@@ -418,7 +418,7 @@ describe('the match on the docket', () => {
     const reloaded = loadGame(JSON.parse(JSON.stringify(saveGame(s.ctx))), bundle);
     const back = reloaded.world.pendingDecisions.find((d) => d.id === match!.id);
     expect(back).toBeDefined();
-    expect(JSON.stringify(back)).toBe(JSON.stringify(match));
+    expect(back).toEqual(match);
 
     // And it is still answerable on the other side.
     const card = back!.kind === 'match' ? back!.cards.find((c) => c.available)! : undefined!;

@@ -3,6 +3,7 @@ import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { streamFor } from '../rng.js';
 import { conceive, meiosis, randomGenome } from '../genetics/meiosis.js';
+import { relationshipThreadRecallMultiplier } from '../relationship-threads.js';
 
 /**
  * RIVAL-HOUSE DESCENT (issue #24 item 6).
@@ -190,6 +191,11 @@ export function tickRivals(ctx: SimCtx, houses: readonly string[] = RIVAL_LINEAG
 export const RIVAL_REOFFER_AFTER = 6;
 /** Remembered people are callbacks, not a standing fourth source of Match cards. */
 export const RIVAL_REOFFER_CHANCE = 0.2;
+
+/** An active external thread is allowed to recur more often, without becoming mandatory. */
+export function rivalReofferChance(ctx: SimCtx, houseId: string): number {
+  return Math.min(1, RIVAL_REOFFER_CHANCE * relationshipThreadRecallMultiplier(ctx, houseId));
+}
 /**
  * A living, unmarried, of-age member of this house's shadow lineage who could
  * stand in for a fresh pool draw on a Match card — or `undefined` where there
@@ -220,7 +226,7 @@ export function pickRivalCandidate(
 
   const remembered = candidates.filter((p) => p.courtship?.template === templateId
     && w.year - p.courtship.offered >= RIVAL_REOFFER_AFTER);
-  if (remembered.length && rng.bool(RIVAL_REOFFER_CHANCE)) return rng.pick(remembered);
+  if (remembered.length && rng.bool(rivalReofferChance(ctx, houseId))) return rng.pick(remembered);
 
   // Once the house has met somebody, they are no longer an anonymous fresh
   // draw. If the callback coin does not land, use somebody genuinely new or

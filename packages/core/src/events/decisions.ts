@@ -13,6 +13,7 @@ import { RUNGS, rungIndex } from '../ascension.js';
 import { noteBearing } from '../bearing.js';
 import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type MatchOffer } from '../people/match.js';
 import { issueOf, type PanelIssue } from '../people/panel.js';
+import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
 
 /**
@@ -65,6 +66,8 @@ export interface PendingChoice {
   event: EventTemplate;
   /** Rendered with the slots already filled — what the player actually reads. */
   body: string;
+  /** A concrete earlier encounter with an outside house represented in this cast (#217). */
+  callback?: string;
   fill: SlotFill;
   choices: DecisionChoice[];
   cast: CastRequest[];
@@ -91,6 +94,8 @@ export interface PendingRecord {
   year: Year;
   event: EventTemplate;
   subject: string;
+  /** A concrete earlier encounter with an outside house represented in this record (#217). */
+  callback?: string;
   options: { option: RecordOption; chronicle: string | null; discrepancy?: string }[];
   /** The chronicle entry this event's outcome created. See `applyRecord` (issue #8). */
   entryId: string;
@@ -153,6 +158,11 @@ export function castRequests(e: EventTemplate, ctx: SimCtx, fill: SlotFill, slot
 
 // ── Queueing ──────────────────────────────────────────────────────────────
 
+function relationshipCallback(ctx: SimCtx, fill: SlotFill): string | undefined {
+  const ids = Object.values(fill).flatMap((value) => typeof value === 'string' ? [value] : value);
+  return externalThreadForPeople(ctx, ids)?.origin.detail;
+}
+
 export function queueChoice(
   ctx: SimCtx,
   e: EventTemplate,
@@ -163,12 +173,14 @@ export function queueChoice(
 ): PendingChoice {
   const choices = e.interaction.kind === 'narration' ? [] : e.interaction.choices;
   const decidedBy: Decider = e.interaction.kind === 'narration' ? 'chance' : e.interaction.decidedBy;
+  const callback = relationshipCallback(ctx, fill);
   const pending: PendingChoice = {
     kind: 'choice',
     id: decisionId(ctx),
     year: ctx.world.year,
     event: { ...e, body },
     body: renderBody(body, fill, ctx),
+    ...(callback ? { callback } : {}),
     fill,
     choices: choices.map((c) => choiceAvailability(c, ctx, fill, e)),
     cast: castRequests(e, ctx, fill, playerCast),
@@ -183,12 +195,14 @@ export function queueChoice(
 export function queueRecord(ctx: SimCtx, e: EventTemplate, entryId: string, fill: SlotFill = {}): PendingRecord | undefined {
   if (!e.record) return undefined;
   const o = e.record.options;
+  const callback = relationshipCallback(ctx, fill);
   const pending: PendingRecord = {
     kind: 'record',
     id: decisionId(ctx),
     year: ctx.world.year,
     event: e,
     subject: e.record.subject,
+    ...(callback ? { callback } : {}),
     options: [
       { option: 'record', chronicle: o.record.chronicle },
       { option: 'omit', chronicle: null },

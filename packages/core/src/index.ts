@@ -18,6 +18,7 @@ export * from './people/secrets.js';
 export * from './people/minting.js';
 export * from './people/branches.js';
 export * from './people/relationships.js';
+export * from './relationship-threads.js';
 export * from './people/demography.js';
 export * from './people/match.js';
 export * from './people/panel.js';

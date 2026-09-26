@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { RivalPerson } from '@ed/schema';
 import {
-  RIVAL_LINEAGE_HOUSES, RIVAL_REOFFER_AFTER, RIVAL_REOFFER_CHANCE, digestOf,
-  findRivalPerson, growRivalLineage, loadGame, mintRecipe, pickRivalCandidate,
-  rollRecipe, saveGame, testRng, testWorld, tickRivals,
+  RELATIONSHIP_THREAD_RECALL_MULTIPLIER,
+  RIVAL_LINEAGE_HOUSES, RIVAL_REOFFER_AFTER, RIVAL_REOFFER_CHANCE,
+  addGrudge, announceAuction, beget, digestOf, findRivalPerson,
+  growRivalLineage, loadGame, mintRecipe, outsiderThreadWeight, pickRivalCandidate,
+  place, queueChoice, queueRecord, relationshipThreadAuctionSeller, relationshipThreadRecallMultiplier,
+  relationshipThreads, rivalReofferChance, rollRecipe, saveGame, testRng, testWorld,
+  tickRelationships, tickRivals,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -331,3 +335,215 @@ describe('a rejected rival Match can become history (issue #214)', () => {
   });
 });
 
+
+
+function threadedWorld(year = 1200) {
+  const ctx = testWorld(bundle, 217, year);
+  const head = place(ctx, { sex: 'male', age: 42, name: 'Aldren Thread', castSlots: ['head'] });
+  return { ctx, head };
+}
+
+describe('external relationship threads (issue #217)', () => {
+  it('keeps the active set to three named, provenance-bearing relationships', () => {
+    const { ctx, head } = threadedWorld();
+    const marrow = place(ctx, { sex: 'male', age: 38, name: 'Ors Marrow', house: 'house_marrow' });
+
+    addGrudge(ctx, marrow.id, head.id, { severity: 70, inheritance: 'house_wide' }, 'ev_thread_quarrel');
+    ctx.world.chronicle.push({
+      year: 1200,
+      weight: 'paragraph',
+      title: 'The North Gate',
+      text: 'Ors Marrow and Aldren Thread disputed who went through the north gate first.',
+      eventId: 'ev_thread_quarrel',
+      named: true,
+    });
+    ctx.world.chronicle.push({
+      id: 'chr_thread_calder',
+      year: 1188,
+      weight: 'paragraph',
+      title: 'The Crooked Account',
+      text: 'The house wrote the payment larger than it was.',
+      named: true,
+      discrepancyId: 'disc_thread_calder',
+    });
+    ctx.world.discrepancies.set('disc_thread_calder', {
+      severity: 'major',
+      provableBy: ['house_calder'],
+      state: 'open',
+    });
+    ctx.world.looseSecrets.push({
+      secret: 'secret_thread_hesk',
+      carrier: 'ret_thread',
+      carrierName: 'Mara Vale',
+      house: 'house_hesk',
+      since: 1175,
+      severity: 'major',
+    });
+    ctx.world.marriagePromises.push({
+      toHouse: 'house_yssanne',
+      year: 1191,
+      lot: 'thread_marriage_lot',
+    });
+
+    const all = relationshipThreads(ctx, 10);
+    const active = relationshipThreads(ctx);
+    expect(all.length).toBeGreaterThanOrEqual(4);
+    expect(active).toHaveLength(3);
+    for (const thread of active) {
+      expect(thread.name.length).toBeGreaterThan(0);
+      expect(thread.origin.detail).toMatch(/\d{4}/);
+      expect(thread.pressures.length).toBeGreaterThan(0);
+      expect('sentiment' in thread).toBe(false);
+      expect('score' in thread).toBe(false);
+    }
+    expect(relationshipThreads(ctx)).toEqual(relationshipThreads(ctx));
+  });
+
+  it('keeps an old origin while a grudge naturally decays into a useful obligation', () => {
+    const { ctx, head } = threadedWorld();
+    const marrow = place(ctx, { sex: 'female', age: 34, name: 'Sera Marrow', house: 'house_marrow' });
+    const oldScene = bundle.events.find((event) => event.purposes.includes('change_relationship'));
+    expect(oldScene).toBeDefined();
+
+    ctx.world.decisionLog.push({
+      kind: 'outcome',
+      year: 1102,
+      event: oldScene!.id,
+      outcomeId: 'thread-history',
+      fill: { HEAD: head.id, RIVAL: marrow.id },
+    });
+    addGrudge(ctx, marrow.id, head.id, { severity: 10, inheritance: 'house_wide' }, String(oldScene!.id));
+    ctx.world.marriagePromises.push({
+      toHouse: 'house_marrow',
+      year: 1198,
+      lot: 'thread_useful_lot',
+    });
+
+    const hostile = relationshipThreads(ctx, 10).find((thread) => thread.house === 'house_marrow');
+    expect(hostile).toBeDefined();
+    expect(hostile!.origin.year).toBe(1102);
+    expect(hostile!.pressures.map((fact) => fact.kind)).toContain('grudge');
+    expect(hostile!.pressures.map((fact) => fact.kind)).toContain('marriage_promise');
+
+    for (let i = 0; i < 12; i += 1) {
+      ctx.world.year += 1;
+      tickRelationships(ctx);
+    }
+
+    const useful = relationshipThreads(ctx, 10).find((thread) => thread.house === 'house_marrow');
+    expect(useful).toBeDefined();
+    expect(useful!.origin).toEqual(hostile!.origin);
+    expect(useful!.pressures.map((fact) => fact.kind)).not.toContain('grudge');
+    expect(useful!.pressures.map((fact) => fact.kind)).toContain('marriage_promise');
+  });
+
+  it('lets Match, auction and outside event casting recall the same active house', () => {
+    const { ctx } = threadedWorld();
+    ctx.world.marriagePromises.push({
+      toHouse: 'house_hesk',
+      year: 1199,
+      lot: 'thread_recall_lot',
+    });
+
+    const hesk = place(ctx, { sex: 'female', age: 27, name: 'Ilya Hesk', house: 'house_hesk' });
+    const calder = place(ctx, { sex: 'female', age: 27, name: 'Ilya Calder', house: 'house_calder' });
+    const rival = { role: 'rival' } as Parameters<typeof outsiderThreadWeight>[0];
+    const ordinaryOutsider = { role: 'outsider' } as Parameters<typeof outsiderThreadWeight>[0];
+
+    expect(RELATIONSHIP_THREAD_RECALL_MULTIPLIER).toBeGreaterThan(1);
+    expect(relationshipThreadRecallMultiplier(ctx, 'house_hesk')).toBe(RELATIONSHIP_THREAD_RECALL_MULTIPLIER);
+    expect(relationshipThreadRecallMultiplier(ctx, 'house_calder')).toBe(1);
+    expect(rivalReofferChance(ctx, 'house_hesk')).toBe(
+      RIVAL_REOFFER_CHANCE * RELATIONSHIP_THREAD_RECALL_MULTIPLIER,
+    );
+    expect(rivalReofferChance(ctx, 'house_calder')).toBe(RIVAL_REOFFER_CHANCE);
+
+    expect(relationshipThreadAuctionSeller(ctx, 'house_calder')).toBe('house_hesk');
+    expect(outsiderThreadWeight(rival, ctx, hesk)).toBe(RELATIONSHIP_THREAD_RECALL_MULTIPLIER);
+    expect(outsiderThreadWeight(rival, ctx, calder)).toBe(1);
+    expect(outsiderThreadWeight(ordinaryOutsider, ctx, hesk)).toBe(1);
+  });
+
+
+  it('recurs an auction seller without changing the stock the ladder can see', () => {
+    const quiet = testWorld(bundle, 2171, 1200);
+    const active = testWorld(bundle, 2171, 1200);
+    active.world.marriagePromises.push({
+      toHouse: 'house_hesk',
+      year: 1199,
+      lot: 'thread_recall_lot',
+    });
+
+    const quietLots = announceAuction(quiet, testRng('thread-auction'));
+    const activeLots = announceAuction(active, testRng('thread-auction'));
+    const stock = (lots: typeof quietLots) => lots.map((lot) => ({
+      kind: lot.kind,
+      refId: lot.refId,
+      reserveCoin: lot.reserveCoin,
+      saleYear: lot.saleYear,
+    }));
+
+    expect(stock(activeLots)).toEqual(stock(quietLots));
+    expect(activeLots.some((lot) => lot.kind !== 'chronicle_page' && lot.house === 'house_hesk')).toBe(true);
+  });
+
+  it('lets old contact fade when nothing remains actionable', () => {
+    const { ctx, head } = threadedWorld(1160);
+    const yssene = place(ctx, { sex: 'male', age: 31, name: 'Teren Yssanne', house: 'house_yssanne' });
+    const scene = bundle.events.find((event) => event.purposes.includes('change_relationship'));
+    expect(scene).toBeDefined();
+    ctx.world.decisionLog.push({
+      kind: 'outcome',
+      year: 1102,
+      event: scene!.id,
+      outcomeId: 'thread-fades',
+      fill: { HEAD: head.id, OUTSIDER: yssene.id },
+    });
+    expect(relationshipThreads(ctx, 10).some((thread) => thread.house === 'house_yssanne')).toBe(true);
+    ctx.world.year = 1163;
+    expect(relationshipThreads(ctx, 10).some((thread) => thread.house === 'house_yssanne')).toBe(false);
+  });
+
+  it('keeps one concrete origin across generations and reuses it in choice and Record decisions', () => {
+    const ctx = testWorld(bundle, 219, 1200);
+    const ours = place(ctx, { sex: 'male', age: 50, name: 'Old Seat' });
+    const theirs = place(ctx, { sex: 'male', age: 50, name: 'Old Marrow', house: 'house_marrow' });
+    const ourHeir = place(ctx, { sex: 'male', age: 20, name: 'Young Seat' });
+    const theirHeir = place(ctx, { sex: 'male', age: 20, name: 'Young Marrow', house: 'house_marrow' });
+    beget(ctx, ourHeir, undefined, ours);
+    beget(ctx, theirHeir, undefined, theirs);
+
+    const scene = bundle.events.find((event) => event.purposes.includes('change_relationship'));
+    expect(scene).toBeDefined();
+    ctx.world.decisionLog.push({
+      kind: 'outcome',
+      year: 1199,
+      event: scene!.id,
+      outcomeId: 'thread-origin',
+      fill: { HEAD: ours.id, RIVAL: theirs.id },
+    });
+    addGrudge(ctx, theirs.id, ours.id, { severity: 80, inheritance: 'house_wide' }, String(scene!.id));
+
+    const first = relationshipThreads(ctx, 10).find((thread) => thread.house === 'house_marrow');
+    expect(first?.origin.year).toBe(1199);
+    expect(first?.origin.detail).toContain('Old Marrow');
+
+    ctx.world.people.kill(ours.id, ctx.world.year, 'a fever');
+    ctx.world.people.kill(theirs.id, ctx.world.year, 'a fever');
+    ctx.world.year = 1225;
+    tickRelationships(ctx);
+
+    const inherited = relationshipThreads(ctx, 10).find((thread) => thread.house === 'house_marrow');
+    expect(inherited?.origin).toEqual(first?.origin);
+
+    const choiceEvent = bundle.events.find((event) => event.interaction.kind === 'choice');
+    if (!choiceEvent) throw new Error('content has no choice event');
+    const choice = queueChoice(ctx, choiceEvent, 'Young Marrow comes again.', { VISITOR: theirHeir.id }, []);
+    expect(choice.callback).toBe(inherited?.origin.detail);
+
+    const recordEvent = bundle.events.find((event) => event.record !== undefined);
+    if (!recordEvent) throw new Error('content has no Record event');
+    const record = queueRecord(ctx, recordEvent, 'chr_thread', { WITNESS: theirHeir.id });
+    expect(record?.callback).toBe(inherited?.origin.detail);
+  });
+});

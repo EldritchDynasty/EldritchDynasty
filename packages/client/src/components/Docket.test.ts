@@ -75,6 +75,7 @@ function choiceDecision(open = true): PendingDecision {
     year: 1100,
     event,
     body: 'The body of the thing, as the player reads it.',
+    callback: 'House Marrow still carries what began with the_seal_refused in 1080.',
     fill: {},
     cast: [],
     choices: event.interaction.choices.map((c) => ({
@@ -158,6 +159,7 @@ function matchDecision(): PendingDecisionView {
         house: 'house_full',
         houseName: 'House Full',
         blurb: 'A watched family.',
+        callback: 'Aldren’s house carried the missing leaf away in 1141.',
         dowry: 70,
         kinship: 0,
         line: 'fertile',
@@ -198,6 +200,7 @@ function recordDecision(): PendingDecision {
     year: 1200,
     event,
     subject: 'p_1',
+    callback: 'Mara Marrow carried the_missing_leaf to House Marrow in 1188.',
     entryId: 'chr_1',
     fill: {},
     options: [
@@ -241,6 +244,7 @@ describe('the docket draws what it is handed', () => {
     const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
 
     expect(w.text()).toContain('The body of the thing');
+    expect(w.text()).toContain('House Marrow still carries what began with the_seal_refused in 1080.');
     const buttons = w.findAll('button');
     expect(
       buttons.length,
@@ -384,6 +388,7 @@ describe('the docket draws what it is handed', () => {
     expect(futures[0]!.text()).toMatch(/close kin|deep blood/);
     expect(futures[1]!.text()).toContain('Continuity');
     expect(futures[1]!.text()).toContain('4 of 5 children');
+    expect(w.text()).toContain('Aldren’s house carried the missing leaf away in 1141.');
     expect(futures[2]!.text()).toContain('Mystery');
     expect(futures[2]!.text()).toContain('thin evidence');
   });
@@ -415,6 +420,7 @@ describe('the docket draws what it is handed', () => {
     // something for each was drawn rather than pinning the wording.
     expect(w.findAll('button').length, 'the Record block drew no options').toBeGreaterThanOrEqual(3);
     expect(text.length, 'the Record block rendered empty').toBeGreaterThan(20);
+    expect(text).toContain('Mara Marrow carried the_missing_leaf to House Marrow in 1188.');
   });
 
   it('and pressing a Record option calls record', async () => {

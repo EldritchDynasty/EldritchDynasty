@@ -219,6 +219,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     <template v-if="decision.kind === 'choice'">
       <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ decision.event.title }}</h3>
       <p class="body">{{ decision.body }}</p>
+      <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
 
       <div v-if="decision.arcStep" class="dim small arc">
         part of {{ decision.arcStep.instance.arc }}<span v-if="decision.arcStep.absent"> — and one of them is gone</span>
@@ -312,6 +313,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <span class="dim small">{{ card.age }} · {{ card.houseName }}</span>
           </div>
           <p class="small soft">{{ card.blurb }}</p>
+          <p v-if="card.callback" class="small callback">{{ card.callback }}</p>
 
           <!-- THE FUTURE ON THE FACE OF THE CARD (issue #214). This is not a
                forecast and it does not know the genome. `futureOf` receives
@@ -452,6 +454,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <p class="body">
         There is one line about <em>{{ decision.subject }}</em>, and this is it.
       </p>
+      <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
 
       <div class="choices stack">
         <template v-for="(o, i) in recordOptions" :key="o.option">

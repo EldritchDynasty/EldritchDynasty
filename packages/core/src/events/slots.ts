@@ -11,6 +11,26 @@ export { castIn, castPeople, soleCast, type SlotFill } from './fill.js';
 import { foremostOf, secondForemostOf } from '../ascension.js';
 import type { Rng } from '../rng.js';
 import { CHILDBEARING, eligibleToMarry } from '../people/demography.js';
+import {
+  RELATIONSHIP_THREAD_RECALL_MULTIPLIER, activeRelationshipThreadHouses,
+} from '../relationship-threads.js';
+
+/** Weight an explicitly rival cast toward one of the few external names the run is already carrying. */
+export function outsiderThreadWeight(
+  spec: SlotSpec,
+  ctx: SimCtx,
+  person: Person,
+  active = activeRelationshipThreadHouses(ctx),
+): number {
+  if (spec.role !== 'rival_house' && spec.role !== 'rival') return 1;
+  return active.has(String(person.houseOfOrigin)) ? RELATIONSHIP_THREAD_RECALL_MULTIPLIER : 1;
+}
+
+function pickCandidate(spec: SlotSpec, ctx: SimCtx, rng: Rng, people: Person[]): Person | undefined {
+  if (spec.role !== 'rival_house' && spec.role !== 'rival') return rng.pick(people);
+  const active = activeRelationshipThreadHouses(ctx);
+  return rng.weighted(people, (person) => outsiderThreadWeight(spec, ctx, person, active));
+}
 
 export interface SlotResolution {
   ok: boolean;
@@ -77,8 +97,8 @@ export function resolveSlots(
       if (spec.optional) continue;
       return { ok: false, fill, playerCast, missing: sid };
     }
-    const chosen = rng.pick(candidates);
-    fill[sid] = chosen.id;
+    const chosen = pickCandidate(spec, ctx, rng, candidates);
+    if (chosen) fill[sid] = chosen.id;
   }
 
   return { ok: true, fill, playerCast };
@@ -107,7 +127,9 @@ function castParty(sid: string, spec: SlotSpec, ctx: SimCtx, bound: SlotFill, rn
   for (let i = 0; i < want; i++) {
     const pool = candidatesFor(spec, ctx, working).filter((p) => !party.includes(p.id));
     if (!pool.length) break;
-    party.push(rng.pick(pool).id);
+    const chosen = pickCandidate(spec, ctx, rng, pool);
+    if (!chosen) break;
+    party.push(chosen.id);
     working[sid] = [...party];
   }
   return party;
@@ -383,7 +405,7 @@ export function autoCast(
       if (party.length) out[sid] = party;
       continue;
     }
-    const chosen = rng.pick(candidatesFor(spec, ctx, out));
+    const chosen = pickCandidate(spec, ctx, rng, candidatesFor(spec, ctx, out));
     if (chosen) out[sid] = chosen.id;
   }
   return out;

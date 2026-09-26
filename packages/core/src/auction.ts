@@ -5,6 +5,7 @@ import { DEBT_FLOOR } from './economy.js';
 import { applyEffect } from './events/effects.js';
 import { acquireLibraryCopy } from './people/library.js';
 import { grantHeirloom, transferHeirloom } from './people/heirlooms.js';
+import { relationshipThreads } from './relationship-threads.js';
 
 /**
  * THE AUCTION (issue #17) — the largest single subsystem in the tracker, and
@@ -94,11 +95,34 @@ export function commissionBook(ctx: SimCtx, id: string): { ok: boolean; reason?:
 }
 
 /** The Sarrow deed is a road to books, not a decorative parcel blurb. */
-export function auctionCandidateWeight(ctx: SimCtx, kind: AuctionLot['kind']): number {
-  if (kind === 'chronicle_page') return 0.7;
-  const hasSarrowRoad = [...ctx.world.parcels.values()]
-    .some((p) => p.defId === 'sarrow_bottom' && p.heldSince <= ctx.world.year);
-  return kind === 'spellbook' && hasSarrowRoad ? 3 : 1;
+export function auctionCandidateWeight(
+  ctx: SimCtx,
+  kind: AuctionLot['kind'],
+): number {
+  return kind === 'chronicle_page'
+    ? 0.7
+    : kind === 'spellbook' && [...ctx.world.parcels.values()]
+      .some((p) => p.defId === 'sarrow_bottom' && p.heldSince <= ctx.world.year)
+      ? 3
+      : 1;
+}
+
+/**
+ * Reuse an active outside name as the keeper/seller of an already-selected lot.
+ *
+ * This deliberately runs AFTER stock selection. Relationship recurrence should
+ * change who the house meets again, not whether a spellbook exists at all:
+ * weighting candidate stock by relationship house moved the Library and ladder
+ * on fixed seeds even though #217 is a social-memory feature.
+ */
+export function relationshipThreadAuctionSeller(
+  ctx: SimCtx,
+  originalHouse: string,
+  ordinal = 0,
+): string {
+  const threads = relationshipThreads(ctx);
+  if (!threads.length) return originalHouse;
+  return threads[Math.abs(ordinal) % threads.length]!.house;
 }
 
 /**
@@ -169,11 +193,17 @@ export function announceAuction(ctx: SimCtx, rng: Rng): AuctionLot[] {
   }
 
   const saleYear = w.year + Math.round(rng.range(LEAD_YEARS.min, LEAD_YEARS.max));
+  let recurringSeller = 0;
   const lots: AuctionLot[] = chosen.map((c) => ({
     id: lotId(ctx),
     kind: c.kind,
     refId: c.refId,
-    house: c.house,
+    // A chronicle page belongs to the specific house that can prove it.
+    // Generic books/heirlooms may instead recur through one of the active
+    // relationship threads, without changing which item the auction stocked.
+    house: c.kind === 'chronicle_page'
+      ? c.house
+      : relationshipThreadAuctionSeller(ctx, c.house, recurringSeller++),
     announcedYear: w.year,
     saleYear,
     reserveCoin: c.reserve,

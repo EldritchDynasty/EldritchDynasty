@@ -13,6 +13,7 @@ import { phenotypeOf } from './factory.js';
 import { marketAppetite } from '../bearing.js';
 import { papersDemanded, papersHeld } from './papers.js';
 import { emptyPanel, readPanel, type MatchPanel } from './panel.js';
+import { externalThreadFor } from '../relationship-threads.js';
 
 /**
  * THE MATCH — draft one partner from three cards.
@@ -113,6 +114,8 @@ export interface MatchCard {
    * why none of it may come off a genome.
    */
   panel: MatchPanel;
+  /** A concrete earlier encounter with this house, derived from existing history (#217). */
+  callback?: string;
   /** Set for `household`. */
   person?: string;
   /** Set for `outsider`. Exactly who arrives if this card is taken. */
@@ -773,6 +776,8 @@ export function dealMatch(ctx: SimCtx, subject: Person, rng: Rng): MatchOffer {
   for (const c of cards) {
     readLine(ctx, c, cen);
     readPanel(ctx, c, cen);
+    const thread = externalThreadFor(ctx, c.house);
+    if (thread) c.callback = thread.origin.detail;
     priceIn(ctx, c, subject);
   }
 
