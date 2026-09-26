@@ -271,6 +271,8 @@ describe('the docket draws what it is handed', () => {
     const [id, choiceId] = actions.choose.mock.calls[0]!;
     expect(id).toBe(decision.id);
     expect(decision.choices.map((c) => c.id)).toContain(choiceId);
+    expect(actions.delegateChoice, 'answering a surfaced choice with the box untouched must not revoke a standing policy')
+      .not.toHaveBeenCalled();
   });
 
   it('opts into the exact routine choice the player actually takes', async () => {
@@ -461,6 +463,8 @@ describe('the docket draws what it is handed', () => {
     await w.findAll('button')[0]!.trigger('click');
     expect(actions.record, 'a Record option was pressed and record was never called').toHaveBeenCalled();
     expect(actions.record.mock.calls[0]![0]).toBe(decision.id);
+    expect(actions.delegateRecord, 'answering a surfaced Record page with the box untouched must not revoke a standing policy')
+      .not.toHaveBeenCalled();
   });
 
   it('opts into plain Record only when the player checks the standing preference', async () => {
