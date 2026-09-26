@@ -38,6 +38,21 @@ describe('a run survives being written down', () => {
     expect(digestOf(after)).toBe(digestOf(before));
   });
 
+  it('round-trips non-empty standing delegation preferences', () => {
+    const before = bootstrap(content, 219, 1042);
+    before.world.delegation.choices.routine_choice = 'pay';
+    before.world.delegation.records.routine_record = 'record';
+
+    const saved = JSON.parse(JSON.stringify(saveGame(before)));
+    expect(saved.delegation).toEqual({
+      choices: { routine_choice: 'pay' },
+      records: { routine_record: 'record' },
+    });
+
+    const after = loadGame(saved, content);
+    expect(after.world.delegation).toEqual(before.world.delegation);
+  });
+
   it('round-trips the selected campaign instead of silently restoring Long', () => {
     const before = bootstrap(content, 1042, 1042, 'short');
     const saved = JSON.parse(JSON.stringify(saveGame(before)));
