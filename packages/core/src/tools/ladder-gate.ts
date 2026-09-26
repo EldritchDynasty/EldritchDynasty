@@ -359,69 +359,7 @@ export function playOnce(bundle: Source, seed: number, years: number, policy: La
  * in the healthy case, because nothing is failing. It runs only over the
  * templates the chronicler batch could not reach, which is normally none.
  */
-export function firedUnderClimbing(
-  source: Source,
-  seeds: number[],
-  years: number,
-  bid = 900,
-  stopWhen?: (fired: ReadonlySet<string>) => boolean,
-): Set<string> {
-  const fired = new Set<string>();
-  const collect = (ctx: SimCtx) => {
-    for (const [id, n] of Object.entries(ctx.world.frequency.templateFires)) {
-      if (n > 0) fired.add(id);
-    }
-  };
-
-  for (const seed of seeds) {
-    const ctx = playForFires(
-      source,
-      seed,
-      years,
-      bid,
-      stopWhen
-        ? (running) => {
-          collect(running);
-          return stopWhen(fired);
-        }
-        : undefined,
-    );
-    collect(ctx);
-    if (stopWhen?.(fired)) break;
-  }
-  return fired;
-}
-
-/**
- * `playOnce`'s loop, kept to the part that matters here: the world afterwards.
- *
- * A caller may stop once the fact it needs is already monotone. In particular,
- * "these templates have fired" can only gain members as a run continues, so a
- * fast-lane test does not need to spend the rest of a 500-year campaign after
- * its complete evidence is already in hand. Production gate calls omit this
- * hook and retain the full-run behaviour.
- */
-function playForFires(
-  source: Source,
-  seed: number,
-  years: number,
-  bid: number,
-  stopWhen?: (ctx: SimCtx) => boolean,
-): SimCtx {
-  const ctx = bootstrap(indexContent(source), seed, START_YEAR);
-  const w = ctx.world;
-  w.bidCeiling = bid;
-  const tally = { asked: 0, paid: 0 };
-
-  for (let y = 0; y < years; y++) {
-    if (w.year >= END_YEAR || w.ending) break;
-    stepYear(ctx, false);
-    resolveYear(ctx, seed, 'climb', tally);
-    clearNamingQueue(ctx);
-    if (stopWhen?.(ctx)) break;
-  }
-  return ctx;
-}
+export { firedUnderClimbing } from './ladder-fires.js';
 
 export interface LadderVerdict { ok: boolean; lines: string[] }
 
