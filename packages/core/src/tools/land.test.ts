@@ -948,13 +948,25 @@ describe('the connector-only remote landing', () => {
     expect(remote, 'pull_request_target would execute PR code with a write token').not.toContain('pull_request_target:');
   });
 
-  it('lets every authorized landing run so Actions cannot discard an older pending request', () => {
-    expect(
-      remote,
-      'Actions concurrency keeps only one pending member and can silently replace an older /land request',
-    ).not.toMatch(/^\s*concurrency:\s*$/m);
-    expect(remote).toContain('Actions concurrency keeps at most one running and one pending member');
-    expect(remote).toContain('final compare-and-swap push');
+  it('queues real landings without letting unrelated comments occupy or replace the queue', () => {
+    const jobs = remote.indexOf('\njobs:\n');
+    const land = remote.indexOf('\n  land:\n', jobs);
+    const concurrency = remote.indexOf('\n    concurrency:\n', land);
+    const condition = remote.indexOf('\n    if: >-', land);
+    const block = remote.slice(concurrency, condition);
+
+    expect(jobs).toBeGreaterThan(0);
+    expect(land).toBeGreaterThan(jobs);
+    expect(concurrency, 'landing concurrency must be job-scoped').toBeGreaterThan(land);
+    expect(concurrency, 'the shared queue must be chosen before the landing condition').toBeLessThan(condition);
+    expect(remote.slice(0, jobs), 'workflow-level concurrency would queue unrelated comments').not.toContain('\nconcurrency:');
+    expect(block).toContain("'remote-land-main'");
+    expect(block).toContain("format('remote-land-skip-{0}', github.run_id)");
+    expect(block).toContain('inputs.pr_number > 0');
+    expect(block).toContain("github.event.comment.body == '/land'");
+    expect(block).toContain("github.event.comment.body == '/land --no-issue-check'");
+    expect(block).toContain('cancel-in-progress: false');
+    expect(block).toContain('queue: max');
   });
 
   it('authorizes the actor and only accepts a ready same-repository PR to main', () => {

@@ -20,13 +20,22 @@ permissions:
 
 jobs:
   land:
-    # Do NOT put remote landings in a GitHub Actions concurrency group.
-    # Actions concurrency keeps at most one running and one pending member;
-    # a third authorized request replaces the older pending request even when
-    # cancel-in-progress is false. Let every request run instead. Each runner
-    # executes the same repository landing, and the final compare-and-swap push
-    # decides which one can advance main. A loser fails visibly and can retry;
-    # an authorized request must never disappear merely because it was waiting.
+    # The default Actions concurrency queue is lossy: one running + one pending,
+    # and a newer request replaces the older pending one. `queue: max` keeps
+    # up to 100 waiting landings instead. Concurrency is evaluated before this
+    # job's `if`, so only REAL /land/bootstrap requests share the landing group;
+    # unrelated issue comments get a per-run group and skip without occupying it.
+    concurrency:
+      group: >-
+        ${{ (inputs.pr_number > 0
+        || (github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && (github.event.comment.body == '/land'
+        || github.event.comment.body == '/land --no-issue-check')))
+        && 'remote-land-main'
+        || format('remote-land-skip-{0}', github.run_id) }}
+      cancel-in-progress: false
+      queue: max
     if: >-
       (github.event_name == 'issue_comment'
       && github.event.issue.pull_request
