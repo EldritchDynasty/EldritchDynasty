@@ -63,7 +63,7 @@ vi.mock('./content.js', async () => {
 });
 
 const {
-  store, fileOf, filesHolding, isDirty, markDirty,
+  store, fileOf, fileOfId, filesHolding, isDirty, markDirty,
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
   createItem, externalChange,
 } = await import('./store.js');
@@ -105,6 +105,14 @@ describe('finding where an item lives', () => {
 
   it('says nothing at all about an id that is not there', () => {
     expect(fileOf('events', 'no_such_event_anywhere')).toBeUndefined();
+  });
+
+  it('locates validation ids across collection kinds without a second layout table', () => {
+    expect(fileOfId(EVENT)).toBe(CRUSADE);
+    expect(fileOfId('arc_the_eight_days')).toBe('arcs/eight_days.yaml');
+    expect(fileOfId('suitor_of_ilm')).toBe('characters/templates.yaml');
+    expect(fileOfId('mind')).toBe('attributes.yaml');
+    expect(fileOfId('no_such_content_id')).toBeUndefined();
   });
 
   it('lists only files that actually hold the collection', () => {
