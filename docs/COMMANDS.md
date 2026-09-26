@@ -99,11 +99,14 @@ to cause the same post-push judgment from inside Actions.
 Remote landings are serialized with GitHub Actions concurrency, but **not**
 with its default one-pending behavior. The default replaces an older pending
 request when a newer one arrives. `remote-land.yml` opts into `queue: max`,
-which keeps up to one hundred waiting members instead. It also sends only exact
-landing requests (and the PR bootstrap bridge) to the shared
-`remote-land-main` group; unrelated issue comments get a run-unique group
-because Actions chooses a concurrency group before evaluating the job's `if`.
-That prevents a `/claim` or ordinary discussion comment from occupying the
+which keeps up to one hundred waiting members instead. It sends the PR bootstrap
+bridge and only trusted exact landing comments to the shared
+`remote-land-main` group: issue comments are prefiltered by
+`author_association` before concurrency admission, then the existing API
+permission lookup remains the authoritative write-access check inside the job.
+Unrelated or outsider comments get a run-unique group because Actions chooses a
+concurrency group before evaluating the job's `if`. That prevents a `/claim`,
+ordinary discussion comment, or outsider-shaped `/land` from occupying the
 landing queue. Local and remote landings can still overlap; their final Git push
 is the compare-and-swap that decides which rebased head can advance `main`.
 
