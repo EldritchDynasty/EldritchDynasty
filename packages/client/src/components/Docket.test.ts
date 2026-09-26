@@ -221,6 +221,8 @@ function spyActions() {
   ] as const;
   const actions = {} as Record<string, ReturnType<typeof vi.fn>>;
   for (const n of names) actions[n] = vi.fn();
+  actions.choose = vi.fn(() => true);
+  actions.record = vi.fn(() => true);
   return actions as unknown as Record<keyof GameActions, ReturnType<typeof vi.fn>>
     & { readonly __brand?: GameActions };
 }
@@ -287,6 +289,19 @@ describe('the docket draws what it is handed', () => {
     expect(actions.delegateChoice).toHaveBeenCalledWith(decision.event.id, decision.choices[0]!.id);
   });
 
+  it('does not learn a standing choice when the normal verb refuses it', async () => {
+    const decision = choiceDecision();
+    if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    actions.choose.mockReturnValue(false);
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateChoice).not.toHaveBeenCalled();
+  });
+
   /**
    * ── AND THE BRANCH THAT IS NOT THE PLAYER'S TO TAKE ──────────────────────
    *
@@ -310,6 +325,7 @@ describe('the docket draws what it is handed', () => {
       ).toBe(false);
     }
 
+    expect(w.find('input[type="checkbox"]').exists(), 'party-cast choices cannot be delegated and should not offer a dead opt-in').toBe(false);
     const send = w.findAll('button').find((b) => b.text().includes('Send them'));
     expect(send, 'a party decision drew no way to send anybody').toBeTruthy();
     await send!.trigger('click');
@@ -477,6 +493,19 @@ describe('the docket draws what it is handed', () => {
     await w.findAll('.choices button')[0]!.trigger('click');
 
     expect(actions.delegateRecord).toHaveBeenCalledWith(decision.event.id, 'record');
+  });
+
+  it('does not learn a Record policy when the normal verb refuses the page', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    actions.record.mockReturnValue(false);
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateRecord).not.toHaveBeenCalled();
   });
 });
 
