@@ -318,11 +318,14 @@ same-repository PR and comments exactly `/land`. The
 command; it is not permission to merge a merely-green PR. The request is
 write-authorized. Remote landings share one Actions concurrency group with
 `queue: max`, so up to one hundred requests may wait rather than the default
-single pending request being replaced by the next one. Only exact `/land`,
-`/land --no-issue-check`, and the PR bootstrap bridge enter that shared group;
-other issue comments use a run-unique group because Actions decides concurrency
-before it evaluates the job's `if`. Remote landings therefore run one at a
-time without silently dropping an older request. Local vs remote still
+single pending request being replaced by the next one. The PR bootstrap bridge
+and only trusted exact `/land` / `/land --no-issue-check` issue comments enter
+that shared group. Issue comments are prefiltered by `author_association` before
+queue admission, while the in-job collaborator-permission lookup remains the
+authoritative write-access check. Other or outsider comments use a run-unique
+group because Actions decides concurrency before it evaluates the job's `if`.
+Remote landings therefore run one at a time without silently dropping an older
+request. Local vs remote still
 arbitrates at the final compare-and-swap push. This exists because a PR check
 can be green on an old base — the rebase and the post-push verdict remain
 mandatory.
