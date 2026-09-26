@@ -19,6 +19,7 @@ export const CLAIM_SYNTAX = [
   '/claim <issue> --agent <working-branch> --paths <csv> [--lane <lane>]',
   '/claim check --agent <working-branch>',
   '/claim release <issue> --agent <working-branch>',
+  '/claim steal <issue> --agent <working-branch>',
 ].join('\n');
 
 const syntaxError = (detail = 'invalid request') =>
@@ -83,6 +84,15 @@ export function parseClaimRequest(raw) {
     return { command: 'release', issue: match[1], agent: validateAgent(match[2]) };
   }
 
+  // Stale recovery deliberately exposes no remote --force. The six-hour rule,
+  // the compare-and-swap lease, and preservation of the old lane/paths all stay
+  // inside agents.mjs. A recovered agent widens paths afterwards with ordinary
+  // /claim <issue> ... --paths ... if the work actually grew.
+  match = body.match(/^\/claim steal ([1-9]\d*) --agent (\S+)$/);
+  if (match) {
+    return { command: 'steal', issue: match[1], agent: validateAgent(match[2]) };
+  }
+
   throw syntaxError();
 }
 
@@ -99,6 +109,8 @@ export function argsFor(request) {
       return ['check', '--agent', request.agent];
     case 'release':
       return ['release', request.issue, '--agent', request.agent];
+    case 'steal':
+      return ['steal', request.issue, '--agent', request.agent];
     default:
       throw new Error(`unsupported remote claim command: ${request.command}`);
   }

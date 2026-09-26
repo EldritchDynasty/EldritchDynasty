@@ -224,7 +224,7 @@ describe('the connector-only remote claim transport', () => {
     argsFor: (request: Record<string, string | undefined>) => string[];
   };
 
-  it('parses the three explicit commands into agents.mjs arguments', async () => {
+  it('parses the four explicit commands into agents.mjs arguments', async () => {
     const { parseClaimRequest, argsFor } = await module();
 
     const take = parseClaimRequest(
@@ -255,6 +255,13 @@ describe('the connector-only remote claim transport', () => {
     expect(argsFor(release)).toEqual([
       'release', '205', '--agent', 'chatgpt/issue-205-remote-claim',
     ]);
+
+    const steal = parseClaimRequest(
+      '/claim steal 36 --agent chatgpt/issue-36-recovery',
+    );
+    expect(argsFor(steal)).toEqual([
+      'steal', '36', '--agent', 'chatgpt/issue-36-recovery',
+    ]);
   });
 
   it.each([
@@ -267,6 +274,9 @@ describe('the connector-only remote claim transport', () => {
     '/claim 205 --agent branch --paths tools --extra nope',
     '/claim check --agent branch trailing',
     '/claim release nope --agent branch',
+    '/claim steal nope --agent branch',
+    '/claim steal 36 --agent branch --force',
+    '/claim steal 36 --agent claim/36',
   ])('rejects malformed or unsafe request %s', async (raw) => {
     const { parseClaimRequest } = await module();
     expect(() => parseClaimRequest(raw)).toThrow(/Expected one of:/);

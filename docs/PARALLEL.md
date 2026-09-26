@@ -70,6 +70,7 @@ working branch first, then put one of these exact commands in an issue comment:
 /claim 93 --agent chatgpt/issue-93-topic --paths packages/core/src/economy --lane code
 /claim check --agent chatgpt/issue-93-topic
 /claim release 93 --agent chatgpt/issue-93-topic
+/claim steal 93 --agent chatgpt/issue-93-recovery
 ```
 
 `.github/workflows/remote-claim.yml` authorizes the commenter, checks out
@@ -79,6 +80,14 @@ constructs a claim ref itself. A competing claim therefore still loses at the
 same orphan-ref push, and a `DENIED` from `agents.mjs` makes the workflow
 fail. The Actions summary contains the tool's output. This is transport to the
 one mutex, not a second mutex.
+
+Connector stale recovery uses `/claim steal <issue> --agent <branch>`. It does
+**not** expose `--force`: `agents.mjs` still decides whether the six-hour
+stale threshold is met and performs the compare-and-swap against the exact claim
+SHA it read. A steal deliberately preserves the abandoned claim's lane and paths;
+if the recovered work needs a wider path set, widen it afterwards with the
+ordinary `/claim <issue> ... --paths ...` form so overlaps are checked rather
+than silently changed during the takeover.
 
 A claim is an orphan commit with an empty tree pushed to `claim/<issue>`. Orphan,
 so no second claim can be a fast-forward of the first and quietly win; empty
@@ -136,7 +145,11 @@ These are single files that every second feature wants to touch. Declare them in
    comment `/claim <issue> --agent <branch> --paths <what you will write>`.
    Do this once for each issue this branch intends to land. Denied means denied
    — pick another issue rather than working it in parallel and discovering the
-   other agent at merge time.
+   other agent at merge time. If a claim is older than six hours and the old
+   session is gone, shell uses `npm run agents -- steal <issue>`; connector-only
+   uses `/claim steal <issue> --agent <branch>`. Neither path steals a fresh
+   claim without an explicit local `--force`, which the remote transport does
+   not expose.
 2. **Branch per agent**, as the session harness already does:
    `claude/<topic>-<suffix>`. One issue, one branch, one session.
 3. **Work.** `npm run test:fast` is the loop — see
