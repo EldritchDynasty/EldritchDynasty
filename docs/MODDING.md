@@ -10,7 +10,7 @@ simulation instruments used by the game repository.
 The desktop host owns one writable mod root:
 
 ```
-<Mod Editor userData>/mods/content/
+<shared desktop userData>/mods/content/
 ```
 
 The separately named game and Mod Editor deliberately share the game's desktop
@@ -22,8 +22,7 @@ profile. On a standard Windows installation that makes the content directory:
 
 The host sets this shared profile explicitly; it does **not** use the Mod
 Editor's product name for `userData`. The host remains the authority if
-Windows redirects that profile. The editor
-never needs an absolute path: it reads shipped content for references and
+Windows redirects that profile. The editor never needs an absolute path: it reads shipped content for references and
 writes only paths rooted under `mods/content`.
 
 Mirror the shipped content layout beneath that root when adding files, for
@@ -75,8 +74,8 @@ than the ambient Frequency ledger.
 
 ## Play with local content
 
-Launch the ordinary desktop game after placing valid files under the Mod
-Editor profile's `mods/content` directory. The desktop game composes those
+Launch the ordinary desktop game after placing valid files under the shared desktop
+profile's `mods/content` directory. The desktop game composes those
 files with the shipped bundle before Vue mounts and validates the combined
 result through the same rules.
 
