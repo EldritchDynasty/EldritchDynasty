@@ -180,7 +180,7 @@ const FUTURE_LABEL: Record<MatchFutureKind, MatchFutureReading['label']> = {
  * allowed to receive the same reading. The deck is not rewritten to manufacture
  * three different archetypes where the world did not deal three.
  */
-export function matchFuture(card: MatchCard): MatchFutureReading {
+export function matchFuture(card: MatchCard, priorities: MatchFutureKind[] = []): MatchFutureReading {
   const blood: FutureCase = { kind: 'blood', score: 0, reasons: [] };
   if (card.kinship >= 0.0625) {
     blood.score += 4;
@@ -248,6 +248,14 @@ export function matchFuture(card: MatchCard): MatchFutureReading {
   if (Math.max(blood.score, standing.score, continuity.score) < 2) {
     mystery.score = Math.max(mystery.score, 2);
     if (!mystery.reasons.length) mystery.reasons.push('nothing visible gives the match a clean case');
+  }
+
+  const byKind: Record<MatchFutureKind, FutureCase> = { blood, standing, continuity, mystery };
+  for (const priority of priorities) {
+    const case_ = byKind[priority];
+    if (case_.score <= 0) continue;
+    case_.score += 3;
+    case_.reasons.unshift(`these years make ${FUTURE_LABEL[priority].toLowerCase()} unusually important`);
   }
 
   // Stable order is deliberate only as a tiebreak for the PRIMARY label.

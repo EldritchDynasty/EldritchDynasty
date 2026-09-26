@@ -20,6 +20,7 @@ import {
   beginImprovement, buyParcel, endowParcel, landIncome, recallParcel, sellParcel, setRentsPolicy,
 } from './land.js';
 import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
+import { ageCareerFactor } from './ages/strategy.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -255,6 +256,18 @@ export const COMMISSION_BY_YIELD: Record<string, number> = {
 
 export function commissionFor(def: { respectYield: string }): number {
   return COMMISSION_BY_YIELD[def.respectYield] ?? COMMISSION_BY_YIELD.none!;
+}
+
+/**
+ * WHAT THE PLAYER PAYS FOR A PLACE IN THESE YEARS (#216).
+ *
+ * The steward still uses commissionFor(): Age pressure changes a deliberate
+ * table decision, not autonomous household policy. A favoured career is easier
+ * for the player to buy into, while its annual income and mortality remain the
+ * authored career's ordinary values.
+ */
+export function playerCommissionFor(ctx: SimCtx, def: { id: string; respectYield: string }): number {
+  return Math.round(commissionFor(def) / ageCareerFactor(ctx, String(def.id)));
 }
 /** How long a term runs, and how much of the attribute it is worth. */
 export const TUTOR_YEARS = 8;
@@ -580,7 +593,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       if (!open.ok) return { ok: false, reason: open.reason };
       if (p.career?.career === o.career) return { ok: false, reason: 'he already holds it' };
       if (w.year - p.born < CAREER_AGE) return { ok: false, reason: 'too young for a post' };
-      const fee = commissionFor(def);
+      const fee = playerCommissionFor(ctx, def);
       if (w.treasury - fee < DEBT_FLOOR) {
         return { ok: false, reason: `the house cannot raise ${fee} crowns for the place` };
       }
@@ -844,6 +857,8 @@ export interface TableView {
     blurb?: string;
     respectYield: string;
     fee: number;
+    /** Present only when these years make this post cheaper than usual. */
+    usualFee?: number;
     canPay: boolean;
     holders: { person: string; name: string }[];
     eligible: { person: string; name: string; age: number }[];
@@ -878,13 +893,15 @@ export function tableView(ctx: SimCtx): TableView {
   });
 
   const posts = ctx.content.careers.map((def) => {
-    const fee = commissionFor(def);
+    const usualFee = commissionFor(def);
+    const fee = playerCommissionFor(ctx, def);
     const minAge = Math.max(CAREER_AGE, def.minAge);
     const post: TableView['posts'][number] = {
       career: String(def.id),
       name: def.name,
       respectYield: def.respectYield,
       fee,
+      ...(fee < usualFee ? { usualFee } : {}),
       canPay: w.treasury - fee >= DEBT_FLOOR,
       holders: household
         .filter((p) => p.career?.career === def.id)

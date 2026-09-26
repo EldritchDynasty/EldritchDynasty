@@ -423,6 +423,23 @@ describe('the docket draws what it is handed', () => {
     expect(text).toContain('Mara Marrow carried the_missing_leaf to House Marrow in 1188.');
   });
 
+  it('puts the Age-tempted Record option first without removing the others', () => {
+    const decision = recordDecision();
+    const actions = spyActions();
+    const w = mount(Docket, {
+      props: {
+        decision,
+        actions: actions as unknown as GameActions,
+        ageRecordPriorities: ['omit'],
+      },
+    });
+
+    const choices = w.findAll('.choices button');
+    expect(choices).toHaveLength(3);
+    expect(choices[0]!.text()).toContain('Leave it out');
+    expect(choices[0]!.text()).toContain('these years make this tempting');
+  });
+
   it('and pressing a Record option calls record', async () => {
     const decision = recordDecision();
     const actions = spyActions();

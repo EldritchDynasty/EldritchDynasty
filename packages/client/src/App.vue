@@ -251,6 +251,15 @@ const yearAndBirths = computed(() => {
       {{ yearAndBirths }}
     </p>
 
+    <!-- WHAT THESE YEARS MAKE VALUABLE (#216). No Age name or onset date:
+         this is the household's actionable reading from inside the years. -->
+    <aside v-if="view.agePressures.length" class="age-pressures panel" aria-label="What matters in these years">
+      <h3 class="label">In these years</h3>
+      <ul class="small">
+        <li v-for="pressure in view.agePressures" :key="pressure">{{ pressure }}</li>
+      </ul>
+    </aside>
+
     <div class="board" :data-pane="pane">
       <div class="left stack">
         <!-- ONE QUESTION, ONE ANSWER (issue #213). This is framing, not a
@@ -283,6 +292,8 @@ const yearAndBirths = computed(() => {
           :key="docket[0]!.id"
           :decision="docket[0]!"
           :actions="actions"
+          :age-match-priorities="view.ageMatchPriorities"
+          :age-record-priorities="view.ageRecordPriorities"
           :refused-card="refusedCard"
         />
 

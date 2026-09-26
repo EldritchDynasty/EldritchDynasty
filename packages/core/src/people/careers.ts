@@ -96,7 +96,8 @@ export function tickCareers(ctx: SimCtx, rng: Rng): void {
     const def = ctx.content.career(p.career.career);
     if (!def) continue;
 
-    w.treasury += def.income.base + (def.income.variance ? rng.range(-def.income.variance, def.income.variance) : 0);
+    const income = def.income.base + (def.income.variance ? rng.range(-def.income.variance, def.income.variance) : 0);
+    w.treasury += income;
     if (RESPECT_CHANCE[def.respectYield] > RESPECT_CHANCE[bestYield]) bestYield = def.respectYield;
 
     if (def.attributeGrowth) {

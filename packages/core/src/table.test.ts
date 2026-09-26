@@ -255,6 +255,34 @@ describe('what an order says it cost', () => {
   });
 });
 
+describe('Age-valued player commissions (#216)', () => {
+  it('makes the favoured post cheaper at the Table and charges that displayed price', () => {
+    const neutral = testWorld(bundle, 7160);
+    neutral.world.treasury = 5_000;
+    place(neutral, { sex: 'male', age: 20, name: 'Neutral Son' });
+    const ordinary = tableView(neutral).posts.find((post) => post.career === 'military')!;
+
+    const wars = testWorld(bundle, 7160);
+    wars.world.treasury = 5_000;
+    const son = place(wars, { sex: 'male', age: 20, name: 'War Son' });
+    wars.world.age.active = [{
+      age: 'the_wars',
+      began: wars.world.year,
+      named: false,
+      paid: { standing: false },
+    }];
+
+    const favoured = tableView(wars).posts.find((post) => post.career === 'military')!;
+    expect(favoured.fee).toBeLessThan(ordinary.fee);
+    expect(favoured.usualFee).toBe(ordinary.fee);
+
+    const result = order(wars, { kind: 'career', person: son.id, career: 'military' });
+    expect(result.ok).toBe(true);
+    expect(result.spent).toBe(favoured.fee);
+    expect(Math.round(wars.world.treasury)).toBe(5_000 - favoured.fee);
+  });
+});
+
 describe('giving the house an order', () => {
   it('pays for a term of tutoring now, and delivers it in eight years', () => {
     const ctx = testWorld(bundle, 7001);

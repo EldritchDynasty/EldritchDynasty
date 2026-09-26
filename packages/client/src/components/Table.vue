@@ -368,7 +368,9 @@ const MARRIAGE_ORDERS = [
       <div v-for="post in table.posts" :key="post.career" class="line">
         <div class="small">
           <strong>{{ post.name }}</strong>
-          <span class="dim"> · {{ post.fee }} crowns · standing {{ post.respectYield }}</span>
+          <span class="dim"> · {{ post.fee }} crowns</span>
+          <span v-if="post.usualFee" class="rubric"> · usually {{ post.usualFee }}; these years make this place cheaper</span>
+          <span class="dim"> · standing {{ post.respectYield }}</span>
         </div>
         <div v-if="post.blurb" class="small dim blurb">{{ post.blurb }}</div>
         <div v-if="post.holders.length" class="small dim">

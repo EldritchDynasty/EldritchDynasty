@@ -44,8 +44,8 @@ export const CAMPAIGN_CHOICES = [CAMPAIGNS.short, CAMPAIGNS.long] as const;
  * back through this seam rather than growing a second little rules engine in
  * the template.
  */
-export function futureOf(card: MatchCard): MatchFutureReading {
-  return matchFuture(card);
+export function futureOf(card: MatchCard, priorities: SessionView['ageMatchPriorities'] = []): MatchFutureReading {
+  return matchFuture(card, priorities);
 }
 
 /** The rolling slot every host keeps without asking. */
