@@ -162,8 +162,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         else w.delegation.records[eventId] = previous;
         if (guard) meaningfulRecords += 1;
 
-        if (opts.delegateRoutine && !guard) g.delegateRecord(eventId, 'record');
-        g.record(d.id, 'record');
+        const result = g.record(d.id, 'record');
+        // Match the real client: a standing preference is learned only after
+        // the ordinary answer succeeds, never before its resolver/drain runs.
+        if (opts.delegateRoutine && !guard && result.ok) g.delegateRecord(eventId, 'record');
       } else {
         choices += 1;
         const guard = mustSurface(g.ctx, d);
@@ -177,8 +179,14 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
           // with the chronicler fallback below if that answer is unavailable.
           const choice = d.choices[0];
           if (choice) {
-            if (opts.delegateRoutine && !guard && choice.available) g.delegateChoice(id, choice.id);
-            g.choose(d.id, choice.id);
+            const result = g.choose(d.id, choice.id);
+            // The measurement uses the same learn-after-success order as the
+            // Docket. Installing the policy first would let this very answer's
+            // post-resolution drain benefit from a preference the player had
+            // not actually established yet.
+            if (opts.delegateRoutine && !guard && choice.available && result.ok) {
+              g.delegateChoice(id, choice.id);
+            }
           }
         }
       }
