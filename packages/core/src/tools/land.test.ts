@@ -969,6 +969,33 @@ describe('the connector-only remote landing', () => {
     expect(block).toContain('queue: max');
   });
 
+  it('keeps outsider-shaped landing comments out of both admission points', () => {
+    const jobs = remote.indexOf('\njobs:\n');
+    const land = remote.indexOf('\n  land:\n', jobs);
+    const concurrency = remote.indexOf('\n    concurrency:\n', land);
+    const condition = remote.indexOf('\n    if: >-', land);
+    const runsOn = remote.indexOf('\n    runs-on:', condition);
+    const queueBlock = remote.slice(concurrency, condition);
+    const jobIf = remote.slice(condition, runsOn);
+    const trust =
+      `contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)`;
+
+    expect(queueBlock, 'an outsider /land can still join remote-land-main before authorization')
+      .toContain(trust);
+    expect(jobIf, 'an outsider /land can still start the landing job')
+      .toContain(trust);
+
+    for (const outsider of ['NONE', 'CONTRIBUTOR', 'FIRST_TIMER', 'FIRST_TIME_CONTRIBUTOR', 'MANNEQUIN']) {
+      expect(queueBlock, `${outsider} is admitted to the shared landing queue`)
+        .not.toContain(`"${outsider}"`);
+      expect(jobIf, `${outsider} is admitted by the landing job condition`)
+        .not.toContain(`"${outsider}"`);
+    }
+
+    expect(jobIf, 'the reusable PR bootstrap must bypass issue-comment association checks')
+      .toContain('inputs.pr_number > 0');
+  });
+
   it('authorizes the actor and only accepts a ready same-repository PR to main', () => {
     expect(remote).toContain('getCollaboratorPermissionLevel');
     expect(remote).toContain("['admin', 'maintain', 'write']");
