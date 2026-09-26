@@ -20,12 +20,13 @@ permissions:
 
 jobs:
   land:
-    # Keep concurrency on the authorized landing job, not the workflow. GitHub
-    # admits workflow-level concurrency before this job-level filter, so an
-    # unrelated issue comment could otherwise replace a valid queued landing.
-    concurrency:
-      group: remote-land-main
-      cancel-in-progress: false
+    # Do NOT put remote landings in a GitHub Actions concurrency group.
+    # Actions concurrency keeps at most one running and one pending member;
+    # a third authorized request replaces the older pending request even when
+    # cancel-in-progress is false. Let every request run instead. Each runner
+    # executes the same repository landing, and the final compare-and-swap push
+    # decides which one can advance main. A loser fails visibly and can retry;
+    # an authorized request must never disappear merely because it was waiting.
     if: >-
       (github.event_name == 'issue_comment'
       && github.event.issue.pull_request

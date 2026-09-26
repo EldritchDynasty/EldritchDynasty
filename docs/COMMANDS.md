@@ -94,9 +94,17 @@ compare-and-swap push. One Actions-specific detail is deliberate:
 remote transport invokes the landing with `--no-verdict`, explicitly dispatches
 the existing `check.yml` on `main`, then runs the ordinary verdict reader
 against the landed SHA. Nothing is skipped; the dispatch is the supported way
-to cause the same post-push judgment from inside Actions. The workflow
-serializes remote landings, but it does not need to serialize against local
-ones because the final Git push is the same compare-and-swap in both paths.
+to cause the same post-push judgment from inside Actions.
+
+The workflow deliberately has **no GitHub Actions concurrency group**. That
+feature is not a durable queue: GitHub keeps at most one running and one pending
+member, and a newer request replaces the older pending one even when
+`cancel-in-progress` is false. Losing an authorized `/land` request is worse
+than spending an extra runner. Remote landings therefore run independently,
+like local landings do. Each one rebases and checks its own head; their final
+Git pushes are the compare-and-swap. If another landing moved `main` first,
+the stale one fails visibly before completing its push and its request can be
+retried.
 
 The workflow summary preserves the two important failure shapes: a landing
 that did not complete its push, and a landing that pushed but whose explicitly

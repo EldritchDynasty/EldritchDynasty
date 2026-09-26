@@ -303,10 +303,16 @@ A connector-only session that cannot run that command locally uses a ready
 same-repository PR and comments exactly `/land`. The
 `.github/workflows/remote-land.yml` runner executes **that same `npm run land`**
 command; it is not permission to merge a merely-green PR. The request is
-write-authorized, remote landings queue behind one another, and local vs remote
-landings still arbitrate at the final compare-and-swap push. This exists because
-a PR check can be green on an old base — the rebase and the post-push verdict
-remain mandatory.
+write-authorized. Remote landings deliberately do **not** use GitHub Actions
+concurrency: that primitive keeps only one pending member, so a third request
+can discard the older pending request even when `cancel-in-progress` is false.
+Multiple remote landings may therefore run at once, just as a local and a remote
+landing may overlap. Each rebases and validates its own head; the final
+compare-and-swap push admits only the one still based on current `main`. A
+loser fails visibly and must be retried. No authorized `/land` request is
+silently cancelled merely because another one arrived later. This exists
+because a PR check can be green on an old base — the rebase and the post-push
+verdict remain mandatory.
 
 **It is one command because the set is derived rather than remembered.**
 `npm run check` is `typecheck && validate && test` — it does not run the gates,

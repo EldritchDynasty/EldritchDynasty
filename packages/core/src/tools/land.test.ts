@@ -948,19 +948,13 @@ describe('the connector-only remote landing', () => {
     expect(remote, 'pull_request_target would execute PR code with a write token').not.toContain('pull_request_target:');
   });
 
-  it('serializes only authorized landing jobs, so unrelated comments cannot replace the queue', () => {
-    const jobs = remote.indexOf('\njobs:\n');
-    const land = remote.indexOf('\n  land:\n', jobs);
-    const concurrency = remote.indexOf('\n    concurrency:\n', land);
-    const condition = remote.indexOf('\n    if: >-', land);
-
-    expect(jobs).toBeGreaterThan(0);
-    expect(land).toBeGreaterThan(jobs);
-    expect(concurrency, 'landing concurrency must be job-scoped').toBeGreaterThan(land);
-    expect(concurrency, 'landing concurrency must be evaluated before the landing condition').toBeLessThan(condition);
-    expect(remote.slice(0, jobs), 'workflow-level concurrency admits unrelated issue comments').not.toContain('\nconcurrency:');
-    expect(remote.slice(concurrency, condition)).toContain('group: remote-land-main');
-    expect(remote.slice(concurrency, condition)).toContain('cancel-in-progress: false');
+  it('lets every authorized landing run so Actions cannot discard an older pending request', () => {
+    expect(
+      remote,
+      'Actions concurrency keeps only one pending member and can silently replace an older /land request',
+    ).not.toMatch(/^\s*concurrency:\s*$/m);
+    expect(remote).toContain('Actions concurrency keeps at most one running and one pending member');
+    expect(remote).toContain('final compare-and-swap push');
   });
 
   it('authorizes the actor and only accepts a ready same-repository PR to main', () => {
