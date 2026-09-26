@@ -10,6 +10,7 @@ import {
   gatePostFillability, gateSlotFillability, judgeZeroReach,
 } from './tools/gates.js';
 import { firedUnderClimbing } from './tools/ladder-gate.js';
+import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
 import { gateBlood } from './tools/blood-gate.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
@@ -52,6 +53,17 @@ describe('the gates pass the shipped game', () => {
   it('gate 6 — purposes', () => {
     const { ok, lines } = gatePurposes(content);
     expect(ok, lines.join('\n')).toBe(true);
+  });
+
+  it('the Mod Editor and CLI use the same browser-safe fire-rate judgement (#75)', () => {
+    const opts = { runs: 2, years: 5, climbRuns: 2 };
+    expect(runFireRateGate(content, opts)).toEqual(gateFireRate(content, opts));
+
+    for (const file of ['fire-rate-gate.ts', 'gate-batch.ts', 'ladder-fires.ts']) {
+      const source = readFileSync(join(import.meta.dirname, 'tools', file), 'utf8');
+      expect(source, `${file} pulled a Node-only loader into the editor`).not.toContain('@ed/content');
+      expect(source, `${file} pulled a Node builtin into the editor`).not.toMatch(/from ['"]node:/);
+    }
   });
 
   /**
