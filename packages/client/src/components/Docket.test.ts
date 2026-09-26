@@ -215,8 +215,9 @@ function recordDecision(): PendingDecision {
 function spyActions() {
   const names = [
     'begin', 'found', 'enter', 'resume', 'restart', 'advance', 'choose', 'send',
-    'match', 'declineHand', 'record', 'dismissOutcome', 'dismissInterlude',
-    'letHimDecide', 'name', 'order', 'view', 'epilogue', 'save',
+    'match', 'declineHand', 'record', 'delegateChoice', 'delegateRecord',
+    'dismissOutcome', 'dismissInterlude', 'letHimDecide', 'name', 'order',
+    'view', 'epilogue', 'save',
   ] as const;
   const actions = {} as Record<string, ReturnType<typeof vi.fn>>;
   for (const n of names) actions[n] = vi.fn();
