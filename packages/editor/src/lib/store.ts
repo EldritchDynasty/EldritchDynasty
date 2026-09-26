@@ -1,7 +1,7 @@
 import { parse, parseDocument, type Document } from 'yaml';
 import { reactive } from 'vue';
 import type { ContentBundle } from '@ed/schema';
-import { assembleBundle } from '@ed/schema';
+import { assembleBundle, CONTENT_LAYOUT } from '@ed/schema';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
 
 /**
@@ -71,6 +71,29 @@ function locate(collectionKey: string, id: string): { path: string; index: numbe
 /** Which file an item lives in, for display (issue #20's `fileOfEvent`, generalised). */
 export function fileOf(collectionKey: string, id: string): string | undefined {
   return locate(collectionKey, id)?.path;
+}
+
+/**
+ * Locate any authored id without keeping a second copy of the content layout.
+ *
+ * Validation issues can name more than editor-writable events/arcs/templates,
+ * and Vue's reactive bundle is a proxy rather than the WeakMap key assembled
+ * by @ed/schema. The YAML documents are the editor's source of truth, and this
+ * walk also sees an item immediately after `createItem` adds its node.
+ */
+export function fileOfId(id: string): string | undefined {
+  for (const [path, file] of files) {
+    for (const spec of CONTENT_LAYOUT) {
+      const key = spec.key as string;
+      const seq = file.doc.get(key, true) as { items?: unknown[] } | undefined;
+      if (!seq?.items) continue;
+      for (let i = 0; i < seq.items.length; i++) {
+        const itemId = file.doc.getIn([key, i, 'id']) ?? file.doc.getIn([key, i, 'key']);
+        if (itemId === id) return path;
+      }
+    }
+  }
+  return undefined;
 }
 
 export interface WriteResult {
