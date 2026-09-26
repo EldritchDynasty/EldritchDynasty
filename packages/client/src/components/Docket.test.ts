@@ -273,6 +273,18 @@ describe('the docket draws what it is handed', () => {
     expect(decision.choices.map((c) => c.id)).toContain(choiceId);
   });
 
+  it('opts into the exact routine choice the player actually takes', async () => {
+    const decision = choiceDecision();
+    if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateChoice).toHaveBeenCalledWith(decision.event.id, decision.choices[0]!.id);
+  });
+
   /**
    * ── AND THE BRANCH THAT IS NOT THE PLAYER'S TO TAKE ──────────────────────
    *
@@ -450,6 +462,18 @@ describe('the docket draws what it is handed', () => {
     expect(actions.record, 'a Record option was pressed and record was never called').toHaveBeenCalled();
     expect(actions.record.mock.calls[0]![0]).toBe(decision.id);
   });
+
+  it('opts into plain Record only when the player checks the standing preference', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateRecord).toHaveBeenCalledWith(decision.event.id, 'record');
+  });
 });
 
 /**
@@ -573,6 +597,35 @@ function buttonContaining(wrapper: VueWrapper, text: string) {
   if (!found) throw new Error(`no button containing "${text}"`);
   return found;
 }
+
+describe('standing preference controls (#219)', () => {
+  it('lets the player withdraw both choice and Record policies from the Table', async () => {
+    const actions = spyActions();
+    const table = riteTable(vesselAssembly);
+    table.delegation = [
+      { event: 'routine_choice', title: 'The Routine Choice', kind: 'choice', answer: 'pay' },
+      { event: 'routine_record', title: 'The Routine Record', kind: 'record', answer: 'record' },
+    ];
+    const wrapper = mount(Table, {
+      props: {
+        table,
+        land: riteLand,
+        actions: actions as unknown as GameActions,
+        refusal: null,
+        receipt: null,
+      },
+    });
+
+    const askAgain = wrapper.findAll('button').filter((button) => button.text().includes('Ask me again'));
+    expect(askAgain).toHaveLength(2);
+    await askAgain[0]!.trigger('click');
+    await askAgain[1]!.trigger('click');
+
+    expect(actions.delegateChoice).toHaveBeenCalledWith('routine_choice', null);
+    expect(actions.delegateRecord).toHaveBeenCalledWith('routine_record', null);
+    wrapper.unmount();
+  });
+});
 
 describe('major rite confirmation (#218)', () => {
   it('shows the engine assembly before doing anything, and cancellation mutates nothing', async () => {
