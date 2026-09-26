@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBundle } from '@ed/content';
-import { assembleBundle, bundleWithUserContent } from '@ed/schema';
+import { PurposeS, assembleBundle, bundleWithUserContent, indexContent, type EventTemplate, type Purpose } from '@ed/schema';
 import { parse } from 'yaml';
+import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { CONTENT_MODULE, contentFiles, readContentDocs } from '../../build/content-plugin.js';
 
 const CLIENT = join(import.meta.dirname, '../..');
@@ -108,6 +109,75 @@ describe('YAML stays off the ordinary startup path', () => {
 describe('desktop user content composition', () => {
   const shipped = readContentDocs(CONTENT);
 
+  function leastUsedPurposeTriple(events: EventTemplate[]): Purpose[] {
+    const choices = PurposeS.options;
+    const counts = new Map<string, number>();
+    for (const event of events) {
+      const key = [...event.purposes].sort().join('+');
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    let best: Purpose[] | undefined;
+    let bestCount = Number.POSITIVE_INFINITY;
+    for (let a = 0; a < choices.length; a++) {
+      for (let b = a + 1; b < choices.length; b++) {
+        for (let d = b + 1; d < choices.length; d++) {
+          const triple = [choices[a]!, choices[b]!, choices[d]!] as Purpose[];
+          const n = counts.get([...triple].sort().join('+')) ?? 0;
+          if (n < bestCount) {
+            best = triple;
+            bestCount = n;
+          }
+        }
+      }
+    }
+    if (!best) throw new Error('the purpose vocabulary has fewer than three entries');
+    return best;
+  }
+
+  function modFixture() {
+    const baseline = assembleBundle(shipped, JSON.parse);
+    const event = structuredClone(baseline.events[0]!);
+    event.id = 'mod_fixture_event';
+    event.title = 'A Page From Outside the Box';
+    event.tier = 'family';
+    event.frequency = 'common';
+    event.weight = 1_000_000;
+    event.repeatable = true;
+    event.cooldownYears = 0;
+    event.tags = ['mod_fixture'];
+    event.purposes = leastUsedPurposeTriple(baseline.events);
+    event.slots = {};
+    delete event.conditions;
+    event.checks = [];
+    event.reads = [];
+    event.body = 'A page from the user-content folder enters the family chronicle.';
+    delete event.absentBody;
+    event.interaction = {
+      kind: 'narration',
+      outcomes: [{
+        id: 'seen',
+        weight: 100,
+        text: 'The added page was seen.',
+        tags: [],
+        effects: [],
+      }],
+    };
+    delete event.record;
+    delete event.rumour;
+    event.accounts = [];
+    delete event.arc;
+    delete event.ages;
+
+    const path = 'events/mod-fixture.yaml';
+    const combined = bundleWithUserContent(
+      shipped,
+      { [path]: JSON.stringify({ events: [event] }) },
+      parse,
+    );
+    return { baseline, combined, path, event };
+  }
+
   it('leaves the shipped bundle unchanged when an added file contributes nothing', () => {
     const baseline = assembleBundle(shipped, JSON.parse);
     const combined = bundleWithUserContent(
@@ -134,5 +204,50 @@ describe('desktop user content composition', () => {
       { 'events/duplicate.yaml': JSON.stringify({ events: [duplicate] }) },
       parse,
     )).toThrow(/ERROR  \[ids\/unique\].*event:/);
+  });
+
+
+  it('keeps an empty user-content directory simulation-identical to the shipped game', () => {
+    const baseline = assembleBundle(shipped, JSON.parse);
+    const combined = bundleWithUserContent(shipped, {}, parse);
+
+    expect(combined).toEqual(baseline);
+
+    const ordinary = bootstrap(indexContent(baseline), 7501, 1042);
+    const emptyMod = bootstrap(indexContent(combined), 7501, 1042);
+    runYears(ordinary, 20);
+    runYears(emptyMod, 20);
+    expect(digestOf(emptyMod)).toBe(digestOf(ordinary));
+  });
+
+  it('loads a user event through the documented composition path and actually fires it', () => {
+    const { combined, event } = modFixture();
+    const ctx = bootstrap(indexContent(combined), 7502, 1042);
+
+    runYears(ctx, 20);
+
+    expect(ctx.world.frequency.templateFires[event.id] ?? 0).toBeGreaterThan(0);
+    expect(ctx.content.sourceOf(event.id)).toBe('events/mod-fixture.yaml');
+  });
+
+  it('refuses a modded save after its referenced user event is removed, naming the id and former file', () => {
+    const { baseline, combined, event, path } = modFixture();
+    const ctx = bootstrap(indexContent(combined), 7503, 1042);
+    runYears(ctx, 20);
+    expect(ctx.world.frequency.templateFires[event.id] ?? 0).toBeGreaterThan(0);
+
+    const saved = saveGame(ctx);
+    expect(saved.contentSources).toContainEqual([event.id, path]);
+
+    const shippedOnly = indexContent(baseline);
+    let message = '';
+    try {
+      loadGame(saved, shippedOnly);
+    } catch (error) {
+      message = String(error);
+    }
+    expect(message).toContain(event.id);
+    expect(message).toContain(path);
+    expect(message).toMatch(/missing content/);
   });
 });
