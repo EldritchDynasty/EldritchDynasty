@@ -531,7 +531,13 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   // DATED BLANK LINE, not a missing line — the blank is the artefact, and it
   // is the thing players screenshot.
   const entry = w.chronicle.find((c) => c.id === entryId);
-  const text = option === 'omit' ? null : chosen.chronicle;
+  // Record prose may name the people this firing actually cast. Render those
+  // slots at the same boundary as outcome prose so an honest Chronicle page
+  // does not replace concrete aftermath with literal {SLOT} tokens or generic
+  // "him/her" copy after the player chooses to record it.
+  const text = option === 'omit' || chosen.chronicle === null
+    ? null
+    : renderBody(chosen.chronicle, fill, ctx);
   if (entry) {
     entry.text = text;
     entry.record = option;

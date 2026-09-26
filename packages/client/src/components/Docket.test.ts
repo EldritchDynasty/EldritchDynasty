@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, type VueWrapper } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { PendingDecisionS } from '@ed/schema';
-import type { PendingDecision, PendingDecisionView } from '@ed/core';
+import type { LandView, PendingDecision, PendingDecisionView, RiteAssembly, TableView } from '@ed/core';
 import Docket from './Docket.vue';
+import Table from './Table.vue';
 import type { GameActions } from '../lib/game';
 
 const content = loadContent();
@@ -479,5 +480,121 @@ describe('every docket kind has a shape in the template', () => {
   it('and its final v-else says it does not know, rather than guessing', () => {
     const tail = template.slice(template.lastIndexOf('v-else'));
     expect(tail).toMatch(/unhandled|does not know how to draw/);
+  });
+});
+
+
+/**
+ * THE GREAT WORK CONFIRMATION (#218).
+ *
+ * This lives in the existing component suite instead of opening another jsdom
+ * file. Vitest intentionally runs this repository with `isolate: false`;
+ * sharing Vue's DOM runtime across separately-created jsdom environments makes
+ * an extra component file order-dependent. The behavior belongs here beside
+ * the docket it ultimately opens.
+ */
+function riteTable(assembly: RiteAssembly): TableView {
+  return {
+    treasury: 500,
+    bidCeiling: 0,
+    marriagePolicy: 'as_it_falls',
+    programmeCandidates: [],
+    shelf: [],
+    missingPrimers: [],
+    ledgerSearch: { ready: false, reason: 'not yet', fee: 40 },
+    vesselRite: { ready: true, assembly },
+    greatRite: { ready: false, reason: 'not yet' },
+    unmaking: { ready: false, reason: 'not yet' },
+    tutoring: [],
+    studying: [],
+    market: [],
+    tutorFee: 40,
+    canTutor: true,
+    teachable: [],
+    servants: [],
+    maxBond: 100,
+    papers: [],
+    pedigreePrices: [],
+    posts: [],
+    pupils: [],
+  };
+}
+
+const riteLand: LandView = {
+  treasury: 500,
+  rentsPolicy: 'customary',
+  held: [],
+  market: [],
+  lost: [],
+};
+
+const vesselAssembly: RiteAssembly = {
+  rite: 'vessel',
+  title: 'The Vessel',
+  actors: [{ slot: 'ASCENDANT', person: 'p_1', name: 'Aldren' }],
+  atRisk: [{
+    slot: 'VESSEL',
+    candidates: [
+      { person: 'p_2', name: 'Mara' },
+      { person: 'p_3', name: 'Cesse' },
+    ],
+  }],
+  preparations: ['Aldren has read The Red Primer.'],
+  irreversible: ['The named Vessel is consumed. Their place in the living house cannot be restored.'],
+};
+
+function buttonContaining(wrapper: VueWrapper, text: string) {
+  const found = wrapper.findAll('button').find((candidate) => candidate.text().includes(text));
+  if (!found) throw new Error(`no button containing "${text}"`);
+  return found;
+}
+
+describe('major rite confirmation (#218)', () => {
+  it('shows the engine assembly before doing anything, and cancellation mutates nothing', async () => {
+    const actions = spyActions();
+    const wrapper = mount(Table, {
+      props: {
+        table: riteTable(vesselAssembly),
+        land: riteLand,
+        actions: actions as unknown as GameActions,
+        refusal: null,
+        receipt: null,
+      },
+    });
+
+    await buttonContaining(wrapper, 'Call the Vessel').trigger('click');
+
+    expect(actions.order).not.toHaveBeenCalled();
+    expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('Aldren');
+    expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('Mara');
+    expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('The Red Primer');
+    expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('consumed');
+
+    await buttonContaining(wrapper, 'Not yet').trigger('click');
+
+    expect(actions.order).not.toHaveBeenCalled();
+    expect(wrapper.find('[aria-label="Rite assembly"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('confirmation invokes the existing rite order exactly once', async () => {
+    const actions = spyActions();
+    const wrapper = mount(Table, {
+      props: {
+        table: riteTable(vesselAssembly),
+        land: riteLand,
+        actions: actions as unknown as GameActions,
+        refusal: null,
+        receipt: null,
+      },
+    });
+
+    await buttonContaining(wrapper, 'Call the Vessel').trigger('click');
+    await buttonContaining(wrapper, 'Put this rite before the house').trigger('click');
+
+    expect(actions.order).toHaveBeenCalledTimes(1);
+    expect(actions.order).toHaveBeenCalledWith({ kind: 'vesselRite' });
+    expect(wrapper.find('[aria-label="Rite assembly"]').exists()).toBe(false);
+    wrapper.unmount();
   });
 });

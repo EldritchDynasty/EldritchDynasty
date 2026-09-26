@@ -358,21 +358,22 @@ export interface RiteAssembly {
 
 function assemblyFor(
   ctx: SimCtx,
-  eventId: string,
+  event: EventTemplate,
+  slots: SlotResolution,
   rite: RiteAssembly['rite'],
   title: string,
-): RiteAssembly | undefined {
-  const offer = riteOffer(ctx, eventId, rite);
-  if (!offer.ok || !offer.event || !offer.slots) return undefined;
-
-  const actors = Object.entries(offer.slots.fill)
+): RiteAssembly {
+  // Build from the exact resolution the offer just produced. Re-resolving here
+  // would make the confirmation a second photograph of the room rather than
+  // the photograph the ready-state was actually based on.
+  const actors = Object.entries(slots.fill)
     .flatMap(([slot, id]) => typeof id === 'string'
       ? [{ slot, person: id, name: ctx.world.people.get(id)?.name ?? id }]
       : []);
 
-  const atRisk = offer.slots.playerCast.map((slot) => {
-    const spec = offer.event!.slots[slot];
-    const people = spec ? candidatesFor(spec, ctx, offer.slots!.fill) : [];
+  const atRisk = slots.playerCast.map((slot) => {
+    const spec = event.slots[slot];
+    const people = spec ? candidatesFor(spec, ctx, slots.fill) : [];
     return {
       slot,
       candidates: people.map((p) => ({ person: p.id, name: p.name })),
@@ -953,20 +954,20 @@ export function tableView(ctx: SimCtx): TableView {
     })(),
     unmaking: (() => {
       const offer = riteOffer(ctx, 'the_unmaking', 'unmaking');
-      return offer.ok
-        ? { ready: true, assembly: assemblyFor(ctx, 'the_unmaking', 'unmaking', 'The Unmaking') }
+      return offer.ok && offer.event && offer.slots
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'unmaking', 'The Unmaking') }
         : { ready: false, reason: offer.reason };
     })(),
     vesselRite: (() => {
       const offer = riteOffer(ctx, 'the_vessel_rite', 'vessel');
-      return offer.ok
-        ? { ready: true, assembly: assemblyFor(ctx, 'the_vessel_rite', 'vessel', 'The Vessel') }
+      return offer.ok && offer.event && offer.slots
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'vessel', 'The Vessel') }
         : { ready: false, reason: offer.reason };
     })(),
     greatRite: (() => {
       const offer = riteOffer(ctx, 'the_great_rite', 'great_rite');
-      return offer.ok
-        ? { ready: true, assembly: assemblyFor(ctx, 'the_great_rite', 'great_rite', 'The Great Rite') }
+      return offer.ok && offer.event && offer.slots
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'great_rite', 'The Great Rite') }
         : { ready: false, reason: offer.reason };
     })(),
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),

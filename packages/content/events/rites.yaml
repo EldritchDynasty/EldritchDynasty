@@ -461,9 +461,9 @@ events:
             - id: taken
               weight: 100
               text: >-
-                {ASCENDANT} says the name once, and the room does what the
-                books said the room would do. Everything they were arrives at
-                once. None of it stops at the door to ask.
+                {ASCENDANT} says {VESSEL}'s name once, and the room does what
+                the books said the room would do. Everything {VESSEL} was
+                arrives at once. None of it stops at the door to ask.
               effects:
                 # ONE EFFECT, and it is the whole rite. What moves and how much
                 # of it moves is in `core/src/events/rites.ts`, where it can be
@@ -481,9 +481,9 @@ events:
               text: >-
                 {ASCENDANT} says no in a room built for a different word. The
                 candles are put out, the doors are opened, and the house goes
-                to bed. Nobody thanks him. The one who was named will spend a
-                long life knowing what the family weighed them against, and so
-                will everyone who was in the room.
+                to bed. Nobody thanks him. {VESSEL} will spend a long life
+                knowing what the family weighed them against, and so will
+                everyone who was in the room.
               effects:
                 # The grudge points back the way the sentiment came: the house
                 # wronged them, and they are the ones who remember it. Inherited
@@ -537,8 +537,8 @@ events:
       options:
         record:
           chronicle: >-
-            We gave one of our own, by name, and she agreed, and we wrote her
-            name down so that it would be a name and not a number.
+            We gave {VESSEL}, one of our own, by name, into {ASCENDANT}, and
+            we wrote the name down so that it would be a name and not a number.
           grantsKnowledge: knows_the_vessel_rite
           effects:
             - { kind: respect, delta: -2 }
@@ -673,9 +673,9 @@ events:
               text: >-
                 The letter goes south in spring and comes back in autumn with a
                 seal on it and a sentence that permits everything while
-                admitting nothing. A canon attends. He stands at the back with
-                his hands folded and he does not write anything down, and that
-                is somehow worse than if he had.
+                admitting nothing. A canon attends. {WITNESS} stands in the
+                room to count while {ASCENDANT} is made wider. The canon stands
+                at the back with his hands folded and writes nothing down.
               effects:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: the_church_sanctioned_the_rite, set: true }
@@ -687,7 +687,8 @@ events:
                 The letter goes south in spring. In autumn a different letter
                 comes back, which does not mention the request and spends four
                 pages on the upkeep of the chapel roof. {ASCENDANT} reads it
-                twice and understands it the first time.
+                twice and understands it the first time. {WITNESS} puts away
+                the count that was never used.
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: knowledge, op: grant, flag: knows_the_church_refused }
@@ -698,10 +699,10 @@ events:
               weight: 100
               text: >-
                 They do it on a Tuesday, without a canon, without a letter, and
-                without telling the village what the lights were. The house is
-                wider by morning and so is the distance between it and everyone
-                who might have been asked. The Church does not respond for
-                nineteen years, which is not the same as not responding.
+                without telling the village what the lights were. {WITNESS}
+                counts while {ASCENDANT} is made wider. By morning the distance
+                between the house and everyone who might have been asked is
+                wider too. The Church does not respond for nineteen years.
               effects:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: church_hostile, set: true }
@@ -730,8 +731,8 @@ events:
       options:
         record:
           chronicle: >-
-            We made him wider, on purpose, and we wrote down that we did it and
-            who stood in the room while it happened.
+            We made {ASCENDANT} wider, on purpose, and we wrote down that
+            {WITNESS} stood in the room while it happened.
           grantsKnowledge: knows_the_great_rite
           effects:
             - { kind: respect, delta: -1 }
@@ -852,8 +853,8 @@ events:
               text: >-
                 It works, which nobody in the room is ready for. What {ELDER}
                 was made into comes out of him in the order it went in, years
-                running backwards in about four minutes, and arrives
-                somewhere it can be used. He is himself again at the very end,
+                running backwards in about four minutes, and arrives in
+                {ASCENDANT}, somewhere it can be used. He is himself again at the very end,
                 briefly, and says something ordinary about the cold.
               effects:
                 - { kind: rite, rite: unmaking, ascendant: ASCENDANT, subject: ELDER }
@@ -897,9 +898,9 @@ events:
       options:
         record:
           chronicle: >-
-            We took apart a man of our own blood who had spent years
-            becoming what he was, in front of eleven witnesses, and we have
-            written down that we did it and why.
+            We took apart {ELDER}, a man of our own blood who had spent years
+            becoming what he was, to raise {ASCENDANT}, in front of eleven
+            witnesses, and we have written down that we did it and why.
           grantsKnowledge: knows_the_unmaking
           effects:
             - { kind: respect, delta: -2 }
