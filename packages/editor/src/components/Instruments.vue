@@ -4,6 +4,7 @@ import type { Content, Issue, EventTemplate, ClauseDef } from '@ed/schema';
 import { PurposeS } from '@ed/schema';
 import { CAMPAIGN_YEARS, TEST_FAMILIES, autoCast, castPeople, decideBranch, nameList, resolveSlots, runFireRateGate, testRng, type FireRateGateResult, type SimCtx } from '@ed/core';
 import { deciderKind } from '@ed/schema';
+import { fileOfId } from '../lib/store';
 
 const props = defineProps<{ content: Content; issues: Issue[] }>();
 
@@ -82,7 +83,7 @@ const purposeCoverage = computed(() =>
 const validationLines = computed(() => props.issues.map((issue) => {
   const colon = issue.where.indexOf(':');
   const id = (colon === -1 ? issue.where : issue.where.slice(colon + 1)).split('/')[0]!;
-  const file = props.content.sourceOf(id);
+  const file = fileOfId(id);
   const where = file ? `${file} → ${issue.where}` : issue.where;
   return {
     ...issue,
