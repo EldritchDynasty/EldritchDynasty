@@ -47,9 +47,9 @@ both assign.
 
 **Git ref creation is a compare-and-swap.** Pushing a branch that already exists,
 carrying a commit that is not a descendant of the one there, is rejected by the
-server, always, by protocol. That is a real mutex and it needs no token, no
-label, and no API — which matters, because a local agent and a web session do not
-have the same tools, and both have `git push`.
+server, always, by protocol. That is a real mutex and it needs no label or
+comment-based lock. Shell sessions reach it directly; connector-only sessions
+reach the same implementation through the repository-hosted transport below.
 
 So the lock is a ref and the tracker is the human view of it:
 
@@ -60,6 +60,25 @@ npm run agents -- check                          # my claim, and anyone overlapp
 npm run agents -- release 93                     # when the work lands
 npm run agents -- steal 93                       # only once a claim has gone stale (6h)
 ```
+
+A connector-only session cannot manufacture the orphan commit that the mutex
+requires through the normal GitHub write surface. Create and push the ordinary
+working branch first, then put one of these exact commands in an issue comment:
+
+```text
+/claim 93 --agent chatgpt/issue-93-topic --paths packages/core/src/economy
+/claim 93 --agent chatgpt/issue-93-topic --paths packages/core/src/economy --lane code
+/claim check --agent chatgpt/issue-93-topic
+/claim release 93 --agent chatgpt/issue-93-topic
+```
+
+`.github/workflows/remote-claim.yml` authorizes the commenter, checks out
+`main`, and runs `tools/remote-claim.mjs`. That transport validates the
+request and invokes **`tools/agents.mjs`** with argument arrays; it never
+constructs a claim ref itself. A competing claim therefore still loses at the
+same orphan-ref push, and a `DENIED` from `agents.mjs` makes the workflow
+fail. The Actions summary contains the tool's output. This is transport to the
+one mutex, not a second mutex.
 
 A claim is an orphan commit with an empty tree pushed to `claim/<issue>`. Orphan,
 so no second claim can be a fast-forward of the first and quietly win; empty
@@ -112,22 +131,27 @@ These are single files that every second feature wants to touch. Declare them in
 
 ## The protocol, end to end
 
-1. **Claim before reading code.** `npm run agents -- take <issue> --paths <what
-   you will write>`, once for each issue this branch intends to land. Denied
-   means denied — pick another issue rather than working it in parallel and
-   discovering the other agent at merge time.
+1. **Claim before reading code.** Shell: `npm run agents -- take <issue> --paths
+   <what you will write>`. Connector-only: create the working branch, then
+   comment `/claim <issue> --agent <branch> --paths <what you will write>`.
+   Do this once for each issue this branch intends to land. Denied means denied
+   — pick another issue rather than working it in parallel and discovering the
+   other agent at merge time.
 2. **Branch per agent**, as the session harness already does:
    `claude/<topic>-<suffix>`. One issue, one branch, one session.
 3. **Work.** `npm run test:fast` is the loop — see
    [AGENTS.md](../AGENTS.md#commands) for what it costs.
-4. **Re-check the claim before the long run.** `npm run agents -- check` costs a
-   fetch and tells you whether somebody landed in your paths while you worked.
+4. **Re-check the claim before the long run.** Shell: `npm run agents -- check`.
+   Connector-only: comment `/claim check --agent <branch>`. Both read the
+   canonical claim refs and report path/lane overlap before you spend the long
+   run.
 5. **Land** — below.
 6. **Release**: a closing keyword per issue in the landing commit does the
    closing, and the janitor retires every claim the branch held and deletes the
-   branch on the same push. `npm run agents -- release <issue>` is for the other
-   case — an issue you are putting down without landing it, so the merge does
-   not sweep it up with the rest.
+   branch on the same push. `npm run agents -- release <issue>` (or connector
+   comment `/claim release <issue> --agent <branch>`) is for the other case —
+   an issue you are putting down without landing it, so the merge does not
+   sweep it up with the rest.
 
 **A release does not delete the ref, and cannot.** A web session's git proxy
 refuses ref deletion — `git push --delete` comes back `403`, and there is no

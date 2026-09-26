@@ -1,8 +1,9 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /**
  * THE MUTEX THAT LETS SEVERAL AGENTS SHARE THIS REPOSITORY.
@@ -203,5 +204,107 @@ describe('the claim ref', () => {
     const out = agents(join(root, 'beta'), 'check', '--agent', 'beta');
     expect(out.code).toBe(1);
     expect(out.out).toMatch(/same paths|CONTENT lane/);
+  });
+});
+
+
+/**
+ * CONNECTOR-ONLY CLAIMS USE A REMOTE SHELL, NOT A SECOND LOCK.
+ *
+ * The bare-repository race above remains the mutex proof. These tests pin the
+ * smaller promise added by #205: issue-comment syntax is strict, authorization
+ * is explicit, and the transport delegates every state change to agents.mjs.
+ */
+describe('the connector-only remote claim transport', () => {
+  const remoteTool = join(import.meta.dirname, '../../../../tools/remote-claim.mjs');
+  const remoteWorkflow = join(import.meta.dirname, '../../../../.github/workflows/remote-claim.yml');
+
+  const module = async () => await import(pathToFileURL(remoteTool).href) as {
+    parseClaimRequest: (raw: string) => Record<string, string | undefined>;
+    argsFor: (request: Record<string, string | undefined>) => string[];
+  };
+
+  it('parses the three explicit commands into agents.mjs arguments', async () => {
+    const { parseClaimRequest, argsFor } = await module();
+
+    const take = parseClaimRequest(
+      '/claim 205 --agent chatgpt/issue-205-remote-claim --paths tools/remote-claim.mjs,.github/workflows --lane gates',
+    );
+    expect(take).toEqual({
+      command: 'take',
+      issue: '205',
+      agent: 'chatgpt/issue-205-remote-claim',
+      paths: 'tools/remote-claim.mjs,.github/workflows',
+      lane: 'gates',
+    });
+    expect(argsFor(take)).toEqual([
+      'take', '205',
+      '--agent', 'chatgpt/issue-205-remote-claim',
+      '--paths', 'tools/remote-claim.mjs,.github/workflows',
+      '--lane', 'gates',
+    ]);
+
+    const check = parseClaimRequest('/claim check --agent chatgpt/issue-205-remote-claim');
+    expect(argsFor(check)).toEqual([
+      'check', '--agent', 'chatgpt/issue-205-remote-claim',
+    ]);
+
+    const release = parseClaimRequest(
+      '/claim release 205 --agent chatgpt/issue-205-remote-claim',
+    );
+    expect(argsFor(release)).toEqual([
+      'release', '205', '--agent', 'chatgpt/issue-205-remote-claim',
+    ]);
+  });
+
+  it.each([
+    '/claim',
+    '/claim 0 --agent branch --paths tools',
+    '/claim 205 --paths tools --agent branch',
+    '/claim 205 --agent main --paths tools',
+    '/claim 205 --agent claim/205 --paths tools',
+    '/claim 205 --agent branch --paths ../outside',
+    '/claim 205 --agent branch --paths tools --extra nope',
+    '/claim check --agent branch trailing',
+    '/claim release nope --agent branch',
+  ])('rejects malformed or unsafe request %s', async (raw) => {
+    const { parseClaimRequest } = await module();
+    expect(() => parseClaimRequest(raw)).toThrow(/Expected one of:/);
+  });
+
+  it('authorizes write collaborators and executes trusted main with full history', () => {
+    const text = readFileSync(remoteWorkflow, 'utf8');
+    expect(text).toContain('issue_comment:');
+    expect(text).toContain("github.event.comment.body == '/claim'");
+    expect(text).toContain("startsWith(github.event.comment.body, '/claim ')");
+    expect(text).toContain('getCollaboratorPermissionLevel');
+    expect(text).toContain("['admin', 'maintain', 'write']");
+    expect(text).toContain('contents: write');
+    expect(text).toContain('ref: main');
+    expect(text).toContain('fetch-depth: 0');
+    expect(text, 'pull_request_target would execute untrusted PR code with a write token')
+      .not.toContain('pull_request_target:');
+  });
+
+  it('delegates claim state to agents.mjs instead of recreating its ref protocol', () => {
+    const transport = readFileSync(remoteTool, 'utf8');
+    const workflow = readFileSync(remoteWorkflow, 'utf8');
+
+    expect(transport).toContain("join(import.meta.dirname, 'agents.mjs')");
+    expect(transport).toContain('spawnSync(process.execPath, [AGENTS, ...args]');
+    expect(workflow).toContain('run: node tools/remote-claim.mjs');
+
+    for (const text of [transport, workflow]) {
+      expect(text).not.toContain('commit-tree');
+      expect(text).not.toContain('refs/heads/claim/');
+      expect(text).not.toContain('--force-with-lease');
+    }
+  });
+
+  it('passes a DENIED exit through and leaves the tool output in the Actions summary', () => {
+    const transport = readFileSync(remoteTool, 'utf8');
+    expect(transport).toContain('process.exitCode = child.status ?? 1');
+    expect(transport).toContain('GITHUB_STEP_SUMMARY');
+    expect(transport).toContain("child.status === 0 ? 'Remote claim' : 'Remote claim — failed'");
   });
 });
