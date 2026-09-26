@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
   bootstrap, stepYear, runYears, makeRng,
@@ -6,6 +6,7 @@ import {
   type PendingChoice, type PendingRecord,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
+import { delegationDensityLines, measureDensity, type DensityRun } from './tools/density-gate.js';
 
 const bundle = loadContent();
 
@@ -209,3 +210,70 @@ describe('auto-resolve is the same path', () => {
     expect(ctx.world.pendingDecisions).toHaveLength(0);
   });
 });
+
+const DELEGATION_SEEDS = [901, 902] as const;
+const DELEGATION_TERMS = [500, 300] as const;
+
+
+function sumDelegation(runs: DensityRun[], pick: (run: DensityRun) => number): number {
+  return runs.reduce((total, run) => total + pick(run), 0);
+}
+
+/**
+ * ISSUE #219'S PAIRED MEASUREMENT.
+ *
+ * Same seeds, same first-choice/plain-Record player, same term. The delegated
+ * column differs in one thing only: after the player answers an ordinary event
+ * once, that exact answer becomes a standing preference. Important repeats are
+ * still surfaced by mustSurface(), so their count must not move.
+ *
+ * Reproduce the printed table directly with:
+ *   npm run gate:density -- --delegation --seeds=901,902 500 300
+ */
+describe('delegation reduces routine interruption without thinning the meaningful stream (#219)', () => {
+  const content = loadContent().bundle;
+  let rows: {
+    term: number;
+    before: DensityRun[];
+    after: DensityRun[];
+  }[] = [];
+
+  beforeAll(() => {
+    rows = DELEGATION_TERMS.map((term) => ({
+      term,
+      before: DELEGATION_SEEDS.map((seed) => measureDensity(content, seed, term)),
+      after: DELEGATION_SEEDS.map((seed) => measureDensity(content, seed, term, { delegateRoutine: true })),
+    }));
+    // Measurement evidence belongs in the CI log as numbers, not only as an
+    // assertion whose pass/fail hides how much changed.
+    for (const line of delegationDensityLines(rows)) console.log(`[delegation-density] ${line}`);
+  }, 900_000);
+
+  for (const term of DELEGATION_TERMS) {
+    it(`delegates repeated low-stakes choices across the ${term}-year line`, () => {
+      const row = rows.find((candidate) => candidate.term === term)!;
+      const before = sumDelegation(row.before, (run) => run.choices);
+      const after = sumDelegation(row.after, (run) => run.choices);
+      expect(after, `${term}y surfaced ${after} choices after delegation vs ${before} before`)
+        .toBeLessThan(before);
+    });
+
+    it(`delegates repeated plain Record prompts across the ${term}-year line`, () => {
+      const row = rows.find((candidate) => candidate.term === term)!;
+      const before = sumDelegation(row.before, (run) => run.records);
+      const after = sumDelegation(row.after, (run) => run.records);
+      expect(after, `${term}y surfaced ${after} Record prompts after delegation vs ${before} before`)
+        .toBeLessThan(before);
+    });
+
+    it(`keeps every consequential choice and Record interruption across the ${term}-year line`, () => {
+      const row = rows.find((candidate) => candidate.term === term)!;
+      expect(sumDelegation(row.after, (run) => run.meaningfulChoices))
+        .toBe(sumDelegation(row.before, (run) => run.meaningfulChoices));
+      expect(sumDelegation(row.after, (run) => run.meaningfulRecords))
+        .toBe(sumDelegation(row.before, (run) => run.meaningfulRecords));
+    });
+  }
+});
+
+

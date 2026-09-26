@@ -11,6 +11,7 @@ import type { BearingEntry } from './bearing.js';
 import type { PendingDecision } from './events/decisions.js';
 import type { Rung } from './ascension.js';
 import type { FriendName } from './people/friends.js';
+import type { DelegationPreferences } from './delegation.js';
 
 export interface ChronicleEntry {
   /**
@@ -53,6 +54,8 @@ export interface ChronicleEntry {
    * person — the one source of truth for sigil drift.
    */
   claims?: ResolvedClaim[];
+  /** A standing preference answered this page (#219). */
+  delegated?: string;
 }
 
 export type GenerationQuestionKind = 'unstable_heir' | 'thin_line' | 'record' | 'ledger' | 'branch' | 'match' | 'ascension';
@@ -574,6 +577,9 @@ export interface WorldState {
    */
   pendingDecisions: PendingDecision[];
 
+  /** Narrow, opt-in answers the player explicitly asked the house to repeat (#219). */
+  delegation: DelegationPreferences;
+
   /**
    * INVARIANT 8. Id sequences live on the WORLD, never at module scope. Module-level
    * counters are shared across every simulation in the process, so two runs of
@@ -719,6 +725,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
     succession: [],
     pendingNames: [],
     pendingDecisions: [],
+    delegation: { choices: {}, records: {} },
     counters,
     decisionLog: [],
     frame: { lastFired: null, firedAt: {}, entries: [] },

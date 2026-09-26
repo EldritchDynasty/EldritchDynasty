@@ -290,6 +290,9 @@ export interface GameActions {
   dismissOutcome(): void;
   /** Choose, replace, or clear the voluntary house ambition (issue #210). */
   setAmbition(id: HouseAmbitionId | null): boolean;
+  /** Remember or withdraw an exact answer for routine repeats (#219). */
+  delegateChoice(eventId: string, choiceId: string | null): void;
+  delegateRecord(eventId: string, option: RecordOption | null): void;
   letHimDecide(): void;
   order(o: TableOrder): OrderResult;
   /** The Muster's own standing verb (issue #89, Stage 2 — #95) — reinforce or withdraw, any year, no docket. */
@@ -620,6 +623,16 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       const ok = session.value?.setAmbition(id) ?? false;
       refresh();
       return ok;
+    },
+
+    delegateChoice(eventId, choiceId) {
+      session.value?.delegateChoice(eventId, choiceId);
+      refresh();
+    },
+
+    delegateRecord(eventId, option) {
+      session.value?.delegateRecord(eventId, option);
+      refresh();
     },
 
     letHimDecide() {

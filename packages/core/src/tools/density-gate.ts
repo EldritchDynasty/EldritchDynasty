@@ -56,6 +56,8 @@
 import { loadContent } from '@ed/content';
 import type { Content, ContentBundle } from '@ed/schema';
 import { newGame } from '../session.js';
+import { mustSurface } from '../delegation.js';
+import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 
 export interface DensityRun {
@@ -75,6 +77,15 @@ export interface DensityRun {
   repeatAge: number;
   ordinary: number;
   reach: number;
+  /** Surfaced choices the interruption guard classified as consequential. */
+  meaningfulChoices: number;
+  /** Surfaced Record questions the interruption guard classified as consequential. */
+  meaningfulRecords: number;
+}
+
+export interface DensityOptions {
+  /** Learn exact routine preferences from the first answer, then delegate repeats. */
+  delegateRoutine?: boolean;
 }
 
 /**
@@ -94,7 +105,7 @@ export interface DensityRun {
  * player than the one the test plays is a band that fails for a reason nobody
  * can find.
  */
-export function measureDensity(source: ContentBundle | Content, seed: number, years: number): DensityRun {
+export function measureDensity(source: ContentBundle | Content, seed: number, years: number, opts: DensityOptions = {}): DensityRun {
   const g = newGame(source, { seed });
   const w = g.ctx.world;
   const end = START_YEAR + years;
@@ -105,6 +116,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   let matches = 0;
   let records = 0;
   let names = 0;
+  let meaningfulChoices = 0;
+  let meaningfulRecords = 0;
   let repeatsRun = 0;
   let repeatsAge = 0;
   let ages = 0;
@@ -138,14 +151,36 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       } else if (d.kind === 'record') {
         records += 1;
         landmark = true;
+
+        // Ask whether a plain Record policy would be safe without leaving that
+        // temporary policy behind in the baseline run.
+        const eventId = d.event.id;
+        const previous = w.delegation.records[eventId];
+        w.delegation.records[eventId] = 'record';
+        const guard = mustSurface(g.ctx, d as PendingRecord);
+        if (previous === undefined) delete w.delegation.records[eventId];
+        else w.delegation.records[eventId] = previous;
+        if (guard) meaningfulRecords += 1;
+
+        if (opts.delegateRoutine && !guard) g.delegateRecord(eventId, 'record');
         g.record(d.id, 'record');
       } else {
         choices += 1;
+        const guard = mustSurface(g.ctx, d);
+        if (guard) meaningfulChoices += 1;
         const id = d.event.id;
         if (seenInRun.has(id)) repeatsRun += 1; else seenInRun.add(id);
         if (seenInAge.has(id)) repeatsAge += 1; else seenInAge.add(id);
         if (!d.choicesAreOpen) g.send(d.id, {});
-        else g.choose(d.id, d.choices[0]!.id);
+        else {
+          // Preserve #88's existing player exactly: first authored choice,
+          // with the chronicler fallback below if that answer is unavailable.
+          const choice = d.choices[0];
+          if (choice) {
+            if (opts.delegateRoutine && !guard && choice.available) g.delegateChoice(id, choice.id);
+            g.choose(d.id, choice.id);
+          }
+        }
       }
       // Never leave the docket standing: a decision with no answer stops the
       // clock for good (invariant 9), and this loop would spin on it.
@@ -179,7 +214,37 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     repeatAge: choices ? repeatsAge / choices : 0,
     ordinary,
     reach: seenInRun.size,
+    meaningfulChoices,
+    meaningfulRecords,
   };
+}
+
+/** Before/after rows for #219, paired on the same seeds and answer policy. */
+export function delegationDensityLines(rows: {
+  term: number;
+  before: DensityRun[];
+  after: DensityRun[];
+}[]): string[] {
+  const out: string[] = [];
+  const head = ['term', 'mode', 'choice', 'record', 'meaningful choice', 'meaningful record', 'interruptions'];
+  const body: string[][] = [];
+  for (const row of rows) {
+    for (const [mode, runs] of [['before', row.before], ['delegated', row.after]] as const) {
+      body.push([
+        String(row.term),
+        mode,
+        mean(runs.map((x) => x.choices)).toFixed(1),
+        mean(runs.map((x) => x.records)).toFixed(1),
+        mean(runs.map((x) => x.meaningfulChoices)).toFixed(1),
+        mean(runs.map((x) => x.meaningfulRecords)).toFixed(1),
+        mean(runs.map((x) => x.choices + x.records + x.matches + x.names)).toFixed(1),
+      ]);
+    }
+  }
+  const widths = head.map((h, i) => Math.max(h.length, ...body.map((b) => (b[i] ?? '').length)));
+  const line = (cells: string[]) => cells.map((cell, i) => cell.padEnd(widths[i]!)).join('  ');
+  out.push(line(head), line(widths.map((w) => '-'.repeat(w))), ...body.map(line));
+  return out;
 }
 
 function mean(xs: number[]): number {
@@ -244,10 +309,21 @@ if (isMain) {
   // The same seeds at both terms, so the 300 and the 500 rows are the same
   // worlds asked to stop at two different pages.
   const seeds = chosen ?? Array.from({ length: runs }, (_, i) => 4100 + i);
-  const rows = (terms.length ? terms : [CAMPAIGN_YEARS, 300]).map((term) => ({
-    term,
-    runs: seeds.map((seed) => measureDensity(bundle, seed, term)),
-  }));
-  console.log(`${seeds.length} runs, ${rows.map((r) => `${r.term}y`).join(' and ')}`);
-  for (const l of densityLines(rows)) console.log(l);
+  const selectedTerms = terms.length ? terms : [CAMPAIGN_YEARS, 300];
+  if (argv.includes('--delegation')) {
+    const rows = selectedTerms.map((term) => ({
+      term,
+      before: seeds.map((seed) => measureDensity(bundle, seed, term)),
+      after: seeds.map((seed) => measureDensity(bundle, seed, term, { delegateRoutine: true })),
+    }));
+    console.log(`${seeds.length} paired runs, ${rows.map((r) => `${r.term}y`).join(' and ')}, delegation before/after`);
+    for (const l of delegationDensityLines(rows)) console.log(l);
+  } else {
+    const rows = selectedTerms.map((term) => ({
+      term,
+      runs: seeds.map((seed) => measureDensity(bundle, seed, term)),
+    }));
+    console.log(`${seeds.length} runs, ${rows.map((r) => `${r.term}y`).join(' and ')}`);
+    for (const l of densityLines(rows)) console.log(l);
+  }
 }
