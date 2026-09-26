@@ -33,20 +33,22 @@ const remember = ref(false);
 
 function answerChoice(choiceId: string, label: string): void {
   if (props.decision.kind !== 'choice') return;
-  // An interrupt is not a withdrawal. A remembered routine answer may surface
-  // because THIS occurrence became important; answering it with the box left
-  // alone must not silently erase the policy for later routine repeats.
-  if (remember.value) props.actions.delegateChoice(props.decision.event.id, choiceId);
-  props.actions.choose(props.decision.id, choiceId, cast.value, label);
+  // Learn only an answer the normal resolver actually accepted. A stale client
+  // or refused cast must not leave behind a standing policy for an act that
+  // never happened.
+  const accepted = props.actions.choose(props.decision.id, choiceId, cast.value, label);
+  if (accepted && remember.value) props.actions.delegateChoice(props.decision.event.id, choiceId);
 }
 
 function answerRecord(option: RecordOption, label: string): void {
   if (props.decision.kind !== 'record') return;
+  const accepted = props.actions.record(props.decision.id, option, label);
   // Only the honest Record answer is delegatable. Explicit withdrawal lives
   // on the Table's "Ask me again" control; an exceptional surfaced page should
   // not revoke a standing policy merely because its local checkbox is clear.
-  if (remember.value && option === 'record') props.actions.delegateRecord(props.decision.event.id, option);
-  props.actions.record(props.decision.id, option, label);
+  if (accepted && remember.value && option === 'record') {
+    props.actions.delegateRecord(props.decision.event.id, option);
+  }
 }
 
 function fill(slot: string, event: Event): void {
@@ -517,7 +519,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     </template>
 
     <!-- Standing preferences are learned only from an answer the player actually makes. -->
-    <label v-if="decision.kind === 'choice' || decision.kind === 'record'" class="remember small">
+    <label
+      v-if="(decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record'"
+      class="remember small"
+    >
       <input v-model="remember" type="checkbox">
       Use the answer I choose for routine repeats of this event.
       <span v-if="decision.kind === 'record'" class="dim">Only “Write it as it happened” can be delegated.</span>
