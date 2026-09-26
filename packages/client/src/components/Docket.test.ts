@@ -520,6 +520,7 @@ function riteTable(assembly: RiteAssembly): TableView {
   return {
     treasury: 500,
     bidCeiling: 0,
+    delegation: [],
     marriagePolicy: 'as_it_falls',
     programmeCandidates: [],
     shelf: [],
