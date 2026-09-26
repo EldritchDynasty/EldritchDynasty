@@ -33,13 +33,19 @@ const remember = ref(false);
 
 function answerChoice(choiceId: string, label: string): void {
   if (props.decision.kind !== 'choice') return;
-  props.actions.delegateChoice(props.decision.event.id, remember.value ? choiceId : null);
+  // An interrupt is not a withdrawal. A remembered routine answer may surface
+  // because THIS occurrence became important; answering it with the box left
+  // alone must not silently erase the policy for later routine repeats.
+  if (remember.value) props.actions.delegateChoice(props.decision.event.id, choiceId);
   props.actions.choose(props.decision.id, choiceId, cast.value, label);
 }
 
 function answerRecord(option: RecordOption, label: string): void {
   if (props.decision.kind !== 'record') return;
-  props.actions.delegateRecord(props.decision.event.id, remember.value && option === 'record' ? option : null);
+  // Only the honest Record answer is delegatable. Explicit withdrawal lives
+  // on the Table's "Ask me again" control; an exceptional surfaced page should
+  // not revoke a standing policy merely because its local checkbox is clear.
+  if (remember.value && option === 'record') props.actions.delegateRecord(props.decision.event.id, option);
   props.actions.record(props.decision.id, option, label);
 }
 
