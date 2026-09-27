@@ -191,6 +191,12 @@ export interface BearingRun {
   rungsWithheld: number;
   /** Weighted standing lies at the term — what the book could not hold up. */
   unsupportable: number;
+  /** Surviving written Chronicle pages at the term. */
+  pages: number;
+  /** Record decisions kept honest. */
+  recorded: number;
+  /** Record decisions written larger. */
+  embellished: number;
   /** Which of §23's five the run landed on. */
   ending: EndingId;
 
@@ -353,6 +359,9 @@ export function playOnce(
     substantiatedRungIndex: rungIndex(reckoning.substantiated),
     rungsWithheld: reckoning.rungsWithheld,
     unsupportable: reckoning.unsupportable,
+    pages: reckoning.pages,
+    recorded: reckoning.recorded,
+    embellished: reckoning.embellished,
     // Never defaulted: a run that reaches the term without an ending is a
     // broken measurement, not a `forgotten`.
     ending: w.ending?.id ?? ('none' as EndingId),
@@ -532,6 +541,9 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
       + `  PROVED ${mean(got).toFixed(2)} (var ${variance(got).toFixed(2)})`
       + `  withheld ${mean(b.runs.map((r) => r.rungsWithheld)).toFixed(2)}`
       + `  unsupportable ${mean(b.runs.map((r) => r.unsupportable)).toFixed(1)}`
+      + `  book ${mean(b.runs.map((r) => r.pages)).toFixed(0)}p/`
+      + `${mean(b.runs.map((r) => r.recorded + r.embellished)).toFixed(1)} records`
+      + `  debt/record ${mean(b.runs.map((r) => r.unsupportable / Math.max(1, r.recorded + r.embellished))).toFixed(2)}`
       + `  warnings heard ${mean(b.runs.map((r) => r.warningsHeard)).toFixed(1)}`
       + `  standing ${mean(b.runs.map((r) => r.respectTierIndex)).toFixed(2)}`
       + `  clauses ${mean(b.runs.map((r) => r.clausesRecovered)).toFixed(1)}`
