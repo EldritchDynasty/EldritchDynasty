@@ -56,6 +56,11 @@ export interface ChronicleEntry {
   claims?: ResolvedClaim[];
   /** A standing preference answered this page (#219). */
   delegated?: string;
+  /**
+   * The earlier act this page answers (#269). A missing page is meaningful:
+   * the house did the thing, but its book never wrote a page for it.
+   */
+  cause?: { year: Year; page?: string };
 }
 
 export type GenerationQuestionKind = 'unstable_heir' | 'thin_line' | 'record' | 'ledger' | 'branch' | 'match' | 'ascension';
