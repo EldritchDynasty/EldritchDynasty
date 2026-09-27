@@ -685,7 +685,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       // same order twice has done one proud thing rather than two.
       if (o.hold && w.withheld[p.id] === undefined) {
         w.withheld[p.id] = w.year;
-        noteBearing(ctx, 'kept_her_back');
+        noteBearing(ctx, 'kept_her_back', p.name);
       } else if (!o.hold) {
         delete w.withheld[p.id];
       }
