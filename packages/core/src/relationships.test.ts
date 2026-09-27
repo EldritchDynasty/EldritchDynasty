@@ -90,9 +90,13 @@ describe('taking a grudge', () => {
 
     response.apply(ctx, makeRng(269), page);
 
-    const grudge = [...ctx.world.relationships.values()].flatMap((rel) => rel.grudges)[0];
+    const [key, rel] = [...ctx.world.relationships.entries()].find(([, r]) => r.grudges.length > 0)!;
+    const grudge = rel.grudges[0];
     expect(grudge?.originPage).toBe(page);
-    const thread = externalThreadFor(ctx, 'house_marrow');
+    // The Assize picks its own rival; read which house it chose rather than
+    // pinning this seed to one of them.
+    const holder = ctx.world.people.get(key.split('->')[0] as never)!;
+    const thread = externalThreadFor(ctx, String(holder.houseOfOrigin));
     expect(thread, 'the Assize grudge did not become an external relationship thread').toBeDefined();
     const grudgeFact = thread!.pressures.find((fact) => fact.kind === 'grudge');
     expect(grudgeFact?.detail).toContain('A neighbouring house produced a document about a boundary');
