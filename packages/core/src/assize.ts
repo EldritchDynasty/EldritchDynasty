@@ -1,6 +1,6 @@
 import type { Year } from '@ed/schema';
 import { MAIN_BRANCH, assertNever } from '@ed/schema';
-import type { SimCtx } from './world.js';
+import { chronicleEntryId, type SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { hall, activeBranches } from './people/branches.js';
 import { phenotypeOf } from './people/factory.js';
@@ -8,7 +8,6 @@ import { acquireLibraryCopy } from './people/library.js';
 import { addGrudge } from './people/relationships.js';
 import { namesakeBurden } from './people/naming.js';
 import { campaignDef, campaignProgress } from './campaign.js';
-import { chronicleEntryId } from './events/effects.js';
 
 
 /**
