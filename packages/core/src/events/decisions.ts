@@ -516,7 +516,7 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   // Same scope an outcome's effects get: a Record option is authored on the
   // template and may `recast` one of its slots, which needs the template to
   // know what role that slot casts for.
-  for (const eff of chosen.effects) applyEffect(eff, ctx, fill, { event: e });
+  for (const eff of chosen.effects) applyEffect(eff, ctx, fill, { event: e, page: entryId });
 
   if (option === 'record' && block.options.record.grantsKnowledge) {
     w.knowledge.add(block.options.record.grantsKnowledge);
@@ -526,7 +526,7 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   let forgedRung: ReturnType<typeof forgeableRung>;
   if (option === 'embellish') {
     const d = block.options.embellish.discrepancy;
-    noteBearing(ctx, 'wrote_it_larger', `the claim recorded as ${d.id}`);
+    noteBearing(ctx, 'wrote_it_larger', `the claim recorded as ${d.id}`, entryId);
     w.discrepancies.set(d.id, { severity: d.severity, provableBy: d.provableBy, state: 'open' });
     discrepancyId = d.id;
     forgedRung = forgeableRung(ctx);
