@@ -27,8 +27,10 @@ import { bootstrap, runYears } from '../sim.js';
 import { TEST_FAMILIES } from './testFamilies.js';
 import { resolveSlots } from '../events/slots.js';
 import { makeRng } from '../rng.js';
-import { declaredOutcomes, emptyReach, outcomeKey, readRun, type Reach } from '../events/reach.js';
-import { firedUnderClimbing, gateLadder } from './ladder-gate.js';
+import { declaredOutcomes, outcomeKey } from '../events/reach.js';
+import { gateLadder } from './ladder-gate.js';
+import { playGateBatch } from './gate-batch.js';
+import { runFireRateGate, type FireRateGateOptions } from './fire-rate-gate.js';
 import { gateWar } from './war-gate.js';
 import { gateEndings } from './ending-gate.js';
 import { gateShortLine } from './short-line-gate.js';
@@ -225,153 +227,12 @@ export function gateClauses(
  * batch gate 8 already pays for, and a fire-rate zero only means anything at a
  * batch size that can tell "never" apart from "rarely" — see `gateFireRate`.
  */
-interface Batch {
-  runs: number;
-  /** Runs in which each template fired at least once. */
-  templateRuns: Map<string, number>;
-  /** Runs in which each outcome resolved, and firings per choice. */
-  reach: Reach;
-}
-
-/**
- * Keyed on the SOURCE object rather than the index: `indexContent` returns a
- * fresh index for a bundle every time it is called, so keying on the result
- * would never hit. One entry, because the gates run back to back on the same
- * content and holding several batches of counts is memory nobody asked for.
- */
-let lastBatch: { source: Source; runs: number; years: number; batch: Batch } | null = null;
-
-function playBatch(source: Source, runs: number, years: number): Batch {
-  if (lastBatch
-    && lastBatch.source === source
-    && lastBatch.runs === runs
-    && lastBatch.years === years) {
-    return lastBatch.batch;
-  }
-
-  const content = indexContent(source);
-  const batch: Batch = { runs, templateRuns: new Map(), reach: emptyReach() };
-  for (let i = 0; i < runs; i++) {
-    const ctx = bootstrap(content, 5000 + i * 7, START_YEAR);
-    runYears(ctx, years);
-    for (const [id, n] of Object.entries(ctx.world.frequency.templateFires)) {
-      if (n > 0) batch.templateRuns.set(id, (batch.templateRuns.get(id) ?? 0) + 1);
-    }
-    readRun(ctx, batch.reach);
-  }
-
-  lastBatch = { source, runs, years, batch };
-  return batch;
-}
-
 export function gateFireRate(
   source: Source = loadContent(),
-  opts: { runs?: number; years?: number; floorPct?: number; climbRuns?: number } = {},
+  opts: FireRateGateOptions = {},
 ): GateResult {
-  const bundle = indexContent(source);
-  // 800, matching gate 8: #133 halves each run, so this preserves the old
-  // 400 x 1000 sampled campaign-years in the ONE shared batch —
-  // and because a zero has to mean something. Rule of three: nothing seen in
-  // N runs has a 95% upper bound of 3/N, so a zero at 100 runs bounds the true
-  // rate at 3%. At 100 the gate could not tell dead content from rare-but-live
-  // content, and had a real chance of failing CI on the rarest live template
-  // every time it ran (`the_unmaking` sat at 2% before issue #61's Stage E1 —
-  // see `OWED_FIRE_RATE` below for where it stands now).
-  //
-  // Was 250. Under the corrected blood count (issue #42), a real fraction of
-  // runs now end at extinction rather than at 2042, which shrinks the total
-  // simulated person-years in any fixed-size batch — and gate 8 had four
-  // outcomes sitting at ~1 expected firing each, so that shrinkage tipped
-  // them to zero. Confirmed against vanilla `main` (pre-#42) that these are
-  // not pre-existing dead content: three were comfortably nonzero there and
-  // the fourth was already at exactly 1 firing. 400 runs restores the same
-  // batch's power without touching any content weight (BALANCE-LOG has the
-  // measurement); at 250 the bound was 1.2%, at 400 it is 0.75%.
-  const runs = opts.runs ?? 800;
-  const years = opts.years ?? CAMPAIGN_YEARS;
-  const floorPct = opts.floorPct ?? 0.5;
-
-  const seenIn = playBatch(source, runs, years).templateRuns;
-
-  const rates = bundle.events
-    .filter((e) => e.tier !== 'frame')
-    .map((e) => ({ id: String(e.id), pct: (100 * (seenIn.get(String(e.id)) ?? 0)) / runs }))
-    .sort((a, b) => a.pct - b.pct);
-
-  const suspect = rates.filter((r) => r.pct < floorPct);
-  const lines = [`gate 4 (fire rate): ${runs} runs x ${years}y — rarest of ${rates.length} non-frame events:`];
-  for (const r of rates.slice(0, 5)) lines.push(`    ${r.id.padEnd(34)} ${r.pct}%`);
-
-  // THE BATCH ABOVE IS THE CHRONICLER, AND THE CHRONICLER NEVER CLIMBS
-  // (issue #64).
-  //
-  // An event cast on a living Hierophant is unreachable to a passive house BY
-  // DESIGN — the rites are the plain case, and all three were on the original
-  // never-fired list while being entirely correct events doing an entirely
-  // correct thing. Convicting on that sends the next person to loosen a
-  // condition that is right, which is the one outcome this gate must never
-  // produce.
-  //
-  // So a zero here is an accusation, not a verdict: anything the chronicler
-  // could not reach is replayed under a policy that PLAYS for the ladder, and
-  // only a template that fires for nobody under either is dead. A template
-  // that fires only when somebody plays for it is in the game.
-  //
-  // The second pass is skipped entirely when nothing is accused, which is the
-  // normal case — it costs what `gate:ladder` costs, and buys nothing against
-  // a healthy bundle.
-  const failing: { id: string; pct: number }[] = [];
-  let acquitted: string[] = [];
-  if (suspect.length) {
-    const climbRuns = opts.climbRuns ?? CLIMB_ACQUIT_RUNS;
-    const climbSeeds = Array.from({ length: climbRuns }, (_, i) => 4000 + i * 13);
-    const climbed = firedUnderClimbing(source, climbSeeds, years);
-    for (const f of suspect) {
-      if (climbed.has(f.id)) acquitted.push(f.id);
-      else failing.push(f);
-    }
-  }
-
-  if (acquitted.length) {
-    lines.push(`  ${acquitted.length} reached only by a house that plays for the ladder, which counts as reachable:`);
-    for (const id of acquitted) lines.push(`    ${id}`);
-  }
-
-  // Paid debts are removed. Keeping the empty ratchet makes the next owed
-  // event a deliberate, named addition rather than a permissive exception.
-  const OWED_FIRE_RATE: string[] = [];
-  const newlyFailing = failing.filter((f) => !OWED_FIRE_RATE.includes(f.id));
-  const owedStill = failing.filter((f) => OWED_FIRE_RATE.includes(f.id));
-  const paidOff = OWED_FIRE_RATE.filter((id) => !failing.some((f) => f.id === id));
-
-  if (owedStill.length) {
-    lines.push(`  owed, and pinned (issue #61, Stage E4): ${owedStill.map((f) => f.id).join(', ')} — `
-      + 'correctly gated on a cast the population cannot yet field');
-  }
-  if (newlyFailing.length) {
-    lines.push(`  FAIL: ${newlyFailing.length} event(s) fire in under ${floorPct}% of runs, under the chronicler`);
-    lines.push(`        AND in ${opts.climbRuns ?? CLIMB_ACQUIT_RUNS} runs played for the ladder:`);
-    for (const f of newlyFailing) lines.push(`    ${f.id}: ${f.pct}%`);
-  }
-  if (paidOff.length) {
-    lines.push(`  FAIL: ${paidOff.join(', ')} now clears the floor. Remove it from OWED_FIRE_RATE — `
-      + 'a pin nobody prunes is a comment that lies about the game.');
-  }
-  return { ok: newlyFailing.length === 0 && paidOff.length === 0, lines };
+  return runFireRateGate(source, opts);
 }
-
-/**
- * How many played runs the acquittal pass gets (issue #64).
- *
- * Small on purpose, and it is not the same kind of number as the 250 above.
- * That batch has to tell "never" from "rarely" and needs the rule of three
- * behind it. This one only has to find ONE firing of a template the chronicler
- * already failed to reach — and the rites, the case it exists for, were
- * offered three times in eight played runs when this was measured. A template
- * that cannot manage one firing in twelve deliberate runs is not being
- * rationed by policy.
- */
-const CLIMB_ACQUIT_RUNS = 12;
 
 /**
  * GATE 6 — purposes. Both halves are content-validation rules, already
@@ -487,7 +348,7 @@ export function gateOutcomeReach(
   const years = opts.years ?? CAMPAIGN_YEARS;
 
   const declared = declaredOutcomes(bundle);
-  const reach = playBatch(source, runs, years).reach;
+  const reach = playGateBatch(source, runs, years).reach;
 
   const rates = [...declared]
     .map(([key, o]) => ({ o, pct: (100 * (reach.runs.get(key) ?? 0)) / runs }))
@@ -989,7 +850,7 @@ export function gateVocabularyReach(
     }
   }
 
-  const batch = playBatch(source, runs, years);
+  const batch = playGateBatch(source, runs, years);
   const reached = new Set<string>();
   for (const key of batch.reach.runs.keys()) {
     for (const kind of carriedBy.get(key) ?? []) reached.add(kind);

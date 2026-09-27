@@ -2,16 +2,18 @@
 import { computed, ref } from 'vue';
 import type { Content, Issue, EventTemplate, ClauseDef } from '@ed/schema';
 import { PurposeS } from '@ed/schema';
-import { CAMPAIGN_YEARS, START_YEAR, TEST_FAMILIES, autoCast, bootstrap, castPeople, decideBranch, nameList, resolveSlots, runYears, testRng, type SimCtx } from '@ed/core';
+import { CAMPAIGN_YEARS, TEST_FAMILIES, autoCast, castPeople, decideBranch, nameList, resolveSlots, runFireRateGate, testRng, type FireRateGateResult, type SimCtx } from '@ed/core';
 import { deciderKind } from '@ed/schema';
+import { fileOfId } from '../lib/store';
 
 const props = defineProps<{ content: Content; issues: Issue[] }>();
 
-type Section = 'families' | 'branches' | 'coverage' | 'firerate' | 'grammar' | 'clauses' | 'tales';
+type Section = 'families' | 'branches' | 'validate' | 'coverage' | 'firerate' | 'grammar' | 'clauses' | 'tales';
 const section = ref<Section>('families');
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'families', label: 'Test families' },
   { id: 'branches', label: 'Branch trace' },
+  { id: 'validate', label: 'Validate' },
   { id: 'coverage', label: 'Coverage' },
   { id: 'firerate', label: 'Fire rate' },
   { id: 'grammar', label: 'Pronoun preview' },
@@ -73,34 +75,46 @@ const purposeCoverage = computed(() =>
 );
 
 /**
- * FIRE-RATE SIMULATION — `gates.ts`'s gate 4, run interactively. The harness
- * runs it headlessly at 100 seeds x one Long Line; the editor runs it on demand,
- * at whatever the author is willing to wait for, which is the whole reason
- * this instrument needs to exist (the harness cannot open in a browser tab).
+ * VALIDATION — the same named rules App.vue already runs, rendered with the
+ * same source-aware shape the CI command prints. `Content.sourceOf` comes
+ * from the assembler's provenance map, so a user YAML file is named exactly
+ * like a shipped one rather than being reduced to an id to grep for.
+ */
+const validationLines = computed(() => props.issues.map((issue) => {
+  const colon = issue.where.indexOf(':');
+  const id = (colon === -1 ? issue.where : issue.where.slice(colon + 1)).split('/')[0]!;
+  const file = fileOfId(id);
+  const where = file ? `${file} → ${issue.where}` : issue.where;
+  return {
+    ...issue,
+    text: `${issue.level === 'error' ? 'ERROR' : 'warn '}  [${issue.rule}] ${where}: ${issue.message}`,
+  };
+}));
+
+/**
+ * FIRE-RATE — the real gate 4 judgement, not a lookalike sampler. Interactive
+ * defaults are intentionally smaller than CI; changing the sample changes how
+ * much evidence the gate has, never the seeds, floor, or ladder acquittal rule.
  */
 const runs = ref(15);
 const years = ref(300);
 const running = ref(false);
-const fireRates = ref<{ id: string; title: string; pct: number }[] | undefined>(undefined);
+const fireRate = ref<FireRateGateResult | undefined>(undefined);
+
+function useCiFireRateSettings() {
+  runs.value = 800;
+  years.value = CAMPAIGN_YEARS;
+}
 
 async function runFireRate() {
   running.value = true;
-  fireRates.value = undefined;
-  await new Promise((r) => setTimeout(r, 0)); // let "running…" paint before the block below
-  const seenIn = new Map<string, number>();
-  for (let i = 0; i < runs.value; i++) {
-    const ctx = bootstrap(props.content, 9000 + i * 7, START_YEAR);
-    runYears(ctx, years.value);
-    for (const [id, n] of Object.entries(ctx.world.frequency.templateFires)) {
-      if (n > 0) seenIn.set(id, (seenIn.get(id) ?? 0) + 1);
-    }
+  fireRate.value = undefined;
+  await new Promise((r) => setTimeout(r, 0)); // let "running…" paint before the synchronous simulation
+  try {
+    fireRate.value = runFireRateGate(props.content, { runs: runs.value, years: years.value });
+  } finally {
+    running.value = false;
   }
-  fireRates.value = props.content.events
-    .filter((e) => e.tier !== 'frame')
-    .map((e) => ({ id: e.id, title: e.title, pct: (100 * (seenIn.get(e.id) ?? 0)) / runs.value }))
-    .sort((a, b) => a.pct - b.pct)
-    .slice(0, 20);
-  running.value = false;
 }
 
 /**
@@ -361,26 +375,42 @@ const talePairs = computed(() =>
     </div>
   </div>
 
+  <!-- ── Validation ─────────────────────────────────────────────────── -->
+  <div v-else-if="section === 'validate'">
+    <div class="panel">
+      <h3>{{ issues.filter((i) => i.level === 'error').length }} errors · {{ issues.filter((i) => i.level === 'warning').length }} warnings</h3>
+      <p class="note">
+        These are the same named validation rules the game and CI run. User files are shown by
+        their path under <code>mods/content</code>, followed by the same content-id token CI prints.
+      </p>
+      <p v-if="!validationLines.length" class="issue" style="color:var(--common)">No validation issues.</p>
+      <pre
+        v-for="line in validationLines" :key="`${line.rule}:${line.where}:${line.message}`"
+        class="issue" :class="{ error: line.level === 'error' }"
+      >{{ line.text }}</pre>
+    </div>
+  </div>
+
   <!-- ── Fire rate ──────────────────────────────────────────────────── -->
   <div v-else-if="section === 'firerate'">
     <div class="bar">
-      <label style="margin:0">Runs<input v-model.number="runs" type="number" min="1" max="60" style="width:70px" /></label>
+      <label style="margin:0">Runs<input v-model.number="runs" type="number" min="1" max="800" style="width:80px" /></label>
       <label style="margin:0">Years<input v-model.number="years" type="number" min="10" :max="CAMPAIGN_YEARS" step="10" style="width:80px" /></label>
-      <button class="btn primary" :disabled="running" @click="runFireRate">{{ running ? 'Running…' : 'Run' }}</button>
+      <button class="btn" :disabled="running" @click="useCiFireRateSettings">Use CI settings</button>
+      <button class="btn primary" :disabled="running" @click="runFireRate">{{ running ? 'Running…' : 'Run gate 4' }}</button>
     </div>
     <p class="note">
-      The harness gate runs 100 seeds x {{ CAMPAIGN_YEARS }} years headlessly; this runs whatever you set, in
-      this tab, which is why the defaults are smaller. Frame-tier events are excluded — they
-      run on a different clock (`reads`, not frequency).
+      <strong><code>frequency</code> is a rationing tier, not a weight.</strong>
+      Adding thirty <code>common</code> templates silently rations every other common template.
+      This invokes the real gate 4: the same seeds, 0.5% floor, and ladder-only acquittal used by CI.
+      Smaller interactive samples are quicker but carry less evidence; CI uses 800 runs × {{ CAMPAIGN_YEARS }} years.
     </p>
-    <table v-if="fireRates" class="attrs">
-      <tbody>
-      <tr v-for="r in fireRates" :key="r.id">
-        <td class="k">{{ r.title }}</td>
-        <td class="v" :style="{ color: r.pct < 0.5 ? 'var(--rubric)' : 'inherit' }">{{ r.pct.toFixed(1) }}%</td>
-      </tr>
-      </tbody>
-    </table>
+    <div v-if="fireRate" class="panel">
+      <h3 :style="{ color: fireRate.ok ? 'var(--common)' : 'var(--rubric)' }">
+        {{ fireRate.ok ? 'PASS' : 'FAIL' }} · gate 4
+      </h3>
+      <pre class="note" style="white-space:pre-wrap">{{ fireRate.lines.join('\n') }}</pre>
+    </div>
   </div>
 
   <!-- ── Pronoun / grammar preview ─────────────────────────────────── -->

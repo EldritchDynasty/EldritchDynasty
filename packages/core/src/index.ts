@@ -53,6 +53,7 @@ export * from './auction.js';
 export * from './record.js';
 export * from './run-library.js';
 export * from './tools/testFamilies.js';
+export * from './tools/fire-rate-gate.js';
 export * from './world.js';
 export * from './year/report.js';
 export * from './year/passage.js';
