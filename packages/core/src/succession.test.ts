@@ -111,6 +111,75 @@ describe('known succession', () => {
   });
 });
 
+describe('succession membership boundary (issue #294)', () => {
+  function outsiderMarriedIntoPlayerHouse(ctx: SimCtx): Person {
+    const outsider = place(ctx, { sex: 'female', age: 40, name: 'Outsider' });
+    const original = outsider.membership[0]!;
+    const otherHouse = [...ctx.world.houses.keys()].find((h) => h !== ctx.world.playerHouse);
+    if (!otherHouse) throw new Error('fixture needs a non-player house');
+
+    outsider.membership = [
+      {
+        ...original,
+        house: otherHouse,
+        kind: 'blood',
+        from: ctx.world.year - 40,
+        to: ctx.world.year,
+      },
+      {
+        ...original,
+        house: ctx.world.playerHouse,
+        kind: 'married_in',
+        from: ctx.world.year,
+        to: undefined,
+      },
+    ];
+    return outsider;
+  }
+
+  it('does not treat a married-in outsider\'s closed blood membership as the player line', () => {
+    const ctx = emptyHouse();
+    const outsider = outsiderMarriedIntoPlayerHouse(ctx);
+
+    expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).map((p) => p.id))
+      .toContain(outsider.id);
+    expect(heirApparent(ctx)).toBeUndefined();
+    expect(knownSuccession(ctx)).toEqual({ possible: [] });
+  });
+
+  it('keeps a current player-house blood member eligible', () => {
+    const ctx = emptyHouse();
+    const blood = place(ctx, { sex: 'female', age: 35, name: 'Blood' });
+
+    expect(heirApparent(ctx)?.id).toBe(blood.id);
+    expect(knownSuccession(ctx)).toEqual({ heir: blood.id, possible: [blood.id] });
+  });
+
+  it('keeps a current player-house cadet eligible', () => {
+    const ctx = emptyHouse();
+    const cadet = place(ctx, { sex: 'female', age: 35, name: 'Cadet' });
+    cadet.membership[0]!.kind = 'cadet';
+    cadet.membership[0]!.branch = 'br_test_cadet';
+
+    expect(heirApparent(ctx)?.id).toBe(cadet.id);
+    expect(knownSuccession(ctx)).toEqual({ heir: cadet.id, possible: [cadet.id] });
+  });
+
+  it('keeps heirApparent and knownSuccession on the same membership boundary', () => {
+    const ctx = emptyHouse();
+    const outsider = outsiderMarriedIntoPlayerHouse(ctx);
+    const blood = place(ctx, { sex: 'female', age: 30, name: 'TrueBlood' });
+
+    const rule = heirApparent(ctx);
+    const view = knownSuccession(ctx);
+
+    expect(rule?.id).toBe(blood.id);
+    expect(view.heir).toBe(rule?.id);
+    expect(view.possible).toEqual([blood.id]);
+    expect(view.possible).not.toContain(outsider.id);
+  });
+});
+
 describe('seating a Head', () => {
   it('leaves a sitting Head alone', () => {
     const ctx = emptyHouse();
