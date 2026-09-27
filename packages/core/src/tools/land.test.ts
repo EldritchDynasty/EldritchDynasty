@@ -948,7 +948,7 @@ describe('the connector-only remote landing', () => {
     expect(remote, 'pull_request_target would execute PR code with a write token').not.toContain('pull_request_target:');
   });
 
-  it('queues real landings without letting unrelated comments occupy or replace the queue', () => {
+  it('queues trusted landing comments while isolating bootstrap and skipped traffic', () => {
     const jobs = remote.indexOf('\njobs:\n');
     const land = remote.indexOf('\n  land:\n', jobs);
     const concurrency = remote.indexOf('\n    concurrency:\n', land);
@@ -958,11 +958,19 @@ describe('the connector-only remote landing', () => {
     expect(jobs).toBeGreaterThan(0);
     expect(land).toBeGreaterThan(jobs);
     expect(concurrency, 'landing concurrency must be job-scoped').toBeGreaterThan(land);
-    expect(concurrency, 'the shared queue must be chosen before the landing condition').toBeLessThan(condition);
+    expect(concurrency, 'the concurrency group must be chosen before the landing condition').toBeLessThan(condition);
     expect(remote.slice(0, jobs), 'workflow-level concurrency would queue unrelated comments').not.toContain('\nconcurrency:');
+
+    expect(
+      block,
+      'the reusable bootstrap must not share queue semantics with the copy of this workflow already on main',
+    ).toContain(
+      "inputs.pr_number > 0\n        && format('remote-land-bootstrap-{0}', github.run_id)",
+    );
+    expect(block).not.toContain('inputs.pr_number > 0\n        ||');
     expect(block).toContain("'remote-land-main'");
     expect(block).toContain("format('remote-land-skip-{0}', github.run_id)");
-    expect(block).toContain('inputs.pr_number > 0');
+    expect(block).toContain("github.event_name == 'issue_comment'");
     expect(block).toContain("github.event.comment.body == '/land'");
     expect(block).toContain("github.event.comment.body == '/land --no-issue-check'");
     expect(block).toContain('cancel-in-progress: false');
