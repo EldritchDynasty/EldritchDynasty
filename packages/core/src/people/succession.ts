@@ -65,7 +65,11 @@ function successionCandidates(ctx: SimCtx, excluding?: string, minAge = 16): Per
   return w.people.household(w.playerHouse, w.year)
     .filter(
       (p) => p.id !== excluding
-        && p.membership.some((m) => m.kind === 'blood' || m.kind === 'cadet')
+        && p.membership.some((m) =>
+          m.house === w.playerHouse
+          && (m.kind === 'blood' || m.kind === 'cadet')
+          && m.from <= w.year
+          && (m.to === undefined || m.to > w.year))
         && w.year - p.born >= minAge,
     )
     .sort((a, b) => successionSeniority(ctx, a, b));
