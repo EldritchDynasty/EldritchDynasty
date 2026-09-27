@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  END_YEAR, LIBRARY_VOICE_FORMS, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, runYears,
+  END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -61,6 +61,45 @@ describe('a run survives being written down', () => {
     const after = loadGame(saved, content);
     expect(after.world.delegation).toEqual(before.world.delegation);
     expect(after.world.chronicle.at(-1)?.delegated).toBe('choice:pay|record:record');
+  });
+
+  it('round-trips Chronicle causes, Bearing pages, and grudge origin pages', () => {
+    const before = bootstrap(content, 269, 1042);
+    const ours = before.world.people.household(before.world.playerHouse, before.world.year)[0]!;
+    const theirs = place(before, { sex: 'male', age: 40, name: 'Witness', house: 'house_marrow' });
+
+    before.world.chronicle.push({
+      id: 'chr_origin',
+      year: 1042,
+      weight: 'paragraph',
+      text: null,
+      named: false,
+      record: 'omit',
+    }, {
+      id: 'chr_answer',
+      year: 1067,
+      weight: 'line',
+      text: 'Years later, the omitted thing returned.',
+      named: false,
+      cause: { year: 1042, page: 'chr_origin' },
+    });
+    before.world.bearing.acts.push({
+      year: 1042,
+      kind: 'wrote_it_larger',
+      about: 'the omitted account',
+      page: 'chr_origin',
+      echoed: true,
+    });
+    addGrudge(before, theirs.id, ours.id, {
+      severity: 40,
+      inheritance: 'house_wide',
+    }, 'an_old_claim', 'chr_origin');
+
+    const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), content);
+    expect(after.world.chronicle.find((entry) => entry.id === 'chr_answer')?.cause)
+      .toEqual({ year: 1042, page: 'chr_origin' });
+    expect(after.world.bearing.acts[0]?.page).toBe('chr_origin');
+    expect([...after.world.relationships.values()][0]?.grudges[0]?.originPage).toBe('chr_origin');
   });
 
   it('round-trips the selected campaign instead of silently restoring Long', () => {
