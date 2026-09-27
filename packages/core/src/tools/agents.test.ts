@@ -85,6 +85,61 @@ describe('the claim ref', () => {
     expect(out.out).toContain('overlapping paths on 101');
   });
 
+  it('stores one path per metadata line and accepts shell-separated path arguments', () => {
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+    const taken = agents(alpha, 'take', '151', '--agent', 'canonical',
+      '--paths', 'packages/core/src/one.ts', 'packages/schema/src/two.ts');
+
+    expect(taken.code).toBe(0);
+    const sha = git(join(root, 'origin.git'), 'rev-parse', 'refs/heads/claim/151');
+    const message = git(join(root, 'origin.git'), 'log', '-1', '--format=%B', sha);
+    expect(message).toContain('path: packages/core/src/one.ts');
+    expect(message).toContain('path: packages/schema/src/two.ts');
+    expect(message).not.toContain('paths:');
+
+    const listed = agents(beta, 'list').out;
+    expect(listed).toContain('packages/core/src/one.ts, packages/schema/src/two.ts');
+  });
+
+  it('recovers legacy claim messages whose paths were separated by spaces', () => {
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+    const legacy = git(alpha, 'commit-tree', EMPTY_TREE, '-m', [
+      'claim 152',
+      '',
+      'agent: legacy',
+      'lane: code',
+      'paths: packages/core/src/legacy.ts packages/schema/src/legacy.ts',
+    ].join('\n'));
+    git(alpha, 'push', '-q', 'origin', `${legacy}:refs/heads/claim/152`);
+
+    const contender = agents(beta, 'take', '153', '--agent', 'legacy-contender',
+      '--paths', 'packages/schema/src/legacy.ts');
+    expect(contender.code).toBe(0);
+    expect(contender.out).toContain('overlapping paths on 152');
+    expect(contender.out).toContain('packages/schema/src/legacy.ts');
+  });
+
+  it('ignores and surfaces a claim ref whose tip is not a claim message', () => {
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+    const ordinary = git(alpha, 'rev-parse', 'HEAD');
+    git(alpha, 'push', '-q', 'origin', `${ordinary}:refs/heads/claim/154`);
+
+    const listed = agents(beta, 'list').out;
+    expect(listed).toContain('INVALID claim/154 ignored');
+    expect(listed).not.toMatch(/154\s+handled by/);
+
+    // An invalid ref is not a lock. A normal take repairs it with the same
+    // compare-and-swap used to retake a released tombstone.
+    const repaired = agents(alpha, 'take', '154', '--agent', 'repair');
+    expect(repaired.code).toBe(0);
+    expect(repaired.out).toContain('held: 154');
+    expect(agents(beta, 'list').out).toContain('154');
+    expect(agents(beta, 'list').out).not.toContain('INVALID claim/154');
+  });
+
   it('warns when a second agent enters the content lane, where branches interact', () => {
     agents(join(root, 'alpha'), 'take', '103', '--agent', 'alpha', '--paths', 'packages/content/events');
     const out = agents(join(root, 'beta'), 'take', '104', '--agent', 'beta', '--paths', 'packages/content/ages');
