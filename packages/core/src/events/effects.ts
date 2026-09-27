@@ -525,6 +525,8 @@ export function applyOutcome(
   const text = renderBody(outcome.text || e.body, fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
   const entryId = chronicleEntryId(ctx);
+  const people = [...new Set(Object.values(fill).flatMap((cast) =>
+    typeof cast === 'string' ? [cast] : cast))];
 
   // Frequency decides how the chronicle renders it. In a game whose artefact
   // IS the chronicle, this is where the tier is felt rather than computed.
@@ -536,6 +538,7 @@ export function applyOutcome(
     text,
     eventId: e.id,
     named: profile.named,
+    ...(people.length ? { people } : {}),
   });
 
   // Rare and Mythic always enter folklore. Common never does.

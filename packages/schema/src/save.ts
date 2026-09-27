@@ -188,7 +188,12 @@ import { CommitmentS } from './muster.js';
  * This replay is based on main's format 24; a later concurrent save-shape
  * change must advance the number again rather than reuse this format.
  */
-export const SAVE_FORMAT = 25;
+/**
+ * Bumped to 26 for Chronicle person links (#268): authored pages retain the
+ * people who were cast in them, so the family tree can point back into the
+ * book without reconstructing a cast from prose.
+ */
+export const SAVE_FORMAT = 26;
 
 // ── Person, in its stored form ────────────────────────────────────────────
 
@@ -514,6 +519,8 @@ export const ChronicleEntryS = z.object({
   claims: z.array(ResolvedClaimS).optional(),
   /** A standing preference answered this page (#219). */
   delegated: z.string().optional(),
+  /** People explicitly cast on this authored page (#268). */
+  people: z.array(z.string()).optional(),
 });
 
 /**

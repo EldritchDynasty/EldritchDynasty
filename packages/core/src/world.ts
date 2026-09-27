@@ -56,6 +56,8 @@ export interface ChronicleEntry {
   claims?: ResolvedClaim[];
   /** A standing preference answered this page (#219). */
   delegated?: string;
+  /** People explicitly cast on this authored page (#268). */
+  people?: string[];
 }
 
 export type GenerationQuestionKind = 'unstable_heir' | 'thin_line' | 'record' | 'ledger' | 'branch' | 'match' | 'ascension';
