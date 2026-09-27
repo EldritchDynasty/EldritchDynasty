@@ -7,40 +7,15 @@ on:
 permissions:
   contents: read
 
-jobs:
-  bearing-density:
-    name: bearing ${{ matrix.years }}y (${{ matrix.base }} + ${{ matrix.step }}i)
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - years: 300
-            base: 4000
-            step: 13
-          - years: 300
-            base: 9001
-            step: 17
-          - years: 300
-            base: 20011
-            step: 29
-          - years: 300
-            base: 31013
-            step: 37
-          - years: 500
-            base: 4000
-            step: 13
-          - years: 500
-            base: 9001
-            step: 17
-          - years: 500
-            base: 20011
-            step: 29
-          - years: 500
-            base: 31013
-            step: 37
+concurrency:
+  group: bearing-36-diagnostic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
+jobs:
+  god-book:
+    name: inspect God seed 5121
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,5 +23,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Measure current book density and Bearing separation
-        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
+      - name: Measure the known God-reaching book
+        run: |
+          npx tsx --tsconfig tsconfig.base.json -e "
+            import { loadContent } from '@ed/content';
+            import { playToTheEnd } from './packages/core/src/tools/ending-gate.ts';
+            const r = playToTheEnd(loadContent(), 5121, 500, 'ascendant', 'long');
+            console.log(JSON.stringify({
+              seed: r.seed,
+              ending: r.ending,
+              attested: r.attested,
+              substantiated: r.substantiated,
+              rungsWithheld: r.rungsWithheld,
+              unsupportable: r.unsupportable,
+              pages: r.pages,
+              records: r.records,
+              debtPerRecord: (r.unsupportable ?? 0) / Math.max(1, r.records ?? 0)
+            }, null, 2));
+          "
