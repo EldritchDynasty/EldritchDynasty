@@ -234,6 +234,7 @@ export function afterimageQuote(
 /** The factual small page: no grade, no rank, no "best" ending. */
 export function afterimageModel(input: AfterimageInput): AfterimageModel {
   const r = input.reckoning;
+  const quote = afterimageQuote(input.read);
   return {
     houseName: input.houseName,
     strap: `${input.campaignName} · ${input.year} · seed ${input.seed}`,
@@ -251,7 +252,53 @@ export function afterimageModel(input: AfterimageInput): AfterimageModel {
       { label: 'What the book attests', value: r.attestedTitle },
       { label: 'Of the blood, living', value: String(r.livingBlood) },
     ],
-    ...(afterimageQuote(input.read) ? { quote: afterimageQuote(input.read)! } : {}),
+    ...(quote ? { quote } : {}),
+  };
+}
+
+/**
+ * The measured half of the Afterimage renderer. Keep line selection and canvas
+ * height out of the component so long endings and Chronicle excerpts cannot
+ * silently clip when copy changes.
+ */
+export interface AfterimageLayout {
+  endingFont: string;
+  summaryFont: string;
+  quoteFont: string;
+  endingLines: string[];
+  summaryLines: string[];
+  quoteLines: string[];
+  height: number;
+}
+
+export function afterimageLayout(model: AfterimageModel, measure: Measure): AfterimageLayout {
+  const inner = PLATE.width - PLATE.pad * 2;
+  const endingFont = `500 28px ${PLATE.serif}`;
+  const summaryFont = `18px ${PLATE.serif}`;
+  const quoteFont = `italic 19px ${PLATE.serif}`;
+  const endingLines = wrap(model.endingTitle, endingFont, inner, measure);
+  const summaryLines = wrap(model.summary, summaryFont, inner, measure);
+  const quoteLines = model.quote
+    ? wrap(model.quote.text, quoteFont, inner - 36, measure)
+    : [];
+  const height = Math.max(
+    760,
+    214
+      + endingLines.length * 38
+      + summaryLines.length * 30
+      + model.facts.length * 42
+      + (model.quote ? 88 + quoteLines.length * 31 : 0)
+      + 80,
+  );
+
+  return {
+    endingFont,
+    summaryFont,
+    quoteFont,
+    endingLines,
+    summaryLines,
+    quoteLines,
+    height,
   };
 }
 

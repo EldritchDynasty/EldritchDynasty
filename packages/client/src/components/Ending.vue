@@ -4,7 +4,7 @@ import type { EpilogueView, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import {
-  PLATE, afterimageModel, afterimageName, wrap, type Measure,
+  PLATE, afterimageLayout, afterimageModel, afterimageName, type Measure,
 } from '../lib/book';
 
 const props = defineProps<{ view: SessionView; epilogue: EpilogueView; actions: GameActions }>();
@@ -68,31 +68,15 @@ async function saveAfterimage(): Promise<void> {
     };
 
     const model = afterimage.value;
+    const layout = afterimageLayout(model, measure);
     const width = PLATE.width;
-    const inner = width - PLATE.pad * 2;
-
-    const endingFont = `500 28px ${PLATE.serif}`;
-    const summaryFont = `18px ${PLATE.serif}`;
-    const quoteFont = `italic 19px ${PLATE.serif}`;
-    const endingLines = wrap(model.endingTitle, endingFont, inner, measure);
-    const summaryLines = wrap(model.summary, summaryFont, inner, measure);
-    const quoteLines = model.quote
-      ? wrap(model.quote.text, quoteFont, inner - 36, measure)
-      : [];
-
-    const height = Math.max(
-      760,
-      214
-        + endingLines.length * 38
-        + summaryLines.length * 30
-        + model.facts.length * 42
-        + (model.quote ? 88 + quoteLines.length * 31 : 0)
-        + 80,
-    );
+    const {
+      endingFont, summaryFont, quoteFont, endingLines, summaryLines, quoteLines,
+    } = layout;
 
     const canvas = document.createElement('canvas');
     canvas.width = width;
-    canvas.height = height;
+    canvas.height = layout.height;
     const ink = canvas.getContext('2d');
     if (!ink) return;
 

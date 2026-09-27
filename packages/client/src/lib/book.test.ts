@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ChronicleEntry } from '@ed/core';
 import {
-  afterimageModel, afterimageName, afterimageQuote,
+  afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
   plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
   type Measure,
 } from './book.js';
@@ -206,6 +206,36 @@ describe('the house afterimage (#260)', () => {
     expect(afterimageQuote([
       entry({ year: 1401, text: null, title: 'Omitted on purpose' }),
     ])).toBeUndefined();
+  });
+
+  it('changes the card when the selected Chronicle line changes', () => {
+    const first = afterimageModel(source);
+    const changed = afterimageModel({
+      ...source,
+      read: source.read.map((e, i) => i === 1
+        ? { ...e, text: 'Wystan accepted the winter hand.' }
+        : e),
+    });
+
+    expect(changed.quote).not.toEqual(first.quote);
+    expect(changed).not.toEqual(first);
+  });
+
+  it('lays out wrapped copy before the canvas is allocated', () => {
+    const model = afterimageModel(source);
+    const short = afterimageLayout(model, monospace);
+    const long = afterimageLayout({
+      ...model,
+      summary: Array.from({ length: 80 }, () => 'remembered').join(' '),
+      quote: model.quote
+        ? { ...model.quote, text: Array.from({ length: 90 }, () => 'winter').join(' ') }
+        : undefined,
+    }, monospace);
+
+    expect(short.endingLines.join(' ')).toBe(model.endingTitle);
+    expect(long.summaryLines.length).toBeGreaterThan(short.summaryLines.length);
+    expect(long.quoteLines.length).toBeGreaterThan(short.quoteLines.length);
+    expect(long.height).toBeGreaterThan(short.height);
   });
 
   it('keeps the card factual rather than grading the run', () => {
