@@ -14,17 +14,20 @@ const props = withDefaults(defineProps<{
   textScale?: TextScale;
   readingFont?: ReadingFont;
   skipSeenProse?: boolean;
+  reduceMotion?: boolean;
 }>(), {
   libraryReady: true,
   textScale: 'standard',
   readingFont: 'book',
   skipSeenProse: false,
+  reduceMotion: false,
 });
 
 const emit = defineEmits<{
   'update:textScale': [value: TextScale];
   'update:readingFont': [value: ReadingFont];
   'update:skipSeenProse': [value: boolean];
+  'update:reduceMotion': [value: boolean];
 }>();
 
 const campaign = ref(CAMPAIGN_CHOICES[0].id);
@@ -125,9 +128,11 @@ onMounted(() => { void refreshSaves(); });
         :text-scale="textScale"
         :reading-font="readingFont"
         :skip-seen-prose="skipSeenProse"
+        :reduce-motion="reduceMotion"
         @update:text-scale="emit('update:textScale', $event)"
         @update:reading-font="emit('update:readingFont', $event)"
         @update:skip-seen-prose="emit('update:skipSeenProse', $event)"
+        @update:reduce-motion="emit('update:reduceMotion', $event)"
       />
     </section>
 
