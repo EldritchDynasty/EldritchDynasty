@@ -1113,6 +1113,19 @@ describe('the connector-only remote landing', () => {
     expect(workflow).toContain('pull-requests: read');
   });
 
+  it('dispatches a real janitor sweep, since neither GitHub nor `on: push` acts on a bot-token push', () => {
+    // #266 and #267 landed remotely with `Closes #N` and stayed open until
+    // closed by hand: GitHub ignores closing keywords in a GITHUB_TOKEN push,
+    // and janitor.yml's `push` trigger never fires for one.
+    expect(remote).toContain("workflow_id: 'janitor.yml'");
+    expect(remote, 'a manual dispatch defaults to a dry run, which closes nothing')
+      .toContain("inputs: { dry_run: 'false' }");
+    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitor).toContain('workflow_dispatch:');
+    expect(janitor, 'the sweep must read dry_run=false as a real run')
+      .toContain("inputs.dry_run == false && '0'");
+  });
+
   it('reports without requiring issue or pull-request write access', () => {
     expect(remote).toContain("if: always() && steps.pr.outcome == 'success'");
     expect(remote).toContain('steps.landing.outcome');

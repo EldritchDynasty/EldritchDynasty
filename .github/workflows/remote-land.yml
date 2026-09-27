@@ -194,6 +194,19 @@ jobs:
               workflow_id: 'check.yml',
               ref: 'main',
             });
+            // The same token rule starves the janitor: it runs `on: push` to
+            // main, a GITHUB_TOKEN push fires nothing, so a remote landing's
+            // `Closes #N`, its claims and its branch waited for the daily cron.
+            // GitHub itself does not close issues from a bot-token push either
+            // (#266 and #267 were closed by hand). Dispatch it with what `push`
+            // would have given it: a real sweep, not the manual dry run.
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'janitor.yml',
+              ref: 'main',
+              inputs: { dry_run: 'false' },
+            });
 
       # verdict.yml never hears about the run dispatched above: GitHub does not
       # deliver `workflow_run` for a run github-actions[bot] started, so it wrote
