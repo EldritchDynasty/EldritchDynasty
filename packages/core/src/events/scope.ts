@@ -33,4 +33,12 @@ export interface EvalScope {
    * that guesses a role frees the wrong person from the wrong chair.
    */
   event?: EventTemplate;
+  /**
+   * The Chronicle page this authored action is writing, when it writes one.
+   *
+   * Allocated before effects run so an effect that creates a delayed
+   * consequence can remember the page that caused it without allocating a
+   * second id or searching the Chronicle afterwards.
+   */
+  page?: string;
 }
