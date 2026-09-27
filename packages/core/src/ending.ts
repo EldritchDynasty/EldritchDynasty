@@ -88,35 +88,38 @@ export const GOD_RITE_FAILED = 'god_rite_failed';
 export const SEVERITY_WEIGHT: Record<string, number> = { minor: 1, major: 2, total: 4 };
 
 /**
- * HOW MUCH UNPROVEN BOOK COSTS A RUNG (§6, §29.3's third bite).
+ * HOW MUCH HOUSE-AUTHORED UNPROVEN BOOK COSTS A RUNG
+ * (§6, §29.3's third bite).
  *
- * Measured before it was chosen, over forty thousand-year runs a column, as
- * weighted standing lies at the term:
+ * Eighteen was the measured all-discrepancy calibration in the thousand-year
+ * game. Once proof debt is restricted to claims the house actually authored,
+ * that is a different population, so the old scalar cannot simply be reused.
+ * Issue #36 exposed two separate assumptions hidden inside that old number:
  *
- *   | the pen             | p25 | p50 | p75 | p90 | max |
- *   |---------------------|-----|-----|-----|-----|-----|
- *   | records everything  |   6 |   9 |  12 |  15 |  24 |
- *   | the chronicler      |   7 |  10 |  13 |  15 |  22 |
- *   | embellishes always  |  11 |  14 |  19 |  22 |  26 |
+ *  1. campaign length changed, so the same evidence density must be read over
+ *     300 or 500 years rather than a millennium; and
+ *  2. not every open Discrepancy is a lie the house authored. The Chronicle
+ *     already carries exact provenance for Embellish pages, so ambient
+ *     contradictions must not be charged as the house's proof debt.
  *
- * A house accrues about nine of these just by living — events create
- * discrepancies whatever the player does with a pen — and the Embellish adds
- * about five and a half on top. So the number that matters is not "how many
- * lies" but "how much more than the ambient load", and EIGHTEEN is roughly
- * double it.
+ * The authored-only ending sweep found 20 as the first reference value that
+ * preserves the existing intentional-ending contract: scaled to the shipped
+ * terms, that is 6 weighted authored lies for A Short Line and 10 for A Long
+ * Line. This keeps provenance and density as separate decisions rather than
+ * making ambient contradictions part of the family's proof debt.
  *
- * What that buys, on the same batches: the house that records everything is
- * charged a rung in 5% of runs and the house that embellishes everything in
- * 35%. That asymmetry is the whole point — it is a TAIL on the house that
- * lied, not a slope every house slides down, and §29.7 asks for exactly that
- * shape rather than for a penalty.
- *
- * Only 0 and 1 are reachable today: the heaviest book measured carried 26.
- * Two is written anyway and `ending.test.ts` enters the branch with a built
- * world, because the ceiling here is how much discrepancy content exists and
- * that is a number that only ever goes up.
+ * §29.4 also makes the debt reversible by act. The intentional ascendant
+ * diagnostic therefore takes authored burying opportunities when offered;
+ * content still rations those scenes, so this remains a consequence rather
+ * than an automatic amnesty.
  */
-export const UNSUPPORTABLE_PER_RUNG = 18;
+export const UNSUPPORTABLE_PER_RUNG = 20;
+const UNSUPPORTABLE_REFERENCE_YEARS = 1000;
+
+function unsupportablePerRung(ctx: SimCtx): number {
+  const years = campaignDef(ctx.world.campaign).years;
+  return Math.max(1, Math.round(UNSUPPORTABLE_PER_RUNG * years / UNSUPPORTABLE_REFERENCE_YEARS));
+}
 
 /**
  * WHAT THE CREDITOR HAS IN FRONT OF IT.
@@ -173,8 +176,11 @@ export interface Reckoning {
   /** The year the book first attested it, where it does. */
   attestedYear?: number;
   /**
-   * WHAT THE BOOK CANNOT CARRY — standing lies, weighted by severity.
+   * WHAT THE BOOK CANNOT CARRY — OPEN discrepancies created by an
+   * Embellish page, weighted by severity.
    *
+   * Provenance matters: an ambient open Discrepancy is still visible in
+   * standingLies, but it is not proof debt the house authored with its pen.
    * Standing ONLY, and the two states left out are left out for a reason.
    *
    * A PROVEN lie has already been paid for: §6 bills it a full Respect tier
@@ -276,11 +282,15 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   let provenLies = 0;
   let standingLies = 0;
   let unsupportable = 0;
-  for (const d of w.discrepancies.values()) {
+  const embellishedDiscrepancies = new Set(w.chronicle.flatMap((entry) =>
+    entry.record === 'embellish' && entry.discrepancyId ? [entry.discrepancyId] : []));
+  for (const [id, d] of w.discrepancies.entries()) {
     if (d.state === 'proven') provenLies += 1;
     else if (d.state === 'open') {
       standingLies += 1;
-      unsupportable += SEVERITY_WEIGHT[d.severity] ?? SEVERITY_WEIGHT['minor']!;
+      if (embellishedDiscrepancies.has(id)) {
+        unsupportable += SEVERITY_WEIGHT[d.severity] ?? SEVERITY_WEIGHT['minor']!;
+      }
     }
   }
 
@@ -290,7 +300,7 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   // in the book, and a page it will not take is a page that cannot hold one
   // up. Nothing is hidden and nothing is stored: the lies were written down
   // when they were told, and this is the year somebody reads them together.
-  const rungsWithheld = Math.floor(unsupportable / UNSUPPORTABLE_PER_RUNG);
+  const rungsWithheld = Math.floor(unsupportable / unsupportablePerRung(ctx));
   const read = RUNGS[Math.max(0, rungIndex(attested) - rungsWithheld)] ?? 'none';
 
   // AND THE TRUTH IS THE CEILING ON WHAT CAN BE SUBSTANTIATED (issue #77).

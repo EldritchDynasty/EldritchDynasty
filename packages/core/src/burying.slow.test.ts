@@ -21,6 +21,7 @@ const bundle = loadContent();
  */
 const BURYING = new Set([
   'the_cross_reference',
+  'the_inquest_of_names',
   'somewhere_quiet_to_be_old',
   'a_second_hand_that_agrees',
   'something_the_church_wants_more',

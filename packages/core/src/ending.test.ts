@@ -114,10 +114,23 @@ describe('the last night reads the book', () => {
  * hold up, because for an honest house every number here is the same number.
  */
 describe('what the book cannot hold up', () => {
-  /** `n` standing lies of one severity, each with a name of its own. */
-  function lie(ctx: SimCtx, n: number, severity = 'total', state = 'open'): void {
+  /** `n` discrepancies of one severity; authored ones leave their Embellish page behind. */
+  function lie(
+    ctx: SimCtx, n: number, severity = 'total', state = 'open', authored = true,
+  ): void {
     for (let i = 0; i < n; i++) {
-      ctx.world.discrepancies.set(`${severity}_${state}_${i}`, { severity, provableBy: [], state: state as never });
+      const id = `${severity}_${state}_${ctx.world.chronicle.length}_${i}`;
+      ctx.world.discrepancies.set(id, { severity, provableBy: [], state: state as never });
+      if (authored) {
+        ctx.world.chronicle.push({
+          year: ctx.world.year - 20 - i,
+          weight: 'paragraph',
+          text: `The house wrote ${id} larger than it was.`,
+          named: false,
+          record: 'embellish',
+          discrepancyId: id,
+        });
+      }
     }
   }
 
@@ -128,38 +141,60 @@ describe('what the book cannot hold up', () => {
     const r = readTheChronicle(ctx);
     expect(r.unsupportable).toBe(0);
     expect(r.rungsWithheld).toBe(0);
-    // The two are the same number for a house that kept its record, and that
-    // is the case this whole mechanism must not disturb.
     expect(r.substantiated).toBe(r.attested);
     expect(selectEnding(ctx)).toBe('devoured');
   });
 
-  it('will not take a rung the rest of the book cannot support', () => {
+  it('does not bill an open discrepancy the house did not write larger', () => {
     const ctx = atTheTerm();
     attest(ctx, 'hierophant');
-    // Five `total` discrepancies weigh 20, which is over one rung's worth.
-    lie(ctx, 5);
+    lie(ctx, 3, 'total', 'open', false); // 12 ambient weight, above Long's authored threshold.
 
     const r = readTheChronicle(ctx);
-    expect(r.unsupportable).toBe(20);
+    expect(r.standingLies).toBe(3);
+    expect(r.unsupportable).toBe(0);
+    expect(r.rungsWithheld).toBe(0);
+    expect(r.substantiated).toBe('hierophant');
+  });
+
+  it('judges the same authored lie density against each campaign term', () => {
+    const short = testWorld(content, 9011, CAMPAIGNS.short.endYear);
+    short.world.campaign = 'short';
+    attest(short, 'hierophant');
+    lie(short, 1, 'total'); // 4: below Short's 6-per-rung threshold.
+    expect(readTheChronicle(short).rungsWithheld).toBe(0);
+    lie(short, 2, 'minor'); // 6: exactly one Short rung.
+    expect(readTheChronicle(short).rungsWithheld).toBe(1);
+
+    const long = atTheTerm(9012);
+    attest(long, 'hierophant');
+    lie(long, 2, 'total'); // 8: below Long's 10-per-rung threshold.
+    expect(readTheChronicle(long).rungsWithheld).toBe(0);
+    lie(long, 2, 'minor'); // 10: exactly one Long rung.
+    expect(readTheChronicle(long).rungsWithheld).toBe(1);
+  });
+
+  it('will not take a rung the authored record cannot support', () => {
+    const ctx = atTheTerm();
+    attest(ctx, 'hierophant');
+    lie(ctx, 3); // 12 at Long's 10-per-rung threshold — one rung.
+
+    const r = readTheChronicle(ctx);
+    expect(r.unsupportable).toBe(12);
     expect(r.rungsWithheld).toBe(1);
     expect(r.attested).toBe('hierophant');
     expect(r.substantiated).toBe('adept');
-    // The house reached the third rung and arrives at §23's worst ending. It
-    // is not that it failed to climb; it is that it cannot show that it did.
     expect(selectEnding(ctx)).toBe('forgotten');
   });
 
-  it('withholds more than one rung when the book is bad enough', () => {
+  it('withholds more than one rung when the authored book is bad enough', () => {
     const ctx = atTheTerm();
     attest(ctx, 'god');
-    lie(ctx, 9); // 36 — two rungs
+    lie(ctx, 5); // 20 — exactly two Long rungs.
 
     const r = readTheChronicle(ctx);
     expect(r.rungsWithheld).toBe(2);
     expect(r.substantiated).toBe('vessel');
-    // Turned away from apotheosis by its own record, and it lands where a
-    // house at that height lands.
     expect(selectEnding(ctx)).toBe('devoured');
   });
 
@@ -175,9 +210,6 @@ describe('what the book cannot hold up', () => {
   it('charges a lie that stands, and not one that was caught or buried', () => {
     const ctx = atTheTerm();
     attest(ctx, 'hierophant');
-    // Enough weight to cost a rung twice over, in the two states that are
-    // already settled: proven is billed in the year it is caught (§6), and
-    // buried is the act that answers this bill (§29.4 rule 5).
     lie(ctx, 10, 'total', 'proven');
     lie(ctx, 10, 'total', 'buried');
 
@@ -189,8 +221,6 @@ describe('what the book cannot hold up', () => {
 
   it('weighs a severity it does not recognise as the cheapest one', () => {
     const ctx = atTheTerm();
-    // `grave` is not a severity any schema declares. A typo in a content file
-    // must not quietly bill the house four times over.
     lie(ctx, 3, 'grave');
     expect(readTheChronicle(ctx).unsupportable).toBe(3);
   });
@@ -198,16 +228,12 @@ describe('what the book cannot hold up', () => {
   it('leaves the reason in the chronicle, where the player can find it', () => {
     const ctx = atTheTerm();
     attest(ctx, 'hierophant');
-    lie(ctx, 5);
+    lie(ctx, 3);
     expect(closeTheLedger(ctx)).toBe('forgotten');
 
-    // §29.3's guard rail: a cost that cannot be reconstructed is
-    // indistinguishable from bad dice. The page names both readings.
     const last = ctx.world.chronicle[ctx.world.chronicle.length - 1]!;
     expect(last.text).toContain('Hierophant');
     expect(last.text).toContain('Adept');
-    // And it is not itself evidence — it carries no rung, so a second reading
-    // of the same book cannot find a claim this page put there.
     expect(last.rung).toBeUndefined();
   });
 
@@ -225,12 +251,10 @@ describe('what the book cannot hold up', () => {
 
     const fell = atTheTerm();
     attest(fell, 'hierophant');
-    lie(fell, 5);
+    lie(fell, 3);
     closeTheLedger(fell);
     const fromAbove = endingSummary('forgotten', readTheChronicle(fell));
 
-    // A house that climbed and could not prove it must not be told it never
-    // passed Adept. It did; the sentence would simply be false.
     expect(fromBelow).toContain('never passed');
     expect(fromAbove).not.toContain('never passed');
     expect(fromAbove).toContain('could not hold it up');
