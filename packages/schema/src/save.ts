@@ -188,7 +188,13 @@ import { CommitmentS } from './muster.js';
  * This replay is based on main's format 24; a later concurrent save-shape
  * change must advance the number again rather than reuse this format.
  */
-export const SAVE_FORMAT = 25;
+/**
+ * Bumped to 26 for causal Chronicle provenance (#269): Bearing acts remember
+ * the page that caused them when there was one, echoes carry a `cause`, and
+ * grudges remember their origin page. Older formats cannot honestly invent
+ * those links, so the existing loader policy refuses them rather than guessing.
+ */
+export const SAVE_FORMAT = 26;
 
 // ── Person, in its stored form ────────────────────────────────────────────
 
@@ -263,6 +269,7 @@ export const GrudgeS = z.object({
   id: z.string(),
   originEvent: z.string(),
   originYear: z.number(),
+  originPage: z.string().optional(),
   severity: z.number(),
   inheritance: z.enum(['none', 'heir_only', 'all_blood', 'house_wide']),
   decayPerYear: z.number(),
@@ -514,6 +521,8 @@ export const ChronicleEntryS = z.object({
   claims: z.array(ResolvedClaimS).optional(),
   /** A standing preference answered this page (#219). */
   delegated: z.string().optional(),
+  /** The earlier act this page answers (#269). */
+  cause: z.object({ year: z.number(), page: z.string().optional() }).optional(),
 });
 
 /**
@@ -815,6 +824,8 @@ export const SavedGameS = z.object({
       about: z.string().optional(),
       /** Whether the one-generation echo has already been written. */
       echoed: z.boolean().optional(),
+      /** The page the act wrote, when the book wrote one. */
+      page: z.string().optional(),
     })).default([]),
     /** Stage 3's trace: the years somebody had something to say and did not. */
     unheard: z.array(z.object({ year: z.number(), event: z.string() })).default([]),
