@@ -71,6 +71,8 @@ export interface BearingEntry {
   about?: string;
   /** Set once the fiction has acknowledged this act, before it can enter the mechanical reading. */
   echoed?: boolean;
+  /** The Chronicle page the act wrote, when it wrote one. */
+  page?: string;
 }
 
 /**
@@ -242,8 +244,13 @@ export function noteUnheard(ctx: SimCtx, event: string): void {
  * Write one act down. Called from the verb that performs it and from nowhere
  * else, so the ledger cannot drift from what the player actually did.
  */
-export function noteBearing(ctx: SimCtx, kind: BearingAct, about?: string): void {
-  ctx.world.bearing.acts.push({ year: ctx.world.year, kind, ...(about ? { about } : {}) });
+export function noteBearing(ctx: SimCtx, kind: BearingAct, about?: string, page?: string): void {
+  ctx.world.bearing.acts.push({
+    year: ctx.world.year,
+    kind,
+    ...(about ? { about } : {}),
+    ...(page ? { page } : {}),
+  });
 }
 
 function echoText(entry: BearingEntry): string {
@@ -278,6 +285,10 @@ export function echoBearing(ctx: SimCtx): number {
       weight: 'line',
       text: echoText(entry),
       named: false,
+      cause: {
+        year: entry.year,
+        ...(entry.page ? { page: entry.page } : {}),
+      },
     });
     written++;
   }
