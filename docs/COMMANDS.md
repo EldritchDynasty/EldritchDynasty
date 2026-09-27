@@ -96,19 +96,24 @@ the existing `check.yml` on `main`, then runs the ordinary verdict reader
 against the landed SHA. Nothing is skipped; the dispatch is the supported way
 to cause the same post-push judgment from inside Actions.
 
-Remote landings are serialized with GitHub Actions concurrency, but **not**
-with its default one-pending behavior. The default replaces an older pending
-request when a newer one arrives. `remote-land.yml` opts into `queue: max`,
-which keeps up to one hundred waiting members instead. It sends the PR bootstrap
-bridge and only trusted exact landing comments to the shared
-`remote-land-main` group: issue comments are prefiltered by
-`author_association` before concurrency admission, then the existing API
-permission lookup remains the authoritative write-access check inside the job.
-Unrelated or outsider comments get a run-unique group because Actions chooses a
-concurrency group before evaluating the job's `if`. That prevents a `/claim`,
-ordinary discussion comment, or outsider-shaped `/land` from occupying the
-landing queue. Local and remote landings can still overlap; their final Git push
-is the compare-and-swap that decides which rebased head can advance `main`.
+Remote issue-comment landings are serialized with GitHub Actions concurrency,
+but **not** with its default one-pending behavior. The default replaces an older
+pending request when a newer one arrives. `remote-land.yml` opts into
+`queue: max`, which keeps up to one hundred trusted exact `/land` /
+`/land --no-issue-check` requests waiting in `remote-land-main`. Issue comments
+are prefiltered by `author_association` before concurrency admission, then the
+existing API permission lookup remains the authoritative write-access check
+inside the job. Unrelated or outsider comments get a run-unique skip group
+because Actions chooses a concurrency group before evaluating the job's `if`.
+
+The reusable PR bootstrap is deliberately different: it gets a run-unique
+`remote-land-bootstrap-<run id>` group instead of joining `remote-land-main`.
+A bootstrap executes the proposed workflow from the PR while issue comments
+execute the version already on `main`; sharing their concurrency group lets old
+queue semantics cancel the new workflow before it can prove itself. Bootstrap
+and comment landings may therefore overlap, just as local and remote landings
+already may. Their final compare-and-swap Git push decides which rebased head can
+advance `main`.
 
 The workflow summary preserves the two important failure shapes: a landing
 that did not complete its push, and a landing that pushed but whose explicitly
