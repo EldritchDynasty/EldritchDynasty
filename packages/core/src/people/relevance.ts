@@ -1,4 +1,4 @@
-import { assertNever, MAIN_BRANCH, type HouseAmbitionId, type PersonId } from '@ed/schema';
+import { assertNever, MAIN_BRANCH, type PersonId } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { measureAscension } from '../ascension.js';
 import { halls } from './branches.js';
@@ -43,7 +43,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
   const ambition = w.houseAmbition;
   if (!ambition) return out;
 
-  switch (ambition satisfies HouseAmbitionId) {
+  switch (ambition) {
     case 'raise_ascendant': {
       const foremost = measureAscension(ctx).foremost;
       if (foremost) {
