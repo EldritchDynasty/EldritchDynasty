@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { Person, RetainerContract, RetainerRole } from '@ed/schema';
-import { RetainerRoleS } from '@ed/schema';
+import { asId, RetainerRoleS } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import {
   beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, heirApparent, inheritPost,
@@ -121,7 +121,7 @@ describe('succession membership boundary (issue #294)', () => {
     outsider.membership = [
       {
         ...original,
-        house: otherHouse,
+        house: asId(otherHouse),
         kind: 'blood',
         from: ctx.world.year - 40,
         to: ctx.world.year,
