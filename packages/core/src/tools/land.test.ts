@@ -1075,11 +1075,17 @@ describe('the connector-only remote landing', () => {
     ).toBeGreaterThanOrEqual(180);
   });
 
-  it('waits longer for the verdict than a check run takes, and budgets for that wait', () => {
-    const wait = Number(/npm run --silent verdict -- "\$TARGET_SHA" --wait (\d+)/.exec(remote)?.[1]);
-    expect(wait, 'the remote landing no longer names its verdict wait').toBeGreaterThan(0);
-    expect(wait, 'PR #283: a 45m check outlived a 40m wait and a green landing reported failure')
-      .toBeGreaterThanOrEqual(60);
+  it('records the dispatched check itself, because verdict.yml never hears about it', () => {
+    // A run github-actions[bot] dispatched delivers no `workflow_run`, so no
+    // ref was ever written and nine of nine remote landings reported FAILURE.
+    const record = remote.indexOf('run: node tools/dispatched-verdict.mjs');
+    const read = remote.indexOf('npm run --silent verdict -- "$TARGET_SHA"');
+    expect(record, 'the remote landing no longer records its own verdict').toBeGreaterThan(0);
+    expect(record, 'the ref has to exist before the ordinary reader asks for it').toBeLessThan(read);
+    expect(remote).toContain("DISPATCHED_AT: ${{ steps.dispatch.outputs.at }}");
+    expect(remote).toContain("core.setOutput('at', new Date().toISOString());");
+    const wait = Number(/WAIT_MINUTES: "(\d+)"/.exec(remote)?.[1]);
+    expect(wait, 'a 45m check run has to fit inside the wait').toBeGreaterThanOrEqual(60);
     const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
     expect(timeout, 'the job cap must cover a ~103m landing plus the whole verdict wait')
       .toBeGreaterThanOrEqual(103 + wait + 15);
@@ -1087,7 +1093,7 @@ describe('the connector-only remote landing', () => {
 
   it('defaults a local verdict wait past the longest measured check run', async () => {
     const { DEFAULT_WAIT_MINUTES } = await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href) as { DEFAULT_WAIT_MINUTES: number };
-    expect(DEFAULT_WAIT_MINUTES, 'a 45m check run outlived the old 40m default').toBeGreaterThanOrEqual(60);
+    expect(DEFAULT_WAIT_MINUTES, 'check runs have taken 45m; 40 was too close').toBeGreaterThanOrEqual(60);
   });
 
   it('dispatches the existing check after the token-authenticated push, then reads its verdict', () => {
@@ -1116,5 +1122,61 @@ describe('the connector-only remote landing', () => {
     expect(remote).not.toContain('issues: write');
     expect(remote).not.toContain('pull-requests: write');
     expect(remote).not.toContain('issues.createComment');
+  });
+});
+
+const recorder = (await import(pathToFileURL(join(REPO, 'tools/dispatched-verdict.mjs')).href)) as {
+  verdictMessage: (v: Record<string, unknown>) => string;
+  pickRun: (runs: Record<string, unknown>[], sha: string, at: string) => Record<string, unknown> | undefined;
+  conclusionOf: (run: Record<string, unknown>) => string;
+};
+const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
+  parseVerdict: (m: string) => { conclusion: string; sha: string; run: string; jobs: { name: string; result: string }[] } | null;
+  stateOf: (v: unknown) => string;
+};
+
+/**
+ * THE REMOTE LANDING'S OWN VERDICT (tools/dispatched-verdict.mjs).
+ *
+ * verdict.yml never ran for a check github-actions[bot] dispatched, so every
+ * remote landing waited on a ref that could not arrive. The recorder writes
+ * that ref itself; these pin that what it writes is what every reader reads.
+ */
+describe('the dispatched-check verdict recorder', () => {
+  const SHA = '9af68b168a8682003d713e9682d652db1bb43164';
+
+  it('writes a message the ordinary reader parses, green and red alike', () => {
+    for (const [conclusion, state] of [['success', 'green'], ['failure', 'red'], ['pending', 'pending']] as const) {
+      const msg = recorder.verdictMessage({
+        sha: SHA, branch: 'main', conclusion,
+        runUrl: 'https://github.com/o/r/actions/runs/36314218433', runNumber: 412,
+        jobs: conclusion === 'pending' ? [] : [{ name: 'test 1/4', result: conclusion }],
+        recorded: '2026-09-27T11:43:20Z',
+      });
+      const v = verdictReader.parseVerdict(msg)!;
+      expect(v.sha).toBe(SHA);
+      expect(v.run).toMatch(/36314218433$/);
+      expect(verdictReader.stateOf(v)).toBe(state);
+      if (conclusion !== 'pending') expect(v.jobs).toEqual([{ name: 'test 1/4', result: conclusion }]);
+    }
+  });
+
+  it('takes the newest dispatch of this commit, and nothing older than the dispatch', () => {
+    const run = (id: number, created: string, extra: Record<string, unknown> = {}) =>
+      ({ id, head_sha: SHA, event: 'workflow_dispatch', created_at: created, ...extra });
+    const runs = [
+      run(1, '2026-09-27T09:00:00Z'),                                    // an earlier landing's
+      run(2, '2026-09-27T10:58:13Z'),
+      run(3, '2026-09-27T10:59:00Z', { event: 'push' }),
+      run(4, '2026-09-27T11:00:00Z', { head_sha: 'f'.repeat(40) }),
+    ];
+    expect(recorder.pickRun(runs, SHA, '2026-09-27T10:58:10Z')?.id).toBe(2);
+    expect(recorder.pickRun(runs, SHA, '2026-09-27T12:00:00Z')).toBeUndefined();
+  });
+
+  it('says pending while a run is going, and GitHub\'s own word once it stops', () => {
+    expect(recorder.conclusionOf({ status: 'in_progress', conclusion: null })).toBe('pending');
+    expect(recorder.conclusionOf({ status: 'completed', conclusion: 'success' })).toBe('success');
+    expect(recorder.conclusionOf({ status: 'completed', conclusion: 'cancelled' })).toBe('cancelled');
   });
 });

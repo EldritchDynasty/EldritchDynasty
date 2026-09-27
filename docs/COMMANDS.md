@@ -104,6 +104,16 @@ the existing `check.yml` on `main`, then runs the ordinary verdict reader
 against the landed SHA. Nothing is skipped; the dispatch is the supported way
 to cause the same post-push judgment from inside Actions.
 
+`verdict.yml` never records that dispatched run. GitHub delivers no
+`workflow_run` for a run that `github-actions[bot]` started, so no
+`refs/verdict/<sha>` was ever written. Every remote landing up to 2026-09-27
+therefore waited on a ref that could not arrive and reported FAILURE, including
+landings whose commit sat green on `main`. `tools/dispatched-verdict.mjs` now
+waits on the run the landing dispatched and writes that ref itself, in
+`verdict.yml`'s format, so `npm run verdict` and the session hook read it like
+any other. If a remote landing's commit is on `main` but shows NO VERDICT from
+before that fix, look up its dispatched `check` run in Actions.
+
 Remote issue-comment landings are serialized with GitHub Actions concurrency,
 but **not** with its default one-pending behavior. The default replaces an older
 pending request when a newer one arrives. `remote-land.yml` opts into

@@ -69,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     # Run 36281354123 spent ~103m in the repository landing, then was killed
     # by the old 120m job cap 17m into verdict.mjs's allowed 40m wait. The job
-    # budget must cover BOTH phases. The verdict wait is now 75m, because PR
-    # #283's landing pushed a commit whose `check` took 45m and gave up at 40,
-    # reporting a green landing as a failure: 103m + 75m, plus headroom.
+    # budget must cover BOTH phases: a ~103m landing plus the 75m that
+    # tools/dispatched-verdict.mjs waits on the dispatched check (measured at
+    # 45m on 2026-09-27), plus headroom.
     timeout-minutes: 240
     env:
       REQUEST_PR: ${{ inputs.pr_number || github.event.issue.number }}
@@ -182,10 +182,12 @@ jobs:
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Dispatch the post-push check
+        id: dispatch
         if: steps.landing.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
+            core.setOutput('at', new Date().toISOString());
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -193,12 +195,27 @@ jobs:
               ref: 'main',
             });
 
+      # verdict.yml never hears about the run dispatched above: GitHub does not
+      # deliver `workflow_run` for a run github-actions[bot] started, so it wrote
+      # no ref and every remote landing on record reported FAILURE — #283's
+      # included, with its commit green on main. This job can read Actions, so
+      # it waits on the run it dispatched and writes the ref itself, in
+      # verdict.yml's format; see tools/dispatched-verdict.mjs.
+      - name: Record the dispatched check's verdict
+        if: steps.landing.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          DISPATCHED_AT: ${{ steps.dispatch.outputs.at }}
+          WAIT_MINUTES: "75"
+        run: node tools/dispatched-verdict.mjs
+
       - name: Wait for the normal verdict
         id: verdict
         if: steps.landing.outcome == 'success'
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
-        run: npm run --silent verdict -- "$TARGET_SHA" --wait 75
+        run: npm run --silent verdict -- "$TARGET_SHA" --wait 5
 
       # The landing can fail before its push; the explicit check can fail after
       # the push. Always report current trunk rather than collapsing those states.
