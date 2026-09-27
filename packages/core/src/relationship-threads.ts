@@ -221,8 +221,11 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
 
     for (const grudge of rel.grudges) {
       if (grudge.severity <= 1) continue;
-      const entry = w.chronicle.find((c) =>
-        c.year === grudge.originYear && c.eventId === grudge.originEvent);
+      const entry = (grudge.originPage
+        ? w.chronicle.find((c) => c.id === grudge.originPage)
+        : undefined)
+        ?? w.chronicle.find((c) =>
+          c.year === grudge.originYear && c.eventId === grudge.originEvent);
       const namedOrigin = entry?.title ?? clip(entry?.text) ?? 'the quarrel';
       const holder = from === outsider ? `${from.name} of ${houseName(ctx, house)}` : from.name;
       const target = to === outsider ? `${to.name} of ${houseName(ctx, house)}` : to.name;
