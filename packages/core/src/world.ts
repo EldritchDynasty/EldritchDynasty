@@ -757,6 +757,15 @@ export interface SimCtx {
   takenNames: Set<string>;
 }
 
+/**
+ * The one allocator for Chronicle page ids. Every writer that needs a stable
+ * page identity uses the world-local counter so two worlds in one process
+ * remain deterministic (invariant 8).
+ */
+export function chronicleEntryId(ctx: SimCtx): string {
+  return `chr_${(ctx.world.counters.chronicle += 1).toString(36)}`;
+}
+
 export function head(w: WorldState): ReturnType<PersonStore['living']>[number] | undefined {
   return w.people
     .living()
