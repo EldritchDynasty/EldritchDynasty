@@ -331,12 +331,11 @@ const yearAndBirths = computed(() => {
         <div class="panel clock">
           <h3 class="label">The clock</h3>
           <div class="wrap">
-            <button :disabled="waiting" :title="blocking" @click="actions.advance(1)">A year</button>
+            <button :disabled="waiting" @click="actions.advance(1)">A year</button>
             <button :disabled="waiting" :title="blocking" @click="actions.advance(5)">Five</button>
             <button :disabled="waiting" :title="blocking" @click="actions.advance(25)">A generation</button>
             <button
               :disabled="waiting"
-              :title="blocking"
               @click="actions.advance(view.campaign.endYear - view.year)"
             >On, to {{ view.campaign.endYear }}</button>
           </div>
