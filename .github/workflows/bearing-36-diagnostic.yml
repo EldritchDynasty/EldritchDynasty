@@ -67,5 +67,31 @@ jobs:
               raise SystemExit("ending.ts threshold function no longer matches diagnostic patch")
           path.write_text(source.replace(needle, replacement))
           PY
-      - name: Measure failing historical schedule
-        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
+      - name: Measure historical schedule
+        shell: bash
+        run: |
+          set +e
+          npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }} \
+            | tee bearing-diagnostic.txt
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$status" -eq 0 ]; then
+            echo "### density ${{ matrix.rate }} · ${{ matrix.years }}y: gate passed" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # This workflow is an experiment, not a gate. A complete Bearing
+          # verdict that rejects a candidate is the measurement we came here
+          # to collect, so keep CI green while preserving the rejection in the
+          # log/summary. Still fail on crashes, setup errors, or truncated runs.
+          if grep -q "gate (bearing):" bearing-diagnostic.txt \
+             && grep -q "spread IN OUTCOME:" bearing-diagnostic.txt \
+             && grep -q "FAIL:" bearing-diagnostic.txt; then
+            echo "### density ${{ matrix.rate }} · ${{ matrix.years }}y: candidate rejected" >> "$GITHUB_STEP_SUMMARY"
+            grep "spread IN OUTCOME:" bearing-diagnostic.txt >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "::error::Bearing diagnostic exited $status without a complete gate verdict"
+          exit "$status"
