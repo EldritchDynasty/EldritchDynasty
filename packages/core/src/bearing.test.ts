@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  ECHO_AFTER, REMEMBERED_AFTER, bearingOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
-  testWorld, tickBearing,
+  ECHO_AFTER, REMEMBERED_AFTER, answeredBy, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
+  testWorld, tickBearing, type BearingAct,
 } from '@ed/core';
 
 const content = loadContent();
@@ -103,6 +103,85 @@ describe('bearing is read off acts, not off fortune', () => {
     ctx.world.year = 1042 + REMEMBERED_AFTER;
     tickBearing(ctx);
     expect(ctx.world.bearing.score, 'the existing bearing owner still resolves the bill').toBeGreaterThan(0);
+  });
+
+  it('links every delayed echo back to the act it answers, exhaustively', () => {
+    const ctx = testWorld(content, 7009);
+    ctx.world.year = 1042;
+
+    const acts: { kind: BearingAct; about: string; page?: string }[] = [
+      { kind: 'wrote_it_larger', about: 'the claim recorded as salt_account', page: 'chr_source_lie' },
+      { kind: 'refused_a_hand', about: 'the hand offered to Agnes' },
+      { kind: 'kept_her_back', about: 'Ysabel' },
+      { kind: 'took_the_cousin', about: 'Margery marrying Thomas' },
+      { kind: 'bit_the_common', about: 'West Mere', page: 'chr_source_common' },
+    ];
+
+    ctx.world.chronicle.push(
+      { id: 'chr_source_lie', year: 1042, weight: 'paragraph', text: 'The book made it larger.', named: false },
+      { id: 'chr_source_common', year: 1042, weight: 'paragraph', text: 'The common was taken.', named: false },
+    );
+    for (const act of acts) noteBearing(ctx, act.kind, act.about, act.page);
+
+    const before = ctx.world.chronicle.length;
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    const echoes = ctx.world.chronicle.slice(before);
+    expect(echoes).toHaveLength(acts.length);
+
+    const expectedPage = (kind: BearingAct): string | undefined => {
+      switch (kind) {
+        case 'wrote_it_larger': return 'chr_source_lie';
+        case 'bit_the_common': return 'chr_source_common';
+        case 'refused_a_hand':
+        case 'kept_her_back':
+        case 'took_the_cousin':
+          return undefined;
+        default: {
+          const exhaustive: never = kind;
+          throw new Error(`unhandled Bearing act: ${String(exhaustive)}`);
+        }
+      }
+    };
+
+    for (let i = 0; i < acts.length; i++) {
+      const act = acts[i]!;
+      const echo = echoes[i]!;
+      expect(echo.id, act.kind).toBeTruthy();
+      expect(echo.cause?.year, act.kind).toBe(1042);
+      expect(echo.cause?.page, act.kind).toBe(expectedPage(act.kind));
+      expect(causeOf(ctx, echo.id!), act.kind).toEqual({
+        year: 1042,
+        ...(expectedPage(act.kind) ? { page: expectedPage(act.kind) } : {}),
+        blank: false,
+      });
+    }
+    expect(echoes[2]!.text).toContain('Ysabel');
+    expect(answeredBy(ctx, 'chr_source_lie')).toEqual([1042 + ECHO_AFTER]);
+    expect(answeredBy(ctx, 'chr_source_common')).toEqual([1042 + ECHO_AFTER]);
+  });
+
+  it('keeps an omitted source linkable without revealing words it does not contain', () => {
+    const ctx = testWorld(content, 7014);
+    ctx.world.year = 1100;
+    ctx.world.chronicle.push({
+      id: 'chr_omitted_origin',
+      year: 1100,
+      weight: 'paragraph',
+      text: null,
+      named: false,
+      record: 'omit',
+    });
+    noteBearing(ctx, 'wrote_it_larger', 'a claim the house later omitted', 'chr_omitted_origin');
+
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    const echo = ctx.world.chronicle.at(-1)!;
+    expect(causeOf(ctx, echo.id!)).toEqual({
+      year: 1100,
+      page: 'chr_omitted_origin',
+      blank: true,
+    });
   });
 
   it('is stored as one reading the year, a client and a condition all share', () => {
