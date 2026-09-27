@@ -28,6 +28,7 @@ describe('replay reconstructs a run from its decision log', () => {
   const YEARS = CAMPAIGN_YEARS;
 
   it('digest(replay(log)) equals digest(original) across the standard seed set', () => {
+    let causalPages = 0;
     for (const seed of SEEDS) {
       const ctx = bootstrap(bundle, seed, 1042);
       runYears(ctx, YEARS);
@@ -39,7 +40,12 @@ describe('replay reconstructs a run from its decision log', () => {
       const original = digestOf(ctx);
       const replayed = replay(bundle, ctx.world.decisionLog, seed, 1042, YEARS);
       expect(digestOf(replayed), `seed ${seed}`).toBe(original);
+      const causes = ctx.world.chronicle.map((entry) => ({ id: entry.id, cause: entry.cause }));
+      const replayedCauses = replayed.world.chronicle.map((entry) => ({ id: entry.id, cause: entry.cause }));
+      expect(replayedCauses, `seed ${seed}: causal Chronicle provenance drifted`).toEqual(causes);
+      causalPages += causes.filter((entry) => entry.cause !== undefined).length;
     }
+    expect(causalPages, 'the replay corpus never exercised a causal Chronicle page').toBeGreaterThan(0);
   });
 
   it('throws rather than returning a run that silently does not match the log it was given', () => {
