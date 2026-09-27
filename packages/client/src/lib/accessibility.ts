@@ -1,3 +1,5 @@
+import { assertNever } from '@ed/schema';
+
 /** Reading choices belong to the reader, not to a saved world. */
 export type TextScale = 'standard' | 'large' | 'largest';
 export type ReadingFont = 'book' | 'readable';
@@ -76,7 +78,9 @@ export function saveAccessibility(
  * Exact prose identity, not an authored id. If an author changes even one
  * character, the new line is unseen and must be offered to the reader.
  */
-export function seenProseKey(kind: 'chapter-opening', text: string): string {
+export type SeenProseKind = 'chapter-opening' | 'prologue' | 'scene';
+
+export function seenProseKey(kind: SeenProseKind, text: string): string {
   return `${kind}\u0000${text}`;
 }
 
@@ -117,21 +121,67 @@ export type ChapterReplayBeat =
   | { kind: 'opening'; text: string }
   | { kind: 'closing' };
 
+export type ReplayBeat =
+  | ChapterReplayBeat
+  | { kind: 'prologue'; text: string }
+  | { kind: 'scene'; event: string; authored: string };
+
+export type ReplayDisposition = 'show' | 'skip' | 'fast' | 'mark';
+
 /**
- * One pure boundary between reader history and the chapter UI. Closings are
- * deliberately representable here so the "never skip a verdict" rule is
- * executable rather than a comment in the component.
+ * One pure boundary between reader history and every recurring reading surface.
+ *
+ * - Age openings may disappear only after an exact repeat and an explicit opt-in.
+ * - The passive prologue beats are never skipped; an exact repeat may reveal at once.
+ * - A repeated authored scene is marked, never hidden.
+ * - Closings are verdicts on this house and never enter reader history.
+ *
+ * A new beat kind must choose one of those contracts here before it can compile.
+ */
+export function replayDisposition(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  skipSeenProse: boolean,
+  beat: ReplayBeat,
+): ReplayDisposition {
+  switch (beat.kind) {
+    case 'closing':
+      return 'show';
+
+    case 'opening': {
+      const key = seenProseKey('chapter-opening', beat.text);
+      if (skipSeenProse && hasSeenProse(storage, key)) return 'skip';
+      rememberSeenProse(storage, key);
+      return 'show';
+    }
+
+    case 'prologue': {
+      const key = seenProseKey('prologue', beat.text);
+      return skipSeenProse && hasSeenProse(storage, key) ? 'fast' : 'show';
+    }
+
+    case 'scene': {
+      // Filled names are deliberately absent. What the reader has met before
+      // is the authored scene, not this run's cast.
+      const key = seenProseKey('scene', `${beat.event}\u0000${beat.authored}`);
+      if (hasSeenProse(storage, key)) return 'mark';
+      rememberSeenProse(storage, key);
+      return 'show';
+    }
+
+    default:
+      return assertNever(beat, 'replay beat');
+  }
+}
+
+/**
+ * Compatibility wrapper for Chapter.vue. Keeping the existing two-result
+ * contract makes the expansion above local: a chapter can still only show or
+ * skip, while other reading surfaces gain their own dispositions.
  */
 export function chapterReplayDisposition(
   storage: Pick<Storage, 'getItem' | 'setItem'> | null,
   skipSeenProse: boolean,
   beat: ChapterReplayBeat,
 ): 'show' | 'skip' {
-  if (beat.kind === 'closing') return 'show';
-
-  const key = seenProseKey('chapter-opening', beat.text);
-  if (skipSeenProse && hasSeenProse(storage, key)) return 'skip';
-
-  rememberSeenProse(storage, key);
-  return 'show';
+  return replayDisposition(storage, skipSeenProse, beat) === 'skip' ? 'skip' : 'show';
 }
