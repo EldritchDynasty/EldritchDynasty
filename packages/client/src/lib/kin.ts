@@ -101,3 +101,104 @@ export function drawnBeside(m: MemberView, hall: MemberView[]): MemberView | und
   const spouse = partner(m, hall);
   return spouse && attached(hall).has(spouse.id) ? spouse : undefined;
 }
+
+
+export type KinshipRelation = 'father' | 'mother' | 'son' | 'daughter' | 'husband' | 'wife';
+
+export interface KinshipStep {
+  /** The next person on the recorded path. */
+  person: MemberView;
+  /** What that person is to the person immediately before them. */
+  relation: KinshipRelation;
+}
+
+/**
+ * HOW THE BOOK SAYS TWO PEOPLE ARE RELATED (#268).
+ *
+ * This deliberately walks the same recorded parentage the tree draws, plus
+ * marriages. It never consults `MemberView.parents`: a forged lineage must
+ * produce the forged relationship path, because that is the relationship the
+ * household can actually plan from.
+ *
+ * The caller supplies the flattened members from every hall it wants to make
+ * navigable. That is what lets a path cross a cadet-hall boundary without
+ * teaching this pure client helper what a hall is.
+ */
+export function kinshipPath(
+  a: MemberView | string,
+  b: MemberView | string,
+  members: MemberView[],
+): KinshipStep[] | undefined {
+  const byId = new Map(members.map((member) => [member.id, member]));
+  const startId = typeof a === 'string' ? a : a.id;
+  const goalId = typeof b === 'string' ? b : b.id;
+
+  if (!byId.has(startId) || !byId.has(goalId)) return undefined;
+  if (startId === goalId) return [];
+
+  const edges = new Map<string, KinshipStep[]>();
+  const connect = (from: string, to: string, relation: KinshipRelation): void => {
+    const person = byId.get(to);
+    if (!person) return;
+    const list = edges.get(from) ?? [];
+    if (!list.some((edge) => edge.person.id === to && edge.relation === relation)) {
+      list.push({ person, relation });
+      edges.set(from, list);
+    }
+  };
+  const childRelation = (child: MemberView): KinshipRelation => (
+    child.sex === 'female' ? 'daughter' : 'son'
+  );
+  const spouseRelation = (spouse: MemberView): KinshipRelation => (
+    spouse.sex === 'female' ? 'wife' : 'husband'
+  );
+
+  for (const member of members) {
+    const { father, mother } = member.record.parents;
+    if (father) {
+      connect(member.id, father, 'father');
+      connect(father, member.id, childRelation(member));
+    }
+    if (mother) {
+      connect(member.id, mother, 'mother');
+      connect(mother, member.id, childRelation(member));
+    }
+
+    const spouseId = member.spouse?.id;
+    const spouse = spouseId ? byId.get(spouseId) : undefined;
+    if (spouse) {
+      connect(member.id, spouse.id, spouseRelation(spouse));
+      connect(spouse.id, member.id, spouseRelation(member));
+    }
+  }
+
+  const previous = new Map<string, { id: string; step: KinshipStep }>();
+  const seen = new Set<string>([startId]);
+  const queue: string[] = [startId];
+
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const here = queue[cursor]!;
+    for (const step of edges.get(here) ?? []) {
+      const next = step.person.id;
+      if (seen.has(next)) continue;
+      seen.add(next);
+      previous.set(next, { id: here, step });
+
+      if (next === goalId) {
+        const path: KinshipStep[] = [];
+        let at = goalId;
+        while (at !== startId) {
+          const link = previous.get(at);
+          if (!link) return undefined;
+          path.push(link.step);
+          at = link.id;
+        }
+        return path.reverse();
+      }
+
+      queue.push(next);
+    }
+  }
+
+  return undefined;
+}
