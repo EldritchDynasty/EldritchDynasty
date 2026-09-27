@@ -221,6 +221,8 @@ export interface GameStore {
   library: Ref<RunLibrary>;
   /** False only while the host's profile store is still being read. */
   libraryReady: Ref<boolean>;
+  /** Chronicle entry ids whose authored cast explicitly included this person. */
+  mentions(person: string): string[];
   actions: GameActions;
 }
 
@@ -308,8 +310,6 @@ export interface GameActions {
    * sixty entries; this is the volume the player has been writing.
    */
   book(opts?: { from?: number; to?: number }): ChronicleEntry[];
-  /** Chronicle entry ids whose authored cast explicitly included this person. */
-  mentions(person: string): string[];
   /**
    * THE SPINE (issue #56). Who has held the seal since the signing. The halls
    * are the living household; this is the fourteen generations behind them.
@@ -378,6 +378,11 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   // show — a client deciding for itself that the displayed collection year means over would be a second
   // opinion about the one thing the whole game is pointed at.
   const ended = computed(() => view.value?.ending !== undefined);
+
+  /** Read-only bridge for family-tree → Chronicle navigation (#268). */
+  function mentions(person: string): string[] {
+    return session.value?.mentions(person) ?? [];
+  }
 
   /**
    * Take the picture again. Called after every verb, and it is the only thing
@@ -700,10 +705,6 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       return session.value?.book(opts) ?? [];
     },
 
-    mentions(person) {
-      return session.value?.mentions(person) ?? [];
-    },
-
     line() {
       return session.value?.line() ?? [];
     },
@@ -834,6 +835,6 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
   return {
     view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, actions,
+    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, mentions, actions,
   };
 }
