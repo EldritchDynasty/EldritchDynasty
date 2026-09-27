@@ -1,6 +1,6 @@
 import type { Effect, EventTemplate, Outcome, Person, Target } from '@ed/schema';
 import { assertNever, canHoldPost, FREQUENCY_PROFILES, MAIN_BRANCH, RESPECT_ORDER, isActiveBranch } from '@ed/schema';
-import type { SimCtx, WorldState } from '../world.js';
+import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
 import { phenotypeOf } from '../people/factory.js';
@@ -504,11 +504,6 @@ export interface ResolvedEvent {
   fill: SlotFill;
   /** The chronicle entry this outcome created. See `applyRecord` (issue #8). */
   entryId: string;
-}
-
-/** A stable id for a chronicle entry, so the record layer can find ITS entry rather than "an" entry. */
-export function chronicleEntryId(ctx: SimCtx): string {
-  return `chr_${(ctx.world.counters.chronicle += 1).toString(36)}`;
 }
 
 export function applyOutcome(
