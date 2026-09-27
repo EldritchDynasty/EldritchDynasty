@@ -212,7 +212,9 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
           if (eff.sentiment !== undefined) relate(w, x, y, eff.sentiment);
           // A grudge is taken by the injured party, so it points back the way
           // the sentiment came: `from` wronged `to`, and `to` remembers.
-          if (eff.grudge) addGrudge(ctx, y, x, eff.grudge);
+          if (eff.grudge) {
+            addGrudge(ctx, y, x, eff.grudge, scope.event?.id ?? 'unrecorded', scope.page);
+          }
         }
       }
       break;
@@ -432,7 +434,7 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
           restoreParcel(ctx, eff.parcel, eff.magnitude);
           break;
         case 'encroach':
-          encroachParcel(ctx, eff.parcel);
+          encroachParcel(ctx, eff.parcel, scope.page);
           break;
         // No `default`: `op` is a closed Zod enum, same reasoning as `muster` above.
       }
@@ -505,7 +507,7 @@ export interface ResolvedEvent {
 }
 
 /** A stable id for a chronicle entry, so the record layer can find ITS entry rather than "an" entry. */
-function chronicleEntryId(ctx: SimCtx): string {
+export function chronicleEntryId(ctx: SimCtx): string {
   return `chr_${(ctx.world.counters.chronicle += 1).toString(36)}`;
 }
 
@@ -516,15 +518,16 @@ export function applyOutcome(
   fill: SlotFill,
   scope: EvalScope = {},
 ): ResolvedEvent {
-  // The template joins the scope here rather than being passed separately:
-  // `recast` needs to know what role a slot casts for, and this is the one
-  // place in the engine that has both the effect and the template it came from.
-  const inner: EvalScope = { ...scope, event: e };
+  // Allocate before effects: an effect may create a delayed consequence that
+  // needs to remember the page this outcome is about to write (#269).
+  const entryId = chronicleEntryId(ctx);
+  // The template and its page join the scope here rather than being passed
+  // separately: recast needs the role, and provenance needs the page.
+  const inner: EvalScope = { ...scope, event: e, page: entryId };
   for (const eff of outcome.effects) applyEffect(eff, ctx, fill, inner);
 
   const text = renderBody(outcome.text || e.body, fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
-  const entryId = chronicleEntryId(ctx);
 
   // Frequency decides how the chronicle renders it. In a game whose artefact
   // IS the chronicle, this is where the tier is felt rather than computed.
