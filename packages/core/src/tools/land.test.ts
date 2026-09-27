@@ -1075,12 +1075,27 @@ describe('the connector-only remote landing', () => {
     ).toBeGreaterThanOrEqual(180);
   });
 
+  it('waits longer for the verdict than a check run takes, and budgets for that wait', () => {
+    const wait = Number(/npm run --silent verdict -- "\$TARGET_SHA" --wait (\d+)/.exec(remote)?.[1]);
+    expect(wait, 'the remote landing no longer names its verdict wait').toBeGreaterThan(0);
+    expect(wait, 'PR #283: a 45m check outlived a 40m wait and a green landing reported failure')
+      .toBeGreaterThanOrEqual(60);
+    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
+    expect(timeout, 'the job cap must cover a ~103m landing plus the whole verdict wait')
+      .toBeGreaterThanOrEqual(103 + wait + 15);
+  });
+
+  it('defaults a local verdict wait past the longest measured check run', async () => {
+    const { DEFAULT_WAIT_MINUTES } = await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href) as { DEFAULT_WAIT_MINUTES: number };
+    expect(DEFAULT_WAIT_MINUTES, 'a 45m check run outlived the old 40m default').toBeGreaterThanOrEqual(60);
+  });
+
   it('dispatches the existing check after the token-authenticated push, then reads its verdict', () => {
     expect(remote).toContain('actions: write');
     expect(remote).toContain('createWorkflowDispatch');
     expect(remote).toContain("workflow_id: 'check.yml'");
     expect(remote).toContain("ref: 'main'");
-    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA"');
+    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait');
   });
 
   it('has a PR-event bootstrap bridge so the new comment workflow can land itself', () => {

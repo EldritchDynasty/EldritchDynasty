@@ -52,7 +52,7 @@
  * run completes. This reads it. Nothing here needs a token, and it behaves
  * identically on a laptop, in a container and inside CI.
  *
- *   npm run verdict                  # HEAD, waiting up to 40 minutes
+ *   npm run verdict                  # HEAD, waiting up to 60 minutes
  *   npm run verdict -- <sha>         # a particular commit
  *   npm run verdict -- --wait 0      # ask once and answer now
  */
@@ -65,8 +65,13 @@ import { execFileSync } from 'node:child_process';
  * queue is on top of that. The first landing to use this timed out on a run
  * that finished shortly after. A timeout is not an answer, and a tool whose
  * default produces the wrong one is worse than one that takes longer.
+ *
+ * Was 40, which was not enough either. On 2026-09-27 the dispatched `check`
+ * for 9af68b1 ran 45 minutes (10:58 to 11:43, green), and the remote landing
+ * of PR #283 that pushed it gave up at 40 and reported the green landing as
+ * a FAILURE. `remote-land.yml` passes its own, larger `--wait`.
  */
-const DEFAULT_WAIT_MINUTES = 40;
+export const DEFAULT_WAIT_MINUTES = 60;
 /** The ref namespace verdict.yml writes. Not under refs/heads: not a branch. */
 const NS = 'refs/verdict';
 
