@@ -28,6 +28,28 @@ const props = defineProps<{
  * reuses the instance and this ref survives into the next decision.
  */
 const cast = ref<SlotFill>({});
+/** Opt-in for this exact event/answer; important repeats are still surfaced by core (#219). */
+const remember = ref(false);
+
+function answerChoice(choiceId: string, label: string): void {
+  if (props.decision.kind !== 'choice') return;
+  // Learn only an answer the normal resolver actually accepted. A stale client
+  // or refused cast must not leave behind a standing policy for an act that
+  // never happened.
+  const accepted = props.actions.choose(props.decision.id, choiceId, cast.value, label);
+  if (accepted && remember.value) props.actions.delegateChoice(props.decision.event.id, choiceId);
+}
+
+function answerRecord(option: RecordOption, label: string): void {
+  if (props.decision.kind !== 'record') return;
+  const accepted = props.actions.record(props.decision.id, option, label);
+  // Only the honest Record answer is delegatable. Explicit withdrawal lives
+  // on the Table's "Ask me again" control; an exceptional surfaced page should
+  // not revoke a standing policy merely because its local checkbox is clear.
+  if (accepted && remember.value && option === 'record') {
+    props.actions.delegateRecord(props.decision.event.id, option);
+  }
+}
 
 function fill(slot: string, event: Event): void {
   const person = (event.target as HTMLSelectElement).value;
@@ -168,7 +190,7 @@ function take(index: number): void {
     if (!d.choicesAreOpen) return;
     const c = d.choices[index];
     if (!c || !c.available || !ready(d.cast)) return;
-    props.actions.choose(d.id, c.id, cast.value, c.label);
+    answerChoice(c.id, c.label);
     return;
   }
   if (d.kind === 'match') {
@@ -178,7 +200,7 @@ function take(index: number): void {
     return;
   }
   const option = recordOptions.value[index];
-  if (option) props.actions.record(d.id, option.option, option.label);
+  if (option) answerRecord(option.option, option.label);
 }
 
 function onKey(e: KeyboardEvent): void {
@@ -289,7 +311,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           v-for="(c, i) in decision.choices"
           :key="c.id"
           :disabled="!c.available || !ready(decision.cast)"
-          @click="actions.choose(decision.id, c.id, cast, c.label)"
+          @click="answerChoice(c.id, c.label)"
         >
           <!-- The number is drawn because a shortcut nobody can see is a
                shortcut nobody uses. -->
@@ -471,7 +493,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
       <div class="choices stack">
         <template v-for="(o, i) in recordOptions" :key="o.option">
-          <button @click="actions.record(decision.id, o.option, o.label)">
+          <button @click="answerRecord(o.option, o.label)">
             <span class="dim key" aria-hidden="true">{{ i + 1 }}</span>
             <span>{{ o.label }}</span>
             <small v-if="recordIsTempting(o.option)" class="dim temptation"> — these years make this tempting</small>
@@ -495,6 +517,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         lost — the clock is waiting, not broken — but it cannot be answered here.
       </p>
     </template>
+
+    <!-- Standing preferences are learned only from an answer the player actually makes. -->
+    <label
+      v-if="(decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record'"
+      class="remember small"
+    >
+      <input v-model="remember" type="checkbox">
+      Use the answer I choose for routine repeats of this event.
+      <span v-if="decision.kind === 'record'" class="dim">Only “Write it as it happened” can be delegated.</span>
+    </label>
 
     <!-- THE ESCAPE HATCH. Daveed is not neutral, and handing him the pen is a
          way of playing rather than a way of skipping. -->
@@ -556,6 +588,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
    the whole reason it is on the panel. */
 .panel .lie { color: var(--rubric); font-style: italic; }
 footer { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 8px; }
+.remember { display: flex; align-items: flex-start; gap: 6px; margin-top: 14px; }
+.remember .dim { display: block; }
 
 /* THE MATCH COLLAPSES (issue #106). `.cards` at `minmax(210px, 1fr)` is one
    column below about 640px, which turns the game's most consequential

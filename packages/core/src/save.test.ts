@@ -38,6 +38,31 @@ describe('a run survives being written down', () => {
     expect(digestOf(after)).toBe(digestOf(before));
   });
 
+  it('round-trips non-empty delegation preferences and their Chronicle audit trail', () => {
+    const before = bootstrap(content, 219, 1042);
+    before.world.delegation.choices.routine_choice = 'pay';
+    before.world.delegation.records.routine_record = 'record';
+    before.world.chronicle.push({
+      year: before.world.year,
+      weight: 'paragraph',
+      text: 'The house paid, and later wrote it plainly.',
+      eventId: 'routine_choice',
+      named: false,
+      delegated: 'choice:pay|record:record',
+    });
+
+    const saved = JSON.parse(JSON.stringify(saveGame(before)));
+    expect(saved.delegation).toEqual({
+      choices: { routine_choice: 'pay' },
+      records: { routine_record: 'record' },
+    });
+    expect(saved.chronicle.at(-1)?.delegated).toBe('choice:pay|record:record');
+
+    const after = loadGame(saved, content);
+    expect(after.world.delegation).toEqual(before.world.delegation);
+    expect(after.world.chronicle.at(-1)?.delegated).toBe('choice:pay|record:record');
+  });
+
   it('round-trips the selected campaign instead of silently restoring Long', () => {
     const before = bootstrap(content, 1042, 1042, 'short');
     const saved = JSON.parse(JSON.stringify(saveGame(before)));

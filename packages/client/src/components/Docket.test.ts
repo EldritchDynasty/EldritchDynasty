@@ -215,11 +215,14 @@ function recordDecision(): PendingDecision {
 function spyActions() {
   const names = [
     'begin', 'found', 'enter', 'resume', 'restart', 'advance', 'choose', 'send',
-    'match', 'declineHand', 'record', 'dismissOutcome', 'dismissInterlude',
-    'letHimDecide', 'name', 'order', 'view', 'epilogue', 'save',
+    'match', 'declineHand', 'record', 'delegateChoice', 'delegateRecord',
+    'dismissOutcome', 'dismissInterlude', 'letHimDecide', 'name', 'order',
+    'view', 'epilogue', 'save',
   ] as const;
   const actions = {} as Record<string, ReturnType<typeof vi.fn>>;
   for (const n of names) actions[n] = vi.fn();
+  actions.choose = vi.fn(() => true);
+  actions.record = vi.fn(() => true);
   return actions as unknown as Record<keyof GameActions, ReturnType<typeof vi.fn>>
     & { readonly __brand?: GameActions };
 }
@@ -270,6 +273,33 @@ describe('the docket draws what it is handed', () => {
     const [id, choiceId] = actions.choose.mock.calls[0]!;
     expect(id).toBe(decision.id);
     expect(decision.choices.map((c) => c.id)).toContain(choiceId);
+    expect(actions.delegateChoice, 'answering a surfaced choice with the box untouched must not revoke a standing policy')
+      .not.toHaveBeenCalled();
+  });
+
+  it('opts into the exact routine choice the player actually takes', async () => {
+    const decision = choiceDecision();
+    if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateChoice).toHaveBeenCalledWith(decision.event.id, decision.choices[0]!.id);
+  });
+
+  it('does not learn a standing choice when the normal verb refuses it', async () => {
+    const decision = choiceDecision();
+    if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    actions.choose.mockReturnValue(false);
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateChoice).not.toHaveBeenCalled();
   });
 
   /**
@@ -295,6 +325,7 @@ describe('the docket draws what it is handed', () => {
       ).toBe(false);
     }
 
+    expect(w.find('input[type="checkbox"]').exists(), 'party-cast choices cannot be delegated and should not offer a dead opt-in').toBe(false);
     const send = w.findAll('button').find((b) => b.text().includes('Send them'));
     expect(send, 'a party decision drew no way to send anybody').toBeTruthy();
     await send!.trigger('click');
@@ -448,6 +479,33 @@ describe('the docket draws what it is handed', () => {
     await w.findAll('button')[0]!.trigger('click');
     expect(actions.record, 'a Record option was pressed and record was never called').toHaveBeenCalled();
     expect(actions.record.mock.calls[0]![0]).toBe(decision.id);
+    expect(actions.delegateRecord, 'answering a surfaced Record page with the box untouched must not revoke a standing policy')
+      .not.toHaveBeenCalled();
+  });
+
+  it('opts into plain Record only when the player checks the standing preference', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateRecord).toHaveBeenCalledWith(decision.event.id, 'record');
+  });
+
+  it('does not learn a Record policy when the normal verb refuses the page', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    actions.record.mockReturnValue(false);
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+
+    await w.get('input[type="checkbox"]').setValue(true);
+    await w.findAll('.choices button')[0]!.trigger('click');
+
+    expect(actions.delegateRecord).not.toHaveBeenCalled();
   });
 });
 
@@ -520,6 +578,7 @@ function riteTable(assembly: RiteAssembly): TableView {
   return {
     treasury: 500,
     bidCeiling: 0,
+    delegation: [],
     marriagePolicy: 'as_it_falls',
     programmeCandidates: [],
     shelf: [],
@@ -571,6 +630,35 @@ function buttonContaining(wrapper: VueWrapper, text: string) {
   if (!found) throw new Error(`no button containing "${text}"`);
   return found;
 }
+
+describe('standing preference controls (#219)', () => {
+  it('lets the player withdraw both choice and Record policies from the Table', async () => {
+    const actions = spyActions();
+    const table = riteTable(vesselAssembly);
+    table.delegation = [
+      { event: 'routine_choice', title: 'The Routine Choice', kind: 'choice', answer: 'pay' },
+      { event: 'routine_record', title: 'The Routine Record', kind: 'record', answer: 'record' },
+    ];
+    const wrapper = mount(Table, {
+      props: {
+        table,
+        land: riteLand,
+        actions: actions as unknown as GameActions,
+        refusal: null,
+        receipt: null,
+      },
+    });
+
+    const askAgain = wrapper.findAll('button').filter((button) => button.text().includes('Ask me again'));
+    expect(askAgain).toHaveLength(2);
+    await askAgain[0]!.trigger('click');
+    await askAgain[1]!.trigger('click');
+
+    expect(actions.delegateChoice).toHaveBeenCalledWith('routine_choice', null);
+    expect(actions.delegateRecord).toHaveBeenCalledWith('routine_record', null);
+    wrapper.unmount();
+  });
+});
 
 describe('major rite confirmation (#218)', () => {
   it('shows the engine assembly before doing anything, and cancellation mutates nothing', async () => {

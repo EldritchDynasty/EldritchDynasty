@@ -730,6 +730,8 @@ function ours(ctx: SimCtx, id: string): Person | undefined {
 export interface TableView {
   treasury: number;
   bidCeiling: number;
+  /** Standing repeat preferences, shown here so each can be withdrawn (#219). */
+  delegation: { event: string; title: string; kind: 'choice' | 'record'; answer: string }[];
   /**
    * THE NEXT SALE, IF ONE HAS BEEN ANNOUNCED (issue #55).
    *
@@ -922,6 +924,14 @@ export function tableView(ctx: SimCtx): TableView {
   return {
     treasury: Math.round(w.treasury),
     bidCeiling: w.bidCeiling,
+    delegation: [
+      ...Object.entries(w.delegation.choices).map(([event, answer]) => ({
+        event, answer, kind: 'choice' as const, title: ctx.content.events.find((e) => e.id === event)?.title ?? event,
+      })),
+      ...Object.entries(w.delegation.records).map(([event, answer]) => ({
+        event, answer, kind: 'record' as const, title: ctx.content.events.find((e) => e.id === event)?.title ?? event,
+      })),
+    ],
     // The soonest sale, and the cheapest thing in it — a ceiling is a guess
     // until you know what the floor is.
     ...(() => {

@@ -163,6 +163,22 @@ const MARRIAGE_ORDERS = [
       <p v-else-if="receipt" class="small spent">{{ receipt }}</p>
     </div>
 
+    <div v-if="table.delegation.length" class="panel">
+      <h3 class="label">Standing preferences</h3>
+      <p class="small dim">Routine repeats may use these answers. Anything important still comes back to the table.</p>
+      <div v-for="policy in table.delegation" :key="policy.kind + ':' + policy.event" class="row policy">
+        <span class="small"><strong>{{ policy.title }}</strong> · {{ policy.answer.replace(/_/g, ' ') }}</span>
+        <button
+          class="quiet small"
+          @click="policy.kind === 'choice'
+            ? actions.delegateChoice(policy.event, null)
+            : actions.delegateRecord(policy.event, null)"
+        >
+          Ask me again
+        </button>
+      </div>
+    </div>
+
     <div class="panel">
       <h3 class="label">The Great Work</h3>
       <p class="small dim">The house can call a rite when its people can field it. Each call opens the authored choice and its cost.</p>

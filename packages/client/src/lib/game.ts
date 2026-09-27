@@ -281,15 +281,18 @@ export interface GameActions {
    * client's own words, and a card is a name. It is only ever shown back to
    * the player above what their answer did (issue #84).
    */
-  choose(decision: string, choiceId: string, cast?: SlotFill, said?: string): void;
+  choose(decision: string, choiceId: string, cast?: SlotFill, said?: string): boolean;
   send(decision: string, cast?: SlotFill, said?: string): void;
   match(decision: string, cardId: string, said?: string): MatchResolution | undefined;
   declineHand(decision: string): void;
-  record(decision: string, option: RecordOption, said?: string): void;
+  record(decision: string, option: RecordOption, said?: string): boolean;
   /** Read the outcome, and let the next decision through. */
   dismissOutcome(): void;
   /** Choose, replace, or clear the voluntary house ambition (issue #210). */
   setAmbition(id: HouseAmbitionId | null): boolean;
+  /** Remember or withdraw an exact answer for routine repeats (#219). */
+  delegateChoice(eventId: string, choiceId: string | null): void;
+  delegateRecord(eventId: string, option: RecordOption | null): void;
   letHimDecide(): void;
   order(o: TableOrder): OrderResult;
   /** The Muster's own standing verb (issue #89, Stage 2 — #95) — reinforce or withdraw, any year, no docket. */
@@ -578,6 +581,7 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       const result = session.value?.choose(decision, choiceId, cast);
       hold(result?.ok ? { said, text: result.resolved?.text ?? null, kind: 'choice' } : null);
       refresh();
+      return result?.ok ?? false;
     },
 
     send(decision, cast = {}, said = '') {
@@ -610,6 +614,7 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       const result = session.value?.record(decision, option);
       hold(result?.ok ? { said, text: result.line ?? null, kind: 'record' } : null);
       refresh();
+      return result?.ok ?? false;
     },
 
     dismissOutcome() {
@@ -620,6 +625,16 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       const ok = session.value?.setAmbition(id) ?? false;
       refresh();
       return ok;
+    },
+
+    delegateChoice(eventId, choiceId) {
+      session.value?.delegateChoice(eventId, choiceId);
+      refresh();
+    },
+
+    delegateRecord(eventId, option) {
+      session.value?.delegateRecord(eventId, option);
+      refresh();
     },
 
     letHimDecide() {

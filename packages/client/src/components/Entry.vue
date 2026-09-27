@@ -47,6 +47,16 @@ const claims = computed(() => (props.entry.claims ?? []).map((c) => {
   if (c.kind === 'trait') return c.has ? `that they were ${c.trait}` : `that they were not ${c.trait}`;
   return `that their ${c.attr.replace(/_/g, ' ')} stood at ${c.value}`;
 }));
+
+const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
+  .split('|')
+  .filter(Boolean)
+  .map((policy) => {
+    const [kind, value] = policy.split(':', 2);
+    if (kind === 'record' && value === 'record') return 'standing preference: write it as it happened';
+    if (kind === 'choice' && value) return `standing preference: ${value.replace(/_/g, ' ')}`;
+    return 'answered by standing preference';
+  }));
 </script>
 
 <template>
@@ -78,6 +88,13 @@ const claims = computed(() => (props.entry.claims ?? []).map((c) => {
          initials a line it improved. -->
     <span v-if="entry.text === null && !read" class="dim small mark">left blank, on purpose</span>
     <span v-if="entry.record === 'embellish' && !read" class="dim small mark">as the house tells it</span>
+        <template v-if="!read">
+      <span
+        v-for="(policy, i) in delegatedPolicies"
+        :key="`delegated-${i}`"
+        class="dim small mark"
+      >{{ policy }}</span>
+    </template>
     <!-- The assertions the creditor checks on the last night. Drawn under the
          line that makes them, because a claim detached from its sentence is a
          fact from nowhere. -->
