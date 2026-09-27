@@ -363,6 +363,13 @@ const yearAndBirths = computed(() => {
                 <option value="readable">Readable sans</option>
               </select>
             </label>
+            <label class="small">
+              Skip Age openings already read
+              <input v-model="accessibility.skipSeenProse" type="checkbox" />
+            </label>
+            <p class="dim small">
+              Exact repeated openings only. Decisions, outcomes, rites and frame scenes still stop for you.
+            </p>
           </div>
           <h3 class="label">Marks</h3>
           <dl class="legend-list">
@@ -453,7 +460,12 @@ const yearAndBirths = computed(() => {
     </div>
 
     <Interlude v-if="interlude" :entry="interlude" :actions="actions" />
-    <Chapter v-if="chapter" :beat="chapter" :actions="actions" />
+    <Chapter
+      v-if="chapter"
+      :beat="chapter"
+      :actions="actions"
+      :skip-seen-prose="accessibility.skipSeenProse"
+    />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :close="() => (bookOpen = null)" />
     <Plat v-if="platOpen && land" :land="land" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
     <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
