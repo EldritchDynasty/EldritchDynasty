@@ -1,10 +1,11 @@
 # Product playtest protocol
 
-This is the shared human-acceptance runbook for the remaining product questions
-that simulation cannot answer. It exists so one first-time-player session can
-collect the observations owed by #60, the carry-forward questions from #24 and
-#35, #36's bearing acceptance, and #85's early/late distinguishability test
-without prompting the answer into existence.
+This is an optional product-research runbook for observing first-time players.
+It preserves questions and thresholds developed while #24, #35, #36, #60, #85,
+#103 and #213 were active. Those issue numbers are provenance, not current
+acceptance gates: #24, #35, #60, #85, #103 and #213 are closed, and #36 now
+defines its remaining acceptance as automated/measurable engineering evidence.
+A live issue body, not this file, is the authority on what closes that issue.
 
 The rule is simple: **record first, interpret second, tune last**.
 
@@ -41,19 +42,21 @@ rather than silently pooling the results.
 
 ## Cohort
 
-Recruit **five first-time or genuinely low-context players** for Phase 13 (#60).
-Six is preferable if available because #36's existing closure plan was written
-for 5–6 completed runs.
+For a cohort using the historical Phase 13 observation set (#60, closed),
+recruit **five first-time or genuinely low-context players**. Six is preferable
+when practical; that is a product-research preference, not an issue-closing
+threshold.
 
 They must not have read the design brief, §29, the bearing issues, or the
 acceptance criteria below.
 
 Normal onboarding is allowed. Design explanation is not.
 
-### Phase 14 platform allocation (#103)
+### Historical cross-device scenario (#103, closed)
 
-Use this same cohort for the human platform acceptance rather than recruiting a
-second group. At least **one participant completes A Short Line on Android**.
+If evaluating cross-device handoff, reuse the same cohort rather than recruiting
+a second group. One useful scenario has **one participant complete A Short Line
+on Android**.
 A different participant **starts on the packaged Windows build and finishes on
 Android from an exported save**, with a full application close between the two
 sittings. At the handoff, record the Windows and Android build SHAs, device/OS,
@@ -78,7 +81,7 @@ Do not tell them:
 Observe rather than coach. Keep a timestamped note whenever one of the following
 occurs.
 
-### Phase 13 — can a new player finish the product? (#60)
+### Historical first-run observation set (#60, closed)
 
 Record:
 
@@ -95,7 +98,7 @@ Record:
 complete.** The #60 criterion is valuable only when the artefact attracts the
 player without being requested.
 
-### Women as people, not inventory — #24 item 3 carry-forward
+### Historical women-as-people observation set (#24, closed)
 
 Record the player's own language around daughters and women on Match panels.
 
@@ -117,7 +120,7 @@ the decision.
 Do not ask "did the women feel like people?" during play. That manufactures the
 criterion.
 
-### Deleterious load — #24 item 5 carry-forward
+### Historical deleterious-load observation set (#24, closed)
 
 For every cousin-card opportunity record:
 
@@ -142,7 +145,7 @@ rejected.
 
 Do not show an issue checklist or explain the design first.
 
-### First question — bearing (#36)
+### Optional bearing question
 
 Ask exactly:
 
@@ -155,7 +158,7 @@ Only after the first answer, ask:
 
 > **Which decision, or repeated kind of decision, do you think caused that?**
 
-For #36 record:
+If using this question, record:
 
 - named a concrete decision or repeated behaviour: yes/no;
 - named a specific person in the explanation: yes/no;
@@ -169,7 +172,7 @@ mechanical stat instead of a remembered act and consequence.
 
 Do not offer a list of Match/Record/bearing mechanics as prompts.
 
-### Phase 13 questions (#60)
+### Historical Phase 13 questions (#60, closed)
 
 After the bearing answer is safely recorded, ask these open questions in order:
 
@@ -186,7 +189,7 @@ Ledger/ladder/endgame or broader generational story reach — rather than merely
 Only after these are recorded may the observer ask about confusing screens,
 missing information, or whether the player would export/share something.
 
-## One participant plays a second Short Line — Phase 11 carry-forward (#35)
+## Historical second-run comparison (#35, closed)
 
 At least one participant who completed the first run should play a second Short
 Line without being told which decision is supposed to differ.
@@ -200,10 +203,10 @@ Pass the carry-forward question when the two runs differ in consequential
 events/outcome and the player names a concrete decision they believe changed
 the line. A number, hidden rule, or "luck" alone is not that result.
 
-## Blind early-vs-late chronicle test (#85)
+## Historical early-vs-late chronicle test (#85, closed)
 
-This is the human half of #85. It complements, rather than replaces, the
-longitudinal state report that #85 still owes in code.
+This was the human half of #85. It remains useful as an optional product-research
+exercise; it is no longer issue acceptance.
 
 ### Prepare the material before any reader sees it
 
@@ -249,11 +252,13 @@ delayed bearing/Record consequences, broader family history, or ladder/goal
 state. "The prose sounds later" with no concrete feature is weaker evidence and
 should be kept separate.
 
-## Pass/fail matrix
+## Historical observation thresholds
 
-Do not convert every qualitative question into a fake precise metric. Use
-numbers where the issues already define them, and preserve the raw observations
-for the design decisions.
+These thresholds preserve how the closed research questions were read. They are
+not current issue-closing gates and must not be copied into an open issue
+without a new decision and new evidence. Do not convert every qualitative
+question into a fake precise metric; preserve the raw observations for design
+decisions.
 
 | Question | Pre-declared reading |
 |---|---|
@@ -263,12 +268,12 @@ for the design decisions.
 | #60 person | at least 3/5 name a specific person |
 | #60 artefact | at least 1/5 voluntarily opens/shares/exports a chronicle page |
 | #60 playtime | report median and range against the active Short-Line product target; do not rewrite the target after observing it |
-| #36 bearing | for a five-player cohort, aim for at least 4/5 decision/repeated-behaviour explanations and 3/5 delayed-consequence links; with six players, retain the issue's existing 4/6 and 3/6 floors |
+| Bearing research signal | for a five-player cohort, 4/5 decision/repeated-behaviour explanations and 3/5 delayed-consequence links was the historical research target; with six players, the historical floors were 4/6 and 3/6 |
 | #24 item 3 | decide from names/history versus inventory language; objection is not failure |
 | #24 item 5 | decide from repeated risk-taking/hesitation/regret, not one dramatic seed |
 | #35 second run | consequential divergence plus a concrete decision the player believes caused it |
 | #85 blind reader | at least 26/40 early-vs-late judgements correct, with concrete cited differences |
-| #213 generation memory | after each completed generation, ask “what was that generation about?” before showing its framing again; record whether the answer names the same pressure/person in substance |
+| Generation-memory research (#213, closed) | after each completed generation, ask “what was that generation about?” before showing its framing again; record whether the answer names the same pressure/person in substance |
 
 A failed row creates a **narrow follow-up for the observed failure**. It does not
 automatically reopen an old tuning theory.
@@ -285,7 +290,7 @@ Examples:
 - blind early/late reasons cite only wording → later game state may still be too
   stationary even if the classifier squeaks past 50%.
 
-## Generation memory check (#213)
+## Historical generation-memory check (#213, closed)
 
 At the first natural pause after a generation closes, **before reopening the
 generation framing**, ask:
