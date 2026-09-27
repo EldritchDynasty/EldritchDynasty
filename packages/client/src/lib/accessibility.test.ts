@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { PrologueView } from '@ed/core';
+import Prologue from '../components/Prologue.vue';
+import type { GameActions } from './game';
 import {
   ACCESSIBILITY_STORAGE_KEY,
   SEEN_PROSE_STORAGE_KEY,
@@ -11,6 +15,7 @@ import {
   loadAccessibility,
   loadSeenProse,
   rememberSeenProse,
+  replayDisposition,
   saveAccessibility,
   seenProseKey,
   type AccessibilityPreferences,
@@ -157,5 +162,164 @@ describe('experienced-player Age openings (#258)', () => {
       { kind: 'closing' },
     )).toBe('show');
     expect(loadSeenProse(s).size).toBe(0);
+  });
+});
+
+
+describe('experienced-reader replay beyond Age openings (#267)', () => {
+  function storage() {
+    const values = new Map<string, string>();
+    return {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+  }
+
+  const prologueText = [
+    'The room was cold.',
+    'A key was given.', 'The door would remember it.',
+    'A name was given.', 'The book would keep it.',
+    'A line was given.', 'The line would be collected.',
+    'What was signed was inherited.',
+  ].join('\u0000');
+
+  it('fast-reveals only an exact repeated prologue when the reader opted in', () => {
+    const s = storage();
+    const beat = { kind: 'prologue' as const, text: prologueText };
+    const key = seenProseKey('prologue', prologueText);
+
+    expect(replayDisposition(s, true, beat)).toBe('show');
+    expect(hasSeenProse(s, key), 'merely mounting the prologue must not mark it read').toBe(false);
+
+    rememberSeenProse(s, key);
+    expect(replayDisposition(s, true, beat)).toBe('fast');
+    expect(replayDisposition(s, false, beat)).toBe('show');
+    expect(replayDisposition(s, true, {
+      kind: 'prologue',
+      text: prologueText.replace('cold', 'very cold'),
+    })).toBe('show');
+  });
+
+  it('marks a repeated authored scene without hiding it or depending on the skip preference', () => {
+    const s = storage();
+    const scene = {
+      kind: 'scene' as const,
+      event: 'the_same_room',
+      authored: '{HEIR} finds the old key under the ledger.',
+    };
+
+    expect(replayDisposition(s, false, scene)).toBe('show');
+    expect(replayDisposition(s, true, scene)).toBe('mark');
+
+    // Filled names are deliberately not an input to the identity. The same
+    // authored scene is still the same scene when a different heir fills it.
+    expect(replayDisposition(s, false, scene)).toBe('mark');
+
+    expect(replayDisposition(s, true, {
+      ...scene,
+      authored: '{HEIR} finds the old key beside the ledger.',
+    })).toBe('show');
+  });
+});
+
+describe('the prologue earns its seen mark only after it is read (#267)', () => {
+  const prologue: PrologueView = {
+    id: 'the_signing',
+    opening: 'The room was cold.',
+    triad: [
+      { given: 'A key was given.', owed: 'The door would remember it.' },
+      { given: 'A name was given.', owed: 'The book would keep it.' },
+      { given: 'A line was given.', owed: 'The line would be collected.' },
+    ],
+    housePrompt: 'What will the family be called?',
+    friendsPrompt: 'Name those who stood outside the blood.',
+    friendsWanted: 0,
+    heirlooms: [{
+      heirloom: 'the_key',
+      name: 'The Key',
+      blurb: 'Iron, and colder than the room.',
+      line: 'He asked for the key.',
+    }],
+    grudges: [{
+      house: 'house_marrow',
+      houseName: 'House Marrow',
+      line: 'They paid the balance.',
+    }],
+    thesis: 'What was signed was inherited.',
+  };
+
+  const exactText = [
+    prologue.opening,
+    ...prologue.triad.flatMap((beat) => [beat.given, beat.owed]),
+    prologue.thesis,
+  ].join('\u0000');
+
+  function actions() {
+    return {
+      found: vi.fn(() => ({ ok: true })),
+      enter: vi.fn(),
+    } as unknown as GameActions;
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.stubGlobal('scrollTo', vi.fn());
+  });
+
+  it('does not remember a half-read signing, then remembers the third revealed beat', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue,
+        actions: game,
+        refused: null,
+        startYear: 1042,
+        skipSeenProse: true,
+      },
+    });
+    const key = seenProseKey('prologue', exactText);
+
+    await wrapper.get('button.on').trigger('click');
+    await wrapper.get('button.on').trigger('click');
+    expect(hasSeenProse(window.localStorage, key)).toBe(false);
+
+    await wrapper.get('button.on').trigger('click');
+    expect(hasSeenProse(window.localStorage, key)).toBe(true);
+    expect((game.found as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('fast-reveals passive beats but still requires every founding answer before Sign it', async () => {
+    rememberSeenProse(window.localStorage, seenProseKey('prologue', exactText));
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue,
+        actions: game,
+        refused: null,
+        startYear: 1042,
+        skipSeenProse: true,
+      },
+    });
+
+    expect(wrapper.findAll('.triad li')).toHaveLength(3);
+    expect(wrapper.findAll('button').some((button) => button.text() === 'The first thing')).toBe(false);
+    expect((game.found as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    expect((game.enter as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+
+    const sign = wrapper.get('button.sign');
+    expect(sign.attributes('disabled')).toBeDefined();
+
+    const options = wrapper.findAll('button.option');
+    await options[0]!.trigger('click');
+    await options[1]!.trigger('click');
+    await wrapper.get('input[aria-label="Name the house"]').setValue('House Test');
+
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+    await wrapper.get('button.sign').trigger('click');
+
+    expect((game.found as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+    expect((game.enter as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    wrapper.unmount();
   });
 });
