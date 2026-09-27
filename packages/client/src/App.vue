@@ -236,9 +236,11 @@ const yearAndBirths = computed(() => {
     :text-scale="accessibility.textScale"
     :reading-font="accessibility.readingFont"
     :skip-seen-prose="accessibility.skipSeenProse"
+    :reduce-motion="accessibility.reduceMotion"
     @update:text-scale="accessibility.textScale = $event"
     @update:reading-font="accessibility.readingFont = $event"
     @update:skip-seen-prose="accessibility.skipSeenProse = $event"
+    @update:reduce-motion="accessibility.reduceMotion = $event"
   />
 
   <!-- A DEBT OF THREE PARTS. Once, at the head of the run, before a year has
@@ -365,6 +367,7 @@ const yearAndBirths = computed(() => {
             v-model:text-scale="accessibility.textScale"
             v-model:reading-font="accessibility.readingFont"
             v-model:skip-seen-prose="accessibility.skipSeenProse"
+            v-model:reduce-motion="accessibility.reduceMotion"
           />
           <h3 class="label">Marks</h3>
           <dl class="legend-list">
