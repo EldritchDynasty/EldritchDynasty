@@ -61,6 +61,8 @@ export interface ChronicleEntry {
    * the house did the thing, but its book never wrote a page for it.
    */
   cause?: { year: Year; page?: string };
+  /** People explicitly cast on this authored page (#268). */
+  people?: string[];
 }
 
 export type GenerationQuestionKind = 'unstable_heir' | 'thin_line' | 'record' | 'ledger' | 'branch' | 'match' | 'ascension';

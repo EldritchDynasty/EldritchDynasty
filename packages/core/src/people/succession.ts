@@ -52,37 +52,112 @@ export interface SuccessionResult {
  * who is next in line, full stop, minor or not — so Wardship can tell a
  * minor who outranks every living adult from one who does not.
  */
-export function heirApparent(ctx: SimCtx, excluding?: string, minAge = 16): Person | undefined {
-  const w = ctx.world;
-  const blood = w.people.household(w.playerHouse, w.year).filter(
-    (p) => p.id !== excluding
-      && p.membership.some((m) => m.kind === 'blood' || m.kind === 'cadet')
-      && w.year - p.born >= minAge,
-  );
 
-  /**
-   * The seat first, then the branches. A cadet cousin is a worse claim than a
-   * son of the main line and a far better one than nobody — which is how "a
-   * mundane cadet cousin is sitting where the founder sat" (§23) happens, and
-   * why a house with living branches is much harder to end.
-   */
-  const bySeniority = (a: Person, b: Person) => {
-    const ab = branchOf(w, a, w.year) === MAIN_BRANCH ? 0 : 1;
-    const bb = branchOf(w, b, w.year) === MAIN_BRANCH ? 0 : 1;
-    return ab - bb || a.born - b.born;
-  };
+function successionSeniority(ctx: SimCtx, a: Person, b: Person): number {
+  const w = ctx.world;
+  const ab = branchOf(w, a, w.year) === MAIN_BRANCH ? 0 : 1;
+  const bb = branchOf(w, b, w.year) === MAIN_BRANCH ? 0 : 1;
+  return ab - bb || a.born - b.born;
+}
+
+function successionCandidates(ctx: SimCtx, excluding?: string, minAge = 16): Person[] {
+  const w = ctx.world;
+  return w.people.household(w.playerHouse, w.year)
+    .filter(
+      (p) => p.id !== excluding
+        && p.membership.some((m) => m.kind === 'blood' || m.kind === 'cadet')
+        && w.year - p.born >= minAge,
+    )
+    .sort((a, b) => successionSeniority(ctx, a, b));
+}
+
+export function heirApparent(ctx: SimCtx, excluding?: string, minAge = 16): Person | undefined {
+  const blood = successionCandidates(ctx, excluding, minAge);
 
   const expressing = blood
-    .filter((p) => p.sex === 'male' && phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress)
-    .sort(bySeniority);
+    .filter((p) => p.sex === 'male' && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress);
   if (expressing.length) return expressing[0];
 
   // No expressing son. The house enters Regency, and the Ledger keeps counting.
-  const women = blood.filter((p) => p.sex === 'female').sort(bySeniority);
+  const women = blood.filter((p) => p.sex === 'female');
   if (women.length) return women[0];
 
   // A mundane man is better than nobody: he can hold a house, just not advance it.
-  return blood.filter((p) => p.sex === 'male').sort(bySeniority)[0];
+  return blood.find((p) => p.sex === 'male');
+}
+
+export interface SuccessionView {
+  /** Set only when every assignment of what the unwoken might reveal gives the same answer. */
+  heir?: string;
+  /** Everyone the seal could go to, in the same seniority order succession uses. */
+  possible: string[];
+  /** Why the answer is not yet settled, expressed only in facts the house knows. */
+  because?: string;
+}
+
+/**
+ * WHO THE HOUSE CAN HONESTLY CALL NEXT.
+ *
+ * The simulation rule may inspect an unwoken son's genome because the world
+ * already has one. A view may not. Before Awakening, the family does not know
+ * whether the font will come through him, and marking him (or skipping him) as
+ * heir would turn a UI badge into a genetic test.
+ *
+ * This asks the rule under every relevant assignment of those unknowns without
+ * inspecting their actual genome. Once a man awakens, canExpress is public and
+ * the ordinary gate may be read.
+ */
+export function knownSuccession(ctx: SimCtx): SuccessionView {
+  const sitting = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+    .find((p) => p.castSlots.includes('head') && p.status === 'alive');
+  const blood = successionCandidates(ctx, sitting?.id);
+  const knownExpressers = blood.filter(
+    (p) => p.sex === 'male'
+      && p.awakening.awakened
+      && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress,
+  );
+  const firstKnown = knownExpressers[0];
+
+  // An unwoken man can alter the answer only if no already-known expresser
+  // outranks him. With no known expresser, any unwoken man can win under some
+  // assignment of what Awakening eventually reveals.
+  const unknown = blood.filter(
+    (p) => p.sex === 'male'
+      && !p.awakening.awakened
+      && (!firstKnown || successionSeniority(ctx, p, firstKnown) < 0),
+  );
+
+  const fallback = firstKnown
+    ?? blood.find((p) => p.sex === 'female')
+    ?? blood.find((p) => p.sex === 'male');
+
+  const possiblePeople = [...unknown, ...(fallback ? [fallback] : [])]
+    .filter((p, i, all) => all.findIndex((x) => x.id === p.id) === i)
+    .sort((a, b) => successionSeniority(ctx, a, b));
+  const possible = possiblePeople.map((p) => p.id);
+
+  if (possible.length <= 1) {
+    return {
+      ...(possible[0] ? { heir: possible[0] } : {}),
+      possible,
+    };
+  }
+
+  const names = unknown
+    .filter((p) => possible.includes(p.id))
+    .map((p) => p.name);
+  const named = names.length <= 1
+    ? names[0]
+    : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+  return {
+    possible,
+    ...(named
+      ? {
+        because: named + ' ' + (names.length === 1 ? 'has' : 'have')
+          + ' not yet awakened; the house does not know what the blood will reveal.',
+      }
+      : {}),
+  };
 }
 
 /**

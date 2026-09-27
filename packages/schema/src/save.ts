@@ -194,7 +194,12 @@ import { CommitmentS } from './muster.js';
  * grudges remember their origin page. Older formats cannot honestly invent
  * those links, so the existing loader policy refuses them rather than guessing.
  */
-export const SAVE_FORMAT = 26;
+/**
+ * Bumped to 27 for Chronicle person links (#268): authored pages retain the
+ * people who were cast in them, so the family tree can point back into the
+ * book without reconstructing a cast from prose.
+ */
+export const SAVE_FORMAT = 27;
 
 // ── Person, in its stored form ────────────────────────────────────────────
 
@@ -523,6 +528,8 @@ export const ChronicleEntryS = z.object({
   delegated: z.string().optional(),
   /** The earlier act this page answers (#269). */
   cause: z.object({ year: z.number(), page: z.string().optional() }).optional(),
+  /** People explicitly cast on this authored page (#268). */
+  people: z.array(z.string()).optional(),
 });
 
 /**
