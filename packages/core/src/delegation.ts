@@ -31,13 +31,21 @@ function peopleNamed(d: PendingChoice | PendingRecord): string[] {
   return ids;
 }
 
-function authoredText(e: EventTemplate): string {
+function authoredText(e: EventTemplate, rememberedChoice?: string): string {
+  const interaction = e.interaction.kind === 'choice' && rememberedChoice
+    ? {
+        kind: e.interaction.kind,
+        decidedBy: e.interaction.decidedBy,
+        choice: e.interaction.choices.find((choice) => choice.id === rememberedChoice),
+      }
+    : e.interaction;
+
   return JSON.stringify({
     id: e.id,
     title: e.title,
     tags: e.tags,
     conditions: e.conditions,
-    interaction: e.interaction,
+    interaction,
     // Only effects of the answer delegation would actually take belong here.
     // Every Record block has an Embellish discrepancy by schema; scanning the
     // whole block would falsely make every plain Record answer consequential.
@@ -77,7 +85,8 @@ export function mustSurface(ctx: SimCtx, d: PendingDecision): DelegationGuard | 
     if (head && named.includes(head.id)) return 'heir';
   }
 
-  const text = authoredText(e);
+  const rememberedChoice = d.kind === 'choice' ? ctx.world.delegation.choices[e.id] : undefined;
+  const text = authoredText(e, rememberedChoice);
   if (/sacrific|\bkill\b|\bdead\b|\bdeath\b/.test(text)) return 'sacrifice';
   if (/great_rite|vessel|unmaking|\brite\b/.test(text)) return 'rite';
   if (/discrepanc/.test(text)) return 'discrepancy';
