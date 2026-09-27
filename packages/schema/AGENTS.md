@@ -35,6 +35,10 @@ validate.ts       the runner: validateBundle, runRule
 - **Adding a field to a state type means adding it to `save.ts`.**
   `SAVE_SHAPES_AGREE` fails to compile if the two drift. Do not "fix" that
   check by widening it.
+- **Saved prose is an artefact, not a translation lookup.** Keep the rendered
+  words of Chronicle pages and other persisted diegetic records; localisation
+  may use stable message ids before rendering, but loading an old save must not
+  require an old translation catalogue. See [docs/LOCALISATION.md](../../docs/LOCALISATION.md).
 - **Branded ids are assignable to `string`.** If you find yourself writing
   `as unknown as string`, you do not need it. Going the other way is `asId<T>`.
 - **`CONTENT_LAYOUT` is the only statement of where content lives.** Both
