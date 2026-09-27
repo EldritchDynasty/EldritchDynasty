@@ -63,6 +63,8 @@ export interface Grudge {
   id: string;
   originEvent: string;
   originYear: number;
+  /** The Chronicle page where this quarrel began, when the book wrote one. */
+  originPage?: string;
   severity: number;
   /** One enum is why the prologue's grudge echoes for a thousand years. */
   inheritance: 'none' | 'heir_only' | 'all_blood' | 'house_wide';
