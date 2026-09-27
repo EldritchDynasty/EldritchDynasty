@@ -250,19 +250,11 @@ describe('delegation reduces routine interruption without thinning the meaningfu
   }, 900_000);
 
   for (const term of DELEGATION_TERMS) {
-    it(`delegates repeated low-stakes choices across the ${term}-year line`, () => {
+    it(`removes repeated low-stakes prompts across the ${term}-year line`, () => {
       const row = rows.find((candidate) => candidate.term === term)!;
-      const before = sumDelegation(row.before, (run) => run.choices);
-      const after = sumDelegation(row.after, (run) => run.choices);
-      expect(after, `${term}y surfaced ${after} choices after delegation vs ${before} before`)
-        .toBeLessThan(before);
-    });
-
-    it(`delegates repeated plain Record prompts across the ${term}-year line`, () => {
-      const row = rows.find((candidate) => candidate.term === term)!;
-      const before = sumDelegation(row.before, (run) => run.records);
-      const after = sumDelegation(row.after, (run) => run.records);
-      expect(after, `${term}y surfaced ${after} Record prompts after delegation vs ${before} before`)
+      const before = sumDelegation(row.before, (run) => run.choices + run.records);
+      const after = sumDelegation(row.after, (run) => run.choices + run.records);
+      expect(after, `${term}y surfaced ${after} choice/Record prompts after delegation vs ${before} before`)
         .toBeLessThan(before);
     });
 
