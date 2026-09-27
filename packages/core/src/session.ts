@@ -41,6 +41,7 @@ import {
   type AgeMatchPriority, type AgeRecordPriority,
 } from './ages/strategy.js';
 import { resolveDelegated } from './delegation.js';
+import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -493,6 +494,16 @@ export class GameSession {
     return this.ctx.world.chronicle.filter(
       (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
     );
+  }
+
+  /** The earlier act a Chronicle page answers, when one is recoverable. */
+  causeOf(entryId: string): ChronicleCause | undefined {
+    return causeOfPage(this.ctx, entryId);
+  }
+
+  /** Later Chronicle years that explicitly answer this page. */
+  answeredBy(entryId: string): number[] {
+    return answeredByPage(this.ctx, entryId);
   }
 
   /**
