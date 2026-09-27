@@ -22,20 +22,25 @@ jobs:
   land:
     # The default Actions concurrency queue is lossy: one running + one pending,
     # and a newer request replaces the older pending one. `queue: max` keeps
-    # up to 100 waiting landings instead. Concurrency is evaluated before this
-    # job's `if`, so only trusted /land/bootstrap requests share the landing
-    # group. Issue-comment admission is prefiltered by author_association before
-    # queueing; the API permission lookup below remains authoritative. Unrelated
-    # or outsider comments get a per-run group and skip without occupying it.
+    # up to 100 trusted issue-comment landings instead. The reusable bootstrap
+    # deliberately gets a run-unique group: it executes the PR's proposed copy
+    # of this workflow while issue comments execute the copy already on main, so
+    # sharing a group would let old queue semantics cancel the new bootstrap.
+    # Concurrency is evaluated before this job's `if`, so trusted exact /land
+    # comments alone share the landing group. Issue-comment admission is
+    # prefiltered by author_association before queueing; the API permission
+    # lookup below remains authoritative. Unrelated or outsider comments get a
+    # per-run group and skip without occupying it.
     concurrency:
       group: >-
         ${{ (inputs.pr_number > 0
-        || (github.event_name == 'issue_comment'
+        && format('remote-land-bootstrap-{0}', github.run_id))
+        || ((github.event_name == 'issue_comment'
         && github.event.issue.pull_request
         && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
         && (github.event.comment.body == '/land'
-        || github.event.comment.body == '/land --no-issue-check')))
-        && 'remote-land-main'
+        || github.event.comment.body == '/land --no-issue-check'))
+        && 'remote-land-main')
         || format('remote-land-skip-{0}', github.run_id) }}
       cancel-in-progress: false
       queue: max
