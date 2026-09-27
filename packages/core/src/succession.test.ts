@@ -115,7 +115,7 @@ describe('succession membership boundary (issue #294)', () => {
   function outsiderMarriedIntoPlayerHouse(ctx: SimCtx): Person {
     const outsider = place(ctx, { sex: 'female', age: 40, name: 'Outsider' });
     const original = outsider.membership[0]!;
-    const otherHouse = [...ctx.world.houses.keys()].find((h) => h !== ctx.world.playerHouse);
+    const otherHouse = bundle.houses.find((h) => h.id !== ctx.world.playerHouse)?.id;
     if (!otherHouse) throw new Error('fixture needs a non-player house');
 
     outsider.membership = [
@@ -128,7 +128,7 @@ describe('succession membership boundary (issue #294)', () => {
       },
       {
         ...original,
-        house: ctx.world.playerHouse,
+        house: original.house,
         kind: 'married_in',
         from: ctx.world.year,
         to: undefined,
