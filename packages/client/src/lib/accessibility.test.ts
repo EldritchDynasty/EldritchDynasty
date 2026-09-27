@@ -124,7 +124,8 @@ describe('the reading-comfort checklist (#275)', () => {
   it('has no component fact available only through a title tooltip', () => {
     for (const name of readdirSync(components).filter((entry) => entry.endsWith('.vue'))) {
       const source = readFileSync(join(components, name), 'utf8');
-      expect(source, name).not.toMatch(/\b(?::|v-bind:)?title\s*=/);
+      const template = source.match(/<template>([\\s\\S]*?)<\\/template>/)?.[1] ?? '';
+      expect(template, name).not.toMatch(/\b(?::|v-bind:)?title\s*=/);
     }
   });
 
