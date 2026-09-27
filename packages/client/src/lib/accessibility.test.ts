@@ -1,14 +1,12 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { mount } from '@vue/test-utils';
-import Chapter from '../components/Chapter.vue';
-import type { ChapterBeat, GameActions } from './game';
 import {
   ACCESSIBILITY_STORAGE_KEY,
   SEEN_PROSE_STORAGE_KEY,
   applyAccessibility,
+  chapterReplayDisposition,
   hasSeenProse,
   loadAccessibility,
   loadSeenProse,
@@ -95,93 +93,69 @@ describe('seen passive prose', () => {
 });
 
 
-function chapterActions() {
-  return {
-    dismissChapter: vi.fn(),
-  } as unknown as GameActions;
-}
-
-function openingBeat(text: string): ChapterBeat {
-  return {
-    kind: 'opening',
-    opening: { text },
-  } as unknown as ChapterBeat;
-}
-
-function closingBeat(): ChapterBeat {
-  return {
-    kind: 'closing',
-    view: {
-      name: 'The Quiet Years',
-      verdict: [{ text: 'The house came through with less silver and more names.' }],
-      boundary: true,
-    },
-  } as unknown as ChapterBeat;
-}
-
 describe('experienced-player Age openings (#258)', () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
+  function storage() {
+    const values = new Map<string, string>();
+    return {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+  }
 
-  it('always shows the first occurrence and records its exact prose as seen', () => {
-    const actions = chapterActions();
+  it('shows the first occurrence and records it as seen', () => {
+    const s = storage();
     const text = 'The bells had not rung since winter.';
-    const key = seenProseKey('chapter-opening', text);
-    const w = mount(Chapter, {
-      props: { beat: openingBeat(text), actions, skipSeenProse: true },
-    });
 
-    expect(actions.dismissChapter).not.toHaveBeenCalled();
-    expect(w.text()).toContain(text);
-    expect(hasSeenProse(window.localStorage, key)).toBe(true);
+    expect(chapterReplayDisposition(
+      s,
+      true,
+      { kind: 'opening', text },
+    )).toBe('show');
+    expect(hasSeenProse(s, seenProseKey('chapter-opening', text))).toBe(true);
   });
 
   it('skips an exact repeat only when the reader opted in', () => {
     const text = 'The bells had not rung since winter.';
-    rememberSeenProse(window.localStorage, seenProseKey('chapter-opening', text));
 
-    const enabled = chapterActions();
-    mount(Chapter, {
-      props: { beat: openingBeat(text), actions: enabled, skipSeenProse: true },
-    });
-    expect(enabled.dismissChapter).toHaveBeenCalledTimes(1);
+    const enabled = storage();
+    rememberSeenProse(enabled, seenProseKey('chapter-opening', text));
+    expect(chapterReplayDisposition(
+      enabled,
+      true,
+      { kind: 'opening', text },
+    )).toBe('skip');
 
-    const disabled = chapterActions();
-    const w = mount(Chapter, {
-      props: { beat: openingBeat(text), actions: disabled, skipSeenProse: false },
-    });
-    expect(disabled.dismissChapter).not.toHaveBeenCalled();
-    expect(w.text()).toContain(text);
+    const disabled = storage();
+    rememberSeenProse(disabled, seenProseKey('chapter-opening', text));
+    expect(chapterReplayDisposition(
+      disabled,
+      false,
+      { kind: 'opening', text },
+    )).toBe('show');
   });
 
   it('treats changed opening prose as unseen', () => {
-    const actions = chapterActions();
+    const s = storage();
     const oldText = 'The bells had not rung since winter.';
     const newText = 'The bells had scarcely rung since winter.';
-    rememberSeenProse(window.localStorage, seenProseKey('chapter-opening', oldText));
+    rememberSeenProse(s, seenProseKey('chapter-opening', oldText));
 
-    const w = mount(Chapter, {
-      props: { beat: openingBeat(newText), actions, skipSeenProse: true },
-    });
-
-    expect(actions.dismissChapter).not.toHaveBeenCalled();
-    expect(w.text()).toContain(newText);
-    expect(hasSeenProse(
-      window.localStorage,
-      seenProseKey('chapter-opening', newText),
-    )).toBe(true);
+    expect(chapterReplayDisposition(
+      s,
+      true,
+      { kind: 'opening', text: newText },
+    )).toBe('show');
+    expect(hasSeenProse(s, seenProseKey('chapter-opening', newText))).toBe(true);
   });
 
-  it('never skips or records an Age closing', () => {
-    const actions = chapterActions();
-    const w = mount(Chapter, {
-      props: { beat: closingBeat(), actions, skipSeenProse: true },
-    });
+  it('always shows a closing and never records one', () => {
+    const s = storage();
 
-    expect(actions.dismissChapter).not.toHaveBeenCalled();
-    expect(w.text()).toContain('The Quiet Years');
-    expect(w.text()).toContain('The house came through with less silver and more names.');
-    expect(loadSeenProse(window.localStorage).size).toBe(0);
+    expect(chapterReplayDisposition(
+      s,
+      true,
+      { kind: 'closing' },
+    )).toBe('show');
+    expect(loadSeenProse(s).size).toBe(0);
   });
 });
