@@ -299,6 +299,12 @@ describe('the connector-only remote claim transport', () => {
       '--lane', 'gates',
     ]);
 
+    const spaced = parseClaimRequest(
+      '/claim 206 --agent chatgpt/issue-206-space-paths --paths tools/agents.mjs packages/core/src/tools/agents.test.ts',
+    );
+    expect(spaced.paths).toBe('tools/agents.mjs,packages/core/src/tools/agents.test.ts');
+    expect(argsFor(spaced)).toContain('tools/agents.mjs,packages/core/src/tools/agents.test.ts');
+
     const check = parseClaimRequest('/claim check --agent chatgpt/issue-205-remote-claim');
     expect(argsFor(check)).toEqual([
       'check', '--agent', 'chatgpt/issue-205-remote-claim',

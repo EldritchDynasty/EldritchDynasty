@@ -16,7 +16,7 @@ import { pathToFileURL } from 'node:url';
 const AGENTS = join(import.meta.dirname, 'agents.mjs');
 
 export const CLAIM_SYNTAX = [
-  '/claim <issue> --agent <working-branch> --paths <csv> [--lane <lane>]',
+  '/claim <issue> --agent <working-branch> --paths <path-list> [--lane <lane>]',
   '/claim check --agent <working-branch>',
   '/claim release <issue> --agent <working-branch>',
   '/claim steal <issue> --agent <working-branch>',
@@ -41,15 +41,14 @@ function validateAgent(agent) {
 }
 
 function validatePaths(raw) {
-  const paths = raw.split(',');
-  if (!raw || paths.some((p) =>
-    !p
-    || p !== p.trim()
-    || p.startsWith('/')
+  const paths = String(raw ?? '').trim().split(/[,\s]+/).filter(Boolean);
+  if (!raw || paths.length === 0 || paths.some((p) =>
+    p.startsWith('/')
+    || p.startsWith('--')
     || p.includes('..')
     || p.includes('//')
     || !/^[A-Za-z0-9._/*-]+$/.test(p))) {
-    throw syntaxError('paths must be a non-empty comma-separated repository path list');
+    throw syntaxError('paths must be a non-empty repository path list separated by commas or whitespace');
   }
   return paths.join(',');
 }
@@ -65,7 +64,7 @@ function validateLane(lane) {
 export function parseClaimRequest(raw) {
   const body = String(raw ?? '').trim();
 
-  let match = body.match(/^\/claim ([1-9]\d*) --agent (\S+) --paths (\S+?)(?: --lane (\S+))?$/);
+  let match = body.match(/^\/claim ([1-9]\d*) --agent (\S+) --paths (.+?)(?: --lane (\S+))?$/);
   if (match) {
     return {
       command: 'take',
