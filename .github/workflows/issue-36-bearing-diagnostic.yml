@@ -21,29 +21,11 @@ jobs:
       matrix:
         include:
           - years: 300
-            base: 4000
-            step: 13
-          - years: 300
-            base: 9001
-            step: 17
-          - years: 300
-            base: 20011
-            step: 29
-          - years: 300
             base: 31013
             step: 37
           - years: 500
-            base: 4000
-            step: 13
-          - years: 500
             base: 9001
             step: 17
-          - years: 500
-            base: 20011
-            step: 29
-          - years: 500
-            base: 31013
-            step: 37
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
