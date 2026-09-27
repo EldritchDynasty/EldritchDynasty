@@ -448,9 +448,12 @@ export const SPREAD_FLOOR = 0;
 /**
  * Below this the spread is printed and NOT judged, which is #76's own argument
  * turned into a guard: a distribution statistic is meaningless at the dozen
- * runs a CI budget allows. It also keeps `bearing-gate.test.ts`'s rule-2
- * fixtures honest — nine synthetic runs whose bins have no internal variance
- * at all report +0.00 and are not making a claim about width.
+ * runs a CI budget allows. This count applies to runs that actually reach the
+ * creditor's reading. Broken Line bypasses that reading entirely and is kept
+ * in the ending report rather than spent as fake sample size for proof spread.
+ *
+ * 240 leaves eighty runs in each bearing third, preserving the sample size the
+ * spread floor was calibrated against.
  */
 export const SPREAD_MIN_RUNS = 240;
 
@@ -555,8 +558,27 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
       + ALL_ENDINGS.map((e) => `${e} ${share(b.runs, e).toFixed(0)}%`).join('  '));
   }
 
-  const low = cut[0]!.runs.map((r) => r.bestRungIndex);
-  const high = cut[2]!.runs.map((r) => r.bestRungIndex);
+  // THE BEARING JUDGMENT STARTS WHERE THE LAST-NIGHT READING EXISTS.
+  //
+  // Broken Line is a different terminal branch: nobody is left for the book
+  // to be read to, and `selectEnding` returns it before consulting the
+  // substantiated rung. Including those runs in a verdict about the creditor's
+  // proof reading creates censoring in both directions. A line that dies early
+  // has fewer generations in which remembered acts can accrue, so it sorts
+  // mechanically toward the low-bearing bin; then its pre-extinction rung is
+  // treated as if it were the outcome the creditor read. Issue #36's shipped-
+  // term sweep exposed the signature directly: 44-61% Broken Line in the
+  // bottom bin versus 11-20% at the top.
+  //
+  // Keep those runs in the report above — the ending distribution is an
+  // acceptance condition in its own right — but do not let an ending that
+  // bypasses the reading decide whether Bearing changes the reading.
+  const readRuns = runs.filter((r) => r.ending !== 'broken_line');
+  const judgedCut = bins(readRuns);
+  lines.push(`  --- Bearing judgment: ${readRuns.length}/${runs.length} runs reached a creditor reading; Broken Line remains in the ending report above ---`);
+
+  const low = judgedCut[0]!.runs.map((r) => r.bestRungIndex);
+  const high = judgedCut[2]!.runs.map((r) => r.bestRungIndex);
   const higher = mean(high) > mean(low);
 
   if (!higher) {
@@ -579,18 +601,18 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
   // about. Never quote a per-bin variance from one batch — a single bin's
   // variance swings by up to 0.10 from nothing but the seed set, which is
   // three times the gap the first measurement here credited to a content drop.
-  const lowGot = cut[0]!.runs.map((r) => r.substantiatedRungIndex);
-  const highGot = cut[2]!.runs.map((r) => r.substantiatedRungIndex);
+  const lowGot = judgedCut[0]!.runs.map((r) => r.substantiatedRungIndex);
+  const highGot = judgedCut[2]!.runs.map((r) => r.substantiatedRungIndex);
   const spread = variance(highGot) - variance(lowGot);
-  const judged = runs.length >= SPREAD_MIN_RUNS;
+  const judged = readRuns.length >= SPREAD_MIN_RUNS;
   // STRICTLY above. "No wider than the bottom" is the failure §29.7 names, so
   // equal width is a failure and not a pass on a technicality.
   const spreadOk = !judged || spread > SPREAD_FLOOR;
 
   lines.push(`  spread IN OUTCOME: the top bin carries ${spread >= 0 ? '+' : ''}${spread.toFixed(2)}`
     + ` of variance over the bottom, against a floor of ${SPREAD_FLOOR.toFixed(2)}`
-    + (judged ? ' — JUDGED' : ` — printed, NOT judged: ${runs.length} runs is under the `
-      + `${SPREAD_MIN_RUNS} this claim needs. Run \`gate:bearing -- 80 1000\``));
+    + (judged ? ' — JUDGED' : ` — printed, NOT judged: ${readRuns.length} creditor-read runs is under the `
+      + `${SPREAD_MIN_RUNS} this claim needs after Broken Line is kept out of the proof reading`));
 
   if (!spreadOk) {
     lines.push('  FAIL: the house the world reads as carrying itself arrives no more VARIOUSLY than'
