@@ -465,11 +465,11 @@ export function restoreParcel(ctx: SimCtx, parcel: string, magnitude = LAND_DAMA
  * `world.bearing.acts`, and the market thins fifty years on for a reason
  * nobody living was there to see.
  */
-export function encroachParcel(ctx: SimCtx, parcel: string): void {
+export function encroachParcel(ctx: SimCtx, parcel: string, page?: string): void {
   if (liveStateOf(ctx, parcel)) return; // already held — see `grantParcel`'s own no-op
   grantParcel(ctx, parcel);
   const def = ctx.content.parcel(parcel);
-  noteBearing(ctx, 'bit_the_common', def?.name ?? parcel);
+  noteBearing(ctx, 'bit_the_common', def?.name ?? parcel, page);
 }
 
 // ── Stage H: cadet-branch land holding (issue #91, ruled 2026-09-07) ───────
