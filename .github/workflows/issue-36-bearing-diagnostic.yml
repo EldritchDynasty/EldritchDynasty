@@ -52,4 +52,4 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Judge Bearing at shipped term
-        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
+        run: npm run gate:bearing -- 120 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
