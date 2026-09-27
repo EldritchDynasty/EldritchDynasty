@@ -8,6 +8,7 @@ import { acquireLibraryCopy } from './people/library.js';
 import { addGrudge } from './people/relationships.js';
 import { namesakeBurden } from './people/naming.js';
 import { campaignDef, campaignProgress } from './campaign.js';
+import { chronicleEntryId } from './events/effects.js';
 
 
 /**
@@ -171,7 +172,7 @@ export interface AssizeResponse {
   line: string;
   /** Whether the world is in a position to do this at all. */
   when?(ctx: SimCtx): boolean;
-  apply(ctx: SimCtx, rng: Rng): void;
+  apply(ctx: SimCtx, rng: Rng, page?: string): void;
 }
 
 /**
@@ -215,13 +216,13 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     when: (ctx) => Boolean(bestRetainer(ctx)),
     line: 'Somebody made the steward an offer in a room the house does not own, '
       + 'and he thought about it for a week before saying no.',
-    apply(ctx, rng) {
+    apply(ctx, rng, page) {
       const p = bestRetainer(ctx);
       // Loyalty is what `tickSecrets` reads. A bought man is how a secret
       // leaves the house — the mechanism is already built, and nothing was
       // pressing on it.
       if (p?.contract) p.contract.loyalty = Math.max(0, p.contract.loyalty - 28);
-      quarrel(ctx, rng, 22, 'heir_only', 'a_retainer_courted_away');
+      quarrel(ctx, rng, 22, 'heir_only', 'a_retainer_courted_away', page);
     },
   },
   {
@@ -239,10 +240,10 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     when: (ctx) => activeBranches(ctx.world).length > 0,
     line: 'A ward was requested of the house, in the way that a request is made '
       + 'when refusing it is the thing being measured.',
-    apply(ctx, rng) {
+    apply(ctx, rng, page) {
       const b = rng.pick(activeBranches(ctx.world));
       if (b) b.grievance = clamp(0, 100, b.grievance + 9);
-      quarrel(ctx, rng, 30, 'all_blood', 'a_ward_is_requested');
+      quarrel(ctx, rng, 30, 'all_blood', 'a_ward_is_requested', page);
     },
   },
   {
@@ -252,7 +253,7 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     when: (ctx) => rivalOf(ctx) !== undefined,
     line: 'A neighbouring house produced a document about a boundary, dated '
       + 'earlier than the house had understood any document could be dated.',
-    apply(ctx, rng) {
+    apply(ctx, rng, page) {
       take(ctx, 0.09);
       ctx.world.discontent = clamp(0, 100, ctx.world.discontent + 7);
       // A BOUNDARY IS A FEUD. `relationships.ts` has carried a full grudge
@@ -260,7 +261,7 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
       // ONE authored outcome in a hundred and twenty-four templates ever
       // created a grudge — so the measured answer to "live grudges at 2042"
       // was zero, in every run, forever. The world now makes its own enemies.
-      quarrel(ctx, rng, 45, 'house_wide', 'an_older_claim');
+      quarrel(ctx, rng, 45, 'house_wide', 'an_older_claim', page);
     },
   },
   {
@@ -378,10 +379,12 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
   const chosen = rng.pick(open);
   if (!chosen) return { pressure };
 
-  chosen.apply(ctx, rng);
+  const entryId = chronicleEntryId(ctx);
+  chosen.apply(ctx, rng, entryId);
   w.assize.lastSitting = w.year;
   w.assize.fired[chosen.id] = w.year;
   w.chronicle.push({
+    id: entryId,
     year: w.year,
     weight: 'line',
     text: chosen.line,
@@ -447,6 +450,7 @@ function quarrel(
   severity: number,
   inheritance: 'heir_only' | 'all_blood' | 'house_wide',
   origin: string,
+  page?: string,
 ): void {
   const w = ctx.world;
   const house = rivalOf(ctx, rng);
@@ -457,7 +461,7 @@ function quarrel(
     ?? hall(w, MAIN_BRANCH, w.year)[0];
   if (!theirs.length || !ours) return;
 
-  addGrudge(ctx, rng.pick(theirs)!.id, ours.id, { severity, inheritance }, origin);
+  addGrudge(ctx, rng.pick(theirs)!.id, ours.id, { severity, inheritance }, origin, page);
 }
 
 function bestRetainer(ctx: SimCtx) {
