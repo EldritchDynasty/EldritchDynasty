@@ -268,14 +268,15 @@ describe('burying is an act a house can actually take', () => {
    * only asserting the first is how the amnesty shipped.
    *
    * §29.3's third bite discounts the rung the book attests by what the book
-   * cannot hold up. A house that lied about everything and never answered for
-   * it carries about fifteen; the same house spending on every answer it is
-   * offered carries about eleven. The act is worth roughly a quarter of the
-   * bill, and the remaining three quarters is the game.
+   * cannot hold up. Proof debt now counts only unsupported claims the house
+   * actually authored with Embellish, not every ambient contradiction in the
+   * world. This guard therefore proves the lying policy still carries material
+   * authored debt without pinning the old all-discrepancy magnitude; the
+   * paired/within-run assertions below hold the burying effect itself.
    */
   it('answers part of the bill, and only part', () => {
-    expect(does_not.unsupportable, 'the lying house was not carrying a bill at all')
-      .toBeGreaterThan(8);
+    expect(does_not.unsupportable, 'the lying house was not carrying material authored proof debt')
+      .toBeGreaterThan(SEVERITY_WEIGHT['total']!);
 
     /**
      * MEASURED WITHIN THE RUN, because the two columns are not the same world.
