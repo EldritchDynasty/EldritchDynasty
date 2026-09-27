@@ -2,6 +2,7 @@ import type { Content } from './content-index.js';
 import type { Effect, EventTemplate, Outcome } from './event.js';
 import { deciderKind, type DeciderKind } from './decider.js';
 import { assertNever } from './exhaustive.js';
+import { isInlineArcId } from './desugar.js';
 
 /**
  * WHAT A CHOICE CAN CHANGE (issue #266).
@@ -128,22 +129,46 @@ function stable(v: unknown): string {
   return JSON.stringify(v) ?? 'null';
 }
 
+/** An arc successor, as the engine consults it: where it goes, under what guard, at what odds. */
+export interface SuccessorShape { to: string; when?: unknown; weight: number }
+
 /**
- * WHAT A SET OF OUTCOMES DOES, as one comparable string.
+ * WHAT ONE OUTCOME DOES, by its mechanics and never by its identity.
  *
- * Effects and the callbacks an outcome declares on itself (`next`, `triggers`),
- * with ids, text, tags and weights left out: two options whose outcomes do the
- * same things are the same decision whatever they are called. Order-free over
- * outcomes. Exported for #271, which compares interaction shapes with it.
+ * In: everything the engine acts on. `weight`, because `pickOutcome` draws on
+ * it. `tags`, because outcome-weight modifiers and successors' `fromTag` read
+ * them. `effects` IN AUTHORED ORDER, because `applyOutcome` applies them in
+ * that order and `flag x=true; flag x=false` is not its own reverse. `next` as
+ * event + schedule + kept slots. An authored `triggers`, and the successors
+ * this outcome would take, each as target + guard + weight, with multiplicity.
+ *
+ * Out: the outcome's id and text, and the trigger `desugar.ts` adds for an
+ * inline `next` — its arc id is `inline_<event>__<outcome>`, which is the
+ * outcome's identity again, and the `next` already says what it does.
+ * (Review of #281: including it made two identical callbacks differ by name,
+ * and reducing successors to their target made a guarded route and an
+ * unguarded one look the same.)
  */
-export function effectSignature(outcomes: readonly Outcome[]): string {
-  return stable(outcomes
-    .map((o) => stable({
-      effects: o.effects.map(stable).sort(),
-      next: o.next?.event,
-      triggers: o.triggers,
-    }))
-    .sort());
+export function outcomeSignature(o: Outcome, routes: readonly SuccessorShape[] = []): string {
+  return stable({
+    weight: o.weight,
+    tags: [...o.tags].sort(),
+    effects: o.effects.map(stable),
+    next: o.next && { event: o.next.event, after: o.next.after, keep: [...o.next.keep].sort() },
+    triggers: o.triggers && !isInlineArcId(o.triggers.arc) ? o.triggers : undefined,
+    routes: routes.map((r) => stable({ to: r.to, when: r.when, weight: r.weight })).sort(),
+  });
+}
+
+/**
+ * WHAT A SET OF OUTCOMES DOES, as one comparable string: `outcomeSignature`
+ * over each, order-free across outcomes because they are alternatives, not a
+ * sequence. Exported for #271. That issue wants a coarser grain (effect kinds,
+ * odds ignored), and should build it on top of this rather than loosen it,
+ * because the convergence error needs exact.
+ */
+export function effectSignature(outcomes: readonly Outcome[], routesOf: (o: Outcome) => readonly SuccessorShape[] = () => []): string {
+  return stable(outcomes.map((o) => outcomeSignature(o, routesOf(o))).sort());
 }
 
 /**
@@ -228,7 +253,7 @@ export function auditChoices(content: Content): ChoiceAudit {
   // ── Callbacks: arc successors that branch on this event's choices ───────
   // A successor with no `from*` fires whatever was chosen, so it makes no
   // choice matter more than another and is not counted.
-  const successorsOf = new Map<string, { fromChoice?: string; fromOutcome?: string; fromTag?: string; to: string }[]>();
+  const successorsOf = new Map<string, (SuccessorShape & { fromChoice?: string; fromOutcome?: string; fromTag?: string })[]>();
   for (const arc of content.arcs) {
     for (const n of arc.nodes) {
       const list = successorsOf.get(n.event) ?? [];
@@ -250,7 +275,7 @@ export function auditChoices(content: Content): ChoiceAudit {
 
     for (const c of e.interaction.choices) {
       const cats = new Set<ChoiceCategory>();
-      const routes = new Set<string>();
+      const routes = new Map<Outcome, SuccessorShape[]>();
       for (const o of c.outcomes) {
         for (const eff of o.effects) {
           const cat = categoryOf(eff.kind);
@@ -259,17 +284,25 @@ export function auditChoices(content: Content): ChoiceAudit {
           cats.add(isRead(mem.kind, mem.key) ? 'eligibility' : 'write_only');
         }
         if (o.next || o.triggers) cats.add('callback');
+        const taken: SuccessorShape[] = [];
         for (const s of succ) {
           if (s.fromChoice !== undefined && s.fromChoice !== c.id) continue;
           if (s.fromOutcome !== undefined && s.fromOutcome !== o.id) continue;
           if (s.fromTag !== undefined && !o.tags.includes(s.fromTag)) continue;
           cats.add('callback');
-          routes.add(s.to);
+          taken.push(s);
         }
+        routes.set(o, taken);
       }
       if (c.outcomes.every((o) => o.tags.includes(SELF_EXPRESSION_TAG))) cats.add('self_expression');
 
-      const signature = stable({ outcomes: effectSignature(c.outcomes), routes: [...routes].sort() });
+      // `requires` decides whether the option can be taken at all, and `check`
+      // which of its outcomes lands, so both are part of what it does.
+      const signature = stable({
+        outcomes: effectSignature(c.outcomes, (o) => routes.get(o) ?? []),
+        requires: c.requires.map(stable).sort(),
+        check: c.check,
+      });
       rows.push({
         event: e.id,
         choice: c.id,

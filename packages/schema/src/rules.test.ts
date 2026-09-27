@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, indexContent, runRule, validateBundle, type ContentBundle } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, effectSignature, indexContent, inlineArcId, outcomeSignature, runRule, validateBundle, type ContentBundle } from '@ed/schema';
 
 const content = loadContent();
 
@@ -1658,5 +1658,87 @@ describe('choices/consequence', () => {
     const rows = auditChoices(indexContent(b)).rows.filter((r) => r.event === target.id);
     expect(rows.find((r) => r.choice === first!.id)!.categories).toContain('callback');
     expect(rows.find((r) => r.choice === second!.id)!.categories).not.toContain('callback');
+  });
+});
+
+/**
+ * #281 REVIEW: THE SIGNATURE IS MECHANICAL, NOT NOMINAL.
+ *
+ * Convergence is an error, so the signature has to say "the same" only when
+ * the engine would do the same thing, and "different" whenever it would not.
+ * Each case below was wrong in the first cut.
+ */
+describe('the consequence signature', () => {
+  type O = Parameters<typeof outcomeSignature>[0];
+  const outcome = (id: string, extra: Partial<O> = {}): O =>
+    ({ id, weight: 100, text: `t ${id}`, tags: [], effects: [], ...extra }) as O;
+  const treasury = (delta: number) => ({ kind: 'treasury', delta }) as O['effects'][number];
+  const flag = (set: boolean) => ({ kind: 'flag', flag: 'x', set }) as O['effects'][number];
+
+  it('ignores the generated inline-arc id, so identical inline callbacks converge', () => {
+    const next = { event: 'the_follow_up', after: 'next_generation', keep: ['HEAD'] } as O['next'];
+    const a = outcome('a', { next, triggers: { arc: inlineArcId('ev', 'a'), op: 'start' } });
+    const b = outcome('b', { next, triggers: { arc: inlineArcId('ev', 'b'), op: 'start' } });
+    expect(effectSignature([a])).toBe(effectSignature([b]));
+  });
+
+  it('tells inline callbacks apart by schedule and kept slots', () => {
+    const base = { event: 'the_follow_up', after: 'next_generation', keep: ['HEAD'] } as NonNullable<O['next']>;
+    const a = outcome('a', { next: base });
+    expect(effectSignature([a])).not.toBe(effectSignature([outcome('b', { next: { ...base, after: 'immediate' } })]));
+    expect(effectSignature([a])).not.toBe(effectSignature([outcome('b', { next: { ...base, keep: [] } })]));
+    // An AUTHORED trigger is mechanics, not identity.
+    expect(effectSignature([outcome('a', { triggers: { arc: 'seal_feud', op: 'start' } })]))
+      .not.toBe(effectSignature([outcome('b', { triggers: { arc: 'seal_feud', op: 'advance' } })]));
+  });
+
+  it('keeps effects in the order the engine applies them', () => {
+    expect(effectSignature([outcome('a', { effects: [flag(true), flag(false)] })]))
+      .not.toBe(effectSignature([outcome('b', { effects: [flag(false), flag(true)] })]));
+  });
+
+  it('counts odds and tags, since the draw and the successors read them', () => {
+    const pair = (wa: number, wb: number) => [
+      outcome('win', { weight: wa, effects: [treasury(10)] }),
+      outcome('lose', { weight: wb, effects: [treasury(-10)] }),
+    ];
+    expect(effectSignature(pair(50, 50))).toBe(effectSignature(pair(50, 50)));
+    expect(effectSignature(pair(90, 10))).not.toBe(effectSignature(pair(10, 90)));
+    expect(effectSignature([outcome('a', { tags: ['kept'] })])).not.toBe(effectSignature([outcome('b')]));
+  });
+
+  it('tells a guarded route from an unguarded one to the same node, and keeps multiplicity', () => {
+    const o = outcome('a');
+    const sig = (routes: { to: string; when?: unknown; weight: number }[]) => effectSignature([o], () => routes);
+    expect(sig([{ to: 'x', weight: 100 }])).toBe(sig([{ to: 'x', weight: 100 }]));
+    expect(sig([{ to: 'x', when: { flag: 'f' }, weight: 100 }])).not.toBe(sig([{ to: 'x', weight: 100 }]));
+    expect(sig([{ to: 'x', weight: 30 }])).not.toBe(sig([{ to: 'x', weight: 70 }]));
+    expect(sig([{ to: 'x', weight: 100 }, { to: 'x', weight: 100 }])).not.toBe(sig([{ to: 'x', weight: 100 }]));
+  });
+
+  it('does not converge two identical options whose successors differ only by guard', () => {
+    const b = structuredClone(content.bundle);
+    const e = b.events.find((x) => x.tier !== 'frame' && x.interaction.kind === 'choice'
+      && x.interaction.decidedBy === 'player' && !x.arc && x.interaction.choices.length >= 2
+      && x.interaction.choices.every((c) => c.outcomes.every((o) => !o.next && !o.triggers)))!;
+    if (e.interaction.kind === 'narration') throw new Error('unreachable');
+    const [first, second] = e.interaction.choices;
+    second!.outcomes = structuredClone(first!.outcomes).map((o) => ({ ...o, id: `${o.id}_twin` }));
+    const arcWith = (secondWhen?: unknown) => {
+      const x = structuredClone(b);
+      x.arcs.push({
+        id: 'review_probe_arc', title: 'Probe', entry: 'start', bindings: [], maxConcurrentInstances: 1, inline: false,
+        nodes: [{
+          id: 'start', event: e.id, selection: 'first_match', schedule: 'next_generation',
+          successors: [
+            { to: 'end', fromChoice: first!.id, weight: 100 },
+            { to: 'end', fromChoice: second!.id, weight: 100, ...(secondWhen ? { when: secondWhen } : {}) },
+          ],
+        }],
+      } as ContentBundle['arcs'][number]);
+      return auditChoices(indexContent(x)).converging.filter((c) => c.event === e.id);
+    };
+    expect(arcWith(), 'same effects, same unguarded route: one decision wearing two labels').toHaveLength(1);
+    expect(arcWith({ flag: 'the_chair_is_kept' }), 'a guarded route is a different decision').toHaveLength(0);
   });
 });
