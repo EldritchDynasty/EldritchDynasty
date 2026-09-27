@@ -49,24 +49,26 @@ function surfaceOf(d: PendingDecision): AdviceSurface {
 
 function lensOf(ctx: SimCtx, p: Person): { lens: AdviserLens; cares: string } | undefined {
   const role = p.contract?.role;
-  if (p.career?.career === 'clergy') return { lens: 'priest', cares: 'the Church is the institution he serves' };
+  const subject = p.sex === 'female' ? 'she' : 'he';
+  const possessive = p.sex === 'female' ? 'her' : 'his';
+  if (p.career?.career === 'clergy') return { lens: 'priest', cares: `the Church is the institution ${subject} serves` };
   if (p.career?.career === 'merchant' || p.career?.career === 'factor' || p.career?.career === 'court') {
-    return { lens: 'broker', cares: 'his post is made of bargains, standing and other houses' };
+    return { lens: 'broker', cares: `${possessive} post is made of bargains, standing and other houses` };
   }
-  if (role === 'steward') return { lens: 'steward', cares: 'he keeps the house and its accounts' };
+  if (role === 'steward') return { lens: 'steward', cares: `${subject} keeps the house and its accounts` };
   if (p.career?.career === 'military' || role === 'guard') {
-    return { lens: 'soldier', cares: 'his work prices risk in bodies' };
+    return { lens: 'soldier', cares: `${possessive} work prices risk in bodies` };
   }
   if (p.career?.career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
-    return { lens: 'reader', cares: 'he lives by what can be read, remembered and proved' };
+    return { lens: 'reader', cares: `${subject} lives by what can be read, remembered and proved` };
   }
   if (ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined)) {
-    return { lens: 'old_head', cares: 'he has held the seal before' };
+    return { lens: 'old_head', cares: `${subject} has held the seal before` };
   }
   const member = p.membership.find((m) =>
     m.house === ctx.world.playerHouse && m.from <= ctx.world.year && (m.to === undefined || m.to > ctx.world.year));
   if (member?.kind === 'blood' || member?.kind === 'married_in') {
-    return { lens: 'close_kin', cares: 'this is his own living house' };
+    return { lens: 'close_kin', cares: `this is ${possessive} own living house` };
   }
   return undefined;
 }
