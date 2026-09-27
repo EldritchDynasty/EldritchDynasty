@@ -104,7 +104,7 @@ onMounted(() => { void refreshSaves(); });
           <strong>{{ choice.name }}</strong>
           <span class="dim small">
             {{ choice.years }} years
-            <template v-if="choice.id === 'short'"> — the default. A three-clause Ledger can be settled or left unresolved; Apotheosis belongs to A Long Line.</template>
+            <template v-if="choice.id === 'short'"> — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.</template>
             <template v-else> — the full nine-clause Ledger, the complete ladder including Apotheosis, and broader story reach.</template>
           </span>
         </span>
