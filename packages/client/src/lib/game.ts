@@ -308,6 +308,8 @@ export interface GameActions {
    * sixty entries; this is the volume the player has been writing.
    */
   book(opts?: { from?: number; to?: number }): ChronicleEntry[];
+  /** Chronicle entry ids whose authored cast explicitly included this person. */
+  mentions(person: string): string[];
   /**
    * THE SPINE (issue #56). Who has held the seal since the signing. The halls
    * are the living household; this is the fourteen generations behind them.
@@ -724,6 +726,10 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     // would be a client that thinks looking at something changes it.
     book(opts) {
       return session.value?.book(opts) ?? [];
+    },
+
+    mentions(person) {
+      return session.value?.mentions(person) ?? [];
     },
 
     line() {

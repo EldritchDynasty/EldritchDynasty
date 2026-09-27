@@ -62,17 +62,19 @@ const contract = (over: Partial<RetainerContract> = {}): RetainerContract => ({
 describe('known succession', () => {
   it('keeps an unwoken son uncertain instead of leaking what his genome will reveal', () => {
     const ctx = emptyHouse();
-    const elder = mundane(ctx, { age: 32, name: 'Edric' });
-    elder.awakening = { ...elder.awakening, awakened: true, year: ctx.world.year, age: 32 };
-    const younger = place(ctx, { sex: 'male', age: 24, name: 'Aldric' });
+    const elder = mundane(ctx, { age: 45, name: 'MundaneSon' });
+    elder.awakening = { ...elder.awakening, awakened: true, year: ctx.world.year, age: 45 };
+    // Reuse the deterministic expresser fixture already exercised by the
+    // Regency tests below; only the family's knowledge of him changes here.
+    const younger = place(ctx, { sex: 'male', age: 17, name: 'Son' });
 
     const before = knownSuccession(ctx);
     expect(before.heir).toBeUndefined();
     expect(before.possible).toEqual([elder.id, younger.id]);
-    expect(before.because).toContain('Aldric');
+    expect(before.because).toContain('Son');
     expect(before.because).toContain('does not know');
 
-    younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 24 };
+    younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 17 };
     younger.phenotype = undefined;
     const after = knownSuccession(ctx);
     expect(after.heir).toBe(younger.id);
