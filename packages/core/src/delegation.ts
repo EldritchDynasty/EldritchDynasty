@@ -85,6 +85,8 @@ export function mustSurface(ctx: SimCtx, d: PendingDecision): DelegationGuard | 
     if (head && named.includes(head.id)) return 'heir';
   }
 
+  // Choice protection is branch-scoped: a consequential sibling must not
+  // poison a harmless standing answer the player explicitly remembered.
   const rememberedChoice = d.kind === 'choice' ? ctx.world.delegation.choices[e.id] : undefined;
   const text = authoredText(e, rememberedChoice);
   if (/sacrific|\bkill\b|\bdead\b|\bdeath\b/.test(text)) return 'sacrifice';
