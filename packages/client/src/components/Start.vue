@@ -3,10 +3,29 @@ import { computed, onMounted, ref } from 'vue';
 import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { LibraryRun, RunLibrary } from '@ed/schema';
+import ReadingSettings from './ReadingSettings.vue';
+import type { ReadingFont, TextScale } from '../lib/accessibility';
 
-const props = withDefaults(defineProps<{ actions: GameActions; resumable: boolean; library?: RunLibrary; libraryReady?: boolean }>(), {
+const props = withDefaults(defineProps<{
+  actions: GameActions;
+  resumable: boolean;
+  library?: RunLibrary;
+  libraryReady?: boolean;
+  textScale?: TextScale;
+  readingFont?: ReadingFont;
+  skipSeenProse?: boolean;
+}>(), {
   libraryReady: true,
+  textScale: 'standard',
+  readingFont: 'book',
+  skipSeenProse: false,
 });
+
+const emit = defineEmits<{
+  'update:textScale': [value: TextScale];
+  'update:readingFont': [value: ReadingFont];
+  'update:skipSeenProse': [value: boolean];
+}>();
 
 const campaign = ref(CAMPAIGN_CHOICES[0].id);
 const selectedCampaign = computed(() => CAMPAIGN_CHOICES.find((c) => c.id === campaign.value) ?? CAMPAIGN_CHOICES[0]);
@@ -100,6 +119,18 @@ onMounted(() => { void refreshSaves(); });
       </button>
     </div>
 
+    <section class="reading panel" aria-label="Reading settings">
+      <h2>Reading</h2>
+      <ReadingSettings
+        :text-scale="textScale"
+        :reading-font="readingFont"
+        :skip-seen-prose="skipSeenProse"
+        @update:text-scale="emit('update:textScale', $event)"
+        @update:reading-font="emit('update:readingFont', $event)"
+        @update:skip-seen-prose="emit('update:skipSeenProse', $event)"
+      />
+    </section>
+
     <section v-if="completedHouses.length" class="library panel" aria-label="Library of Houses">
       <div class="library-head">
         <div>
@@ -166,6 +197,11 @@ h1 { font-size: var(--t-display); font-weight: 400; margin: 0 0 26px; letter-spa
 .primary-row { display: flex; gap: 12px; flex-wrap: wrap; }
 input { width: 9ch; }
 .saved { margin-top: 26px; }
+.reading { margin-top: 26px; }
+.reading h2 {
+  margin: 0 0 12px; font-size: var(--t-label); letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-faint); font-weight: 600;
+}
 .library { margin-top: 26px; }
 .library-head, .library-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .library-head h2 { margin: 0; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; }
