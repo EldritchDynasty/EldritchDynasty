@@ -170,3 +170,140 @@ export function plateName(houseName: string, entries: readonly ChronicleEntry[])
   const house = houseName.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
   return `${house}-${plateSpan(entries).replace('–', '-')}.png`;
 }
+
+
+/**
+ * THE HOUSE AFTERIMAGE (issue #260).
+ *
+ * A finished Chronicle is a volume; this is the single page a player can hand
+ * to somebody else. It is deliberately assembled only from the ending read
+ * model and the Chronicle pages the creditor already selected. Nothing here
+ * asks the client to infer hidden truth, and nothing is scored.
+ */
+export interface AfterimageInput {
+  houseName: string;
+  campaignName: string;
+  seed: number;
+  year: number;
+  endingTitle: string;
+  endingSummary: string;
+  reckoning: {
+    pages: number;
+    blanks: number;
+    embellished: number;
+    standingLies: number;
+    provenLies: number;
+    clauses: number;
+    clausesTotal: number;
+    attestedTitle: string;
+    livingBlood: number;
+  };
+  read: readonly ChronicleEntry[];
+}
+
+export interface AfterimageModel {
+  houseName: string;
+  strap: string;
+  endingTitle: string;
+  summary: string;
+  facts: { label: string; value: string }[];
+  quote?: { year: number; title?: string; text: string };
+}
+
+/**
+ * One remembered line for the small page. Illuminated pages are already the
+ * Chronicle's own "this mattered" signal, so the newest one wins. If the last
+ * night read no illuminated prose, the newest non-blank page wins instead.
+ * A blank stays a blank; this helper never reconstructs what the house omitted.
+ */
+export function afterimageQuote(
+  read: readonly ChronicleEntry[],
+): AfterimageModel['quote'] | undefined {
+  const written = [...read].reverse().filter(
+    (entry): entry is ChronicleEntry & { text: string } => entry.text !== null,
+  );
+  const picked = written.find((entry) => entry.weight === 'illuminated') ?? written[0];
+  if (!picked) return undefined;
+  return {
+    year: picked.year,
+    ...(picked.title ? { title: picked.title } : {}),
+    text: picked.text,
+  };
+}
+
+/** The factual small page: no grade, no rank, no "best" ending. */
+export function afterimageModel(input: AfterimageInput): AfterimageModel {
+  const r = input.reckoning;
+  const quote = afterimageQuote(input.read);
+  return {
+    houseName: input.houseName,
+    strap: `${input.campaignName} · ${input.year} · seed ${input.seed}`,
+    endingTitle: input.endingTitle,
+    summary: input.endingSummary,
+    facts: [
+      { label: 'Pages written', value: String(r.pages) },
+      { label: 'Left blank', value: String(r.blanks) },
+      { label: 'Improved', value: String(r.embellished) },
+      {
+        label: 'Lies still standing',
+        value: r.provenLies > 0 ? `${r.standingLies} · ${r.provenLies} caught` : String(r.standingLies),
+      },
+      { label: 'The contract, recovered', value: `${r.clauses} of ${r.clausesTotal} clauses` },
+      { label: 'What the book attests', value: r.attestedTitle },
+      { label: 'Of the blood, living', value: String(r.livingBlood) },
+    ],
+    ...(quote ? { quote } : {}),
+  };
+}
+
+/**
+ * The measured half of the Afterimage renderer. Keep line selection and canvas
+ * height out of the component so long endings and Chronicle excerpts cannot
+ * silently clip when copy changes.
+ */
+export interface AfterimageLayout {
+  endingFont: string;
+  summaryFont: string;
+  quoteFont: string;
+  endingLines: string[];
+  summaryLines: string[];
+  quoteLines: string[];
+  height: number;
+}
+
+export function afterimageLayout(model: AfterimageModel, measure: Measure): AfterimageLayout {
+  const inner = PLATE.width - PLATE.pad * 2;
+  const endingFont = `500 28px ${PLATE.serif}`;
+  const summaryFont = `18px ${PLATE.serif}`;
+  const quoteFont = `italic 19px ${PLATE.serif}`;
+  const endingLines = wrap(model.endingTitle, endingFont, inner, measure);
+  const summaryLines = wrap(model.summary, summaryFont, inner, measure);
+  const quoteLines = model.quote
+    ? wrap(model.quote.text, quoteFont, inner - 36, measure)
+    : [];
+  const height = Math.max(
+    760,
+    214
+      + endingLines.length * 38
+      + summaryLines.length * 30
+      + model.facts.length * 42
+      + (model.quote ? 88 + quoteLines.length * 31 : 0)
+      + 80,
+  );
+
+  return {
+    endingFont,
+    summaryFont,
+    quoteFont,
+    endingLines,
+    summaryLines,
+    quoteLines,
+    height,
+  };
+}
+
+/** Stable, collision-resistant enough for several finished houses in one folder. */
+export function afterimageName(houseName: string, seed: number, year: number): string {
+  const house = houseName.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
+  return `${house}-${year}-seed-${seed}-afterimage.png`;
+}

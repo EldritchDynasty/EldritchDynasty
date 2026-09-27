@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ChronicleEntry } from '@ed/core';
 import {
+  afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
   plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
   type Measure,
 } from './book.js';
@@ -144,5 +145,110 @@ describe('the plate', () => {
       .toBe('the-house-of-salt-1042-1542.png');
     // A house whose name is all punctuation still produces a filename.
     expect(plateName('!!!', [entry()])).toBe('the-house-1200-1200.png');
+  });
+});
+
+
+describe('the house afterimage (#260)', () => {
+  const source = {
+    houseName: 'House Vey',
+    campaignName: 'A Long Line',
+    seed: 1042,
+    year: 1542,
+    endingTitle: 'The House That Endured',
+    endingSummary: 'The creditor closed the book and left the seal where it lay.',
+    reckoning: {
+      pages: 71,
+      blanks: 8,
+      embellished: 11,
+      standingLies: 4,
+      provenLies: 2,
+      clauses: 7,
+      clausesTotal: 9,
+      attestedTitle: 'the Fourth Rung',
+      livingBlood: 13,
+    },
+    read: [
+      entry({ year: 1301, text: 'An ordinary remembered line.' }),
+      entry({ year: 1414, weight: 'illuminated', title: 'The Winter Hand', text: 'Wystan refused the winter hand.' }),
+      entry({ year: 1508, record: 'embellish', text: 'A later, smaller improvement.' }),
+    ],
+  };
+
+  it('is deterministic and changes when the finished account changes', () => {
+    const first = afterimageModel(source);
+    expect(afterimageModel(source)).toEqual(first);
+
+    const altered = afterimageModel({
+      ...source,
+      endingTitle: 'The Broken Line',
+      reckoning: { ...source.reckoning, livingBlood: 0 },
+    });
+    expect(altered).not.toEqual(first);
+    expect(first.facts.some((fact) => fact.label === 'Of the blood, living' && fact.value === '13')).toBe(true);
+  });
+
+  it('quotes the newest illuminated page before a later ordinary line', () => {
+    expect(afterimageQuote(source.read)).toEqual({
+      year: 1414,
+      title: 'The Winter Hand',
+      text: 'Wystan refused the winter hand.',
+    });
+  });
+
+  it('falls back to the newest written line and never reconstructs a blank', () => {
+    expect(afterimageQuote([
+      entry({ year: 1400, text: 'Earlier.' }),
+      entry({ year: 1401, text: null, title: 'Omitted on purpose' }),
+      entry({ year: 1402, text: 'Later.' }),
+    ])?.text).toBe('Later.');
+
+    expect(afterimageQuote([
+      entry({ year: 1401, text: null, title: 'Omitted on purpose' }),
+    ])).toBeUndefined();
+  });
+
+  it('changes the card when the selected Chronicle line changes', () => {
+    const first = afterimageModel(source);
+    const changed = afterimageModel({
+      ...source,
+      read: source.read.map((e, i) => i === 1
+        ? { ...e, text: 'Wystan accepted the winter hand.' }
+        : e),
+    });
+
+    expect(changed.quote).not.toEqual(first.quote);
+    expect(changed).not.toEqual(first);
+  });
+
+  it('lays out wrapped copy before the canvas is allocated', () => {
+    const model = afterimageModel(source);
+    const short = afterimageLayout(model, monospace);
+    const long = afterimageLayout({
+      ...model,
+      summary: Array.from({ length: 80 }, () => 'remembered').join(' '),
+      quote: model.quote
+        ? { ...model.quote, text: Array.from({ length: 90 }, () => 'winter').join(' ') }
+        : undefined,
+    }, monospace);
+
+    expect(short.endingLines.join(' ')).toBe(model.endingTitle);
+    expect(long.summaryLines.length).toBeGreaterThan(short.summaryLines.length);
+    expect(long.quoteLines.length).toBeGreaterThan(short.quoteLines.length);
+    expect(long.height).toBeGreaterThan(short.height);
+  });
+
+  it('keeps the card factual rather than grading the run', () => {
+    const model = afterimageModel(source);
+    const labels = model.facts.map((fact) => fact.label.toLowerCase()).join(' ');
+    expect(labels).not.toMatch(/score|grade|rating|best/);
+    expect(model.endingTitle).toBe(source.endingTitle);
+  });
+
+  it('names the image after the house, term and seed', () => {
+    expect(afterimageName('House of Salt', 8080, 1542))
+      .toBe('house-of-salt-1542-seed-8080-afterimage.png');
+    expect(afterimageName('!!!', 7, 1242))
+      .toBe('the-house-1242-seed-7-afterimage.png');
   });
 });
