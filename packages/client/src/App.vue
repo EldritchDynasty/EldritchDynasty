@@ -22,6 +22,7 @@ import Ending from './components/Ending.vue';
 import Book from './components/Book.vue';
 import Plat from './components/Plat.vue';
 import Line from './components/Line.vue';
+import ReadingSettings from './components/ReadingSettings.vue';
 import { SHORTCUTS, isControl, isField, shortcutFor } from './lib/keys';
 import { LEGEND } from './lib/marks';
 import {
@@ -226,7 +227,19 @@ const yearAndBirths = computed(() => {
 </script>
 
 <template>
-  <Start v-if="!view" :actions="actions" :resumable="resumable" :library="library" :library-ready="libraryReady" />
+  <Start
+    v-if="!view"
+    :actions="actions"
+    :resumable="resumable"
+    :library="library"
+    :library-ready="libraryReady"
+    :text-scale="accessibility.textScale"
+    :reading-font="accessibility.readingFont"
+    :skip-seen-prose="accessibility.skipSeenProse"
+    @update:text-scale="accessibility.textScale = $event"
+    @update:reading-font="accessibility.readingFont = $event"
+    @update:skip-seen-prose="accessibility.skipSeenProse = $event"
+  />
 
   <!-- A DEBT OF THREE PARTS. Once, at the head of the run, before a year has
        turned — and never again: `founded` is what the world remembers of it. -->
@@ -236,6 +249,7 @@ const yearAndBirths = computed(() => {
     :actions="actions"
     :refused="refused"
     :start-year="view.campaign.startYear"
+    :skip-seen-prose="accessibility.skipSeenProse"
   />
 
   <template v-else-if="ended && epilogue">
@@ -347,30 +361,11 @@ const yearAndBirths = computed(() => {
           <!-- Reading controls first, then the legend a non-visual reader
                needs before meeting the same marks throughout the tree. -->
           <h3 class="label">Reading</h3>
-          <div class="reading-settings stack">
-            <label class="small">
-              Text size
-              <select v-model="accessibility.textScale">
-                <option value="standard">Standard</option>
-                <option value="large">Large</option>
-                <option value="largest">Largest</option>
-              </select>
-            </label>
-            <label class="small">
-              Typeface
-              <select v-model="accessibility.readingFont">
-                <option value="book">Book face</option>
-                <option value="readable">Readable sans</option>
-              </select>
-            </label>
-            <label class="small">
-              Skip Age openings already read
-              <input v-model="accessibility.skipSeenProse" type="checkbox" />
-            </label>
-            <p class="dim small">
-              Exact repeated openings only. Decisions, outcomes, rites and frame scenes still stop for you.
-            </p>
-          </div>
+          <ReadingSettings
+            v-model:text-scale="accessibility.textScale"
+            v-model:reading-font="accessibility.readingFont"
+            v-model:skip-seen-prose="accessibility.skipSeenProse"
+          />
           <h3 class="label">Marks</h3>
           <dl class="legend-list">
             <template v-for="m in LEGEND" :key="m.kind">
@@ -543,7 +538,6 @@ const yearAndBirths = computed(() => {
 .keys dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
 .keys dt, .keys dd { margin: 0; }
 .keys h3.label:not(:first-child) { margin-top: 14px; }
-.reading-settings label { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* The glyphs in the legend are the glyphs on the cards, in the same ink, or
    the legend is teaching a different alphabet. */
 .legend-list dt { text-align: center; }
