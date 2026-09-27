@@ -1,6 +1,6 @@
 import type { Year } from '@ed/schema';
 import { MAIN_BRANCH, assertNever } from '@ed/schema';
-import type { SimCtx } from './world.js';
+import { chronicleEntryId, type SimCtx } from './world.js';
 import { activeBranches } from './people/branches.js';
 
 /**
@@ -281,6 +281,7 @@ export function echoBearing(ctx: SimCtx): number {
     if (entry.echoed || ctx.world.year - entry.year < ECHO_AFTER) continue;
     entry.echoed = true;
     ctx.world.chronicle.push({
+      id: chronicleEntryId(ctx),
       year: ctx.world.year,
       weight: 'line',
       text: echoText(entry),
