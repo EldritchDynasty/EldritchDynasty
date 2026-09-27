@@ -4,8 +4,8 @@ import type { Person, RetainerContract, RetainerRole } from '@ed/schema';
 import { RetainerRoleS } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import {
-  beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, inheritPost,
-  inRegency, loadGame, maintainCast, place, releaseContracts, runYears, saveGame, testRng,
+  beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, heirApparent, inheritPost,
+  inRegency, knownSuccession, loadGame, maintainCast, place, releaseContracts, runYears, saveGame, testRng,
   testWorld,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
@@ -57,6 +57,56 @@ const contract = (over: Partial<RetainerContract> = {}): RetainerContract => ({
   debt: 0,
   knowsSecrets: [],
   ...over,
+});
+
+describe('known succession', () => {
+  it('keeps an unwoken son uncertain instead of leaking what his genome will reveal', () => {
+    const ctx = emptyHouse();
+    const elder = mundane(ctx, { age: 32, name: 'Edric' });
+    elder.awakening = { ...elder.awakening, awakened: true, year: ctx.world.year, age: 32 };
+    const younger = place(ctx, { sex: 'male', age: 24, name: 'Aldric' });
+
+    const before = knownSuccession(ctx);
+    expect(before.heir).toBeUndefined();
+    expect(before.possible).toEqual([elder.id, younger.id]);
+    expect(before.because).toContain('Aldric');
+    expect(before.because).toContain('does not know');
+
+    younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 24 };
+    younger.phenotype = undefined;
+    const after = knownSuccession(ctx);
+    expect(after.heir).toBe(younger.id);
+    expect(after.heir).toBe(heirApparent(ctx)?.id);
+  });
+
+  it('never names a certain heir different from the simulation rule', () => {
+    const fixtures = [
+      () => {
+        const ctx = emptyHouse(2681);
+        place(ctx, { sex: 'male', age: 40, name: 'Known', awakened: true });
+        return ctx;
+      },
+      () => {
+        const ctx = emptyHouse(2682);
+        const man = mundane(ctx, { age: 40, name: 'Mundane' });
+        man.awakening = { ...man.awakening, awakened: true, year: ctx.world.year, age: 40 };
+        return ctx;
+      },
+      () => {
+        const ctx = emptyHouse(2683);
+        const man = mundane(ctx, { age: 40, name: 'Mundane' });
+        man.awakening = { ...man.awakening, awakened: true, year: ctx.world.year, age: 40 };
+        place(ctx, { sex: 'female', age: 35, name: 'Regent' });
+        return ctx;
+      },
+    ];
+
+    for (const build of fixtures) {
+      const ctx = build();
+      const known = knownSuccession(ctx);
+      if (known.heir) expect(known.heir).toBe(heirApparent(ctx)?.id);
+    }
+  });
 });
 
 describe('seating a Head', () => {
