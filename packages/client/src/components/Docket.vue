@@ -111,8 +111,8 @@ function full(req: CastRequest, id: string): boolean {
  * Kinship and the line read are two of the three numbers that decide a match,
  * and both carried their meaning in a `title` — so on a phone they were two
  * bare figures with no explanation available anywhere in the game. The string
- * is held here because the tooltip and the note under the cards have to be the
- * same sentence: two wordings of one explanation is how they come apart.
+ * is held here because the visible note under the cards is the one canonical
+ * explanation: a second tooltip wording is how two explanations come apart.
  */
 const KINSHIP_SAYS = 'the inbreeding coefficient of the child this match would have, '
   + "as the family's own documents would calculate it";
@@ -396,7 +396,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
           <p class="small words">{{ card.words }}</p>
           <div class="dim small">
-            <span :title="KINSHIP_SAYS">kinship {{ card.kinship.toFixed(4) }}</span>
+            <span>kinship {{ card.kinship.toFixed(4) }}</span>
             ·
             <!-- The count is drawn rather than hovered. "The line reads fair"
                  says nothing on its own: a word standing on four completed
