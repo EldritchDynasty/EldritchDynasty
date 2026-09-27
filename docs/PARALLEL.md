@@ -316,18 +316,23 @@ A connector-only session that cannot run that command locally uses a ready
 same-repository PR and comments exactly `/land`. The
 `.github/workflows/remote-land.yml` runner executes **that same `npm run land`**
 command; it is not permission to merge a merely-green PR. The request is
-write-authorized. Remote landings share one Actions concurrency group with
-`queue: max`, so up to one hundred requests may wait rather than the default
-single pending request being replaced by the next one. The PR bootstrap bridge
-and only trusted exact `/land` / `/land --no-issue-check` issue comments enter
-that shared group. Issue comments are prefiltered by `author_association` before
-queue admission, while the in-job collaborator-permission lookup remains the
+write-authorized. Trusted exact `/land` / `/land --no-issue-check` issue
+comments share `remote-land-main` with `queue: max`, so up to one hundred may
+wait rather than the default single pending request being replaced by the next
+one. Issue comments are prefiltered by `author_association` before queue
+admission, while the in-job collaborator-permission lookup remains the
 authoritative write-access check. Other or outsider comments use a run-unique
-group because Actions decides concurrency before it evaluates the job's `if`.
-Remote landings therefore run one at a time without silently dropping an older
-request. Local vs remote still
-arbitrates at the final compare-and-swap push. This exists because a PR check
-can be green on an old base — the rebase and the post-push verdict remain
+skip group because Actions decides concurrency before it evaluates the job's
+`if`.
+
+The PR bootstrap bridge does **not** join `remote-land-main`: it gets a
+run-unique `remote-land-bootstrap-<run id>` group. A bootstrap runs the proposed
+workflow from the PR while issue comments run the version already on `main`;
+letting those versions share a concurrency group allows old queue semantics to
+cancel the new bootstrap during exactly the workflow change it exists to prove.
+Bootstrap and comment landings can overlap, just as local and remote landings
+can; the final compare-and-swap push arbitrates them. This exists because a PR
+check can be green on an old base — the rebase and the post-push verdict remain
 mandatory.
 
 **It is one command because the set is derived rather than remembered.**
