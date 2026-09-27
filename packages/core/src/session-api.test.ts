@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  beget, branchReport, consumeVessel, describeDecision, frequencyReport, hallOf, heldBooks,
+  beget, branchReport, consumeVessel, describeDecision, frequencyReport, hallOf, heldBooks, hashSeed,
   loseLibraryCopy, marry, newGame, place, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
   type ChronicleEntry, type GameSession,
@@ -384,6 +384,41 @@ describe('the two ends of the run, through the façade', () => {
     const g = newGame(content, { seed: 1042 });
     expect(g.epilogue()).toBeUndefined();
     expect(g.view().ending).toBeUndefined();
+  });
+});
+
+describe('family planning fields do not read hidden blood', () => {
+  it('keeps succession and relevance identical when only an unwoken genome changes', () => {
+    const a = newGame(content, { seed: 268 });
+    const b = newGame(content, { seed: 268 });
+    const pa = place(a.ctx, { sex: 'male', age: 23, name: 'Unwoken Test Son' });
+    const pb = place(b.ctx, { sex: 'male', age: 23, name: 'Unwoken Test Son' });
+
+    pb.genome = { kind: 'lazy', pool: 'commons', seed: hashSeed('hidden-mundane', pb.name) };
+    pb.phenotype = undefined;
+
+    const ma = a.view().halls.flatMap((h) => h.members).find((m) => m.id === pa.id)!;
+    const mb = b.view().halls.flatMap((h) => h.members).find((m) => m.id === pb.id)!;
+
+    expect(pa.awakening.awakened).toBe(false);
+    expect(pb.awakening.awakened).toBe(false);
+    expect(ma.succession).toBe(mb.succession);
+    expect(ma.relevance).toEqual(mb.relevance);
+  });
+
+  it('finds authored Chronicle pages that explicitly cast a person', () => {
+    const g = newGame(content, { seed: 269 });
+    const person = g.ctx.world.people.household(g.ctx.world.playerHouse, g.year)[0]!;
+    g.ctx.world.chronicle.push({
+      id: 'chr_test_mention',
+      year: g.year,
+      weight: 'paragraph',
+      text: person.name + ' stood in the written scene.',
+      named: false,
+      people: [person.id],
+    });
+
+    expect(g.mentions(person.id)).toContain('chr_test_mention');
   });
 });
 
