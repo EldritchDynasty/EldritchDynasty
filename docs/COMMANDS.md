@@ -115,6 +115,12 @@ and comment landings may therefore overlap, just as local and remote landings
 already may. Their final compare-and-swap Git push decides which rebased head can
 advance `main`.
 
+The remote job's timeout covers both phases: the full repository landing and
+the post-push verdict wait. That is deliberate — run 36281354123 completed its
+landing and push, then hit the old job cap while waiting for the verdict. A
+transport timeout must not turn "pushed, still being judged" into a failed
+landing.
+
 The workflow summary preserves the two important failure shapes: a landing
 that did not complete its push, and a landing that pushed but whose explicitly
 dispatched post-push check did not return green. It names current `main` in

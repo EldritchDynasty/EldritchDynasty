@@ -52,7 +52,10 @@ jobs:
       || github.event.comment.body == '/land --no-issue-check'))
       || inputs.pr_number > 0
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # Run 36281354123 spent ~103m in the repository landing, then was killed
+    # by the old 120m job cap 17m into verdict.mjs's allowed 40m wait. The job
+    # budget must cover BOTH phases; 180m leaves headroom for runner variance.
+    timeout-minutes: 180
     env:
       REQUEST_PR: ${{ inputs.pr_number || github.event.issue.number }}
 
