@@ -135,6 +135,27 @@ describe('the janitor', () => {
    * What it was protecting against was a MASS DELETION, and a mass deletion is
    * a number of branches rather than a proportion of them.
    */
+  /**
+   * A remote landing dispatches this sweep, and a dispatch has no push event to
+   * derive a range from, so it hands one in as free text. A range is read only
+   * if it is two SHAs: it goes to `git log` as an argument, where `--output=…`
+   * would be an option rather than a range.
+   */
+  it('reads a dispatched range of two SHAs, and nothing else', () => {
+    const full = join(root, 'full');
+    const range = `${git(full, 'rev-parse', 'origin/main~2')}..${git(full, 'rev-parse', 'origin/main')}`;
+    // An empty summary path sends `say()` to stdout, where this can read it.
+    const named = janitor(full, { DRY_RUN: '1', GITHUB_STEP_SUMMARY: '', JANITOR_RANGE: range });
+    expect(named.code).toBe(0);
+    expect(named.out).toContain('### Issues named by this push');
+
+    for (const bad of ['', 'main~2..main', `--output=${join(root, 'x')}`, `${range}; echo`]) {
+      const r = janitor(full, { DRY_RUN: '1', GITHUB_STEP_SUMMARY: '', JANITOR_RANGE: bad });
+      expect(r.code, bad).toBe(0);
+      expect(r.out, bad).not.toContain('### Issues named by this push');
+    }
+  });
+
   it('sweeps a backlog where nearly every branch is legitimately merged', () => {
     const r = janitor(join(root, 'full'), { DRY_RUN: '1' });
     expect(r.code).toBe(0);

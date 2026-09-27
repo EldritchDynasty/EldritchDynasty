@@ -170,6 +170,18 @@ jobs:
       # workflow_dispatch is GitHub's explicit exception, so let the landing do
       # everything through the compare-and-swap push, then dispatch the existing
       # check workflow and use the repository's normal verdict reader on that SHA.
+      # The janitor dispatched below closes only the issues THIS landing named,
+      # so it needs the range the landing added: main as it stood before, to the
+      # landed SHA. Remote landings share one concurrency group, so nothing
+      # else moves main between this read and the landing's own fetch unless a
+      # session lands locally in that window — and that push fires the janitor
+      # itself, whose closes are idempotent.
+      - name: Record main before the landing
+        id: before
+        run: |
+          git fetch --quiet origin main
+          echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Run the repository landing through its push
         id: landing
         env:
@@ -185,6 +197,9 @@ jobs:
         id: dispatch
         if: steps.landing.outcome == 'success'
         uses: actions/github-script@v7
+        env:
+          BEFORE_SHA: ${{ steps.before.outputs.sha }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
         with:
           script: |
             core.setOutput('at', new Date().toISOString());
@@ -199,13 +214,15 @@ jobs:
             // `Closes #N`, its claims and its branch waited for the daily cron.
             // GitHub itself does not close issues from a bot-token push either
             // (#266 and #267 were closed by hand). Dispatch it with what `push`
-            // would have given it: a real sweep, not the manual dry run.
+            // would have given it: a real sweep, not the manual dry run, and
+            // the before..after range a push event carries. Without the range
+            // janitor.mjs skips its issue-closing section entirely.
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'janitor.yml',
               ref: 'main',
-              inputs: { dry_run: 'false' },
+              inputs: { dry_run: 'false', range: `${process.env.BEFORE_SHA}..${process.env.TARGET_SHA}` },
             });
 
       # verdict.yml never hears about the run dispatched above: GitHub does not

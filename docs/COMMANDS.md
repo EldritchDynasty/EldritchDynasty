@@ -119,8 +119,11 @@ The same token rule applies to the janitor. GitHub does not close issues from
 `on: push` never fires for such a push. Until 2026-09-27 a remote landing's
 issues, claims and branch waited for the daily 19:17 UTC sweep, and #266 and
 #267 were closed by hand. `remote-land.yml` now dispatches `janitor.yml` with
-`dry_run: false` right after the push, which is exactly what a push would have
-triggered.
+`dry_run: false` right after the push, and with `range: <before>..<landed>` —
+`main` as read just before the landing, to the SHA it pushed. That is exactly
+what a push would have triggered: the janitor closes only issues a landing's own
+commits named, and with no range it closes nothing at all. A dispatched range
+must be two SHAs; anything else reads as "nothing was named".
 
 Remote issue-comment landings are serialized with GitHub Actions concurrency,
 but **not** with its default one-pending behavior. The default replaces an older
