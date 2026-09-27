@@ -245,7 +245,10 @@ describe('the platform seam', () => {
     const game = createGame(source, first);
     game.actions.begin(1042);
     game.actions.advance(1);
-    await Promise.resolve();
+    // Autosaves are serialized: the 1043 snapshot is queued behind the
+    // immediately-resolving 1042 write. Give that promise tail one event-loop
+    // turn to drain before reading the host.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const saved = first.saves.get('autosave');
     expect(saved).toMatchObject({ format: expect.any(Number), year: 1043 });
 
