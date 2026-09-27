@@ -174,6 +174,12 @@ export interface EndingRun {
   substantiated?: Rung;
   /** How many attested rungs the reading refused for lack of support. */
   rungsWithheld?: number;
+  /** Diagnostic: authored unsupported proof weight at the term. */
+  unsupportable?: number;
+  /** Diagnostic: surviving written Chronicle pages at the term. */
+  pages?: number;
+  /** Diagnostic: actual Record decisions written honestly or larger. */
+  records?: number;
   clauses: number;
   /** Living members of the house on the last night. */
   survivors: number;
@@ -559,6 +565,9 @@ export function playToTheEnd(
     attested: r.attested,
     substantiated: r.substantiated,
     rungsWithheld: r.rungsWithheld,
+    unsupportable: r.unsupportable,
+    pages: r.pages,
+    records: r.recorded + r.embellished,
     clauses: r.clauses,
     survivors: w.people.household(w.playerHouse, w.year).length,
     householdLow: Number.isFinite(householdLow) ? householdLow : 0,
