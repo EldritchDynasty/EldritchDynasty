@@ -1,0 +1,52 @@
+name: bearing-36-diagnostic
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  bearing-density:
+    name: bearing ${{ matrix.years }}y (${{ matrix.base }} + ${{ matrix.step }}i)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - years: 300
+            base: 4000
+            step: 13
+          - years: 300
+            base: 9001
+            step: 17
+          - years: 300
+            base: 20011
+            step: 29
+          - years: 300
+            base: 31013
+            step: 37
+          - years: 500
+            base: 4000
+            step: 13
+          - years: 500
+            base: 9001
+            step: 17
+          - years: 500
+            base: 20011
+            step: 29
+          - years: 500
+            base: 31013
+            step: 37
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Measure current book density and Bearing separation
+        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
