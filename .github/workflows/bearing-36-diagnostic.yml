@@ -12,10 +12,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  god-book:
-    name: inspect God seed 5121
+  density-candidate:
+    name: density ${{ matrix.rate }} · ${{ matrix.years }}y · ${{ matrix.base }}+${{ matrix.step }}i
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rate: "0.55"
+            years: 300
+            base: 31013
+            step: 37
+          - rate: "0.55"
+            years: 500
+            base: 9001
+            step: 17
+          - rate: "0.60"
+            years: 300
+            base: 31013
+            step: 37
+          - rate: "0.60"
+            years: 500
+            base: 9001
+            step: 17
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,23 +43,29 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Measure the known God-reaching book
+      - name: Apply measurement-only density threshold
+        env:
+          RATE: ${{ matrix.rate }}
         run: |
-          cat > .bearing-36-god.ts <<'TS'
-          import { loadContent } from '@ed/content';
-          import { playToTheEnd } from './packages/core/src/tools/ending-gate.ts';
+          python - <<'PY'
+          import os
+          from pathlib import Path
 
-          const r = playToTheEnd(loadContent(), 5121, 500, 'ascendant', 'long');
-          process.stdout.write('GOD_BOOK ' + JSON.stringify({
-            seed: r.seed,
-            ending: r.ending,
-            attested: r.attested,
-            substantiated: r.substantiated,
-            rungsWithheld: r.rungsWithheld,
-            unsupportable: r.unsupportable,
-            pages: r.pages,
-            records: r.records,
-            debtPerRecord: (r.unsupportable ?? 0) / Math.max(1, r.records ?? 0),
-          }) + '\n');
-          TS
-          npx tsx --tsconfig tsconfig.base.json .bearing-36-god.ts
+          path = Path("packages/core/src/ending.ts")
+          source = path.read_text()
+          needle = """function unsupportablePerRung(ctx: SimCtx): number {
+            const years = campaignDef(ctx.world.campaign).years;
+            return Math.max(1, Math.round(UNSUPPORTABLE_PER_RUNG * years / UNSUPPORTABLE_REFERENCE_YEARS));
+          }"""
+          rate = os.environ["RATE"]
+          replacement = f"""function unsupportablePerRung(ctx: SimCtx): number {{
+            const records = ctx.world.chronicle.filter((entry) =>
+              entry.record === 'record' || entry.record === 'embellish').length;
+            return Math.max(1, Math.ceil(records * {rate}));
+          }}"""
+          if needle not in source:
+              raise SystemExit("ending.ts threshold function no longer matches diagnostic patch")
+          path.write_text(source.replace(needle, replacement))
+          PY
+      - name: Measure failing historical schedule
+        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
