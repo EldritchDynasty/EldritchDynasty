@@ -28,12 +28,9 @@
  *               there is not, holds every carrying daughter off the market, and
  *               writes the family larger at every Record block. All four of
  *               `BearingAct`'s acts, played deliberately.
- *   modest      takes the outsider whenever the player is actually asked,
- *               releases everybody, and records honestly. Unasked marriages
- *               keep the shipped `as_it_falls` policy: forcing every wedding
- *               outward is the separate blood-selling strategy, and made this
- *               counter-example die Broken Line instead of surviving diluted
- *               toward Forgotten.
+ *   modest      takes a card every time and takes the outsider, releases
+ *               everybody, and records honestly. The house that does the
+ *               correct, dilute, well-liked thing for a thousand years.
  *   unattended  the chronicler decides. The control, and the shape of a run
  *               nobody is playing.
  *
@@ -288,14 +285,8 @@ export function playOnce(
   const def = campaignDef(campaign);
   const ctx = bootstrap(source, seed, def.startYear, campaign);
   const w = ctx.world;
-  // The proud column deliberately concentrates the WHOLE house: that standing
-  // order is one of the choices the design is testing. The modest counter-
-  // example is narrower. It chooses the outsider whenever the player is asked
-  // below, but leaves unasked marriages at the shipped default. Setting `out`
-  // here sold the blood on every automatic wedding, and the low-bearing bin
-  // consequently ended Broken Line more often than it survived to be
-  // Forgotten. That measures an extinction strategy, not §29's modest house.
-  if (carriage === 'modest') w.marriagePolicy = 'as_it_falls';
+  // The standing order a house of this carriage gives once and never revisits.
+  if (carriage === 'modest') w.marriagePolicy = 'out';
   if (carriage === 'proud') w.marriagePolicy = 'in';
 
   const tally = { hands: 0, cards: 0, declined: 0, kin: 0 };
