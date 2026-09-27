@@ -33,6 +33,10 @@ on:
         description: 'Pause if more than this % of branches read as merged'
         type: string
         default: '60'
+      range:
+        description: 'before..after SHAs a landing pushed; close the issues they name'
+        type: string
+        default: ''
 
 permissions:
   contents: write   # delete merged branches and spent claim refs
@@ -58,8 +62,10 @@ jobs:
           # branches once.
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run == false && '0' || '1') || '0' }}
           JANITOR_MAX_SHARE: ${{ inputs.max_share || '60' }}
-          # Only a real push has a range to read closing keywords out of. A
-          # first push, or a branch created, reports 000… for `before`, and the
-          # script treats an unreadable range as "nothing was named".
-          JANITOR_RANGE: ${{ github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000' && format('{0}..{1}', github.event.before, github.sha) || '' }}
+          # A real push has a range to read closing keywords out of; so does a
+          # remote landing, whose GITHUB_TOKEN push fires no `push` event and
+          # which therefore dispatches this with the range it pushed. A first
+          # push, or a branch created, reports 000… for `before`, and the script
+          # treats an unreadable range as "nothing was named".
+          JANITOR_RANGE: ${{ github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000' && format('{0}..{1}', github.event.before, github.sha) || github.event_name == 'workflow_dispatch' && inputs.range || '' }}
         run: node tools/janitor.mjs

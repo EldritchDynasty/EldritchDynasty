@@ -47,7 +47,14 @@ import { onPath } from './portable.mjs';
 const DRY = process.env.DRY_RUN === '1';
 const REMOTE = process.env.REMOTE ?? 'origin';
 const SUMMARY = process.env.GITHUB_STEP_SUMMARY ?? '';
-const RANGE = process.env.JANITOR_RANGE ?? '';
+/**
+ * Two SHAs and nothing else. A dispatch hands this in as free text, and it goes
+ * to `git log` as an argument: `--output=…` would be an option, not a range.
+ * Anything else reads as "nothing was named", the same answer an unreadable
+ * push range gets.
+ */
+const readRange = (raw) => (/^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$/.test(raw) ? raw : '');
+const RANGE = readRange((process.env.JANITOR_RANGE ?? '').trim());
 const CWD = process.cwd();
 
 /**

@@ -1113,6 +1113,36 @@ describe('the connector-only remote landing', () => {
     expect(workflow).toContain('pull-requests: read');
   });
 
+  it('dispatches a real janitor sweep, since neither GitHub nor `on: push` acts on a bot-token push', () => {
+    // #266 and #267 landed remotely with `Closes #N` and stayed open until
+    // closed by hand: GitHub ignores closing keywords in a GITHUB_TOKEN push,
+    // and janitor.yml's `push` trigger never fires for one.
+    expect(remote).toContain("workflow_id: 'janitor.yml'");
+    expect(remote, 'a manual dispatch defaults to a dry run, which closes nothing')
+      .toContain("dry_run: 'false'");
+    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitor).toContain('workflow_dispatch:');
+    expect(janitor, 'the sweep must read dry_run=false as a real run')
+      .toContain("inputs.dry_run == false && '0'");
+  });
+
+  it('hands the dispatched janitor the range it landed, or it closes nothing', () => {
+    // janitor.mjs gates its whole issue-closing section on JANITOR_RANGE, and
+    // a dispatch has no push event to derive one from.
+    expect(remote, 'main is read before the landing moves it')
+      .toMatch(/id: before\n\s+run: \|\n\s+git fetch --quiet origin main\n\s+echo "sha=\$\(git rev-parse FETCH_HEAD\)"/);
+    expect(remote.indexOf('id: before'), 'before the landing, not after')
+      .toBeLessThan(remote.indexOf('id: landing'));
+    expect(remote).toContain('BEFORE_SHA: ${{ steps.before.outputs.sha }}');
+    expect(remote).toContain('TARGET_SHA: ${{ steps.target.outputs.sha }}');
+    expect(remote).toContain("range: `${process.env.BEFORE_SHA}..${process.env.TARGET_SHA}`");
+
+    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitor).toMatch(/workflow_dispatch:\n\s+inputs:[\s\S]*\n\s+range:\n\s+description:/);
+    expect(janitor, 'a dispatched sweep reads its range from the input')
+      .toContain("github.event_name == 'workflow_dispatch' && inputs.range");
+  });
+
   it('reports without requiring issue or pull-request write access', () => {
     expect(remote).toContain("if: always() && steps.pr.outcome == 'success'");
     expect(remote).toContain('steps.landing.outcome');
