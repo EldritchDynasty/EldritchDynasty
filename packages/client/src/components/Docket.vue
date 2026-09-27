@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { CastRequest, MatchCard, MatchPanel, PendingDecisionView, RecordOption, SlotFill } from '@ed/core';
 import { futureOf, type GameActions } from '../lib/game';
 import { isControl, isField, shortcutFor } from '../lib/keys';
+import { replayDisposition } from '../lib/accessibility';
 
 const props = defineProps<{
   decision: PendingDecisionView;
@@ -18,6 +19,30 @@ const props = defineProps<{
    */
   refusedCard?: { card: string; reason: string } | null;
 }>();
+
+function readingStorage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A repeated decision remains a decision. This is only the reader's marginal
+ * mark that the authored scene has appeared before; filled names are not part
+ * of the identity and the preference toggle does not suppress the mark.
+ */
+const metBefore = props.decision.kind === 'choice'
+  && replayDisposition(
+    readingStorage(),
+    false,
+    {
+      kind: 'scene',
+      event: String(props.decision.event.id),
+      authored: props.decision.event.body,
+    },
+  ) === 'mark';
 
 /**
  * WHO THE PLAYER IS CASTING, per slot, for the decision on screen.
@@ -254,6 +279,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     <template v-if="decision.kind === 'choice'">
       <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ decision.event.title }}</h3>
       <p class="body">{{ decision.body }}</p>
+      <p v-if="metBefore" class="met-before dim small">
+        <span aria-hidden="true">↺</span>
+        <span>met before</span>
+      </p>
       <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
 
       <div v-if="decision.arcStep" class="dim small arc">
@@ -622,4 +651,6 @@ footer { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 8px; 
     padding-top: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
+.met-before { margin-top: -8px; }
+.met-before span + span { margin-left: 4px; }
 </style>
