@@ -68,6 +68,7 @@ export function addGrudge(
   to: string,
   spec: { severity: number; inheritance: Grudge['inheritance'] },
   originEvent = 'unrecorded',
+  originPage?: string,
 ): Grudge {
   const w = ctx.world;
   const rel = upsert(w, from, to);
@@ -78,6 +79,7 @@ export function addGrudge(
     id: `gr_${(w.counters.grudge += 1).toString(36)}`,
     originEvent,
     originYear: w.year,
+    ...(originPage ? { originPage } : {}),
     severity,
     inheritance: spec.inheritance,
     // Severe grudges last longer, which is the only sense in which severity is
