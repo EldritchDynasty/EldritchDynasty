@@ -1029,6 +1029,15 @@ describe('the connector-only remote landing', () => {
     expect(remote, 'the workflow must not bypass land.mjs with its own direct main push').not.toMatch(/run:\s*git push[^\n]*:main/);
   });
 
+  it('budgets enough job time for landing plus the verdict wait', () => {
+    const timeout = /\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1];
+    expect(timeout, 'remote landing has no job timeout').toBeTruthy();
+    expect(
+      Number(timeout),
+      '120m killed run 36281354123 after a ~103m landing and only 17m of the 40m verdict wait',
+    ).toBeGreaterThanOrEqual(180);
+  });
+
   it('dispatches the existing check after the token-authenticated push, then reads its verdict', () => {
     expect(remote).toContain('actions: write');
     expect(remote).toContain('createWorkflowDispatch');
