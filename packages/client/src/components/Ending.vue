@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { EpilogueView, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
+import {
+  PLATE, afterimageModel, afterimageName, wrap, type Measure,
+} from '../lib/book';
 
 const props = defineProps<{ view: SessionView; epilogue: EpilogueView; actions: GameActions }>();
 defineEmits<{ (e: 'open'): void }>();
@@ -21,6 +24,175 @@ defineEmits<{ (e: 'open'): void }>();
  * the drop is the effect.
  */
 const reckoning = computed(() => props.epilogue.reckoning);
+
+const afterimage = computed(() => afterimageModel({
+  houseName: props.view.houseName,
+  campaignName: props.view.campaign.name,
+  seed: props.view.seed,
+  year: props.epilogue.year,
+  endingTitle: props.epilogue.title,
+  endingSummary: props.epilogue.summary,
+  reckoning: {
+    pages: props.epilogue.reckoning.pages,
+    blanks: props.epilogue.reckoning.blanks,
+    embellished: props.epilogue.reckoning.embellished,
+    standingLies: props.epilogue.reckoning.standingLies,
+    provenLies: props.epilogue.reckoning.provenLies,
+    clauses: props.epilogue.reckoning.clauses,
+    clausesTotal: props.epilogue.reckoning.clausesTotal,
+    attestedTitle: props.epilogue.reckoning.attested === 'none'
+      ? 'nothing at all'
+      : props.epilogue.reckoning.attestedTitle,
+    livingBlood: props.epilogue.reckoning.livingBlood,
+  },
+  read: props.epilogue.read,
+}));
+
+const savingAfterimage = ref(false);
+
+/**
+ * ONE PAGE SOMEBODY CAN HAND TO SOMEBODY ELSE (#260).
+ *
+ * This deliberately uses the same fixed plate, ink, vellum and wrapping seam
+ * as the Chronicle export rather than screenshotting the current DOM. The
+ * current viewport is an accident; the finished house is not.
+ */
+async function saveAfterimage(): Promise<void> {
+  savingAfterimage.value = true;
+  try {
+    const gauge = document.createElement('canvas').getContext('2d');
+    if (!gauge) return;
+    const measure: Measure = (text, font) => {
+      gauge.font = font;
+      return gauge.measureText(text).width;
+    };
+
+    const model = afterimage.value;
+    const width = PLATE.width;
+    const inner = width - PLATE.pad * 2;
+
+    const endingFont = `500 28px ${PLATE.serif}`;
+    const summaryFont = `18px ${PLATE.serif}`;
+    const quoteFont = `italic 19px ${PLATE.serif}`;
+    const endingLines = wrap(model.endingTitle, endingFont, inner, measure);
+    const summaryLines = wrap(model.summary, summaryFont, inner, measure);
+    const quoteLines = model.quote
+      ? wrap(model.quote.text, quoteFont, inner - 36, measure)
+      : [];
+
+    const height = Math.max(
+      760,
+      214
+        + endingLines.length * 38
+        + summaryLines.length * 30
+        + model.facts.length * 42
+        + (model.quote ? 88 + quoteLines.length * 31 : 0)
+        + 80,
+    );
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ink = canvas.getContext('2d');
+    if (!ink) return;
+
+    ink.fillStyle = PLATE.ground;
+    ink.fillRect(0, 0, canvas.width, canvas.height);
+
+    let y = 66;
+    ink.fillStyle = PLATE.ink;
+    ink.font = `500 34px ${PLATE.serif}`;
+    ink.fillText(model.houseName, PLATE.pad, y);
+
+    y += 28;
+    ink.fillStyle = PLATE.faint;
+    ink.font = `13px ${PLATE.serif}`;
+    ink.fillText(model.strap, PLATE.pad, y);
+
+    y += 24;
+    ink.strokeStyle = PLATE.rule;
+    ink.beginPath();
+    ink.moveTo(PLATE.pad, y);
+    ink.lineTo(width - PLATE.pad, y);
+    ink.stroke();
+
+    y += 52;
+    ink.fillStyle = PLATE.rubric;
+    ink.font = endingFont;
+    for (const line of endingLines) {
+      ink.fillText(line, PLATE.pad, y);
+      y += 38;
+    }
+
+    y += 4;
+    ink.fillStyle = PLATE.ink;
+    ink.font = summaryFont;
+    for (const line of summaryLines) {
+      ink.fillText(line, PLATE.pad, y);
+      y += 30;
+    }
+
+    y += 22;
+    ink.strokeStyle = PLATE.rule;
+    ink.beginPath();
+    ink.moveTo(PLATE.pad, y);
+    ink.lineTo(width - PLATE.pad, y);
+    ink.stroke();
+    y += 32;
+
+    for (const fact of model.facts) {
+      ink.textAlign = 'left';
+      ink.fillStyle = PLATE.faint;
+      ink.font = `14px ${PLATE.serif}`;
+      ink.fillText(fact.label, PLATE.pad, y);
+
+      ink.textAlign = 'right';
+      ink.fillStyle = PLATE.ink;
+      ink.font = `17px ${PLATE.serif}`;
+      ink.fillText(fact.value, width - PLATE.pad, y);
+      y += 42;
+    }
+    ink.textAlign = 'left';
+
+    if (model.quote) {
+      y += 8;
+      ink.strokeStyle = PLATE.rule;
+      ink.beginPath();
+      ink.moveTo(PLATE.pad, y);
+      ink.lineTo(width - PLATE.pad, y);
+      ink.stroke();
+      y += 32;
+
+      ink.fillStyle = PLATE.faint;
+      ink.font = `12px ${PLATE.serif}`;
+      const title = model.quote.title ? ` · ${model.quote.title}` : '';
+      ink.fillText(`FROM THE CHRONICLE · ${model.quote.year}${title}`, PLATE.pad, y);
+      y += 34;
+
+      ink.fillStyle = PLATE.ink;
+      ink.font = quoteFont;
+      for (const line of quoteLines) {
+        ink.fillText(line, PLATE.pad + 18, y);
+        y += 31;
+      }
+    }
+
+    ink.fillStyle = PLATE.faint;
+    ink.font = `12px ${PLATE.serif}`;
+    ink.fillText('Eldritch Dynasty · House Afterimage', PLATE.pad, canvas.height - 28);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = afterimageName(props.view.houseName, props.view.seed, props.epilogue.year);
+    link.click();
+    URL.revokeObjectURL(url);
+  } finally {
+    savingAfterimage.value = false;
+  }
+}
 </script>
 
 <template>
@@ -110,7 +282,12 @@ const reckoning = computed(() => props.epilogue.reckoning);
 
     <p class="closing">{{ epilogue.closing }}</p>
 
-    <button class="quiet" @click="actions.restart()">Another house</button>
+    <div class="row ending-actions">
+      <button class="quiet" :disabled="savingAfterimage" @click="saveAfterimage()">
+        {{ savingAfterimage ? 'Setting the afterimage…' : 'Save the house afterimage' }}
+      </button>
+      <button class="quiet" @click="actions.restart()">Another house</button>
+    </div>
   </main>
 </template>
 
@@ -139,4 +316,5 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
   margin: 40px 0 30px; padding-top: 22px; border-top: 1px solid var(--rule);
   font-size: var(--t-lead); color: var(--ink);
 }
+.ending-actions { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 </style>
