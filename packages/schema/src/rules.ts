@@ -11,6 +11,7 @@ import { FRAME_PROSE_SENTENCE_THRESHOLD, PROSE_SENTENCE_THRESHOLD, proseIssues }
 import { isInlineArcId } from './desugar.js';
 import { ENDING_ORDER } from './ending.js';
 import { assertNever } from './exhaustive.js';
+import { auditChoices, isProseOnly, SELF_EXPRESSION_TAG } from './choices.js';
 
 /**
  * THE RULES.
@@ -1872,6 +1873,49 @@ const countedSlots: ValidationRule = {
   },
 };
 
+/**
+ * A CHOICE THAT CHANGES NOTHING (issue #266).
+ *
+ * Three findings off `auditChoices`, one rule, so the editor's Issues panel
+ * files them together:
+ *
+ *   error    two options on one event whose outcomes do the same things. The
+ *            player is choosing a label. Shipped content has none, so this is
+ *            an error from day one.
+ *   warning  a prose-only option — no effect, or only memory nothing reads —
+ *            that is not tagged `self_expression`. Its Chronicle page differs,
+ *            which is why self-expression is a legitimate thing to declare; it
+ *            has to be declared, not arrived at.
+ *   warning  a flag, knowledge key or arc flag that content writes and no
+ *            condition reads (invariant 11). Once per key, at its first writer.
+ *
+ * The warnings are Phase B's worklist. When they reach zero, promote them to
+ * errors in the same PR.
+ */
+const choiceConsequence: ValidationRule = {
+  id: 'choices/consequence',
+  about: 'Every choice must change something that lasts, and every flag or knowledge key written must be read somewhere.',
+  check(content) {
+    const issues: Issue[] = [];
+    const audit = auditChoices(content);
+    for (const c of audit.converging) {
+      issues.push(err(this.id, `event:${c.event}`,
+        `options ${c.choices.join(', ')} have identical effects and callbacks — the player is choosing a label`));
+    }
+    for (const r of audit.rows) {
+      if (!isProseOnly(r)) continue;
+      issues.push(warn(this.id, `event:${r.event}/${r.choice}`,
+        `changes nothing that lasts — give it a cost or a remembered consequence, or tag every outcome '${SELF_EXPRESSION_TAG}'`));
+    }
+    for (const w of audit.writeOnly) {
+      const what = w.kind === 'arc_flag' ? 'arc flag' : w.kind === 'knowledge' ? 'knowledge' : 'flag';
+      issues.push(warn(this.id, w.writers[0]!,
+        `${what} '${w.key}' is written${w.writers.length > 1 ? ` in ${w.writers.length} places` : ''} and read by no condition — author a reader, or delete the write`));
+    }
+    return issues;
+  },
+};
+
 export const CONTENT_RULES: readonly ValidationRule[] = [
   uniqueIds,
   threePurposes,
@@ -1910,4 +1954,5 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   frameShape,
   attentionFloor,
   riteWiring,
+  choiceConsequence,
 ];

@@ -40,6 +40,7 @@
     "//2d": "Measure what the commands cost and write it into CLAUDE.md. The figures rot when OTHER branches land, so remembering is not a strategy.",
     "cost": "node tools/cost.mjs",
     "validate": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/validate.ts",
+    "audit:choices": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/choice-audit.ts",
     "harness": "tsx --tsconfig tsconfig.base.json packages/core/src/harness.ts",
     "digest": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/digest.ts",
     "gates": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/gates.ts",

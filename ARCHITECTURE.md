@@ -62,6 +62,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | Looking a content id **up** | `schema/src/content-index.ts` | `bundle.test.ts` |
 | A **validation** rule | `schema/src/rules.ts` → `CONTENT_RULES` | `rules.test.ts` |
 | The **prose** contract | `schema/src/prose.ts` | `rules.test.ts` |
+| What a **choice** can change | `schema/src/choices.ts` → `auditChoices`; CLI `core/src/tools/choice-audit.ts` (`npm run audit:choices`) | `rules.test.ts` |
 | The **save format** | `schema/src/save.ts` (shape) + `core/src/save.ts` (conversion) | `save.test.ts` |
 | **What happens in a year** | `core/src/year/phases.ts` → `YEAR_PHASES` | `year.test.ts` |
 | Death, birth, marriage rates | `core/src/people/demography.ts` | `demography.slow.test.ts`, `attributes.slow.test.ts` |

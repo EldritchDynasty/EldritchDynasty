@@ -278,3 +278,4 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
 | `frame/shape` | The frame reacts to the record: no effects, no Record block, no rumour, no choices, no slot against the living family, and at least one read to react to. `reads` is frame-only, and a `chronicled` read names an event that can actually leave a page. |
 | `events/player-share` | At least a quarter of the library must actually ask the player something. |
 | `rites/wiring` | A rite names declared slots, casts its ascendant from a pool that can express, and takes its subject. |
+| `choices/consequence` | Every choice must change something that lasts, and every flag or knowledge key written must be read somewhere. |

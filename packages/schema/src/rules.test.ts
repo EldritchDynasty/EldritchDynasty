@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, CONTENT_RULES, runRule, validateBundle, type ContentBundle } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, indexContent, runRule, validateBundle, type ContentBundle } from '@ed/schema';
 
 const content = loadContent();
 
@@ -1538,5 +1538,125 @@ describe('the rules that had never caught anything', () => {
       });
       expect(messages('arcs/wiring', b)).toMatch(/next points at its own event/);
     });
+  });
+});
+
+/**
+ * ISSUE #266: A CHOICE THAT CHANGES NOTHING.
+ *
+ * Each case clones the real bundle and breaks ONE event, so the rule is shown
+ * firing against content the game would load rather than against a toy. The
+ * event is chosen by shape, not by id, so these survive Phase B rewriting the
+ * content they happen to land on.
+ */
+describe('choices/consequence', () => {
+  const withEvents = (mutate: (b: ContentBundle) => void): ContentBundle => {
+    const b = structuredClone(content.bundle);
+    mutate(b);
+    return b;
+  };
+
+  type Ev = ContentBundle['events'][number];
+  const choicesOf = (e: Ev) => (e.interaction.kind === 'narration' ? [] : e.interaction.choices);
+  const inAnyArc = new Set(content.arcs.flatMap((a) => a.nodes.map((n) => String(n.event))));
+
+  /**
+   * A plain player choice: two or more options, no arc anywhere near it, no
+   * inline follow-up, and a first option that does something that lasts.
+   */
+  const plain = (b: ContentBundle): Ev => {
+    const e = b.events.find((x) => x.tier !== 'frame'
+      && x.interaction.kind === 'choice'
+      && x.interaction.decidedBy === 'player'
+      && !x.arc
+      && !inAnyArc.has(String(x.id))
+      && choicesOf(x).every((c) => c.outcomes.every((o) => !o.next && !o.triggers))
+      && choicesOf(x)[0]!.outcomes.some((o) => o.effects.some((f) => f.kind === 'treasury' || f.kind === 'respect')));
+    if (!e) throw new Error('the shipped content has no plain player choice to break');
+    return e;
+  };
+
+  const issuesAt = (b: ContentBundle, where: string) =>
+    runRule('choices/consequence', b).filter((i) => i.where === where);
+
+  it('raises no error on the shipped content', () => {
+    expect(runRule('choices/consequence', content).filter((i) => i.level === 'error')).toHaveLength(0);
+  });
+
+  it('errors on two options with identical effects', () => {
+    let id = '';
+    const b = withEvents((x) => {
+      const e = plain(x);
+      id = String(e.id);
+      const [first, second] = choicesOf(e);
+      second!.outcomes = structuredClone(first!.outcomes).map((o) => ({ ...o, id: `${o.id}_twin`, text: 'Different words.' }));
+    });
+    const errors = issuesAt(b, `event:${id}`).filter((i) => i.level === 'error');
+    expect(errors, 'converging options must be an error').toHaveLength(1);
+    expect(errors[0]!.message).toMatch(/identical effects/);
+  });
+
+  it('warns on an untagged no-effect option, and self_expression clears it', () => {
+    let at = '';
+    const strip = (tag: boolean) => withEvents((x) => {
+      const e = plain(x);
+      const c = choicesOf(e)[1]!;
+      at = `event:${e.id}/${c.id}`;
+      for (const o of c.outcomes) {
+        o.effects = [];
+        o.tags = tag ? [...o.tags, 'self_expression'] : o.tags.filter((t) => t !== 'self_expression');
+      }
+    });
+    expect(issuesAt(strip(false), at).some((i) => i.level === 'warning' && /changes nothing/.test(i.message))).toBe(true);
+    expect(issuesAt(strip(true), at)).toHaveLength(0);
+  });
+
+  it('warns on a flag nothing reads, and a reader anywhere clears it', () => {
+    const FLAG = 'issue_266_unread_probe';
+    const write = (x: ContentBundle) => {
+      const e = plain(x);
+      const o = choicesOf(e)[0]!.outcomes[0]!;
+      o.effects.push({ kind: 'flag', flag: FLAG, set: true });
+      return e;
+    };
+    const unread = withEvents((x) => { write(x); });
+    const probe = (b: ContentBundle) =>
+      runRule('choices/consequence', b).filter((i) => i.message.includes(`'${FLAG}'`));
+    expect(probe(unread)).toHaveLength(1);
+    expect(probe(unread)[0]!.level).toBe('warning');
+
+    const read = withEvents((x) => {
+      const writer = write(x);
+      const other = x.events.find((e) => e.id !== writer.id && e.tier !== 'frame')!;
+      const reader = { flag: FLAG };
+      other.conditions = other.conditions ? { all: [other.conditions, reader] } : reader;
+    });
+    expect(probe(read)).toHaveLength(0);
+  });
+
+  it('counts a successor with fromChoice as a callback on that choice', () => {
+    const b = withEvents((x) => {
+      const e = plain(x);
+      x.arcs.push({
+        id: 'issue_266_probe_arc',
+        title: 'Probe',
+        entry: 'start',
+        nodes: [{
+          id: 'start',
+          event: e.id,
+          selection: 'first_match',
+          schedule: 'next_generation',
+          successors: [{ to: 'end', fromChoice: choicesOf(e)[0]!.id, weight: 100 }],
+        }],
+        bindings: [],
+        maxConcurrentInstances: 1,
+        inline: false,
+      } as ContentBundle['arcs'][number]);
+    });
+    const target = plain(b);
+    const [first, second] = choicesOf(target);
+    const rows = auditChoices(indexContent(b)).rows.filter((r) => r.event === target.id);
+    expect(rows.find((r) => r.choice === first!.id)!.categories).toContain('callback');
+    expect(rows.find((r) => r.choice === second!.id)!.categories).not.toContain('callback');
   });
 });

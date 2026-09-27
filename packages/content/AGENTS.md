@@ -106,6 +106,20 @@ npm run validate     # 32 rules; exits non-zero on any error
   `castBy: player` slot and a check whose bands name CHOICES, not outcomes.
 - **A second beat is `next` on an outcome**, with `keep` naming the slots the
   follow-up casts with the same people. Longer than three beats, write an arc.
+- **Every option has to change something that lasts** (`choices/consequence`,
+  issue #266). Two options with identical effects and callbacks are an error.
+  An option with no effect, or only memory nothing reads, is a warning. That
+  includes the passive "leave it", which otherwise teaches the player that
+  inaction is free. If changing nothing is the point, tag every one of its
+  outcomes `self_expression`. That is legitimate, because its Chronicle page
+  still differs, but it has to be said. `npm run audit:choices` prints the
+  whole picture.
+- **A flag you set must be read somewhere.** Every `flag`, `knowledge`
+  (including a Record's `grantsKnowledge`) and `arc_flag` needs a condition
+  that reads it: a later event, a successor's `when`, a rite. Otherwise it is
+  a warning, and it is invariant 11. The outcome's own Chronicle page already
+  remembers the act, so a flag that nothing will ever ask about is a delete,
+  not a stub.
 - **Any body longer than five sentences is held to the prose contract.** Use the
   `rothfuss-prose` skill. `npm run validate` counts the countable half.
 
