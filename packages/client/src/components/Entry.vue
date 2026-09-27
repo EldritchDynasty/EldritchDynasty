@@ -72,12 +72,11 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
     <span class="year dim small">{{ entry.year }}</span>
     <h4 v-if="entry.title && entry.text !== null">{{ entry.title }}</h4>
     <p v-if="entry.text !== null">{{ entry.text }}</p>
-    <!-- To a screen reader this was `&nbsp;` with a `title` on it, which is to
-         say nothing whatsoever, exactly where the artefact is. The sentence is
-         said; the page still shows the gap. ONE sentence for both channels —
-         the title and the announcement said slightly different things, which
-         is how two wordings of one fact start drifting apart. -->
-    <p v-else class="blank" title="Somebody decided this year would not be written down.">
+    <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
+         became a tooltip. Neither is a touch-safe explanation. The sentence is
+         said; the page still shows the gap, and the visible mark below carries
+         the same fact for sighted readers. -->
+    <p v-else class="blank">
       <span class="said-not-shown">Somebody decided this year would not be written down.</span>
       <span aria-hidden="true">&nbsp;</span>
     </p>
