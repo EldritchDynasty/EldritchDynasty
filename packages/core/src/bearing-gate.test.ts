@@ -39,6 +39,7 @@ function run(
    * the outcome are the same number.
    */
   substantiatedRungIndex = bestRungIndex,
+  ending: BearingRun['ending'] = substantiatedRungIndex >= 3 ? 'devoured' : 'forgotten',
 ): BearingRun {
   n += 1;
   return {
@@ -57,7 +58,7 @@ function run(
     substantiatedRungIndex,
     rungsWithheld: bestRungIndex - substantiatedRungIndex,
     unsupportable: (bestRungIndex - substantiatedRungIndex) * 18,
-    ending: substantiatedRungIndex >= 3 ? 'devoured' : 'forgotten',
+    ending,
     warningsHeard: 2,
     warningsWithheld: 2,
     respectTierIndex: 3,
@@ -124,6 +125,31 @@ describe('the bearing gate', () => {
     // And the ladder half is untouched in both, which is the point: rule 2 is
     // judged on what the house climbed, and it climbed the same either way.
     expect(honest.ok).toBe(discounted.ok);
+  });
+
+  it('keeps Broken Line censoring out of the creditor-reading verdict', () => {
+    // A Broken Line run never reaches the branch of selectEnding that reads a
+    // substantiated rung. It is also structurally likely to have low measured
+    // carriage because it stopped generating acts early. If those extinct
+    // lines are binned into the proof verdict, the outcome can manufacture its
+    // own low-bearing comparison group.
+    const carriages: Carriage[] = ['unattended', 'modest', 'proud'];
+    const readRuns = Array.from({ length: SPREAD_MIN_RUNS }, (_, i) => {
+      const top = i >= SPREAD_MIN_RUNS - SPREAD_MIN_RUNS / 3;
+      const c = (i + 1) / (SPREAD_MIN_RUNS + 1);
+      // Rule 2 passes: the high-bearing third reaches rung 3, the low third 2.
+      // Spread passes too: only the high third has a proof tail.
+      const reached = top ? 3 : 2;
+      const proved = top && i % 4 === 0 ? 1 : reached;
+      return run(carriages[i % 3]!, c, reached, proved);
+    });
+    const extinct = Array.from({ length: 90 }, (_, i) =>
+      run(carriages[i % 3]!, 0.001 * (i + 1), i % 2 ? 4 : 0, i % 2 ? 4 : 0, 'broken_line'));
+
+    const { ok, lines } = verdictOver([...extinct, ...readRuns]);
+    expect(ok, lines.join('\n')).toBe(true);
+    expect(lines.some((l) => l.includes(`${SPREAD_MIN_RUNS}/${SPREAD_MIN_RUNS + extinct.length} runs reached a creditor reading`)))
+      .toBe(true);
   });
 
   it('passes a game where the house that carried itself climbed higher', () => {
