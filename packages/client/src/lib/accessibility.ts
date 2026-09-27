@@ -1,5 +1,3 @@
-import { assertNever } from '@ed/schema';
-
 /** Reading choices belong to the reader, not to a saved world. */
 export type TextScale = 'standard' | 'large' | 'largest';
 export type ReadingFont = 'book' | 'readable';
@@ -128,6 +126,19 @@ export type ReplayBeat =
 
 export type ReplayDisposition = 'show' | 'skip' | 'fast' | 'mark';
 
+function assertNever(value: never, what: string): never {
+  throw new Error(`unhandled ${what}: ${JSON.stringify(value)}`);
+}
+
+/** The exact passive signing text whose identity survives across runs. */
+export function prologueSeenText(
+  opening: string,
+  triad: readonly { given: string; owed: string }[],
+  thesis: string,
+): string {
+  return [opening, ...triad.flatMap((beat) => [beat.given, beat.owed]), thesis].join('\u0000');
+}
+
 /**
  * One pure boundary between reader history and every recurring reading surface.
  *
@@ -184,4 +195,33 @@ export function chapterReplayDisposition(
   beat: ChapterReplayBeat,
 ): 'show' | 'skip' {
   return replayDisposition(storage, skipSeenProse, beat) === 'skip' ? 'skip' : 'show';
+}
+
+/**
+ * The prologue owns one small piece of presentation state: how many passive
+ * beats have been revealed. Keeping the reader-history transition here makes
+ * it testable without mounting a second Vue/jsdom runtime.
+ */
+export function initialPrologueShown(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  skipSeenProse: boolean,
+  text: string,
+  triadLength: number,
+): number {
+  return replayDisposition(storage, skipSeenProse, { kind: 'prologue', text }) === 'fast'
+    ? triadLength
+    : 0;
+}
+
+export function revealPrologueBeat(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  text: string,
+  shown: number,
+  triadLength: number,
+): number {
+  const next = Math.min(triadLength, shown + 1);
+  if (next === triadLength) {
+    rememberSeenProse(storage, seenProseKey('prologue', text));
+  }
+  return next;
 }
