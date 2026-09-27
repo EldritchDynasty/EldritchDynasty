@@ -5,6 +5,9 @@ import { DurationSequencer } from './tools/shards.mjs';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
+/** Where the suites that mount a component live. See `poolMatchGlobs` below. */
+export const DOM_SUITES = '**/packages/client/src/components/**/*.test.ts';
+
 /**
  * TWO SPEEDS, AND THE FILENAME SAYS WHICH.
  *
@@ -122,8 +125,26 @@ export default defineConfig({
      * If a suite ever needs a fresh registry, it says so per-file with
      * `// @vitest-environment` or its own describe-level setup, rather than by
      * turning this back on for all 132.
+     *
+     * Set per pool, below, because a top-level `isolate` overrides both.
      */
-    isolate: false,
+    /**
+     * ── EXCEPT A DOM, WHICH IS MODULE-LEVEL STATE BY CONSTRUCTION ──────────
+     *
+     * Vue's DOM renderer takes `document` once, when it is first imported. A
+     * jsdom suite gets a fresh `document` per FILE, so with the registry shared,
+     * the second jsdom file in a worker renders into the FIRST file's document:
+     * the elements exist, `html()` shows them, and every class selector over
+     * them finds nothing. On main, three suites passed only because they landed
+     * on separate workers — run serially, 25 of their tests failed — and adding
+     * a fourth (#269) tipped the scheduling.
+     *
+     * So the suites that mount a component (`DOM_SUITES`) run in the `threads`
+     * pool, isolated per file; everything else keeps the shared registry.
+     * `lanes.test.ts` fails the build if a suite mounts one anywhere else.
+     */
+    poolMatchGlobs: [[DOM_SUITES, 'threads']],
+    poolOptions: { forks: { isolate: false }, threads: { isolate: true } },
     sequence: {
       /**
        * ── THE SHARDS ARE PACKED BY DURATION, NOT BY PATH HASH ─────────────

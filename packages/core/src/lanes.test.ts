@@ -437,3 +437,45 @@ describe('the shards are packed by duration', () => {
     ).toBeLessThanOrEqual(UNMEASURED_BUDGET);
   });
 });
+
+/**
+ * A SUITE THAT MOUNTS A COMPONENT RUNS ISOLATED (#269).
+ *
+ * Vue's renderer keeps the `document` it was first imported under, and the
+ * shared registry this config runs with hands it to the next jsdom file in the
+ * worker, whose elements then land in a document its selectors do not search.
+ * `vitest.config.ts` sends the mounting suites to an isolating pool by GLOB;
+ * a suite that mounts outside that glob would pass alone and fail the day the
+ * scheduler put it behind another one.
+ */
+describe('a suite that mounts a component', () => {
+  const config = readFileSync(join(REPO, 'vitest.config.ts'), 'utf8');
+  // Spelled in two halves so this file does not read as a suite that mounts.
+  const MOUNTS = "from '@vue/" + "test-utils'";
+  const glob = /export const DOM_SUITES = '\*\*\/([^*']+)\*\*\/\*\.test\.ts';/.exec(config)?.[1];
+
+  it('names where the mounting suites live, and isolates that pool', () => {
+    expect(glob, 'DOM_SUITES is no longer a `**/<dir>/**/*.test.ts` glob this test can read').toBeDefined();
+    expect(config).toContain("poolMatchGlobs: [[DOM_SUITES, 'threads']]");
+    expect(config).toMatch(/threads: \{ isolate: true \}/);
+  });
+
+  it('lives inside that glob', () => {
+    const mounting: string[] = [];
+    const walk = (dir: string): void => {
+      for (const name of readdirSync(dir)) {
+        if (name === 'node_modules' || name === 'dist') continue;
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) walk(path);
+        else if (name.endsWith('.test.ts') && readFileSync(path, 'utf8').includes(MOUNTS)) {
+          mounting.push(path.slice(REPO.length + 1).replace(/\\/g, '/'));
+        }
+      }
+    };
+    walk(join(REPO, 'packages'));
+
+    expect(mounting.length, 'found no suite that mounts a component — has the walker gone blind?').toBeGreaterThan(0);
+    const outside = mounting.filter((f) => !f.startsWith(glob!));
+    expect(outside, `these mount a component outside ${glob}, where the registry is shared`).toEqual([]);
+  });
+});
