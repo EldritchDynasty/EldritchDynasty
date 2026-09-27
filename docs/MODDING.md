@@ -79,15 +79,21 @@ profile's `mods/content` directory. The desktop game composes those
 files with the shipped bundle before Vue mounts and validates the combined
 result through the same rules.
 
-For repository development:
+For repository development, use the desktop shell for both sides of the
+workflow. Close the Mod Editor before launching the game:
 
 ```bash
 npm run mod-editor --workspace @ed/shell
-npm run play
+# after authoring/validation, close the Mod Editor
+npm run shell
 ```
 
-The ordinary game with **no** user-content files keeps the precompiled shipped
-content path: it does not load the YAML parser or change the simulation.
+`npm run play` launches the browser client. It is useful for ordinary client
+development, but it has no desktop filesystem bridge and therefore does **not**
+read the shared `mods/content` directory.
+
+The ordinary desktop game with **no** user-content files keeps the precompiled
+shipped content path: it does not load the YAML parser or change the simulation.
 
 ## Saves remember what content they used
 
