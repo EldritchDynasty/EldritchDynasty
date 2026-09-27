@@ -1,0 +1,55 @@
+name: issue-36-bearing-diagnostic
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: issue-36-bearing-diagnostic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bearing:
+    name: bearing ${{ matrix.years }}y · ${{ matrix.base }}+${{ matrix.step }}i
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - years: 300
+            base: 4000
+            step: 13
+          - years: 300
+            base: 9001
+            step: 17
+          - years: 300
+            base: 20011
+            step: 29
+          - years: 300
+            base: 31013
+            step: 37
+          - years: 500
+            base: 4000
+            step: 13
+          - years: 500
+            base: 9001
+            step: 17
+          - years: 500
+            base: 20011
+            step: 29
+          - years: 500
+            base: 31013
+            step: 37
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Judge Bearing at shipped term
+        run: npm run gate:bearing -- 80 ${{ matrix.years }} ${{ matrix.base }} ${{ matrix.step }}
