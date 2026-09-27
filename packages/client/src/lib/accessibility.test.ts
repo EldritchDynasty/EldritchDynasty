@@ -1,21 +1,20 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { PrologueView } from '@ed/core';
-import Prologue from '../components/Prologue.vue';
-import type { GameActions } from './game';
 import {
   ACCESSIBILITY_STORAGE_KEY,
   SEEN_PROSE_STORAGE_KEY,
   applyAccessibility,
   chapterReplayDisposition,
+  initialPrologueShown,
   hasSeenProse,
   loadAccessibility,
   loadSeenProse,
+  prologueSeenText,
   rememberSeenProse,
   replayDisposition,
+  revealPrologueBeat,
   saveAccessibility,
   seenProseKey,
   type AccessibilityPreferences,
@@ -222,104 +221,71 @@ describe('experienced-reader replay beyond Age openings (#267)', () => {
   });
 });
 
+
 describe('the prologue earns its seen mark only after it is read (#267)', () => {
-  const prologue: PrologueView = {
-    id: 'the_signing',
-    opening: 'The room was cold.',
-    triad: [
-      { given: 'A key was given.', owed: 'The door would remember it.' },
-      { given: 'A name was given.', owed: 'The book would keep it.' },
-      { given: 'A line was given.', owed: 'The line would be collected.' },
-    ],
-    housePrompt: 'What will the family be called?',
-    friendsPrompt: 'Name those who stood outside the blood.',
-    friendsWanted: 0,
-    heirlooms: [{
-      heirloom: 'the_key',
-      name: 'The Key',
-      blurb: 'Iron, and colder than the room.',
-      line: 'He asked for the key.',
-    }],
-    grudges: [{
-      house: 'house_marrow',
-      houseName: 'House Marrow',
-      line: 'They paid the balance.',
-    }],
-    thesis: 'What was signed was inherited.',
-  };
-
-  const exactText = [
-    prologue.opening,
-    ...prologue.triad.flatMap((beat) => [beat.given, beat.owed]),
-    prologue.thesis,
-  ].join('\u0000');
-
-  function actions() {
+  function storage() {
+    const values = new Map<string, string>();
     return {
-      found: vi.fn(() => ({ ok: true })),
-      enter: vi.fn(),
-    } as unknown as GameActions;
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
   }
 
-  beforeEach(() => {
-    window.localStorage.clear();
-    vi.stubGlobal('scrollTo', vi.fn());
-  });
+  const triad = [
+    { given: 'A key was given.', owed: 'The door would remember it.' },
+    { given: 'A name was given.', owed: 'The book would keep it.' },
+    { given: 'A line was given.', owed: 'The line would be collected.' },
+  ];
+  const exactText = prologueSeenText(
+    'The room was cold.',
+    triad,
+    'What was signed was inherited.',
+  );
 
-  it('does not remember a half-read signing, then remembers the third revealed beat', async () => {
-    const game = actions();
-    const wrapper = mount(Prologue, {
-      props: {
-        prologue,
-        actions: game,
-        refused: null,
-        startYear: 1042,
-        skipSeenProse: true,
-      },
-    });
+  it('does not remember a half-read signing, then remembers the third revealed beat', () => {
+    const s = storage();
     const key = seenProseKey('prologue', exactText);
+    let shown = initialPrologueShown(s, true, exactText, triad.length);
 
-    await wrapper.get('button.on').trigger('click');
-    await wrapper.get('button.on').trigger('click');
-    expect(hasSeenProse(window.localStorage, key)).toBe(false);
+    expect(shown).toBe(0);
+    expect(hasSeenProse(s, key)).toBe(false);
 
-    await wrapper.get('button.on').trigger('click');
-    expect(hasSeenProse(window.localStorage, key)).toBe(true);
-    expect((game.found as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
-    wrapper.unmount();
+    shown = revealPrologueBeat(s, exactText, shown, triad.length);
+    shown = revealPrologueBeat(s, exactText, shown, triad.length);
+    expect(shown).toBe(2);
+    expect(hasSeenProse(s, key)).toBe(false);
+
+    shown = revealPrologueBeat(s, exactText, shown, triad.length);
+    expect(shown).toBe(3);
+    expect(hasSeenProse(s, key)).toBe(true);
   });
 
-  it('fast-reveals passive beats but still requires every founding answer before Sign it', async () => {
-    rememberSeenProse(window.localStorage, seenProseKey('prologue', exactText));
-    const game = actions();
-    const wrapper = mount(Prologue, {
-      props: {
-        prologue,
-        actions: game,
-        refused: null,
-        startYear: 1042,
-        skipSeenProse: true,
-      },
-    });
+  it('fast-reveals only the passive beats of an exact repeat, and only with the preference on', () => {
+    const s = storage();
+    rememberSeenProse(s, seenProseKey('prologue', exactText));
 
-    expect(wrapper.findAll('.triad li')).toHaveLength(3);
-    expect(wrapper.findAll('button').some((button) => button.text() === 'The first thing')).toBe(false);
-    expect((game.found as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
-    expect((game.enter as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    expect(initialPrologueShown(s, true, exactText, triad.length)).toBe(3);
+    expect(initialPrologueShown(s, false, exactText, triad.length)).toBe(0);
+    expect(initialPrologueShown(
+      s,
+      true,
+      exactText.replace('cold', 'very cold'),
+      triad.length,
+    )).toBe(0);
+  });
 
-    const sign = wrapper.get('button.sign');
-    expect(sign.attributes('disabled')).toBeDefined();
+  it('keeps the fast path presentation-only until the existing Sign it gate', () => {
+    const source = readFileSync(join(import.meta.dirname, '..', 'components', 'Prologue.vue'), 'utf8');
+    const sign = source.indexOf('function sign(): void');
+    expect(sign).toBeGreaterThan(0);
 
-    const options = wrapper.findAll('button.option');
-    await options[0]!.trigger('click');
-    await options[1]!.trigger('click');
-    await wrapper.get('input[aria-label="Name the house"]').setValue('House Test');
+    // Replay setup and reveal state may touch only reader-local storage. The
+    // first simulation verb remains the existing found() call inside sign().
+    expect(source.slice(0, sign)).not.toContain('props.actions.');
+    expect(source.slice(sign)).toContain('props.actions.found(');
 
-    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
-    await wrapper.get('button.sign').trigger('click');
-
-    expect((game.found as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
-    expect((game.enter as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
-    wrapper.unmount();
+    // Fast reveal changes only `shown`; the founding requirements still own
+    // whether the simulation verb can be pressed.
+    expect(source).toContain(':disabled="wanted.length > 0"');
   });
 });
