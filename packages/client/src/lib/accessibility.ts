@@ -5,13 +5,17 @@ export type ReadingFont = 'book' | 'readable';
 export interface AccessibilityPreferences {
   textScale: TextScale;
   readingFont: ReadingFont;
+  /** Presentation only: never answers a decision or changes a saved world. */
+  skipSeenProse: boolean;
 }
 
 export const ACCESSIBILITY_STORAGE_KEY = 'eldritch-dynasty:reading';
+export const SEEN_PROSE_STORAGE_KEY = 'eldritch-dynasty:seen-prose';
 
 export const DEFAULT_ACCESSIBILITY: AccessibilityPreferences = {
   textScale: 'standard',
   readingFont: 'book',
+  skipSeenProse: false,
 };
 
 function isTextScale(value: unknown): value is TextScale {
@@ -29,10 +33,12 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
     const parsed = JSON.parse(storage.getItem(ACCESSIBILITY_STORAGE_KEY) ?? 'null') as {
       textScale?: unknown;
       readingFont?: unknown;
+      skipSeenProse?: unknown;
     } | null;
     return {
       textScale: isTextScale(parsed?.textScale) ? parsed.textScale : DEFAULT_ACCESSIBILITY.textScale,
       readingFont: isReadingFont(parsed?.readingFont) ? parsed.readingFont : DEFAULT_ACCESSIBILITY.readingFont,
+      skipSeenProse: parsed?.skipSeenProse === true,
     };
   } catch {
     return { ...DEFAULT_ACCESSIBILITY };
@@ -63,4 +69,69 @@ export function saveAccessibility(
     // A private or full store is not a reason to take the game away. The
     // preference still applies for this session through the document root.
   }
+}
+
+
+/**
+ * Exact prose identity, not an authored id. If an author changes even one
+ * character, the new line is unseen and must be offered to the reader.
+ */
+export function seenProseKey(kind: 'chapter-opening', text: string): string {
+  return `${kind}\u0000${text}`;
+}
+
+export function loadSeenProse(storage: Pick<Storage, 'getItem'> | null): Set<string> {
+  if (!storage) return new Set();
+  try {
+    const parsed = JSON.parse(storage.getItem(SEEN_PROSE_STORAGE_KEY) ?? '[]');
+    return new Set(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function hasSeenProse(
+  storage: Pick<Storage, 'getItem'> | null,
+  key: string,
+): boolean {
+  return loadSeenProse(storage).has(key);
+}
+
+export function rememberSeenProse(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  key: string,
+): void {
+  if (!storage) return;
+  try {
+    const seen = loadSeenProse(storage);
+    if (seen.has(key)) return;
+    seen.add(key);
+    storage.setItem(SEEN_PROSE_STORAGE_KEY, JSON.stringify([...seen]));
+  } catch {
+    // A reading convenience is never a reason to make the game unavailable.
+  }
+}
+
+
+export type ChapterReplayBeat =
+  | { kind: 'opening'; text: string }
+  | { kind: 'closing' };
+
+/**
+ * One pure boundary between reader history and the chapter UI. Closings are
+ * deliberately representable here so the "never skip a verdict" rule is
+ * executable rather than a comment in the component.
+ */
+export function chapterReplayDisposition(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  skipSeenProse: boolean,
+  beat: ChapterReplayBeat,
+): 'show' | 'skip' {
+  if (beat.kind === 'closing') return 'show';
+
+  const key = seenProseKey('chapter-opening', beat.text);
+  if (skipSeenProse && hasSeenProse(storage, key)) return 'skip';
+
+  rememberSeenProse(storage, key);
+  return 'show';
 }

@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
+import { chapterReplayDisposition } from '../lib/accessibility';
 
-const props = defineProps<{ beat: ChapterBeat; actions: GameActions }>();
+const props = withDefaults(defineProps<{
+  beat: ChapterBeat;
+  actions: GameActions;
+  skipSeenProse?: boolean;
+}>(), {
+  skipSeenProse: false,
+});
 
 /**
  * THE AGE IS THE SESSION (issue #65).
@@ -22,6 +29,14 @@ const props = defineProps<{ beat: ChapterBeat; actions: GameActions }>();
 const card = ref<HTMLElement | null>(null);
 const goOn = ref<HTMLButtonElement | null>(null);
 let cameFrom: HTMLElement | null = null;
+
+function readingStorage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 function focusable(): HTMLElement[] {
   if (!card.value) return [];
@@ -56,6 +71,24 @@ function onKey(e: KeyboardEvent): void {
 }
 
 onMounted(() => {
+  /**
+   * REPLAY COMPRESSION (#258). Only the nameless opening is passive prose.
+   * A closing is a verdict on THIS house and therefore never enters this
+   * history. Exact text is the identity on purpose: an edited variant is new
+   * prose, even when it came from the same authored Age.
+   */
+  const replay = chapterReplayDisposition(
+    readingStorage(),
+    props.skipSeenProse,
+    props.beat.kind === 'opening'
+      ? { kind: 'opening', text: props.beat.opening.text }
+      : { kind: 'closing' },
+  );
+  if (replay === 'skip') {
+    props.actions.dismissChapter();
+    return;
+  }
+
   const active = document.activeElement;
   cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
   goOn.value?.focus();
