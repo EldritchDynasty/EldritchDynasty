@@ -236,6 +236,20 @@ describe('standing-delegation interruption guard (#219)', () => {
     expect(mustSurface(testWorld(bundle), pending())).toBeUndefined();
   });
 
+  it('checks only the remembered branch and still surfaces protected content in that branch', () => {
+    const ctx = testWorld(bundle);
+    const event = twoBranch('player');
+    if (event.interaction.kind !== 'choice') throw new Error('expected a choice event');
+
+    event.interaction.choices[1]!.label = 'Sacrifice a cadet';
+
+    ctx.world.delegation.choices[event.id] = 'pay';
+    expect(mustSurface(ctx, pending(event))).toBeUndefined();
+
+    ctx.world.delegation.choices[event.id] = 'refuse';
+    expect(mustSurface(ctx, pending(event))).toBe('sacrifice');
+  });
+
   it('surfaces every named importance class before a remembered choice can fire', () => {
     const ctx = testWorld(bundle);
     ctx.world.houseAmbition = 'deepen_blood';
