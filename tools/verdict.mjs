@@ -66,10 +66,9 @@ import { execFileSync } from 'node:child_process';
  * that finished shortly after. A timeout is not an answer, and a tool whose
  * default produces the wrong one is worse than one that takes longer.
  *
- * Was 40, which was not enough either. On 2026-09-27 the dispatched `check`
- * for 9af68b1 ran 45 minutes (10:58 to 11:43, green), and the remote landing
- * of PR #283 that pushed it gave up at 40 and reported the green landing as
- * a FAILURE. `remote-land.yml` passes its own, larger `--wait`.
+ * Was 40, which is too close: on 2026-09-27 a `check` on `main` ran 45
+ * minutes (run 36314218433, 10:58 to 11:43). A local landing waiting on one
+ * like it would have been told STILL RUNNING five minutes before the answer.
  */
 export const DEFAULT_WAIT_MINUTES = 60;
 /** The ref namespace verdict.yml writes. Not under refs/heads: not a branch. */
