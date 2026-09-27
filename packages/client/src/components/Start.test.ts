@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import Start from './Start.vue';
-import type { GameActions } from '../lib/game';
+import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { RunLibrary } from '@ed/schema';
 
@@ -75,7 +75,16 @@ describe('campaign choice (#66)', () => {
     expect(w.text()).toContain('A Short Line');
     expect(w.text()).toContain('A Long Line');
     expect(w.text()).toContain('three-clause Ledger');
-    expect(w.text()).toContain('Apotheosis belongs to A Long Line');
+
+    const short = w.findAll('label.campaign').find((label) => label.find('input').attributes('value') === 'short');
+    expect(short, 'the Short Line choice is missing').toBeTruthy();
+    const shortEndings = new Set(CAMPAIGN_CHOICES.find((choice) => choice.id === 'short')!.endings);
+    const longOnlyEndingTitles = CAMPAIGN_CHOICES
+      .find((choice) => choice.id === 'long')!
+      .endings
+      .filter((ending) => !shortEndings.has(ending))
+      .map((ending) => ending.replaceAll('_', ' ').replace(/^./, (letter) => letter.toUpperCase()));
+    for (const title of longOnlyEndingTitles) expect(short!.text()).not.toContain(title);
 
     const long = w.findAll('input[type="radio"]').find((input) => input.attributes('value') === 'long');
     expect(long, 'the Long Line is not selectable').toBeTruthy();
