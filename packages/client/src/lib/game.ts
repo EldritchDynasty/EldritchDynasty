@@ -349,6 +349,28 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   // because the front door needs to know it exists.
   let keptSave: unknown | null = null;
   let archivedRunId: string | null = null;
+
+  /**
+   * AUTOSAVE IS ONE LOG, EVEN ON AN ASYNCHRONOUS HOST (#279).
+   *
+   * Native bridges are allowed to finish writes in any order. Starting two
+   * writes concurrently therefore lets an older snapshot arrive last and
+   * replace the newer one; deleting while an old write is in flight can even
+   * resurrect a run the player just discarded. Keep one mutation tail so the
+   * host observes write/delete operations in the same order the player caused
+   * them. A rejection is swallowed only on the tail, never on the operation's
+   * own promise, so callers still learn whether their mutation failed and the
+   * next mutation always gets a turn.
+   */
+  let autosaveTail: Promise<void> = Promise.resolve();
+  let autosaveRevision = 0;
+
+  function mutateAutosave(operation: () => Promise<void>): { revision: number; done: Promise<void> } {
+    const revision = ++autosaveRevision;
+    const done = autosaveTail.then(operation);
+    autosaveTail = done.catch(() => undefined);
+    return { revision, done };
+  }
   /** The chapter queue (issue #65). Never trimmed to "the latest" — see `ChapterBeat`. */
   const chapterQueue = ref<ChapterBeat[]>([]);
 
@@ -762,10 +784,22 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     keptSave = save;
     resumable.value = true;
     saveStatus.value = 'saving';
-    void platform.writeSave(AUTOSAVE, save)
-      .then(() => { saveStatus.value = 'saved'; })
-      .then(refreshSaves)
-      .catch(() => { resumable.value = false; saveStatus.value = 'error'; });
+
+    const { revision, done } = mutateAutosave(() => platform.writeSave(AUTOSAVE, save));
+    void done.then(
+      () => {
+        // A newer write/delete is already the player's intent. An older
+        // completion may advance the queue, but it may not rewrite the UI.
+        if (revision !== autosaveRevision) return;
+        saveStatus.value = 'saved';
+        void refreshSaves();
+      },
+      () => {
+        if (revision !== autosaveRevision) return;
+        resumable.value = false;
+        saveStatus.value = 'error';
+      },
+    );
   }
 
   function loadSave(save: unknown | null, discardAutosave = false): boolean {
@@ -787,11 +821,18 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   }
 
   async function readKept(): Promise<unknown | null> {
+    // Composition starts this read immediately. If the player starts or
+    // discards a run before a slow host answers, that stale answer must not
+    // overwrite the newer local intent.
+    const revision = autosaveRevision;
     try {
-      keptSave = await platform.readSave(AUTOSAVE);
+      const found = await platform.readSave(AUTOSAVE);
+      if (revision !== autosaveRevision) return keptSave;
+      keptSave = found;
       resumable.value = keptSave !== null;
       return keptSave;
     } catch {
+      if (revision !== autosaveRevision) return keptSave;
       keptSave = null;
       resumable.value = false;
       return null;
@@ -801,7 +842,9 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   function forget(): void {
     keptSave = null;
     resumable.value = false;
-    void platform.deleteSave(AUTOSAVE).catch(() => undefined);
+    saveStatus.value = 'idle';
+    const { done } = mutateAutosave(() => platform.deleteSave(AUTOSAVE));
+    void done.catch(() => undefined);
   }
 
   const libraryLoad = platform.readLibrary()
