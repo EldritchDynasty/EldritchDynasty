@@ -6,12 +6,14 @@ const props = defineProps<{
   textScale: TextScale;
   readingFont: ReadingFont;
   skipSeenProse: boolean;
+  reduceMotion: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:textScale': [value: TextScale];
   'update:readingFont': [value: ReadingFont];
   'update:skipSeenProse': [value: boolean];
+  'update:reduceMotion': [value: boolean];
 }>();
 
 const textScaleModel = computed<TextScale>({
@@ -27,6 +29,11 @@ const readingFontModel = computed<ReadingFont>({
 const skipSeenModel = computed<boolean>({
   get: () => props.skipSeenProse,
   set: (value) => emit('update:skipSeenProse', value),
+});
+
+const reduceMotionModel = computed<boolean>({
+  get: () => props.reduceMotion,
+  set: (value) => emit('update:reduceMotion', value),
 });
 </script>
 
@@ -52,6 +59,11 @@ const skipSeenModel = computed<boolean>({
     <label class="small">
       Skip reading I've already done
       <input v-model="skipSeenModel" type="checkbox" />
+    </label>
+
+    <label class="small">
+      Reduce motion
+      <input v-model="reduceMotionModel" type="checkbox" />
     </label>
 
     <p class="dim small">

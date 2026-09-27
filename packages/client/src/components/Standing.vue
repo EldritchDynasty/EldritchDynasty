@@ -162,11 +162,7 @@ const muster = computed(() => {
              left the screen at `Begin` and never came back, which meant a
              player could not say which run they had played, replay it, or
              report a bug against it. -->
-        <span
-          class="dim seed"
-          :title="'the seed this run was dealt from'"
-          :aria-label="'the seed this run was dealt from, ' + view.seed"
-        >#{{ view.seed }}</span>
+        <span class="dim seed">seed #{{ view.seed }}</span>
       </div>
       <div class="dim small">
         {{ view.treasury }} crowns<span
@@ -262,7 +258,8 @@ const muster = computed(() => {
       <!-- The magnitude the sentence throws away. Left is the world steadying
            a house it can see is failing; right is the world charging one it can
            see is ahead — the same order as the number (invariant 13). -->
-      <div class="gauge" role="img" :aria-label="reading" :title="reading">
+      <div class="dim small gauge-reading">{{ reading }}</div>
+      <div class="gauge" aria-hidden="true">
         <span class="tick" />
         <span class="needle" :style="{ left: needle + '%' }" />
       </div>
@@ -304,8 +301,9 @@ const muster = computed(() => {
 /* A RULED LINE, NOT A PROGRESS BAR. It is drawn the way a scale is drawn in
    the margin of a page: a hairline, a tick at the middle for the world not
    thinking about you, and one pen stroke for where the house actually sits. */
+.gauge-reading { margin-top: 3px; }
 .gauge {
-  position: relative; margin: 5px 0 0 auto; width: 108px; height: 9px;
+  position: relative; margin: 3px 0 0 auto; width: 108px; height: 9px;
   border-bottom: 1px solid var(--rule);
 }
 .gauge .tick, .gauge .needle { position: absolute; bottom: 0; width: 1px; }

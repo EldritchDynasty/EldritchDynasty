@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   ACCESSIBILITY_STORAGE_KEY,
@@ -31,6 +31,7 @@ describe('reading preferences', () => {
       textScale: 'largest',
       readingFont: 'readable',
       skipSeenProse: true,
+      reduceMotion: true,
     };
 
     saveAccessibility(storage, wanted);
@@ -40,6 +41,7 @@ describe('reading preferences', () => {
     applyAccessibility(document.documentElement, wanted);
     expect(document.documentElement.dataset.textScale).toBe('largest');
     expect(document.documentElement.dataset.readingFont).toBe('readable');
+    expect(document.documentElement.dataset.reduceMotion).toBe('true');
     expect(document.documentElement.style.fontSize).toBe('130%');
   });
 
@@ -48,20 +50,94 @@ describe('reading preferences', () => {
       textScale: 'standard',
       readingFont: 'book',
       skipSeenProse: false,
+      reduceMotion: false,
     });
     expect(loadAccessibility({ getItem: () => JSON.stringify({ textScale: 'huge' }) })).toEqual({
       textScale: 'standard',
       readingFont: 'book',
       skipSeenProse: false,
+      reduceMotion: false,
     });
   });
 });
 
-describe('the stylesheet preserves non-visual preferences', () => {
+describe('the reading-comfort checklist (#275)', () => {
   const css = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8');
+  const components = join(import.meta.dirname, '..', 'components');
 
-  it('honours reduced motion and forced colours', () => {
+  function variables(block: string): Record<string, string> {
+    return Object.fromEntries(
+      [...block.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6})\s*;/gi)]
+        .map((match) => [match[1]!, match[2]!.toLowerCase()]),
+    );
+  }
+
+  function channel(hex: string): number {
+    const value = Number.parseInt(hex, 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  }
+
+  function luminance(hex: string): number {
+    const colour = hex.replace('#', '');
+    return 0.2126 * channel(colour.slice(0, 2))
+      + 0.7152 * channel(colour.slice(2, 4))
+      + 0.0722 * channel(colour.slice(4, 6));
+  }
+
+  function contrast(a: string, b: string): number {
+    const first = luminance(a);
+    const second = luminance(b);
+    const light = Math.max(first, second);
+    const dark = Math.min(first, second);
+    return (light + 0.05) / (dark + 0.05);
+  }
+
+  it('keeps every ordinary text token at WCAG AA contrast on every game ground', () => {
+    const lightBlock = css.match(/:root\s*\{([\s\S]*?)\}/)?.[1];
+    const darkBlock = css.match(
+      /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{([\s\S]*?)\}\s*\}/,
+    )?.[1];
+    expect(lightBlock).toBeTruthy();
+    expect(darkBlock).toBeTruthy();
+
+    const light = variables(lightBlock!);
+    const dark = { ...light, ...variables(darkBlock!) };
+    const grounds = ['vellum', 'vellum-deep', 'panel'] as const;
+    const text = ['ink', 'ink-soft', 'ink-faint', 'rubric'] as const;
+
+    for (const [theme, palette] of [['light', light], ['dark', dark]] as const) {
+      for (const ink of text) {
+        for (const ground of grounds) {
+          expect(
+            contrast(palette[ink]!, palette[ground]!),
+            `${theme} --${ink} on --${ground}`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+      expect(
+        contrast(palette['on-rubric']!, palette.rubric!),
+        `${theme} --on-rubric on --rubric`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('has no component fact available only through a title tooltip', () => {
+    for (const name of readdirSync(components).filter((entry) => entry.endsWith('.vue'))) {
+      const source = readFileSync(join(components, name), 'utf8');
+      const open = source.indexOf('<template>');
+      const shut = source.lastIndexOf('</template>');
+      const template = open === -1 || shut === -1
+        ? ''
+        : source.slice(open + '<template>'.length, shut);
+      expect(template, name).not.toMatch(/\b(?::|v-bind:)?title\s*=/);
+    }
+  });
+
+  it('honours reduced motion from both the OS and the in-game preference', () => {
     expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
+    expect(css).toContain(":root[data-reduce-motion='true'] *");
+    expect(css).toMatch(/scroll-behavior:\s*auto\s*!important/);
+    expect(css).toMatch(/transition-duration:\s*0\.01ms\s*!important/);
     expect(css).toMatch(/forced-colors:\s*active/);
   });
 
@@ -69,6 +145,26 @@ describe('the stylesheet preserves non-visual preferences', () => {
     expect(css).toContain("data-text-scale='large'");
     expect(css).toContain("data-text-scale='largest'");
     expect(css).toContain("data-reading-font='readable'");
+  });
+
+  it('keeps every long-form reading surface to a deliberate measure', () => {
+    const measures = [
+      ['Chronicle.vue', /max-width:\s*46ch\b/],
+      ['Docket.vue', /max-width:\s*72ch\b/],
+      ['Outcome.vue', /max-width:\s*72ch\b/],
+      ['Chapter.vue', /max-width:\s*56ch\b/],
+      ['Interlude.vue', /max-width:\s*56ch\b/],
+      ['Abroad.vue', /max-width:\s*62ch\b/],
+      ['Ending.vue', /max-width:\s*64ch\b/],
+      ['Start.vue', /max-width:\s*58ch\b/],
+      ['Prologue.vue', /max-width:\s*62ch\b/],
+      ['Book.vue', /width:\s*min\(64ch,\s*100%\)/],
+    ] as const;
+
+    for (const [name, measure] of measures) {
+      const source = readFileSync(join(components, name), 'utf8');
+      expect(source, name).toMatch(measure);
+    }
   });
 });
 

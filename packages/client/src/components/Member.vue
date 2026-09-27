@@ -96,17 +96,16 @@ const foundling = computed(() => {
       <span class="name">
         {{ member.name }}<span v-if="member.epithet" class="dim"> {{ member.epithet }}</span>
       </span>
-      <!-- SAID AS WELL AS DRAWN (issue #107). The tooltip stays — it is a
-           good third channel — but it is not the only one any more: the same
-           sentence is the accessible name, and the whole table is printed in
-           the legend under Marks, which a thumb can open. -->
+      <!-- SAID AS WELL AS DRAWN (issues #107, #275). A hover tooltip is
+           not a reading channel: the same sentence is the accessible name,
+           and the whole table is printed in the visible Marks legend that a
+           thumb can open. -->
       <span class="marks">
         <span class="dim"><span aria-hidden="true">{{ member.sex === 'female' ? '♀' : '♂' }}</span><span class="said-not-shown">{{ member.sex === 'female' ? 'woman' : 'man' }}, </span> {{ member.age }}</span>
         <span
           v-for="mark in marks"
           :key="mark.kind"
           :class="mark.kind"
-          :title="mark.says"
           :aria-label="mark.says"
           role="img"
         >{{ mark.glyph }}</span>
