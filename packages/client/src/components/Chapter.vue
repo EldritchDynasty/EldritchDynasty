@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
-import { hasSeenProse, rememberSeenProse, seenProseKey } from '../lib/accessibility';
+import { chapterReplayDisposition } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
   beat: ChapterBeat;
@@ -77,14 +77,16 @@ onMounted(() => {
    * history. Exact text is the identity on purpose: an edited variant is new
    * prose, even when it came from the same authored Age.
    */
-  if (props.beat.kind === 'opening') {
-    const storage = readingStorage();
-    const key = seenProseKey('chapter-opening', props.beat.opening.text);
-    if (props.skipSeenProse && hasSeenProse(storage, key)) {
-      props.actions.dismissChapter();
-      return;
-    }
-    rememberSeenProse(storage, key);
+  const replay = chapterReplayDisposition(
+    readingStorage(),
+    props.skipSeenProse,
+    props.beat.kind === 'opening'
+      ? { kind: 'opening', text: props.beat.opening.text }
+      : { kind: 'closing' },
+  );
+  if (replay === 'skip') {
+    props.actions.dismissChapter();
+    return;
   }
 
   const active = document.activeElement;
