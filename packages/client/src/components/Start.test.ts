@@ -78,7 +78,7 @@ describe('campaign choice (#66)', () => {
 
     const short = w.findAll('label.campaign').find((label) => label.find('input').attributes('value') === 'short');
     expect(short, 'the Short Line choice is missing').toBeTruthy();
-    const shortEndings = new Set(CAMPAIGN_CHOICES.find((choice) => choice.id === 'short')!.endings);
+    const shortEndings = new Set<string>(CAMPAIGN_CHOICES.find((choice) => choice.id === 'short')!.endings);
     const longOnlyEndingTitles = CAMPAIGN_CHOICES
       .find((choice) => choice.id === 'long')!
       .endings
