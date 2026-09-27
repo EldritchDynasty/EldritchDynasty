@@ -128,6 +128,7 @@ export function campaignForYears(years: number): CampaignId {
  * count of scenes and the other a count of entries in a ledger, sitting next
  * to each other in the same printed row.
  */
+// #36 measurement: keep the evidence exposure beside the verdict it calibrates.
 export interface BearingRun {
   seed: number;
   carriage: Carriage;
