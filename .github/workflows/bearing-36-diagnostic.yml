@@ -25,19 +25,21 @@ jobs:
       - run: npm ci
       - name: Measure the known God-reaching book
         run: |
-          npx tsx --tsconfig tsconfig.base.json -e "
-            import { loadContent } from '@ed/content';
-            import { playToTheEnd } from './packages/core/src/tools/ending-gate.ts';
-            const r = playToTheEnd(loadContent(), 5121, 500, 'ascendant', 'long');
-            console.log(JSON.stringify({
-              seed: r.seed,
-              ending: r.ending,
-              attested: r.attested,
-              substantiated: r.substantiated,
-              rungsWithheld: r.rungsWithheld,
-              unsupportable: r.unsupportable,
-              pages: r.pages,
-              records: r.records,
-              debtPerRecord: (r.unsupportable ?? 0) / Math.max(1, r.records ?? 0)
-            }, null, 2));
-          "
+          cat > .bearing-36-god.ts <<'TS'
+          import { loadContent } from '@ed/content';
+          import { playToTheEnd } from './packages/core/src/tools/ending-gate.ts';
+
+          const r = playToTheEnd(loadContent(), 5121, 500, 'ascendant', 'long');
+          process.stdout.write('GOD_BOOK ' + JSON.stringify({
+            seed: r.seed,
+            ending: r.ending,
+            attested: r.attested,
+            substantiated: r.substantiated,
+            rungsWithheld: r.rungsWithheld,
+            unsupportable: r.unsupportable,
+            pages: r.pages,
+            records: r.records,
+            debtPerRecord: (r.unsupportable ?? 0) / Math.max(1, r.records ?? 0),
+          }) + '\n');
+          TS
+          npx tsx --tsconfig tsconfig.base.json .bearing-36-god.ts
