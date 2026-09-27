@@ -71,6 +71,24 @@ function argOf(name) {
   return eq ? eq.slice(name.length + 1) : undefined;
 }
 
+/**
+ * --paths is intentionally friendlier than scalar flags. Agents naturally type
+ * `--paths a b c`; consume every token up to the next flag, and accept commas
+ * inside a token too. Claim commits then store one `path:` line per entry, so
+ * the persisted format has no list delimiter to get wrong.
+ */
+function pathArgs() {
+  const i = args.indexOf('--paths');
+  const values = [];
+  if (i >= 0) {
+    for (let j = i + 1; j < args.length && !args[j].startsWith('--'); j++) values.push(args[j]);
+  } else {
+    const eq = flags.find((x) => x.startsWith('--paths='));
+    if (eq) values.push(eq.slice('--paths='.length));
+  }
+  return values.flatMap((value) => value.split(',')).map((p) => p.trim()).filter(Boolean);
+}
+
 /** An issue number, or a named lane like `lane-content`. Both are just ref names. */
 const slugOf = (raw) => {
   if (!raw) die('name an issue number or a lane — e.g. `take 93` or `take lane-content`');
@@ -107,19 +125,33 @@ function readRefs() {
     const body = tryGit(['log', '-1', '--format=%B%x00%ct', sha]).out;
     const [message = '', ts = '0'] = body.split('\0');
     const field = (k) => (message.match(new RegExp(`^${k}:\\s*(.*)$`, 'm'))?.[1] ?? '').trim();
+    const fields = (k) => [...message.matchAll(new RegExp(`^${k}:\\s*(.*)$`, 'gm'))]
+      .map((m) => m[1].trim())
+      .filter(Boolean);
+    const released = field('released') !== '';
+    const claimSlug = message.match(/^claim\s+(\S+)\s*(?:\n|$)/)?.[1] ?? '';
+    const agent = field('agent');
+    const canonicalPaths = fields('path');
+    // Backward compatibility for every claim written before #250, including
+    // claims that accidentally used whitespace instead of commas.
+    const legacyPaths = canonicalPaths.length
+      ? []
+      : field('paths').split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
+    const malformed = !released && (claimSlug !== slug || !agent);
     const seconds = Number(ts);
     return {
       slug,
       sha,
+      malformed,
       // A released claim is a ref whose head says so. Deleting the ref would be
       // tidier and is not available everywhere: a web session's git proxy
       // refuses ref deletion outright (403), so a release that deleted would
       // work on a laptop, fail in a container, and leave the issue looking held
       // by an agent that finished with it hours ago.
-      released: field('released') !== '',
-      agent: field('agent') || '(unnamed)',
+      released,
+      agent: agent || '(unnamed)',
       lane: field('lane') || 'unspecified',
-      paths: field('paths').split(',').map((p) => p.trim()).filter(Boolean),
+      paths: canonicalPaths.length ? canonicalPaths : legacyPaths,
       note: field('note'),
       takenAt: new Date(seconds * 1000).toISOString(),
       ageHours: (Date.now() / 1000 - seconds) / 3600,
@@ -128,7 +160,7 @@ function readRefs() {
 }
 
 /** What is HELD. A tombstoned ref is a free issue with a receipt attached. */
-const readClaims = () => readRefs().filter((c) => !c.released);
+const readClaims = () => readRefs().filter((c) => !c.released && !c.malformed);
 
 /** Prefix overlap, with a trailing wildcard or slash meaning "and everything under it". */
 const overlaps = (a, b) => {
@@ -154,10 +186,16 @@ const age = (h) => (h < 1 ? `${Math.round(h * 60)}m` : h < 48 ? `${h.toFixed(1)}
 
 function list() {
   const all = readRefs();
-  const claims = has('--all') ? all : all.filter((c) => !c.released);
+  const malformed = all.filter((c) => c.malformed);
+  const openClaims = all.filter((c) => !c.released && !c.malformed);
+  const claims = has('--all') ? all : openClaims;
   if (has('--json')) return console.log(JSON.stringify(claims, null, 2));
+  for (const c of malformed) {
+    console.log(`  ⚠ INVALID claim/${c.slug} ignored — its tip is not a claim message for that slug`);
+  }
   if (claims.length === 0) {
-    const done = all.length ? ` (${all.length} released, \`--all\` to see them)` : '';
+    const released = all.filter((c) => c.released).length;
+    const done = released ? ` (${released} released, \`--all\` to see them)` : '';
     return console.log(`no open claims — every issue is free${done}`);
   }
   /**
@@ -178,7 +216,7 @@ function list() {
   const line = landingLine(claims.filter((c) => !c.released && c.agent === thisAgent()));
   if (line) console.log(`this branch's landing commit needs: ${line}\n`);
 
-  const open = claims.filter((c) => !c.released).length;
+  const open = claims.filter((c) => !c.released && !c.malformed).length;
   console.log(has('--all')
     ? `${claims.length} claim ref${claims.length === 1 ? '' : 's'}, ${open} open:\n`
     : `${open} open claim${open === 1 ? '' : 's'}:\n`);
@@ -195,12 +233,12 @@ function list() {
 function take() {
   const slug = slugOf(positional[1]);
   const agent = thisAgent();
-  const paths = (argOf('--paths') ?? '').split(',').map((p) => p.trim()).filter(Boolean);
+  const paths = pathArgs();
   const lane = argOf('--lane') ?? (paths.some((p) => p.startsWith('packages/content')) ? 'content' : 'code');
   const note = argOf('--note') ?? '';
 
   const all = readRefs();
-  const held = all.filter((c) => !c.released);
+  const held = all.filter((c) => !c.released && !c.malformed);
   const existing = all.find((c) => c.slug === slug);   // may be a tombstone
   const mine = held.find((c) => c.slug === slug);
   if (mine) {
@@ -250,7 +288,7 @@ function take() {
     `claim ${slug}`, '',
     `agent: ${agent}`,
     `lane: ${lane}`,
-    `paths: ${paths.join(', ')}`,
+    ...paths.map((p) => `path: ${p}`),
     note ? `note: ${note}` : '',
     `taken: ${new Date().toISOString()}`,
   ].filter(Boolean).join('\n');
@@ -330,7 +368,7 @@ function release() {
 function steal() {
   const slug = slugOf(positional[1]);
   const claim = readRefs().find((c) => c.slug === slug);
-  if (!claim || claim.released) return console.log(`${slug} is free — take it, no stealing needed`);
+  if (!claim || claim.released || claim.malformed) return console.log(`${slug} is free — take it, no stealing needed`);
   if (claim.ageHours <= STALE_HOURS && !has('--force')) {
     die(`${slug} is held by ${claim.agent} and is only ${age(claim.ageHours)} old — not stale yet (${STALE_HOURS}h).`);
   }
@@ -339,7 +377,7 @@ function steal() {
     `claim ${slug}`, '',
     `agent: ${agent}`,
     `lane: ${claim.lane}`,
-    `paths: ${claim.paths.join(', ')}`,
+    ...claim.paths.map((p) => `path: ${p}`),
     `note: stolen from ${claim.agent}, whose claim had stood ${age(claim.ageHours)}`,
     `taken: ${new Date().toISOString()}`,
   ].join('\n');
