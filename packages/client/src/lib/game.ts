@@ -3,7 +3,7 @@ import type { CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, R
 import { appendLibraryRun, emptyRunLibrary, readRunLibrary } from '@ed/schema';
 import {
   CAMPAIGNS, matchFuture, newGame, resumeGame, standingMoved,
-  type ChapterOpening, type ChapterView, type ChronicleEntry,
+  type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
   type LandView, type MatchCard, type MatchFutureReading, type MatchResolution, type MusterOrder, type MusterOrderResult,
   type OrderResult, type Passage, type PendingDecision,
@@ -313,6 +313,12 @@ export interface GameActions {
    * are the living household; this is the fourteen generations behind them.
    */
   line(): ReturnType<GameSession['line']>;
+  /**
+   * THE WAY BACK (issue #269). The earlier page a later one answers, when the
+   * book kept one, and the years in which later pages answer this one.
+   */
+  causeOf(entryId: string): ChronicleCause | undefined;
+  answeredBy(entryId: string): number[];
   dismissInterlude(): void;
   /** Read the chapter card, and let the next one in the queue through. */
   dismissChapter(): void;
@@ -722,6 +728,14 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
     line() {
       return session.value?.line() ?? [];
+    },
+
+    causeOf(entryId) {
+      return session.value?.causeOf(entryId);
+    },
+
+    answeredBy(entryId) {
+      return session.value?.answeredBy(entryId) ?? [];
     },
 
     dismissInterlude() {

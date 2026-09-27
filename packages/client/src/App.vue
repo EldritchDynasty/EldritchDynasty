@@ -133,7 +133,10 @@ const helpOpen = ref(false);
  * change, which is whether the book is open.
  */
 const bookOpen = shallowRef<ReturnType<GameActions['book']> | null>(null);
-function openBook(): void {
+/** The page a link asked the volume to open at (issue #269). */
+const bookFocus = ref<string | undefined>(undefined);
+function openBook(page?: string): void {
+  bookFocus.value = page;
   bookOpen.value = actions.book();
 }
 
@@ -256,7 +259,7 @@ const yearAndBirths = computed(() => {
 
   <template v-else-if="ended && epilogue">
     <Ending :view="view" :epilogue="epilogue" :actions="actions" @open="openBook()" />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :close="() => (bookOpen = null)" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
   </template>
 
@@ -452,7 +455,7 @@ const yearAndBirths = computed(() => {
       </div>
 
       <div class="right">
-        <Chronicle :view="view" :frame="frame" @open="openBook()" />
+        <Chronicle :view="view" :frame="frame" :actions="actions" @open="openBook" />
       </div>
     </div>
 
@@ -463,7 +466,7 @@ const yearAndBirths = computed(() => {
       :actions="actions"
       :skip-seen-prose="accessibility.skipSeenProse"
     />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :close="() => (bookOpen = null)" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Plat v-if="platOpen && land" :land="land" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
     <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
   </template>

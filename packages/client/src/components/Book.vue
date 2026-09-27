@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type { ChronicleEntry, SessionView } from '@ed/core';
 import { useModal } from '../lib/modal';
+import { findEntry, linksFor } from '../lib/causes';
+import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import {
   LENSES, PLATE, plateHeight, plateName, plateRows, plateSubtitle, reads,
@@ -22,6 +24,10 @@ const props = defineProps<{
   /** For the plate's heading. The book is this house's book. */
   houseName: string;
   close: () => void;
+  /** Only the two reads behind a page's way back (issue #269). */
+  actions: Pick<GameActions, 'causeOf' | 'answeredBy'>;
+  /** Open at this page, because the panel followed a link past its window. */
+  focus?: string;
 }>();
 
 /**
@@ -86,7 +92,9 @@ const drawn = ref(PAGE);
 const page = computed(() => shown.value.slice(0, drawn.value));
 const more = computed(() => shown.value.length - page.value.length);
 
-// Any change of what is being looked FOR starts the reading again.
+// Any change of what is being looked FOR starts the reading again. `follow`
+// waits a tick after widening the reading, so this has run before it sets the
+// window itself.
 watch([lens, from, find], () => { drawn.value = PAGE; });
 
 function onScroll(e: Event): void {
@@ -95,6 +103,45 @@ function onScroll(e: Event): void {
     drawn.value = Math.min(shown.value.length, drawn.value + PAGE);
   }
 }
+
+/**
+ * THE WAY BACK (issue #269), asked only of the pages drawn.
+ */
+const links = computed(() => linksFor(page.value, {
+  causeOf: (id) => props.actions.causeOf(id),
+  answeredBy: (id) => props.actions.answeredBy(id),
+}));
+
+const pages = ref<HTMLElement | null>(null);
+const marked = ref<string | null>(null);
+let unmark: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Follow a link to the page it names. A lens, a search or a century can hide
+ * the target, and the window may not have reached it yet; a link that did
+ * nothing in either case would read as a broken one. So the reading widens to
+ * the whole book first, and the window grows until the page is drawn.
+ */
+async function follow(id: string): Promise<void> {
+  if (!shown.value.some((e) => e.id === id)) {
+    lens.value = 'all';
+    from.value = null;
+    find.value = '';
+    await nextTick();
+  }
+  const at = shown.value.findIndex((e) => e.id === id);
+  if (at < 0) return;
+  if (at >= drawn.value) drawn.value = at + 1;
+  await nextTick();
+  const el = findEntry(pages.value, id);
+  el?.scrollIntoView({ block: 'center' });
+  el?.focus({ preventScroll: true });
+  marked.value = id;
+  clearTimeout(unmark);
+  unmark = setTimeout(() => { marked.value = null; }, 2400);
+}
+
+onMounted(() => { if (props.focus) void follow(props.focus); });
 
 /**
  * THE AGE BOUNDARIES FALLING INSIDE WHAT IS DRAWN.
@@ -288,7 +335,7 @@ const counts = computed(() => ({
       <!-- Oldest first, which is the order a book is read in and the reverse of
            the panel's. The panel answers "what just happened"; this is the
            volume. -->
-      <div class="pages" @scroll.passive="onScroll">
+      <div ref="pages" class="pages" @scroll.passive="onScroll">
         <template v-for="(entry, i) in page" :key="entry.id ?? entry.year + ':' + i">
           <!-- Drawn before the first entry of the year the Age began, and only
                once: two entries in that year must not draw two rules. -->
@@ -299,7 +346,12 @@ const counts = computed(() => ({
             <span v-if="boundaries.get(entry.year)" class="age">{{ boundaries.get(entry.year) }}</span>
             <span v-else class="dim small unnamed">these years, which the house never named</span>
           </div>
-          <Entry :entry="entry" />
+          <Entry
+            :entry="entry"
+            :links="entry.id ? links.get(entry.id) : undefined"
+            :marked="!!entry.id && marked === entry.id"
+            @follow="follow"
+          />
         </template>
         <p v-if="!shown.length" class="dim small">
           Nothing in the book answers to that.

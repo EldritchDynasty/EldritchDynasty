@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ChronicleEntry } from '@ed/core';
+import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 
 /**
  * ONE LINE OF THE BOOK, wherever the book is being read (issue #48).
@@ -25,7 +26,16 @@ const props = defineProps<{
   entry: ChronicleEntry;
   /** The epilogue reads the book aloud in a plainer hand than the panel keeps. */
   read?: boolean;
+  /** What this page answers and what answers it (issue #269). */
+  links?: EntryLinks;
+  /** Briefly marked, because the reader just followed a link to it. */
+  marked?: boolean;
 }>();
+
+const emit = defineEmits<{ (e: 'follow', page: string): void }>();
+
+const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause) : null));
+const answered = computed(() => answeredLabel(props.links?.answered ?? []));
 
 /**
  * WHAT THE LINE ACTUALLY CLAIMS (issue #19).
@@ -62,11 +72,14 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
 <template>
   <article
     class="entry"
+    :data-entry="entry.id"
+    :tabindex="marked ? -1 : undefined"
     :class="[entry.weight, {
       greyed: entry.greyed,
       omitted: entry.text === null,
       embellished: entry.record === 'embellish',
       read,
+      marked,
     }]"
   >
     <span class="year dim small">{{ entry.year }}</span>
@@ -94,6 +107,18 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
         class="dim small mark"
       >{{ policy }}</span>
     </template>
+    <!-- THE WAY BACK (issue #269). A year and nothing else: no weight, no
+         score, no time until it is billed (§29 rule 1). An act the house did
+         and never wrote down says so rather than inventing a page. -->
+    <template v-if="!read">
+      <button
+        v-if="cause?.kind === 'see'"
+        class="link small"
+        @click="emit('follow', cause.page)"
+      >{{ cause.label }}</button>
+      <span v-else-if="cause" class="dim small mark">{{ cause.label }}</span>
+      <span v-if="answered" class="dim small mark">{{ answered }}</span>
+    </template>
     <!-- The assertions the creditor checks on the last night. Drawn under the
          line that makes them, because a claim detached from its sentence is a
          fact from nowhere. -->
@@ -115,6 +140,17 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
 .entry.illuminated h4 { color: var(--rubric); font-size: var(--t-lead); }
 .entry.illuminated p { font-size: var(--t-lead); }
 .entry.greyed { opacity: .55; }
+/* Followed to: a rubric rule that fades, so the eye lands and the page settles. */
+.entry.marked { animation: marked 2.4s ease-out; outline: none; }
+@keyframes marked {
+  from { box-shadow: -8px 0 0 -6px var(--rubric); background: var(--vellum-deep); }
+  to { box-shadow: -8px 0 0 -6px transparent; background: transparent; }
+}
+.entry .link {
+  display: inline; padding: 0; border: 0; background: none;
+  font-style: italic; color: var(--rubric); text-decoration: underline dotted; cursor: pointer;
+}
+.entry .link + .mark, .entry .mark + .mark { margin-left: 8px; }
 /* The artefact. A ruled empty line where a year should have been. */
 .entry.omitted .blank { border-bottom: 1px solid var(--rule); }
 .entry .mark { font-style: italic; }
