@@ -111,3 +111,27 @@ export function rememberSeenProse(
     // A reading convenience is never a reason to make the game unavailable.
   }
 }
+
+
+export type ChapterReplayBeat =
+  | { kind: 'opening'; text: string }
+  | { kind: 'closing' };
+
+/**
+ * One pure boundary between reader history and the chapter UI. Closings are
+ * deliberately representable here so the "never skip a verdict" rule is
+ * executable rather than a comment in the component.
+ */
+export function chapterReplayDisposition(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  skipSeenProse: boolean,
+  beat: ChapterReplayBeat,
+): 'show' | 'skip' {
+  if (beat.kind === 'closing') return 'show';
+
+  const key = seenProseKey('chapter-opening', beat.text);
+  if (skipSeenProse && hasSeenProse(storage, key)) return 'skip';
+
+  rememberSeenProse(storage, key);
+  return 'show';
+}
