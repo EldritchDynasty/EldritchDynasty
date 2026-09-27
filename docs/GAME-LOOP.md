@@ -8,7 +8,7 @@ this page simplifies something into a rougher shape than the brief gives it.
 ## The basic loop
 
 You don't play one character — you play the **family**, generation after generation
-(roughly one chapter, ~15 minutes, per generation). Each round: years pass, you pick a
+(roughly one chapter per generation). Each round: years pass, you pick a
 marriage partner for your heir from three candidate cards, a handful of text events fire,
 children are born, you decide what the chronicle records about the generation just lived,
 and you name an heir. The shipped start screen defaults to **A Short Line: 300 years (1042–1342)**; **A Long Line** is the full **500-year (1042–1542)** campaign, roughly twenty generations. See §5, Core Loop.
