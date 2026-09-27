@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  addGrudge, beget, bitterestAgainst, bootstrap, edge, grudgeAgainstUs, grudgesAgainst,
-  newGame, place, relate, sentimentBetween, testWorld, tickRelationships,
+  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, edge, externalThreadFor,
+  grudgeAgainstUs, grudgesAgainst, makeRng, newGame, place, relate, sentimentBetween, testWorld,
+  tickRelationships,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -73,6 +74,29 @@ describe('taking a grudge', () => {
     expect(g.originYear).toBe(ctx.world.year);
     expect(g.originEvent).toBe('ev_seal_feud');
     expect(edge(ctx.world, them.id, us.id)!.kinds).toContain('rival');
+  });
+
+  it('names an Assize grudge from the Assize page instead of falling back to the quarrel', () => {
+    const { ctx } = feuding(269);
+    const response = ASSIZE_RESPONSES.find((candidate) => candidate.id === 'an_older_claim')!;
+    const page = 'chr_assize_claim';
+    ctx.world.chronicle.push({
+      id: page,
+      year: ctx.world.year,
+      weight: 'line',
+      text: response.line,
+      named: false,
+    });
+
+    response.apply(ctx, makeRng(269), page);
+
+    const grudge = [...ctx.world.relationships.values()].flatMap((rel) => rel.grudges)[0];
+    expect(grudge?.originPage).toBe(page);
+    const thread = externalThreadFor(ctx, 'house_marrow');
+    expect(thread, 'the Assize grudge did not become an external relationship thread').toBeDefined();
+    const grudgeFact = thread!.pressures.find((fact) => fact.kind === 'grudge');
+    expect(grudgeFact?.detail).toContain('A neighbouring house produced a document about a boundary');
+    expect(grudgeFact?.detail).not.toContain('the quarrel');
   });
 
   it('numbers grudges off the world, not off a module counter', () => {
