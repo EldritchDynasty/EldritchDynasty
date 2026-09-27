@@ -42,6 +42,113 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+describe('autosave mutation ordering', () => {
+  function deferred(): {
+    host: Platform & { saves: Map<string, unknown> };
+    writes: Array<{ save: unknown; resolve: () => void; reject: () => void }>;
+    deletes: Array<{ resolve: () => void }>;
+  } {
+    const host = memoryPlatform();
+    const writes: Array<{ save: unknown; resolve: () => void; reject: () => void }> = [];
+    const deletes: Array<{ resolve: () => void }> = [];
+
+    host.writeSave = (slot, save) => new Promise<void>((resolve, reject) => {
+      writes.push({
+        save,
+        resolve: () => { host.saves.set(slot, save); resolve(); },
+        reject: () => reject(new Error('host refused write')),
+      });
+    });
+    host.deleteSave = (slot) => new Promise<void>((resolve) => {
+      deletes.push({
+        resolve: () => { host.saves.delete(slot); resolve(); },
+      });
+    });
+
+    return { host, writes, deletes };
+  }
+
+  async function turnQueue(): Promise<void> {
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+
+  it('serializes snapshots so an older slow write cannot complete after a newer one', async () => {
+    const { host, writes } = deferred();
+    const game = createGame(loadContent(), host);
+
+    game.actions.begin(27901);
+    game.actions.begin(27902);
+    await turnQueue();
+
+    // The hostile host is holding the first write open. Before #279 the
+    // second write was already in flight and could finish first.
+    expect(writes).toHaveLength(1);
+    const first = writes[0]!;
+    first.resolve();
+    await turnQueue();
+
+    expect(writes).toHaveLength(2);
+    const second = writes[1]!;
+    expect(second.save).not.toBe(first.save);
+    second.resolve();
+    await turnQueue();
+
+    expect(host.saves.get('autosave')).toBe(second.save);
+    expect(game.saveStatus.value).toBe('saved');
+  });
+
+  it('lets a later save succeed after an earlier host write fails', async () => {
+    const { host, writes } = deferred();
+    const game = createGame(loadContent(), host);
+
+    game.actions.begin(27911);
+    game.actions.begin(27912);
+    await turnQueue();
+
+    expect(writes).toHaveLength(1);
+    writes[0]!.reject();
+    await turnQueue();
+
+    expect(writes).toHaveLength(2);
+    // The first rejection is stale because the second save was already
+    // requested; it must not flash a false error over the newer intent.
+    expect(game.saveStatus.value).toBe('saving');
+    writes[1]!.resolve();
+    await turnQueue();
+
+    expect(host.saves.get('autosave')).toBe(writes[1]!.save);
+    expect(game.saveStatus.value).toBe('saved');
+    expect(game.resumable.value).toBe(true);
+  });
+
+  it('orders restart deletion after an in-flight write so the discarded run cannot return', async () => {
+    const { host, writes, deletes } = deferred();
+    const game = createGame(loadContent(), host);
+
+    game.actions.begin(27921);
+    await turnQueue();
+    expect(writes).toHaveLength(1);
+
+    game.actions.restart();
+    await turnQueue();
+    expect(deletes).toHaveLength(0);
+    expect(game.resumable.value).toBe(false);
+    expect(game.saveStatus.value).toBe('idle');
+
+    writes[0]!.resolve();
+    await turnQueue();
+    expect(host.saves.has('autosave')).toBe(true);
+    expect(deletes).toHaveLength(1);
+
+    deletes[0]!.resolve();
+    await turnQueue();
+    expect(host.saves.has('autosave')).toBe(false);
+    expect(game.resumable.value).toBe(false);
+    expect(game.saveStatus.value).toBe('idle');
+  });
+});
+
 describe('the platform seam', () => {
   it('takes an injected host whole, rather than detecting one below composition', async () => {
     const injected = bridge();
@@ -138,7 +245,10 @@ describe('the platform seam', () => {
     const game = createGame(source, first);
     game.actions.begin(1042);
     game.actions.advance(1);
-    await Promise.resolve();
+    // Autosaves are serialized: the 1043 snapshot is queued behind the
+    // immediately-resolving 1042 write. Give that promise tail one event-loop
+    // turn to drain before reading the host.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     const saved = first.saves.get('autosave');
     expect(saved).toMatchObject({ format: expect.any(Number), year: 1043 });
 
