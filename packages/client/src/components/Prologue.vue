@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import type { PrologueView } from '@ed/core';
 import type { GameActions } from '../lib/game';
-import { rememberSeenProse, replayDisposition, seenProseKey } from '../lib/accessibility';
+import { initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
   prologue: PrologueView;
@@ -22,16 +22,10 @@ function readingStorage(): Storage | null {
   }
 }
 
-const replayText = [
+const replayText = prologueSeenText(
   props.prologue.opening,
-  ...props.prologue.triad.flatMap((beat) => [beat.given, beat.owed]),
+  props.prologue.triad,
   props.prologue.thesis,
-].join('\u0000');
-
-const replay = replayDisposition(
-  readingStorage(),
-  props.skipSeenProse,
-  { kind: 'prologue', text: replayText },
 );
 
 /**
@@ -48,7 +42,12 @@ const replay = replayDisposition(
  * Nothing here is skippable by accident and everything is skippable on
  * purpose: the reader who wants the whole page can have it in three clicks.
  */
-const shown = ref(replay === 'fast' ? props.prologue.triad.length : 0);
+const shown = ref(initialPrologueShown(
+  readingStorage(),
+  props.skipSeenProse,
+  replayText,
+  props.prologue.triad.length,
+));
 const houseName = ref('');
 const heirloom = ref('');
 const grudge = ref('');
@@ -71,12 +70,12 @@ const friends = ref(
 );
 
 function on(): void {
-  shown.value = Math.min(props.prologue.triad.length, shown.value + 1);
-  // A reader who leaves halfway through the signing has not read it. The key
-  // is earned only when all three passive beats have actually been revealed.
-  if (shown.value === props.prologue.triad.length) {
-    rememberSeenProse(readingStorage(), seenProseKey('prologue', replayText));
-  }
+  shown.value = revealPrologueBeat(
+    readingStorage(),
+    replayText,
+    shown.value,
+    props.prologue.triad.length,
+  );
 }
 
 /**
