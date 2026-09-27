@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap, runYears, viewOf } from '@ed/core';
-import { children, drawnBeside, partner, roots, type MemberView } from './kin.js';
+import { children, drawnBeside, kinshipPath, partner, roots, type MemberView } from './kin.js';
 
 /**
  * THE TREE, WITH MARRIAGES IN IT (issue #56).
@@ -106,6 +106,65 @@ describe('drawing a couple as a couple', () => {
     expect(partner(hall[0]!, hall)).toBeUndefined();
     expect(drawnBeside(hall[0]!, hall)).toBeUndefined();
     expect(roots(hall).map((m) => m.id)).toEqual(['lone']);
+  });
+});
+
+
+describe('recorded kinship paths (#268)', () => {
+  it('crosses a cadet-hall boundary when the caller supplies both halls', () => {
+    const seat = [
+      person({ id: 'grand', sex: 'male' }),
+      person({
+        id: 'father',
+        sex: 'male',
+        record: { attrs: {}, claimedTraits: [], parents: { father: 'grand' }, claimed: [] },
+      }),
+    ];
+    const cadet = [
+      person({
+        id: 'daughter',
+        record: { attrs: {}, claimedTraits: [], parents: { father: 'father' }, claimed: [] },
+      }),
+    ];
+
+    const path = kinshipPath('daughter', 'grand', [...seat, ...cadet]);
+    expect(path?.map((step) => [step.person.id, step.relation])).toEqual([
+      ['father', 'father'],
+      ['grand', 'father'],
+    ]);
+  });
+
+  it('walks through a married-in spouse', () => {
+    const hall = marriedIn();
+    const path = kinshipPath('grand', 'wife', hall);
+
+    expect(path?.map((step) => [step.person.id, step.relation])).toEqual([
+      ['son', 'son'],
+      ['wife', 'wife'],
+    ]);
+  });
+
+  it('follows a forged record rather than the hidden parentage', () => {
+    const members = [
+      person({ id: 'truth', sex: 'male' }),
+      person({ id: 'claimed', sex: 'male' }),
+      person({
+        id: 'child',
+        sex: 'male',
+        parents: { father: 'truth' },
+        record: { attrs: {}, claimedTraits: [], parents: { father: 'claimed' }, claimed: [] },
+      }),
+    ];
+
+    expect(kinshipPath('child', 'claimed', members)?.map((step) => step.relation))
+      .toEqual(['father']);
+    expect(kinshipPath('child', 'truth', members)).toBeUndefined();
+  });
+
+  it('returns undefined rather than guessing when the recorded graph is disconnected', () => {
+    const members = [person({ id: 'a' }), person({ id: 'b' })];
+    expect(kinshipPath('a', 'b', members)).toBeUndefined();
+    expect(kinshipPath('a', 'a', members)).toEqual([]);
   });
 });
 
