@@ -9,6 +9,8 @@ import type { LandView, PendingDecision, PendingDecisionView, RiteAssembly, Tabl
 import Docket from './Docket.vue';
 import Table from './Table.vue';
 import type { GameActions } from '../lib/game';
+import { applyAccessibility, DEFAULT_ACCESSIBILITY } from '../lib/accessibility';
+import { installPseudoLocalisation } from '../pseudo-loc';
 
 const content = loadContent();
 
@@ -506,6 +508,66 @@ describe('the docket draws what it is handed', () => {
     await w.findAll('.choices button')[0]!.trigger('click');
 
     expect(actions.delegateRecord).not.toHaveBeenCalled();
+  });
+});
+
+describe('pseudo-localisation stress (#276)', () => {
+  it('renders choice, Match, Record and Table copy at the largest reading scale', () => {
+    applyAccessibility(document.documentElement, {
+      ...DEFAULT_ACCESSIBILITY,
+      textScale: 'largest',
+    });
+
+    const wrappers = [
+      mount(Docket, {
+        props: { decision: choiceDecision(), actions: spyActions() as unknown as GameActions },
+      }),
+      mount(Docket, {
+        props: { decision: matchDecision(), actions: spyActions() as unknown as GameActions },
+      }),
+      mount(Docket, {
+        props: { decision: recordDecision(), actions: spyActions() as unknown as GameActions },
+      }),
+      mount(Table, {
+        props: {
+          table: riteTable(vesselAssembly),
+          land: riteLand,
+          actions: spyActions() as unknown as GameActions,
+          refusal: null,
+          receipt: null,
+        },
+      }),
+    ];
+
+    try {
+      expect(document.documentElement.style.fontSize).toBe('130%');
+      for (const wrapper of wrappers) {
+        const stop = installPseudoLocalisation(wrapper.element);
+        try {
+          expect(wrapper.text()).toContain('⟦');
+          expect(
+            wrapper.findAll('button').some((button) => button.text().includes('⟦')),
+            'an expanded recurring surface has no pseudo-localised control label',
+          ).toBe(true);
+        } finally {
+          stop();
+        }
+      }
+    } finally {
+      for (const wrapper of wrappers) wrapper.unmount();
+      applyAccessibility(document.documentElement, DEFAULT_ACCESSIBILITY);
+    }
+  });
+
+  it('keeps shared controls shrinkable and wrapping under expanded copy', () => {
+    const css = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8')
+      .replace(/\s+/g, ' ');
+
+    expect(css).toMatch(/button \{[^}]*max-width: 100%;[^}]*overflow-wrap: anywhere;/);
+    expect(css).toMatch(/input, select \{[^}]*max-width: 100%;[^}]*min-width: 0;/);
+    expect(css).toMatch(/\.panel \{[^}]*min-width: 0;/);
+    expect(css).toMatch(/\.row \{[^}]*flex-wrap: wrap;[^}]*min-width: 0;/);
+    expect(css).toMatch(/\.wrap \{[^}]*flex-wrap: wrap;[^}]*min-width: 0;/);
   });
 });
 
