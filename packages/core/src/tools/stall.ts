@@ -6,7 +6,7 @@ import {
   standingOf,
   type LadderBlocker,
 } from '../ascension.js';
-import { tableView, type RiteAssembly } from '../table.js';
+import { tableView, type OrderResult, type RiteAssembly, type TableOrder } from '../table.js';
 import { canStudySpellbook } from '../people/library.js';
 import type { PendingChoice, PendingDecision, PendingRecord } from '../events/decisions.js';
 import { evalCheck } from '../events/checks.js';
@@ -118,6 +118,91 @@ export interface CheckAttemptObservation {
   person: string;
   /** Passing the authored difficulty is the check's success boundary. */
   ok: boolean;
+}
+
+/**
+ * One real Table attempt, reduced to the identity #270 needs for streaks.
+ *
+ * Only person-targeted orders qualify: the acceptance question is whether the
+ * same order keeps failing for the same PERSON. Land, auction and house-policy
+ * orders deliberately have no synthetic person attached to them.
+ */
+export interface OrderAttemptObservation {
+  order: string;
+  person: string;
+  ok: boolean;
+}
+
+/**
+ * Observe an order RESULT after the real GameSession.order path has answered
+ * it. This does not issue an order, predict one, or duplicate table validation.
+ * The density policy normally issues none, so its baseline remains a measured
+ * zero; a table-playing policy can feed its real attempts through this observer.
+ */
+export function observeOrderAttempt(
+  attempt: TableOrder,
+  result: OrderResult,
+): OrderAttemptObservation | undefined {
+  if (!('person' in attempt) || typeof attempt.person !== 'string') return undefined;
+  const { person, ...rest } = attempt;
+  const order = Object.entries(rest)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${String(value)}`)
+    .join('|');
+  return { order, person, ok: result.ok };
+}
+
+export interface FailureTracker {
+  /** Longest failed-attempt streak seen for each measured source. */
+  check: number;
+  order: number;
+  /** Running streak by exact authored check + exact person. */
+  checkCurrent: Map<string, number>;
+  /** Running streak by exact table order + exact person. */
+  orderCurrent: Map<string, number>;
+}
+
+export function makeFailureTracker(): FailureTracker {
+  return {
+    check: 0,
+    order: 0,
+    checkCurrent: new Map(),
+    orderCurrent: new Map(),
+  };
+}
+
+/** Break an Age-scoped streak without discarding that Age's maxima. */
+export function breakFailureTracker(tracker: FailureTracker): void {
+  tracker.checkCurrent.clear();
+  tracker.orderCurrent.clear();
+}
+
+export function noteCheckAttempt(tracker: FailureTracker, attempt: CheckAttemptObservation): void {
+  const streak = noteFailureAttempt(
+    tracker.checkCurrent,
+    `${attempt.check}::${attempt.person}`,
+    attempt.ok,
+  );
+  tracker.check = Math.max(tracker.check, streak);
+}
+
+export function noteOrderAttempt(tracker: FailureTracker, attempt: OrderAttemptObservation): void {
+  const streak = noteFailureAttempt(
+    tracker.orderCurrent,
+    `${attempt.order}::${attempt.person}`,
+    attempt.ok,
+  );
+  tracker.order = Math.max(tracker.order, streak);
+}
+
+function noteFailureAttempt(current: Map<string, number>, key: string, ok: boolean): number {
+  if (ok) {
+    current.set(key, 0);
+    return 0;
+  }
+  const streak = (current.get(key) ?? 0) + 1;
+  current.set(key, streak);
+  return streak;
 }
 
 /**
