@@ -99,6 +99,7 @@ function densityFixture(seed: number, top: ShapeFrequency[]): DensityRun {
     actionableGap: noBlockerYears(),
     stallAges: {},
     ambitionFlat: {},
+    ambitionFlatAges: {},
     repeatedFailure: { campaign: { check: 0, order: 0 }, ages: {} },
     predeterminedShare: 0.12,
     topShapes: {
