@@ -3,7 +3,10 @@ import { loadContent } from '@ed/content';
 import { EventTemplateS, type Choice, type EventTemplate, type Purpose } from '@ed/schema';
 import { newGame } from '../session.js';
 import type { PendingChoice } from '../events/decisions.js';
-import { densityLines, type DensityRun } from './density-report.js';
+import {
+  densityLines, shapeFrequencies,
+  type DensityRun, type ShapeFrequency,
+} from './density-report.js';
 import { isPredetermined, shapeOf } from './shapes.js';
 
 const PURPOSES_A: Purpose[] = ['change_standing', 'buy_patience', 'worldbuild_through_action'];
@@ -65,18 +68,19 @@ const pay = (id: string, delta: number) => choice(id, [{ kind: 'treasury', delta
 const remember = (id: string, flag: string) => choice(id, [{ kind: 'flag', flag, set: true }]);
 const mark = (id: string, trait: string) => choice(id, [{ kind: 'trait', target: 'head', trait, op: 'add' }]);
 
-function densityFixture(seed: number, top: ['[money | money]', '[lasting | money]'] | ['[lasting | money]', '[money | money]']): DensityRun {
+function densityFixture(seed: number, top: ShapeFrequency[]): DensityRun {
+  const choices = top.reduce((sum, shape) => sum + shape.count, 0);
   return {
     seed,
     years: 500,
     generations: 20,
     ages: 8,
-    choices: 100,
+    choices,
     matches: 20,
     records: 15,
     names: 10,
-    perGeneration: 5,
-    perAge: 12.5,
+    perGeneration: choices / 20,
+    perAge: choices / 8,
     repeatRun: 0.25,
     repeatAge: 0.03,
     shapeRepeat: {
@@ -86,9 +90,9 @@ function densityFixture(seed: number, top: ['[money | money]', '[lasting | money
     shapeWindow: 0.20,
     predeterminedShare: 0.12,
     topShapes: {
-      campaign: top.map((shape) => ({ shape, count: 5, share: 0.05 })),
+      campaign: top,
       ages: {
-        the_long_peace: top.map((shape) => ({ shape, count: 2, share: 0.10 })),
+        the_long_peace: top,
       },
     },
     ordinary: 30,
@@ -96,6 +100,11 @@ function densityFixture(seed: number, top: ['[money | money]', '[lasting | money
     meaningfulChoices: 50,
     meaningfulRecords: 8,
   };
+}
+
+function frequencies(entries: [string, number][]): ShapeFrequency[] {
+  const total = entries.reduce((sum, [, count]) => sum + count, 0);
+  return shapeFrequencies(entries, total);
 }
 
 describe('interaction shapes', () => {
@@ -160,9 +169,43 @@ describe('interaction shapes', () => {
     expect(isPredetermined(ctx, d)).toBe(false);
   });
 
+  it('lets a consistently just-below-cutoff shape become a batch top shape', () => {
+    const shared = '[shared below cutoff]';
+    const runA = frequencies([
+      ...Array.from({ length: 10 }, (_, i) => [`[run-a-${i}]`, 6] as [string, number]),
+      [shared, 5],
+    ]);
+    const runB = frequencies([
+      ...Array.from({ length: 10 }, (_, i) => [`[run-b-${i}]`, 6] as [string, number]),
+      [shared, 5],
+    ]);
+
+    // Each run ranks the shared shape 11th. It must still survive measurement,
+    // because across the batch its count is 10 while every one-off shape is 6.
+    expect(runA).toHaveLength(11);
+    expect(runB).toHaveLength(11);
+    expect(runA.at(-1)?.shape).toBe(shared);
+    expect(runB.at(-1)?.shape).toBe(shared);
+
+    const output = densityLines([{
+      term: 500,
+      runs: [densityFixture(903, runA), densityFixture(904, runB)],
+    }]).join('\n');
+    const campaignRows = output.split('\n').filter((line) => /^500\s+campaign\s+/.test(line));
+
+    expect(campaignRows).toHaveLength(10);
+    expect(campaignRows[0]).toContain(shared);
+  });
+
   it('prints byte-identical aggregate tables regardless of run order', () => {
-    const a = densityFixture(901, ['[money | money]', '[lasting | money]']);
-    const b = densityFixture(902, ['[lasting | money]', '[money | money]']);
+    const a = densityFixture(901, frequencies([
+      ['[money | money]', 5],
+      ['[lasting | money]', 5],
+    ]));
+    const b = densityFixture(902, frequencies([
+      ['[lasting | money]', 5],
+      ['[money | money]', 5],
+    ]));
 
     const forward = densityLines([{ term: 500, runs: [a, b] }]).join('\n');
     const reverse = densityLines([{ term: 500, runs: [b, a] }]).join('\n');
