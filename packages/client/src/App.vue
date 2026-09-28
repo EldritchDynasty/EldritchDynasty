@@ -11,6 +11,7 @@ import Outcome from './components/Outcome.vue';
 import Naming from './components/Naming.vue';
 import PassageLog from './components/Passage.vue';
 import Tree from './components/Tree.vue';
+import TreeCounsel from './components/TreeCounsel.vue';
 import Cast from './components/Cast.vue';
 import Chronicle from './components/Chronicle.vue';
 import GameTable from './components/Table.vue';
@@ -450,6 +451,7 @@ const yearAndBirths = computed(() => {
                is true of them and of nobody else. The tree is still under it;
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" @select="select" />
+          <TreeCounsel :view="view" :selected="selected" :actions="actions" />
           <Tree :view="view" :selected="selected" @select="select" @line="openLine()" />
         </template>
       </div>
