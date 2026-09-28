@@ -1,0 +1,23 @@
+name: stall-270-measurement
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  density:
+    name: strategic stalls 12 x 500/300
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Measure strategic stalls at both shipped terms
+        run: npm run gate:density -- 12 500 300

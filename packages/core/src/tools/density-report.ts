@@ -233,7 +233,7 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
   }
 
   out.push('');
-  const ambitionHead = ['term', 'owner', 'ambition', 'flat years mean', 'flat years max', 'decisions mean', 'decisions max'];
+  const ambitionHead = ['term', 'scope', 'owner', 'ambition', 'flat years mean', 'flat years max', 'decisions mean', 'decisions max'];
   const ambitionBody: string[][] = [];
   for (const { term, runs } of rows) {
     const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.ambitionFlatAges)))].sort();
@@ -256,6 +256,7 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
         ambitionBody.push([
           String(term),
           scope,
+          'ambition',
           id,
           mean(years).toFixed(1),
           String(Math.max(...years)),
