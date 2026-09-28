@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { indexContent, type CampaignId } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
-import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, conditionTruths } from './campaign-gate.js';
-import type { EndingRun } from './ending-gate.js';
+import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
 
 describe('static campaign difference report', () => {
   const content = indexContent(loadContent());
@@ -86,7 +85,7 @@ describe('static campaign difference report', () => {
       seed: 901, policy: 'ascendant', ending: 'apotheosis', attested: 'none', clauses: 5,
       survivors: 1, householdLow: 1, bloodLeft: 1, bloodLow: 1,
       templateFires: { late_long: 2, ordinary: 10 },
-    } as EndingRun;
+    } as CampaignPlayedSourceRun;
 
     expect(campaignReachOf(run, 'long', 'ascendant', staticReport)).toMatchObject({
       exclusiveEvents: ['late_long'],
