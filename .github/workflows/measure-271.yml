@@ -1,0 +1,27 @@
+name: measure-271
+
+on:
+  push:
+    branches: [chatgpt/271-measurement]
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: typecheck
+        run: npm run typecheck
+      - name: acceptance density sweep
+        run: npm run gate:density -- 12 500 300
+      - name: attention-batch density sweep
+        run: npm run gate:density -- --seeds=901,902,903,904,905,913,914,916,918,919,920,921,924,927,928,930,931,932,934,940,941,942,943,947,951 500 300
+      - name: fast lane
+        run: npm run test:fast
