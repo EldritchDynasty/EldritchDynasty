@@ -2,7 +2,7 @@ import type { EventTemplate } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { resolveChoice, resolveRecord, type PendingChoice, type PendingDecision, type PendingRecord, type RecordOption } from './events/decisions.js';
 import { streamFor } from './rng.js';
-import { ambitionView } from './ambition.js';
+import { ambitionRelevance } from './ambition.js';
 
 export interface DelegationPreferences {
   choices: Record<string, string>;
