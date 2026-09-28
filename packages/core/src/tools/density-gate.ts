@@ -54,11 +54,12 @@
  * for the same answer. This is the sweep rig that produced the band.
  */
 import { loadContent } from '@ed/content';
-import type { Content, ContentBundle } from '@ed/schema';
+import type { Content, ContentBundle, HouseAmbitionId } from '@ed/schema';
 import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { ambitionOptions, ambitionView } from '../ambition.js';
 import { LADDER_BLOCKERS, foremostOf, type LadderBlocker } from '../ascension.js';
 import { blockerActionability } from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
@@ -112,6 +113,9 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const categoryWindow: string[] = [];
   const campaignStall = makeStallTracker();
   const ageStalls = new Map<string, StallTracker>();
+  const ambitionTrackers = new Map<HouseAmbitionId, AmbitionTracker>(
+    ambitionOptions(w.campaign).map((a) => [a.id, makeAmbitionTracker()]),
+  );
   let shapeWindow = 0;
   let predeterminedChoices = 0;
   let nonPredeterminedChoices = 0;
@@ -156,6 +160,21 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     const actionable = blockerActionability(g.ctx, blocker, top?.person.id).actionable;
     noteStall(campaignStall, blocker, actionable);
 
+    // Ambitions are readings only (#210): selecting one does not alter the
+    // simulation. Read every campaign-legal ambition off this SAME played year
+    // rather than paying for four reruns that would answer an identical world.
+    // Restore the player's actual selection before any docket answer can see it.
+    const selectedAmbition = w.houseAmbition;
+    for (const [id, tracker] of ambitionTrackers) {
+      w.houseAmbition = id;
+      const view = ambitionView(g.ctx);
+      const key = view
+        ? `${view.progress.current}${id === 'raise_ascendant' ? `:${blocker}` : ''}`
+        : 'unavailable';
+      noteAmbition(tracker, key);
+    }
+    w.houseAmbition = selectedAmbition;
+
     const activeAges = new Set(w.age.active.map((a) => String(a.age)));
     for (const age of activeAges) {
       const tracker = ageStalls.get(age) ?? makeStallTracker();
@@ -167,7 +186,9 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     }
 
     let inner = 0;
+    let decisionsThisYear = 0;
     while (w.pendingDecisions.length && inner++ < 500) {
+      decisionsThisYear += 1;
       const d = w.pendingDecisions[0]!;
       if (d.kind === 'match') {
         matches += 1;
@@ -268,6 +289,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       if (w.pendingDecisions[0] === d) g.letHimDecide();
     }
 
+    for (const tracker of ambitionTrackers.values()) noteAmbitionDecisions(tracker, decisionsThisYear);
+
     // The span is years BETWEEN landmarks, so a landmark year ends it without
     // being counted into it.
     if (landmark) { ordinary = Math.max(ordinary, span); span = 0; } else span += 1;
@@ -320,6 +343,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         blockerSpan: tracker.blockerSpan,
         actionableGap: tracker.actionableGap,
       }])),
+    ambitionFlat: Object.fromEntries([...ambitionTrackers.entries()]
+      .map(([id, tracker]) => [id, { years: tracker.years, decisions: tracker.decisions }])),
     predeterminedShare: choices ? predeterminedChoices / choices : 0,
     topShapes: {
       campaign: shapeFrequencies(campaignShapeCounts, choices),
@@ -332,6 +357,33 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     meaningfulChoices,
     meaningfulRecords,
   };
+}
+
+interface AmbitionTracker {
+  key?: string;
+  currentYears: number;
+  currentDecisions: number;
+  years: number;
+  decisions: number;
+}
+
+function makeAmbitionTracker(): AmbitionTracker {
+  return { currentYears: 0, currentDecisions: 0, years: 0, decisions: 0 };
+}
+
+function noteAmbition(tracker: AmbitionTracker, key: string): void {
+  if (tracker.key === key) tracker.currentYears += 1;
+  else {
+    tracker.key = key;
+    tracker.currentYears = 1;
+    tracker.currentDecisions = 0;
+  }
+  tracker.years = Math.max(tracker.years, tracker.currentYears);
+}
+
+function noteAmbitionDecisions(tracker: AmbitionTracker, decisions: number): void {
+  tracker.currentDecisions += decisions;
+  tracker.decisions = Math.max(tracker.decisions, tracker.currentDecisions);
 }
 
 interface StallTracker extends StallSpans {
