@@ -4,6 +4,7 @@ import type { ResolvedEvent } from '../events/effects.js';
 import type { AssizeReport } from '../assize.js';
 import type { Bearing } from '../bearing.js';
 import type { HouseAscension } from '../ascension.js';
+import type { LandRiskResult } from '../land.js';
 
 /** What a year did. The only thing `stepYear` returns, and every phase writes to it. */
 export interface YearReport {
@@ -55,6 +56,11 @@ export interface YearReport {
   bearing?: Bearing;
   /** Where the house stands on the ladder (`ascension.ts`, concept §22). */
   ascension?: HouseAscension;
+  /**
+   * Transient land hazards resolved this year. This is report state, not save
+   * state: instruments can read the route without parsing Chronicle prose.
+   */
+  landRisks?: LandRiskResult;
 }
 
 export function emptyReport(year: number): YearReport {
