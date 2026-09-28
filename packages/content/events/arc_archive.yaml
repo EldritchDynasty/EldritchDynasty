@@ -53,7 +53,6 @@ events:
             keeps in its presses. She answers the way anybody answers: not much,
             and not at first.
           effects:
-            - { kind: flag, flag: the_archive_walked_out, set: true }
             - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.5 }
 
   - id: archive_the_bookseller_at_cawdry
@@ -105,7 +104,6 @@ events:
                 that they are down there and that they stay down there.
               effects:
                 - { kind: treasury, delta: -9 }
-                - { kind: flag, flag: bought_the_index_back, set: true }
         - id: let_it_go
           label: Let it go. Bidding for it tells eleven houses it is worth having.
           outcomes:
@@ -124,7 +122,6 @@ events:
                 evasive. He genuinely cannot say, which is worse, and he writes
                 to ask whether the house has any more of the same.
               effects:
-                - { kind: flag, flag: the_index_went_east, set: true }
                 - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.65 }
                 - { kind: discrepancy, op: create, id: the_index_out_of_the_house, severity: minor, provableBy: [house_marrow, the_church] }
     record:
@@ -136,7 +133,6 @@ events:
             in a thin year, was on sale at Cawdry for nine crowns. Whoever
             reads this: it was made by somebody who was not us, and that is not
             a small thing, and the contract says so in the ninth line.
-          grantsKnowledge: knows_the_index_left
           effects:
             - { kind: respect, delta: -1 }
         omit:
@@ -205,7 +201,6 @@ events:
                 by the debtor is not evidence.
               effects:
                 - { kind: clause, reveal: clause_of_the_witness }
-                - { kind: knowledge, op: grant, flag: knows_the_witness_clause }
         - id: object
           label: Object to the date. Get the quires struck from the record.
           outcomes:
@@ -233,7 +228,6 @@ events:
             An advocate at Cawdry read out, from an index this house does not
             own, where the box is kept. It is in the provincial record. No
             reading of the ninth clause after this one should need explaining.
-          grantsKnowledge: knows_the_witness_clause
           effects:
             - { kind: respect, delta: -1 }
         omit:
