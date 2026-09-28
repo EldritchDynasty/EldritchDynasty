@@ -30,7 +30,8 @@ import {
 } from './ending-gate.js';
 import { answerWarChoice, type WarPolicy } from './war-gate.js';
 import { costsTheClimber, resolveYear as resolveLadderYear, type LadderPolicy } from './ladder-policy.js';
-import { foremostOf, rungIndex, RUNGS } from '../ascension.js';
+import { foremostOf, rungIndex, RUNGS, LADDER_BLOCKERS, type LadderBlocker } from '../ascension.js';
+export { LADDER_BLOCKERS, type LadderBlocker } from '../ascension.js';
 import { RESPECT_ORDER, type Content, type EndingId, type RespectTier, type Rung } from '@ed/schema';
 import { expectMean } from '../testing.js';
 import type { SimCtx } from '../world.js';
@@ -40,43 +41,17 @@ export type LongLinePolicy =
   | Extract<WarPolicy, 'chronicler' | 'commit'>
   | Extract<LadderPolicy, 'climb' | 'ascendant'>;
 
-export const LADDER_BLOCKERS = [
-  'no-expresser',
-  'clear',
-  'awakening',
-  'power',
-  'books',
-  'affinities',
-  'madness-floor',
-  'madness-overflow',
-  'mind',
-  'respect',
-  'rite',
-  'regalia',
-  'clauses',
-  'other',
-] as const;
-export type LadderBlocker = typeof LADDER_BLOCKERS[number];
-
-export function ladderBlockerKind(blocked: string | undefined, hasExpresser = true): LadderBlocker {
+/**
+ * Compatibility name for the long-line diagnostics. The classifier used to
+ * parse English from `Standing.blocked`; #270 moved the fact into ascension
+ * itself, so prose can now change without silently changing measurements.
+ */
+export function ladderBlockerKind(
+  blocker: LadderBlocker | undefined,
+  hasExpresser = true,
+): LadderBlocker {
   if (!hasExpresser) return 'no-expresser';
-  if (!blocked) return 'clear';
-  if (blocked.includes('has not awakened')) return 'awakening';
-  if (blocked.includes('blood comes through')) return 'power';
-  if (blocked.includes('clauses')) return 'clauses';
-  if (blocked.includes('book') || blocked.includes('family readers know')) return 'books';
-  if (blocked.includes('affinit') || blocked.includes('opposed pairs')) return 'affinities';
-  if (blocked.includes('not cost him enough')
-    || blocked.includes('not hurt him deeply enough')
-    || blocked.includes('not brought him close enough to ruin')) return 'madness-floor';
-  if (blocked.includes('more than his mind can bear')) return 'madness-overflow';
-  if (blocked.includes('mind is not yet wide enough')) return 'mind';
-  if (blocked.includes('not yet regarded') || blocked.includes('not yet eminent') || blocked.includes('not yet exalted')) {
-    return 'respect';
-  }
-  if (blocked.includes('Vessel is unpaid') || blocked.includes('Great Rite') || blocked.includes('unmade for him')) return 'rite';
-  if (blocked.includes('Regalia')) return 'regalia';
-  return 'other';
+  return blocker ?? 'clear';
 }
 
 interface LadderDiagnostics {
@@ -502,7 +477,7 @@ function runOne(bundle: Content, seed: number, years: number, policy: LongLinePo
       const previousPerson = previousForemost ? w.people.get(previousForemost.person) : undefined;
       if (!previousPerson || previousPerson.status !== 'alive') ladder.mortalityDrops += 1;
     }
-    const blocker = ladderBlockerKind(top?.standing.blocked, top !== undefined);
+    const blocker = ladderBlockerKind(top?.standing.blocker, top !== undefined);
     ladder.blockerYears[blocker] += 1;
     previousForemost = top ? { person: top.person.id, rung: top.standing.rung } : undefined;
 
