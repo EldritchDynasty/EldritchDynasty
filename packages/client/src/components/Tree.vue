@@ -26,6 +26,46 @@ const emit = defineEmits<{ (e: 'select', id: string): void; (e: 'line'): void }>
 /** 'all' or a hall id. Narrows which halls are drawn at all. */
 const hallFilter = ref<string>('all');
 
+type HallView = SessionView['halls'][number];
+type MemberFilter = 'all' | 'head' | 'succession' | 'married' | 'unmarried' | 'post' | 'cadet' | 'awakened';
+
+const MEMBER_FILTERS: { id: MemberFilter; label: string }[] = [
+  { id: 'all', label: 'Everyone' },
+  { id: 'head', label: 'Head' },
+  { id: 'succession', label: 'Heir / possible' },
+  { id: 'married', label: 'Married' },
+  { id: 'unmarried', label: 'Unmarried' },
+  { id: 'post', label: 'In post' },
+  { id: 'cadet', label: 'Cadet hall' },
+  { id: 'awakened', label: 'Awakened' },
+];
+
+/**
+ * Planning filters read only the photographed session view. In particular,
+ * succession is the engine's known-facts answer: this client never filters on
+ * an unwoken member's expresses field and therefore cannot turn a filter into
+ * a genetic test (#268).
+ */
+const memberFilter = ref<MemberFilter>('all');
+const showRelevance = ref(false);
+
+function matchesMemberFilter(member: MemberView, hall: HallView): boolean {
+  switch (memberFilter.value) {
+    case 'all': return true;
+    case 'head': return member.head;
+    case 'succession': return member.succession !== undefined;
+    case 'married': return member.spouse !== undefined;
+    case 'unmarried': return member.spouse === undefined;
+    case 'post': return member.contract !== undefined;
+    case 'cadet': return !hall.isSeat;
+    case 'awakened': return member.awakened;
+  }
+}
+
+function membersOf(hall: HallView): MemberView[] {
+  return hall.members.filter((member) => matchesMemberFilter(member, hall));
+}
+
 /**
  * A MEMBER ID TO ROOT AT, within whichever hall holds them. Set from the
  * "Only this branch" control `Kin.vue` offers wherever a member has
@@ -51,18 +91,28 @@ function pickHall(id: string): void {
   clearFocus();
 }
 
-/** Which halls this render draws, given the picker. */
-const shownHalls = computed(() => (hallFilter.value === 'all'
-  ? props.view.halls
-  : props.view.halls.filter((h) => h.id === hallFilter.value)));
+function pickMemberFilter(id: MemberFilter): void {
+  memberFilter.value = id;
+  clearFocus();
+}
 
-/** The root(s) a given hall draws: the whole hall, or one focused branch. */
-function rootsOf(hall: SessionView['halls'][number]): MemberView[] {
+/** Which non-empty halls this planning view draws, given both selectors. */
+const shownHalls = computed(() => {
+  const halls = hallFilter.value === 'all'
+    ? props.view.halls
+    : props.view.halls.filter((h) => h.id === hallFilter.value);
+  if (memberFilter.value === 'all') return halls;
+  return halls.filter((hall) => membersOf(hall).length > 0);
+});
+
+/** The root(s) a given hall draws: the whole filtered hall, or one focused branch. */
+function rootsOf(hall: HallView): MemberView[] {
+  const members = membersOf(hall);
   if (focus.value) {
-    const found = hall.members.find((m) => m.id === focus.value);
+    const found = members.find((m) => m.id === focus.value);
     if (found) return [found];
   }
-  return roots(hall.members);
+  return roots(members);
 }
 
 /**
@@ -119,6 +169,33 @@ async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
     </ul>
     <p v-else-if="query.trim().length >= 2" class="dim small">Nobody of the house answers to that.</p>
 
+    <!-- A PLANNING INDEX, NOT ANOTHER STAT SHEET (#268). These filters only
+         name facts already present in SessionView. "Heir / possible" is the
+         engine's known-succession answer; it never reads unwoken Power here. -->
+    <div class="planning" aria-label="Plan with the family tree">
+      <span class="dim small planning-label">Read the house by</span>
+      <div class="wrap filters" role="group" aria-label="Family tree filters">
+        <button
+          v-for="filter in MEMBER_FILTERS"
+          :key="filter.id"
+          type="button"
+          class="quiet small"
+          :class="{ on: memberFilter === filter.id }"
+          :aria-pressed="memberFilter === filter.id"
+          :data-filter="filter.id"
+          @click="pickMemberFilter(filter.id)"
+        >{{ filter.label }}</button>
+      </div>
+      <button
+        type="button"
+        class="quiet small relevance-toggle"
+        :class="{ on: showRelevance }"
+        :aria-pressed="showRelevance"
+        data-relevance-toggle
+        @click="showRelevance = !showRelevance"
+      >Relevant to the plan</button>
+    </div>
+
     <!-- THE HALL PICKER. A HALL IS NOT A HOUSE (invariant 15): cadet branches
          are households inside the player's house, and crowding is per hall —
          so "show me one of them" is a real question and not an arbitrary
@@ -148,32 +225,34 @@ async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
       <h3 :id="'hall-' + hall.id" class="label">
         {{ hall.name }}
         <span v-if="hall.isSeat" class="rubric">· the seat</span>
-        <span class="dim"> · {{ hall.members.length }} at table</span>
+        <span class="dim"> · {{ membersOf(hall).length }} shown</span>
         <span v-if="hall.grievance > 0" class="dim"> · grievance {{ Math.round(hall.grievance) }}</span>
       </h3>
 
       <!-- THE BREADCRUMB OUT OF A FOCUSED BRANCH. Only where this hall is the
            one the focus belongs to — the picker may be showing several. -->
-      <p v-if="focus && hall.members.some((m) => m.id === focus)" class="dim small branch">
+      <p v-if="focus && membersOf(hall).some((m) => m.id === focus)" class="dim small branch">
         Showing one branch. <button class="quiet small" @click="clearFocus()">Show the whole hall</button>
       </p>
 
-      <ul v-if="hall.members.length">
+      <ul v-if="membersOf(hall).length">
         <Kin
           v-for="member in rootsOf(hall)"
           :key="member.id"
           :member="member"
-          :hall="hall.members"
+          :hall="membersOf(hall)"
           :names="view.attributes"
           :trait-names="view.traits"
           :selected="selected"
+          :show-relevance="showRelevance"
           @select="$emit('select', $event)"
           @line="$emit('line')"
           @root="onRoot(hall.id, $event)"
         />
       </ul>
-      <p v-else class="dim small">Nobody. The hall stands empty.</p>
+      <p v-else class="dim small">Nobody in this hall matches that reading.</p>
     </section>
+    <p v-if="!shownHalls.length" class="dim small no-match">Nobody in the living house matches that reading.</p>
   </section>
 </template>
 
@@ -184,7 +263,17 @@ async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
 .find input { flex: 1; min-width: 0; }
 .matches { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .matches button { width: 100%; text-align: left; }
+.planning {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin: 0 0 14px; padding: 8px 0;
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+}
+.planning-label { flex: 0 0 auto; }
+.filters { flex: 1 1 420px; }
+.planning button.on { color: var(--ink); background: var(--vellum-deep); border-color: var(--rule); }
+.relevance-toggle { margin-left: auto; }
 .halls { margin-bottom: 14px; }
 .halls button.on { color: var(--ink); background: var(--vellum-deep); border-color: var(--rule); }
 .branch { margin: -4px 0 10px; }
+.no-match { margin: 0 0 18px; }
 </style>
