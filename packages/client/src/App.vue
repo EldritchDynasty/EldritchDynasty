@@ -150,6 +150,13 @@ function openLine(): void {
   lineOpen.value = actions.line();
 }
 
+function mentionPages(person: string): { id: string; year: number }[] {
+  const ids = new Set(mentions(person));
+  if (!ids.size) return [];
+  return actions.book().flatMap((entry) =>
+    entry.id && ids.has(entry.id) ? [{ id: entry.id, year: entry.year }] : []);
+}
+
 function onKey(e: KeyboardEvent): void {
   const el = document.activeElement;
   const press = shortcutFor({
@@ -452,7 +459,15 @@ const yearAndBirths = computed(() => {
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" @select="select" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" />
-          <Tree :view="view" :selected="selected" @select="select" @line="openLine()" />
+          <Tree
+            :view="view"
+            :selected="selected"
+            :line="actions.line()"
+            :mentions="mentionPages"
+            @select="select"
+            @line="openLine()"
+            @book="openBook"
+          />
         </template>
       </div>
 
