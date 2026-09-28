@@ -1,3 +1,4 @@
+import type { HouseAmbitionId } from '@ed/schema';
 import { LADDER_BLOCKERS, type LadderBlocker } from '../ascension.js';
 import type { ShapeGrain } from './shapes.js';
 import { blockerLevers } from './stall.js';
@@ -31,6 +32,11 @@ export function shapeFrequencies(
     .sort((a, b) => b.count - a.count || a.shape.localeCompare(b.shape));
 }
 
+export interface AmbitionFlat {
+  years: number;
+  decisions: number;
+}
+
 export interface StallSpans {
   blockerSpan: Record<LadderBlocker, number>;
   actionableGap: Record<LadderBlocker, number>;
@@ -61,6 +67,8 @@ export interface DensityRun {
   actionableGap: Record<LadderBlocker, number>;
   /** The same two readings scoped to each authored Age that was active in the sampled years. */
   stallAges: Record<string, StallSpans>;
+  /** Longest unchanged ambition reading; raise_ascendant also moves when its foremost blocker changes. */
+  ambitionFlat: Partial<Record<HouseAmbitionId, AmbitionFlat>>;
   /** Choice presentations already settled by availability, shape or #219's guard. */
   predeterminedShare: number;
   /**
@@ -208,6 +216,33 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
     const stallWidths = stallHead.map((h, i) => Math.max(h.length, ...stallBody.map((b) => (b[i] ?? '').length)));
     const stallLine = (cells: string[]) => cells.map((c, i) => c.padEnd(stallWidths[i]!)).join('  ');
     out.push(stallLine(stallHead), stallLine(stallWidths.map((w) => '-'.repeat(w))), ...stallBody.map(stallLine));
+  }
+
+  out.push('');
+  const ambitionHead = ['term', 'owner', 'ambition', 'flat years mean', 'flat years max', 'decisions mean', 'decisions max'];
+  const ambitionBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    const ids = [...new Set(runs.flatMap((run) => Object.keys(run.ambitionFlat)))].sort() as HouseAmbitionId[];
+    for (const id of ids) {
+      const readings = runs.flatMap((run) => run.ambitionFlat[id] ? [run.ambitionFlat[id]!] : []);
+      if (!readings.length) continue;
+      const years = readings.map((x) => x.years);
+      const decisions = readings.map((x) => x.decisions);
+      ambitionBody.push([
+        String(term),
+        'ambition',
+        id,
+        mean(years).toFixed(1),
+        String(Math.max(...years)),
+        mean(decisions).toFixed(1),
+        String(Math.max(...decisions)),
+      ]);
+    }
+  }
+  if (ambitionBody.length) {
+    const ambitionWidths = ambitionHead.map((h, i) => Math.max(h.length, ...ambitionBody.map((b) => (b[i] ?? '').length)));
+    const ambitionLine = (cells: string[]) => cells.map((c, i) => c.padEnd(ambitionWidths[i]!)).join('  ');
+    out.push(ambitionLine(ambitionHead), ambitionLine(ambitionWidths.map((w) => '-'.repeat(w))), ...ambitionBody.map(ambitionLine));
   }
 
   out.push('');
