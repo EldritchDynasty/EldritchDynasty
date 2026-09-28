@@ -2,10 +2,10 @@ import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type { CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, RunLibrary } from '@ed/schema';
 import { appendLibraryRun, emptyRunLibrary, readRunLibrary } from '@ed/schema';
 import {
-  CAMPAIGNS, matchFuture, newGame, resumeGame, standingMoved,
+  CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type AdviserAdvice, type HelpSurface, type HelpTier,
-  type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
+  type AchievementId, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
   type LandView, type MatchCard, type MatchFutureReading, type MatchResolution, type MusterOrder, type MusterOrderResult,
   type OrderResult, type Passage, type PendingDecision,
   type PrologueView, type RecordOption, type SessionView, type SlotFill, type StandingDelta,
@@ -360,6 +360,8 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   // because the front door needs to know it exists.
   let keptSave: unknown | null = null;
   let archivedRunId: string | null = null;
+  /** Profile-wide unlocks already handed to this host instance. */
+  const deliveredAchievements = new Set<AchievementId>();
 
   /**
    * AUTOSAVE IS ONE LOG, EVEN ON AN ASYNCHRONOUS HOST (#279).
@@ -805,10 +807,21 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     });
   }
 
+  /** Deliver core-owned finished-run achievement ids to the optional host backend. */
+  function unlockFinished(save: ReturnType<GameSession['save']>): void {
+    if (!save.ending || !platform.unlockAchievement) return;
+    for (const id of earnedAchievements(save, library.value)) {
+      if (deliveredAchievements.has(id)) continue;
+      deliveredAchievements.add(id);
+      void platform.unlockAchievement(id).catch(() => deliveredAchievements.delete(id));
+    }
+  }
+
   /** Write after every completed client verb, and once more at host pause. */
   function keep(g: GameSession): void {
     const save = g.save();
     archiveFinished(g);
+    unlockFinished(save);
     keptSave = save;
     resumable.value = true;
     saveStatus.value = 'saving';
