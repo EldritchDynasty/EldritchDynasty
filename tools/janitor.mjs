@@ -42,7 +42,8 @@
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
-import { onPath } from './portable.mjs';\nimport { closingIssues } from './closing-keywords.mjs';
+import { onPath } from './portable.mjs';
+import { closingIssues } from './closing-keywords.mjs';
 
 const DRY = process.env.DRY_RUN === '1';
 const REMOTE = process.env.REMOTE ?? 'origin';
