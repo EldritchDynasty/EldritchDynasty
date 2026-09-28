@@ -1,4 +1,4 @@
-import type { Person } from '@ed/schema';
+import { assertNever, type Person } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { PendingDecision } from './events/decisions.js';
 import type { MatchCard } from './people/match.js';
@@ -13,7 +13,8 @@ import type { MatchCard } from './people/match.js';
  * values, the adviser does not know it.
  */
 export type AdviserLens =
-  | 'priest' | 'broker' | 'steward' | 'soldier' | 'reader' | 'old_head' | 'close_kin';
+  | 'priest' | 'broker' | 'steward' | 'soldier' | 'reader'
+  | 'mother' | 'midwife' | 'old_head' | 'close_kin';
 
 export type AdviceSurface = 'match' | 'record' | 'rite' | 'choice';
 
@@ -34,10 +35,10 @@ interface Adviser {
 }
 
 const SURFACE_LENS: Record<AdviceSurface, AdviserLens[]> = {
-  match: ['broker', 'steward', 'reader', 'close_kin', 'old_head', 'priest', 'soldier'],
-  record: ['reader', 'priest', 'old_head', 'broker', 'steward', 'close_kin', 'soldier'],
-  rite: ['priest', 'reader', 'old_head', 'close_kin', 'soldier', 'steward', 'broker'],
-  choice: ['old_head', 'close_kin', 'steward', 'reader', 'priest', 'soldier', 'broker'],
+  match: ['mother', 'midwife', 'broker', 'steward', 'reader', 'close_kin', 'old_head', 'priest', 'soldier'],
+  record: ['reader', 'priest', 'old_head', 'broker', 'steward', 'close_kin', 'soldier', 'midwife', 'mother'],
+  rite: ['priest', 'reader', 'old_head', 'close_kin', 'soldier', 'steward', 'broker', 'midwife', 'mother'],
+  choice: ['old_head', 'close_kin', 'steward', 'reader', 'priest', 'soldier', 'broker', 'midwife', 'mother'],
 };
 
 function eventHasRite(d: Extract<PendingDecision, { kind: 'choice' }>): boolean {
@@ -54,10 +55,33 @@ function surfaceOf(d: PendingDecision): AdviceSurface {
   return eventHasRite(d) ? 'rite' : 'choice';
 }
 
-function lensOf(ctx: SimCtx, p: Person): { lens: AdviserLens; cares: string } | undefined {
+function widowOfHead(ctx: SimCtx, p: Person): boolean {
+  return p.marriages.some((marriage) => {
+    const spouse = ctx.world.people.get(marriage.spouse);
+    return spouse?.status === 'dead'
+      && ctx.world.succession.some((held) => held.person === spouse.id);
+  });
+}
+
+function lensOf(
+  ctx: SimCtx,
+  p: Person,
+  d: PendingDecision,
+): { lens: AdviserLens; cares: string } | undefined {
   const role = p.contract?.role;
   const subject = p.sex === 'female' ? 'she' : 'he';
   const possessive = p.sex === 'female' ? 'her' : 'his';
+
+  if (d.kind === 'match') {
+    const matched = ctx.world.people.get(d.subject.id);
+    if (matched?.claimedParents.mother === p.id) {
+      return { lens: 'mother', cares: 'her child is the one who must live inside this bargain' };
+    }
+    if (role === 'midwife') {
+      return { lens: 'midwife', cares: `${subject} has watched this house count births, losses and grown children` };
+    }
+  }
+
   if (p.career?.career === 'clergy') return { lens: 'priest', cares: `the Church is the institution ${subject} serves` };
   if (p.career?.career === 'merchant' || p.career?.career === 'factor' || p.career?.career === 'court') {
     return { lens: 'broker', cares: `${possessive} post is made of bargains, standing and other houses` };
@@ -69,9 +93,18 @@ function lensOf(ctx: SimCtx, p: Person): { lens: AdviserLens; cares: string } | 
   if (p.career?.career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
     return { lens: 'reader', cares: `${subject} lives by what can be read, remembered and proved` };
   }
-  if (ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined)) {
-    return { lens: 'old_head', cares: `${subject} has held the seal before` };
+
+  const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
+  const regent = p.sex === 'female' && p.castSlots.includes('head');
+  if (heldSeal || regent || widowOfHead(ctx, p)) {
+    const cares = heldSeal
+      ? `${subject} has held the seal before`
+      : regent
+        ? 'she holds the seal because the house has no waking son to hold it'
+        : 'her husband held the seal, and she lived through what it cost the household';
+    return { lens: 'old_head', cares };
   }
+
   const member = p.membership.find((m) =>
     m.house === ctx.world.playerHouse && m.from <= ctx.world.year && (m.to === undefined || m.to > ctx.world.year));
   if (member?.kind === 'blood' || member?.kind === 'married_in') {
@@ -96,7 +129,7 @@ function advisers(ctx: SimCtx, d: PendingDecision): Adviser[] {
   return ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
     .filter((p) => p.status === 'alive' && ctx.world.year - p.born >= 15)
     .flatMap((person) => {
-      const found = lensOf(ctx, person);
+      const found = lensOf(ctx, person, d);
       if (!found) return [];
       const domain = Math.max(0, order.length - order.indexOf(found.lens));
       return [{ person, ...found, relevance: domain + relatedBonus(ctx, person, d) }];
@@ -109,36 +142,75 @@ function evidenceCount(card: MatchCard): number {
     + card.panel.said.length + card.panel.ourBook.length;
 }
 
-function matchPosition(lens: AdviserLens, cards: MatchCard[]): string {
-  const open = cards.filter((c) => c.available);
+function matchPosition(
+  lens: AdviserLens,
+  d: Extract<PendingDecision, { kind: 'match' }>,
+): string {
+  const open = d.cards.filter((c) => c.available);
   if (!open.length) return 'None of these names is still a marriage the house can make.';
-  let card = open[0]!;
-  if (lens === 'steward' || lens === 'broker') {
-    card = [...open].sort((a, b) => a.dowry - b.dowry || evidenceCount(b) - evidenceCount(a))[0]!;
-    return `I would take ${card.name}. ${card.dowry} crowns is the part of this bargain the account book can prove today.`;
+
+  switch (lens) {
+    case 'steward':
+    case 'broker': {
+      const card = [...open].sort((a, b) => a.dowry - b.dowry || evidenceCount(b) - evidenceCount(a))[0]!;
+      return `I would take ${card.name}. ${card.dowry} crowns is the part of this bargain the account book can prove today.`;
+    }
+    case 'reader': {
+      const card = [...open].sort((a, b) => evidenceCount(b) - evidenceCount(a) || b.lineSeen - a.lineSeen)[0]!;
+      return `I would take ${card.name}. There is more written and witnessed around that line than the others.`;
+    }
+    case 'priest': {
+      const card = [...open].sort((a, b) => a.kinship - b.kinship || a.dowry - b.dowry)[0]!;
+      return `I would take ${card.name}. Of these matches, the family papers put the greatest distance between the two lines there.`;
+    }
+    case 'soldier': {
+      const grown = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.grown, 0);
+      const card = [...open].sort((a, b) => grown(b) - grown(a) || b.lineSeen - a.lineSeen)[0]!;
+      return `I would take ${card.name}. The lives we have actually watched in that line are the evidence I trust.`;
+    }
+    case 'mother': {
+      const card = [...open].sort((a, b) =>
+        Math.abs(a.age - d.subject.age) - Math.abs(b.age - d.subject.age)
+        || evidenceCount(b) - evidenceCount(a))[0]!;
+      return `I would take ${card.name}. Of these names, that life begins nearest my child's own age. I am thinking about the years after the bargain.`;
+    }
+    case 'midwife': {
+      const issue = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.borne + r.grown, 0);
+      const card = [...open].sort((a, b) => issue(b) - issue(a) || b.lineSeen - a.lineSeen)[0]!;
+      return `I would take ${card.name}. That line has the most witnessed childbearing behind it. I trust the lives we have counted more than a market word.`;
+    }
+    case 'old_head':
+    case 'close_kin': {
+      const card = [...open].sort((a, b) => b.kinship - a.kinship || evidenceCount(b) - evidenceCount(a))[0]!;
+      return `I would take ${card.name}. The papers keep that blood nearest the house, and I would not pretend that is a neutral reason.`;
+    }
+    default:
+      return assertNever(lens, 'adviser lens');
   }
-  if (lens === 'reader') {
-    card = [...open].sort((a, b) => evidenceCount(b) - evidenceCount(a) || b.lineSeen - a.lineSeen)[0]!;
-    return `I would take ${card.name}. There is more written and witnessed around that line than the others.`;
-  }
-  if (lens === 'priest') {
-    card = [...open].sort((a, b) => a.kinship - b.kinship || a.dowry - b.dowry)[0]!;
-    return `I would take ${card.name}. Of these matches, the family papers put the greatest distance between the two lines there.`;
-  }
-  if (lens === 'soldier') {
-    const grown = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.grown, 0);
-    card = [...open].sort((a, b) => grown(b) - grown(a) || b.lineSeen - a.lineSeen)[0]!;
-    return `I would take ${card.name}. The lives we have actually watched in that line are the evidence I trust.`;
-  }
-  card = [...open].sort((a, b) => b.kinship - a.kinship || evidenceCount(b) - evidenceCount(a))[0]!;
-  return `I would take ${card.name}. The papers keep that blood nearest the house, and I would not pretend that is a neutral reason.`;
 }
 
 function recordPosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: 'record' }>): string {
   const offered = new Set(d.options.map((o) => o.option));
-  if (lens === 'reader' && offered.has('record')) return 'Write it as it happened. A page we can rely on later is worth more to me than a cleaner one now.';
-  if ((lens === 'broker' || lens === 'old_head') && offered.has('embellish')) return 'Improve it. Other houses deal with the name they have heard, not the private truth behind it.';
-  if (lens === 'priest' && offered.has('omit')) return 'Leave it out. Not every true thing belongs in a book another institution may one day read.';
+  switch (lens) {
+    case 'reader':
+      if (offered.has('record')) return 'Write it as it happened. A page we can rely on later is worth more to me than a cleaner one now.';
+      break;
+    case 'broker':
+    case 'old_head':
+      if (offered.has('embellish')) return 'Improve it. Other houses deal with the name they have heard, not the private truth behind it.';
+      break;
+    case 'priest':
+      if (offered.has('omit')) return 'Leave it out. Not every true thing belongs in a book another institution may one day read.';
+      break;
+    case 'steward':
+    case 'soldier':
+    case 'mother':
+    case 'midwife':
+    case 'close_kin':
+      break;
+    default:
+      return assertNever(lens, 'adviser lens');
+  }
   if (offered.has('record')) return 'Write it plainly. I would rather the house remember what it chose.';
   return 'Use the least boastful version the chronicler is offering.';
 }
@@ -148,13 +220,28 @@ function choicePosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: '
   if (!open.length) return 'I see no course on this page the house can actually take.';
   const first = open[0]!;
   const last = open[open.length - 1]!;
+
   if (surface === 'rite') {
     if (lens === 'priest') return `I would choose “${first.label}”. With a rite, caution is not ignorance; it is the only part we control.`;
     if (lens === 'reader') return `I would choose “${last.label}”. I am weighing the words and precedents we have, not what the rite may secretly do.`;
   }
-  if (lens === 'steward' || lens === 'old_head') return `I favour “${first.label}”. It is the course I can defend from what is on the table now.`;
-  if (lens === 'reader') return `I favour “${last.label}”. The written case for it is the one I would want left in the book.`;
-  return `I favour “${first.label}”. That is my interest speaking; I know no more than this page says.`;
+
+  switch (lens) {
+    case 'steward':
+    case 'old_head':
+      return `I favour “${first.label}”. It is the course I can defend from what is on the table now.`;
+    case 'reader':
+      return `I favour “${last.label}”. The written case for it is the one I would want left in the book.`;
+    case 'priest':
+    case 'broker':
+    case 'soldier':
+    case 'mother':
+    case 'midwife':
+    case 'close_kin':
+      return `I favour “${first.label}”. That is my interest speaking; I know no more than this page says.`;
+    default:
+      return assertNever(lens, 'adviser lens');
+  }
 }
 
 /** Build one or two current, named, deliberately biased advisers for a decision. */
@@ -166,7 +253,7 @@ export function adviceForDecision(ctx: SimCtx, d: PendingDecision): AdviserAdvic
     lens,
     cares,
     position: d.kind === 'match'
-      ? matchPosition(lens, d.cards)
+      ? matchPosition(lens, d)
       : d.kind === 'record'
         ? recordPosition(lens, d)
         : choicePosition(lens, d, surface),
