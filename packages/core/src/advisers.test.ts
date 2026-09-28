@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent } from '@ed/schema';
+import { bearingWordsIn, indexContent } from '@ed/schema';
 import { beget, place, testWorld } from './testing.js';
 import { queueChoice } from './events/decisions.js';
 import {
@@ -11,6 +11,7 @@ import {
   type HelpTier,
 } from './advisers.js';
 import type { SimCtx } from './world.js';
+import { GameSession } from './session.js';
 
 const contentBundle = indexContent(loadContent());
 const HELP_SURFACES: HelpSurface[] = ['tree', 'chronicle', 'branches'];
@@ -34,6 +35,10 @@ function helpWorld() {
     career: { career: 'scholar', heldYears: 8 },
   });
   beget(ctx, target, reader);
+  // The target is only the subject of the tree question. Keeping the reader
+  // as the sole living adviser makes this fixture test her words rather than
+  // whichever lens happens to outrank her on another surface.
+  target.status = 'dead';
   return { ctx, target, reader };
 }
 
@@ -66,9 +71,11 @@ describe('adviser knowledge boundary (#273)', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');
 
-    // Mirrors prose/bearing's forbidden vocabulary, and also guards the
-    // internal mechanic's own names from being spoken by counsel.
-    expect(source).not.toMatch(/\b(?:pride|proud|arrogance|arrogant|hubris|vanity|vain|bearing|carriage)\b/i);
+    // The content rule and these code-owned templates share one predicate, so
+    // widening prose/bearing cannot leave advice behind with an older copy.
+    expect(bearingWordsIn(source)).toEqual([]);
+    // The mechanic's own internal names are forbidden here as well.
+    expect(source).not.toMatch(/\b(?:bearing|carriage)\b/i);
   });
 
   it('does not change help when only a hidden attribute changes', () => {
@@ -169,5 +176,12 @@ describe('adviser knowledge boundary (#273)', () => {
     expect(first[0]?.position).not.toContain('Find somebody by name');
     expect(second[0]?.position).not.toContain('Find somebody by name');
     expect(third[0]?.position).toContain('Find somebody by name');
+  });
+
+  it('exposes the same bounded help through GameSession', () => {
+    const { ctx, target } = helpWorld();
+    const session = new GameSession(ctx);
+
+    expect(session.advice('tree', target.id, 1)).toEqual(adviceFor(ctx, 'tree', target.id, 1));
   });
 });

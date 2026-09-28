@@ -106,7 +106,7 @@ blockquote footer {
 blockquote footer {
   margin-top: 2px;
   color: var(--ink-soft);
-  font-size: 0.82rem;
+  font-size: var(--t-fine);
 }
 
 blockquote strong {
@@ -116,13 +116,16 @@ blockquote strong {
 
 .ask {
   appearance: none;
-  padding: 0;
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 4px;
   border: 0;
   border-bottom: 1px solid var(--ink-faint);
   background: transparent;
   color: var(--ink-soft);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--t-fine);
   cursor: pointer;
 }
 
@@ -140,6 +143,6 @@ blockquote strong {
 .unanswered {
   margin: 0;
   color: var(--ink-faint);
-  font-size: 0.82rem;
+  font-size: var(--t-fine);
 }
 </style>

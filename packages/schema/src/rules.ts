@@ -1382,6 +1382,11 @@ const voiceContract: ValidationRule = {
  */
 const NEVER_NAMED = ['pride', 'proud', 'arrogance', 'arrogant', 'hubris', 'vanity', 'vain'];
 
+/** The exact vocabulary guarded by `prose/bearing`, reusable by non-content prose. */
+export function bearingWordsIn(text: string): string[] {
+  return NEVER_NAMED.filter((word) => new RegExp(`\\b${word}\\b`, 'i').test(text));
+}
+
 const bearingUnnamed: ValidationRule = {
   id: 'prose/bearing',
   about: 'No choice label names bearing — it must never read as a stat (concept §29, rule 1).',
@@ -1390,8 +1395,7 @@ const bearingUnnamed: ValidationRule = {
     for (const e of content.events) {
       if (e.interaction.kind === 'narration') continue;
       for (const c of e.interaction.choices) {
-        for (const word of NEVER_NAMED) {
-          if (!new RegExp(`\\b${word}\\b`, 'i').test(c.label)) continue;
+        for (const word of bearingWordsIn(c.label)) {
           issues.push(err(this.id, `event:${e.id}/${c.id}`, `a choice label names it: '${word}'. `
             + 'Bearing is never a thing the player is told he is spending (concept §29, rule 1) — '
             + 'the label says what the house DOES, and the prose may let somebody else supply the noun'));

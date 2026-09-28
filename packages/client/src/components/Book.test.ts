@@ -33,6 +33,7 @@ function readsOver(book: ChronicleEntry[]) {
       return c ? { ...c, blank: false } : undefined;
     },
     answeredBy: (id: string) => book.filter((e) => e.cause?.page === id).map((e) => e.year),
+    advice: () => [],
   };
 }
 

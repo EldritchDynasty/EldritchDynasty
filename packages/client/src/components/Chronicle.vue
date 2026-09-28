@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import type { FrameEntry } from '@ed/schema';
-import type { SessionView } from '@ed/core';
+import type { HelpTier, SessionView } from '@ed/core';
 import { findEntry, linksFor } from '../lib/causes';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
+import AdviserHelp from './AdviserHelp.vue';
 
 const props = defineProps<{
   view: SessionView;
   frame: FrameEntry[];
   /** Only the two reads behind a page's way back (issue #269). */
-  actions: Pick<GameActions, 'causeOf' | 'answeredBy'>;
+  actions: Pick<GameActions, 'causeOf' | 'answeredBy' | 'advice'>;
 }>();
 /** `open` with a page: the link names one older than this window holds. */
 const emit = defineEmits<{ (e: 'open', page?: string): void }>();
@@ -24,6 +25,10 @@ const links = computed(() => linksFor(entries.value, {
 const panel = ref<HTMLElement | null>(null);
 const marked = ref<string | null>(null);
 let unmark: ReturnType<typeof setTimeout> | undefined;
+
+function askAdviser(tier: HelpTier) {
+  return props.actions.advice('chronicle', 'chronicle', tier);
+}
 
 /**
  * THE WAY BACK (issue #269). A generation's echo points at a page fifty years
@@ -51,6 +56,7 @@ async function follow(id: string): Promise<void> {
       <span>The chronicle</span>
       <button class="quiet small" @click="emit('open')">Read it whole</button>
     </h3>
+    <AdviserHelp :ask="askAdviser" :reset-key="`chronicle:${view.house}`" />
 
     <!-- FREQUENCY IS FELT HERE, as typography, and `Entry.vue` is where that
          lives now — one component for the panel, the reading pane and the

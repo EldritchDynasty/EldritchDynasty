@@ -4,6 +4,7 @@ import { appendLibraryRun, emptyRunLibrary, readRunLibrary } from '@ed/schema';
 import {
   CAMPAIGNS, matchFuture, newGame, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
+  type AdviserAdvice, type HelpSurface, type HelpTier,
   type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
   type LandView, type MatchCard, type MatchFutureReading, type MatchResolution, type MusterOrder, type MusterOrderResult,
   type OrderResult, type Passage, type PendingDecision,
@@ -321,6 +322,8 @@ export interface GameActions {
    */
   causeOf(entryId: string): ChronicleCause | undefined;
   answeredBy(entryId: string): number[];
+  /** Pull one requested tier of attributed, in-world help for a reading surface. */
+  advice(surface: HelpSurface, subject: string, tier: HelpTier): AdviserAdvice[];
   dismissInterlude(): void;
   /** Read the chapter card, and let the next one in the queue through. */
   dismissChapter(): void;
@@ -743,6 +746,10 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
     answeredBy(entryId) {
       return session.value?.answeredBy(entryId) ?? [];
+    },
+
+    advice(surface, subject, tier) {
+      return session.value?.advice(surface, subject, tier) ?? [];
     },
 
     dismissInterlude() {

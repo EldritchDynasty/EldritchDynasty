@@ -13,7 +13,10 @@ import {
   type ChoiceResolution, type MatchResolution, type PendingDecision, type RecordOption,
   type RecordResolution,
 } from './events/decisions.js';
-import { adviceForDecision } from './advisers.js';
+import {
+  adviceFor, adviceForDecision,
+  type AdviserAdvice, type HelpSurface, type HelpTier,
+} from './advisers.js';
 import type { SlotFill } from './events/slots.js';
 import { branchOf, halls } from './people/branches.js';
 import { phenotypeOf } from './people/factory.js';
@@ -284,6 +287,16 @@ export class GameSession {
 
   get pending(): PendingDecision[] {
     return [...this.ctx.world.pendingDecisions];
+  }
+
+  /**
+   * Ask one living member of the household for help with a page that is not a
+   * decision. The tier is supplied by the client only after the previous one
+   * has been shown; this method returns exactly what was asked for and keeps
+   * the knowledge boundary in `advisers.ts`.
+   */
+  advice(surface: HelpSurface, subject: string, tier: HelpTier): AdviserAdvice[] {
+    return adviceFor(this.ctx, surface, subject, tier);
   }
 
   /** Remember or withdraw one exact repeated-event answer (#219). */
