@@ -16,6 +16,7 @@ import { standingOf } from './ascension.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import type { SimCtx } from './world.js';
 import { adviceForDecision } from './advisers.js';
+import { newGame } from './session.js';
 import type { MatchCard } from './people/match.js';
 
 const content = indexContent(loadContent());
@@ -647,6 +648,63 @@ describe('broader adviser voices', () => {
     expect(advice[0]?.adviser.id).toBe(widow.id);
     expect(advice[0]?.lens).toBe('old_head');
     expect(advice[0]?.cares).toContain('her husband held the seal');
+  });
+});
+
+describe('diagnostic: adviser distribution after #273 step 3', () => {
+  it('prints the four-Long adviser mix for seeds 901–904', () => {
+    const counts = new Map<string, number>();
+    let total = 0;
+
+    for (const seed of [901, 902, 903, 904]) {
+      const game = newGame(loadContent(), { seed, campaign: 'long' });
+      let guard = 0;
+
+      while (!game.view().ending && guard++ < 100_000) {
+        if (!game.pending.length) game.advance(1);
+
+        let inner = 0;
+        while (game.pending.length && inner++ < 500) {
+          const photographed = game.view().docket[0];
+          if (photographed?.advice) {
+            for (const line of photographed.advice) {
+              counts.set(line.lens, (counts.get(line.lens) ?? 0) + 1);
+              total += 1;
+            }
+          }
+
+          const decision = game.pending[0]!;
+          if (decision.kind === 'match') {
+            const card = decision.cards.find((c) => c.available);
+            if (card) game.match(decision.id, card.id);
+            else game.declineHand(decision.id);
+          } else if (decision.kind === 'record') {
+            game.record(decision.id, 'record');
+          } else if (!decision.choicesAreOpen) {
+            game.send(decision.id, {});
+          } else {
+            const choice = decision.choices.find((c) => c.available);
+            if (choice) game.choose(decision.id, choice.id);
+          }
+
+          if (game.pending[0]?.id === decision.id) game.letHimDecide();
+        }
+
+        for (const wanted of game.view().namesWanted) {
+          game.name(wanted.person, wanted.suggested);
+        }
+      }
+    }
+
+    const byLens = Object.fromEntries([...counts].sort(([a], [b]) => a.localeCompare(b)));
+    const closeKin = counts.get('close_kin') ?? 0;
+    console.log('ADVISER_DISTRIBUTION_AFTER_STEP_3', JSON.stringify({
+      total,
+      closeKin,
+      closeKinShare: total ? closeKin / total : 0,
+      byLens,
+    }));
+    expect(total).toBeGreaterThan(0);
   });
 });
 
