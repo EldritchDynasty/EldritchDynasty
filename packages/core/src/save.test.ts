@@ -102,6 +102,26 @@ describe('a run survives being written down', () => {
     expect([...after.world.relationships.values()][0]?.grudges[0]?.originPage).toBe('chr_origin');
   });
 
+  it('round-trips Chronicle cast links for family-to-book navigation', () => {
+    const before = bootstrap(content, 268, 1042);
+    const person = before.world.people.household(before.world.playerHouse, before.world.year)[0]!;
+    before.world.chronicle.push({
+      id: 'chr_people_roundtrip',
+      year: before.world.year,
+      weight: 'paragraph',
+      text: person.name + ' was named on this page.',
+      named: false,
+      people: [person.id],
+    });
+
+    const saved = JSON.parse(JSON.stringify(saveGame(before)));
+    expect(saved.format).toBe(26);
+    expect(saved.chronicle.at(-1)?.people).toEqual([person.id]);
+
+    const after = loadGame(saved, content);
+    expect(after.world.chronicle.at(-1)?.people).toEqual([person.id]);
+  });
+
   it('round-trips the selected campaign instead of silently restoring Long', () => {
     const before = bootstrap(content, 1042, 1042, 'short');
     const saved = JSON.parse(JSON.stringify(saveGame(before)));
