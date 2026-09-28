@@ -91,11 +91,11 @@ npm run land         # the landing: fetch, rebase, install, the whole set CI
 npm run land -- --status   # is a landing running, or did one die — and did it
                      # push before it died? Ask before assuming either.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
-npm run test:fast    # 47s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+npm run test:fast    # 37s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
-npm test             # everything: 2,536 tests in 157 files, ~14 min
+npm test             # everything: 3,043 tests in 175 files, ~10 min
 npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
                      # client's templates. ~22s
 npm run validate     # 32 content rules; exits non-zero on any error. An error
