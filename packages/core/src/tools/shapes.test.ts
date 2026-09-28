@@ -70,8 +70,9 @@ const remember = (id: string, flag: string) => choice(id, [{ kind: 'flag', flag,
 const mark = (id: string, trait: string) => choice(id, [{ kind: 'trait', target: 'head', trait, op: 'add' }]);
 
 function noBlockerYears(): DensityRun['blockerSpan'] {
-  return Object.fromEntries(LADDER_BLOCKERS.map((blocker) => [blocker, 0]))
-    as DensityRun['blockerSpan'];
+  return Object.fromEntries(
+    LADDER_BLOCKERS.map((blocker) => [blocker, 0]),
+  ) as DensityRun['blockerSpan'];
 }
 
 function densityFixture(seed: number, top: ShapeFrequency[]): DensityRun {
