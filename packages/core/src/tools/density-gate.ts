@@ -62,10 +62,13 @@ import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { ambitionOptions, ambitionView } from '../ambition.js';
 import { foremostOf, type LadderBlocker } from '../ascension.js';
 import {
-  breakStallClock, makeStallClock, observeChoiceCheck, observePartyCheck, sampleStallClock,
-  type CheckAttemptObservation, type StallClock,
+  breakFailureTracker, breakStallClock, makeFailureTracker, makeStallClock,
+  noteCheckAttempt, noteOrderAttempt, observeChoiceCheck, observeOrderAttempt, observePartyCheck,
+  sampleStallClock, type FailureTracker, type StallClock,
 } from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
+import type { TableOrder } from '../table.js';
+import type { SimCtx } from '../world.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
   type DensityRun,
@@ -76,6 +79,15 @@ export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './densi
 export interface DensityOptions {
   /** Learn exact routine preferences from the first answer, then delegate repeats. */
   delegateRoutine?: boolean;
+  /**
+   * Optional table-playing policy for a measurement run.
+   *
+   * The established density player deliberately supplies none, which preserves
+   * the baseline in BALANCE-LOG. When a policy does supply an order, it is a
+   * REAL GameSession.order attempt: success changes that measurement run and
+   * failure is observed for #270's repeated-order streak.
+   */
+  tableOrder?: (ctx: SimCtx) => TableOrder | undefined;
 }
 
 /**
@@ -213,7 +225,21 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     // A streak scoped to one authored Age must not bridge a period where that
     // Age was not active, even if the same event/check reappears later.
     for (const [age, tracker] of ageFailures) {
-      if (!activeAges.has(age)) tracker.checkCurrent.clear();
+      if (!activeAges.has(age)) breakFailureTracker(tracker);
+    }
+
+    const tableOrder = opts.tableOrder?.(g.ctx);
+    if (tableOrder) {
+      const result = g.order(tableOrder);
+      const observed = observeOrderAttempt(tableOrder, result);
+      if (observed) {
+        noteOrderAttempt(campaignFailures, observed);
+        for (const age of activeAges) {
+          const tracker = ageFailures.get(age) ?? makeFailureTracker();
+          noteOrderAttempt(tracker, observed);
+          ageFailures.set(age, tracker);
+        }
+      }
     }
 
     let inner = 0;
@@ -425,29 +451,6 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     meaningfulChoices,
     meaningfulRecords,
   };
-}
-
-interface FailureTracker {
-  /** Longest failed-attempt streak seen for either source. */
-  check: number;
-  order: number;
-  /** Running streak by exact authored check + exact person. */
-  checkCurrent: Map<string, number>;
-}
-
-function makeFailureTracker(): FailureTracker {
-  return { check: 0, order: 0, checkCurrent: new Map() };
-}
-
-function noteCheckAttempt(tracker: FailureTracker, attempt: CheckAttemptObservation): void {
-  const key = `${attempt.check}::${attempt.person}`;
-  if (attempt.ok) {
-    tracker.checkCurrent.set(key, 0);
-    return;
-  }
-  const streak = (tracker.checkCurrent.get(key) ?? 0) + 1;
-  tracker.checkCurrent.set(key, streak);
-  tracker.check = Math.max(tracker.check, streak);
 }
 
 interface AmbitionTracker {
