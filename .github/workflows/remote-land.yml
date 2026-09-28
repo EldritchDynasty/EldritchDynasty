@@ -161,6 +161,12 @@ jobs:
         with:
           node-version: 22
 
+      - name: Reject negated closing keywords in pull request body
+        env:
+          CHECK_PR_BODY: '1'
+          PR_BODY: ${{ steps.pr.outputs.body }}
+        run: node tools/closing-keywords.mjs
+
       - name: Configure landing committer
         run: |
           git config user.name "github-actions[bot]"
