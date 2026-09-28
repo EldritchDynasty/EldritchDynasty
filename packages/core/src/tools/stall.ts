@@ -224,8 +224,9 @@ export interface StallClock {
 }
 
 function zeroBlockers(): Record<LadderBlocker, number> {
-  return Object.fromEntries(LADDER_BLOCKERS.map((blocker) => [blocker, 0]))
-    as Record<LadderBlocker, number>;
+  return Object.fromEntries(
+    LADDER_BLOCKERS.map((blocker) => [blocker, 0]),
+  ) as Record<LadderBlocker, number>;
 }
 
 export function makeStallClock(): StallClock {
