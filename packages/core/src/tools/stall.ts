@@ -409,7 +409,7 @@ function studyCanMove(
   if (blocker !== 'books' && blocker !== 'affinities') return false;
   const p = ctx.world.people.get(personId);
   if (!p) return false;
-  const householdGate = standingOf(ctx, p).rung === 'demigod';
+  const householdGate = p.rites.includes('unmaking');
 
   for (const row of table.shelf) {
     const def = ctx.content.spellbook(row.book);
@@ -439,7 +439,7 @@ function seekBookCanMove(
   if (blocker !== 'books' && blocker !== 'affinities') return false;
   const p = ctx.world.people.get(personId);
   if (!p) return false;
-  const householdGate = standingOf(ctx, p).rung === 'demigod';
+  const householdGate = p.rites.includes('unmaking');
   const personAffinities = knownAffinities(ctx, personId);
   const godMissing = householdGate ? missingGodAffinities(ctx) : undefined;
 
