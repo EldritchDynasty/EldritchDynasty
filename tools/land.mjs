@@ -68,7 +68,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync,
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { nodeModulesLinkType, npmInvocation } from './portable.mjs';
-import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';
+import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';\nimport { closingIssues } from './closing-keywords.mjs';
 
 /** This checkout, derived from the script rather than from the cwd. */
 const REPO = join(import.meta.dirname, '..');
