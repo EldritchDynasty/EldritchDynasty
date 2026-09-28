@@ -60,12 +60,15 @@ import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { ambitionOptions, ambitionView } from '../ambition.js';
-import { LADDER_BLOCKERS, foremostOf, type LadderBlocker } from '../ascension.js';
-import { blockerActionability, observeChoiceCheck, observePartyCheck, type CheckAttemptObservation } from './stall.js';
+import { foremostOf, type LadderBlocker } from '../ascension.js';
+import {
+  breakStallClock, makeStallClock, observeChoiceCheck, observePartyCheck, sampleStallClock,
+  type CheckAttemptObservation, type StallClock,
+} from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
-  type DensityRun, type StallSpans,
+  type DensityRun,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
 export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './density-report.js';
@@ -111,8 +114,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const ageShapeCounts = new Map<string, Map<string, number>>();
   const ageShapeChoices = new Map<string, number>();
   const categoryWindow: string[] = [];
-  const campaignStall = makeStallTracker();
-  const ageStalls = new Map<string, StallTracker>();
+  const campaignStall = makeStallClock();
+  const ageStalls = new Map<string, StallClock>();
   const ambitionTrackers = new Map<HouseAmbitionId, AmbitionTracker>(
     ambitionOptions(w.campaign).map((a) => [a.id, makeAmbitionTracker()]),
   );
@@ -159,8 +162,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     // make every interactive year look like waiting.
     const top = foremostOf(g.ctx);
     const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
-    const actionable = blockerActionability(g.ctx, blocker, top?.person.id).actionable;
-    noteStall(campaignStall, blocker, actionable);
+    sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
 
     // Ambitions are readings only (#210): selecting one does not alter the
     // simulation. Read every campaign-legal ambition off this SAME played year
@@ -179,12 +181,12 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
 
     const activeAges = new Set(w.age.active.map((a) => String(a.age)));
     for (const age of activeAges) {
-      const tracker = ageStalls.get(age) ?? makeStallTracker();
-      noteStall(tracker, blocker, actionable);
+      const tracker = ageStalls.get(age) ?? makeStallClock();
+      sampleStallClock(g.ctx, tracker, blocker, top?.person.id);
       ageStalls.set(age, tracker);
     }
     for (const [age, tracker] of ageStalls) {
-      if (!activeAges.has(age)) breakStall(tracker);
+      if (!activeAges.has(age)) breakStallClock(tracker);
     }
     // A streak scoped to one authored Age must not bridge a period where that
     // Age was not active, even if the same event/check reappears later.
@@ -442,56 +444,6 @@ function noteAmbition(tracker: AmbitionTracker, key: string): void {
 function noteAmbitionDecisions(tracker: AmbitionTracker, decisions: number): void {
   tracker.currentDecisions += decisions;
   tracker.decisions = Math.max(tracker.decisions, tracker.currentDecisions);
-}
-
-interface StallTracker extends StallSpans {
-  currentBlocker?: LadderBlocker;
-  currentSpan: number;
-  currentGapBlocker?: LadderBlocker;
-  currentGap: number;
-}
-
-function blockerYears(): Record<LadderBlocker, number> {
-  return Object.fromEntries(LADDER_BLOCKERS.map((blocker) => [blocker, 0]))
-    as Record<LadderBlocker, number>;
-}
-
-function makeStallTracker(): StallTracker {
-  return {
-    blockerSpan: blockerYears(),
-    actionableGap: blockerYears(),
-    currentSpan: 0,
-    currentGap: 0,
-  };
-}
-
-function breakStall(tracker: StallTracker): void {
-  tracker.currentBlocker = undefined;
-  tracker.currentSpan = 0;
-  tracker.currentGapBlocker = undefined;
-  tracker.currentGap = 0;
-}
-
-function noteStall(tracker: StallTracker, blocker: LadderBlocker, actionable: boolean): void {
-  if (tracker.currentBlocker === blocker) tracker.currentSpan += 1;
-  else {
-    tracker.currentBlocker = blocker;
-    tracker.currentSpan = 1;
-  }
-  tracker.blockerSpan[blocker] = Math.max(tracker.blockerSpan[blocker], tracker.currentSpan);
-
-  if (blocker === 'clear' || actionable) {
-    tracker.currentGapBlocker = undefined;
-    tracker.currentGap = 0;
-    return;
-  }
-
-  if (tracker.currentGapBlocker === blocker) tracker.currentGap += 1;
-  else {
-    tracker.currentGapBlocker = blocker;
-    tracker.currentGap = 1;
-  }
-  tracker.actionableGap[blocker] = Math.max(tracker.actionableGap[blocker], tracker.currentGap);
 }
 
 function bump(counts: Map<string, number>, key: string): void {
