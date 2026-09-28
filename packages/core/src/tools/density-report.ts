@@ -79,6 +79,8 @@ export interface DensityRun {
   stallAges: Record<string, StallSpans>;
   /** Longest unchanged ambition reading; raise_ascendant also moves when its foremost blocker changes. */
   ambitionFlat: Partial<Record<HouseAmbitionId, AmbitionFlat>>;
+  /** The same flat-reading clock scoped to each authored Age. */
+  ambitionFlatAges: Record<string, Partial<Record<HouseAmbitionId, AmbitionFlat>>>;
   /** Longest real failed-attempt streak for the same check/order and person. */
   repeatedFailure: RepeatedFailure;
   /** Choice presentations already settled by availability, shape or #219's guard. */
@@ -234,21 +236,33 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
   const ambitionHead = ['term', 'owner', 'ambition', 'flat years mean', 'flat years max', 'decisions mean', 'decisions max'];
   const ambitionBody: string[][] = [];
   for (const { term, runs } of rows) {
-    const ids = [...new Set(runs.flatMap((run) => Object.keys(run.ambitionFlat)))].sort() as HouseAmbitionId[];
-    for (const id of ids) {
-      const readings = runs.flatMap((run) => run.ambitionFlat[id] ? [run.ambitionFlat[id]!] : []);
-      if (!readings.length) continue;
-      const years = readings.map((x) => x.years);
-      const decisions = readings.map((x) => x.decisions);
-      ambitionBody.push([
-        String(term),
-        'ambition',
-        id,
-        mean(years).toFixed(1),
-        String(Math.max(...years)),
-        mean(decisions).toFixed(1),
-        String(Math.max(...decisions)),
-      ]);
+    const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.ambitionFlatAges)))].sort();
+    const scopes: [string, ((run: DensityRun) => Partial<Record<HouseAmbitionId, AmbitionFlat>> | undefined)][] = [
+      ['campaign', (run) => run.ambitionFlat],
+      ...ageIds.map((age): [string, (run: DensityRun) => Partial<Record<HouseAmbitionId, AmbitionFlat>> | undefined] =>
+        [`age:${age}`, (run) => run.ambitionFlatAges[age]]),
+    ];
+
+    for (const [scope, pick] of scopes) {
+      const readingsByRun = runs.map(pick).filter(
+        (x): x is Partial<Record<HouseAmbitionId, AmbitionFlat>> => x !== undefined,
+      );
+      const ids = [...new Set(readingsByRun.flatMap((reading) => Object.keys(reading)))].sort() as HouseAmbitionId[];
+      for (const id of ids) {
+        const readings = readingsByRun.flatMap((reading) => reading[id] ? [reading[id]!] : []);
+        if (!readings.length) continue;
+        const years = readings.map((x) => x.years);
+        const decisions = readings.map((x) => x.decisions);
+        ambitionBody.push([
+          String(term),
+          scope,
+          id,
+          mean(years).toFixed(1),
+          String(Math.max(...years)),
+          mean(decisions).toFixed(1),
+          String(Math.max(...decisions)),
+        ]);
+      }
     }
   }
   if (ambitionBody.length) {
