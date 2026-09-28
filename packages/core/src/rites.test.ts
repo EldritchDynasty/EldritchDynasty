@@ -603,7 +603,7 @@ describe('broader adviser voices', () => {
     expect(hers?.adviser.id).toBe(midwife.id);
     expect(hers?.cares).toContain('births');
     expect(hers?.position).toContain('Ysabet');
-    expect(hers?.position).toContain('witnessed childbearing');
+    expect(hers?.position).toContain('witnessed birth history');
     expect(hers?.position).not.toMatch(/fecund|probab|genome/i);
   });
 
