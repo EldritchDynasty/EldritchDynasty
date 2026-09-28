@@ -8726,3 +8726,25 @@ it is left to that instrument's owner.
 
 No threshold is set. The next useful number is the shape overlap after a
 content pass that targets repeated categories.
+
+---
+
+## Campaign difference baseline (#274) — 27 September 2026
+
+Before the played-reach report existed, the issue measured the same seeds in both campaign shapes.
+This is the baseline the report is meant to keep reproducible; it is a finding, not a threshold.
+
+| measure | A Short Line | A Long Line |
+|---|---:|---:|
+| reached the term (seeds 901–912) | 5/12 | 4/12 |
+| distinct events fired | 241 | 280 |
+| events seen in Long and never in Short | — | 56 |
+| late-Long decisions measured | — | 123 |
+| late-Long decisions with a category shape absent from Short | — | 6/123 (5%) |
+
+The highest-rung distribution was identical in the paired sample: adept 5 · hierophant 3 · vessel 1 · touched 1 · none 2.
+The first shared-seed decision streams diverged after 21–37 decisions (roughly 1090–1150), while 44–79% of Long's pre-1342 decisions still occurred in Short in the same year.
+The ordinary chronicler ending sample reached no Long-only ending; the ascendant ending measurement at the time reached Apotheosis in 1% and Unmade in 6%.
+
+`npm run gate:campaigns -- 12` now prints the static inventory beside played reach under both chronicler and ascendant policies.
+Its played row deliberately reports rather than judges until enough runs establish a stable campaign-exclusive reach band.
