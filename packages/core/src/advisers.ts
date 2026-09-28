@@ -40,11 +40,18 @@ const SURFACE_LENS: Record<AdviceSurface, AdviserLens[]> = {
   choice: ['old_head', 'close_kin', 'steward', 'reader', 'priest', 'soldier', 'broker'],
 };
 
+function eventHasRite(d: Extract<PendingDecision, { kind: 'choice' }>): boolean {
+  const interaction = d.event.interaction;
+  const outcomes = interaction.kind === 'narration'
+    ? interaction.outcomes
+    : interaction.choices.flatMap((choice) => choice.outcomes);
+  return outcomes.some((outcome) => outcome.effects.some((effect) => effect.kind === 'rite'));
+}
+
 function surfaceOf(d: PendingDecision): AdviceSurface {
   if (d.kind === 'match') return 'match';
   if (d.kind === 'record') return 'record';
-  const words = `${d.event.id} ${d.event.title}`.toLowerCase();
-  return words.includes('rite') || words.includes('ritual') ? 'rite' : 'choice';
+  return eventHasRite(d) ? 'rite' : 'choice';
 }
 
 function lensOf(ctx: SimCtx, p: Person): { lens: AdviserLens; cares: string } | undefined {
