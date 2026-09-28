@@ -44,7 +44,7 @@ import {
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, mentions, actions,
 } = game;
 
 /**
