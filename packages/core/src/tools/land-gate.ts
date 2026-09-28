@@ -10,12 +10,13 @@
  */
 import { loadContent } from '@ed/content';
 import { indexContent, type Content, type ContentBundle, type EventTemplate } from '@ed/schema';
-import { buyParcel, heldParcels, landView, sellParcel } from '../land.js';
+import { LAND_RISK_ROUTES, buyParcel, heldParcels, landView, sellParcel } from '../land.js';
 import { clearNamingQueue } from '../sim.js';
 import { autoResolveAll, resolveChoice, type PendingChoice } from '../events/decisions.js';
 import { hashSeed, makeRng } from '../rng.js';
 import { bootstrap } from '../sim.js';
 import { stepYear } from '../year/step.js';
+import { landRiskRoutes } from './land-routes.js';
 import { expectMean, expectRate } from '../testing.js';
 import { CAMPAIGN_YEARS, END_YEAR, START_YEAR } from '../campaign.js';
 
@@ -156,8 +157,7 @@ function runLand(source: Source, seed: number, years: number): LandRun {
   for (let turn = 0; turn < years && w.year < END_YEAR && !w.ending; turn++) {
     const beforeAcres = acreage(ctx);
     const logAt = w.decisionLog.length;
-    const chronicleAt = w.chronicle.length;
-    stepYear(ctx, false);
+    const report = stepYear(ctx, false);
 
     let guard = 0;
     while (w.pendingDecisions.length && guard++ < 200) {
@@ -176,16 +176,11 @@ function runLand(source: Source, seed: number, years: number): LandRun {
         latestChange = w.year;
       }
     }
-    if (w.chronicle.slice(chronicleAt).some((c) => c.text?.includes('black water off Sarrow'))) {
-      routes.add('sarrow_sink');
-      latestChange = w.year;
-    }
-    // Blight (issue #91, Stage G) is the same shape as the Sarrow sink above:
-    // an engine-tick risk (`tickLandRisks`), never an authored `land` effect,
-    // so `declaredRoutes` below cannot find it by scanning content and it is
-    // named here by hand instead.
-    if (w.chronicle.slice(chronicleAt).some((c) => c.text?.includes('Blight took hold in'))) {
-      routes.add('blight');
+    // Blight and the Sarrow sink (issue #91) are engine-tick risks, never an
+    // authored `land` effect, so `declaredRoutes` below cannot find them by
+    // scanning content; the year's report names them instead (issue #276).
+    for (const route of landRiskRoutes(report)) {
+      routes.add(route);
       latestChange = w.year;
     }
 
@@ -231,7 +226,7 @@ function runLand(source: Source, seed: number, years: number): LandRun {
 function declaredRoutes(source: Source): { acquisition: string[]; loss: string[] } {
   const content = indexContent(source);
   const acquisition = new Set<string>(['purchase']);
-  const loss = new Set<string>(['sale', 'sarrow_sink', 'blight']);
+  const loss = new Set<string>(['sale', ...LAND_RISK_ROUTES]);
   for (const event of content.events) {
     const outcomes = event.interaction.kind === 'narration'
       ? event.interaction.outcomes
