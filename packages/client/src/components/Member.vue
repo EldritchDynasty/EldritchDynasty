@@ -11,8 +11,14 @@ const props = defineProps<{
   names: SessionView['attributes'];
   traitNames: SessionView['traits'];
   open: boolean;
+  showRelevance?: boolean;
+  mentions?: (person: string) => { id: string; year: number }[];
 }>();
-defineEmits<{ (e: 'select', id: string): void; (e: 'line'): void }>();
+defineEmits<{
+  (e: 'select', id: string): void;
+  (e: 'line'): void;
+  (e: 'book', page: string): void;
+}>();
 
 /**
  * WHAT THE BOOK SAYS ABOUT THEM, and only that (issue #19).
@@ -79,13 +85,22 @@ const foundling = computed(() => {
   const t = props.member.parents;
   return r.mother !== t.mother || r.father !== t.father;
 });
+
+const relevance = computed(() => props.showRelevance ? (props.member.relevance ?? []) : []);
+const succession = computed(() => {
+  if (props.member.succession === 'heir') return 'next to hold the seal';
+  if (props.member.succession === 'possible') return 'may hold the seal';
+  return undefined;
+});
+const mentionPages = computed(() =>
+  props.open && props.mentions ? props.mentions(props.member.id) : []);
 </script>
 
 <template>
   <div
     :id="'member-' + member.id"
     class="member"
-    :class="{ open, head: member.head, drift: member.drift, consumed }"
+    :class="{ open, head: member.head, drift: member.drift, consumed, relevant: relevance.length > 0 }"
   >
     <button
       class="face"
@@ -112,6 +127,14 @@ const foundling = computed(() => {
       </span>
     </button>
 
+    <div v-if="succession" class="succession small rubric">{{ succession }}</div>
+    <div v-if="relevance.length" class="relevance small">
+      <span class="rubric">For the plan:</span>
+      <span v-for="(item, i) in relevance" :key="item.reason">
+        <span v-if="i" class="dim"> · </span>{{ item.reason }}
+      </span>
+    </div>
+
     <!-- WHERE SHE CAME FROM, on the row (issue #56). §7's market is houses
          trading blood, so the house a spouse married in from is the one fact
          about her the tree has to carry — and it lived inside a card. -->
@@ -132,6 +155,18 @@ const foundling = computed(() => {
         of {{ member.spouse.house }}</span>
       </div>
       <div v-if="member.contract" class="small dim">holds a contract as {{ member.contract }}</div>
+      <div v-if="member.post" class="small dim">holds a post as {{ member.post }}</div>
+      <div v-if="mentionPages.length" class="small mentions">
+        <span class="dim">In the book:</span>
+        <button
+          v-for="page in mentionPages"
+          :key="page.id"
+          type="button"
+          class="quiet small"
+          :data-mention="page.id"
+          @click.stop="$emit('book', page.id)"
+        >{{ page.year }}</button>
+      </div>
       <!-- Only from the seat, and only when the card is open (issue #56). The
            halls are the living household; the line behind them is a different
            question, asked from the person currently answering it. -->
@@ -164,6 +199,7 @@ const foundling = computed(() => {
   background: var(--panel); padding: 6px 9px; min-width: 190px;
 }
 .member.head { border-color: var(--rubric); }
+.member.relevant { box-shadow: inset 3px 0 0 var(--rubric); }
 .member.consumed { border-style: dashed; opacity: 0.55; }
 .given { color: var(--rubric); }
 .member.open { background: var(--vellum-deep); }
@@ -181,6 +217,10 @@ const foundling = computed(() => {
 .carries { color: var(--ink-soft); }
 .drift { color: var(--ink-faint); }
 .claimed { display: flex; gap: 9px; margin-top: 3px; font-size: var(--t-label); }
+.succession { margin-top: 2px; }
+.relevance { margin-top: 4px; line-height: 1.35; }
+.mentions { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.mentions button { padding: 0 2px; }
 .from { margin-top: 2px; }
 .detail { margin-top: 8px; border-top: 1px solid var(--rule); padding-top: 7px; display: grid; gap: 4px; }
 .attrs { border-collapse: collapse; width: 100%; }
