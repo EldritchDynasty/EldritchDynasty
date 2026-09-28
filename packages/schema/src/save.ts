@@ -624,6 +624,12 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
       lineSeen: z.number().default(0),
       words: z.string().default(''),
       /**
+       * The market's word on the house's blood, as a word rather than a
+       * sentence (issue #276). Optional: a card saved before it existed loads
+       * as one the market said nothing structured about.
+       */
+      blood: z.enum(['deep', 'drop']).optional(),
+      /**
        * The papers (concept §7). Defaulted for the same reason `line` is: a
        * save written before the dowry was documentation still loads, as a hand
        * nobody asked a pedigree of — which is what those hands were.

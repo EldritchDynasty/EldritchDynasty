@@ -51,6 +51,9 @@ import { externalThreadFor } from '../relationship-threads.js';
  * later card can be recognisably the same person without ever minting the decline.
  */
 
+/** What the market says of a house's blood. See `MatchCard.blood`. */
+export type BloodWord = 'deep' | 'drop';
+
 export interface MatchCard {
   id: string;
   /** Someone already alive, or a recipe for someone who would arrive. */
@@ -82,6 +85,14 @@ export interface MatchCard {
    * use, which requires it to be somewhere a player can read it.
    */
   words: string;
+  /**
+   * The market's word on her HOUSE's blood — the same fact `words` says in
+   * English, kept as a word a rule can read. `deep` is "deep blood", `drop` is
+   * "a drop of it, they say"; absent, the market says neither. `matchFuture`
+   * reads this and never the sentence, so rewording or translating the
+   * broker (issue #276) cannot change which future a card is read as.
+   */
+  blood?: BloodWord;
   /**
    * How many completed lives that word rests on. Zero is `unknown`; one is her
    * mother and nothing else, which the player should be told before he bets a
@@ -189,10 +200,10 @@ export function matchFuture(card: MatchCard, priorities: MatchFutureKind[] = [])
     blood.score += 2;
     blood.reasons.push('the family papers still join these two lines');
   }
-  if (card.words.includes('deep blood')) {
+  if (card.blood === 'deep') {
     blood.score += 3;
     blood.reasons.push(`${card.houseName} is spoken of as deep blood`);
-  } else if (card.words.includes('a drop of it')) {
+  } else if (card.blood === 'drop') {
     blood.score += 1;
     blood.reasons.push(`${card.houseName} is said to carry a drop of the old blood`);
   }
@@ -993,6 +1004,9 @@ function priceIn(ctx: SimCtx, card: MatchCard, subject: Person): void {
   card.papersAsked = papersDemanded(card.dowry, card.kinship, deep);
   card.papersShown = papersHeld(ctx, subject);
 
+  const said = bloodWord(deep);
+  if (said) card.blood = said;
+  else delete card.blood;
   card.words = marketWords(ctx, card);
 
   // ELIGIBILITY BEFORE COIN. Both ends of the pairing must still be able to
@@ -1033,6 +1047,17 @@ const MAX_ASK_SHARE = 0.25;
 const FAVOURED_TERMS = 0.55;
 
 /**
+ * The market's word on a house's blood, from how often its daughters are known
+ * to carry. Decided once, here, so the sentence the broker says and the score
+ * `matchFuture` gives can never disagree about which word was said.
+ */
+export function bloodWord(fontCarrierRate: number): BloodWord | undefined {
+  if (fontCarrierRate >= 0.04) return 'deep';
+  if (fontCarrierRate > 0) return 'drop';
+  return undefined;
+}
+
+/**
  * THE MARKET HAS A VOCABULARY (§7), and it was never on the card.
  *
  * "Deep blood." "A thin line." "A bought grandmother." The concept is explicit
@@ -1046,7 +1071,6 @@ const FAVOURED_TERMS = 0.55;
 function marketWords(ctx: SimCtx, card: MatchCard): string {
   const w = ctx.world;
   const house = w.houses.get(card.house);
-  const deep = house?.genePool?.fontCarrierRate ?? 0;
 
   const said: string[] = [];
 
@@ -1056,8 +1080,8 @@ function marketWords(ctx: SimCtx, card: MatchCard): string {
   else if (card.kinship >= 0.0625) said.push('close kin');
   else if (card.kinship > 0) said.push('kin, at a distance');
 
-  if (deep >= 0.04) said.push('deep blood');
-  else if (deep > 0) said.push('a drop of it, they say');
+  if (card.blood === 'deep') said.push('deep blood');
+  else if (card.blood === 'drop') said.push('a drop of it, they say');
 
   if (card.line === 'fertile') said.push('a full line');
   else if (card.line === 'thin') said.push('a thin line');
