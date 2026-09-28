@@ -11,7 +11,7 @@ import { acquireLibraryCopy, canStudySpellbook } from '../people/library.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
 import type { SimCtx } from '../world.js';
-import { blockerActionability, blockerLevers } from './stall.js';
+import { blockerActionability, blockerLevers, makeStallClock, sampleStallClock } from './stall.js';
 
 const bundle = loadContent();
 
@@ -71,6 +71,10 @@ describe('#270 strategic-stall actionability', () => {
     const result = blockerActionability(ctx, 'books');
     expect(result.actionable).toBe(true);
     expect(result.verbs).toContain('study');
+
+    const clock = makeStallClock();
+    sampleStallClock(ctx, clock, 'books', him.id);
+    expect(clock.actionableGap.books).toBe(0);
   });
 
   it('lets a real power blocker accumulate a gap when no Match or widening rite is offered', () => {
@@ -86,5 +90,10 @@ describe('#270 strategic-stall actionability', () => {
 
     const result = blockerActionability(ctx, 'power');
     expect(result).toEqual({ actionable: false, verbs: [] });
+
+    const clock = makeStallClock();
+    sampleStallClock(ctx, clock, 'power', him.id);
+    sampleStallClock(ctx, clock, 'power', him.id);
+    expect(clock.actionableGap.power).toBe(2);
   });
 });
