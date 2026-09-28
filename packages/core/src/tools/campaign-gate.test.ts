@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { indexContent, type CampaignId } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
-import { campaignStaticLines, campaignStaticReport, conditionTruths } from './campaign-gate.js';
+import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, conditionTruths } from './campaign-gate.js';
+import type { EndingRun } from './ending-gate.js';
 
 describe('static campaign difference report', () => {
   const content = indexContent(loadContent());
@@ -73,5 +74,36 @@ describe('static campaign difference report', () => {
     expect(text).toContain('A Long Line (500 years)');
     expect(text).toContain('exclusive endings: apotheosis, unmade');
     expect(text).toContain('clauses: up to 3 of 9 authored');
+  });
+  it('counts only campaign-exclusive material a played run actually reaches', () => {
+    const staticReport = {
+      campaigns: [
+        { id: 'short', name: 'A Short Line', years: 300, clauseCapacity: 3, authoredClauses: [], endings: ['settled'], exclusiveEndings: ['settled'], rungs: [], rites: [], exclusiveEvents: ['short_only'], exclusiveArcs: [] },
+        { id: 'long', name: 'A Long Line', years: 500, clauseCapacity: 9, authoredClauses: [], endings: ['apotheosis'], exclusiveEndings: ['apotheosis'], rungs: [], rites: [], exclusiveEvents: ['late_long', 'never_seen'], exclusiveArcs: [] },
+      ],
+    } as ReturnType<typeof campaignStaticReport>;
+    const run = {
+      seed: 901, policy: 'ascendant', ending: 'apotheosis', clauses: 5,
+      templateFires: { late_long: 2, ordinary: 10 },
+    } as EndingRun;
+
+    expect(campaignReachOf(run, 'long', 'ascendant', staticReport)).toMatchObject({
+      exclusiveEvents: ['late_long'],
+      exclusiveEnding: 'apotheosis',
+      beyondShortClauses: 2,
+      exclusiveItems: 4,
+    });
+  });
+
+  it('summarises played reach without turning the baseline into a threshold', () => {
+    const lines = campaignPlayedLines({ runs: [
+      { seed: 1, campaign: 'long', policy: 'ascendant', ending: 'forgotten', clauses: 3, exclusiveEvents: [], beyondShortClauses: 0, exclusiveItems: 0 },
+      { seed: 2, campaign: 'long', policy: 'ascendant', ending: 'apotheosis', clauses: 5, exclusiveEvents: ['late_long'], exclusiveEnding: 'apotheosis', beyondShortClauses: 2, exclusiveItems: 4 },
+    ] });
+    const text = lines.join('\n');
+    expect(text).toContain('A Long Line / ascendant: 2 runs');
+    expect(text).toContain('reached campaign-exclusive material: 1/2');
+    expect(text).toContain('exclusive endings: apotheosis 1/2');
+    expect(text).toContain("beyond Short's clause capacity: 1/2");
   });
 });
