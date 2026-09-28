@@ -27,7 +27,7 @@ const emit = defineEmits<{ (e: 'select', id: string): void; (e: 'line'): void }>
 const hallFilter = ref<string>('all');
 
 type HallView = SessionView['halls'][number];
-type MemberFilter = 'all' | 'head' | 'succession' | 'married' | 'unmarried' | 'post' | 'cadet' | 'awakened';
+type MemberFilter = 'all' | 'head' | 'succession' | 'married' | 'unmarried' | 'cadet' | 'awakened';
 
 const MEMBER_FILTERS: { id: MemberFilter; label: string }[] = [
   { id: 'all', label: 'Everyone' },
@@ -35,7 +35,6 @@ const MEMBER_FILTERS: { id: MemberFilter; label: string }[] = [
   { id: 'succession', label: 'Heir / possible' },
   { id: 'married', label: 'Married' },
   { id: 'unmarried', label: 'Unmarried' },
-  { id: 'post', label: 'In post' },
   { id: 'cadet', label: 'Cadet hall' },
   { id: 'awakened', label: 'Awakened' },
 ];
@@ -56,7 +55,6 @@ function matchesMemberFilter(member: MemberView, hall: HallView): boolean {
     case 'succession': return member.succession !== undefined;
     case 'married': return member.spouse !== undefined;
     case 'unmarried': return member.spouse === undefined;
-    case 'post': return member.contract !== undefined;
     case 'cadet': return !hall.isSeat;
     case 'awakened': return member.awakened;
   }
