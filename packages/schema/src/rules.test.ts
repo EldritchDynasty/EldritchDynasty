@@ -196,6 +196,15 @@ describe('the content rules', () => {
     expect(runRule('refs/known', b).some((i) => i.message.includes('clause_that_is_not'))).toBe(true);
   });
 
+  it('catches a tale concern naming a house that does not exist', () => {
+    const b = withEvents((x) => {
+      x.tales[0]!.houses = ['house_that_is_not'];
+    });
+    expect(runRule('refs/known', b).some((i) =>
+      i.level === 'error' && i.message.includes('house_that_is_not'),
+    )).toBe(true);
+  });
+
   /** Issue #14: the ballad content already names thirteen dangling tale ids before this file exists. */
   it('catches an event accounting for a tale that does not exist', () => {
     const b = withEvents((x) => { x.events[0]!.accounts = ['no_such_tale']; });
