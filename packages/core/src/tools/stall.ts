@@ -7,6 +7,7 @@ import {
   type LadderBlocker,
 } from '../ascension.js';
 import { tableView, type RiteAssembly } from '../table.js';
+import { canStudySpellbook } from '../people/library.js';
 import type { PendingChoice, PendingDecision, PendingRecord } from '../events/decisions.js';
 import { evalCheck } from '../events/checks.js';
 import { streamFor } from '../rng.js';
@@ -444,8 +445,23 @@ function seekBookCanMove(
 
   return table.missingPrimers.some((book) => {
     if (book.queued) return false;
-    if (blocker === 'books') return true;
-    return householdGate ? godMissing!.has(book.affinity) : !personAffinities.has(book.affinity);
+    const def = ctx.content.spellbook(book.book);
+    if (!def) return false;
+
+    if (!householdGate) {
+      if (!canStudySpellbook(ctx, p, def).ok) return false;
+      if (p.spellsKnown.some((known) => String(known) === book.book)) return false;
+      return blocker === 'books' || !personAffinities.has(book.affinity);
+    }
+
+    // The final circle is a LIVING-HOUSEHOLD predicate. A brokered replacement
+    // for a volume somebody living already knows cannot increase book count;
+    // nor is an opposed affinity useful unless the pair is wholly missing.
+    const readers = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .filter((reader) => reader.status === 'alive' && canStudySpellbook(ctx, reader, def).ok);
+    if (!readers.length) return false;
+    if (blocker === 'books') return !livingHouseholdKnows(ctx, book.book);
+    return godMissing!.has(book.affinity);
   });
 }
 
