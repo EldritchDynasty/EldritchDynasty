@@ -57,7 +57,6 @@ events:
                 which the house does not find out for two years and does not
                 stop being frightened about in the meantime.
               effects:
-                - { kind: flag, flag: wrote_to_corran_plainly, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_letters_to_anvary, accuracy: 0.3 }
         - id: answer_nothing
           label: Answer around it. Weather, prices, his sister's marriage.
@@ -221,7 +220,6 @@ events:
             letter, warranted in Terra and carrying the paper for it. What this
             house decided about him is written below. What he actually was is
             not written anywhere, because nobody ever established it.
-          grantsKnowledge: knows_the_corran_return
           claims:
             - { kind: deed, target: { slot: SON }, text: came back from Bramme nine years later warranted in Terra, with his identity unproved }
         omit:
