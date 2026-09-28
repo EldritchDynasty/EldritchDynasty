@@ -1,11 +1,27 @@
 # Product playtest protocol
 
 This is an optional product-research runbook for observing first-time players.
-It preserves questions and thresholds developed while #24, #35, #36, #60, #85,
-#103 and #213 were active. Those issue numbers are provenance, not current
-acceptance gates: #24, #35, #60, #85, #103 and #213 are closed, and #36 now
-defines its remaining acceptance as automated/measurable engineering evidence.
-A live issue body, not this file, is the authority on what closes that issue.
+It preserves questions and thresholds developed while #24, #35, #36, #44, #60,
+#72, #85, #103 and #213 were active. Those issue numbers are provenance, not
+acceptance gates.
+
+**Every human acceptance test those issues named was waived by the owner on
+2026-09-28** (#324, #335). None of them was run. The waiver covers:
+
+| Test | From |
+|---|---|
+| Five first-timers finish A Short Line unaided and name what the house was for | #60 |
+| A second Short Line diverges, and the player names the decision that did it | #35 |
+| Blind early-third vs late-third chronicle reading | #85 |
+| A full run with a screen reader on and the display off, by a non-team tester | #72 |
+| After a loss, the player blames a decision rather than a number | #36 |
+| Women read as people, not inventory; the deleterious load reads as a risk | #24 items 3 and 5 |
+| The player can name three people from the run | #44 |
+
+Waived means not owed, not passed. Nothing here is evidence that any of these
+held. Running the protocol below is still worthwhile product research, and a
+failed observation should open a narrow follow-up rather than reopen the
+original issue.
 
 The rule is simple: **record first, interpret second, tune last**.
 
