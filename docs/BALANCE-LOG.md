@@ -57,6 +57,44 @@ written down is so it is not learned a sixth.
 
 ---
 
+## Interaction-shape baseline (#271) — 28 September 2026
+
+The old repetition instrument asked whether an **event id** had appeared before.
+That misses the player-facing treadmill where different scenes ask the same
+mechanical question. #271 adds two coarser projections over only the choices
+that are actually available: exact effect **kind** sets and #266 effect
+**categories**. Ids, prose, purposes, slot names, authored option order,
+magnitudes and outcome weights are deliberately absent.
+
+The current instrument was measured on the same 25 seeds already paid for by
+`attention.slow.test.ts`:
+
+`901, 902, 903, 904, 905, 913, 914, 916, 918, 919, 920, 921, 924, 927, 928, 930, 931, 932, 934, 940, 941, 942, 943, 947, 951`.
+
+| measure | Long 500 | Short 300 |
+|---|---:|---:|
+| choices / run | 126 | 78 |
+| event-id repeat, run / Age | 25% / 3% | 21% / 3% |
+| effect-kind repeat, run / Age | 32.4% / 4.0% | 25.8% / 3.7% |
+| category repeat, run / Age | **52.04% / 10.25%** | **44.12% / 10.36%** |
+| category repeat excluding predetermined, run / Age | 49.55% / 9.13% | 41.77% / 9.28% |
+| largest share of one category shape in a 20-choice window | 21.80% | 20.20% |
+| predetermined presentations | 12.25% | 11.05% |
+
+For the within-Age category figure, two standard errors were **1.88 percentage
+points** Long and **2.06 points** Short. The regression band is therefore
+**6–15%** in `attention.slow.test.ts`: wide enough to clear sampling noise on
+both terms, narrow enough to catch a material structural shift. The 20-choice
+window is **not** judged yet; one measured baseline tells us what exists, not
+what the right local concentration is.
+
+The acceptance sweep `npm run gate:density -- 12 500 300` on the same code
+also reproduced the same order of magnitude: Long category repeat **52.1% /
+10.4%**, Short **45.3% / 9.7%**, with predetermined shares **12.4% / 12.8%**.
+The useful finding is that the within-Age category signal is effectively
+campaign-invariant even though the whole-run repeat necessarily rises with a
+longer term.
+
 ## What is built, and what is not
 
 Verified against the code on 2026-08-23; `npm run check` green.
