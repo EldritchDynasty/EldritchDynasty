@@ -248,6 +248,48 @@ describe('the matchmaker’s panel', () => {
     expect(Object.keys(row!)).not.toContain('accuracy');
   });
 
+  it('keeps house relevance when the tale no longer names the house in English', () => {
+    const b = structuredClone(content.bundle);
+    const tale = b.tales.find((t) => t.id === 'marrow_chronicle_fragment_1188')!;
+    expect(tale.houses).toContain('house_marrow');
+    tale.teller = 'the red-bound clerks';
+    tale.text = 'A hostile account survives in a red book, with no family name in the wording.';
+
+    const reworded = indexContent(b);
+    const ctx = testWorld(reworded, 907, 1200);
+    ctx.world.tales.set(tale.id, {
+      bornYear: 1188, circulatesFrom: 1193, circulating: true, mutations: 0,
+    });
+
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Marra', house: 'house_marrow' });
+    const card = cardFor(girl);
+    card.house = 'house_marrow';
+    readPanel(ctx, card, census());
+
+    expect(card.panel.said.find((r) => r.tale === tale.id)).toBeDefined();
+  });
+
+  it('does not invent house relevance because free prose happens to name a house', () => {
+    const b = structuredClone(content.bundle);
+    const tale = b.tales.find((t) => t.id === 'ballad_of_the_thumb_sized_bottle')!;
+    expect(tale.houses).toEqual([]);
+    tale.teller = 'House Marrow';
+    tale.text = 'House Marrow is named here only to prove that wording is not a rule.';
+
+    const reworded = indexContent(b);
+    const ctx = testWorld(reworded, 907, 1200);
+    ctx.world.tales.set(tale.id, {
+      bornYear: 1188, circulatesFrom: 1193, circulating: true, mutations: 0,
+    });
+
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Marra', house: 'house_marrow' });
+    const card = cardFor(girl);
+    card.house = 'house_marrow';
+    readPanel(ctx, card, census());
+
+    expect(card.panel.said.find((r) => r.tale === tale.id)).toBeUndefined();
+  });
+
   /**
    * AND A TALE NOBODY HAS HEARD YET IS NOT SOMETHING A MATCHMAKER CAN REPEAT.
    * `circulating` is the whole of the difference between a tale whose event
