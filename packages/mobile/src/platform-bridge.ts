@@ -76,6 +76,10 @@ const platform = {
     await Preferences.set({ key: LIBRARY_KEY, value: JSON.stringify(library) });
   },
 
+  // Deliberately local/no-op: adding Play Games would require sign-in/network
+  // and would invalidate the store's current no-data-transmitted declaration.
+  async unlockAchievement(): Promise<void> {},
+
   async readUserContent(): Promise<Record<string, string>> {
     return {};
   },
