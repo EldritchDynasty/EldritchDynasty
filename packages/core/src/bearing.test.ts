@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { bearingWordsIn } from '@ed/schema';
 import {
-  ECHO_AFTER, REMEMBERED_AFTER, answeredBy, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
+  ECHO_AFTER, REMEMBERED_AFTER, answeredBy, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
   testWorld, tickBearing, type BearingAct,
 } from '@ed/core';
 
@@ -78,7 +79,7 @@ describe('bearing is read off acts, not off fortune', () => {
   it('echoes concrete record, match, and land acts before any of them are billed', () => {
     const ctx = testWorld(content, 7008);
     ctx.world.year = 1042;
-    noteBearing(ctx, 'wrote_it_larger', 'the claim recorded as black_stair_account');
+    noteBearing(ctx, 'wrote_it_larger', 'the page headed "The Black Stair"');
     noteBearing(ctx, 'refused_a_hand', 'the hand offered to Ysabel');
     noteBearing(ctx, 'bit_the_common', 'West Mere');
 
@@ -92,7 +93,7 @@ describe('bearing is read off acts, not off fortune', () => {
     tickBearing(ctx);
     const echoes = ctx.world.chronicle.slice(before).map((e) => e.text ?? '');
     expect(echoes).toHaveLength(3);
-    expect(echoes.some((e) => e.includes('black_stair_account'))).toBe(true);
+    expect(echoes.some((e) => e.includes('The Black Stair'))).toBe(true);
     expect(echoes.some((e) => e.includes('Ysabel'))).toBe(true);
     expect(echoes.some((e) => e.includes('West Mere'))).toBe(true);
     expect(ctx.world.bearing.score, 'the echo is presentation, not the bill').toBe(0);
@@ -105,12 +106,52 @@ describe('bearing is read off acts, not off fortune', () => {
     expect(ctx.world.bearing.score, 'the existing bearing owner still resolves the bill').toBeGreaterThan(0);
   });
 
+  /**
+   * AN ECHO SAYS ONLY WHAT IS TRUE THE YEAR IT IS WRITTEN (issue #326).
+   * It comes a generation before the act enters the reading, so no echo may
+   * claim a consequence — the refused hand's once said the letters had
+   * thinned, twenty-five years before the market dealt one card fewer.
+   */
+  it('writes its echo before the bill, and claims no consequence the bill has not paid', () => {
+    expect(ECHO_AFTER).toBeLessThan(REMEMBERED_AFTER);
+    const ctx = testWorld(content, 7011);
+    ctx.world.year = 1042;
+    noteBearing(ctx, 'refused_a_hand', 'the hand offered to Ysabel');
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    const echo = ctx.world.chronicle.at(-1)!.text ?? '';
+    expect(echo).toContain('Ysabel');
+    expect(ctx.world.bearing.score, 'the refusal is not in the reading yet').toBe(0);
+    expect(echo, 'the echo reports a thinner market the engine has not dealt').not.toMatch(/fewer|less|thinn|no longer/i);
+  });
+
+  it('never names bearing in an echo (concept §29 rule 1, the prose/bearing vocabulary)', () => {
+    // A Record keyed by the union, so the compiler holds this to every act kind.
+    const every: Record<BearingAct, true> = {
+      wrote_it_larger: true, refused_a_hand: true, kept_her_back: true, took_the_cousin: true, bit_the_common: true,
+    };
+    for (const kind of Object.keys(every) as BearingAct[]) {
+      expect(bearingWordsIn(echoText({ year: 1100, kind, about: 'the matter' })), kind).toEqual([]);
+    }
+  });
+
+  it('names the year, never a generic "old decision", when an act carries no subject', () => {
+    const ctx = testWorld(content, 7012);
+    ctx.world.year = 1077;
+    noteBearing(ctx, 'bit_the_common');
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    const echo = ctx.world.chronicle.at(-1)!.text ?? '';
+    expect(echo).toContain('1077');
+    expect(echo).not.toMatch(/old decision/);
+  });
+
   it('links every delayed echo back to the act it answers, exhaustively', () => {
     const ctx = testWorld(content, 7009);
     ctx.world.year = 1042;
 
     const acts: { kind: BearingAct; about: string; page?: string }[] = [
-      { kind: 'wrote_it_larger', about: 'the claim recorded as salt_account', page: 'chr_source_lie' },
+      { kind: 'wrote_it_larger', about: 'the page headed "The Salt Account"', page: 'chr_source_lie' },
       { kind: 'refused_a_hand', about: 'the hand offered to Agnes' },
       { kind: 'kept_her_back', about: 'Ysabel' },
       { kind: 'took_the_cousin', about: 'Margery marrying Thomas' },

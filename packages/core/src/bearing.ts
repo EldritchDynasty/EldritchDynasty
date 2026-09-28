@@ -253,13 +253,24 @@ export function noteBearing(ctx: SimCtx, kind: BearingAct, about?: string, page?
   });
 }
 
-function echoText(entry: BearingEntry): string {
-  const about = entry.about ?? 'an old decision of the house';
+/**
+ * The echo's line, one per act kind. Each says only what is TRUE the year it
+ * is written (issue #326): an echo comes at `ECHO_AFTER`, a generation before
+ * `bearingOf` counts the act at `REMEMBERED_AFTER`, so no echo may claim the
+ * bill has already landed. The refused hand used to say "Fewer names came back
+ * with the next letter" twenty-five years before the market thinned by so
+ * much as one card — the world reporting a consequence it had not dealt,
+ * which is invariant 13 read backwards.
+ */
+export function echoText(entry: BearingEntry): string {
+  // Every call site names the act; a save from before `about` existed names
+  // the year instead, never a generic "old decision" (#211's own rule).
+  const about = entry.about ?? `what the house did in ${entry.year}`;
   switch (entry.kind) {
     case 'wrote_it_larger':
       return `A copy kept elsewhere still named ${about}, and did not tell it quite as the house had.`;
     case 'refused_a_hand':
-      return `A matchmaker remembered ${about}. Fewer names came back with the next letter.`;
+      return `A matchmaker remembered ${about}, and said as much to the next house that asked.`;
     case 'took_the_cousin':
       return `People still spoke of ${about}: the outside hand had been there, and the house had chosen its own blood.`;
     case 'bit_the_common':
