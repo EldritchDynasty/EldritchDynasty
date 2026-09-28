@@ -3,6 +3,7 @@ import {
   GOD_AFFINITY_PAIRS,
   LADDER_BLOCKERS,
   foremostOf,
+  standingOf,
   type LadderBlocker,
 } from '../ascension.js';
 import { tableView, type RiteAssembly } from '../table.js';
@@ -407,7 +408,7 @@ function studyCanMove(
   if (blocker !== 'books' && blocker !== 'affinities') return false;
   const p = ctx.world.people.get(personId);
   if (!p) return false;
-  const householdGate = p.rites.includes('unmaking');
+  const householdGate = standingOf(ctx, p).rung === 'demigod';
 
   for (const row of table.shelf) {
     const def = ctx.content.spellbook(row.book);
@@ -437,7 +438,7 @@ function seekBookCanMove(
   if (blocker !== 'books' && blocker !== 'affinities') return false;
   const p = ctx.world.people.get(personId);
   if (!p) return false;
-  const householdGate = p.rites.includes('unmaking');
+  const householdGate = standingOf(ctx, p).rung === 'demigod';
   const personAffinities = knownAffinities(ctx, personId);
   const godMissing = householdGate ? missingGodAffinities(ctx) : undefined;
 
