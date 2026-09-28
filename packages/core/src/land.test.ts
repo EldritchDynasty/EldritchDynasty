@@ -624,7 +624,10 @@ describe('the six land risk shapes', () => {
     const ctx = testWorld(bundle);
     grantParcel(ctx, 'sarrow_bottom');
 
-    const result = tickLandRisks(ctx, riskRng([1, 3.4], [true]));
+    // Ardwen's woodland roll comes before Sarrow's sink roll in the held
+    // parcel order, so make the two hazards explicit rather than cycling one
+    // boolean through both.
+    const result = tickLandRisks(ctx, riskRng([1, 3.4], [false, true]));
 
     expect(result.sarrowSank).toBe(true);
     expect(result.blighted).toEqual([]);
