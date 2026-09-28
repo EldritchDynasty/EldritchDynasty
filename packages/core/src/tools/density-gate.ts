@@ -62,7 +62,7 @@ import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
-  type DensityRun, type ShapeFrequency,
+  type DensityRun,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
 export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './density-report.js';
