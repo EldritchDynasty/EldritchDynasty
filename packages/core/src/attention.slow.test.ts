@@ -262,6 +262,36 @@ describe('what the player is asked across A Long Line', () => {
     expectMean({ values: gap.map((d) => -d), ceiling: 1.5, what: 'how much denser 300 years is than 500, per generation' });
   });
 
+  /**
+   * DIFFERENT WORDS CAN STILL BE THE SAME DECISION (#271).
+   *
+   * Event-id repetition above answers whether the player has met the same
+   * authored scene. This asks the coarser and more important interaction
+   * question: inside one Age, how often has the player already been offered
+   * the same CATEGORY SHAPE — money against money, relationship against a
+   * lasting change, and so on — even when the prose and template id differ.
+   *
+   * Measured 2026-09-28 on this exact 25-seed pool:
+   *   Long 500: 10.25%, 2 SE 1.88 percentage points
+   *   Short 300: 10.36%, 2 SE 2.06 percentage points
+   *
+   * Six to fifteen percent clears the measured noise on both sides and catches
+   * a material structural move without pretending 10.3% is a target. The
+   * 20-choice maximum share is logged, not judged: one baseline does not tell
+   * us what that local concentration SHOULD be.
+   */
+  const SHAPE_REPEAT_AGE = { floor: 0.06, ceiling: 0.15 };
+
+  for (const [term, get] of [
+    ['a 500-year Long Line', () => runs.map(({ b }) => b.shapeRepeat.category.age)],
+    ['a 300-year Short Line', () => short.map((b) => b.shapeRepeat.category.age)],
+  ] as const) {
+    it(`keeps repeated interaction shapes bounded inside each Age across ${term}`, () => {
+      expectMean({ values: get(), floor: SHAPE_REPEAT_AGE.floor, what: `category-shape repeat within Age, ${term}` });
+      expectMean({ values: get(), ceiling: SHAPE_REPEAT_AGE.ceiling, what: `category-shape repeat within Age, ${term}` });
+    });
+  }
+
   it('asks about the record often enough to be the thesis it claims to be', () => {
     // Once a generation or better. Record / Omit / Embellish is the mechanical
     // form of "the chronicle is evidence and the player is falsifying it".
