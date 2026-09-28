@@ -376,7 +376,7 @@ not try it, and do not read a surviving branch as work in flight.
 - **`npm run gate:drag` / `:blood` / `:ladder` / `:bearing`** are the four
   measured sessions; their arguments and findings are in
   [BALANCE-LOG.md](BALANCE-LOG.md).
-- **`npm run gate:campaigns`** (issue #274) prints the static difference between A Short Line and A Long Line: ending sets, Ledger capacity, ladder/rite vocabulary, and content the campaign shape itself makes exclusive. Run it whenever `CAMPAIGNS`, an ending, or a campaign-scoped condition changes, and paste the before/after report with the change so product drift is visible rather than inferred from prose.
+- **`npm run gate:campaigns -- 12`** (issue #274) prints both the static difference between A Short Line and A Long Line and played reach on shared seeds under the chronicler and ascendant policies: ending sets, Ledger capacity, ladder/rite vocabulary, campaign-exclusive content, and how often a real run actually reaches it. Use `--static` for the cheap inventory-only check. Run the played report whenever `CAMPAIGNS`, an ending, or a campaign-scoped condition changes, and paste the before/after report with the change so product drift is visible rather than inferred from prose.
 - **`npm run gate:density`** (issue #88) reports what the player is asked and
   how often the same thing twice — per generation, per Age, the repeat rate
   within a run and within an Age, and the longest span carrying no Match, no
