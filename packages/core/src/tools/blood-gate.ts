@@ -314,10 +314,13 @@ function trueChannel(ctx: SimCtx, card: PendingMatch['cards'][number]): number {
  * them collapses onto kinship. That is not a strawman — it is what the card
  * carried, and it is the finding the panel was built against.
  */
-function saidScore(card: PendingMatch['cards'][number]): number {
+export function saidScore(
+  card: Pick<PendingMatch['cards'][number], 'line'>,
+  fontCarrierRate: number,
+): number {
   let n = 0;
-  if (card.words.includes('deep blood')) n += 4;
-  else if (card.words.includes('a drop of it')) n += 1;
+  if (fontCarrierRate >= 0.04) n += 4;
+  else if (fontCarrierRate > 0) n += 1;
   if (card.line === 'fertile') n += 2;
   else if (card.line === 'thin') n -= 2;
   return n;
@@ -439,11 +442,15 @@ function answerMatch(ctx: SimCtx, pending: PendingMatch, policy: Policy, tally: 
     // sentence when the panel is silent — which it often is, because a house
     // nobody has watched is a house nobody has watched.
     if (policy === 'blind') {
-      return (saidScore(b) - saidScore(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
+      const said = (card: PendingMatch['cards'][number]) =>
+        saidScore(card, ctx.world.houses.get(card.house)?.genePool?.fontCarrierRate ?? 0);
+      return (said(b) - said(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
     }
     if (policy === 'panel') {
+      const said = (card: PendingMatch['cards'][number]) =>
+        saidScore(card, ctx.world.houses.get(card.house)?.genePool?.fontCarrierRate ?? 0);
       return (panelScore(b) - panelScore(a))
-        || (saidScore(b) - saidScore(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
+        || (said(b) - said(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
     }
 
     if (policy === 'channel_oracle') {
