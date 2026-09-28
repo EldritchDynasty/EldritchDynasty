@@ -1,4 +1,4 @@
-import type { RunLibrary, SavedGame } from '@ed/schema';
+import { assertNever, type RunLibrary, type SavedGame } from '@ed/schema';
 
 /**
  * Stable backend ids for Steam achievements (#323 / #73 Track B).
@@ -70,10 +70,11 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
     case 'forgotten': add('ending_forgotten'); break;
     case 'devoured': add('ending_devoured'); break;
     case 'settled': add('ending_settled'); break;
+    default: assertNever(save.ending.id, 'achievement ending');
   }
 
   const endings = new Set([
-    ...library?.runs.map((run) => run.ending.id) ?? [],
+    ...(library?.runs.map((run) => run.ending.id) ?? []),
     save.ending.id,
   ]);
   add('ending_all_long', LONG_ENDINGS.every((id) => endings.has(id)));
