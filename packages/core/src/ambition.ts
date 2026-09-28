@@ -3,7 +3,6 @@ import {
   RUNG_ORDER,
   isLadderRole,
   type CampaignId,
-  type Condition,
   type Effect,
   type HouseAmbitionId,
 } from '@ed/schema';
@@ -178,88 +177,88 @@ function recordRelevance(
   ambition: HouseAmbitionId,
   decision: PendingRecord,
 ): AmbitionRelevance | undefined {
-  const effects = recordEffects(decision);
-  const condition = decision.event.conditions;
+  // These are exactly the strings the Record panel draws before the player
+  // answers: its subject, callback, and all three Chronicle alternatives.
+  // Do not read EventTemplate conditions/purposes or outcome effects here;
+  // those are author mechanics, not evidence on the page.
+  const text = visibleRecordText(decision);
 
   if (ambition === 'restore_ledger') {
-    if (
-      decision.event.purposes.includes('advance_clause')
-      || effects.some((effect) => effect.kind === 'clause')
-      || condition !== undefined && conditionHas(condition, ['clausesRecovered'])
-    ) {
+    if (/\bledger\b|\bclause\b/i.test(text)) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page is tied to evidence the recoverable Ledger can still bring home.',
+        reason: 'This page names the Ledger or one of the clauses the house is trying to recover.',
       };
     }
-
-    const discrepancy = effects.find((effect): effect is Extract<Effect, { kind: 'discrepancy' }> =>
-      effect.kind === 'discrepancy');
-    if (discrepancy) {
-      return {
-        surface: 'record',
-        effect: discrepancy.op === 'create' ? 'endanger' : 'advance',
-        reason: discrepancy.op === 'create'
-          ? 'This page can put another disputed account into the Ledger.'
-          : 'This page can settle a disputed account already carried in the Ledger.',
-      };
-    }
-    if (condition !== undefined && conditionHas(condition, ['discrepancy', 'openDiscrepancies'])) {
+    const namedDiscrepancy = [...ctx.world.discrepancies.keys()]
+      .find((id) => visibleToken(text, id));
+    if (namedDiscrepancy || /discrepanc/i.test(text)) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page exists because a disputed part of the family record is still in play.',
+        reason: 'This page names a disputed part of the family record the Ledger is already carrying.',
       };
     }
     return undefined;
   }
 
-  if (ambition === 'raise_ascendant' && namesProgrammePerson(ctx, decision)) {
-    return {
-      surface: 'record',
-      effect: 'advance',
-      reason: 'This page names the Scion, his heir, or a man the house can already see standing on the ladder.',
-    };
+  if (ambition === 'raise_ascendant') {
+    const measured = measureAscension(ctx);
+    const programme = [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
+      .filter((id): id is string => Boolean(id));
+    if (programme.some((id) => {
+      const person = ctx.world.people.get(id);
+      return person !== undefined && visibleToken(text, person.name);
+    })) {
+      return {
+        surface: 'record',
+        effect: 'advance',
+        reason: 'This page names the Scion, his heir, or the man the house can already see foremost on the ladder.',
+      };
+    }
+    return undefined;
   }
 
   if (ambition === 'secure_branches') {
-    const branchEffect = effects.find((effect): effect is Extract<Effect, { kind: 'branch' }> =>
-      effect.kind === 'branch');
-    if (branchEffect) {
-      return {
-        surface: 'record',
-        effect: branchEffect.op === 'slight' ? 'endanger' : 'advance',
-        reason: branchEffect.op === 'slight'
-          ? 'What is written here leaves a cadet hall with another grievance to carry.'
-          : 'What is written here can answer a cadet hall instead of leaving it to the seat.',
-      };
-    }
+    const cadetNames = [...halls(ctx.world, ctx.world.year)]
+      .filter(([hall]) => hall !== MAIN_BRANCH)
+      .flatMap(([, people]) => people.map((person) => person.name));
     if (
-      condition !== undefined && conditionHas(condition, ['cadetBranches', 'branchGrievance'])
-      || filledRole(decision, (role) => role === 'cadet')
+      cadetNames.some((name) => visibleToken(text, name))
+      || /\bcadet (?:hall|branch)\b/i.test(text)
     ) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page is about a cadet hall the ambition is trying to keep viable.',
+        reason: 'This page names a cadet hall or somebody currently carrying one.',
       };
     }
+    return undefined;
   }
 
-  if (ambition === 'deepen_blood' && (
-    condition !== undefined && conditionHas(condition, ['bloodCount'])
-    || filledRole(decision, (role) =>
-      role === 'sole_heir_unwed' || role === 'sole_heir_spent' || role === 'listener_blood')
-  )) {
+  if (/\bliving blood\b|\bbloodline\b|\bthe line (?:thins|narrows|widens)\b/i.test(text)) {
     return {
       surface: 'record',
       effect: 'advance',
-      reason: 'This page is about the living line at the point where its breadth matters.',
+      reason: 'This page names the breadth of the living line the ambition is trying to preserve.',
     };
   }
 
   return undefined;
+}
+
+function visibleRecordText(decision: PendingRecord): string {
+  return [
+    decision.subject,
+    decision.callback ?? '',
+    ...decision.options.map((option) => option.chronicle ?? ''),
+  ].join(' ').toLowerCase();
+}
+
+function visibleToken(text: string, token: string): boolean {
+  const lower = token.toLowerCase();
+  return text.includes(lower) || text.includes(lower.replaceAll('_', ' '));
 }
 
 function choiceRelevance(
@@ -284,14 +283,14 @@ function choiceEffects(ctx: SimCtx, decision: PendingChoice): Effect[] {
   const interaction = decision.event.interaction;
   if (interaction.kind === 'narration') return [];
 
+  // A first-time open choice has no chosen branch yet. Reading every sibling's
+  // outcome here would be an oracle. Delegation is the one place a pending
+  // Choice already has a player-authored answer, so only that exact branch may
+  // be read — the same branch scope mustSurface has used since #278.
   const remembered = ctx.world.delegation.choices[decision.event.id];
-  const ids = remembered
-    ? new Set([remembered])
-    : new Set(decision.choices.filter((choice) => choice.available).map((choice) => choice.id));
-
-  return interaction.choices
-    .filter((choice) => ids.has(choice.id))
-    .flatMap((choice) => choice.outcomes.flatMap((outcome) => outcome.effects));
+  if (!remembered) return [];
+  const choice = interaction.choices.find((candidate) => candidate.id === remembered);
+  return choice ? choice.outcomes.flatMap((outcome) => outcome.effects) : [];
 }
 
 function effectRelevance(
@@ -399,44 +398,6 @@ function effectRelevance(
   }
 
   return undefined;
-}
-
-function recordEffects(decision: PendingRecord): Effect[] {
-  const record = decision.event.record;
-  if (!record) return [];
-  return [
-    ...record.options.record.effects,
-    ...record.options.omit.effects,
-    ...record.options.embellish.effects,
-  ];
-}
-
-function conditionHas(condition: Condition, keys: readonly string[]): boolean {
-  if ('all' in condition) return condition.all.some((part) => conditionHas(part, keys));
-  if ('any' in condition) return condition.any.some((part) => conditionHas(part, keys));
-  if ('not' in condition) return conditionHas(condition.not, keys);
-  return keys.some((key) => key in condition);
-}
-
-function namesProgrammePerson(ctx: SimCtx, decision: PendingRecord): boolean {
-  const named = new Set(
-    Object.values(decision.fill)
-      .flatMap((value) => Array.isArray(value) ? value : [value])
-      .filter((value): value is string => typeof value === 'string'),
-  );
-  if (ctx.world.scion && named.has(ctx.world.scion)) return true;
-  if (ctx.world.scionHeir && named.has(ctx.world.scionHeir)) return true;
-  return filledRole(decision, (role) => isLadderRole(role));
-}
-
-function filledRole(
-  decision: PendingRecord,
-  predicate: (role: string) => boolean,
-): boolean {
-  return Object.entries(decision.fill).some(([slot, value]) =>
-    value !== undefined
-    && (Array.isArray(value) ? value.length > 0 : Boolean(value))
-    && predicate(decision.event.slots[slot]?.role ?? ''));
 }
 
 function roleOf(decision: PendingChoice, slot: string): string | undefined {
