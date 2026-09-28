@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap, runYears,
-  expectRate, CHILDBEARING,
+  expectRate, CHILDBEARING, heirApparent,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
 
@@ -84,11 +84,7 @@ describe('the house survives its own Long Line', () => {
       runYears(ctx, 400);
       const w = ctx.world;
       const roster = w.people.household(w.playerHouse, w.year);
-      const eligible = roster.filter(
-        (p) => p.membership.some((m) => m.kind === 'blood' || m.kind === 'cadet')
-          && w.year - p.born >= 16,
-      );
-      if (!eligible.length) continue;
+      if (!heirApparent(ctx)) continue;
       expect(roster.some((p) => p.castSlots.includes('head')), `seed ${seed}`).toBe(true);
     }
   });

@@ -42,6 +42,8 @@ import {
 } from './ages/strategy.js';
 import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
+import { knownSuccession } from './people/succession.js';
+import { relevantPeople } from './people/relevance.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -506,6 +508,12 @@ export class GameSession {
     return answeredByPage(this.ctx, entryId);
   }
 
+  /** Stable authored pages in which the book explicitly cast this person. */
+  mentions(person: string): string[] {
+    return this.ctx.world.chronicle.flatMap((entry) =>
+      entry.id && entry.people?.includes(person) ? [entry.id] : []);
+  }
+
   /**
    * THE SPINE (issue #56). Who has held the seal since the signing, oldest
    * first, with what the book says became of each of them.
@@ -890,6 +898,10 @@ export interface MemberView {
    */
   status: PersonStatus;
   head: boolean;
+  /** Known succession only: never inferred from an unwoken person's genome. */
+  succession?: 'heir' | 'possible';
+  /** Visible reasons this person matters to the current plan or house state. */
+  relevance?: { reason: string }[];
   /**
    * The family found out what is in their blood — NOT that the Power
    * manifested in them. §11 times a daughter's Awakening by what she carries
@@ -1050,6 +1062,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   }
 
   const namesake = headNamesake(ctx);
+  const succession = knownSuccession(ctx);
+  const successionPossible = new Set(succession.possible);
+  const relevance = relevantPeople(ctx);
   const hallViews: HallView[] = [];
   for (const [id, living] of halls(w, w.year)) {
     const members = [...living, ...(consumedByHall.get(id) ?? [])];
@@ -1093,6 +1108,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           drift: view.divergence.size > 0,
         };
         if (p.epithet !== undefined) m.epithet = p.epithet;
+        if (succession.heir === p.id) m.succession = 'heir';
+        else if (successionPossible.has(p.id)) m.succession = 'possible';
+        const reasons = relevance.get(p.id);
+        if (reasons?.length) m.relevance = reasons.map((reason) => ({ reason }));
         if (p.contract) m.contract = p.contract.role;
         if (spouse) {
           const marriedIn = spouse.houseOfOrigin !== w.playerHouse;
