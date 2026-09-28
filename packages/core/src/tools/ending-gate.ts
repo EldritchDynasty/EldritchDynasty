@@ -90,6 +90,7 @@ import { affinitiesFor, booksFor, DEMIGOD_AGEING_STOPPED, GOD_READING_BOOKS, hou
 import { CAMPAIGN_YEARS, campaignDef } from '../campaign.js';
 import { nameScion, nameScionHeir, resolveYear, unmakingReadyForAscendant, type LadderPolicy } from './ladder-policy.js';
 import { candidatesFor, resolveSlots } from '../events/slots.js';
+import { ascendantFunnelVerdict } from './ascendant-verdict.js';
 import { heldBooks } from '../people/library.js';
 import { order } from '../table.js';
 import {
@@ -540,7 +541,10 @@ export function playToTheEnd(
     (d.event === 'the_house_has_one_name_left' && d.choiceId === 'send_to_a_broker')
     || (d.event === 'the_marriage_that_cannot_answer' && d.choiceId === 'put_it_to_the_church')
   )).length;
-  const takers = unmaking ? w.people.all().filter((p) => p.rites.includes('unmaking')) : [];
+  // Counted in BOTH columns (issue #325): the funnel verdict compares the
+  // ascendant house's Unmaking rate against the chronicler's, and a column
+  // that never counted would be compared against a zero it did not measure.
+  const takers = w.people.all().filter((p) => p.rites.includes('unmaking'));
   const unmakingTakerPeak = takers.reduce((peak, p) => {
     const standing = standingOf(ctx, p);
     return {
@@ -634,9 +638,10 @@ const DEVOURED_CEILING = 0.45;
  *
  * #61 originally paired this 29% ceiling with an 8% floor. #133 halves the
  * complete Long Line and its Stage 5F contract deliberately says something
- * different: Apotheosis must be NON-ZERO under intentional play, and trying
- * for it must beat the chronicler. The relative check below enforces both
- * without fitting a new tiny percentage floor to a noisy 500-year batch.
+ * different: trying for Apotheosis must beat the chronicler. At about one run
+ * in a hundred Apotheosis itself cannot carry that claim, so #325 judges it a
+ * step earlier in the funnel (`ascendant-verdict.ts`) and prints Apotheosis
+ * as a diagnostic, without fitting a new tiny percentage floor to it.
  *
  * The owner's 29% ceiling is unchanged. It still guards the other failure
  * mode: concentration becoming so strong that God stops being a terminal
@@ -924,13 +929,13 @@ export function verdictOver(runs: EndingRun[]): EndingVerdict {
     if (aShare > APOTHEOSIS_CEILING) {
       failures.push(`  FAIL: apotheosis is above the ascendant ceiling (${(100 * aShare).toFixed(1)}%, ceiling ${(100 * APOTHEOSIS_CEILING).toFixed(0)}%)`);
     }
-    // THE STATE THIS HALF OF THE ISSUE WAS FILED ABOUT: a house that never
-    // tried reaching God as often as, or more often than, a house that did —
-    // which would mean playing for the ladder buys nothing.
-    const chronApo = count('apotheosis') / n;
-    if (chronApo >= aShare) {
-      failures.push(`  FAIL: the chronicler reaches apotheosis (${(100 * chronApo).toFixed(1)}%) at least as often as ascendant (${(100 * aShare).toFixed(1)}%) — trying for the ladder buys nothing`);
-    }
+    // THE STATE THIS HALF OF THE ISSUE WAS FILED ABOUT: playing for the
+    // ladder buying nothing. Judged on the Unmaking, not on Apotheosis, which
+    // at 1 run in 100 no batch CI runs can carry (#325, owner's choice (c));
+    // Apotheosis against the chronicler is printed beside it.
+    const funnel = ascendantFunnelVerdict(chronicler, ascendant);
+    lines.push(...funnel.lines);
+    failures.push(...funnel.failures);
   }
 
   lines.push(...failures);

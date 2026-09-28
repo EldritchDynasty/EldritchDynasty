@@ -8566,3 +8566,31 @@ is a no-agency stall: Books are long-lived here while remaining actionable.
 No threshold, event budget, Match rate or ladder requirement is changed by
 #270. Any gameplay response belongs to the system that owns the measured
 blocker and should be raised separately.
+
+## #325 (2026-09-28): the endings gate judges the Unmaking, not one Apotheosis
+
+`gate (endings)` failed only if the chronicler reached Apotheosis at least as
+often as the ascendant house. The chronicler's count is 0, so the check held
+while the ascendant column had **one** Apotheosis in 100 runs, and that is
+what it had (`bdb7891`, and #185's accepted measurement before it). At a true
+rate near 1%, a re-rolled batch shows none about 37% of the time.
+
+**Owner's decision on #325: (c).** Judge a step earlier in the God funnel
+with counts the CI batch can carry, and print Apotheosis as a diagnostic. The
+absolute 29% Apotheosis ceiling stays as a CI guard. Batch size and CI time
+are unchanged: 100 paired runs, 500 years, seeds 5100–5199.
+
+| | before | after |
+|---|---|---|
+| judged claim | ascendant Apotheosis > chronicler's | ascendant runs with an Unmaking taker > chronicler's, through `expectRate` |
+| ascendant | 1/100 Apotheosis | 16/100 runs with a taker (Apotheosis 1/100, printed) |
+| chronicler | 0/100 Apotheosis | 1/100 runs with a taker (Apotheosis 0/100, printed) |
+| margin | one run; no standard error | (0.16 − 0.01) / 0.0367 ≈ **4.1 SE** (the rule needs 2) |
+
+The chronicler's taker count was never recorded before, because the gate
+counted takers only under the ascendant policy. It is counted in both columns
+now. It came back 1, not the 0 the old comparison would have implied, which is
+why the comparison had to be measured rather than assumed. The judgement lives
+in `tools/ascendant-verdict.ts`, and `ascendant-verdict.test.ts` hands it batches
+it must reject: parity, and a 3-to-0 lead that is only 1.7 SE.
+`npm run gates -- endings` took 7m26s locally.

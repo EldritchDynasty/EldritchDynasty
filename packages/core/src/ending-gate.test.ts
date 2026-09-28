@@ -47,15 +47,19 @@ function losable(n = 100): EndingRun[] {
   return out;
 }
 
-/** An `ascendant` batch with explicit intentional reach for God and Unmaking. */
-function ascendant(apotheosisShare: number, n = 100, unmadeShare = 0.01): EndingRun[] {
+/**
+ * An `ascendant` batch with explicit intentional reach for God and Unmaking.
+ * `takerShare` is the runs in which somebody took the Unmaking — the funnel
+ * step #325 judges — and defaults to the 16% the CI batch measured.
+ */
+function ascendant(apotheosisShare: number, n = 100, unmadeShare = 0.01, takerShare = 0.16): EndingRun[] {
   const apo = Math.round(apotheosisShare * n);
   const unmade = Math.round(unmadeShare * n);
-  return Array.from({ length: n }, (_, i) => run(
-    i < apo ? 'apotheosis' : i < apo + unmade ? 'unmade' : 'forgotten',
-    9000 + i,
-    'ascendant',
-  ));
+  const takers = Math.round(takerShare * n);
+  return Array.from({ length: n }, (_, i) => ({
+    ...run(i < apo ? 'apotheosis' : i < apo + unmade ? 'unmade' : 'forgotten', 9000 + i, 'ascendant'),
+    unmakingTakers: i < takers ? 1 : 0,
+  }));
 }
 
 
@@ -279,20 +283,27 @@ describe('the ending distribution gate', () => {
    * a new tiny percentage threshold to one noisy 500-year batch.
    */
   describe('the ascendant column (issues #61 and #133)', () => {
-    it('passes when a rare Long-Line Apotheosis is non-zero and beats a zero chronicler', () => {
+    it('passes when intentional play reaches the Unmaking measurably more than the chronicler', () => {
       const chronicler = losable().map((r) =>
         r.ending === 'apotheosis' ? run('forgotten', r.seed) : r);
       const v = verdictOver([...chronicler, ...ascendant(0.01)]);
       expect(v.ok, v.lines.join('\n')).toBe(true);
       expect(v.lines.join('\n')).toMatch(/ascendant .*100 runs.*apotheosis 1 \(1\.0%\)/);
+      expect(v.lines.join('\n')).toMatch(/ladder funnel: a house took the Unmaking in 16\/100/);
     });
 
-    it('fails when intentional play still reaches zero Apotheoses', () => {
+    /**
+     * #325, the owner's choice (c). Zero Apotheoses in 100 used to fail the
+     * gate, and at a true rate near 1% a re-rolled batch shows zero about a
+     * third of the time. The claim is carried by the Unmaking now; Apotheosis
+     * against the chronicler is printed and not judged.
+     */
+    it('no longer turns on one Apotheosis: zero of them passes when the funnel carries the claim', () => {
       const chronicler = losable().map((r) =>
         r.ending === 'apotheosis' ? run('forgotten', r.seed) : r);
       const v = verdictOver([...chronicler, ...ascendant(0)]);
-      expect(v.ok).toBe(false);
-      expect(v.lines.join('\n')).toMatch(/trying for the ladder buys nothing/);
+      expect(v.ok, v.lines.join('\n')).toBe(true);
+      expect(v.lines.join('\n')).toMatch(/ladder diagnostic \(not judged, #325\): apotheosis 0\/100/);
     });
 
     it('fails when intentional play never reaches Unmade', () => {
@@ -311,16 +322,22 @@ describe('the ending distribution gate', () => {
 
     /**
      * THE STATE THIS HALF OF THE ISSUE WAS FILED ABOUT: a house that never
-     * tries for the ladder reaching God as often as one that does, which
-     * would mean the whole Scion/marriage/library mechanism buys nothing.
-     * `losable()`'s own chronicler apotheosis share is 1%, so an ascendant
-     * column that only matches it must fail even though 1% remains below the
-     * owner's 29% ceiling.
+     * tries for the ladder getting as far as one that does, which would mean
+     * the whole Scion/marriage/library mechanism buys nothing. Judged at the
+     * Unmaking since #325; an ascendant column that reaches it no more often
+     * than the chronicler fails, whatever its Apotheosis count.
      */
-    it('fails when the chronicler reaches apotheosis as often as ascendant does', () => {
-      const v = verdictOver([...losable(), ...ascendant(0.01)]);
+    it('fails when intentional play reaches the Unmaking no more often than the chronicler', () => {
+      const chronicler = losable().map((r) => ({ ...r, unmakingTakers: r.seed < 16 ? 1 : 0 }));
+      const v = verdictOver([...chronicler, ...ascendant(0.05)]);
       expect(v.ok).toBe(false);
-      expect(v.lines.join('\n')).toMatch(/trying for the ladder buys nothing/);
+      expect(v.lines.join('\n')).toMatch(/trying for the ladder does not measurably reach the Unmaking/);
+    });
+
+    it('fails when intentional play never takes the Unmaking at all', () => {
+      const v = verdictOver([...losable(), ...ascendant(0.01, 100, 0.01, 0)]);
+      expect(v.ok).toBe(false);
+      expect(v.lines.join('\n')).toMatch(/does not measurably reach the Unmaking/);
     });
 
     it('asserts nothing about apotheosis when the ascendant batch is too small', () => {
