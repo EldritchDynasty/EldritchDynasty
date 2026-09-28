@@ -86,7 +86,7 @@ function quietRecord(ctx: SimCtx): PendingRecord {
         },
       },
     },
-  } as EventTemplate;
+  } as unknown as EventTemplate;
 
   return {
     kind: 'record',
@@ -147,7 +147,7 @@ function bloodChoice(ctx: SimCtx) {
         },
       ],
     },
-  } as EventTemplate;
+  } as unknown as EventTemplate;
   const pending = queueChoice(ctx, event, event.body, {}, []);
   ctx.world.delegation.choices[event.id] = 'open_the_match';
   return pending;
@@ -268,7 +268,7 @@ describe('house ambition (issue #210)', () => {
 
   it('keeps the ambition reader out of hidden genetics, Bearing, RNG and checks', () => {
     const source = readFileSync(new URL('./ambition.ts', import.meta.url), 'utf8');
-    const imports = [...source.matchAll(/from\\s+['"]([^'"]+)['"]/g)].map((match) => match[1]);
+    const imports = [...source.matchAll(new RegExp("from\\\\s+['\\\"]([^'\\\"]+)['\\\"]", 'g'))].map((match) => match[1]);
 
     expect(imports).toEqual([
       '@ed/schema',
@@ -278,7 +278,7 @@ describe('house ambition (issue #210)', () => {
       './campaign.js',
       './events/decisions.js',
     ]);
-    expect(imports.some((path) => /genetics\\/|bearing|rng|checks/i.test(path ?? ''))).toBe(false);
+    expect(imports.some((path) => (path ?? '').includes('genetics/') || /bearing|rng|checks/i.test(path ?? ''))).toBe(false);
   });
 
   it('adapts campaign horizons without changing the catalogue', () => {
