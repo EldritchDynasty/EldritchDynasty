@@ -116,8 +116,7 @@ export function campaignStaticReport(
 ): CampaignStaticReport {
   const content = indexContent(source);
   const ids = CampaignIdS.options;
-  const endingSets = Object.fromEntries(ids.map((id) => [id, new Set(campaigns[id].endings)]))
-    as Record<CampaignId, Set<string>>;
+  const endingSets = Object.fromEntries(ids.map((id) => [id, new Set(campaigns[id].endings)])) as Record<CampaignId, Set<string>>;
 
   const possibleEvents = Object.fromEntries(ids.map((id) => [
     id,
