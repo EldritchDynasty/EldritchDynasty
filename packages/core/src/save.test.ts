@@ -115,7 +115,7 @@ describe('a run survives being written down', () => {
     });
 
     const saved = JSON.parse(JSON.stringify(saveGame(before)));
-    expect(saved.format).toBe(26);
+    expect(saved.format).toBe(27);
     expect(saved.chronicle.at(-1)?.people).toEqual([person.id]);
 
     const after = loadGame(saved, content);
