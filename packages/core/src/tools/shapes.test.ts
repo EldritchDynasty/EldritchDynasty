@@ -3,6 +3,7 @@ import { loadContent } from '@ed/content';
 import { EventTemplateS, type Choice, type EventTemplate, type Purpose } from '@ed/schema';
 import { newGame } from '../session.js';
 import type { PendingChoice } from '../events/decisions.js';
+import { densityLines, type DensityRun } from './density-gate.js';
 import { isPredetermined, shapeOf } from './shapes.js';
 
 const PURPOSES_A: Purpose[] = ['change_standing', 'buy_patience', 'worldbuild_through_action'];
@@ -64,6 +65,39 @@ const pay = (id: string, delta: number) => choice(id, [{ kind: 'treasury', delta
 const remember = (id: string, flag: string) => choice(id, [{ kind: 'flag', flag, set: true }]);
 const mark = (id: string, trait: string) => choice(id, [{ kind: 'trait', target: 'head', trait, op: 'add' }]);
 
+function densityFixture(seed: number, top: ['[money | money]', '[lasting | money]'] | ['[lasting | money]', '[money | money]']): DensityRun {
+  return {
+    seed,
+    years: 500,
+    generations: 20,
+    ages: 8,
+    choices: 100,
+    matches: 20,
+    records: 15,
+    names: 10,
+    perGeneration: 5,
+    perAge: 12.5,
+    repeatRun: 0.25,
+    repeatAge: 0.03,
+    shapeRepeat: {
+      kind: { run: 0.32, age: 0.04, runWithoutPredetermined: 0.30, ageWithoutPredetermined: 0.035 },
+      category: { run: 0.52, age: 0.10, runWithoutPredetermined: 0.49, ageWithoutPredetermined: 0.09 },
+    },
+    shapeWindow: 0.20,
+    predeterminedShare: 0.12,
+    topShapes: {
+      campaign: top.map((shape) => ({ shape, count: 5, share: 0.05 })),
+      ages: {
+        the_long_peace: top.map((shape) => ({ shape, count: 2, share: 0.10 })),
+      },
+    },
+    ordinary: 30,
+    reach: 75,
+    meaningfulChoices: 50,
+    meaningfulRecords: 8,
+  };
+}
+
 describe('interaction shapes', () => {
   it('collapses different ids and prose when the available option effects have the same shape', () => {
     const a = pending(event('shape_alpha', [pay('pay_a', -3), mark('mark_a', 'stern')], {
@@ -124,5 +158,18 @@ describe('interaction shapes', () => {
     const d = pending(event('shape_consequential', [pay('pay', -2), mark('mark', 'steady')], { frequency: 'rare' }));
 
     expect(isPredetermined(ctx, d)).toBe(false);
+  });  it('prints byte-identical aggregate tables regardless of run order', () => {
+    const a = densityFixture(901, ['[money | money]', '[lasting | money]']);
+    const b = densityFixture(902, ['[lasting | money]', '[money | money]']);
+
+    const forward = densityLines([{ term: 500, runs: [a, b] }]).join('\n');
+    const reverse = densityLines([{ term: 500, runs: [b, a] }]).join('\n');
+
+    expect(reverse).toBe(forward);
+    expect(forward).toContain('category shape');
+    expect(forward).toContain('[lasting | money]');
+    expect(forward).toContain('[money | money]');
   });
+
+
 });
