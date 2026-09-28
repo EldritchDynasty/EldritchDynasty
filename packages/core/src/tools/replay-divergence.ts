@@ -152,10 +152,22 @@ export function libraryLines(reading: LibraryReading): string[] {
   ];
 }
 
+/**
+ * A whole Short Line, read through the corpus.
+ *
+ * The campaign has to be passed, not implied by the length. A Long Line cut at
+ * 1343 is a different game: nine clauses instead of three, no `settled`, and
+ * every `campaignProgress` condition reading a smaller fraction in the same
+ * year. This gate measured exactly that for its first day, while
+ * `measureLibraryVisibility` seeded its second run as a real Short Line.
+ */
+function shortLine(source: Source, seed: number) {
+  return playedRun(source, seed, CAMPAIGNS.short.years + 1, CAMPAIGNS.short.startYear, 'short');
+}
+
 export function measureReplayPair(source: Source, a: number, b: number): ReplayPair {
-  const years = CAMPAIGNS.short.years + 1;
-  const first = eventDecisionStream(playedRun(source, a, years).world.decisionLog);
-  const second = eventDecisionStream(playedRun(source, b, years).world.decisionLog);
+  const first = eventDecisionStream(shortLine(source, a).world.decisionLog);
+  const second = eventDecisionStream(shortLine(source, b).world.decisionLog);
   return {
     a,
     b,
@@ -165,7 +177,7 @@ export function measureReplayPair(source: Source, a: number, b: number): ReplayP
 }
 
 export function measureLibraryVisibility(source: Source, seed: number, nextSeed: number): LibraryReading {
-  const ctx = playedRun(source, seed, CAMPAIGNS.short.years + 1);
+  const ctx = shortLine(source, seed);
   const run = libraryRunOf(ctx);
   if (!run) {
     return {

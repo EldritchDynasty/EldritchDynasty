@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import type { Content, ContentBundle } from '@ed/schema';
+import type { CampaignId, Content, ContentBundle } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { bootstrap } from './sim.js';
 import { runYears } from './year/step.js';
@@ -32,7 +32,9 @@ import { loadGame, saveGame } from './save.js';
  *
  * Nothing here is checked in and nothing is asserted against a stored value.
  * The corpus is a CACHE of a pure function: `(content, code, seed, years)`
- * fully determines the run (invariant 8), so the key is a hash of all four
+ * fully determines the run (invariant 8) — with the campaign, which decides the
+ * Ledger's size, the endings, and what `campaignProgress` means in a given
+ * year — so the key is a hash of all of them
  * and a stale entry is unreachable rather than merely unlikely. Change a byte
  * of content or of `core`, and every key changes with it. That is the same
  * bargain `@ed/content`'s parse cache already makes, deliberately mirrored,
@@ -110,16 +112,28 @@ function contentKey(source: ContentBundle | Content): string {
 
 let contentMemo: { source: unknown; key: string } | undefined;
 
-function keyFor(source: ContentBundle | Content, seed: number, years: number, from: number): string {
+function keyFor(
+  source: ContentBundle | Content,
+  seed: number,
+  years: number,
+  from: number,
+  campaign: CampaignId,
+): string {
   if (!contentMemo || contentMemo.source !== source) {
     contentMemo = { source, key: contentKey(source) };
   }
-  return `${simulationKey()}-${contentMemo.key}-${from}-${years}-${seed}`;
+  return `${simulationKey()}-${contentMemo.key}-${campaign}-${from}-${years}-${seed}`;
 }
 
 /** Play it, for real. The only place in this file that advances a clock. */
-function play(source: ContentBundle | Content, seed: number, years: number, from: number): SimCtx {
-  const ctx = bootstrap(source, seed, from);
+function play(
+  source: ContentBundle | Content,
+  seed: number,
+  years: number,
+  from: number,
+  campaign: CampaignId,
+): SimCtx {
+  const ctx = bootstrap(source, seed, from, campaign);
   runYears(ctx, years);
   return ctx;
 }
@@ -142,19 +156,26 @@ export function corpusStats(): CorpusStats {
  *
  * Never throws on a cache problem. A corrupt or unreadable entry is a slow
  * test, not a failed one, so every filesystem step falls back to playing.
+ *
+ * `campaign` defaults to the Long Line. A Short Line is NOT the first 300
+ * years of one: its Ledger holds three clauses, it ends on `settled`, and
+ * every `campaignProgress` condition reads a different fraction in the same
+ * year. `gate:replay` read truncated Long runs as Short ones until the
+ * campaign became part of the key.
  */
 export function playedRun(
   source: ContentBundle | Content,
   seed: number,
   years: number,
   from = 1042,
+  campaign: CampaignId = 'long',
 ): SimCtx {
   if (process.env.ED_RUN_CORPUS === 'off') {
     stats.misses += 1;
-    return play(source, seed, years, from);
+    return play(source, seed, years, from, campaign);
   }
 
-  const file = join(CACHE_DIR, `${keyFor(source, seed, years, from)}.json.gz`);
+  const file = join(CACHE_DIR, `${keyFor(source, seed, years, from, campaign)}.json.gz`);
 
   if (existsSync(file)) {
     try {
@@ -168,7 +189,7 @@ export function playedRun(
   }
 
   stats.misses += 1;
-  const ctx = play(source, seed, years, from);
+  const ctx = play(source, seed, years, from, campaign);
   try {
     mkdirSync(CACHE_DIR, { recursive: true });
     writeFileSync(file, gzipSync(Buffer.from(JSON.stringify(saveGame(ctx)), 'utf8')));
@@ -189,6 +210,7 @@ export function playedFresh(
   seed: number,
   years: number,
   from = 1042,
+  campaign: CampaignId = 'long',
 ): SimCtx {
-  return play(source, seed, years, from);
+  return play(source, seed, years, from, campaign);
 }

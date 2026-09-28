@@ -212,3 +212,36 @@ describe('the corpus cannot serve a stale run', () => {
     expect(after.misses).toBeGreaterThan(before.misses);
   });
 });
+
+/**
+ * ── A SHORT LINE IS NOT A LONG LINE CUT EARLY ─────────────────────────────
+ *
+ * The key was `(code, content, from, years, seed)`, and `play` booted every
+ * run as a Long Line. So `gate:replay` asked for "a Short Line" by length and
+ * measured the first 301 years of a Long one — nine clauses, no `settled`,
+ * and every `campaignProgress` condition reading a different fraction — while
+ * the same tool's library table seeded a real Short Line. Nothing threw.
+ *
+ * Warm the Short entry FIRST: under the old key the Long request below is a
+ * hit on it, and comes back a Short world.
+ */
+describe('the campaign is part of what a run is', () => {
+  const SEED_BOTH = 4243;
+  const SPAN = 5;
+
+  it('a Short Line comes back a Short Line, played or remembered', () => {
+    const before = corpusStats();
+    playedRun(bundle, SEED_BOTH, SPAN, 1042, 'short');
+    const remembered = playedRun(bundle, SEED_BOTH, SPAN, 1042, 'short');
+    expect(corpusStats().hits - before.hits).toBeGreaterThan(0);
+    expect(remembered.world.campaign).toBe('short');
+    expect(playedFresh(bundle, SEED_BOTH, SPAN, 1042, 'short').world.campaign).toBe('short');
+  });
+
+  it('and the same seed and span as a Long Line is not served the Short entry', () => {
+    playedRun(bundle, SEED_BOTH, SPAN, 1042, 'short');
+    expect(playedRun(bundle, SEED_BOTH, SPAN, 1042, 'long').world.campaign).toBe('long');
+    // The default is still the Long Line every existing caller means.
+    expect(playedRun(bundle, SEED_BOTH, SPAN).world.campaign).toBe('long');
+  });
+});
