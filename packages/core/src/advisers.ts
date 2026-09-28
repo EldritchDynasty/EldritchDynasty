@@ -177,7 +177,7 @@ function matchPosition(
     case 'steward':
     case 'broker': {
       const card = [...open].sort((a, b) => a.dowry - b.dowry || evidenceCount(b) - evidenceCount(a))[0]!;
-      return `I would take ${card.name}. ${card.dowry} crowns is the part of this bargain the account book can prove today.`;
+      return `I would take ${card.name}. The dowry is the part of this bargain the account book can prove today.`;
     }
     case 'reader': {
       const card = [...open].sort((a, b) => evidenceCount(b) - evidenceCount(a) || b.lineSeen - a.lineSeen)[0]!;
@@ -352,7 +352,7 @@ function helpPosition(
         case 'chronicle':
           return 'Use Read it whole. Where a page points backward or forward, follow that thread before you judge it.';
         case 'branches':
-          return 'Choose this hall, then open one of its people or follow Only this branch. Read the quarrel beside the family carrying it.';
+          return 'Open the Table if the quarrel needs an answer. Endow can put land behind a cadet hall; Scion changes where the house concentrates its effort.';
         default:
           return assertNever(surface, 'help surface');
       }
