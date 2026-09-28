@@ -693,8 +693,14 @@ const knownReferences: ValidationRule = {
     }
 
     for (const t of content.tales) {
+      const at = `tale:${t.id}`;
       if (!content.event(t.about)) {
-        issues.push(err(this.id, `tale:${t.id}`, `'about' names unknown event '${t.about}'`));
+        issues.push(err(this.id, at, `'about' names unknown event '${t.about}'`));
+      }
+      for (const house of t.houses) {
+        if (!content.house(house)) {
+          issues.push(err(this.id, at, `'houses' names unknown house '${house}'`));
+        }
       }
     }
     return issues;
