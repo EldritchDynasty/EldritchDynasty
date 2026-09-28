@@ -4,8 +4,16 @@ import { mount, type VueWrapper } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { PendingDecisionS } from '@ed/schema';
-import type { LandView, PendingDecision, PendingDecisionView, RiteAssembly, TableView } from '@ed/core';
+import { PendingDecisionS, type FrameEntry } from '@ed/schema';
+import type {
+  LandView,
+  PendingDecision,
+  PendingDecisionView,
+  RiteAssembly,
+  SessionView,
+  TableView,
+} from '@ed/core';
+import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
 import Table from './Table.vue';
 import type { GameActions } from '../lib/game';
@@ -512,7 +520,7 @@ describe('the docket draws what it is handed', () => {
 });
 
 describe('pseudo-localisation stress (#276)', () => {
-  it('renders choice, Match, Record and Table copy at the largest reading scale', () => {
+  it('renders choice, Match, Record, Chronicle and Table copy at the largest reading scale', () => {
     applyAccessibility(document.documentElement, {
       ...DEFAULT_ACCESSIBILITY,
       textScale: 'largest',
@@ -535,6 +543,20 @@ describe('pseudo-localisation stress (#276)', () => {
           actions: spyActions() as unknown as GameActions,
           refusal: null,
           receipt: null,
+        },
+      }),
+      mount(Chronicle, {
+        props: {
+          view: {
+            chronicle: [],
+            campaign: { endYear: 1542 },
+          } as unknown as SessionView,
+          frame: [{
+            eventId: 'pseudo_loc_probe',
+            year: 1542,
+            text: 'The remembered page is still readable when the words grow.',
+          } as FrameEntry],
+          actions: spyActions() as unknown as GameActions,
         },
       }),
     ];
