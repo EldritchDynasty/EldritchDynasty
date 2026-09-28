@@ -68,7 +68,8 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync,
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { nodeModulesLinkType, npmInvocation } from './portable.mjs';
-import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';\nimport { closingIssues } from './closing-keywords.mjs';
+import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';
+import { closingIssues } from './closing-keywords.mjs';
 
 /** This checkout, derived from the script rather than from the cwd. */
 const REPO = join(import.meta.dirname, '..');
@@ -252,9 +253,8 @@ export function issueLeftOpen(branch, commitLog, held = []) {
   const wanted = [...new Set([...(fromName ? [fromName] : []), ...held.map(String)])];
   if (!wanted.length) return null;
 
-  const closes = (n) =>
-    new RegExp(`\\b(clos(e|es|ed)|fix(e[sd])?|resolv(e|es|ed))\\s+#${n}\\b`, 'i').test(commitLog);
-  const open = wanted.filter((n) => !closes(n));
+  const closed = new Set(closingIssues(commitLog));
+  const open = wanted.filter((n) => !closed.has(n));
   if (!open.length) return null;
 
   const list = open.map((n) => `#${n}`).join(', ');
