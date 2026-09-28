@@ -159,6 +159,39 @@ export function observeChoiceCheck(
   };
 }
 
+export function observePartyCheck(
+  ctx: SimCtx,
+  d: PendingChoice,
+): CheckAttemptObservation | undefined {
+  if (d.choicesAreOpen) return undefined;
+  // The density player sends an empty cast. A required player-cast slot means
+  // that attempt will be refused and handed to the chronicler instead, so
+  // there is no player check attempt to count.
+  if (d.cast.some((request) => !request.optional)) return undefined;
+  if (d.event.interaction.kind === 'narration') return undefined;
+
+  const decider = d.event.interaction.decidedBy;
+  if (typeof decider !== 'object' || !('party' in decider)) return undefined;
+  const check = d.event.checks.find((candidate) => candidate.id === decider.party.check);
+  if (!check) return undefined;
+
+  const person = checkPerson(check.pool, d.fill);
+  if (!person) return undefined;
+
+  const result = evalCheck(
+    ctx,
+    check,
+    d.event,
+    d.fill,
+    streamFor(ctx.world, 'decision', d.id),
+  );
+  return {
+    check: `${d.event.id}/${check.id}`,
+    person,
+    ok: result.roll >= result.difficulty,
+  };
+}
+
 function checkPerson(
   pool: { kind: string; slot?: string; slots?: string[] },
   fill: PendingChoice['fill'],
