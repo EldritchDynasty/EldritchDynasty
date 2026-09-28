@@ -6,6 +6,8 @@ import {
 } from '../ascension.js';
 import { tableView, type RiteAssembly } from '../table.js';
 import type { PendingChoice, PendingDecision, PendingRecord } from '../events/decisions.js';
+import { evalCheck } from '../events/checks.js';
+import { streamFor } from '../rng.js';
 import type { SimCtx } from '../world.js';
 
 /**
@@ -105,6 +107,77 @@ export function blockerLevers(blocker: LadderBlocker): readonly BlockerLever[] {
     default:
       return assertNever(blocker);
   }
+}
+
+export interface CheckAttemptObservation {
+  /** Authored check identity; stable across repeated firings of the event. */
+  check: string;
+  person: string;
+  /** Passing the authored difficulty is the check's success boundary. */
+  ok: boolean;
+}
+
+/**
+ * Observe the EXACT check the ordinary GameSession.choose path is about to
+ * roll, without advancing shared RNG or mutating the world.
+ *
+ * GameSession.choose derives a fresh stream from (world, "decision", id) on
+ * every resolution. Reconstructing that fresh stream here is deterministic and
+ * non-mutating, so the later real resolution sees the same roll. We refuse
+ * player-cast decisions because this instrument does not invent a cast merely
+ * to obtain a number: if the actual density policy cannot supply the required
+ * person, there was no check attempt to count.
+ */
+export function observeChoiceCheck(
+  ctx: SimCtx,
+  d: PendingChoice,
+  choiceId: string,
+): CheckAttemptObservation | undefined {
+  if (d.cast.some((request) => !request.optional)) return undefined;
+  if (d.event.interaction.kind === 'narration') return undefined;
+  if (!d.choices.find((choice) => choice.id === choiceId)?.available) return undefined;
+
+  const choice = d.event.interaction.choices.find((candidate) => candidate.id === choiceId);
+  if (!choice?.check) return undefined;
+  const check = d.event.checks.find((candidate) => candidate.id === choice.check);
+  if (!check) return undefined;
+
+  const person = checkPerson(check.pool, d.fill);
+  if (!person) return undefined;
+
+  const result = evalCheck(
+    ctx,
+    check,
+    d.event,
+    d.fill,
+    streamFor(ctx.world, 'decision', d.id),
+  );
+  return {
+    check: `${d.event.id}/${check.id}`,
+    person,
+    ok: result.roll >= result.difficulty,
+  };
+}
+
+function checkPerson(
+  pool: { kind: string; slot?: string; slots?: string[] },
+  fill: PendingChoice['fill'],
+): string | undefined {
+  if (pool.kind === 'slot' && pool.slot) {
+    const cast = fill[pool.slot];
+    return typeof cast === 'string' ? cast : undefined;
+  }
+  if (pool.kind === 'party_sum' && pool.slots) {
+    const people = pool.slots.flatMap((slot) => {
+      const cast = fill[slot];
+      return typeof cast === 'string' ? [cast] : Array.isArray(cast) ? cast : [];
+    });
+    const unique = [...new Set(people)];
+    return unique.length === 1 ? unique[0] : undefined;
+  }
+  // Family/record pools are deliberately not attributed to a person. #270 is
+  // specifically asking whether the same PERSON keeps failing the same check.
+  return undefined;
 }
 
 export interface BlockerActionability {
