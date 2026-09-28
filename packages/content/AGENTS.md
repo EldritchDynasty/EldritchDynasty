@@ -27,7 +27,7 @@ checklist to run before you commit one; §24 is what is already fixed and may no
 npm run validate     # 32 rules; exits non-zero on any error
 ```
 
-**Campaign shape (#274):** changing an ending or a campaign-scoped condition requires `npm run gate:campaigns`; paste its before/after report. Never hand-list Short/Long reach.
+**Campaign shape (#274):** endings/conditions → `npm run gate:campaigns`; paste before/after.
 
 ## Events
 
