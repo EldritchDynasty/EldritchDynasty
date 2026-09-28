@@ -116,9 +116,11 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const categoryWindow: string[] = [];
   const campaignStall = makeStallClock();
   const ageStalls = new Map<string, StallClock>();
+  const ambitionIds = ambitionOptions(w.campaign).map((a) => a.id);
   const ambitionTrackers = new Map<HouseAmbitionId, AmbitionTracker>(
-    ambitionOptions(w.campaign).map((a) => [a.id, makeAmbitionTracker()]),
+    ambitionIds.map((id) => [id, makeAmbitionTracker()]),
   );
+  const ageAmbitionTrackers = new Map<string, Map<HouseAmbitionId, AmbitionTracker>>();
   const campaignFailures = makeFailureTracker();
   const ageFailures = new Map<string, FailureTracker>();
   let shapeWindow = 0;
@@ -164,6 +166,15 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
     sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
 
+    const activeAges = new Set(w.age.active.map((a) => String(a.age)));
+    for (const age of activeAges) {
+      if (!ageAmbitionTrackers.has(age)) {
+        ageAmbitionTrackers.set(age, new Map(
+          ambitionIds.map((id) => [id, makeAmbitionTracker()]),
+        ));
+      }
+    }
+
     // Ambitions are readings only (#210): selecting one does not alter the
     // simulation. Read every campaign-legal ambition off this SAME played year
     // rather than paying for four reruns that would answer an identical world.
@@ -176,10 +187,18 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         ? `${view.progress.current}${id === 'raise_ascendant' ? `:${blocker}` : ''}`
         : 'unavailable';
       noteAmbition(tracker, key);
+      for (const age of activeAges) {
+        noteAmbition(ageAmbitionTrackers.get(age)!.get(id)!, key);
+      }
     }
     w.houseAmbition = selectedAmbition;
 
-    const activeAges = new Set(w.age.active.map((a) => String(a.age)));
+    for (const [age, trackers] of ageAmbitionTrackers) {
+      if (!activeAges.has(age)) {
+        for (const tracker of trackers.values()) breakAmbitionTracker(tracker);
+      }
+    }
+
     for (const age of activeAges) {
       const tracker = ageStalls.get(age) ?? makeStallClock();
       sampleStallClock(g.ctx, tracker, blocker, top?.person.id);
@@ -324,6 +343,11 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     }
 
     for (const tracker of ambitionTrackers.values()) noteAmbitionDecisions(tracker, decisionsThisYear);
+    for (const age of activeAges) {
+      for (const tracker of ageAmbitionTrackers.get(age)!.values()) {
+        noteAmbitionDecisions(tracker, decisionsThisYear);
+      }
+    }
 
     // The span is years BETWEEN landmarks, so a landmark year ends it without
     // being counted into it.
@@ -379,6 +403,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       }])),
     ambitionFlat: Object.fromEntries([...ambitionTrackers.entries()]
       .map(([id, tracker]) => [id, { years: tracker.years, decisions: tracker.decisions }])),
+    ambitionFlatAges: Object.fromEntries([...ageAmbitionTrackers.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([age, trackers]) => [age, Object.fromEntries([...trackers.entries()]
+        .map(([id, tracker]) => [id, { years: tracker.years, decisions: tracker.decisions }]))])),
     repeatedFailure: {
       campaign: { check: campaignFailures.check, order: campaignFailures.order },
       ages: Object.fromEntries([...ageFailures.entries()]
@@ -447,6 +475,12 @@ function noteAmbition(tracker: AmbitionTracker, key: string): void {
 function noteAmbitionDecisions(tracker: AmbitionTracker, decisions: number): void {
   tracker.currentDecisions += decisions;
   tracker.decisions = Math.max(tracker.decisions, tracker.currentDecisions);
+}
+
+function breakAmbitionTracker(tracker: AmbitionTracker): void {
+  tracker.key = undefined;
+  tracker.currentYears = 0;
+  tracker.currentDecisions = 0;
 }
 
 function bump(counts: Map<string, number>, key: string): void {
