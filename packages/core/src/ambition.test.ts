@@ -61,7 +61,7 @@ function quietRecord(ctx: SimCtx): PendingRecord {
     frequency: 'common',
     tags: [],
     purposes: ['change_relationship', 'worldbuild_through_action', 'force_record_choice'],
-    conditions: [],
+    conditions: undefined,
     slots: {},
     interaction: {
       kind: 'narration',
@@ -114,7 +114,7 @@ function bloodChoice(ctx: SimCtx) {
     frequency: 'common',
     tags: [],
     purposes: ['change_relationship', 'worldbuild_through_action', 'buy_patience'],
-    conditions: [],
+    conditions: undefined,
     slots: {},
     record: undefined,
     interaction: {
