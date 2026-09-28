@@ -31,6 +31,10 @@ Git will merge those two diffs without a murmur. So:
 
 Everything else in this document is bookkeeping.
 
+**When an issue must stay open, mention it as `Refs #N` or `Part of #N`. Never
+write a negated closing keyword such as `does not close #N`: GitHub still closes
+`#N` because it reads the keyword, not the negation.**
+
 ---
 
 ## Can an agent assign an issue to itself?
