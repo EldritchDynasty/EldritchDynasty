@@ -65,7 +65,7 @@ export function prBodyError(text) {
   ].join('\n');
 }
 
-// Workflows set this explicitly. Imports from land/janitor remain pure.
+// CI workflows set this explicitly; normal imports from land/janitor remain pure.
 if (process.env.CHECK_PR_BODY === '1') {
   const error = prBodyError(process.env.PR_BODY ?? '');
   if (error) {
