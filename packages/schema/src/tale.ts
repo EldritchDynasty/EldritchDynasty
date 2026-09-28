@@ -29,6 +29,11 @@ export const TaleDefS = z.object({
   bias: z.string().min(1),
   /** The event this tale is about. Its circulation clock starts the year that event actually fires. */
   about: z.string(),
+  /**
+   * Houses this account concerns, independent of how the teller or prose names
+   * them. Match panels read these ids; wording is presentation and may change.
+   */
+  houses: z.array(z.string()).default([]),
   /** How much of it is true, 0..1. The simulation's actual outcome is often neither this account nor its rival's. */
   accuracy: z.number().min(0).max(1),
   /** Years after `about` fires before this tale starts circulating. */
