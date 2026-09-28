@@ -1,25 +1,30 @@
 /**
  * RUN-TWO DIVERGENCE — issue #272.
  *
- * The returning-player question is deliberately split in two:
+ * Two readings of the same question — how much of run two has the player
+ * already met in run one:
  *
- *   1. event-id freshness can be measured now from the decision log;
- *   2. interaction-shape freshness belongs to #271's canonical `shapeOf`.
+ *   1. by EVENT ID, the literal repeat;
+ *   2. by #271's category SHAPE (`shapeOf`), the repeat a player recognises
+ *      even when the prose, pounds and event id all differ.
  *
- * This file does not invent a second shape vocabulary while #271 is open.
- * The pure comparator accepts a shape reader, so #271 can plug its one source
- * of truth in without changing the statistic or the tests below.
+ * Both come off one player: `measureDensity`, through its `onChoice`
+ * observer, on a real Short Line. The shape key only exists while a choice is
+ * pending — it reads which options are available — so a saved decision log
+ * cannot supply it, and a second play loop here would be a second copy of the
+ * density player's answer policy for the two columns to disagree about.
  *
- * Whole campaigns are read through `playedRun`, the repository's deterministic
- * run corpus. The Library's mechanical neutrality is not reimplemented here:
- * `gateLibraryNeutrality` remains the authority and this report delegates to it.
+ * The Library table reads a finished Short Line through `playedRun`, the
+ * deterministic run corpus. Its mechanical neutrality is not reimplemented
+ * here: `gateLibraryNeutrality` remains the authority and this delegates to it.
  */
 import { loadContent } from '@ed/content';
-import type { Content, ContentBundle, LoggedDecision } from '@ed/schema';
+import type { Content, ContentBundle } from '@ed/schema';
 import { CAMPAIGNS } from '../campaign.js';
 import { playedRun } from '../corpus.js';
 import { libraryRunOf } from '../run-library.js';
 import { newGame } from '../session.js';
+import { measureDensity } from './density-gate.js';
 import { gateLibraryNeutrality } from './library-gate.js';
 
 type Source = ContentBundle | Content;
@@ -28,6 +33,8 @@ export interface DecisionVisit {
   /** Stable event-level identity. Match/name forms have no event id and are not fabricated here. */
   id: string;
   year: number;
+  /** #271's category shape, when the stream was read off a live player. */
+  shape?: string;
 }
 
 export interface DivergenceReading {
@@ -41,33 +48,11 @@ export interface DivergenceReading {
 }
 
 /**
- * The stable event-level decisions a second run can literally meet again.
- *
- * An outcome without `choiceId` is narration, not a decision. Match and name
- * answers are real decisions, but their log entries carry person/card identity
- * rather than a stable interaction id; treating every match as "match" would
- * manufacture overlap, while comparing person ids across seeds would manufacture
- * novelty. #271's shape layer is the right home for those forms.
- */
-export function eventDecisionStream(log: readonly LoggedDecision[]): DecisionVisit[] {
-  const out: DecisionVisit[] = [];
-  for (const decision of log) {
-    if (decision.kind === 'outcome') {
-      if (decision.choiceId !== undefined) out.push({ id: decision.event, year: decision.year });
-      continue;
-    }
-    if (decision.kind === 'record') {
-      out.push({ id: `record:${decision.event}`, year: decision.year });
-    }
-  }
-  return out;
-}
-
-/**
  * Compare B against everything A has already shown.
  *
- * The optional shape reader is dependency injection on purpose: #272 may ship
- * its ID/corpus/library instrument without copying #271's interaction taxonomy.
+ * The shape reader is injected rather than imported so this statistic stays a
+ * pure function over two lists, testable without playing a run; #271's
+ * `shapeOf` is still the only thing that decides what a shape is.
  */
 export function compareDecisionStreams(
   a: readonly DecisionVisit[],
@@ -120,11 +105,20 @@ function mean(values: readonly number[]): number {
 }
 
 export function replayLines(rows: readonly ReplayPair[]): string[] {
-  const head = ['pair', 'B first 30 in A', 'B overall in A', 'first new B decision'];
+  // The shape columns appear only when every reading carries one: a row
+  // without shapes printed as 0% would read as "nothing repeats".
+  const shaped = rows.length > 0 && rows.every((row) =>
+    row.opening.shapeOverlap !== undefined && row.overall.shapeOverlap !== undefined);
+  const head = [
+    'pair', 'B first 30 in A', 'B overall in A',
+    ...(shaped ? ['shape first 30', 'shape overall'] : []),
+    'first new B decision',
+  ];
   const body = rows.map((row) => [
     `${row.a}→${row.b}`,
     percent(row.opening.idOverlap),
     percent(row.overall.idOverlap),
+    ...(shaped ? [percent(row.opening.shapeOverlap!), percent(row.overall.shapeOverlap!)] : []),
     row.overall.firstNewIndex < 0
       ? 'none'
       : `#${row.overall.firstNewIndex + 1} (${row.overall.firstNewYear ?? '?'})`,
@@ -134,6 +128,12 @@ export function replayLines(rows: readonly ReplayPair[]): string[] {
       'mean',
       percent(mean(rows.map((row) => row.opening.idOverlap))),
       percent(mean(rows.map((row) => row.overall.idOverlap))),
+      ...(shaped
+        ? [
+          percent(mean(rows.map((row) => row.opening.shapeOverlap!))),
+          percent(mean(rows.map((row) => row.overall.shapeOverlap!))),
+        ]
+        : []),
       '',
     ]);
   }
@@ -165,14 +165,32 @@ function shortLine(source: Source, seed: number) {
   return playedRun(source, seed, CAMPAIGNS.short.years + 1, CAMPAIGNS.short.startYear, 'short');
 }
 
+/**
+ * Every choice a Short Line puts to the density player, in order, with its
+ * category shape.
+ */
+export function shortLineChoices(source: Source, seed: number): DecisionVisit[] {
+  const out: DecisionVisit[] = [];
+  measureDensity(source, seed, CAMPAIGNS.short.years, {
+    campaign: 'short',
+    onChoice: (visit) => out.push({ id: visit.id, year: visit.year, shape: visit.category }),
+  });
+  return out;
+}
+
+function shapeOfVisit(visit: DecisionVisit): string {
+  if (visit.shape === undefined) throw new Error(`decision ${visit.id} (${visit.year}) was read without a shape`);
+  return visit.shape;
+}
+
 export function measureReplayPair(source: Source, a: number, b: number): ReplayPair {
-  const first = eventDecisionStream(shortLine(source, a).world.decisionLog);
-  const second = eventDecisionStream(shortLine(source, b).world.decisionLog);
+  const first = shortLineChoices(source, a);
+  const second = shortLineChoices(source, b);
   return {
     a,
     b,
-    opening: compareDecisionStreams(first, second.slice(0, 30)),
-    overall: compareDecisionStreams(first, second),
+    opening: compareDecisionStreams(first, second.slice(0, 30), shapeOfVisit),
+    overall: compareDecisionStreams(first, second, shapeOfVisit),
   };
 }
 
@@ -214,7 +232,6 @@ if (isMain) {
 
   console.log(`replay divergence: ${pairs} paired Short Lines`);
   for (const line of replayLines(rows)) console.log(line);
-  console.log('  shape overlap: awaiting #271 canonical shapeOf (not duplicated here)');
   console.log('');
   for (const line of libraryLines(measureLibraryVisibility(source, rows[0]!.a, rows[0]!.b))) console.log(line);
   console.log('');

@@ -8661,3 +8661,68 @@ all echo systems together:
 
 Both terms clear stage 1's bars (mean at most 4 copies of one frame, at
 least 2 echo lines per run), and the bars are unchanged.
+
+## #272 run-two divergence baseline — the words are new, the questions are not
+
+**Measured 29 September 2026** on `1a2753b` plus the #272 change, with
+`npm run gate:replay -- 12`: twelve pairs of **real Short Lines**,
+`(901,902) … (923,924)`. Run A is the first run and run B is the second. Both
+are played by the density player (`measureDensity`'s answer policy) through
+its `onChoice` observer, so the id and shape columns come from the same
+choices. Two runs print identical tables.
+
+```text
+pair     B first 30 in A  B overall in A  shape first 30  shape overall  first new B decision
+-------  ---------------  --------------  --------------  -------------  --------------------
+901→902  53%              50%             67%             71%            #1 (1044)
+903→904  40%              24%             73%             68%            #1 (1043)
+905→906  17%              24%             43%             43%            #1 (1046)
+907→908  14%              14%             38%             38%            #1 (1048)
+909→910  7%               5%              17%             18%            #1 (1043)
+911→912  20%              14%             67%             55%            #1 (1043)
+913→914  40%              42%             70%             76%            #1 (1047)
+915→916  37%              33%             57%             55%            #4 (1055)
+917→918  37%              33%             63%             60%            #3 (1061)
+919→920  43%              39%             67%             73%            #1 (1044)
+921→922  50%              42%             77%             72%            #1 (1043)
+923→924  53%              40%             67%             58%            #3 (1050)
+mean     34%              30%             59%             57%
+```
+
+Library: the finished Short Line leaves **12** entries. The next run seeds
+**4** memories, all dated **1042**, and they surface only in Abroad
+(`SessionView.tales`). `library-neutrality` is exact on every column.
+
+### What this says
+
+1. **By event, run two is mostly new.** About a third of B's opening 30
+   choices are scenes A already showed. In 9 pairs of 12, B's very first
+   choice is new. Where A ended early (909), almost nothing repeats.
+2. **By shape, it mostly is not.** 57% of B's choices ask a category of
+   question A already asked (59% in the opening 30). The returning player
+   meets new scenes that pose familiar mechanical questions. That is #271's
+   within-run finding (category repeat ≈ 45% at a 300-year term), seen across
+   runs, and it belongs to the same owners.
+3. **The Library is a placement problem, not a timing one.** The memories
+   exist from the founding year and nothing in the main flow reads them. The
+   two surfacing options are in #272's plan (an interlude after the first Age
+   opening, or one prologue line). Both are design calls for the owner, not
+   built here.
+
+### How this differs from the numbers in the issue
+
+#272's 2026-09-27 prototype table (mean 17% for "first 30") compared B only
+against **A's first three generations**, and it predates two fixes: until
+`a4f2a44`, `playedRun` could not play a Short Line, and until this change
+`measureDensity` could not either. This table compares B against the whole
+of A, on Short Lines.
+
+**Caution for earlier rows:** `gate:density`'s `300` term and the #271/#270
+"Short 300" columns above still play a **Long Line stopped at 300 years**.
+`measureDensity` defaults to `campaign: 'long'`, and nothing in those gates
+passes a campaign. The rows are internally consistent, but they are not
+Short Lines. Changing them would move `attention.slow.test.ts`'s bands, so
+it is left to that instrument's owner.
+
+No threshold is set. The next useful number is the shape overlap after a
+content pass that targets repeated categories.

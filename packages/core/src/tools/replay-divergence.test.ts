@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   compareDecisionStreams,
-  eventDecisionStream,
   libraryLines,
   replayLines,
   type DecisionVisit,
 } from './replay-divergence.js';
-import type { LoggedDecision } from '@ed/schema';
 
 describe('replay divergence comparison (#272)', () => {
   it('measures B against ids already seen in A and locates the first new decision', () => {
@@ -43,21 +41,6 @@ describe('replay divergence comparison (#272)', () => {
     });
   });
 
-  it('extracts only decisions with stable event identities from the log', () => {
-    const log: LoggedDecision[] = [
-      { kind: 'outcome', year: 1044, event: 'asked', choiceId: 'yes', outcomeId: 'paid', fill: {} },
-      { kind: 'outcome', year: 1045, event: 'weather', outcomeId: 'rain', fill: {} },
-      { kind: 'record', year: 1044, event: 'asked', option: 'record' },
-      { kind: 'name', year: 1046, person: 'p_1', name: 'Anne' },
-      { kind: 'match', year: 1047, subject: 'p_2', card: null, spouse: 'p_3' },
-    ];
-
-    expect(eventDecisionStream(log)).toEqual([
-      { id: 'asked', year: 1044 },
-      { id: 'record:asked', year: 1044 },
-    ]);
-  });
-
   it('formats deterministic report rows without playing a run', () => {
     const reading = compareDecisionStreams(
       [{ id: 'old', year: 1042 }],
@@ -75,5 +58,22 @@ describe('replay divergence comparison (#272)', () => {
       since: 1042,
       surfaced: 'Abroad / SessionView.tales',
     })).toContain('  inherited memories at founding: 4');
+  });
+
+  it('prints the shape columns only when every reading carries a shape', () => {
+    const a = [{ id: 'old', year: 1042, shape: '[money]' }];
+    const b = [{ id: 'old', year: 1043, shape: '[money]' }, { id: 'new', year: 1044, shape: '[lasting | money]' }];
+    const reading = compareDecisionStreams(a, b, (visit) => visit.shape!);
+    const lines = replayLines([{ a: 901, b: 902, opening: reading, overall: reading }]);
+    expect(lines[0]).toContain('shape first 30');
+    expect(lines[2]).toBe('901→902  50%              50%             50%             50%            #2 (1044)           ');
+
+    // One row without shapes: the columns go rather than printing it as 0%.
+    const bare = compareDecisionStreams(a, b);
+    const mixed = replayLines([
+      { a: 901, b: 902, opening: reading, overall: reading },
+      { a: 903, b: 904, opening: bare, overall: bare },
+    ]);
+    expect(mixed[0]).not.toContain('shape');
   });
 });

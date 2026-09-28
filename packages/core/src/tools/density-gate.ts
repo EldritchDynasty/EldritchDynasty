@@ -54,7 +54,7 @@
  * for the same answer. This is the sweep rig that produced the band.
  */
 import { loadContent } from '@ed/content';
-import type { Content, ContentBundle, HouseAmbitionId } from '@ed/schema';
+import type { CampaignId, Content, ContentBundle, HouseAmbitionId } from '@ed/schema';
 import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
@@ -88,6 +88,31 @@ export interface DensityOptions {
    * failure is observed for #270's repeated-order streak.
    */
   tableOrder?: (ctx: SimCtx) => TableOrder | undefined;
+  /**
+   * Which campaign to play. Default: the Long Line, which is what every
+   * baseline measured through this function so far was played as.
+   *
+   * A 300-year term on the Long Line is NOT a Short Line: the Ledger holds
+   * nine clauses instead of three, `settled` is not an ending, and every
+   * `campaignProgress` condition reads a different fraction in the same year.
+   */
+  campaign?: CampaignId;
+  /**
+   * Called once per choice, in the order the player meets them, with the
+   * event id and both of #271's shape keys. An observer: it cannot answer,
+   * and measuring with it changes nothing the run returns. `gate:replay`
+   * (#272) reads its id and shape streams off the same player through this,
+   * rather than keeping a second copy of this loop's answer policy.
+   */
+  onChoice?: (visit: ChoiceVisit) => void;
+}
+
+/** One choice as the density player met it (see `DensityOptions.onChoice`). */
+export interface ChoiceVisit {
+  id: string;
+  year: number;
+  kind: string;
+  category: string;
 }
 
 /**
@@ -108,7 +133,7 @@ export interface DensityOptions {
  * can find.
  */
 export function measureDensity(source: ContentBundle | Content, seed: number, years: number, opts: DensityOptions = {}): DensityRun {
-  const g = newGame(source, { seed });
+  const g = newGame(source, { seed, campaign: opts.campaign ?? 'long' });
   const w = g.ctx.world;
   const end = START_YEAR + years;
 
@@ -283,6 +308,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
           kind: shapeOf(d, 'kind'),
           category: shapeOf(d, 'category'),
         };
+        opts.onChoice?.({ id: d.event.id, year: w.year, ...shapes });
         for (const grain of ['kind', 'category'] as const) {
           const shape = shapes[grain];
           if (shapeSeenRun[grain].has(shape)) shapeRepeatsRun[grain] += 1;
