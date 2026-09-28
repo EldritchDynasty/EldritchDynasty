@@ -1,6 +1,7 @@
 import { assertNever } from '@ed/schema';
 import {
   GOD_AFFINITY_PAIRS,
+  LADDER_BLOCKERS,
   foremostOf,
   type LadderBlocker,
 } from '../ascension.js';
@@ -211,6 +212,72 @@ function checkPerson(
   // Family/record pools are deliberately not attributed to a person. #270 is
   // specifically asking whether the same PERSON keeps failing the same check.
   return undefined;
+}
+
+export interface StallClock {
+  blockerSpan: Record<LadderBlocker, number>;
+  actionableGap: Record<LadderBlocker, number>;
+  currentBlocker?: LadderBlocker;
+  currentSpan: number;
+  currentGapBlocker?: LadderBlocker;
+  currentGap: number;
+}
+
+function zeroBlockers(): Record<LadderBlocker, number> {
+  return Object.fromEntries(LADDER_BLOCKERS.map((blocker) => [blocker, 0]))
+    as Record<LadderBlocker, number>;
+}
+
+export function makeStallClock(): StallClock {
+  return {
+    blockerSpan: zeroBlockers(),
+    actionableGap: zeroBlockers(),
+    currentSpan: 0,
+    currentGap: 0,
+  };
+}
+
+/** Break continuity at an Age boundary without discarding that Age's maxima. */
+export function breakStallClock(clock: StallClock): void {
+  clock.currentBlocker = undefined;
+  clock.currentSpan = 0;
+  clock.currentGapBlocker = undefined;
+  clock.currentGap = 0;
+}
+
+/**
+ * Sample one played year. This is the one implementation used by the gate and
+ * by the real-world acceptance fixtures, so "actionable gap" cannot mean one
+ * thing in a unit test and another over five centuries.
+ */
+export function sampleStallClock(
+  ctx: SimCtx,
+  clock: StallClock,
+  blocker = foremostOf(ctx)?.standing.blocker ?? 'no-expresser',
+  personId = foremostOf(ctx)?.person.id,
+): BlockerActionability {
+  const action = blockerActionability(ctx, blocker, personId);
+
+  if (clock.currentBlocker === blocker) clock.currentSpan += 1;
+  else {
+    clock.currentBlocker = blocker;
+    clock.currentSpan = 1;
+  }
+  clock.blockerSpan[blocker] = Math.max(clock.blockerSpan[blocker], clock.currentSpan);
+
+  if (blocker === 'clear' || action.actionable) {
+    clock.currentGapBlocker = undefined;
+    clock.currentGap = 0;
+    return action;
+  }
+
+  if (clock.currentGapBlocker === blocker) clock.currentGap += 1;
+  else {
+    clock.currentGapBlocker = blocker;
+    clock.currentGap = 1;
+  }
+  clock.actionableGap[blocker] = Math.max(clock.actionableGap[blocker], clock.currentGap);
+  return action;
 }
 
 export interface BlockerActionability {
