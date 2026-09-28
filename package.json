@@ -66,6 +66,8 @@
     "gate:long": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/long-line-gate.ts",
     "//15": "Issue #66: Short-Line ending distribution and Ledger-recovery measurement. Use 100 runs to judge the 40% ceiling.",
     "gate:short": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/short-line-gate.ts",
+    "//17": "Issue #274: static Short/Long product inventory — endings, Ledger capacity, ladder vocabulary and campaign-exclusive content.",
+    "gate:campaigns": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/campaign-gate.ts",
     "//16": "Issue #272: paired Short-Line run-two freshness and inherited-Library visibility. Shape overlap plugs into #271's canonical shapeOf.",
     "gate:replay": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/replay-divergence.ts",
     "lint:prose": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/prose-lint.ts",
