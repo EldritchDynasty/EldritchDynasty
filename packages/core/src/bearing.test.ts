@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bearingWordsIn } from '@ed/schema';
 import {
-  ECHO_AFTER, REMEMBERED_AFTER, answeredBy, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
+  ECHO_AFTER, ECHO_SPACING, ECHO_VARIANTS, REMEMBERED_AFTER, answeredBy, echoTally, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
   testWorld, tickBearing, type BearingAct,
 } from '@ed/core';
 
@@ -122,7 +122,51 @@ describe('bearing is read off acts, not off fortune', () => {
     const echo = ctx.world.chronicle.at(-1)!.text ?? '';
     expect(echo).toContain('Ysabel');
     expect(ctx.world.bearing.score, 'the refusal is not in the reading yet').toBe(0);
-    expect(echo, 'the echo reports a thinner market the engine has not dealt').not.toMatch(/fewer|less|thinn|no longer/i);
+    for (let v = 0; v < ECHO_VARIANTS; v++) {
+      const line = echoText({ year: 1042, kind: 'refused_a_hand', about: 'x' }, v);
+      expect(line, 'an echo reports a thinner market the engine has not dealt').not.toMatch(/fewer|less|thinn|no longer/i);
+    }
+  });
+
+  /**
+   * ONE SENTENCE, NOT TWELVE (issue #326). A house that takes the cousin card
+   * for every child of a generation used to hear "People still spoke of…"
+   * once per marriage. A kind echoes at most once a generation, and its lines
+   * rotate; an act held back is still billed, because the bill reads acts.
+   */
+  it('holds a cluster of one kind to one echo a generation, and still bills every act', () => {
+    const ctx = testWorld(content, 7013);
+    ctx.world.year = 1042;
+    for (const who of ['Ysabel', 'Corran', 'Maud', 'Edric']) noteBearing(ctx, 'took_the_cousin', `${who} marrying a cousin`);
+    const before = ctx.world.chronicle.length;
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    expect(ctx.world.chronicle.length - before).toBe(1);
+    expect(ctx.world.bearing.acts.every((a) => a.echoed), 'every act is acknowledged, held or written').toBe(true);
+    expect(echoTally(ctx.world.bearing.acts)).toEqual({ written: 1, maxCopies: 1 });
+
+    ctx.world.year = 1042 + REMEMBERED_AFTER;
+    tickBearing(ctx);
+    const one = testWorld(content, 7013);
+    one.world.year = 1042;
+    noteBearing(one, 'took_the_cousin', 'Ysabel marrying a cousin');
+    one.world.year = 1042 + REMEMBERED_AFTER;
+    expect(bearingOf(ctx).carriage, 'a held-back echo is not a forgiven act').toBeGreaterThan(bearingOf(one).carriage);
+  });
+
+  it('rotates a kind\'s lines across the generations it echoes in', () => {
+    const ctx = testWorld(content, 7014);
+    const lines: string[] = [];
+    for (let i = 0; i < ECHO_VARIANTS + 1; i++) {
+      ctx.world.year = 1042 + i * ECHO_SPACING;
+      noteBearing(ctx, 'took_the_cousin', `marriage ${i}`);
+      ctx.world.year += ECHO_AFTER;
+      tickBearing(ctx);
+      lines.push((ctx.world.chronicle.at(-1)!.text ?? '').replace(`marriage ${i}`, '*'));
+    }
+    expect(new Set(lines.slice(0, ECHO_VARIANTS)).size, 'each generation hears a different line').toBe(ECHO_VARIANTS);
+    expect(lines[ECHO_VARIANTS], 'and the rotation comes round').toBe(lines[0]);
+    expect(echoTally(ctx.world.bearing.acts)).toEqual({ written: ECHO_VARIANTS + 1, maxCopies: 2 });
   });
 
   it('never names bearing in an echo (concept §29 rule 1, the prose/bearing vocabulary)', () => {
@@ -131,7 +175,9 @@ describe('bearing is read off acts, not off fortune', () => {
       wrote_it_larger: true, refused_a_hand: true, kept_her_back: true, took_the_cousin: true, bit_the_common: true,
     };
     for (const kind of Object.keys(every) as BearingAct[]) {
-      expect(bearingWordsIn(echoText({ year: 1100, kind, about: 'the matter' })), kind).toEqual([]);
+      for (let v = 0; v < ECHO_VARIANTS; v++) {
+        expect(bearingWordsIn(echoText({ year: 1100, kind, about: 'the matter' }, v)), `${kind} #${v}`).toEqual([]);
+      }
     }
   });
 

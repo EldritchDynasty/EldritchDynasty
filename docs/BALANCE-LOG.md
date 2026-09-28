@@ -8594,3 +8594,38 @@ why the comparison had to be measured rather than assumed. The judgement lives
 in `tools/ascendant-verdict.ts`, and `ascendant-verdict.test.ts` hands it batches
 it must reject: parity, and a 3-to-0 lead that is only 1.7 SE.
 `npm run gates -- endings` took 7m26s locally.
+
+## #326 (2026-09-28): echoes, common enough to teach and rare enough not to nag
+
+#211 shipped Bearing's echo lines and measured neither half of "common enough
+to teach causality without becoming repetitive". Measured on `68a69db`,
+chronicler play, seeds 901–906. The per-kind count is the copies of the one
+sentence each kind had:
+
+| | echo lines per run | most copies of ONE line per run | mean of that |
+|---|---|---|---|
+| Short (300y) | 15, 6, 2, 11, 9, 2 | 12, 3, 2, 8, 7, 1 | **5.5** |
+| Long (500y) | 14, 11, 2, 16, 9, 1 | 9, 9, 2, 10, 5, 1 | **6.0** |
+
+Nearly all of it is `took_the_cousin`: a house marrying in takes the cousin
+card for each child of a generation, and every card echoed as "People still
+spoke of…".
+
+**Change.** Each act kind rotates three lines, and a kind echoes at most once
+a generation (`ECHO_SPACING = ECHO_AFTER`). A held-back echo is still billed:
+`bearingOf` reads acts, not lines, and a test pins that. Measured after, over
+seeds 901–912 (`echo.slow.test.ts`):
+
+| | echo lines per run | most copies of one line |
+|---|---|---|
+| Short | 10, 6, 2, 7, 7, 2, 7, 6, 1, 7, 9, 6 (mean 5.8) | 3, 1, 1, 2, 2, 1, 2, 2, 1, 3, 3, 2 (mean 1.9) |
+| Long | 11, 8, 2, 11, 8, 1, 13, 8, 1, 15, 15, 13 (mean 9.7) | 3, 2, 1, 3, 2, 1, 3, 2, 1, 3, 3, 3 (mean 2.3) |
+
+**The bars, chosen deliberately.** A mean of at most **4** copies of one line
+per run is the repetition ceiling. It sits above the rotation's arithmetic
+floor (three lines, one echo a generation, so 300 years gives ~12/3) and below
+the 5.5–6.0 the old code measured, so the old code fails it. A mean of at
+least **2** echo lines per run is the reach floor. It sits under the lowest
+single run that still echoes at all. Both go through `expectMean`, so a
+margin under two standard errors fails with the batch size that would carry
+it.

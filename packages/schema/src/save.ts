@@ -833,6 +833,8 @@ export const SavedGameS = z.object({
       about: z.string().optional(),
       /** Whether the one-generation echo has already been written. */
       echoed: z.boolean().optional(),
+      /** The year that echo was written; absent when held back as a repeat (#326). */
+      echoedIn: z.number().optional(),
       /** The page the act wrote, when the book wrote one. */
       page: z.string().optional(),
     })).default([]),

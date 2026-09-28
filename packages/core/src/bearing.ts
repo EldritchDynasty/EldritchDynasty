@@ -71,6 +71,11 @@ export interface BearingEntry {
   about?: string;
   /** Set once the fiction has acknowledged this act, before it can enter the mechanical reading. */
   echoed?: boolean;
+  /**
+   * The year its echo line was actually written. Absent when the echo was held
+   * back as a repeat of its kind (issue #326), and on saves from before that.
+   */
+  echoedIn?: Year;
   /** The Chronicle page the act wrote, when it wrote one. */
   page?: string;
 }
@@ -254,48 +259,97 @@ export function noteBearing(ctx: SimCtx, kind: BearingAct, about?: string, page?
 }
 
 /**
- * The echo's line, one per act kind. Each says only what is TRUE the year it
- * is written (issue #326): an echo comes at `ECHO_AFTER`, a generation before
- * `bearingOf` counts the act at `REMEMBERED_AFTER`, so no echo may claim the
- * bill has already landed. The refused hand used to say "Fewer names came back
- * with the next letter" twenty-five years before the market thinned by so
- * much as one card — the world reporting a consequence it had not dealt,
- * which is invariant 13 read backwards.
+ * The echo's lines, three per act kind. Each says only what is TRUE the year
+ * it is written (issue #326): an echo comes at `ECHO_AFTER`, a generation
+ * before `bearingOf` counts the act at `REMEMBERED_AFTER`, so no echo may claim
+ * the bill has already landed. The refused hand used to say "Fewer names came
+ * back with the next letter" twenty-five years before the market thinned by so
+ * much as one card — the world reporting a consequence it had not dealt, which
+ * is invariant 13 read backwards.
+ *
+ * Three, because one sentence frame came back ten to twelve times in a run:
+ * a house that takes the cousin card every generation heard "People still
+ * spoke of…" at every one of them. The lines rotate in order, and
+ * `ECHO_SPACING` holds a kind to one echo a generation besides.
  */
-export function echoText(entry: BearingEntry): string {
-  // Every call site names the act; a save from before `about` existed names
-  // the year instead, never a generic "old decision" (#211's own rule).
-  const about = entry.about ?? `what the house did in ${entry.year}`;
-  switch (entry.kind) {
+function echoLines(kind: BearingAct, about: string): string[] {
+  const About = about.charAt(0).toUpperCase() + about.slice(1);
+  switch (kind) {
     case 'wrote_it_larger':
-      return `A copy kept elsewhere still named ${about}, and did not tell it quite as the house had.`;
+      return [
+        `A copy kept elsewhere still named ${about}, and did not tell it quite as the house had.`,
+        `A clerk from another house asked about ${about}, and wrote down an answer that was not the house's.`,
+        `${About} was read aloud at somebody else's table, from somebody else's copy.`,
+      ];
     case 'refused_a_hand':
-      return `A matchmaker remembered ${about}, and said as much to the next house that asked.`;
+      return [
+        `A matchmaker remembered ${about}, and said as much to the next house that asked.`,
+        `${About} was still told in the market towns, by people who had not been in the room.`,
+        `An old broker's book still had a line against ${about}.`,
+      ];
     case 'took_the_cousin':
-      return `People still spoke of ${about}: the outside hand had been there, and the house had chosen its own blood.`;
+      return [
+        `People still spoke of ${about}: the outside hand had been there, and the house had chosen its own blood.`,
+        `At a wedding in another hall somebody's aunt brought up ${about}, and nobody changed the subject.`,
+        `${About} was the example a priest reached for, a generation on, when a family asked him about cousins.`,
+      ];
     case 'bit_the_common':
-      return `At ${about}, old boundary stones were still pointed out in the village, though the house's map had moved on.`;
+      return [
+        `At ${about}, old boundary stones were still pointed out in the village, though the house's map had moved on.`,
+        `Children at ${about} still walked the old line on feast days, the way their grandparents had.`,
+        `A tenant's widow at ${about} still called the field by the name it had before the house took it.`,
+      ];
     case 'kept_her_back':
-      return `The market had not forgotten ${about}, who had been kept from it when a hand might still have been made.`;
+      return [
+        `The market had not forgotten ${about}, who had been kept from it when a hand might still have been made.`,
+        `A broker asked after ${about} a generation late, as if the offer might still stand.`,
+        `${About} came up in a letter from another house, as the daughter this one had kept at home.`,
+      ];
     default:
-      return assertNever(entry.kind, 'bearing echo');
+      return assertNever(kind, 'bearing echo');
   }
 }
 
 /**
- * The missing middle beat: fiction acknowledges a concrete old act one generation
- * after it happened, while the mechanical bill remains owned by bearing at fifty years.
+ * One echo's line. `ordinal` is how many echoes of this kind the run has
+ * already written, which picks the line in rotation.
+ */
+export function echoText(entry: BearingEntry, ordinal = 0): string {
+  // Every call site names the act; a save from before `about` existed names
+  // the year instead, never a generic "old decision" (#211's own rule).
+  const lines = echoLines(entry.kind, entry.about ?? `what the house did in ${entry.year}`);
+  return lines[ordinal % lines.length]!;
+}
+
+/** How many sentence frames a kind rotates through. */
+export const ECHO_VARIANTS = echoLines('wrote_it_larger', '').length;
+
+/**
+ * At most one echo of a kind a generation. Acts of one kind cluster — a house
+ * takes the cousin card for every child of a marrying generation — and an echo
+ * held back is still billed at `REMEMBERED_AFTER` by `bearingOf`, which reads
+ * the act, not the line.
+ */
+export const ECHO_SPACING = ECHO_AFTER;
+
+/**
+ * The fiction acknowledges a concrete old act one generation after it
+ * happened, while the mechanical bill remains owned by bearing at fifty years.
  */
 export function echoBearing(ctx: SimCtx): number {
+  const acts = ctx.world.bearing.acts;
   let written = 0;
-  for (const entry of ctx.world.bearing.acts) {
+  for (const entry of acts) {
     if (entry.echoed || ctx.world.year - entry.year < ECHO_AFTER) continue;
     entry.echoed = true;
+    const sameKind = acts.filter((a) => a.kind === entry.kind && a.echoedIn !== undefined);
+    if (sameKind.some((a) => ctx.world.year - a.echoedIn! < ECHO_SPACING)) continue;
+    entry.echoedIn = ctx.world.year;
     ctx.world.chronicle.push({
       id: chronicleEntryId(ctx),
       year: ctx.world.year,
       weight: 'line',
-      text: echoText(entry),
+      text: echoText(entry, sameKind.length),
       named: false,
       cause: {
         year: entry.year,
@@ -305,6 +359,19 @@ export function echoBearing(ctx: SimCtx): number {
     written++;
   }
   return written;
+}
+
+/**
+ * What a run's echoes came to (issue #326's instrument): how many lines were
+ * written, and the most copies of any ONE sentence frame. Read off the acts,
+ * never off the chronicle's words.
+ */
+export function echoTally(acts: readonly BearingEntry[]): { written: number; maxCopies: number } {
+  const byKind = new Map<BearingAct, number>();
+  for (const a of acts) if (a.echoedIn !== undefined) byKind.set(a.kind, (byKind.get(a.kind) ?? 0) + 1);
+  let maxCopies = 0;
+  for (const n of byKind.values()) maxCopies = Math.max(maxCopies, Math.ceil(n / ECHO_VARIANTS));
+  return { written: [...byKind.values()].reduce((a, b) => a + b, 0), maxCopies };
 }
 
 /** One reading, written to the world. Draws no dice. */
