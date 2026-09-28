@@ -48,8 +48,22 @@ export interface CampaignPlayedRun {
   exclusiveItems: number;
 }
 
+export interface CampaignDecisionVisit {
+  id: string;
+  year: number;
+}
+
+export interface CampaignDivergenceRun {
+  seed: number;
+  sharedPrefix: number;
+  divergenceYear?: number;
+  sameYearOverlap: number;
+  comparedBeforeShortTerm: number;
+}
+
 export interface CampaignPlayedReport {
   runs: CampaignPlayedRun[];
+  divergence: CampaignDivergenceRun[];
 }
 
 /**
@@ -231,6 +245,37 @@ export function campaignReachOf(
   };
 }
 
+export function campaignStreamDifference(
+  seed: number,
+  short: readonly CampaignDecisionVisit[],
+  long: readonly CampaignDecisionVisit[],
+  shortEndYear: number,
+): CampaignDivergenceRun {
+  const shared = Math.min(short.length, long.length);
+  let sharedPrefix = 0;
+  while (
+    sharedPrefix < shared
+    && short[sharedPrefix]!.id === long[sharedPrefix]!.id
+    && short[sharedPrefix]!.year === long[sharedPrefix]!.year
+  ) {
+    sharedPrefix += 1;
+  }
+  const firstDifferent = short[sharedPrefix] ?? long[sharedPrefix];
+
+  const shortSameYear = new Set(short.map((decision) => `${decision.year}\u0000${decision.id}`));
+  const beforeTerm = long.filter((decision) => decision.year <= shortEndYear);
+  const sameYear = beforeTerm.filter((decision) =>
+    shortSameYear.has(`${decision.year}\u0000${decision.id}`)).length;
+
+  return {
+    seed,
+    sharedPrefix,
+    ...(firstDifferent ? { divergenceYear: firstDifferent.year } : {}),
+    sameYearOverlap: beforeTerm.length ? sameYear / beforeTerm.length : 0,
+    comparedBeforeShortTerm: beforeTerm.length,
+  };
+}
+
 /** Play the same seeds in both products, under ordinary and intentional ladder play. */
 export async function campaignPlayedReport(
   source: ContentBundle | Content,
@@ -239,7 +284,11 @@ export async function campaignPlayedReport(
   // Keep the whole-game runner off the import graph of this module's fast
   // tests. The played report is a CLI/diagnostic path; the reducer above is
   // what belongs in the fast lane.
-  const { playToTheEnd } = await import('./ending-gate.js');
+  const [{ playToTheEnd }, { playedRun }, { eventDecisionStream }] = await Promise.all([
+    import('./ending-gate.js'),
+    import('../corpus.js'),
+    import('./replay-divergence.js'),
+  ]);
   const statics = campaignStaticReport(source);
   const runs: CampaignPlayedRun[] = [];
   for (const campaign of CampaignIdS.options) {
@@ -251,7 +300,21 @@ export async function campaignPlayedReport(
       }
     }
   }
-  return { runs };
+  const divergence = seeds.map((seed) => {
+    const shortWorld = playedRun(
+      source, seed, CAMPAIGNS.short.years + 1, CAMPAIGNS.short.startYear, 'short',
+    ).world;
+    const longWorld = playedRun(
+      source, seed, CAMPAIGNS.long.years + 1, CAMPAIGNS.long.startYear, 'long',
+    ).world;
+    return campaignStreamDifference(
+      seed,
+      eventDecisionStream(shortWorld.decisionLog),
+      eventDecisionStream(longWorld.decisionLog),
+      CAMPAIGNS.short.endYear,
+    );
+  });
+  return { runs, divergence };
 }
 
 export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
@@ -285,8 +348,23 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       );
     }
   }
+  if (report.divergence.length) {
+    const prefixes = report.divergence.map((row) => row.sharedPrefix);
+    const years = report.divergence
+      .map((row) => row.divergenceYear)
+      .filter((year): year is number => year !== undefined);
+    const overlap = report.divergence.reduce((sum, row) => sum + row.sameYearOverlap, 0)
+      / report.divergence.length;
+    out.push(
+      'same-seed Short → Long decision stream:',
+      `  shared opening prefix: mean ${(prefixes.reduce((a, b) => a + b, 0) / prefixes.length).toFixed(1)}, range ${Math.min(...prefixes)}–${Math.max(...prefixes)} decisions`,
+      `  first divergence year: ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'none'}`,
+      `  Long pre-${CAMPAIGNS.short.endYear} decisions also in Short in the same year: ${(100 * overlap).toFixed(1)}%`,
+    );
+  }
   return out;
 }
+
 export function campaignStaticLines(report: CampaignStaticReport): string[] {
   const out: string[] = [];
   for (const row of report.campaigns) {
