@@ -11,8 +11,13 @@ import { acquireLibraryCopy, canStudySpellbook } from '../people/library.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
+import { order } from '../table.js';
 import type { SimCtx } from '../world.js';
-import { blockerActionability, blockerLevers, makeStallClock, sampleStallClock } from './stall.js';
+import { measureDensity } from './density-gate.js';
+import {
+  blockerActionability, blockerLevers, makeFailureTracker, makeStallClock,
+  noteOrderAttempt, observeOrderAttempt, sampleStallClock,
+} from './stall.js';
 
 const bundle = loadContent();
 
@@ -130,6 +135,35 @@ describe('#270 strategic-stall actionability', () => {
     // it, so Study no longer moves the book-count predicate.
     him.rites.push('unmaking');
     expect(blockerActionability(ctx, 'books', him.id).verbs).not.toContain('study');
+  });
+
+  it('counts repeated failed table orders for the same person and exact order', () => {
+    const ctx = testWorld(bundle, 27004);
+    const him = place(ctx, { sex: 'male', age: 20, name: 'Persistent Pupil' });
+    const attempt = { kind: 'tutor', person: him.id, attr: 'strength' } as const;
+    const tracker = makeFailureTracker();
+
+    for (let i = 0; i < 2; i++) {
+      const result = order(ctx, attempt);
+      expect(result.ok).toBe(false);
+      const observed = observeOrderAttempt(attempt, result);
+      expect(observed).toBeTruthy();
+      noteOrderAttempt(tracker, observed!);
+    }
+
+    expect(tracker.order).toBe(2);
+  });
+
+  it('wires real table-policy attempts into DensityRun.repeatedFailure.order', () => {
+    let person: string | undefined;
+    const run = measureDensity(bundle, 27005, 3, {
+      tableOrder: (ctx) => {
+        person ??= ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)[0]?.id;
+        return person ? { kind: 'tutor', person, attr: 'strength' } : undefined;
+      },
+    });
+
+    expect(run.repeatedFailure.campaign.order).toBe(3);
   });
 
   it('lets a real power blocker accumulate a gap when no Match or widening rite is offered', () => {
