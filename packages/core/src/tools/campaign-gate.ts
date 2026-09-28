@@ -5,10 +5,17 @@ import {
 } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
-import { playToTheEnd, type EndingPolicy, type EndingRun } from './ending-gate.js';
 
 type Campaigns = Readonly<Record<CampaignId, CampaignDef>>;
 type Truths = ReadonlySet<boolean>;
+export type CampaignPolicy = 'chronicler' | 'ascendant';
+
+export interface CampaignPlayedSourceRun {
+  seed: number;
+  ending: string;
+  clauses: number;
+  templateFires?: Record<string, number>;
+}
 
 export interface CampaignStaticView {
   id: CampaignId;
@@ -31,7 +38,7 @@ export interface CampaignStaticReport {
 export interface CampaignPlayedRun {
   seed: number;
   campaign: CampaignId;
-  policy: EndingPolicy;
+  policy: CampaignPolicy;
   ending: string;
   clauses: number;
   exclusiveEvents: string[];
@@ -191,9 +198,9 @@ export function campaignStaticReport(
  * over existing telemetry rather than a second simulation instrument.
  */
 export function campaignReachOf(
-  run: EndingRun,
+  run: CampaignPlayedSourceRun,
   campaign: CampaignId,
-  policy: EndingPolicy,
+  policy: CampaignPolicy,
   report: CampaignStaticReport,
 ): CampaignPlayedRun {
   const row = report.campaigns.find((x) => x.id === campaign);
@@ -225,10 +232,14 @@ export function campaignReachOf(
 }
 
 /** Play the same seeds in both products, under ordinary and intentional ladder play. */
-export function campaignPlayedReport(
+export async function campaignPlayedReport(
   source: ContentBundle | Content,
   seeds: readonly number[],
-): CampaignPlayedReport {
+): Promise<CampaignPlayedReport> {
+  // Keep the whole-game runner off the import graph of this module's fast
+  // tests. The played report is a CLI/diagnostic path; the reducer above is
+  // what belongs in the fast lane.
+  const { playToTheEnd } = await import('./ending-gate.js');
   const statics = campaignStaticReport(source);
   const runs: CampaignPlayedRun[] = [];
   for (const campaign of CampaignIdS.options) {
@@ -305,6 +316,6 @@ if (isMain) {
     const seeds = Array.from({ length: Math.max(1, runs) }, (_, i) => 901 + i);
     console.log('');
     console.log(`played reach, ${seeds.length} shared seeds per campaign/policy`);
-    for (const line of campaignPlayedLines(campaignPlayedReport(source, seeds))) console.log(line);
+    for (const line of campaignPlayedLines(await campaignPlayedReport(source, seeds))) console.log(line);
   }
 }
