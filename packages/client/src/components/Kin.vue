@@ -10,8 +10,15 @@ const props = defineProps<{
   names: SessionView['attributes'];
   traitNames: SessionView['traits'];
   selected: string | null;
+  showRelevance?: boolean;
+  mentions?: (person: string) => { id: string; year: number }[];
 }>();
-defineEmits<{ (e: 'select', id: string): void; (e: 'line'): void; (e: 'root', id: string): void }>();
+defineEmits<{
+  (e: 'select', id: string): void;
+  (e: 'line'): void;
+  (e: 'root', id: string): void;
+  (e: 'book', page: string): void;
+}>();
 
 const kids = computed(() => children(props.member, props.hall));
 
@@ -30,11 +37,11 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
          the player's most consequential recurring decision is who marries
          whom — none of which was in the picture of the family. -->
     <div class="pair">
-      <Member :member="member" :names="names" :trait-names="traitNames" :open="selected === member.id" @select="$emit('select', $event)" @line="$emit('line')" />
+      <Member :member="member" :names="names" :trait-names="traitNames" :open="selected === member.id" :show-relevance="showRelevance" :mentions="mentions" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" />
       <template v-if="beside">
         <span class="knot" aria-hidden="true">⚭</span>
         <span class="said-not-shown">married to</span>
-        <Member :member="beside" :names="names" :trait-names="traitNames" :open="selected === beside.id" @select="$emit('select', $event)" @line="$emit('line')" />
+        <Member :member="beside" :names="names" :trait-names="traitNames" :open="selected === beside.id" :show-relevance="showRelevance" :mentions="mentions" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" />
       </template>
       <!-- A WAY IN, NOT A SMALLER INDENT (issue #106). The tree does not run
            off the side of a phone — the deepest chain measured across five
@@ -58,8 +65,11 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
         :names="names"
         :trait-names="traitNames"
         :selected="selected"
+        :show-relevance="showRelevance"
+        :mentions="mentions"
         @select="$emit('select', $event)"
         @line="$emit('line')"
+        @book="$emit('book', $event)"
         @root="$emit('root', $event)"
       />
     </ul>
