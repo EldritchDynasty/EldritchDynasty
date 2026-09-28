@@ -82,6 +82,17 @@ function lensOf(
     }
   }
 
+  const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
+  const regent = p.sex === 'female' && p.castSlots.includes('head');
+  if (heldSeal || regent || widowOfHead(ctx, p)) {
+    const cares = heldSeal
+      ? `${subject} has held the seal before`
+      : regent
+        ? 'she holds the seal because the house has no waking son to hold it'
+        : 'her husband held the seal, and she lived through what it cost the household';
+    return { lens: 'old_head', cares };
+  }
+
   if (p.career?.career === 'clergy') return { lens: 'priest', cares: `the Church is the institution ${subject} serves` };
   if (p.career?.career === 'merchant' || p.career?.career === 'factor' || p.career?.career === 'court') {
     return { lens: 'broker', cares: `${possessive} post is made of bargains, standing and other houses` };
@@ -92,17 +103,6 @@ function lensOf(
   }
   if (p.career?.career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
     return { lens: 'reader', cares: `${subject} lives by what can be read, remembered and proved` };
-  }
-
-  const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
-  const regent = p.sex === 'female' && p.castSlots.includes('head');
-  if (heldSeal || regent || widowOfHead(ctx, p)) {
-    const cares = heldSeal
-      ? `${subject} has held the seal before`
-      : regent
-        ? 'she holds the seal because the house has no waking son to hold it'
-        : 'her husband held the seal, and she lived through what it cost the household';
-    return { lens: 'old_head', cares };
   }
 
   const member = p.membership.find((m) =>
@@ -172,7 +172,7 @@ function matchPosition(
       const card = [...open].sort((a, b) =>
         Math.abs(a.age - d.subject.age) - Math.abs(b.age - d.subject.age)
         || evidenceCount(b) - evidenceCount(a))[0]!;
-      return `I would take ${card.name}. Of these names, that life begins nearest my child's own age. I am thinking about the years after the bargain.`;
+      return `I would take ${card.name}. Of these names, that one is nearest my child's age. I am thinking about the years after the bargain.`;
     }
     case 'midwife': {
       const issue = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.borne + r.grown, 0);
