@@ -350,10 +350,11 @@ function readOurBook(pages: ChronicleEntry[]): PanelPage[] {
 /**
  * WHAT IS SAID OF THE HOUSE, AND BY WHOM.
  *
- * A tale is `about` an event, never about a house — `TaleDefS` has no house
- * field and adding one would be a second way of saying what the cast already
- * says. So a tale reaches a house the same way our own book does: through the
- * pages that event actually wrote, and the people those pages named.
+ * A tale reaches a house by two structural routes: its about-event appears on
+ * pages concerning that house, or the tale explicitly declares the house in
+ * `TaleDef.houses`. The second route is what lets a rival chronicle be useful
+ * before our own book has mentioned that family, without making the rules read
+ * a house name out of free prose.
  *
  * Only tales that have STARTED CIRCULATING appear, for the reason
  * `circulatingTales` gives: a tale whose event has fired but whose
@@ -363,7 +364,6 @@ function readOurBook(pages: ChronicleEntry[]): PanelPage[] {
 function readSaid(ctx: SimCtx, house: string, pages: ChronicleEntry[]): PanelSaying[] {
   const w = ctx.world;
   const events = new Set(pages.map((e) => e.eventId).filter((id): id is string => id !== undefined));
-  const named = w.houses.get(house)?.name;
   const out: PanelSaying[] = [];
   const seen = new Set<string>();
 
@@ -376,24 +376,12 @@ function readSaid(ctx: SimCtx, house: string, pages: ChronicleEntry[]): PanelSay
 
   for (const eventId of events) for (const t of ctx.content.talesAbout(eventId)) take(t);
 
-  // AND THE SHORTER ROUTE, which is the one a person would use: a tale that
-  // NAMES the house, in what it says or in whose mouth it is. Kept second so
-  // the pages this family itself wrote lead, and kept at all because the
-  // claims route reaches almost nothing outside this house — the family's book
-  // writes about the family, and the cards a player most needs a second
-  // opinion on are the ones it has never mentioned.
-  //
-  // A house's own clerks count. `House Marrow's death-clerks, gloating` is not
-  // a neutral account of House Marrow and was never going to be; it is a thing
-  // said, by somebody with a motive, in a matter that house was in — which is
-  // the whole of what this section claims to be. The teller is on the row, so
-  // the player can see exactly whose mouth it came out of and weigh it the way
-  // they would weigh a person.
-  if (named) {
-    for (const id of w.tales.keys()) {
-      const t = ctx.content.tale(id);
-      if (t && (t.text.includes(named) || t.teller.includes(named))) take(t);
-    }
+  // AND THE SHORTER ROUTE: an authored semantic link. Kept second so pages
+  // this family itself wrote still lead. The teller and wording remain free to
+  // change, translate, or omit the house's name without changing the panel.
+  for (const id of w.tales.keys()) {
+    const t = ctx.content.tale(id);
+    if (t?.houses.includes(house)) take(t);
   }
   return out.slice(0, ROWS);
 }
