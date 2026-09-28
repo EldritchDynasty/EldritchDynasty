@@ -2,10 +2,16 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import { installUserContent } from './lib/content.js';
 import { installPlatform, platformForWindow } from './platform.js';
+import { installPseudoLocalisation, pseudoLocRequested } from './pseudo-loc.js';
 import './styles.css';
 
 const platform = platformForWindow();
 installPlatform(platform);
+
+const pseudoRoot = document.querySelector('#app');
+if (import.meta.env.DEV && pseudoRoot && pseudoLocRequested(window.location.search)) {
+  installPseudoLocalisation(pseudoRoot);
+}
 
 function startupFailure(error: unknown): void {
   const root = document.querySelector('#app');
