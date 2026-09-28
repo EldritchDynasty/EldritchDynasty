@@ -63,8 +63,8 @@ is in **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 npm install
 
 # Measured on a four-core container, and perishable. Re-measure before quoting.
-npm run check        # typecheck (vue-tsc too) + validate + test. ~15 min since
-                     # #143, and NOT the gates: landing on it broke main 4 times.
+npm run check        # typecheck (vue-tsc too) + validate + test. ~27 min,
+                     # and NOT the gates: landing on it broke main 4 times.
 npm run land         # the landing: fetch, rebase, install, the whole set CI
                      # runs ON THAT head, push, wait for CI. AGENTS.md authorises it.
                      # 40m MEASURED 2026-09-13 on a four-core container, from
@@ -80,9 +80,9 @@ npm run test:fast    # 75s, the fix-and-rerun loop. Skips the *.slow.test.ts sui
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
-npm test             # everything: 3,043 tests in 175 files, ~10 min
+npm test             # everything: 3,070 tests in 178 files, ~26 min
 npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
-                     # client's templates. ~22s
+                     # client's templates. ~29s
 npm run validate     # every content rule; exits non-zero on any error. An error
                      # names the file it is in: `events/rites.yaml → event:the_drowning`
 
