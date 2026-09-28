@@ -264,7 +264,8 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
     const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.repeatedFailure.ages)))].sort();
     const scopes: [string, ((run: DensityRun) => FailureStreaks | undefined)][] = [
       ['campaign', (run) => run.repeatedFailure.campaign],
-      ...ageIds.map((age) => [`age:${age}`, (run: DensityRun) => run.repeatedFailure.ages[age]] as const),
+      ...ageIds.map((age): [string, (run: DensityRun) => FailureStreaks | undefined] =>
+        [`age:${age}`, (run) => run.repeatedFailure.ages[age]]),
     ];
     for (const [scope, pick] of scopes) {
       const readings = runs.map(pick).filter((x): x is FailureStreaks => x !== undefined);
