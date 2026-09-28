@@ -5,7 +5,7 @@ import {
   ambientPool, beginImprovement, buyParcel, damageParcel, encroachParcel, endowParcel, grantParcel,
   heldParcels, isCaput, landIncome, landView, recallParcel,
   grudgeAgainstUs, parcelPrice, restoreParcel, seizeParcel, sellParcel,
-  setRentsPolicy, testWorld, tickLandImprovements, tickLandMarket, tickLandRisks,
+  emptyReport, runPhase, setRentsPolicy, testWorld, tickLandImprovements, tickLandMarket, tickLandRisks,
   type Rng,
 } from '@ed/core';
 
@@ -582,6 +582,18 @@ describe('tickLandImprovements', () => {
 });
 
 describe('the six land risk shapes', () => {
+  it('carries the structured risk result through the land phase report', () => {
+    const ctx = testWorld(bundle);
+    const report = emptyReport(ctx.world.year);
+
+    runPhase('land', ctx, report);
+
+    expect(report.landRisks).toBeDefined();
+    expect(typeof report.landRisks?.villageHarvest).toBe('number');
+    expect(typeof report.landRisks?.sarrowSank).toBe('boolean');
+    expect(Array.isArray(report.landRisks?.blighted)).toBe(true);
+  });
+
   it('couples the Wend mill to the same village harvest as the tenant farms', () => {
     const ctx = testWorld(bundle);
     tickLandRisks(ctx, riskRng([0.8]));
