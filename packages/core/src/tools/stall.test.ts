@@ -140,7 +140,7 @@ describe('#270 strategic-stall actionability', () => {
   it('counts repeated failed table orders for the same person and exact order', () => {
     const ctx = testWorld(bundle, 27004);
     const him = place(ctx, { sex: 'male', age: 20, name: 'Persistent Pupil' });
-    const attempt = { kind: 'tutor', person: him.id, attr: 'strength' } as const;
+    const attempt = { kind: 'career', person: him.id, career: 'no_such_post' } as const;
     const tracker = makeFailureTracker();
 
     for (let i = 0; i < 2; i++) {
@@ -159,7 +159,7 @@ describe('#270 strategic-stall actionability', () => {
     const run = measureDensity(bundle, 27005, 3, {
       tableOrder: (ctx) => {
         person ??= ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)[0]?.id;
-        return person ? { kind: 'tutor', person, attr: 'strength' } : undefined;
+        return person ? { kind: 'career', person, career: 'no_such_post' } : undefined;
       },
     });
 
