@@ -222,11 +222,15 @@ describe('house ambition (issue #210)', () => {
     expect(mustSurface(g.ctx, pending)).toBeUndefined();
   });
 
-  it('reads the exact remembered choice branch when it changes the bloodline', () => {
+  it('reads only the exact remembered choice branch when it changes the bloodline', () => {
     const g = newGame(content, { seed: 3273, campaign: 'short', decider: 'chronicler' });
     g.setAmbition('deepen_blood');
     const pending = bloodChoice(g.ctx);
 
+    delete g.ctx.world.delegation.choices[pending.event.id];
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+
+    g.ctx.world.delegation.choices[pending.event.id] = 'open_the_match';
     expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
       surface: 'choice',
       effect: 'advance',
