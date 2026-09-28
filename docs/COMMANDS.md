@@ -93,6 +93,10 @@ That second form is not a substitute for a forgotten closing keyword. Use it onl
 when the issue genuinely remains open after this landing; ordinary work stays on
 `/land` and keeps the issue-closing guard.
 
+To mention an issue without closing it, write `Refs #N` or `Part of #N`. Never write
+`close #N`, `fix #N` or `resolve #N` under a negation: GitHub ignores the negation
+and still closes the issue, so both PR admission paths reject that wording.
+
 `.github/workflows/remote-land.yml` accepts only those exact requests, and only
 from a repository collaborator with write-or-better permission. It checks out the exact PR head
 named by the request, restores the feature-branch name for claim checks, and

@@ -346,6 +346,15 @@ describe('a branch named for an issue is refused if nothing closes it', () => {
     },
   );
 
+  it('rejects a negated closing keyword as landing evidence', () => {
+    const msg = land.issueLeftOpen(
+      'claude/issue-110-x',
+      'Follow-up work\\n\\nThis does **not** close #110',
+    );
+    expect(msg, 'a negated close was accepted as if the issue were meant to close').not.toBeNull();
+    expect(msg).toContain('#110');
+  });
+
   it('requires the keyword before EACH number, matching GitHub and janitor.mjs', () => {
     // "Closes #106, #107" closes only #106 on GitHub — janitor.mjs reads it the
     // same way on purpose, so what this refuses and what GitHub actually did
