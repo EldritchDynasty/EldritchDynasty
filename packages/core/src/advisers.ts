@@ -17,6 +17,9 @@ export type AdviserLens =
   | 'mother' | 'midwife' | 'old_head' | 'close_kin';
 
 export type AdviceSurface = 'match' | 'record' | 'rite' | 'choice';
+export type HelpSurface = 'tree' | 'chronicle' | 'branches';
+export type HelpTier = 1 | 2 | 3;
+type AdviserSurface = AdviceSurface | HelpSurface;
 
 export interface AdviserAdvice {
   adviser: { id: string; name: string };
@@ -34,11 +37,14 @@ interface Adviser {
   relevance: number;
 }
 
-const SURFACE_LENS: Record<AdviceSurface, AdviserLens[]> = {
+const SURFACE_LENS: Record<AdviserSurface, AdviserLens[]> = {
   match: ['mother', 'midwife', 'broker', 'steward', 'reader', 'close_kin', 'old_head', 'priest', 'soldier'],
   record: ['reader', 'priest', 'old_head', 'broker', 'steward', 'close_kin', 'soldier', 'midwife', 'mother'],
   rite: ['priest', 'reader', 'old_head', 'close_kin', 'soldier', 'steward', 'broker', 'midwife', 'mother'],
   choice: ['old_head', 'close_kin', 'steward', 'reader', 'priest', 'soldier', 'broker', 'midwife', 'mother'],
+  tree: ['reader', 'old_head', 'close_kin', 'steward', 'priest', 'broker', 'soldier', 'midwife', 'mother'],
+  chronicle: ['reader', 'old_head', 'priest', 'broker', 'close_kin', 'steward', 'soldier', 'midwife', 'mother'],
+  branches: ['old_head', 'steward', 'broker', 'close_kin', 'reader', 'priest', 'soldier', 'midwife', 'mother'],
 };
 
 function eventHasRite(d: Extract<PendingDecision, { kind: 'choice' }>): boolean {
@@ -66,13 +72,13 @@ function widowOfHead(ctx: SimCtx, p: Person): boolean {
 function lensOf(
   ctx: SimCtx,
   p: Person,
-  d: PendingDecision,
+  d?: PendingDecision,
 ): { lens: AdviserLens; cares: string } | undefined {
   const role = p.contract?.role;
   const subject = p.sex === 'female' ? 'she' : 'he';
   const possessive = p.sex === 'female' ? 'her' : 'his';
 
-  if (d.kind === 'match') {
+  if (d?.kind === 'match') {
     const matched = ctx.world.people.get(d.subject.id);
     if (matched?.claimedParents.mother === p.id) {
       return { lens: 'mother', cares: 'her child is the one who must live inside this bargain' };
@@ -113,8 +119,8 @@ function lensOf(
   return undefined;
 }
 
-function relatedBonus(ctx: SimCtx, p: Person, d: PendingDecision): number {
-  if (d.kind !== 'match') return 0;
+function relatedBonus(ctx: SimCtx, p: Person, d?: PendingDecision): number {
+  if (d?.kind !== 'match') return 0;
   if (d.subject.id === p.id) return 6;
   const subject = ctx.world.people.get(d.subject.id);
   if (!subject) return 0;
@@ -123,16 +129,34 @@ function relatedBonus(ctx: SimCtx, p: Person, d: PendingDecision): number {
   return 0;
 }
 
-function advisers(ctx: SimCtx, d: PendingDecision): Adviser[] {
-  const surface = surfaceOf(d);
+function helpSubjectBonus(ctx: SimCtx, p: Person, surface: AdviserSurface, subject?: string): number {
+  if (surface !== 'tree' || !subject) return 0;
+  const target = ctx.world.people.get(subject);
+  if (!target) return 0;
+  if (target.claimedParents.mother === p.id || target.claimedParents.father === p.id) return 4;
+  if (p.marriages.some((m) => m.spouse === target.id)) return 4;
+  return 0;
+}
+
+function advisers(
+  ctx: SimCtx,
+  surface: AdviserSurface,
+  d?: PendingDecision,
+  subject?: string,
+): Adviser[] {
   const order = SURFACE_LENS[surface];
   return ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
     .filter((p) => p.status === 'alive' && ctx.world.year - p.born >= 15)
     .flatMap((person) => {
       const found = lensOf(ctx, person, d);
       if (!found) return [];
-      const domain = Math.max(0, order.length - order.indexOf(found.lens));
-      return [{ person, ...found, relevance: domain + relatedBonus(ctx, person, d) }];
+      const rank = order.indexOf(found.lens);
+      const domain = rank < 0 ? 0 : order.length - rank;
+      return [{
+        person,
+        ...found,
+        relevance: domain + relatedBonus(ctx, person, d) + helpSubjectBonus(ctx, person, surface, subject),
+      }];
     })
     .sort((a, b) => b.relevance - a.relevance || b.person.born - a.person.born || a.person.id.localeCompare(b.person.id));
 }
@@ -244,10 +268,122 @@ function choicePosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: '
   }
 }
 
+/**
+ * HELP THAT HAS TO BE ASKED FOR (issue #273).
+ *
+ * These three surfaces are not decisions, so they cannot reuse a docket's
+ * visible cards or choices. They stay inside the same epistemic cul-de-sac:
+ * the tree advice names only rules the tree itself draws, Chronicle advice
+ * names only what a written record is, and branch advice reads only the
+ * grievance value already printed beside that hall.
+ *
+ * Tier one nudges. Tier two says the rule as the household knows it. Tier
+ * three points at an existing control or screen and never chooses for the
+ * player. Nothing here predicts an outcome.
+ */
+function nudgeFor(lens: AdviserLens, surface: HelpSurface, grievance: boolean): string {
+  switch (lens) {
+    case 'reader':
+      if (surface === 'chronicle') return 'I would read one page beside the pages around it. A lone sentence makes a poor history.';
+      if (surface === 'tree') return 'I would begin with one name. A whole tree is easier to read one branch at a time.';
+      return grievance
+        ? 'I would read who lives in this hall before I read its grievance. A quarrel belongs to people.'
+        : 'I would begin with the people in this hall. Quiet does not make a branch unimportant.';
+    case 'old_head':
+      if (surface === 'chronicle') return 'Begin with the page that names the act you care about. Then see what answered it later.';
+      if (surface === 'tree') return 'Find the person nearest the question you are asking. The rest of the line can wait.';
+      return grievance
+        ? 'This hall has not settled something. I would look at who is carrying it before I looked at the grievance.'
+        : 'This hall is quiet for now. I would still know who sits in it.';
+    case 'close_kin':
+    case 'mother':
+    case 'midwife':
+      if (surface === 'tree') return 'Start with one of us, not with the whole hall. Follow the family from there.';
+      if (surface === 'chronicle') return 'Start with the page nearest the person you care about. Then read what came before and after it.';
+      return grievance
+        ? 'This hall is carrying something. Read the family here before you read the grievance.'
+        : 'Start with the family in this hall. The branch is more than its grievance.';
+    case 'steward':
+    case 'broker':
+      if (surface === 'branches') return grievance
+        ? 'I would look at who lives in this hall before I looked at its grievance. The account makes more sense beside the household.'
+        : 'I would start with who lives here. An empty grievance line is not an empty hall.';
+      if (surface === 'chronicle') return 'Read the page beside what followed it. A record matters when somebody later has to act on it.';
+      return 'Start with one name and one hall. The whole house is too much to price at once.';
+    case 'priest':
+    case 'soldier':
+      if (surface === 'chronicle') return 'Read one page at a time, and remember who wrote it. A book is still made by people.';
+      if (surface === 'tree') return 'Start with one person. Follow the line around them before you judge the whole house.';
+      return grievance
+        ? 'Read the people in this hall first. A grievance without faces is only a mark on a page.'
+        : 'Read who lives here first. The hall matters even when its grievance is quiet.';
+    default:
+      return assertNever(lens, 'adviser lens');
+  }
+}
+
+function helpPosition(
+  ctx: SimCtx,
+  lens: AdviserLens,
+  surface: HelpSurface,
+  subject: string,
+  tier: HelpTier,
+): string {
+  const grievance = surface === 'branches' && (ctx.world.branches.get(subject)?.grievance ?? 0) > 0;
+
+  switch (tier) {
+    case 1:
+      return nudgeFor(lens, surface, grievance);
+    case 2:
+      switch (surface) {
+        case 'tree':
+          return 'The tree shows the living house through its own record. The dead go to the Chronicle, and the seal has its own line.';
+        case 'chronicle':
+          return 'The Chronicle is what this house chose to keep, not a voice from outside it. A mistake or a boast can stay on the page.';
+        case 'branches':
+          return 'A cadet hall is still this house. Its grievance is kept here because the pressure belongs to this branch, not every hall at once.';
+        default:
+          return assertNever(surface, 'help surface');
+      }
+    case 3:
+      switch (surface) {
+        case 'tree':
+          return 'Use Find somebody by name, choose a hall, or follow Only this branch. For former Heads, open the seal\'s line.';
+        case 'chronicle':
+          return 'Use Read it whole. Where a page points backward or forward, follow that thread before you judge it.';
+        case 'branches':
+          return 'Choose this hall, then open one of its people or follow Only this branch. Read the quarrel beside the family carrying it.';
+        default:
+          return assertNever(surface, 'help surface');
+      }
+    default:
+      return assertNever(tier, 'help tier');
+  }
+}
+
+/**
+ * Pull-only help for a non-docket surface. The subject is deliberately opaque
+ * except for a branch id (to read its already-visible grievance) and a person
+ * id on the tree (to prefer close family as the speaker).
+ */
+export function adviceFor(
+  ctx: SimCtx,
+  surface: HelpSurface,
+  subject: string,
+  tier: HelpTier,
+): AdviserAdvice[] {
+  return advisers(ctx, surface, undefined, subject).slice(0, 2).map(({ person, lens, cares }) => ({
+    adviser: { id: person.id, name: person.name },
+    lens,
+    cares,
+    position: helpPosition(ctx, lens, surface, subject, tier),
+  }));
+}
+
 /** Build one or two current, named, deliberately biased advisers for a decision. */
 export function adviceForDecision(ctx: SimCtx, d: PendingDecision): AdviserAdvice[] {
   const surface = surfaceOf(d);
-  const picked = advisers(ctx, d).slice(0, 2);
+  const picked = advisers(ctx, surface, d).slice(0, 2);
   return picked.map(({ person, lens, cares }) => ({
     adviser: { id: person.id, name: person.name },
     lens,
