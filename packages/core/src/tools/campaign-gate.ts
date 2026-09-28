@@ -126,7 +126,10 @@ export function campaignStaticReport(
 
   const possibleArcs = Object.fromEntries(ids.map((id) => [
     id,
-    new Set(content.arcs
+    // Inventory the authored story catalogue, not synthetic inline-followup
+    // arcs produced by indexContent(). `arcCanFinish` above still resolves
+    // through the compiled index when a condition actually names one.
+    new Set(content.bundle.arcs
       .filter((arc) => minimumArcYears(arc) <= campaigns[id].years)
       .map((arc) => String(arc.id))),
   ])) as Record<CampaignId, Set<string>>;
