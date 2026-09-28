@@ -18,8 +18,11 @@ events/           selection, slots, conditions, effects, decisions, arcs
 genetics/         loci, meiosis, expression
 ages/scheduler.ts Ages as a hazard process; the Ledger pays out here
 economy.ts        income, upkeep, tithes, standing decay
+assize.ts, land.ts, muster.ts, campaign.ts, record.ts, replay.ts, …
+                  one file per system — ARCHITECTURE.md's table names each
 testing.ts        testWorld / place / marry / beget / phase — build the state you mean
-tools/            validate, digest, gen-docs — all runnable via npm scripts
+tools/            validate, digest, gates, the measured sessions, gen-docs —
+                  all runnable via npm scripts
 ```
 
 ## Before you touch anything

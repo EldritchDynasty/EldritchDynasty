@@ -100,6 +100,22 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | What the **player** sees and clicks | `packages/client/src/` | `packages/client/src/lib/verbs.test.ts`, `packages/client/src/lib/run.slow.test.ts` |
 | The **Windows host / installer** | `packages/shell/` | `npm run smoke --workspace @ed/shell`, packaged smoke on release tags |
 | The **Android host** | `packages/mobile/` — bridge in `packages/mobile/src/platform-bridge.ts` | Android tag build + the client `Platform` contract |
+| **Land** — parcels, and income as the sum of what is held | `core/src/land.ts` | `land.test.ts`, `land.slow.test.ts`, `gate:land` |
+| **The Muster** — the levy, and what a war costs | `core/src/muster.ts` | `muster.test.ts`, `muster.slow.test.ts`, `gate:war` |
+| **The papers** — lineage documents as the real dowry | `core/src/people/papers.ts` | `papers.test.ts` |
+| Rival-house **descent** | `core/src/people/rivals.ts` | `rivals.test.ts` |
+| Which outside houses **recur** — a read model over grudges, the Match, lies | `core/src/relationship-threads.ts` | `rivals.test.ts` |
+| The **campaign** — Short Line or Long Line | `core/src/campaign.ts` → `CAMPAIGNS` | `campaign.test.ts`, `gate:campaigns` |
+| The house's **ambition** | `core/src/ambition.ts` | `ambition.test.ts` |
+| What a standing **delegation** answers, and what must still surface | `core/src/delegation.ts` → `mustSurface` | `deciders.test.ts`, `decisions.slow.test.ts` |
+| **Advisers** — a person's advice, never the engine's answer | `core/src/advisers.ts` | `advisers.test.ts` |
+| What the chronicle **claims** — the record layer, sigil drift | `core/src/record.ts` | `record.test.ts`, `record.slow.test.ts` |
+| Which page **answers** which — Chronicle backlinks | `core/src/cause.ts` | `packages/client/src/lib/causes.test.ts` |
+| **Nested tales** in circulation | `core/src/events/tales.ts` | `tales.test.ts`, `tales.slow.test.ts` |
+| The **decision log** and replay | `core/src/replay.ts` | `replay.slow.test.ts` |
+| The **Library of Houses** — what a finished run leaves the next | `core/src/run-library.ts` | `run-library.slow.test.ts` |
+| A **gate** — a design claim measured over a batch | `core/src/tools/gates.ts` → `GATES` | `gates.test.ts` |
+| How a choice **feels** — interaction shapes | `core/src/tools/shapes.ts` | `shapes.test.ts` |
 | Test scaffolding | `core/src/testing.ts` | `year.test.ts` |
 | The generated reference | `schema/src/reference.ts` + `core/src/tools/gen-docs.ts` | `docs.test.ts` |
 
@@ -112,9 +128,10 @@ Each phase declares what it must run **after** and why, and `year.test.ts`
 holds the table to its own declarations.
 
 ```
-ages → assize → bearing → lifecycle → guardian → quarrels → secrets → careers → table
-     → library → economy → auction → succession → branches → marriage → births
-     → arcs → ambient → frame → ascension → generation
+ages → lifecycle → guardian → quarrels → secrets → papers → assize → bearing
+     → careers → table → library → muster → land → economy → auction → succession
+     → branches → rivals → marriage → births → arcs → ambient → frame → ascension
+     → generation → docket
 ```
 
 Every phase draws from `streamFor(world, phase.name)` — its own stream, derived

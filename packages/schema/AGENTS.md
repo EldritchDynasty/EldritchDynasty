@@ -14,7 +14,7 @@ attributes.ts     AttributeDef, TraitDef, the affinities, canLearn
 genome.ts         LocusDef, Genome, EldritchProfile, GenePool
 person.ts         Person, membership, contracts, the phenotype cache
 age/arc/branch/heirloom/house/clause/character.ts   one concept each
-content.ts        ContentBundle — the eleven arrays, as authored
+content.ts        ContentBundle — one array per collection, as authored
 assemble.ts       CONTENT_LAYOUT: which collection comes from which file
 content-index.ts  Content — the bundle with its lookups built
 save.ts           SavedGame, and the compile-time check that it matches runtime

@@ -20,11 +20,11 @@ You should not need to open a `.ts` file to author content.
 
 Read **[Background/eldritch-dynasty-world.md](../../Background/eldritch-dynasty-world.md)** for
 the world the content is set in — places, distances, coin, law, the Church, the technology line,
-and how a name is built. Nothing validates it, so an event set nowhere passes CI. Its §23 is the
-checklist to run before you commit one; §24 is what is already fixed and may not be contradicted.
+and how a name is built. Nothing validates it, so an event set nowhere passes CI. Its §26 is the
+checklist to run before you commit one; §27 is what is already fixed and may not be contradicted.
 
 ```bash
-npm run validate     # 32 rules; exits non-zero on any error
+npm run validate     # every content rule; exits non-zero on any error
 ```
 
 **Campaign shape (#274):** endings/conditions → `npm run gate:campaigns`; paste before/after.

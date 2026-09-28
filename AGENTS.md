@@ -12,21 +12,7 @@ Read `DesignConcepts/eldritch-dynasty-concept-brief.md` before changing anything
 
 The unbuilt brief, its implementation plan, and the fertility do-to were folded into those issues and deleted — the same reason the data-model and event-editor briefs before them are gone. A specification that duplicates working code drifts, and every one of these drifted: the data-model brief was still claiming twelve heritable attributes and a `House` with a `roster`; the unbuilt brief was still saying `ModifierS` had seven kinds when it has eight. **For anything that exists, the code is the spec.** All three are recoverable in full from git history.
 
-**Build order.** Phases are done in order; each parent issue lists its sub-issues and what blocks it.
-
-| | | |
-|---|---|---|
-| [#7](https://github.com/JamesFlames/EldritchDynasty/issues/7) | **Phase 0** — Gates and instruments | *do this first — most of what follows fails green* |
-| [#8](https://github.com/JamesFlames/EldritchDynasty/issues/8) | **Phase 1** — Decision log and replay | cheapest item; every later phase debugs easier for it |
-| [#9](https://github.com/JamesFlames/EldritchDynasty/issues/9) | **Phase 2** — Make Discrepancies readable | ~30 lines; unblocks three phases |
-| [#12](https://github.com/JamesFlames/EldritchDynasty/issues/12) | **Phase 3** — Checks and the influence modifiers | |
-| [#13](https://github.com/JamesFlames/EldritchDynasty/issues/13) | **Phase 4** — Frame events | |
-| [#14](https://github.com/JamesFlames/EldritchDynasty/issues/14) | **Phase 5** — Nested tales | |
-| [#18](https://github.com/JamesFlames/EldritchDynasty/issues/18) | **Phase 6** — Library, careers, auction | Library first — the auction needs stock |
-| [#19](https://github.com/JamesFlames/EldritchDynasty/issues/19) | **Phase 7** — Claims, RecordView, sigil drift | last: the only part needing a claim vocabulary |
-| [#23](https://github.com/JamesFlames/EldritchDynasty/issues/23) | **Phase 8** — The editor | write-back first, or it edits a discarded copy |
-| [#24](https://github.com/JamesFlames/EldritchDynasty/issues/24) | **Phase 9** — Open design decisions | design calls, not engineering |
-| [#28](https://github.com/JamesFlames/EldritchDynasty/issues/28) | **Fertility** — what shipped, what is left | option A shipped; D next, B behind a constant |
+**What is next.** The original build order — Phases 0–9 ([#7](https://github.com/JamesFlames/EldritchDynasty/issues/7)–[#24](https://github.com/JamesFlames/EldritchDynasty/issues/24)) and fertility ([#28](https://github.com/JamesFlames/EldritchDynasty/issues/28)) — is shipped and closed; an issue number in the text below is a pointer into history, not open work. Open work is [#277](https://github.com/JamesFlames/EldritchDynasty/issues/277), the commercial pass: its body carries the build order, the lanes, and what cannot run in parallel. Read that table rather than a copy of it here — this one went stale the day its last phase closed.
 
 ---
 
@@ -50,8 +36,7 @@ Background/       The world bible: geography, law, money, technology, the Church
 .codex/             Codex: hooks.json (pointing at .claude/hooks) and config.toml.
 ```
 
-Everything unbuilt — and every open design question — is in the issue tracker. See the build
-order above.
+Everything unbuilt — and every open design question — is in the issue tracker.
 
 **Read [Background/eldritch-dynasty-world.md](Background/eldritch-dynasty-world.md) before
 authoring content.** The brief says what the game is about; the world file says what the game is
@@ -91,14 +76,14 @@ npm run land         # the landing: fetch, rebase, install, the whole set CI
 npm run land -- --status   # is a landing running, or did one die — and did it
                      # push before it died? Ask before assuming either.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
-npm run test:fast    # 37s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+npm run test:fast    # 75s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
 npm test             # everything: 3,043 tests in 175 files, ~10 min
 npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
                      # client's templates. ~22s
-npm run validate     # 32 content rules; exits non-zero on any error. An error
+npm run validate     # every content rule; exits non-zero on any error. An error
                      # names the file it is in: `events/rites.yaml → event:the_drowning`
 
 npm run dev          # authoring tool at localhost:5173
@@ -112,9 +97,11 @@ npm run harness -- 16 500             # 16 headless Long Lines, with balance num
 npm run digest  -- 8 400              # fingerprint 8 runs; diff the block across commits
 npm run gate                          # every gate — what CI will say, in one command
 npm run gates   -- fire-rate          # one of them on its own, when you know which
-npm run gates   -- --lane war         # one CI lane. TWO runners: `war` (8m46s) and
-                                      # `batch` (20m50s, mostly fire-rate's 250 runs)
-npm run gate:drag / :blood / :ladder / :bearing   # measured sessions
+npm run gates   -- --lane war         # one CI lane. THREE runners: `batch` (the floor,
+                                      # mostly fire-rate), `war` and `endings`
+npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
+npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
+                                      # question is its `//` note in package.json
 npm run gate:density -- --seeds=901,902 500 300   # what the player is asked, per
                                       # generation and per Age, and how often the same
                                       # thing twice. Both campaign terms. #88's instrument
@@ -170,31 +157,6 @@ has the full account and the reason behind each rule below.**
 - When changing commands, hooks, or test infrastructure, verify the current
   platform and preserve the other platform deliberately; platform-only behavior
   must be guarded and covered by a test.
-
-**One script, two registrations.** The hook scripts are canonical in
-`.claude/hooks/`; `.codex/hooks.json` names those same files rather than
-carrying copies. It carried a copy once, and the copy is the whole story: it
-pointed at an absolute path on one developer's Windows machine, so it
-registered nothing anywhere else, and the script it pointed at was gated on
-`CLAUDE_CODE_REMOTE` — a variable Codex never sets — so it would have exited at
-line one even where the path resolved.
-
-**The two agents send different payloads for the same act.** Claude writes with
-`Write`/`Edit` and a `tool_input.file_path`; Codex writes with `apply_patch`
-and names its files inside a unified-diff envelope on `tool_input.command`,
-with no `file_path` key at all. A hook that reads one key works under one agent
-and *silently does nothing* under the other — which is what both of these did.
-`hookPaths` in `.claude/hooks/lib-paths.sh` is the one reader of both shapes;
-never parse a payload anywhere else.
-
-**AGENTS.md has a size budget under Codex.** Codex concatenates AGENTS.md from
-the root down and stops at `project_doc_max_bytes` — 32 KiB by default, and it
-truncates *silently*. This file is over 51 KiB, so at the default Codex read
-about 63% of it: "Working style", "Do not" and "Known gaps" all fell past the
-cut, and every per-package `AGENTS.md` reached Codex at zero bytes.
-`.codex/config.toml` raises the budget to 64 KiB and
-`packages/core/src/tools/codex.test.ts` fails the build if this file plus the
-largest package file outgrows it.
 
 ---
 
@@ -358,11 +320,17 @@ so an agent loads only what its task needs:
 | [docs/VOCABULARY.md](docs/VOCABULARY.md) | **Generated.** Every effect, condition, filter, slot role, purpose, phase and rule. Read this instead of the schemas. |
 | [docs/FAILURES.md](docs/FAILURES.md) | Bugs that shipped, and what each one teaches. All of them silent. |
 | [docs/PORTABILITY.md](docs/PORTABILITY.md) | Windows and Linux, Claude Code and Codex: what broke, and what enforces it now. |
+| [docs/PARALLEL.md](docs/PARALLEL.md) | Several agents at once: lanes, claims, and what does not parallelise. |
+| [docs/BALANCE-LOG.md](docs/BALANCE-LOG.md) | What every balance change measured. Append-only; read the entry for the system you touch. |
+| [docs/AGENT-LOG.md](docs/AGENT-LOG.md) | The same, for the agent workflow itself. |
+| [docs/LOCALISATION.md](docs/LOCALISATION.md) | The localisation storage decision: saved prose keeps its rendered words (#276). |
+| [docs/MODDING.md](docs/MODDING.md) · [docs/PLAYTEST.md](docs/PLAYTEST.md) · [docs/GAME-LOOP.md](docs/GAME-LOOP.md) | The Mod Editor; the first-player playtest runbook; the loop in plain language. |
 | [packages/core/AGENTS.md](packages/core/AGENTS.md) | Simulation. |
 | [packages/schema/AGENTS.md](packages/schema/AGENTS.md) | Types, validation, the save format. |
 | [packages/content/AGENTS.md](packages/content/AGENTS.md) | Writing events and characters. |
 | [packages/editor/AGENTS.md](packages/editor/AGENTS.md) | The authoring tool, and its silent-failure list. |
 | [packages/client/AGENTS.md](packages/client/AGENTS.md) | The game, and the one rule that keeps it on its side of the seam. |
+| [packages/shell/AGENTS.md](packages/shell/AGENTS.md) · [packages/mobile/AGENTS.md](packages/mobile/AGENTS.md) | The Windows and Android hosts. Neither owns a rule. |
 
 The enforcement points for the invariants above are greppable:
 
@@ -380,11 +348,11 @@ way to play — the chronicler picked a name, and the chronicler is not you.
 ## Tests
 
 Grouped by the kind of failure they catch rather than by module. How many there
-are, and what a run of them costs, is in [AGENTS.md](AGENTS.md#commands).
+are, and what a run of them costs, is in the command block above.
 
 - **`*.slow.test.ts` plays whole games** — the suites that assert the shape of
   a healthy run. `npm run test:fast` skips them; what it costs is stated once,
-  in [AGENTS.md](AGENTS.md#commands), and measured by `npm run cost`. That is
+  in the command block, and measured by `npm run cost`. That is
   the fix-and-rerun loop, and `lanes.test.ts` keeps it one by failing the build
   when a suite that plays a millennium lands in it.
   `npm run check` runs both lanes; `npm run land` runs the whole set CI runs,
@@ -435,6 +403,7 @@ return. [docs/FAILURES.md](docs/FAILURES.md) is the catalogue.
 [docs/TEST-COVERAGE.md](docs/TEST-COVERAGE.md) is the coverage survey and what
 it found — three live bugs, one mechanic that had never run, and why line
 coverage reads high on a dispatch chain nobody has ever taken a branch of.
+
 ## Branches, and the tracker
 
 The rules an agent needs before it writes anything, in the order it needs them.
@@ -454,6 +423,8 @@ true even if nobody opens it.
   arbitrate a race; a ref can, because creating one is a compare-and-swap.
   Denied means denied — take another issue rather than working it in parallel
   and meeting the other agent at merge time.
+  With no shell (a connector-only session), create the working branch and
+  comment `/claim <issue> --agent <branch> --paths <paths>` instead.
 - **Read the issue before building any of it.** Each is self-contained: the
   fact, the file paths, the type shapes, the assertion that has to pass.
 - **Close it from the landing commit**: `Closes #93, closes #94`, a keyword
@@ -492,7 +463,7 @@ true even if nobody opens it.
   unmerged. `tools/orient.mjs` unshallows at session start; if you are unsure,
   `git rev-parse --is-shallow-repository` before any "has this landed" reasoning.
   See [docs/COMMANDS.md](docs/COMMANDS.md#how-a-session-starts).
-- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is now the normal case rather than the exception, and a branch that was green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. So: `npm run land`, which rebases and re-runs the whole set on that head before it pushes. Claim the issue first (shell: `npm run agents -- take <issue>`; connector-only: create the working branch, then comment `/claim <issue> --agent <branch> --paths <paths>`), because every agent authenticates to GitHub as the same user and an assignee therefore cannot say which one holds it. Put `Closes #<issue>` in the landing commit: a closing keyword in a commit that reaches `main` closes the issue with no PR involved, and `.github/workflows/janitor.yml` then deletes the merged branch and retires the claim — the tidying no agent can do for itself, since a session's git proxy refuses ref deletion. [docs/PARALLEL.md](docs/PARALLEL.md) has the lanes and the one thing that does not parallelise at all.
+- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases and re-runs the whole set on that head before it pushes. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
 
 ## Do not
 
@@ -503,7 +474,8 @@ true even if nobody opens it.
 - Put an id counter, or any mutable simulation state, at module scope.
 - Make Eldritch Power reliable, schedulable, or manifest-on-demand at any tier.
 - Spawn people outside `core/src/people/minting.ts`.
-- Hand-edit `packages/content/loci.yaml` or `docs/VOCABULARY.md`.
+- Hand-edit `packages/content/loci.yaml`, `docs/VOCABULARY.md` or
+  `tools/test-durations.json`.
 - End a switch or `in`-chain over a closed union with a permissive default.
 - Add a field to `WorldState` without adding it to the save format.
 - Reach into `ctx.world` from a client.
@@ -517,7 +489,7 @@ true even if nobody opens it.
 
 ## Known gaps
 
-- **Outcomes passing on a coin.** Gate 8 (outcome reach) requires every authored outcome to resolve at least once in a hundred thousand-year runs, and a handful still sit at 2-4%: `the_registrar_asks_for_the_book`'s two branches, `who_gets_the_physician/the_weak_one -> kept_them_both`, `the_coat_hung_up/let_him_stop -> home` and `the_turn_of_the_stave/mend_the_verse -> mended`. Any change to any phase's draws re-rolls them, so that gate can go red on content nobody touched. Two rounds of this are done and both are written up beside the content they moved: the Insurrection's four scenes at one measured weight (top of `packages/content/events/age_insurrection.yaml`), and the archive substory's launcher (`the_archive_and_the_wage_roll`, in `packages/content/events/retainers.yaml`). The frame layer is no longer clear, and "every interlude is at 7% or better" has stopped being true: measured over sixty runs, seven interludes fire in 1 to 4 of them. Every one of those waits on a single named lie, which the chronicler tells one time in five when the event carrying it fires at all — and BALANCE-LOG now measures the frame in two columns, ELIGIBLE against FIRED, because "its premise never came true" and "it lost the draw" look identical from the gate and are not the same bug. Three interludes have been moved onto the PAGE (`chronicled`) rather than the lie and went from 0 to 13-17 runs in 60. The coverage batch in `arcs.slow.test.ts` is a coin over what is left of that tail, so a red there naming one of them is the tail and not a regression.
+- **Outcomes passing on a coin.** Gate 8 (outcome reach, `gateOutcomeReach`) requires every authored outcome to resolve at least once across its batch of Long Lines — 800 of them now, widened from 100 more than once for exactly this tail — and a handful sat at 2-4% when last measured: `the_registrar_asks_for_the_book`'s two branches, `who_gets_the_physician/the_weak_one -> kept_them_both`, `the_coat_hung_up/let_him_stop -> home` and `the_turn_of_the_stave/mend_the_verse -> mended`. Any change to any phase's draws re-rolls them, so that gate can go red on content nobody touched. Two rounds of this are done and both are written up beside the content they moved: the Insurrection's four scenes at one measured weight (top of `packages/content/events/age_insurrection.yaml`), and the archive substory's launcher (`the_archive_and_the_wage_roll`, in `packages/content/events/retainers.yaml`). The frame layer is no longer clear, and "every interlude is at 7% or better" has stopped being true: measured over sixty runs, seven interludes fire in 1 to 4 of them. Every one of those waits on a single named lie, which the chronicler tells one time in five when the event carrying it fires at all — and BALANCE-LOG now measures the frame in two columns, ELIGIBLE against FIRED, because "its premise never came true" and "it lost the draw" look identical from the gate and are not the same bug. Three interludes have been moved onto the PAGE (`chronicled`) rather than the lie and went from 0 to 13-17 runs in 60. The coverage batch in `arcs.slow.test.ts` is a coin over what is left of that tail, so a red there naming one of them is the tail and not a regression.
 - **Measure the funnel, not the thing that looks thin.** Both frame interludes that sat at 1-2% were fine; they were starved four events upstream, by a launcher firing in 10 runs of a hundred and by a Discrepancy reachable only through a one-in-five Embellish. Neither was visible from the interlude, and raising the interlude's own weight would have bought nothing — a frame event is gated by `reads`, not drawn from a rationed pool. The frame's cadence caps how many interludes a run gets; the supply of open Discrepancies decides which ones they can be, so `arcs.slow.test.ts`'s batch mean is the wrong instrument for asking whether one is reachable and gate 8 is the right one.
 
 ### Closed, and how they behave now
