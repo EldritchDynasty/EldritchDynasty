@@ -325,6 +325,8 @@ const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(h
 export interface LandRiskResult {
   villageHarvest: number;
   sarrowSank: boolean;
+  /** Authored parcel ids whose woodland was struck by blight this year. */
+  blighted: string[];
 }
 
 /**
@@ -350,6 +352,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
   const w = ctx.world;
   const villageHarvest = clamp(rng.normal(1, 0.07), 0.78, 1.22);
   let sarrowSank = false;
+  const blighted: string[] = [];
 
   for (const state of [...heldParcels(ctx)]) {
     if (!state.defId) continue;
@@ -369,6 +372,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
         state.yieldFactor = 1;
         if (rng.bool(BLIGHT_CHANCE)) {
           damageParcel(ctx, def.id);
+          blighted.push(def.id);
           w.chronicle.push({
             year: w.year, weight: 'line', named: false,
             text: `Blight took hold in ${def.name} this year, and the timber that would have paid for it did not.`,
@@ -408,7 +412,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
     }
   }
 
-  return { villageHarvest, sarrowSank };
+  return { villageHarvest, sarrowSank, blighted };
 }
 
 // ── Phase D: the `land` Effect (issue #91, #98) ─────────────────────────────
