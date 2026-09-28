@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { playedRun } from './corpus.js';
-import { echoTally } from './bearing.js';
+import { echoLineTally } from './echoes.js';
 import { expectMean } from './testing.js';
 
 /**
@@ -12,6 +12,9 @@ import { expectMean } from './testing.js';
  * cousin card each generation heard "People still spoke of…" at every one of
  * them. Each kind now rotates three lines and echoes at most once a
  * generation (`ECHO_SPACING`); this is the instrument that holds both halves.
+ * It counts every system that writes an echo — Bearing's acts and, since the
+ * second stage of #326, quarrels held against the house — by the sentence
+ * frame each line is tagged with, never by its words.
  *
  * Both terms, twelve seeds each, read back through the run corpus. The
  * ceiling and floor are recorded in docs/BALANCE-LOG.md with the measurement
@@ -26,11 +29,12 @@ const MAX_COPIES_CEILING = 4;
 const ECHOES_FLOOR = 2;
 
 describe.each([['short', 300], ['long', 500]] as const)('Bearing echoes on the %s line (issue #326)', (campaign, years) => {
-  const tallies = SEEDS.map((seed) => echoTally(playedRun(bundle, seed, years, 1042, campaign).world.bearing.acts));
+  const tallies = SEEDS.map((seed) => echoLineTally(playedRun(bundle, seed, years, 1042, campaign).world.chronicle));
 
   it('prints what it measured', () => {
     console.log(`echoes (${campaign}): written ${tallies.map((t) => t.written).join(', ')}`
-      + ` · most copies of one line ${tallies.map((t) => t.maxCopies).join(', ')}`);
+      + ` · most copies of one line ${tallies.map((t) => t.maxCopies).join(', ')}`
+      + ` · grudge lines ${tallies.map((t) => t.bySystem.grudge ?? 0).join(', ')}`);
     expect(tallies).toHaveLength(SEEDS.length);
   });
 

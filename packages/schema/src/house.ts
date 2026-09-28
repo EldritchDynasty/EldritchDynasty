@@ -69,4 +69,8 @@ export interface Grudge {
   /** One enum is why the prologue's grudge echoes for a thousand years. */
   inheritance: 'none' | 'heir_only' | 'all_blood' | 'house_wide';
   decayPerYear: number;
+  /** The year its echo line was written (issue #326); absent until then, or held back as a repeat. */
+  echoedIn?: number;
+  /** Set once the quarrel's generation has passed, whether or not a line was written for it. */
+  echoed?: boolean;
 }

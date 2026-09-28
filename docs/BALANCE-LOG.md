@@ -8629,3 +8629,35 @@ least **2** echo lines per run is the reach floor. It sits under the lowest
 single run that still echoes at all. Both go through `expectMean`, so a
 margin under two standard errors fails with the batch size that would carry
 it.
+
+### #326 stage 2 (2026-09-28): two echo chains Bearing does not bill
+
+#211's first acceptance line asked for act → echo → bill chains across
+systems, "the later bill ... resolved by the system that already owns it".
+Every chain it shipped was billed by Bearing. There are now two more:
+
+- **A quarrel** (`people/relationships.ts`, `echoGrudges`). A grudge held
+  against this house that is still live a generation after it began writes
+  one line, linked to the page where it started. A house holding several
+  quarrels is heard from once a generation, and a grudge that has faded
+  writes nothing. The bill stays with the grudge: its own decay, its
+  inheritance policy, and content gated on `grudgeAgainstUs`.
+- **A secret that walked** (`people/secrets.ts`). The page that tells it now
+  links back (`cause`) to the page that saw the servant go. The bill is the
+  open Discrepancy, which the Discrepancy system owns.
+
+Every echo line now carries `echoFrame`, the sentence frame that wrote it
+(`bearing:took_the_cousin:1`, `grudge:2`). `echo.slow.test.ts` counts those
+tags across both systems, never the words. The first cut rotated the grudge
+lines by a count kept on the grudges, and since grudges decay and are
+deleted that count reset: one sentence came back 9 times in a Long Line. The
+line is now keyed on generation and house. Re-measured over seeds 901–912,
+all echo systems together:
+
+| | echo lines per run | of them grudge lines | most copies of one frame |
+|---|---|---|---|
+| Short | 14, 9, 2, 10, 10, 3, 10, 6, 1, 8, 13, 8 | 4, 3, 0, 3, 3, 1, 3, 0, 0, 1, 4, 2 | 3, 2, 1, 2, 3, 1, 2, 2, 1, 3, 4, 2 (mean 2.2) |
+| Long | 17, 11, 2, 20, 16, 1, 16, 10, 1, 22, 24, 20 | 6, 3, 0, 9, 8, 0, 3, 2, 0, 7, 9, 7 | 3, 2, 1, 4, 5, 1, 3, 2, 1, 3, 4, 4 (mean 2.75) |
+
+Both terms clear stage 1's bars (mean at most 4 copies of one frame, at
+least 2 echo lines per run), and the bars are unchanged.

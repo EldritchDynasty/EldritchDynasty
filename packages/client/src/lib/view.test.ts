@@ -112,6 +112,10 @@ const NOT_DRAWN: Record<string, string> = {
   // layer does not give (AGENTS.md → Do not). A page is disputed; it is never
   // labelled a lie.
   discrepancyId: 'an embellished page\'s key into world.discrepancies. The mark "as the house tells it" already draws the fact; the state behind the key is not the page\'s to show',
+  // Issue #326. The echo line's own words are drawn; this is which sentence
+  // frame produced them, kept so the repetition instrument can count copies
+  // without reading English (#276). A reader has no use for the frame's name.
+  echoFrame: 'which echo sentence frame wrote a line; structure for the repetition instrument, never prose',
   // Surfaced by #336's full walk: it sits on a few members, never the first.
   succession: 'drawing the heir and the possible heirs on the tree is #268\'s client slice (Tree.vue / Member.vue); delete this entry when it lands',
 };

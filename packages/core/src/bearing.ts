@@ -350,6 +350,7 @@ export function echoBearing(ctx: SimCtx): number {
       year: ctx.world.year,
       weight: 'line',
       text: echoText(entry, sameKind.length),
+      echoFrame: `bearing:${entry.kind}:${sameKind.length % ECHO_VARIANTS}`,
       named: false,
       cause: {
         year: entry.year,
