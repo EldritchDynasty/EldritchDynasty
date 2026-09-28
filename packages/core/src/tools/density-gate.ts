@@ -61,7 +61,7 @@ import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import {
-  delegationDensityLines, densityLines,
+  delegationDensityLines, densityLines, shapeFrequencies,
   type DensityRun, type ShapeFrequency,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
@@ -291,10 +291,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     shapeWindow,
     predeterminedShare: choices ? predeterminedChoices / choices : 0,
     topShapes: {
-      campaign: topShapeCounts(campaignShapeCounts, choices),
+      campaign: shapeFrequencies(campaignShapeCounts, choices),
       ages: Object.fromEntries([...ageShapeCounts.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([age, counts]) => [age, topShapeCounts(counts, ageShapeChoices.get(age) ?? 0)])),
+        .map(([age, counts]) => [age, shapeFrequencies(counts, ageShapeChoices.get(age) ?? 0)])),
     },
     ordinary,
     reach: seenInRun.size,
@@ -305,13 +305,6 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
 
 function bump(counts: Map<string, number>, key: string): void {
   counts.set(key, (counts.get(key) ?? 0) + 1);
-}
-
-function topShapeCounts(counts: Map<string, number>, total: number): ShapeFrequency[] {
-  return [...counts]
-    .sort(([aShape, a], [bShape, b]) => b - a || aShape.localeCompare(bShape))
-    .slice(0, 10)
-    .map(([shape, count]) => ({ shape, count, share: total ? count / total : 0 }));
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('density-gate.ts');
