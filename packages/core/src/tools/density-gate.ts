@@ -184,6 +184,9 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       const tracker = ageStalls.get(age) ?? makeStallClock();
       sampleStallClock(g.ctx, tracker, blocker, top?.person.id);
       ageStalls.set(age, tracker);
+      // Keep a zero-valued failure row for Ages with no attributable checks;
+      // absence and a measured zero are different claims in a baseline table.
+      if (!ageFailures.has(age)) ageFailures.set(age, makeFailureTracker());
     }
     for (const [age, tracker] of ageStalls) {
       if (!activeAges.has(age)) breakStallClock(tracker);
