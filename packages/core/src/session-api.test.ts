@@ -571,6 +571,8 @@ describe('the table read model', () => {
     expect(posts.map((p) => p.career).sort()).toEqual(content.careers.map((c) => String(c.id)).sort());
     expect(military.fee).toBeGreaterThan(0);
     expect(military.holders.map((h) => h.person)).toContain(holder.id);
+    const member = g.view().halls.flatMap((h) => h.members).find((m) => m.id === holder.id)!;
+    expect(member.post).toBe(content.career('military')!.name);
     // He holds it already, so he is not among the people who could be put in it.
     expect(military.eligible.map((e) => e.person)).not.toContain(holder.id);
     // A child is nobody's officer.
