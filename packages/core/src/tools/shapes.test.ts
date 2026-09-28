@@ -204,7 +204,7 @@ describe('interaction shapes', () => {
       term: 500,
       runs: [densityFixture(903, runA), densityFixture(904, runB)],
     }]).join('\n');
-    const campaignRows = output.split('\n').filter((line) => /^500\s+campaign\s+/.test(line));
+    const campaignRows = output.split('\n').filter((line) => /^500\s+campaign\s+\d+(?:\.\d+)?%\s+/.test(line));
 
     expect(campaignRows).toHaveLength(10);
     expect(campaignRows[0]).toContain(shared);

@@ -8,9 +8,9 @@ import {
 } from '../ascension.js';
 import { phenotypeOf } from '../people/factory.js';
 import { acquireLibraryCopy, canStudySpellbook } from '../people/library.js';
+import { grantHeirloom } from '../people/heirlooms.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
-import { TEST_FAMILIES } from './testFamilies.js';
 import type { SimCtx } from '../world.js';
 import { blockerActionability, blockerLevers, makeStallClock, sampleStallClock } from './stall.js';
 
@@ -79,24 +79,53 @@ describe('#270 strategic-stall actionability', () => {
   });
 
   it('does not call a duplicate household reading progress at the God gate', () => {
-    const fixture = TEST_FAMILIES.find((candidate) => candidate.id === 'demigod_stagnant')!;
-    const ctx = fixture.build(bundle);
-    const top = foremostOf(ctx);
-    expect(top, 'demigod fixture has no foremost expresser').toBeTruthy();
-    expect(top!.standing.rung).toBe('demigod');
-    expect(top!.standing.blocker).toBe('books');
+    const ctx = testWorld(bundle, 27003);
+    const him = placedExpresser(ctx);
 
-    const him = top!.person;
-    const household = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year);
+    // Build the exact final-circle state directly instead of importing
+    // TEST_FAMILIES, whose module drives whole-game batches and therefore does
+    // not belong in the fast lane. Six books on him plus one on another living
+    // reader clear Demigod's seven-book family reading while leaving God's
+    // eight-book reading one volume short.
+    ctx.world.respect = 'exalted';
+    him.acquired[ELDRITCH_GIFT] = 400;
+    him.acquired[ELDRITCH_REACH] = 400;
+    him.acquired.mind = 400;
+    him.madness = 65;
+    him.rites.push('unmaking');
+    const demigodBookIds = [
+      'lesser_workings_of_fluid',
+      'lesser_workings_of_thermal',
+      'lesser_workings_of_aero',
+      'lesser_workings_of_terra',
+      'lesser_workings_of_life',
+      'lesser_workings_of_death',
+    ];
+    for (const id of demigodBookIds) {
+      const def = ctx.content.spellbook(id);
+      expect(def, `fixture is missing ${id}`).toBeTruthy();
+      him.spellsKnown.push(def!.id);
+    }
+    grantHeirloom(ctx, 'the_ninefold_seal');
+    grantHeirloom(ctx, 'the_ring');
+    grantHeirloom(ctx, 'the_rod');
+    him.phenotype = undefined;
+
     const duplicate = ctx.content.spellbooks.find((def) =>
       !him.spellsKnown.some((known) => String(known) === String(def.id))
-      && household.some((reader) =>
-        reader.id !== him.id
-        && reader.status === 'alive'
-        && reader.spellsKnown.some((known) => String(known) === String(def.id)))
       && canStudySpellbook(ctx, him, def).ok);
+    expect(duplicate, 'fixture needs one readable seventh book').toBeTruthy();
 
-    expect(duplicate, 'fixture needs one readable book already known elsewhere in the household').toBeTruthy();
+    const reader = place(ctx, { sex: 'male', age: 30, name: 'Another Reader' });
+    reader.spellsKnown.push(duplicate!.id);
+
+    const standing = standingOf(ctx, him);
+    expect(standing.rung).toBe('demigod');
+    expect(standing.blocker).toBe('books');
+
+    // The shelf contains a copy the climber himself could read, but the living
+    // household already knows it. Studying that duplicate cannot move the
+    // household book-count predicate, so it is not an actionable Study.
     ctx.world.library.clear();
     acquireLibraryCopy(ctx, String(duplicate!.id));
 
@@ -106,9 +135,13 @@ describe('#270 strategic-stall actionability', () => {
 
   it('lets a real power blocker accumulate a gap when no Match or widening rite is offered', () => {
     const ctx = testWorld(bundle, 27002);
-    const him = placedExpresser(ctx, (power) => power < 10);
+    const him = placedExpresser(ctx, (power) => power < 50);
     makeOnlyExpresser(ctx, him.id);
-    him.spellsKnown = [];
+    // A normal expresser sits around the thirties on the ladder scale. Give
+    // him the reading needed to clear Adept so the next unmet predicate is
+    // still power, without depending on a near-zero expresser that the locus
+    // table does not actually produce.
+    him.spellsKnown = ctx.content.spellbooks.map((book) => book.id);
     him.phenotype = undefined;
 
     expect(foremostOf(ctx)?.person.id).toBe(him.id);
