@@ -15,7 +15,7 @@ import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js'
 import { standingOf } from './ascension.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import type { SimCtx } from './world.js';
-import { adviceForDecision } from './advisers.js';
+import { adviceFor, adviceForDecision, type HelpSurface } from './advisers.js';
 import type { MatchCard } from './people/match.js';
 
 const content = indexContent(loadContent());
@@ -647,6 +647,89 @@ describe('broader adviser voices', () => {
     expect(advice[0]?.adviser.id).toBe(widow.id);
     expect(advice[0]?.lens).toBe('old_head');
     expect(advice[0]?.cares).toContain('her husband held the seal');
+  });
+});
+
+describe('graduated in-world help', () => {
+  function clearLiving(ctx: SimCtx): void {
+    for (const person of ctx.world.people.all()) {
+      person.status = 'dead';
+      person.castSlots = [];
+    }
+  }
+
+  function helpWorld(): { ctx: SimCtx; target: Person; reader: Person } {
+    const ctx = testWorld(content, 273);
+    clearLiving(ctx);
+    const target = place(ctx, { sex: 'male', age: 21, name: 'Edren' });
+    const reader = place(ctx, {
+      sex: 'female',
+      age: 43,
+      name: 'Mara',
+      career: { career: 'scholar', heldYears: 8 },
+    });
+    beget(ctx, target, reader);
+    return { ctx, target, reader };
+  }
+
+  it('only becomes more specific when a higher help tier is requested', () => {
+    const { ctx, target } = helpWorld();
+
+    const first = adviceFor(ctx, 'tree', target.id, 1);
+    const second = adviceFor(ctx, 'tree', target.id, 2);
+    const third = adviceFor(ctx, 'tree', target.id, 3);
+
+    expect(first).toHaveLength(1);
+    expect(first[0]?.adviser.name).toBe('Mara');
+    expect(first[0]?.position).not.toEqual(second[0]?.position);
+    expect(second[0]?.position).not.toEqual(third[0]?.position);
+    expect(first[0]?.position).not.toContain('Find somebody by name');
+    expect(second[0]?.position).not.toContain('Find somebody by name');
+    expect(third[0]?.position).toContain('Find somebody by name');
+  });
+
+  it('keeps every standalone help surface attributed and free of numeric oracle text', () => {
+    const { ctx, target } = helpWorld();
+    const subjects: Record<HelpSurface, string> = {
+      tree: target.id,
+      chronicle: 'the-chronicle',
+      branches: 'the-main-hall',
+    };
+
+    for (const surface of ['tree', 'chronicle', 'branches'] as const) {
+      for (const tier of [1, 2, 3] as const) {
+        const lines = adviceFor(ctx, surface, subjects[surface], tier);
+        expect(lines.length, `${surface} tier ${tier} had no living adviser`).toBeGreaterThan(0);
+        for (const line of lines) {
+          expect(line.adviser.name.length).toBeGreaterThan(0);
+          expect(line.cares.length).toBeGreaterThan(0);
+          expect(line.position).not.toMatch(/\d/);
+        }
+      }
+    }
+  });
+
+  it('gives identical help when the only changed fact is a hidden lazy genome', () => {
+    const a = helpWorld();
+    const b = helpWorld();
+
+    expect(a.reader.genome.kind).toBe('lazy');
+    expect(b.reader.genome.kind).toBe('lazy');
+    if (b.reader.genome.kind !== 'lazy') throw new Error('fixture reader must keep a lazy genome');
+    b.reader.genome = { ...b.reader.genome, seed: b.reader.genome.seed + 999_983 };
+
+    const surfaces: { surface: HelpSurface; aSubject: string; bSubject: string }[] = [
+      { surface: 'tree', aSubject: a.target.id, bSubject: b.target.id },
+      { surface: 'chronicle', aSubject: 'the-chronicle', bSubject: 'the-chronicle' },
+      { surface: 'branches', aSubject: 'the-main-hall', bSubject: 'the-main-hall' },
+    ];
+
+    for (const { surface, aSubject, bSubject } of surfaces) {
+      for (const tier of [1, 2, 3] as const) {
+        expect(adviceFor(a.ctx, surface, aSubject, tier))
+          .toEqual(adviceFor(b.ctx, surface, bSubject, tier));
+      }
+    }
   });
 });
 
