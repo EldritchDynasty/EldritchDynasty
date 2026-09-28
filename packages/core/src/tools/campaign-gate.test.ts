@@ -83,7 +83,8 @@ describe('static campaign difference report', () => {
       ],
     } as ReturnType<typeof campaignStaticReport>;
     const run = {
-      seed: 901, policy: 'ascendant', ending: 'apotheosis', clauses: 5,
+      seed: 901, policy: 'ascendant', ending: 'apotheosis', attested: 'none', clauses: 5,
+      survivors: 1, householdLow: 1, bloodLeft: 1, bloodLow: 1,
       templateFires: { late_long: 2, ordinary: 10 },
     } as EndingRun;
 
