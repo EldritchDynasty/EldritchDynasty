@@ -150,7 +150,7 @@ by two strings happening to match. Surveyed 2026-09-28 against `main`:
 | A later page answering an earlier act (`cause.ts`, #269) | a backlink from a page to the act it answers | `ChronicleEntry.cause` = `{ year, page }`; `cause.ts` resolves the page by id | **id** (a blank is found by `text === null`, which is structure, not English) |
 | A Library memory (`run-library.ts`) | a previous house's page, quoted into a later run | `sourceHouse` and `sourceYear`; `sourceText` is the quotation itself | **id** — `sourceText` is displayed and never compared |
 | A tale cited by an event (`accounts`, `about`) | a nested tale surfacing on a later event | tale ids, validated by `refs/known` | **id** |
-| A tale surfaced on a Match card (`people/panel.ts:395`) | tales that concern the candidate's house | `t.text.includes(named) \|\| t.teller.includes(named)` | **string match** — step 1 of #276: tales should declare the houses they concern |
+| A tale surfaced on a Match card (`people/panel.ts`) | tales that concern the candidate's house | `TaleDef.houses`, validated by `refs/known` | **id** — it searched the tale's text and teller for the house's name until #276 |
 
 The rule for a new callback: if the second appearance has to be *recognised*,
 give the first one an id and have the second one read it. A phrase repeated by
