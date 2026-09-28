@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { Person, RetainerContract, RetainerRole } from '@ed/schema';
-import { RetainerRoleS } from '@ed/schema';
+import { asId, RetainerRoleS } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import {
-  beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, inheritPost,
-  inRegency, loadGame, maintainCast, place, releaseContracts, runYears, saveGame, testRng,
+  beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, heirApparent, inheritPost,
+  inRegency, knownSuccession, loadGame, maintainCast, place, releaseContracts, runYears, saveGame, testRng,
   testWorld,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
@@ -57,6 +57,149 @@ const contract = (over: Partial<RetainerContract> = {}): RetainerContract => ({
   debt: 0,
   knowsSecrets: [],
   ...over,
+});
+
+describe('known succession', () => {
+  it('keeps an unwoken son uncertain instead of leaking what his genome will reveal', () => {
+    const ctx = emptyHouse();
+    const elder = mundane(ctx, { age: 45, name: 'MundaneSon' });
+    elder.awakening = { ...elder.awakening, awakened: true, year: ctx.world.year, age: 45 };
+    // Reuse the deterministic expresser fixture already exercised by the
+    // Regency tests below; only the family's knowledge of him changes here.
+    const younger = place(ctx, { sex: 'male', age: 17, name: 'Son' });
+
+    const before = knownSuccession(ctx);
+    expect(before.heir).toBeUndefined();
+    expect(before.possible).toEqual([elder.id, younger.id]);
+    expect(before.because).toContain('Son');
+    expect(before.because).toContain('does not know');
+
+    younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 17 };
+    younger.phenotype = undefined;
+    const after = knownSuccession(ctx);
+    expect(after.heir).toBe(younger.id);
+    expect(after.heir).toBe(heirApparent(ctx)?.id);
+  });
+
+  it('keeps an equal-age unwoken candidate uncertain when stable order puts him first', () => {
+    const ctx = emptyHouse(2684);
+    const unknown = place(ctx, { sex: 'male', age: 30, name: 'Unknown' });
+    const known = place(ctx, { sex: 'male', age: 30, name: 'Known', awakened: true });
+
+    const before = knownSuccession(ctx);
+    expect(before.heir).toBeUndefined();
+    expect(before.possible).toEqual([unknown.id, known.id]);
+
+    unknown.awakening = {
+      ...unknown.awakening,
+      awakened: true,
+      year: ctx.world.year,
+      age: 30,
+    };
+    unknown.phenotype = undefined;
+
+    const after = knownSuccession(ctx);
+    expect(after.heir).toBe(unknown.id);
+    expect(after.heir).toBe(heirApparent(ctx)?.id);
+  });
+
+  it('never names a certain heir different from the simulation rule', () => {
+    const fixtures = [
+      () => {
+        const ctx = emptyHouse(2681);
+        place(ctx, { sex: 'male', age: 40, name: 'Known', awakened: true });
+        return ctx;
+      },
+      () => {
+        const ctx = emptyHouse(2682);
+        const man = mundane(ctx, { age: 40, name: 'Mundane' });
+        man.awakening = { ...man.awakening, awakened: true, year: ctx.world.year, age: 40 };
+        return ctx;
+      },
+      () => {
+        const ctx = emptyHouse(2683);
+        const man = mundane(ctx, { age: 40, name: 'Mundane' });
+        man.awakening = { ...man.awakening, awakened: true, year: ctx.world.year, age: 40 };
+        place(ctx, { sex: 'female', age: 35, name: 'Regent' });
+        return ctx;
+      },
+    ];
+
+    for (const build of fixtures) {
+      const ctx = build();
+      const known = knownSuccession(ctx);
+      if (known.heir) expect(known.heir).toBe(heirApparent(ctx)?.id);
+    }
+  });
+});
+
+describe('succession membership boundary (issue #294)', () => {
+  function outsiderMarriedIntoPlayerHouse(ctx: SimCtx): Person {
+    const outsider = place(ctx, { sex: 'female', age: 40, name: 'Outsider' });
+    const original = outsider.membership[0]!;
+    const otherHouse = bundle.houses.find((h) => h.id !== ctx.world.playerHouse)?.id;
+    if (!otherHouse) throw new Error('fixture needs a non-player house');
+
+    outsider.membership = [
+      {
+        ...original,
+        house: asId(otherHouse),
+        kind: 'blood',
+        from: ctx.world.year - 40,
+        to: ctx.world.year,
+      },
+      {
+        ...original,
+        house: original.house,
+        kind: 'married_in',
+        from: ctx.world.year,
+        to: undefined,
+      },
+    ];
+    return outsider;
+  }
+
+  it('does not treat a married-in outsider\'s closed blood membership as the player line', () => {
+    const ctx = emptyHouse();
+    const outsider = outsiderMarriedIntoPlayerHouse(ctx);
+
+    expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).map((p) => p.id))
+      .toContain(outsider.id);
+    expect(heirApparent(ctx)).toBeUndefined();
+    expect(knownSuccession(ctx)).toEqual({ possible: [] });
+  });
+
+  it('keeps a current player-house blood member eligible', () => {
+    const ctx = emptyHouse();
+    const blood = place(ctx, { sex: 'female', age: 35, name: 'Blood' });
+
+    expect(heirApparent(ctx)?.id).toBe(blood.id);
+    expect(knownSuccession(ctx)).toEqual({ heir: blood.id, possible: [blood.id] });
+  });
+
+  it('keeps a current player-house cadet eligible', () => {
+    const ctx = emptyHouse();
+    const cadet = place(ctx, { sex: 'female', age: 35, name: 'Cadet' });
+    cadet.membership[0]!.kind = 'cadet';
+    cadet.membership[0]!.branch = 'br_test_cadet';
+
+    expect(heirApparent(ctx)?.id).toBe(cadet.id);
+    expect(knownSuccession(ctx)).toEqual({ heir: cadet.id, possible: [cadet.id] });
+  });
+
+  it('keeps heirApparent and knownSuccession on the same membership boundary', () => {
+    const ctx = emptyHouse();
+    const outsider = outsiderMarriedIntoPlayerHouse(ctx);
+    const blood = place(ctx, { sex: 'female', age: 30, name: 'TrueBlood' });
+
+    const rule = heirApparent(ctx);
+    const view = knownSuccession(ctx);
+
+    expect(rule?.id).toBe(blood.id);
+    expect(view.heir).toBe(rule?.id);
+    expect(view.possible).toEqual([blood.id]);
+    expect(view.possible).not.toContain(outsider.id);
+  });
 });
 
 describe('seating a Head', () => {
