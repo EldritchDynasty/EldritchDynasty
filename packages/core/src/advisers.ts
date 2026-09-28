@@ -372,7 +372,7 @@ export function adviceFor(
   subject: string,
   tier: HelpTier,
 ): AdviserAdvice[] {
-  return advisers(ctx, surface, undefined, subject).slice(0, 2).map(({ person, lens, cares }) => ({
+  return advisers(ctx, surface, undefined, subject).slice(0, 1).map(({ person, lens, cares }) => ({
     adviser: { id: person.id, name: person.name },
     lens,
     cares,
