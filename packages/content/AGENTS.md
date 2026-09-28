@@ -27,7 +27,7 @@ checklist to run before you commit one; §27 is what is already fixed and may no
 npm run validate     # every content rule; exits non-zero on any error
 ```
 
-**Campaign shape (#274):** endings/conditions → `npm run gate:campaigns`; paste before/after.
+**Campaign shape (#274):** endings/conditions → `npm run gate:campaigns -- 12`; paste the static and played-reach before/after. Use `--static` only for a cheap inventory check while editing.
 
 ## Events
 
