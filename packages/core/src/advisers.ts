@@ -177,7 +177,7 @@ function matchPosition(
     case 'midwife': {
       const issue = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.borne + r.grown, 0);
       const card = [...open].sort((a, b) => issue(b) - issue(a) || b.lineSeen - a.lineSeen)[0]!;
-      return `I would take ${card.name}. That line has the most witnessed childbearing behind it. I trust the lives we have counted more than a market word.`;
+      return `I would take ${card.name}. That line has the strongest witnessed birth history behind it. I trust the lives we have counted more than a market word.`;
     }
     case 'old_head':
     case 'close_kin': {
