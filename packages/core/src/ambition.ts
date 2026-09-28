@@ -179,13 +179,13 @@ function recordRelevance(
   decision: PendingRecord,
 ): AmbitionRelevance | undefined {
   const effects = recordEffects(decision);
-  const conditions = decision.event.conditions;
+  const condition = decision.event.conditions;
 
   if (ambition === 'restore_ledger') {
     if (
       decision.event.purposes.includes('advance_clause')
       || effects.some((effect) => effect.kind === 'clause')
-      || conditions.some((condition) => conditionHas(condition, ['clausesRecovered']))
+      || condition !== undefined && conditionHas(condition, ['clausesRecovered'])
     ) {
       return {
         surface: 'record',
@@ -205,7 +205,7 @@ function recordRelevance(
           : 'This page can settle a disputed account already carried in the Ledger.',
       };
     }
-    if (conditions.some((condition) => conditionHas(condition, ['discrepancy', 'openDiscrepancies']))) {
+    if (condition !== undefined && conditionHas(condition, ['discrepancy', 'openDiscrepancies'])) {
       return {
         surface: 'record',
         effect: 'advance',
@@ -236,7 +236,7 @@ function recordRelevance(
       };
     }
     if (
-      conditions.some((condition) => conditionHas(condition, ['cadetBranches', 'branchGrievance']))
+      condition !== undefined && conditionHas(condition, ['cadetBranches', 'branchGrievance'])
       || filledRole(decision, (role) => role === 'cadet')
     ) {
       return {
@@ -248,7 +248,7 @@ function recordRelevance(
   }
 
   if (ambition === 'deepen_blood' && (
-    conditions.some((condition) => conditionHas(condition, ['bloodCount']))
+    condition !== undefined && conditionHas(condition, ['bloodCount'])
     || filledRole(decision, (role) =>
       role === 'sole_heir_unwed' || role === 'sole_heir_spent' || role === 'listener_blood')
   )) {
