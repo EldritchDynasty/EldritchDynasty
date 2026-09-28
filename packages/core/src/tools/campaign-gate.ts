@@ -5,6 +5,7 @@ import {
 } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
+import { playToTheEnd, type EndingPolicy, type EndingRun } from './ending-gate.js';
 
 type Campaigns = Readonly<Record<CampaignId, CampaignDef>>;
 type Truths = ReadonlySet<boolean>;
@@ -25,6 +26,23 @@ export interface CampaignStaticView {
 
 export interface CampaignStaticReport {
   campaigns: CampaignStaticView[];
+}
+
+export interface CampaignPlayedRun {
+  seed: number;
+  campaign: CampaignId;
+  policy: EndingPolicy;
+  ending: string;
+  clauses: number;
+  exclusiveEvents: string[];
+  exclusiveEnding?: string;
+  beyondShortClauses: number;
+  /** Distinct campaign-only things this run actually reached. */
+  exclusiveItems: number;
+}
+
+export interface CampaignPlayedReport {
+  runs: CampaignPlayedRun[];
 }
 
 /**
@@ -166,6 +184,98 @@ export function campaignStaticReport(
   };
 }
 
+/**
+ * Reduce one played run to the product-shape facts #274 cares about.
+ *
+ * templateFires is already collected by ending-gate, so this stays a report
+ * over existing telemetry rather than a second simulation instrument.
+ */
+export function campaignReachOf(
+  run: EndingRun,
+  campaign: CampaignId,
+  policy: EndingPolicy,
+  report: CampaignStaticReport,
+): CampaignPlayedRun {
+  const row = report.campaigns.find((x) => x.id === campaign);
+  if (!row) throw new Error(`campaign report is missing ${campaign}`);
+  const short = report.campaigns.find((x) => x.id === 'short');
+  if (!short) throw new Error('campaign report is missing short');
+
+  const fires = run.templateFires ?? {};
+  const exclusiveEvents = row.exclusiveEvents
+    .filter((id) => (fires[id] ?? 0) > 0)
+    .sort();
+  const exclusiveEnding = row.exclusiveEndings.includes(run.ending)
+    ? String(run.ending) : undefined;
+  const beyondShortClauses = campaign === 'long'
+    ? Math.max(0, run.clauses - short.clauseCapacity)
+    : 0;
+
+  return {
+    seed: run.seed,
+    campaign,
+    policy,
+    ending: String(run.ending),
+    clauses: run.clauses,
+    exclusiveEvents,
+    exclusiveEnding,
+    beyondShortClauses,
+    exclusiveItems: exclusiveEvents.length + (exclusiveEnding ? 1 : 0) + beyondShortClauses,
+  };
+}
+
+/** Play the same seeds in both products, under ordinary and intentional ladder play. */
+export function campaignPlayedReport(
+  source: ContentBundle | Content,
+  seeds: readonly number[],
+): CampaignPlayedReport {
+  const statics = campaignStaticReport(source);
+  const runs: CampaignPlayedRun[] = [];
+  for (const campaign of CampaignIdS.options) {
+    const years = CAMPAIGNS[campaign].years;
+    for (const policy of ['chronicler', 'ascendant'] as const) {
+      for (const seed of seeds) {
+        const played = playToTheEnd(source, seed, years, policy, campaign);
+        runs.push(campaignReachOf(played, campaign, policy, statics));
+      }
+    }
+  }
+  return { runs };
+}
+
+export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
+  const out: string[] = [];
+  for (const campaign of CampaignIdS.options) {
+    for (const policy of ['chronicler', 'ascendant'] as const) {
+      const rows = report.runs.filter((r) => r.campaign === campaign && r.policy === policy);
+      if (!rows.length) continue;
+      const reached = rows.filter((r) => r.exclusiveItems > 0).length;
+      const eventCounts = new Map<string, number>();
+      const endingCounts = new Map<string, number>();
+      let clauseRuns = 0;
+      let items = 0;
+      for (const row of rows) {
+        items += row.exclusiveItems;
+        if (row.beyondShortClauses > 0) clauseRuns += 1;
+        for (const id of row.exclusiveEvents) eventCounts.set(id, (eventCounts.get(id) ?? 0) + 1);
+        if (row.exclusiveEnding) endingCounts.set(row.exclusiveEnding, (endingCounts.get(row.exclusiveEnding) ?? 0) + 1);
+      }
+      const list = (counts: Map<string, number>) => [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([id, count]) => `${id} ${count}/${rows.length}`)
+        .join(', ') || 'none';
+      out.push(
+        `${CAMPAIGNS[campaign].name} / ${policy}: ${rows.length} runs`,
+        `  reached campaign-exclusive material: ${reached}/${rows.length}`,
+        `  mean exclusive items: ${(items / rows.length).toFixed(2)}`,
+        `  exclusive endings: ${list(endingCounts)}`,
+        `  exclusive events: ${list(eventCounts)}`,
+        `  beyond Short's clause capacity: ${clauseRuns}/${rows.length}`,
+      );
+    }
+  }
+  return out;
+}
 export function campaignStaticLines(report: CampaignStaticReport): string[] {
   const out: string[] = [];
   for (const row of report.campaigns) {
@@ -185,6 +295,16 @@ export function campaignStaticLines(report: CampaignStaticReport): string[] {
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('campaign-gate.ts');
 if (isMain) {
-  const report = campaignStaticReport(loadContent());
+  const source = loadContent();
+  const report = campaignStaticReport(source);
   for (const line of campaignStaticLines(report)) console.log(line);
+
+  const argv = process.argv.slice(2);
+  if (!argv.includes('--static')) {
+    const runs = Number(argv.find((a) => !a.startsWith('--')) ?? 12);
+    const seeds = Array.from({ length: Math.max(1, runs) }, (_, i) => 901 + i);
+    console.log('');
+    console.log(`played reach, ${seeds.length} shared seeds per campaign/policy`);
+    for (const line of campaignPlayedLines(campaignPlayedReport(source, seeds))) console.log(line);
+  }
 }
