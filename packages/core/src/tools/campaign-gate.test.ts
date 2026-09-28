@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { indexContent, type CampaignId } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
-import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
+import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, campaignStreamDifference, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
 
 describe('static campaign difference report', () => {
   const content = indexContent(loadContent());
@@ -96,7 +96,7 @@ describe('static campaign difference report', () => {
   });
 
   it('summarises played reach without turning the baseline into a threshold', () => {
-    const lines = campaignPlayedLines({ runs: [
+    const lines = campaignPlayedLines({ divergence: [], runs: [
       { seed: 1, campaign: 'long', policy: 'ascendant', ending: 'forgotten', clauses: 3, exclusiveEvents: [], beyondShortClauses: 0, exclusiveItems: 0 },
       { seed: 2, campaign: 'long', policy: 'ascendant', ending: 'apotheosis', clauses: 5, exclusiveEvents: ['late_long'], exclusiveEnding: 'apotheosis', beyondShortClauses: 2, exclusiveItems: 4 },
     ] });
@@ -106,4 +106,32 @@ describe('static campaign difference report', () => {
     expect(text).toContain('exclusive endings: apotheosis 1/2');
     expect(text).toContain("beyond Short's clause capacity: 1/2");
   });
+  it('measures same-seed Short/Long divergence without playing a game', () => {
+    const reading = campaignStreamDifference(
+      901,
+      [
+        { id: 'a', year: 1044 },
+        { id: 'b', year: 1048 },
+        { id: 'short_only', year: 1052 },
+        { id: 'shared_late', year: 1100 },
+      ],
+      [
+        { id: 'a', year: 1044 },
+        { id: 'b', year: 1048 },
+        { id: 'long_only', year: 1053 },
+        { id: 'shared_late', year: 1100 },
+        { id: 'after_short', year: 1400 },
+      ],
+      1342,
+    );
+
+    expect(reading).toEqual({
+      seed: 901,
+      sharedPrefix: 2,
+      divergenceYear: 1052,
+      sameYearOverlap: 3 / 4,
+      comparedBeforeShortTerm: 4,
+    });
+  });
+
 });
