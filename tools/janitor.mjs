@@ -42,7 +42,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
-import { onPath } from './portable.mjs';
+import { onPath } from './portable.mjs';\nimport { closingIssues } from './closing-keywords.mjs';
 
 const DRY = process.env.DRY_RUN === '1';
 const REMOTE = process.env.REMOTE ?? 'origin';
@@ -120,9 +120,7 @@ if (gitOut('rev-parse', '--is-shallow-repository') !== 'false') {
 git('fetch', '-q', REMOTE, '+refs/heads/*:refs/janitor/*', '--prune');
 const MAIN = gitOut('rev-parse', 'refs/janitor/main');
 
-/** Closing keywords are landing evidence whether or not GitHub has closed the issue yet. */
-const closingIssues = (text) =>
-  [...text.matchAll(/(?:clos(?:e|es|ed)|fix(?:e[sd])?|resolv(?:e|es|ed)) +#(\d+)/gi)].map((m) => m[1]);
+/** Positive closing keywords are landing evidence whether or not GitHub has closed the issue yet. */
 
 /**
  * Latest main commit time that names each issue. The timestamp matters: an old
