@@ -67,7 +67,6 @@ function largeView(): SessionView {
             house: 'House Elsewhere',
           },
         } : {}),
-        ...(index % 5 === 0 ? { contract: 'steward' } : {}),
         ...(index % 7 === 0 ? {
           relevance: [{ reason: index % 14 === 0
             ? 'their hall holds a grievance'
@@ -132,7 +131,6 @@ describe('the family tree as a planning board (#268)', () => {
       ['succession', ({ member }) => member.succession !== undefined],
       ['married', ({ member }) => member.spouse !== undefined],
       ['unmarried', ({ member }) => member.spouse === undefined],
-      ['post', ({ member }) => member.contract !== undefined],
       ['cadet', ({ hall }) => !hall.isSeat],
       ['awakened', ({ member }) => member.awakened],
     ];
