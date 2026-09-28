@@ -32,6 +32,16 @@ export function shapeFrequencies(
     .sort((a, b) => b.count - a.count || a.shape.localeCompare(b.shape));
 }
 
+export interface FailureStreaks {
+  check: number;
+  order: number;
+}
+
+export interface RepeatedFailure {
+  campaign: FailureStreaks;
+  ages: Record<string, FailureStreaks>;
+}
+
 export interface AmbitionFlat {
   years: number;
   decisions: number;
@@ -69,6 +79,8 @@ export interface DensityRun {
   stallAges: Record<string, StallSpans>;
   /** Longest unchanged ambition reading; raise_ascendant also moves when its foremost blocker changes. */
   ambitionFlat: Partial<Record<HouseAmbitionId, AmbitionFlat>>;
+  /** Longest real failed-attempt streak for the same check/order and person. */
+  repeatedFailure: RepeatedFailure;
   /** Choice presentations already settled by availability, shape or #219's guard. */
   predeterminedShare: number;
   /**
@@ -243,6 +255,37 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
     const ambitionWidths = ambitionHead.map((h, i) => Math.max(h.length, ...ambitionBody.map((b) => (b[i] ?? '').length)));
     const ambitionLine = (cells: string[]) => cells.map((c, i) => c.padEnd(ambitionWidths[i]!)).join('  ');
     out.push(ambitionLine(ambitionHead), ambitionLine(ambitionWidths.map((w) => '-'.repeat(w))), ...ambitionBody.map(ambitionLine));
+  }
+
+  out.push('');
+  const failureHead = ['term', 'scope', 'owner', 'attempt', 'streak mean', 'streak max'];
+  const failureBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.repeatedFailure.ages)))].sort();
+    const scopes: [string, ((run: DensityRun) => FailureStreaks | undefined)][] = [
+      ['campaign', (run) => run.repeatedFailure.campaign],
+      ...ageIds.map((age) => [`age:${age}`, (run: DensityRun) => run.repeatedFailure.ages[age]] as const),
+    ];
+    for (const [scope, pick] of scopes) {
+      const readings = runs.map(pick).filter((x): x is FailureStreaks => x !== undefined);
+      if (!readings.length) continue;
+      for (const [attempt, owner] of [['check', 'events/checks'], ['order', 'table']] as const) {
+        const values = readings.map((x) => x[attempt]);
+        failureBody.push([
+          String(term),
+          scope,
+          owner,
+          attempt,
+          mean(values).toFixed(2),
+          String(Math.max(...values)),
+        ]);
+      }
+    }
+  }
+  if (failureBody.length) {
+    const failureWidths = failureHead.map((h, i) => Math.max(h.length, ...failureBody.map((b) => (b[i] ?? '').length)));
+    const failureLine = (cells: string[]) => cells.map((c, i) => c.padEnd(failureWidths[i]!)).join('  ');
+    out.push(failureLine(failureHead), failureLine(failureWidths.map((w) => '-'.repeat(w))), ...failureBody.map(failureLine));
   }
 
   out.push('');
