@@ -16,17 +16,20 @@ function bridge(): Platform {
   };
 }
 
-function memoryPlatform(): Platform & { saves: Map<string, unknown> } {
+function memoryPlatform(): Platform & { saves: Map<string, unknown>; unlocks: string[] } {
   const saves = new Map<string, unknown>();
+  const unlocks: string[] = [];
   let library: unknown | null = null;
   return {
     saves,
+    unlocks,
     listSaves: async () => [...saves].map(([slot, save]) => ({ slot, ...(save as { year?: number }) })),
     readSave: async (slot) => saves.get(slot) ?? null,
     writeSave: async (slot, save) => { saves.set(slot, save); },
     deleteSave: async (slot) => { saves.delete(slot); },
     readLibrary: async () => library,
     writeLibrary: async (next) => { library = next; },
+    unlockAchievement: async (id) => { unlocks.push(id); },
     readUserContent: async () => ({}),
     exportSave: async () => undefined, importSave: async () => null,
     onPause: () => () => undefined, onBack: () => () => undefined,
@@ -237,6 +240,13 @@ describe('the platform seam', () => {
       format: 1,
       runs: [{ seed: 8181, house: 'House Remembered', endedYear: 1342 }],
     });
+    expect(host.unlocks).toContain('ending_forgotten');
+
+    // Loading/refreshing the same completed house again re-evaluates pure
+    // facts, but must not spam the profile backend with a second unlock call.
+    await game.actions.load('finished');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(host.unlocks.filter((id) => id === 'ending_forgotten')).toHaveLength(1);
   });
 
   it('round-trips the same snapshot through separate host implementations', async () => {
