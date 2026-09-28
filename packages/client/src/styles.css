@@ -81,6 +81,7 @@ button {
   font: inherit; color: var(--ink); cursor: pointer;
   background: var(--panel); border: 1px solid var(--rule);
   border-radius: 2px; padding: 6px 12px;
+  max-width: 100%; overflow-wrap: anywhere;
 }
 button:hover:not(:disabled) { background: var(--vellum-deep); border-color: var(--ink-faint); }
 button:disabled { cursor: default; color: var(--ink-faint); opacity: .65; }
@@ -92,6 +93,7 @@ button.quiet:hover:not(:disabled) { color: var(--ink); background: var(--vellum-
 input, select {
   font: inherit; color: var(--ink); background: var(--vellum);
   border: 1px solid var(--rule); border-radius: 2px; padding: 5px 7px;
+  max-width: 100%; min-width: 0;
 }
 
 /* A keyboard cursor must be more than the same faint rule used by every
@@ -103,7 +105,7 @@ input, select {
 
 .panel {
   background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 3px; padding: 14px 16px;
+  border-radius: 3px; padding: 14px 16px; min-width: 0;
 }
 .panel h3, h3.label {
   margin: 0 0 10px; font-size: var(--t-label); letter-spacing: .14em;
@@ -113,9 +115,9 @@ input, select {
 .soft { color: var(--ink-soft); }
 .rubric { color: var(--rubric); }
 .small { font-size: var(--t-fine); }
-.row { display: flex; align-items: baseline; gap: 8px; }
-.wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-.stack { display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.wrap { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 
 /* SEEN OR HEARD, NOT BOTH (issue #58). Text that carries a meaning the layout
    is carrying visually — an omitted chronicle line is a ruled blank on the
