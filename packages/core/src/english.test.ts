@@ -40,17 +40,13 @@ const ALLOWED: Record<string, string> = {};
 
 /** File → how many matches it still has, and who is taking them out. */
 const NOT_YET: Record<string, { sites: number; owner: string }> = {
+  // #270 moved `standing.blocked` onto a structured `LadderBlocker`, which
+  // took long-line-gate.ts's nineteen phrases and the endings gate's Ledger
+  // check off this list. One remains: the Ledger-wait page dedupes on its
+  // own opening words.
   'ascension.ts': {
-    sites: 2,
-    owner: '#270/#276: `standing.blocked` becomes a structured `LadderBlocker`; the Ledger-wait page dedupes on an id',
-  },
-  'tools/ending-gate.ts': {
     sites: 1,
-    owner: '#276: reads `blocker === ...` once ascension.ts carries one',
-  },
-  'tools/long-line-gate.ts': {
-    sites: 19,
-    owner: '#270/#276: the phrases mapping `blocked` onto `LadderBlocker` move into the engine',
+    owner: '#270/#276: the Ledger-wait page (`The Ledger Stayed Open`) dedupes on `entry.text?.startsWith(opening)`; give it an id',
   },
 };
 

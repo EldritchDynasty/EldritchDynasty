@@ -471,7 +471,8 @@ export function playToTheEnd(
           unmakingTakerPeakRung = standing.rung;
         }
         if (rungIndex(standing.rung) >= rungIndex('demigod')) demigodThisYear = true;
-        if (standing.rung === 'demigod' && standing.blocked?.startsWith('the book holds ')) {
+        // The structured blocker (#270), not the prose it is written beside (#276).
+        if (standing.rung === 'demigod' && standing.blocker === 'clauses') {
           ledgerWaitThisYear = true;
         }
         const stages = [true, standing.power >= POWER_FLOOR.god,
