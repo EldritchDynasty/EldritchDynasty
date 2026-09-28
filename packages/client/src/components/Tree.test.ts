@@ -95,7 +95,11 @@ function largeView(): SessionView {
 
 function renderedIds(wrapper: VueWrapper): string[] {
   return wrapper.findAll('.member')
-    .map((node) => node.attributes('id').replace(/^member-/, ''))
+    .map((node) => {
+      const id = node.attributes('id');
+      if (!id) throw new Error('rendered member card has no stable id');
+      return id.replace(/^member-/, '');
+    })
     .sort();
 }
 
