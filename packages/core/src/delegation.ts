@@ -93,13 +93,10 @@ export function mustSurface(ctx: SimCtx, d: PendingDecision): DelegationGuard | 
   if (/great_rite|vessel|unmaking|\brite\b/.test(text)) return 'rite';
   if (/discrepanc/.test(text)) return 'discrepancy';
   if (ctx.world.houseAmbition) {
-    // #210 already defines which player surfaces an ambition makes consequential.
-    // Use that domain reading rather than requiring authored event prose to contain
-    // the word “ambition”. Today Record is the only delegatable surface an
-    // ambition can mark relevant; Match is always surfaced above and Table/Ladder
-    // are standing verbs rather than pending decisions.
-    const ambition = ambitionView(ctx);
-    if (d.kind === 'record' && ambition?.relevance.some((r) => r.surface === 'record')) return 'ambition';
+    // The same reader feeds the docket and the interruption guard. For a
+    // standing choice it reads the exact remembered branch from delegation, so
+    // a consequential sibling cannot poison the harmless answer (#278).
+    if (ambitionRelevance(ctx, d)) return 'ambition';
     // Keep explicit ambition-authored events fail-safe as well.
     if (/ambition/.test(text)) return 'ambition';
   }
