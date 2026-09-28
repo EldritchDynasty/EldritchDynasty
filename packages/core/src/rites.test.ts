@@ -8,13 +8,14 @@ import {
   performUnmaking,
 } from './events/rites.js';
 import { applyEffect } from './events/effects.js';
-import { applyRecord, commitOutcome, type PendingChoice } from './events/decisions.js';
+import { applyRecord, commitOutcome, queueChoice, type PendingChoice } from './events/decisions.js';
 import type { SlotFill } from './events/slots.js';
 import { order, tableView, type TableOrder } from './table.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js';
 import { standingOf } from './ascension.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import type { SimCtx } from './world.js';
+import { adviceForDecision } from './advisers.js';
 
 const content = indexContent(loadContent());
 
@@ -464,6 +465,49 @@ describe('what the Great Rite moves', () => {
     expect(performGreatRite(ctx, him).ok).toBe(true);
     expect(him.rites).toContain('great_rite');
     expect(blocked === undefined || typeof blocked === 'string').toBe(true);
+  });
+});
+
+describe('how advisers recognise a rite', () => {
+  function onlyPriest(ctx: SimCtx) {
+    for (const person of ctx.world.people.all()) person.status = 'dead';
+    return place(ctx, {
+      sex: 'female',
+      age: 40,
+      name: 'Sister Elian',
+      career: { career: 'clergy' },
+    });
+  }
+
+  it('reads the rite effect even when neither id nor title says rite', () => {
+    const ctx = testWorld(content);
+    const priest = onlyPriest(ctx);
+    const source = ctx.content.event('the_vessel_rite');
+    expect(source).toBeDefined();
+
+    const event = { ...source!, id: 'ordinary_page', title: 'A Quiet Question' };
+    const pending = queueChoice(ctx, event, event.body, {}, []);
+    const advice = adviceForDecision(ctx, pending);
+
+    expect(advice).toHaveLength(1);
+    expect(advice[0]?.adviser.id).toBe(priest.id);
+    expect(advice[0]?.lens).toBe('priest');
+    expect(advice[0]?.position).toContain('With a rite');
+  });
+
+  it('does not turn ordinary choices into rites because their words say ritual', () => {
+    const ctx = testWorld(content);
+    onlyPriest(ctx);
+    const source = ctx.content.event('the_seal_questioned');
+    expect(source).toBeDefined();
+
+    const event = { ...source!, id: 'the_ritual_question', title: 'The Rite of the Seal' };
+    const pending = queueChoice(ctx, event, event.body, {}, []);
+    const advice = adviceForDecision(ctx, pending);
+
+    expect(advice).toHaveLength(1);
+    expect(advice[0]?.lens).toBe('priest');
+    expect(advice[0]?.position).not.toContain('With a rite');
   });
 });
 
