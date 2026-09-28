@@ -27,7 +27,7 @@ checklist to run before you commit one; §24 is what is already fixed and may no
 npm run validate     # 32 rules; exits non-zero on any error
 ```
 
-**Campaign-shape checklist (#274).** If authored content changes an ending or adds/changes a condition whose reach depends on the campaign shape (for example `year`, `campaignProgress`, `clausesRecovered` or `arcCanFinish`), run `npm run gate:campaigns` and paste the before/after report with the change. Engine changes to `CAMPAIGNS` follow the same rule. The report derives Short/Long exclusivity from the shipped definitions; never replace it with a hand-maintained list.
+**Campaign shape (#274):** changing an ending or a campaign-scoped condition requires `npm run gate:campaigns`; paste its before/after report. Never hand-list Short/Long reach.
 
 ## Events
 
