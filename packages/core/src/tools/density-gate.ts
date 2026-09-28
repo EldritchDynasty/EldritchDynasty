@@ -59,10 +59,12 @@ import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { LADDER_BLOCKERS, foremostOf, type LadderBlocker } from '../ascension.js';
+import { blockerActionability } from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
-  type DensityRun,
+  type DensityRun, type StallSpans,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
 export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './density-report.js';
@@ -108,6 +110,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const ageShapeCounts = new Map<string, Map<string, number>>();
   const ageShapeChoices = new Map<string, number>();
   const categoryWindow: string[] = [];
+  const campaignStall = makeStallTracker();
+  const ageStalls = new Map<string, StallTracker>();
   let shapeWindow = 0;
   let predeterminedChoices = 0;
   let nonPredeterminedChoices = 0;
@@ -141,6 +145,25 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         shapeSeenAgeWithoutPredetermined.category.clear();
       }
       ages += turned.agesEnded.length;
+    }
+
+    // Read the blocker while this year's docket is still standing. A Match,
+    // Record or authored choice that can move it is an OFFERED verb only at
+    // this point; resolving the docket first would erase the evidence and
+    // make every interactive year look like waiting.
+    const top = foremostOf(g.ctx);
+    const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
+    const actionable = blockerActionability(g.ctx, blocker, top?.person.id).actionable;
+    noteStall(campaignStall, blocker, actionable);
+
+    const activeAges = new Set(w.age.active.map((a) => String(a.age)));
+    for (const age of activeAges) {
+      const tracker = ageStalls.get(age) ?? makeStallTracker();
+      noteStall(tracker, blocker, actionable);
+      ageStalls.set(age, tracker);
+    }
+    for (const [age, tracker] of ageStalls) {
+      if (!activeAges.has(age)) breakStall(tracker);
     }
 
     let inner = 0;
@@ -289,6 +312,14 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       },
     },
     shapeWindow,
+    blockerSpan: campaignStall.blockerSpan,
+    actionableGap: campaignStall.actionableGap,
+    stallAges: Object.fromEntries([...ageStalls.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([age, tracker]) => [age, {
+        blockerSpan: tracker.blockerSpan,
+        actionableGap: tracker.actionableGap,
+      }])),
     predeterminedShare: choices ? predeterminedChoices / choices : 0,
     topShapes: {
       campaign: shapeFrequencies(campaignShapeCounts, choices),
@@ -301,6 +332,56 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     meaningfulChoices,
     meaningfulRecords,
   };
+}
+
+interface StallTracker extends StallSpans {
+  currentBlocker?: LadderBlocker;
+  currentSpan: number;
+  currentGapBlocker?: LadderBlocker;
+  currentGap: number;
+}
+
+function blockerYears(): Record<LadderBlocker, number> {
+  return Object.fromEntries(LADDER_BLOCKERS.map((blocker) => [blocker, 0]))
+    as Record<LadderBlocker, number>;
+}
+
+function makeStallTracker(): StallTracker {
+  return {
+    blockerSpan: blockerYears(),
+    actionableGap: blockerYears(),
+    currentSpan: 0,
+    currentGap: 0,
+  };
+}
+
+function breakStall(tracker: StallTracker): void {
+  tracker.currentBlocker = undefined;
+  tracker.currentSpan = 0;
+  tracker.currentGapBlocker = undefined;
+  tracker.currentGap = 0;
+}
+
+function noteStall(tracker: StallTracker, blocker: LadderBlocker, actionable: boolean): void {
+  if (tracker.currentBlocker === blocker) tracker.currentSpan += 1;
+  else {
+    tracker.currentBlocker = blocker;
+    tracker.currentSpan = 1;
+  }
+  tracker.blockerSpan[blocker] = Math.max(tracker.blockerSpan[blocker], tracker.currentSpan);
+
+  if (blocker === 'clear' || actionable) {
+    tracker.currentGapBlocker = undefined;
+    tracker.currentGap = 0;
+    return;
+  }
+
+  if (tracker.currentGapBlocker === blocker) tracker.currentGap += 1;
+  else {
+    tracker.currentGapBlocker = blocker;
+    tracker.currentGap = 1;
+  }
+  tracker.actionableGap[blocker] = Math.max(tracker.actionableGap[blocker], tracker.currentGap);
 }
 
 function bump(counts: Map<string, number>, key: string): void {
