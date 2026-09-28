@@ -82,6 +82,7 @@ tales:
     teller: an unnamed annotator of House Ilm's library
     bias: dismissive
     about: the_portion_of_fertility
+    houses: [house_ilm]
     accuracy: 0.65
     circulatesFrom: { yearsAfterEvent: 40 }
     mutatesEveryYears: 300
@@ -114,6 +115,7 @@ tales:
     teller: House Marrow's death-clerks
     bias: gloating
     about: the_drowning
+    houses: [house_marrow]
     accuracy: 0.5
     circulatesFrom: { yearsAfterEvent: 8 }
     mutatesEveryYears: 220
@@ -130,6 +132,7 @@ tales:
     teller: House Marrow's chroniclers, a later hand
     bias: contemptuous
     about: the_seal_questioned
+    houses: [house_marrow]
     accuracy: 0.45
     circulatesFrom: { yearsAfterEvent: 6 }
     mutatesEveryYears: 220
@@ -162,6 +165,7 @@ tales:
     teller: the scholars of House Ilm
     bias: grieving
     about: the_burning_of_the_nine_libraries
+    houses: [house_ilm]
     accuracy: 0.55
     circulatesFrom: { yearsAfterEvent: 3 }
     mutatesEveryYears: 180
@@ -419,6 +423,7 @@ tales:
     teller: a lecturer of the Colleges, in a letter to House Ilm
     bias: dismissive
     about: rod_the_correlation_was_something_else
+    houses: [house_ilm]
     accuracy: 0.5
     circulatesFrom: { yearsAfterEvent: 8 }
     mutatesEveryYears: 180
@@ -1771,6 +1776,7 @@ tales:
     teller: the stewards of House Marrow, in a bad decade
     bias: humiliated
     about: the_marrow_codex_offered
+    houses: [house_marrow]
     accuracy: 0.75
     circulatesFrom: { yearsAfterEvent: 3 }
     mutatesEveryYears: 130
