@@ -665,15 +665,11 @@ describe('diagnostic: adviser distribution after #273 step 3', () => {
 
         let inner = 0;
         while (game.pending.length && inner++ < 500) {
-          const photographed = game.view().docket[0];
-          if (photographed?.advice) {
-            for (const line of photographed.advice) {
-              counts.set(line.lens, (counts.get(line.lens) ?? 0) + 1);
-              total += 1;
-            }
-          }
-
           const decision = game.pending[0]!;
+          for (const line of adviceForDecision(game.ctx, decision)) {
+            counts.set(line.lens, (counts.get(line.lens) ?? 0) + 1);
+            total += 1;
+          }
           if (decision.kind === 'match') {
             const card = decision.cards.find((c) => c.available);
             if (card) game.match(decision.id, card.id);
