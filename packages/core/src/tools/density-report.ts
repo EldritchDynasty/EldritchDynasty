@@ -1,4 +1,7 @@
+import type { HouseAmbitionId } from '@ed/schema';
+import { LADDER_BLOCKERS, type LadderBlocker } from '../ascension.js';
 import type { ShapeGrain } from './shapes.js';
+import { blockerLevers } from './stall.js';
 
 export interface ShapeRepeat {
   run: number;
@@ -29,6 +32,26 @@ export function shapeFrequencies(
     .sort((a, b) => b.count - a.count || a.shape.localeCompare(b.shape));
 }
 
+export interface FailureStreaks {
+  check: number;
+  order: number;
+}
+
+export interface RepeatedFailure {
+  campaign: FailureStreaks;
+  ages: Record<string, FailureStreaks>;
+}
+
+export interface AmbitionFlat {
+  years: number;
+  decisions: number;
+}
+
+export interface StallSpans {
+  blockerSpan: Record<LadderBlocker, number>;
+  actionableGap: Record<LadderBlocker, number>;
+}
+
 export interface DensityRun {
   seed: number;
   /** The term, or the line running out before it (issue #42). */
@@ -48,6 +71,18 @@ export interface DensityRun {
   shapeRepeat: Record<ShapeGrain, ShapeRepeat>;
   /** Largest share held by one category shape in any complete 20-choice window. */
   shapeWindow: number;
+  /** Longest uninterrupted years behind the same structured ladder blocker (#270). */
+  blockerSpan: Record<LadderBlocker, number>;
+  /** Longest same-blocker span with no currently offered verb that can move its predicate. */
+  actionableGap: Record<LadderBlocker, number>;
+  /** The same two readings scoped to each authored Age that was active in the sampled years. */
+  stallAges: Record<string, StallSpans>;
+  /** Longest unchanged ambition reading; raise_ascendant also moves when its foremost blocker changes. */
+  ambitionFlat: Partial<Record<HouseAmbitionId, AmbitionFlat>>;
+  /** The same flat-reading clock scoped to each authored Age. */
+  ambitionFlatAges: Record<string, Partial<Record<HouseAmbitionId, AmbitionFlat>>>;
+  /** Longest real failed-attempt streak for the same check/order and person. */
+  repeatedFailure: RepeatedFailure;
   /** Choice presentations already settled by availability, shape or #219's guard. */
   predeterminedShare: number;
   /**
@@ -158,6 +193,116 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
   const shapeWidths = shapeHead.map((h, i) => Math.max(h.length, ...shapeBody.map((b) => (b[i] ?? '').length)));
   const shapeLine = (cells: string[]) => cells.map((c, i) => c.padEnd(shapeWidths[i]!)).join('  ');
   out.push(shapeLine(shapeHead), shapeLine(shapeWidths.map((w) => '-'.repeat(w))), ...shapeBody.map(shapeLine));
+
+  out.push('');
+  const stallHead = ['term', 'scope', 'owner', 'blocker', 'span mean', 'span max', 'no-verb mean', 'no-verb max'];
+  const stallBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    const scopes: [string, ((run: DensityRun) => StallSpans | undefined)][] = [
+      ['campaign', (run) => ({ blockerSpan: run.blockerSpan, actionableGap: run.actionableGap })],
+    ];
+    const ages = [...new Set(runs.flatMap((run) => Object.keys(run.stallAges)))].sort();
+    for (const age of ages) scopes.push([`age:${age}`, (run) => run.stallAges[age]]);
+
+    for (const [scope, pick] of scopes) {
+      for (const blocker of LADDER_BLOCKERS) {
+        if (blocker === 'clear' || blocker === 'other') continue;
+        const readings = runs.map(pick).filter((x): x is StallSpans => x !== undefined);
+        if (!readings.length) continue;
+        const spans = readings.map((x) => x.blockerSpan[blocker]);
+        const gaps = readings.map((x) => x.actionableGap[blocker]);
+        if (!spans.some(Boolean) && !gaps.some(Boolean)) continue;
+        const owners = [...new Set(blockerLevers(blocker).map((l) => l.owner))].join('+') || 'ladder';
+        stallBody.push([
+          String(term),
+          scope,
+          owners,
+          blocker,
+          mean(spans).toFixed(1),
+          String(Math.max(...spans)),
+          mean(gaps).toFixed(1),
+          String(Math.max(...gaps)),
+        ]);
+      }
+    }
+  }
+  if (stallBody.length) {
+    const stallWidths = stallHead.map((h, i) => Math.max(h.length, ...stallBody.map((b) => (b[i] ?? '').length)));
+    const stallLine = (cells: string[]) => cells.map((c, i) => c.padEnd(stallWidths[i]!)).join('  ');
+    out.push(stallLine(stallHead), stallLine(stallWidths.map((w) => '-'.repeat(w))), ...stallBody.map(stallLine));
+  }
+
+  out.push('');
+  const ambitionHead = ['term', 'scope', 'owner', 'ambition', 'flat years mean', 'flat years max', 'decisions mean', 'decisions max'];
+  const ambitionBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.ambitionFlatAges)))].sort();
+    const scopes: [string, ((run: DensityRun) => Partial<Record<HouseAmbitionId, AmbitionFlat>> | undefined)][] = [
+      ['campaign', (run) => run.ambitionFlat],
+      ...ageIds.map((age): [string, (run: DensityRun) => Partial<Record<HouseAmbitionId, AmbitionFlat>> | undefined] =>
+        [`age:${age}`, (run) => run.ambitionFlatAges[age]]),
+    ];
+
+    for (const [scope, pick] of scopes) {
+      const readingsByRun = runs.map(pick).filter(
+        (x): x is Partial<Record<HouseAmbitionId, AmbitionFlat>> => x !== undefined,
+      );
+      const ids = [...new Set(readingsByRun.flatMap((reading) => Object.keys(reading)))].sort() as HouseAmbitionId[];
+      for (const id of ids) {
+        const readings = readingsByRun.flatMap((reading) => reading[id] ? [reading[id]!] : []);
+        if (!readings.length) continue;
+        const years = readings.map((x) => x.years);
+        const decisions = readings.map((x) => x.decisions);
+        ambitionBody.push([
+          String(term),
+          scope,
+          'ambition',
+          id,
+          mean(years).toFixed(1),
+          String(Math.max(...years)),
+          mean(decisions).toFixed(1),
+          String(Math.max(...decisions)),
+        ]);
+      }
+    }
+  }
+  if (ambitionBody.length) {
+    const ambitionWidths = ambitionHead.map((h, i) => Math.max(h.length, ...ambitionBody.map((b) => (b[i] ?? '').length)));
+    const ambitionLine = (cells: string[]) => cells.map((c, i) => c.padEnd(ambitionWidths[i]!)).join('  ');
+    out.push(ambitionLine(ambitionHead), ambitionLine(ambitionWidths.map((w) => '-'.repeat(w))), ...ambitionBody.map(ambitionLine));
+  }
+
+  out.push('');
+  const failureHead = ['term', 'scope', 'owner', 'attempt', 'streak mean', 'streak max'];
+  const failureBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    const ageIds = [...new Set(runs.flatMap((run) => Object.keys(run.repeatedFailure.ages)))].sort();
+    const scopes: [string, ((run: DensityRun) => FailureStreaks | undefined)][] = [
+      ['campaign', (run) => run.repeatedFailure.campaign],
+      ...ageIds.map((age): [string, (run: DensityRun) => FailureStreaks | undefined] =>
+        [`age:${age}`, (run) => run.repeatedFailure.ages[age]]),
+    ];
+    for (const [scope, pick] of scopes) {
+      const readings = runs.map(pick).filter((x): x is FailureStreaks => x !== undefined);
+      if (!readings.length) continue;
+      for (const [attempt, owner] of [['check', 'events/checks'], ['order', 'table']] as const) {
+        const values = readings.map((x) => x[attempt]);
+        failureBody.push([
+          String(term),
+          scope,
+          owner,
+          attempt,
+          mean(values).toFixed(2),
+          String(Math.max(...values)),
+        ]);
+      }
+    }
+  }
+  if (failureBody.length) {
+    const failureWidths = failureHead.map((h, i) => Math.max(h.length, ...failureBody.map((b) => (b[i] ?? '').length)));
+    const failureLine = (cells: string[]) => cells.map((c, i) => c.padEnd(failureWidths[i]!)).join('  ');
+    out.push(failureLine(failureHead), failureLine(failureWidths.map((w) => '-'.repeat(w))), ...failureBody.map(failureLine));
+  }
 
   out.push('');
   const topHead = ['term', 'scope', 'share', 'category shape'];

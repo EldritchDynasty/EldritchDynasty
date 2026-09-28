@@ -54,12 +54,21 @@
  * for the same answer. This is the sweep rig that produced the band.
  */
 import { loadContent } from '@ed/content';
-import type { Content, ContentBundle } from '@ed/schema';
+import type { Content, ContentBundle, HouseAmbitionId } from '@ed/schema';
 import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { ambitionOptions, ambitionView } from '../ambition.js';
+import { foremostOf, type LadderBlocker } from '../ascension.js';
+import {
+  breakFailureTracker, breakStallClock, makeFailureTracker, makeStallClock,
+  noteCheckAttempt, noteOrderAttempt, observeChoiceCheck, observeOrderAttempt, observePartyCheck,
+  sampleStallClock, type FailureTracker, type StallClock,
+} from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
+import type { TableOrder } from '../table.js';
+import type { SimCtx } from '../world.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
   type DensityRun,
@@ -70,6 +79,15 @@ export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './densi
 export interface DensityOptions {
   /** Learn exact routine preferences from the first answer, then delegate repeats. */
   delegateRoutine?: boolean;
+  /**
+   * Optional table-playing policy for a measurement run.
+   *
+   * The established density player deliberately supplies none, which preserves
+   * the baseline in BALANCE-LOG. When a policy does supply an order, it is a
+   * REAL GameSession.order attempt: success changes that measurement run and
+   * failure is observed for #270's repeated-order streak.
+   */
+  tableOrder?: (ctx: SimCtx) => TableOrder | undefined;
 }
 
 /**
@@ -108,6 +126,15 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const ageShapeCounts = new Map<string, Map<string, number>>();
   const ageShapeChoices = new Map<string, number>();
   const categoryWindow: string[] = [];
+  const campaignStall = makeStallClock();
+  const ageStalls = new Map<string, StallClock>();
+  const ambitionIds = ambitionOptions(w.campaign).map((a) => a.id);
+  const ambitionTrackers = new Map<HouseAmbitionId, AmbitionTracker>(
+    ambitionIds.map((id) => [id, makeAmbitionTracker()]),
+  );
+  const ageAmbitionTrackers = new Map<string, Map<HouseAmbitionId, AmbitionTracker>>();
+  const campaignFailures = makeFailureTracker();
+  const ageFailures = new Map<string, FailureTracker>();
   let shapeWindow = 0;
   let predeterminedChoices = 0;
   let nonPredeterminedChoices = 0;
@@ -143,8 +170,82 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       ages += turned.agesEnded.length;
     }
 
+    // Read the blocker while this year's docket is still standing. A Match,
+    // Record or authored choice that can move it is an OFFERED verb only at
+    // this point; resolving the docket first would erase the evidence and
+    // make every interactive year look like waiting.
+    const top = foremostOf(g.ctx);
+    const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
+    sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
+
+    const activeAges = new Set(w.age.active.map((a) => String(a.age)));
+    for (const age of activeAges) {
+      if (!ageAmbitionTrackers.has(age)) {
+        ageAmbitionTrackers.set(age, new Map(
+          ambitionIds.map((id) => [id, makeAmbitionTracker()]),
+        ));
+      }
+    }
+
+    // Ambitions are readings only (#210): selecting one does not alter the
+    // simulation. Read every campaign-legal ambition off this SAME played year
+    // rather than paying for four reruns that would answer an identical world.
+    // Restore the player's actual selection before any docket answer can see it.
+    const selectedAmbition = w.houseAmbition;
+    for (const [id, tracker] of ambitionTrackers) {
+      w.houseAmbition = id;
+      const view = ambitionView(g.ctx);
+      const key = view
+        ? `${view.progress.current}${id === 'raise_ascendant' ? `:${blocker}` : ''}`
+        : 'unavailable';
+      noteAmbition(tracker, key);
+      for (const age of activeAges) {
+        noteAmbition(ageAmbitionTrackers.get(age)!.get(id)!, key);
+      }
+    }
+    w.houseAmbition = selectedAmbition;
+
+    for (const [age, trackers] of ageAmbitionTrackers) {
+      if (!activeAges.has(age)) {
+        for (const tracker of trackers.values()) breakAmbitionTracker(tracker);
+      }
+    }
+
+    for (const age of activeAges) {
+      const tracker = ageStalls.get(age) ?? makeStallClock();
+      sampleStallClock(g.ctx, tracker, blocker, top?.person.id);
+      ageStalls.set(age, tracker);
+      // Keep a zero-valued failure row for Ages with no attributable checks;
+      // absence and a measured zero are different claims in a baseline table.
+      if (!ageFailures.has(age)) ageFailures.set(age, makeFailureTracker());
+    }
+    for (const [age, tracker] of ageStalls) {
+      if (!activeAges.has(age)) breakStallClock(tracker);
+    }
+    // A streak scoped to one authored Age must not bridge a period where that
+    // Age was not active, even if the same event/check reappears later.
+    for (const [age, tracker] of ageFailures) {
+      if (!activeAges.has(age)) breakFailureTracker(tracker);
+    }
+
+    const tableOrder = opts.tableOrder?.(g.ctx);
+    if (tableOrder) {
+      const result = g.order(tableOrder);
+      const observed = observeOrderAttempt(tableOrder, result);
+      if (observed) {
+        noteOrderAttempt(campaignFailures, observed);
+        for (const age of activeAges) {
+          const tracker = ageFailures.get(age) ?? makeFailureTracker();
+          noteOrderAttempt(tracker, observed);
+          ageFailures.set(age, tracker);
+        }
+      }
+    }
+
     let inner = 0;
+    let decisionsThisYear = 0;
     while (w.pendingDecisions.length && inner++ < 500) {
+      decisionsThisYear += 1;
       const d = w.pendingDecisions[0]!;
       if (d.kind === 'match') {
         matches += 1;
@@ -223,13 +324,35 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         const id = d.event.id;
         if (seenInRun.has(id)) repeatsRun += 1; else seenInRun.add(id);
         if (seenInAge.has(id)) repeatsAge += 1; else seenInAge.add(id);
-        if (!d.choicesAreOpen) g.send(d.id, {});
-        else {
+        if (!d.choicesAreOpen) {
+          const observed = observePartyCheck(g.ctx, d);
+          const result = g.send(d.id, {});
+          if (result.ok && observed) {
+            noteCheckAttempt(campaignFailures, observed);
+            for (const age of activeAges) {
+              const tracker = ageFailures.get(age) ?? makeFailureTracker();
+              noteCheckAttempt(tracker, observed);
+              ageFailures.set(age, tracker);
+            }
+          }
+        } else {
           // Preserve #88's existing player exactly: first authored choice,
           // with the chronicler fallback below if that answer is unavailable.
           const choice = d.choices[0];
           if (choice) {
+            // This reconstructs the SAME fresh per-decision stream choose()
+            // will use below; it neither advances shared RNG nor resolves the
+            // event. Only a successful ordinary resolution makes it an attempt.
+            const observed = observeChoiceCheck(g.ctx, d, choice.id);
             const result = g.choose(d.id, choice.id);
+            if (result.ok && observed) {
+              noteCheckAttempt(campaignFailures, observed);
+              for (const age of activeAges) {
+                const tracker = ageFailures.get(age) ?? makeFailureTracker();
+                noteCheckAttempt(tracker, observed);
+                ageFailures.set(age, tracker);
+              }
+            }
             // The measurement uses the same learn-after-success order as the
             // Docket. Installing the policy first would let this very answer's
             // post-resolution drain benefit from a preference the player had
@@ -243,6 +366,13 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       // Never leave the docket standing: a decision with no answer stops the
       // clock for good (invariant 9), and this loop would spin on it.
       if (w.pendingDecisions[0] === d) g.letHimDecide();
+    }
+
+    for (const tracker of ambitionTrackers.values()) noteAmbitionDecisions(tracker, decisionsThisYear);
+    for (const age of activeAges) {
+      for (const tracker of ageAmbitionTrackers.get(age)!.values()) {
+        noteAmbitionDecisions(tracker, decisionsThisYear);
+      }
     }
 
     // The span is years BETWEEN landmarks, so a landmark year ends it without
@@ -289,6 +419,26 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       },
     },
     shapeWindow,
+    blockerSpan: campaignStall.blockerSpan,
+    actionableGap: campaignStall.actionableGap,
+    stallAges: Object.fromEntries([...ageStalls.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([age, tracker]) => [age, {
+        blockerSpan: tracker.blockerSpan,
+        actionableGap: tracker.actionableGap,
+      }])),
+    ambitionFlat: Object.fromEntries([...ambitionTrackers.entries()]
+      .map(([id, tracker]) => [id, { years: tracker.years, decisions: tracker.decisions }])),
+    ambitionFlatAges: Object.fromEntries([...ageAmbitionTrackers.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([age, trackers]) => [age, Object.fromEntries([...trackers.entries()]
+        .map(([id, tracker]) => [id, { years: tracker.years, decisions: tracker.decisions }]))])),
+    repeatedFailure: {
+      campaign: { check: campaignFailures.check, order: campaignFailures.order },
+      ages: Object.fromEntries([...ageFailures.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([age, tracker]) => [age, { check: tracker.check, order: tracker.order }])),
+    },
     predeterminedShare: choices ? predeterminedChoices / choices : 0,
     topShapes: {
       campaign: shapeFrequencies(campaignShapeCounts, choices),
@@ -301,6 +451,39 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     meaningfulChoices,
     meaningfulRecords,
   };
+}
+
+interface AmbitionTracker {
+  key?: string;
+  currentYears: number;
+  currentDecisions: number;
+  years: number;
+  decisions: number;
+}
+
+function makeAmbitionTracker(): AmbitionTracker {
+  return { currentYears: 0, currentDecisions: 0, years: 0, decisions: 0 };
+}
+
+function noteAmbition(tracker: AmbitionTracker, key: string): void {
+  if (tracker.key === key) tracker.currentYears += 1;
+  else {
+    tracker.key = key;
+    tracker.currentYears = 1;
+    tracker.currentDecisions = 0;
+  }
+  tracker.years = Math.max(tracker.years, tracker.currentYears);
+}
+
+function noteAmbitionDecisions(tracker: AmbitionTracker, decisions: number): void {
+  tracker.currentDecisions += decisions;
+  tracker.decisions = Math.max(tracker.decisions, tracker.currentDecisions);
+}
+
+function breakAmbitionTracker(tracker: AmbitionTracker): void {
+  tracker.key = undefined;
+  tracker.currentYears = 0;
+  tracker.currentDecisions = 0;
 }
 
 function bump(counts: Map<string, number>, key: string): void {

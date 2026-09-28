@@ -165,14 +165,10 @@ describe('the CI gate lanes cover every gate exactly once', () => {
 });
 
 describe('#201 late ladder diagnosis', () => {
-  it('groups changing blocker prose by the mechanism that owns it', () => {
-    expect(ladderBlockerKind('the blood comes through him at 47; the next step asks 50')).toBe('power');
-    expect(ladderBlockerKind('he has read 3 books; the next step asks 7')).toBe('books');
-    expect(ladderBlockerKind('living family readers cover 3 of the 4 opposed pairs; the last working asks one affinity from each')).toBe('affinities');
-    expect(ladderBlockerKind('the blood has not hurt him deeply enough yet')).toBe('madness-floor');
-    expect(ladderBlockerKind('the Vessel is unpaid: a living member of the blood, willingly given')).toBe('rite');
-    expect(ladderBlockerKind('the Regalia are still divided — 2 of 3 held')).toBe('regalia');
-    expect(ladderBlockerKind('the book holds 6 of the 7 clauses the last step requires')).toBe('clauses');
+  it('reads the engine blocker fact instead of classifying changing English prose', () => {
+    for (const blocker of ['power', 'books', 'affinities', 'madness-floor', 'rite', 'regalia', 'clauses'] as const) {
+      expect(ladderBlockerKind(blocker)).toBe(blocker);
+    }
     expect(ladderBlockerKind(undefined, false)).toBe('no-expresser');
     expect(ladderBlockerKind(undefined, true)).toBe('clear');
   });

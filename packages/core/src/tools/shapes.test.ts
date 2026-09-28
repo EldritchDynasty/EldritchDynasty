@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { EventTemplateS, type Choice, type EventTemplate, type Purpose } from '@ed/schema';
 import { newGame } from '../session.js';
+import { LADDER_BLOCKERS } from '../ascension.js';
 import type { PendingChoice } from '../events/decisions.js';
 import {
   densityLines, shapeFrequencies,
@@ -68,6 +69,12 @@ const pay = (id: string, delta: number) => choice(id, [{ kind: 'treasury', delta
 const remember = (id: string, flag: string) => choice(id, [{ kind: 'flag', flag, set: true }]);
 const mark = (id: string, trait: string) => choice(id, [{ kind: 'trait', target: 'head', trait, op: 'add' }]);
 
+function noBlockerYears(): DensityRun['blockerSpan'] {
+  return Object.fromEntries(
+    LADDER_BLOCKERS.map((blocker) => [blocker, 0]),
+  ) as DensityRun['blockerSpan'];
+}
+
 function densityFixture(seed: number, top: ShapeFrequency[]): DensityRun {
   const choices = top.reduce((sum, shape) => sum + shape.count, 0);
   return {
@@ -88,6 +95,12 @@ function densityFixture(seed: number, top: ShapeFrequency[]): DensityRun {
       category: { run: 0.52, age: 0.10, runWithoutPredetermined: 0.49, ageWithoutPredetermined: 0.09 },
     },
     shapeWindow: 0.20,
+    blockerSpan: noBlockerYears(),
+    actionableGap: noBlockerYears(),
+    stallAges: {},
+    ambitionFlat: {},
+    ambitionFlatAges: {},
+    repeatedFailure: { campaign: { check: 0, order: 0 }, ages: {} },
     predeterminedShare: 0.12,
     topShapes: {
       campaign: top,
@@ -191,7 +204,7 @@ describe('interaction shapes', () => {
       term: 500,
       runs: [densityFixture(903, runA), densityFixture(904, runB)],
     }]).join('\n');
-    const campaignRows = output.split('\n').filter((line) => /^500\s+campaign\s+/.test(line));
+    const campaignRows = output.split('\n').filter((line) => /^500\s+campaign\s+\d+(?:\.\d+)?%\s+/.test(line));
 
     expect(campaignRows).toHaveLength(10);
     expect(campaignRows[0]).toContain(shared);

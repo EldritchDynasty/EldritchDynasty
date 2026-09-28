@@ -8433,3 +8433,136 @@ either the variance clause needs a mechanism that can survive the shipped
 horizon, or its acceptance needs to be reconsidered explicitly. The blind
 human protocol remains written and unchanged; this measurement does not claim
 to have run it.
+
+
+---
+
+## #270 strategic-stall baseline — a long blocker is not always a dead blocker
+
+**Measured 29 September 2026** on PR #317. The acceptance batch was
+`npm run gate:density -- 12 500 300` on seeds **4100–4111**, with the same
+seeds stopped at both shipped terms. The measurement head was `5d388ef`.
+A second job checked out the PR merge base `0a278330` and ran the pre-#270
+instrument on the same seeds.
+
+### The instrument is observational
+
+Every pre-existing density row was identical between the #270 branch and its
+base. The headline table was byte-for-byte the same:
+
+```text
+term  runs  lived  gens  ages  choice  per gen   per age  repeat run  repeat age  ordinary  reach  match  record  name
+----  ----  -----  ----  ----  ------  --------  -------  ----------  ----------  --------  -----  -----  ------  ----
+500   12    436    17.4  9.8   130     7.4 ±0.5  14.1     26%         3%          28.9      94     23     16      20
+300   12    269    10.8  5.5   80      7.4 ±0.5  15.4     21%         3%          24.3      63     16     9       17
+```
+
+The interaction-shape rows were identical too:
+
+```text
+term  grain     repeat run  repeat age  run excl pred  age excl pred  window 20  predetermined
+----  --------  ----------  ----------  -------------  -------------  ---------  -------------
+500   kind      33.5%       3.8%        32.6%          4.0%           -          14.4%
+500   category  52.9%       10.2%       48.4%          8.9%           19.6%      14.4%
+300   kind      27.9%       3.5%        28.3%          3.8%           -          13.6%
+300   category  45.8%       9.8%        41.6%          8.8%           17.9%      13.6%
+```
+
+So the blocker, ambition and failed-attempt clocks below did not perturb the
+played worlds they measure.
+
+### Same blocker versus no offered verb
+
+`span` is the longest uninterrupted run behind the blocker. `no-verb` is
+the longest run behind that blocker while none of its mapped verbs could move
+the exact failed predicate on the current surface.
+
+```text
+term  owner         blocker           span mean  span max  no-verb mean  no-verb max
+----  ------------  ----------------  ---------  --------  ------------  -----------
+500   match         no-expresser      37.8       182       22.0          66
+500   match         awakening         51.0       105       34.1          105
+500   table+match   power             109.0      274       39.4          80
+500   table         books             53.9       116       0.0           0
+500   docket+table  madness-floor     9.9        36        8.7           31
+500   table         madness-overflow  1.9        13        1.9           13
+500   table+docket  respect           3.2        15        0.0           0
+500   table         rite              0.2        2         0.0           0
+300   match         no-expresser      11.5       74        9.8           59
+300   match         awakening         39.7       81        26.5          81
+300   table+match   power             66.5       146       23.2          80
+300   table         books             53.9       116       0.0           0
+300   docket+table  madness-floor     8.3        36        7.2           31
+300   table         madness-overflow  1.9        13        1.9           13
+300   table+docket  respect           3.1        15        0.0           0
+```
+
+The per-Age rows point in the same direction. The largest Age-scoped no-verb
+gaps include **80 years of power** in `the_long_peace`, **66 years of
+awakening** in `the_insurrection`, **59 years with no expresser** in
+`the_withering`, and **31 years at the Madness floor** in
+`the_crusade`. Books and Respect have a zero no-verb maximum in every Age
+where they appear.
+
+This separates two things the earlier prototype could not. Books can hold the
+same blocker for **116 years**, but in this batch there is always a Study or
+Seek-book surface that can move the exact reading predicate. Power and
+Awakening are different: their long spans contain long periods in which the
+player genuinely has no current verb that moves the failed predicate. That is
+the strategic-waiting signal #270 was opened to measure.
+
+`affinities`, `regalia` and `clauses` do not appear in the table because
+none had a non-zero blocker span in these twelve runs; absence here is not a
+claim that those blockers cannot occur.
+
+### House Ambition flat spans
+
+For `raise_ascendant`, a change in the foremost person's structured blocker
+counts as movement even if the historical best rung has not changed.
+
+```text
+term  ambition         flat years mean  flat years max  decisions mean  decisions max
+----  ---------------  ---------------  --------------  --------------  -------------
+500   deepen_blood     12.3             27              6.3             11
+500   raise_ascendant  131.3            274             51.9            95
+500   restore_ledger   170.5            328             65.8            118
+500   secure_branches  94.3             235             38.8            102
+300   deepen_blood     12.3             27              6.2             11
+300   raise_ascendant  88.7             146             34.3            53
+300   restore_ledger   128.8            234             49.6            83
+300   secure_branches  69.2             136             27.5            60
+```
+
+The earlier prototype counted only `ascension.best` movement and therefore
+made `raise_ascendant` look flatter than the player-facing question really
+is. Counting blocker changes cuts that structural false-flat signal. It does
+not make ambitions uniformly lively: on these seeds `restore_ledger` now has
+the longest campaign-level flat span.
+
+### Repeated failed attempts
+
+```text
+term  owner          attempt  streak mean  streak max
+----  -------------  -------  -----------  ----------
+500   events/checks  check    0.08         1
+500   table          order    0.00         0
+300   events/checks  check    0.08         1
+300   table          order    0.00         0
+```
+
+No authored check failed twice running for the same person in this batch. The
+table-order row is zero because the established density answer policy issues
+no table orders; it is **not** evidence that a table order can never fail.
+The instrument only counts real attempts and does not invent orders to make the
+column non-zero.
+
+### Finding, without tuning it here
+
+The baseline confirms the issue's narrow premise: **genetic ladder blockers
+can leave the player waiting with no current way to act**, especially Power
+and Awakening. It also falsifies the broader shortcut that every long blocker
+is a no-agency stall: Books are long-lived here while remaining actionable.
+
+No threshold, event budget, Match rate or ladder requirement is changed by
+#270. Any gameplay response belongs to the system that owns the measured
+blocker and should be raised separately.

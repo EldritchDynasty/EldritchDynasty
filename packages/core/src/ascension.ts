@@ -115,7 +115,7 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
   if (
     p.rites.includes('unmaking')
     && standing.rung === 'demigod'
-    && standing.blocked?.startsWith('the book holds ')
+    && standing.blocker === 'clauses'
   ) {
     const title = 'The Ledger Stayed Open';
     const opening = `${p.name} stopped growing older before the Ledger was finished.`;
@@ -531,6 +531,31 @@ export type AscensionBlockerKind =
   | 'final_circle';
 
 /**
+ * Coarse blocker vocabulary for campaign instruments.
+ *
+ * This belongs beside the ladder rather than in a tool: prose is presentation,
+ * while these values are engine facts. `other` remains as an explicit
+ * diagnostic escape hatch, but `standingOf` never emits it for a known gate.
+ */
+export const LADDER_BLOCKERS = [
+  'no-expresser',
+  'clear',
+  'awakening',
+  'power',
+  'books',
+  'affinities',
+  'madness-floor',
+  'madness-overflow',
+  'mind',
+  'respect',
+  'rite',
+  'regalia',
+  'clauses',
+  'other',
+] as const;
+export type LadderBlocker = typeof LADDER_BLOCKERS[number];
+
+/**
  * A player-safe reading of one unmet ladder predicate.
  *
  * The precise threshold stays in `blocked` for tests, tooling and deep
@@ -554,6 +579,8 @@ export interface AscensionDiagnosis {
 /** What one person has and what the rung above them still wants. */
 export interface Standing {
   rung: Rung;
+  /** Stable blocker category for tooling; never derived from `blocked` prose. */
+  blocker: LadderBlocker;
   /** The precise first failed predicate, retained for tests and deep inspection. */
   blocked?: string;
   /** The same failed predicate translated for a player, without its threshold. */
@@ -588,21 +615,25 @@ function affinityShortfall(have: number, need: number, household = false): strin
 }
 
 interface GateBlocker extends AscensionBlocker {
+  /** Stable coarse category for campaign instruments. */
+  blocker: LadderBlocker;
   /** Existing exact reason; changing this is a gate/test contract, not UI copy. */
   precise: string;
 }
 
 function gateBlocker(
   kind: AscensionBlockerKind,
+  blocker: LadderBlocker,
   precise: string,
   text: string,
   hint: string,
 ): GateBlocker {
-  return { kind, precise, text, hint };
+  return { kind, blocker, precise, text, hint };
 }
 
 function powerBlocker(power: number, need: number, target: string): GateBlocker {
   return gateBlocker(
+    'power',
     'power',
     powerShortfall(power, need),
     `The blood comes through him, but not strongly enough for ${target}.`,
@@ -612,6 +643,7 @@ function powerBlocker(power: number, need: number, target: string): GateBlocker 
 
 function booksBlocker(read: number, need: number, household: boolean, target: string): GateBlocker {
   return gateBlocker(
+    'books',
     'books',
     bookShortfall(read, need, household),
     household
@@ -626,6 +658,7 @@ function booksBlocker(read: number, need: number, household: boolean, target: st
 function affinitiesBlocker(have: number, need: number, household: boolean, target: string): GateBlocker {
   return gateBlocker(
     'affinities',
+    'affinities',
     affinityShortfall(have, need, household),
     household
       ? `The living family does not yet carry enough different arts for ${target}.`
@@ -639,6 +672,7 @@ function affinitiesBlocker(have: number, need: number, household: boolean, targe
 function respectBlocker(precise: string, target: string): GateBlocker {
   return gateBlocker(
     'respect',
+    'respect',
     precise,
     `The house is not yet held in enough regard for ${target}.`,
     'Raise the house\'s Respect before asking the world to tolerate this step.',
@@ -648,6 +682,7 @@ function respectBlocker(precise: string, target: string): GateBlocker {
 function costBlocker(precise: string, target: string): GateBlocker {
   return gateBlocker(
     'madness',
+    'madness-floor',
     precise,
     `The blood has not marked him deeply enough for ${target}.`,
     'The upper ladder opens through costly Awakenings and rites, not study alone.',
@@ -657,6 +692,7 @@ function costBlocker(precise: string, target: string): GateBlocker {
 function overborneBlocker(precise: string): GateBlocker {
   return gateBlocker(
     'madness',
+    'madness-overflow',
     precise,
     'His mind cannot safely bear what the blood has already done to him.',
     'Do not press him higher until the line can carry more Mind.',
@@ -708,6 +744,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (!p.awakening.awakened) {
         return gateBlocker(
           'awakening',
+          'awakening',
           'he has not awakened',
           'The blood is in him, but it has not awakened.',
           'Keep him in view for an Awakening; study cannot supply this step.',
@@ -746,6 +783,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (mind < MIND_FLOOR.vessel!) {
         return gateBlocker(
           'mind',
+          'mind',
           'his mind is not yet wide enough for what the Vessel would put into it',
           'His mind is not yet wide enough for what the Vessel would put into it.',
           'Strengthen Mind in the bloodline before committing him to this step.',
@@ -761,6 +799,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (!p.rites.includes('vessel') && !p.rites.includes('unmaking')) {
         return gateBlocker(
           'rites',
+          'rite',
           'the Vessel is unpaid: a living member of the blood, willingly given',
           'The Vessel\'s price has not been paid.',
           'Call the Vessel rite when the house is ready to give a willing member of the blood.',
@@ -786,6 +825,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (regalia < REGALIA_COMPLETE) {
         return gateBlocker(
           'regalia',
+          'regalia',
           `the Regalia are still divided — ${regalia} of ${REGALIA_COMPLETE} held`,
           'The Regalia are still divided.',
           'Recover the missing Regalia before attempting the next rite.',
@@ -797,6 +837,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (!p.rites.includes('great_rite') && !p.rites.includes('unmaking')) {
         return gateBlocker(
           'rites',
+          'rite',
           'the Great Rite remains undone — sanctioned or defied',
           `The Great Rite still stands between him and ${target}.`,
           'Call the Great Rite, sanctioned or defied, when its other costs are ready.',
@@ -809,6 +850,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (reading < books) {
         return gateBlocker(
           'final_circle',
+          'books',
           `living family readers know ${reading} books; the last working asks ${books}`,
           'The living family has not read enough of the library for the final circle.',
           'Put more books into the hands of living family readers.',
@@ -818,6 +860,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (circlePairs < affinityNeed) {
         return gateBlocker(
           'final_circle',
+          'affinities',
           `living family readers cover ${circlePairs} of the ${affinityNeed} opposed pairs; the last working asks one affinity from each`,
           'The living family cannot yet carry every opposed pair into the final circle.',
           'Spread the missing affinities across living family readers.',
@@ -829,6 +872,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (madness < MADNESS_FLOOR.god!) {
         return gateBlocker(
           'madness',
+          'madness-floor',
           'the blood has not brought him close enough to ruin',
           `The blood has not brought him close enough to ruin for ${target}.`,
           'The upper ladder opens through costly Awakenings and rites, not study alone.',
@@ -837,6 +881,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (mind < madness) {
         return gateBlocker(
           'mind',
+          'madness-overflow',
           'what the blood has done to him is more than his mind can bear',
           'His mind cannot safely bear what the final working would ask of him.',
           'Do not attempt the final step until Mind can bear what the blood has done.',
@@ -844,6 +889,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       }
       if (w.clausesRecovered.size < GOD_CLAUSES) {
         return gateBlocker(
+          'clauses',
           'clauses',
           `the book holds ${w.clausesRecovered.size} of the ${GOD_CLAUSES} clauses the last step requires`,
           'The Ledger is not complete enough for the last working.',
@@ -861,6 +907,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       if (!p.rites.includes('unmaking')) {
         return gateBlocker(
           'final_circle',
+          'rite',
           'no two-rite elder has yet been unmade for him',
           'The final circle still lacks the elder it must spend.',
           'Prepare a separate two-rite elder, then call the Unmaking for this ascendant.',
@@ -886,7 +933,7 @@ export const GOD_CLAUSES = 7;
  */
 export function standingOf(ctx: SimCtx, p: Person): Standing {
   const ph = phenotypeOf(p, ctx.genetics, ctx.world.year);
-  const base: Omit<Standing, 'rung' | 'blocked'> = {
+  const base: Omit<Standing, 'rung' | 'blocked' | 'blocker'> = {
     power: Math.round(eldritchPower(ctx, p) * 10) / 10,
     spells: p.spellsKnown.length,
     affinities: affinityCount(ctx, p),
@@ -907,6 +954,7 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
     };
     return {
       rung: 'none',
+      blocker: 'no-expresser',
       blocked: 'he cannot express it',
       diagnosis: { target: 'touched', targetTitle: rungTitle('touched'), blockers: [blocker] },
       ...base,
@@ -919,6 +967,7 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
     if (why) {
       return {
         rung: held,
+        blocker: why.blocker,
         blocked: why.precise,
         diagnosis: diagnosisFor(rung, why),
         ...base,
@@ -926,7 +975,7 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
     }
     held = rung;
   }
-  return { rung: held, ...base };
+  return { rung: held, blocker: 'clear', ...base };
 }
 
 /**

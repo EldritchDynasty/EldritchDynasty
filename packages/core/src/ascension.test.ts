@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import type { Person, Rung } from '@ed/schema';
 import { indexContent } from '@ed/schema';
 import {
-  DEMIGOD_AGEING_STOPPED, RUNGS, affinitiesFor, booksFor, bootstrap, diagnoseAscension, eldritchPower, grantHeirloom, householdAffinities, householdBooks,
+  DEMIGOD_AGEING_STOPPED, LADDER_BLOCKERS, RUNGS, affinitiesFor, booksFor, bootstrap, diagnoseAscension, eldritchPower, foremostOf, grantHeirloom, householdAffinities, householdBooks,
   maxExpressiblePower, order, performUnmaking, phenotypeOf, place, rungIndex, rungTitle, standingOf, testWorld, tickAscension, viewOf,
   type SimCtx,
 } from '@ed/core';
@@ -52,6 +52,25 @@ describe('the ladder is a ladder', () => {
     }
   });
 
+  it('pairs every blocked sentence with a structured blocker kind', () => {
+    const ctx = testWorld(bundle, 8213);
+
+    for (const person of ctx.world.people.all()) {
+      const standing = standingOf(ctx, person);
+      expect(LADDER_BLOCKERS).toContain(standing.blocker);
+      if (standing.blocked) {
+        expect(standing.blocker, `${person.name} has prose but no structured blocker`).not.toBe('clear');
+        expect(standing.blocker, `${person.name} fell through to the diagnostic escape hatch`).not.toBe('other');
+      } else {
+        expect(standing.blocker).toBe('clear');
+      }
+    }
+
+    const foremost = foremostOf(ctx);
+    expect(foremost, 'the built world has no living expresser to diagnose').toBeTruthy();
+    expect(foremost!.standing.blocker).not.toBe('other');
+  });
+
   it('writes a measured shortfall as prose rather than a score fragment', () => {
     const ctx = testWorld(bundle, 8091);
     const him = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
@@ -76,6 +95,7 @@ describe('the ladder is a ladder', () => {
     him.awakening = { ...him.awakening, awakened: false };
     const before = standingOf(ctx, him);
     expect(before.blocked).toBe('he has not awakened');
+    expect(before.blocker).toBe('awakening');
     expect(before.diagnosis?.target).toBe('touched');
     expect(before.diagnosis?.blockers).toEqual([
       {
@@ -204,6 +224,7 @@ describe('the terminal irony no longer eats its own tail', () => {
     const waiting = standingOf(ctx, recipient);
     expect(waiting.rung).toBe('demigod');
     expect(waiting.blocked).toMatch(/book holds 6 of the 7 clauses/);
+    expect(waiting.blocker).toBe('clauses');
 
     tickAscension(ctx);
     const entry = ctx.world.chronicle.find((line) => line.title === 'The Ledger Stayed Open');
