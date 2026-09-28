@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import { EventTemplateS, type Choice, type EventTemplate, type Purpose } from '@ed/schema';
 import { newGame } from '../session.js';
 import type { PendingChoice } from '../events/decisions.js';
-import { densityLines, type DensityRun } from './density-gate.js';
+import { densityLines, type DensityRun } from './density-report.js';
 import { isPredetermined, shapeOf } from './shapes.js';
 
 const PURPOSES_A: Purpose[] = ['change_standing', 'buy_patience', 'worldbuild_through_action'];
@@ -158,7 +158,9 @@ describe('interaction shapes', () => {
     const d = pending(event('shape_consequential', [pay('pay', -2), mark('mark', 'steady')], { frequency: 'rare' }));
 
     expect(isPredetermined(ctx, d)).toBe(false);
-  });  it('prints byte-identical aggregate tables regardless of run order', () => {
+  });
+
+  it('prints byte-identical aggregate tables regardless of run order', () => {
     const a = densityFixture(901, ['[money | money]', '[lasting | money]']);
     const b = densityFixture(902, ['[lasting | money]', '[money | money]']);
 
@@ -170,6 +172,4 @@ describe('interaction shapes', () => {
     expect(forward).toContain('[lasting | money]');
     expect(forward).toContain('[money | money]');
   });
-
-
 });
