@@ -14,9 +14,19 @@ export interface ShapeFrequency {
 }
 
 export interface ShapeTops {
+  /** Complete category-shape frequencies for this run; reporting truncates only after batch aggregation. */
   campaign: ShapeFrequency[];
-  /** Category-shape top tens keyed by the authored Age id. */
+  /** Complete category-shape frequencies keyed by the authored Age id. */
   ages: Record<string, ShapeFrequency[]>;
+}
+
+export function shapeFrequencies(
+  counts: Iterable<readonly [string, number]>,
+  total: number,
+): ShapeFrequency[] {
+  return [...counts]
+    .map(([shape, count]) => ({ shape, count, share: total ? count / total : 0 }))
+    .sort((a, b) => b.count - a.count || a.shape.localeCompare(b.shape));
 }
 
 export interface DensityRun {
@@ -40,7 +50,11 @@ export interface DensityRun {
   shapeWindow: number;
   /** Choice presentations already settled by availability, shape or #219's guard. */
   predeterminedShare: number;
-  /** Most common category shapes for the campaign and each active authored Age. */
+  /**
+   * Complete category-shape frequencies for the campaign and each active Age.
+   * The name is historical: the printed report takes the top ten only after
+   * frequencies have been aggregated across the whole batch.
+   */
   topShapes: ShapeTops;
   ordinary: number;
   reach: number;
@@ -162,15 +176,14 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
 }
 
 function aggregateTopShapes(runs: DensityRun[]): [string, ShapeFrequency[]][] {
-  const scopes = new Map<string, { samples: number; shares: Map<string, number> }>();
+  const scopes = new Map<string, Map<string, number>>();
 
   const add = (scope: string, shapes: ShapeFrequency[]) => {
-    const row = scopes.get(scope) ?? { samples: 0, shares: new Map<string, number>() };
-    row.samples += 1;
+    const counts = scopes.get(scope) ?? new Map<string, number>();
     for (const shape of shapes) {
-      row.shares.set(shape.shape, (row.shares.get(shape.shape) ?? 0) + shape.share);
+      counts.set(shape.shape, (counts.get(shape.shape) ?? 0) + shape.count);
     }
-    scopes.set(scope, row);
+    scopes.set(scope, counts);
   };
 
   for (const run of runs) {
@@ -180,11 +193,8 @@ function aggregateTopShapes(runs: DensityRun[]): [string, ShapeFrequency[]][] {
 
   return [...scopes.entries()]
     .sort(([a], [b]) => a === 'campaign' ? -1 : b === 'campaign' ? 1 : a.localeCompare(b))
-    .map(([scope, row]) => [
-      scope,
-      [...row.shares]
-        .map(([shape, sum]) => ({ shape, count: 0, share: sum / row.samples }))
-        .sort((a, b) => b.share - a.share || a.shape.localeCompare(b.shape))
-        .slice(0, 10),
-    ]);
+    .map(([scope, counts]) => {
+      const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+      return [scope, shapeFrequencies(counts, total).slice(0, 10)];
+    });
 }
