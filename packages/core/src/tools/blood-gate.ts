@@ -76,6 +76,7 @@ import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import type { SimCtx } from '../world.js';
 import { expectMean } from '../testing.js';
 import { GREAT_RITE_REACH } from '../events/rites.js';
+import { saidScore } from './blood-market.js';
 
 export type Policy = 'concentrate' | 'dilute' | 'chronicler' | 'withhold' | 'marry_in' | 'marry_out'
   | 'blind' | 'panel'
@@ -314,14 +315,6 @@ function trueChannel(ctx: SimCtx, card: PendingMatch['cards'][number]): number {
  * them collapses onto kinship. That is not a strawman — it is what the card
  * carried, and it is the finding the panel was built against.
  */
-function saidScore(card: PendingMatch['cards'][number]): number {
-  let n = 0;
-  if (card.words.includes('deep blood')) n += 4;
-  else if (card.words.includes('a drop of it')) n += 1;
-  if (card.line === 'fertile') n += 2;
-  else if (card.line === 'thin') n -= 2;
-  return n;
-}
 
 /**
  * WHAT THE PANEL LETS A PERSON WORK OUT, and nothing more.
@@ -439,11 +432,15 @@ function answerMatch(ctx: SimCtx, pending: PendingMatch, policy: Policy, tally: 
     // sentence when the panel is silent — which it often is, because a house
     // nobody has watched is a house nobody has watched.
     if (policy === 'blind') {
-      return (saidScore(b) - saidScore(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
+      const said = (card: PendingMatch['cards'][number]) =>
+        saidScore({ line: card.line, fontCarrierRate: ctx.world.houses.get(card.house)?.genePool?.fontCarrierRate ?? 0 });
+      return (said(b) - said(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
     }
     if (policy === 'panel') {
+      const said = (card: PendingMatch['cards'][number]) =>
+        saidScore({ line: card.line, fontCarrierRate: ctx.world.houses.get(card.house)?.genePool?.fontCarrierRate ?? 0 });
       return (panelScore(b) - panelScore(a))
-        || (saidScore(b) - saidScore(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
+        || (said(b) - said(a)) || (b.kinship - a.kinship) || (a.id < b.id ? -1 : 1);
     }
 
     if (policy === 'channel_oracle') {
