@@ -41,9 +41,16 @@ const bundle = loadContent();
 // years with no active Age (was 162). Checked the other 71: none of them
 // moved past 204y, so this is one seed's path changing, not a systemic
 // shift. Swapped for 912, confirmed to reach 1542 (longest dead stretch 116y).
+//
+// 2042 stopped surviving once succession required an ACTIVE blood or cadet
+// record in the player house (issue #294). Its old line handed the seal in
+// 1061 to a Marrow man who had married in — the exact bug #294 closes — and
+// the corrected line runs out of heirs in 1128, which reads here as a
+// 439-year stretch with no active Age. Swapped for 910, confirmed to reach
+// 1542 by `ledger-clauses.slow.test.ts` (longest dead stretch 50y).
 const SEEDS = [
   // Existing Age-suite survivors.
-  1000, 5152, 5154, 1035, 8080, 8081, 1063, 1045, 2042, 1070, 4013, 4026,
+  1000, 5152, 5154, 1035, 8080, 8081, 1063, 1045, 910, 1070, 4013, 4026,
   901, 912, 904, 905, 913, 914, 916, 918, 4002, 5101, 7013, 8000,
   // Clause-gate survivors.
   1001, 1003, 1004, 1008, 1013, 1016, 1019, 1020, 1024, 1025, 1026, 1031,
