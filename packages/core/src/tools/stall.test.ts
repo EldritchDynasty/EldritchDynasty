@@ -10,6 +10,7 @@ import { phenotypeOf } from '../people/factory.js';
 import { acquireLibraryCopy, canStudySpellbook } from '../people/library.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
+import { TEST_FAMILIES } from './testFamilies.js';
 import type { SimCtx } from '../world.js';
 import { blockerActionability, blockerLevers, makeStallClock, sampleStallClock } from './stall.js';
 
@@ -75,6 +76,32 @@ describe('#270 strategic-stall actionability', () => {
     const clock = makeStallClock();
     sampleStallClock(ctx, clock, 'books', him.id);
     expect(clock.actionableGap.books).toBe(0);
+  });
+
+  it('does not call a duplicate household reading progress at the God gate', () => {
+    const fixture = TEST_FAMILIES.find((candidate) => candidate.id === 'demigod_stagnant')!;
+    const ctx = fixture.build(bundle);
+    const top = foremostOf(ctx);
+    expect(top, 'demigod fixture has no foremost expresser').toBeTruthy();
+    expect(top!.standing.rung).toBe('demigod');
+    expect(top!.standing.blocker).toBe('books');
+
+    const him = top!.person;
+    const household = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year);
+    const duplicate = ctx.content.spellbooks.find((def) =>
+      !him.spellsKnown.some((known) => String(known) === String(def.id))
+      && household.some((reader) =>
+        reader.id !== him.id
+        && reader.status === 'alive'
+        && reader.spellsKnown.some((known) => String(known) === String(def.id)))
+      && canStudySpellbook(ctx, him, def).ok);
+
+    expect(duplicate, 'fixture needs one readable book already known elsewhere in the household').toBeTruthy();
+    ctx.world.library.clear();
+    acquireLibraryCopy(ctx, String(duplicate!.id));
+
+    const result = blockerActionability(ctx, 'books', him.id);
+    expect(result.verbs).not.toContain('study');
   });
 
   it('lets a real power blocker accumulate a gap when no Match or widening rite is offered', () => {
