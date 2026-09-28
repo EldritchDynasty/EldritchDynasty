@@ -8,7 +8,7 @@ import {
   performUnmaking,
 } from './events/rites.js';
 import { applyEffect } from './events/effects.js';
-import { applyRecord, commitOutcome, queueChoice, type PendingChoice } from './events/decisions.js';
+import { applyRecord, commitOutcome, queueChoice, queueMatch, type PendingChoice } from './events/decisions.js';
 import type { SlotFill } from './events/slots.js';
 import { order, tableView, type TableOrder } from './table.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js';
@@ -16,6 +16,7 @@ import { standingOf } from './ascension.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import type { SimCtx } from './world.js';
 import { adviceForDecision } from './advisers.js';
+import type { MatchCard } from './people/match.js';
 
 const content = indexContent(loadContent());
 
@@ -508,6 +509,144 @@ describe('how advisers recognise a rite', () => {
     expect(advice).toHaveLength(1);
     expect(advice[0]?.lens).toBe('priest');
     expect(advice[0]?.position).not.toContain('With a rite');
+  });
+});
+
+describe('broader adviser voices', () => {
+  function emptyHouse(ctx: SimCtx): void {
+    for (const person of ctx.world.people.all()) {
+      person.status = 'dead';
+      person.castSlots = [];
+    }
+  }
+
+  function card(
+    id: string,
+    name: string,
+    age: number,
+    issue: { name: string; relation: string; borne: number; grown: number }[] = [],
+  ): MatchCard {
+    return {
+      id,
+      kind: 'outsider',
+      name,
+      sex: 'female',
+      age,
+      house: 'house_marrow',
+      houseName: 'House Marrow',
+      blurb: 'A name the market knows.',
+      dowry: 100,
+      kinship: 0.04,
+      line: issue.length ? 'ordinary' : 'unknown',
+      words: 'the market has a word for the line',
+      lineSeen: issue.length,
+      papersAsked: 0,
+      papersShown: 0,
+      panel: { issue, woken: [], said: [], ourBook: [] },
+      available: true,
+    };
+  }
+
+  it('lets the Match subject\'s mother speak from her child\'s life, not the house ledger', () => {
+    const ctx = testWorld(content);
+    emptyHouse(ctx);
+    const mother = place(ctx, { sex: 'female', age: 44, name: 'Mara' });
+    const child = place(ctx, { sex: 'male', age: 20, name: 'Edren' });
+    beget(ctx, child, mother);
+
+    const pending = queueMatch(ctx, {
+      subject: { id: child.id, name: child.name, sex: child.sex, age: 20 },
+      cards: [
+        card('near', 'Alys', 21),
+        card('far', 'Ysabet', 39, [{ name: 'Her Mother', relation: 'her mother', borne: 5, grown: 4 }]),
+      ],
+    });
+    const advice = adviceForDecision(ctx, pending);
+    const hers = advice.find((a) => a.lens === 'mother');
+
+    expect(hers?.adviser.id).toBe(mother.id);
+    expect(hers?.cares).toContain('her child');
+    expect(hers?.position).toContain('Alys');
+    expect(hers?.position).toContain('years after the bargain');
+  });
+
+  it('lets a midwife prefer witnessed family history without reading hidden fertility', () => {
+    const ctx = testWorld(content);
+    emptyHouse(ctx);
+    const child = place(ctx, { sex: 'male', age: 20, name: 'Edren' });
+    const midwife = place(ctx, { sex: 'female', age: 51, name: 'Tavia' });
+    midwife.membership[0]!.kind = 'retainer';
+    midwife.contract = {
+      role: 'midwife',
+      term: 'lifetime',
+      wage: 12,
+      loyalty: 70,
+      boundTo: child.id,
+      onEmployerDeath: 'passes_to_heir',
+      debt: 0,
+      knowsSecrets: [],
+    };
+
+    const pending = queueMatch(ctx, {
+      subject: { id: child.id, name: child.name, sex: child.sex, age: 20 },
+      cards: [
+        card('unseen', 'Alys', 21),
+        card('counted', 'Ysabet', 25, [
+          { name: 'Her Mother', relation: 'her mother', borne: 5, grown: 4 },
+          { name: 'Her Sister', relation: 'her sister', borne: 3, grown: 3 },
+        ]),
+      ],
+    });
+    const advice = adviceForDecision(ctx, pending);
+    const hers = advice.find((a) => a.lens === 'midwife');
+
+    expect(hers?.adviser.id).toBe(midwife.id);
+    expect(hers?.cares).toContain('births');
+    expect(hers?.position).toContain('Ysabet');
+    expect(hers?.position).toContain('witnessed childbearing');
+    expect(hers?.position).not.toMatch(/fecund|probab|genome/i);
+  });
+
+  it('treats a woman holding the seal as the governing old-head voice', () => {
+    const ctx = testWorld(content);
+    emptyHouse(ctx);
+    const regent = place(ctx, { sex: 'female', age: 42, name: 'Lady Teren', castSlots: ['head'] });
+    const event = ctx.content.event('the_seal_questioned');
+    expect(event).toBeDefined();
+
+    const pending = queueChoice(ctx, event!, event!.body, {}, []);
+    const advice = adviceForDecision(ctx, pending);
+
+    expect(advice).toHaveLength(1);
+    expect(advice[0]?.adviser.id).toBe(regent.id);
+    expect(advice[0]?.lens).toBe('old_head');
+    expect(advice[0]?.cares).toContain('holds the seal');
+  });
+
+  it('lets the widow of a former Head carry the old-head perspective', () => {
+    const ctx = testWorld(content);
+    emptyHouse(ctx);
+    const widow = place(ctx, { sex: 'female', age: 50, name: 'Lady Orra' });
+    const former = place(ctx, { sex: 'male', age: 55, name: 'Lord Orra' });
+    marry(ctx, widow, former);
+    former.status = 'dead';
+    former.died = ctx.world.year - 1;
+    ctx.world.succession.push({
+      person: former.id,
+      name: former.name,
+      from: ctx.world.year - 20,
+      to: ctx.world.year - 1,
+    });
+
+    const event = ctx.content.event('the_seal_questioned');
+    expect(event).toBeDefined();
+    const pending = queueChoice(ctx, event!, event!.body, {}, []);
+    const advice = adviceForDecision(ctx, pending);
+
+    expect(advice).toHaveLength(1);
+    expect(advice[0]?.adviser.id).toBe(widow.id);
+    expect(advice[0]?.lens).toBe('old_head');
+    expect(advice[0]?.cares).toContain('her husband held the seal');
   });
 });
 
