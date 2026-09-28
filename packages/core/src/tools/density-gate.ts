@@ -59,6 +59,26 @@ import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
+
+export interface ShapeRepeat {
+  run: number;
+  age: number;
+  runWithoutPredetermined: number;
+  ageWithoutPredetermined: number;
+}
+
+export interface ShapeFrequency {
+  shape: string;
+  count: number;
+  share: number;
+}
+
+export interface ShapeTops {
+  campaign: ShapeFrequency[];
+  /** Category-shape top tens keyed by the authored Age id. */
+  ages: Record<string, ShapeFrequency[]>;
+}
 
 export interface DensityRun {
   seed: number;
@@ -75,6 +95,14 @@ export interface DensityRun {
   perAge: number;
   repeatRun: number;
   repeatAge: number;
+  /** Repetition by interaction mechanics rather than template identity (#271). */
+  shapeRepeat: Record<ShapeGrain, ShapeRepeat>;
+  /** Largest share held by one category shape in any complete 20-choice window. */
+  shapeWindow: number;
+  /** Choice presentations already settled by availability, shape or #219's guard. */
+  predeterminedShare: number;
+  /** Most common category shapes for the campaign and each active authored Age. */
+  topShapes: ShapeTops;
   ordinary: number;
   reach: number;
   /** Surfaced choices the interruption guard classified as consequential. */
@@ -112,6 +140,21 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
 
   const seenInRun = new Set<string>();
   const seenInAge = new Set<string>();
+  const shapeSeenRun: Record<ShapeGrain, Set<string>> = { kind: new Set(), category: new Set() };
+  const shapeSeenAge: Record<ShapeGrain, Set<string>> = { kind: new Set(), category: new Set() };
+  const shapeSeenRunWithoutPredetermined: Record<ShapeGrain, Set<string>> = { kind: new Set(), category: new Set() };
+  const shapeSeenAgeWithoutPredetermined: Record<ShapeGrain, Set<string>> = { kind: new Set(), category: new Set() };
+  const shapeRepeatsRun: Record<ShapeGrain, number> = { kind: 0, category: 0 };
+  const shapeRepeatsAge: Record<ShapeGrain, number> = { kind: 0, category: 0 };
+  const shapeRepeatsRunWithoutPredetermined: Record<ShapeGrain, number> = { kind: 0, category: 0 };
+  const shapeRepeatsAgeWithoutPredetermined: Record<ShapeGrain, number> = { kind: 0, category: 0 };
+  const campaignShapeCounts = new Map<string, number>();
+  const ageShapeCounts = new Map<string, Map<string, number>>();
+  const ageShapeChoices = new Map<string, number>();
+  const categoryWindow: string[] = [];
+  let shapeWindow = 0;
+  let predeterminedChoices = 0;
+  let nonPredeterminedChoices = 0;
   let choices = 0;
   let matches = 0;
   let records = 0;
@@ -136,6 +179,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       if (turned.agesBegan.length || turned.agesEnded.length) {
         landmark = true;
         seenInAge.clear();
+        shapeSeenAge.kind.clear();
+        shapeSeenAge.category.clear();
+        shapeSeenAgeWithoutPredetermined.kind.clear();
+        shapeSeenAgeWithoutPredetermined.category.clear();
       }
       ages += turned.agesEnded.length;
     }
@@ -170,6 +217,53 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         choices += 1;
         const guard = mustSurface(g.ctx, d);
         if (guard) meaningfulChoices += 1;
+
+        const predetermined = isPredetermined(g.ctx, d);
+        if (predetermined) predeterminedChoices += 1;
+        else nonPredeterminedChoices += 1;
+
+        const shapes: Record<ShapeGrain, string> = {
+          kind: shapeOf(d, 'kind'),
+          category: shapeOf(d, 'category'),
+        };
+        for (const grain of ['kind', 'category'] as const) {
+          const shape = shapes[grain];
+          if (shapeSeenRun[grain].has(shape)) shapeRepeatsRun[grain] += 1;
+          else shapeSeenRun[grain].add(shape);
+          if (shapeSeenAge[grain].has(shape)) shapeRepeatsAge[grain] += 1;
+          else shapeSeenAge[grain].add(shape);
+
+          if (!predetermined) {
+            if (shapeSeenRunWithoutPredetermined[grain].has(shape)) {
+              shapeRepeatsRunWithoutPredetermined[grain] += 1;
+            } else {
+              shapeSeenRunWithoutPredetermined[grain].add(shape);
+            }
+            if (shapeSeenAgeWithoutPredetermined[grain].has(shape)) {
+              shapeRepeatsAgeWithoutPredetermined[grain] += 1;
+            } else {
+              shapeSeenAgeWithoutPredetermined[grain].add(shape);
+            }
+          }
+        }
+
+        const categoryShape = shapes.category;
+        bump(campaignShapeCounts, categoryShape);
+        for (const active of w.age.active) {
+          const counts = ageShapeCounts.get(active.age) ?? new Map<string, number>();
+          bump(counts, categoryShape);
+          ageShapeCounts.set(active.age, counts);
+          ageShapeChoices.set(active.age, (ageShapeChoices.get(active.age) ?? 0) + 1);
+        }
+
+        categoryWindow.push(categoryShape);
+        if (categoryWindow.length > 20) categoryWindow.shift();
+        if (categoryWindow.length === 20) {
+          const counts = new Map<string, number>();
+          for (const shape of categoryWindow) bump(counts, shape);
+          shapeWindow = Math.max(shapeWindow, Math.max(...counts.values()) / 20);
+        }
+
         const id = d.event.id;
         if (seenInRun.has(id)) repeatsRun += 1; else seenInRun.add(id);
         if (seenInAge.has(id)) repeatsAge += 1; else seenInAge.add(id);
@@ -220,6 +314,32 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     perAge: choices / Math.max(1, ages),
     repeatRun: choices ? repeatsRun / choices : 0,
     repeatAge: choices ? repeatsAge / choices : 0,
+    shapeRepeat: {
+      kind: {
+        run: choices ? shapeRepeatsRun.kind / choices : 0,
+        age: choices ? shapeRepeatsAge.kind / choices : 0,
+        runWithoutPredetermined: nonPredeterminedChoices
+          ? shapeRepeatsRunWithoutPredetermined.kind / nonPredeterminedChoices : 0,
+        ageWithoutPredetermined: nonPredeterminedChoices
+          ? shapeRepeatsAgeWithoutPredetermined.kind / nonPredeterminedChoices : 0,
+      },
+      category: {
+        run: choices ? shapeRepeatsRun.category / choices : 0,
+        age: choices ? shapeRepeatsAge.category / choices : 0,
+        runWithoutPredetermined: nonPredeterminedChoices
+          ? shapeRepeatsRunWithoutPredetermined.category / nonPredeterminedChoices : 0,
+        ageWithoutPredetermined: nonPredeterminedChoices
+          ? shapeRepeatsAgeWithoutPredetermined.category / nonPredeterminedChoices : 0,
+      },
+    },
+    shapeWindow,
+    predeterminedShare: choices ? predeterminedChoices / choices : 0,
+    topShapes: {
+      campaign: topShapeCounts(campaignShapeCounts, choices),
+      ages: Object.fromEntries([...ageShapeCounts.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([age, counts]) => [age, topShapeCounts(counts, ageShapeChoices.get(age) ?? 0)])),
+    },
     ordinary,
     reach: seenInRun.size,
     meaningfulChoices,
@@ -253,6 +373,17 @@ export function delegationDensityLines(rows: {
   const line = (cells: string[]) => cells.map((cell, i) => cell.padEnd(widths[i]!)).join('  ');
   out.push(line(head), line(widths.map((w) => '-'.repeat(w))), ...body.map(line));
   return out;
+}
+
+function bump(counts: Map<string, number>, key: string): void {
+  counts.set(key, (counts.get(key) ?? 0) + 1);
+}
+
+function topShapeCounts(counts: Map<string, number>, total: number): ShapeFrequency[] {
+  return [...counts]
+    .sort(([aShape, a], [bShape, b]) => b - a || aShape.localeCompare(bShape))
+    .slice(0, 10)
+    .map(([shape, count]) => ({ shape, count, share: total ? count / total : 0 }));
 }
 
 function mean(xs: number[]): number {
@@ -298,7 +429,72 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
   const widths = head.map((h, i) => Math.max(h.length, ...body.map((b) => (b[i] ?? '').length)));
   const line = (cells: string[]) => cells.map((c, i) => c.padEnd(widths[i]!)).join('  ');
   out.push(line(head), line(widths.map((w) => '-'.repeat(w))), ...body.map(line));
+
+  out.push('');
+  const shapeHead = ['term', 'grain', 'repeat run', 'repeat age', 'run excl pred', 'age excl pred', 'window 20', 'predetermined'];
+  const shapeBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    for (const grain of ['kind', 'category'] as const) {
+      shapeBody.push([
+        String(term),
+        grain,
+        `${(100 * mean(runs.map((r) => r.shapeRepeat[grain].run))).toFixed(1)}%`,
+        `${(100 * mean(runs.map((r) => r.shapeRepeat[grain].age))).toFixed(1)}%`,
+        `${(100 * mean(runs.map((r) => r.shapeRepeat[grain].runWithoutPredetermined))).toFixed(1)}%`,
+        `${(100 * mean(runs.map((r) => r.shapeRepeat[grain].ageWithoutPredetermined))).toFixed(1)}%`,
+        grain === 'category'
+          ? `${(100 * mean(runs.map((r) => r.shapeWindow))).toFixed(1)}%`
+          : '-',
+        `${(100 * mean(runs.map((r) => r.predeterminedShare))).toFixed(1)}%`,
+      ]);
+    }
+  }
+  const shapeWidths = shapeHead.map((h, i) => Math.max(h.length, ...shapeBody.map((b) => (b[i] ?? '').length)));
+  const shapeLine = (cells: string[]) => cells.map((c, i) => c.padEnd(shapeWidths[i]!)).join('  ');
+  out.push(shapeLine(shapeHead), shapeLine(shapeWidths.map((w) => '-'.repeat(w))), ...shapeBody.map(shapeLine));
+
+  out.push('');
+  const topHead = ['term', 'scope', 'share', 'category shape'];
+  const topBody: string[][] = [];
+  for (const { term, runs } of rows) {
+    for (const [scope, shapes] of aggregateTopShapes(runs)) {
+      for (const shape of shapes) {
+        topBody.push([String(term), scope, `${(100 * shape.share).toFixed(1)}%`, shape.shape]);
+      }
+    }
+  }
+  const topWidths = topHead.map((h, i) => Math.max(h.length, ...topBody.map((b) => (b[i] ?? '').length)));
+  const topLine = (cells: string[]) => cells.map((c, i) => c.padEnd(topWidths[i]!)).join('  ');
+  out.push(topLine(topHead), topLine(topWidths.map((w) => '-'.repeat(w))), ...topBody.map(topLine));
   return out;
+}
+
+function aggregateTopShapes(runs: DensityRun[]): [string, ShapeFrequency[]][] {
+  const scopes = new Map<string, { samples: number; shares: Map<string, number> }>();
+
+  const add = (scope: string, shapes: ShapeFrequency[]) => {
+    const row = scopes.get(scope) ?? { samples: 0, shares: new Map<string, number>() };
+    row.samples += 1;
+    for (const shape of shapes) {
+      row.shares.set(shape.shape, (row.shares.get(shape.shape) ?? 0) + shape.share);
+    }
+    scopes.set(scope, row);
+  };
+
+  for (const run of runs) {
+    add('campaign', run.topShapes.campaign);
+    for (const [age, shapes] of Object.entries(run.topShapes.ages)) add(`age:${age}`, shapes);
+  }
+
+  return [...scopes.entries()]
+    .sort(([a], [b]) => a === 'campaign' ? -1 : b === 'campaign' ? 1 : a.localeCompare(b))
+    .map(([scope, row]) => [
+      scope,
+      [...row.shares]
+        .map(([shape, sum]) => ({ shape, count: 0, share: sum / row.samples }))
+        .sort((a, b) => b.share - a.share || a.shape.localeCompare(b.shape))
+        .slice(0, 10),
+    ]);
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('density-gate.ts');
