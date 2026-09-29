@@ -71,6 +71,7 @@ function verdictFor(sha) {
     conclusion,
     branch: field('branch') ?? null,
     jobs: [...r.out.matchAll(/^job: (.+?) = (.+)$/gm)].map(([, name, result]) => ({ name, result })),
+    coveredBy: field('covered-by') ?? null,
   };
 }
 
@@ -192,7 +193,7 @@ export function tally(rows, { trunk = TRUNK, advisory = advisoryJobs(null) } = {
   const advisorySet = advisory instanceof Set ? advisory : new Set(advisory);
   const out = {
     total: rows.length,
-    green: 0, red: 0, pending: 0, cancelled: 0, offTrunk: 0, unjudged: 0,
+    green: 0, red: 0, pending: 0, cancelled: 0, covered: 0, offTrunk: 0, unjudged: 0,
     byJob: {}, advisoryJob: {}, offTrunkBy: {},
   };
   for (const { verdict } of rows) {
@@ -210,6 +211,7 @@ export function tally(rows, { trunk = TRUNK, advisory = advisoryJobs(null) } = {
       out.cancelled++;
       continue;
     }
+    if (verdict.conclusion === 'covered') { out.covered++; continue; }
     if (verdict.conclusion === 'success') { out.green++; continue; }
     out.red++;
     for (const j of verdict.jobs) {
@@ -223,8 +225,8 @@ export function tally(rows, { trunk = TRUNK, advisory = advisoryJobs(null) } = {
 }
 
 /**
- * Percentage over the commits TRUNK ACTUALLY JUDGED — not over the window, and
- * not over the commits that happen to carry some verdict from somewhere.
+ * Percentage over the heads TRUNK ACTUALLY JUDGED — not over the window, not
+ * over covered commits, and not over commits carrying a verdict from elsewhere.
  */
 export const redRate = (t) => {
   const judged = t.green + t.red;
@@ -255,13 +257,14 @@ function main() {
   const t = tally(rows, { advisory: advisoryJobs(workflow) });
   const rate = redRate(t);
   const isRed = (v) => v && v.branch === TRUNK
-    && !['success', 'pending', 'cancelled', 'skipped'].includes(v.conclusion);
+    && !['success', 'pending', 'cancelled', 'skipped', 'covered'].includes(v.conclusion);
 
   console.log(`${TRUNK}, last ${t.total} commits\n`);
   console.log(`  green      ${String(t.green).padStart(4)}`);
   console.log(`  red        ${String(t.red).padStart(4)}`);
   console.log(`  pending    ${String(t.pending).padStart(4)}`);
   console.log(`  cancelled  ${String(t.cancelled).padStart(4)}   superseded before it could answer`);
+  console.log(`  covered    ${String(t.covered).padStart(4)}   included in a separately judged main head`);
   console.log(`  off-trunk  ${String(t.offTrunk).padStart(4)}   only ever judged on the branch it was written on`);
   console.log(`  unjudged   ${String(t.unjudged).padStart(4)}   no verdict ref — see below`);
   console.log('');
