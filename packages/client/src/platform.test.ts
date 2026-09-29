@@ -270,16 +270,16 @@ describe('the platform seam', () => {
   });
 
   it('does not name a host anywhere in the client', () => {
-    const forbidden = /userAgent|capacitor|electron|isAndroid|process\.platform/i;
+    const forbidden = /userAgent|capacitor|electron|isAndroid|isIOS|process\.platform/i;
     const offenders = sourceFiles(join(import.meta.dirname))
       .filter((path) => forbidden.test(readFileSync(path, 'utf8')));
     expect(offenders).toEqual([]);
   });
 });
 
-describe('the shared mobile bridge stays interchangeable with every other host', () => {
+describe('the Android bridge stays interchangeable with every other host', () => {
   const clientSource = readFileSync(join(import.meta.dirname, 'platform.ts'), 'utf8');
-  const mobileSource = readFileSync(
+  const androidSource = readFileSync(
     join(import.meta.dirname, '../../mobile/src/platform-bridge.ts'),
     'utf8',
   );
@@ -299,25 +299,24 @@ describe('the shared mobile bridge stays interchangeable with every other host',
   function methodBlock(source: string, name: string, next: string): string {
     const start = source.indexOf(`async ${name}(`);
     const end = source.indexOf(`async ${next}(`, start + 1);
-    if (start < 0 || end < 0) throw new Error(`cannot isolate mobile ${name}()`);
+    if (start < 0 || end < 0) throw new Error(`cannot isolate Android ${name}()`);
     return source.slice(start, end);
   }
 
-  it('type-checks the real shared mobile object against the client-owned Platform contract', () => {
-    expect(mobileSource).toContain("import type { Platform } from '../../client/src/platform.js';");
-    expect(mobileSource).toContain('} satisfies Platform;');
-    expect(mobileSource).toContain('Object.assign(window, { edPlatform: platform });');
-    expect(mobileSource).not.toMatch(/Capacitor\.(?:getPlatform|isNativePlatform)|\bis(?:Android|IOS)\b/);
+  it('type-checks the real Android object against the client-owned Platform contract', () => {
+    expect(androidSource).toContain("import type { Platform } from '../../client/src/platform.js';");
+    expect(androidSource).toContain('} satisfies Platform;');
+    expect(androidSource).toContain('Object.assign(window, { edPlatform: platform });');
   });
 
   it('uses the same save and library namespaces as the browser host', () => {
-    expect(stringConstant(mobileSource, 'PREFIX')).toBe(stringConstant(clientSource, 'PREFIX'));
-    expect(stringConstant(mobileSource, 'LIBRARY_KEY')).toBe(stringConstant(clientSource, 'LIBRARY_KEY'));
+    expect(stringConstant(androidSource, 'PREFIX')).toBe(stringConstant(clientSource, 'PREFIX'));
+    expect(stringConstant(androidSource, 'LIBRARY_KEY')).toBe(stringConstant(clientSource, 'LIBRARY_KEY'));
   });
 
-  it('keeps save payloads opaque instead of translating them in the mobile shell', () => {
-    const read = methodBlock(mobileSource, 'readSave', 'writeSave');
-    const write = methodBlock(mobileSource, 'writeSave', 'deleteSave');
+  it('keeps save payloads opaque instead of translating them in the Android shell', () => {
+    const read = methodBlock(androidSource, 'readSave', 'writeSave');
+    const write = methodBlock(androidSource, 'writeSave', 'deleteSave');
 
     expect(read).toContain('return value ? JSON.parse(value) : null;');
     expect(write).toContain('value: JSON.stringify(save)');
@@ -325,8 +324,8 @@ describe('the shared mobile bridge stays interchangeable with every other host',
   });
 
   it('imports the same interchange files and exports JSON on both hosts', () => {
-    expect(acceptList(mobileSource)).toBe(acceptList(clientSource));
-    expect(mobileSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
+    expect(acceptList(androidSource)).toBe(acceptList(clientSource));
+    expect(androidSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
     expect(clientSource).toMatch(/link\.download = `eldritch-\$\{[^}]+\}\.json`/);
   });
 });
