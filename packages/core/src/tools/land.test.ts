@@ -1252,24 +1252,25 @@ describe('the connector-only remote landing', () => {
     expect(timeout, 'remote landing has no job timeout').toBeTruthy();
     expect(
       Number(timeout),
-      '120m killed run 36281354123 after a ~103m landing and only 17m of the 40m verdict wait',
+      'the queue must fit the rebased landing plus the ordinary post-push verdict window',
     ).toBeGreaterThanOrEqual(180);
   });
 
-  it('records the dispatched check itself, because verdict.yml never hears about it', () => {
-    // A run github-actions[bot] dispatched delivers no `workflow_run`, so no
-    // ref was ever written and nine of nine remote landings reported FAILURE.
-    const record = remote.indexOf('run: node tools/dispatched-verdict.mjs');
-    const read = remote.indexOf('npm run --silent verdict -- "$TARGET_SHA"');
-    expect(record, 'the remote landing no longer records its own verdict').toBeGreaterThan(0);
-    expect(record, 'the ref has to exist before the ordinary reader asks for it').toBeLessThan(read);
-    expect(remote).toContain("DISPATCHED_AT: ${{ steps.dispatch.outputs.at }}");
-    expect(remote).toContain("core.setOutput('at', new Date().toISOString());");
-    const wait = Number(/WAIT_MINUTES: "(\d+)"/.exec(remote)?.[1]);
-    expect(wait, 'a 45m check run has to fit inside the wait').toBeGreaterThanOrEqual(60);
-    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
-    expect(timeout, 'the job cap must cover a ~103m landing plus the whole verdict wait')
-      .toBeGreaterThanOrEqual(103 + wait + 15);
+  it('lets the deploy-key push trigger check, verdict and janitor exactly once', () => {
+    // GITHUB_TOKEN pushes needed an explicit dispatch because GitHub suppresses
+    // their follow-on workflow events. A deploy-key SSH push is an ordinary
+    // push event, so keeping that workaround would run the full check twice.
+    expect(remote).toContain('The deploy-key push below is deliberately NOT a GITHUB_TOKEN push');
+    expect(remote, 'deploy-key landing still manually dispatches a second workflow')
+      .not.toContain('createWorkflowDispatch');
+    expect(remote, 'the old token-suppressed verdict recorder is still in the queue')
+      .not.toContain('tools/dispatched-verdict.mjs');
+    expect(remote).not.toContain("workflow_id: 'check.yml'");
+    expect(remote).not.toContain("workflow_id: 'janitor.yml'");
+
+    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitor).toMatch(/on:\n\s+push:\n\s+branches: \[main\]/);
+    expect(janitor).toContain('github.event.before');
   });
 
   it('defaults a local verdict wait past the longest measured check run', async () => {
@@ -1277,12 +1278,15 @@ describe('the connector-only remote landing', () => {
     expect(DEFAULT_WAIT_MINUTES, 'check runs have taken 45m; 40 was too close').toBeGreaterThanOrEqual(60);
   });
 
-  it('dispatches the existing check after the token-authenticated push, then reads its verdict', () => {
-    expect(remote).toContain('actions: write');
-    expect(remote).toContain('createWorkflowDispatch');
-    expect(remote).toContain("workflow_id: 'check.yml'");
-    expect(remote).toContain("ref: 'main'");
-    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait');
+  it('waits for the normal push-triggered verdict without Actions write permission', () => {
+    expect(remote).toContain('contents: read');
+    expect(remote).not.toContain('actions: write');
+    expect(remote).not.toContain('createWorkflowDispatch');
+    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait 75');
+
+    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
+    expect(timeout, 'the job cap must cover a ~103m landing plus the 75m verdict window')
+      .toBeGreaterThanOrEqual(103 + 75 + 15);
   });
 
   it('has a PR-event bootstrap bridge so the new comment workflow can land itself', () => {
@@ -1294,41 +1298,24 @@ describe('the connector-only remote landing', () => {
     expect(workflow).toContain('pull-requests: read');
   });
 
-  it('dispatches a real janitor sweep, since neither GitHub nor `on: push` acts on a bot-token push', () => {
-    // #266 and #267 landed remotely with `Closes #N` and stayed open until
-    // closed by hand: GitHub ignores closing keywords in a GITHUB_TOKEN push,
-    // and janitor.yml's `push` trigger never fires for one.
-    expect(remote).toContain("workflow_id: 'janitor.yml'");
-    expect(remote, 'a manual dispatch defaults to a dry run, which closes nothing')
-      .toContain("dry_run: 'false'");
-    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
-    expect(janitor).toContain('workflow_dispatch:');
-    expect(janitor, 'the sweep must read dry_run=false as a real run')
-      .toContain("inputs.dry_run == false && '0'");
-  });
-
-  it('hands the dispatched janitor the range it landed, or it closes nothing', () => {
-    // janitor.mjs gates its whole issue-closing section on JANITOR_RANGE, and
-    // a dispatch has no push event to derive one from.
-    expect(remote, 'main is read before the landing moves it')
-      .toMatch(/id: before\n\s+run: \|\n\s+git fetch --quiet origin main\n\s+echo "sha=\$\(git rev-parse FETCH_HEAD\)"/);
-    expect(remote.indexOf('id: before'), 'before the landing, not after')
-      .toBeLessThan(remote.indexOf('id: landing'));
-    expect(remote).toContain('BEFORE_SHA: ${{ steps.before.outputs.sha }}');
-    expect(remote).toContain('TARGET_SHA: ${{ steps.target.outputs.sha }}');
-    expect(remote).toContain("range: `${process.env.BEFORE_SHA}..${process.env.TARGET_SHA}`");
+  it('does not manually dispatch janitor now that the deploy-key push supplies a real range', () => {
+    expect(remote).not.toContain("workflow_id: 'janitor.yml'");
+    expect(remote).not.toContain("dry_run: 'false'");
+    expect(remote).not.toContain('BEFORE_SHA:');
+    expect(remote).not.toContain('id: before');
 
     const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
-    expect(janitor).toMatch(/workflow_dispatch:\n\s+inputs:[\s\S]*\n\s+range:\n\s+description:/);
-    expect(janitor, 'a dispatched sweep reads its range from the input')
-      .toContain("github.event_name == 'workflow_dispatch' && inputs.range");
+    expect(janitor).toContain('push:');
+    expect(janitor).toContain('branches: [main]');
+    expect(janitor).toContain("github.event_name == 'push'");
+    expect(janitor).toContain('github.event.before');
   });
 
   it('reports without requiring issue or pull-request write access', () => {
     expect(remote).toContain("if: always() && steps.pr.outcome == 'success'");
     expect(remote).toContain('steps.landing.outcome');
     expect(remote).toContain('steps.verdict.outcome');
-    expect(remote).toContain('explicitly dispatched post-push check');
+    expect(remote).toContain('normal push-triggered check');
     expect(remote).toContain('core.summary.addRaw(body).write()');
     expect(remote).not.toContain('issues: write');
     expect(remote).not.toContain('pull-requests: write');
