@@ -177,27 +177,28 @@ function recordRelevance(
   ambition: HouseAmbitionId,
   decision: PendingRecord,
 ): AmbitionRelevance | undefined {
-  // These are exactly the strings the Record panel draws before the player
-  // answers: its subject, callback, and all three Chronicle alternatives.
-  // Do not read EventTemplate conditions/purposes or outcome effects here;
-  // those are author mechanics, not evidence on the page.
-  const text = visibleRecordText(decision);
-
+  // Record prose is localisable player-facing text (#276), so the reader uses
+  // the stable structure that authored that page: declared purpose, named
+  // Discrepancy gates, and the cast ids rendered into the page. Rewording a
+  // subject or Chronicle alternative must never change whether it matters.
   if (ambition === 'restore_ledger') {
-    if (/\bledger\b|\bclause\b/i.test(text)) {
+    if (decision.event.purposes.includes('advance_clause')) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page names the Ledger or one of the clauses the house is trying to recover.',
+        reason: 'This page belongs to an event authored to advance a missing Ledger clause.',
       };
     }
-    const namedDiscrepancy = [...ctx.world.discrepancies.keys()]
-      .find((id) => visibleToken(text, id));
-    if (namedDiscrepancy || /discrepanc/i.test(text)) {
+
+    if (
+      conditionNamesCarriedDiscrepancy(ctx, decision.event.conditions)
+      || decision.options.some((option) =>
+        option.discrepancy !== undefined && ctx.world.discrepancies.has(option.discrepancy))
+    ) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page names a disputed part of the family record the Ledger is already carrying.',
+        reason: 'This page is tied to a named disputed part of the family record the Ledger is already carrying.',
       };
     }
     return undefined;
@@ -205,60 +206,41 @@ function recordRelevance(
 
   if (ambition === 'raise_ascendant') {
     const measured = measureAscension(ctx);
-    const programme = [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
-      .filter((id): id is string => Boolean(id));
-    if (programme.some((id) => {
-      const person = ctx.world.people.get(id);
-      return person !== undefined && visibleToken(text, person.name);
-    })) {
+    const programme = new Set(
+      [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
+        .filter((id): id is string => Boolean(id)),
+    );
+    if (filledIds(decision).some((id) => programme.has(id))) {
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page names the Scion, his heir, or the man the house can already see foremost on the ladder.',
+        reason: 'This page includes the Scion, his heir, or the man the house can already see foremost on the ladder.',
       };
     }
-    return undefined;
   }
 
-  if (ambition === 'secure_branches') {
-    const cadetNames = [...halls(ctx.world, ctx.world.year)]
-      .filter(([hall]) => hall !== MAIN_BRANCH)
-      .flatMap(([, people]) => people.map((person) => person.name));
-    if (
-      cadetNames.some((name) => visibleToken(text, name))
-      || /\bcadet (?:hall|branch)\b/i.test(text)
-    ) {
-      return {
-        surface: 'record',
-        effect: 'advance',
-        reason: 'This page names a cadet hall or somebody currently carrying one.',
-      };
-    }
-    return undefined;
-  }
-
-  if (/\bliving blood\b|\bbloodline\b|\bthe line (?:thins|narrows|widens)\b/i.test(text)) {
-    return {
-      surface: 'record',
-      effect: 'advance',
-      reason: 'This page names the breadth of the living line the ambition is trying to preserve.',
-    };
-  }
-
+  // #327 names no structural Record signal for blood breadth or cadet halls.
+  // Keep those pages quiet rather than infer importance from translated prose.
   return undefined;
 }
 
-function visibleRecordText(decision: PendingRecord): string {
-  return [
-    decision.subject,
-    decision.callback ?? '',
-    ...decision.options.map((option) => option.chronicle ?? ''),
-  ].join(' ').toLowerCase();
+type EventCondition = NonNullable<PendingRecord['event']['conditions']>;
+
+function conditionNamesCarriedDiscrepancy(
+  ctx: SimCtx,
+  condition: EventCondition | undefined,
+): boolean {
+  if (!condition) return false;
+  if ('discrepancy' in condition) return ctx.world.discrepancies.has(condition.discrepancy);
+  if ('all' in condition) return condition.all.some((part) => conditionNamesCarriedDiscrepancy(ctx, part));
+  if ('any' in condition) return condition.any.some((part) => conditionNamesCarriedDiscrepancy(ctx, part));
+  if ('not' in condition) return conditionNamesCarriedDiscrepancy(ctx, condition.not);
+  return false;
 }
 
-function visibleToken(text: string, token: string): boolean {
-  const lower = token.toLowerCase();
-  return text.includes(lower) || text.includes(lower.replaceAll('_', ' '));
+function filledIds(decision: PendingRecord): string[] {
+  return Object.values(decision.fill)
+    .flatMap((value) => typeof value === 'string' ? [value] : value);
 }
 
 function choiceRelevance(
