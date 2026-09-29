@@ -35,8 +35,8 @@
  * `--from-queue` is intentionally absent from the normal command list. It is the
  * remote /land workflow's capability boundary: only that serialized job may
  * cross from a green preflight to `git push …:main`. Its `--no-verdict`
- * belongs there because remote-land.yml dispatches and records the post-push
- * check itself.
+ * belongs there because remote-land.yml waits for the ordinary push-triggered
+ * check and its verdict itself.
  *
  * A DIFF OF ONLY MARKDOWN, ON A GREEN BASE, RUNS THE SHORT SET — typecheck,
  * validate and the fast lane, which is CI's short tier and holds every test
