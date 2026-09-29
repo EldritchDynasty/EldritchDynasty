@@ -8956,3 +8956,21 @@ Getting from 25% to under 20% is roughly 180 of 3,574 B-side choices moved
 off shared money shapes. That is new authored trade-offs priced in the
 vocabulary the game under-uses: `people` (who goes), eligibility, Record
 claims, land. Contradiction-fixing is exhausted well before it gets there.
+
+**Fifth slice: two promises the prose made, paid.** `the_toll_on_the_plank_bridge`
+("a thing the house may need to have agreed to in about ninety years") and
+`the_alewife_and_the_licence` ("in about ninety years a clerk with a
+grievance goes looking for exactly that kind of file") each promised a
+return that nothing authored. Each now carries an `Outcome.next`, 70–95
+years on, to a scene that asks a question with no coin on the unsaying side:
+`the_clause_read_back` is `[money+record | record]`, the market-day toll
+against a minor Discrepancy provable by the commons, and
+`the_file_a_clerk_went_looking_for` is `[relationship | record+relationship]`,
+Wick against the town. Reach over 200 Long Lines: every new outcome resolved
+in 10–17 runs, far above gate 8's one-in-800.
+
+At 48 pairs this slice reads 25.0% → 26.0%. The follow-ups fire in a few
+percent of Short Lines, so that point is the re-roll rather than the scenes.
+It is also the size of the 48-pair error. A content change that reaches a
+few runs cannot be judged by this instrument at all. It is authored because
+the prose owed it, not because it moves the table.

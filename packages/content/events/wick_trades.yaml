@@ -223,6 +223,62 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: 1 }
+          next:
+            event: the_file_a_clerk_went_looking_for
+            after: { minYears: 70, maxYears: 95 }
+
+
+  # #341: `asserted` promised that "in about ninety years a clerk with a
+  # grievance goes looking for exactly that kind of file", and no clerk ever
+  # came. This is the clerk. Neither answer costs coin; both cost Wick.
+  - id: the_file_a_clerk_went_looking_for
+    title: The Hall's Own Letter, Returned
+    tier: head
+    frequency: uncommon
+    weight: 100
+    tags: [tenants, law, custom, record]
+    purposes: [change_relationship, plant_rumour, buy_patience]
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The alehouse at Wick has never had a licence, and the woman who keeps it
+      now is the old alewife's great-granddaughter. A clerk of the bench at
+      Bramme has been through the town's files and found the hall's reply
+      from ninety years back, and he has found it useful. If the low justice
+      at Wick is the house's, he writes, then so is the fine for brewing
+      without the town's leave. The house will levy it, or the house will say
+      in writing that it will not. Somebody at Bramme has waited a long time
+      to send it.
+    interaction:
+      kind: choice
+      choices:
+        - id: levy_it
+          label: Levy it. Our justice, so our fine.
+          outcomes:
+            - id: levied
+              weight: 100
+              text: >-
+                The reeve walks down on a market day, takes the fine off the
+                counter in front of the whole room, and sends every mite of
+                it on to Bramme. The town is satisfied that the hall's justice
+                works. The alehouse goes quiet when anybody from the hall
+                comes in, and stays quiet for a generation.
+              effects:
+                - { kind: relationship, from: household, to: head, sentiment: -10 }
+        - id: refuse_in_writing
+          label: Write that the house will not, and seal it.
+          outcomes:
+            - id: refused
+              weight: 100
+              text: >-
+                One sentence, sealed, and filed at Bramme beside the first.
+                She brews on. The town now holds two letters from the hall
+                that say together that it keeps a justice and will not use
+                it, which is the sort of pair a clerk carries to Cawdry when
+                he wants the Warden to look at something.
+              effects:
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
+                - { kind: rumour, op: seed, id: rumour_the_halls_justice_is_a_shelter, accuracy: 0.6 }
 
   - id: the_thatcher_from_the_lag
     title: A Thatcher, Down From the Lag
