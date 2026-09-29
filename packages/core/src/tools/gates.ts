@@ -219,11 +219,9 @@ export function gateClauses(
  * ONE BATCH, READ BY BOTH GATES (issue #64).
  *
  * Gate 4 and gate 8 were bootstrapping the SAME seeds — `5000 + i * 7` — for
- * the same thousand years, each throwing away everything the other wanted.
- * Measured: gate 4 alone was 342 seconds at 100 runs, and gate 8 plays 250 of
- * the identical runs beside it.
+ * the same campaign span, each throwing away everything the other wanted.
  *
- * Sharing the pass is worth more than the minutes. It lets gate 4 read the
+ * Sharing the pass is structural, not a timing constant. It lets gate 4 read the
  * batch gate 8 already pays for, and a fire-rate zero only means anything at a
  * batch size that can tell "never" apart from "rarely" — see `gateFireRate`.
  */
@@ -1021,14 +1019,13 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  * by CI; a number written here would be an unchecked second source of truth.
  */
 const OWN_LANE: Record<string, readonly string[]> = {
-  // #333: measured on green PR #362. These two independent gates accounted
-  // for ~32 of the batch lane's ~37 minutes of gate execution. Giving each
-  // its own runner preserves every seed and assertion while removing their
-  // serial sum from the critical path.
+  // #333 measured these as the two independent costs dominating the default
+  // lane. Giving each its own runner preserves every seed and assertion while
+  // removing their serial sum from the critical path.
   blood: ['blood'],
-  // Keep the two readers of fire-rate's 800-run memo in the same process.
+  // Keep the two readers of fire-rate's batch memo in the same process.
   // Splitting these across lanes would replay the corpus and trade wall clock
-  // for ~15 extra runner-minutes.
+  // for duplicate compute.
   'fire-rate': ['fire-rate', 'outcome-reach', 'vocabulary-reach'],
   war: ['war'],
   // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
@@ -1129,11 +1126,10 @@ if (isMain) {
 
   // A LANE ALWAYS NAMES ITS GATES, even when it holds only one.
   //
-  // These headers are the only per-gate timing this repository has: the
-  // runner stamps every log line, so `── war ──` to the next header IS that
-  // gate's cost, and reading them back off run 123 is how the 36-minute job
-  // was split at all. A one-gate lane printing nothing would have made the
-  // `war` runner unmeasurable the moment it became the thing to measure.
+  // These headers are the measurement boundary for per-gate attribution: the
+  // runner stamps every log line, so one header to the next is the gate's
+  // elapsed segment. A one-gate lane printing nothing would make its internal
+  // cost impossible to attribute when the checked timing data drifts.
   const named = chosen.length > 1 || lane !== undefined;
 
   let failed = 0;
