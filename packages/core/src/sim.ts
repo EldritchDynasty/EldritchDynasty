@@ -88,6 +88,9 @@ export function bootstrap(
       const motherGamete = meiosis(genomeOf(mother, genetics), genetics.table, 'female', rng, s.born);
       const fatherGamete = meiosis(genomeOf(father, genetics), genetics.table, 'male', rng, s.born, s.sex);
       const conceived = conceive(motherGamete, fatherGamete, genetics.table);
+      if (conceived.sex !== s.sex) {
+        throw new Error(`seed child ${s.key} was conceived ${conceived.sex}, authored ${s.sex}`);
+      }
       genome = conceived.genome;
     } else {
       rng = makeRng(hashSeed(seed, 'seed-person', s.key));
