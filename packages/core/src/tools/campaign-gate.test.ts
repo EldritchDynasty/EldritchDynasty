@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, type CampaignId } from '@ed/schema';
+import { indexContent, type CampaignId, type LoggedDecision } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
-import { campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, campaignStreamDifference, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
+import { campaignDecisionStream, campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, campaignStreamDifference, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
 
 describe('static campaign difference report', () => {
   const content = indexContent(loadContent());
@@ -134,4 +134,20 @@ describe('static campaign difference report', () => {
     });
   });
 
+});
+
+describe('the decision stream the campaign report compares', () => {
+  it('keeps answered choices and Record pages, and drops narration, matches and names', () => {
+    const log: LoggedDecision[] = [
+      { kind: 'outcome', year: 1043, event: 'narrated', outcomeId: 'only', fill: {} },
+      { kind: 'outcome', year: 1044, event: 'chosen', choiceId: 'left', outcomeId: 'went_left', fill: {} },
+      { kind: 'record', year: 1045, event: 'chosen', option: 'omit' },
+      { kind: 'match', year: 1046, subject: 'p_3', card: null, spouse: 'p_9' },
+      { kind: 'name', year: 1047, person: 'p_12', name: 'Alys' },
+    ];
+    expect(campaignDecisionStream(log)).toEqual([
+      { id: 'chosen', year: 1044 },
+      { id: 'record:chosen', year: 1045 },
+    ]);
+  });
 });

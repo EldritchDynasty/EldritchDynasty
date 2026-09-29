@@ -1,7 +1,7 @@
 import { loadContent } from '@ed/content';
 import {
   CampaignIdS, RITE_OF_RUNG, RUNG_ORDER, compare, indexContent,
-  type CampaignId, type Condition, type Content, type ContentBundle, type Rung,
+  type CampaignId, type Condition, type Content, type ContentBundle, type LoggedDecision, type Rung,
 } from '@ed/schema';
 import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
@@ -51,6 +51,31 @@ export interface CampaignPlayedRun {
 export interface CampaignDecisionVisit {
   id: string;
   year: number;
+}
+
+/**
+ * The stable event-level decisions two campaigns on one seed can both meet.
+ *
+ * An outcome without `choiceId` is narration, not a decision. Match and name
+ * answers are real decisions, but their log entries carry person and card
+ * identity rather than a stable interaction id: counting every match as
+ * "match" would manufacture overlap, and comparing person ids across the two
+ * products would manufacture divergence. So neither is in the stream.
+ *
+ * This was `eventDecisionStream` in `replay-divergence.ts` until #272 moved
+ * that instrument to live choices and removed the reader as uncalled. This
+ * report still reads the saved log, so it keeps its own copy.
+ */
+export function campaignDecisionStream(log: readonly LoggedDecision[]): CampaignDecisionVisit[] {
+  const out: CampaignDecisionVisit[] = [];
+  for (const decision of log) {
+    if (decision.kind === 'outcome') {
+      if (decision.choiceId !== undefined) out.push({ id: decision.event, year: decision.year });
+      continue;
+    }
+    if (decision.kind === 'record') out.push({ id: `record:${decision.event}`, year: decision.year });
+  }
+  return out;
 }
 
 export interface CampaignDivergenceRun {
@@ -284,10 +309,9 @@ export async function campaignPlayedReport(
   // Keep the whole-game runner off the import graph of this module's fast
   // tests. The played report is a CLI/diagnostic path; the reducer above is
   // what belongs in the fast lane.
-  const [{ playToTheEnd }, { playedRun }, { eventDecisionStream }] = await Promise.all([
+  const [{ playToTheEnd }, { playedRun }] = await Promise.all([
     import('./ending-gate.js'),
     import('../corpus.js'),
-    import('./replay-divergence.js'),
   ]);
   const statics = campaignStaticReport(source);
   const runs: CampaignPlayedRun[] = [];
@@ -309,8 +333,8 @@ export async function campaignPlayedReport(
     ).world;
     return campaignStreamDifference(
       seed,
-      eventDecisionStream(shortWorld.decisionLog),
-      eventDecisionStream(longWorld.decisionLog),
+      campaignDecisionStream(shortWorld.decisionLog),
+      campaignDecisionStream(longWorld.decisionLog),
       CAMPAIGNS.short.endYear,
     );
   });
