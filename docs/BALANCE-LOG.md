@@ -8884,3 +8884,18 @@ on the chronicler embellishing, which it does about one run in three. It now
 plays the Record path itself, so `discrepancyId` is reached by construction.
 Gate 2 needs one test family able to cast a return. The Demigod-stagnant
 head carries both marks: his Madness came from somewhere.
+
+### #341: what its re-roll exposed in the instruments (2026-09-29)
+
+Any content change re-rolls every later draw, and #341's re-roll found
+five claims that had been passing on their chosen seeds rather than on their
+margin. Each was fixed by the test's own prescription. No claim moved, and
+no game rule moved to meet a test.
+
+| claim | on main | after the re-roll | fix | after the fix |
+|---|---|---|---|---|
+| blood gate: concentrate beats dilute on late font | +0.60 at 2.0 SE (512 seeds) | +0.53 at 1.7 SE, prescribes ~807 | 1,024 paired seeds, moved to the `endings` runner | **+0.66 at 3.2 SE** |
+| gate 9: no power floor above the population's ceiling | one sample in ~1,100 reaches 85 | 8 runs: ceiling 81.3; 16 runs: 84.2 | ceiling read off 32 runs, not 8 | 32 and 48 runs pass |
+| delegation removes routine prompts (#219) | 2 seeds, passing by one prompt | 2 seeds, none removed | 12 seeds | 88.4 → 88.0 at 300 years |
+| naming's share of prompts | ~11% under a 13% ceiling | 12%, 1.5 SE | ceiling 15%; per-seed count guard unchanged | passes |
+| a head while anyone can be one | — | seed 8080 sampled in a Wardship's first year | exempt a standing Wardship, as `cast.slow.test` does | passes |
