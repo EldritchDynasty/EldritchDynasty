@@ -12,8 +12,8 @@
       "evidence": "Successful main runs 2026-09-26 through 2026-09-28: 21-39 min, typically about 37 min (#333)."
     },
     "endings": {
-      "seconds": 360,
-      "evidence": "Successful main runs 2026-09-26 through 2026-09-28: 3-6 min, typically about 6 min (#333)."
+      "seconds": 1830,
+      "evidence": "The endings runner has carried the blood gate (1,024 paired seeds) since #341. Measured on CI run 36529343819 (head f61ea47, 2026-09-29): 30.5 min, 06:06:49 to 06:37:22. Before the move it ran 3-6 min (#333). The batch lane lost the blood gate in the same change (26.7 min on that run) and keeps its existing ceiling."
     }
   }
 }
