@@ -69,86 +69,23 @@ concurrency:
 # is the green they already gave its parent. The argument for where both
 # lines fall is on the `tier` job itself.
 #
-# ── WHAT IT COSTS, RE-MEASURED 2026-09-20 ─────────────────────────────────
+# ── WHAT IT COSTS ───────────────────────────────────────────────────────────
 #
-# Read off run 185 (`main`, green, 4601428) — the runner stamps every log line,
-# so these are real job boundaries and not a stopwatch. EVERY JOB STARTED
-# WITHIN THREE SECONDS OF EVERY OTHER, so none of this is queuing:
+# Gate timing is checked data, not prose. Current lane baselines, measurement
+# date, evidence and tolerance live in tools/gate-durations.json, and every
+# gate job below checks its own elapsed wall clock against that file.
 #
-#   lint 42s · windows 2m36s · corpus 5m20s
-#   test  1/4 3m02s · 4/4 4m03s · 3/4 10m45s · 2/4 67m47s
-#   gates war 8m46s · batch 20m50s              ── ~68m of wall clock
+# #333 re-measured a green runner gate-by-gate before repacking. The expensive
+# default-lane work was independent blood play plus the shared fire-rate
+# corpus, so those costs now run in parallel lanes without reducing a seed or
+# an assertion. War remains the gate critical path. The measurement and the
+# before/after critical-path and runner-minute accounting are recorded in
+# docs/BALANCE-LOG.md.
 #
-# THE BLOCK THIS REPLACED WAS THREE TIMES OUT AND ARGUED AGAINST FIXING IT.
-# It said `18m02s of wall clock`, true of run 125, and reasoned from that:
-# "balancing all four onto the ~7m30s they average would take the BUILD from
-# 18m to about 17m and no further, because the gate lanes below are 16m50s and
-# are the floor." Sound when written. Then `war` HALVED (the 500-year term,
-# #133), `batch` grew, and `test 2/4` quadrupled — so the floor stopped being
-# the gates and became the shard, and balancing went from worth one minute to
-# worth forty-six. Anyone who read this file to decide whether sharding was
-# worth paying for got a confident, reasoned, wrong answer.
+# Test-file cost is separately data-driven by tools/test-durations.json and
+# tools/shards.mjs. Keep both timing systems machine-readable; do not add a
+# stopwatch figure here as another source of truth.
 #
-# A CORRECTED NUMBER UNDER A STALE CONCLUSION IS THE WORSE OF THE TWO FAILURES,
-# which is why the paragraph above is rewritten and not just re-typed.
-#
-# TWO THINGS CHANGED, AND THEY ARE NOT THE SAME KIND OF THING.
-#
-# The shards are packed by measured duration now rather than by path hash
-# (`tools/shards.mjs`), so the four cannot fall 4x apart by coincidence of
-# filename. And one FILE was most of the problem underneath that:
-# `burying.slow.test.ts` polled the whole session view two and three times a
-# turn to read a number, which made it sixty minutes and the floor nothing
-# could get under. It plays exactly what it played before — see the note in
-# that file, and #143.
-#
-# MEASURED ON A FOUR-CORE CONTAINER, 2026-09-20, before and after:
-#
-#   npm test        ~65 min   ->   ~14 min   (2,536 tests in 157 files)
-#   packed shards   60.2m / 14.6m / 14.6m / 14.6m   ->   ~10m each
-#   spread          4.12x     ->   1.00x
-#   longest FILE    60.2m, over a fair share of 26.0m   ->   ~9m, under ~10m
-#
-# THOSE ARE CONTAINER FIGURES, NOT RUNNER FIGURES. Here is the same build on
-# the runners — run 197 (`main`, green, a1c3c3c), read off the job stamps:
-#
-#   gates (batch) 22m54s · gates (war) 10m10s
-#   test 1/4 10m05s · 2/4 5m31s · 4/4 5m30s · 3/4 5m27s
-#   windows 2m51s · fast lane 1m27s · lint 30s · corpus 22s · tier 3s
-#                                                 ── 23m03s of wall clock
-#
-#   68 minutes to 23, no test deleted, nothing moved off `main`.
-#
-# THAT WAS THE CONCLUSION OF RUN 197, NOT A CURRENT TIMING CONTRACT.
-# Current gate-lane baselines live in `tools/gate-durations.json`; the gate
-# job below measures its own wall clock and fails when a lane drifts beyond the
-# recorded factor. The historical numbers above stay only to explain why the
-# lane split exists. Anyone deciding today's critical path reads the data, not
-# this comment.
-#
-# THE SHARDS ARE NOT LEVEL ON THE RUNNERS — 10m05s against 5m27s — while the
-# committed table packs them level. That is not the packing failing. The
-# durations are measured on a four-core container with a warm run corpus, and
-# a runner is a different machine that may restore a cold one; what the table
-# gets right is the RELATIVE cost of the files, which is what decides the
-# packing, and being an hour wrong about one file is the thing it exists to
-# stop. `lanes.test.ts` asserts the packing against the recorded durations —
-# a structural claim — and never against a runner's clock, which would be a
-# stopwatch in CI and muted within a fortnight.
-#
-# AND THE FIGURES ABOVE WILL ROT TOO. Three files carried a timing block, all
-# three warned in their own prose that such a block is perishable, and all
-# three had rotted anyway. The warning is not the mechanism. So the thing that
-# DECIDES anything is no longer written here: per-file durations live in
-# `tools/test-durations.json`, the sequencer packs the shards from them, and
-# `lanes.test.ts` fails the build when the packing comes out lopsided. What is
-# left in this comment is an account of how the shape was arrived at, which is
-# the part a number cannot carry. `tools/cost.mjs` is the instrument, and it is
-# named here as a PATH rather than as the command that runs it, for the same
-# reason the corpus key below is: `ciScripts` in `tools/land.mjs` matches npm
-# invocations anywhere in this file, comments included, and a command spelled
-# out in prose would read to it as a job the landing has to run.
-jobs:
   # ── WHICH TIER THIS RUN IS, DECIDED IN ONE PLACE ──────────────────────────
   #
   # THE WASTE THIS EXISTS FOR, MEASURED over runs 169-198 (issue #144). Agents
@@ -500,33 +437,16 @@ jobs:
       - name: test
         run: npm test -- --shard=${{ matrix.shard }}/4
 
-  # ── THE GATES, IN THREE ───────────────────────────────────────────────────
+  # ── THE GATES, PARTITIONED BY MEASURED COST ──────────────────────────────
   #
-  # 36m24s on one runner, and two gates were ninety per cent of it: `war` at
-  # 16m38s and `fire-rate` at 16m05s. Everything else in the job came to under
-  # four minutes together, and `outcome-reach` and `vocabulary-reach` came to
-  # THREE AND FOUR MILLISECONDS, because they read the 250-run batch that
-  # `fire-rate` already paid for.
+  # packages/core/src/tools/gates.ts owns the partition and derives batch
+  # as every registered gate not assigned an independent lane. The fire-rate
+  # lane deliberately keeps outcome-reach and vocabulary-reach beside their
+  # shared process-local corpus. packages/core/src/gates.test.ts proves that
+  # this matrix and the engine lane table agree.
   #
-  # That is what decides where the split falls, and it is the same argument
-  # issue #64 made when the batch was shared in the first place: separate
-  # those two from `fire-rate` and the 250 runs get played twice, turning two
-  # free gates into sixteen minutes each. `war` shares its runs with nothing.
-  # `endings` now also stands alone: its old 24-run configuration took about
-  # 95 seconds but could not judge a 1% floor at all; #185 raises it to the
-  # first judgeable 100-run batch, so its added cost belongs on its own runner.
-  #
-  # THE LANES ARE STILL NOT A LIST OF GATE NAMES. `npm run gates -- --lane`
-  # names only the gates that need a runner of their own and DERIVES `batch`
-  # as everything else, so a new gate is in CI the moment it exists rather
-  # than the moment somebody remembers this file — which is what happened to
-  # gate 2, written for CI and wired into nothing for its whole life. The two
-  # lanes together are exactly `Object.keys(GATES)`, and `gates.test.ts`
-  # asserts that against this file's matrix rather than trusting it.
-  #
-  # gate 7 clauses · gate 4 fire rate · gate 2 slot fillability
-  # gate 8 outcome reach · gate 6 purposes · gate 9 ladder scales · ladder
-  # gate 10 vocabulary reach · endings · land · war
+  # tools/gate-durations.json is the sole current timing authority. Each lane
+  # measures itself below and fails if it exceeds the checked tolerance.
   gates:
     name: gates (${{ matrix.lane }})
     needs: tier
