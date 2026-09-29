@@ -1000,41 +1000,25 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
 /**
  * ── CI LANES: WHICH GATES SHARE A RUNNER ──────────────────────────────────
  *
- * The gates job was ONE runner and had quietly become the longest thing in
- * CI. Measured off the timestamps in run 123's own log (`main`, green):
+ * Current lane budgets live in tools/gate-durations.json. This file owns only
+ * the structural partition: which gates must share a process, and which
+ * expensive independent gates can run in parallel.
  *
- *   war 16m38s · fire-rate 16m05s · endings 95s · clauses 49s · ladder 45s
- *   ladder-scales 30s · outcome-reach 0.003s · vocabulary-reach 0.004s
- *   purposes ~0s · slot-fillability 0.07s        ── 36m24s in total
+ * #333 measured a green runner gate-by-gate and found two independent costs
+ * dominating the default lane: blood, and the shared fire-rate corpus.
+ * fire-rate, outcome-reach and vocabulary-reach MUST remain together: the
+ * latter two consume the process-local batch memo built by fire-rate.
+ * Splitting them would replay the same corpus on another runner and buy wall
+ * clock by wasting compute. Blood has no such sharing and gets its own lane.
  *
- * TWO GATES ARE NINETY PER CENT OF IT, and they are ninety per cent of it for
- * unrelated reasons: `war` plays 128 runs x 1000 years across two policy
- * columns, and `fire-rate` plays the 250-run batch. `check.yml` had been
- * claiming `gates 8m38s` since run 98 — `gate:war` and `gate:land` were added
- * on 8-9 September and nobody re-measured, which is this repository's own
- * lesson about perishable timing comments, applied to the file that states it.
+ * War and endings remain independent lanes for the same reason: each owns its
+ * own played sample. The default batch lane is DERIVED as everything not
+ * named here, so a newly registered gate is in CI without a second hand-kept
+ * list. gates.test.ts proves the partition and proves the workflow matrix
+ * names every lane.
  *
- * SO THE EXPENSIVE INDEPENDENT GATES GET THEIR OWN RUNNERS, AND `playBatch`
- * DECIDES where the shared corpus falls. #185 adds `endings`: 100 paired
- * Long-Line runs are required for its one-per-cent floor to mean anything,
- * and making that correctness fix should not lengthen the already-heavy batch lane.
- * `outcome-reach` and `vocabulary-reach` cost THREE AND FOUR MILLISECONDS —
- * they read the batch `fire-rate` already paid for. Separating them from it
- * would play those 250 runs twice and turn two free gates into sixteen
- * minutes each. `war` shares its runs with nothing, so it is the one gate
- * that can leave without taking a batch with it.
- *
- * A LANE IS NOT A LIST OF GATES, AND THAT IS DELIBERATE. Only the gates that
- * need a runner of their own are named; `batch` is DERIVED as everything
- * else. This is the argument `check.yml` already makes about iterating
- * `GATES` rather than naming gates in a workflow — "gate 2 was written for CI
- * and wired into nothing for its whole life under the old hand-kept list" —
- * and it holds one level down: a gate added tomorrow is in CI the moment it
- * exists, in `batch`, without anybody editing this table or the workflow.
- *
- * What that cannot notice is a new gate that is EXPENSIVE. It lands in
- * `batch` and makes that lane slow, which is a cost regression and not a
- * correctness one — the gate still runs, and `npm run cost` is what says so.
+ * Timing is deliberately absent from this comment. The JSON budget is checked
+ * by CI; a number written here would be an unchecked second source of truth.
  */
 const OWN_LANE: Record<string, readonly string[]> = {
   // #333: measured on green PR #362. These two independent gates accounted
