@@ -208,6 +208,9 @@ events:
     frequency: uncommon
     weight: 100
     repeatable: true
+    # A return arrives through its `next`; the cooldown is the ration that
+    # keeps it from also being drawn as ladder pressure on its own.
+    cooldownYears: 60
     tags: [ladder, madness, wick]
     purposes: [test_magic_rule, change_relationship, plant_rumour]
     slots:
@@ -264,6 +267,9 @@ events:
     frequency: uncommon
     weight: 100
     repeatable: true
+    # A return arrives through its `next`; the cooldown is the ration that
+    # keeps it from also being drawn as ladder pressure on its own.
+    cooldownYears: 60
     tags: [ladder, madness, library, blood]
     purposes: [test_magic_rule, change_relationship, worldbuild_through_action]
     slots:

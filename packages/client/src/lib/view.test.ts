@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { bootstrap, runYears, viewOf } from '@ed/core';
+import { autoResolveAll, bootstrap, resolveChoice, resolveRecord, stepYear, testRng, viewOf } from '@ed/core';
+import type { SimCtx } from '@ed/core';
 
 const SRC = join(import.meta.dirname, '..');
 
@@ -61,10 +62,34 @@ const drawn = templates(SRC).map((p) => readFileSync(p, 'utf8')).join('\n');
  */
 const VIEW_SEEDS = [1043, 1044];
 
+/**
+ * PLAYED, NOT MERELY RUN (#341). `discrepancyId` sits only on an embellished
+ * page, and the chronicler that `runYears` plays embellishes about one run in
+ * three — so when #341's content re-rolled both seeds, neither reached it, and
+ * re-seeding would only have bought time until the next content change. This
+ * player answers each choice with its first available option through the
+ * player's own path, which is what raises a Record block, and writes every
+ * Record larger. The optional fields are then reached by construction rather
+ * than by the dice.
+ */
+function play(ctx: SimCtx, years: number): void {
+  const rng = testRng('view-fixture');
+  for (let y = 0; y < years; y++) {
+    stepYear(ctx, false);
+    for (let guard = 0; ctx.world.pendingDecisions.length && guard < 50; guard++) {
+      const d = ctx.world.pendingDecisions[0]!;
+      if (d.kind === 'record' && resolveRecord(ctx, d.id, 'embellish').ok) continue;
+      const first = d.kind === 'choice' ? d.choices.find((c) => c.available) : undefined;
+      if (first && resolveChoice(ctx, d.id, first.id, rng).ok) continue;
+      autoResolveAll(ctx, rng);
+    }
+  }
+}
+
 function agedViews(): Record<string, unknown>[] {
   return VIEW_SEEDS.map((seed) => {
     const ctx = bootstrap(loadContent(), seed, 1042);
-    runYears(ctx, 400);
+    play(ctx, 400);
     return viewOf(ctx) as unknown as Record<string, unknown>;
   });
 }

@@ -8806,3 +8806,57 @@ the mechanism work #332's body names (the pair and Ledger timing). Loosening
 §22's gates beyond the table above would stop them being the gates the brief
 describes. Nothing in this entry is shipped, and the reported rate stays at
 the baseline.
+
+### #341 step 2 (2026-09-29): the heavy repeaters, decided one by one
+
+Measured on 24 real Short Lines (seeds 901–924), played by the density
+player on `campaign: 'short'` through #272's `onChoice` stream, the same
+player and seeds as the issue's baseline (1,666 choices both times).
+
+**Before.** Three events averaged more than two fires a Short Line:
+`past_what_the_book_says` 3.67, `the_race_silted_through` 3.54 and
+`the_accounts_of_the_smaller_house` 2.04 (3.8 in the 13 runs it reached).
+`what_the_province_asks_to_see` sat just under, at 1.96.
+
+**Decisions, each written beside its YAML:**
+
+- **The two ladder bargains are recurrence.** `the_ladder.yaml`'s header
+  argues for asking a climbing man twice in a working life. So the rate
+  stays and the return is a different scene. An answered first asking carries
+  a `next` to a follow-up with the same man: `wick_asks_for_him_by_name`
+  (`[lasting+relationship | record+relationship]`) and `what_he_wrote_past_it`
+  (`[lasting+record | relationship]`). Neither asks in coin. The first scenes'
+  cooldown goes from 40 to 100. At 70, every first scene and every return
+  fired more than twice a Short Line, and each lane asked MORE often than
+  before (race 4.5 a run against 3.5, book 4.4 against 3.7).
+- **The cousin's accounts are supply.** The event had no cooldown and
+  re-fired until its arc started, which the density player's first-choice
+  answer never does. The cooldown is now 60 years, once a generation.
+- **The province is supply.** When the first two scenes spaced out, it took
+  their draws and rose to 2.17. Its cooldown goes from 80 to 110.
+
+**After**, same seeds and player:
+
+| | before | after |
+|---|---:|---:|
+| events above 2 fires a Short Line | 3 | **0** (the ladder's five sit at 1.67–1.92) |
+| choices, all 24 runs | 1,666 | 1,768 |
+| top category shape's share | 8.7% | **6.6%** |
+| within-run shape repeats | 43.4% | 41.9% |
+| money on one side of the top 10 shapes | 9 | 8 |
+| B's choices new by event, familiar by shape (12 pairs) | 26.7% | 27.8% |
+| `gate:replay` shape overlap, first 30 / whole run | 59% / 57% | 57% / 57% |
+
+The docket did not thin: choices rose. The ladder's Madness supply on the
+answering branches is about 63 a run against 67 before, so the Hierophant
+floor is not starved. The "new scene, same question" share did **not**
+fall. The returns are new events in run B whose shapes run A already asked,
+because both runs now meet them. That share is step 3's to move (money as
+the default axis), and nothing in this step claims it.
+
+Two fast tests went red on the re-roll and were fixed in the test, not the
+content. `succession.test.ts` pinned seed 1042 to more than three reigns in
+400 years; that seed now dies out after three, while 400-year extinction
+across seeds 2000–2039 is 17 of 40 against 18 before. `view.test.ts` relied
+on the chronicler embellishing, which it does about one run in three. It now
+plays the Record path itself, so `discrepancyId` is reached by construction.
