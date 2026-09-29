@@ -23,14 +23,20 @@
  * written for CI and wired into nothing for its whole life under a hand-kept
  * list. This is that argument one level up.
  *
- *   npm run land                     # fetch, rebase, install, the whole set,
- *                                    # push, then WAIT for CI
- *   npm run land -- --status         # is a landing running, or did one die?
+ *   npm run land                     # session preflight: fetch, rebase,
+ *                                    # install, run the whole CI set, STOP
+ *                                    # green at preflight-green; never push main
+ *   npm run land -- --status         # running / dead / last preflight-green
  *   npm run land -- --dry-run        # print the plan and do none of it
- *   npm run land -- --no-verdict     # push and do not wait to be judged
- *   npm run land -- --no-issue-check # land even though the branch names an
- *                                    # issue no commit closes
+ *   npm run land -- --no-issue-check # preflight even though the branch names
+ *                                    # an issue no commit closes
  *   npm run land -- --full           # the whole set even on a docs-only diff
+ *
+ * `--from-queue` is intentionally absent from the normal command list. It is the
+ * remote /land workflow's capability boundary: only that serialized job may
+ * cross from a green preflight to `git push …:main`. Its `--no-verdict`
+ * belongs there because remote-land.yml dispatches and records the post-push
+ * check itself.
  *
  * A DIFF OF ONLY MARKDOWN, ON A GREEN BASE, RUNS THE SHORT SET — typecheck,
  * validate and the fast lane, which is CI's short tier and holds every test
@@ -59,7 +65,8 @@
  *
  * It does make this command load-bearing in a way it was not: on a draft
  * branch, the steps below are the only place the slow suites and the gates
- * run before the push. `land.test.ts` is what keeps that honest — the step
+ * run before a session hands the verified head to the queue. `land.test.ts`
+ * is what keeps that honest — the step
  * set is still DERIVED from the workflow, and `ciScripts` cannot see an `if:`
  * at all, so a tier can never quietly subtract a job from what this runs.
  */
@@ -847,7 +854,7 @@ async function main() {
   }
 
   /**
-   * WHAT WAS TESTED MUST BE WHAT IS PUSHED.
+   * WHAT WAS TESTED MUST BE THE HEAD HANDED TO THE QUEUE.
    *
    * The tree is checked for cleanliness at the top and then the steps run for
    * half an hour, during which nothing stopped the agent editing files. The
