@@ -26,7 +26,7 @@ packages/
   editor/    Vue 3 + Vite authoring tool. Imports `core` directly.
   client/    Vue 3 + Vite game. Reads and writes the world through `GameSession`.
   shell/     Electron Windows host. Owns the window and the disk. Owns no rules.
-  mobile/    Capacitor Android host. Owns activity/device services. Owns no rules.
+  mobile/    Capacitor phone host (Android + iOS). Owns native/device services. Owns no rules.
 CLAUDE.md         Claude Code compatibility shim; imports this file.
 ARCHITECTURE.md   The map: where a thing lives, and how to add one.
 DesignConcepts/   The concept brief. The authority on game rules.
