@@ -759,6 +759,20 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
 
 
 describe('only the serialized queue can move main after verification', () => {
+  it('wires the hidden queue flag into the final boundary and records preflight-green', () => {
+    const source = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+    expect(source).toContain("const FROM_QUEUE = process.argv.includes('--from-queue')");
+    expect(source, 'main bypasses finishLanding, so the queue boundary is only test decoration')
+      .toMatch(/finishLanding\(\{\s*fromQueue: FROM_QUEUE,/);
+    expect(source, 'a session-green result is not persisted for --status')
+      .toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
+    expect(source, 'the main push exists outside the finishLanding callback')
+      .not.toMatch(/mark\('push'\);[\s\S]*?finishLanding\(/);
+  });
+
   it('reproduces the push race without making a session restart verification', () => {
     const root = mkdtempSync(join(tmpdir(), 'ed-land-race-'));
     const remote = join(root, 'remote.git');
