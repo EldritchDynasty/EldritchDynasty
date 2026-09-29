@@ -283,8 +283,9 @@ const DRY = process.argv.includes('--dry-run');
 const NO_VERDICT = process.argv.includes('--no-verdict');
 const NO_ISSUE_CHECK = process.argv.includes('--no-issue-check');
 const STATUS = process.argv.includes('--status');
-const FULL = process.argv.includes('--full');
+const FULL_PREFLIGHT = process.argv.includes('--full-preflight') || process.argv.includes('--full');
 const FROM_QUEUE = process.argv.includes('--from-queue');
+const PUSH_PREFLIGHT = process.argv.includes('--push-preflight');
 
 /**
  * THE LAST VERIFIED RESULT IS NOT THE LIVE LOCK.
@@ -294,7 +295,7 @@ const FROM_QUEUE = process.argv.includes('--from-queue');
  * process so `npm run land -- --status` can answer "verified, not landed"
  * without leaving a dead pid lock that the next landing mistakes for a crash.
  */
-export function finishLanding({ fromQueue, target, branch, push }) {
+export function finishLanding({ fromQueue, pushNow = false, target, branch, push }) {
   if (!fromQueue) {
     return {
       ok: true,
@@ -306,13 +307,22 @@ export function finishLanding({ fromQueue, target, branch, push }) {
     };
   }
 
+  if (!pushNow) {
+    return {
+      ok: true,
+      state: 'queue-preflight-green',
+      message:
+        `authoritative queue preflight green on ${target.slice(0, 7)} — mint the short-lived GitHub App token now, then push only this recorded SHA.`,
+    };
+  }
+
   if (!push()) {
     return {
       ok: false,
       state: 'push-rejected',
       message:
         'queue push rejected — the /land queue is the only writer allowed to move main. ' +
-        'Check the main ruleset bypass and the LAND_DEPLOY_KEY queue credential. ' +
+        'Check the main ruleset GitHub App bypass and the LAND_APP_CLIENT_ID/LAND_APP_PRIVATE_KEY credentials. ' +
         'Do not restart the verification loop; fix the queue/ruleset configuration.',
     };
   }
@@ -597,10 +607,14 @@ function status() {
   const seen = readLock();
   if (!seen) {
     const last = readLast();
-    if (last?.step === 'preflight-green') {
-      say(`last landing state: preflight-green on ${String(last.target ?? '').slice(0, 7)}.`);
+    if (last?.step === 'preflight-green' || last?.step === 'queue-preflight-green') {
+      say(`last landing state: ${last.step} on ${String(last.target ?? '').slice(0, 7)}.`);
       if (last.branch) say(`  branch ${last.branch} was verified but was NOT pushed to main.`);
-      say('  enqueue it with a PR plus /land (or /land --no-issue-check).');
+      if (last.step === 'queue-preflight-green') {
+        say('  only `--from-queue --push-preflight` may push this recorded verification.');
+      } else {
+        say('  enqueue it with a PR plus /land (or /land --no-issue-check).');
+      }
       return 0;
     }
     say('no landing is running, and none left a mark on this checkout.');
@@ -665,6 +679,56 @@ async function main() {
 
   const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
 
+  // A GitHub App installation token lives for about an hour, while the full
+  // queue preflight can run longer than that. The workflow therefore mints the
+  // token only AFTER the expensive checks and comes back through this narrow
+  // continuation. It can push only the exact branch/SHA/base tuple the queue
+  // recorded as green; it cannot turn a fresh, unchecked HEAD into a push.
+  if (PUSH_PREFLIGHT) {
+    if (!FROM_QUEUE) die('--push-preflight is queue-only and requires --from-queue.');
+
+    const verified = readLast();
+    if (verified?.step !== 'queue-preflight-green') {
+      die('no authoritative queue preflight is recorded; refusing a push-only continuation.');
+    }
+    if (verified.branch !== branch) {
+      die(`the recorded queue preflight belongs to ${verified.branch ?? 'an unknown branch'}, not ${branch}.`);
+    }
+
+    const target = git('rev-parse', 'HEAD');
+    if (verified.target !== target) {
+      die(
+        `HEAD is ${target.slice(0, 7)}, but the queue verified ${String(verified.target ?? '').slice(0, 7)}. ` +
+        'Refusing to push bytes the authoritative preflight did not check.',
+      );
+    }
+
+    say('\n$ git fetch origin main');
+    if (!run('git', ['fetch', 'origin', 'main'])) die('fetch failed before the queue push.');
+    const base = git('rev-parse', 'origin/main');
+    if (verified.base !== base) {
+      die(
+        `main moved from verified base ${String(verified.base ?? '').slice(0, 7)} to ${base.slice(0, 7)} before push. ` +
+        'The queue must rebase and verify this entry again; no unchecked fast-forward was attempted.',
+      );
+    }
+
+    const finished = finishLanding({
+      fromQueue: true,
+      pushNow: true,
+      target,
+      branch,
+      push: () => {
+        say(`\n$ git push origin ${target.slice(0, 7)}:main`);
+        return run('git', ['push', 'origin', `${target}:main`]);
+      },
+    });
+    if (!finished.ok) die(finished.message);
+    remember('pushed', { target, branch, base });
+    say(`\nqueue push complete — ${target.slice(0, 7)} is now the requested main head.`);
+    return;
+  }
+
   /**
    * A shallow clone answers ancestry questions WRONGLY rather than refusing, so
    * a rebase onto a graft boundary is not a rebase. tools/orient.mjs unshallows
@@ -678,12 +742,14 @@ async function main() {
     git('status', '--porcelain') && 'working tree is dirty. Commit or stash before landing.',
     branch === 'main' && 'already on main — land from the feature branch.',
     !NO_ISSUE_CHECK && issueLeftOpen(branch, ownCommitMessages(), claimedIssues(branch)),
+    PUSH_PREFLIGHT && !FROM_QUEUE && '--push-preflight requires --from-queue.',
   ].filter(Boolean);
 
-  say(`landing ${branch} → ${FROM_QUEUE ? 'main' : 'preflight'}`);
+  say(`landing ${branch} → ${FROM_QUEUE ? 'queue preflight' : 'preflight'}`);
+  const plannedSteps = FROM_QUEUE || FULL_PREFLIGHT ? STEPS : DOCS_ONLY_STEPS;
   say(
-    `  fetch · rebase · ${STEPS.map((s) => `npm run ${s}`).join(' · ')} · ` +
-    (FROM_QUEUE ? 'push' : 'preflight-green'),
+    `  fetch · rebase · ${plannedSteps.map((s) => `npm run ${s}`).join(' · ')} · ` +
+    (FROM_QUEUE ? 'queue-preflight-green' : 'preflight-green'),
   );
 
   // A dry run REPORTS the preconditions rather than stopping at the first one.
@@ -692,12 +758,10 @@ async function main() {
   if (DRY) {
     // Against the local `origin/main`, unfetched and unrebased — so a preview.
     // The real landing decides again on the rebased head.
-    if (!FULL) {
-      const plan = tryGit('rev-parse', 'origin/main').ok
-        ? landingPlan(git('rev-parse', 'origin/main'), 'HEAD')
-        : { short: false, reason: 'no local origin/main to compare against' };
-      say(`\n  would run the ${plan.short ? 'SHORT' : 'full'} set — ${plan.reason}`);
-    }
+    say(
+      `\n  would run the ${FROM_QUEUE || FULL_PREFLIGHT ? 'full' : 'SHORT'} set — ` +
+      (FROM_QUEUE ? 'the queue is authoritative' : FULL_PREFLIGHT ? '--full-preflight' : 'session default'),
+    );
     for (const b of blockers) say(`\n  would stop: ${b}`);
     say(`\n--dry-run: nothing was fetched, rebased, run or pushed.`);
     process.exit(blockers.length ? 1 : 0);
@@ -747,7 +811,8 @@ async function main() {
    * landed, which is the right answer and needs no guard to notice.
    */
   const target = git('rev-parse', 'HEAD');
-  mark('worktree', { target });
+  const base = git('rev-parse', 'origin/main');
+  mark('worktree', { target, base });
   say(`\n  landing ${target.slice(0, 7)} — commits made from here on are not in it.`);
 
   /**
@@ -808,12 +873,15 @@ async function main() {
   // Which set, decided HERE: after the rebase, against the commit being
   // pushed. `origin/main` is what CI will call `before`, so the landing and
   // the build classify the same diff against the same verdict.
-  const plan = FULL
-    ? { short: false, reason: '--full' }
-    : landingPlan(git('rev-parse', 'origin/main'), target);
-  say(`\n  ${plan.short ? 'SHORT set' : 'full set'} — ${plan.reason}.`);
-  if (plan.short) say(`  ${DOCS_ONLY_STEPS.map((s) => `npm run ${s}`).join(' · ')}; --full for everything.`);
-  const { alone, together } = landPhases(plan.short ? DOCS_ONLY_STEPS : STEPS);
+  const short = !FROM_QUEUE && !FULL_PREFLIGHT;
+  const reason = FROM_QUEUE
+    ? 'the serialized queue is the authoritative check'
+    : FULL_PREFLIGHT
+      ? '--full-preflight'
+      : 'session default; use --full-preflight for risky core/content/gate work';
+  say(`\n  ${short ? 'SHORT set' : 'full set'} — ${reason}.`);
+  if (short) say(`  ${DOCS_ONLY_STEPS.map((s) => `npm run ${s}`).join(' · ')}.`);
+  const { alone, together } = landPhases(short ? DOCS_ONLY_STEPS : STEPS);
 
   // Cheapest first, and one at a time. Twenty-three seconds that catch a
   // broken Vue template or a bad schema, before anything spends forty minutes.
@@ -877,51 +945,20 @@ async function main() {
   // check that keeps firing.
   const finished = finishLanding({
     fromQueue: FROM_QUEUE,
+    pushNow: false,
     target,
     branch,
-    push: () => {
-      mark('push');
-      say(`\n$ git push origin ${target.slice(0, 7)}:main`);
-      return run('git', ['push', 'origin', `${target}:main`]);
-    },
+    push: () => false,
   });
 
   if (!finished.ok) die(finished.message);
-  if (finished.state === 'preflight-green') {
-    remember('preflight-green', { target, branch });
-    say('\nverdict: preflight-green');
-    say(`  ${finished.message}`);
-    return;
-  }
-
-  // The step that separates "nothing reached main" from "a commit is on main
-  // and nobody heard the verdict" — the only two readings a corpse can have.
-  mark('verdict');
-
-  // A PUSH IS NOT THE END OF THE WORK.
-  //
-  // This used to print "verify the verdict actually arrived" and leave it
-  // there. A rule that is only asked for is the failure mode this repository
-  // has the longest record of — `lanes.test.ts` exists because one was asked
-  // for and ignored by seven suites for months. So the landing waits for the
-  // verdict itself, and its exit code is the verdict's.
-  //
-  // Waiting costs nothing that is at risk: the push has happened, nothing is
-  // holding a lock, and the alternative is a session that ends believing a
-  // commit was judged when it was not. `--no-verdict` is there for a human
-  // who would rather watch the Actions tab.
-  if (NO_VERDICT) {
-    say('\nlanded. --no-verdict: nobody is checking whether CI answered.');
-    return;
-  }
-  say('\n$ npm run verdict');
-  const answered = runNpm(['run', '--silent', 'verdict']);
-  if (!answered) {
-    die('the landing is on `main`, and CI has not returned a green verdict for it.\n' +
-        '      Read the lines above: a RED build is yours to fix, an ABSENT one is not\n' +
-        '      yours to fix and is still not a pass.');
-  }
-  say('\nlanded, and judged.');
+  const terminal = finished.state === 'queue-preflight-green'
+    ? 'queue-preflight-green'
+    : 'preflight-green';
+  remember(terminal, { target, branch, base });
+  say(`\nverdict: ${terminal}`);
+  say(`  ${finished.message}`);
+  return;
 }
 
 // Importable for the test that compares STEPS against the workflow, runnable as
