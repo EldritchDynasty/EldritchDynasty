@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { checkGateDuration } from '../../../tools/gate-duration.mjs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  checkGateDuration,
+  readGateDurations,
+} from '../../../tools/gate-duration.mjs';
+
+const REPO = join(import.meta.dirname, '../../..');
 
 const config = {
   measured: '2026-09-28',
@@ -28,5 +35,15 @@ describe('gate duration guard', () => {
 
   it('rejects invalid elapsed time instead of treating it as fast', () => {
     expect(() => checkGateDuration('batch', Number.NaN, config)).toThrow(/invalid elapsed/);
+  });
+
+  it('covers every gate lane CI runs', () => {
+    const workflow = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
+    const matrix = /^\s*lane:\s*\[([^\]]+)\]/m.exec(workflow);
+    expect(matrix, 'check.yml no longer declares a gate lane matrix this rule can read').toBeTruthy();
+
+    const ciLanes = matrix![1]!.split(',').map((lane) => lane.trim()).sort();
+    const recorded = Object.keys(readGateDurations().lanes).sort();
+    expect(recorded).toEqual(ciLanes);
   });
 });
