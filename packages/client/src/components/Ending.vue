@@ -210,6 +210,10 @@ async function saveAfterimage(): Promise<void> {
       <h3 class="label">The reckoning</h3>
       <dl>
         <div><dt>The house</dt><dd>{{ view.houseName }}</dd></div>
+        <!-- The run's number, for replaying it or reporting it (#59). The
+             running game keeps it behind a control (#356); here it is part of
+             the record of what was played. -->
+        <div><dt>The line</dt><dd>seed #{{ view.seed }}</dd></div>
         <div v-if="epilogue.founding">
           <dt>Asked for, in {{ view.campaign.startYear }}</dt><dd>{{ epilogue.founding.heirloomName }}</dd>
         </div>

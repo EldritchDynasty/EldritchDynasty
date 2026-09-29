@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
 import { needleAt } from '../lib/assize';
@@ -25,6 +25,8 @@ const props = defineProps<{
  * the family tree: a thumb never hovers, so whatever a tooltip would have said
  * has to be readable without one.
  */
+const showSeed = ref(false);
+
 const saveLabel = computed(() => {
   switch (props.saveStatus) {
     case 'saving': return 'saving…';
@@ -157,12 +159,6 @@ const muster = computed(() => {
     <div class="house">
       <div class="name">
         {{ view.houseName }}
-        <!-- THE RUN'S NAME (issue #59). Determinism is per-world and carefully
-             kept, so the seed is what identifies this Long Line — and it
-             left the screen at `Begin` and never came back, which meant a
-             player could not say which run they had played, replay it, or
-             report a bug against it. -->
-        <span class="dim seed">seed #{{ view.seed }}</span>
       </div>
       <div class="dim small">
         {{ view.treasury }} crowns<span
@@ -269,6 +265,23 @@ const muster = computed(() => {
         {{ view.guardian.name }} watches, and has since {{ view.guardian.since }}.
       </div>
     </div>
+
+    <!-- THE RUN'S NUMBER, WHEN ASKED FOR (issues #59, #356). The seed is what
+         identifies a run: without it a player cannot say which line they
+         played, replay it, or report a bug against it (#59). It is not a fact
+         about the house, though, and a playtester read it as clutter (#356).
+         So it follows the front door's rule — nobody sees the word seed unless
+         they go looking — behind one quiet control, and the ending screen
+         prints it for good. A click, not a hover: #275 forbids hover-only
+         facts. -->
+    <div class="small run-number">
+      <button
+        class="quiet small"
+        :aria-expanded="showSeed"
+        @click="showSeed = !showSeed"
+      >run number</button>
+      <span v-if="showSeed" class="dim seed">seed #{{ view.seed }}</span>
+    </div>
   </header>
 </template>
 
@@ -293,6 +306,7 @@ const muster = computed(() => {
 .delta { color: var(--ink); }
 /* Small enough to ignore across a Long Line, and there when it is wanted. */
 .seed { font-size: var(--t-label); letter-spacing: .04em; }
+.run-number { margin-top: 10px; display: flex; gap: 8px; align-items: baseline; }
 /* Its own line under "generation N" rather than run into it — a fact about
    the host, not about the house. */
 .save { display: block; margin-top: 2px; }
