@@ -1,7 +1,7 @@
 # ELDRITCH DYNASTY — Concept Brief
 
-**Version:** 0.2.2 (bearing)
-**Date:** August 2026
+**Version:** 0.2.3 (the founder's name)
+**Date:** September 2026
 **Genre:** Text-based generational strategy / narrative simulation
 **Platform:** PC (Windows, macOS, Linux) via Steam; browser demo
 **Stack:** Vue 3 + TypeScript, Electron
@@ -15,6 +15,8 @@
 > §20 also changes: **Ages now begin and end by chance**, with per-Age duration bands rather than one global 40–150 span, and Ages may own exclusive events.
 >
 > **0.2.2 — one addition, and it is a theme becoming a system.** §29 is new. The story manual has always named **Pride** the line's fatal flaw, alongside the blood and the signing; unlike every other component on that list it was never given a mechanism, and a theme no system reads is decoration. §29 makes it **bearing** — a reading rather than a resource, computed off seven acts the player already performs, never named in a player-facing string, and billed two generations late. Nothing else moves: no section is renumbered, no existing rule changes, and §27 gains two entries.
+>
+> **0.2.3 — the founder has a name, and it is yours.** §3 used to withhold the founder's name and have the player name only the house. It now asks the player for **their own name** and gives it to the founder, who is the Narrator and, after his death, the guardian — the player has been him the whole time (§4), and now the page says so. The prologue also gains **the Examination**: a few hypothetical questions put to the man before he may sign, each answer a thing given and a thing owed, and none of them right. §3 and §4 move, §26 gains row 14, §27 gains one entry. The design and the build are issue #343.
 
 ---
 
@@ -76,9 +78,10 @@ Everything the world says about the world: tavern songs, rival houses' chronicle
 
 ## 3. The Prologue — A Debt of Three Parts
 
-Once, at the head of the run. Non-interactive except for two choices. Roughly four minutes.
+Once, at the head of the run. Non-interactive except for the founder's name, the Examination, and two choices. Roughly seven minutes.
 
-- Year 1042. The founder is **never named**. He is "the man," "your ancestor." The player names the *house*, not the man — names are load-bearing in this world and his is withheld deliberately.
+- Year 1042. **The player names the founder, with their own name**, and names the house. Names are load-bearing in this world, and that is the reason to ask: the man who signed is the Narrator, and after his death the guardian who makes the house's decisions (§4), so the name the player types is the name the creditor has been waiting five hundred years to say. The prose may still call him "the man" and "your ancestor" in the frame's register; what changed is that he has a name to be called by. The name is optional, and a player who leaves it blank gets the chronicler's: **Daveed Gearithy**, which is also who the founder is in every headless run.
+- **The Examination.** Before the other party lets him hold the pen it asks him a handful of hypothetical questions — a ford in flood, a winter with bread for two and three at the door — and he answers without understanding that he is being weighed. Each answer is built like the triad: **a thing given and a thing owed**. What they move is the founding line's heritable attributes, the treasury, standing, and the loyalty of the household's first retainers. **No answer is right.** Every gain is paid for, in another attribute, in another good, or as a small cut to everything, and a batch gate — not a pricing table — is what holds that true. Nothing asked here touches Eldritch Power or Madness: the thing in the blood cannot be asked for (the triad's second beat), and a questionnaire that could buy it would make it schedulable (§27, numinous drift).
 - The counterparty appears **on-screen, once, in the entire game**. Not shown; described by what it displaces. Iron rusting on the table between one sentence and the next. A dog that will not come into the room. The smell of wet ash indoors, in summer.
 - The prologue is structured as an announced triad — **three things given, three things owed** — and delivers three, ascending in weight. The third is the one that hurts.
 - The player's two choices set the founding heirloom and the family's first grudge. Both echo for five hundred years.
@@ -91,6 +94,8 @@ Once, at the head of the run. Non-interactive except for two choices. Roughly fo
 ## 4. Player Fantasy
 
 You are not a character. You are the **will of a bloodline** — the thing that persists while individuals are born, ruined, and buried. You never fight, never explore, never speak a line of dialogue.
+
+You begin, once, as a man. The founder carries your name (§3); when death comes for him it is redirected, and he becomes the guardian spirit that makes the house's decisions from then on. That is the will of the bloodline, and it has had your name since 1042.
 
 You do three things: you decide **who marries whom**, you decide **who is spent**, and you decide **what gets written down**.
 
@@ -681,6 +686,7 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 | 11 | Endings recast as **variations on the prologue** | Closes the ring; makes the last line land |
 | 12 | Event editor enforces **three declared purposes** | Rothfuss's revision method moved upstream into authoring |
 | 13 | Eldritch Power explicitly **may never become reliable** | Protects the numinous half of the magic design from optimisation |
+| 14 | *(0.2.3)* The founder carries the **player's name**, and the prologue gains the **Examination** | The player is the founder and then the guardian; the page should know it. The Examination gives the first hour an investment the next five hundred years pay off |
 
 ---
 
@@ -696,6 +702,7 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 - [ ] **Record mechanic as pure stat.** If players resolve Record choices without reading them, the choices are not costing enough.
 - [ ] **Unwritten ending.** The counterparty's true nature must exist in the bible before vertical slice.
 - [ ] **Pride as a penalty.** Bin runs by bearing (§29). High-bearing runs must reach *higher* rungs on average **and** fail harder. If they only fail harder, bearing is a difficulty setting and players will play around it instead of feeling it.
+- [ ] **The Examination has a right answer.** If one answer to any question wins more often, players will look it up and the questions become a form. The balance gate (#343) runs paired batches per answer; a dominant *or* dominated answer is a redesign.
 - [ ] **The named flaw.** Any player-facing string containing *pride*, *arrogance*, *hubris* or *vanity* is a design failure and not a wording one. It is a lint rule, not a review note.
 
 ---
