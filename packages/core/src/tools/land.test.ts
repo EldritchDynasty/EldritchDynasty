@@ -67,6 +67,12 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   issueLeftOpen: (branch: string, commitLog: string, held?: string[]) => string | null;
   deathReading: (dead: { pid: number; started: string; step?: string; target?: string }) => string[];
   ourShed: (tree: unknown, tmp?: string) => boolean;
+  finishLanding: (args: {
+    fromQueue: boolean;
+    target: string;
+    branch: string;
+    push: () => boolean;
+  }) => { ok: boolean; state: 'preflight-green' | 'pushed' | 'push-rejected'; message: string };
 };
 
 const workflow = readFileSync(WORKFLOW, 'utf8');
@@ -522,6 +528,33 @@ describe('a killed landing says what it was and what it left on main', () => {
     }
   });
 
+  it('reports preflight-green as verified but not landed', () => {
+    const gitDir = git(REPO, 'rev-parse', '--git-dir');
+    const lock = join(gitDir, 'land.lock');
+    const last = join(gitDir, 'land.last.json');
+    const previousLock = existsSync(lock) ? readFileSync(lock, 'utf8') : null;
+    const previousLast = existsSync(last) ? readFileSync(last, 'utf8') : null;
+    if (existsSync(lock)) unlinkSync(lock);
+    writeFileSync(last, JSON.stringify({
+      step: 'preflight-green',
+      target: dead.target,
+      branch: 'chatgpt/352-queue-only-landing',
+    }));
+    try {
+      const r = spawnSync('node', [TOOL, '--status'], { encoding: 'utf8', cwd: REPO });
+      const out = `${r.stdout}${r.stderr}`;
+      expect(r.status).toBe(0);
+      expect(out).toContain('preflight-green');
+      expect(out).toContain('NOT pushed to main');
+      expect(out).toContain('/land');
+    } finally {
+      if (previousLock !== null) writeFileSync(lock, previousLock);
+      else if (existsSync(lock)) unlinkSync(lock);
+      if (previousLast !== null) writeFileSync(last, previousLast);
+      else if (existsSync(last)) unlinkSync(last);
+    }
+  });
+
   /**
    * THE SWEEP READS ITS PATH OUT OF A FILE, SO IT GETS A GUARD.
    *
@@ -720,6 +753,121 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
     } finally {
       if (previous !== null) writeFileSync(lock, previous);
       else if (existsSync(lock)) unlinkSync(lock);
+    }
+  });
+});
+
+
+describe('only the serialized queue can move main after verification', () => {
+  it('reproduces the push race without making a session restart verification', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-land-race-'));
+    const remote = join(root, 'remote.git');
+    const session = join(root, 'session');
+    const outsider = join(root, 'outsider');
+    const runGit = (cwd: string, ...args: string[]) =>
+      execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+    const commit = (cwd: string, name: string) => {
+      runGit(cwd, 'config', 'user.name', name);
+      runGit(cwd, 'config', 'user.email', `${name}@example.test`);
+    };
+    const push = (cwd: string, target: string) =>
+      spawnSync('git', ['push', 'origin', `${target}:main`], {
+        cwd,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).status === 0;
+
+    try {
+      execFileSync('git', ['init', '--bare', remote], { cwd: root, stdio: 'ignore' });
+      execFileSync('git', ['clone', remote, session], { cwd: root, stdio: 'ignore' });
+      commit(session, 'session');
+      writeFileSync(join(session, 'base.txt'), 'base\n');
+      runGit(session, 'add', 'base.txt');
+      runGit(session, 'commit', '-m', 'base');
+      runGit(session, 'branch', '-M', 'main');
+      runGit(session, 'push', '-u', 'origin', 'main');
+      runGit(remote, 'symbolic-ref', 'HEAD', 'refs/heads/main');
+
+      execFileSync('git', ['clone', remote, outsider], { cwd: root, stdio: 'ignore' });
+      commit(outsider, 'outside');
+
+      // Session mode: verification captured this target, then main moved in a
+      // disjoint file. The old landing would attempt a doomed push here.
+      runGit(session, 'checkout', '-b', 'feature');
+      writeFileSync(join(session, 'feature.txt'), 'verified feature\n');
+      runGit(session, 'add', 'feature.txt');
+      runGit(session, 'commit', '-m', 'feature');
+      const preflightTarget = runGit(session, 'rev-parse', 'HEAD');
+
+      writeFileSync(join(outsider, 'outside-1.txt'), 'outside one\n');
+      runGit(outsider, 'add', 'outside-1.txt');
+      runGit(outsider, 'commit', '-m', 'outside one');
+      runGit(outsider, 'push', 'origin', 'main');
+      const outsideOne = runGit(outsider, 'rev-parse', 'HEAD');
+
+      let attemptedPushes = 0;
+      const preflight = land.finishLanding({
+        fromQueue: false,
+        target: preflightTarget,
+        branch: 'feature',
+        push: () => {
+          attemptedPushes += 1;
+          return push(session, preflightTarget);
+        },
+      });
+      expect(preflight.ok).toBe(true);
+      expect(preflight.state).toBe('preflight-green');
+      expect(preflight.message).toContain('open a PR');
+      expect(preflight.message).toContain('/land');
+      expect(attemptedPushes, 'session mode still tried to move main').toBe(0);
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideOne);
+
+      // Queue mode, with no other writer, advances main.
+      runGit(session, 'fetch', 'origin', 'main');
+      runGit(session, 'checkout', '-B', 'queue-ok', 'origin/main');
+      writeFileSync(join(session, 'queue-ok.txt'), 'queue owns the push\n');
+      runGit(session, 'add', 'queue-ok.txt');
+      runGit(session, 'commit', '-m', 'queue ok');
+      const queueTarget = runGit(session, 'rev-parse', 'HEAD');
+      const queued = land.finishLanding({
+        fromQueue: true,
+        target: queueTarget,
+        branch: 'queue-ok',
+        push: () => push(session, queueTarget),
+      });
+      expect(queued).toMatchObject({ ok: true, state: 'pushed' });
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(queueTarget);
+
+      // If an outside writer somehow exists despite #351, queue mode diagnoses
+      // the configuration fault. It never tells a human to repeat the checks.
+      runGit(session, 'fetch', 'origin', 'main');
+      runGit(session, 'checkout', '-B', 'queue-race', 'origin/main');
+      writeFileSync(join(session, 'queue-race.txt'), 'already verified\n');
+      runGit(session, 'add', 'queue-race.txt');
+      runGit(session, 'commit', '-m', 'queue race target');
+      const racedTarget = runGit(session, 'rev-parse', 'HEAD');
+
+      runGit(outsider, 'fetch', 'origin', 'main');
+      runGit(outsider, 'reset', '--hard', 'origin/main');
+      writeFileSync(join(outsider, 'outside-2.txt'), 'outside two\n');
+      runGit(outsider, 'add', 'outside-2.txt');
+      runGit(outsider, 'commit', '-m', 'outside two');
+      runGit(outsider, 'push', 'origin', 'main');
+      const outsideTwo = runGit(outsider, 'rev-parse', 'HEAD');
+
+      const rejected = land.finishLanding({
+        fromQueue: true,
+        target: racedTarget,
+        branch: 'queue-race',
+        push: () => push(session, racedTarget),
+      });
+      expect(rejected).toMatchObject({ ok: false, state: 'push-rejected' });
+      expect(rejected.message).toContain('main ruleset');
+      expect(rejected.message).toContain('LAND_DEPLOY_KEY');
+      expect(rejected.message).not.toContain('Run this again');
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideTwo);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });
@@ -1070,9 +1218,19 @@ describe('the connector-only remote landing', () => {
     expect(remote).toContain("&& command === '/land --no-issue-check'");
     expect(remote).toContain("? '--no-issue-check'");
     expect(remote).toContain('ISSUE_CHECK_ARG: ${{ steps.pr.outputs.issue_check_arg }}');
-    expect(remote).toContain('run: npm run land -- --no-verdict $ISSUE_CHECK_ARG');
+    expect(remote).toContain('run: npm run land -- --from-queue --no-verdict $ISSUE_CHECK_ARG');
     expect(remote, 'remote landing must not substitute the incomplete local check').not.toContain('run: npm run check');
     expect(remote, 'the workflow must not bypass land.mjs with its own direct main push').not.toMatch(/run:\s*git push[^\n]*:main/);
+  });
+
+  it('uses the deploy key for the only main-pushing path', () => {
+    expect(remote).toContain('LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}');
+    expect(remote).toContain('persist-credentials: false');
+    expect(remote).not.toContain('persist-credentials: true');
+    expect(remote).toContain('git config core.sshCommand');
+    expect(remote).toContain('git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"');
+    expect(remote).toContain('LAND_DEPLOY_KEY is unavailable');
+    expect(remote).toContain('--from-queue');
   });
 
   it('budgets enough job time for landing plus the verdict wait', () => {
