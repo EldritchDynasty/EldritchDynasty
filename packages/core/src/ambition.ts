@@ -220,7 +220,8 @@ function recordRelevance(
   }
 
   // #327 names no structural Record signal for blood breadth or cadet halls.
-  // Keep those pages quiet rather than infer importance from translated prose.
+  // Keep those pages quiet rather than infer importance from translated prose;
+  // irrelevance is represented by silence, not by a generic ambition warning.
   return undefined;
 }
 
