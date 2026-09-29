@@ -164,25 +164,54 @@ const muster = computed(() => {
              report a bug against it. -->
         <span class="dim seed">seed #{{ view.seed }}</span>
       </div>
-      <div class="dim small">
-        {{ view.treasury }} crowns<span
-          v-if="moved && moved.treasury !== 0"
-          class="delta"
-        > ({{ signed(moved.treasury) }})</span> ·
-        <span :class="{ delta: moved?.respect }">{{ view.respect }}</span><span
-          v-if="moved?.respect"
-          class="delta"
-        > (was {{ moved.respect.from }})</span> ·
-        discontent {{ view.discontent }}<span
-          v-if="moved && moved.discontent !== 0"
-          class="delta"
-        > ({{ signed(moved.discontent) }})</span> ·
-        <span :class="{ delta: moved && moved.clauses > 0 }">
-          {{ view.clausesRecovered }}/{{ view.clausesTotal }} clauses recovered</span><span
-            v-if="moved && moved.clauses > 0"
-            class="delta"
-          > ({{ signed(moved.clauses) }})</span>
-      </div>
+      <dl class="house-ledger small">
+        <div>
+          <dt>Treasury</dt>
+          <dd>
+            {{ view.treasury }} crowns<span
+              v-if="moved && moved.treasury !== 0"
+              class="delta"
+            > ({{ signed(moved.treasury) }})</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Standing</dt>
+          <dd>
+            <span :class="{ delta: moved?.respect }">{{ view.respect }}</span><span
+              v-if="moved?.respect"
+              class="delta"
+            > (was {{ moved.respect.from }})</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Discontent</dt>
+          <dd>
+            {{ view.discontent }}<span
+              v-if="moved && moved.discontent !== 0"
+              class="delta"
+            > ({{ signed(moved.discontent) }})</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Ledger</dt>
+          <dd>
+            <span :class="{ delta: moved && moved.clauses > 0 }">
+              {{ view.clausesRecovered }}/{{ view.clausesTotal }} clauses recovered</span><span
+                v-if="moved && moved.clauses > 0"
+                class="delta"
+              > ({{ signed(moved.clauses) }})</span>
+          </dd>
+        </div>
+      </dl>
+      <details class="house-key small">
+        <summary>What these readings mean</summary>
+        <dl>
+          <div><dt>Treasury</dt><dd>crowns the house can spend.</dd></div>
+          <div><dt>Standing</dt><dd>the regard the wider world gives the house.</dd></div>
+          <div><dt>Discontent</dt><dd>how much strain is building inside the house and its holdings.</dd></div>
+          <div><dt>Ledger</dt><dd>how much of the old bargain the family has recovered.</dd></div>
+        </dl>
+      </details>
     </div>
 
     <!-- THE LADDER, AND WHAT IS IN THE WAY OF THE NEXT RUNG (concept §22,
@@ -229,7 +258,9 @@ const muster = computed(() => {
            1400 and buried him in 1431 read ever after like a house that never
            managed it. Shown only when it is not the current rung: when they
            agree the line above has already said it. -->
-      <div v-if="reachedHigher" class="soft small">{{ reachedHigher }}</div>
+      <div v-if="reachedHigher" class="soft small">
+        Highest reached · {{ reachedHigher }}
+      </div>
     </div>
     <div v-if="ages.length" class="age">
       <div v-for="age in ages" :key="age.age" class="name">
@@ -258,6 +289,9 @@ const muster = computed(() => {
       <!-- The magnitude the sentence throws away. Left is the world steadying
            a house it can see is failing; right is the world charging one it can
            see is ahead — the same order as the number (invariant 13). -->
+      <div class="soft small assize-explainer">
+        The Assize is how the wider world answers a house that has fallen behind or pulled too far ahead.
+      </div>
       <div class="dim small gauge-reading">{{ reading }}</div>
       <div class="gauge" aria-hidden="true">
         <span class="tick" />
@@ -281,6 +315,35 @@ const muster = computed(() => {
 .year strong { font-size: var(--t-year); font-weight: 500; display: block; line-height: 1.1; }
 .year { min-width: 90px; }
 .house .name, .rung .name { font-size: var(--t-body); }
+.house-ledger {
+  margin: 3px 0 0;
+}
+.house-ledger > div,
+.house-key dl > div {
+  display: grid;
+  grid-template-columns: 8ch minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+.house-ledger dt,
+.house-key dt {
+  color: var(--ink-faint);
+}
+.house-ledger dd,
+.house-key dd {
+  margin: 0;
+}
+.house-key {
+  margin-top: 3px;
+  color: var(--ink-soft);
+}
+.house-key summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.house-key dl {
+  margin: 4px 0 0;
+}
 .rung .name { color: var(--rubric); }
 .next-rung { margin-top: 2px; }
 .ladder-blocker { max-width: 48ch; margin-top: 2px; }
@@ -301,6 +364,7 @@ const muster = computed(() => {
 /* A RULED LINE, NOT A PROGRESS BAR. It is drawn the way a scale is drawn in
    the margin of a page: a hairline, a tick at the middle for the world not
    thinking about you, and one pen stroke for where the house actually sits. */
+.assize-explainer { margin-top: 3px; max-width: 36ch; margin-left: auto; }
 .gauge-reading { margin-top: 3px; }
 .gauge {
   position: relative; margin: 3px 0 0 auto; width: 108px; height: 9px;
@@ -325,6 +389,7 @@ const muster = computed(() => {
   .year { min-width: 0; display: flex; align-items: baseline; gap: 8px; }
   .house .name, .rung .name, .age .name { font-size: var(--t-card); }
   .world { margin-left: 0; text-align: left; max-width: none; }
+  .assize-explainer { margin-left: 0; }
   .gauge { margin-left: 0; }
 }
 </style>
