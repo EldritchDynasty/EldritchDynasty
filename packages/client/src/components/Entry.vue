@@ -102,7 +102,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          cast ids when the page was made; Chronicle.vue resolves only people
          still in the living halls. The words of the page remain prose, while
          this quiet ledger line is a route back to the person it was about. -->
-    <div v-if="people?.length && !read" class="people small">
+    <div v-if="entry.text !== null && people?.length && !read" class="people small">
       <span class="dim">with</span>
       <button
         v-for="person in people"
