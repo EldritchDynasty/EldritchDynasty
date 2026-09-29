@@ -39,4 +39,26 @@ jobs:
           npm run digest -- 8 400
 
       - name: Founding bias calibration
-        run: npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/measure-344.ts
+        run: npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/measure-344.ts calibration
+
+      - name: Re-pinned fixture candidates
+        run: npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/measure-344.ts fixtures
+
+  endings:
+    if: github.head_ref == 'chatgpt/344-founding-inheritance'
+    strategy:
+      fail-fast: false
+      matrix:
+        bias: [0.10, 0.20, 0.25, 0.30, 0.35]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Endings gate at founder bias ${{ matrix.bias }}
+        run: npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/measure-344.ts endings ${{ matrix.bias }}
