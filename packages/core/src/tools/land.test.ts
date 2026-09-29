@@ -69,10 +69,19 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   ourShed: (tree: unknown, tmp?: string) => boolean;
   finishLanding: (args: {
     fromQueue: boolean;
+    pushNow?: boolean;
     target: string;
     branch: string;
     push: () => boolean;
-  }) => { ok: boolean; state: 'preflight-green' | 'pushed' | 'push-rejected'; message: string };
+  }) => {
+    ok: boolean;
+    state: 'preflight-green' | 'queue-preflight-green' | 'pushed' | 'push-rejected';
+    message: string;
+  };
+  queuePushGuard: (
+    verified: { step?: string; branch?: string; target?: string; base?: string } | null,
+    current: { branch: string; target: string; base: string },
+  ) => string | null;
 };
 
 const workflow = readFileSync(WORKFLOW, 'utf8');
@@ -759,20 +768,49 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
 
 
 describe('only the serialized queue can move main after verification', () => {
-  it('wires the hidden queue flag into the final boundary and records preflight-green', () => {
+  it('splits the full queue preflight from the short-lived credential push', () => {
     const source = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
 
     expect(source).toContain("const FROM_QUEUE = process.argv.includes('--from-queue')");
-    expect(source, 'main bypasses finishLanding, so the queue boundary is only test decoration')
-      .toMatch(/finishLanding\(\{\s*fromQueue: FROM_QUEUE,/);
-    expect(source, 'a session-green result is not persisted for --status')
-      .toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
-    expect(source, 'the main push exists outside the finishLanding callback')
-      .not.toMatch(/mark\('push'\);[\s\S]*?finishLanding\(/);
+    expect(source).toContain("const PUSH_PREFLIGHT = process.argv.includes('--push-preflight')");
+    expect(source, 'the expensive queue pass must stop before a write credential is useful')
+      .toMatch(/finishLanding\(\{\s*fromQueue: FROM_QUEUE,\s*pushNow: false,/);
+    expect(source, 'the exact queue verification tuple is not persisted for the push continuation')
+      .toContain("remember(terminal, { target, branch, base })");
+    expect(source, 'the push continuation is not guarded by the recorded tuple')
+      .toContain('queuePushGuard(verified, { branch, target, base })');
+    expect(source, 'a queue push can occur without the explicit second capability flag')
+      .toMatch(/if \(PUSH_PREFLIGHT\)[\s\S]*?pushNow: true/);
   });
 
+  it('allows a push continuation only for the exact recorded queue tuple', () => {
+    const verified = {
+      step: 'queue-preflight-green',
+      branch: 'feature',
+      target: 'a'.repeat(40),
+      base: 'b'.repeat(40),
+    };
+    expect(land.queuePushGuard(verified, {
+      branch: verified.branch,
+      target: verified.target,
+      base: verified.base,
+    })).toBeNull();
+
+    expect(land.queuePushGuard({ ...verified, branch: 'other' }, {
+      branch: verified.branch, target: verified.target, base: verified.base,
+    })).toContain('belongs to');
+    expect(land.queuePushGuard({ ...verified, target: 'c'.repeat(40) }, {
+      branch: verified.branch, target: verified.target, base: verified.base,
+    })).toContain('verified');
+    expect(land.queuePushGuard({ ...verified, base: 'd'.repeat(40) }, {
+      branch: verified.branch, target: verified.target, base: verified.base,
+    })).toContain('main moved');
+    expect(land.queuePushGuard(null, {
+      branch: verified.branch, target: verified.target, base: verified.base,
+    })).toContain('no authoritative queue preflight');
+  });
   it('reproduces the push race without making a session restart verification', () => {
     const root = mkdtempSync(join(tmpdir(), 'ed-land-race-'));
     const remote = join(root, 'remote.git');
