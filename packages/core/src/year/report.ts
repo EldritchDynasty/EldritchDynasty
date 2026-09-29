@@ -4,6 +4,7 @@ import type { ResolvedEvent } from '../events/effects.js';
 import type { AssizeReport } from '../assize.js';
 import type { Bearing } from '../bearing.js';
 import type { HouseAscension } from '../ascension.js';
+import type { LandRiskResult } from '../land.js';
 
 /** What a year did. The only thing `stepYear` returns, and every phase writes to it. */
 export interface YearReport {
@@ -55,6 +56,13 @@ export interface YearReport {
   bearing?: Bearing;
   /** Where the house stands on the ladder (`ascension.ts`, concept §22). */
   ascension?: HouseAscension;
+  /**
+   * What the ground did to the house this year (`tickLandRisks`, issue #100):
+   * the village harvest and every holding a risk struck. Set on every year the
+   * `land` phase ran. The chronicle carries the same losses as prose; this is
+   * the copy a tool can count without reading English (issue #276).
+   */
+  landRisks?: LandRiskResult;
 }
 
 export function emptyReport(year: number): YearReport {

@@ -526,7 +526,11 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   let forgedRung: ReturnType<typeof forgeableRung>;
   if (option === 'embellish') {
     const d = block.options.embellish.discrepancy;
-    noteBearing(ctx, 'wrote_it_larger', `the claim recorded as ${d.id}`, entryId);
+    // The echo quotes this page by its own title. It used to quote the
+    // Discrepancy's content id, so the book printed `black_stair_account`
+    // to the player a generation later (issue #326).
+    const title = w.chronicle.find((c) => c.id === entryId)?.title;
+    noteBearing(ctx, 'wrote_it_larger', title ? `the page headed "${title}"` : `the page of ${w.year}`, entryId);
     w.discrepancies.set(d.id, { severity: d.severity, provableBy: d.provableBy, state: 'open' });
     discrepancyId = d.id;
     forgedRung = forgeableRung(ctx);

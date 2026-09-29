@@ -1,19 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
 const props = defineProps<{ view: SessionView; actions: GameActions }>();
 const choosing = ref(false);
 const selected = ref(props.view.ambition?.id ?? props.view.ambitionOptions[0]?.id);
-
-const immediate = computed(() => {
-  const ambition = props.view.ambition;
-  const decision = props.view.docket[0];
-  if (!ambition || !decision) return undefined;
-  const surface = decision.kind === 'match' ? 'match' : decision.kind === 'record' ? 'record' : undefined;
-  return surface ? ambition.relevance.find((r) => r.surface === surface) : undefined;
-});
 
 function apply(): void {
   if (!selected.value) return;
@@ -39,9 +31,6 @@ function clear(): void {
       <p class="small ambition-progress">{{ view.ambition.progress.label }}</p>
       <p class="dim small">{{ view.ambition.status }}</p>
       <p class="small next"><span class="rubric">Next:</span> {{ view.ambition.next }}</p>
-      <p v-if="immediate" class="small relevance">
-        <span class="rubric">This decision:</span> {{ immediate.reason }}
-      </p>
     </template>
 
     <template v-else>
@@ -74,8 +63,7 @@ function clear(): void {
   margin: 10px 0 3px; padding-top: 8px; border-top: 1px solid var(--rule);
   font-variant-numeric: tabular-nums;
 }
-.next, .relevance { margin-bottom: 0; }
-.relevance { padding-top: 7px; border-top: 1px solid var(--rule); }
+.next { margin-bottom: 0; }
 .rubric { color: var(--rubric); }
 label { display: grid; gap: 6px; }
 select { width: 100%; }

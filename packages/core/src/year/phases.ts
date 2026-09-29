@@ -359,10 +359,10 @@ export const YEAR_PHASES: readonly Phase[] = [
       + 'The market opens and expires here, and a term of improvement completes here, on this '
       + 'phase\'s own reserved stream (issue #94, Phase B) — tenant risk and loss (issue #91, '
       + 'Phase D on) land inside it too, rather than reshuffling the table around them.',
-    run({ ctx, rng }) {
+    run({ ctx, rng, report }) {
       tickLandMarket(ctx, rng);
       tickLandImprovements(ctx);
-      tickLandRisks(ctx, rng);
+      report.landRisks = tickLandRisks(ctx, rng);
       // Last in the phase: the illuminated deed reads the acreage AFTER this
       // year's risks have settled, so a holding lost to one is not counted.
       tickPlatIllumination(ctx);

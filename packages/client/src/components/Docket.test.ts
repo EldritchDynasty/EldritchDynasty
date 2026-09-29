@@ -251,6 +251,30 @@ describe('the docket draws what it is handed', () => {
     w.unmount();
   });
 
+  it('draws a core ambition reading only when this decision is relevant', () => {
+    const relevant = matchDecision() as SessionView['docket'][number];
+    relevant.ambition = {
+      surface: 'match',
+      effect: 'endanger',
+      reason: 'Every open card folds the living blood back into close kin.',
+    };
+    const relevantWrapper = mount(Docket, {
+      props: { decision: relevant, actions: spyActions() as unknown as GameActions },
+    });
+
+    const line = relevantWrapper.get('.ambition-reading');
+    expect(line.text()).toContain('can endanger the house’s ambition');
+    expect(line.text()).toContain('folds the living blood back into close kin');
+    relevantWrapper.unmount();
+
+    const irrelevant = recordDecision() as SessionView['docket'][number];
+    const irrelevantWrapper = mount(Docket, {
+      props: { decision: irrelevant, actions: spyActions() as unknown as GameActions },
+    });
+    expect(irrelevantWrapper.find('.ambition-reading').exists()).toBe(false);
+    irrelevantWrapper.unmount();
+  });
+
   it('renders a choice, with a control per branch', () => {
     const decision = choiceDecision();
     const actions = spyActions();

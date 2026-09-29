@@ -10,8 +10,8 @@ import type { YearReport } from './year/report.js';
 import { passageOf, type Passage } from './year/passage.js';
 import {
   autoResolveAll, declineMatch, resolveChoice, resolveMatch, resolveRecord,
-  type ChoiceResolution, type MatchResolution, type PendingDecision, type RecordOption,
-  type RecordResolution,
+  type ChoiceResolution, type MatchResolution, type PendingDecision, type PendingDecisionView,
+  type RecordOption, type RecordResolution,
 } from './events/decisions.js';
 import {
   adviceFor, adviceForDecision,
@@ -38,7 +38,10 @@ import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './c
 import { streamFor } from './rng.js';
 import { campaignDef } from './campaign.js';
 import { libraryRunOf } from './run-library.js';
-import { ambitionOptions, ambitionView, type HouseAmbitionOption, type HouseAmbitionView } from './ambition.js';
+import {
+  ambitionOptions, ambitionRelevance, ambitionView,
+  type AmbitionRelevance, type HouseAmbitionOption, type HouseAmbitionView,
+} from './ambition.js';
 import {
   activeMatchPriorities, activeRecordPriorities, strategicPressures,
   type AgeMatchPriority, type AgeRecordPriority,
@@ -613,6 +616,8 @@ export function resumeGame(
  * built on live references has to be told when to re-read; a UI built on values
  * only has to be given a new one.
  */
+export type SessionDecisionView = PendingDecisionView & { ambition?: AmbitionRelevance };
+
 export interface SessionView {
   year: number;
   campaign: { id: CampaignId; name: string; startYear: number; endYear: number };
@@ -692,7 +697,7 @@ export interface SessionView {
   chronicle: ChronicleEntry[];
   /** The frame (concept §2, issue #13) — separate from `chronicle` on purpose. See `world.frame`. */
   frame: FrameEntry[];
-  docket: PendingDecision[];
+  docket: SessionDecisionView[];
   /**
    * The children the house is being asked to name, and WHY each one (issue
    * #62). Naming was 189 prompts a run and is now raised only where the
@@ -1219,10 +1224,14 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     // as long as a sixty-year window rarely contained an interlude. More frame
     // content made it visible; it was always wrong.
     frame: [...w.frame.entries],
-    docket: w.pendingDecisions.map((decision) => ({
-      ...decision,
-      advice: adviceForDecision(ctx, decision),
-    })),
+    docket: w.pendingDecisions.map((decision) => {
+      const ambition = ambitionRelevance(ctx, decision);
+      return {
+        ...decision,
+        advice: adviceForDecision(ctx, decision),
+        ...(ambition ? { ambition } : {}),
+      };
+    }),
     namesWanted: w.pendingNames.map((n) => ({
       person: n.person, suggested: n.suggested, sex: n.sex, born: n.born, because: n.because,
     })),

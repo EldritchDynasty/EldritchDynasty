@@ -59,6 +59,7 @@ describe('the future on a Match card (issue #214)', () => {
       kind: 'household',
       kinship: 0.0625,
       words: 'close kin · deep blood · an ordinary line',
+      blood: 'deep',
       line: 'ordinary',
       lineSeen: 3,
     }));
@@ -128,6 +129,7 @@ describe('the future on a Match card (issue #214)', () => {
       line: 'ordinary',
       lineSeen: 3,
       words: 'close kin · deep blood · an ordinary line',
+      blood: 'deep',
     });
     const b = visibleCard({
       id: 'b',
@@ -136,9 +138,46 @@ describe('the future on a Match card (issue #214)', () => {
       line: 'ordinary',
       lineSeen: 3,
       words: 'close kin · deep blood · an ordinary line',
+      blood: 'deep',
     });
     expect(matchFuture(a).kind).toBe('blood');
     expect(matchFuture(b).kind).toBe('blood');
+  });
+
+  /**
+   * The reading used to search the broker's sentence for 'deep blood' and
+   * 'a drop of it' (issue #276), so a reworded or translated broker changed
+   * which future a card was read as. It reads the card's `blood` word now.
+   */
+  it('reads the market\'s word on the blood, not the broker\'s sentence', () => {
+    const outsider = { line: 'ordinary' as const, lineSeen: 3 };
+    const deep = visibleCard({ ...outsider, words: 'deep blood · an ordinary line', blood: 'deep' });
+    const reworded = { ...deep, words: 'old blood, they say · a line like any other' };
+    const unsaid = { ...deep, blood: undefined };
+
+    expect(matchFuture(reworded)).toEqual(matchFuture(deep));
+    expect(matchFuture(deep).kind).toBe('blood');
+    expect(matchFuture(unsaid).kind).not.toBe('blood');
+    const drop = visibleCard({ ...outsider, kinship: 0.01, words: 'a drop of it, they say', blood: 'drop' });
+    expect(matchFuture({ ...drop, words: 'a little of it, perhaps' })).toEqual(matchFuture(drop));
+  });
+
+  it('says the same blood word it scores', () => {
+    // A fresh bundle: the houses are shared objects and this rewrites them.
+    const ctx = testWorld(loadContent(), 4242, 1042);
+    const her = place(ctx, { sex: 'female', age: 19, name: 'Test Daughter' });
+    const words = new Set<string | undefined>();
+    for (let hand = 0; hand < 12; hand++) {
+      [...ctx.world.houses.values()].forEach((h, i) => {
+        if (h.genePool) h.genePool.fontCarrierRate = [0, 0.01, 0.05][(i + hand) % 3]!;
+      });
+      for (const card of dealMatch(ctx, her, testRng('blood-word', hand)).cards) {
+        words.add(card.blood);
+        expect(card.words.includes('deep blood'), card.words).toBe(card.blood === 'deep');
+        expect(card.words.includes('a drop of it'), card.words).toBe(card.blood === 'drop');
+      }
+    }
+    expect([...words].sort(), 'the hands never said every word, so this compared nothing').toEqual(['deep', 'drop', undefined]);
   });
 
   it('cannot change its reading when only the outsider recipe changes', () => {

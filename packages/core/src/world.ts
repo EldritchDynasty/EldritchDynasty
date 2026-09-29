@@ -63,6 +63,13 @@ export interface ChronicleEntry {
   cause?: { year: Year; page?: string };
   /** People explicitly cast on this authored page (#268). */
   people?: string[];
+  /**
+   * Which echo sentence frame wrote this line (issue #326), e.g.
+   * `bearing:took_the_cousin:1` or `grudge:2`. Structure, not prose: it is how
+   * the repetition instrument counts copies of one line without reading
+   * English. Absent on every page that is not an echo.
+   */
+  echoFrame?: string;
 }
 
 export type GenerationQuestionKind = 'unstable_heir' | 'thin_line' | 'record' | 'ledger' | 'branch' | 'match' | 'ascension';

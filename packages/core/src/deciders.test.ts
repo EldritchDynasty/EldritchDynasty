@@ -330,13 +330,14 @@ describe('standing-delegation interruption guard (#219)', () => {
   it('surfaces Record when the active House Ambition says Record is consequential', () => {
     const ctx = testWorld(bundle);
     const d = recordPending();
+    d.event.purposes = ['advance_clause', 'worldbuild_through_action', 'force_record_choice'];
     ctx.world.houseAmbition = 'restore_ledger';
     ctx.world.delegation.records[d.event.id] = 'record';
 
-    // #210 expresses relevance in the ambition read model, not by tagging
-    // arbitrary events with the word "ambition". This fixture deliberately
-    // carries no such wording so the guard cannot pass by regex accident.
+    // #327 reads stable event structure rather than translated Record prose.
+    // No generic ambition tag and no magic Ledger wording are needed.
     expect(JSON.stringify(d.event).toLowerCase()).not.toContain('ambition');
+    expect(d.subject.toLowerCase()).not.toMatch(/ledger|clause|discrep/);
     expect(mustSurface(ctx, d)).toBe('ambition');
     expect(delegatedRecord(ctx, d)).toBeUndefined();
   });
