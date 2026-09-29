@@ -119,14 +119,12 @@ concurrency:
 #
 #   68 minutes to 23, no test deleted, nothing moved off `main`.
 #
-# AND THE CONCLUSION THAT FOLLOWS IS THE OPPOSITE OF THE ONE ABOVE IT.
-# `gates (batch)` is the floor now, at 22m54s, and the LONGEST test shard
-# finishes in under half of it. So balancing the shards further buys exactly
-# nothing — which is what the block this replaced claimed, wrongly, at a
-# moment when it was worth forty-six minutes. It is true now, it is true for
-# the same reason it was false then (where the floor is), and it will stop
-# being true the moment either number moves. Anyone wanting a faster build
-# should be reading the `batch` gate lane, not this job.
+# THAT WAS THE CONCLUSION OF RUN 197, NOT A CURRENT TIMING CONTRACT.
+# Current gate-lane baselines live in `tools/gate-durations.json`; the gate
+# job below measures its own wall clock and fails when a lane drifts beyond the
+# recorded factor. The historical numbers above stay only to explain why the
+# lane split exists. Anyone deciding today's critical path reads the data, not
+# this comment.
 #
 # THE SHARDS ARE NOT LEVEL ON THE RUNNERS — 10m05s against 5m27s — while the
 # committed table packs them level. That is not the packing failing. The
@@ -358,8 +356,8 @@ jobs:
   # runner thirty minutes to re-derive them would buy nothing.
   #
   # IT IS FREE, AND THAT IS A MEASURED CLAIM RATHER THAN A HOPE. The build's
-  # floor is the `war` gate lane at 16m50s (see the timing block at the top of
-  # this file). Everything below — install, typecheck, validate, fast lane —
+  # floor is a gate lane (the current baselines are checked data in
+  # `tools/gate-durations.json`). Everything below — install, typecheck, validate, fast lane —
   # runs several times inside that, so this job adds a runner and no wall
   # clock. Re-measure it with `tools/cost.mjs` like everything else here; if it
   # ever approaches the floor, shard it before deleting it.
@@ -417,8 +415,8 @@ jobs:
   #
   # `vitest.config.ts` names a sequencer now (`tools/shards.mjs`) that
   # bin-packs the files by recorded cost, longest first. The count stays four:
-  # packed, a shard is about 21 minutes and the floor becomes `gates (batch)`
-  # at 20m50s, so a fifth runner would buy nothing — this is sized against the
+  # packed, the shards sit below the gate-lane floor recorded in
+  # `tools/gate-durations.json`, so a fifth runner buys nothing while that remains true — this is sized against the
   # critical path, the same argument as before, now made against numbers that
   # are measured rather than remembered.
   #
