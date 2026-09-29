@@ -241,7 +241,7 @@ describe('house ambition (issue #210)', () => {
     expect(ambitionRelevance(g.ctx, pending)).toEqual(before);
   });
 
-  it('finds an Ascension Record participant by cast id rather than rendered name', () => {
+  it('finds an Ascension Record participant by a slot named on the page', () => {
     const g = newGame(content, { seed: 3277, campaign: 'short', decider: 'chronicler' });
     g.setAmbition('raise_ascendant');
     const scion = oneSubject(g.ctx);
@@ -249,12 +249,18 @@ describe('house ambition (issue #210)', () => {
 
     const pending = quietRecord(g.ctx);
     pending.fill = { SUBJECT: scion.id };
+    pending.event.record!.options.record.chronicle = 'The book names {SUBJECT}.';
     pending.subject = 'an ordinary page with no programme words';
 
     expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
       surface: 'record',
       effect: 'advance',
     }));
+
+    // Being in the event cast is not enough: the Record page itself has to
+    // carry that slot. This is what keeps an off-page Scion from surfacing it.
+    pending.event.record!.options.record.chronicle = 'The book names nobody.';
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
   });
 
   it('reads only the exact remembered choice branch when it changes the bloodline', () => {
