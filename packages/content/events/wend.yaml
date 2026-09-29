@@ -303,10 +303,15 @@ events:
               text: >-
                 He is down there rather longer than the house expected and
                 comes up saying almost nothing, which is worse than any of the
-                things he might have said.
+                things he might have said. He says rather more at Bramme,
+                and the chapter house is not a place where things stay said
+                once.
+              # #341: nothing in the cellar was sold or seized, and the thirty
+              # crowns were never explained. What candour costs is the room
+              # itself, carried out of the house by a man with a wax tablet.
               effects:
-                - { kind: treasury, delta: -30 }
                 - { kind: respect, delta: 2 }
+                - { kind: rumour, op: seed, id: rumour_the_room_under_the_east_cellar, accuracy: 0.6 }
     # A scene whose declared purpose is `force_record_choice` and which offered
     # the family no Record choice was the same dilution bug from the other side:
     # it drew from the ambient pool without ever feeding the record layer the

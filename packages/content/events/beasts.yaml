@@ -254,11 +254,15 @@ events:
                 Six oxen through clay, four tendays instead of two, and two
                 of the four holdings sown after the ground has gone past its
                 best, and both of them short at Harvest by about what two oxen
-                cost. The arithmetic is available to anybody who does it. The
-                steward does it, afterwards, and says nothing.
+                cost. The rent is labour-days, and the labour-days were worked,
+                so the hall's book comes out whole and the two holdings eat
+                less. The steward does the arithmetic afterwards and says
+                nothing.
+              # #341: sowing with six cost the hall more coin than buying two
+              # AND cost the tenants, a choice no one should ever take. The
+              # shortfall falls where the text puts it, on the two holdings.
               effects:
-                - { kind: treasury, delta: -14 }
-                - { kind: relationship, from: household, to: head, sentiment: -6 }
+                - { kind: relationship, from: household, to: head, sentiment: -10 }
 
   - id: the_terrier_and_the_barn
     title: Rats, and the One Thing That Works

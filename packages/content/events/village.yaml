@@ -123,9 +123,11 @@ events:
                 service, and the accounts come out level. The cowman under the
                 hall wall keeps his stock and his silence and neither is
                 forgotten.
+              # #341: the text says the accounts come out level, so holding the
+              # terms costs no coin, and the other houses never hear of it. The
+              # price is what Wick keeps: the daughter's service, and the byre.
               effects:
-                - { kind: treasury, delta: -10 }
-                - { kind: respect, delta: -1 }
+                - { kind: relationship, from: household, to: head, sentiment: -8 }
                 - { kind: rumour, op: seed, id: rumour_the_clean_byre, accuracy: 0.3 }
 
   - id: the_boar_in_the_west_wood
