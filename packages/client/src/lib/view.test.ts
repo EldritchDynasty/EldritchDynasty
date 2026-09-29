@@ -116,8 +116,12 @@ const NOT_DRAWN: Record<string, string> = {
   // frame produced them, kept so the repetition instrument can count copies
   // without reading English (#276). A reader has no use for the frame's name.
   echoFrame: 'which echo sentence frame wrote a line; structure for the repetition instrument, never prose',
-  // Surfaced by #336's full walk: it sits on a few members, never the first.
+  // Surfaced by #336's full walk: these sit on a few members, never the first.
+  // Both belong to #268's still-open family-planning client slice rather than
+  // this House Ambition change; keeping the exception explicit prevents an
+  // unrelated identifier elsewhere in the UI from pretending they are drawn.
   succession: 'drawing the heir and the possible heirs on the tree is #268\'s client slice (Tree.vue / Member.vue); delete this entry when it lands',
+  relevance: 'the visible planning reasons already carried on each family member; rendering them on the tree is #268\'s client slice (Tree.vue / Member.vue); delete this entry when it lands',
 };
 
 /**
