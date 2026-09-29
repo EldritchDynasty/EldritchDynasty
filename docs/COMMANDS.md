@@ -272,19 +272,13 @@ four-core container, before and after:
 | spread | 4.12x | **1.00x** |
 | longest single file | 60.2m, over a 26.0m fair share | **~9m, under ~10m** |
 
-Those are container figures. **On the runners**, run 197 (`main`, green,
-`a1c3c3c`): `gates (batch)` 22m54s, `gates (war)` 10m10s, the four shards
-10m05s / 5m31s / 5m30s / 5m27s, `windows` 2m51s, `fast lane` 1m27s, lint 30s,
-corpus 22s, tier 3s — **23m03s of wall clock, against the 68m #142 opened
-with**, with no test deleted and nothing moved off `main`.
-
-That was the conclusion of run 197, not a permanent timing contract. The
-current gate-lane baselines now live in `tools/gate-durations.json`, and the
-gate jobs measure themselves and fail when a lane exceeds the recorded figure
-by the stated factor. The historical figures above remain because they explain
-why the lanes were split; they are no longer used to decide today's critical
-path. A faster build still starts by looking at whichever gate lane the checked
-data says is longest.
+Those container figures explain why duration-packed test shards exist; they
+are not a current runner contract. Current gate-lane baselines live only in
+`tools/gate-durations.json`, and each gate job measures itself and fails when
+it exceeds the recorded tolerance. #333 records the current per-gate
+attribution and repack evidence in `docs/BALANCE-LOG.md` instead of copying
+another stopwatch table here. A faster build starts by looking at whichever
+checked lane the data says is longest.
 
 The shards are not level on the runners (10m05s against 5m27s) while the
 committed table packs them level, and that is not the packing failing: the
@@ -307,14 +301,13 @@ mechanism**, so the numbers that decide anything are data now: `npm run cost --
 when they drift. What is left in the comments is the reasoning, which is the
 part a number cannot carry.
 
-**The gates job was the longest thing in CI, not the tests**, before any of
-this. Measured off run 123's own timestamps: `test 34m04s`, `gates 36m24s` —
-against comments that had claimed 13m and 8m since run 98. Two gates were
-ninety per cent of the gates job (`war` 16m38s, `fire-rate` 16m05s), and
-`outcome-reach` and `vocabulary-reach` cost three and four milliseconds because
-they read `fire-rate`'s batch. So the lanes are `war` alone against everything
-else: splitting anywhere else would play a 250-run batch twice.
-
+**Gate-lane shape is measured, not remembered.** Earlier versions of this
+file copied runner timings and then reasoned from them after they had gone
+stale. #333 makes the current lane cost machine-readable instead. The
+important structural fact remains: gates that share an expensive process-local
+corpus stay together, while expensive independent gates can move to separate
+runners. `gates.test.ts` proves the partition and the workflow matrix agree;
+`gate-duration.mjs` proves the checked timing budget still describes CI.
 **The landing is a separate problem, and it got its own fix.** Sharding buys
 the verdict; it cannot help `npm run land`, which runs on one container. So
 the landing overlaps instead: `typecheck` and `validate` still go first and
