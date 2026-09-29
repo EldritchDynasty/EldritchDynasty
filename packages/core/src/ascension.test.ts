@@ -231,6 +231,15 @@ describe('the terminal irony no longer eats its own tail', () => {
     expect(entry?.text).toContain('stopped growing older before the Ledger was finished');
     expect(entry?.text).toContain('The house waited.');
 
+    // Written once, whatever the page came to say and whatever he came to be
+    // called (issue #276): the dedupe reads the page's id, never its words.
+    entry!.text = 'Reworded, or rendered in another language.';
+    entry!.title = 'Another title';
+    recipient.name = 'Somebody Renamed';
+    tickAscension(ctx);
+    tickAscension(ctx);
+    expect(ctx.world.chronicle.filter((line) => line.people?.includes(recipient.id) && line.rung === 'demigod')).toHaveLength(1);
+
     // Standing is a current reading. Reaching Demigod is a life event:
     // lose the CURRENT rung before his first mortality roll after attainment.
     // If the ascension phase did not latch the event above, the five-century

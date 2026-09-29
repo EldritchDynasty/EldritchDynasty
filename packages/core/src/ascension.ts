@@ -112,19 +112,25 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
   // phase and lose Respect in the very next authored effect, so write it at
   // the same boundary that proves the attainment. Dedupe keeps the annual
   // safety-net read from writing it twice.
+  //
+  // The dedupe is keyed on a page id made from the person's id (issue #276).
+  // It used to search the chronicle for the page's own opening words, which
+  // carried his name — so a reworded or translated page, or a renamed man,
+  // would have been written again every year he waited.
   if (
     p.rites.includes('unmaking')
     && standing.rung === 'demigod'
     && standing.blocker === 'clauses'
   ) {
-    const title = 'The Ledger Stayed Open';
-    const opening = `${p.name} stopped growing older before the Ledger was finished.`;
-    if (!ctx.world.chronicle.some((entry) => entry.title === title && entry.text?.startsWith(opening))) {
+    const page = `ledger_wait:${p.id}`;
+    if (!ctx.world.chronicle.some((entry) => entry.id === page)) {
       ctx.world.chronicle.push({
+        id: page,
         year: ctx.world.year,
         weight: 'paragraph',
-        title,
-        text: `${opening} The book remained open on the table. The house waited.`,
+        title: 'The Ledger Stayed Open',
+        text: `${p.name} stopped growing older before the Ledger was finished. The book remained open on the table. The house waited.`,
+        people: [p.id],
         named: false,
         rung: 'demigod',
       });
