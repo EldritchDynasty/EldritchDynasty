@@ -278,13 +278,13 @@ Those are container figures. **On the runners**, run 197 (`main`, green,
 corpus 22s, tier 3s — **23m03s of wall clock, against the 68m #142 opened
 with**, with no test deleted and nothing moved off `main`.
 
-The conclusion that follows is now the opposite of the one that stood here for
-a month: `gates (batch)` is the floor, and the longest test shard finishes in
-under half of it, so balancing the shards further buys nothing. That is what
-the old block claimed — at a moment when it was worth forty-six minutes a
-build. It is true now for the same reason it was false then, and it stops
-being true the moment either figure moves. A faster build means the `batch`
-gate lane.
+That was the conclusion of run 197, not a permanent timing contract. The
+current gate-lane baselines now live in `tools/gate-durations.json`, and the
+gate jobs measure themselves and fail when a lane exceeds the recorded figure
+by the stated factor. The historical figures above remain because they explain
+why the lanes were split; they are no longer used to decide today's critical
+path. A faster build still starts by looking at whichever gate lane the checked
+data says is longest.
 
 The shards are not level on the runners (10m05s against 5m27s) while the
 committed table packs them level, and that is not the packing failing: the
