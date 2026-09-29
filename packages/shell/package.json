@@ -18,5 +18,8 @@
     "@ed/core": "*",
     "electron": "^38.0.0",
     "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "steamworks.js": "0.4.0"
   }
 }
