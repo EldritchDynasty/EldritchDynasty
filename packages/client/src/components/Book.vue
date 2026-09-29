@@ -378,6 +378,9 @@ const counts = computed(() => ({
   padding-bottom: max(30px, env(safe-area-inset-bottom));
   padding-left: max(30px, env(safe-area-inset-left));
   padding-right: max(30px, env(safe-area-inset-right));
+  /* The row is the window, not the content, or "Read it whole" cannot scroll
+     (#356). Why, measured: `lib/overlays.test.ts`. */
+  grid-template-rows: minmax(0, 100%);
 }
 .volume {
   background: var(--vellum); border: 1px solid var(--rule);
