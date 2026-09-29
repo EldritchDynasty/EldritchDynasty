@@ -18,7 +18,25 @@ const props = defineProps<{
    * class is a client that draws the answer.
    */
   refusedCard?: { card: string; reason: string } | null;
+  /**
+   * The year the house was founded, so standing preferences can wait (#356).
+   * Absent, the panel offers them from the first year, as it always has.
+   */
+  foundedYear?: number;
 }>();
+
+/**
+ * ROUTINE REPEATS WAIT FIFTY YEARS (#356, owner's decision). Delegating an
+ * answer is a tool for a player who has met the same scene enough times to
+ * know what they want from it; offered from 1042 it is one more control on a
+ * screen the player is still learning, and an invitation to stop reading the
+ * scenes before they have been read once. #219's measured density is
+ * unaffected: this gates the offer in the panel, not the engine's delegation.
+ */
+const ROUTINE_REPEATS_AFTER_YEARS = 50;
+const routineRepeatsOpen = computed(() =>
+  props.foundedYear === undefined
+  || props.decision.year >= props.foundedYear + ROUTINE_REPEATS_AFTER_YEARS);
 
 function readingStorage(): Storage | null {
   try {
@@ -561,7 +579,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
     <!-- Standing preferences are learned only from an answer the player actually makes. -->
     <label
-      v-if="(decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record'"
+      v-if="routineRepeatsOpen && ((decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record')"
       class="remember small"
     >
       <input v-model="remember" type="checkbox">

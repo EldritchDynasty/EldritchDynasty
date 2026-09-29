@@ -323,6 +323,39 @@ describe('the docket draws what it is handed', () => {
     expect(actions.delegateChoice).toHaveBeenCalledWith(decision.event.id, decision.choices[0]!.id);
   });
 
+  /**
+   * ── ROUTINE REPEATS WAIT FIFTY YEARS (#356) ────────────────────────────
+   *
+   * The owner's call: no standing preferences in a house's first fifty years.
+   * The fixture's decision is dated 1100.
+   */
+  it('does not offer routine repeats in the house\'s first fifty years', () => {
+    const decision = choiceDecision();
+    const w = mount(Docket, {
+      props: { decision, actions: spyActions() as unknown as GameActions, foundedYear: 1060 },
+    });
+    expect(w.find('input[type="checkbox"]').exists()).toBe(false);
+    expect(w.text()).not.toContain('routine repeats');
+  });
+
+  it('offers them from the fiftieth year on', () => {
+    const decision = choiceDecision();
+    for (const foundedYear of [1050, 1042]) {
+      const w = mount(Docket, {
+        props: { decision, actions: spyActions() as unknown as GameActions, foundedYear },
+      });
+      expect(w.find('input[type="checkbox"]').exists(), `founded ${foundedYear}, asked 1100`).toBe(true);
+    }
+  });
+
+  it('holds a Record block to the same fifty years', () => {
+    // The Record fixture is dated 1200: forty years after this founding.
+    const w = mount(Docket, {
+      props: { decision: recordDecision(), actions: spyActions() as unknown as GameActions, foundedYear: 1160 },
+    });
+    expect(w.find('input[type="checkbox"]').exists()).toBe(false);
+  });
+
   it('does not learn a standing choice when the normal verb refuses it', async () => {
     const decision = choiceDecision();
     if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
