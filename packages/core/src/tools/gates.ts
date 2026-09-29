@@ -571,7 +571,14 @@ export function gateLadderScales(
     demigod: POWER_FLOOR.demigod,
     god: POWER_FLOOR.god,
   };
-  const runs = opts.runs ?? 8;
+  // 32, not 8 (#341). The stale check reads a MAXIMUM, and the power floors
+  // for Demigod and God are cleared by about one expresser-sample in a
+  // thousand — one man in one run. Eight runs (about 530 samples) passed with
+  // main's content because that one man happened to be there; #341's content
+  // re-roll left eight runs, and sixteen, without him (ceilings 81.3 and 84.2)
+  // and 32 and 48 with him again. A ceiling the batch cannot reliably see is
+  // not one it can convict a floor on.
+  const runs = opts.runs ?? 32;
   const years = opts.years ?? CAMPAIGN_YEARS;
   // Sampled through the run rather than at the end: a man who stood at
   // Hierophant in 1400 and died in 1440 is not in the household at 2042, and
