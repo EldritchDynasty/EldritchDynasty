@@ -251,6 +251,13 @@ describe('the family tree as a planning board (#268)', () => {
         text: 'The page deliberately does not name the person in its prose.',
         named: false,
         people: ['p001', 'somebody-no-longer-living'],
+      }, {
+        id: 'entry-blank',
+        year: 1187,
+        weight: 'line',
+        text: null,
+        named: false,
+        people: ['p001'],
       }],
     } as unknown as SessionView;
 
@@ -266,9 +273,12 @@ describe('the family tree as a planning board (#268)', () => {
       },
     });
 
-    const person = wrapper.get('[data-person="p001"]');
+    const people = wrapper.findAll('[data-person="p001"]');
+    expect(people).toHaveLength(1);
+    const person = people[0]!;
     expect(person.text()).toBe('Member 001');
     expect(wrapper.find('[data-person="somebody-no-longer-living"]').exists()).toBe(false);
+    expect(wrapper.get('[data-entry="entry-blank"]').find('[data-person]').exists()).toBe(false);
 
     await person.trigger('click');
     expect(wrapper.emitted('person')).toEqual([['p001']]);
