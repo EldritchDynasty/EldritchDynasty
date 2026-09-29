@@ -1031,7 +1031,11 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  */
 const OWN_LANE: Record<string, readonly string[]> = {
   war: ['war'],
-  endings: ['endings'],
+  // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
+  // (`blood-gate.ts`): about 24 minutes more of play, which on `batch` would
+  // have made the slowest runner slower, and on `endings`' otherwise six-minute
+  // runner costs no wall time. Neither shares its runs with any other gate.
+  endings: ['endings', 'blood'],
 };
 
 /** The lane every gate falls into unless it is named above. */
