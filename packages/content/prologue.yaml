@@ -142,3 +142,14 @@ prologue:
           who asks.
 
     thesis: Everything after this was done by people who did not sign it.
+
+    # Shown only when this run inherited a Library account (#342). Frame
+    # register, and it vouches for neither side: {house} is the older house,
+    # {teller} the voice now carrying the account. No verb follows {teller},
+    # because the tellers are singular and plural both.
+    inheritedLine: >-
+      Before this house there was another, which called itself {house} and
+      kept a book as this one will, and of that house nothing remains in the
+      province now but the book and what is said of it. The saying has passed,
+      as such things pass, to {teller}; and whether the book or the telling is
+      the truer, the chronicle does not say.

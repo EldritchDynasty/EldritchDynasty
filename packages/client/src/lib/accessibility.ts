@@ -203,6 +203,31 @@ export function chapterReplayDisposition(
   return replayDisposition(storage, skipSeenProse, beat) === 'skip' ? 'skip' : 'show';
 }
 
+export interface InitialProloguePresentation {
+  shown: number;
+  inheritedVisible: boolean;
+}
+
+/**
+ * The inherited Library line is deliberately outside the replay identity.
+ *
+ * A returning reader may fast-reveal the signing they have already read, but
+ * the new run's inherited account is new run-specific prose and remains on the
+ * first screen whenever it exists.
+ */
+export function initialProloguePresentation(
+  storage: Pick<Storage, 'getItem' | 'setItem'> | null,
+  skipSeenProse: boolean,
+  text: string,
+  triadLength: number,
+  hasInherited: boolean,
+): InitialProloguePresentation {
+  return {
+    shown: initialPrologueShown(storage, skipSeenProse, text, triadLength),
+    inheritedVisible: hasInherited,
+  };
+}
+
 /**
  * The prologue owns one small piece of presentation state: how many passive
  * beats have been revealed. Keeping the reader-history transition here makes

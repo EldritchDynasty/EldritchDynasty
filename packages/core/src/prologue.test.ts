@@ -38,6 +38,117 @@ describe('the prologue', () => {
     expect(view.founded).toBeUndefined();
   });
 
+  it('carries the furthest-travelled inherited account without adjudicating it', () => {
+    const ctx = testWorld(content);
+    ctx.world.libraryMemories = [
+      {
+        id: 'library_memory_b',
+        sourceRun: 'old_b',
+        sourceHouse: 'House Salt',
+        sourceYear: 1420,
+        sourceText: 'The older page.',
+        form: 'song',
+        teller: 'the household singers of Marrow',
+        bias: 'keeping the version Marrow prefers to remember',
+        text: 'The singers say the east tower was empty.',
+        about: 'library:old_b:page_1',
+        since: ctx.world.year,
+        mutations: 1,
+        people: {},
+        sourceClaims: [],
+        claims: [],
+      },
+      {
+        id: 'library_memory_a',
+        sourceRun: 'old_a',
+        sourceHouse: 'House Ash',
+        sourceYear: 1510,
+        sourceText: 'Another old page.',
+        form: 'footnote',
+        teller: 'an unnamed annotator in Ilm\'s library',
+        bias: 'correcting the old house from the safety of Ilm\'s margin',
+        text: 'The margin says the west tower was locked.',
+        about: 'library:old_a:page_2',
+        since: ctx.world.year,
+        mutations: 4,
+        people: {},
+        sourceClaims: [],
+        claims: [],
+      },
+    ];
+
+    expect(prologueView(ctx)!.inherited).toEqual({
+      houseName: 'House Ash',
+      teller: 'an unnamed annotator in Ilm\'s library',
+      bias: 'correcting the old house from the safety of Ilm\'s margin',
+      text: 'The margin says the west tower was locked.',
+      line: content.prologue!.inheritedLine!
+        .replaceAll('{house}', 'House Ash')
+        .replaceAll('{teller}', 'an unnamed annotator in Ilm\'s library'),
+    });
+    const line = prologueView(ctx)!.inherited!.line;
+    expect(line).toContain('House Ash');
+    expect(line).toContain('an unnamed annotator in Ilm\'s library');
+    expect(line).not.toMatch(/\{(house|teller)\}/);
+  });
+
+  it('shows no inherited account in no one\'s voice when the bundle authors no wrapper', () => {
+    const { inheritedLine: _unwritten, ...unwrapped } = content.prologue!;
+    const ctx = testWorld({ ...content.bundle, prologue: [unwrapped] });
+    ctx.world.libraryMemories = [{
+      id: 'library_memory_a',
+      sourceRun: 'old',
+      sourceHouse: 'House Salt',
+      sourceYear: 1400,
+      sourceText: 'The page.',
+      form: 'rhyme',
+      teller: 'the children of a lower hall',
+      bias: 'keeping what children remember',
+      text: 'The rhyme.',
+      about: 'library:old:page_1',
+      since: ctx.world.year,
+      mutations: 0,
+      people: {},
+      sourceClaims: [],
+      claims: [],
+    }];
+    expect('inherited' in prologueView(ctx)!).toBe(false);
+  });
+
+  it('breaks equally travelled inherited accounts by id, without a draw', () => {
+    const ctx = testWorld(content);
+    const memory = (id: string, text: string) => ({
+      id,
+      sourceRun: 'old',
+      sourceHouse: 'House Salt',
+      sourceYear: 1400,
+      sourceText: 'The page.',
+      form: 'rhyme' as const,
+      teller: 'the children of a lower hall',
+      bias: 'keeping what children remember',
+      text,
+      about: `library:old:${id}`,
+      since: ctx.world.year,
+      mutations: 3,
+      people: {},
+      sourceClaims: [],
+      claims: [],
+    });
+    ctx.world.libraryMemories = [
+      memory('library_memory_z', 'The later id.'),
+      memory('library_memory_a', 'The earlier id.'),
+    ];
+
+    expect(prologueView(ctx)!.inherited?.text).toBe('The earlier id.');
+  });
+
+  it('leaves the empty-Library prologue shape exactly as it was', () => {
+    const view = prologueView(testWorld(content))!;
+    expect('inherited' in view).toBe(false);
+    const { inherited: _nothing, ...preFeature } = view;
+    expect(view).toStrictEqual(preFeature);
+  });
+
   it('states the selected campaign term and collection year in the signing', () => {
     for (const campaign of Object.values(CAMPAIGNS)) {
       const ctx = testWorld(content);

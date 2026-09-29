@@ -63,7 +63,7 @@ export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
   'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'description',
   'teller', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
   'closing', 'because', 'cause', 'thesis', 'notarisedBy',
-  'friendsPrompt', 'housePrompt', 'campaignText',
+  'friendsPrompt', 'housePrompt', 'campaignText', 'inheritedLine',
 ]);
 
 export const CONTENT_NOT_PROSE: ReadonlyMap<string, string> = new Map([

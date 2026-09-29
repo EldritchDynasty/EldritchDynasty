@@ -46,6 +46,14 @@ export interface PrologueView {
   /** The first grudge, with the house that will hold it. */
   grudges: { house: string; houseName: string; line: string }[];
   thesis: string;
+  /**
+   * One older house's account, when this run inherited a Library memory.
+   *
+   * The wrapper names the source and the voice; it never promotes the tale to
+   * fact. The memory's own teller and bias remain visible because the game is
+   * not the judge between attributed accounts.
+   */
+  inherited?: { houseName: string; teller: string; bias: string; text: string; line: string };
   /** What was chosen, once it has been. The prologue is a once-only screen. */
   founded?: { houseName: string; heirloom: string; grudge: string; year: number };
   /**
@@ -75,6 +83,28 @@ export const HOUSE_NAME_MAX = 48;
 
 export function prologueDef(ctx: SimCtx): PrologueDef | undefined {
   return ctx.content.prologue;
+}
+
+function inheritedRumour(
+  ctx: SimCtx,
+  def: PrologueDef,
+): PrologueView['inherited'] | undefined {
+  if (def.inheritedLine === undefined) return undefined;
+  const memory = [...ctx.world.libraryMemories]
+    .sort((a, b) => b.mutations - a.mutations || a.id.localeCompare(b.id))[0];
+  if (!memory) return undefined;
+
+  return {
+    houseName: memory.sourceHouse,
+    teller: memory.teller,
+    bias: memory.bias,
+    text: memory.text,
+    // Authored frame prose: it names where the account came from and whose
+    // voice carries it, and never tells the player whether it is true.
+    line: def.inheritedLine
+      .replaceAll('{house}', memory.sourceHouse)
+      .replaceAll('{teller}', memory.teller),
+  };
 }
 
 function renderOwed(owed: PrologueOwed, campaign: CampaignDef): string {
@@ -137,6 +167,8 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
     }),
     thesis: def.thesis,
   };
+  const inherited = inheritedRumour(ctx, def);
+  if (inherited) view.inherited = inherited;
   if (w.founding) view.founded = { ...w.founding };
   if (w.friends.length) view.friends = w.friends.map((f) => ({ name: f.name, sex: f.sex }));
   return view;

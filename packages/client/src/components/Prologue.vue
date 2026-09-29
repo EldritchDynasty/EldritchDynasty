@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import type { PrologueView } from '@ed/core';
 import type { GameActions } from '../lib/game';
-import { initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
+import { initialProloguePresentation, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
   prologue: PrologueView;
@@ -42,12 +42,14 @@ const replayText = prologueSeenText(
  * Nothing here is skippable by accident and everything is skippable on
  * purpose: the reader who wants the whole page can have it in three clicks.
  */
-const shown = ref(initialPrologueShown(
+const initial = initialProloguePresentation(
   readingStorage(),
   props.skipSeenProse,
   replayText,
   props.prologue.triad.length,
-));
+  props.prologue.inherited !== undefined,
+);
+const shown = ref(initial.shown);
 const houseName = ref('');
 const heirloom = ref('');
 const grudge = ref('');
@@ -118,6 +120,18 @@ function sign(): void {
 <template>
   <main class="prologue">
     <p v-if="!prologue.founded" class="opening">{{ prologue.opening }}</p>
+
+    <!-- Run-specific Library memory is NOT part of prologueSeenText. A reader
+         may fast-reveal an old signing and still meets this new inherited voice. -->
+    <aside
+      v-if="!prologue.founded && initial.inheritedVisible && prologue.inherited"
+      class="inherited"
+      aria-label="An inherited account"
+    >
+      <p class="inherited-line">{{ prologue.inherited.line }}</p>
+      <blockquote>{{ prologue.inherited.text }}</blockquote>
+      <small>{{ prologue.inherited.bias }}</small>
+    </aside>
 
     <ol v-if="!prologue.founded" class="triad">
       <li v-for="(beat, i) in prologue.triad.slice(0, shown)" :key="i">
@@ -235,6 +249,18 @@ function sign(): void {
   font-size: var(--t-body); line-height: 1.8; color: var(--ink-soft);
   margin: 0 0 18px; white-space: pre-line;
 }
+.inherited {
+  margin: 28px 0; padding: 18px 0;
+  border-block: 1px solid var(--rule);
+}
+.inherited-line {
+  margin: 0 0 12px; color: var(--ink-soft); font-size: var(--t-card); line-height: 1.7;
+}
+.inherited blockquote {
+  margin: 0 0 10px; color: var(--ink); font-size: var(--t-body);
+  line-height: 1.8; font-style: italic; white-space: pre-line;
+}
+.inherited small { display: block; color: var(--ink-faint); line-height: 1.55; }
 .triad { list-style: none; margin: 26px 0 0; padding: 0; counter-reset: beat; }
 .triad li {
   border-top: 1px solid var(--rule); padding-top: 18px; margin-bottom: 12px;
