@@ -86,12 +86,23 @@ describe('cadet branches — grievance', () => {
     // 49.8, which is the same statistic reporting the sample rather than the
     // game. This is the fourth time that lesson has been learned in this
     // repository and the second time it has been written into a test.
+    //
+    // SAMPLED THROUGH THE RUN, NOT AT ITS LAST INSTANT (#341). The claim is
+    // that a hall EVER became aggrieved, and reading one number per hall at
+    // the term's end asks whether one happened to be aggrieved on that day.
+    // #341's content re-roll left the end-of-term maximum at 47.4 over these
+    // eighteen seeds with nothing in grievance touched, which is the snapshot
+    // reporting the calendar. Every 25 years is the same eighteen runs, the
+    // same years played, and the question the assertion's message asks.
     const wideGrievance: number[] = [];
+    const SAMPLE_EVERY = 25;
     for (let i = 0; i < 18; i += 1) {
       const ctx = bootstrap(bundle, 3300 + i * 41, 1042);
-      runYears(ctx, CAMPAIGN_YEARS);
-      for (const b of ctx.world.branches.values()) {
-        if (b.extinct === undefined) wideGrievance.push(b.grievance);
+      for (let played = 0; played < CAMPAIGN_YEARS; played += SAMPLE_EVERY) {
+        runYears(ctx, Math.min(SAMPLE_EVERY, CAMPAIGN_YEARS - played));
+        for (const b of ctx.world.branches.values()) {
+          if (b.extinct === undefined) wideGrievance.push(b.grievance);
+        }
       }
     }
     expect(Math.min(...wideGrievance), 'no hall in any run was ever content').toBeLessThan(10);
