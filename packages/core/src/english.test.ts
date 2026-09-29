@@ -22,12 +22,7 @@ import { join } from 'node:path';
  * reason a reviewer would accept for a rule depending on the wording of a
  * sentence; there has not been one yet.
  *
- * `NOT_YET` is different in kind: sites known to read English, each owned by
- * an issue that is removing it. It exists so this guard could land before the
- * last of them was fixed and stop new ones arriving meanwhile. Every entry is
- * checked to still be true, so fixing a site fails this suite until its entry
- * is deleted — a declaration nobody has to earn is how a list like this goes
- * stale. When it is empty, delete it.
+ * There are no grandfathered sites: the scan is expected to stay empty.
  */
 
 const SRC = join(import.meta.dirname);
@@ -37,18 +32,6 @@ const ENGLISH_READ =
   /\b(?:text|title|label|blocked|teller|words)\??\.(?:includes|startsWith|endsWith|match)\(/g;
 
 const ALLOWED: Record<string, string> = {};
-
-/** File → how many matches it still has, and who is taking them out. */
-const NOT_YET: Record<string, { sites: number; owner: string }> = {
-  // #270 moved `standing.blocked` onto a structured `LadderBlocker`, which
-  // took long-line-gate.ts's nineteen phrases and the endings gate's Ledger
-  // check off this list. One remains: the Ledger-wait page dedupes on its
-  // own opening words.
-  'ascension.ts': {
-    sites: 1,
-    owner: '#270/#276: the Ledger-wait page (`The Ledger Stayed Open`) dedupes on `entry.text?.startsWith(opening)`; give it an id',
-  },
-};
 
 /** Every non-test TypeScript file under a directory, `/`-separated and relative to it. */
 function sources(dir: string, rel = '', out: string[] = []): string[] {
@@ -89,7 +72,6 @@ describe('no rule reads English (issue #276)', () => {
 
   it('finds no new site that reads a sentence to decide something', () => {
     const unexpected = [...found]
-      .filter(([file]) => !(file in NOT_YET))
       .flatMap(([file, reads]) => reads.map((r) => `packages/core/src/${file}:${r}`));
     expect(
       unexpected,
@@ -98,15 +80,4 @@ describe('no rule reads English (issue #276)', () => {
     ).toEqual([]);
   });
 
-  for (const [file, { sites, owner }] of Object.entries(NOT_YET)) {
-    it(`still has the ${sites} known site(s) in ${file}, or the entry goes`, () => {
-      const now = found.get(file)?.length ?? 0;
-      expect(
-        now,
-        now < sites
-          ? `${file} reads English in fewer places than NOT_YET says (${owner}). Lower or delete its entry.`
-          : `${file} reads English in MORE places than NOT_YET allows. The new one is not owned by anybody.`,
-      ).toBe(sites);
-    });
-  }
 });
