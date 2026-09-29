@@ -67,6 +67,12 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   issueLeftOpen: (branch: string, commitLog: string, held?: string[]) => string | null;
   deathReading: (dead: { pid: number; started: string; step?: string; target?: string }) => string[];
   ourShed: (tree: unknown, tmp?: string) => boolean;
+  finishLanding: (args: {
+    fromQueue: boolean;
+    target: string;
+    branch: string;
+    push: () => boolean;
+  }) => { ok: boolean; state: 'preflight-green' | 'pushed' | 'push-rejected'; message: string };
 };
 
 const workflow = readFileSync(WORKFLOW, 'utf8');
@@ -522,6 +528,33 @@ describe('a killed landing says what it was and what it left on main', () => {
     }
   });
 
+  it('reports preflight-green as verified but not landed', () => {
+    const gitDir = git(REPO, 'rev-parse', '--git-dir');
+    const lock = join(gitDir, 'land.lock');
+    const last = join(gitDir, 'land.last.json');
+    const previousLock = existsSync(lock) ? readFileSync(lock, 'utf8') : null;
+    const previousLast = existsSync(last) ? readFileSync(last, 'utf8') : null;
+    if (existsSync(lock)) unlinkSync(lock);
+    writeFileSync(last, JSON.stringify({
+      step: 'preflight-green',
+      target: dead.target,
+      branch: 'chatgpt/352-queue-only-landing',
+    }));
+    try {
+      const r = spawnSync('node', [TOOL, '--status'], { encoding: 'utf8', cwd: REPO });
+      const out = `${r.stdout}${r.stderr}`;
+      expect(r.status).toBe(0);
+      expect(out).toContain('preflight-green');
+      expect(out).toContain('NOT pushed to main');
+      expect(out).toContain('/land');
+    } finally {
+      if (previousLock !== null) writeFileSync(lock, previousLock);
+      else if (existsSync(lock)) unlinkSync(lock);
+      if (previousLast !== null) writeFileSync(last, previousLast);
+      else if (existsSync(last)) unlinkSync(last);
+    }
+  });
+
   /**
    * THE SWEEP READS ITS PATH OUT OF A FILE, SO IT GETS A GUARD.
    *
@@ -720,6 +753,135 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
     } finally {
       if (previous !== null) writeFileSync(lock, previous);
       else if (existsSync(lock)) unlinkSync(lock);
+    }
+  });
+});
+
+
+describe('only the serialized queue can move main after verification', () => {
+  it('wires the hidden queue flag into the final boundary and records preflight-green', () => {
+    const source = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+    expect(source).toContain("const FROM_QUEUE = process.argv.includes('--from-queue')");
+    expect(source, 'main bypasses finishLanding, so the queue boundary is only test decoration')
+      .toMatch(/finishLanding\(\{\s*fromQueue: FROM_QUEUE,/);
+    expect(source, 'a session-green result is not persisted for --status')
+      .toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
+    expect(source, 'the main push exists outside the finishLanding callback')
+      .not.toMatch(/mark\('push'\);[\s\S]*?finishLanding\(/);
+  });
+
+  it('reproduces the push race without making a session restart verification', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-land-race-'));
+    const remote = join(root, 'remote.git');
+    const session = join(root, 'session');
+    const outsider = join(root, 'outsider');
+    const runGit = (cwd: string, ...args: string[]) =>
+      execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+    const commit = (cwd: string, name: string) => {
+      runGit(cwd, 'config', 'user.name', name);
+      runGit(cwd, 'config', 'user.email', `${name}@example.test`);
+    };
+    const push = (cwd: string, target: string) =>
+      spawnSync('git', ['push', 'origin', `${target}:main`], {
+        cwd,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).status === 0;
+
+    try {
+      execFileSync('git', ['init', '--bare', remote], { cwd: root, stdio: 'ignore' });
+      execFileSync('git', ['clone', remote, session], { cwd: root, stdio: 'ignore' });
+      commit(session, 'session');
+      writeFileSync(join(session, 'base.txt'), 'base\n');
+      runGit(session, 'add', 'base.txt');
+      runGit(session, 'commit', '-m', 'base');
+      runGit(session, 'branch', '-M', 'main');
+      runGit(session, 'push', '-u', 'origin', 'main');
+      runGit(remote, 'symbolic-ref', 'HEAD', 'refs/heads/main');
+
+      execFileSync('git', ['clone', remote, outsider], { cwd: root, stdio: 'ignore' });
+      commit(outsider, 'outside');
+
+      // Session mode: verification captured this target, then main moved in a
+      // disjoint file. The old landing would attempt a doomed push here.
+      runGit(session, 'checkout', '-b', 'feature');
+      writeFileSync(join(session, 'feature.txt'), 'verified feature\n');
+      runGit(session, 'add', 'feature.txt');
+      runGit(session, 'commit', '-m', 'feature');
+      const preflightTarget = runGit(session, 'rev-parse', 'HEAD');
+
+      writeFileSync(join(outsider, 'outside-1.txt'), 'outside one\n');
+      runGit(outsider, 'add', 'outside-1.txt');
+      runGit(outsider, 'commit', '-m', 'outside one');
+      runGit(outsider, 'push', 'origin', 'main');
+      const outsideOne = runGit(outsider, 'rev-parse', 'HEAD');
+
+      let attemptedPushes = 0;
+      const preflight = land.finishLanding({
+        fromQueue: false,
+        target: preflightTarget,
+        branch: 'feature',
+        push: () => {
+          attemptedPushes += 1;
+          return push(session, preflightTarget);
+        },
+      });
+      expect(preflight.ok).toBe(true);
+      expect(preflight.state).toBe('preflight-green');
+      expect(preflight.message).toContain('open a PR');
+      expect(preflight.message).toContain('/land');
+      expect(attemptedPushes, 'session mode still tried to move main').toBe(0);
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideOne);
+
+      // Queue mode, with no other writer, advances main.
+      runGit(session, 'fetch', 'origin', 'main');
+      runGit(session, 'checkout', '-B', 'queue-ok', 'origin/main');
+      writeFileSync(join(session, 'queue-ok.txt'), 'queue owns the push\n');
+      runGit(session, 'add', 'queue-ok.txt');
+      runGit(session, 'commit', '-m', 'queue ok');
+      const queueTarget = runGit(session, 'rev-parse', 'HEAD');
+      const queued = land.finishLanding({
+        fromQueue: true,
+        target: queueTarget,
+        branch: 'queue-ok',
+        push: () => push(session, queueTarget),
+      });
+      expect(queued).toMatchObject({ ok: true, state: 'pushed' });
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(queueTarget);
+
+      // If an outside writer somehow exists despite #351, queue mode diagnoses
+      // the configuration fault. It never tells a human to repeat the checks.
+      runGit(session, 'fetch', 'origin', 'main');
+      runGit(session, 'checkout', '-B', 'queue-race', 'origin/main');
+      writeFileSync(join(session, 'queue-race.txt'), 'already verified\n');
+      runGit(session, 'add', 'queue-race.txt');
+      runGit(session, 'commit', '-m', 'queue race target');
+      const racedTarget = runGit(session, 'rev-parse', 'HEAD');
+
+      runGit(outsider, 'fetch', 'origin', 'main');
+      runGit(outsider, 'reset', '--hard', 'origin/main');
+      writeFileSync(join(outsider, 'outside-2.txt'), 'outside two\n');
+      runGit(outsider, 'add', 'outside-2.txt');
+      runGit(outsider, 'commit', '-m', 'outside two');
+      runGit(outsider, 'push', 'origin', 'main');
+      const outsideTwo = runGit(outsider, 'rev-parse', 'HEAD');
+
+      const rejected = land.finishLanding({
+        fromQueue: true,
+        target: racedTarget,
+        branch: 'queue-race',
+        push: () => push(session, racedTarget),
+      });
+      expect(rejected).toMatchObject({ ok: false, state: 'push-rejected' });
+      expect(rejected.message).toContain('main ruleset');
+      expect(rejected.message).toContain('LAND_DEPLOY_KEY');
+      expect(rejected.message).not.toContain('Run this again');
+      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideTwo);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });
@@ -1070,9 +1232,19 @@ describe('the connector-only remote landing', () => {
     expect(remote).toContain("&& command === '/land --no-issue-check'");
     expect(remote).toContain("? '--no-issue-check'");
     expect(remote).toContain('ISSUE_CHECK_ARG: ${{ steps.pr.outputs.issue_check_arg }}');
-    expect(remote).toContain('run: npm run land -- --no-verdict $ISSUE_CHECK_ARG');
+    expect(remote).toContain('run: npm run land -- --from-queue --no-verdict $ISSUE_CHECK_ARG');
     expect(remote, 'remote landing must not substitute the incomplete local check').not.toContain('run: npm run check');
     expect(remote, 'the workflow must not bypass land.mjs with its own direct main push').not.toMatch(/run:\s*git push[^\n]*:main/);
+  });
+
+  it('uses the deploy key for the only main-pushing path', () => {
+    expect(remote).toContain('LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}');
+    expect(remote).toContain('persist-credentials: false');
+    expect(remote).not.toContain('persist-credentials: true');
+    expect(remote).toContain('git config core.sshCommand');
+    expect(remote).toContain('git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"');
+    expect(remote).toContain('LAND_DEPLOY_KEY is unavailable');
+    expect(remote).toContain('--from-queue');
   });
 
   it('budgets enough job time for landing plus the verdict wait', () => {
@@ -1080,24 +1252,25 @@ describe('the connector-only remote landing', () => {
     expect(timeout, 'remote landing has no job timeout').toBeTruthy();
     expect(
       Number(timeout),
-      '120m killed run 36281354123 after a ~103m landing and only 17m of the 40m verdict wait',
+      'the queue must fit the rebased landing plus the ordinary post-push verdict window',
     ).toBeGreaterThanOrEqual(180);
   });
 
-  it('records the dispatched check itself, because verdict.yml never hears about it', () => {
-    // A run github-actions[bot] dispatched delivers no `workflow_run`, so no
-    // ref was ever written and nine of nine remote landings reported FAILURE.
-    const record = remote.indexOf('run: node tools/dispatched-verdict.mjs');
-    const read = remote.indexOf('npm run --silent verdict -- "$TARGET_SHA"');
-    expect(record, 'the remote landing no longer records its own verdict').toBeGreaterThan(0);
-    expect(record, 'the ref has to exist before the ordinary reader asks for it').toBeLessThan(read);
-    expect(remote).toContain("DISPATCHED_AT: ${{ steps.dispatch.outputs.at }}");
-    expect(remote).toContain("core.setOutput('at', new Date().toISOString());");
-    const wait = Number(/WAIT_MINUTES: "(\d+)"/.exec(remote)?.[1]);
-    expect(wait, 'a 45m check run has to fit inside the wait').toBeGreaterThanOrEqual(60);
-    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
-    expect(timeout, 'the job cap must cover a ~103m landing plus the whole verdict wait')
-      .toBeGreaterThanOrEqual(103 + wait + 15);
+  it('lets the deploy-key push trigger check, verdict and janitor exactly once', () => {
+    // GITHUB_TOKEN pushes needed an explicit dispatch because GitHub suppresses
+    // their follow-on workflow events. A deploy-key SSH push is an ordinary
+    // push event, so keeping that workaround would run the full check twice.
+    expect(remote).toContain('The deploy-key push below is deliberately NOT a GITHUB_TOKEN push');
+    expect(remote, 'deploy-key landing still manually dispatches a second workflow')
+      .not.toContain('createWorkflowDispatch');
+    expect(remote, 'the old token-suppressed verdict recorder is still in the queue')
+      .not.toContain('tools/dispatched-verdict.mjs');
+    expect(remote).not.toContain("workflow_id: 'check.yml'");
+    expect(remote).not.toContain("workflow_id: 'janitor.yml'");
+
+    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitor).toMatch(/on:\n\s+push:\n\s+branches: \[main\]/);
+    expect(janitor).toContain('github.event.before');
   });
 
   it('defaults a local verdict wait past the longest measured check run', async () => {
@@ -1105,12 +1278,15 @@ describe('the connector-only remote landing', () => {
     expect(DEFAULT_WAIT_MINUTES, 'check runs have taken 45m; 40 was too close').toBeGreaterThanOrEqual(60);
   });
 
-  it('dispatches the existing check after the token-authenticated push, then reads its verdict', () => {
-    expect(remote).toContain('actions: write');
-    expect(remote).toContain('createWorkflowDispatch');
-    expect(remote).toContain("workflow_id: 'check.yml'");
-    expect(remote).toContain("ref: 'main'");
-    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait');
+  it('waits for the normal push-triggered verdict without Actions write permission', () => {
+    expect(remote).toContain('contents: read');
+    expect(remote).not.toContain('actions: write');
+    expect(remote).not.toContain('createWorkflowDispatch');
+    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait 75');
+
+    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
+    expect(timeout, 'the job cap must cover a ~103m landing plus the 75m verdict window')
+      .toBeGreaterThanOrEqual(103 + 75 + 15);
   });
 
   it('has a PR-event bootstrap bridge so the new comment workflow can land itself', () => {
@@ -1122,41 +1298,24 @@ describe('the connector-only remote landing', () => {
     expect(workflow).toContain('pull-requests: read');
   });
 
-  it('dispatches a real janitor sweep, since neither GitHub nor `on: push` acts on a bot-token push', () => {
-    // #266 and #267 landed remotely with `Closes #N` and stayed open until
-    // closed by hand: GitHub ignores closing keywords in a GITHUB_TOKEN push,
-    // and janitor.yml's `push` trigger never fires for one.
-    expect(remote).toContain("workflow_id: 'janitor.yml'");
-    expect(remote, 'a manual dispatch defaults to a dry run, which closes nothing')
-      .toContain("dry_run: 'false'");
-    const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
-    expect(janitor).toContain('workflow_dispatch:');
-    expect(janitor, 'the sweep must read dry_run=false as a real run')
-      .toContain("inputs.dry_run == false && '0'");
-  });
-
-  it('hands the dispatched janitor the range it landed, or it closes nothing', () => {
-    // janitor.mjs gates its whole issue-closing section on JANITOR_RANGE, and
-    // a dispatch has no push event to derive one from.
-    expect(remote, 'main is read before the landing moves it')
-      .toMatch(/id: before\n\s+run: \|\n\s+git fetch --quiet origin main\n\s+echo "sha=\$\(git rev-parse FETCH_HEAD\)"/);
-    expect(remote.indexOf('id: before'), 'before the landing, not after')
-      .toBeLessThan(remote.indexOf('id: landing'));
-    expect(remote).toContain('BEFORE_SHA: ${{ steps.before.outputs.sha }}');
-    expect(remote).toContain('TARGET_SHA: ${{ steps.target.outputs.sha }}');
-    expect(remote).toContain("range: `${process.env.BEFORE_SHA}..${process.env.TARGET_SHA}`");
+  it('does not manually dispatch janitor now that the deploy-key push supplies a real range', () => {
+    expect(remote).not.toContain("workflow_id: 'janitor.yml'");
+    expect(remote).not.toContain("dry_run: 'false'");
+    expect(remote).not.toContain('BEFORE_SHA:');
+    expect(remote).not.toContain('id: before');
 
     const janitor = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
-    expect(janitor).toMatch(/workflow_dispatch:\n\s+inputs:[\s\S]*\n\s+range:\n\s+description:/);
-    expect(janitor, 'a dispatched sweep reads its range from the input')
-      .toContain("github.event_name == 'workflow_dispatch' && inputs.range");
+    expect(janitor).toContain('push:');
+    expect(janitor).toContain('branches: [main]');
+    expect(janitor).toContain("github.event_name == 'push'");
+    expect(janitor).toContain('github.event.before');
   });
 
   it('reports without requiring issue or pull-request write access', () => {
     expect(remote).toContain("if: always() && steps.pr.outcome == 'success'");
     expect(remote).toContain('steps.landing.outcome');
     expect(remote).toContain('steps.verdict.outcome');
-    expect(remote).toContain('explicitly dispatched post-push check');
+    expect(remote).toContain('normal push-triggered check');
     expect(remote).toContain('core.summary.addRaw(body).write()');
     expect(remote).not.toContain('issues: write');
     expect(remote).not.toContain('pull-requests: write');

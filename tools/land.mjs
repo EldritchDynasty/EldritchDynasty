@@ -23,14 +23,20 @@
  * written for CI and wired into nothing for its whole life under a hand-kept
  * list. This is that argument one level up.
  *
- *   npm run land                     # fetch, rebase, install, the whole set,
- *                                    # push, then WAIT for CI
- *   npm run land -- --status         # is a landing running, or did one die?
+ *   npm run land                     # session preflight: fetch, rebase,
+ *                                    # install, run the whole CI set, STOP
+ *                                    # green at preflight-green; never push main
+ *   npm run land -- --status         # running / dead / last preflight-green
  *   npm run land -- --dry-run        # print the plan and do none of it
- *   npm run land -- --no-verdict     # push and do not wait to be judged
- *   npm run land -- --no-issue-check # land even though the branch names an
- *                                    # issue no commit closes
+ *   npm run land -- --no-issue-check # preflight even though the branch names
+ *                                    # an issue no commit closes
  *   npm run land -- --full           # the whole set even on a docs-only diff
+ *
+ * `--from-queue` is intentionally absent from the normal command list. It is the
+ * remote /land workflow's capability boundary: only that serialized job may
+ * cross from a green preflight to `git push …:main`. Its `--no-verdict`
+ * belongs there because remote-land.yml waits for the ordinary push-triggered
+ * check and its verdict itself.
  *
  * A DIFF OF ONLY MARKDOWN, ON A GREEN BASE, RUNS THE SHORT SET — typecheck,
  * validate and the fast lane, which is CI's short tier and holds every test
@@ -59,7 +65,8 @@
  *
  * It does make this command load-bearing in a way it was not: on a draft
  * branch, the steps below are the only place the slow suites and the gates
- * run before the push. `land.test.ts` is what keeps that honest — the step
+ * run before a session hands the verified head to the queue. `land.test.ts`
+ * is what keeps that honest — the step
  * set is still DERIVED from the workflow, and `ciScripts` cannot see an `if:`
  * at all, so a tier can never quietly subtract a job from what this runs.
  */
@@ -277,6 +284,41 @@ const NO_VERDICT = process.argv.includes('--no-verdict');
 const NO_ISSUE_CHECK = process.argv.includes('--no-issue-check');
 const STATUS = process.argv.includes('--status');
 const FULL = process.argv.includes('--full');
+const FROM_QUEUE = process.argv.includes('--from-queue');
+
+/**
+ * THE LAST VERIFIED RESULT IS NOT THE LIVE LOCK.
+ *
+ * A session landing now stops at preflight-green: it has verified a rebased
+ * SHA, but it has deliberately NOT moved main. That state has to survive the
+ * process so `npm run land -- --status` can answer "verified, not landed"
+ * without leaving a dead pid lock that the next landing mistakes for a crash.
+ */
+export function finishLanding({ fromQueue, target, branch, push }) {
+  if (!fromQueue) {
+    return {
+      ok: true,
+      state: 'preflight-green',
+      message:
+        `green on ${target.slice(0, 7)} — enqueue it: open a PR from \`${branch}\` and comment \`/land\` ` +
+        '(or `/land --no-issue-check`). The session shell cannot perform that GitHub action; ' +
+        'use the GitHub connector/tooling.',
+    };
+  }
+
+  if (!push()) {
+    return {
+      ok: false,
+      state: 'push-rejected',
+      message:
+        'queue push rejected — the /land queue is the only writer allowed to move main. ' +
+        'Check the main ruleset bypass and the LAND_DEPLOY_KEY queue credential. ' +
+        'Do not restart the verification loop; fix the queue/ruleset configuration.',
+    };
+  }
+
+  return { ok: true, state: 'pushed', message: '' };
+}
 
 /**
  * Commit messages unique to this branch, best effort. Checked before the
@@ -363,7 +405,27 @@ const tryGit = (...args) => {
  * problem. Two SESSIONS landing at once is already handled, and more strongly
  * — the push is a compare-and-swap and the server rejects the loser.
  */
-const LOCK = join(git('rev-parse', '--git-dir'), 'land.lock');
+const GIT_DIR = git('rev-parse', '--git-dir');
+const LOCK = join(GIT_DIR, 'land.lock');
+const LAST = join(GIT_DIR, 'land.last.json');
+
+function readLast() {
+  if (!existsSync(LAST)) return null;
+  try {
+    return JSON.parse(readFileSync(LAST, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function remember(step, extra = {}) {
+  try {
+    writeFileSync(LAST, JSON.stringify({ step, at: new Date().toISOString(), ...extra }));
+  } catch {
+    // Status is diagnostic. A result that cannot be remembered must not turn a
+    // green verification into a red one.
+  }
+}
 
 const alive = (pid) => {
   try {
@@ -505,6 +567,7 @@ export function deathReading(dead) {
 }
 
 function takeLock() {
+  try { unlinkSync(LAST); } catch { /* no previous terminal result */ }
   const dead = readLock();
   if (dead) {
     say('\n  A PREVIOUS LANDING DID NOT FINISH:');
@@ -533,6 +596,13 @@ function takeLock() {
 function status() {
   const seen = readLock();
   if (!seen) {
+    const last = readLast();
+    if (last?.step === 'preflight-green') {
+      say(`last landing state: preflight-green on ${String(last.target ?? '').slice(0, 7)}.`);
+      if (last.branch) say(`  branch ${last.branch} was verified but was NOT pushed to main.`);
+      say('  enqueue it with a PR plus /land (or /land --no-issue-check).');
+      return 0;
+    }
     say('no landing is running, and none left a mark on this checkout.');
     return 0;
   }
@@ -610,8 +680,11 @@ async function main() {
     !NO_ISSUE_CHECK && issueLeftOpen(branch, ownCommitMessages(), claimedIssues(branch)),
   ].filter(Boolean);
 
-  say(`landing ${branch} → main`);
-  say(`  fetch · rebase · ${STEPS.map((s) => `npm run ${s}`).join(' · ')} · push`);
+  say(`landing ${branch} → ${FROM_QUEUE ? 'main' : 'preflight'}`);
+  say(
+    `  fetch · rebase · ${STEPS.map((s) => `npm run ${s}`).join(' · ')} · ` +
+    (FROM_QUEUE ? 'push' : 'preflight-green'),
+  );
 
   // A dry run REPORTS the preconditions rather than stopping at the first one.
   // Being told about the dirty tree and then, on the next attempt, about the
@@ -781,7 +854,7 @@ async function main() {
   }
 
   /**
-   * WHAT WAS TESTED MUST BE WHAT IS PUSHED.
+   * WHAT WAS TESTED MUST BE THE HEAD HANDED TO THE QUEUE.
    *
    * The tree is checked for cleanliness at the top and then the steps run for
    * half an hour, during which nothing stopped the agent editing files. The
@@ -802,11 +875,25 @@ async function main() {
   // tree cannot affect what was verified or what is pushed. The guard is gone
   // because the condition is, which is the better of the two ways to fix a
   // check that keeps firing.
-  mark('push');
-  say(`\n$ git push origin ${target.slice(0, 7)}:main`);
-  if (!run('git', ['push', 'origin', `${target}:main`])) {
-    die('push rejected — somebody landed first. Run this again: it rebases and re-checks.');
+  const finished = finishLanding({
+    fromQueue: FROM_QUEUE,
+    target,
+    branch,
+    push: () => {
+      mark('push');
+      say(`\n$ git push origin ${target.slice(0, 7)}:main`);
+      return run('git', ['push', 'origin', `${target}:main`]);
+    },
+  });
+
+  if (!finished.ok) die(finished.message);
+  if (finished.state === 'preflight-green') {
+    remember('preflight-green', { target, branch });
+    say('\nverdict: preflight-green');
+    say(`  ${finished.message}`);
+    return;
   }
+
   // The step that separates "nothing reached main" from "a commit is on main
   // and nobody heard the verdict" — the only two readings a corpse can have.
   mark('verdict');
