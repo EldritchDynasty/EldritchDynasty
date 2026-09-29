@@ -226,6 +226,8 @@ function confirmNaming(item: PlatItem): void {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
   display: grid; place-items: center; padding: 30px;
+  /* The row is the window, not the content: see `Book.vue` (#356). */
+  grid-template-rows: minmax(0, 100%);
   padding-top: max(30px, env(safe-area-inset-top));
   padding-bottom: max(30px, env(safe-area-inset-bottom));
   padding-left: max(30px, env(safe-area-inset-left));

@@ -83,6 +83,8 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
   display: grid; place-items: center; padding: 30px;
+  /* The row is the window, not the content: see `Book.vue` (#356). */
+  grid-template-rows: minmax(0, 100%);
   /* NO OVERLAY HONOURED THE SAFE AREA (issue #106). See `Book.vue` for why
      these fall back to nothing on a device with no notch to clear. */
   padding-top: max(30px, env(safe-area-inset-top));
