@@ -38,11 +38,10 @@ function chooseFile(): Promise<unknown | null> {
   });
 }
 
-// This is the shared mobile implementation of the client-owned Platform interface.
-// It is bundled beside the web assets for both Android and iOS, so the client
-// imports no native module and contains no host detection. Preferences retains
-// slots across app termination; the App plugin supplies lifecycle events, while
-// Android additionally supplies the hardware back-button event.
+// This is the Android implementation of the client-owned Platform interface.
+// It is bundled beside the web assets, so the client imports no native module
+// and contains no host detection. Preferences retains slots across activity
+// death; the App plugin supplies Android's pause and back events.
 const platform = {
   async listSaves(): Promise<Summary[]> {
     const { keys } = await Preferences.keys();
