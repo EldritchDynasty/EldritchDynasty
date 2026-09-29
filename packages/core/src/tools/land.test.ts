@@ -1293,26 +1293,36 @@ describe('the connector-only remote landing', () => {
     expect(remote).toContain('git switch -c "$HEAD_REF" "$HEAD_SHA"');
   });
 
-  it('runs the one landing through its push and mirrors the local staged-work escape hatch', () => {
+  it('runs the authoritative preflight and recorded push as two land.mjs capabilities', () => {
     expect(remote).toContain("context.eventName === 'issue_comment'");
     expect(remote).toContain("&& command === '/land --no-issue-check'");
     expect(remote).toContain("? '--no-issue-check'");
     expect(remote).toContain('ISSUE_CHECK_ARG: ${{ steps.pr.outputs.issue_check_arg }}');
-    expect(remote).toContain('run: npm run land -- --from-queue --no-verdict $ISSUE_CHECK_ARG');
+    expect(remote).toContain('run: npm run land -- --from-queue $ISSUE_CHECK_ARG');
+    expect(remote).toContain('run: npm run land -- --from-queue --push-preflight --no-verdict');
     expect(remote, 'remote landing must not substitute the incomplete local check').not.toContain('run: npm run check');
     expect(remote, 'the workflow must not bypass land.mjs with its own direct main push').not.toMatch(/run:\s*git push[^\n]*:main/);
   });
 
-  it('uses the deploy key for the only main-pushing path', () => {
-    expect(remote).toContain('LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}');
+  it('mints a repository-scoped GitHub App token only after the expensive preflight', () => {
+    expect(remote).toContain('LAND_APP_CLIENT_ID:');
+    expect(remote).toContain('LAND_APP_PRIVATE_KEY:');
+    expect(remote).toContain('actions/create-github-app-token@v3');
+    expect(remote).toContain('client-id: ${{ secrets.LAND_APP_CLIENT_ID }}');
+    expect(remote).toContain('private-key: ${{ secrets.LAND_APP_PRIVATE_KEY }}');
+    expect(remote).toContain('permission-contents: write');
     expect(remote).toContain('persist-credentials: false');
-    expect(remote).not.toContain('persist-credentials: true');
-    expect(remote).toContain('git config core.sshCommand');
-    expect(remote).toContain('git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"');
-    expect(remote).toContain('LAND_DEPLOY_KEY is unavailable');
-    expect(remote).toContain('--from-queue');
-  });
+    expect(remote).not.toContain('LAND_DEPLOY_KEY');
+    expect(remote).not.toContain('git config core.sshCommand');
+    expect(remote).not.toContain('git@github.com:');
 
+    const preflight = remote.indexOf('- name: Run authoritative queue preflight');
+    const token = remote.indexOf('- name: Mint the landing GitHub App token');
+    const push = remote.indexOf('- name: Push the recorded queue preflight');
+    expect(preflight).toBeGreaterThan(0);
+    expect(token, 'the one-hour App token is minted before the long verification run').toBeGreaterThan(preflight);
+    expect(push, 'the App token is not minted immediately before the push-only continuation').toBeGreaterThan(token);
+  });
   it('budgets enough job time for landing plus the verdict wait', () => {
     const timeout = /\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1];
     expect(timeout, 'remote landing has no job timeout').toBeTruthy();
@@ -1322,12 +1332,12 @@ describe('the connector-only remote landing', () => {
     ).toBeGreaterThanOrEqual(180);
   });
 
-  it('lets the deploy-key push trigger check, verdict and janitor exactly once', () => {
-    // GITHUB_TOKEN pushes needed an explicit dispatch because GitHub suppresses
-    // their follow-on workflow events. A deploy-key SSH push is an ordinary
-    // push event, so keeping that workaround would run the full check twice.
-    expect(remote).toContain('The deploy-key push below is deliberately NOT a GITHUB_TOKEN push');
-    expect(remote, 'deploy-key landing still manually dispatches a second workflow')
+  it('lets the GitHub App push trigger check, verdict and janitor exactly once', () => {
+    // GITHUB_TOKEN pushes suppress most follow-on workflow events. The dedicated
+    // App installation token does not, so keeping the old manual-dispatch
+    // workaround would run the authoritative check twice.
+    expect(remote).toContain('A GitHub App installation token is deliberately NOT GITHUB_TOKEN');
+    expect(remote, 'App landing still manually dispatches a second workflow')
       .not.toContain('createWorkflowDispatch');
     expect(remote, 'the old token-suppressed verdict recorder is still in the queue')
       .not.toContain('tools/dispatched-verdict.mjs');
@@ -1364,7 +1374,7 @@ describe('the connector-only remote landing', () => {
     expect(workflow).toContain('pull-requests: read');
   });
 
-  it('does not manually dispatch janitor now that the deploy-key push supplies a real range', () => {
+  it('does not manually dispatch janitor now that the App push supplies a real range', () => {
     expect(remote).not.toContain("workflow_id: 'janitor.yml'");
     expect(remote).not.toContain("dry_run: 'false'");
     expect(remote).not.toContain('BEFORE_SHA:');
