@@ -119,7 +119,11 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
   ) {
     const title = 'The Ledger Stayed Open';
     const opening = `${p.name} stopped growing older before the Ledger was finished.`;
-    if (!ctx.world.chronicle.some((entry) => entry.title === title && entry.text?.startsWith(opening))) {
+    if (!ctx.world.chronicle.some((entry) =>
+      entry.title === title
+      && entry.rung === 'demigod'
+      && entry.people?.includes(p.id)
+    )) {
       ctx.world.chronicle.push({
         year: ctx.world.year,
         weight: 'paragraph',
@@ -127,6 +131,7 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
         text: `${opening} The book remained open on the table. The house waited.`,
         named: false,
         rung: 'demigod',
+        people: [p.id],
       });
     }
   }
