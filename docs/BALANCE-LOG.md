@@ -8748,3 +8748,61 @@ The ordinary chronicler ending sample reached no Long-only ending; the ascendant
 
 `npm run gate:campaigns -- 12` now prints the static inventory beside played reach under both chronicler and ascendant policies.
 Its played row deliberately reports rather than judges until enough runs establish a stable campaign-exclusive reach band.
+
+### #332 (2026-09-29): what raising Apotheosis toward 8% would take
+
+The owner kept the 8–29% band on #332, allowed the God gate to be relaxed,
+and ruled that missing the floor is reported and does not fail CI while the
+game is pre-production. `gates (endings)` now prints the band and the
+measured rate. This entry records what moved the rate and what did not, so
+the next attempt starts from the funnel rather than from the God gate.
+
+**Method.** The same 100 × 500 ascendant probe as Stage 5F (seeds 5100–5199,
+`playToTheEnd(…, 'ascendant')`), with each gate relaxed through throwaway
+environment hooks in a scratch worktree. None of it is committed. Every
+change re-rolls every later draw, so at n = 100 a difference of one or two
+Apotheoses is noise (one standard error at 2% is about 1.4 runs).
+
+| Relaxation | Apotheosis / 100 |
+|---|---|
+| none (baseline) | 1 |
+| God: 6 clauses instead of 7 | 1 |
+| God: Madness floor 80 instead of 90 | 1 |
+| God: Mind may trail Madness by 30 | 1 |
+| every rung: Mind +20 for the Madness ≤ Mind test | 4 |
+| every rung: Respect counted one tier higher | 0 |
+| both of the last two | 1 |
+| both, with Mind +40 | 1 |
+| ascendant embellishes from Known, not only from Eminent | 2 |
+| the Unmaking's success costs 1 Respect tier instead of 2 | 1 |
+| the Unmaking's success costs no Respect | 1 |
+| **all at once:** 5 clauses, floor 70, Mind slack 30, ladder Mind +20, Respect +1, free Unmaking | **3** |
+
+**Relaxing one God gate at a time moves nothing**, because takers fail
+different gates. The independent pass counts over the Unmaking's takers barely
+overlap: in the baseline, 11 takers clear power, 16 clear books and circle, 8
+clear Mind, 4 clear clauses and 5 clear Respect, and 1 clears all of them.
+
+**Attested God is not reached God.** The breakdown of every run whose book
+attests God:
+
+| | book attests God | house actually reached God | Apotheosis | lost after reaching it |
+|---|---|---|---|---|
+| baseline | 3 | 1 | 1 | — |
+| all relaxations | 7 | 5 | 3 | 1 broken line (5121), 1 Unmade (5167) |
+
+Seeds 5106 and 5194 attest God in both columns and reach only Demigod. The
+ascendant's embellishment forged the last rung (`forgeableRung`, #77), and
+`readTheChronicle` capped the reading at `ascension.best`. They end Devoured
+with zero rungs withheld, which is correct: it is the truth ceiling doing
+its job, not a defect.
+
+**Conclusion.** The rate is bounded by how many houses reach God at all: 1 in
+100 as shipped, and 5 in 100 with every personal God gate and both ladder-wide
+walls relaxed together. A reached God still leaks to the Unmaking's 36%
+failure branch, to extinction, and to forgery. 8% at n = 100 therefore needs
+more houses arriving at the Unmaking with a descendant ready: supply, which is
+the mechanism work #332's body names (the pair and Ledger timing). Loosening
+§22's gates beyond the table above would stop them being the gates the brief
+describes. Nothing in this entry is shipped, and the reported rate stays at
+the baseline.
