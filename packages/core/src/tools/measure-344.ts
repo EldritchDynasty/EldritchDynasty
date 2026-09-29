@@ -17,11 +17,16 @@ function mean(xs: number[]): number {
   return xs.reduce((sum, x) => sum + x, 0) / (xs.length || 1);
 }
 
+const bundle = loadContent();
+const founderSeed = bundle.characters.find((s) => s.key === 'founder');
+if (!founderSeed) throw new Error('no founder seed');
+const authoredBias = { ...founderSeed.bias };
+
 for (const strength of strengths) {
-  const bundle = structuredClone(loadContent());
-  const founderSeed = bundle.characters.find((s) => s.key === 'founder');
-  if (!founderSeed) throw new Error('no founder seed');
-  founderSeed.bias = { ...founderSeed.bias, eldritch_power: strength };
+  // bootstrap reads content but never mutates the authored seed. This temporary
+  // probe deliberately varies the one field under calibration, then restores
+  // the authored value after all samples.
+  founderSeed.bias = { ...authoredBias, eldritch_power: strength };
 
   const founderFont: number[] = [];
   const founderPower: number[] = [];
@@ -61,3 +66,5 @@ for (const strength of strengths) {
     ].join(' | '),
   );
 }
+
+founderSeed.bias = authoredBias;
