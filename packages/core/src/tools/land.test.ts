@@ -1144,7 +1144,7 @@ describe('a markdown-only change runs the short set, and only then', () => {
     expect(
       unexplained,
       `${unexplained.join(', ')} names a markdown file in code, outside the fast lane. A docs-only ` +
-      `landing skips everything outside it, so if this READS markdown and can fail a build, a ` +
+      `CI tier skips everything outside it, so if this READS markdown and can fail a build, a ` +
       `markdown-only change could break main unseen. Move the check into a fast test, or add it ` +
       `to OUTSIDE_FAST_LANE with the reason it cannot change a verdict.`,
     ).toEqual([]);
@@ -1153,12 +1153,13 @@ describe('a markdown-only change runs the short set, and only then', () => {
     expect(stale, `OUTSIDE_FAST_LANE explains files that no longer name markdown: ${stale.join(', ')}`).toEqual([]);
   });
 
-  it('is decided by one module, which the landing and CI both call', () => {
+  it('keeps CI docs-only classification while session preflight defaults to the same short tier', () => {
     const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
-    expect(code).toMatch(/landingPlan\(git\('rev-parse', 'origin\/main'\), target\)/);
-    expect(code).toMatch(/landPhases\(plan\.short \? DOCS_ONLY_STEPS : STEPS\)/);
+    expect(code).toContain('const short = !FROM_QUEUE && !FULL_PREFLIGHT');
+    expect(code).toContain('landPhases(short ? DOCS_ONLY_STEPS : STEPS)');
+    expect(code).toContain("process.argv.includes('--full-preflight')");
     expect(workflow).toContain('node tools/docs-only.mjs "$BASE" "$HEAD_SHA"');
   });
 });
