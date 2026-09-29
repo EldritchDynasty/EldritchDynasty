@@ -582,16 +582,22 @@ events:
             - id: refused
               weight: 100
               text: The other party objects in modern Aubrenic and removes the three words.
+              # #341: what refusing costs is not coin but a reputation, and
+              # this event's own purposes name the rumour it never planted.
               effects:
-                - { kind: treasury, delta: -2 }
+                - { kind: rumour, op: seed, id: rumour_the_house_reads_ambric, accuracy: 0.7 }
         - id: take_the_term
           label: Seal it. The house needs the bargain.
           outcomes:
             - id: bound
               weight: 100
-              text: The first payment is small. That is why there is a second.
+              text: >-
+                {ADVOCATE} reads the three words aloud once more before the
+                seal goes on, and is not asked to read anything else that
+                year. The first payment is small. That is why there is a second.
               effects:
                 - { kind: treasury, delta: -18 }
+                - { kind: relationship, from: { slot: ADVOCATE }, to: head, sentiment: -10 }
 
   - id: the_advocates_day
     title: Two Marks a Day
