@@ -43,8 +43,9 @@ events:
                 the round dances go on until the fires are down. Two cups stay
                 full at the head of the board all night. In the morning
                 somebody has drunk one of them and nobody ever finds out who.
+              # #341: both sides paid the same 13 crowns, which is the feast's
+              # bill and not the choice's. The choice is what is said aloud.
               effects:
-                - { kind: treasury, delta: -13 }
                 - { kind: relationship, from: { slot: MOURNER }, to: head, sentiment: 8 }
         - id: name_them
           label: Stand and name them both aloud.
@@ -59,7 +60,6 @@ events:
                 the names wrong, and holds the house higher for it than for
                 anything it did that year with money.
               effects:
-                - { kind: treasury, delta: -13 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: MOURNER }, to: head, sentiment: 14 }
 

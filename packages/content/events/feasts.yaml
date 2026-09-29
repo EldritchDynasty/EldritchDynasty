@@ -62,8 +62,11 @@ events:
                 for nothing and blamed for nothing, which is the ordinary
                 relation between a hall and a village and is not to be
                 despised.
+              # #341: thanked for nothing and blamed for nothing is no change,
+              # and the other outcome's price is the keeper's word, which is
+              # its rumour. A Respect point beside it billed that twice.
               effects:
-                - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: The Thaw ball was played on the Wend and the house stood on the bank. The custom was kept. }
             - id: he_does_not_get_up
               weight: 40
               tags: [hard]
@@ -74,7 +77,6 @@ events:
                 house should have moved, and the keeper says it in his own
                 house, to his wife, once.
               effects:
-                - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_boy_in_the_shallows, accuracy: 0.5 }
 
   - id: precedence_at_greening

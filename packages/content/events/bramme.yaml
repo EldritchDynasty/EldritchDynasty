@@ -62,8 +62,9 @@ events:
                 It costs a mark that was never going to be paid. Two more
                 things go out of the store before Thaw and the yard man stops
                 mentioning them.
+              # #341: a fine remitted in the same breath moves no coin, as the
+              # text says. What forgiving buys and costs is the parish.
               effects:
-                - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: an_eviction_remembered
