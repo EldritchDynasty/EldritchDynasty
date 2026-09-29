@@ -49,7 +49,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | `editor` | Vue 3 authoring tool. Imports `core` directly, so preview is the real thing. Its effect, slot and check forms are generated from the Zod schemas (`reference.ts` → `fieldsOfSchema`), so they cannot fall behind the unions | Reimplemented simulation, and any hand-listed copy of a closed union |
 | `client` | Vue 3 game. Every gameplay read/action goes through `GameSession`; host I/O goes through the generic `Platform` seam | `session.ctx`, a second simulation read model, native APIs, or any rule of its own |
 | `shell` | Electron Windows host: window, filesystem-backed saves/import/export and NSIS packaging | Rules |
-| `mobile` | Capacitor Android host: activity, device services, save/import/export bridge and store artefacts | Rules, simulation state, duplicate client UI |
+| `mobile` | Capacitor host for Android, and iOS next (#349): device services, save/import/export bridge and store artefacts | Rules, simulation state, duplicate client UI |
 
 ---
 
@@ -99,7 +99,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | Host I/O — saves, import/export, pause/back | `packages/client/src/platform.ts` + `packages/shell/src/preload.cjs` + `packages/mobile/src/platform-bridge.ts` | `packages/client/src/platform.test.ts`, `packages/shell/src/saves.test.ts` |
 | What the **player** sees and clicks | `packages/client/src/` | `packages/client/src/lib/verbs.test.ts`, `packages/client/src/lib/run.slow.test.ts` |
 | The **Windows host / installer** | `packages/shell/` | `npm run smoke --workspace @ed/shell`, packaged smoke on release tags |
-| The **Android host** | `packages/mobile/` — bridge in `packages/mobile/src/platform-bridge.ts` | Android tag build + the client `Platform` contract |
+| The **mobile host** (Android; iOS next, #349) | `packages/mobile/` — one bridge for both, `packages/mobile/src/platform-bridge.ts` | Android tag build + the client `Platform` contract |
 | **Land** — parcels, and income as the sum of what is held | `core/src/land.ts` | `land.test.ts`, `land.slow.test.ts`, `gate:land` |
 | **The Muster** — the levy, and what a war costs | `core/src/muster.ts` | `muster.test.ts`, `muster.slow.test.ts`, `gate:war` |
 | **The papers** — lineage documents as the real dowry | `core/src/people/papers.ts` | `papers.test.ts` |

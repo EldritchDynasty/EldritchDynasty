@@ -26,7 +26,7 @@ packages/
   editor/    Vue 3 + Vite authoring tool. Imports `core` directly.
   client/    Vue 3 + Vite game. Reads and writes the world through `GameSession`.
   shell/     Electron Windows host. Owns the window and the disk. Owns no rules.
-  mobile/    Capacitor Android host. Owns activity/device services. Owns no rules.
+  mobile/    Capacitor host: Android, and iOS next (#349). Owns device services. Owns no rules.
 CLAUDE.md         Claude Code compatibility shim; imports this file.
 ARCHITECTURE.md   The map: where a thing lives, and how to add one.
 DesignConcepts/   The concept brief. The authority on game rules.
@@ -332,7 +332,7 @@ so an agent loads only what its task needs:
 | [packages/content/AGENTS.md](packages/content/AGENTS.md) | Writing events and characters. |
 | [packages/editor/AGENTS.md](packages/editor/AGENTS.md) | The authoring tool, and its silent-failure list. |
 | [packages/client/AGENTS.md](packages/client/AGENTS.md) | The game, and the one rule that keeps it on its side of the seam. |
-| [packages/shell/AGENTS.md](packages/shell/AGENTS.md) · [packages/mobile/AGENTS.md](packages/mobile/AGENTS.md) | The Windows and Android hosts. Neither owns a rule. |
+| [packages/shell/AGENTS.md](packages/shell/AGENTS.md) · [packages/mobile/AGENTS.md](packages/mobile/AGENTS.md) | The Windows and mobile (Android, iOS) hosts. Neither owns a rule. |
 
 The enforcement points for the invariants above are greppable:
 
@@ -513,7 +513,7 @@ true even if nobody opens it.
 - **Cadet branches** (concept §16) are modelled — see invariant 10 and `people/branches.ts`. A man of the blood leaves the year his brother takes the seal; the family grows sideways to ~70 living across six halls by the term instead of ~20 in one.
 - **The suitor draft** is built — `people/match.ts`. Blood of the main hall is dealt three cards, one of them usually a cousin, each with a house, a price and the kinship the documents claim; the rest of the world still pairs through `autoMarry`. A card is a `MintRecipe` rather than a person, so the two declined never enter the world. `wed` is the one marriage path both use.
 - **Player choice** is wired — see invariant 9 and `events/decisions.ts`. Choice events, player-cast slots and the Record block all go on a docket that stops the clock, and `autoResolve` still answers them for the harness.
-- **Two hosts, one client.** `packages/shell` loads the built game client in Electron, packages Windows with electron-builder/NSIS, and smoke-tests both source and packaged layouts; release-tag CI requires a signing certificate. `packages/mobile` wraps that same client with Capacitor for Android. Neither host owns game rules or duplicate UI.
+- **Two hosts, one client.** `packages/shell` loads the built game client in Electron, packages Windows with electron-builder/NSIS, and smoke-tests both source and packaged layouts; release-tag CI requires a signing certificate. `packages/mobile` wraps that same client with Capacitor for Android, and will for iPhone through the same bridge ([#349](https://github.com/JamesFlames/EldritchDynasty/issues/349)); macOS and Linux desktop builds are out of scope. Neither host owns game rules or duplicate UI.
 - **Fertility is heritable.** Fecundity is a Core attribute weighted seventy-thirty toward the mother, driving both completed family size and the annual conception chance — see invariant 10 and [#28](https://github.com/JamesFlames/EldritchDynasty/issues/28).
 - **The Ledger pays out.** Every named, clause-bearing Age reveals one clause to a house that keeps an archivist. Runs recover 4–9 of the nine, and about three quarters reach the God gate of seven.
 - **Hostility is an edge.** Grudges are recorded, inherited down the generations by their own policy, and decay. Content can gate on `grudgeAgainstUs`.
