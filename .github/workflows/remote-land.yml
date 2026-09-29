@@ -218,8 +218,9 @@ jobs:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
         run: npm run --silent verdict -- "$TARGET_SHA" --wait 75
 
-      # The landing can fail before its push; the explicit check can fail after
-      # the push. Always report current trunk rather than collapsing those states.
+      # The landing can fail before its push; the normal push-triggered check
+      # can fail after it. Always report current trunk rather than collapsing
+      # those states.
       - name: Report landing result
         if: always() && steps.pr.outcome == 'success'
         uses: actions/github-script@v7
