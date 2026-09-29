@@ -28,7 +28,7 @@ import { writeWindowsReleaseProof } from './windows-release-proof.mjs';
  * After packaging on Windows, this script boots the freshly-created
  * `win-unpacked` application with `--smoke`. For the game that proves the
  * packaged client/save bridge; for the Mod Editor it additionally proves the
- * second entrypoint selected `mode: mod-editor` than silently opening
+ * second entrypoint selected `mode: mod-editor` rather than silently opening
  * the game under a different product name.
  *
  * Every game package also writes `windows-release-proof.json` beside the NSIS
