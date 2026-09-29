@@ -30,6 +30,17 @@ describe('founding inheritance', () => {
     (s) => s.fatherKey === founderSeed.key && s.sex === 'female',
   );
 
+  it('uses the authored child sex to choose the father\'s X or Y', () => {
+    for (let sample = 0; sample < 16; sample++) {
+      const ctx = bootstrap(bundle, 34_300 + sample);
+      for (const seed of seededChildren) {
+        const child = genomeOf(personNamed(ctx, seed.name));
+        if (seed.sex === 'female') expect(child.sex[1], seed.name).not.toBeNull();
+        else expect(child.sex[1], seed.name).toBeNull();
+      }
+    }
+  });
+
   it('passes the founder\'s single X intact to every seeded daughter, except recorded mutations', () => {
     let compared = 0;
 
