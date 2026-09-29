@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('edPlatform', {
   deleteSave: async (slot) => { await result(ipcRenderer.invoke('ed:delete-save', slot)); },
   readLibrary: async () => (await result(ipcRenderer.invoke('ed:read-library'))).library ?? null,
   writeLibrary: async (library) => { await result(ipcRenderer.invoke('ed:write-library', library)); },
+  unlockAchievement: async (id) => { await result(ipcRenderer.invoke('ed:unlock-achievement', id)); },
   readUserContent: async () => (await result(ipcRenderer.invoke('ed:read-user-content'))).files ?? {},
   exportSave: async (save) => { await result(ipcRenderer.invoke('ed:export-save', save)); },
   importSave: async () => (await result(ipcRenderer.invoke('ed:import-save'))).save ?? null,
