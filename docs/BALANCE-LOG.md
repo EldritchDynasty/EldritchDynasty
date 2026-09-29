@@ -8566,3 +8566,98 @@ is a no-agency stall: Books are long-lived here while remaining actionable.
 No threshold, event budget, Match rate or ladder requirement is changed by
 #270. Any gameplay response belongs to the system that owns the measured
 blocker and should be raised separately.
+
+## #325 (2026-09-28): the endings gate judges the Unmaking, not one Apotheosis
+
+`gate (endings)` failed only if the chronicler reached Apotheosis at least as
+often as the ascendant house. The chronicler's count is 0, so the check held
+while the ascendant column had **one** Apotheosis in 100 runs, and that is
+what it had (`bdb7891`, and #185's accepted measurement before it). At a true
+rate near 1%, a re-rolled batch shows none about 37% of the time.
+
+**Owner's decision on #325: (c).** Judge a step earlier in the God funnel
+with counts the CI batch can carry, and print Apotheosis as a diagnostic. The
+absolute 29% Apotheosis ceiling stays as a CI guard. Batch size and CI time
+are unchanged: 100 paired runs, 500 years, seeds 5100–5199.
+
+| | before | after |
+|---|---|---|
+| judged claim | ascendant Apotheosis > chronicler's | ascendant runs with an Unmaking taker > chronicler's, through `expectRate` |
+| ascendant | 1/100 Apotheosis | 16/100 runs with a taker (Apotheosis 1/100, printed) |
+| chronicler | 0/100 Apotheosis | 1/100 runs with a taker (Apotheosis 0/100, printed) |
+| margin | one run; no standard error | (0.16 − 0.01) / 0.0367 ≈ **4.1 SE** (the rule needs 2) |
+
+The chronicler's taker count was never recorded before, because the gate
+counted takers only under the ascendant policy. It is counted in both columns
+now. It came back 1, not the 0 the old comparison would have implied, which is
+why the comparison had to be measured rather than assumed. The judgement lives
+in `tools/ascendant-verdict.ts`, and `ascendant-verdict.test.ts` hands it batches
+it must reject: parity, and a 3-to-0 lead that is only 1.7 SE.
+`npm run gates -- endings` took 7m26s locally.
+
+## #326 (2026-09-28): echoes, common enough to teach and rare enough not to nag
+
+#211 shipped Bearing's echo lines and measured neither half of "common enough
+to teach causality without becoming repetitive". Measured on `68a69db`,
+chronicler play, seeds 901–906. The per-kind count is the copies of the one
+sentence each kind had:
+
+| | echo lines per run | most copies of ONE line per run | mean of that |
+|---|---|---|---|
+| Short (300y) | 15, 6, 2, 11, 9, 2 | 12, 3, 2, 8, 7, 1 | **5.5** |
+| Long (500y) | 14, 11, 2, 16, 9, 1 | 9, 9, 2, 10, 5, 1 | **6.0** |
+
+Nearly all of it is `took_the_cousin`: a house marrying in takes the cousin
+card for each child of a generation, and every card echoed as "People still
+spoke of…".
+
+**Change.** Each act kind rotates three lines, and a kind echoes at most once
+a generation (`ECHO_SPACING = ECHO_AFTER`). A held-back echo is still billed:
+`bearingOf` reads acts, not lines, and a test pins that. Measured after, over
+seeds 901–912 (`echo.slow.test.ts`):
+
+| | echo lines per run | most copies of one line |
+|---|---|---|
+| Short | 10, 6, 2, 7, 7, 2, 7, 6, 1, 7, 9, 6 (mean 5.8) | 3, 1, 1, 2, 2, 1, 2, 2, 1, 3, 3, 2 (mean 1.9) |
+| Long | 11, 8, 2, 11, 8, 1, 13, 8, 1, 15, 15, 13 (mean 9.7) | 3, 2, 1, 3, 2, 1, 3, 2, 1, 3, 3, 3 (mean 2.3) |
+
+**The bars, chosen deliberately.** A mean of at most **4** copies of one line
+per run is the repetition ceiling. It sits above the rotation's arithmetic
+floor (three lines, one echo a generation, so 300 years gives ~12/3) and below
+the 5.5–6.0 the old code measured, so the old code fails it. A mean of at
+least **2** echo lines per run is the reach floor. It sits under the lowest
+single run that still echoes at all. Both go through `expectMean`, so a
+margin under two standard errors fails with the batch size that would carry
+it.
+
+### #326 stage 2 (2026-09-28): two echo chains Bearing does not bill
+
+#211's first acceptance line asked for act → echo → bill chains across
+systems, "the later bill ... resolved by the system that already owns it".
+Every chain it shipped was billed by Bearing. There are now two more:
+
+- **A quarrel** (`people/relationships.ts`, `echoGrudges`). A grudge held
+  against this house that is still live a generation after it began writes
+  one line, linked to the page where it started. A house holding several
+  quarrels is heard from once a generation, and a grudge that has faded
+  writes nothing. The bill stays with the grudge: its own decay, its
+  inheritance policy, and content gated on `grudgeAgainstUs`.
+- **A secret that walked** (`people/secrets.ts`). The page that tells it now
+  links back (`cause`) to the page that saw the servant go. The bill is the
+  open Discrepancy, which the Discrepancy system owns.
+
+Every echo line now carries `echoFrame`, the sentence frame that wrote it
+(`bearing:took_the_cousin:1`, `grudge:2`). `echo.slow.test.ts` counts those
+tags across both systems, never the words. The first cut rotated the grudge
+lines by a count kept on the grudges, and since grudges decay and are
+deleted that count reset: one sentence came back 9 times in a Long Line. The
+line is now keyed on generation and house. Re-measured over seeds 901–912,
+all echo systems together:
+
+| | echo lines per run | of them grudge lines | most copies of one frame |
+|---|---|---|---|
+| Short | 14, 9, 2, 10, 10, 3, 10, 6, 1, 8, 13, 8 | 4, 3, 0, 3, 3, 1, 3, 0, 0, 1, 4, 2 | 3, 2, 1, 2, 3, 1, 2, 2, 1, 3, 4, 2 (mean 2.2) |
+| Long | 17, 11, 2, 20, 16, 1, 16, 10, 1, 22, 24, 20 | 6, 3, 0, 9, 8, 0, 3, 2, 0, 7, 9, 7 | 3, 2, 1, 4, 5, 1, 3, 2, 1, 3, 4, 4 (mean 2.75) |
+
+Both terms clear stage 1's bars (mean at most 4 copies of one frame, at
+least 2 echo lines per run), and the bars are unchanged.

@@ -274,6 +274,9 @@ export const GrudgeS = z.object({
   severity: z.number(),
   inheritance: z.enum(['none', 'heir_only', 'all_blood', 'house_wide']),
   decayPerYear: z.number(),
+  /** Issue #326. Optional, so a save from before grudges echoed loads unchanged. */
+  echoedIn: z.number().optional(),
+  echoed: z.boolean().optional(),
 });
 
 export const RelationshipS = z.object({
@@ -428,6 +431,7 @@ export const LooseSecretS = z.object({
   since: z.number(),
   severity: z.enum(['minor', 'major']),
   told: z.number().optional(),
+  page: z.string().optional(),
 });
 
 export const TaleCirculationStateS = z.object({
@@ -526,6 +530,8 @@ export const ChronicleEntryS = z.object({
   cause: z.object({ year: z.number(), page: z.string().optional() }).optional(),
   /** People explicitly cast on this authored page (#268). */
   people: z.array(z.string()).optional(),
+  /** Which echo sentence frame wrote this line (#326). Absent on every other page. */
+  echoFrame: z.string().optional(),
 });
 
 /**
@@ -623,6 +629,12 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
       line: z.enum(['fertile', 'ordinary', 'thin', 'unknown']).default('unknown'),
       lineSeen: z.number().default(0),
       words: z.string().default(''),
+      /**
+       * The market's word on the house's blood, as a word rather than a
+       * sentence (issue #276). Optional: a card saved before it existed loads
+       * as one the market said nothing structured about.
+       */
+      blood: z.enum(['deep', 'drop']).optional(),
       /**
        * The papers (concept §7). Defaulted for the same reason `line` is: a
        * save written before the dowry was documentation still loads, as a hand
@@ -827,6 +839,8 @@ export const SavedGameS = z.object({
       about: z.string().optional(),
       /** Whether the one-generation echo has already been written. */
       echoed: z.boolean().optional(),
+      /** The year that echo was written; absent when held back as a repeat (#326). */
+      echoedIn: z.number().optional(),
       /** The page the act wrote, when the book wrote one. */
       page: z.string().optional(),
     })).default([]),

@@ -615,6 +615,7 @@ describe('the six land risk shapes', () => {
     const result = tickLandRisks(ctx, riskRng([1, 3.4], [true]));
 
     expect(result.sarrowSank).toBe(true);
+    expect(result.struck).toContainEqual({ route: 'sarrow_sink', parcel: 'sarrow_bottom' });
     expect(heldParcels(ctx).some((p) => p.defId === 'sarrow_bottom')).toBe(false);
     expect(ctx.world.chronicle.at(-1)?.text).toMatch(/black water off Sarrow/);
   });
@@ -627,8 +628,9 @@ describe('the six land risk shapes', () => {
     tickLandRisks(ctx, riskRng([1], [false]));
     const before = landIncome(ctx);
 
-    tickLandRisks(ctx, riskRng([1], [true]));
+    const result = tickLandRisks(ctx, riskRng([1], [true]));
 
+    expect(result.struck).toContainEqual({ route: 'blight', parcel: 'ardwen_wood' });
     expect(heldParcels(ctx).some((p) => p.defId === 'ardwen_wood')).toBe(true);
     expect(landIncome(ctx)).toBeLessThan(before);
     expect(ctx.world.chronicle.at(-1)?.text).toMatch(/[Bb]light took hold in Ardwen Wood/);
@@ -638,8 +640,9 @@ describe('the six land risk shapes', () => {
     const ctx = testWorld(bundle);
     const chronicleBefore = ctx.world.chronicle.length;
 
-    tickLandRisks(ctx, riskRng([1], [false]));
+    const result = tickLandRisks(ctx, riskRng([1], [false]));
 
+    expect(result.struck).toEqual([]);
     expect(ctx.world.chronicle).toHaveLength(chronicleBefore);
     expect(heldParcels(ctx).find((p) => p.defId === 'ardwen_wood')?.yieldBonus ?? 0).toBe(0);
   });

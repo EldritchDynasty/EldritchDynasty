@@ -1,7 +1,9 @@
 # Localisation and saved prose
 
-This document records the storage decision required by issue #276. It does not
-choose a launch language, translation vendor, message format, or UI library.
+This document records the storage decision required by issue #276, where every
+callback that must repeat exactly is carried, and how the text is inventoried.
+It does not choose a launch language, translation vendor, message format, or UI
+library.
 
 ## Decision: the Chronicle is an artefact
 
@@ -129,3 +131,45 @@ for authored quotations and omissions, and a decision about whether Library
 memories quote the historical wording or the current translation.
 
 Until such a product decision exists, **saved words are history**.
+
+## Callback identity: where a phrase must come back
+
+Some words in this game are meant to be recognised when they return — the
+ending's ring against the prologue, a clause read back, an old act named again
+a generation later. A translation (or a rewording) must not be able to break
+that recognition, so each callback has to be carried by an **identity**, never
+by two strings happening to match. Surveyed 2026-09-28 against `main`:
+
+| Callback | What repeats | Carried by | Status |
+|---|---|---|---|
+| The ring (`ending.ts`, rule `ending/ring`) | the prologue's triad, restated in every ending with one element replaced | `EndingRing.beat` (a 1-based index into `prologue.triad`) plus exactly one replacement field; the other beats are read from the prologue itself | **id** — nothing compares text |
+| An Age named late (`year/phases.ts`, `chapter.ts`) | the Age's `opening`, shown when it begins and quoted unchanged on the page that names it | the Age id; both appearances read `AgeDef.opening` | **id** for the quotation. The naming page, like the clause page below, carries no Age id of its own — same gap, same fix |
+| A clause revealed (`revealClause`) | the contract's own words, entered in its own hand | `world.clausesRecovered` and `ActiveAge.paid.clause` hold the clause id | **gap** — the chronicle page itself carries only `title` and `text`, so nothing can tell *which* clause a page is without comparing strings. Nothing does today. The fix is a clause id on `ChronicleEntryS`, which is a `SAVE_FORMAT` change and waits for a slice that owns `save.ts` |
+| The Ledger's Demigod wait (`ascension.ts`) | a page written once when the book holds too few clauses | the condition is `standing.blocker === 'clauses'` since #270 (the endings gate reads the same field); the page is still deduped by `entry.text?.startsWith(opening)` | **half done** — the dedupe still matches English, and `english.test.ts` lists it as the one known site |
+| A bearing act echoed (`bearing.ts`, #211) | the match, claim or parcel an act was about, named again a generation later | the act's `kind` (a closed enum), `year` and `page` id decide *whether* and *when* it echoes | **id** for identity; `about` is a rendered name frozen at the time of the act and interpolated into the echo. Under the storage decision above that is history, not a key — but the echo sentence around it is rendered later, so a book can mix two languages inside one line. Acceptable; noted so nobody is surprised |
+| A later page answering an earlier act (`cause.ts`, #269) | a backlink from a page to the act it answers | `ChronicleEntry.cause` = `{ year, page }`; `cause.ts` resolves the page by id | **id** (a blank is found by `text === null`, which is structure, not English) |
+| A Library memory (`run-library.ts`) | a previous house's page, quoted into a later run | `sourceHouse` and `sourceYear`; `sourceText` is the quotation itself | **id** — `sourceText` is displayed and never compared |
+| A tale cited by an event (`accounts`, `about`) | a nested tale surfacing on a later event | tale ids, validated by `refs/known` | **id** |
+| A tale surfaced on a Match card (`people/panel.ts`) | tales that concern the candidate's house | `TaleDef.houses`, validated by `refs/known` | **id** — it searched the tale's text and teller for the house's name until #276 |
+
+The rule for a new callback: if the second appearance has to be *recognised*,
+give the first one an id and have the second one read it. A phrase repeated by
+hand in two YAML files is a callback nothing can check, and the first
+translator to render them differently has broken it without anyone noticing.
+
+## How much there is, and in which voice
+
+`npm run audit:strings` inventories every player-facing string source — content
+YAML, sentence literals in `packages/core/src`, and the client's templates,
+attributes and scripts — with counts, words and `{SLOT}` interpolations, and
+tags each with the register it is written in (`event`, `interlude`, `frame`,
+`prologue`, `ledger`, `tale`, `age`, `adviser`, `chronicler`, `interface`).
+`-- --files` adds the per-file table. It is an inventory, never a gate, and it
+chooses no language.
+
+The voice comes from where a string lives, per the register split in
+AGENTS.md → Skills, except that a `tier: frame` event is an interlude wherever
+it is filed. Which content keys count is a closed pair of lists in
+`packages/core/src/tools/string-audit.ts`; its test fails when a content key
+carries multi-word text and is in neither, so a new prose field cannot join the
+game without the inventory being told whether a player reads it.

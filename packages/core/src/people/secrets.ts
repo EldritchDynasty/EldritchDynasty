@@ -1,5 +1,5 @@
 import type { LooseSecret, Person, RetainerContract } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import { chronicleEntryId, type SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { isBonded } from './bond.js';
@@ -154,8 +154,12 @@ export function walkSecrets(
   }
 
   if (!walked.length) return [];
+  // The page that saw them go, which the page that tells it links back to.
+  const page = chronicleEntryId(ctx);
+  for (const loose of walked) loose.page = page;
   w.looseSecrets.push(...walked);
   w.chronicle.push({
+    id: page,
     year: w.year,
     weight: 'line',
     text: `${p.name} took a place elsewhere within the year, and took the rest of it along.`,
@@ -236,7 +240,14 @@ export function tellSecrets(ctx: SimCtx, rng: Rng): string[] {
     }
 
     const house = w.houses.get(loose.house)?.name ?? loose.house;
+    // AN ECHO BILLED BY ANOTHER SYSTEM (issue #326). The act was letting the
+    // servant go; this page is its echo, and it links back to the page that
+    // saw them leave. The bill is the open Discrepancy above, which the
+    // Discrepancy system owns — proof costs a Respect tier, and the creditor
+    // reads it on the last night — not Bearing.
     w.chronicle.push({
+      id: chronicleEntryId(ctx),
+      cause: { year: loose.since, ...(loose.page ? { page: loose.page } : {}) },
       year: w.year,
       weight: 'paragraph',
       text: `Something this house has never written down was known at ${house} by the spring, `

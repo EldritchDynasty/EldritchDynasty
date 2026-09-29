@@ -1,6 +1,7 @@
 import type { Grudge, Person, PersonId, Relationship } from '@ed/schema';
 import { asId } from '@ed/schema';
-import type { SimCtx, WorldState } from '../world.js';
+import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
+import { ECHO_AFTER, ECHO_SPACING } from '../bearing.js';
 
 /**
  * RELATIONSHIPS AND GRUDGES.
@@ -220,6 +221,85 @@ export function tickRelationships(ctx: SimCtx): void {
     moved.from = from;
     moved.to = to;
   }
+
+  echoGrudges(ctx);
+}
+
+/**
+ * A QUARREL, A GENERATION ON (issue #326). The second echo chain whose bill is
+ * not Bearing's. A grudge somebody holds against this house is still held
+ * twenty-five years after it began; the book notices, once, and links back to
+ * the page where it started. The BILL stays with this file: the grudge keeps
+ * decaying at its own rate, passes down by its own inheritance policy, and
+ * reaches the player through content gated on `grudgeAgainstUs`.
+ *
+ * It says only what is true that year — the grudge is live when the line is
+ * written, or no line is written — and a house that holds several quarrels
+ * against this one is heard from once a generation, not once a quarrel.
+ */
+function grudgeLines(house: string, about: string): string[] {
+  return [
+    `At ${house} they had not let go of ${about}.`,
+    `${house} still told ${about} their own way, and still told it against this house.`,
+    `A guest from ${house} was civil at the table and never once mentioned ${about}, which was how everybody knew.`,
+  ];
+}
+
+/**
+ * Which line, keyed on the generation and the house rather than on a count of
+ * earlier echoes: grudges decay and their relationships are deleted, so a
+ * count kept on them resets, and the first cut of this repeated one sentence
+ * nine times in a Long Line. Stateless, deterministic, and it moves every
+ * generation.
+ */
+function grudgeLineIndex(year: number, house: string, n: number): number {
+  let h = 0;
+  for (const ch of house) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return (Math.floor(year / ECHO_SPACING) + h) % n;
+}
+
+function ours(w: WorldState, id: string): boolean {
+  const p = w.people.get(id);
+  return p?.houseOfOrigin === w.playerHouse
+    || (p?.membership.some((m) => m.house === w.playerHouse && m.to === undefined) ?? false);
+}
+
+export function echoGrudges(ctx: SimCtx): number {
+  const w = ctx.world;
+  const holderHouse = (rel: Relationship) => w.people.get(rel.from)?.houseOfOrigin;
+  let written = 0;
+  for (const rel of w.relationships.values()) {
+    if (!ours(w, rel.to)) continue;
+    const house = holderHouse(rel);
+    if (!house || house === w.playerHouse) continue;
+    for (const g of rel.grudges) {
+      if (g.echoed || w.year - g.originYear < ECHO_AFTER) continue;
+      g.echoed = true;
+      // Once a generation per house holding it, however many quarrels it holds.
+      const heard = [...w.relationships.values()]
+        .filter((r) => holderHouse(r) === house)
+        .flatMap((r) => r.grudges)
+        .filter((x) => x.echoedIn !== undefined);
+      if (heard.some((x) => w.year - x.echoedIn! < ECHO_SPACING)) continue;
+      g.echoedIn = w.year;
+      const title = ctx.content.event(g.originEvent)?.title;
+      const about = title ? `what happened in "${title}"` : `what the house did in ${g.originYear}`;
+      const name = w.houses.get(house)?.name ?? house;
+      const lines = grudgeLines(name, about);
+      const line = grudgeLineIndex(w.year, house, lines.length);
+      w.chronicle.push({
+        id: chronicleEntryId(ctx),
+        year: w.year,
+        weight: 'line',
+        text: lines[line]!,
+        echoFrame: `grudge:${line}`,
+        named: false,
+        cause: { year: g.originYear, ...(g.originPage ? { page: g.originPage } : {}) },
+      });
+      written++;
+    }
+  }
+  return written;
 }
 
 const RANK: Record<Grudge['inheritance'], number> = {

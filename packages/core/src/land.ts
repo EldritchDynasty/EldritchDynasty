@@ -322,9 +322,29 @@ export function tickLandImprovements(ctx: SimCtx): void {
 
 const clamp = (n: number, low: number, high: number) => Math.max(low, Math.min(high, n));
 
+/**
+ * A loss the ground dealt the house this year, by what it was and where.
+ *
+ * Structured because something has to count these that is not a reader: the
+ * land gate once found both routes by searching the chronicle for
+ * `'black water off Sarrow'` and `'Blight took hold in'`, so rewording either
+ * sentence — or translating it (issue #276) — would have silently dropped a
+ * loss route from the gate while the sentence still read perfectly well.
+ */
+export const LAND_RISK_ROUTES = ['sarrow_sink', 'blight'] as const;
+export type LandRiskRoute = (typeof LAND_RISK_ROUTES)[number];
+
+export interface LandRiskStrike {
+  route: LandRiskRoute;
+  /** The `ParcelDef` id the risk struck. */
+  parcel: string;
+}
+
 export interface LandRiskResult {
   villageHarvest: number;
   sarrowSank: boolean;
+  /** Every loss this tick dealt, in the order it was dealt. */
+  struck: LandRiskStrike[];
 }
 
 /**
@@ -350,6 +370,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
   const w = ctx.world;
   const villageHarvest = clamp(rng.normal(1, 0.07), 0.78, 1.22);
   let sarrowSank = false;
+  const struck: LandRiskStrike[] = [];
 
   for (const state of [...heldParcels(ctx)]) {
     if (!state.defId) continue;
@@ -369,6 +390,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
         state.yieldFactor = 1;
         if (rng.bool(BLIGHT_CHANCE)) {
           damageParcel(ctx, def.id);
+          struck.push({ route: 'blight', parcel: def.id });
           w.chronicle.push({
             year: w.year, weight: 'line', named: false,
             text: `Blight took hold in ${def.name} this year, and the timber that would have paid for it did not.`,
@@ -387,6 +409,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
         if (rng.bool(0.018)) {
           seizeParcel(ctx, def.id);
           sarrowSank = true;
+          struck.push({ route: 'sarrow_sink', parcel: def.id });
           w.chronicle.push({
             year: w.year, weight: 'line', named: false,
             text: `${def.name} went down in black water off Sarrow, with its cargo and every crown laid into it.`,
@@ -408,7 +431,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
     }
   }
 
-  return { villageHarvest, sarrowSank };
+  return { villageHarvest, sarrowSank, struck };
 }
 
 // ── Phase D: the `land` Effect (issue #91, #98) ─────────────────────────────

@@ -126,6 +126,11 @@ export interface LooseSecret {
   severity: 'minor' | 'major';
   /** The year it was finally told. Undefined while it is still only walking. */
   told?: Year;
+  /**
+   * The Chronicle page that saw them go (issue #326), so the page that tells
+   * it can link back to the act that let it out.
+   */
+  page?: string;
 }
 
 export const AwakeningStateS = z.object({
