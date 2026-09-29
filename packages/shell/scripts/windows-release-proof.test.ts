@@ -74,7 +74,10 @@ describe('Windows release proof', () => {
   });
 
   it('passes the exact path to Windows Authenticode verification without shell interpolation', async () => {
-    const run = vi.fn(async () => undefined);
+    const run = vi.fn(async (
+      _script: string,
+      _options: { env: Record<string, string> },
+    ) => undefined);
     const filePath = "C:\\build\\O'Brien\\Eldritch Dynasty.exe";
 
     await verifyAuthenticode(filePath, { platform: 'win32', run });
