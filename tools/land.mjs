@@ -75,7 +75,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync,
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { nodeModulesLinkType, npmInvocation } from './portable.mjs';
-import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';
+import { DOCS_ONLY_STEPS } from './docs-only.mjs';
 import { closingIssues } from './closing-keywords.mjs';
 
 /** This checkout, derived from the script rather than from the cwd. */
@@ -328,6 +328,33 @@ export function finishLanding({ fromQueue, pushNow = false, target, branch, push
   }
 
   return { ok: true, state: 'pushed', message: '' };
+}
+
+/**
+ * The write-token continuation is allowed to act on exactly one recorded
+ * verification tuple. Keeping this pure makes it possible to prove that a
+ * changed branch, SHA, or base cannot smuggle unchecked bytes into the push.
+ */
+export function queuePushGuard(verified, { branch, target, base }) {
+  if (verified?.step !== 'queue-preflight-green') {
+    return 'no authoritative queue preflight is recorded; refusing a push-only continuation.';
+  }
+  if (verified.branch !== branch) {
+    return `the recorded queue preflight belongs to ${verified.branch ?? 'an unknown branch'}, not ${branch}.`;
+  }
+  if (verified.target !== target) {
+    return (
+      `HEAD is ${target.slice(0, 7)}, but the queue verified ${String(verified.target ?? '').slice(0, 7)}. ` +
+      'Refusing to push bytes the authoritative preflight did not check.'
+    );
+  }
+  if (verified.base !== base) {
+    return (
+      `main moved from verified base ${String(verified.base ?? '').slice(0, 7)} to ${base.slice(0, 7)} before push. ` +
+      'The queue must rebase and verify this entry again; no unchecked fast-forward was attempted.'
+    );
+  }
+  return null;
 }
 
 /**
@@ -688,30 +715,13 @@ async function main() {
     if (!FROM_QUEUE) die('--push-preflight is queue-only and requires --from-queue.');
 
     const verified = readLast();
-    if (verified?.step !== 'queue-preflight-green') {
-      die('no authoritative queue preflight is recorded; refusing a push-only continuation.');
-    }
-    if (verified.branch !== branch) {
-      die(`the recorded queue preflight belongs to ${verified.branch ?? 'an unknown branch'}, not ${branch}.`);
-    }
-
     const target = git('rev-parse', 'HEAD');
-    if (verified.target !== target) {
-      die(
-        `HEAD is ${target.slice(0, 7)}, but the queue verified ${String(verified.target ?? '').slice(0, 7)}. ` +
-        'Refusing to push bytes the authoritative preflight did not check.',
-      );
-    }
 
     say('\n$ git fetch origin main');
     if (!run('git', ['fetch', 'origin', 'main'])) die('fetch failed before the queue push.');
     const base = git('rev-parse', 'origin/main');
-    if (verified.base !== base) {
-      die(
-        `main moved from verified base ${String(verified.base ?? '').slice(0, 7)} to ${base.slice(0, 7)} before push. ` +
-        'The queue must rebase and verify this entry again; no unchecked fast-forward was attempted.',
-      );
-    }
+    const guard = queuePushGuard(verified, { branch, target, base });
+    if (guard) die(guard);
 
     const finished = finishLanding({
       fromQueue: true,
