@@ -1,0 +1,42 @@
+name: issue 344 measurement
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    if: github.head_ref == 'chatgpt/344-founding-inheritance'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Base digest
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git checkout --detach "$BASE_SHA"
+          echo "=== BASE DIGEST ==="
+          npm run digest -- 8 400
+
+      - name: Head digest
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git checkout --detach "$HEAD_SHA"
+          echo "=== HEAD DIGEST ==="
+          npm run digest -- 8 400
+
+      - name: Founding bias calibration
+        run: npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/measure-344.ts
