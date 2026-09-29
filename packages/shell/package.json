@@ -7,9 +7,9 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "mod-editor": "node scripts/dev.mjs --mod-editor",
-    "start": "electron .",
-    "preview": "npm run build --workspace @ed/client && electron .",
-    "smoke": "electron . --smoke",
+    "start": "node scripts/electron.mjs .",
+    "preview": "npm run build --workspace @ed/client && node scripts/electron.mjs .",
+    "smoke": "node scripts/electron.mjs . --smoke",
     "dist:windows": "node scripts/dist-windows.mjs",
     "dist:mod-editor": "node scripts/dist-windows.mjs --mod-editor"
   },

@@ -40,6 +40,12 @@ npm run build:mod-editor # Windows Mod Editor (#75): build editor, package the s
                           # refuses to ship unsigned rather than doing it quietly.
 ```
 
+The three development launch commands go through `scripts/electron.mjs`. Some
+Node-hosted tools export `ELECTRON_RUN_AS_NODE=1` for their own process; passing
+that flag through makes Electron behave as Node and fail before it can create a
+window. The launcher removes that one inherited host flag before starting the
+real Electron binary.
+
 ## Boundaries
 
 - `electron-builder.yml` is the single packaging configuration for both Windows
