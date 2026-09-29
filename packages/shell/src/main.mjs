@@ -88,6 +88,14 @@ function createWindow() {
     target: MOD_EDITOR ? 'editor' : 'client',
   }));
 
+  // NO MENU BAR IN THE GAME (#356). Electron's default File / Edit / View /
+  // Window / Help bar is an application's chrome on top of a book, and every
+  // item in it either does nothing here or opens developer tools. The game
+  // window drops it; the Mod Editor keeps it, being a tool. `removeMenu` is a
+  // per-window call, so on macOS — where the menu belongs to the application —
+  // it changes nothing and the Edit menu's copy and paste keep working.
+  if (!MOD_EDITOR) win.removeMenu();
+
   // A link to a rival house's chronicle opens in the browser, not in a window
   // with no address bar and our preload attached to it.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -238,6 +246,13 @@ function smokeTest(win) {
     const expectedMode = MOD_EDITOR ? 'mod-editor' : 'game';
     if (mode !== expectedMode) {
       done(false, `preload mode is ${mode ?? 'missing'}, wanted ${expectedMode}`);
+      return;
+    }
+
+    // The game shows no menu bar (#356). Only meaningful where a window owns
+    // its menu bar; on macOS the application menu is not the window's.
+    if (!MOD_EDITOR && process.platform !== 'darwin' && win.isMenuBarVisible()) {
+      done(false, 'the game window still shows the File / Edit / View menu bar');
       return;
     }
 
