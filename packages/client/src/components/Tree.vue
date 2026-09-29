@@ -294,11 +294,11 @@ async function jumpToId(id: string): Promise<void> {
     <div v-if="relationAnchor" class="relationship small" aria-live="polite">
       <template v-if="relationshipTo">
         <span class="dim">Recorded relationship:</span>
-        <button class="quiet small" @click="jumpToId(relationAnchor.id)">{{ relationAnchor.name }}</button>
+        <button class="quiet small" :data-relation-person="relationAnchor.id" @click="jumpToId(relationAnchor.id)">{{ relationAnchor.name }}</button>
         <template v-if="relationship">
           <template v-for="step in relationship" :key="step.person.id + ':' + step.relation">
             <span class="dim relation-step">→ {{ step.relation }}</span>
-            <button class="quiet small" @click="jumpToId(step.person.id)">{{ step.person.name }}</button>
+            <button class="quiet small" :data-relation-person="step.person.id" @click="jumpToId(step.person.id)">{{ step.person.name }}</button>
           </template>
         </template>
         <span v-else class="dim">— the book records no path between them.</span>
