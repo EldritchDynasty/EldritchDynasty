@@ -1037,6 +1037,12 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  * correctness one — the gate still runs, and `npm run cost` is what says so.
  */
 const OWN_LANE: Record<string, readonly string[]> = {
+  // #333: measured on green PR #362. These two independent gates accounted
+  // for ~32 of the batch lane's ~37 minutes of gate execution. Giving each
+  // its own runner preserves every seed and assertion while removing their
+  // serial sum from the critical path.
+  blood: ['blood'],
+  'fire-rate': ['fire-rate'],
   war: ['war'],
   // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
   // (`blood-gate.ts`): about 24 minutes more of play, which on `batch` would
