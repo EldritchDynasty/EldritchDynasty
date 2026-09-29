@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { electronEnvironment } from './electron-environment.mjs';
 
 /**
  * Find the application executable inside electron-builder's unpacked Windows
@@ -26,11 +27,12 @@ export async function findPackagedExecutable(releaseDir) {
   return join(unpacked, executables[0]);
 }
 
-function runProcess(executable, args) {
+function runProcess(executable, args, env) {
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, {
       stdio: 'inherit',
       windowsHide: true,
+      env,
     });
 
     child.once('error', reject);
@@ -61,11 +63,11 @@ function runProcess(executable, args) {
  */
 export async function smokePackagedApp(
   releaseDir,
-  { platform = process.platform, run = runProcess } = {},
+  { platform = process.platform, run = runProcess, parentEnv = process.env } = {},
 ) {
   if (platform !== 'win32') return { skipped: true };
 
   const executable = await findPackagedExecutable(releaseDir);
-  await run(executable, ['--smoke']);
+  await run(executable, ['--smoke'], electronEnvironment(parentEnv));
   return { skipped: false, executable };
 }
