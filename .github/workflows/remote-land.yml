@@ -9,6 +9,10 @@ on:
         description: Pull request to land. Used by the check.yml bootstrap bridge.
         required: true
         type: number
+    secrets:
+      LAND_DEPLOY_KEY:
+        description: Write-enabled deploy key used by the only main-pushing path.
+        required: false
 
 # This workflow is deliberately the only connector-only substitute for running
 # `npm run land` in a session shell. It does not recreate the landing in YAML:
@@ -149,7 +153,10 @@ jobs:
         with:
           ref: ${{ steps.pr.outputs.head_sha }}
           fetch-depth: 0
-          persist-credentials: true
+          # A GITHUB_TOKEN credential here would silently remain in origin and
+          # let the landing push with the wrong actor. The queue configures the
+          # deploy key explicitly below.
+          persist-credentials: false
 
       - name: Restore feature branch name
         env:
@@ -157,6 +164,22 @@ jobs:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           git switch -c "$HEAD_REF" "$HEAD_SHA"
+
+      - name: Configure the landing deploy key
+        shell: bash
+        env:
+          LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}
+        run: |
+          if [ -z "$LAND_DEPLOY_KEY" ]; then
+            echo "::error::LAND_DEPLOY_KEY is unavailable. Create the write-enabled deploy key/secret from #351 before enabling the main ruleset."
+            exit 1
+          fi
+          install -d -m 700 "$HOME/.ssh"
+          key="$HOME/.ssh/eldritch-land"
+          printf '%s\n' "$LAND_DEPLOY_KEY" > "$key"
+          chmod 600 "$key"
+          git config core.sshCommand "ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
 
       - uses: actions/setup-node@v4
         with:
@@ -193,7 +216,7 @@ jobs:
         id: landing
         env:
           ISSUE_CHECK_ARG: ${{ steps.pr.outputs.issue_check_arg }}
-        run: npm run land -- --no-verdict $ISSUE_CHECK_ARG
+        run: npm run land -- --from-queue --no-verdict $ISSUE_CHECK_ARG
 
       - name: Capture landed SHA
         id: target
