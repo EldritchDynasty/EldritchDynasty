@@ -85,7 +85,11 @@ export function prologueDef(ctx: SimCtx): PrologueDef | undefined {
   return ctx.content.prologue;
 }
 
-function inheritedRumour(ctx: SimCtx): PrologueView['inherited'] | undefined {
+function inheritedRumour(
+  ctx: SimCtx,
+  def: PrologueDef,
+): PrologueView['inherited'] | undefined {
+  if (def.inheritedLine === undefined) return undefined;
   const memory = [...ctx.world.libraryMemories]
     .sort((a, b) => b.mutations - a.mutations || a.id.localeCompare(b.id))[0];
   if (!memory) return undefined;
@@ -95,9 +99,11 @@ function inheritedRumour(ctx: SimCtx): PrologueView['inherited'] | undefined {
     teller: memory.teller,
     bias: memory.bias,
     text: memory.text,
-    // Frame/myth register: the line says where the account travelled from and
-    // whose voice carries it, but never tells the player whether it is true.
-    line: `There was an older telling already abroad, out of ${memory.sourceHouse}, kept now in the voice of ${memory.teller}; it is set down here as that voice gives it, and no hand in this room is made judge of the account.`,
+    // Authored frame prose: it names where the account came from and whose
+    // voice carries it, and never tells the player whether it is true.
+    line: def.inheritedLine
+      .replaceAll('{house}', memory.sourceHouse)
+      .replaceAll('{teller}', memory.teller),
   };
 }
 
@@ -161,7 +167,7 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
     }),
     thesis: def.thesis,
   };
-  const inherited = inheritedRumour(ctx);
+  const inherited = inheritedRumour(ctx, def);
   if (inherited) view.inherited = inherited;
   if (w.founding) view.founded = { ...w.founding };
   if (w.friends.length) view.friends = w.friends.map((f) => ({ name: f.name, sex: f.sex }));

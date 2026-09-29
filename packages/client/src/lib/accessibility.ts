@@ -203,11 +203,6 @@ export function chapterReplayDisposition(
   return replayDisposition(storage, skipSeenProse, beat) === 'skip' ? 'skip' : 'show';
 }
 
-/**
- * The prologue owns one small piece of presentation state: how many passive
- * beats have been revealed. Keeping the reader-history transition here makes
- * it testable without mounting a second Vue/jsdom runtime.
- */
 export interface InitialProloguePresentation {
   shown: number;
   inheritedVisible: boolean;
@@ -233,6 +228,11 @@ export function initialProloguePresentation(
   };
 }
 
+/**
+ * The prologue owns one small piece of presentation state: how many passive
+ * beats have been revealed. Keeping the reader-history transition here makes
+ * it testable without mounting a second Vue/jsdom runtime.
+ */
 export function initialPrologueShown(
   storage: Pick<Storage, 'getItem' | 'setItem'> | null,
   skipSeenProse: boolean,

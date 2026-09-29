@@ -82,8 +82,37 @@ describe('the prologue', () => {
       teller: 'an unnamed annotator in Ilm\'s library',
       bias: 'correcting the old house from the safety of Ilm\'s margin',
       text: 'The margin says the west tower was locked.',
-      line: 'There was an older telling already abroad, out of House Ash, kept now in the voice of an unnamed annotator in Ilm\'s library; it is set down here as that voice gives it, and no hand in this room is made judge of the account.',
+      line: content.prologue!.inheritedLine!
+        .replaceAll('{house}', 'House Ash')
+        .replaceAll('{teller}', 'an unnamed annotator in Ilm\'s library'),
     });
+    const line = prologueView(ctx)!.inherited!.line;
+    expect(line).toContain('House Ash');
+    expect(line).toContain('an unnamed annotator in Ilm\'s library');
+    expect(line).not.toMatch(/\{(house|teller)\}/);
+  });
+
+  it('shows no inherited account in no one\'s voice when the bundle authors no wrapper', () => {
+    const { inheritedLine: _unwritten, ...unwrapped } = content.prologue!;
+    const ctx = testWorld({ ...content.bundle, prologue: [unwrapped] });
+    ctx.world.libraryMemories = [{
+      id: 'library_memory_a',
+      sourceRun: 'old',
+      sourceHouse: 'House Salt',
+      sourceYear: 1400,
+      sourceText: 'The page.',
+      form: 'rhyme',
+      teller: 'the children of a lower hall',
+      bias: 'keeping what children remember',
+      text: 'The rhyme.',
+      about: 'library:old:page_1',
+      since: ctx.world.year,
+      mutations: 0,
+      people: {},
+      sourceClaims: [],
+      claims: [],
+    }];
+    expect('inherited' in prologueView(ctx)!).toBe(false);
   });
 
   it('breaks equally travelled inherited accounts by id, without a draw', () => {

@@ -130,6 +130,15 @@ export const PrologueDefS = z.object({
    * the run, and every ending reaches back to it (§23).
    */
   thesis: z.string(),
+  /**
+   * The wrapper around an inherited Library account, when the run has one
+   * (#342). `{house}` is the older house the account is about and `{teller}`
+   * the voice now carrying it. It introduces who is speaking and must never
+   * say whether the account is true. Authored here rather than in `core` for
+   * the same reason as `friendsPrompt`: it is frame prose. Without it the
+   * prologue shows no inherited account, rather than one in no one's voice.
+   */
+  inheritedLine: z.string().optional(),
 });
 export type PrologueDef = z.infer<typeof PrologueDefS>;
 
