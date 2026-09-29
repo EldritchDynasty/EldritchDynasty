@@ -297,10 +297,29 @@ describe('the frame', () => {
     expect(counts.every((n) => n > 0), `counts were ${counts.join(',')}`).toBe(true);
   });
 
+  /**
+   * READ OVER RUNS THAT REACH THE TERM, AND OVER MORE OF THEM (#341).
+   *
+   * The frame needs the Narrator crossed over and an open Discrepancy to read,
+   * so a line broken in its founding century has no frame at all — that is a
+   * fact about extinction, which `demography.slow.test.ts` owns, not about
+   * cadence. Two of the twelve seeds above break early (5101 by 1177, 906 by
+   * 1141) and were nearly all of this batch's spread: a content re-roll left
+   * it at 6.42 by 1.8 standard errors. Over 36 seeds, the 27 that reach the
+   * term measured 7.52 with a standard deviation of 0.85. The floor and the
+   * ceiling did not move; the instrument stopped measuring early deaths.
+   */
   it('averages 5-18 interludes per run across the batch', () => {
-    const counts = frameCounts(SEEDS);
-    expectMean({ values: counts, floor: 5 - 1e-9, what: 'interludes per run' });
-    expectMean({ values: counts, ceiling: 18 + 1e-9, what: 'interludes per run' });
+    const WIDE = [...SEEDS, ...Array.from({ length: 24 }, (_, i) => 6100 + i * 37)];
+    const counts: number[] = [];
+    for (const seed of WIDE) {
+      const ctx = bootstrap(bundle, seed, 1042);
+      runYears(ctx, CAMPAIGN_YEARS);
+      if (ctx.world.year >= 1042 + CAMPAIGN_YEARS) counts.push(ctx.world.frame.entries.length);
+    }
+    expect(counts.length, 'too few runs reached the term to read a cadence').toBeGreaterThanOrEqual(18);
+    expectMean({ values: counts, floor: 5 - 1e-9, what: 'interludes per full-term run' });
+    expectMean({ values: counts, ceiling: 18 + 1e-9, what: 'interludes per full-term run' });
   });
 
   it('never dispenses systems information — no effects, record or rumour, ever', () => {
