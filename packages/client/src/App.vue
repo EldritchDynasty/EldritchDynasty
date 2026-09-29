@@ -44,7 +44,7 @@ import {
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, mentions, actions,
 } = game;
 
 /**
@@ -148,6 +148,19 @@ const platOpen = ref(false);
 const lineOpen = ref<ReturnType<GameActions['line']> | null>(null);
 function openLine(): void {
   lineOpen.value = actions.line();
+}
+
+/**
+ * DATED BACKLINKS FROM A PERSON TO THE BOOK (#268). mentions() gives stable
+ * page ids from the engine; the book read supplies years for human labels.
+ * No component searches prose for a name, so renames and namesakes cannot
+ * create false links.
+ */
+function mentionPages(person: string): { id: string; year: number }[] {
+  const ids = new Set(mentions(person));
+  if (!ids.size) return [];
+  return actions.book().flatMap((entry) =>
+    entry.id && ids.has(entry.id) ? [{ id: entry.id, year: entry.year }] : []);
 }
 
 function onKey(e: KeyboardEvent): void {
@@ -452,12 +465,26 @@ const yearAndBirths = computed(() => {
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" @select="select" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" />
-          <Tree :view="view" :selected="selected" @select="select" @line="openLine()" />
+          <Tree
+            :view="view"
+            :selected="selected"
+            :line="actions.line()"
+            :mentions="mentionPages"
+            @select="select"
+            @line="openLine()"
+            @book="openBook"
+          />
         </template>
       </div>
 
       <div class="right">
-        <Chronicle :view="view" :frame="frame" :actions="actions" @open="openBook" />
+        <Chronicle
+          :view="view"
+          :frame="frame"
+          :actions="actions"
+          @open="openBook"
+          @person="look"
+        />
       </div>
     </div>
 
