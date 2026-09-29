@@ -874,20 +874,45 @@ describe('only the serialized queue can move main after verification', () => {
       expect(attemptedPushes, 'session mode still tried to move main').toBe(0);
       expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideOne);
 
-      // Queue mode, with no other writer, advances main.
+      // Queue mode first records a full green preflight without pushing. Only
+      // the explicit continuation (where the workflow has just minted its App
+      // token) is allowed to advance main.
       runGit(session, 'fetch', 'origin', 'main');
       runGit(session, 'checkout', '-B', 'queue-ok', 'origin/main');
+      const queueBase = runGit(session, 'rev-parse', 'origin/main');
       writeFileSync(join(session, 'queue-ok.txt'), 'queue owns the push\n');
       runGit(session, 'add', 'queue-ok.txt');
       runGit(session, 'commit', '-m', 'queue ok');
       const queueTarget = runGit(session, 'rev-parse', 'HEAD');
-      const queued = land.finishLanding({
+      let queuePushes = 0;
+      const checked = land.finishLanding({
         fromQueue: true,
         target: queueTarget,
         branch: 'queue-ok',
-        push: () => push(session, queueTarget),
+        push: () => {
+          queuePushes += 1;
+          return push(session, queueTarget);
+        },
+      });
+      expect(checked).toMatchObject({ ok: true, state: 'queue-preflight-green' });
+      expect(queuePushes, 'queue preflight already possessed a push side effect').toBe(0);
+      expect(land.queuePushGuard(
+        { step: checked.state, branch: 'queue-ok', target: queueTarget, base: queueBase },
+        { branch: 'queue-ok', target: queueTarget, base: queueBase },
+      )).toBeNull();
+
+      const queued = land.finishLanding({
+        fromQueue: true,
+        pushNow: true,
+        target: queueTarget,
+        branch: 'queue-ok',
+        push: () => {
+          queuePushes += 1;
+          return push(session, queueTarget);
+        },
       });
       expect(queued).toMatchObject({ ok: true, state: 'pushed' });
+      expect(queuePushes).toBe(1);
       expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(queueTarget);
 
       // If an outside writer somehow exists despite #351, queue mode diagnoses
@@ -909,13 +934,15 @@ describe('only the serialized queue can move main after verification', () => {
 
       const rejected = land.finishLanding({
         fromQueue: true,
+        pushNow: true,
         target: racedTarget,
         branch: 'queue-race',
         push: () => push(session, racedTarget),
       });
       expect(rejected).toMatchObject({ ok: false, state: 'push-rejected' });
       expect(rejected.message).toContain('main ruleset');
-      expect(rejected.message).toContain('LAND_DEPLOY_KEY');
+      expect(rejected.message).toContain('LAND_APP_CLIENT_ID');
+      expect(rejected.message).toContain('LAND_APP_PRIVATE_KEY');
       expect(rejected.message).not.toContain('Run this again');
       expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideTwo);
     } finally {
