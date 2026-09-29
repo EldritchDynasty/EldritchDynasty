@@ -1042,7 +1042,10 @@ const OWN_LANE: Record<string, readonly string[]> = {
   // its own runner preserves every seed and assertion while removing their
   // serial sum from the critical path.
   blood: ['blood'],
-  'fire-rate': ['fire-rate'],
+  // Keep the two readers of fire-rate's 800-run memo in the same process.
+  // Splitting these across lanes would replay the corpus and trade wall clock
+  // for ~15 extra runner-minutes.
+  'fire-rate': ['fire-rate', 'outcome-reach', 'vocabulary-reach'],
   war: ['war'],
   // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
   // (`blood-gate.ts`): about 24 minutes more of play, which on `batch` would
