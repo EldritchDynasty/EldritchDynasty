@@ -70,14 +70,14 @@
  * column that could not buy one would understate what a trying house can
  * reach for a reason unrelated to the ladder itself.
  *
- * `verdictOver`'s policy denominator began as #61's 8–29% target, read
- * against `ascendant`. #133 then changed the complete campaign from 1,000
- * to 500 years and explicitly changed Stage 5F acceptance to **non-zero under
- * intentional play**, while preserving the requirement that trying for the
- * ladder must beat the chronicler. The owner's 29% ceiling remains useful —
- * God must stay rare — but the old 8% millennium-era floor is no longer the
- * Long-Line contract. A game that hands a god to a house that never played
- * for one is still not the game §22 describes.
+ * `verdictOver`'s policy denominator is the owner's 8–29% Apotheosis band
+ * (#61), read against `ascendant`. An agent working #133 retired the 8% floor
+ * on its own reading of Stage 5F; the owner reinstated it on #332
+ * (2026-09-29) and ruled that, while the game is pre-production, missing it
+ * is REPORTED and does not fail CI. The 29% ceiling is still judged — God must
+ * stay rare — and so is #325's check that trying for the ladder beats the
+ * chronicler. A game that hands a god to a house that never played for one is
+ * still not the game §22 describes.
  */
 import { loadContent } from '@ed/content';
 import { indexContent, MAIN_BRANCH, type CampaignId, type Content, type ContentBundle, type EndingId, type Rung } from '@ed/schema';
@@ -637,18 +637,23 @@ const DEVOURED_CEILING = 0.45;
 /**
  * THE UPPER BOUND ON A HOUSE DELIBERATELY PLAYING FOR GOD.
  *
- * #61 originally paired this 29% ceiling with an 8% floor. #133 halves the
- * complete Long Line and its Stage 5F contract deliberately says something
- * different: trying for Apotheosis must beat the chronicler. At about one run
- * in a hundred Apotheosis itself cannot carry that claim, so #325 judges it a
- * step earlier in the funnel (`ascendant-verdict.ts`) and prints Apotheosis
- * as a diagnostic, without fitting a new tiny percentage floor to it.
- *
- * The owner's 29% ceiling is unchanged. It still guards the other failure
- * mode: concentration becoming so strong that God stops being a terminal
+ * The owner's band is 8–29% (#61, 2026-09-20). The 29% ceiling is judged: it
+ * guards against concentration so strong that God stops being a terminal
  * outcome a family has to be built for.
  */
 const APOTHEOSIS_CEILING = 0.29;
+
+/**
+ * THE OWNER'S FLOOR, REPORTED AND NOT JUDGED (#332, 2026-09-29).
+ *
+ * "Keep the 8 percent floor", and "the floor being missed shouldn't block CI
+ * landing, as this is all preprod". So every run of this gate prints the
+ * ascendant rate against it and says plainly when it falls short. Raising the
+ * rate toward it is #332's balance work. Turning this into a failing claim is
+ * the owner's later call, and at 100 runs it would need the ascendant rate
+ * near 15% to clear two standard errors (`expectRate`).
+ */
+export const APOTHEOSIS_TARGET_FLOOR = 0.08;
 
 /**
  * Below this the batch cannot see a five-way distribution and says so.
@@ -918,12 +923,13 @@ export function verdictOver(runs: EndingRun[]): EndingVerdict {
     );
   }
 
-  // #133 Stage 5F: intentional play must make Apotheosis reachable, and it
-  // must buy something the chronicler does not get for free. That relative
-  // comparison is deliberately the LOWER guard now that A Long Line is 500
-  // years; the old #61 8% floor was calibrated for the millennium-era product.
-  // The owner's 29% ceiling remains an absolute guard against making God common.
+  // The owner's 8–29% band (#61, #332). The ceiling is judged; the 8% floor is
+  // reported every run and never fails CI while the game is pre-production
+  // (#332). Trying for the ladder must still beat the chronicler (#325).
   if (ascJudgeable) {
+    lines.push(aShare >= APOTHEOSIS_TARGET_FLOOR
+      ? `  apotheosis target (owner, #332): ${(100 * aShare).toFixed(1)}% is inside the 8–29% band`
+      : `  apotheosis target (owner, #332): ${(100 * aShare).toFixed(1)}% is BELOW the 8% floor — reported, not judged, while pre-production`);
     if (aUnmadeShare < ENDING_FLOOR) {
       failures.push(`  FAIL: unmade is below the ascendant floor (${aUnmade} of ${aN}, floor ${(100 * ENDING_FLOOR).toFixed(0)}%)`);
     }

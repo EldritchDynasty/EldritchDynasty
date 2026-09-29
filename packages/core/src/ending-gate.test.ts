@@ -306,6 +306,21 @@ describe('the ending distribution gate', () => {
       expect(v.lines.join('\n')).toMatch(/ladder diagnostic \(not judged, #325\): apotheosis 0\/100/);
     });
 
+    /**
+     * The owner's 8% floor (#332) is reported, never judged, while the game is
+     * pre-production: a batch below it passes, and says so.
+     */
+    it('reports the owner\'s 8% floor without failing on it', () => {
+      const chronicler = losable().map((r) =>
+        r.ending === 'apotheosis' ? run('forgotten', r.seed) : r);
+      const below = verdictOver([...chronicler, ...ascendant(0.01)]);
+      expect(below.ok, below.lines.join('\n')).toBe(true);
+      expect(below.lines.join('\n')).toMatch(/1\.0% is BELOW the 8% floor — reported, not judged/);
+      const inside = verdictOver([...chronicler, ...ascendant(0.12)]);
+      expect(inside.ok, inside.lines.join('\n')).toBe(true);
+      expect(inside.lines.join('\n')).toMatch(/12\.0% is inside the 8–29% band/);
+    });
+
     it('fails when intentional play never reaches Unmade', () => {
       const chronicler = losable().map((r) =>
         r.ending === 'apotheosis' ? run('forgotten', r.seed) : r);
