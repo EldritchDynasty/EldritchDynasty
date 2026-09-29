@@ -8978,7 +8978,7 @@ the prose owed it, not because it moves the table.
 
 ## #333 (2026-09-29): gate cost is measured, then repacked without shrinking evidence
 
-PR #362's green check run `36561761799` is the before measurement; that PR
+PR #362's green check run `36561761799` is the before measurement; PR #364 is the calibration run for the repacked lanes. That source PR
 does not touch core simulation. Runner timestamps around each emitted gate
 section make the expensive parts attributable rather than inferred from one
 lane total.
