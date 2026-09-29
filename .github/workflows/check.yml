@@ -548,7 +548,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: gates
-        run: npm run gates -- --lane ${{ matrix.lane }}
+        run: |
+          started=$(date +%s)
+          npm run gates -- --lane ${{ matrix.lane }}
+          elapsed=$(( $(date +%s) - started ))
+          node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
 
   # ── THE CORPUS WARM, WHICH BLOCKS NOTHING ─────────────────────────────────
   #
