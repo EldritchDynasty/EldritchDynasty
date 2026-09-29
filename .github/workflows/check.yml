@@ -86,6 +86,7 @@ concurrency:
 # tools/shards.mjs. Keep both timing systems machine-readable; do not add a
 # stopwatch figure here as another source of truth.
 #
+jobs:
   # ── WHICH TIER THIS RUN IS, DECIDED IN ONE PLACE ──────────────────────────
   #
   # THE WASTE THIS EXISTS FOR, MEASURED over runs 169-198 (issue #144). Agents
