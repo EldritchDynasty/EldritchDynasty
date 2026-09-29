@@ -8946,9 +8946,11 @@ buy:
 2. **The top shape is one scene.** `[lasting+money | money]` is 6.6%, and
    `the_race_silted_through` is about half of it by design (step 2's
    decision, written beside it in `the_ladder.yaml`: the ladder's first
-   question is Madness against coin). The 6% ceiling is reachable by moving
-   its companions (`the_levy_at_the_door`, `the_farrow_line_ends`,
-   `a_share_called_in_sarrow`), not by making the race rarer.
+   question is Madness against coin). Its companions are honest trades, read
+   and left alone: `the_levy_at_the_door` is coin against a son,
+   `a_share_called_in_sarrow` coin against a partnership, `the_boar_in_the_oats`
+   coin against the oats. The 6% ceiling needs one of them to ask a different
+   question, which is authoring, not correction, and not a rarer race.
 
 Getting from 25% to under 20% is roughly 180 of 3,574 B-side choices moved
 off shared money shapes. That is new authored trade-offs priced in the
