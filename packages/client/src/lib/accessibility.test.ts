@@ -7,6 +7,7 @@ import {
   SEEN_PROSE_STORAGE_KEY,
   applyAccessibility,
   chapterReplayDisposition,
+  initialProloguePresentation,
   initialPrologueShown,
   hasSeenProse,
   loadAccessibility,
@@ -368,6 +369,51 @@ describe('the prologue earns its seen mark only after it is read (#267)', () => 
       exactText.replace('cold', 'very cold'),
       triad.length,
     )).toBe(0);
+  });
+
+  it('fast-reveals a seen signing without hiding this run\'s inherited account', () => {
+    const s = storage();
+    rememberSeenProse(s, seenProseKey('prologue', exactText));
+
+    expect(initialProloguePresentation(
+      s,
+      true,
+      exactText,
+      triad.length,
+      true,
+    )).toEqual({
+      shown: 3,
+      inheritedVisible: true,
+    });
+
+    expect(initialProloguePresentation(
+      s,
+      true,
+      exactText,
+      triad.length,
+      false,
+    )).toEqual({
+      shown: 3,
+      inheritedVisible: false,
+    });
+  });
+
+  it('places inherited prose after the opening and before the replayable triad', () => {
+    const source = readFileSync(join(import.meta.dirname, '..', 'components', 'Prologue.vue'), 'utf8');
+    const opening = source.indexOf('class="opening"');
+    const inherited = source.indexOf('class="inherited"');
+    const triad = source.indexOf('class="triad"');
+
+    expect(opening).toBeGreaterThan(0);
+    expect(inherited).toBeGreaterThan(opening);
+    expect(triad).toBeGreaterThan(inherited);
+    // The exact seen identity is still assembled from opening + triad + thesis;
+    // the run-specific account never enters the call.
+    const seenCall = source.slice(
+      source.indexOf('const replayText = prologueSeenText('),
+      source.indexOf('/**\n * A DEBT OF THREE PARTS'),
+    );
+    expect(seenCall).not.toContain('inherited');
   });
 
   it('keeps the fast path presentation-only until the existing Sign it gate', () => {
