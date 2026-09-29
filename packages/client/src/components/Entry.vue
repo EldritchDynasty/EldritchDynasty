@@ -90,6 +90,14 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
     <span class="year dim small">{{ entry.year }}</span>
     <h4 v-if="entry.title && entry.text !== null">{{ entry.title }}</h4>
     <p v-if="entry.text !== null">{{ entry.text }}</p>
+    <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
+         became a tooltip. Neither is a touch-safe explanation. The sentence is
+         said; the page still shows the gap, and the visible mark below carries
+         the same fact for sighted readers. -->
+    <p v-else class="blank">
+      <span class="said-not-shown">Somebody decided this year would not be written down.</span>
+      <span aria-hidden="true">&nbsp;</span>
+    </p>
     <!-- PERSON PROVENANCE (#268), not name parsing. applyOutcome recorded the
          cast ids when the page was made; Chronicle.vue resolves only people
          still in the living halls. The words of the page remain prose, while
@@ -105,14 +113,6 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
         @click="emit('person', person.id)"
       >{{ person.name }}</button>
     </div>
-    <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
-         became a tooltip. Neither is a touch-safe explanation. The sentence is
-         said; the page still shows the gap, and the visible mark below carries
-         the same fact for sighted readers. -->
-    <p v-else class="blank">
-      <span class="said-not-shown">Somebody decided this year would not be written down.</span>
-      <span aria-hidden="true">&nbsp;</span>
-    </p>
     <!-- AND VISIBLY (issue #107). A ruled blank with its explanation in a
          tooltip reads, on a phone, as a rendering bug — which is the worst
          possible thing for the most interesting artefact the game produces.
