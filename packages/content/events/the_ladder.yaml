@@ -73,20 +73,24 @@
 # Forty years let the first two scenes come round about 3.6 times in a
 # 300-year Short Line — the two most-repeated choices in the game, and the
 # same question each time. The recurrence is the design: a man is asked in
-# his working life, and asked again. So the rate stays and the RETURN is a
-# different scene: each first asking that he answers carries a `next` to a
-# follow-up with the same man, which asks what the first answer led to and
-# never asks it in coin. The first scene's own cooldown goes to a hundred
-# years, because its return now arrives on its own schedule: measured at
-# seventy, each first scene and each return fired over twice a Short Line,
-# and the lane asked MORE often than it had before (#341's BALANCE-LOG entry).
+# his working life, and asked again. So the lane keeps its forty-year cadence
+# and splits BY MAN. Answering the first scene marks him (`went_past_the_book`,
+# `asked_for_in_wick`); the first scene will not cast a marked man, and its
+# return will cast nobody else. A new climber is asked the first question,
+# and the man who already answered it is asked what his answer led to.
+#
+# The first cut chained the return with `next` and stretched the first
+# scene's cooldown to a hundred years instead. It met the fire-rate bar and
+# halved the ascendant column's Unmaking takers (16 to 7): a lane resting a
+# century never asks the NEXT generation's climber at all, and the Mind the
+# first scene pays went with it. See #341's BALANCE-LOG entry.
 events:
   - id: the_race_silted_through
     title: An Afternoon's Work
     tier: family
     frequency: common
     weight: 260
-    cooldownYears: 100
+    cooldownYears: 70
     tags: [ladder, madness, money, wick]
     purposes: [test_magic_rule, change_standing, worldbuild_through_action]
     conditions: { ascension: { atLeast: adept } }
@@ -95,7 +99,7 @@ events:
     # Daveed" in every run where he is. Where these scenes need the seat they
     # name the bare `head` TARGET, which is a person without being a token.
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: asked_for_in_wick, has: false }] }
     body: >-
       The race silted through above the mill in the spring and Wick has been
       carrying water uphill since Greening. Two hundred crowns hires a gang and
@@ -125,7 +129,7 @@ events:
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 5 }
                 - { kind: respect, delta: 1 }
-              next: { event: wick_asks_for_him_by_name, after: { minYears: 8, maxYears: 20 }, keep: [ASCENDANT] }
+                - { kind: trait, target: { slot: ASCENDANT }, trait: asked_for_in_wick, op: add }
         - id: hire_the_gang
           label: Hire the gang. Keep him out of it.
           outcomes:
@@ -145,12 +149,12 @@ events:
     tier: individual
     frequency: common
     weight: 260
-    cooldownYears: 100
+    cooldownYears: 70
     tags: [ladder, madness, library, blood]
     purposes: [establish_magic_rule, change_relationship, worldbuild_through_action]
     conditions: { ascension: { atLeast: adept } }
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: went_past_the_book, has: false }] }
     body: >-
       The book is a greater work and the man at Cawdry who sold it said so and
       charged accordingly. {ASCENDANT} has had it eleven months and can read
@@ -183,7 +187,7 @@ events:
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 7 }
                 - { kind: attribute, target: { slot: ASCENDANT }, attr: mind, delta: 3 }
-              next: { event: what_he_wrote_past_it, after: { minYears: 10, maxYears: 24 }, keep: [ASCENDANT] }
+                - { kind: trait, target: { slot: ASCENDANT }, trait: went_past_the_book, op: add }
         - id: take_the_book
           label: Take the book. Put it back on the shelf.
           outcomes:
@@ -198,23 +202,22 @@ events:
               effects:
                 - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: -22 }
 
-  # THE RETURN OF `the_race_silted_through` (#341). The village has learned
+  # THE RETURN OF `the_race_silted_through` (#341), for a man who already
+  # carries `asked_for_in_wick`. The village has learned
   # the price of an afternoon and learned that nobody shows it the bill. The
   # question is no longer money against his mind: it is whether the house or
   # the man decides what he spends, and neither answer costs a crown.
   - id: wick_asks_for_him_by_name
     title: Asked For By Name
     tier: family
-    frequency: uncommon
-    weight: 100
-    repeatable: true
-    # A return arrives through its `next`; the cooldown is the ration that
-    # keeps it from also being drawn as ladder pressure on its own.
-    cooldownYears: 60
+    frequency: common
+    weight: 260
+    cooldownYears: 70
     tags: [ladder, madness, wick]
     purposes: [test_magic_rule, change_relationship, plant_rumour]
+    conditions: { ascension: { atLeast: adept } }
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: asked_for_in_wick, has: true }] }
     body: >-
       The race silts again in a wet spring, and this time Wick does not wait
       for the house. The reeve comes up the hill on foot with his hat in both
@@ -257,23 +260,22 @@ events:
                 - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: -12 }
                 - { kind: rumour, op: seed, id: rumour_wick_dug_it_themselves, accuracy: 0.5 }
 
-  # THE RETURN OF `past_what_the_book_says` (#341). He went past the book once.
+  # THE RETURN OF `past_what_the_book_says` (#341), for a man who already
+  # carries `went_past_the_book`. He went past the book once.
   # The question now is not his mind against the shelf but whether the next
   # reader of the blood inherits a map — a thing the record keeps, or a thing
   # burned in front of him.
   - id: what_he_wrote_past_it
     title: The Margins
     tier: individual
-    frequency: uncommon
-    weight: 100
-    repeatable: true
-    # A return arrives through its `next`; the cooldown is the ration that
-    # keeps it from also being drawn as ladder pressure on its own.
-    cooldownYears: 60
+    frequency: common
+    weight: 260
+    cooldownYears: 70
     tags: [ladder, madness, library, blood]
     purposes: [test_magic_rule, change_relationship, worldbuild_through_action]
+    conditions: { ascension: { atLeast: adept } }
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: went_past_the_book, has: true }] }
     body: >-
       The greater work comes down off the shelf in the cold months now, because
       {ASCENDANT} has started writing in it. Not in the text. In the margins, in
@@ -300,6 +302,7 @@ events:
                 time he looks like a man who has put something down.
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 6 }
+                - { kind: attribute, target: { slot: ASCENDANT }, attr: mind, delta: 3 }
                 - { kind: chronicle, text: A greater work in the library was written over in the family's own hand, past the place where the book itself stops. }
         - id: cut_the_pages
           label: Cut the pages out. Burn them where he can see.
