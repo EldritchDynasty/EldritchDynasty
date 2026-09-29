@@ -10,6 +10,11 @@ events:
     tier: family
     frequency: uncommon
     weight: 120
+    # SUPPLY, NOT RECURRENCE (#341). A cousin brings his accounts up the road
+    # once a generation. With no cooldown of its own this re-fired whenever
+    # grievance sat above 35 and the arc had not started — 3.8 times in the
+    # Short Lines it reached, and every time the same four-mile gift.
+    cooldownYears: 60
     tags: [cadet, family, standing]
     purposes: [change_relationship, change_standing, plant_rumour]
     conditions:
