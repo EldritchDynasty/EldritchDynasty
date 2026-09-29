@@ -1,14 +1,14 @@
-# mobile — the Android shell
+# mobile — the phone shell
 
 Capacitor wraps the already-built `@ed/client` application. This package owns
-the Android activity, platform services, and store artefacts. It owns no game
-rules, simulation state, content, or duplicate client UI.
+the Android and iOS hosts, platform services, and store artefacts. It owns no
+game rules, simulation state, content, or duplicate client UI.
 
 ## The seam
 
-`src/platform-bridge.ts` is the Android implementation of the client's
-`Platform` interface. It may use Capacitor plugins here; no file in
-`packages/client/src` may name an Android or Capacitor API. The client receives
+`src/platform-bridge.ts` is the shared mobile implementation of the client's
+`Platform` interface for Android and iOS. It may use Capacitor plugins here; no
+file in `packages/client/src` may name an Android, iOS or Capacitor API. The client receives
 the generic `window.edPlatform` bridge before it starts.
 
 Saves are opaque JSON. Preferences persists named snapshots, while core remains
@@ -18,8 +18,9 @@ schema here.
 ## Commands
 
 ```bash
-npm run sync --workspace @ed/mobile     # bundle the host bridge, copy client assets, sync plugins
-npm run android                          # rebuild, sync, install/run the debug build on a selected device
+npm run sync --workspace @ed/mobile     # bundle the host bridge, copy client assets, sync Android plugins
+npm run android                          # rebuild, sync, install/run the Android debug build on a selected device
+# iOS sync/run commands arrive with #349's committed Capacitor iOS project
 ```
 
 `android/variables.gradle` pins min/compile/target SDK values explicitly. The
@@ -28,7 +29,7 @@ file are ignored and must never be committed.
 
 ## Boundaries
 
-- Keep all native dependencies and status/safe-area work here.
+- Keep all native dependencies and status/safe-area work here, shared where Capacitor is shared and platform-specific only where the native hosts require it.
 - `packages/client/dist` is generated. The bridge injection script may prepare
   it for `cap sync`; do not hand-edit it.
 - The app must keep working offline. Do not add analytics, crash reporting, or
