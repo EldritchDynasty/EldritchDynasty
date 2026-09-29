@@ -56,9 +56,12 @@ events:
                 concede, and a parish that concludes the hall will meet a man
                 halfway when his roof goes. Three men lose their halves in the
                 following eleven years. Two of them are lying.
+              # #341: what the parish concludes is a thing said about the
+              # house, and the Record is where a thing said is kept.
               effects:
                 - { kind: treasury, delta: 5 }
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
+                - { kind: rumour, op: seed, id: rumour_the_hall_meets_a_man_halfway, accuracy: 0.5 }
 
   - id: the_clipped_coin
     title: Four of These Are Light

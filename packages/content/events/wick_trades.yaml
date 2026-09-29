@@ -503,6 +503,9 @@ events:
                 there from the following Frostfall. It is entirely correct.
                 Wick spends that winter in its own cottages and works out for
                 itself which change came first.
+              # #341: the purpose was always plant_rumour, and this is the
+              # side where Wick works something out for itself.
               effects:
                 - { kind: treasury, delta: 4 }
                 - { kind: relationship, from: household, to: head, sentiment: -11 }
+                - { kind: rumour, op: seed, id: rumour_the_forge_door_shut, accuracy: 0.6 }
