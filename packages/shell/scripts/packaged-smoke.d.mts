@@ -1,11 +1,13 @@
 export type PackagedSmokeRunner = (
   executable: string,
   args: string[],
+  env: NodeJS.ProcessEnv,
 ) => Promise<void>;
 
 export interface PackagedSmokeOptions {
   platform?: NodeJS.Platform;
   run?: PackagedSmokeRunner;
+  parentEnv?: NodeJS.ProcessEnv;
 }
 
 export type PackagedSmokeResult =
