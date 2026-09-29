@@ -65,3 +65,11 @@ real Electron binary.
   it then runs the freshly-built `win-unpacked` application with `--smoke`;
   the tagged release job therefore verifies the installed resource path and
   real preload/save bridge before it uploads the installer.
+- Steam achievements (#323) use `steamworks.js` **only in the Electron main
+  process**. The renderer receives one `unlockAchievement(id)` IPC capability;
+  never enable Node integration or disable context isolation to reach Steam.
+  The package is pinned because it ships native binaries, is unpacked from ASAR,
+  and is loaded by the packaged smoke before an installer is trusted. A shipped
+  build contains no App ID: Steam supplies it when launching the game.
+  `ED_STEAM_APP_ID` and `steam_appid.txt` are development aids only, and the
+  latter is explicitly excluded from packaging.
