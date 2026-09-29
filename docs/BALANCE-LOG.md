@@ -8899,3 +8899,58 @@ no game rule moved to meet a test.
 | delegation removes routine prompts (#219) | 2 seeds, passing by one prompt | 2 seeds, none removed | 12 seeds | 88.4 → 88.0 at 300 years |
 | naming's share of prompts | ~11% under a 13% ceiling | 12%, 1.5 SE | ceiling 15%; per-seed count guard unchanged | passes |
 | a head while anyone can be one | — | seed 8080 sampled in a Wardship's first year | exempt a standing Wardship, as `cast.slow.test` does | passes |
+
+### #341 step 3: money as the default axis, first four slices (2026-09-29)
+
+Step 3 re-authors one side of a trade so it costs something other than coin.
+These four slices do the cheapest honest part of that: **sides whose price
+contradicts their own prose.** "The accounts come out level", then 10
+crowns. "A mark that was never going to be paid", then 4 crowns. Both sides
+of the gallery and the second cup charged the same sum, which is the scene's
+bill and not the choice's. "Thanked for nothing and blamed for nothing", then
+a Respect point. Fourteen events across the four slices. Each has a comment beside
+its YAML saying what the text names as the price, and that price is now the
+one it pays. No `Effect` kind, no change to `shapeOf`, no event made rarer.
+
+Measured with `gate:replay -- 48` (96 Short Lines, seeds 901–996), content
+before and after, identical code:
+
+| | before | after | #341 candidate |
+|---|---:|---:|---:|
+| B's choices new by event, familiar by shape | 27.2% (960 / 3,530) | **25.0%** (894 / 3,574) | < 20% |
+| top category shape's share | 7.4% | 6.6% | ≤ 6% |
+| money on one side of the top 10 shapes | 8 | 7 | ≤ 6 |
+| top 10 shapes' cumulative share | 41.9% | 36.6% | |
+| `[money+relationship \| money+relationship]` | 5.7% (2nd) | 3.6% (4th) | |
+| `[money \| money]` | 3.7% (5th) | out of the top 10 | |
+| shape overlap across pairs, whole run | 61% | 59% | |
+
+**Read this at 48 pairs, never at 12.** A 12-pair reading has 782 B-side
+choices, and a 25% share carries about 1.5 points of standard error on
+that. The fourth slice read *worse* at 12 pairs (24.7% → 25.8%) and better
+at 48. The 12-pair table is for finding heavy events. It cannot judge a
+slice.
+
+**What the rest of step 3 has to do.** The remaining money on the top shapes
+is mostly honest: the draper's dowry, the hearth tax, the toll, the pannage
+count, the inn fee on the Quieting. Those events are *about* coin, and
+stripping the coin would be a prose-only choice (#266's `choices/consequence`
+already counts that as false). Two findings bound what the next slices can
+buy:
+
+1. **Moving a side off money does not by itself make the question new.**
+   Slice four's edits landed three events in `[money+relationship |
+   relationship]`, which entered the top ten at once. A shape is only rare if
+   few events share it. Re-authoring toward one favourite non-money price
+   (a relationship) rebuilds the same concentration one column over.
+2. **The top shape is one scene.** `[lasting+money | money]` is 6.6%, and
+   `the_race_silted_through` is about half of it by design (step 2's
+   decision, written beside it in `the_ladder.yaml`: the ladder's first
+   question is Madness against coin). The 6% ceiling is reachable by moving
+   its companions (`the_levy_at_the_door`, `the_farrow_line_ends`,
+   `a_share_called_in_sarrow`), not by making the race rarer.
+
+Getting from 25% to under 20% is roughly 180 of 3,574 B-side choices moved
+off shared money shapes. That is new authored trade-offs priced in the
+vocabulary the game under-uses: `people` (who goes), eligibility, Record
+claims, land. Contradiction-fixing is exhausted well before it gets there.
