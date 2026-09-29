@@ -222,6 +222,41 @@ describe('house ambition (issue #210)', () => {
     expect(mustSurface(g.ctx, pending)).toBeUndefined();
   });
 
+  it('derives Ledger Record relevance from structure, not localisable wording', () => {
+    const g = newGame(content, { seed: 3276, campaign: 'short', decider: 'chronicler' });
+    g.setAmbition('restore_ledger');
+    const pending = quietRecord(g.ctx);
+    pending.event.purposes = ['advance_clause', 'worldbuild_through_action', 'force_record_choice'];
+
+    const before = ambitionRelevance(g.ctx, pending);
+    expect(before).toEqual(expect.objectContaining({ surface: 'record', effect: 'advance' }));
+
+    pending.subject = 'a differently worded household account';
+    pending.options = [
+      { option: 'record', chronicle: 'A different sentence was written.' },
+      { option: 'omit', chronicle: null },
+      { option: 'embellish', chronicle: 'Another different sentence was written.' },
+    ];
+
+    expect(ambitionRelevance(g.ctx, pending)).toEqual(before);
+  });
+
+  it('finds an Ascension Record participant by cast id rather than rendered name', () => {
+    const g = newGame(content, { seed: 3277, campaign: 'short', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const scion = oneSubject(g.ctx);
+    g.ctx.world.scion = scion.id;
+
+    const pending = quietRecord(g.ctx);
+    pending.fill = { SUBJECT: scion.id };
+    pending.subject = 'an ordinary page with no programme words';
+
+    expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
+      surface: 'record',
+      effect: 'advance',
+    }));
+  });
+
   it('reads only the exact remembered choice branch when it changes the bloodline', () => {
     const g = newGame(content, { seed: 3273, campaign: 'short', decider: 'chronicler' });
     g.setAmbition('deepen_blood');
