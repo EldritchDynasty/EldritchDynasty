@@ -9,9 +9,9 @@
  * even though they were part of the exact integrated tree CI exercised.
  *
  * This helper finds the nearest earlier ancestor with a JUDGED main verdict,
- * then prints every commit in base..head. Pending/cancelled/skipped runs are
- * deliberately not boundaries: they answered nothing, so a later integrated
- * run is allowed to cover through them.
+ * then prints every commit in base..head. Pending/cancelled/skipped runs and
+ * synthetic `covered` refs are deliberately not boundaries: only a check that
+ * actually judged that exact main head may define an integration boundary.
  *
  * Safety rule: if no judged main boundary can be proved, return only the head.
  * Never repaint unknown history merely to make the scoreboard look complete.
@@ -23,7 +23,7 @@
 import { execFileSync } from 'node:child_process';
 
 export const TRUNK = 'main';
-const NON_ANSWERS = new Set(['pending', 'cancelled', 'skipped']);
+const NON_BOUNDARIES = new Set(['pending', 'cancelled', 'skipped', 'covered']);
 
 const git = (...args) =>
   execFileSync('git', args, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
@@ -53,7 +53,7 @@ function sourceRunId(run) {
 }
 
 export function isJudgedMainBoundary(meta, currentRunId = '', trunk = TRUNK) {
-  if (!meta || meta.branch !== trunk || NON_ANSWERS.has(meta.conclusion)) return false;
+  if (!meta || meta.branch !== trunk || NON_BOUNDARIES.has(meta.conclusion)) return false;
   if (currentRunId && sourceRunId(meta.run) === String(currentRunId)) return false;
   return true;
 }
@@ -76,7 +76,8 @@ function metaForRef(sha) {
  * Each pair of adjacent judged main tips proves one historical integration
  * range. The newer tip's run tested every commit in older..newer, so missing,
  * feature-branch, pending and cancelled refs inside that range can inherit that
- * exact source verdict. Existing judged main refs are never overwritten.
+ * exact source verdict. Existing independently judged main refs are never
+ * overwritten; synthetic `covered` refs may be repaired from the real source.
  *
  * Nothing older than the oldest pair is returned: without both boundaries the
  * batch cannot be reconstructed honestly.
