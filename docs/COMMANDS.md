@@ -339,9 +339,9 @@ answer because that is where the suites that spawn the real scripts live:
 `portability` all run the tooling and read what it prints. The gates and the
 slow lane stay on one platform; a seeded pure simulation returns the same
 numbers on either, and a second runner spending thirty minutes to re-derive
-them would buy nothing. It costs no wall clock either way — the build's floor
-is the `war` gate lane at 16m50s, and everything in the Windows job runs
-several times inside that.
+them would buy nothing. It costs no wall clock either way — the current
+gate critical path is read from `tools/gate-durations.json`, and the Windows
+job remains below that checked budget.
 
 `npm run land` cannot stand in for it. The landing runs on whatever machine
 the agent is on, so green there says the suite passes THERE. `ciScripts` in
