@@ -10,8 +10,11 @@ on:
         required: true
         type: number
     secrets:
-      LAND_DEPLOY_KEY:
-        description: Write-enabled deploy key used by the only main-pushing path.
+      LAND_APP_CLIENT_ID:
+        description: Client id of the dedicated landing GitHub App.
+        required: false
+      LAND_APP_PRIVATE_KEY:
+        description: Private key of the dedicated landing GitHub App.
         required: false
 
 # This workflow is deliberately the only connector-only substitute for running
@@ -152,8 +155,8 @@ jobs:
           ref: ${{ steps.pr.outputs.head_sha }}
           fetch-depth: 0
           # A GITHUB_TOKEN credential here would silently remain in origin and
-          # let the landing push with the wrong actor. The queue configures the
-          # deploy key explicitly below.
+          # let the landing push with the wrong actor. The queue mints the
+          # dedicated App token only after the expensive preflight is green.
           persist-credentials: false
 
       - name: Restore feature branch name
@@ -162,22 +165,6 @@ jobs:
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           git switch -c "$HEAD_REF" "$HEAD_SHA"
-
-      - name: Configure the landing deploy key
-        shell: bash
-        env:
-          LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}
-        run: |
-          if [ -z "$LAND_DEPLOY_KEY" ]; then
-            echo "::error::LAND_DEPLOY_KEY is unavailable. Create the write-enabled deploy key/secret from #351 before enabling the main ruleset."
-            exit 1
-          fi
-          install -d -m 700 "$HOME/.ssh"
-          key="$HOME/.ssh/eldritch-land"
-          printf '%s\n' "$LAND_DEPLOY_KEY" > "$key"
-          chmod 600 "$key"
-          git config core.sshCommand "ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
-          git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}.git"
 
       - uses: actions/setup-node@v4
         with:
@@ -194,18 +181,54 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # The deploy-key push below is deliberately NOT a GITHUB_TOKEN push.
-      # GitHub therefore emits the ordinary `push` event: check.yml starts on
-      # main, verdict.yml records requested/completed on refs/verdict/<sha>, and
-      # janitor.yml receives the real before..after range. Do not manually
-      # dispatch any of them here — that workaround was only for token-suppressed
-      # pushes and would duplicate CI once the queue owns a deploy key.
-      - name: Run the repository landing through its push
-        id: landing
+      # The expensive authoritative check runs BEFORE any write credential
+      # exists in the job. GitHub App installation tokens expire after about an
+      # hour, while this preflight can exceed that; minting one up front creates
+      # a credential that can be dead precisely when the push is finally due.
+      - name: Run authoritative queue preflight
+        id: preflight
         env:
           ISSUE_CHECK_ARG: ${{ steps.pr.outputs.issue_check_arg }}
-        run: npm run land -- --from-queue --no-verdict $ISSUE_CHECK_ARG
+        run: npm run land -- --from-queue $ISSUE_CHECK_ARG
 
+      # Mint the ruleset-bypass actor only after the exact rebased SHA is green.
+      # No owner/repositories input means create-github-app-token scopes the
+      # installation token to this repository.
+      - name: Mint the landing GitHub App token
+        id: land-app
+        if: steps.preflight.outcome == 'success'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.LAND_APP_CLIENT_ID }}
+          private-key: ${{ secrets.LAND_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Configure Git for the landing App
+        if: steps.preflight.outcome == 'success'
+        shell: bash
+        env:
+          LAND_APP_TOKEN: ${{ steps.land-app.outputs.token }}
+        run: |
+          if [ -z "$LAND_APP_TOKEN" ]; then
+            echo "::error::The landing GitHub App token is unavailable. Configure LAND_APP_CLIENT_ID and LAND_APP_PRIVATE_KEY from #351."
+            exit 1
+          fi
+          auth="$(printf 'x-access-token:%s' "$LAND_APP_TOKEN" | base64 | tr -d '\n')"
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+      # The second land invocation is NOT another verification run. land.mjs
+      # reads .git/land.last.json and refuses unless branch, checked SHA, and
+      # origin/main still equal the tuple recorded by the green queue preflight.
+      - name: Push the recorded queue preflight
+        id: landing
+        if: steps.preflight.outcome == 'success'
+        run: npm run land -- --from-queue --push-preflight --no-verdict
+
+      # A GitHub App installation token is deliberately NOT GITHUB_TOKEN.
+      # Its push emits the ordinary `push` event: check.yml starts on main,
+      # verdict.yml records refs/verdict/<sha>, and janitor.yml receives the
+      # real before..after range. Do not manually dispatch those workflows.
       - name: Capture landed SHA
         id: target
         if: steps.landing.outcome == 'success'
