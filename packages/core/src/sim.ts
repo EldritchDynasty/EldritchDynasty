@@ -9,12 +9,12 @@ import { chooseGenerationQuestion } from './generation.js';
 import type { CampaignId, Content, ContentBundle, GenePool, LibraryRun, Person, SeedPerson } from '@ed/schema';
 import { asId, indexContent } from '@ed/schema';
 import { buildLocusTable } from './genetics/loci.js';
-import { applyBias, randomGenome } from './genetics/meiosis.js';
-import { makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
+import { applyBias, conceive, meiosis, randomGenome } from './genetics/meiosis.js';
+import { genomeOf, makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
 import { maxPowerOf } from './ascension.js';
 import { expectedAttribute, mintShareByHouse } from './genetics/expression.js';
 import { createWorld, type SimCtx, type WorldState } from './world.js';
-import { hashSeed, makeRng, type Rng } from './rng.js';
+import { conceptionSeed, hashSeed, makeRng, type Rng } from './rng.js';
 import { autoMarry } from './people/demography.js';
 import { branchOf } from './people/branches.js';
 import { applyFriendBlessing, friendBlessing, releaseFriendName } from './people/friends.js';
@@ -70,14 +70,34 @@ export function bootstrap(
 
   const byKey = new Map<string, Person>();
   const ordered = orderSeeds(content.characters);
+  const conceptionOrdinals = seedConceptionOrdinals(content.characters);
 
   for (const s of ordered) {
-    const rng = makeRng(hashSeed(seed, 'seed-person', s.key));
-    const pool = genetics.pools.get(s.house);
-    const genome = randomGenome(genetics.table, pool, s.sex, rng);
+    const mother = s.motherKey ? byKey.get(s.motherKey) : undefined;
+    const father = s.fatherKey ? byKey.get(s.fatherKey) : undefined;
 
-    // `bias` nudges an authored intent without pinning the genome: the founder
-    // is meant to be formidable, but the alleles are still rolled.
+    let rng: Rng;
+    let genome: ReturnType<typeof randomGenome>;
+    if (mother && father) {
+      // A seed child is a child, not a second unrelated draw from the same
+      // house pool. Use the same conception stream and meiosis path as every
+      // later birth (invariant 8), with the authored sex selecting the
+      // father's X or Y rather than rejection-rolling until it happens.
+      const ordinal = conceptionOrdinals.get(s.key) ?? 1;
+      rng = makeRng(conceptionSeed(seed, String(mother.id), String(father.id), ordinal));
+      const motherGamete = meiosis(genomeOf(mother, genetics), genetics.table, 'female', rng, s.born);
+      const fatherGamete = meiosis(genomeOf(father, genetics), genetics.table, 'male', rng, s.born, s.sex);
+      const conceived = conceive(motherGamete, fatherGamete, genetics.table);
+      genome = conceived.genome;
+    } else {
+      rng = makeRng(hashSeed(seed, 'seed-person', s.key));
+      const pool = genetics.pools.get(s.house);
+      genome = randomGenome(genetics.table, pool, s.sex, rng);
+    }
+
+    // `bias` nudges an authored intent without pinning the genome. For a seed
+    // child it applies AFTER conception, so X-linked bias still writes the
+    // maternal X (`sex[0]`) and cannot overwrite a daughter's paternal X.
     biasSeedPerson(genome, s, genetics, rng);
 
     // Born of one house, living in another. A wife of House Ilm who has
@@ -183,6 +203,28 @@ export function bootstrap(
   if (firstReign) firstReign.question = chooseGenerationQuestion(ctx);
 
   return ctx;
+}
+
+/**
+ * Runtime conceptions number siblings by birth order (`borne + 1`). Seed
+ * children need the same stable ordinal without changing `orderSeeds`, whose
+ * order also fixes ids and therefore many other deterministic streams.
+ */
+function seedConceptionOrdinals(seeds: SeedPerson[]): Map<string, number> {
+  const groups = new Map<string, SeedPerson[]>();
+  for (const s of seeds) {
+    if (!s.motherKey || !s.fatherKey) continue;
+    const pair = `${s.motherKey}\0${s.fatherKey}`;
+    groups.set(pair, [...(groups.get(pair) ?? []), s]);
+  }
+
+  const ordinals = new Map<string, number>();
+  for (const siblings of groups.values()) {
+    siblings
+      .sort((a, b) => a.born - b.born || a.key.localeCompare(b.key))
+      .forEach((s, index) => ordinals.set(s.key, index + 1));
+  }
+  return ordinals;
 }
 
 function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
