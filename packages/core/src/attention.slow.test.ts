@@ -170,9 +170,16 @@ describe('what the player is asked across A Long Line', () => {
     // owns the final ratio. A legitimate draw-order shift measured this batch
     // at about 11%, leaving 12% only about one standard error away.
     // Until then 13% is a structural guard, not a target.
+    //
+    // 15% since #341. Its content pass re-rolled this batch to a mean of 12%
+    // (sd 0.04 over 25 runs), which 13% cannot carry at two standard errors
+    // (1.5) — the third time a re-roll has walked this share by a point. What
+    // this guards is #62's failure, a prompt for every child, and that lands
+    // far past 15%. The per-seed count below is the second half of the same
+    // guard and is unchanged.
     expectMean({
       values: shares.map((s) => s.of('name')),
-      ceiling: 0.13,
+      ceiling: 0.15,
       what: "naming's share of everything asked, across the 500-year batch",
     });
     // And the count, because a share falls just as well by the rest of the
