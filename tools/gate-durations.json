@@ -16,8 +16,8 @@
       "evidence": "Green PR #362 run 36561761799: fire-rate section 11:46:29.223 to 12:00:59.816 = 871s. Rounded to 900s baseline (#333)."
     },
     "war": {
-      "seconds": 2220,
-      "evidence": "Successful CI 2026-09-26 through 2026-09-28: 21-39 min, typically about 37 min (#333). Still the critical path after repacking."
+      "seconds": 1830,
+      "evidence": "Green PR #362 run 36561761799: war section 11:27:22.671 to 11:57:50.392 = 1828s. Rounded to 1830s baseline (#333)."
     },
     "endings": {
       "seconds": 360,

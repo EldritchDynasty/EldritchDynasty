@@ -9012,6 +9012,8 @@ runner-minutes on run 36561761799; the repacked five lanes perform the same
 simulation work plus only process startup overhead. No batch size, seed
 list, floor, or assertion changes.
 
+The remaining gate floor is deliberately the war lane rather than a smaller statistical sample. `war-gate.ts` records why its 768-seed batch exists: smaller measured batches lost the required margin as content changed. Reducing that sample would change the evidence, which #333 forbids. Further reduction of the floor therefore requires parallelizing/aggregating the same 768 seeds, not deleting them.
+
 Current lane budgets and their tolerance are machine-readable in
 `tools/gate-durations.json`. The first CI run on the new partition is the
 calibration check: if runner overhead pushes a lane beyond its measured
