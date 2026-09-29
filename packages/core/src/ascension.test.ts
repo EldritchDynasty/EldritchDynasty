@@ -230,6 +230,17 @@ describe('the terminal irony no longer eats its own tail', () => {
     const entry = ctx.world.chronicle.find((line) => line.title === 'The Ledger Stayed Open');
     expect(entry?.text).toContain('stopped growing older before the Ledger was finished');
     expect(entry?.text).toContain('The house waited.');
+    expect(entry?.rung).toBe('demigod');
+    expect(entry?.people).toEqual([recipient.id]);
+
+    // The page's prose is not its identity. Rewording or translating it must
+    // not make the annual safety-net write the same wait a second time.
+    if (entry) entry.text = 'A reworded account of the same wait.';
+    tickAscension(ctx);
+    expect(ctx.world.chronicle.filter((line) =>
+      line.title === 'The Ledger Stayed Open'
+      && line.rung === 'demigod'
+      && line.people?.includes(recipient.id))).toHaveLength(1);
 
     // Standing is a current reading. Reaching Demigod is a life event:
     // lose the CURRENT rung before his first mortality roll after attainment.
