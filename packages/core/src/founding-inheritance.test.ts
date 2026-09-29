@@ -112,8 +112,15 @@ describe('founding inheritance', () => {
   });
 
   it('keeps a played world internally healthy after seeded inheritance is real', () => {
-    const ctx = bootstrap(bundle, 344_999);
-    runYears(ctx, 80);
-    expectHealthyWorld(ctx);
+    // Sampled THROUGH the founding century rather than only at its end: the
+    // conceived children marry and breed in its first decades, and a world
+    // that goes incoherent there and recovers would pass a tail-only check.
+    for (const seed of [344_997, 344_998, 344_999]) {
+      const ctx = bootstrap(bundle, seed);
+      for (let decade = 0; decade < 10; decade++) {
+        runYears(ctx, 10);
+        expectHealthyWorld(ctx);
+      }
+    }
   });
 });
