@@ -23,5 +23,13 @@
       "seconds": 360,
       "evidence": "Successful CI 2026-09-26 through 2026-09-28: 3-6 min, typically about 6 min (#333)."
     }
-  }
+  },
+  "runner": {
+    "provider": "GitHub Actions",
+    "image": "ubuntu-latest",
+    "workflow": ".github/workflows/check.yml",
+    "sourceRun": "36561761799",
+    "node": "22"
+  },
+  "command": "npm run gates -- --lane <lane>"
 }
