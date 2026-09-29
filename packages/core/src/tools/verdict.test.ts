@@ -427,6 +427,22 @@ describe('the commit range covered by an integrated main run', () => {
     }
   });
 
+  it('does not let synthetic covered refs become later integration boundaries', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('last independently judged main');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const coveredCommit = commit('covered by an earlier integrated head');
+      writeVerdict(root, coveredCommit, 'covered', 'main', '850');
+      const next = commit('next commit after covered marker');
+      const head = commit('later checked main head');
+
+      expect(covered(root, head)).toEqual([coveredCommit, next, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('covers through pending and cancelled main runs because neither answered', () => {
     const { root, commit } = fixture();
     try {
@@ -578,6 +594,30 @@ describe('historical verdict batch repair', () => {
         { source: tipOne, target: a },
         { source: tipOne, target: b },
       ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('never uses a covered ref as the source of a historical repair range', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const oldest = commit('old independently judged main');
+      verdictRef(oldest, 'success', 'main', '700');
+
+      const beforeCovered = commit('member before synthetic coverage marker');
+      const coveredCommit = commit('synthetic covered commit');
+      verdictRef(coveredCommit, 'covered', 'main', '800');
+      const afterCovered = commit('member after synthetic coverage marker');
+      const head = commit('new independently judged tip');
+      verdictRef(head, 'success', 'main', '900');
+
+      expect(plans(head)).toEqual([
+        { source: head, target: beforeCovered },
+        { source: head, target: coveredCommit },
+        { source: head, target: afterCovered },
+      ]);
+      expect(plans(head).some((plan) => plan.source === coveredCommit)).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
