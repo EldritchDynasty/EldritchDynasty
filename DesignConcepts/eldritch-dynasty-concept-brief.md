@@ -3,8 +3,8 @@
 **Version:** 0.2.2 (bearing)
 **Date:** August 2026
 **Genre:** Text-based generational strategy / narrative simulation
-**Platform:** PC (Windows, macOS, Linux) via Steam; browser demo
-**Stack:** Vue 3 + TypeScript, Electron
+**Platform:** Windows via Steam; Android and iPhone (iOS); browser demo
+**Stack:** Vue 3 + TypeScript, Electron (Windows), Capacitor (Android + iOS)
 **Target price:** NZD $28–35
 **Session shape:** **A Long Line** is 500 in-game years (1042–1542), roughly 20 generations. Real-time playtime has not been measured for this profile; no duration claim is made. **A Short Line** is the separate 300-year default (#66).
 
