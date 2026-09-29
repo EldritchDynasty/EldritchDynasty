@@ -67,8 +67,10 @@ npm run check        # typecheck (vue-tsc too) + validate + test. ~27 min,
                      # and NOT the gates: landing on it broke main 4 times.
 npm run land         # the landing: fetch, rebase, install, the whole set CI
                      # runs ON THAT head, push, wait for CI. AGENTS.md authorises it.
-                     # 40m MEASURED 2026-09-13 on a four-core container, from
-                     # fetch to the push — the CI verdict wait is on top. Was
+                     # 40m was measured 2026-09-13 on a four-core container,
+                     # and is historical, not today's promise. Gate-lane wall
+                     # clocks are checked data in tools/gate-durations.json.
+                     # The CI verdict wait is on top. Was
                      # ~76m: `test` and `gates` now overlap, and BOTH report, so
                      # a red test no longer hides a moved gate for another hour.
                      # Background it — a `nohup … &` landing dies with the
