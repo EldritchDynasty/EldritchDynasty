@@ -8974,3 +8974,46 @@ percent of Short Lines, so that point is the re-roll rather than the scenes.
 It is also the size of the 48-pair error. A content change that reaches a
 few runs cannot be judged by this instrument at all. It is authored because
 the prose owed it, not because it moves the table.
+---
+
+## #333 (2026-09-29): gate cost is measured, then repacked without shrinking evidence
+
+PR #362's green check run `36561761799` is the before measurement; that PR
+does not touch core simulation. Runner timestamps around each emitted gate
+section make the expensive parts attributable rather than inferred from one
+lane total.
+
+| gate / shared corpus | measured elapsed |
+|---|---:|
+| blood | 1,069 s |
+| fire-rate corpus | 871 s |
+| short-line | 53 s |
+| ladder | 44 s |
+| land | 109 s |
+| all other default-lane gates combined | ~54 s |
+| war lane | 1,829 s |
+| endings lane | 335 s |
+
+Before repacking, the same run spent about **36m41s** executing the batch
+lane, **30m29s** in war, and **5m35s** in endings. Batch was the critical
+path. The two dominant batch costs are independent, so #333 assigns `blood`
+its own lane and assigns `fire-rate`, `outcome-reach`, and
+`vocabulary-reach` together to another lane. Those three stay together
+because the two readers consume fire-rate's process-local 800-run memo;
+separating them would replay the corpus and reduce wall clock by spending
+extra runner-minutes.
+
+The projected gate-only critical path is therefore **war at ~30.5 minutes**,
+down from **batch at ~36.7 minutes** on this run. Against the older
+successful-run typicals recorded when #333 opened, it moves the expected
+floor from roughly 48 minutes to roughly 37 minutes. Total gate runner-time
+remains approximately flat: the old three lanes consumed ~72.8
+runner-minutes on run 36561761799; the repacked five lanes perform the same
+simulation work plus only process startup overhead. No batch size, seed
+list, floor, or assertion changes.
+
+Current lane budgets and their tolerance are machine-readable in
+`tools/gate-durations.json`. The first CI run on the new partition is the
+calibration check: if runner overhead pushes a lane beyond its measured
+budget, re-measure the lane rather than lowering evidence or copying a new
+stopwatch number into prose.
