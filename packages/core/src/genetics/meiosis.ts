@@ -17,7 +17,14 @@ const FONT_UPWARD_BIAS = 0.75;
  * is a genuine bargain — the blessing arrives chained to the curse, and
  * separating them needs a specific crossover a family may wait generations for.
  */
-export function meiosis(g: Genome, table: LocusTable, sex: Sex, rng: Rng, year: number): Gamete {
+export function meiosis(
+  g: Genome,
+  table: LocusTable,
+  sex: Sex,
+  rng: Rng,
+  year: number,
+  offspringSex?: Sex,
+): Gamete {
   const mutations: MutationRecord[] = [];
   const autosomal = recombine(g.autosomal[0], g.autosomal[1], table.autosomal, rng);
 
@@ -31,7 +38,12 @@ export function meiosis(g: Genome, table: LocusTable, sex: Sex, rng: Rng, year: 
     // Consequence: a son's font comes ONLY from his mother, and a father
     // passes his single X INTACT to every daughter. Both are real biology and
     // both are the reason cousin marriage is the mechanism, not a mechanism.
-    x = rng.bool(0.5) ? Int16Array.from(g.sex[0]) : null;
+    // Founding children already have an authored sex. Let bootstrap ask for
+    // the corresponding paternal gamete directly rather than drawing and
+    // discarding gametes until one happens to match: the conception stream is
+    // still one stream, and ordinary births keep the fair coin.
+    const passesX = offspringSex === undefined ? rng.bool(0.5) : offspringSex === 'female';
+    x = passesX ? Int16Array.from(g.sex[0]) : null;
   }
 
   mutate(autosomal, table, 'autosomal', rng, year, mutations);
