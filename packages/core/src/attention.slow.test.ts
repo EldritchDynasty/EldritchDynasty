@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { expectMean } from '@ed/core';
-import { CAMPAIGN_YEARS } from './campaign.js';
-import { measureDensity, type DensityRun } from './tools/density-gate.js';
+import { CAMPAIGN_YEARS, CAMPAIGNS } from './campaign.js';
+import { campaignForTerm, measureDensity, type DensityRun } from './tools/density-gate.js';
 
 /**
  * THE ATTENTION BUDGET.
@@ -42,7 +42,7 @@ describe('what the player is asked across A Long Line', () => {
    * plays is a band nobody can reproduce when it goes red.
    */
   function budget(seed: number, years: number): DensityRun {
-    return measureDensity(content, seed, years);
+    return measureDensity(content, seed, years, { campaign: campaignForTerm(years) });
   }
 
   // Widened from six to twenty-five (issue #42): the corrected
@@ -69,11 +69,16 @@ describe('what the player is asked across A Long Line', () => {
   ];
   /**
    * A SHORT LINE IS 300 YEARS (#66), AND IT IS A DIFFERENT PRODUCT-LOAD
-   * QUESTION FROM THE SAME GAME. Kept as a number here rather than imported,
-   * because #66 owns the campaign profile and does not exist yet; when it
-   * lands, this reads its term off the definition instead.
+   * QUESTION FROM THE SAME GAME. Read off the campaign definition, and PLAYED
+   * as a Short Line since #341 step 0 (`campaignForTerm`): these rows used to
+   * be a Long Line stopped at 300, with the Long Ledger and Long
+   * `campaignProgress` timing. Re-measured on this pool as a real Short Line:
+   * choices per generation 7.21 (se 0.16, was 7.10 stopped), shape repeat
+   * within an Age 10.6% (se 1.1, was 10.8%), Long minus Short per generation
+   * -0.00 (sd 0.58, was +0.10). Every band below still clears two standard
+   * errors by four or more, so their values stand on the new measurement.
    */
-  const SHORT_YEARS = 300;
+  const SHORT_YEARS = CAMPAIGNS.short.years;
 
   let runs: { seed: number; b: DensityRun }[] = [];
   let short: DensityRun[] = [];
