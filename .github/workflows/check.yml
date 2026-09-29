@@ -33,7 +33,7 @@ concurrency:
 # ── WHY THESE JOBS AND NOT ONE ────────────────────────────────────────────
 #
 # This was one serial job, then three. It is now a tier decision, two cheap
-# jobs that always run (lint, fast lane), four test shards, two gate lanes, a
+# jobs that always run (lint, fast lane), four test shards, five gate lanes, a
 # windows runner and a corpus warm that blocks nothing. The reason for
 # splitting has never been the clock, and it still is not.
 #
