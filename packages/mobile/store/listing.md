@@ -76,6 +76,14 @@ Answer descriptively rather than defaulting to "no":
 
 - All functionality is available without login, account, or special access.
 
+## Closed-test operations
+
+Before starting the 14-day closed test, give testers
+[`closed-test-smoke.md`](closed-test-smoke.md). It verifies the Play-installed
+build, restart/resume, the main reading surfaces, same-device export/import and
+offline play, and routes failures to reproducible GitHub issues without adding
+analytics or a feedback network service to the app.
+
 ## Graphics
 
 - **Icon:** `play-icon-512.png` — 512×512, in the same vellum/ink/rubric
