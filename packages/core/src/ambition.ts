@@ -210,7 +210,7 @@ function recordRelevance(
       [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
         .filter((id): id is string => Boolean(id)),
     );
-    if (filledIds(decision).some((id) => programme.has(id))) {
+    if (recordMentionedIds(decision).some((id) => programme.has(id))) {
       return {
         surface: 'record',
         effect: 'advance',
@@ -238,9 +238,32 @@ function conditionNamesCarriedDiscrepancy(
   return false;
 }
 
-function filledIds(decision: PendingRecord): string[] {
-  return Object.values(decision.fill)
-    .flatMap((value) => typeof value === 'string' ? [value] : value);
+function recordMentionedIds(decision: PendingRecord): string[] {
+  const record = decision.event.record;
+  if (!record) return [];
+
+  // Slot markers are structure embedded in the localisable Record surface:
+  // translation may replace every surrounding word, but it must keep
+  // {ASCENDANT}/{HEIR}/etc. for interpolation. Read only those markers, then
+  // map them through this firing's fill; a person cast elsewhere in the scene
+  // is not thereby named on the Record page.
+  const visible = [
+    record.subject,
+    record.options.record.chronicle,
+    record.options.embellish.chronicle,
+  ];
+  const slots = new Set<string>();
+  for (const text of visible) {
+    for (const match of text.matchAll(/\{([A-Z][A-Z0-9_]*)\}/g)) {
+      if (match[1]) slots.add(match[1]);
+    }
+  }
+
+  return [...slots].flatMap((slot) => {
+    const value = decision.fill[slot];
+    if (value === undefined) return [];
+    return typeof value === 'string' ? [value] : value;
+  });
 }
 
 function choiceRelevance(
