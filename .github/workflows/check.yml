@@ -537,7 +537,7 @@ jobs:
       # these lanes answer unrelated questions.
       fail-fast: false
       matrix:
-        lane: [batch, war, endings]
+        lane: [batch, blood, fire-rate, war, endings]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
