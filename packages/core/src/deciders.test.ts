@@ -330,12 +330,13 @@ describe('standing-delegation interruption guard (#219)', () => {
   it('surfaces Record when the active House Ambition says Record is consequential', () => {
     const ctx = testWorld(bundle);
     const d = recordPending();
+    d.subject = 'the missing Ledger clause';
     ctx.world.houseAmbition = 'restore_ledger';
     ctx.world.delegation.records[d.event.id] = 'record';
 
-    // #210 expresses relevance in the ambition read model, not by tagging
-    // arbitrary events with the word "ambition". This fixture deliberately
-    // carries no such wording so the guard cannot pass by regex accident.
+    // #327 makes relevance a reading of the decision the player can see.
+    // The visible subject makes this page consequential without relying on an
+    // authored "ambition" tag or making every Record page consequential.
     expect(JSON.stringify(d.event).toLowerCase()).not.toContain('ambition');
     expect(mustSurface(ctx, d)).toBe('ambition');
     expect(delegatedRecord(ctx, d)).toBeUndefined();

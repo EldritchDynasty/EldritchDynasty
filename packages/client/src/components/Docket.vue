@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import type { CastRequest, MatchCard, MatchPanel, PendingDecisionView, RecordOption, SlotFill } from '@ed/core';
+import type { CastRequest, MatchCard, MatchPanel, RecordOption, SessionView, SlotFill } from '@ed/core';
 import { futureOf, type GameActions } from '../lib/game';
 import { isControl, isField, shortcutFor } from '../lib/keys';
 import { replayDisposition } from '../lib/accessibility';
 
 const props = defineProps<{
-  decision: PendingDecisionView;
+  decision: SessionView['docket'][number];
   actions: GameActions;
   ageMatchPriorities?: import('@ed/core').AgeMatchPriority[];
   ageRecordPriorities?: import('@ed/core').AgeRecordPriority[];
@@ -284,6 +284,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <span>met before</span>
       </p>
       <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
+      <p v-if="decision.ambition" class="ambition-reading small">
+        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        {{ decision.ambition.reason }}
+      </p>
 
       <div v-if="decision.arcStep" class="dim small arc">
         part of {{ decision.arcStep.instance.arc }}<span v-if="decision.arcStep.absent"> — and one of them is gone</span>
@@ -367,6 +371,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · a marriage for {{ decision.subject.name }}</h3>
       <p class="body">
         {{ decision.subject.name }} is {{ decision.subject.age }}. These are the cards the year dealt.
+      </p>
+      <p v-if="decision.ambition" class="ambition-reading small">
+        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        {{ decision.ambition.reason }}
       </p>
 
       <div class="cards">
@@ -519,6 +527,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         There is one line about <em>{{ decision.subject }}</em>, and this is it.
       </p>
       <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
+      <p v-if="decision.ambition" class="ambition-reading small">
+        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        {{ decision.ambition.reason }}
+      </p>
 
       <div class="choices stack">
         <template v-for="(o, i) in recordOptions" :key="o.option">
@@ -569,6 +581,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 .docket { max-width: 72ch; }
 .body { font-size: var(--t-body); line-height: 1.62; margin: 0 0 14px; }
 .arc { margin-bottom: 10px; }
+.ambition-reading {
+  margin: 8px 0 12px; padding-top: 7px; border-top: 1px solid var(--rule);
+  color: var(--ink-soft);
+}
+.ambition-reading .rubric { color: var(--rubric); }
 .cast { margin-bottom: 8px; }
 .party { border: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 2px 12px; padding: 4px 8px; }
 .party label { display: flex; align-items: center; gap: 4px; min-width: 0; }
