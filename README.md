@@ -6,7 +6,7 @@ You are not a character. You are the will of a bloodline — the thing that pers
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
-**Status:** pre-production. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android Capacitor host are working. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
+**Status:** pre-production. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android Capacitor host are working; the iOS Capacitor host is the active #349 engineering pass. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
 
 New to the design? [docs/GAME-LOOP.md](docs/GAME-LOOP.md) is a plain-language walkthrough
 of the loop and how a family progresses — the Ascension Ladder and the barriers between
@@ -22,9 +22,9 @@ packages/
   core/      Pure simulation. Zero DOM, seeded RNG, deterministic.
   content/   Authored YAML: events, ages, characters, templates, arcs, loci.
   editor/    Vue 3 + Vite authoring tool. Imports core directly.
-  client/    Vue 3 + Vite game. One client for browser, Windows and Android.
+  client/    Vue 3 + Vite game. One client for browser, Windows, Android and iOS.
   shell/     Electron Windows host. Owns the window and the disk, and no rules.
-  mobile/    Capacitor Android host. Owns the activity/device services, and no rules.
+  mobile/    Capacitor phone host (Android + iOS). Owns native/device services, and no rules.
 AGENTS.md         Shared agent entry point: rules, commands, and task routing.
 CLAUDE.md         Claude Code compatibility shim that imports AGENTS.md.
 ARCHITECTURE.md   Where a thing lives, and how to add one.
