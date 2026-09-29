@@ -30,9 +30,14 @@ const props = defineProps<{
   links?: EntryLinks;
   /** Briefly marked, because the reader just followed a link to it. */
   marked?: boolean;
+  /** Living people structurally recorded in this page's authored cast (#268). */
+  people?: { id: string; name: string }[];
 }>();
 
-const emit = defineEmits<{ (e: 'follow', page: string): void }>();
+const emit = defineEmits<{
+  (e: 'follow', page: string): void;
+  (e: 'person', id: string): void;
+}>();
 
 const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause) : null));
 const answered = computed(() => answeredLabel(props.links?.answered ?? []));
@@ -85,6 +90,21 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
     <span class="year dim small">{{ entry.year }}</span>
     <h4 v-if="entry.title && entry.text !== null">{{ entry.title }}</h4>
     <p v-if="entry.text !== null">{{ entry.text }}</p>
+    <!-- PERSON PROVENANCE (#268), not name parsing. applyOutcome recorded the
+         cast ids when the page was made; Chronicle.vue resolves only people
+         still in the living halls. The words of the page remain prose, while
+         this quiet ledger line is a route back to the person it was about. -->
+    <div v-if="people?.length && !read" class="people small">
+      <span class="dim">with</span>
+      <button
+        v-for="person in people"
+        :key="person.id"
+        type="button"
+        class="link small"
+        :data-person="person.id"
+        @click="emit('person', person.id)"
+      >{{ person.name }}</button>
+    </div>
     <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
          became a tooltip. Neither is a touch-safe explanation. The sentence is
          said; the page still shows the gap, and the visible mark below carries
@@ -151,6 +171,8 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
   font-style: italic; color: var(--rubric); text-decoration: underline dotted; cursor: pointer;
 }
 .entry .link + .mark, .entry .mark + .mark { margin-left: 8px; }
+.entry .people { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+.entry .people .link { font-style: normal; }
 /* The artefact. A ruled empty line where a year should have been. */
 .entry.omitted .blank { border-bottom: 1px solid var(--rule); }
 .entry .mark { font-style: italic; }
