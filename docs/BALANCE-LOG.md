@@ -8811,7 +8811,7 @@ the baseline.
 
 Measured on 24 real Short Lines (seeds 901–924), played by the density
 player on `campaign: 'short'` through #272's `onChoice` stream, the same
-player and seeds as the issue's baseline (1,666 choices both times).
+player and seeds as the issue's baseline.
 
 **Before.** Three events averaged more than two fires a Short Line:
 `past_what_the_book_says` 3.67, `the_race_silted_through` 3.54 and
@@ -8821,38 +8821,60 @@ player and seeds as the issue's baseline (1,666 choices both times).
 **Decisions, each written beside its YAML:**
 
 - **The two ladder bargains are recurrence.** `the_ladder.yaml`'s header
-  argues for asking a climbing man twice in a working life. So the rate
-  stays and the return is a different scene. An answered first asking carries
-  a `next` to a follow-up with the same man: `wick_asks_for_him_by_name`
-  (`[lasting+relationship | record+relationship]`) and `what_he_wrote_past_it`
-  (`[lasting+record | relationship]`). Neither asks in coin. The first scenes'
-  cooldown goes from 40 to 100. At 70, every first scene and every return
-  fired more than twice a Short Line, and each lane asked MORE often than
-  before (race 4.5 a run against 3.5, book 4.4 against 3.7).
+  argues for asking a climbing man twice in a working life. So each lane
+  keeps its rate and is split BY MAN. Answering the first scene marks him with
+  a declared trait (`went_past_the_book`, `asked_for_in_wick`; no presence
+  effect). The first scene casts only an unmarked climber, and its return
+  casts only a marked one: `what_he_wrote_past_it`
+  (`[lasting+record | relationship]`) and `wick_asks_for_him_by_name`
+  (`[lasting+relationship | record+relationship]`). Neither return asks in
+  coin, and the Margins pay the Mind the first scene paid. All four sit at a
+  70-year cooldown, which gives each lane close to its old rate as two
+  questions: race 2.21 + 1.63 against 3.54, book 2.25 + 1.46 against 3.67.
 - **The cousin's accounts are supply.** The event had no cooldown and
   re-fired until its arc started, which the density player's first-choice
   answer never does. The cooldown is now 60 years, once a generation.
-- **The province is supply.** When the first two scenes spaced out, it took
-  their draws and rose to 2.17. Its cooldown goes from 80 to 110.
+- **The province is supply.** Cooldown 80 → 110, measured at 1.67 after.
 
-**After**, same seeds and player:
+**The first cut, and why it was replaced.** It chained each return with
+`Outcome.next` and rested the first scene for a hundred years. That met
+"no event above two a Short Line", and CI's endings gate then showed the
+ascendant column's Unmaking takers falling from 16 to 7. A lane resting a
+century never asks the next generation's climber at all, and the Mind the
+first scene pays went with it. Variants measured on the endings gate
+(100 × 500, both columns):
+
+| variant | chronicler broken_line | ascendant Unmaking takers |
+|---|---:|---:|
+| before #341 | 26% | 16 |
+| `next` + 100-year first scenes | 20% | 7 |
+| … + Mind on the Margins | 20% | 9 |
+| … + 40-year first scenes | 21% | 15 |
+| **split by man, 70 years each (shipped)** | **26%** | **12** |
+
+The broken-line dip in the middle rows was the re-roll, not the content.
+Over 200 fresh seeds (7000–7199) the chronicler's broken lines were 56 with
+the first cut against 60 on `main`. It still turned the endings gate red,
+because its 22% floor sits about 1.5 standard errors under the ~29% the game
+actually produces at n = 100.
+
+**After** (the shipped version, same seeds and player):
 
 | | before | after |
 |---|---:|---:|
-| events above 2 fires a Short Line | 3 | **0** (the ladder's five sit at 1.67–1.92) |
-| choices, all 24 runs | 1,666 | 1,768 |
-| top category shape's share | 8.7% | **6.6%** |
-| within-run shape repeats | 43.4% | 41.9% |
+| events above 2 fires a Short Line | 3 | 2, both a first scene whose return now asks the second question |
+| choices per generation | 7.21 | 7.18 |
+| top category shape's share | 8.7% | 7.1% |
+| within-run shape repeats | 43.4% | 39.8% |
 | money on one side of the top 10 shapes | 9 | 8 |
-| B's choices new by event, familiar by shape (12 pairs) | 26.7% | 27.8% |
-| `gate:replay` shape overlap, first 30 / whole run | 59% / 57% | 57% / 57% |
+| B's choices new by event, familiar by shape (12 pairs) | 26.7% | 26.3% |
+| `gate:replay` event overlap / shape overlap, whole run | 30% / 57% | 28% / 53% |
 
-The docket did not thin: choices rose. The ladder's Madness supply on the
-answering branches is about 63 a run against 67 before, so the Hierophant
-floor is not starved. The "new scene, same question" share did **not**
-fall. The returns are new events in run B whose shapes run A already asked,
-because both runs now meet them. That share is step 3's to move (money as
-the default axis), and nothing in this step claims it.
+The docket did not thin: choices per generation held. Total choices fell,
+1,666 to 1,494, only because these 24 seeds lived 523 fewer years between
+them (5,738 → 5,215), which the 200-seed check above says is the re-roll.
+The "new scene, same question" share barely moved. That share is step 3's
+to move (money as the default axis), and nothing here claims it.
 
 Two fast tests went red on the re-roll and were fixed in the test, not the
 content. `succession.test.ts` pinned seed 1042 to more than three reigns in
@@ -8860,3 +8882,5 @@ content. `succession.test.ts` pinned seed 1042 to more than three reigns in
 across seeds 2000–2039 is 17 of 40 against 18 before. `view.test.ts` relied
 on the chronicler embellishing, which it does about one run in three. It now
 plays the Record path itself, so `discrepancyId` is reached by construction.
+Gate 2 needs one test family able to cast a return. The Demigod-stagnant
+head carries both marks: his Madness came from somewhere.
