@@ -7,6 +7,7 @@ const props = defineProps<{
   readingFont: ReadingFont;
   skipSeenProse: boolean;
   reduceMotion: boolean;
+  showEverythingFromStart: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   'update:readingFont': [value: ReadingFont];
   'update:skipSeenProse': [value: boolean];
   'update:reduceMotion': [value: boolean];
+  'update:showEverythingFromStart': [value: boolean];
 }>();
 
 const textScaleModel = computed<TextScale>({
@@ -34,6 +36,11 @@ const skipSeenModel = computed<boolean>({
 const reduceMotionModel = computed<boolean>({
   get: () => props.reduceMotion,
   set: (value) => emit('update:reduceMotion', value),
+});
+
+const showEverythingModel = computed<boolean>({
+  get: () => props.showEverythingFromStart,
+  set: (value) => emit('update:showEverythingFromStart', value),
 });
 </script>
 
@@ -64,6 +71,11 @@ const reduceMotionModel = computed<boolean>({
     <label class="small">
       Reduce motion
       <input v-model="reduceMotionModel" type="checkbox" />
+    </label>
+
+    <label class="small">
+      Show everything from the start
+      <input v-model="showEverythingModel" type="checkbox" />
     </label>
 
     <p class="dim small">
