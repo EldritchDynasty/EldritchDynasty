@@ -17,3 +17,7 @@ node_modules/.cache/ed-runs
 
 # OpenBrowser local session/state
 .openbrowser/
+
+# Local landing deploy key. Never commit private or public key material.
+eldritch-land
+eldritch-land.pub
