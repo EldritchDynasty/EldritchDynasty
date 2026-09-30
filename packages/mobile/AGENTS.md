@@ -13,16 +13,25 @@ Linux desktop builds are out of scope.
 ## The seam
 
 `src/platform-bridge.ts` is the mobile implementation of the client's
-`Platform` interface: Android today, and the same file for iOS under #349,
-not a fork. It uses only cross-platform Capacitor plugins (filesystem,
-preferences, share, app). If a platform ever needs a branch, it takes the
-platform as an argument (AGENTS.md, "Supported environments"). No file in
-`packages/client/src` may name an Android, iOS or Capacitor API. The client receives
-the generic `window.edPlatform` bridge before it starts.
+`Platform` interface: one bridge for Android and iOS, not a fork. It uses only
+cross-platform Capacitor plugins (filesystem, preferences, share, app). If a
+platform ever needs a branch, it takes the platform as an argument (AGENTS.md,
+"Supported environments"). No file in `packages/client/src` may name an
+Android, iOS or Capacitor API. The client receives the generic
+`window.edPlatform` bridge before it starts.
 
-Saves are opaque JSON. Preferences persists named snapshots, while core remains
-the only authority that validates and resumes one. Do not add a second save
-schema here.
+Saves are opaque JSON. Full save snapshots and the Library of Houses live under
+Capacitor `Filesystem`'s app-owned `Directory.Data`
+(`eldritch/saves/*.json` and `eldritch/library.json`), while core remains
+the only authority that validates and resumes them. Android builds before #349
+stored those payloads in `Preferences`; `src/storage.ts` migrates each legacy
+key only after its durable file write succeeds. Keep that fallback until a
+deliberate compatibility decision removes it. Do not add a second save schema
+here.
+
+Interchange files are different from durable state: export writes a JSON file
+to `Directory.Documents` and hands its URI to the native share sheet. Import
+must feed the selected JSON back to core unchanged.
 
 ## Commands
 
