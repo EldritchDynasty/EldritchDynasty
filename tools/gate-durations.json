@@ -12,12 +12,12 @@
       "evidence": "Green PR #362 run 36561761799: blood section 11:27:41.777 to 11:45:30.979 = 1069s. Rounded to 1100s baseline (#333)."
     },
     "fire-rate": {
-      "seconds": 900,
-      "evidence": "Green PR #362 run 36561761799: fire-rate section 11:46:29.223 to 12:00:59.816 = 871s. Rounded to 900s baseline (#333)."
+      "seconds": 1260,
+      "evidence": "Isolated fire-rate lane on PR #364 run 36586278258: 20.7 min (1240s) with fire-rate, outcome-reach and vocabulary-reach all passing. Baseline rounded to 21m; 1.25x guard = 26.25m, so runner noise is not treated as a regression (#333)."
     },
     "war": {
-      "seconds": 1830,
-      "evidence": "Green PR #362 run 36561761799: war section 11:27:22.671 to 11:57:50.392 = 1828s. Rounded to 1830s baseline (#333)."
+      "seconds": 2340,
+      "evidence": "Isolated war lane on PR #364 run 36586278258: 38.7 min (2323s), with the war gate itself passing. The issue's successful-run evidence spans 21-39 min; baseline rounded to 39m; 1.25x guard = 48.75m (#333)."
     },
     "endings": {
       "seconds": 360,
@@ -28,7 +28,7 @@
     "provider": "GitHub Actions",
     "image": "ubuntu-latest",
     "workflow": ".github/workflows/check.yml",
-    "sourceRun": "36561761799",
+    "sourceRun": "36586278258",
     "node": "22"
   },
   "command": "npm run gates -- --lane <lane>"
