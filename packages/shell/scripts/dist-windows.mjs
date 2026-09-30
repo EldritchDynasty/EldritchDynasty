@@ -6,9 +6,10 @@ import { join, resolve } from 'node:path';
 import { build, Platform } from 'electron-builder';
 import { smokePackagedApp } from './packaged-smoke.mjs';
 import { builderOverrides, packageTarget } from './package-target.mjs';
+import { writeWindowsReleaseProof } from './windows-release-proof.mjs';
 
 /**
- * PACKAGE @ed/shell INTO A WINDOWS INSTALLER (issues #67 and #75).
+ * PACKAGE @ed/shell INTO A WINDOWS INSTALLER (issues #67, #75 and #321).
  *
  * There is one builder configuration and two renderer targets. The ordinary
  * invocation packages the game. `--mod-editor` packages the already-built
@@ -30,6 +31,13 @@ import { builderOverrides, packageTarget } from './package-target.mjs';
  * second entrypoint selected `mode: mod-editor` rather than silently opening
  * the game under a different product name.
  *
+ * Every game package also writes `windows-release-proof.json` beside the NSIS
+ * installer. It identifies both the installer and the packaged executable by
+ * SHA-256, so a clean-machine check can name the exact bytes CI produced.
+ * `--require-signature` additionally asks Windows to validate Authenticode on
+ * both files and aborts rather than publishing a proof for an invalid release.
+ * Pre-release and local packages deliberately leave that check opt-in.
+ *
  * DELIBERATELY NEVER INVOKED AS `npm run <script>` FROM check.yml.
  * `tools/land.mjs` derives ordinary landing work from workflow npm scripts;
  * packaging a Windows installer must remain tag/local work, not something
@@ -37,7 +45,9 @@ import { builderOverrides, packageTarget } from './package-target.mjs';
  */
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const SHELL = resolve(HERE, '..');
-const target = packageTarget(process.argv.slice(2));
+const args = process.argv.slice(2);
+const target = packageTarget(args);
+const requireSignature = args.includes('--require-signature');
 const RELEASE = resolve(SHELL, target.output);
 const STAGED_RENDERER = resolve(SHELL, '.renderer');
 const RENDERER_SOURCE = resolve(SHELL, '..', target.renderer, 'dist');
@@ -58,6 +68,10 @@ try {
     );
   }
 
+  // Proof is intentionally one-build-one-artifact. A stale installer from a
+  // previous package must never make this run ambiguous or be uploaded beside
+  // the bytes the smoke test actually exercised.
+  await rm(RELEASE, { recursive: true, force: true });
   await rm(STAGED_RENDERER, { recursive: true, force: true });
   await cp(RENDERER_SOURCE, STAGED_RENDERER, { recursive: true });
 
@@ -72,6 +86,19 @@ try {
     console.log(`packaged ${target.mode} smoke skipped — the Windows executable cannot run on this platform`);
   } else {
     console.log(`packaged ${target.mode} smoke ok — ${smoke.executable}`);
+  }
+
+  if (target.mode === 'game') {
+    const releaseProof = await writeWindowsReleaseProof(RELEASE, { requireSignature });
+    console.log(
+      `Windows installer proof — ${releaseProof.proof.installer.file} ` +
+      `sha256 ${releaseProof.proof.installer.sha256}`,
+    );
+    console.log(
+      `Windows executable proof — ${releaseProof.proof.executable.file} ` +
+      `sha256 ${releaseProof.proof.executable.sha256}`,
+    );
+    console.log(`Windows release proof written — ${releaseProof.path}`);
   }
 } catch (e) {
   console.error(e?.stack ?? String(e));
