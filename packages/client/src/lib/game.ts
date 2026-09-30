@@ -388,16 +388,17 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   const chapterQueue = ref<ChapterBeat[]>([]);
 
   /**
-   * Hold what an answer did, unless there is nothing worth holding.
+   * Hold every accepted answer long enough for the player to see that it took.
    *
-   * A narration outcome with no authored text, and a Record omission, both
-   * arrive here as a null `text`. The omission is still shown — the dated
-   * blank is the artefact, and the panel says so in words. An outcome with
-   * neither text nor a blank to point at is not held: an empty panel between
-   * two decisions is one more click for nothing.
+   * A null `text` does not mean "nothing happened". For a Record omission it
+   * is the dated blank itself; for a choice or Match it only means there is no
+   * immediate authored consequence sentence to quote. Dropping the latter made
+   * a successful press indistinguishable from a missed one (#374), so Outcome
+   * owns the honest "decision made; anything further arrives with the years"
+   * fallback instead of inventing hidden timing here.
    */
   function hold(next: Outcome | null): void {
-    outcome.value = next && (next.text !== null || next.kind === 'record') ? next : null;
+    outcome.value = next;
   }
 
   /** How much frame the player has already been shown. */

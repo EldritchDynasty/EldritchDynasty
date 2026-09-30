@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { createGame } from './game.js';
+import { createGame, type Outcome } from './game.js';
 
 /**
  * A WHOLE RUN, DRIVEN THE WAY THE CLIENT DRIVES IT.
@@ -257,9 +257,10 @@ describe('answering a decision says what it did', () => {
   const game = createGame(content);
   game.actions.begin(5150);
 
-  const held: string[] = [];
+  const held: Outcome[] = [];
   const kinds = new Set<string>();
   let answered = 0;
+  let accepted = 0;
   let stacked = 0;
 
   for (let guard = 0; guard < 3000 && !game.ended.value; guard += 1) {
@@ -267,7 +268,7 @@ describe('answering a decision says what it did', () => {
       // The next decision waits behind it. If the docket were allowed
       // through, the outcome would be a panel the player never sees.
       if (game.docket.value.length) stacked += 1;
-      held.push(game.outcome.value.text ?? '');
+      held.push(game.outcome.value);
       game.actions.dismissOutcome();
       continue;
     }
@@ -285,13 +286,15 @@ describe('answering a decision says what it did', () => {
       if (!d.choicesAreOpen) { game.actions.letHimDecide(); continue; }
       const open = d.choices.find((c) => c.available);
       if (!open || d.cast.some((r) => !r.optional)) { game.actions.letHimDecide(); continue; }
-      game.actions.choose(d.id, open.id, {}, open.label);
+      if (game.actions.choose(d.id, open.id, {}, open.label)) accepted += 1;
     } else if (d.kind === 'match') {
       const card = d.cards.find((c) => c.available);
-      if (card) game.actions.match(d.id, card.id, card.name);
-      else game.actions.declineHand(d.id);
+      if (card) {
+        const result = game.actions.match(d.id, card.id, card.name);
+        if (result?.ok) accepted += 1;
+      } else game.actions.declineHand(d.id);
     } else {
-      game.actions.record(d.id, 'record', 'Write it as it happened');
+      if (game.actions.record(d.id, 'record', 'Write it as it happened')) accepted += 1;
     }
   }
 
@@ -300,12 +303,13 @@ describe('answering a decision says what it did', () => {
     expect([...kinds].sort()).toEqual(['choice', 'match', 'record']);
   });
 
-  it('held an outcome with real words in it, over and over', () => {
-    // Not "at least one": the bug was that this fired 304 times a run and was
-    // shown zero times, so a single hit would be indistinguishable from the
-    // one path that happens to work.
-    expect(held.length).toBeGreaterThan(20);
-    expect(held.every((t) => t.length > 0)).toBe(true);
+  it('holds one receipt for every accepted player answer, with the words the player chose', () => {
+    // A null consequence sentence is still an accepted answer (#374). The
+    // receipt must exist even when there is nothing immediate to quote; only
+    // failed/refused actions and Daveed's bulk escape hatch skip this beat.
+    expect(accepted).toBeGreaterThan(20);
+    expect(held).toHaveLength(accepted);
+    expect(held.every((receipt) => receipt.said.length > 0)).toBe(true);
   });
 
   it('stood in front of the next decision rather than beside it', () => {
