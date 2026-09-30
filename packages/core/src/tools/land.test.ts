@@ -1152,7 +1152,7 @@ describe('a markdown-only change runs the short set, and only then', () => {
 /**
  * CONNECTOR-ONLY SESSIONS GET A REMOTE SHELL, NOT A SECOND LANDING.
  *
- * This belongs beside the local landing contract rather than in its own test
+ * This belongs beside the landing command contract rather than in its own test
  * file: the assertions are static and fast, and keeping them here also means
  * adding the transport does not distort the duration-packed shard table.
  */

@@ -2,7 +2,7 @@
 /**
  * DID CI ACTUALLY ANSWER? — AND "NO" IS NOT THE SAME AS "RED".
  *
- * `npm run land` ends by pushing to `main`. That is not the end of the work.
+ * A queued `/land` ends by pushing to `main`. That is not the end of the work.
  * Between 2026-09-05 09:02 and 2026-09-06 01:12, seven consecutive pushes to
  * `main` produced a workflow run that concluded in three to five seconds with
  * a single job carrying zero steps — a run that never started, because the
@@ -67,7 +67,7 @@ import { execFileSync } from 'node:child_process';
  * default produces the wrong one is worse than one that takes longer.
  *
  * Was 40, which is too close: on 2026-09-27 a `check` on `main` ran 45
- * minutes (run 36314218433, 10:58 to 11:43). A local landing waiting on one
+ * minutes (run 36314218433, 10:58 to 11:43). A queue landing waiting on one
  * like it would have been told STILL RUNNING five minutes before the answer.
  */
 export const DEFAULT_WAIT_MINUTES = 60;
@@ -193,7 +193,7 @@ function report(sha, verdict) {
       console.log(`  ${j.result === 'success' ? ' ' : '✗'} ${j.name}: ${j.result}`);
     }
     if (verdict.run) console.log(`  ${verdict.run}`);
-    console.log('\nFix it and land again. `npm run land` re-runs the whole set on the rebased head.');
+    console.log('\nFix it, preflight again, and enqueue `/land`; the queue re-runs the whole set after rebasing.');
   } else if (state === 'pending') {
     console.log(`STILL RUNNING — ${sha.slice(0, 7)} has not been judged yet.`);
     if (verdict.run) console.log(`  ${verdict.run}`);

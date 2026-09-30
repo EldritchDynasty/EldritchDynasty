@@ -192,7 +192,7 @@ claim each, and they close themselves.
 |---|---|---|
 | Claim | `npm run agents -- take 93 --paths …`, once per issue | a ref push each. Every claim records the **branch** holding it, so `npm run agents` reads as an assignment table and one branch may appear on several rows |
 | Say so, for the humans | one comment on the issue naming the branch | optional, and never the lock — an agent's GitHub identity is yours, so a comment cannot arbitrate anything |
-| Land | `Closes #93, closes #94` in the commit message | GitHub closes them when that commit reaches `main` — **a keyword in a commit works with no PR at all**, which is what this repository's fast-forward flow needs |
+| Land | `Closes #93, closes #94` in the commit message, then PR + `/land` | GitHub closes them when the queued commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
 | Clean up | `.github/workflows/janitor.yml` → `tools/janitor.mjs` | deletes the merged branch, retires **every claim that branch was holding**, and closes anything the keyword missed |
 
 ### One branch, several issues
@@ -301,26 +301,26 @@ only one of them can be created on the first second of the session.
 
 ## Landing
 
-The repository's standing authorization is to fast-forward `main` as soon as
-`npm run land` is green, with no PR ([AGENTS.md](../AGENTS.md#working-style)).
-That holds with several agents running, and the reason it is one command rather
-than four is the whole point of this document:
+Sessions do not push `main`. They preflight, open a ready same-repository PR,
+and put the landing in the serialized queue with `/land`
+([AGENTS.md](../AGENTS.md#working-style)). Never use the merge button.
 
 ```bash
-npm run land            # fetch · rebase onto origin/main · typecheck, validate,
-                        # test AND gate ON THAT HEAD · push · WAIT for CI's
-                        # verdict. Stops on the first thing that fails, and
-                        # pushes nothing when it does.
+npm run land            # advisory session preflight: fetch · rebase · install ·
+                        # typecheck · validate · test:fast · STOP preflight-green
+npm run land -- --full-preflight
+                        # optional complete local set for risky work; still no push
 npm run land -- --dry-run      # the plan, and none of it performed
-npm run land -- --no-verdict   # push, and do not wait to be judged
 npm run verdict                # ask about HEAD on its own
 ```
 
-A connector-only session that cannot run that command locally uses a ready
-same-repository PR and comments exactly `/land`. The
-`.github/workflows/remote-land.yml` runner executes **that same `npm run land`**
-command; it is not permission to merge a merely-green PR. The request is
-write-authorized. Trusted exact `/land` / `/land --no-issue-check` issue
+A connector-only session skips only the local preflight; it still uses a ready
+same-repository PR and comments exactly `/land`. The queue's
+`.github/workflows/remote-land.yml` runner invokes `npm run land` with the
+explicit `--from-queue` capability. That is the sole path that runs the full
+authoritative set and pushes its checked head with `LAND_DEPLOY_KEY`; an ambient
+Actions variable grants no push authority. Trusted exact `/land` /
+`/land --no-issue-check` issue
 comments share `remote-land-main` with `queue: max`, so up to one hundred may
 wait rather than the default single pending request being replaced by the next
 one. Issue comments are prefiltered by `author_association` before queue
@@ -334,31 +334,32 @@ run-unique `remote-land-bootstrap-<run id>` group. A bootstrap runs the proposed
 workflow from the PR while issue comments run the version already on `main`;
 letting those versions share a concurrency group allows old queue semantics to
 cancel the new bootstrap during exactly the workflow change it exists to prove.
-Bootstrap and comment landings can overlap, just as local and remote landings
-can; the final compare-and-swap push arbitrates them. This exists because a PR
+Bootstrap and comment landings can overlap; the final compare-and-swap push
+arbitrates the two queue transports. This exists because a PR
 check can be green on an old base — the rebase and the post-push verdict remain
 mandatory.
 
-**It is one command because the set is derived rather than remembered.**
+**The queue's full set is derived rather than remembered.**
 `npm run check` is `typecheck && validate && test` — it does not run the gates,
 which is nine minutes of measured runs and a third of what CI does. Four of the
 eleven red runs of `check.yml` on `main` across runs 61-100 failed at exactly
 that step, each one after the whole test suite had been green for forty-one
 minutes. `packages/core/src/tools/land.test.ts` reads
-`.github/workflows/check.yml` and fails the build if CI grows a job the landing
-does not run, so the two sets cannot drift apart again quietly.
+`.github/workflows/check.yml` and fails the build if CI grows a job the queued
+landing does not run, so the two sets cannot drift apart again quietly. The
+session default deliberately runs the existing short tier; `--full-preflight`
+selects the queue's set without gaining its push capability.
 
-Put `Closes #93` in the landing commit. GitHub honours a closing keyword in any
-commit that reaches the default branch — [it does not need a pull
-request](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/using-keywords-in-issues-and-pull-requests)
-— so the issue closes on the fast-forward and the janitor retires the claim
-behind it. A keyword in a commit that lands on any other branch does nothing but
+Put `Closes #93` in the landing commit. When the queue pushes that commit to the
+default branch, GitHub closes the issue and the janitor retires the claim behind
+it. A keyword in a commit that remains on any other branch does nothing but
 leave a reference.
 
-**The check that matters is the one after the rebase**, and `land` is that check
-— it runs everything on the rebased head, every time. A green run against the
-base you forked from says nothing about the base you are landing on — that is
-exactly the case where two content branches each pass and their merge does not.
+**The check that matters is the queue's one after its rebase.** It runs
+everything on the exact head it can push. A green PR or local preflight against
+the base you forked from says nothing about the base you are landing on — that
+is exactly the case where two content branches each pass and their merge does
+not.
 
 This used to be a table of what you could skip depending on what the rebase
 brought in: the full check for content or `core`, `test:fast` and a gate for
@@ -375,7 +376,8 @@ One thing is still yours to run, because it answers a question no gate asks:
   moved block names the system that moved it.
 
 **A push is not finished until a verdict comes back, and there are four
-answers.** `land` waits for it and exits on what it says:
+answers.** The queue waits for it and reports what it says; `npm run verdict`
+reads the same result independently:
 
 | | | |
 |---|---|---|
@@ -418,12 +420,12 @@ do not have the same API access, and both have `git fetch`.
 
 Three or four concurrent, of which **at most one in content**.
 
-The ceiling is not thinking time, it is the landing lane: `npm run land` runs
-the whole set CI runs and has to run again after every rebase, so five agents
-finishing together spend their afternoon re-checking each other. What it costs
-is stated once, in [AGENTS.md](../AGENTS.md#commands) — and this paragraph used
-to say "about nine minutes" against a measured thirty, which made the crowding
-sound three times cheaper than it is. Give each agent
+The ceiling is not thinking time, it is the serialized landing queue: every
+entry rebases and runs the complete set CI runs, so five agents finishing
+together wait for five authoritative checks. What it costs is stated once, in
+[AGENTS.md](../AGENTS.md#commands) — and this paragraph used to say "about nine
+minutes" against a measured thirty, which made the crowding sound three times
+cheaper than it is. Give each agent
 a different package where you can — client, editor, engine, content — and the
 rebases stay empty.
 

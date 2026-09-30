@@ -929,8 +929,9 @@ async function main() {
   //
   // Waiting costs nothing that is at risk: the push has happened, nothing is
   // holding a lock, and the alternative is a session that ends believing a
-  // commit was judged when it was not. `--no-verdict` is there for a human
-  // who would rather watch the Actions tab.
+  // commit was judged when it was not. The remote queue passes `--no-verdict`
+  // because its workflow captures the pushed SHA and performs this wait as a
+  // separate, visible step.
   if (NO_VERDICT) {
     say('\nlanded. --no-verdict: nobody is checking whether CI answered.');
     return;
