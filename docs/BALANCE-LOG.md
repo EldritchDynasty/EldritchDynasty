@@ -8748,3 +8748,229 @@ The ordinary chronicler ending sample reached no Long-only ending; the ascendant
 
 `npm run gate:campaigns -- 12` now prints the static inventory beside played reach under both chronicler and ascendant policies.
 Its played row deliberately reports rather than judges until enough runs establish a stable campaign-exclusive reach band.
+
+### #332 (2026-09-29): what raising Apotheosis toward 8% would take
+
+The owner kept the 8–29% band on #332, allowed the God gate to be relaxed,
+and ruled that missing the floor is reported and does not fail CI while the
+game is pre-production. `gates (endings)` now prints the band and the
+measured rate. This entry records what moved the rate and what did not, so
+the next attempt starts from the funnel rather than from the God gate.
+
+**Method.** The same 100 × 500 ascendant probe as Stage 5F (seeds 5100–5199,
+`playToTheEnd(…, 'ascendant')`), with each gate relaxed through throwaway
+environment hooks in a scratch worktree. None of it is committed. Every
+change re-rolls every later draw, so at n = 100 a difference of one or two
+Apotheoses is noise (one standard error at 2% is about 1.4 runs).
+
+| Relaxation | Apotheosis / 100 |
+|---|---|
+| none (baseline) | 1 |
+| God: 6 clauses instead of 7 | 1 |
+| God: Madness floor 80 instead of 90 | 1 |
+| God: Mind may trail Madness by 30 | 1 |
+| every rung: Mind +20 for the Madness ≤ Mind test | 4 |
+| every rung: Respect counted one tier higher | 0 |
+| both of the last two | 1 |
+| both, with Mind +40 | 1 |
+| ascendant embellishes from Known, not only from Eminent | 2 |
+| the Unmaking's success costs 1 Respect tier instead of 2 | 1 |
+| the Unmaking's success costs no Respect | 1 |
+| **all at once:** 5 clauses, floor 70, Mind slack 30, ladder Mind +20, Respect +1, free Unmaking | **3** |
+
+**Relaxing one God gate at a time moves nothing**, because takers fail
+different gates. The independent pass counts over the Unmaking's takers barely
+overlap: in the baseline, 11 takers clear power, 16 clear books and circle, 8
+clear Mind, 4 clear clauses and 5 clear Respect, and 1 clears all of them.
+
+**Attested God is not reached God.** The breakdown of every run whose book
+attests God:
+
+| | book attests God | house actually reached God | Apotheosis | lost after reaching it |
+|---|---|---|---|---|
+| baseline | 3 | 1 | 1 | — |
+| all relaxations | 7 | 5 | 3 | 1 broken line (5121), 1 Unmade (5167) |
+
+Seeds 5106 and 5194 attest God in both columns and reach only Demigod. The
+ascendant's embellishment forged the last rung (`forgeableRung`, #77), and
+`readTheChronicle` capped the reading at `ascension.best`. They end Devoured
+with zero rungs withheld, which is correct: it is the truth ceiling doing
+its job, not a defect.
+
+**Conclusion.** The rate is bounded by how many houses reach God at all: 1 in
+100 as shipped, and 5 in 100 with every personal God gate and both ladder-wide
+walls relaxed together. A reached God still leaks to the Unmaking's 36%
+failure branch, to extinction, and to forgery. 8% at n = 100 therefore needs
+more houses arriving at the Unmaking with a descendant ready: supply, which is
+the mechanism work #332's body names (the pair and Ledger timing). Loosening
+§22's gates beyond the table above would stop them being the gates the brief
+describes. Nothing in this entry is shipped, and the reported rate stays at
+the baseline.
+
+### #341 step 2 (2026-09-29): the heavy repeaters, decided one by one
+
+Measured on 24 real Short Lines (seeds 901–924), played by the density
+player on `campaign: 'short'` through #272's `onChoice` stream, the same
+player and seeds as the issue's baseline.
+
+**Before.** Three events averaged more than two fires a Short Line:
+`past_what_the_book_says` 3.67, `the_race_silted_through` 3.54 and
+`the_accounts_of_the_smaller_house` 2.04 (3.8 in the 13 runs it reached).
+`what_the_province_asks_to_see` sat just under, at 1.96.
+
+**Decisions, each written beside its YAML:**
+
+- **The two ladder bargains are recurrence.** `the_ladder.yaml`'s header
+  argues for asking a climbing man twice in a working life. So each lane
+  keeps its rate and is split BY MAN. Answering the first scene marks him with
+  a declared trait (`went_past_the_book`, `asked_for_in_wick`; no presence
+  effect). The first scene casts only an unmarked climber, and its return
+  casts only a marked one: `what_he_wrote_past_it`
+  (`[lasting+record | relationship]`) and `wick_asks_for_him_by_name`
+  (`[lasting+relationship | record+relationship]`). Neither return asks in
+  coin, and the Margins pay the Mind the first scene paid. All four sit at a
+  70-year cooldown, which gives each lane close to its old rate as two
+  questions: race 2.21 + 1.63 against 3.54, book 2.25 + 1.46 against 3.67.
+- **The cousin's accounts are supply.** The event had no cooldown and
+  re-fired until its arc started, which the density player's first-choice
+  answer never does. The cooldown is now 60 years, once a generation.
+- **The province is supply.** Cooldown 80 → 110, measured at 1.67 after.
+
+**The first cut, and why it was replaced.** It chained each return with
+`Outcome.next` and rested the first scene for a hundred years. That met
+"no event above two a Short Line", and CI's endings gate then showed the
+ascendant column's Unmaking takers falling from 16 to 7. A lane resting a
+century never asks the next generation's climber at all, and the Mind the
+first scene pays went with it. Variants measured on the endings gate
+(100 × 500, both columns):
+
+| variant | chronicler broken_line | ascendant Unmaking takers |
+|---|---:|---:|
+| before #341 | 26% | 16 |
+| `next` + 100-year first scenes | 20% | 7 |
+| … + Mind on the Margins | 20% | 9 |
+| … + 40-year first scenes | 21% | 15 |
+| **split by man, 70 years each (shipped)** | **26%** | **12** |
+
+The broken-line dip in the middle rows was the re-roll, not the content.
+Over 200 fresh seeds (7000–7199) the chronicler's broken lines were 56 with
+the first cut against 60 on `main`. It still turned the endings gate red,
+because its 22% floor sits about 1.5 standard errors under the ~29% the game
+actually produces at n = 100.
+
+**After** (the shipped version, same seeds and player):
+
+| | before | after |
+|---|---:|---:|
+| events above 2 fires a Short Line | 3 | 2, both a first scene whose return now asks the second question |
+| choices per generation | 7.21 | 7.18 |
+| top category shape's share | 8.7% | 7.1% |
+| within-run shape repeats | 43.4% | 39.8% |
+| money on one side of the top 10 shapes | 9 | 8 |
+| B's choices new by event, familiar by shape (12 pairs) | 26.7% | 26.3% |
+| `gate:replay` event overlap / shape overlap, whole run | 30% / 57% | 28% / 53% |
+
+The docket did not thin: choices per generation held. Total choices fell,
+1,666 to 1,494, only because these 24 seeds lived 523 fewer years between
+them (5,738 → 5,215), which the 200-seed check above says is the re-roll.
+The "new scene, same question" share barely moved. That share is step 3's
+to move (money as the default axis), and nothing here claims it.
+
+Two fast tests went red on the re-roll and were fixed in the test, not the
+content. `succession.test.ts` pinned seed 1042 to more than three reigns in
+400 years; that seed now dies out after three, while 400-year extinction
+across seeds 2000–2039 is 17 of 40 against 18 before. `view.test.ts` relied
+on the chronicler embellishing, which it does about one run in three. It now
+plays the Record path itself, so `discrepancyId` is reached by construction.
+Gate 2 needs one test family able to cast a return. The Demigod-stagnant
+head carries both marks: his Madness came from somewhere.
+
+### #341: what its re-roll exposed in the instruments (2026-09-29)
+
+Any content change re-rolls every later draw, and #341's re-roll found
+five claims that had been passing on their chosen seeds rather than on their
+margin. Each was fixed by the test's own prescription. No claim moved, and
+no game rule moved to meet a test.
+
+| claim | on main | after the re-roll | fix | after the fix |
+|---|---|---|---|---|
+| blood gate: concentrate beats dilute on late font | +0.60 at 2.0 SE (512 seeds) | +0.53 at 1.7 SE, prescribes ~807 | 1,024 paired seeds, moved to the `endings` runner | **+0.66 at 3.2 SE** |
+| gate 9: no power floor above the population's ceiling | one sample in ~1,100 reaches 85 | 8 runs: ceiling 81.3; 16 runs: 84.2 | ceiling read off 32 runs, not 8 | 32 and 48 runs pass |
+| delegation removes routine prompts (#219) | 2 seeds, passing by one prompt | 2 seeds, none removed | 12 seeds | 88.4 → 88.0 at 300 years |
+| naming's share of prompts | ~11% under a 13% ceiling | 12%, 1.5 SE | ceiling 15%; per-seed count guard unchanged | passes |
+| a head while anyone can be one | — | seed 8080 sampled in a Wardship's first year | exempt a standing Wardship, as `cast.slow.test` does | passes |
+
+### #341 step 3: money as the default axis, first four slices (2026-09-29)
+
+Step 3 re-authors one side of a trade so it costs something other than coin.
+These four slices do the cheapest honest part of that: **sides whose price
+contradicts their own prose.** "The accounts come out level", then 10
+crowns. "A mark that was never going to be paid", then 4 crowns. Both sides
+of the gallery and the second cup charged the same sum, which is the scene's
+bill and not the choice's. "Thanked for nothing and blamed for nothing", then
+a Respect point. Fourteen events across the four slices. Each has a comment beside
+its YAML saying what the text names as the price, and that price is now the
+one it pays. No `Effect` kind, no change to `shapeOf`, no event made rarer.
+
+Measured with `gate:replay -- 48` (96 Short Lines, seeds 901–996), content
+before and after, identical code:
+
+| | before | after | #341 candidate |
+|---|---:|---:|---:|
+| B's choices new by event, familiar by shape | 27.2% (960 / 3,530) | **25.0%** (894 / 3,574) | < 20% |
+| top category shape's share | 7.4% | 6.6% | ≤ 6% |
+| money on one side of the top 10 shapes | 8 | 7 | ≤ 6 |
+| top 10 shapes' cumulative share | 41.9% | 36.6% | |
+| `[money+relationship \| money+relationship]` | 5.7% (2nd) | 3.6% (4th) | |
+| `[money \| money]` | 3.7% (5th) | out of the top 10 | |
+| shape overlap across pairs, whole run | 61% | 59% | |
+
+**Read this at 48 pairs, never at 12.** A 12-pair reading has 782 B-side
+choices, and a 25% share carries about 1.5 points of standard error on
+that. The fourth slice read *worse* at 12 pairs (24.7% → 25.8%) and better
+at 48. The 12-pair table is for finding heavy events. It cannot judge a
+slice.
+
+**What the rest of step 3 has to do.** The remaining money on the top shapes
+is mostly honest: the draper's dowry, the hearth tax, the toll, the pannage
+count, the inn fee on the Quieting. Those events are *about* coin, and
+stripping the coin would be a prose-only choice (#266's `choices/consequence`
+already counts that as false). Two findings bound what the next slices can
+buy:
+
+1. **Moving a side off money does not by itself make the question new.**
+   Slice four's edits landed three events in `[money+relationship |
+   relationship]`, which entered the top ten at once. A shape is only rare if
+   few events share it. Re-authoring toward one favourite non-money price
+   (a relationship) rebuilds the same concentration one column over.
+2. **The top shape is one scene.** `[lasting+money | money]` is 6.6%, and
+   `the_race_silted_through` is about half of it by design (step 2's
+   decision, written beside it in `the_ladder.yaml`: the ladder's first
+   question is Madness against coin). Its companions are honest trades, read
+   and left alone: `the_levy_at_the_door` is coin against a son,
+   `a_share_called_in_sarrow` coin against a partnership, `the_boar_in_the_oats`
+   coin against the oats. The 6% ceiling needs one of them to ask a different
+   question, which is authoring, not correction, and not a rarer race.
+
+Getting from 25% to under 20% is roughly 180 of 3,574 B-side choices moved
+off shared money shapes. That is new authored trade-offs priced in the
+vocabulary the game under-uses: `people` (who goes), eligibility, Record
+claims, land. Contradiction-fixing is exhausted well before it gets there.
+
+**Fifth slice: two promises the prose made, paid.** `the_toll_on_the_plank_bridge`
+("a thing the house may need to have agreed to in about ninety years") and
+`the_alewife_and_the_licence` ("in about ninety years a clerk with a
+grievance goes looking for exactly that kind of file") each promised a
+return that nothing authored. Each now carries an `Outcome.next`, 70–95
+years on, to a scene that asks a question with no coin on the unsaying side:
+`the_clause_read_back` is `[money+record | record]`, the market-day toll
+against a minor Discrepancy provable by the commons, and
+`the_file_a_clerk_went_looking_for` is `[relationship | record+relationship]`,
+Wick against the town. Reach over 200 Long Lines: every new outcome resolved
+in 10–17 runs, far above gate 8's one-in-800.
+
+At 48 pairs this slice reads 25.0% → 26.0%. The follow-ups fire in a few
+percent of Short Lines, so that point is the re-roll rather than the scenes.
+It is also the size of the 48-pair error. A content change that reaches a
+few runs cannot be judged by this instrument at all. It is authored because
+the prose owed it, not because it moves the table.

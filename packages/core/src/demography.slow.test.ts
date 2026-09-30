@@ -85,6 +85,12 @@ describe('the house survives its own Long Line', () => {
       const w = ctx.world;
       const roster = w.people.household(w.playerHouse, w.year);
       if (!heirApparent(ctx)) continue;
+      // A standing Wardship is the one state with an heir and no head, by
+      // design (#91): the Warden manages the estate until the ward comes of
+      // age, and `cast.slow.test.ts` makes the same exception. This test
+      // predates Wardship; #341's content re-roll landed seed 8080's sample
+      // on the very year its head died and a Wardship began.
+      if (w.wardship) continue; // bought back or not: buying it back restores the income, not the seat
       expect(roster.some((p) => p.castSlots.includes('head')), `seed ${seed}`).toBe(true);
     }
   });

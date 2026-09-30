@@ -152,10 +152,10 @@ events:
                 take it away with them and are visibly relieved, and the story
                 they were carrying dies in the wood where it started. Eleven
                 marks a year of goodwill for four minutes in a yard.
+              # #341: four minutes in a yard cost nothing, and the other houses
+              # never hear what was said to a collier. What it buys is {SEEN}.
               effects:
-                - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: { slot: SEEN }, to: head, sentiment: 10 }
-                - { kind: respect, delta: 1 }
         - id: pay_them_off
           label: Give them a barrel and no answer.
           outcomes:

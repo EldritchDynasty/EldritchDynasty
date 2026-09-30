@@ -67,13 +67,30 @@
 # also the right shape for the scene: a man's working life, so the house asks
 # the man who is climbing about twice before he dies, which is what the
 # paragraph above says it wanted.
+#
+# ─── Asked twice, and the second time differently (#341) ────────────────────
+#
+# Forty years let the first two scenes come round about 3.6 times in a
+# 300-year Short Line — the two most-repeated choices in the game, and the
+# same question each time. The recurrence is the design: a man is asked in
+# his working life, and asked again. So the lane keeps its forty-year cadence
+# and splits BY MAN. Answering the first scene marks him (`went_past_the_book`,
+# `asked_for_in_wick`); the first scene will not cast a marked man, and its
+# return will cast nobody else. A new climber is asked the first question,
+# and the man who already answered it is asked what his answer led to.
+#
+# The first cut chained the return with `next` and stretched the first
+# scene's cooldown to a hundred years instead. It met the fire-rate bar and
+# halved the ascendant column's Unmaking takers (16 to 7): a lane resting a
+# century never asks the NEXT generation's climber at all, and the Mind the
+# first scene pays went with it. See #341's BALANCE-LOG entry.
 events:
   - id: the_race_silted_through
     title: An Afternoon's Work
     tier: family
     frequency: common
     weight: 260
-    cooldownYears: 40
+    cooldownYears: 70
     tags: [ladder, madness, money, wick]
     purposes: [test_magic_rule, change_standing, worldbuild_through_action]
     conditions: { ascension: { atLeast: adept } }
@@ -82,7 +99,7 @@ events:
     # Daveed" in every run where he is. Where these scenes need the seat they
     # name the bare `head` TARGET, which is a person without being a token.
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: asked_for_in_wick, has: false }] }
     body: >-
       The race silted through above the mill in the spring and Wick has been
       carrying water uphill since Greening. Two hundred crowns hires a gang and
@@ -112,6 +129,7 @@ events:
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 5 }
                 - { kind: respect, delta: 1 }
+                - { kind: trait, target: { slot: ASCENDANT }, trait: asked_for_in_wick, op: add }
         - id: hire_the_gang
           label: Hire the gang. Keep him out of it.
           outcomes:
@@ -131,12 +149,12 @@ events:
     tier: individual
     frequency: common
     weight: 260
-    cooldownYears: 40
+    cooldownYears: 70
     tags: [ladder, madness, library, blood]
     purposes: [establish_magic_rule, change_relationship, worldbuild_through_action]
     conditions: { ascension: { atLeast: adept } }
     slots:
-      ASCENDANT: { role: foremost }
+      ASCENDANT: { role: foremost, filters: [{ trait: went_past_the_book, has: false }] }
     body: >-
       The book is a greater work and the man at Cawdry who sold it said so and
       charged accordingly. {ASCENDANT} has had it eleven months and can read
@@ -169,6 +187,7 @@ events:
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 7 }
                 - { kind: attribute, target: { slot: ASCENDANT }, attr: mind, delta: 3 }
+                - { kind: trait, target: { slot: ASCENDANT }, trait: went_past_the_book, op: add }
         - id: take_the_book
           label: Take the book. Put it back on the shelf.
           outcomes:
@@ -183,12 +202,132 @@ events:
               effects:
                 - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: -22 }
 
+  # THE RETURN OF `the_race_silted_through` (#341), for a man who already
+  # carries `asked_for_in_wick`. The village has learned
+  # the price of an afternoon and learned that nobody shows it the bill. The
+  # question is no longer money against his mind: it is whether the house or
+  # the man decides what he spends, and neither answer costs a crown.
+  - id: wick_asks_for_him_by_name
+    title: Asked For By Name
+    tier: family
+    frequency: common
+    weight: 260
+    cooldownYears: 70
+    tags: [ladder, madness, wick]
+    purposes: [test_magic_rule, change_relationship, plant_rumour]
+    conditions: { ascension: { atLeast: adept } }
+    slots:
+      ASCENDANT: { role: foremost, filters: [{ trait: asked_for_in_wick, has: true }] }
+    body: >-
+      The race silts again in a wet spring, and this time Wick does not wait
+      for the house. The reeve comes up the hill on foot with his hat in both
+      hands and mud to the knee, and he does not ask for the family. He asks
+      for {ASCENDANT}, by name, at the gate, the way a village asks for the man
+      who mends things. Nobody taught him to. The village has done its own
+      sums: a gang costs a season, a man from the house costs an afternoon, and
+      nobody has ever shown Wick the rest of the bill. He is waiting in the
+      yard.
+    interaction:
+      kind: choice
+      choices:
+        - id: send_him_down
+          label: Send him down. It is his village as much as ours.
+          outcomes:
+            - id: the_race_runs_again
+              weight: 100
+              text: >-
+                He goes down with the reeve and the race runs before dark. Wick
+                lines the bank to watch, which it did not do the first time,
+                and a few of them clap, and {ASCENDANT} does not know what to do
+                with his hands. He climbs back slower than he went down. He has
+                started to like being asked.
+              effects:
+                - { kind: madness, target: { slot: ASCENDANT }, delta: 5 }
+                - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: 10 }
+        - id: keep_him_in
+          label: Keep him in. Tell the reeve it was once.
+          outcomes:
+            - id: wick_digs_it_out
+              weight: 100
+              text: >-
+                The reeve goes back down the hill with his hat on. Wick digs the
+                race out itself, with spades, over five weeks, and says in the
+                alehouse that the house has got proud, which is what a village
+                says instead of what it means. {ASCENDANT} watches the digging
+                from the upper window most of that week. He does not come down
+                to supper the day it runs.
+              effects:
+                - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: -12 }
+                - { kind: rumour, op: seed, id: rumour_wick_dug_it_themselves, accuracy: 0.5 }
+
+  # THE RETURN OF `past_what_the_book_says` (#341), for a man who already
+  # carries `went_past_the_book`. He went past the book once.
+  # The question now is not his mind against the shelf but whether the next
+  # reader of the blood inherits a map — a thing the record keeps, or a thing
+  # burned in front of him.
+  - id: what_he_wrote_past_it
+    title: The Margins
+    tier: individual
+    frequency: common
+    weight: 260
+    cooldownYears: 70
+    tags: [ladder, madness, library, blood]
+    purposes: [test_magic_rule, change_relationship, worldbuild_through_action]
+    conditions: { ascension: { atLeast: adept } }
+    slots:
+      ASCENDANT: { role: foremost, filters: [{ trait: went_past_the_book, has: true }] }
+    body: >-
+      The greater work comes down off the shelf in the cold months now, because
+      {ASCENDANT} has started writing in it. Not in the text. In the margins, in
+      a small hand, beside the place where the book stops explaining and he did
+      not stop. The ink is the kitchen's, so he has been doing it at night, at
+      the long table by the banked fire, with nothing to hear but the clock and
+      the dog. What he has written is not a spell. It is directions: which
+      word, which door, how long to wait in the dark before something answers.
+      Anybody of the blood who can read could follow them, and that is the
+      whole of the question. Whether the next one gets a map.
+    interaction:
+      kind: choice
+      choices:
+        - id: let_the_margins_stand
+          label: Let the margins stand. The next one should not have to find it alone.
+          outcomes:
+            - id: finished_in_one_winter
+              weight: 100
+              text: >-
+                He finishes it over one winter, and goes back through the
+                working twice more to be sure of the order, which is the part
+                nobody counts. The margins fill. The book is heavier by a few
+                ounces of ink and a good deal else. When he closes it the last
+                time he looks like a man who has put something down.
+              effects:
+                - { kind: madness, target: { slot: ASCENDANT }, delta: 6 }
+                - { kind: attribute, target: { slot: ASCENDANT }, attr: mind, delta: 3 }
+                - { kind: chronicle, text: A greater work in the library was written over in the family's own hand, past the place where the book itself stops. }
+        - id: cut_the_pages
+          label: Cut the pages out. Burn them where he can see.
+          outcomes:
+            - id: eleven_pages
+              weight: 100
+              text: >-
+                The knife is the one from the kitchen and it takes eleven pages
+                clean at the gutter. They go into the hall grate one at a time,
+                because a book burns badly all at once. {ASCENDANT} stands and
+                watches it done and says nothing, then or afterwards. He can
+                still do everything he wrote down. Now he is the only one who
+                can.
+              effects:
+                - { kind: relationship, from: { slot: ASCENDANT }, to: head, sentiment: -20 }
+
   - id: what_the_province_asks_to_see
     title: Where the Province Can Watch
     tier: head
     frequency: uncommon
     weight: 200
-    cooldownYears: 80
+    # SUPPLY (#341). Once the first two scenes spaced themselves out, this one
+    # took their draws and reached 2.2 a Short Line — the province asking to
+    # watch in every other generation. It asks once in a man's life now.
+    cooldownYears: 110
     tags: [ladder, madness, standing, assize]
     purposes: [change_standing, plant_rumour, test_magic_rule]
     conditions: { ascension: { atLeast: adept } }

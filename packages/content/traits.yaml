@@ -357,3 +357,23 @@ traits:
         modifiers:
           - { kind: check_bonus, match: { tags: [hardship] }, delta: 6 }
           - { kind: attribute, attr: health, delta: 1, target: household }
+
+  # THE LADDER'S MEMORY OF A MAN (#341). Neither does anything by presence;
+  # each is what `the_ladder.yaml` reads to ask him the second question rather
+  # than the first one again.
+  - id: went_past_the_book
+    name: Past the Book
+    tags: [ladder, madness, library]
+    acquisition: { kind: assigned }
+    description: >-
+      He read a greater work past the place where it stops explaining, and it
+      worked. He is quicker since, and harder to surprise, and nobody has asked
+      him what else changed.
+
+  - id: asked_for_in_wick
+    name: Asked For in Wick
+    tags: [ladder, madness, wick]
+    acquisition: { kind: assigned }
+    description: >-
+      He cleared the mill race above Wick in an afternoon. The village has not
+      forgotten, and it has not been told what the afternoon cost.

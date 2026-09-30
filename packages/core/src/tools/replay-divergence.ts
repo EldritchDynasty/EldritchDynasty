@@ -137,6 +137,11 @@ export function replayLines(rows: readonly ReplayPair[]): string[] {
       '',
     ]);
   }
+  return table(head, body);
+}
+
+/** Left-aligned columns under a rule, as every table this gate prints is laid out. */
+function table(head: readonly string[], body: readonly (readonly string[])[]): string[] {
   const widths = head.map((label, i) => Math.max(label.length, ...body.map((row) => row[i]!.length)));
   const line = (cells: readonly string[]) => cells.map((cell, i) => cell.padEnd(widths[i]!)).join('  ');
   return [line(head), line(widths.map((width) => '-'.repeat(width))), ...body.map(line)];
@@ -149,6 +154,116 @@ export function libraryLines(reading: LibraryReading): string[] {
     `  inherited memories at founding: ${reading.inheritedMemories}`,
     `  first since: ${reading.since ?? 'none'}`,
     `  surfaced: ${reading.surfaced}`,
+  ];
+}
+
+/**
+ * WHAT THE PLAYER IS ASKED MOST, AND WHAT MAKES A NEW SCENE FEEL OLD (#341).
+ *
+ * The divergence table says how much of run two run one already showed; this
+ * says which questions carry that overlap. A pure reduction over choice
+ * streams already read off the density player, so its test builds streams by
+ * hand and plays nothing.
+ *
+ * - `top`: the most common category shapes across every stream, each with how
+ *   many distinct events carry it and the events that carry it most.
+ * - `familiar`: for each pair (A, B), B's choices whose EVENT A never showed
+ *   but whose SHAPE A did — a new scene asking a question already asked —
+ *   and the shapes that make up that share.
+ * - `moneyInTop`: how many of the top shapes have money on at least one side,
+ *   by the shape key's own `money` token.
+ */
+export interface ShapeCount {
+  shape: string;
+  count: number;
+  share: number;
+}
+
+export interface ShapeConcentration {
+  choices: number;
+  shapes: number;
+  events: number;
+  top: (ShapeCount & { events: number; heaviest: { id: string; fires: number }[] })[];
+  familiar: { compared: number; count: number; share: number; top: ShapeCount[] };
+  moneyInTop: number;
+}
+
+export function shapeConcentration(
+  streams: readonly (readonly DecisionVisit[])[],
+  pairs: readonly (readonly [number, number])[],
+  topN = 10,
+): ShapeConcentration {
+  const all = streams.flat();
+  const byShape = new Map<string, Map<string, number>>();
+  for (const visit of all) {
+    const shape = shapeOfVisit(visit);
+    const events = byShape.get(shape) ?? new Map<string, number>();
+    events.set(visit.id, (events.get(visit.id) ?? 0) + 1);
+    byShape.set(shape, events);
+  }
+  const total = (events: Map<string, number>) => [...events.values()].reduce((a, n) => a + n, 0);
+  // Ties break on the key, so the table is the same table every time it is printed.
+  const ranked = [...byShape].sort(([sa, a], [sb, b]) => total(b) - total(a) || sa.localeCompare(sb));
+  const top = ranked.slice(0, topN).map(([shape, events]) => ({
+    shape,
+    count: total(events),
+    share: all.length ? total(events) / all.length : 0,
+    events: events.size,
+    heaviest: [...events]
+      .sort(([ia, a], [ib, b]) => b - a || ia.localeCompare(ib))
+      .slice(0, 3)
+      .map(([id, fires]) => ({ id, fires })),
+  }));
+
+  let compared = 0;
+  const familiarByShape = new Map<string, number>();
+  for (const [ia, ib] of pairs) {
+    const a = streams[ia] ?? [];
+    const b = streams[ib] ?? [];
+    const ids = new Set(a.map((visit) => visit.id));
+    const shapes = new Set(a.map(shapeOfVisit));
+    compared += b.length;
+    for (const visit of b) {
+      if (ids.has(visit.id) || !shapes.has(shapeOfVisit(visit))) continue;
+      familiarByShape.set(shapeOfVisit(visit), (familiarByShape.get(shapeOfVisit(visit)) ?? 0) + 1);
+    }
+  }
+  const familiarCount = [...familiarByShape.values()].reduce((a, n) => a + n, 0);
+
+  return {
+    choices: all.length,
+    shapes: byShape.size,
+    events: new Set(all.map((visit) => visit.id)).size,
+    top,
+    familiar: {
+      compared,
+      count: familiarCount,
+      share: compared ? familiarCount / compared : 0,
+      top: [...familiarByShape]
+        .sort(([sa, a], [sb, b]) => b - a || sa.localeCompare(sb))
+        .slice(0, 5)
+        .map(([shape, count]) => ({ shape, count, share: familiarCount ? count / familiarCount : 0 })),
+    },
+    moneyInTop: top.filter(({ shape }) => /\bmoney\b/.test(shape)).length,
+  };
+}
+
+export function concentrationLines(c: ShapeConcentration): string[] {
+  const pct = (x: number) => `${(100 * x).toFixed(1)}%`;
+  let cumulative = 0;
+  const rows = c.top.map((row) => {
+    cumulative += row.share;
+    return [
+      pct(row.share), pct(cumulative), row.shape, String(row.events),
+      row.heaviest.map(({ id, fires }) => `${id} x${fires}`).join(', '),
+    ];
+  });
+  return [
+    `Shape concentration: ${c.choices} choices, ${c.shapes} distinct shapes, ${c.events} distinct events`,
+    ...table(['share', 'cumulative', 'shape', 'events', 'heaviest'], rows).map((line) => `  ${line}`),
+    `  money on one side of ${c.moneyInTop} of the top ${c.top.length} shapes`,
+    `  new event, familiar shape: ${pct(c.familiar.share)} of B's choices (${c.familiar.count} of ${c.familiar.compared})`,
+    ...c.familiar.top.map((row) => `    ${pct(row.share)} of that  ${row.shape}`),
   ];
 }
 
@@ -184,8 +299,10 @@ function shapeOfVisit(visit: DecisionVisit): string {
 }
 
 export function measureReplayPair(source: Source, a: number, b: number): ReplayPair {
-  const first = shortLineChoices(source, a);
-  const second = shortLineChoices(source, b);
+  return replayPairOf(a, b, shortLineChoices(source, a), shortLineChoices(source, b));
+}
+
+function replayPairOf(a: number, b: number, first: DecisionVisit[], second: DecisionVisit[]): ReplayPair {
   return {
     a,
     b,
@@ -225,13 +342,17 @@ const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('replay-divergence.
 if (isMain) {
   const pairs = Math.max(1, Number(process.argv[2] ?? 12));
   const source = loadContent();
-  const rows = Array.from({ length: pairs }, (_, i) => {
-    const a = 901 + i * 2;
-    return measureReplayPair(source, a, a + 1);
-  });
+  // Each Short Line is played once and read twice: by the pair table and by
+  // the concentration table, which must describe the same choices.
+  const seeds = Array.from({ length: pairs * 2 }, (_, i) => 901 + i);
+  const streams = seeds.map((seed) => shortLineChoices(source, seed));
+  const pairIndex = Array.from({ length: pairs }, (_, i) => [i * 2, i * 2 + 1] as const);
+  const rows = pairIndex.map(([ia, ib]) => replayPairOf(seeds[ia]!, seeds[ib]!, streams[ia]!, streams[ib]!));
 
   console.log(`replay divergence: ${pairs} paired Short Lines`);
   for (const line of replayLines(rows)) console.log(line);
+  console.log('');
+  for (const line of concentrationLines(shapeConcentration(streams, pairIndex))) console.log(line);
   console.log('');
   for (const line of libraryLines(measureLibraryVisibility(source, rows[0]!.a, rows[0]!.b))) console.log(line);
   console.log('');

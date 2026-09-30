@@ -43,8 +43,9 @@ events:
                 the round dances go on until the fires are down. Two cups stay
                 full at the head of the board all night. In the morning
                 somebody has drunk one of them and nobody ever finds out who.
+              # #341: both sides paid the same 13 crowns, which is the feast's
+              # bill and not the choice's. The choice is what is said aloud.
               effects:
-                - { kind: treasury, delta: -13 }
                 - { kind: relationship, from: { slot: MOURNER }, to: head, sentiment: 8 }
         - id: name_them
           label: Stand and name them both aloud.
@@ -59,7 +60,6 @@ events:
                 the names wrong, and holds the house higher for it than for
                 anything it did that year with money.
               effects:
-                - { kind: treasury, delta: -13 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: MOURNER }, to: head, sentiment: 14 }
 
@@ -277,9 +277,10 @@ events:
                 the wrong thing. Nobody at that table will say so. Forty years
                 later {BEREAVED} tells a child about it and gets the day wrong
                 and the feeling exactly right.
+              # #341: nothing in filling a place at the board costs coin, and
+              # nothing here said it did. The price is the one the text names.
               effects:
                 - { kind: relationship, from: { slot: BEREAVED }, to: head, sentiment: -14 }
-                - { kind: treasury, delta: -9 }
 
   - id: the_child_with_no_name
     title: The Child With No Name

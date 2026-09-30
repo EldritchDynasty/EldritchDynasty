@@ -796,6 +796,14 @@ export function bloodVerdict(concentrate: BloodRun[], dilute: BloodRun[]): Blood
  * the unchanged claim with enough evidence instead of tuning the game or
  * acceptance floor to whichever histories the latest unrelated change rolled.
  *
+ * 1,024 since #341. Its content re-roll measured +0.53 on the same 512 seeds,
+ * sd about 6.7, at 1.7 SE, and prescribed about 807. The effect has read
+ * +0.5 to +0.9 on every width since 192, against a per-seed spread near 6.7,
+ * so 512 was carrying it at 2.0 SE exactly and any content change could tip
+ * it. The first 512 seeds are unchanged; the second 512 continue the same
+ * stride. The gate moved to the `endings` lane with it (`tools/gates.ts`),
+ * so the extra runs cost no wall time on the heaviest runner.
+ *
  * The hidden-channel oracle below is DIAGNOSTIC, not part of this verdict.
  * The standalone gate:blood tool still prints it. CI no longer pays a third
  * full 500-year column for a number it does not judge; that budget goes into
@@ -815,7 +823,7 @@ export function gateBlood(
   opts: { seeds?: number[]; years?: number } = {},
 ): BloodVerdict {
   const bundle = indexContent(source).bundle;
-  const seeds = opts.seeds ?? Array.from({ length: 512 }, (_, i) => 4000 + i * 13);
+  const seeds = opts.seeds ?? Array.from({ length: 1024 }, (_, i) => 4000 + i * 13);
   const years = opts.years ?? CAMPAIGN_YEARS;
   const concentrate = seeds.map((seed) => playOnce(bundle, seed, years, 'concentrate'));
   const dilute = seeds.map((seed) => playOnce(bundle, seed, years, 'dilute'));

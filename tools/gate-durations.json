@@ -12,8 +12,8 @@
       "evidence": "Successful main runs 2026-09-26 through 2026-09-28: 21-39 min, typically about 37 min (#333)."
     },
     "endings": {
-      "seconds": 360,
-      "evidence": "Successful main runs 2026-09-26 through 2026-09-28: 3-6 min, typically about 6 min (#333)."
+      "seconds": 3000,
+      "evidence": "The endings runner carries the blood gate (1,024 paired seeds, dff12c3). The same blood-gate code measured 30.5 min (CI 36529343819, f61ea47), 34 min (cd82b78), then 49.9 and 53.3 min on one head twice (61b4a9b, run 36630095730 and its re-run). A 24-pair subset takes 74-77 s locally with the content before and after #341 step 3 alike, so content is not the cause, and it projects to about 53 min for the full batch on a four-core container. The first two readings were fast runners, and 1830 s was set from the faster of them. The baseline is now the typical run, the way batch's is."
     }
   }
 }

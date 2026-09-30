@@ -614,7 +614,13 @@ describe('who has held the seal', () => {
     runYears(ctx, 400);
 
     const line = ctx.world.succession;
-    expect(line.length, 'four hundred years and nobody took the seal').toBeGreaterThan(3);
+    // At least one handover, which is what the message says. This was `> 3`,
+    // a number about how long THIS seed's house lives rather than about the
+    // record: #341's content pass re-rolled seed 1042 into a house that dies
+    // out after three reigns, with 400-year extinction unchanged across forty
+    // seeds (17 against 18), and three reigns still carry two handovers to
+    // check the order of.
+    expect(line.length, 'four hundred years and nobody took the seal').toBeGreaterThan(1);
 
     for (let i = 0; i < line.length; i++) {
       const held = line[i]!;

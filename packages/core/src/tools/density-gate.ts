@@ -58,7 +58,7 @@ import type { CampaignId, Content, ContentBundle, HouseAmbitionId } from '@ed/sc
 import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
 import type { PendingRecord } from '../events/decisions.js';
-import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { CAMPAIGN_YEARS, CAMPAIGNS, START_YEAR } from '../campaign.js';
 import { ambitionOptions, ambitionView } from '../ambition.js';
 import { foremostOf, type LadderBlocker } from '../ascension.js';
 import {
@@ -516,6 +516,16 @@ function bump(counts: Map<string, number>, key: string): void {
   counts.set(key, (counts.get(key) ?? 0) + 1);
 }
 
+/**
+ * THE CAMPAIGN A TERM MEANS (#341 step 0). A 300-year row used to be a Long
+ * Line stopped at 300, with the Long Ledger, no `settled` ending and Long
+ * `campaignProgress` timing. A term equal to the Short Line's is played as
+ * one; any other term is the Long Line, as before.
+ */
+export function campaignForTerm(term: number): CampaignId {
+  return term === CAMPAIGNS.short.years ? 'short' : 'long';
+}
+
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('density-gate.ts');
 if (isMain) {
   const argv = process.argv.slice(2);
@@ -536,15 +546,15 @@ if (isMain) {
   if (argv.includes('--delegation')) {
     const rows = selectedTerms.map((term) => ({
       term,
-      before: seeds.map((seed) => measureDensity(bundle, seed, term)),
-      after: seeds.map((seed) => measureDensity(bundle, seed, term, { delegateRoutine: true })),
+      before: seeds.map((seed) => measureDensity(bundle, seed, term, { campaign: campaignForTerm(term) })),
+      after: seeds.map((seed) => measureDensity(bundle, seed, term, { campaign: campaignForTerm(term), delegateRoutine: true })),
     }));
     console.log(`${seeds.length} paired runs, ${rows.map((r) => `${r.term}y`).join(' and ')}, delegation before/after`);
     for (const l of delegationDensityLines(rows)) console.log(l);
   } else {
     const rows = selectedTerms.map((term) => ({
       term,
-      runs: seeds.map((seed) => measureDensity(bundle, seed, term)),
+      runs: seeds.map((seed) => measureDensity(bundle, seed, term, { campaign: campaignForTerm(term) })),
     }));
     console.log(`${seeds.length} runs, ${rows.map((r) => `${r.term}y`).join(' and ')}`);
     for (const l of densityLines(rows)) console.log(l);

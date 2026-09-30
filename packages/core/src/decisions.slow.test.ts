@@ -211,7 +211,14 @@ describe('auto-resolve is the same path', () => {
   });
 });
 
-const DELEGATION_SEEDS = [901, 902] as const;
+/**
+ * Twelve, not two (#341). Delegation takes about five prompts off a 300-year
+ * line across twelve seeds, with this content and with the content before it,
+ * and two seeds were passing the strict "fewer" by exactly one prompt. #341's
+ * content re-roll left 901 and 902 with none to remove between them, which is
+ * a fact about which two seeds were chosen, not about the feature.
+ */
+const DELEGATION_SEEDS = [901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 912] as const;
 const DELEGATION_TERMS = [500, 300] as const;
 
 

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   compareDecisionStreams,
+  concentrationLines,
   libraryLines,
   replayLines,
+  shapeConcentration,
   type DecisionVisit,
 } from './replay-divergence.js';
 
@@ -75,5 +77,43 @@ describe('replay divergence comparison (#272)', () => {
       { a: 903, b: 904, opening: bare, overall: bare },
     ]);
     expect(mixed[0]).not.toContain('shape');
+  });
+});
+
+describe('shape concentration (#341)', () => {
+  const v = (id: string, shape: string): DecisionVisit => ({ id, year: 1100, shape });
+  // Run A asks the race twice and the book once; run B asks the race again,
+  // a NEW event with the race's shape, and a new event with a new shape.
+  const a = [v('race', '[lasting+money | money]'), v('race', '[lasting+money | money]'), v('book', '[lasting | relationship]')];
+  const b = [v('race', '[lasting+money | money]'), v('gallery', '[lasting+money | money]'), v('margins', '[lasting+record | relationship]')];
+
+  it('ranks shapes by share, counts the events carrying each, and names the heaviest', () => {
+    const c = shapeConcentration([a, b], [[0, 1]]);
+    expect(c.choices).toBe(6);
+    expect(c.shapes).toBe(3);
+    expect(c.events).toBe(4);
+    expect(c.top[0]).toEqual({
+      shape: '[lasting+money | money]', count: 4, share: 4 / 6, events: 2,
+      heaviest: [{ id: 'race', fires: 3 }, { id: 'gallery', fires: 1 }],
+    });
+    // A tie on count breaks on the shape key, so the table never reorders itself.
+    expect(c.top.slice(1).map((row) => row.shape)).toEqual(['[lasting | relationship]', '[lasting+record | relationship]']);
+    expect(c.moneyInTop).toBe(1);
+  });
+
+  it('counts a new event asking a question run A already asked, and only that', () => {
+    const c = shapeConcentration([a, b], [[0, 1]]);
+    // race: A showed the event. margins: A never showed the shape. gallery: new event, old shape.
+    expect(c.familiar).toEqual({
+      compared: 3, count: 1, share: 1 / 3,
+      top: [{ shape: '[lasting+money | money]', count: 1, share: 1 }],
+    });
+  });
+
+  it('prints the same table every time, and refuses a stream read without shapes', () => {
+    const c = shapeConcentration([a, b], [[0, 1]]);
+    expect(concentrationLines(c)).toEqual(concentrationLines(shapeConcentration([a, b], [[0, 1]])));
+    expect(concentrationLines(c)[0]).toBe('Shape concentration: 6 choices, 3 distinct shapes, 4 distinct events');
+    expect(() => shapeConcentration([[{ id: 'x', year: 1100 }]], [])).toThrow(/without a shape/);
   });
 });

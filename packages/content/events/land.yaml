@@ -88,9 +88,11 @@ events:
                 back down, and the rent from Longmere is thin this winter,
                 thinner where it stood longest. Nobody drowned. Nobody dug,
                 either.
+              # #341: what the county says about a drowned field is this
+              # event's own rumour, below. A Respect point beside it billed the
+              # same talk twice. The price is the ground, which is the choice.
               effects:
                 - { kind: land, op: damage, parcel: longmere }
-                - { kind: respect, delta: -1 }
     rumour: { id: rumour_longmere_flooded_again, accuracy: 0.6, spread: 2 }
 
   - id: what_the_years_wore_down

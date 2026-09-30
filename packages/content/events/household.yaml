@@ -25,11 +25,15 @@ events:
           outcomes:
             - id: held
               weight: 100
+              # #341: the bread is already in the cellar, so rationing it
+              # costs no coin. It costs the man who has to say no.
               text: >-
-                The house holds. It is a thin, mean, unremarkable winter, and
-                in eighty years nobody will remember that it happened at all.
+                The house holds. It is a thin, mean winter, and {STEWARD} is
+                the one who says no at the kitchen door every night until the
+                thaw. The kitchen remembers whose voice it was. In eighty
+                years nobody else will remember the winter at all.
               effects:
-                - { kind: treasury, delta: -12 }
+                - { kind: relationship, from: { slot: STEWARD }, to: head, sentiment: -8 }
         - id: generous
           label: Open the stores to the village.
           outcomes:

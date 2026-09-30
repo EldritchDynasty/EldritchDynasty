@@ -571,7 +571,14 @@ export function gateLadderScales(
     demigod: POWER_FLOOR.demigod,
     god: POWER_FLOOR.god,
   };
-  const runs = opts.runs ?? 8;
+  // 32, not 8 (#341). The stale check reads a MAXIMUM, and the power floors
+  // for Demigod and God are cleared by about one expresser-sample in a
+  // thousand — one man in one run. Eight runs (about 530 samples) passed with
+  // main's content because that one man happened to be there; #341's content
+  // re-roll left eight runs, and sixteen, without him (ceilings 81.3 and 84.2)
+  // and 32 and 48 with him again. A ceiling the batch cannot reliably see is
+  // not one it can convict a floor on.
+  const runs = opts.runs ?? 32;
   const years = opts.years ?? CAMPAIGN_YEARS;
   // Sampled through the run rather than at the end: a man who stood at
   // Hierophant in 1400 and died in 1440 is not in the household at 2042, and
@@ -1031,7 +1038,11 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  */
 const OWN_LANE: Record<string, readonly string[]> = {
   war: ['war'],
-  endings: ['endings'],
+  // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
+  // (`blood-gate.ts`): about 24 minutes more of play, which on `batch` would
+  // have made the slowest runner slower, and on `endings`' otherwise six-minute
+  // runner costs no wall time. Neither shares its runs with any other gate.
+  endings: ['endings', 'blood'],
 };
 
 /** The lane every gate falls into unless it is named above. */

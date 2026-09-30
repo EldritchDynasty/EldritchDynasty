@@ -1,5 +1,5 @@
 import type { Content, ContentBundle, RetainerContract, RetainerRole } from '@ed/schema';
-import { MAIN_BRANCH, indexContent } from '@ed/schema';
+import { MAIN_BRANCH, asId, indexContent } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { place, marry } from '../testing.js';
@@ -90,6 +90,11 @@ function demigodStagnant(source: ContentBundle | Content): SimCtx {
   // claimed Demigod without the Regalia to show for it, was the same
   // half-claim either way.
   head.rites.push('vessel', 'great_rite');
+  // And the ladder's two bargains, answered on the way up — his Madness came
+  // from somewhere. `the_ladder.yaml` asks a marked man the RETURN of each
+  // (#341), so a house with no marked climber could never cast one.
+  head.traits.add(asId('asked_for_in_wick'));
+  head.traits.add(asId('went_past_the_book'));
   grantHeirloom(ctx, 'the_ninefold_seal');
   grantHeirloom(ctx, 'the_ring');
   grantHeirloom(ctx, 'the_rod');

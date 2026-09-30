@@ -22,12 +22,11 @@ import { join } from 'node:path';
  * reason a reviewer would accept for a rule depending on the wording of a
  * sentence; there has not been one yet.
  *
- * `NOT_YET` is different in kind: sites known to read English, each owned by
- * an issue that is removing it. It exists so this guard could land before the
- * last of them was fixed and stop new ones arriving meanwhile. Every entry is
- * checked to still be true, so fixing a site fails this suite until its entry
- * is deleted — a declaration nobody has to earn is how a list like this goes
- * stale. When it is empty, delete it.
+ * `NOT_YET` held the sites known to read English while #270 and #276 took
+ * them out, so this guard could land before the last was fixed. It is empty
+ * now, and it stays in the file only so its "still true" check keeps anyone
+ * from quietly re-listing a site instead of fixing it: an entry must be
+ * earned by a real match, and the test below insists the list is empty.
  */
 
 const SRC = join(import.meta.dirname);
@@ -39,16 +38,7 @@ const ENGLISH_READ =
 const ALLOWED: Record<string, string> = {};
 
 /** File → how many matches it still has, and who is taking them out. */
-const NOT_YET: Record<string, { sites: number; owner: string }> = {
-  // #270 moved `standing.blocked` onto a structured `LadderBlocker`, which
-  // took long-line-gate.ts's nineteen phrases and the endings gate's Ledger
-  // check off this list. One remains: the Ledger-wait page dedupes on its
-  // own opening words.
-  'ascension.ts': {
-    sites: 1,
-    owner: '#270/#276: the Ledger-wait page (`The Ledger Stayed Open`) dedupes on `entry.text?.startsWith(opening)`; give it an id',
-  },
-};
+const NOT_YET: Record<string, { sites: number; owner: string }> = {};
 
 /** Every non-test TypeScript file under a directory, `/`-separated and relative to it. */
 function sources(dir: string, rel = '', out: string[] = []): string[] {
@@ -85,6 +75,7 @@ describe('no rule reads English (issue #276)', () => {
 
   it('has no exceptions', () => {
     expect(Object.keys(ALLOWED)).toEqual([]);
+    expect(Object.keys(NOT_YET), 'every known English-reading site was fixed; fix a new one rather than listing it').toEqual([]);
   });
 
   it('finds no new site that reads a sentence to decide something', () => {

@@ -62,8 +62,9 @@ events:
                 It costs a mark that was never going to be paid. Two more
                 things go out of the store before Thaw and the yard man stops
                 mentioning them.
+              # #341: a fine remitted in the same breath moves no coin, as the
+              # text says. What forgiving buys and costs is the parish.
               effects:
-                - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: an_eviction_remembered
@@ -254,6 +255,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
+          next:
+            event: the_clause_read_back
+            after: { minYears: 70, maxYears: 95 }
         - id: hold_the_chain
           label: Hold the chain. The clause is about a ford in another county.
           outcomes:
@@ -268,6 +272,62 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: flag, flag: the_bridge_right_defended, set: true }
+
+
+  # #341: `halved` said the house had agreed to something it "may need to
+  # have agreed to in about ninety years", and nothing ever came back for it.
+  # This is what comes back. Keeping the word costs the market-day toll;
+  # unsaying it costs the record, because Bramme keeps both answers.
+  - id: the_clause_read_back
+    title: What the House Said the Charter Said
+    tier: head
+    frequency: uncommon
+    weight: 100
+    tags: [town, trade, rights, record]
+    purposes: [force_record_choice, change_standing, worldbuild_through_action]
+    slots:
+      HEAD: { role: head }
+    body: >-
+      Rain on the gate arch, and a carriers' man under it with a satchel held
+      against his chest the way you hold something that must not get wet. His
+      grandfather stood in this yard with a clause about a ford in another
+      county, and the house halved the rate and said the charter had persuaded
+      it. That answer is in the town's book at Bramme, in a clerk's round
+      hand, and the grandson has a fair copy. He reads it out once. If the
+      clause bound the bridge then, he says, it binds the chain now, and the
+      chain comes down on market days. Everybody at the table remembers what
+      the house said the charter said, and nobody remembers the charter. It
+      was in Old Ambric.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_the_word
+          label: Let the chain down on market days. The house said what it said.
+          outcomes:
+            - id: chain_down
+              weight: 100
+              text: >-
+                The chain comes down at first light on market days and goes
+                back up at dusk, and the carts come through Wick in a line you
+                can hear from the hall. The toll box is light on those days
+                and stays light. There is a line about it in the house's own
+                book, and the line is true.
+              effects:
+                - { kind: treasury, delta: -3 }
+                - { kind: chronicle, text: The chain at the Wick bridge comes down on market days, because the house once said the Bramme charter bound it, and a house keeps what it said. }
+        - id: it_was_a_courtesy
+          label: Say it was a courtesy then, and was never the law.
+          outcomes:
+            - id: courtesy
+              weight: 100
+              text: >-
+                The carriers' man writes the answer down while it is still
+                being given, which his grandfather did not think to do. The
+                chain stays up. At Bramme the two answers sit in one book,
+                eleven pages apart, and any clerk who turns eleven pages can
+                read them both.
+              effects:
+                - { kind: discrepancy, op: create, id: the_charter_was_a_courtesy, severity: minor, provableBy: [commons] }
 
   - id: the_bonesetter_or_the_physician
     title: The Bonesetter, or the Man From Bramme
