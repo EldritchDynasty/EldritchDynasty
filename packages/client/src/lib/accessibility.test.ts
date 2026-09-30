@@ -3,6 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  loadRevealed,
+  revealStorageKey,
+  revealTransition,
+  saveRevealed,
+  tableHasAffordableOrder,
+} from './reveal';
+import {
   ACCESSIBILITY_STORAGE_KEY,
   SEEN_PROSE_STORAGE_KEY,
   applyAccessibility,
@@ -33,6 +40,7 @@ describe('reading preferences', () => {
       readingFont: 'readable',
       skipSeenProse: true,
       reduceMotion: true,
+      showEverythingFromStart: false,
     };
 
     saveAccessibility(storage, wanted);
@@ -52,12 +60,14 @@ describe('reading preferences', () => {
       readingFont: 'book',
       skipSeenProse: false,
       reduceMotion: false,
+      showEverythingFromStart: null,
     });
     expect(loadAccessibility({ getItem: () => JSON.stringify({ textScale: 'huge' }) })).toEqual({
       textScale: 'standard',
       readingFont: 'book',
       skipSeenProse: false,
       reduceMotion: false,
+      showEverythingFromStart: null,
     });
   });
 });
@@ -429,5 +439,142 @@ describe('the prologue earns its seen mark only after it is read (#267)', () => 
     // Fast reveal changes only `shown`; the founding requirements still own
     // whether the simulation verb can be pressed.
     expect(source).toContain(':disabled="wanted.length > 0"');
+  });
+});
+
+
+describe('progressive surface reveal (#368)', () => {
+  type RevealView = Parameters<typeof revealTransition>[0];
+  type RevealTable = Parameters<typeof revealTransition>[1];
+
+  function view(year = 1042, overrides: Partial<RevealView> = {}): RevealView {
+    return {
+      year,
+      campaign: { id: 'short', name: 'Short Line', startYear: 1042, endYear: 1342 },
+      tales: [],
+      ascension: {
+        rung: 'none',
+        best: 'none',
+        title: 'Unmarked',
+        bestTitle: 'Unmarked',
+      },
+      assize: {
+        pressure: 0,
+        arm: 'indifferent',
+        favour: false,
+        mercy: false,
+        exaction: false,
+      },
+      ...overrides,
+    } as RevealView;
+  }
+
+  function affordableTable(): RevealTable {
+    return {
+      treasury: 100,
+      canTutor: true,
+      pupils: [{ person: 'p1', name: 'A', age: 10 }],
+      teachable: [{ attr: 'mind', name: 'Mind' }],
+      posts: [],
+      papers: [],
+      pedigreePrices: [],
+      missingPrimers: [],
+      ledgerSearch: { ready: false, fee: 0 },
+      unmaking: { ready: false },
+      vesselRite: { ready: false },
+      greatRite: { ready: false },
+    } as RevealTable;
+  }
+
+  it('starts quiet and reaches every time floor no later than promised', () => {
+    const empty = new Set<never>();
+    expect([...revealTransition(view(1042), null, empty, { showEverything: false }).shown]).toEqual([]);
+    expect(revealTransition(view(1047), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five']));
+    expect(revealTransition(view(1052), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five', 'table']));
+    expect(revealTransition(view(1062), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five', 'table', 'assize']));
+    expect(revealTransition(view(1067), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five', 'table', 'assize', 'ladder']));
+    expect(revealTransition(view(1072), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five', 'table', 'assize', 'ladder', 'abroad']));
+    expect(revealTransition(view(1092), null, empty, { showEverything: false }).shown)
+      .toEqual(new Set(['clock-five', 'table', 'assize', 'ladder', 'abroad', 'clock-long']));
+  });
+
+  it('reveals public triggers before their floors without duplicating game rules', () => {
+    expect(tableHasAffordableOrder(affordableTable())).toBe(true);
+    expect(revealTransition(view(), affordableTable(), new Set(), { showEverything: false }).shown)
+      .toContain('table');
+
+    expect(revealTransition(
+      view(1042, { assize: { ...view().assize, pressure: 0.1 } }),
+      null,
+      new Set(),
+      { showEverything: false },
+    ).shown).toContain('assize');
+
+    expect(revealTransition(
+      view(1042, {
+        ascension: {
+          ...view().ascension,
+          foremost: { person: 'p1', name: 'A', power: 40, spells: 0 },
+        },
+      }),
+      null,
+      new Set(),
+      { showEverything: false },
+    ).shown).toContain('ladder');
+
+    expect(revealTransition(
+      view(1042, { tales: [{ id: 'heard' }] as RevealView['tales'] }),
+      null,
+      new Set(),
+      { showEverything: false },
+    ).shown).toContain('abroad');
+  });
+
+  it('never hides a revealed surface and can reveal one a visible decision needs', () => {
+    const prior = new Set(['abroad'] as const);
+    const kept = revealTransition(view(), null, prior, { showEverything: false });
+    expect(kept.shown).toContain('abroad');
+    expect(kept.newlyShown).toEqual([]);
+
+    const needed = revealTransition(view(), null, new Set(), {
+      showEverything: false,
+      needed: ['table'],
+    });
+    expect(needed.shown).toContain('table');
+    expect(needed.newlyShown).toEqual(['table']);
+  });
+
+  it('expands a returning reader immediately when that preference is effective', () => {
+    const result = revealTransition(view(), null, new Set(), { showEverything: true });
+    expect([...result.shown]).toEqual([
+      'clock-five',
+      'table',
+      'assize',
+      'ladder',
+      'abroad',
+      'clock-long',
+    ]);
+  });
+
+  it('persists reveal history per run instead of teaching every later house at once', () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+    const first = revealStorageKey(view());
+    const second = revealStorageKey({
+      ...view(),
+      seed: 2,
+    } as Parameters<typeof revealStorageKey>[0]);
+
+    saveRevealed(storage, first, new Set(['table', 'assize']));
+    expect(loadRevealed(storage, first)).toEqual(new Set(['table', 'assize']));
+    expect(loadRevealed(storage, second)).toEqual(new Set());
   });
 });
