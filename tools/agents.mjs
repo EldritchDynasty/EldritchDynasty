@@ -310,9 +310,9 @@ function take() {
   }
 
   console.log(`held: ${slug} → ${agent} (lane ${lane})`);
-  // The landing commit is what closes an issue: GitHub honours a closing keyword
-  // in any commit that reaches the default branch, PR or no PR, and this
-  // repository fast-forwards straight onto main. A branch may be holding
+  // The landing commit is what closes an issue: GitHub honours its closing
+  // keyword when the queue advances that commit onto the default branch. The
+  // PR is transport, not the durable closing instruction. A branch may be holding
   // SEVERAL issues by now, and GitHub needs the keyword before each number —
   // `Closes #12, closes #13` closes both, `Closes #12, #13` closes only #12 —
   // so the reminder is the whole line rather than this one issue.
