@@ -5,12 +5,18 @@ import type { StandingDelta } from '@ed/core';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   view: SessionView;
   jump: StandingDelta | null;
   /** Whether the host has the latest turn (issue #67). */
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
-}>();
+  /** #368 presentation gates; omitted callers retain the pre-#368 surface. */
+  showAssize?: boolean;
+  showLadder?: boolean;
+}>(), {
+  showAssize: true,
+  showLadder: true,
+});
 
 /**
  * WHAT THE PLAYER READS AS "SAVED" (issue #67).
@@ -219,7 +225,7 @@ const muster = computed(() => {
          tooling and deep inspection, but this header speaks in the world's
          language: one dominant obstacle, then one kind of action the house can
          take. No progress bar and no wall of thresholds. -->
-    <div class="rung">
+    <div v-if="showLadder" class="rung">
       <div class="name">{{ view.ascension.title }}</div>
 
       <template v-if="view.ascension.diagnosis">
@@ -268,7 +274,8 @@ const muster = computed(() => {
       </div>
     </div>
 
-    <div class="world">
+    <div v-if="showAssize || favours.length || muster || view.guardian" class="world">
+      <template v-if="showAssize">
       <!-- An arm that flipped between two renders used to just be a different
            sentence, as though it had always said that.
 
@@ -297,6 +304,7 @@ const muster = computed(() => {
         <span class="tick" />
         <span class="needle" :style="{ left: needle + '%' }" />
       </div>
+      </template>
       <div v-if="favours.length" class="rubric small">{{ favours.join(' · ') }}</div>
       <div v-if="muster" class="rubric small">{{ muster }}</div>
       <div v-if="view.guardian" class="dim small">
