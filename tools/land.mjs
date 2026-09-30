@@ -2,8 +2,8 @@
 /**
  * THE QUEUED LANDING RUNS THE SAME SET CI RUNS.
  *
- * AGENTS.md carries standing authorisation to fast-forward `main` with no pull
- * request "as soon as `npm run check` is green". CI runs THREE jobs. `check` is
+ * The old AGENTS.md rule authorised a session to fast-forward `main` as soon
+ * as `npm run check` was green. CI runs THREE jobs. `check` is
  * `typecheck && validate && test` — it does not run the gates.
  *
  * That gap is not theoretical. Four of the eleven red runs of `check.yml` on
@@ -39,30 +39,27 @@
  * belongs there because remote-land.yml waits for the ordinary push-triggered
  * check and its verdict itself.
  *
- * A DIFF OF ONLY MARKDOWN, ON A GREEN BASE, RUNS THE SHORT SET — typecheck,
- * validate and the fast lane, which is CI's short tier and holds every test
- * that reads a markdown file. The gates and the slow suites cannot see one.
- * The rule, and why it is not the self-classification described below, is in
- * `tools/docs-only.mjs`; it is decided on the REBASED head, never before.
+ * `DOCS_ONLY_STEPS` is also the session's default preflight set. That reuse is
+ * about the commands, not the reason: CI still calls `tools/docs-only.mjs` to
+ * decide when a markdown-only change may take its short tier, while a session
+ * now takes the short tier for every diff and leaves the full judgment to the
+ * serialized queue.
  *
- * IN A WEB SESSION, START IT SO THAT IT SURVIVES THE SESSION. A landing runs
- * for about an hour and a remote container is paused between turns; twice on
- * 2026-09-08 a `nohup … &` landing was killed by that pause and left no
- * error, no exit code and a log that simply stopped. Use the harness's own
- * tracked background run instead — see AGENTS.md, "Working style". If you
- * come back and are not sure, `--status` answers it.
+ * A `--full-preflight` can still outlive a web-session turn. Start that mode
+ * with the harness's tracked background run, never `nohup … &`; `--status`
+ * reports whether it is still running or where it stopped.
  *
- * What this does NOT do is put the gates in the fix-and-rerun loop. `npm run
- * gate` is nine minutes; it belongs here, once, on the rebased head. The loop
- * is still `npm run test:fast`.
+ * What this does NOT do is put the gates in the fix-and-rerun loop. The loop
+ * is still `npm run test:fast`; the queue runs the full gate set once on the
+ * rebased head it can actually push.
  *
  * ── A SESSION MAY ASK FOR THE QUEUE'S FULL SET BEFORE ENQUEUEING ───────────
  *
  * `check.yml` is tiered (#144): a DRAFT pull request runs typecheck, validate
  * and the fast lane, and everything else — every push to `main`, every tag,
  * every manual dispatch, every pull request that is not a draft — runs the
- * whole thing. That was always the shape of a landing anyway, because a
- * landing pushes to `main`, and the push it makes is judged by the full set.
+ * whole thing. The queue mirrors that full tier before it pushes, and the
+ * resulting push is judged by CI again.
  *
  * A risky draft can opt into the complete local set with `--full-preflight`
  * before handing the branch to the queue. The queue runs it regardless, after
