@@ -15,6 +15,7 @@ import type {
 } from '@ed/core';
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
+import Outcome from './Outcome.vue';
 import Table from './Table.vue';
 import type { GameActions } from '../lib/game';
 import { applyAccessibility, DEFAULT_ACCESSIBILITY } from '../lib/accessibility';
@@ -543,6 +544,61 @@ describe('the docket draws what it is handed', () => {
   });
 });
 
+describe('decision receipts (#374)', () => {
+  it('confirms an accepted decision even when there is no immediate authored consequence', () => {
+    const wrapper = mount(Outcome, {
+      props: {
+        outcome: {
+          said: 'Keep the gate shut',
+          text: null,
+          kind: 'choice',
+        },
+      },
+    });
+
+    expect(wrapper.get('section.outcome').attributes('aria-live')).toBe('assertive');
+    expect(wrapper.text()).toContain('The choice is made');
+    expect(wrapper.text()).toContain('You said: Keep the gate shut');
+    expect(wrapper.text()).toContain('Anything further will show itself as the years advance');
+    expect(wrapper.text()).not.toContain('dated blank line');
+    wrapper.unmount();
+  });
+
+  it('keeps a Record omission distinct from an accepted choice with no immediate prose', () => {
+    const wrapper = mount(Outcome, {
+      props: {
+        outcome: {
+          said: 'Leave it out',
+          text: null,
+          kind: 'record',
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain('What came of it');
+    expect(wrapper.text()).toContain('dated blank line');
+    expect(wrapper.text()).not.toContain('years advance');
+    wrapper.unmount();
+  });
+
+  it('still puts an immediate authored consequence ahead of the generic receipt', () => {
+    const wrapper = mount(Outcome, {
+      props: {
+        outcome: {
+          said: 'Open the gate',
+          text: 'The hinges gave once, and the yard filled before dusk.',
+          kind: 'choice',
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain('What came of it');
+    expect(wrapper.text()).toContain('The hinges gave once');
+    expect(wrapper.text()).not.toContain('Anything further');
+    wrapper.unmount();
+  });
+});
+
 describe('pseudo-localisation stress (#276)', () => {
   it('renders choice, Match, Record, Chronicle and Table copy at the largest reading scale', () => {
     applyAccessibility(document.documentElement, {
@@ -559,6 +615,15 @@ describe('pseudo-localisation stress (#276)', () => {
       }),
       mount(Docket, {
         props: { decision: recordDecision(), actions: spyActions() as unknown as GameActions },
+      }),
+      mount(Outcome, {
+        props: {
+          outcome: {
+            said: 'Keep the gate shut',
+            text: null,
+            kind: 'choice',
+          },
+        },
       }),
       mount(Table, {
         props: {
