@@ -942,6 +942,8 @@ export interface MemberView {
   /** Only ever nonzero where the person can express. See invariant 1. */
   madness: number;
   contract?: string;
+  /** The authored career/post this person currently holds. Retainer contracts are separate. */
+  post?: string;
   /**
    * WHO THEY WERE REALLY BORN TO, and who they are married to now. A tree is a
    * tree because of these — the halls used to arrive as three flat lists of
@@ -1131,6 +1133,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         const reasons = relevance.get(p.id);
         if (reasons?.length) m.relevance = reasons.map((reason) => ({ reason }));
         if (p.contract) m.contract = p.contract.role;
+        if (p.career) m.post = ctx.content.career(p.career.career)?.name ?? String(p.career.career);
         if (spouse) {
           const marriedIn = spouse.houseOfOrigin !== w.playerHouse;
           m.spouse = {

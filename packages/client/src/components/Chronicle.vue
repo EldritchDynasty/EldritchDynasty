@@ -14,9 +14,34 @@ const props = defineProps<{
   actions: Pick<GameActions, 'causeOf' | 'answeredBy' | 'advice'>;
 }>();
 /** `open` with a page: the link names one older than this window holds. */
-const emit = defineEmits<{ (e: 'open', page?: string): void }>();
+const emit = defineEmits<{
+  (e: 'open', page?: string): void;
+  (e: 'person', id: string): void;
+}>();
 
 const entries = computed(() => [...props.view.chronicle].reverse());
+
+/**
+ * STRUCTURAL PEOPLE LINKS (#268). ChronicleEntry.people is provenance written
+ * when the authored page was made. Resolve it against the current halls and
+ * never grep a name out of prose: renamed people, repeated names and omitted
+ * pages all remain unambiguous this way.
+ */
+const livingById = computed(() => new Map(
+  props.view.halls.flatMap((hall) => hall.members).map((member) => [member.id, member.name]),
+));
+function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name: string }[] {
+  const seen = new Set<string>();
+  const out: { id: string; name: string }[] = [];
+  for (const id of entry.people ?? []) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const name = livingById.value.get(id);
+    if (name) out.push({ id, name });
+  }
+  return out;
+}
+
 const links = computed(() => linksFor(entries.value, {
   causeOf: (id) => props.actions.causeOf(id),
   answeredBy: (id) => props.actions.answeredBy(id),
@@ -67,7 +92,9 @@ async function follow(id: string): Promise<void> {
       :entry="entry"
       :links="entry.id ? links.get(entry.id) : undefined"
       :marked="!!entry.id && marked === entry.id"
+      :people="peopleFor(entry)"
       @follow="follow"
+      @person="emit('person', $event)"
     />
 
     <!-- THE FRAME, WHICH IS QUIETER THAN THE TALE. The term has been writing while

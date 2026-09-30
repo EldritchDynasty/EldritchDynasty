@@ -44,7 +44,7 @@ import {
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, mentions, actions,
 } = game;
 
 /**
@@ -87,6 +87,15 @@ const middle = computed(() => (pane.value === 'chronicle' ? 'house' : pane.value
  */
 const selected = ref<string | null>(null);
 
+/**
+ * An explicit request to make a person visible in the tree. Selection alone
+ * cannot carry this meaning: clicking a visible card also changes `selected`,
+ * but must not discard the planning filters the player deliberately chose.
+ * The token makes repeated links to the same person a fresh navigation.
+ */
+const treeReveal = ref<{ id: string; token: number } | null>(null);
+let treeRevealToken = 0;
+
 function select(id: string): void {
   selected.value = selected.value === id ? null : id;
 }
@@ -106,6 +115,7 @@ function select(id: string): void {
 function look(id: string): void {
   pane.value = 'house';
   selected.value = id;
+  treeReveal.value = { id, token: ++treeRevealToken };
 }
 
 /**
@@ -148,6 +158,19 @@ const platOpen = ref(false);
 const lineOpen = ref<ReturnType<GameActions['line']> | null>(null);
 function openLine(): void {
   lineOpen.value = actions.line();
+}
+
+/**
+ * DATED BACKLINKS FROM A PERSON TO THE BOOK (#268). mentions() gives stable
+ * page ids from the engine; the book read supplies years for human labels.
+ * No component searches prose for a name, so renames and namesakes cannot
+ * create false links.
+ */
+function mentionPages(person: string): { id: string; year: number }[] {
+  const ids = new Set(mentions(person));
+  if (!ids.size) return [];
+  return actions.book().flatMap((entry) =>
+    entry.id && ids.has(entry.id) ? [{ id: entry.id, year: entry.year }] : []);
 }
 
 function onKey(e: KeyboardEvent): void {
@@ -452,12 +475,27 @@ const yearAndBirths = computed(() => {
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" @select="select" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" />
-          <Tree :view="view" :selected="selected" @select="select" @line="openLine()" />
+          <Tree
+            :view="view"
+            :selected="selected"
+            :reveal="treeReveal"
+            :line="actions.line()"
+            :mentions="mentionPages"
+            @select="select"
+            @line="openLine()"
+            @book="openBook"
+          />
         </template>
       </div>
 
       <div class="right">
-        <Chronicle :view="view" :frame="frame" :actions="actions" @open="openBook" />
+        <Chronicle
+          :view="view"
+          :frame="frame"
+          :actions="actions"
+          @open="openBook"
+          @person="look"
+        />
       </div>
     </div>
 
