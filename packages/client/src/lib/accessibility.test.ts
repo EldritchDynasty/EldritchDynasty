@@ -483,7 +483,7 @@ describe('progressive surface reveal (#368)', () => {
       unmaking: { ready: false },
       vesselRite: { ready: false },
       greatRite: { ready: false },
-    } as RevealTable;
+    } as unknown as RevealTable;
   }
 
   it('starts quiet and reaches every time floor no later than promised', () => {
