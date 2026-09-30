@@ -57,6 +57,7 @@
  *   npm run verdict -- --wait 0      # ask once and answer now
  */
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 
 /**
  * Long enough for the slowest job, plus the wait to be scheduled at all.
@@ -91,6 +92,184 @@ const tryGit = (...args) => {
     return { ok: false, out: `${e.stdout ?? ''}${e.stderr ?? ''}`.trim() };
   }
 };
+
+/** The queue's durable coverage namespace (#320/#352), separate from CI verdicts. */
+const LANDING_NS = 'refs/landing';
+const RANGE = git('rev-parse', '--git-path', 'land.range.json');
+
+function landingReceiptFor(sha) {
+  if (!existsSync(RANGE)) return null;
+  try {
+    const r = JSON.parse(readFileSync(RANGE, 'utf8'));
+    const hex = (x) => typeof x === 'string' && /^[0-9a-f]{40}$/i.test(x);
+    if (r?.version !== 1 || !hex(r.before) || !hex(r.checked) || !hex(r.pushed) || typeof r.branch !== 'string') {
+      return false;
+    }
+    if (r.checked !== sha || r.pushed !== sha) return null;
+    return r;
+  } catch {
+    return false;
+  }
+}
+
+/** Machine-readable payload stored in refs/landing/<checked sha>. */
+export function landingRecordMessage(receipt, verdict) {
+  return [
+    'landing coverage',
+    '',
+    `before: ${receipt.before}`,
+    `checked: ${receipt.checked}`,
+    `pushed: ${receipt.pushed}`,
+    `branch: ${receipt.branch}`,
+    `verdict: ${verdict.conclusion}`,
+    `verdict_ref: refs/verdict/${receipt.checked}`,
+    `run: ${verdict.run ?? ''}`,
+    `recorded: ${new Date().toISOString()}`,
+    '',
+  ].join('\n');
+}
+
+export function parseLandingRecord(message) {
+  if (!message) return null;
+  const field = (name) => new RegExp(`^${name}: (.*)#!/usr/bin/env node
+/**
+ * DID CI ACTUALLY ANSWER? — AND "NO" IS NOT THE SAME AS "RED".
+ *
+ * A queued `/land` ends by pushing to `main`. That is not the end of the work.
+ * Between 2026-09-05 09:02 and 2026-09-06 01:12, seven consecutive pushes to
+ * `main` produced a workflow run that concluded in three to five seconds with
+ * a single job carrying zero steps — a run that never started, because the
+ * repository was out of Actions minutes while it was private. Six of those
+ * seven commits were agent landings. Nobody noticed for sixteen hours.
+ *
+ * Nothing in this repository told an agent a push was unfinished until a
+ * verdict came back, and in every UI a red run and a run that never happened
+ * are the same colour. This codebase's own thesis, turned on its own CI: it
+ * failed by doing nothing, and looked exactly like a feature nobody had
+ * exercised yet.
+ *
+ * So there are FOUR states here, not two:
+ *
+ *   green    every job succeeded                                      exit 0
+ *   red      a job failed, and this names which                       exit 1
+ *   absent   no verdict for that commit — CI did not run, or ran and  exit 2
+ *            recorded nothing. NOT a pass. Usually not the agent's to
+ *            fix, and always the agent's to report.
+ *   pending  CI is running and has not answered yet                   exit 3
+ *
+ * THE FOURTH ONE IS HERE BECAUSE THIS TOOL SHIPPED WITHOUT IT AND WAS WRONG.
+ * The first landing to use it reported NO VERDICT for a commit whose `check`
+ * run was still in progress — "not yet" reported as "never", which is the
+ * same two-states-where-there-are-three mistake the whole issue was about,
+ * made inside the fix for it. A pending run and a run that never existed had
+ * written the same thing to the refs: nothing.
+ *
+ * `verdict.yml` now records a run when it STARTS as well as when it finishes,
+ * so `pending` is a thing the refs can say. Absence stays honest, because a
+ * run that never starts never announces itself either.
+ *
+ * WHY A GIT REF RATHER THAN THE ACTIONS API. Because the API is not reachable
+ * from where this has to run. Measured in an agent container, 2026-09-07:
+ *
+ *   curl https://api.github.com/repos/JamesFlames/EldritchDynasty/actions/runs
+ *   → 403 {"message":"GitHub access is not enabled for this session."}
+ *
+ * The host is allowed; the session holds no credential for it. Only the MCP
+ * tools do, and a script cannot call those. `git fetch` works, including over
+ * a custom ref namespace. docs/PARALLEL.md makes the same argument about the
+ * claim mutex — "a local agent and a web session do not have the same tools,
+ * and both have `git push`" — and this is its other half: they do not have the
+ * same API access, and both have `git fetch`.
+ *
+ * `.github/workflows/verdict.yml` writes `refs/verdict/<sha>` when a `check`
+ * run completes. This reads it. Nothing here needs a token, and it behaves
+ * identically on a laptop, in a container and inside CI.
+ *
+ *   npm run verdict                  # HEAD, waiting up to 60 minutes
+ *   npm run verdict -- <sha>         # a particular commit
+ *   npm run verdict -- --wait 0      # ask once and answer now
+ */
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+
+/**
+ * Long enough for the slowest job, plus the wait to be scheduled at all.
+ *
+ * Was 25, which was not enough: `check` runs have taken 20-30 minutes and the
+ * queue is on top of that. The first landing to use this timed out on a run
+ * that finished shortly after. A timeout is not an answer, and a tool whose
+ * default produces the wrong one is worse than one that takes longer.
+ *
+ * Was 40, which is too close: on 2026-09-27 a `check` on `main` ran 45
+ * minutes (run 36314218433, 10:58 to 11:43). A queue landing waiting on one
+ * like it would have been told STILL RUNNING five minutes before the answer.
+ */
+export const DEFAULT_WAIT_MINUTES = 60;
+/** The ref namespace verdict.yml writes. Not under refs/heads: not a branch. */
+const NS = 'refs/verdict';
+
+const argv = process.argv.slice(2);
+const flag = (name, fallback) => {
+  const i = argv.indexOf(`--${name}`);
+  return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : fallback;
+};
+const positional = argv.filter((a, i) => !a.startsWith('--') && !argv[i - 1]?.startsWith('--'));
+
+const git = (...args) =>
+  execFileSync('git', args, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+
+, 'm').exec(message)?.[1]?.trim() ?? '';
+  const before = field('before');
+  const checked = field('checked');
+  const pushed = field('pushed');
+  const verdict = field('verdict');
+  if (![before, checked, pushed].every((x) => /^[0-9a-f]{40}$/i.test(x)) || !verdict) return null;
+  return {
+    before,
+    checked,
+    pushed,
+    branch: field('branch'),
+    verdict,
+    verdictRef: field('verdict_ref'),
+    run: field('run'),
+    recorded: field('recorded'),
+  };
+}
+
+/**
+ * Persist the queue range only after the normal push-triggered verdict exists.
+ * No local receipt means this is an ordinary verdict read and stays read-only.
+ */
+function recordLandingRange(sha, verdict) {
+  const receipt = landingReceiptFor(sha);
+  if (receipt === null) return true;
+  if (receipt === false) {
+    console.error(`verdict: malformed queue landing receipt at ${RANGE}; refusing to lose coverage metadata.`);
+    return false;
+  }
+
+  const empty = tryGit('hash-object', '-t', 'tree', '/dev/null');
+  if (!empty.ok) return false;
+  const message = landingRecordMessage(receipt, verdict);
+  let commit;
+  try {
+    commit = execFileSync('git', ['commit-tree', empty.out], {
+      encoding: 'utf8',
+      input: message,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch (e) {
+    console.error(`verdict: could not create landing coverage record: ${e.stderr ?? e.message}`);
+    return false;
+  }
+  const pushed = tryGit('push', '--force', 'origin', `${commit}:${LANDING_NS}/${sha}`);
+  if (!pushed.ok) {
+    console.error(`verdict: CI answered, but landing coverage could not be persisted: ${pushed.out}`);
+    return false;
+  }
+  try { unlinkSync(RANGE); } catch { /* the durable ref is already the source of truth */ }
+  return true;
+}
 
 /**
  * The verdict recorded for a commit, or null if there is none.
@@ -239,6 +418,12 @@ async function main() {
     }
   }
 
+  const terminal = stateOf(verdict) === 'green' || stateOf(verdict) === 'red';
+  if (terminal && !recordLandingRange(sha, verdict)) {
+    // A checked landing whose range vanished is not a completed queue result:
+    // #320 must be able to explain what one authoritative head covered.
+    process.exit(EXIT.red);
+  }
   process.exit(report(sha, verdict));
 }
 
