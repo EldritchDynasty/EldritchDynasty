@@ -9032,3 +9032,36 @@ too-tight pre-partition budgets, then the corrected budgets passed on run
 `36689754856`. If later runner evidence moves beyond those checked tolerances,
 re-measure the lane rather than lowering evidence or copying a new stopwatch
 number into prose.
+
+
+### Post-#341 remeasurement on the five-lane head
+
+The first five-lane calibration above predates #341's deliberate increase of the
+blood instrument from 512 to **1,024 paired played runs**. The exact #364 head
+`5fb4660` remeasured that stronger instrument in check run `36772609542`.
+Every gameplay gate passed; only the stale blood duration budget failed.
+
+| lane | run 36772609542 |
+|---|---:|
+| batch | 6.4m |
+| blood | 49.6m |
+| fire-rate | 20.8m |
+| war | 36.5m |
+| endings | 4.2m |
+
+The measured gate-only critical path is therefore **blood at 49.6 minutes** and
+the five lanes consume about **117.5 gate runner-minutes** in this run. That is
+materially above the earlier 87.8-minute observation because the dominant blood
+experiment now carries twice the paired histories; the stronger sample, not a
+gameplay regression, is the attributed growth. The blood gate itself passed:
+concentrate beat dilute on late font expression by **+0.79 / 3.8 standard
+errors**.
+
+This also means #333's earlier wall-clock improvement is no longer the current
+floor after #341 strengthened the blood evidence. Current main independently
+measured the same 1,024-pair blood gate at roughly 49.9 and 53.3 minutes while
+it shared the endings runner, so the isolated 49.6-minute result is consistent
+with repeated runner evidence. `tools/gate-durations.json` now records a
+50-minute blood baseline with the existing 1.25x drift tolerance. No sample
+size, seed list, gameplay threshold, or statistical assertion was reduced to
+recover CI time.
