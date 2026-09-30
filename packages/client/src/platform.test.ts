@@ -3,8 +3,10 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { bootstrap, saveGame } from '@ed/core';
+import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
 import { browserPlatform, platformForWindow, type Platform } from './platform.js';
+import { mobileStorage } from '../../mobile/src/storage.js';
 
 function bridge(): Platform {
   return {
@@ -277,18 +279,12 @@ describe('the platform seam', () => {
   });
 });
 
-describe('the Android bridge stays interchangeable with every other host', () => {
+describe('the mobile bridge stays interchangeable with every other host', () => {
   const clientSource = readFileSync(join(import.meta.dirname, 'platform.ts'), 'utf8');
-  const androidSource = readFileSync(
+  const mobileSource = readFileSync(
     join(import.meta.dirname, '../../mobile/src/platform-bridge.ts'),
     'utf8',
   );
-
-  function stringConstant(source: string, name: string): string {
-    const value = new RegExp(`const ${name} = '([^']+)'`).exec(source)?.[1];
-    if (value === undefined) throw new Error(`missing ${name}`);
-    return value;
-  }
 
   function acceptList(source: string): string {
     const value = /input\.accept\s*=\s*'([^']+)'/.exec(source)?.[1];
@@ -296,37 +292,180 @@ describe('the Android bridge stays interchangeable with every other host', () =>
     return value;
   }
 
-  function methodBlock(source: string, name: string, next: string): string {
-    const start = source.indexOf(`async ${name}(`);
-    const end = source.indexOf(`async ${next}(`, start + 1);
-    if (start < 0 || end < 0) throw new Error(`cannot isolate Android ${name}()`);
-    return source.slice(start, end);
-  }
-
-  it('type-checks the real Android object against the client-owned Platform contract', () => {
-    expect(androidSource).toContain("import type { Platform } from '../../client/src/platform.js';");
-    expect(androidSource).toContain('} satisfies Platform;');
-    expect(androidSource).toContain('Object.assign(window, { edPlatform: platform });');
+  it('type-checks the real mobile object against the client-owned Platform contract', () => {
+    expect(mobileSource).toContain("import type { Platform } from '../../client/src/platform.js';");
+    expect(mobileSource).toContain("import { mobileStorage, saveSummary } from './storage.js';");
+    expect(mobileSource).toContain('} satisfies Platform;');
+    expect(mobileSource).toContain('Object.assign(window, { edPlatform: platform });');
   });
 
-  it('uses the same save and library namespaces as the browser host', () => {
-    expect(stringConstant(androidSource, 'PREFIX')).toBe(stringConstant(clientSource, 'PREFIX'));
-    expect(stringConstant(androidSource, 'LIBRARY_KEY')).toBe(stringConstant(clientSource, 'LIBRARY_KEY'));
-  });
-
-  it('keeps save payloads opaque instead of translating them in the Android shell', () => {
-    const read = methodBlock(androidSource, 'readSave', 'writeSave');
-    const write = methodBlock(androidSource, 'writeSave', 'deleteSave');
-
-    expect(read).toContain('return value ? JSON.parse(value) : null;');
-    expect(write).toContain('value: JSON.stringify(save)');
-    expect(write).not.toMatch(/\b(format|year|savedAt)\s*:/);
-  });
-
-  it('imports the same interchange files and exports JSON on both hosts', () => {
-    expect(acceptList(androidSource)).toBe(acceptList(clientSource));
-    expect(androidSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
+  it('imports the same interchange files and exports JSON on browser and mobile hosts', () => {
+    expect(acceptList(mobileSource)).toBe(acceptList(clientSource));
+    expect(mobileSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
     expect(clientSource).toMatch(/link\.download = `eldritch-\$\{[^}]+\}\.json`/);
   });
 });
 
+const MOBILE_MISSING = { code: 'OS-PLUG-FILE-0008' };
+
+function mobileFileStore(initial: Record<string, string> = {}) {
+  const data = new Map(Object.entries(initial));
+  const writes: Array<{ path: string; directory: Directory; encoding: Encoding; recursive?: boolean }> = [];
+  return {
+    data,
+    writes,
+    async readdir({ path, directory }: { path: string; directory: Directory }) {
+      const prefix = `${path}/`;
+      const files = [...data.keys()]
+        .filter((candidate) => candidate.startsWith(prefix))
+        .map((candidate) => candidate.slice(prefix.length))
+        .filter((candidate) => candidate && !candidate.includes('/'))
+        .map((name) => ({ name, type: 'file' as const }));
+      if (!files.length && ![...data.keys()].some((candidate) => candidate.startsWith(prefix))) {
+        throw MOBILE_MISSING;
+      }
+      expect(directory).toBe(Directory.Data);
+      return { files };
+    },
+    async readFile({ path, directory, encoding }: {
+      path: string;
+      directory: Directory;
+      encoding: Encoding;
+    }) {
+      expect(directory).toBe(Directory.Data);
+      expect(encoding).toBe(Encoding.UTF8);
+      const value = data.get(path);
+      if (value === undefined) throw MOBILE_MISSING;
+      return { data: value };
+    },
+    async writeFile({ path, data: value, directory, encoding, recursive }: {
+      path: string;
+      data: string;
+      directory: Directory;
+      encoding: Encoding;
+      recursive?: boolean;
+    }) {
+      writes.push({ path, directory, encoding, recursive });
+      data.set(path, value);
+      return { uri: path };
+    },
+    async deleteFile({ path, directory }: { path: string; directory: Directory }) {
+      expect(directory).toBe(Directory.Data);
+      if (!data.delete(path)) throw MOBILE_MISSING;
+    },
+  };
+}
+
+function mobilePreferenceStore(initial: Record<string, string> = {}) {
+  const data = new Map(Object.entries(initial));
+  return {
+    data,
+    async keys() { return { keys: [...data.keys()] }; },
+    async get({ key }: { key: string }) { return { value: data.get(key) ?? null }; },
+    async remove({ key }: { key: string }) { data.delete(key); },
+  };
+}
+
+describe('mobile durable storage', () => {
+  it('stores opaque saves and the Library in the app-owned Data directory', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore();
+    const store = mobileStorage(files, preferences);
+    const save = { format: 27, year: 1201, nested: { exact: ['opaque', 7] } };
+    const library = { format: 1, runs: [{ seed: 19 }] };
+
+    await store.writeSave('autosave', save);
+    await store.writeLibrary(library);
+
+    expect(files.data.get('eldritch/saves/autosave.json')).toBe(JSON.stringify(save));
+    expect(files.data.get('eldritch/library.json')).toBe(JSON.stringify(library));
+    expect(files.writes).toEqual([
+      expect.objectContaining({ path: 'eldritch/saves/autosave.json', directory: Directory.Data, recursive: true }),
+      expect.objectContaining({ path: 'eldritch/library.json', directory: Directory.Data, recursive: true }),
+    ]);
+    await expect(store.readSave('autosave')).resolves.toEqual(save);
+    await expect(store.readLibrary()).resolves.toEqual(library);
+  });
+
+  it('round-trips arbitrary slot names without turning them into paths', async () => {
+    const files = mobileFileStore();
+    const store = mobileStorage(files, mobilePreferenceStore());
+
+    await store.writeSave('old house / 2', { format: 27, year: 1300 });
+
+    expect(files.data.has('eldritch/saves/old%20house%20%2F%202.json')).toBe(true);
+    await expect(store.listSaves()).resolves.toMatchObject([
+      { slot: 'old house / 2', year: 1300, format: 27 },
+    ]);
+  });
+
+  it('migrates existing Android Preference saves only after a durable write succeeds', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:save:autosave': JSON.stringify({
+        format: 27,
+        year: 1199,
+        savedAt: '2026-09-30T00:00:00.000Z',
+      }),
+      'ed:library': JSON.stringify({ format: 1, runs: [{ seed: 91 }] }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.listSaves()).resolves.toMatchObject([
+      { slot: 'autosave', year: 1199, format: 27 },
+    ]);
+    expect(preferences.data.has('ed:save:autosave')).toBe(false);
+    expect(files.data.has('eldritch/saves/autosave.json')).toBe(true);
+
+    await expect(store.readLibrary()).resolves.toEqual({ format: 1, runs: [{ seed: 91 }] });
+    expect(preferences.data.has('ed:library')).toBe(false);
+    expect(files.data.has('eldritch/library.json')).toBe(true);
+  });
+
+  it('keeps a legacy save readable when migration cannot write the file', async () => {
+    const base = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:save:autosave': JSON.stringify({ format: 27, year: 1177 }),
+    });
+    const files = {
+      ...base,
+      async writeFile() { throw new Error('disk unavailable'); },
+    };
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readSave('autosave')).resolves.toEqual({ format: 27, year: 1177 });
+    expect(preferences.data.has('ed:save:autosave')).toBe(true);
+  });
+
+  it('ignores malformed snapshots without making the whole save list unreadable', async () => {
+    const files = mobileFileStore({
+      'eldritch/saves/bad.json': '{',
+      'eldritch/saves/good.json': JSON.stringify({
+        format: 27,
+        year: 1234,
+        savedAt: '2026-10-01T00:00:00.000Z',
+      }),
+    });
+    const store = mobileStorage(files, mobilePreferenceStore());
+
+    await expect(store.listSaves()).resolves.toEqual([
+      { slot: 'good', format: 27, year: 1234, savedAt: '2026-10-01T00:00:00.000Z' },
+    ]);
+  });
+
+  it('deletes both durable and pre-migration copies of a slot', async () => {
+    const files = mobileFileStore({
+      'eldritch/saves/autosave.json': JSON.stringify({ format: 27, year: 1200 }),
+    });
+    const preferences = mobilePreferenceStore({
+      'ed:save:autosave': JSON.stringify({ format: 27, year: 1199 }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await store.deleteSave('autosave');
+
+    expect(files.data.has('eldritch/saves/autosave.json')).toBe(false);
+    expect(preferences.data.has('ed:save:autosave')).toBe(false);
+    await expect(store.readSave('autosave')).resolves.toBeNull();
+  });
+});
