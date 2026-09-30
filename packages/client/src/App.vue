@@ -500,6 +500,7 @@ const yearAndBirths = computed(() => {
             v-model:skip-seen-prose="accessibility.skipSeenProse"
             v-model:reduce-motion="accessibility.reduceMotion"
             v-model:show-everything-from-start="showEverythingFromStart"
+            :show-progressive-reveal-option="true"
           />
           <h3 class="label">Marks</h3>
           <dl class="legend-list">
