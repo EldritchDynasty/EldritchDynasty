@@ -87,6 +87,15 @@ const middle = computed(() => (pane.value === 'chronicle' ? 'house' : pane.value
  */
 const selected = ref<string | null>(null);
 
+/**
+ * An explicit request to make a person visible in the tree. Selection alone
+ * cannot carry this meaning: clicking a visible card also changes `selected`,
+ * but must not discard the planning filters the player deliberately chose.
+ * The token makes repeated links to the same person a fresh navigation.
+ */
+const treeReveal = ref<{ id: string; token: number } | null>(null);
+let treeRevealToken = 0;
+
 function select(id: string): void {
   selected.value = selected.value === id ? null : id;
 }
@@ -106,6 +115,7 @@ function select(id: string): void {
 function look(id: string): void {
   pane.value = 'house';
   selected.value = id;
+  treeReveal.value = { id, token: ++treeRevealToken };
 }
 
 /**
@@ -468,6 +478,7 @@ const yearAndBirths = computed(() => {
           <Tree
             :view="view"
             :selected="selected"
+            :reveal="treeReveal"
             :line="actions.line()"
             :mentions="mentionPages"
             @select="select"
