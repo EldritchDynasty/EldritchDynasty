@@ -53,6 +53,10 @@ file are ignored and must never be committed.
   it for `cap sync`; do not hand-edit it.
 - The app must keep working offline. Do not add analytics, crash reporting, or
   a network dependency without revisiting the Play data-safety declaration.
+- The iOS project must carry `PrivacyInfo.xcprivacy` entries for the Capacitor
+  Filesystem timestamp API and, while legacy migration remains, UserDefaults.
+  These are required-reason API declarations, not evidence that user data is
+  collected or transmitted.
 
 ## The store privacy declarations
 
