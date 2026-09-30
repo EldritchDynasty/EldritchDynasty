@@ -26,7 +26,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
  * hook ask the same question as the installer instead of carrying a stale
  * second definition of "set up".
  */
-export const SESSION_DEPENDENCIES = ['vitest', '@playwright/test'];
+export const PLAYWRIGHT_PACKAGE = '@playwright/test';
+export const SESSION_DEPENDENCIES = ['vitest', PLAYWRIGHT_PACKAGE];
 
 export function sessionDependenciesInstalled(root, exists = existsSync) {
   return SESSION_DEPENDENCIES.every((name) =>
@@ -35,7 +36,7 @@ export function sessionDependenciesInstalled(root, exists = existsSync) {
 }
 
 const loadPlaywright = (root) =>
-  createRequire(join(root, 'package.json'))('playwright');
+  createRequire(join(root, 'package.json'))(PLAYWRIGHT_PACKAGE);
 
 /**
  * Playwright's npm package and browser payload have different lifetimes.
