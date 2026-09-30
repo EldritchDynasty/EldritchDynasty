@@ -9,6 +9,11 @@ export interface AccessibilityPreferences {
   skipSeenProse: boolean;
   /** Presentation only: reader-controlled motion, never part of SavedGame. */
   reduceMotion: boolean;
+  /**
+   * null means "use the returning-reader default": expanded when the Library
+   * already contains a completed house, progressive for a first-time reader.
+   */
+  showEverythingFromStart: boolean | null;
 }
 
 export const ACCESSIBILITY_STORAGE_KEY = 'eldritch-dynasty:reading';
@@ -19,6 +24,7 @@ export const DEFAULT_ACCESSIBILITY: AccessibilityPreferences = {
   readingFont: 'book',
   skipSeenProse: false,
   reduceMotion: false,
+  showEverythingFromStart: null,
 };
 
 function isTextScale(value: unknown): value is TextScale {
@@ -38,12 +44,16 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
       readingFont?: unknown;
       skipSeenProse?: unknown;
       reduceMotion?: unknown;
+      showEverythingFromStart?: unknown;
     } | null;
     return {
       textScale: isTextScale(parsed?.textScale) ? parsed.textScale : DEFAULT_ACCESSIBILITY.textScale,
       readingFont: isReadingFont(parsed?.readingFont) ? parsed.readingFont : DEFAULT_ACCESSIBILITY.readingFont,
       skipSeenProse: parsed?.skipSeenProse === true,
       reduceMotion: parsed?.reduceMotion === true,
+      showEverythingFromStart: typeof parsed?.showEverythingFromStart === 'boolean'
+        ? parsed.showEverythingFromStart
+        : null,
     };
   } catch {
     return { ...DEFAULT_ACCESSIBILITY };
