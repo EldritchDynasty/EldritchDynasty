@@ -9,6 +9,14 @@ appId: nz.eldritchdynasty.game
 productName: Eldritch Dynasty
 copyright: Eldritch Dynasty
 
+# steamworks.js ships prebuilt N-API binaries plus Steam's redistributable.
+# Rebuilding it would replace a known binary with a machine-local build, and
+# native modules cannot load from inside app.asar.
+npmRebuild: false
+asar: true
+asarUnpack:
+  - '**/node_modules/steamworks.js/**'
+
 directories:
   # `packages/shell` is the project dir electron-builder reads `files` and
   # `extraResources` against; keep build output out of it so a packaging run
@@ -29,6 +37,9 @@ files:
   # Dev orchestration and the packaging script itself — neither runs inside
   # the packaged app.
   - '!scripts/**'
+  # Development-only. In a Steam launch the client supplies the real App ID;
+  # shipping this file would override it for every customer.
+  - '!steam_appid.txt'
 
 # FILES FROM OUTSIDE `packages/shell` — the two things this package needs
 # that it does not own the source of.

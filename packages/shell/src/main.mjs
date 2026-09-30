@@ -9,6 +9,7 @@ import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, userContentRoot } from './user-content.mjs';
+import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
 
 /**
  * THE SHELL.
@@ -48,6 +49,28 @@ const CONTENT = join(REPO, 'packages/content');
 /** Set by `npm run shell` to the running Vite server. Absent in a built app. */
 const DEV_SERVER = process.env.ED_DEV_SERVER;
 const MOD_EDITOR = process.env.ED_MOD_EDITOR === '1' || process.argv.includes('--mod-editor');
+
+let steamAchievements;
+let steamModuleError;
+
+// Steam is a host capability, never a renderer capability. Loading the native
+// module and initialising the Steam client both happen before the first window
+// is created so steamworks.js can install the Electron overlay switches in
+// time. A normal non-Steam launch remains playable; only achievement delivery
+// is unavailable in that case.
+if (!MOD_EDITOR) {
+  try {
+    const steamworks = loadSteamworks();
+    try {
+      steamAchievements = createSteamAchievementBackend({ steamworks });
+    } catch (error) {
+      console.warn('[steam] achievement init skipped:', error?.message ?? error);
+    }
+  } catch (error) {
+    steamModuleError = error;
+    console.warn('[steam] native module unavailable:', error?.message ?? error);
+  }
+}
 
 if (app.isPackaged) {
   // The installer names are different, but the profile is deliberately one:
@@ -162,6 +185,11 @@ const answered = (fn) => (_event, ...args) => {
   }
 };
 
+ipcMain.handle('ed:unlock-achievement', answered((id) => {
+  if (!steamAchievements) throw new Error('Steam achievements are unavailable');
+  return { unlocked: steamAchievements.unlock(id) };
+}));
+
 ipcMain.handle('ed:list-saves', answered(() => ({ saves: listSaves(saves()) })));
 ipcMain.handle('ed:read-save', answered((slot) => ({ save: readSave(saves(), slot) })));
 ipcMain.handle('ed:write-save', answered((slot, save) => ({ path: writeSave(saves(), slot, save) })));
@@ -247,6 +275,24 @@ function smokeTest(win) {
     if (mode !== expectedMode) {
       done(false, `preload mode is ${mode ?? 'missing'}, wanted ${expectedMode}`);
       return;
+    }
+
+    if (!MOD_EDITOR) {
+      const hasAchievementBridge = await win.webContents.executeJavaScript(
+        'typeof window.edPlatform?.unlockAchievement === "function"',
+      );
+      if (!hasAchievementBridge) {
+        done(false, 'the game preload did not expose the achievement bridge');
+        return;
+      }
+
+      // Steam itself does not have to be running on a packaging worker. The
+      // native module DOES have to be loadable, otherwise an installed build
+      // would discover a missing .node/DLL only after somebody finished a run.
+      if (app.isPackaged && steamModuleError) {
+        done(false, `the packaged Steam module did not load — ${steamModuleError?.message ?? steamModuleError}`);
+        return;
+      }
     }
 
     // The game shows no menu bar (#356). Only meaningful where a window owns
