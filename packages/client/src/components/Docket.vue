@@ -10,6 +10,8 @@ const props = defineProps<{
   actions: GameActions;
   ageMatchPriorities?: import('@ed/core').AgeMatchPriority[];
   ageRecordPriorities?: import('@ed/core').AgeRecordPriority[];
+  /** Campaign/founding year; when supplied, routine delegation waits fifty years. */
+  foundedYear?: number;
   /**
    * A card the engine refused anyway (issue #83), drawn against the card it
    * belongs to. `match.ts` closes a card the moment its person or its subject
@@ -55,6 +57,8 @@ const metBefore = props.decision.kind === 'choice'
 const cast = ref<SlotFill>({});
 /** Opt-in for this exact event/answer; important repeats are still surfaced by core (#219). */
 const remember = ref(false);
+const delegationReady = computed(() =>
+  props.foundedYear === undefined || props.decision.year >= props.foundedYear + 50);
 
 function answerChoice(choiceId: string, label: string): void {
   if (props.decision.kind !== 'choice') return;
@@ -561,7 +565,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
     <!-- Standing preferences are learned only from an answer the player actually makes. -->
     <label
-      v-if="(decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record'"
+      v-if="delegationReady && ((decision.kind === 'choice' && decision.choicesAreOpen) || decision.kind === 'record')"
       class="remember small"
     >
       <input v-model="remember" type="checkbox">
