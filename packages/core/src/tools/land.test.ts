@@ -11,8 +11,8 @@ const git = (cwd: string, ...args: string[]) =>
 /**
  * THE QUEUE RUNS WHAT CI RUNS, AND THE SET IS DERIVED RATHER THAN REMEMBERED.
  *
- * AGENTS.md grants standing authorisation to fast-forward `main` with no pull
- * request as soon as `npm run check` is green. `check` is
+ * AGENTS.md used to grant standing authorisation to fast-forward `main` with
+ * no pull request as soon as `npm run check` was green. `check` is
  * `typecheck && validate && test`. CI runs the gates too — measured runs that
  * `check` has never touched, and which were nine minutes when this was
  * written and are better than half an hour now (see `check.yml`'s own
