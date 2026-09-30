@@ -1399,7 +1399,63 @@ const recorder = (await import(pathToFileURL(join(REPO, 'tools/dispatched-verdic
 const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
   parseVerdict: (m: string) => { conclusion: string; sha: string; run: string; jobs: { name: string; result: string }[] } | null;
   stateOf: (v: unknown) => string;
+  landingRecordMessage: (
+    receipt: { before: string; checked: string; pushed: string; branch: string },
+    verdict: { conclusion: string; run?: string },
+  ) => string;
+  parseLandingRecord: (m: string) => {
+    before: string;
+    checked: string;
+    pushed: string;
+    branch: string;
+    verdict: string;
+    verdictRef: string;
+    run: string;
+    recorded: string;
+  } | null;
 };
+
+describe('queue landing coverage metadata (#320/#352)', () => {
+  const BEFORE = 'a'.repeat(40);
+  const TARGET = 'b'.repeat(40);
+
+  it('captures the freshly fetched main head before rebase and hands the pushed target to verdict', () => {
+    const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8');
+    const fetch = code.indexOf("run('git', ['fetch', 'origin', 'main'])");
+    const before = code.indexOf("const before = git('rev-parse', 'origin/main')");
+    const rebase = code.indexOf("run('git', ['rebase', 'origin/main'])");
+    const receipt = code.indexOf('writeFileSync(RANGE, JSON.stringify({');
+
+    expect(fetch).toBeGreaterThan(0);
+    expect(before, 'landing does not capture the exact fetched trunk head').toBeGreaterThan(fetch);
+    expect(rebase, 'before must be captured before rebase changes HEAD').toBeGreaterThan(before);
+    expect(receipt, 'successful queue pushes do not leave the verdict hand-off receipt').toBeGreaterThan(rebase);
+  });
+
+  it('records one checked/pushed head and its real verdict, not invented verdicts for covered commits', () => {
+    const message = verdictReader.landingRecordMessage(
+      { before: BEFORE, checked: TARGET, pushed: TARGET, branch: 'feature/range' },
+      { conclusion: 'success', run: 'https://github.com/o/r/actions/runs/42' },
+    );
+    const record = verdictReader.parseLandingRecord(message);
+
+    expect(record).toMatchObject({
+      before: BEFORE,
+      checked: TARGET,
+      pushed: TARGET,
+      branch: 'feature/range',
+      verdict: 'success',
+      verdictRef: `refs/verdict/${TARGET}`,
+      run: 'https://github.com/o/r/actions/runs/42',
+    });
+    expect(message.match(/^checked:/gm)).toHaveLength(1);
+    expect(message.match(/^verdict:/gm)).toHaveLength(1);
+
+    const code = readFileSync(join(REPO, 'tools/verdict.mjs'), 'utf8');
+    expect(code).toContain("const LANDING_NS = 'refs/landing'");
+    expect(code).toContain('recordLandingRange(sha, verdict)');
+  });
+});
 
 /**
  * THE REMOTE LANDING'S OWN VERDICT (tools/dispatched-verdict.mjs).
