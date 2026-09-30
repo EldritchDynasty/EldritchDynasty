@@ -2,13 +2,18 @@
 import { computed } from 'vue';
 import type { ReadingFont, TextScale } from '../lib/accessibility';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   textScale: TextScale;
   readingFont: ReadingFont;
   skipSeenProse: boolean;
   reduceMotion: boolean;
-  showEverythingFromStart: boolean;
-}>();
+  showEverythingFromStart?: boolean;
+  /** The progressive-reveal option belongs to the in-run "Reading, marks and keys" panel. */
+  showProgressiveRevealOption?: boolean;
+}>(), {
+  showEverythingFromStart: false,
+  showProgressiveRevealOption: false,
+});
 
 const emit = defineEmits<{
   'update:textScale': [value: TextScale];
@@ -73,7 +78,7 @@ const showEverythingModel = computed<boolean>({
       <input v-model="reduceMotionModel" type="checkbox" />
     </label>
 
-    <label class="small">
+    <label v-if="showProgressiveRevealOption" class="small">
       Show everything from the start
       <input v-model="showEverythingModel" type="checkbox" />
     </label>
