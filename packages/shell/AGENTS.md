@@ -36,8 +36,9 @@ npm run build:shell      # Windows game: build client, package NSIS, smoke win-u
 npm run build:mod-editor # Windows Mod Editor (#75): build editor, package the second NSIS
                           # target through the SAME builder config, smoke its mode.
                           # Both are unsigned unless CSC_LINK/CSC_KEY_PASSWORD are set.
-                          # The tagged game release job supplies those secrets and
-                          # refuses to ship unsigned rather than doing it quietly.
+                          # Pre-release tags deliberately package unsigned and retain
+                          # the hash proof. Plain production tags require valid
+                          # Authenticode and refuse to upload unsigned bytes.
 ```
 
 The three development launch commands go through `scripts/electron.mjs`. Some

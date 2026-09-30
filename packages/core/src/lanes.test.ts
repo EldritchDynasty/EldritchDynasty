@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { packShards, shardCosts, UNMEASURED_MS } from '../../../tools/shards.mjs';
 import { CAMPAIGN_YEARS } from './campaign.js';
 
 const REPO = join(import.meta.dirname, '../../..');
+const costTool = (await import(pathToFileURL(join(REPO, 'tools/cost.mjs')).href)) as {
+  costMeasurementEnvironment: (environment?: Record<string, string | undefined>)
+    => Record<string, string | undefined>;
+  isCostMeasurement: (environment?: Record<string, string | undefined>) => boolean;
+};
+const { costMeasurementEnvironment, isCostMeasurement } = costTool;
 
 /**
  * WHICH LANE A SUITE IS IN, ENFORCED RATHER THAN ASKED FOR.
@@ -393,6 +400,14 @@ describe('the shards are packed by duration', () => {
     expect(UNMEASURED_MS).toBeGreaterThan(1000);
   });
 
+  it('lets only a cost measurement pass the stale-table bootstrap', () => {
+    const environment = costMeasurementEnvironment({ EXISTING_VALUE: 'kept' });
+    expect(environment.EXISTING_VALUE).toBe('kept');
+    expect(isCostMeasurement(environment)).toBe(true);
+    expect(isCostMeasurement({ ED_COST_MEASUREMENT: '0' })).toBe(false);
+    expect(isCostMeasurement({})).toBe(false);
+  });
+
   /**
    * ── THE RULE THIS FILE WAS EXTENDED FOR ───────────────────────────────
    *
@@ -427,6 +442,10 @@ describe('the shards are packed by duration', () => {
   });
 
   it('has a duration for almost every file it packs', () => {
+    // This is the one assertion the prescribed repair command may suppress.
+    // Every other suite still runs, and `cost.mjs` refuses to publish the
+    // reporter output if any of them fails.
+    if (isCostMeasurement()) return;
     // The balance claim below rests on the table describing the tree. A few
     // new files are normal and are absorbed by the floor; a table that has
     // stopped covering the suite makes the claim meaningless, and a rule that

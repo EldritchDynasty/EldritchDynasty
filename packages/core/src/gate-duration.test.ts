@@ -47,3 +47,24 @@ describe('gate duration guard', () => {
     expect(recorded).toEqual(ciLanes);
   });
 });
+
+describe('the Windows tag policy handed off by issue #321', () => {
+  const workflow = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
+
+  it('packages pre-releases unsigned and makes production prove Authenticode', () => {
+    expect(workflow).toMatch(
+      /name: package unsigned Windows pre-release[\s\S]*?if: contains\(github\.ref_name, '-'\)[\s\S]*?run: node scripts\/dist-windows\.mjs\s/,
+    );
+    expect(workflow).toMatch(
+      /name: package production Windows release and require Authenticode[\s\S]*?if: \$\{\{ !contains\(github\.ref_name, '-'\) \}\}[\s\S]*?run: node scripts\/dist-windows\.mjs --require-signature/,
+    );
+    expect(workflow).not.toContain('WINDOWS_CERTIFICATE_BASE64');
+    expect(workflow).not.toContain('windows-cert.pfx');
+  });
+
+  it('retains the proof JSON beside the exact installer', () => {
+    expect(workflow).toMatch(
+      /name: Eldritch-Dynasty-\$\{\{ github\.ref_name \}\}-windows[\s\S]*?packages\/shell\/release\/\*\.exe[\s\S]*?packages\/shell\/release\/windows-release-proof\.json/,
+    );
+  });
+});

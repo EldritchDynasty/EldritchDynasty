@@ -577,7 +577,7 @@ jobs:
           name: Eldritch-Dynasty-${{ github.ref_name }}.aab
           path: packages/mobile/android/app/build/outputs/bundle/release/app-release.aab
 
-  # A release is the same checked client inside a signed Windows installer —
+  # A release is the same checked client inside a Windows installer —
   # the desktop half of the same rule `android` states above. Windows only:
   # macOS and Linux are out of scope per #103, not deferred.
   #
@@ -600,52 +600,36 @@ jobs:
       - name: build the offline client
         run: npm run build:client
 
-      # A TAG IS A RELEASE, AND A RELEASE SHIPS SIGNED OR IT DOES NOT SHIP.
+      # PRE-RELEASE TAGS PROVE PACKAGING NOW; PRODUCTION TAGS STILL REFUSE
+      # UNSIGNED BYTES. Public-trust code-signing keys have been non-exportable
+      # since 2023, so the old base64-PFX secret could never be provisioned.
+      # Signing stays deferred until the owner selects a remote-HSM provider.
       #
-      # electron-builder happily produces an unsigned installer when it finds
-      # no certificate — correct for a local build:shell run and for a
-      # PR that never reaches this job at all, and wrong here: this job runs
-      # ONLY on `refs/tags/*`, so every run of it IS the tagged release. #67's
-      # packaging plan says so in as many words: "a production release should
-      # fail clearly when signing is required but unavailable" rather than
-      # silently shipping unsigned. The certificate itself (NZD $600-800/year,
-      # #67 and #103) is bought once outside this file; this is what happens
-      # before it has been.
-      - name: require a signing certificate for a tagged release
-        shell: bash
-        run: |
-          if [ -z "${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}" ]; then
-            echo 'No WINDOWS_CERTIFICATE_BASE64 secret is set. A tag builds a signed installer or none at all — buy the certificate (see issue 67) before pushing the next release tag.' >&2
-            exit 1
-          fi
-
-      - name: install the signing certificate
-        shell: bash
-        env:
-          CERT_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
-        run: echo "$CERT_BASE64" | base64 --decode > "${{ github.workspace }}/packages/shell/windows-cert.pfx"
-
-      # Reaches electron-builder's own Node API rather than an npm script —
-      # `dist-windows.mjs`'s own header says why, and `tools/land.mjs`'s
-      # `ciScripts` derivation is the reason it matters here: this step must
-      # never read as `npm run <name>`, or every ordinary landing would start
-      # trying to package a Windows installer over a change to a rite's prose.
-      - name: package the signed Windows installer
+      # A hyphen is SemVer's pre-release marker: `v0.3.0-beta.1` packages
+      # unsigned and records `authenticode: not-checked`; `v1.0.0` takes the
+      # production path and the proof script rejects both installer and shipped
+      # executable unless Authenticode validates. When cloud signing is wired,
+      # it belongs before that production proof without changing this split.
+      #
+      # Both steps reach electron-builder's Node API rather than an npm script.
+      # `tools/land.mjs` derives ordinary landing work from workflow npm scripts;
+      # tag packaging must never become something every landing pays for.
+      - name: package unsigned Windows pre-release
+        if: contains(github.ref_name, '-')
         working-directory: packages/shell
-        env:
-          CSC_LINK: ${{ github.workspace }}/packages/shell/windows-cert.pfx
-          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: node scripts/dist-windows.mjs
 
-      - name: remove the certificate
-        if: always()
-        shell: bash
-        run: rm -f "${{ github.workspace }}/packages/shell/windows-cert.pfx"
+      - name: package production Windows release and require Authenticode
+        if: ${{ !contains(github.ref_name, '-') }}
+        working-directory: packages/shell
+        run: node scripts/dist-windows.mjs --require-signature
 
       - uses: actions/upload-artifact@v4
         with:
           name: Eldritch-Dynasty-${{ github.ref_name }}-windows
-          path: packages/shell/release/*.exe
+          path: |
+            packages/shell/release/*.exe
+            packages/shell/release/windows-release-proof.json
 
 
   # BOOTSTRAP FOR THE COMMENT-TRIGGERED REMOTE LANDING.

@@ -108,8 +108,25 @@ function perFile(raw) {
   return out;
 }
 
+/**
+ * Mark the one run whose purpose is to replace stale duration data.
+ *
+ * `lanes.test.ts` normally fails once too many new suites are absent from the
+ * committed table. Without this marker that failure prevents the reporter
+ * from publishing the table that would repair it: the prescribed command is
+ * then an unfixable loop. Only that stale-table assertion observes the marker;
+ * every other test still has to pass before `measureFull` will publish data.
+ */
+export function costMeasurementEnvironment(environment = process.env) {
+  return { ...environment, ED_COST_MEASUREMENT: '1' };
+}
+
+export function isCostMeasurement(environment = process.env) {
+  return environment.ED_COST_MEASUREMENT === '1';
+}
+
 /** Run a command, return seconds and vitest's own file/test counts if present. */
-export function measure(script, extra = []) {
+export function measure(script, extra = [], environment = process.env) {
   const started = Date.now();
   let out = '';
   let ok = true;
@@ -121,7 +138,7 @@ export function measure(script, extra = []) {
     out = execFileSync(
       npm.command,
       [...npm.prefix, 'run', '--silent', script, ...(extra.length ? ['--', ...extra] : [])],
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] },
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], env: environment },
     );
   } catch (e) {
     ok = false;
@@ -188,9 +205,11 @@ function measureFull() {
     // Both reporters: the default one still prints the counts `measure` reads
     // back, and ours writes the per-file table. Asking for the table alone
     // would silently break the figure this tool has always produced.
-    result = measure('test', [
-      '--reporter=default', `--reporter=${reporter}`, `--outputFile=${out}`,
-    ]);
+    result = measure(
+      'test',
+      ['--reporter=default', `--reporter=${reporter}`, `--outputFile=${out}`],
+      costMeasurementEnvironment(),
+    );
     // A failing suite may still leave a reporter file behind. That is a
     // PARTIAL measurement, not fresh shard data, so never publish it.
     if (!result.ok) return { result, files: null };
@@ -260,7 +279,10 @@ function main() {
   const results = [];
   let table = null;
 
-  if (!REPORT) results.push(measure('test:fast'));
+  if (!REPORT) {
+    const environment = FULL ? costMeasurementEnvironment() : process.env;
+    results.push(measure('test:fast', [], environment));
+  }
   if (FULL || REPORT) {
     const full = measureFull();
     results.push(full.result);
