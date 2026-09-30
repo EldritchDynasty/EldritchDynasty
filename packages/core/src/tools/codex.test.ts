@@ -198,7 +198,9 @@ describe('the session-start hook is not gated on a Claude-only variable', () => 
       /CLAUDE_CODE_REMOTE !== 'true'\)\s*(?:\{\s*)?process\.exit/.test(launcher),
       'the hook exits at line one of every Codex session',
     ).toBe(false);
-    expect(launcher, 'the gate asks nothing a fresh Codex checkout can answer')
+    expect(launcher, 'the launcher does not consult the shared readiness gate')
+      .toContain('sessionReady(ROOT)');
+    expect(body, 'the shared gate asks nothing a fresh Codex checkout can answer')
       .toContain('node_modules');
   });
 

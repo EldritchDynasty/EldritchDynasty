@@ -79,9 +79,12 @@
     "gen:loci": "node packages/content/tools/gen-loci.mjs",
     "gen:docs": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/gen-docs.ts",
     "//8": "Who is working on what, when several agents run at once. The claim is a git ref because every agent authenticates to GitHub as the same user — docs/PARALLEL.md.",
-    "agents": "node tools/agents.mjs"
+    "agents": "node tools/agents.mjs",
+    "test:e2e": "playwright test",
+    "playwright:install": "playwright install chromium"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.2",
     "@vue/test-utils": "^2.5.0",
     "jsdom": "^25.0.1",

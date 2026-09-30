@@ -13,23 +13,23 @@
  * one harness. Codex sets no variable of its own, so the Codex copy exited at
  * line one of every session it ever ran in — installing nothing, warming
  * nothing, orienting nothing, and printing nothing to say so. What the gate is
- * actually for is "a checkout that has not been set up", and a missing
- * `node_modules/vitest` is true in every fresh container and false in every
- * working local clone, under either agent, on either platform.
+ * actually for is "a checkout that has not been set up". That readiness test
+ * lives in `tools/session-start.mjs` and asks for the npm dependencies plus
+ * the exact Chromium executable required by the installed Playwright version,
+ * so a restored package cache cannot hide a missing browser cache.
  *
  * A local checkout that is already installed still skips it, which is the
  * whole point: a hook that runs on every session start there is a tax with no
  * payer.
  */
-import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sessionStart } from '../../tools/session-start.mjs';
+import { sessionReady, sessionStart } from '../../tools/session-start.mjs';
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR
   ?? join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-if (process.env.CLAUDE_CODE_REMOTE !== 'true' && existsSync(join(ROOT, 'node_modules', 'vitest'))) {
+if (process.env.CLAUDE_CODE_REMOTE !== 'true' && sessionReady(ROOT)) {
   process.exit(0);
 }
 

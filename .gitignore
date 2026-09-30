@@ -22,3 +22,7 @@ node_modules/.cache/ed-runs
 aldritch-land
 eldritch-land
 eldritch-land.pub
+
+# Playwright browser-test artifacts
+playwright-report/
+test-results/

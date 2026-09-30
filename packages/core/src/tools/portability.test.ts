@@ -56,6 +56,31 @@ const portable = (await import(pathToFileURL(join(REPO, 'tools/portable.mjs')).h
 };
 const { npmInvocation, nodeModulesLinkType, repoRelative, readHookPayload, foldPath } = portable;
 
+const sessionStartTool = (await import(pathToFileURL(join(REPO, 'tools/session-start.mjs')).href)) as {
+  sessionDependenciesInstalled: (
+    root: string,
+    exists?: (path: string) => boolean,
+  ) => boolean;
+  sessionReady: (
+    root: string,
+    exists?: (path: string) => boolean,
+    load?: (root: string) => unknown,
+  ) => boolean;
+  playwrightBrowserInstallArgs: (withSystemDeps?: boolean) => string[];
+  playwrightProvisionArgs: (
+    root: string,
+    withSystemDeps?: boolean,
+    exists?: (path: string) => boolean,
+    load?: (root: string) => unknown,
+  ) => string[] | null;
+};
+const {
+  sessionDependenciesInstalled,
+  sessionReady,
+  playwrightBrowserInstallArgs,
+  playwrightProvisionArgs,
+} = sessionStartTool;
+
 const costTool = (await import(pathToFileURL(join(REPO, 'tools/cost.mjs')).href)) as {
   measure: (script: string, extra?: string[]) => {
     script: string; seconds: number; files?: number; tests?: number; ok: boolean;
@@ -297,6 +322,48 @@ describe('CI', () => {
    */
   it('pins line endings so a checkout is the same on both', () => {
     expect(read('.gitattributes')).toMatch(/^\* text=auto eol=lf$/m);
+  });
+});
+
+describe('the browser-test session bootstrap', () => {
+  it('does not call a checkout ready when Playwright is missing', () => {
+    const seen: string[] = [];
+    const exists = (path: string) => {
+      const normalized = path.replace(/\\/g, '/');
+      seen.push(normalized);
+      return normalized.endsWith('/node_modules/vitest');
+    };
+
+    expect(sessionDependenciesInstalled('/repo', exists)).toBe(false);
+    expect(seen.some((path) => path.endsWith('/node_modules/@playwright/test'))).toBe(true);
+  });
+
+  it('does not call a checkout ready when packages exist but Chromium is absent', () => {
+    const exists = (path: string) => !path.includes('/browser-cache/');
+    const load = () => ({
+      chromium: { executablePath: () => '/browser-cache/chromium' },
+    });
+
+    expect(sessionDependenciesInstalled('/repo', exists)).toBe(true);
+    expect(sessionReady('/repo', exists, load)).toBe(false);
+    expect(playwrightProvisionArgs('/repo', false, exists, load))
+      .toEqual(['exec', '--', 'playwright', 'install', 'chromium']);
+  });
+
+  it('skips browser provisioning only when the exact Chromium executable exists', () => {
+    const load = () => ({
+      chromium: { executablePath: () => '/browser-cache/chromium' },
+    });
+
+    expect(sessionReady('/repo', () => true, load)).toBe(true);
+    expect(playwrightProvisionArgs('/repo', false, () => true, load)).toBeNull();
+  });
+
+  it('installs Chromium through npm exec, not a platform-specific bin shim', () => {
+    expect(playwrightBrowserInstallArgs())
+      .toEqual(['exec', '--', 'playwright', 'install', 'chromium']);
+    expect(playwrightBrowserInstallArgs(true))
+      .toEqual(['exec', '--', 'playwright', 'install', '--with-deps', 'chromium']);
   });
 });
 
