@@ -9003,19 +9003,32 @@ because the two readers consume fire-rate's process-local 800-run memo;
 separating them would replay the corpus and reduce wall clock by spending
 extra runner-minutes.
 
-The projected gate-only critical path is therefore **war at ~30.5 minutes**,
-down from **batch at ~36.7 minutes** on this run. Against the older
-successful-run typicals recorded when #333 opened, it moves the expected
-floor from roughly 48 minutes to roughly 37 minutes. Total gate runner-time
-remains approximately flat: the old three lanes consumed ~72.8
-runner-minutes on run 36561761799; the repacked five lanes perform the same
-simulation work plus only process startup overhead. No batch size, seed
-list, floor, or assertion changes.
+The first successful five-lane calibration is PR #364 check run
+`36689754856` on head `d8a4a7e`. Its gate-step timestamps were:
+
+| lane | measured elapsed |
+|---|---:|
+| batch | 354 s / 5.9m |
+| blood | 1,146 s / 19.1m |
+| fire-rate | 1,189 s / 19.8m |
+| war | 2,246 s / 37.4m |
+| endings | 332 s / 5.5m |
+
+So the measured gate-only critical path is **war at ~37.4 minutes**, down from
+the older ~48-minute successful-run floor that #333 opened against, but not the
+~30.5-minute projection from the pre-partition timings. The five lanes consumed
+about **87.8 gate runner-minutes** in this observed run, versus **~72.8** for
+source run `36561761799`: about **20.6% more runner-time**. That increase is
+recorded rather than hidden as "approximately flat"; it may contain runner
+variance and isolated-process overhead, but one run is not evidence to subtract
+either away. The partition still buys wall clock while preserving the same
+evidence. No batch size, seed list, floor, or assertion changes.
 
 The remaining gate floor is deliberately the war lane rather than a smaller statistical sample. `war-gate.ts` records why its 768-seed batch exists: smaller measured batches lost the required margin as content changed. Reducing that sample would change the evidence, which #333 forbids. Further reduction of the floor therefore requires parallelizing/aggregating the same 768 seeds, not deleting them.
 
 Current lane budgets and their tolerance are machine-readable in
-`tools/gate-durations.json`. The first CI run on the new partition is the
-calibration check: if runner overhead pushes a lane beyond its measured
-budget, re-measure the lane rather than lowering evidence or copying a new
-stopwatch number into prose.
+`tools/gate-durations.json`. The isolated-lane calibration first exposed
+too-tight pre-partition budgets, then the corrected budgets passed on run
+`36689754856`. If later runner evidence moves beyond those checked tolerances,
+re-measure the lane rather than lowering evidence or copying a new stopwatch
+number into prose.
