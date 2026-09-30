@@ -1,10 +1,11 @@
 import { loadContent } from '@ed/content';
 import {
   CampaignIdS, RITE_OF_RUNG, RUNG_ORDER, compare, indexContent,
-  type CampaignId, type Condition, type Content, type ContentBundle, type LoggedDecision, type Rung,
+  type CampaignId, type Condition, type Content, type ContentBundle, type Rung,
 } from '@ed/schema';
-import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
+import { CAMPAIGNS, isLateCampaignYear, type CampaignDef } from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
+import { measureDensity, type ChoiceVisit, type DensityYearVisit } from './density-gate.js';
 
 type Campaigns = Readonly<Record<CampaignId, CampaignDef>>;
 type Truths = ReadonlySet<boolean>;
@@ -48,42 +49,19 @@ export interface CampaignPlayedRun {
   exclusiveItems: number;
 }
 
-export interface CampaignDecisionVisit {
-  id: string;
-  year: number;
-}
-
-/**
- * The stable event-level decisions two campaigns on one seed can both meet.
- *
- * An outcome without `choiceId` is narration, not a decision. Match and name
- * answers are real decisions, but their log entries carry person and card
- * identity rather than a stable interaction id: counting every match as
- * "match" would manufacture overlap, and comparing person ids across the two
- * products would manufacture divergence. So neither is in the stream.
- *
- * This was `eventDecisionStream` in `replay-divergence.ts` until #272 moved
- * that instrument to live choices and removed the reader as uncalled. This
- * report still reads the saved log, so it keeps its own copy.
- */
-export function campaignDecisionStream(log: readonly LoggedDecision[]): CampaignDecisionVisit[] {
-  const out: CampaignDecisionVisit[] = [];
-  for (const decision of log) {
-    if (decision.kind === 'outcome') {
-      if (decision.choiceId !== undefined) out.push({ id: decision.event, year: decision.year });
-      continue;
-    }
-    if (decision.kind === 'record') out.push({ id: `record:${decision.event}`, year: decision.year });
-  }
-  return out;
-}
-
 export interface CampaignDivergenceRun {
   seed: number;
   sharedPrefix: number;
   divergenceYear?: number;
   sameYearOverlap: number;
   comparedBeforeShortTerm: number;
+  /** First year the measured Long run reaches any structurally Long-only material. */
+  firstExclusiveYear?: number;
+  /** Choice presentations in the Long Line's final fifth. */
+  lateLongChoices: number;
+  /** Those late choices whose canonical #271 category shape never appeared in Short. */
+  lateLongUniqueShapeChoices: number;
+  lateLongUniqueShapeShare: number;
 }
 
 export interface CampaignPlayedReport {
@@ -270,11 +248,40 @@ export function campaignReachOf(
   };
 }
 
+/**
+ * Date the first structurally campaign-exclusive thing reached by the SAME
+ * measured player that supplies #272's choice stream.
+ *
+ * `templateFires` is cumulative, so the first yearly snapshot containing an
+ * exclusive event is the first year that event fired. Clause capacity and an
+ * exclusive ending are read from that same snapshot; no second replay model is
+ * involved.
+ */
+export function campaignFirstExclusiveYear(
+  years: readonly DensityYearVisit[],
+  campaign: CampaignId,
+  report: CampaignStaticReport,
+): number | undefined {
+  const row = report.campaigns.find((x) => x.id === campaign);
+  if (!row) throw new Error(`campaign report is missing ${campaign}`);
+  const short = report.campaigns.find((x) => x.id === 'short');
+  if (!short) throw new Error('campaign report is missing short');
+
+  for (const visit of years) {
+    const exclusiveEvent = row.exclusiveEvents.some((id) => (visit.templateFires[id] ?? 0) > 0);
+    const exclusiveEnding = visit.ending !== undefined && row.exclusiveEndings.includes(visit.ending);
+    const beyondShortClauses = campaign === 'long' && visit.clauses > short.clauseCapacity;
+    if (exclusiveEvent || exclusiveEnding || beyondShortClauses) return visit.year;
+  }
+  return undefined;
+}
+
 export function campaignStreamDifference(
   seed: number,
-  short: readonly CampaignDecisionVisit[],
-  long: readonly CampaignDecisionVisit[],
+  short: readonly ChoiceVisit[],
+  long: readonly ChoiceVisit[],
   shortEndYear: number,
+  firstExclusiveYear?: number,
 ): CampaignDivergenceRun {
   const shared = Math.min(short.length, long.length);
   let sharedPrefix = 0;
@@ -292,12 +299,49 @@ export function campaignStreamDifference(
   const sameYear = beforeTerm.filter((decision) =>
     shortSameYear.has(`${decision.year}\u0000${decision.id}`)).length;
 
+  // This is #271's category shape as observed by #272's live-choice hook.
+  // Nothing in this file projects effects into a second shape vocabulary.
+  const shortShapes = new Set(short.map((decision) => decision.category));
+  const lateLong = long.filter((decision) => isLateCampaignYear(decision.year, CAMPAIGNS.long));
+  const uniqueLate = lateLong.filter((decision) => !shortShapes.has(decision.category)).length;
+
   return {
     seed,
     sharedPrefix,
     ...(firstDifferent ? { divergenceYear: firstDifferent.year } : {}),
     sameYearOverlap: beforeTerm.length ? sameYear / beforeTerm.length : 0,
     comparedBeforeShortTerm: beforeTerm.length,
+    ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
+    lateLongChoices: lateLong.length,
+    lateLongUniqueShapeChoices: uniqueLate,
+    lateLongUniqueShapeShare: lateLong.length ? uniqueLate / lateLong.length : 0,
+  };
+}
+
+interface CampaignObservedRun {
+  choices: ChoiceVisit[];
+  years: DensityYearVisit[];
+  firstExclusiveYear?: number;
+}
+
+function campaignObservedRun(
+  source: ContentBundle | Content,
+  seed: number,
+  campaign: CampaignId,
+  statics: CampaignStaticReport,
+): CampaignObservedRun {
+  const choices: ChoiceVisit[] = [];
+  const years: DensityYearVisit[] = [];
+  measureDensity(source, seed, CAMPAIGNS[campaign].years, {
+    campaign,
+    onChoice: (visit) => choices.push(visit),
+    onYear: (visit) => years.push(visit),
+  });
+  const firstExclusiveYear = campaignFirstExclusiveYear(years, campaign, statics);
+  return {
+    choices,
+    years,
+    ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
   };
 }
 
@@ -309,10 +353,7 @@ export async function campaignPlayedReport(
   // Keep the whole-game runner off the import graph of this module's fast
   // tests. The played report is a CLI/diagnostic path; the reducer above is
   // what belongs in the fast lane.
-  const [{ playToTheEnd }, { playedRun }] = await Promise.all([
-    import('./ending-gate.js'),
-    import('../corpus.js'),
-  ]);
+  const { playToTheEnd } = await import('./ending-gate.js');
   const statics = campaignStaticReport(source);
   const runs: CampaignPlayedRun[] = [];
   for (const campaign of CampaignIdS.options) {
@@ -325,17 +366,14 @@ export async function campaignPlayedReport(
     }
   }
   const divergence = seeds.map((seed) => {
-    const shortWorld = playedRun(
-      source, seed, CAMPAIGNS.short.years + 1, CAMPAIGNS.short.startYear, 'short',
-    ).world;
-    const longWorld = playedRun(
-      source, seed, CAMPAIGNS.long.years + 1, CAMPAIGNS.long.startYear, 'long',
-    ).world;
+    const short = campaignObservedRun(source, seed, 'short', statics);
+    const long = campaignObservedRun(source, seed, 'long', statics);
     return campaignStreamDifference(
       seed,
-      campaignDecisionStream(shortWorld.decisionLog),
-      campaignDecisionStream(longWorld.decisionLog),
+      short.choices,
+      long.choices,
       CAMPAIGNS.short.endYear,
+      long.firstExclusiveYear,
     );
   });
   return { runs, divergence };
@@ -379,11 +417,20 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       .filter((year): year is number => year !== undefined);
     const overlap = report.divergence.reduce((sum, row) => sum + row.sameYearOverlap, 0)
       / report.divergence.length;
+    const exclusiveYears = report.divergence
+      .map((row) => row.firstExclusiveYear)
+      .filter((year): year is number => year !== undefined);
+    const lateChoices = report.divergence.reduce((sum, row) => sum + row.lateLongChoices, 0);
+    const lateUnique = report.divergence.reduce(
+      (sum, row) => sum + row.lateLongUniqueShapeChoices, 0,
+    );
     out.push(
-      'same-seed Short → Long decision stream:',
-      `  shared opening prefix: mean ${(prefixes.reduce((a, b) => a + b, 0) / prefixes.length).toFixed(1)}, range ${Math.min(...prefixes)}–${Math.max(...prefixes)} decisions`,
+      'same-seed Short → Long measured-choice stream:',
+      `  shared opening prefix: mean ${(prefixes.reduce((a, b) => a + b, 0) / prefixes.length).toFixed(1)}, range ${Math.min(...prefixes)}–${Math.max(...prefixes)} choices`,
       `  first divergence year: ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'none'}`,
-      `  Long pre-${CAMPAIGNS.short.endYear} decisions also in Short in the same year: ${(100 * overlap).toFixed(1)}%`,
+      `  first Long-exclusive reach: ${exclusiveYears.length ? `${Math.min(...exclusiveYears)}–${Math.max(...exclusiveYears)}` : 'none'}`,
+      `  Long pre-${CAMPAIGNS.short.endYear} choices also in Short in the same year: ${(100 * overlap).toFixed(1)}%`,
+      `  late-Long choices with a #271 category shape absent from Short: ${lateUnique}/${lateChoices} (${(100 * (lateChoices ? lateUnique / lateChoices : 0)).toFixed(1)}%)`,
     );
   }
   return out;
