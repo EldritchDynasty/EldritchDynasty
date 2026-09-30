@@ -567,9 +567,12 @@ describe('progressive surface reveal (#368)', () => {
       getItem: (key: string) => values.get(key) ?? null,
       setItem: (key: string, value: string) => values.set(key, value),
     };
-    const first = revealStorageKey(view());
+    const first = revealStorageKey({
+      campaign: view().campaign,
+      seed: 1,
+    } as Parameters<typeof revealStorageKey>[0]);
     const second = revealStorageKey({
-      ...view(),
+      campaign: view().campaign,
       seed: 2,
     } as Parameters<typeof revealStorageKey>[0]);
 
