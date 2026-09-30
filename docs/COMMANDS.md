@@ -307,7 +307,7 @@ stale. #333 makes the current lane cost machine-readable instead. The
 important structural fact remains: gates that share an expensive process-local
 corpus stay together, while expensive independent gates can move to separate
 runners. `gates.test.ts` proves the partition and the workflow matrix agree;
-`gate-duration.mjs` proves the checked timing budget still describes CI.
+the per-lane duration guard proves the checked timing budget still describes CI.
 **The landing is a separate problem, and it got its own fix.** Sharding buys
 the verdict; it cannot help `npm run land`, which runs on one container. So
 the landing overlaps instead: `typecheck` and `validate` still go first and
