@@ -262,7 +262,6 @@ events:
             We took one down, and we have written whose it was, and we have
             written why, and anyone who comes after us can decide whether we
             were right.
-          grantsKnowledge: knows_who_came_off_the_wall
           effects:
             - { kind: respect, delta: -1 }
         omit:
