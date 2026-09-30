@@ -258,13 +258,14 @@ export function campaignReachOf(
 }
 
 /**
- * Date the first structurally campaign-exclusive thing reached by the SAME
- * measured player that supplies #272's choice stream.
+ * Date the first structurally campaign-exclusive thing reached by one existing
+ * chronicler/ascendant policy run.
  *
  * `templateFires` is cumulative, so the first yearly snapshot containing an
  * exclusive event is the first year that event fired. Clause capacity and an
- * exclusive ending are read from that same snapshot; no second replay model is
- * involved.
+ * exclusive ending are read from that same run; no second policy simulator is
+ * involved. #272's measured-choice observer remains separate and authoritative
+ * for the category-shape comparison below.
  */
 export function campaignFirstExclusiveYear(
   years: readonly CampaignYearVisit[],
