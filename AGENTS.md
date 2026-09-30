@@ -65,16 +65,14 @@ npm install
 # Measured on a four-core container, and perishable. Re-measure before quoting.
 npm run check        # typecheck (vue-tsc too) + validate + test. ~27 min,
                      # and NOT the gates: landing on it broke main 4 times.
-npm run land         # the landing: fetch, rebase, install, the whole set CI
-                     # runs ON THAT head, push, wait for CI. AGENTS.md authorises it.
-                     # 40m was measured 2026-09-13 on a four-core container,
-                     # and is historical, not today's promise. Gate-lane wall
-                     # clocks are checked data in tools/gate-durations.json.
-                     # The CI verdict wait is on top. Was
-                     # ~76m: `test` and `gates` now overlap, and BOTH report, so
-                     # a red test no longer hides a moved gate for another hour.
-                     # Background it — a `nohup … &` landing dies with the
-                     # container, silently.
+npm run land         # session preflight: fetch, rebase, install, and run the
+                     # CI-derived set ON THAT head. It stops at preflight-green;
+                     # a session NEVER pushes main. Then open/keep a ready PR and
+                     # comment /land (or /land --no-issue-check for staged work).
+                     # The serialized queue rebases/checks again and is the only
+                     # path allowed to push main, using LAND_DEPLOY_KEY.
+                     # Long preflights must use a harness-tracked background run;
+                     # `nohup … &` dies with the container silently.
 npm run land -- --status   # is a landing running, or did one die — and did it
                      # push before it died? Ask before assuming either.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
@@ -445,19 +443,17 @@ true even if nobody opens it.
 - **Run the harness before claiming a balance change works.** A full run is multi-hour; batch simulation is the only viable balance method. #133 supplies the measured 500-year playtime.
 - When a test fails, work out whether the test or the code is wrong. Several "failures" here were correct behaviour asserted incorrectly — rare upward font mutation is *designed*.
 - Prefer fixing the model over special-casing the symptom. Nearly every bug in this codebase has been structural: children in the wrong household, widows still married to dead men, cast slots never refilled, counters at module scope.
-- **Land a feature branch on `main` with `npm run land`, without stopping to ask.**
-  Standing authorization for this project specifically: run it, and if it is
-  green it fast-forwards `main` and pushes — no PR, no confirmation prompt. Fall
-  back to asking only if it stops. `npm run check` is **not** that set: it omits
-  the gates, and four of the eleven red runs of `check.yml` on `main` across runs
-  61-100 failed at exactly that step with the whole test suite green ahead of it.
-  `packages/core/src/tools/land.test.ts` derives the step set from the workflow
-  and fails the build if CI grows a job the landing does not run. **A push is not
-  finished until a verdict comes back, and an absent verdict is not a pass** —
-  the four answers, and what to do with each, are in
+- **Preflight with `npm run land`, then land only through the serialized `/land` queue.**
+  Standing authorization for this project specifically: run the session preflight,
+  keep/open a ready same-repository PR, and enqueue it without stopping to ask.
+  A session never pushes `main`; only explicit `--from-queue` in
+  `remote-land.yml` crosses that boundary, using `LAND_DEPLOY_KEY`. The queue
+  rebases and checks again at the head of the line, so the checked head is the
+  pushed head. `npm run check` is **not** enough: it omits the gates.
+  **A queue push is not finished until a verdict comes back, and an absent verdict
+  is not a pass.** Connector-only: `/land`; staged work that genuinely leaves its
+  issue open: `/land --no-issue-check`. **Never merge the PR directly.** See
   [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
-  Connector-only: `/land`; staged: `/land --no-issue-check`. See
-  `docs/COMMANDS.md`. **Never merge the PR directly.**
 - **Landing must outlive the turn; never use `nohup … &`.** Use the harness-tracked background run (Claude Code: `run_in_background`) and read it with `npm run land -- --status`. Details and failure recovery live in [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Never ask a fresh clone what has been merged.** It arrives shallow, and
   `merge-base --is-ancestor` answers FALSE past the graft boundary rather than
@@ -465,7 +461,7 @@ true even if nobody opens it.
   unmerged. `tools/orient.mjs` unshallows at session start; if you are unsure,
   `git rev-parse --is-shallow-repository` before any "has this landed" reasoning.
   See [docs/COMMANDS.md](docs/COMMANDS.md#how-a-session-starts).
-- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases and re-runs the whole set on that head before it pushes. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
+- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases for the session preflight; the queue rebases and re-runs the authoritative set again before its only permitted push. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
 
 ## Do not
 
