@@ -176,6 +176,42 @@ describe('the family tree as a planning board (#268)', () => {
     wrapper.unmount();
   });
 
+  it('reveals an externally navigated person hidden by hall, branch, or filter state', async () => {
+    const view = largeView();
+    const wrapper = mount(Tree, {
+      props: { view, selected: null, reveal: null },
+    });
+
+    // Put the player in a different hall and then inside one focused branch.
+    const hallButtons = wrapper.findAll('.halls button');
+    await hallButtons[3]!.trigger('click'); // Cadet Hall 2
+    await wrapper.get('.root').trigger('click');
+    expect(wrapper.find('#member-p001').exists()).toBe(false);
+
+    // The Chronicle/passages path selects the person in App and supplies a
+    // separate reveal request. The tree must discard its private narrowing.
+    await wrapper.setProps({
+      selected: 'p001',
+      reveal: { id: 'p001', token: 1 },
+    });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.get('#member-p001').classes()).toContain('open');
+    expect(wrapper.find('.branch').exists()).toBe(false);
+    expect(wrapper.get('[data-filter="all"]').attributes('aria-pressed')).toBe('true');
+
+    // A repeated link to the same selected person is still navigation. Hide
+    // them behind a filter, then change only the reveal token.
+    await wrapper.get('[data-filter="awakened"]').trigger('click');
+    expect(wrapper.find('#member-p001').exists()).toBe(false);
+    await wrapper.setProps({ reveal: { id: 'p001', token: 2 } });
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.get('#member-p001').classes()).toContain('open');
+    expect(wrapper.get('[data-filter="all"]').attributes('aria-pressed')).toBe('true');
+    wrapper.unmount();
+  });
+
   it('links an open member back to dated Chronicle pages', async () => {
     const view = largeView();
     const wrapper = mount(Tree, {
