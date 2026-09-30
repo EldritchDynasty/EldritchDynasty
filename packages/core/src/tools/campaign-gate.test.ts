@@ -87,22 +87,24 @@ describe('static campaign difference report', () => {
       templateFires: { late_long: 2, ordinary: 10 },
     } as CampaignPlayedSourceRun;
 
-    expect(campaignReachOf(run, 'long', 'ascendant', staticReport)).toMatchObject({
+    expect(campaignReachOf(run, 'long', 'ascendant', staticReport, 1288)).toMatchObject({
       exclusiveEvents: ['late_long'],
       exclusiveEnding: 'apotheosis',
       beyondShortClauses: 2,
       exclusiveItems: 4,
+      firstExclusiveYear: 1288,
     });
   });
 
   it('summarises played reach without turning the baseline into a threshold', () => {
     const lines = campaignPlayedLines({ divergence: [], runs: [
       { seed: 1, campaign: 'long', policy: 'ascendant', ending: 'forgotten', clauses: 3, exclusiveEvents: [], beyondShortClauses: 0, exclusiveItems: 0 },
-      { seed: 2, campaign: 'long', policy: 'ascendant', ending: 'apotheosis', clauses: 5, exclusiveEvents: ['late_long'], exclusiveEnding: 'apotheosis', beyondShortClauses: 2, exclusiveItems: 4 },
+      { seed: 2, campaign: 'long', policy: 'ascendant', ending: 'apotheosis', clauses: 5, exclusiveEvents: ['late_long'], exclusiveEnding: 'apotheosis', beyondShortClauses: 2, exclusiveItems: 4, firstExclusiveYear: 1288 },
     ] });
     const text = lines.join('\n');
     expect(text).toContain('A Long Line / ascendant: 2 runs');
     expect(text).toContain('reached campaign-exclusive material: 1/2');
+    expect(text).toContain('first campaign-exclusive reach: 1288–1288');
     expect(text).toContain('exclusive endings: apotheosis 1/2');
     expect(text).toContain("beyond Short's clause capacity: 1/2");
   });
@@ -148,7 +150,6 @@ describe('static campaign difference report', () => {
         { id: 'late_unique_shape', year: 1451, kind: '[flag]', category: '[eligibility]' },
       ],
       1342,
-      1260,
     );
 
     expect(reading).toEqual({
@@ -157,7 +158,6 @@ describe('static campaign difference report', () => {
       divergenceYear: 1052,
       sameYearOverlap: 3 / 4,
       comparedBeforeShortTerm: 4,
-      firstExclusiveYear: 1260,
       lateLongChoices: 2,
       lateLongUniqueShapeChoices: 1,
       lateLongUniqueShapeShare: 0.5,
