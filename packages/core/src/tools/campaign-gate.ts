@@ -320,7 +320,6 @@ export function campaignStreamDifference(
 
 interface CampaignObservedRun {
   choices: ChoiceVisit[];
-  years: DensityYearVisit[];
   firstExclusiveYear?: number;
 }
 
@@ -340,7 +339,6 @@ function campaignObservedRun(
   const firstExclusiveYear = campaignFirstExclusiveYear(years, campaign, statics);
   return {
     choices,
-    years,
     ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
   };
 }
