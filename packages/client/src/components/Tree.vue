@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
 import Kin from './Kin.vue';
 import { kinshipPath, roots, type MemberView } from '../lib/kin';
@@ -15,6 +15,8 @@ type LineEntry = { person: string };
 const props = defineProps<{
   view: SessionView;
   selected: string | null;
+  /** Explicit navigation request from outside the tree (Chronicle/passage links). */
+  reveal?: { id: string; token: number } | null;
   line?: readonly LineEntry[];
   mentions?: (person: string) => MentionPage[];
 }>();
@@ -220,22 +222,47 @@ const matches = computed(() => {
  * long page even with one hall showing, and a card opened off-screen is a
  * card the player has to go looking for anyway.
  */
-async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
+async function makeVisible(m: { id: string; hallId: string }): Promise<void> {
   hallFilter.value = m.hallId;
   memberFilter.value = 'all';
   directLine.value = false;
   focus.value = null;
   query.value = '';
-  emit('select', m.id);
   await nextTick();
   document.getElementById('member-' + m.id)?.scrollIntoView({ block: 'center' });
 }
 
-async function jumpToId(id: string): Promise<void> {
-  const hall = props.view.halls.find((candidate) => candidate.members.some((member) => member.id === id));
-  if (!hall) return;
-  await jumpTo({ id, hallId: hall.id });
+async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
+  emit('select', m.id);
+  await makeVisible(m);
 }
+
+function hallFor(id: string): HallView | undefined {
+  return props.view.halls.find((candidate) => candidate.members.some((member) => member.id === id));
+}
+
+async function jumpToId(id: string): Promise<void> {
+  const hall = hallFor(id);
+  if (!hall) return;
+  emit('select', id);
+  await makeVisible({ id, hallId: hall.id });
+}
+
+async function revealId(id: string): Promise<void> {
+  const hall = hallFor(id);
+  if (!hall) return;
+  await makeVisible({ id, hallId: hall.id });
+}
+
+/**
+ * A Chronicle/passage link means "show me this person", not merely "select
+ * this id". Reset every private narrowing state that could otherwise keep the
+ * selected card unrendered. Immediate handles navigation that changes pane and
+ * mounts the tree in the same tick; token handles following the same link twice.
+ */
+watch(() => props.reveal?.token, () => {
+  if (props.reveal) void revealId(props.reveal.id);
+}, { immediate: true });
 </script>
 
 <template>
