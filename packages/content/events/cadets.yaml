@@ -133,7 +133,6 @@ events:
                 or the next one, or any year after that.
               effects:
                 - { kind: branch, op: slight, slot: COUSIN, amount: 26 }
-                - { kind: knowledge, op: grant, flag: knows_the_branches_carry_it }
                 - { kind: rumour, op: seed, id: rumour_the_boy_from_the_smaller_house, accuracy: 0.5 }
         - id: send_the_tutor_down
           label: Send the tutor down the road. Teach him where he stands.
@@ -148,7 +147,6 @@ events:
                 been handed and exactly what it has not.
               effects:
                 - { kind: branch, op: appease, slot: COUSIN, amount: 14 }
-                - { kind: knowledge, op: grant, flag: knows_the_branches_carry_it }
                 - { kind: treasury, delta: -20 }
             - id: taught_badly
               weight: 42
@@ -162,6 +160,5 @@ events:
                 that the tutor cannot account for.
               effects:
                 - { kind: branch, op: slight, slot: COUSIN, amount: 12 }
-                - { kind: knowledge, op: grant, flag: knows_the_branches_carry_it }
                 - { kind: rumour, op: seed, id: rumour_the_boy_from_the_smaller_house, accuracy: 0.7 }
     rumour: { id: rumour_the_boy_from_the_smaller_house, accuracy: 0.45, spread: 2 }
