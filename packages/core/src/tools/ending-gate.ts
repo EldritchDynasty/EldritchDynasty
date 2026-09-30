@@ -102,6 +102,14 @@ import type { SimCtx } from '../world.js';
 
 type Source = ContentBundle | Content;
 
+/** Read-only campaign facts exposed by the existing ending-policy player. */
+export interface EndingYearVisit {
+  year: number;
+  clauses: number;
+  ending?: EndingId;
+  templateFires: Readonly<Record<string, number>>;
+}
+
 /**
  * Only two of `LadderPolicy`'s five values apply here. This file never
  * isolates a single lever the way `gate:ladder` does — `chronicler` plays
@@ -293,6 +301,7 @@ export function playToTheEnd(
   years: number,
   policy: EndingPolicy = 'chronicler',
   campaign: CampaignId = 'long',
+  onYear?: (visit: EndingYearVisit) => void,
 ): EndingRun {
   const def = campaignDef(campaign);
   const ctx = bootstrap(indexContent(source), seed, def.startYear, campaign);
@@ -519,6 +528,17 @@ export function playToTheEnd(
     }
     householdLow = Math.min(householdLow, w.people.household(w.playerHouse, w.year).length);
     bloodLow = Math.min(bloodLow, livingBlood(w));
+
+    // Observe this existing policy run rather than replaying it elsewhere.
+    // The terminal year is deferred until closeTheLedger below has assigned
+    // its ending, so the observer receives exactly one snapshot per played year.
+    if (w.year < def.endYear && !w.ending) {
+      onYear?.({
+        year: w.year,
+        clauses: w.clausesRecovered.size,
+        templateFires: { ...w.frequency.templateFires },
+      });
+    }
   }
 
   // AND THE READING ITSELF. `closeTheLedger` runs INSIDE `stepYear`, on a year
@@ -533,7 +553,15 @@ export function playToTheEnd(
   // be true, and the one that was lying was the default. A silent fallback in
   // the instrument is worse than one in the game: it reports the finding the
   // issue predicted, in the issue's own words, and is wrong.
-  if (w.year >= def.endYear || w.ending) closeTheLedger(ctx);
+  if (w.year >= def.endYear || w.ending) {
+    closeTheLedger(ctx);
+    onYear?.({
+      year: w.year,
+      clauses: w.clausesRecovered.size,
+      ...(w.ending ? { ending: w.ending.id } : {}),
+      templateFires: { ...w.frequency.templateFires },
+    });
+  }
 
   const r = readTheChronicle(ctx);
   const bottleneckDecisions = w.decisionLog.filter((d) => d.kind === 'outcome'
