@@ -57,6 +57,7 @@ const portable = (await import(pathToFileURL(join(REPO, 'tools/portable.mjs')).h
 const { npmInvocation, nodeModulesLinkType, repoRelative, readHookPayload, foldPath } = portable;
 
 const sessionStartTool = (await import(pathToFileURL(join(REPO, 'tools/session-start.mjs')).href)) as {
+  PLAYWRIGHT_PACKAGE: string;
   sessionDependenciesInstalled: (
     root: string,
     exists?: (path: string) => boolean,
@@ -75,6 +76,7 @@ const sessionStartTool = (await import(pathToFileURL(join(REPO, 'tools/session-s
   ) => string[] | null;
 };
 const {
+  PLAYWRIGHT_PACKAGE,
   sessionDependenciesInstalled,
   sessionReady,
   playwrightBrowserInstallArgs,
@@ -326,6 +328,10 @@ describe('CI', () => {
 });
 
 describe('the browser-test session bootstrap', () => {
+  it('loads Chromium through the Playwright package the repository declares directly', () => {
+    expect(PLAYWRIGHT_PACKAGE).toBe('@playwright/test');
+  });
+
   it('does not call a checkout ready when Playwright is missing', () => {
     const seen: string[] = [];
     const exists = (path: string) => {
