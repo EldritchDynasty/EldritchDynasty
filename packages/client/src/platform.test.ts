@@ -270,7 +270,7 @@ describe('the platform seam', () => {
   });
 
   it('does not name a host anywhere in the client', () => {
-    const forbidden = /userAgent|capacitor|electron|isAndroid|process\.platform/i;
+    const forbidden = /userAgent|capacitor|electron|isAndroid|isIOS|process\.platform/i;
     const offenders = sourceFiles(join(import.meta.dirname))
       .filter((path) => forbidden.test(readFileSync(path, 'utf8')));
     expect(offenders).toEqual([]);

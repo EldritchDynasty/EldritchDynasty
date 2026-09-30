@@ -2,7 +2,7 @@
   "name": "@ed/mobile",
   "version": "0.1.0",
   "private": true,
-  "description": "Android shell for Eldritch Dynasty. Owns the activity and device services; owns no game rules.",
+  "description": "Android and iOS shell for Eldritch Dynasty. Owns native lifecycle and device services; owns no game rules.",
   "scripts": {
     "prepare-web": "esbuild src/platform-bridge.ts --bundle --format=iife --outfile=../client/dist/ed-platform.js && node scripts/inject-bridge.mjs",
     "sync": "npm run prepare-web && cap sync android",
