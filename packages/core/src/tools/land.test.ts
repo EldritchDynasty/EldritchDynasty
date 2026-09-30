@@ -289,6 +289,24 @@ describe('session preflight and queue verification are different authorities', (
     expect(readFileSync(TOOL, 'utf8')).toContain("process.argv.includes('--full-preflight')");
   });
 
+  it('does not let a full session preflight cross the queue-only push boundary', () => {
+    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: true });
+    let attemptedPushes = 0;
+    const result = land.finishLanding({
+      fromQueue: false,
+      target: '0123456789abcdef',
+      branch: 'feature',
+      push: () => {
+        attemptedPushes += 1;
+        return true;
+      },
+    });
+
+    expect(plan.kind).toBe('full');
+    expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
+    expect(attemptedPushes, '--full-preflight gained queue push authority').toBe(0);
+  });
+
   it('always gives the serialized queue the complete set', () => {
     for (const fullPreflight of [false, true]) {
       const plan = land.verificationPlan({ fromQueue: true, fullPreflight });
