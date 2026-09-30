@@ -57,7 +57,6 @@ events:
             before he started counting. It is not a catastrophe yet. It is the
             kind of thing that is not a catastrophe for about fifteen years.
           effects:
-            - { kind: knowledge, op: grant, flag: knows_the_north_wall }
           next: { event: the_north_wall_is_dealt_with, after: { minYears: 10, maxYears: 24 }, keep: [HEAD, KEEPER] }
         - id: the_moment_never_comes
           weight: 50
