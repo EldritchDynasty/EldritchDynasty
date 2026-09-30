@@ -8,8 +8,8 @@
       "evidence": "Projected from per-gate timestamps in green PR #362 run 36561761799 after moving blood (1069s) and fire-rate (871s) out of batch; remaining gates total about 4m20s of execution, with a 7m lane baseline for runner overhead/variance (#333)."
     },
     "blood": {
-      "seconds": 1560,
-      "evidence": "Isolated blood lane on PR #364 run 36717891480: 25.5 min (~1532s) with the 512-pair blood gate passing; baseline rounded to 26m. The prior 1100s figure came from blood running inside the old shared batch and under-described the isolated-runner wall clock; 1.25x guard = 32.5m (#333)."
+      "seconds": 3000,
+      "evidence": "Isolated blood lane on PR #364 run 36772609542: 49.6 min (~2976s) with the post-#341 1,024-pair blood gate passing by 3.8 SE. #341 deliberately doubled the prior 512-pair sample; current main had already measured the same 1,024-pair gate at 49.9 and 53.3 min when blood shared the endings runner. A 50m isolated baseline therefore reflects the repeated 1,024-pair evidence rather than the stale 26m / 512-pair calibration; 1.25x guard = 62.5m (#333/#341)."
     },
     "fire-rate": {
       "seconds": 1260,
@@ -28,7 +28,7 @@
     "provider": "GitHub Actions",
     "image": "ubuntu-latest",
     "workflow": ".github/workflows/check.yml",
-    "sourceRun": "36717891480",
+    "sourceRun": "36772609542",
     "node": "22"
   },
   "command": "npm run gates -- --lane <lane>"
