@@ -432,6 +432,15 @@ const tryGit = (...args) => {
 const GIT_DIR = git('rev-parse', '--git-dir');
 const LOCK = join(GIT_DIR, 'land.lock');
 const LAST = join(GIT_DIR, 'land.last.json');
+/**
+ * Queue-only hand-off to `tools/verdict.mjs`.
+ *
+ * The queue knows the exact main head it fetched before rebasing and the exact
+ * rebased SHA it checked and pushed. The verdict command runs later in the same
+ * checkout, after the ordinary push-triggered CI answers, and turns this local
+ * receipt into the durable `refs/landing/<sha>` coverage record #320 needs.
+ */
+const RANGE = join(GIT_DIR, 'land.range.json');
 
 function readLast() {
   if (!existsSync(LAST)) return null;
@@ -728,6 +737,9 @@ async function main() {
 
   say('\n$ git fetch origin main');
   if (!run('git', ['fetch', 'origin', 'main'])) die('fetch failed.');
+  // This is the exact trunk head the queue is about to rebase onto. Capture it
+  // after the fetch, not from a workflow event or reconstructed history later.
+  const before = git('rev-parse', 'origin/main');
 
   mark('rebase');
   say('\n$ git rebase origin/main');
@@ -914,6 +926,17 @@ async function main() {
     say(`  ${finished.message}`);
     return;
   }
+
+  // Queue mode has now pushed exactly `target`. Leave the before/checked/pushed
+  // range in .git for the verdict reader that the queue invokes next. A session
+  // preflight never writes this file because it never crosses the push boundary.
+  writeFileSync(RANGE, JSON.stringify({
+    version: 1,
+    before,
+    checked: target,
+    pushed: target,
+    branch,
+  }, null, 2));
 
   // The step that separates "nothing reached main" from "a commit is on main
   // and nobody heard the verdict" — the only two readings a corpse can have.
