@@ -9,7 +9,7 @@ const git = (cwd: string, ...args: string[]) =>
   execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 
 /**
- * THE LANDING RUNS WHAT CI RUNS, AND THE SET IS DERIVED RATHER THAN REMEMBERED.
+ * THE QUEUE RUNS WHAT CI RUNS, AND THE SET IS DERIVED RATHER THAN REMEMBERED.
  *
  * AGENTS.md grants standing authorisation to fast-forward `main` with no pull
  * request as soon as `npm run check` is green. `check` is
@@ -30,8 +30,8 @@ const git = (cwd: string, ...args: string[]) =>
  * validate and the whole test suite green, forty-one minutes of it, then
  * `gates` red. Both agents did what the rulebook said and broke trunk anyway.
  *
- * `tools/land.mjs` is the command that closes it. This is the test that keeps
- * it closed, and the thing it guards is not today's four steps — it is the
+ * `tools/land.mjs --from-queue` is the command that closes it. This is the test
+ * that keeps it closed, and the thing it guards is not today's four steps — it is the
  * FOURTH JOB nobody has written yet. check.yml already makes this argument
  * about its own gate list:
  *
@@ -52,6 +52,7 @@ const WORKFLOW = join(REPO, '.github/workflows/check.yml');
 
 const land = (await import(pathToFileURL(TOOL).href)) as {
   STEPS: string[];
+  SESSION_PREFLIGHT_STEPS: string[];
   ADVISORY: string[];
   CONCURRENT: string[];
   npmInvocation: (
@@ -61,6 +62,11 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   ) => { command: string; prefix: string[] };
   nodeModulesLinkType: (platform?: NodeJS.Platform) => 'junction' | 'dir';
   landPhases: (steps?: string[]) => { alone: string[]; together: string[] };
+  verificationPlan: (args: { fromQueue: boolean; fullPreflight: boolean }) => {
+    steps: string[];
+    kind: 'fast' | 'full';
+    reason: string;
+  };
   start: (cmd: string, args: string[], cwd: string | undefined, o: { live: boolean })
     => Promise<{ ok: boolean; out: string }>;
   ciScripts: (workflow: string) => Set<string>;
@@ -77,16 +83,16 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
 
 const workflow = readFileSync(WORKFLOW, 'utf8');
 
-describe('the landing runs every check CI runs', () => {
+describe('the queued landing runs every check CI runs', () => {
   it('leaves no script CI runs out of the landing', () => {
     const covered = new Set([...land.STEPS, ...land.ADVISORY]);
     const missed = [...land.ciScripts(workflow)].filter((s) => !covered.has(s));
     expect(
       missed,
-      `check.yml runs ${missed.join(', ')}, and \`npm run land\` does not.\n` +
+      `check.yml runs ${missed.join(', ')}, and the queued \`npm run land\` does not.\n` +
       `Add it to STEPS in tools/land.mjs — or to ADVISORY, if it provably cannot\n` +
       `fail a build, with the reason beside it. An agent's licence to push to\n` +
-      `main is that command being green.`,
+      `main is that authoritative queue check being green.`,
     ).toEqual([]);
   });
 
@@ -265,6 +271,40 @@ describe('the landing runs its long steps together', () => {
     const { alone, together } = land.landPhases(['typecheck', 'validate']);
     expect(alone).toEqual(['typecheck', 'validate']);
     expect(together).toEqual([]);
+  });
+});
+
+describe('session preflight and queue verification are different authorities', () => {
+  it('runs the fast tier by default in a session', () => {
+    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: false });
+    expect(plan.kind).toBe('fast');
+    expect(plan.steps).toEqual(['typecheck', 'validate', 'test:fast']);
+    expect(plan.steps).toEqual(land.SESSION_PREFLIGHT_STEPS);
+  });
+
+  it('offers the complete local set only through --full-preflight', () => {
+    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: true });
+    expect(plan.kind).toBe('full');
+    expect(plan.steps).toEqual(land.STEPS);
+    expect(readFileSync(TOOL, 'utf8')).toContain("process.argv.includes('--full-preflight')");
+  });
+
+  it('always gives the serialized queue the complete set', () => {
+    for (const fullPreflight of [false, true]) {
+      const plan = land.verificationPlan({ fromQueue: true, fullPreflight });
+      expect(plan.kind).toBe('full');
+      expect(plan.steps).toEqual(land.STEPS);
+      expect(plan.reason).toContain('queue');
+    }
+  });
+
+  it('names only scripts package.json provides', () => {
+    const pkg = JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')) as {
+      scripts: Record<string, string>;
+    };
+    for (const step of new Set([...land.SESSION_PREFLIGHT_STEPS, ...land.STEPS])) {
+      expect(pkg.scripts[step], `no \`${step}\` script`).toBeTruthy();
+    }
   });
 });
 
@@ -1088,12 +1128,12 @@ describe('a markdown-only change runs the short set, and only then', () => {
     expect(stale, `OUTSIDE_FAST_LANE explains files that no longer name markdown: ${stale.join(', ')}`).toEqual([]);
   });
 
-  it('is decided by one module, which the landing and CI both call', () => {
+  it('keeps one short-tier step list while CI alone classifies docs-only changes', () => {
     const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
-    expect(code).toMatch(/landingPlan\(git\('rev-parse', 'origin\/main'\), target\)/);
-    expect(code).toMatch(/landPhases\(plan\.short \? DOCS_ONLY_STEPS : STEPS\)/);
+    expect(code).toContain('SESSION_PREFLIGHT_STEPS = DOCS_ONLY_STEPS');
+    expect(code).toMatch(/landPhases\(plan\.steps\)/);
     expect(workflow).toContain('node tools/docs-only.mjs "$BASE" "$HEAD_SHA"');
   });
 });

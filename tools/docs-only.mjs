@@ -35,9 +35,10 @@
  * thing this repository refuses in its own simulation, so the base's verdict
  * is read off `refs/verdict/<sha>` and anything short of `success` runs it all.
  *
- * ONE MODULE, TWO CALLERS. `land.mjs` imports `landingPlan`; `check.yml`'s
- * `tier` job runs this file as a command. Two copies of the rule would be two
- * rules within a month.
+ * ONE MODULE, TWO CALLERS. `land.mjs` imports the short-tier step list for its
+ * default advisory preflight; `check.yml`'s `tier` job runs this file as a
+ * command to decide whether CI itself may use that tier. Two copies of either
+ * list would be two rules within a month.
  *
  *   node tools/docs-only.mjs <base> <head>   # prints `short` or `full`; why, on stderr
  */
