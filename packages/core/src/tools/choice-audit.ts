@@ -2,6 +2,7 @@
  * What every authored choice can change (issue #266).
  *
  *   npm run audit:choices
+ *   npm run audit:choices -- --json   # #334's deterministic debt worklist
  *
  * Static analysis only — `auditChoices` in `@ed/schema` reads the indexed
  * content, so inline `next` chains are compiled in, and no game is played (so
@@ -58,6 +59,63 @@ export interface ChoiceBaseline {
   eventsOneCategorySet: number;
 }
 
+/**
+ * PHASE-B WORKLIST (#334).
+ *
+ * The audit can prove that a memory key is unread; it cannot decide whether
+ * the story should later read it or whether the write should disappear. That
+ * is a content decision, so this worklist records provenance rather than
+ * guessing a classification. A later content slice can make the choice with
+ * the exact event/outcome and source file in hand.
+ */
+export interface ChoiceWorklistWriter {
+  where: string;
+  file: string;
+}
+
+export interface ChoiceWorklistMemory {
+  kind: ChoiceAudit['writeOnly'][number]['kind'];
+  key: string;
+  writers: ChoiceWorklistWriter[];
+}
+
+export interface ChoiceWorklistProseOnly {
+  event: string;
+  choice: string;
+  decider: ChoiceRow['decider'];
+  file: string;
+}
+
+export interface ChoiceWorklistFile {
+  file: string;
+  memory: {
+    kind: ChoiceAudit['writeOnly'][number]['kind'];
+    key: string;
+    writers: string[];
+  }[];
+  proseOnly: {
+    event: string;
+    choice: string;
+    decider: ChoiceRow['decider'];
+  }[];
+}
+
+export interface ChoiceWorklist {
+  version: 1;
+  summary: {
+    writeOnlyKeys: number;
+    writeOnlyWrites: number;
+    proseOnly: number;
+    files: number;
+  };
+  /** One row per unread memory key, with every writer and its source file. */
+  memory: ChoiceWorklistMemory[];
+  /** The untagged choices whose only consequence is prose/write-only memory. */
+  proseOnly: ChoiceWorklistProseOnly[];
+  /** The same debt regrouped for one-file-at-a-time content slices. */
+  files: ChoiceWorklistFile[];
+}
+
 /** The numbers issue #266's baseline table states, in the same order. */
 export function baseline(audit: ChoiceAudit): ChoiceBaseline {
   const byEvent = groupBy(audit.rows, (r) => r.event);
@@ -78,6 +136,83 @@ export function baseline(audit: ChoiceAudit): ChoiceBaseline {
     eventsAllResourceOrNothing: events.filter((rs) => rs.every((r) => isResourceOnly(r) || lasting(r).length === 0)).length,
     eventsOneCategorySet: events.filter((rs) => new Set(rs.map(setOf)).size === 1).length,
   };
+}
+
+export function choiceWorklist(content: Content): ChoiceWorklist {
+  const audit = auditChoices(content);
+
+  const memory: ChoiceWorklistMemory[] = audit.writeOnly.map((item) => ({
+    kind: item.kind,
+    key: item.key,
+    writers: item.writers
+      .map((where) => ({ where, file: fileOf(where, content) }))
+      .sort((a, b) => a.file.localeCompare(b.file) || a.where.localeCompare(b.where)),
+  }));
+
+  const proseOnly: ChoiceWorklistProseOnly[] = audit.rows
+    .filter(isProseOnly)
+    .map((row) => ({
+      event: row.event,
+      choice: row.choice,
+      decider: row.decider,
+      file: fileOf(`event:${row.event}`, content),
+    }))
+    .sort((a, b) => a.file.localeCompare(b.file)
+      || a.event.localeCompare(b.event)
+      || a.choice.localeCompare(b.choice));
+
+  const byFile = new Map<string, ChoiceWorklistFile>();
+  const fileRow = (file: string): ChoiceWorklistFile => {
+    const existing = byFile.get(file);
+    if (existing) return existing;
+    const made: ChoiceWorklistFile = { file, memory: [], proseOnly: [] };
+    byFile.set(file, made);
+    return made;
+  };
+
+  for (const item of memory) {
+    const writers = groupBy(item.writers, (writer) => writer.file);
+    for (const [file, sourceWriters] of writers) {
+      fileRow(file).memory.push({
+        kind: item.kind,
+        key: item.key,
+        writers: sourceWriters.map((writer) => writer.where).sort(),
+      });
+    }
+  }
+  for (const row of proseOnly) {
+    fileRow(row.file).proseOnly.push({
+      event: row.event,
+      choice: row.choice,
+      decider: row.decider,
+    });
+  }
+
+  const files = [...byFile.values()]
+    .sort((a, b) => a.file.localeCompare(b.file))
+    .map((row) => ({
+      ...row,
+      memory: row.memory.sort((a, b) => a.kind.localeCompare(b.kind) || a.key.localeCompare(b.key)),
+      proseOnly: row.proseOnly.sort((a, b) => a.event.localeCompare(b.event) || a.choice.localeCompare(b.choice)),
+    }));
+
+  return {
+    version: 1,
+    summary: {
+      writeOnlyKeys: memory.length,
+      writeOnlyWrites: memory.reduce((sum, item) => sum + item.writers.length, 0),
+      proseOnly: proseOnly.length,
+      files: files.length,
+    },
+    memory,
+    proseOnly,
+    files,
+  };
+}
+
+/** Byte-stable JSON for agents and one-file-at-a-time #334 content slices. */
+export function renderChoiceWorklistJson(content: Content): string {
+  return JSON.stringify(choiceWorklist(content), null, 2) + '\n';
 }
 
 export function renderChoiceAudit(content: Content): string {
@@ -155,5 +290,8 @@ export function renderChoiceAudit(content: Content): string {
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('choice-audit.ts');
 if (isMain) {
   const sources: ContentSources = new Map();
-  process.stdout.write(renderChoiceAudit(loadContent(undefined, sources)));
+  const content = loadContent(undefined, sources);
+  process.stdout.write(process.argv.includes('--json')
+    ? renderChoiceWorklistJson(content)
+    : renderChoiceAudit(content));
 }
