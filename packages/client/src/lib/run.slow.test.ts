@@ -73,13 +73,11 @@ function playARun(seed: number) {
     kinds.add(d.kind);
     if (d.kind === 'record') {
       records += 1;
-      if (game.actions.record(d.id, 'record', 'Write it as it happened')) accepted += 1;
+      game.actions.record(d.id, 'record', 'Write it as it happened');
     } else if (d.kind === 'match') {
       const card = d.cards.find((c) => c.available);
-      if (card) {
-        const result = game.actions.match(d.id, card.id, card.name);
-        if (result?.ok) accepted += 1;
-      } else game.actions.declineHand(d.id);
+      if (card) game.actions.match(d.id, card.id, card.name);
+      else game.actions.declineHand(d.id);
     } else if (!d.choicesAreOpen || d.cast.some((r) => !r.optional)) {
       // A party decider, or a cast this loop has no opinion about. Daveed
       // takes those, which is what the escape hatch is for.
