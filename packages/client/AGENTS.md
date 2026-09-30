@@ -100,7 +100,7 @@ line that lands under a family tree does nothing.
 ## Saves and hosts
 
 The client owns the save UI and talks only to the generic `Platform` seam in
-`src/platform.ts`. It must not name Electron, Capacitor, Android or Windows.
+`src/platform.ts`. It must not name Electron, Capacitor, Android, iOS or Windows.
 The browser implementation persists named slots in `localStorage`; native hosts
 inject the same `window.edPlatform` contract before the client starts.
 
