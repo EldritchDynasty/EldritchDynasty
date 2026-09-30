@@ -31,6 +31,14 @@ import {
   loadAccessibility,
   saveAccessibility,
 } from './lib/accessibility';
+import {
+  loadRevealed,
+  revealNotice,
+  revealStorageKey,
+  revealTransition,
+  saveRevealed,
+  type RevealElement,
+} from './lib/reveal';
 
 /**
  * THE WHOLE CLIENT, above one store and one read model.
@@ -64,6 +72,78 @@ watch(accessibility, (preferences) => {
   applyAccessibility(document.documentElement, preferences);
   saveAccessibility(window.localStorage, preferences);
 }, { deep: true, immediate: true });
+
+
+/**
+ * Experienced readers may opt out of the progressive introduction. null is an
+ * intentional "automatic" preference: once the Library contains a completed
+ * house, a returning reader starts expanded until they choose otherwise.
+ */
+const showEverythingFromStart = computed<boolean>({
+  get: () => accessibility.value.showEverythingFromStart
+    ?? (libraryReady.value && library.value.runs.length > 0),
+  set: (value) => { accessibility.value.showEverythingFromStart = value; },
+});
+
+function readingStorage(): Storage | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+const revealStorage = readingStorage();
+const revealed = ref<Set<RevealElement>>(new Set());
+const revealNotices = ref<{ id: RevealElement; text: string }[]>([]);
+let revealRunKey: string | null = null;
+
+function isRevealed(element: RevealElement): boolean {
+  return revealed.value.has(element);
+}
+
+function dismissReveal(element: RevealElement): void {
+  revealNotices.value = revealNotices.value.filter((notice) => notice.id !== element);
+}
+
+/**
+ * Reveal state is reader-local and run-specific. The simulation does not know
+ * whether a panel is currently visible. A Muster is an explicit safety
+ * override because its controls live on The table and must never be hidden.
+ */
+watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEverything]) => {
+  if (!nextView) {
+    revealRunKey = null;
+    revealed.value = new Set();
+    revealNotices.value = [];
+    return;
+  }
+
+  const key = revealStorageKey(nextView);
+  const prior = key === revealRunKey
+    ? revealed.value
+    : loadRevealed(revealStorage, key);
+  if (key !== revealRunKey) revealNotices.value = [];
+
+  const transition = revealTransition(nextView, nextTable, prior, {
+    showEverything,
+    needed: nextView.muster ? ['table'] : [],
+  });
+
+  revealRunKey = key;
+  revealed.value = transition.shown;
+  if (!transition.newlyShown.length) return;
+
+  saveRevealed(revealStorage, key, transition.shown);
+  // "Show everything" is the experienced-reader escape hatch, so do not turn
+  // it into six onboarding notices at once.
+  if (!showEverything) {
+    revealNotices.value = [
+      ...revealNotices.value,
+      ...transition.newlyShown.map((id) => ({ id, text: revealNotice(id) })),
+    ];
+  }
+}, { immediate: true });
 
 /**
  * WHAT THE MIDDLE COLUMN IS SHOWING, which is not quite what the switcher says.
@@ -288,7 +368,20 @@ const yearAndBirths = computed(() => {
   </template>
 
   <template v-else>
-    <Standing :view="view" :jump="jump" :save-status="saveStatus" />
+    <Standing
+      :view="view"
+      :jump="jump"
+      :save-status="saveStatus"
+      :show-assize="isRevealed('assize')"
+      :show-ladder="isRevealed('ladder')"
+    />
+
+    <div v-if="revealNotices.length" class="reveal-notices" aria-live="polite">
+      <p v-for="notice in revealNotices" :key="notice.id" class="panel small reveal-note">
+        <span>{{ notice.text }}</span>
+        <button class="quiet small" @click="dismissReveal(notice.id)">Dismiss</button>
+      </p>
+    </div>
 
     <p class="said-not-shown" role="status" aria-live="polite" aria-atomic="true">
       {{ yearAndBirths }}
@@ -337,6 +430,7 @@ const yearAndBirths = computed(() => {
           :actions="actions"
           :age-match-priorities="view.ageMatchPriorities"
           :age-record-priorities="view.ageRecordPriorities"
+          :founded-year="view.campaign.startYear"
           :refused-card="refusedCard"
         />
 
@@ -359,9 +453,20 @@ const yearAndBirths = computed(() => {
           <h3 class="label">The clock</h3>
           <div class="wrap">
             <button :disabled="waiting" @click="actions.advance(1)">A year</button>
-            <button :disabled="waiting" :title="blocking" @click="actions.advance(5)">Five</button>
-            <button :disabled="waiting" :title="blocking" @click="actions.advance(25)">A generation</button>
             <button
+              v-if="isRevealed('clock-five')"
+              :disabled="waiting"
+              :title="blocking"
+              @click="actions.advance(5)"
+            >Five</button>
+            <button
+              v-if="isRevealed('clock-long')"
+              :disabled="waiting"
+              :title="blocking"
+              @click="actions.advance(25)"
+            >A generation</button>
+            <button
+              v-if="isRevealed('clock-long')"
               :disabled="waiting"
               @click="actions.advance(view.campaign.endYear - view.year)"
             >On, to {{ view.campaign.endYear }}</button>
@@ -394,6 +499,7 @@ const yearAndBirths = computed(() => {
             v-model:reading-font="accessibility.readingFont"
             v-model:skip-seen-prose="accessibility.skipSeenProse"
             v-model:reduce-motion="accessibility.reduceMotion"
+            v-model:show-everything-from-start="showEverythingFromStart"
           />
           <h3 class="label">Marks</h3>
           <dl class="legend-list">
@@ -422,12 +528,14 @@ const yearAndBirths = computed(() => {
             @click="pane = 'house'"
           >The house</button>
           <button
+            v-if="isRevealed('table')"
             class="quiet small"
             :class="{ on: pane === 'table' }"
             :aria-pressed="pane === 'table'"
             @click="pane = 'table'"
           >The table</button>
           <button
+            v-if="isRevealed('abroad')"
             class="quiet small"
             :class="{ on: pane === 'abroad' }"
             :aria-pressed="pane === 'abroad'"
