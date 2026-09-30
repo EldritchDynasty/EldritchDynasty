@@ -1028,11 +1028,7 @@ const OWN_LANE: Record<string, readonly string[]> = {
   // for duplicate compute.
   'fire-rate': ['fire-rate', 'outcome-reach', 'vocabulary-reach'],
   war: ['war'],
-  // `blood` rides with `endings` since #341 widened it to 1,024 paired seeds
-  // (`blood-gate.ts`): about 24 minutes more of play, which on `batch` would
-  // have made the slowest runner slower, and on `endings`' otherwise six-minute
-  // runner costs no wall time. Neither shares its runs with any other gate.
-  endings: ['endings', 'blood'],
+  endings: ['endings'],
 };
 
 /** The lane every gate falls into unless it is named above. */

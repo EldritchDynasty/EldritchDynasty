@@ -97,13 +97,11 @@ describe('the gates pass the shipped game', () => {
 /**
  * ── THE CI LANES ARE A PARTITION, AND THE WORKFLOW IS THE OTHER HALF ──────
  *
- * The gates job runs on two runners now, because two gates were ninety per
- * cent of it: `war` at 16m38s and `fire-rate` at 16m05s, measured off the
- * timestamps in run 123's own log. `outcome-reach` and `vocabulary-reach`
- * cost three and four MILLISECONDS in that same log, because they read the
- * 250-run batch `fire-rate` already paid for — which is why the split is
- * `war` alone against everything else, and not a tidier-looking division
- * that would play those 250 runs twice.
+ * The gates job runs on five runners now. The independently expensive gates
+ * have their own lanes; the JSON duration budget is the checked source for
+ * their measured costs. `outcome-reach` and `vocabulary-reach` remain beside
+ * `fire-rate` because all three read the same memoized batch. Splitting those
+ * readers would replay the corpus merely to make the lane names look tidier.
  *
  * `gatesInLane` DERIVES `batch` rather than listing it, so a gate added
  * tomorrow is in CI the moment it exists. That is deliberate, and it is the
@@ -701,17 +699,16 @@ describe('the gates are actually run', () => {
    *
    * This matched ANY argument after `npm run gates --`, which was the same
    * thing as a gate name while the only argument was a gate name. The gates
-   * job runs in two lanes now (`--lane batch`, `--lane war`), and both of
-   * those tripped it — a guard firing on the mechanism rather than on the
-   * thing it was protecting.
+   * job runs with lane arguments now, and those tripped it — a guard firing
+   * on the mechanism rather than on the thing it was protecting.
    *
    * What it protects is unchanged and is the reason gate 2 ran on nobody's
    * machine for its whole life: a hand-kept list of GATE NAMES in the
    * workflow, which goes stale the moment somebody adds a gate and forgets
-   * this file. A LANE is not that. Only `batch` and `war` are ever named, and
-   * `batch` is DERIVED as every gate not spoken for, so a new gate is in CI
-   * the moment it exists — the property the old rule existed to defend,
-   * defended by construction rather than by a regex.
+   * this file. A LANE is not that. `batch` is DERIVED as every gate not
+   * spoken for, so a new gate is in CI the moment it exists — the property
+   * the old rule existed to defend, defended by construction rather than by
+   * a regex.
    *
    * So the check is now what it always meant: no argument CI passes may be
    * the name of a gate. `npm run gates -- fire-rate` still fails this.
