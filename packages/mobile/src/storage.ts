@@ -124,7 +124,14 @@ export function mobileStorage(
       encoding: Encoding.UTF8,
       recursive: true,
     });
-    await preferences.remove({ key: LEGACY_SAVE_PREFIX + slot });
+    // Cleanup is opportunistic after the durable write: if Preferences is
+    // temporarily unavailable the file is still the authoritative successful
+    // save, and listSaves will retry removing the stale key later.
+    try {
+      await preferences.remove({ key: LEGACY_SAVE_PREFIX + slot });
+    } catch {
+      // Keep the successful file write successful.
+    }
   }
 
   async function readSave(slot: string): Promise<unknown | null> {
@@ -168,7 +175,11 @@ export function mobileStorage(
       if (saves.has(slot)) {
         // The file is authoritative once it exists. Finish a prior migration
         // that wrote successfully but was interrupted before key cleanup.
-        await preferences.remove({ key });
+        try {
+          await preferences.remove({ key });
+        } catch {
+          // The durable file already wins; stale-key cleanup can retry later.
+        }
         continue;
       }
 
@@ -200,7 +211,11 @@ export function mobileStorage(
       encoding: Encoding.UTF8,
       recursive: true,
     });
-    await preferences.remove({ key: LEGACY_LIBRARY_KEY });
+    try {
+      await preferences.remove({ key: LEGACY_LIBRARY_KEY });
+    } catch {
+      // The durable Library file is already authoritative.
+    }
   }
 
   async function readLibrary(): Promise<unknown | null> {
