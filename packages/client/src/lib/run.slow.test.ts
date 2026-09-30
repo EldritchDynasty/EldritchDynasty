@@ -289,10 +289,12 @@ describe('answering a decision says what it did', () => {
       if (game.actions.choose(d.id, open.id, {}, open.label)) accepted += 1;
     } else if (d.kind === 'match') {
       const card = d.cards.find((c) => c.available);
-      if (card) game.actions.match(d.id, card.id, card.name);
-      else game.actions.declineHand(d.id);
+      if (card) {
+        const result = game.actions.match(d.id, card.id, card.name);
+        if (result?.ok) accepted += 1;
+      } else game.actions.declineHand(d.id);
     } else {
-      game.actions.record(d.id, 'record', 'Write it as it happened');
+      if (game.actions.record(d.id, 'record', 'Write it as it happened')) accepted += 1;
     }
   }
 
