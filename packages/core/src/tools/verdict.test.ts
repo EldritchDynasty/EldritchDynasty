@@ -29,6 +29,7 @@ import { pathToFileURL } from 'node:url';
 
 const REPO = join(import.meta.dirname, '../../../..');
 const TOOL = join(REPO, 'tools/verdict.mjs');
+const RANGE_TOOL = join(REPO, 'tools/verdict-range.mjs');
 
 const runTool = <T>(name: string, argument: unknown): T => JSON.parse(execFileSync(
   process.execPath,
@@ -312,5 +313,379 @@ describe('the sha a verdict is looked up under', () => {
       'main() takes the positional argument verbatim again — a short sha will report '
       + 'NO VERDICT for a green commit, which is the bug this function exists for',
     ).toMatch(/resolveSha\(positional\[0\]\)/);
+  });
+});
+
+
+/**
+ * A MAIN RUN JUDGES THE INTEGRATED RANGE, NOT ONLY ITS TIP (#320).
+ *
+ * Connector landings and merged PRs can place several commits on main before
+ * one push-triggered check runs. The old recorder wrote refs/verdict/<head>
+ * only, so the other commits stayed permanently unjudged even though their
+ * content was present in the exact tree CI exercised.
+ *
+ * These fixtures use real git history and real verdict refs. The important
+ * failure cases are the boundaries: a cancelled run is not an answer and may
+ * be covered through; a failed run IS an answer and must keep its own verdict.
+ */
+describe('the commit range covered by an integrated main run', () => {
+  const gitAt = (cwd: string, ...args: string[]) =>
+    execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+  const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
+  const writeVerdict = (
+    cwd: string,
+    sha: string,
+    conclusion: string,
+    branch = 'main',
+    run = '900',
+  ) => {
+    const body = [
+      `verdict ${conclusion}`,
+      '',
+      `sha: ${sha}`,
+      `branch: ${branch}`,
+      `conclusion: ${conclusion}`,
+      `run: https://github.com/JamesFlames/EldritchDynasty/actions/runs/${run}`,
+      'recorded: 2026-09-29T05:00:00Z',
+    ].join('\n');
+    const refCommit = gitAt(cwd, 'commit-tree', EMPTY_TREE, '-m', body);
+    gitAt(cwd, 'update-ref', `refs/verdict/${sha}`, refCommit);
+  };
+
+  const covered = (cwd: string, head: string, branch = 'main', run = '999') =>
+    execFileSync(process.execPath, [RANGE_TOOL, head, branch, run], {
+      cwd,
+      encoding: 'utf8',
+    }).trim().split('\n').filter(Boolean);
+
+  const fixture = () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-verdict-range-'));
+    gitAt(root, 'init', '-q', '-b', 'main');
+    gitAt(root, 'config', 'user.email', 'verdict-range@example.com');
+    gitAt(root, 'config', 'user.name', 'verdict-range');
+    const commit = (subject: string) => {
+      gitAt(root, 'commit', '-q', '--allow-empty', '-m', subject);
+      return gitAt(root, 'rev-parse', 'HEAD');
+    };
+    return { root, commit };
+  };
+
+  it('covers every commit after the previous judged main head', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('previous landed head');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const one = commit('first commit in landed batch');
+      const two = commit('second commit in landed batch');
+      const head = commit('batch tip');
+
+      expect(covered(root, head)).toEqual([one, two, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('uses the first-parent main boundary for a real merge commit', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('previous main');
+      writeVerdict(root, base, 'success', 'main', '800');
+
+      gitAt(root, 'checkout', '-q', '-b', 'topic');
+      const one = commit('topic one');
+      // Even a misleading main-shaped ref on the side branch cannot become
+      // the integration boundary; only trunk's first-parent lineage can.
+      writeVerdict(root, one, 'success', 'main', '850');
+      const two = commit('topic two');
+
+      gitAt(root, 'checkout', '-q', 'main');
+      gitAt(root, 'merge', '-q', '--no-ff', 'topic', '-m', 'merge topic');
+      const head = gitAt(root, 'rev-parse', 'HEAD');
+
+      expect(covered(root, head)).toEqual([one, two, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('does not let feature-branch verdicts truncate main coverage', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('previous main');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const one = commit('feature commit one');
+      writeVerdict(root, one, 'success', 'chatgpt/work', '850');
+      const two = commit('feature commit two');
+      writeVerdict(root, two, 'failure', 'chatgpt/work', '851');
+      const head = commit('landed tip');
+
+      expect(covered(root, head)).toEqual([one, two, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('does not let synthetic covered refs become later integration boundaries', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('last independently judged main');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const coveredCommit = commit('covered by an earlier integrated head');
+      writeVerdict(root, coveredCommit, 'covered', 'main', '850');
+      const next = commit('next commit after covered marker');
+      const head = commit('later checked main head');
+
+      expect(covered(root, head)).toEqual([coveredCommit, next, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('covers through pending and cancelled main runs because neither answered', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('last judged main');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const pending = commit('superseded pending head');
+      writeVerdict(root, pending, 'pending', 'main', '810');
+      const cancelled = commit('cancelled head');
+      writeVerdict(root, cancelled, 'cancelled', 'main', '811');
+      const head = commit('later integrated head');
+
+      expect(covered(root, head)).toEqual([pending, cancelled, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('stops at an earlier failed main run because that commit was actually judged', () => {
+    const { root, commit } = fixture();
+    try {
+      const old = commit('older green');
+      writeVerdict(root, old, 'success', 'main', '800');
+      const failed = commit('red main');
+      writeVerdict(root, failed, 'failure', 'main', '810');
+      const head = commit('later fix');
+
+      expect(covered(root, head)).toEqual([head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('ignores partial refs from the same source check when a recorder is retried', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('previous judged main');
+      writeVerdict(root, base, 'success', 'main', '800');
+      const one = commit('batch one');
+      // Simulate a recorder that wrote one successful-looking ref before its
+      // own job was retried. It belongs to the same source check, so it cannot
+      // become the boundary for itself.
+      writeVerdict(root, one, 'success', 'main', '999');
+      const head = commit('batch tip');
+
+      expect(covered(root, head, 'main', '999')).toEqual([one, head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to the head only when no safe main boundary exists', () => {
+    const { root, commit } = fixture();
+    try {
+      commit('unknown history one');
+      commit('unknown history two');
+      const head = commit('current head');
+
+      expect(covered(root, head)).toEqual([head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps feature-branch runs head-only even when main verdicts exist behind them', () => {
+    const { root, commit } = fixture();
+    try {
+      const base = commit('main base');
+      writeVerdict(root, base, 'success', 'main', '800');
+      commit('feature one');
+      const head = commit('feature tip');
+
+      expect(covered(root, head, 'chatgpt/feature')).toEqual([head]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+
+describe('historical verdict batch repair', () => {
+  const gitAt = (cwd: string, ...args: string[]) =>
+    execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+  const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
+  const fixture = () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-verdict-repair-'));
+    gitAt(root, 'init', '-q', '-b', 'main');
+    gitAt(root, 'config', 'user.email', 'verdict-repair@example.com');
+    gitAt(root, 'config', 'user.name', 'verdict-repair');
+    const commit = (subject: string) => {
+      gitAt(root, 'commit', '-q', '--allow-empty', '-m', subject);
+      return gitAt(root, 'rev-parse', 'HEAD');
+    };
+    const verdictRef = (
+      sha: string,
+      conclusion: string,
+      branch = 'main',
+      run = '900',
+    ) => {
+      const body = [
+        `verdict ${conclusion}`,
+        '',
+        `sha: ${sha}`,
+        `branch: ${branch}`,
+        `conclusion: ${conclusion}`,
+        `run: https://github.com/JamesFlames/EldritchDynasty/actions/runs/${run}`,
+        'recorded: 2026-09-29T05:00:00Z',
+      ].join('\n');
+      const refCommit = gitAt(root, 'commit-tree', EMPTY_TREE, '-m', body);
+      gitAt(root, 'update-ref', `refs/verdict/${sha}`, refCommit);
+    };
+    const plans = (head: string) => {
+      const out = execFileSync(process.execPath, [RANGE_TOOL, '--repair', head], {
+        cwd: root,
+        encoding: 'utf8',
+      }).trim();
+      if (!out) return [] as Array<{ source: string; target: string }>;
+      return out.split('\n').map((line) => {
+        const [source, target] = line.split('\t');
+        return { source: source!, target: target! };
+      });
+    };
+    return { root, commit, verdictRef, plans };
+  };
+
+  it('reconstructs every missing commit between adjacent judged main tips', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const oldest = commit('oldest known main tip');
+      verdictRef(oldest, 'success', 'main', '700');
+
+      const a = commit('batch one a');
+      const b = commit('batch one b');
+      const tipOne = commit('batch one tip');
+      verdictRef(tipOne, 'success', 'main', '800');
+
+      const c = commit('batch two a');
+      // A feature-branch verdict is evidence about that branch, not main, and
+      // is exactly the kind of ref the historical repair must supersede.
+      verdictRef(c, 'success', 'chatgpt/topic', '850');
+      const d = commit('batch two b');
+      verdictRef(d, 'cancelled', 'main', '860');
+      const tipTwo = commit('batch two tip');
+      verdictRef(tipTwo, 'success', 'main', '900');
+
+      expect(plans(tipTwo)).toEqual([
+        { source: tipTwo, target: c },
+        { source: tipTwo, target: d },
+        { source: tipOne, target: a },
+        { source: tipOne, target: b },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('never uses a covered ref as the source of a historical repair range', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const oldest = commit('old independently judged main');
+      verdictRef(oldest, 'success', 'main', '700');
+
+      const beforeCovered = commit('member before synthetic coverage marker');
+      const coveredCommit = commit('synthetic covered commit');
+      verdictRef(coveredCommit, 'covered', 'main', '800');
+      const afterCovered = commit('member after synthetic coverage marker');
+      const head = commit('new independently judged tip');
+      verdictRef(head, 'success', 'main', '900');
+
+      expect(plans(head)).toEqual([
+        { source: head, target: beforeCovered },
+        { source: head, target: coveredCommit },
+        { source: head, target: afterCovered },
+      ]);
+      expect(plans(head).some((plan) => plan.source === coveredCommit)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('preserves a real failed main verdict while repairing each side of it', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const oldest = commit('old green');
+      verdictRef(oldest, 'success', 'main', '700');
+
+      const beforeRed = commit('introduced by red batch');
+      const red = commit('red tip');
+      verdictRef(red, 'failure', 'main', '800');
+
+      const afterRed = commit('introduced by later green batch');
+      const green = commit('green tip');
+      verdictRef(green, 'success', 'main', '900');
+
+      expect(plans(green)).toEqual([
+        { source: green, target: afterRed },
+        { source: red, target: beforeRed },
+      ]);
+      expect(plans(green).some((plan) => plan.target === red)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('never invents coverage before the oldest provable judged-main boundary', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const unknownA = commit('too old to reconstruct a');
+      const unknownB = commit('too old to reconstruct b');
+      const oldestKnown = commit('first known judged main');
+      verdictRef(oldestKnown, 'success', 'main', '800');
+      const newer = commit('new batch member');
+      const head = commit('new judged tip');
+      verdictRef(head, 'success', 'main', '900');
+
+      const repaired = plans(head);
+      expect(repaired).toEqual([{ source: head, target: newer }]);
+      expect(repaired.some((plan) => plan.target === unknownA || plan.target === unknownB)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('repairs commits introduced by a merge from the merge tip verdict', () => {
+    const { root, commit, verdictRef, plans } = fixture();
+    try {
+      const base = commit('known main base');
+      verdictRef(base, 'success', 'main', '700');
+
+      gitAt(root, 'checkout', '-q', '-b', 'topic');
+      const sideA = commit('side a');
+      const sideB = commit('side b');
+      gitAt(root, 'checkout', '-q', 'main');
+      gitAt(root, 'merge', '-q', '--no-ff', 'topic', '-m', 'merge topic');
+      const mergeTip = gitAt(root, 'rev-parse', 'HEAD');
+      verdictRef(mergeTip, 'success', 'main', '800');
+
+      expect(plans(mergeTip)).toEqual([
+        { source: mergeTip, target: sideA },
+        { source: mergeTip, target: sideB },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
