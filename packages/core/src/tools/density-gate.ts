@@ -105,13 +105,6 @@ export interface DensityOptions {
    * rather than keeping a second copy of this loop's answer policy.
    */
   onChoice?: (visit: ChoiceVisit) => void;
-  /**
-   * Called once after each played year with the campaign facts a reach report
-   * can date without owning a second player loop. Like `onChoice`, this is an
-   * observer only: the snapshot is copied plain data and cannot answer a
-   * decision or mutate the run.
-   */
-  onYear?: (visit: DensityYearVisit) => void;
 }
 
 /** One choice as the density player met it (see `DensityOptions.onChoice`). */
@@ -120,14 +113,6 @@ export interface ChoiceVisit {
   year: number;
   kind: string;
   category: string;
-}
-
-/** One completed year from that same measured run. */
-export interface DensityYearVisit {
-  year: number;
-  clauses: number;
-  ending?: string;
-  templateFires: Readonly<Record<string, number>>;
 }
 
 /**
@@ -422,13 +407,6 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
 
     names += w.pendingNames.length;
     for (const n of [...w.pendingNames]) g.name(n.person, n.suggested);
-
-    opts.onYear?.({
-      year: w.year,
-      clauses: w.clausesRecovered.size,
-      ...(w.ending ? { ending: String(w.ending.id) } : {}),
-      templateFires: { ...w.frequency.templateFires },
-    });
   }
   ordinary = Math.max(ordinary, span);
 
