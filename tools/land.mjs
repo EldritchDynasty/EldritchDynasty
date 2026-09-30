@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * THE LANDING, AS ONE COMMAND, RUNNING THE SAME SET CI RUNS.
+ * THE QUEUED LANDING RUNS THE SAME SET CI RUNS.
  *
  * AGENTS.md carries standing authorisation to fast-forward `main` with no pull
  * request "as soon as `npm run check` is green". CI runs THREE jobs. `check` is
@@ -16,21 +16,22 @@
  * for docs — which is a decision made before the answer is known, with a
  * shorter path available for getting it wrong.
  *
- * So the landing is one command and the set is derived, not remembered:
+ * So the queue's authoritative check is derived, not remembered:
  * `land.test.ts` reads `.github/workflows/check.yml` and fails the build if CI
- * grows a job this does not run. That is the same argument check.yml already
- * makes for iterating GATES rather than naming gates in a list — gate 2 was
- * written for CI and wired into nothing for its whole life under a hand-kept
- * list. This is that argument one level up.
+ * grows a job the queue does not run. Session mode is an advisory fast
+ * preflight by default; `--full-preflight` deliberately selects that same
+ * derived set. This is the same argument check.yml already makes for iterating
+ * GATES rather than naming gates in a list — gate 2 was written for CI and
+ * wired into nothing for its whole life under a hand-kept list.
  *
  *   npm run land                     # session preflight: fetch, rebase,
- *                                    # install, run the whole CI set, STOP
+ *                                    # install, typecheck, validate, fast tests, STOP
  *                                    # green at preflight-green; never push main
+ *   npm run land -- --full-preflight # session preflight with the whole CI set
  *   npm run land -- --status         # running / dead / last preflight-green
  *   npm run land -- --dry-run        # print the plan and do none of it
  *   npm run land -- --no-issue-check # preflight even though the branch names
  *                                    # an issue no commit closes
- *   npm run land -- --full           # the whole set even on a docs-only diff
  *
  * `--from-queue` is intentionally absent from the normal command list. It is the
  * remote /land workflow's capability boundary: only that serialized job may
@@ -55,7 +56,7 @@
  * gate` is nine minutes; it belongs here, once, on the rebased head. The loop
  * is still `npm run test:fast`.
  *
- * ── AND IT IS NOW THE ONLY FULL SET A DRAFT BRANCH GETS ───────────────────
+ * ── A SESSION MAY ASK FOR THE QUEUE'S FULL SET BEFORE ENQUEUEING ───────────
  *
  * `check.yml` is tiered (#144): a DRAFT pull request runs typecheck, validate
  * and the fast lane, and everything else — every push to `main`, every tag,
@@ -63,10 +64,10 @@
  * whole thing. That was always the shape of a landing anyway, because a
  * landing pushes to `main`, and the push it makes is judged by the full set.
  *
- * It does make this command load-bearing in a way it was not: on a draft
- * branch, the steps below are the only place the slow suites and the gates
- * run before a session hands the verified head to the queue. `land.test.ts`
- * is what keeps that honest — the step
+ * A risky draft can opt into the complete local set with `--full-preflight`
+ * before handing the branch to the queue. The queue runs it regardless, after
+ * rebasing at the head of the serialized line. `land.test.ts` keeps that full
+ * set honest — the step
  * set is still DERIVED from the workflow, and `ciScripts` cannot see an `if:`
  * at all, so a tier can never quietly subtract a job from what this runs.
  */
@@ -75,14 +76,15 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync,
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { nodeModulesLinkType, npmInvocation } from './portable.mjs';
-import { DOCS_ONLY_STEPS, landingPlan } from './docs-only.mjs';
+import { DOCS_ONLY_STEPS } from './docs-only.mjs';
 import { closingIssues } from './closing-keywords.mjs';
 
 /** This checkout, derived from the script rather than from the cwd. */
 const REPO = join(import.meta.dirname, '..');
 
 /**
- * The npm scripts a landing runs, in order, ON THE REBASED HEAD.
+ * The npm scripts the queue (and `--full-preflight`) runs, in order, ON THE
+ * REBASED HEAD.
  *
  * Ordered cheapest-first so a broken template fails in seconds rather than
  * after the suite. CI runs its three jobs in PARALLEL for the opposite reason —
@@ -91,6 +93,31 @@ const REPO = join(import.meta.dirname, '..');
  * answer it needs.
  */
 export const STEPS = ['typecheck', 'validate', 'build:client', 'test', 'gates'];
+
+/**
+ * The advisory check a session runs before it hands a branch to the queue.
+ *
+ * This is deliberately CI's existing short tier rather than another list:
+ * typecheck and validation catch broken contracts/content, while the fast lane
+ * catches the ordinary implementation regressions without making every author
+ * duplicate the queue's authoritative full run. `--full-preflight` selects
+ * `STEPS` for risky work; `--from-queue` always selects it.
+ */
+export const SESSION_PREFLIGHT_STEPS = DOCS_ONLY_STEPS;
+
+export function verificationPlan({ fromQueue, fullPreflight }) {
+  if (fromQueue) {
+    return { steps: STEPS, kind: 'full', reason: 'the queue is the authoritative full check' };
+  }
+  if (fullPreflight) {
+    return { steps: STEPS, kind: 'full', reason: '--full-preflight' };
+  }
+  return {
+    steps: SESSION_PREFLIGHT_STEPS,
+    kind: 'fast',
+    reason: 'default session preflight; the queue repeats the rebase and runs the full set',
+  };
+}
 
 /**
  * ── THE TWO STEPS THAT RUN AT THE SAME TIME ───────────────────────────────
@@ -283,7 +310,7 @@ const DRY = process.argv.includes('--dry-run');
 const NO_VERDICT = process.argv.includes('--no-verdict');
 const NO_ISSUE_CHECK = process.argv.includes('--no-issue-check');
 const STATUS = process.argv.includes('--status');
-const FULL = process.argv.includes('--full');
+const FULL_PREFLIGHT = process.argv.includes('--full-preflight');
 const FROM_QUEUE = process.argv.includes('--from-queue');
 
 /**
@@ -680,9 +707,13 @@ async function main() {
     !NO_ISSUE_CHECK && issueLeftOpen(branch, ownCommitMessages(), claimedIssues(branch)),
   ].filter(Boolean);
 
+  const requestedPlan = verificationPlan({
+    fromQueue: FROM_QUEUE,
+    fullPreflight: FULL_PREFLIGHT,
+  });
   say(`landing ${branch} → ${FROM_QUEUE ? 'main' : 'preflight'}`);
   say(
-    `  fetch · rebase · ${STEPS.map((s) => `npm run ${s}`).join(' · ')} · ` +
+    `  fetch · rebase · ${requestedPlan.steps.map((s) => `npm run ${s}`).join(' · ')} · ` +
     (FROM_QUEUE ? 'push' : 'preflight-green'),
   );
 
@@ -690,14 +721,7 @@ async function main() {
   // Being told about the dirty tree and then, on the next attempt, about the
   // shallow clone is two round trips to learn one thing.
   if (DRY) {
-    // Against the local `origin/main`, unfetched and unrebased — so a preview.
-    // The real landing decides again on the rebased head.
-    if (!FULL) {
-      const plan = tryGit('rev-parse', 'origin/main').ok
-        ? landingPlan(git('rev-parse', 'origin/main'), 'HEAD')
-        : { short: false, reason: 'no local origin/main to compare against' };
-      say(`\n  would run the ${plan.short ? 'SHORT' : 'full'} set — ${plan.reason}`);
-    }
+    say(`\n  would run the ${requestedPlan.kind} set — ${requestedPlan.reason}`);
     for (const b of blockers) say(`\n  would stop: ${b}`);
     say(`\n--dry-run: nothing was fetched, rebased, run or pushed.`);
     process.exit(blockers.length ? 1 : 0);
@@ -805,15 +829,15 @@ async function main() {
   // it lands on — two content branches can each pass every gate and their merge
   // fail gate 4, with no overlap between the two diffs.
   //
-  // Which set, decided HERE: after the rebase, against the commit being
-  // pushed. `origin/main` is what CI will call `before`, so the landing and
-  // the build classify the same diff against the same verdict.
-  const plan = FULL
-    ? { short: false, reason: '--full' }
-    : landingPlan(git('rev-parse', 'origin/main'), target);
-  say(`\n  ${plan.short ? 'SHORT set' : 'full set'} — ${plan.reason}.`);
-  if (plan.short) say(`  ${DOCS_ONLY_STEPS.map((s) => `npm run ${s}`).join(' · ')}; --full for everything.`);
-  const { alone, together } = landPhases(plan.short ? DOCS_ONLY_STEPS : STEPS);
+  // Session preflight is advisory. The serialized queue repeats the rebase and
+  // always runs the complete CI-equivalent set on the exact head it pushes.
+  // Risky work can ask for the same local evidence with `--full-preflight`.
+  const plan = verificationPlan({ fromQueue: FROM_QUEUE, fullPreflight: FULL_PREFLIGHT });
+  say(`\n  ${plan.kind} set — ${plan.reason}.`);
+  if (plan.kind === 'fast') {
+    say('  use --full-preflight for the complete local CI-equivalent set.');
+  }
+  const { alone, together } = landPhases(plan.steps);
 
   // Cheapest first, and one at a time. Twenty-three seconds that catch a
   // broken Vue template or a bad schema, before anything spends forty minutes.
