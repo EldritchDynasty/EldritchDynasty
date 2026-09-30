@@ -298,6 +298,16 @@ describe('session preflight and queue verification are different authorities', (
     }
   });
 
+  it('uses that plan for the steps the command actually executes', () => {
+    const source = readFileSync(TOOL, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    expect(source).toMatch(
+      /const plan = verificationPlan\(\{ fromQueue: FROM_QUEUE, fullPreflight: FULL_PREFLIGHT \}\)/,
+    );
+    expect(source).toMatch(/landPhases\(plan\.steps\)/);
+  });
+
   it('names only scripts package.json provides', () => {
     const pkg = JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')) as {
       scripts: Record<string, string>;
