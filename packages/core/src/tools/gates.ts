@@ -19,6 +19,7 @@
  * the gate still has teeth.
  */
 import { loadContent } from '@ed/content';
+import { writeFileSync } from 'node:fs';
 import {
   indexContent, validateBundle, vocabulary,
   type Condition, type Content, type ContentBundle, type EventTemplate,
@@ -1072,16 +1073,52 @@ export function laneMatrix(workflow: string): string[] {
   return m[1]!.split(',').map((x) => x.trim()).filter(Boolean);
 }
 
+export interface GateTimingSample {
+  gate: string;
+  seconds: number;
+  ok: boolean;
+}
+
+/** Structured timing output for attribution when a checked lane grows. */
+export function gateTimingJson(
+  lane: string | undefined,
+  gates: readonly GateTimingSample[],
+  totalSeconds: number,
+): string {
+  return `${JSON.stringify({
+    version: 1,
+    lane: lane ?? null,
+    totalSeconds,
+    gates,
+  }, null, 2)}\n`;
+}
+
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('gates.ts');
 if (isMain) {
   const argv = process.argv.slice(2);
   const laneAt = argv.indexOf('--lane');
   const lane = laneAt >= 0 ? argv[laneAt + 1] : undefined;
+  const timingsAt = argv.indexOf('--timings-json');
+  const timingsPath = timingsAt >= 0 ? argv[timingsAt + 1] : undefined;
   if (laneAt >= 0 && !lane) {
     console.error(`usage: gates.ts --lane [${LANES.join('|')}]`);
     process.exit(2);
   }
-  const name = laneAt >= 0 ? undefined : argv[0];
+  if (timingsAt >= 0 && !timingsPath) {
+    console.error('usage: gates.ts --timings-json <file>');
+    process.exit(2);
+  }
+  const optionIndexes = new Set<number>();
+  if (laneAt >= 0) {
+    optionIndexes.add(laneAt);
+    optionIndexes.add(laneAt + 1);
+  }
+  if (timingsAt >= 0) {
+    optionIndexes.add(timingsAt);
+    optionIndexes.add(timingsAt + 1);
+  }
+  const positional = argv.filter((_arg, i) => !optionIndexes.has(i));
+  const name = laneAt >= 0 ? undefined : positional[0];
 
   // No argument means all of them — `npm run gate`, which is "what will CI
   // say". The gate names are four things to remember and CI's answer needs
@@ -1122,18 +1159,30 @@ if (isMain) {
 
   // A LANE ALWAYS NAMES ITS GATES, even when it holds only one.
   //
-  // These headers are the measurement boundary for per-gate attribution: the
-  // runner stamps every log line, so one header to the next is the gate's
-  // elapsed segment. A one-gate lane printing nothing would make its internal
-  // cost impossible to attribute when the checked timing data drifts.
+  // Headers keep the live log readable. `--timings-json` is the durable
+  // measurement boundary: CI retains one structured report per lane, so a
+  // drift names the gate that grew without somebody transcribing timestamps.
   const named = chosen.length > 1 || lane !== undefined;
 
   let failed = 0;
+  const runStarted = Date.now();
+  const timings: GateTimingSample[] = [];
   for (const n of chosen) {
     if (named) console.log(`\n── ${n} ──`);
+    const started = Date.now();
     const { ok, lines } = GATES[n]!(content);
+    timings.push({
+      gate: n,
+      seconds: Number(((Date.now() - started) / 1000).toFixed(3)),
+      ok,
+    });
     for (const line of lines) console.log(line);
     if (!ok) failed += 1;
+  }
+  if (timingsPath) {
+    const totalSeconds = Number(((Date.now() - runStarted) / 1000).toFixed(3));
+    writeFileSync(timingsPath, gateTimingJson(lane, timings, totalSeconds));
+    console.log(`\ngate timings written — ${timingsPath}`);
   }
   if (named) {
     const where = lane ? ` in lane ${lane}` : '';

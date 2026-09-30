@@ -46,6 +46,16 @@ describe('gate duration guard', () => {
     const recorded = Object.keys(readGateDurations().lanes).sort();
     expect(recorded).toEqual(ciLanes);
   });
+
+  it('retains structured per-gate timings for every measured lane', () => {
+    const workflow = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
+    expect(workflow).toContain(
+      '--timings-json gate-timings-${{ matrix.lane }}.json',
+    );
+    expect(workflow).toMatch(
+      /name: retain structured gate timings[\s\S]*?if: always\(\)[\s\S]*?name: gate-timings-\$\{\{ matrix\.lane \}\}[\s\S]*?path: gate-timings-\$\{\{ matrix\.lane \}\}\.json/,
+    );
+  });
 });
 
 describe('the Windows tag policy handed off by issue #321', () => {

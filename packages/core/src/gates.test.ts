@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
-  GATES, LANES, gatesInLane, laneMatrix,
+  GATES, LANES, gateTimingJson, gatesInLane, laneMatrix,
   gateClauses, gateFireRate, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
   gatePostFillability, gateSlotFillability, judgeZeroReach,
@@ -120,6 +120,17 @@ describe('the CI gate lanes cover every gate exactly once', () => {
     join(import.meta.dirname, '../../../.github/workflows/check.yml'),
     'utf8',
   );
+
+  it('emits machine-readable per-gate timing evidence', () => {
+    expect(JSON.parse(gateTimingJson('blood', [
+      { gate: 'blood', seconds: 12.345, ok: true },
+    ], 12.5))).toEqual({
+      version: 1,
+      lane: 'blood',
+      totalSeconds: 12.5,
+      gates: [{ gate: 'blood', seconds: 12.345, ok: true }],
+    });
+  });
 
   it('partitions GATES — nothing missed, nothing run twice', () => {
     const assigned = LANES.flatMap(gatesInLane);

@@ -277,8 +277,10 @@ are not a current runner contract. Current gate-lane baselines live only in
 `tools/gate-durations.json`, and each gate job measures itself and fails when
 it exceeds the recorded tolerance. #333 records the current per-gate
 attribution and repack evidence in `docs/BALANCE-LOG.md` instead of copying
-another stopwatch table here. A faster build starts by looking at whichever
-checked lane the data says is longest.
+another stopwatch table here. Each lane also retains the JSON produced by
+`npm run gates -- --lane <lane> --timings-json <file>`, so a drift can be
+attributed gate by gate without transcribing timestamps. A faster build starts
+by looking at whichever checked lane the data says is longest.
 
 The shards are not level on the runners (10m05s against 5m27s) while the
 committed table packs them level, and that is not the packing failing: the

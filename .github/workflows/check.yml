@@ -469,9 +469,15 @@ jobs:
       - name: gates
         run: |
           started=$(date +%s)
-          npm run gates -- --lane ${{ matrix.lane }}
+          npm run gates -- --lane ${{ matrix.lane }} --timings-json gate-timings-${{ matrix.lane }}.json
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
+      - name: retain structured gate timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-timings-${{ matrix.lane }}
+          path: gate-timings-${{ matrix.lane }}.json
 
   # ── THE CORPUS WARM, WHICH BLOCKS NOTHING ─────────────────────────────────
   #
