@@ -324,6 +324,32 @@ describe('the docket draws what it is handed', () => {
     expect(actions.delegateChoice).toHaveBeenCalledWith(decision.event.id, decision.choices[0]!.id);
   });
 
+  it('holds routine delegation back until fifty years after the founding', () => {
+    const tooEarly = choiceDecision();
+    tooEarly.year = 1091;
+    const before = mount(Docket, {
+      props: {
+        decision: tooEarly,
+        actions: spyActions() as unknown as GameActions,
+        foundedYear: 1042,
+      },
+    });
+    expect(before.find('label.remember').exists()).toBe(false);
+    before.unmount();
+
+    const ready = choiceDecision();
+    ready.year = 1092;
+    const after = mount(Docket, {
+      props: {
+        decision: ready,
+        actions: spyActions() as unknown as GameActions,
+        foundedYear: 1042,
+      },
+    });
+    expect(after.get('label.remember').text()).toContain('routine repeats');
+    after.unmount();
+  });
+
   it('does not learn a standing choice when the normal verb refuses it', async () => {
     const decision = choiceDecision();
     if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
