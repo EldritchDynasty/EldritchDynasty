@@ -16,9 +16,11 @@ import type {
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
 import Outcome from './Outcome.vue';
+import Standing from './Standing.vue';
 import Table from './Table.vue';
 import type { GameActions } from '../lib/game';
 import { applyAccessibility, DEFAULT_ACCESSIBILITY } from '../lib/accessibility';
+import { revealTransition } from '../lib/reveal';
 import { installPseudoLocalisation } from '../pseudo-loc';
 
 const content = loadContent();
@@ -567,6 +569,57 @@ describe('the docket draws what it is handed', () => {
     await w.findAll('.choices button')[0]!.trigger('click');
 
     expect(actions.delegateRecord).not.toHaveBeenCalled();
+  });
+});
+
+describe('the year-one progressive surface (#368)', () => {
+  it('mounts the standing header with the start readings but without the Assize or ladder', () => {
+    const view = {
+      year: 1042,
+      campaign: { id: 'short', name: 'Short Line', startYear: 1042, endYear: 1342 },
+      generation: 1,
+      house: 'house_marrow',
+      houseName: 'House Marrow',
+      seed: 1042,
+      treasury: 100,
+      respect: 'minor',
+      discontent: 0,
+      clausesRecovered: 0,
+      clausesTotal: 3,
+      ages: [],
+      tales: [],
+      assize: {
+        pressure: 0,
+        arm: 'indifferent',
+        favour: false,
+        mercy: false,
+        exaction: false,
+      },
+      ascension: {
+        rung: 'none',
+        best: 'none',
+        title: 'Unmarked',
+        bestTitle: 'Unmarked',
+      },
+    } as unknown as SessionView;
+
+    const reveal = revealTransition(view, null, new Set(), { showEverything: false });
+    const wrapper = mount(Standing, {
+      props: {
+        view,
+        jump: null,
+        saveStatus: 'idle',
+        showAssize: reveal.shown.has('assize'),
+        showLadder: reveal.shown.has('ladder'),
+      },
+    });
+
+    expect(wrapper.text()).toContain('House Marrow');
+    expect(wrapper.text()).toContain('Treasury');
+    expect(wrapper.text()).toContain('Standing');
+    expect(wrapper.find('.rung').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('The Assize');
+    wrapper.unmount();
   });
 });
 
