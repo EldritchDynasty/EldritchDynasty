@@ -97,8 +97,8 @@ function verdictState(git, sha) {
  * goes wrong asking the question is an answer of `full`.
  *
  * The verdict is read for the MERGE BASE, because that is the commit whose
- * code this diff leaves untouched. For a landing and a push to `main` it is
- * `base` itself; for a pull request it is where the branch left `main`.
+ * code this diff leaves untouched. For a push to `main` it is `base` itself;
+ * for a pull request it is where the branch left `main`.
  */
 export function landingPlan(base, head, cwd = undefined) {
   const git = gitIn(cwd);
