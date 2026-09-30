@@ -1,6 +1,6 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-09-29",
+  "measured": "2026-09-30",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
@@ -8,8 +8,8 @@
       "evidence": "Projected from per-gate timestamps in green PR #362 run 36561761799 after moving blood (1069s) and fire-rate (871s) out of batch; remaining gates total about 4m20s of execution, with a 7m lane baseline for runner overhead/variance (#333)."
     },
     "blood": {
-      "seconds": 1100,
-      "evidence": "Green PR #362 run 36561761799: blood section 11:27:41.777 to 11:45:30.979 = 1069s. Rounded to 1100s baseline (#333)."
+      "seconds": 1560,
+      "evidence": "Isolated blood lane on PR #364 run 36717891480: 25.5 min (~1532s) with the 512-pair blood gate passing; baseline rounded to 26m. The prior 1100s figure came from blood running inside the old shared batch and under-described the isolated-runner wall clock; 1.25x guard = 32.5m (#333)."
     },
     "fire-rate": {
       "seconds": 1260,
@@ -28,7 +28,7 @@
     "provider": "GitHub Actions",
     "image": "ubuntu-latest",
     "workflow": ".github/workflows/check.yml",
-    "sourceRun": "36586278258",
+    "sourceRun": "36717891480",
     "node": "22"
   },
   "command": "npm run gates -- --lane <lane>"
