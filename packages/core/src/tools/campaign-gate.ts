@@ -5,7 +5,7 @@ import {
 } from '@ed/schema';
 import { CAMPAIGNS, isLateCampaignYear, type CampaignDef } from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
-import { measureDensity, type ChoiceVisit, type DensityYearVisit } from './density-gate.js';
+import { measureDensity, type ChoiceVisit } from './density-gate.js';
 
 type Campaigns = Readonly<Record<CampaignId, CampaignDef>>;
 type Truths = ReadonlySet<boolean>;
@@ -47,6 +47,15 @@ export interface CampaignPlayedRun {
   beyondShortClauses: number;
   /** Distinct campaign-only things this run actually reached. */
   exclusiveItems: number;
+  /** First year this policy run reached structurally campaign-exclusive material. */
+  firstExclusiveYear?: number;
+}
+
+export interface CampaignYearVisit {
+  year: number;
+  clauses: number;
+  ending?: string;
+  templateFires: Readonly<Record<string, number>>;
 }
 
 export interface CampaignDivergenceRun {
@@ -55,8 +64,6 @@ export interface CampaignDivergenceRun {
   divergenceYear?: number;
   sameYearOverlap: number;
   comparedBeforeShortTerm: number;
-  /** First year the measured Long run reaches any structurally Long-only material. */
-  firstExclusiveYear?: number;
   /** Choice presentations in the Long Line's final fifth. */
   lateLongChoices: number;
   /** Those late choices whose canonical #271 category shape never appeared in Short. */
@@ -219,6 +226,7 @@ export function campaignReachOf(
   campaign: CampaignId,
   policy: CampaignPolicy,
   report: CampaignStaticReport,
+  firstExclusiveYear?: number,
 ): CampaignPlayedRun {
   const row = report.campaigns.find((x) => x.id === campaign);
   if (!row) throw new Error(`campaign report is missing ${campaign}`);
@@ -245,6 +253,7 @@ export function campaignReachOf(
     exclusiveEnding,
     beyondShortClauses,
     exclusiveItems: exclusiveEvents.length + (exclusiveEnding ? 1 : 0) + beyondShortClauses,
+    ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
   };
 }
 
@@ -258,7 +267,7 @@ export function campaignReachOf(
  * involved.
  */
 export function campaignFirstExclusiveYear(
-  years: readonly DensityYearVisit[],
+  years: readonly CampaignYearVisit[],
   campaign: CampaignId,
   report: CampaignStaticReport,
 ): number | undefined {
@@ -281,7 +290,6 @@ export function campaignStreamDifference(
   short: readonly ChoiceVisit[],
   long: readonly ChoiceVisit[],
   shortEndYear: number,
-  firstExclusiveYear?: number,
 ): CampaignDivergenceRun {
   const shared = Math.min(short.length, long.length);
   let sharedPrefix = 0;
@@ -311,7 +319,6 @@ export function campaignStreamDifference(
     ...(firstDifferent ? { divergenceYear: firstDifferent.year } : {}),
     sameYearOverlap: beforeTerm.length ? sameYear / beforeTerm.length : 0,
     comparedBeforeShortTerm: beforeTerm.length,
-    ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
     lateLongChoices: lateLong.length,
     lateLongUniqueShapeChoices: uniqueLate,
     lateLongUniqueShapeShare: lateLong.length ? uniqueLate / lateLong.length : 0,
@@ -320,27 +327,19 @@ export function campaignStreamDifference(
 
 interface CampaignObservedRun {
   choices: ChoiceVisit[];
-  firstExclusiveYear?: number;
 }
 
 function campaignObservedRun(
   source: ContentBundle | Content,
   seed: number,
   campaign: CampaignId,
-  statics: CampaignStaticReport,
 ): CampaignObservedRun {
   const choices: ChoiceVisit[] = [];
-  const years: DensityYearVisit[] = [];
   measureDensity(source, seed, CAMPAIGNS[campaign].years, {
     campaign,
     onChoice: (visit) => choices.push(visit),
-    onYear: (visit) => years.push(visit),
   });
-  const firstExclusiveYear = campaignFirstExclusiveYear(years, campaign, statics);
-  return {
-    choices,
-    ...(firstExclusiveYear !== undefined ? { firstExclusiveYear } : {}),
-  };
+  return { choices };
 }
 
 /** Play the same seeds in both products, under ordinary and intentional ladder play. */
@@ -358,20 +357,34 @@ export async function campaignPlayedReport(
     const years = CAMPAIGNS[campaign].years;
     for (const policy of ['chronicler', 'ascendant'] as const) {
       for (const seed of seeds) {
-        const played = playToTheEnd(source, seed, years, policy, campaign);
-        runs.push(campaignReachOf(played, campaign, policy, statics));
+        const timeline: CampaignYearVisit[] = [];
+        const played = playToTheEnd(
+          source,
+          seed,
+          years,
+          policy,
+          campaign,
+          (visit) => timeline.push(visit),
+        );
+        const firstExclusiveYear = campaignFirstExclusiveYear(timeline, campaign, statics);
+        runs.push(campaignReachOf(
+          played,
+          campaign,
+          policy,
+          statics,
+          firstExclusiveYear,
+        ));
       }
     }
   }
   const divergence = seeds.map((seed) => {
-    const short = campaignObservedRun(source, seed, 'short', statics);
-    const long = campaignObservedRun(source, seed, 'long', statics);
+    const short = campaignObservedRun(source, seed, 'short');
+    const long = campaignObservedRun(source, seed, 'long');
     return campaignStreamDifference(
       seed,
       short.choices,
       long.choices,
       CAMPAIGNS.short.endYear,
-      long.firstExclusiveYear,
     );
   });
   return { runs, divergence };
@@ -384,6 +397,9 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       const rows = report.runs.filter((r) => r.campaign === campaign && r.policy === policy);
       if (!rows.length) continue;
       const reached = rows.filter((r) => r.exclusiveItems > 0).length;
+      const firstYears = rows
+        .map((r) => r.firstExclusiveYear)
+        .filter((year): year is number => year !== undefined);
       const eventCounts = new Map<string, number>();
       const endingCounts = new Map<string, number>();
       let clauseRuns = 0;
@@ -401,6 +417,7 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       out.push(
         `${CAMPAIGNS[campaign].name} / ${policy}: ${rows.length} runs`,
         `  reached campaign-exclusive material: ${reached}/${rows.length}`,
+        `  first campaign-exclusive reach: ${firstYears.length ? `${Math.min(...firstYears)}–${Math.max(...firstYears)}` : 'none'}`,
         `  mean exclusive items: ${(items / rows.length).toFixed(2)}`,
         `  exclusive endings: ${list(endingCounts)}`,
         `  exclusive events: ${list(eventCounts)}`,
@@ -415,9 +432,6 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       .filter((year): year is number => year !== undefined);
     const overlap = report.divergence.reduce((sum, row) => sum + row.sameYearOverlap, 0)
       / report.divergence.length;
-    const exclusiveYears = report.divergence
-      .map((row) => row.firstExclusiveYear)
-      .filter((year): year is number => year !== undefined);
     const lateChoices = report.divergence.reduce((sum, row) => sum + row.lateLongChoices, 0);
     const lateUnique = report.divergence.reduce(
       (sum, row) => sum + row.lateLongUniqueShapeChoices, 0,
@@ -426,7 +440,6 @@ export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
       'same-seed Short → Long measured-choice stream:',
       `  shared opening prefix: mean ${(prefixes.reduce((a, b) => a + b, 0) / prefixes.length).toFixed(1)}, range ${Math.min(...prefixes)}–${Math.max(...prefixes)} choices`,
       `  first divergence year: ${years.length ? `${Math.min(...years)}–${Math.max(...years)}` : 'none'}`,
-      `  first Long-exclusive reach: ${exclusiveYears.length ? `${Math.min(...exclusiveYears)}–${Math.max(...exclusiveYears)}` : 'none'}`,
       `  Long pre-${CAMPAIGNS.short.endYear} choices also in Short in the same year: ${(100 * overlap).toFixed(1)}%`,
       `  late-Long choices with a #271 category shape absent from Short: ${lateUnique}/${lateChoices} (${(100 * (lateChoices ? lateUnique / lateChoices : 0)).toFixed(1)}%)`,
     );
