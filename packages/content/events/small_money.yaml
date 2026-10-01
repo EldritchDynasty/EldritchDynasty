@@ -95,7 +95,6 @@ events:
                 house again for nineteen years.
               effects:
                 - { kind: treasury, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_to_weigh_the_rents }
         - id: send_the_four_to_bramme
           label: Send the four to the magistrate. Clipping is his business.
           outcomes:
@@ -189,8 +188,6 @@ events:
             Braccish weigh the coin everyone else spends and take their cut of
             every exchange, and have since before this house had a name. The
             steward keeps a copy anyway. It is in the press in 1500.
-          effects:
-            - { kind: knowledge, op: grant, flag: knows_what_the_two_per_cent_came_to }
 
   - id: the_debt_that_outlives_him
     title: He Died Owing Fourteen Marks
@@ -336,8 +333,7 @@ events:
                 crowns, which is not a wage anybody could live on and was never
                 meant to be. The arrangement holds for eleven decades. Four
                 stewards inherit it and none of them writes it down either.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_what_the_gate_actually_pays }
+              tags: [self_expression]
 
   - id: the_price_of_everything_in_a_thin_year
     title: The Steward Has Written It All Down
@@ -450,7 +446,6 @@ events:
                 bricked.
               effects:
                 - { kind: treasury, delta: 6 }
-                - { kind: flag, flag: two_hearths_bricked_for_the_tax, set: true }
         - id: pay_on_seven
           label: Pay on seven. The house has seven and always has.
           outcomes:
