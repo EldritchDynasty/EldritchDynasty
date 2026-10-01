@@ -1432,6 +1432,12 @@ describe('queue landing coverage metadata (#320/#352)', () => {
     expect(receipt, 'successful queue pushes do not leave the verdict hand-off receipt').toBeGreaterThan(rebase);
   });
 
+  it('creates the landing coverage commit without a platform-specific filesystem sentinel', () => {
+    const code = readFileSync(join(REPO, 'tools/verdict.mjs'), 'utf8');
+    expect(code).toContain("tryGit('mktree')");
+    expect(code).not.toMatch(/hash-object['"],\s*['"]-t['"],\s*['"]tree/);
+  });
+
   it('records one checked/pushed head and its real verdict, not invented verdicts for covered commits', () => {
     const message = verdictReader.landingRecordMessage(
       { before: BEFORE, checked: TARGET, pushed: TARGET, branch: 'feature/range' },
