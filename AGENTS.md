@@ -65,16 +65,18 @@ npm install
 # Measured on a four-core container, and perishable. Re-measure before quoting.
 npm run check        # typecheck (vue-tsc too) + validate + test. ~27 min,
                      # and NOT the gates: landing on it broke main 4 times.
-npm run land         # session preflight: fetch, rebase, install, and run the
-                     # CI-derived set ON THAT head. It stops at preflight-green;
-                     # a session NEVER pushes main. Then open/keep a ready PR and
-                     # comment /land (or /land --no-issue-check for staged work).
+npm run land         # session preflight: fetch, rebase, install, then run
+                     # typecheck + validate + test:fast ON THAT head. It stops
+                     # at preflight-green; a session NEVER pushes main. Use
+                     # --full-preflight for the complete local CI-derived set.
+                     # Then open/keep a ready PR and comment /land (or
+                     # /land --no-issue-check for staged work).
                      # The serialized queue rebases/checks again and is the only
                      # path allowed to push main, using LAND_DEPLOY_KEY.
                      # Long preflights must use a harness-tracked background run;
                      # `nohup … &` dies with the container silently.
-npm run land -- --status   # is a landing running, or did one die — and did it
-                     # push before it died? Ask before assuming either.
+npm run land -- --status   # is a preflight running, dead, or preflight-green?
+                     # A session preflight never pushes.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
 npm run test:fast    # 31s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
@@ -446,6 +448,9 @@ true even if nobody opens it.
 - **Preflight with `npm run land`, then land only through the serialized `/land` queue.**
   Standing authorization for this project specifically: run the session preflight,
   keep/open a ready same-repository PR, and enqueue it without stopping to ask.
+  The default preflight runs typecheck, validation and the fast lane; use
+  `--full-preflight` for risky core, content or gate work when the complete
+  local CI-equivalent evidence is useful. Either result is advisory.
   A session never pushes `main`; only explicit `--from-queue` in
   `remote-land.yml` crosses that boundary, using `LAND_DEPLOY_KEY`. The queue
   rebases and checks again at the head of the line, so the checked head is the

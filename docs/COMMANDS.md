@@ -35,12 +35,14 @@ issues other sessions are holding. What that cost before it existed is in
 result without a confirmation prompt, but a session has no code path that may
 push `main`.
 
-The preflight fetches, rebases onto `origin/main`, installs, and runs the
-CI-derived verification set on that rebased head. On success it records
-`preflight-green` and tells the caller to keep/open a ready same-repository PR
-and comment `/land`. It does not create a CI verdict, close an issue, or turn
-"green here" into "landed". `npm run check` is not a substitute: it omits the
-gates.
+The default preflight fetches, rebases onto `origin/main`, installs, then runs
+typecheck, validation and `test:fast` on that rebased head. Risky core, content
+or gate work can opt into the complete local CI-derived set with
+`npm run land -- --full-preflight`; it still has no push authority. On success
+either mode records `preflight-green` and tells the caller to keep/open a ready
+same-repository PR and comment `/land`. It does not create a CI verdict, close
+an issue, or turn "green here" into "landed". The queue always repeats the
+rebase and complete authoritative set on the exact head it can push.
 
 The **only** push boundary is `.github/workflows/remote-land.yml`, which invokes
 the same command with explicit `--from-queue`. The queue serializes requests,
@@ -114,10 +116,10 @@ markdown file, which is the day the argument above stops being true.
 
 ### A preflight has to outlive the session that started it
 
-A full session preflight can outlive a web-session turn. Start it in a background
-the harness tracks (for example Claude Code's `run_in_background`) and never
-with `nohup … &`, which can die when the container is paused and leave no
-useful completion signal.
+An optional `--full-preflight` can outlive a web-session turn. Start it in a
+background the harness tracks (for example Claude Code's `run_in_background`)
+and never with `nohup … &`, which can die when the container is paused and
+leave no useful completion signal.
 
 `npm run land -- --status` reports whether the preflight is running, dead, or
 last reached `preflight-green`. A dead session preflight has pushed nothing:
