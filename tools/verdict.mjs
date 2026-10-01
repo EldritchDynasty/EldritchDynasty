@@ -160,7 +160,10 @@ function recordLandingRange(sha, verdict) {
     return false;
   }
 
-  const empty = tryGit('hash-object', '-t', 'tree', '/dev/null');
+  // `git mktree` reads an empty tree description from stdin and works on both
+  // supported platforms; never smuggle a POSIX-only null-device path into an
+  // operating script just to manufacture Git's empty tree.
+  const empty = tryGit('mktree');
   if (!empty.ok) return false;
   const message = landingRecordMessage(receipt, verdict);
   let commit;
