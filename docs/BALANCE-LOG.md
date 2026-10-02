@@ -9173,3 +9173,52 @@ The gameplay balance debt separated by this correctness change is the
 self-cleaning #378 God-Madness pin above; the two test-policy threshold changes
 are recorded here rather than hidden as fixture churn.
 
+## 2026-10-02 — #274: fresh Short-vs-Long played baseline
+
+This is the first post-#379 baseline from the landed `gate:campaigns`
+observer, measured in Actions run `36977844891` over 12 shared seeds per
+campaign/policy. The 27 September figures above remain historical prototype
+evidence; they are not golden expectations.
+
+### Static product shape
+
+- A Short Line is 300 years, offers `broken_line · devoured · forgotten · settled`,
+  and can recover at most 3 of the 9 Ledger clauses.
+- A Long Line is 500 years, offers
+  `apotheosis · broken_line · devoured · forgotten · unmade`, and can recover
+  all 9 clauses.
+- The static inventory finds no authored event or arc exclusive to one campaign.
+  The explicit product differences are term, Ledger capacity, and ending set.
+
+### Played reach — 12 shared seeds per campaign/policy
+
+| campaign / policy | reached campaign-exclusive material | first exclusive reach | mean exclusive items | exclusive ending | beyond Short clause capacity |
+|---|---:|---:|---:|---|---:|
+| Short / chronicler | 2/12 | 1342–1342 | 0.17 | settled 2/12 | 0/12 |
+| Short / ascendant | 0/12 | none | 0.00 | none | 0/12 |
+| Long / chronicler | 5/12 | 1182–1411 | 1.83 | none | 5/12 |
+| Long / ascendant | 8/12 | 1096–1290 | 1.83 | unmade 1/12 | 8/12 |
+
+No policy reached a campaign-exclusive authored event. In this batch Long's
+ordinary distinctive reach comes from passing the Short Ledger capacity, with
+one Long-only `unmade` ending in the ascendant column.
+
+### Same-seed Short → Long stream
+
+- shared opening prefix: mean **24.3 choices**, range **10–47**;
+- first divergence year: **1075–1246**;
+- Long pre-1342 choices also present in Short in the same year: **67.6%**;
+- late-Long choices whose canonical #271 category shape never appeared in the
+  paired Short run: **53/148 = 35.8%**.
+
+The last number materially revises the old prototype's 6/123 (5%). That change
+is why #274 required a fresh run through the landed canonical observer rather
+than promoting the prototype to an expectation. The opening-stream comparison
+is less different: 67.6% same-year overlap remains inside the old 44–79% range.
+
+This is evidence, not a threshold decision. It says late Long play is not merely
+"Short plus 200 years" at the interaction-shape level, while chronicler still
+reaches no Long-exclusive ending in this 12-run sample and the static inventory
+contains no Long-only event deck. Any future floor must cite an explicit owner
+decision; none is introduced by this baseline.
+
