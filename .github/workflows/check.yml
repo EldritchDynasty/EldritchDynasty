@@ -391,6 +391,7 @@ jobs:
           CODE_SIGNING_ALLOWED=NO build
 
       - name: install and launch on an iPhone simulator
+        timeout-minutes: 6
         working-directory: packages/mobile
         run: |
           DEVICES="$(xcrun simctl list devices available -j)"
@@ -399,15 +400,37 @@ jobs:
             process.stdin.on("data", (chunk) => input += chunk);
             process.stdin.on("end", () => {
               const { devices } = JSON.parse(input);
-              const phone = Object.values(devices).flat()
-                .find((device) => device.isAvailable && device.name.startsWith("iPhone "));
+              const phones = Object.values(devices).flat()
+                .filter((device) => device.isAvailable && device.name.startsWith("iPhone "));
+              const phone = phones.find((device) => device.state === "Booted") ?? phones[0];
               if (!phone) process.exit(1);
               process.stdout.write(phone.udid);
             });
           ')"
           test -n "$UDID" || { echo "No available iPhone simulator on macOS runner."; exit 1; }
           xcrun simctl boot "$UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$UDID" -b
+
+          STATE=""
+          for attempt in $(seq 1 60); do
+            STATE="$(xcrun simctl list devices -j | UDID="$UDID" node -e '
+              let input = "";
+              process.stdin.on("data", (chunk) => input += chunk);
+              process.stdin.on("end", () => {
+                const { devices } = JSON.parse(input);
+                const match = Object.values(devices).flat()
+                  .find((device) => device.udid === process.env.UDID);
+                process.stdout.write(match?.state ?? "");
+              });
+            ')"
+            if [ "$STATE" = "Booted" ]; then break; fi
+            sleep 2
+          done
+          test "$STATE" = "Booted" || {
+            echo "iPhone simulator $UDID did not reach Booted state within 120 seconds."
+            xcrun simctl list devices
+            exit 1
+          }
+
           APP="$RUNNER_TEMP/ed-ios-derived/Build/Products/Debug-iphonesimulator/App.app"
           test -d "$APP" || { echo "Built iOS app missing at $APP"; exit 1; }
           xcrun simctl install "$UDID" "$APP"
