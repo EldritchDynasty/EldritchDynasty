@@ -509,7 +509,6 @@ const yearAndBirths = computed(() => {
 
         <button
           class="quiet small legend"
-          title="Return to the start screen without deleting this run"
           @click="leaveToStart"
         >Saves &amp; new game</button>
 
