@@ -222,6 +222,34 @@ describe('the prologue', () => {
     expect(ctx.world.founding?.houseName).toBe('The House of Salt');
   });
 
+  it('logs the validated founding answer once, and never logs a refusal', () => {
+    const refused = testWorld(content);
+    expect(foundHouse(refused, { ...CHOICE, houseName: '   ' }).ok).toBe(false);
+    expect(refused.world.decisionLog).toEqual([]);
+
+    const ctx = testWorld(content);
+    const choice = {
+      ...CHOICE,
+      houseName: '  The   House of Salt  ',
+      friends: [
+        { name: '  Iona  Vale ', sex: 'female' as const },
+        { name: 'Corven Pike', sex: 'male' as const },
+      ],
+    };
+    expect(foundHouse(ctx, choice).ok).toBe(true);
+    expect(ctx.world.decisionLog).toEqual([{
+      kind: 'founding',
+      year: 1042,
+      houseName: 'The House of Salt',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      friends: [
+        { name: 'Iona Vale', sex: 'female' },
+        { name: 'Corven Pike', sex: 'male' },
+      ],
+    }]);
+  });
+
   /**
    * ISSUE #38'S ACCEPTANCE: "the two choices are readable off the save nine
    * hundred years later". A field the save format forgets resets silently on
