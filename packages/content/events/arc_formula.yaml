@@ -30,8 +30,6 @@ events:
             year is out. The chapter house calls it that too, which is the
             first sign that a legal victory has become a thing other people
             can use.
-          effects:
-            - { kind: knowledge, op: grant, flag: knows_the_formula_is_on_both_desks }
 
   - id: formula_another_house_uses_it
     title: The Ardwen Formula, in Somebody Else's Mouth
@@ -65,7 +63,6 @@ events:
                 A private escape has become precedent.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: arc_flag, flag: stood_by_the_formula, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_ardwen_formula, accuracy: 0.8 }
         - id: distinguish_it
           label: Say their case is different. Keep our victory narrow.
@@ -80,7 +77,6 @@ events:
                 sentences instead of one.
               effects:
                 - { kind: treasury, delta: -8 }
-                - { kind: arc_flag, flag: narrowed_the_formula, set: true }
 
   - id: formula_returns_to_ardwen
     title: What the Last Clause Meant
@@ -137,7 +133,6 @@ events:
             We made the two courts agree on a sentence when agreement served
             us. The sentence outlived the advocates and came back with the same
             comma and a different use. Both copies are evidence of both facts.
-          grantsKnowledge: knows_the_formula_came_back
           effects: []
         omit:
           chronicle: null
