@@ -334,6 +334,61 @@ jobs:
       - name: fast lane
         run: npm run test:fast
 
+  # ── THE APPLE PHONE HOST, COMPILED WHERE XCODE EXISTS ────────────────────
+  #
+  # #349 makes iPhone a supported mobile target without making macOS a
+  # supported desktop target. The native project is therefore checked on
+  # Apple's runner, not inferred from TypeScript or from the Android host.
+  #
+  # Capacitor 8 requires Xcode 26+. Pin the runner family and assert the tool
+  # version in the log so a future image change cannot quietly lower the
+  # environment below the framework's supported floor.
+  #
+  # The bridge/sync commands below are intentionally NOT new `npm run`
+  # workflow steps. `tools/land.mjs` derives the portable queue check from
+  # workflow npm scripts, and a Linux/Windows landing can never execute Xcode.
+  # `build:client` is already part of the portable landing set; the remaining
+  # commands are the platform-specific proof only this macOS runner can supply.
+  ios:
+    name: iOS simulator build
+    needs: tier
+    if: needs.tier.outputs.full == 'true'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: require Xcode 26 or newer
+        run: |
+          xcodebuild -version
+          XCODE_MAJOR="$(xcodebuild -version | awk 'NR == 1 { split($2, v, "."); print v[1] }')"
+          if [ "$XCODE_MAJOR" -lt 26 ]; then
+            echo "Capacitor 8 requires Xcode 26+; runner supplied Xcode $XCODE_MAJOR."
+            exit 1
+          fi
+
+      - name: build the offline client
+        run: npm run build:client
+
+      - name: sync the shared mobile bridge and Capacitor plugins
+        working-directory: packages/mobile
+        run: |
+          npx --no-install esbuild src/platform-bridge.ts --bundle --format=iife --outfile=../client/dist/ed-platform.js
+          node scripts/inject-bridge.mjs
+          npx --no-install cap sync ios
+
+      - name: build unsigned iPhone simulator app
+        working-directory: packages/mobile
+        run: >
+          xcodebuild -project ios/App/App.xcodeproj -scheme App
+          -configuration Debug -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build
+
   # ── THE TEST LANE, IN FOUR, PACKED BY DURATION ────────────────────────────
   #
   # Both vitest lanes are in here — the fast suites and the `*.slow.test.ts`
