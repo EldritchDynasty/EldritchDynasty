@@ -3,6 +3,7 @@ import { assertNever } from '@ed/schema';
 import { bootstrap } from './sim.js';
 import { runYears } from './year/step.js';
 import { canonical } from './save.js';
+import { foundHouse } from './prologue.js';
 import type { SimCtx } from './world.js';
 
 /**
@@ -43,6 +44,38 @@ export function replay(
   years: number,
 ): SimCtx {
   const ctx = bootstrap(source, seed, startYear);
+
+  // Founding is the one external answer made before the first year turns
+  // (issue #391). It used to be absent from the log, so replay silently
+  // rebuilt a different house: no chosen gift, grudge, friends, house name or
+  // opening Chronicle page. Apply it through the same verb, never by copying
+  // those five pieces of state here.
+  const founding = log.filter((d) => d.kind === 'founding');
+  if (founding.length > 1) {
+    throw new ReplayMismatchError(
+      `replay found ${founding.length} founding decisions at seed ${seed}; expected at most one`,
+    );
+  }
+  const first = founding[0];
+  if (first) {
+    if (first.year !== startYear) {
+      throw new ReplayMismatchError(
+        `replay founding decision is dated ${first.year} at seed ${seed}; expected ${startYear}`,
+      );
+    }
+    const result = foundHouse(ctx, {
+      houseName: first.houseName,
+      heirloom: first.heirloom,
+      grudge: first.grudge,
+      friends: first.friends.map((friend) => ({ ...friend })),
+    });
+    if (!result.ok) {
+      throw new ReplayMismatchError(
+        `replay could not apply founding decision at seed ${seed}: ${result.reason ?? 'refused'}`,
+      );
+    }
+  }
+
   runYears(ctx, years);
 
   const got = canonical(ctx.world.decisionLog);
@@ -67,6 +100,8 @@ export function describeDecision(d: LoggedDecision): string {
       return d.card
         ? `${d.year}  ${d.subject} married ${d.spouse} off ${d.card}`
         : `${d.year}  ${d.subject} was offered a hand and took none of it`;
+    case 'founding':
+      return `${d.year}  founded ${d.houseName}; asked for ${d.heirloom}; wronged ${d.grudge}`;
     case 'name':
       return `${d.year}  ${d.person} named ${d.name}`;
     default:
