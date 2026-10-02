@@ -8,6 +8,9 @@ import type { CampaignId, EndingId } from '@ed/schema';
  * state. Keeping the definitions here means that work can replace reads of the
  * old module constants without creating a second source of truth.
  */
+export const FULL_CAMPAIGN_IDS = ['short', 'long'] as const satisfies readonly CampaignId[];
+export type FullCampaignId = (typeof FULL_CAMPAIGN_IDS)[number];
+
 export interface CampaignDef {
   id: CampaignId;
   name: string;
@@ -39,6 +42,23 @@ export const CAMPAIGNS: Readonly<Record<CampaignId, CampaignDef>> = {
     years: 500,
     clauses: 9,
     endings: ['apotheosis', 'unmade', 'broken_line', 'forgotten', 'devoured'],
+  },
+  /**
+   * Track C of #323: the same game in miniature, not a second mode.
+   *
+   * The profile owns only the clock/contract/ending envelope. Guaranteed demo
+   * beats (one complete Age, a Record decision, an interlude and its verdict)
+   * are structural work layered on the normal machinery rather than flags
+   * spread through the simulation.
+   */
+  demo: {
+    id: 'demo',
+    name: 'A Demonstration',
+    startYear: 1042,
+    endYear: 1075,
+    years: 33,
+    clauses: 1,
+    endings: ['broken_line', 'settled', 'forgotten', 'devoured'],
   },
 };
 
