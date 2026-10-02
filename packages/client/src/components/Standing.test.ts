@@ -98,4 +98,33 @@ describe('Standing legibility (#356)', () => {
 
     expect(wrapper.text()).toContain('Highest reached · Hierophant, once, in 1114.');
   });
+
+  it('keeps the run seed out of sight until the player asks for it', async () => {
+    const wrapper = mount(Standing, {
+      props: { view: view(), jump: null, saveStatus: 'idle' },
+    });
+    const control = wrapper.get('.run-number button');
+
+    expect(wrapper.text().toLowerCase()).not.toContain('seed');
+    expect(wrapper.text()).not.toContain('47');
+    expect(control.attributes('aria-expanded')).toBe('false');
+
+    await control.trigger('click');
+
+    expect(wrapper.text()).toContain('seed #47');
+    expect(control.attributes('aria-expanded')).toBe('true');
+  });
+
+  it('can hide the diagnostic run number again', async () => {
+    const wrapper = mount(Standing, {
+      props: { view: view(), jump: null, saveStatus: 'idle' },
+    });
+    const control = wrapper.get('.run-number button');
+
+    await control.trigger('click');
+    await control.trigger('click');
+
+    expect(wrapper.text()).not.toContain('seed #47');
+    expect(control.attributes('aria-expanded')).toBe('false');
+  });
 });
