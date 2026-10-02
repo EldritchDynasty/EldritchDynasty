@@ -7,7 +7,7 @@
  */
 import { loadContent } from '@ed/content';
 import type { CampaignId, Content } from '@ed/schema';
-import { type AchievementSample, renderAchievementRates } from '../achievement-rates.js';
+import { ACHIEVEMENT_RATE_JUDGEABLE_RUNS, type AchievementSample, renderAchievementRates } from '../achievement-rates.js';
 import { earnedAchievements } from '../achievements.js';
 import { campaignDef } from '../campaign.js';
 import { autoResolveAll } from '../events/decisions.js';
@@ -56,7 +56,7 @@ export function playAchievementRun(content: Content, seed: number, campaign: 'sh
   };
 }
 
-export function measureAchievementRates(content: Content = loadContent(), runs = 24, seedBase = 32300): AchievementSample[] {
+export function measureAchievementRates(content: Content = loadContent(), runs = ACHIEVEMENT_RATE_JUDGEABLE_RUNS, seedBase = 32300): AchievementSample[] {
   if (!Number.isInteger(runs) || runs <= 0) throw new Error('runs must be a positive integer');
 
   const samples: AchievementSample[] = [];
@@ -70,6 +70,6 @@ export function measureAchievementRates(content: Content = loadContent(), runs =
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('achievement-report.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? 24);
+  const runs = Number(process.argv[2] ?? ACHIEVEMENT_RATE_JUDGEABLE_RUNS);
   process.stdout.write(renderAchievementRates(measureAchievementRates(loadContent(), runs)));
 }
