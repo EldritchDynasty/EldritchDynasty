@@ -111,7 +111,6 @@ events:
                 the family's name in it.
               effects:
                 - { kind: treasury, delta: 60 }
-                - { kind: flag, flag: the_church_has_fed_us, set: true }
         - id: refuse
           label: Send it back full.
           outcomes:
