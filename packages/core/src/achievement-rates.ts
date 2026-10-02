@@ -66,8 +66,15 @@ function cell(value: AchievementRate | null): string {
 
 export function renderAchievementRates(samples: readonly AchievementSample[]): string {
   const rows = achievementRates(samples);
+  const shortRuns = samples.filter((sample) => sample.campaign === 'short').length;
+  const longRuns = samples.filter((sample) => sample.campaign === 'long').length;
+  const judgeable = shortRuns >= ACHIEVEMENT_RATE_JUDGEABLE_RUNS && longRuns >= ACHIEVEMENT_RATE_JUDGEABLE_RUNS;
   const out = [
     'ACHIEVEMENT EARN RATES (#323) — chronicler policy, isolated finished runs',
+    `  sample: Short ${shortRuns} · Long ${longRuns}`,
+    ...(judgeable ? [] : [
+      `  NOT JUDGEABLE for the ~1% rarity floor — use at least ${ACHIEVEMENT_RATE_JUDGEABLE_RUNS} runs per campaign.`,
+    ]),
     '  id                              Short             Long',
   ];
   for (const row of rows) {
