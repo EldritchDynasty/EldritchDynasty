@@ -159,4 +159,20 @@ describe('achievement earn-rate report (#323)', () => {
     expect(text).toContain('ending_all_long');
     expect(text).toContain('Library = cross-run condition');
   });
+
+  it('labels smoke-sized samples as unjudgeable for the 1% rarity floor', () => {
+    const text = renderAchievementRates(samples);
+    expect(text).toContain('sample: Short 2 · Long 2');
+    expect(text).toContain('NOT JUDGEABLE for the ~1% rarity floor');
+
+    const judgeable: AchievementSample[] = [
+      ...Array.from({ length: ACHIEVEMENT_RATE_JUDGEABLE_RUNS }, (_, i) => ({
+        campaign: 'short' as const, seed: i, earned: [] as const,
+      })),
+      ...Array.from({ length: ACHIEVEMENT_RATE_JUDGEABLE_RUNS }, (_, i) => ({
+        campaign: 'long' as const, seed: i, earned: [] as const,
+      })),
+    ];
+    expect(renderAchievementRates(judgeable)).not.toContain('NOT JUDGEABLE');
+  });
 });
