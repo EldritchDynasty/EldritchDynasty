@@ -288,7 +288,11 @@ not try it, and do not read a surviving branch as work in flight.
   the four above, it prints and does not judge.
 - **`npm run cost`** re-measures the figures in AGENTS.md's block; `--write`
   applies them. They are measured on a four-core container and are perishable.
-- **`npm run scoreboard`** gives the red rate on `main` and which job went red.
+- **`npm run scoreboard`** gives the red rate on `main` and which job went red. It
+  distinguishes exact **judged heads** from commits **covered** by a durable
+  landing range; covered means the commit was included in a separately checked
+  main head, not that it received its own green verdict. **Unjudged** means
+  neither a main verdict nor proven landing coverage explains that history.
 - **`npm run agents`** is the claim protocol — see [PARALLEL.md](PARALLEL.md).
   `check` before the long run says whether somebody landed in your paths while
   you worked.
