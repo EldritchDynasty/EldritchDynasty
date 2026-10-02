@@ -82,10 +82,41 @@ landing request. To mention an issue without closing it use `Refs #N` or
 the keyword.
 
 Remote landing requests are admitted only for trusted collaborators and are
-serialized with the workflow's `queue: max` group. The queue's final
-compare-and-swap push is authoritative: if it is rejected after the checked
-rebase, that is a deploy-key/ruleset integration failure, not an instruction to
-race another manual push.
+serialized with the workflow's `queue: max` group. The normal group has an
+explicit epoch suffix (currently `remote-land-main-v2`). The queue's final
+non-force push is authoritative: if `main` moved after the checked rebase,
+Git rejects the stale push rather than letting an old runner overwrite newer
+work.
+
+### Recovering an orphaned remote landing queue
+
+A queue holder that is merely slow is not an orphan. First read its workflow
+run and the `land` job. Only use this recovery when GitHub still reports the
+job running **after the workflow's own `timeout-minutes` budget has elapsed**,
+and the available GitHub control surface cannot cancel that run. Run
+`36833259028` on 2026-10-01/02 is the first recorded example: its 240-minute
+job remained `in_progress` for more than a day and held every later `/land`.
+
+Do **not** bypass the queue or click GitHub's merge button. Instead:
+
+1. Change only the normal queue epoch suffix in
+   `.github/workflows/remote-land.yml` (for example
+   `remote-land-main-v2` → `remote-land-main-v3`) and update its fast test.
+2. Put `<!-- remote-land -->` in that recovery PR's body. The existing
+   reusable bootstrap uses `remote-land-bootstrap-<run id>`, a separate,
+   run-unique concurrency group, specifically so a proposed queue workflow can
+   land without joining the broken copy already on `main`.
+3. Land the recovery through that bootstrap path. The old holder may eventually
+   wake, but its previously checked head cannot overwrite newer `main`: the
+   repository landing pushes a specific rebased SHA without force, so Git
+   rejects a stale non-fast-forward push.
+4. Re-comment `/land` (or `/land --no-issue-check`) on any PRs that were
+   waiting behind the retired epoch. Old pending runs stay attached to the old
+   group; do not assume changing the workflow migrates them.
+
+Rotating the epoch is recovery from an observed orphan, not a routine way to
+skip a busy queue. If the existing holder is within its timeout, leave it
+alone.
 
 **Never click GitHub's merge button as a substitute.**
 
