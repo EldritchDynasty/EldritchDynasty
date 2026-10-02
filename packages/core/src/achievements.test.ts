@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import type { RunLibrary, SavedGame } from '@ed/schema';
 import { newGame } from './session.js';
 import { ACHIEVEMENT_IDS, earnedAchievements } from './achievements.js';
-import { achievementRates, renderAchievementRates, type AchievementSample } from './tools/achievement-report.js';
+import { achievementRates, renderAchievementRates, type AchievementSample } from './achievement-rates.js';
 
 const content = loadContent();
 
