@@ -338,7 +338,22 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
 
   world.chronicle = s.chronicle;
   world.log = s.log;
-  world.decisionLog = s.decisionLog;
+  // Issue #391 shipped the founding answer into the decision log without a
+  // save-format bump: the state needed to reconstruct that answer was already
+  // present in current-format saves. Repair founded saves written before that
+  // logger existed by deriving exactly the external inputs from durable state.
+  // Friend windows are deliberately not serialized into the decision — replay
+  // re-deals them from the same seed through foundHouse().
+  world.decisionLog = s.founding && !s.decisionLog.some((decision) => decision.kind === 'founding')
+    ? [{
+        kind: 'founding',
+        year: s.founding.year,
+        houseName: s.founding.houseName,
+        heirloom: s.founding.heirloom,
+        grudge: s.founding.grudge,
+        friends: s.friends.map(({ name, sex }) => ({ name, sex })),
+      }, ...s.decisionLog]
+    : s.decisionLog;
   world.frame = s.frame;
 
   if (s.narrator !== undefined) world.narrator = s.narrator;
