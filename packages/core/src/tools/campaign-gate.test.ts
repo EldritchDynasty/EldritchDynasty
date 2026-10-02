@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, type CampaignId } from '@ed/schema';
-import { CAMPAIGNS, type CampaignDef } from '../campaign.js';
+import { indexContent } from '@ed/schema';
+import { CAMPAIGNS, FULL_CAMPAIGN_IDS, type CampaignDef, type FullCampaignId } from '../campaign.js';
 import { campaignFirstExclusiveYear, campaignPlayedLines, campaignReachOf, campaignStaticLines, campaignStaticReport, campaignStreamDifference, conditionTruths, type CampaignPlayedSourceRun } from './campaign-gate.js';
 
 describe('static campaign difference report', () => {
@@ -25,10 +25,12 @@ describe('static campaign difference report', () => {
       { rung: 'demigod', rite: 'great_rite' },
       { rung: 'god', rite: 'unmaking' },
     ]);
+    expect(report.campaigns.map((row) => row.id)).toEqual(FULL_CAMPAIGN_IDS);
+    expect(report.campaigns.some((row) => row.id === 'demo')).toBe(false);
   });
 
   it('reads fixture campaign definitions rather than a hand-written ending answer', () => {
-    const fixtures: Readonly<Record<CampaignId, CampaignDef>> = {
+    const fixtures: Readonly<Record<FullCampaignId, CampaignDef>> = {
       short: {
         ...CAMPAIGNS.short,
         endings: ['forgotten', 'unmade'],
