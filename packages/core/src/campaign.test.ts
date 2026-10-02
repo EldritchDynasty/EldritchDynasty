@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CAMPAIGNS,
   CAMPAIGN_YEARS,
+  FULL_CAMPAIGN_IDS,
   END_YEAR,
   LATE_PHASE_START,
   START_YEAR,
@@ -11,7 +12,7 @@ import {
 } from './campaign.js';
 
 describe('campaign profiles (#66, #133)', () => {
-  it('defines the shipped Short and Long terms from one source', () => {
+  it('defines the full campaigns and the demo term from one source', () => {
     expect(campaignDef('short')).toEqual({
       id: 'short',
       name: 'A Short Line',
@@ -30,6 +31,16 @@ describe('campaign profiles (#66, #133)', () => {
       clauses: 9,
       endings: ['apotheosis', 'unmade', 'broken_line', 'forgotten', 'devoured'],
     });
+    expect(campaignDef('demo')).toEqual({
+      id: 'demo',
+      name: 'A Demonstration',
+      startYear: 1042,
+      endYear: 1075,
+      years: 33,
+      clauses: 1,
+      endings: ['broken_line', 'settled', 'forgotten', 'devoured'],
+    });
+    expect(FULL_CAMPAIGN_IDS).toEqual(['short', 'long']);
   });
 
   it('keeps the compatibility constants pointed at Long Line', () => {
