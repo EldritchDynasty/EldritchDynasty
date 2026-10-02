@@ -19,6 +19,8 @@
     "//mod-editor-build": "Windows-only (#75 B2). Builds the editor, then packages the second NSIS target through the same shell/builder config.",
     "build:mod-editor": "npm run build --workspace @ed/editor && npm run dist:mod-editor --workspace @ed/shell",
     "android": "npm run android --workspace @ed/mobile",
+    "ios": "npm run ios --workspace @ed/mobile",
+    "ios:build": "npm run ios:build --workspace @ed/mobile",
     "test": "vitest run",
     "//0": "test:fast skips the *.slow.test.ts suites — the ones that simulate centuries. What it costs is stated once, in CLAUDE.md, and measured by `npm run cost`: this note said 3s for months while the lane took a hundred.",
     "test:fast": "vitest run --exclude \"packages/**/*.slow.test.ts\"",
