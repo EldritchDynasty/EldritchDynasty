@@ -33,6 +33,8 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { LANDING_NS, landingRecordAnswered, parseLandingRecord } from './landing-record.mjs';
+import { repairPlans } from './verdict-range.mjs';
 
 const NS = 'refs/verdict';
 const WINDOW = Number(process.argv[2] ?? 40);
@@ -73,6 +75,73 @@ function verdictFor(sha) {
     jobs: [...r.out.matchAll(/^job: (.+?) = (.+)$/gm)].map(([, name, result]) => ({ name, result })),
     coveredBy: field('covered-by') ?? null,
   };
+}
+
+/**
+ * COVERAGE IS A PROPERTY OF A LANDING RANGE, NOT A MADE-UP VERDICT.
+ *
+ * #352 records one durable `before -> checked/pushed head -> verdict` message
+ * after the queue's real main check answers. Walk those exact ranges here and
+ * map each intermediate commit to the head that actually judged it. The
+ * checked head itself is deliberately absent from this map: its real verdict
+ * ref remains the evidence for green/red.
+ *
+ * A malformed/stale record cannot widen coverage. `before` must be an
+ * ancestor of `checked`, checked must equal pushed, and a non-answer cannot
+ * cover anything.
+ */
+function coverageForMain() {
+  // Historical tip-only batches are provable between adjacent judged main
+  // heads. #350 already owns the DAG/boundary proof; consume it rather than
+  // reimplementing that logic or minting synthetic green refs.
+  const covered = new Map(repairPlans('origin/main').map(({ source, target }) => [target, source]));
+
+  const refs = tryGit('for-each-ref', '--format=%(refname)', `${LANDING_NS}/*`);
+  if (!refs.ok || !refs.out) return covered;
+
+  for (const ref of refs.out.split('\n').filter(Boolean)) {
+    const message = tryGit('log', '-1', '--format=%B', ref);
+    if (!message.ok) continue;
+    const record = parseLandingRecord(message.out);
+    if (!landingRecordAnswered(record) || record.checked !== record.pushed) continue;
+    if (record.verdictRef !== `${NS}/${record.checked}`) continue;
+
+    // The range record is provenance, not a replacement for its source
+    // verdict. Trust it only when the exact checked head still has the same
+    // terminal main verdict and is itself in today's main history.
+    const headVerdict = verdictFor(record.checked);
+    if (!headVerdict || headVerdict.branch !== TRUNK || headVerdict.conclusion !== record.verdict) continue;
+    if (['pending', 'cancelled', 'skipped'].includes(headVerdict.conclusion)) continue;
+    if (!tryGit('merge-base', '--is-ancestor', record.before, record.checked).ok) continue;
+    if (!tryGit('merge-base', '--is-ancestor', record.checked, 'origin/main').ok) continue;
+
+    const range = tryGit('rev-list', '--reverse', `${record.before}..${record.checked}`);
+    if (!range.ok) continue;
+    for (const sha of range.out.split('\n').filter(Boolean)) {
+      if (sha !== record.checked) covered.set(sha, record.checked);
+    }
+  }
+  return covered;
+}
+
+/**
+ * A genuine main verdict remains a genuine judged head. Otherwise, a durable
+ * landing range may explain this commit as covered even if the commit also
+ * carries an old feature-branch verdict.
+ */
+export function effectiveVerdict(verdict, coveredBy, trunk = TRUNK) {
+  const nonAnswers = new Set(['pending', 'cancelled', 'skipped', 'covered']);
+  const judgedOnTrunk = verdict?.branch === trunk && !nonAnswers.has(verdict.conclusion);
+  if (judgedOnTrunk) return verdict;
+  if (coveredBy) return { conclusion: 'covered', branch: trunk, jobs: [], coveredBy };
+
+  // Historical experiments wrote synthetic `conclusion: covered` verdict refs.
+  // Those are claims about a range, not independently judged heads, and #320's
+  // revised contract explicitly forbids trusting them on their own. If today's
+  // DAG reconstruction / durable landing records cannot prove the range, the
+  // commit is genuinely unexplained and must fall back to `unjudged`.
+  if (verdict?.conclusion === 'covered') return null;
+  return verdict;
 }
 
 /**
@@ -238,6 +307,9 @@ function main() {
     console.error('scoreboard: could not reach the remote.');
     process.exit(1);
   }
+  // Landing records begin with #352. A repository with no such refs yet is
+  // valid history, so this fetch is optional until the first queue record exists.
+  tryGit('fetch', '--quiet', 'origin', `+${LANDING_NS}/*:${LANDING_NS}/*`);
   tryGit('fetch', '--quiet', 'origin', 'main');
 
   const workflow = (() => {
@@ -249,10 +321,11 @@ function main() {
   })();
 
   const shas = git('rev-list', `-${WINDOW}`, 'origin/main').split('\n').filter(Boolean);
+  const coverage = coverageForMain();
   const rows = shas.map((sha) => ({
     sha,
     subject: tryGit('log', '-1', '--format=%s', sha).out,
-    verdict: verdictFor(sha),
+    verdict: effectiveVerdict(verdictFor(sha), coverage.get(sha)),
   }));
   const t = tally(rows, { advisory: advisoryJobs(workflow) });
   const rate = redRate(t);
@@ -266,7 +339,7 @@ function main() {
   console.log(`  cancelled  ${String(t.cancelled).padStart(4)}   superseded before it could answer`);
   console.log(`  covered    ${String(t.covered).padStart(4)}   included in a separately judged main head`);
   console.log(`  off-trunk  ${String(t.offTrunk).padStart(4)}   only ever judged on the branch it was written on`);
-  console.log(`  unjudged   ${String(t.unjudged).padStart(4)}   no verdict ref — see below`);
+  console.log(`  unjudged   ${String(t.unjudged).padStart(4)}   no verdict or landing coverage — see below`);
   console.log('');
   console.log(`  red rate   ${rate === null ? '   —' : `${rate.toFixed(1)}%`}   over the ${t.green + t.red} commit(s) ${TRUNK} judged`);
 
@@ -314,10 +387,10 @@ function main() {
 
   if (t.unjudged) {
     console.log('');
-    console.log(`  ${t.unjudged} of ${t.total} commit(s) have no verdict ref. Verdicts began on`);
-    console.log('  2026-09-07, so anything older is outside this window rather than unjudged');
-    console.log('  in the sense #118 means. A RECENT commit with no verdict is the real');
-    console.log('  thing: `npm run verdict -- <sha>` says which.');
+    console.log(`  ${t.unjudged} of ${t.total} commit(s) have no verdict ref or landing-range coverage.`);
+    console.log('  Verdicts began on 2026-09-07 and landing records begin with #352, so old');
+    console.log('  history can remain genuinely unexplained. A recent commit with neither is');
+    console.log('  the real thing: `npm run verdict -- <sha>` says whether CI answered.');
   }
 }
 
