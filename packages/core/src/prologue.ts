@@ -271,6 +271,19 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     named: true,
   });
 
+  // THE FOUNDING IS AN EXTERNAL ANSWER (issue #391), not deterministic weather.
+  // Log it here, at the one verb that applies it, after all validation has
+  // succeeded. Replay calls this same verb so heirloom, grudge, friend windows,
+  // founding state and the Chronicle page are rebuilt by their real owners.
+  w.decisionLog.push({
+    kind: 'founding',
+    year: w.year,
+    houseName,
+    heirloom: String(heirloom.heirloom),
+    grudge: String(grudge.house),
+    friends: roster.map(({ name, sex }) => ({ name, sex })),
+  });
+
   return { ok: true };
 }
 
