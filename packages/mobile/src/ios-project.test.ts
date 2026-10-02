@@ -72,4 +72,13 @@ describe('Capacitor iOS project', () => {
     expect(swiftPackage).toContain('platforms: [.iOS(.v15)]');
     expect(swiftPackage).toContain('capacitor-swift-pm.git');
   });
+  it('keeps the macOS proof as a real install-and-launch smoke, not compile-only', () => {
+    const workflow = readFileSync(join(MOBILE, '../../.github/workflows/check.yml'), 'utf8');
+
+    expect(workflow).toContain('runs-on: macos-26');
+    expect(workflow).toContain('-derivedDataPath "$RUNNER_TEMP/ed-ios-derived"');
+    expect(workflow).toContain('xcrun simctl install "$UDID" "$APP"');
+    expect(workflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
+  });
+
 });
