@@ -32,6 +32,21 @@ describe('Capacitor iOS project', () => {
     expect(project).not.toContain('com.getcapacitor.App');
   });
 
+  it('keeps Interface Builder metadata while the launch screen stays self-contained', () => {
+    for (const storyboard of [
+      'ios/App/App/Base.lproj/Main.storyboard',
+      'ios/App/App/Base.lproj/LaunchScreen.storyboard',
+    ]) {
+      const source = text(storyboard);
+      expect(source).toContain('toolsVersion=');
+      expect(source).toContain('IBCocoaTouchPlugin');
+    }
+
+    const launch = text('ios/App/App/Base.lproj/LaunchScreen.storyboard');
+    expect(launch).not.toContain('image="Splash"');
+    expect(launch).not.toContain('<image name="Splash"');
+  });
+
   it('declares the required-reason APIs used by durable storage and legacy migration', () => {
     const privacy = text('ios/App/App/PrivacyInfo.xcprivacy');
 
