@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SlotFillS } from './slot-fill.js';
+import { SexS } from './attributes.js';
 
 /**
  * THE DECISION LOG (issue #8, phase 1).
@@ -60,6 +61,24 @@ export const LoggedDecisionS = z.discriminatedUnion('kind', [
     subject: z.string(),
     card: z.string().nullable(),
     spouse: z.string(),
+  }),
+  /**
+   * The founding answer (issue #391): the house name, gift, first grudge and
+   * the finite friend-name roster. These are external player answers just as
+   * surely as a later Match choice; without them replay can only rebuild an
+   * unsigned/headless world.
+   *
+   * Kept separate from #343's future bootstrap-time `signing` decision. The
+   * Examination changes inputs to bootstrap; this entry records the existing
+   * post-bootstrap `foundHouse` answer.
+   */
+  z.object({
+    kind: z.literal('founding'),
+    year: z.number(),
+    houseName: z.string(),
+    heirloom: z.string(),
+    grudge: z.string(),
+    friends: z.array(z.object({ name: z.string(), sex: SexS })),
   }),
   /** A newborn renamed. `renameChild` mutates `takenNames`, which feeds every later name roll. */
   z.object({
