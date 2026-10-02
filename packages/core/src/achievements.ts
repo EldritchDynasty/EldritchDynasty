@@ -73,11 +73,17 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
     default: assertNever(save.ending.id, 'achievement ending');
   }
 
-  const endings = new Set([
-    ...(library?.runs.map((run) => run.ending.id) ?? []),
-    save.ending.id,
+  // "All long" means all five Long-Line endings, not five ending ids collected
+  // across whichever campaign happened to produce them. The current finished
+  // Long run is included because evaluation happens before it is necessarily
+  // appended to the installation Library; a Short run must never fill that gap.
+  const longEndings = new Set([
+    ...(library?.runs
+      .filter((run) => run.campaign === 'long')
+      .map((run) => run.ending.id) ?? []),
+    ...(save.campaign === 'long' ? [save.ending.id] : []),
   ]);
-  add('ending_all_long', LONG_ENDINGS.every((id) => endings.has(id)));
+  add('ending_all_long', LONG_ENDINGS.every((id) => longEndings.has(id)));
 
   const best = RUNGS.indexOf(save.ascension.best);
   for (const [rung, id] of [
