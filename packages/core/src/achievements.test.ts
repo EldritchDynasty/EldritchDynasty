@@ -117,6 +117,34 @@ describe('achievements (issue #323)', () => {
 
     expect(earnedAchievements(save, library)).toContain('ending_all_long');
   });
+
+  it('does not let Short-Line Library runs fill the all-Long-endings achievement', () => {
+    const save = finished();
+    save.campaign = 'short';
+    save.ending = { id: 'devoured', year: 1342 };
+    const longIds = ['apotheosis', 'unmade', 'broken_line', 'forgotten'] as const;
+    const library: RunLibrary = {
+      format: 1,
+      runs: [
+        ...longIds.map((id, i) => ({
+          id: `long_${i}`, seed: i, campaign: 'long' as const, endedYear: 1542,
+          house: `Long House ${i}`, ending: { id, title: id }, entries: [],
+        })),
+        {
+          id: 'short_devoured', seed: 99, campaign: 'short', endedYear: 1342,
+          house: 'Short House', ending: { id: 'devoured', title: 'devoured' }, entries: [],
+        },
+      ],
+    };
+
+    expect(earnedAchievements(save, library)).not.toContain('ending_all_long');
+
+    // The current Long run may supply the fifth ending before it has been
+    // appended to the Library.
+    save.campaign = 'long';
+    save.ending = { id: 'devoured', year: 1542 };
+    expect(earnedAchievements(save, library)).toContain('ending_all_long');
+  });
 });
 
 
