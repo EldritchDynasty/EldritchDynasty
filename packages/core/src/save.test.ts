@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, runYears,
+  CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -122,14 +122,17 @@ describe('a run survives being written down', () => {
     expect(after.world.chronicle.at(-1)?.people).toEqual([person.id]);
   });
 
-  it('round-trips the selected campaign instead of silently restoring Long', () => {
-    const before = bootstrap(content, 1042, 1042, 'short');
-    const saved = JSON.parse(JSON.stringify(saveGame(before)));
+  it.each(['short', 'demo'] as const)(
+    'round-trips the selected %s campaign instead of silently restoring Long',
+    (campaign) => {
+      const before = bootstrap(content, 1042, 1042, campaign);
+      const saved = JSON.parse(JSON.stringify(saveGame(before)));
 
-    expect(saved.campaign).toBe('short');
-    const after = loadGame(saved, content);
-    expect(after.world.campaign).toBe('short');
-  });
+      expect(saved.campaign).toBe(campaign);
+      const after = loadGame(saved, content);
+      expect(after.world.campaign).toBe(campaign);
+    },
+  );
 
   it('round-trips a run four hundred years in', () => {
     const before = bootstrap(content, 909, 1042);
@@ -255,6 +258,18 @@ describe('a run survives being written down', () => {
 
     expect(() => loadGame(save, content))
       .toThrow(new SaveFormatError(`save year ${END_YEAR + 1} is beyond the long campaign term ${END_YEAR}`));
+  });
+
+  it('refuses a demo save beyond the demonstration term', () => {
+    const ctx = bootstrap(content, 323, CAMPAIGNS.demo.startYear, 'demo');
+    const save = JSON.parse(JSON.stringify(saveGame(ctx)));
+    save.year = CAMPAIGNS.demo.endYear + 1;
+
+    expect(() => loadGame(save, content)).toThrow(
+      new SaveFormatError(
+        `save year ${CAMPAIGNS.demo.endYear + 1} is beyond the demo campaign term ${CAMPAIGNS.demo.endYear}`,
+      ),
+    );
   });
 
   it('refuses an ended save whose ending is beyond the new term', () => {
