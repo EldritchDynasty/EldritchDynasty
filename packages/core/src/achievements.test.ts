@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import type { RunLibrary, SavedGame } from '@ed/schema';
 import { newGame } from './session.js';
 import { ACHIEVEMENT_IDS, earnedAchievements } from './achievements.js';
-import { achievementRates, renderAchievementRates, type AchievementSample } from './achievement-rates.js';
+import { ACHIEVEMENT_RATE_JUDGEABLE_RUNS, achievementRates, renderAchievementRates, type AchievementSample } from './achievement-rates.js';
 
 const content = loadContent();
 
@@ -121,6 +121,10 @@ describe('achievements (issue #323)', () => {
 
 
 describe('achievement earn-rate report (#323)', () => {
+  it('defaults to the first batch size that can represent the 1% rarity floor', () => {
+    expect(ACHIEVEMENT_RATE_JUDGEABLE_RUNS).toBe(100);
+  });
+
   const samples: AchievementSample[] = [
     { campaign: 'short', seed: 1, earned: ['ending_settled', 'ladder_touched', 'ladder_touched'] },
     { campaign: 'short', seed: 2, earned: ['ending_settled'] },
