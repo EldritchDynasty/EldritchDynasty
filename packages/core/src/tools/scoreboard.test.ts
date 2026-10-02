@@ -69,7 +69,7 @@ type Verdict = {
 };
 
 type Tally = {
-  total: number; green: number; red: number; pending: number; cancelled: number;
+  total: number; green: number; red: number; pending: number; cancelled: number; covered: number;
   offTrunk: number; unjudged: number;
   byJob: Record<string, number>;
   advisoryJob: Record<string, number>;
@@ -348,5 +348,199 @@ describe('the scoreboard CLI over real verdict refs', () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it('derives covered commits from one exact landing range without fabricating verdict refs', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-scoreboard-landing-'));
+    try {
+      const bare = join(root, 'origin.git');
+      const writer = join(root, 'writer');
+      const reader = join(root, 'reader');
+
+      gitAt(root, 'init', '-q', '--bare', 'origin.git');
+      gitAt(root, 'init', '-q', 'writer');
+      gitAt(writer, 'config', 'user.email', 'scoreboard@example.com');
+      gitAt(writer, 'config', 'user.name', 'scoreboard');
+
+      const commit = (subject: string) => {
+        gitAt(writer, 'commit', '-q', '--allow-empty', '-m', subject);
+        return gitAt(writer, 'rev-parse', 'HEAD');
+      };
+      const base = commit('previous judged main head');
+      const first = commit('first commit in queued landing');
+      const second = commit('second commit in queued landing');
+      const head = commit('exact checked and pushed head');
+
+      gitAt(writer, 'branch', '-M', 'main');
+      gitAt(writer, 'remote', 'add', 'origin', bare);
+      gitAt(writer, 'push', '-q', 'origin', 'main');
+
+      const verdictRef = (sha: string, conclusion: string, branch = 'main') => {
+        const message = [
+          `verdict ${conclusion}`,
+          '',
+          `sha: ${sha}`,
+          `branch: ${branch}`,
+          `conclusion: ${conclusion}`,
+          'job: test = success',
+          '',
+        ].join('\n');
+        const verdict = gitAt(writer, 'commit-tree', EMPTY_TREE, '-m', message);
+        gitAt(writer, 'push', '-q', 'origin', `${verdict}:refs/verdict/${sha}`);
+      };
+
+      // Only the exact checked head was independently judged. With no older
+      // judged boundary, historical repair cannot explain this range; the
+      // durable landing record below is the only evidence for its members.
+      verdictRef(head, 'success');
+      // Neither weaker kind of evidence may hide the later checked range:
+      // an off-trunk verdict says nothing about main, and a cancelled main run
+      // answered nothing at all.
+      verdictRef(first, 'failure', 'chatgpt/work');
+      verdictRef(second, 'cancelled', 'main');
+
+      const landingMessage = [
+        'landing coverage',
+        '',
+        `before: ${base}`,
+        `checked: ${head}`,
+        `pushed: ${head}`,
+        'branch: chatgpt/work',
+        'verdict: success',
+        `verdict_ref: refs/verdict/${head}`,
+        'run: https://github.com/o/r/actions/runs/42',
+        'recorded: 2026-10-01T07:00:00Z',
+        '',
+      ].join('\n');
+      const landing = gitAt(writer, 'commit-tree', EMPTY_TREE, '-m', landingMessage);
+      gitAt(writer, 'push', '-q', 'origin', `${landing}:refs/landing/${head}`);
+
+      gitAt(root, 'clone', '-q', '--branch', 'main', bare, 'reader');
+      const out = execFileSync(process.execPath, [TOOL, '3'], {
+        cwd: reader,
+        encoding: 'utf8',
+      });
+
+      expect(out).toMatch(/^\s*green\s+1\s*$/m);
+      expect(out).toMatch(/^\s*covered\s+2\s+included in a separately judged main head\s*$/m);
+      expect(out).toMatch(/^\s*off-trunk\s+0\s+only ever judged on the branch it was written on\s*$/m);
+      expect(out).toMatch(/^\s*unjudged\s+0\s+no verdict or landing coverage — see below\s*$/m);
+      expect(out).toMatch(/^\s*red rate\s+0\.0%\s+over the 1 commit\(s\) main judged\s*$/m);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('does not trust a synthetic covered ref when no current range proves it', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-scoreboard-unproved-covered-'));
+    try {
+      const bare = join(root, 'origin.git');
+      const writer = join(root, 'writer');
+      const reader = join(root, 'reader');
+
+      gitAt(root, 'init', '-q', '--bare', 'origin.git');
+      gitAt(root, 'init', '-q', 'writer');
+      gitAt(writer, 'config', 'user.email', 'scoreboard@example.com');
+      gitAt(writer, 'config', 'user.name', 'scoreboard');
+
+      gitAt(writer, 'commit', '-q', '--allow-empty', '-m', 'synthetically covered long ago');
+      const synthetic = gitAt(writer, 'rev-parse', 'HEAD');
+      gitAt(writer, 'commit', '-q', '--allow-empty', '-m', 'unexplained boundary');
+      gitAt(writer, 'commit', '-q', '--allow-empty', '-m', 'only independently judged head');
+      const head = gitAt(writer, 'rev-parse', 'HEAD');
+
+      gitAt(writer, 'branch', '-M', 'main');
+      gitAt(writer, 'remote', 'add', 'origin', bare);
+      gitAt(writer, 'push', '-q', 'origin', 'main');
+
+      const verdictRef = (sha: string, conclusion: string) => {
+        const message = [
+          `verdict ${conclusion}`,
+          '',
+          `sha: ${sha}`,
+          'branch: main',
+          `conclusion: ${conclusion}`,
+          ...(conclusion === 'covered' ? [`covered-by: ${head}`] : ['job: test = success']),
+          '',
+        ].join('\n');
+        const verdict = gitAt(writer, 'commit-tree', EMPTY_TREE, '-m', message);
+        gitAt(writer, 'push', '-q', 'origin', `${verdict}:refs/verdict/${sha}`);
+      };
+      verdictRef(synthetic, 'covered');
+      verdictRef(head, 'success');
+
+      // There is only one independently judged main head, so historical repair
+      // has no adjacent judged boundary and there is no durable landing record.
+      // The old synthetic ref must therefore not make history look explained.
+      gitAt(root, 'clone', '-q', '--branch', 'main', bare, 'reader');
+      const out = execFileSync(process.execPath, [TOOL, '3'], {
+        cwd: reader,
+        encoding: 'utf8',
+      });
+
+      expect(out).toMatch(/^\s*green\s+1\s*$/m);
+      expect(out).toMatch(/^\s*covered\s+0\s+included in a separately judged main head\s*$/m);
+      expect(out).toMatch(/^\s*unjudged\s+2\s+no verdict or landing coverage — see below\s*$/m);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('reconstructs old tip-only batches only between independently judged main heads', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-scoreboard-history-'));
+    try {
+      const bare = join(root, 'origin.git');
+      const writer = join(root, 'writer');
+      const reader = join(root, 'reader');
+
+      gitAt(root, 'init', '-q', '--bare', 'origin.git');
+      gitAt(root, 'init', '-q', 'writer');
+      gitAt(writer, 'config', 'user.email', 'scoreboard@example.com');
+      gitAt(writer, 'config', 'user.name', 'scoreboard');
+
+      const commit = (subject: string) => {
+        gitAt(writer, 'commit', '-q', '--allow-empty', '-m', subject);
+        return gitAt(writer, 'rev-parse', 'HEAD');
+      };
+      const base = commit('older judged batch tip');
+      const first = commit('old batch member one');
+      const second = commit('old batch member two');
+      const head = commit('newer judged batch tip');
+
+      gitAt(writer, 'branch', '-M', 'main');
+      gitAt(writer, 'remote', 'add', 'origin', bare);
+      gitAt(writer, 'push', '-q', 'origin', 'main');
+
+      const verdictRef = (sha: string) => {
+        const message = [
+          'verdict success',
+          '',
+          `sha: ${sha}`,
+          'branch: main',
+          'conclusion: success',
+          'job: test = success',
+          '',
+        ].join('\n');
+        const verdict = gitAt(writer, 'commit-tree', EMPTY_TREE, '-m', message);
+        gitAt(writer, 'push', '-q', 'origin', `${verdict}:refs/verdict/${sha}`);
+      };
+      verdictRef(base);
+      verdictRef(head);
+
+      gitAt(root, 'clone', '-q', '--branch', 'main', bare, 'reader');
+      const out = execFileSync(process.execPath, [TOOL, '4'], {
+        cwd: reader,
+        encoding: 'utf8',
+      });
+
+      expect(out).toMatch(/^\s*green\s+2\s*$/m);
+      expect(out).toMatch(/^\s*covered\s+2\s+included in a separately judged main head\s*$/m);
+      expect(out).toMatch(/^\s*unjudged\s+0\s+no verdict or landing coverage — see below\s*$/m);
+      expect(out).toMatch(/^\s*red rate\s+0\.0%\s+over the 2 commit\(s\) main judged\s*$/m);
+      expect(first).not.toBe(second);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
 });
 
