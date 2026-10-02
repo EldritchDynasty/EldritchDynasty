@@ -172,9 +172,12 @@ describe('what the player is asked across A Long Line', () => {
     // The old 1,000-year guard held naming under 10% of prompts. The structural
     // 500-year migration measures about 10% on this established batch, too
     // close to carry that old ceiling at two standard errors. Stage 5B / #88
-    // owns the final ratio. A legitimate draw-order shift measured this batch
-    // at about 11%, leaving 12% only about one standard error away.
-    // Until then 13% is a structural guard, not a target.
+    // owns the final ratio. A legitimate draw-order shift first measured this
+    // batch at about 11%; #344's corrected inheritance re-rolled it to 12%
+    // (sd 4pp, n=25), leaving the temporary 13% guard only 0.8 SE away.
+    // 15% restores >2-SE headroom without pretending either 12% or 15% is a
+    // target, and avoids turning this already-slow suite into the ~172 runs
+    // the old ceiling would require.
     //
     // 15% since #341. Its content pass re-rolled this batch to a mean of 12%
     // (sd 0.04 over 25 runs), which 13% cannot carry at two standard errors

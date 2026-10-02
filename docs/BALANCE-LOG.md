@@ -9065,3 +9065,111 @@ with repeated runner evidence. `tools/gate-durations.json` now records a
 50-minute blood baseline with the existing 1.25x drift tolerance. No sample
 size, seed list, gameplay threshold, or statistical assertion was reduced to
 recover CI time.
+
+## 2026-10-02 — #344: founding children inherit from their named parents
+
+### Mechanism
+
+Two-parent authored seed children now use the normal conception path: the same
+`conceptionSeed(runSeed, mother, father, ordinal)`, parental `meiosis`, and
+`conceive` machinery used by runtime births. Authored child bias may lean which
+haplotype a parent actually carries is chosen at a chromosome start; ordinary
+crossovers and recorded mutations still decide the gamete. There is no
+post-conception `applyBias` rewrite.
+
+The authored bootstrap sex is supplied only for those seeded children so an
+authored daughter receives the father's X and an authored son his Y. Ordinary
+runtime births keep the existing unforced X/Y draw. One-parent and no-parent
+seed people keep the rolled-genome path.
+
+### Deterministic history movement
+
+Instrument: `npm run digest -- 8 400`, comparing current-main base
+`a17fa4c` with corrected-inheritance head `fbb52ba`.
+
+| Seed | Current-main base | Corrected inheritance |
+| ---: | --- | --- |
+| 1000 | `e0ea2be95c653e19:1490175` | `cef9530355a8393b:1459967` |
+| 1007 | `92c655b34ca933a3:245382` | `542c081f42b0fde1:317609` |
+| 1014 | `1a0f842a40c9b388:1523383` | `5a9628765b307a66:1491053` |
+| 1021 | `e703a4c365872909:1426957` | `48d62e4ea5b59720:422842` |
+| 1028 | `29d7bf7d88d7365f:1346731` | `cec602513777dd89:1424641` |
+| 1035 | `e32b0db1e06d66c1:259688` | `dc13f4bde1c467ed:1474256` |
+| 1042 | `001850bf53372aff:368920` | `06a316cb52bac27d:1522547` |
+| 1049 | `003d894fa205cf3f:293362` | `0eeda6969a1aa3ae:1471066` |
+
+All eight histories move. That is expected here: the founding children's
+genomes are now inherited from their named parents instead of independently
+rolled, so the deterministic draw stream downstream changes with the corrected
+population.
+
+### Founder and first-generation calibration
+
+Forty seeds from 344000. The founder himself is unchanged by the conception
+repair; the children are not.
+
+| Tree / bias | Founder font | Founder §22 power | Daughters font | Aldous font | Aldous §22 power |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| current-main / 0.20 | 24.8 | 60.1 | 21.6 | 13.8 | 38.4 |
+| corrected / 0.00 | 17.5 | 47.3 | 12.1 | 0.3 | 0.8 |
+| corrected / 0.20 | 24.8 | 60.1 | 17.0 | 0.3 | 0.8 |
+| corrected / 0.35 | 31.2 | 67.6 | 21.3 | 0.3 | 0.8 |
+| corrected / 0.90 | 61.2 | 91.4 | 41.5 | 0.3 | 0.8 |
+
+The authored 0.20 remains the intended opening: Daveed sits above Hierophant
+(50) and below Vessel (70). Raising that bias to repair a downstream ladder
+tail would preload the climb into the founder, so it stays 0.20.
+
+### Ladder-scale consequence and owned debt
+
+The same 32-Long-Line gate was run on both trees at the authored 0.20 bias.
+
+- Current main: 2,345 expresser samples; Hierophant/Vessel power reach
+  15.3%/2.0%; God Madness reaches 0.1%. No stale floor.
+- Corrected inheritance: 1,904 expresser samples; power reach remains real at
+  Hierophant 10.6%, Vessel 0.6%, Demigod 0.1%, God 0.1%. God Madness is 0.0%,
+  with a measured population ceiling of 61.8 against the unchanged floor of 90.
+- That is the only newly stale floor. It is explicitly owned by #378, whose
+  scope is to restore a rare real >=90 Madness tail on the progression side.
+
+Gate 9's existing self-cleaning debt ledger therefore pins exactly
+`god: madness`. The floor is not lowered. Once #378 restores a judgeable
+tail, `stalePaidOff` makes the pin itself fail until it is removed.
+
+### Endings and fixture evidence
+
+The production endings gate is green at its default 160 paired Long Lines:
+Broken Line 48/160 (30.0%), Devoured 24/160 (15.0%), and the ascendant policy
+takes the Unmaking in 4/160 runs versus 0/160 chronicler runs. A temporary
+100-pair #344 probe saw only 2/100 and correctly reported 1.4 standard errors;
+that underpowered diagnostic was removed rather than used to tune the game.
+
+The deterministic fixture repairs are mostly wider measurements and current-rule
+survivor re-pins. Two statistical guard thresholds also needed explicit
+recalibration after the corrected founding population re-rolled their measured
+distributions; neither changes gameplay:
+
+- 292/400 candidate seeds survive the full Long Line. Among those survivors the
+  least-common major Age is the Quickening at 234/292 (80.1%); the others are
+  93.8-100%. The 72-run Age suite itself measured Quickening at 42/72 (58%),
+  only 1.4 SE above its former 50% guard, so that starvation guard moves to
+  45% rather than pretending the old deterministic sample carried 50%.
+- The cast suite's heir share moved close enough to its former global 60%
+  ceiling that the structural rule is now explicit: every non-head role stays
+  below 60% except `heir`, which may shadow the seal up to 65%. The sample was
+  also widened from 8 to 18 Long Lines so the 65% heir ceiling has enough
+  evidence instead of relying on a thin draw.
+- Muster position reach still misses captaincy at 80 and 120 runs but reaches it
+  at 160, which is why the reach fixture widens its evidence rather than its
+  authored gate.
+- Relationship pruning still shows the intended sawtooth over the current
+  500-year term when sampled every 50 years; seed 77 ranges from 2 to 72
+  relationships over ten samples.
+- All four slow-test shards on `fbb52ba` completed green before the final
+  debt-pin/documentation cleanup.
+
+No production ladder floor or founder bias was weakened to make #344 pass.
+The gameplay balance debt separated by this correctness change is the
+self-cleaning #378 God-Madness pin above; the two test-policy threshold changes
+are recorded here rather than hidden as fixture churn.
+

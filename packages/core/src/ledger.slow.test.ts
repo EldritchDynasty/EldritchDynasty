@@ -223,16 +223,18 @@ describe('hostility is an edge (concept §7)', () => {
    * So sample it across the run instead. Sentiment cools at 0.995 a year and
    * an edge with no grudge on it dies with either of its people, so a real
    * map SAWTOOTHS — it fills up over a generation and collapses when the
-   * household turns over. Measured on three seeds it runs 72, 65, 5, 2, 73
-   * across the original millennium-length measurement. A map that never comes
-   * back down is the bug; a
-   * map that peaks high and empties is the system working.
+   * household turns over. Measured on three seeds it ran 72, 65, 5, 2, 73
+   * under the original millennium-length campaign. The shipped campaign is
+   * 500 years now, so ten 50-year samples cover the live term exactly instead
+   * of taking five terminal no-op samples after the clock has stopped. A map
+   * that never comes back down is the bug; a map that peaks high and empties
+   * is the system working.
    */
   it('prunes the edge map instead of accumulating it', () => {
     const ctx = bootstrap(bundle, 77, 1042);
     const seen: number[] = [];
     for (let i = 0; i < 10; i++) {
-      runYears(ctx, 100);
+      runYears(ctx, 50);
       seen.push(ctx.world.relationships.size);
     }
     expect(Math.max(...seen), 'the edge map grew without bound').toBeLessThan(160);

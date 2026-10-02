@@ -9,12 +9,12 @@ import { chooseGenerationQuestion } from './generation.js';
 import type { CampaignId, Content, ContentBundle, GenePool, LibraryRun, Person, SeedPerson } from '@ed/schema';
 import { asId, indexContent } from '@ed/schema';
 import { buildLocusTable } from './genetics/loci.js';
-import { applyBias, randomGenome } from './genetics/meiosis.js';
-import { makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
+import { applyBias, conceive, meiosis, randomGenome } from './genetics/meiosis.js';
+import { genomeOf, makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
 import { maxPowerOf } from './ascension.js';
 import { expectedAttribute, mintShareByHouse } from './genetics/expression.js';
 import { createWorld, type SimCtx, type WorldState } from './world.js';
-import { hashSeed, makeRng, type Rng } from './rng.js';
+import { conceptionSeed, hashSeed, makeRng, type Rng } from './rng.js';
 import { autoMarry } from './people/demography.js';
 import { branchOf } from './people/branches.js';
 import { applyFriendBlessing, friendBlessing, releaseFriendName } from './people/friends.js';
@@ -70,15 +70,57 @@ export function bootstrap(
 
   const byKey = new Map<string, Person>();
   const ordered = orderSeeds(content.characters);
+  const conceptionOrdinals = seedConceptionOrdinals(content.characters);
 
   for (const s of ordered) {
-    const rng = makeRng(hashSeed(seed, 'seed-person', s.key));
-    const pool = genetics.pools.get(s.house);
-    const genome = randomGenome(genetics.table, pool, s.sex, rng);
+    const mother = s.motherKey ? byKey.get(s.motherKey) : undefined;
+    const father = s.fatherKey ? byKey.get(s.fatherKey) : undefined;
 
-    // `bias` nudges an authored intent without pinning the genome: the founder
-    // is meant to be formidable, but the alleles are still rolled.
-    biasSeedPerson(genome, s, genetics, rng);
+    // A seed that names both parents must be conceived from those exact
+    // parents. `orderSeeds` intentionally falls back instead of hanging when
+    // the parent graph is malformed or cyclic; without this guard that fallback
+    // would silently recreate #344 by rolling an unrelated genome.
+    if (s.motherKey && s.fatherKey && (!mother || !father)) {
+      const missing = [
+        !mother ? `mother ${s.motherKey}` : undefined,
+        !father ? `father ${s.fatherKey}` : undefined,
+      ].filter(Boolean).join(' and ');
+      throw new Error(`seed child ${s.key} could not resolve ${missing}`);
+    }
+
+    let rng: Rng;
+    let genome: ReturnType<typeof randomGenome>;
+    if (mother && father) {
+      // A seed child is a child, not a second unrelated draw from the same
+      // house pool. Use the same conception stream and meiosis path as every
+      // later birth (invariant 8), with the authored sex selecting the
+      // father's X or Y rather than rejection-rolling until it happens.
+      const ordinal = conceptionOrdinals.get(s.key) ?? 1;
+      rng = makeRng(conceptionSeed(seed, String(mother.id), String(father.id), ordinal));
+      const motherGenome = genomeOf(mother, genetics);
+      const fatherGenome = genomeOf(father, genetics);
+      // A two-parent seed bias is an authored tendency INSIDE inheritance, not
+      // permission to rewrite a recombinant gamete. It only leans the normal
+      // per-chromosome choice of parental haplotype; crossovers and mutations
+      // remain the same meiosis mechanics used by every later child.
+      const motherGamete = meiosis(
+        motherGenome, genetics.table, 'female', rng, s.born, undefined, s.bias,
+      );
+      const fatherGamete = meiosis(
+        fatherGenome, genetics.table, 'male', rng, s.born, s.sex, s.bias,
+      );
+
+      const conceived = conceive(motherGamete, fatherGamete, genetics.table);
+      if (conceived.sex !== s.sex) {
+        throw new Error(`seed child ${s.key} was conceived ${conceived.sex}, authored ${s.sex}`);
+      }
+      genome = conceived.genome;
+    } else {
+      rng = makeRng(hashSeed(seed, 'seed-person', s.key));
+      const pool = genetics.pools.get(s.house);
+      genome = randomGenome(genetics.table, pool, s.sex, rng);
+      biasSeedPerson(genome, s, genetics, rng);
+    }
 
     // Born of one house, living in another. A wife of House Ilm who has
     // married into The Eldritch House is a daughter of Ilm AND a member of the
@@ -185,6 +227,33 @@ export function bootstrap(
   return ctx;
 }
 
+/**
+ * Runtime conceptions number a mother's children by birth order
+ * (`world.people.children(mother.id).length + 1`). Seed children need the
+ * same stable ordinal without changing `orderSeeds`, whose order also fixes
+ * ids and therefore many other deterministic streams. A change of father does
+ * not restart the runtime count, so it must not restart this one either.
+ */
+function seedConceptionOrdinals(seeds: SeedPerson[]): Map<string, number> {
+  const byMother = new Map<string, SeedPerson[]>();
+  for (const s of seeds) {
+    if (!s.motherKey) continue;
+    byMother.set(s.motherKey, [...(byMother.get(s.motherKey) ?? []), s]);
+  }
+
+  const ordinals = new Map<string, number>();
+  for (const children of byMother.values()) {
+    // Runtime births use `world.people.children(mother.id).length + 1`, so
+    // remarriage does NOT restart the conception ordinal. One-parent seeded
+    // children count too: once bootstrap has set parentage they are children
+    // of this mother just as surely as the two-parent seeds conceived here.
+    children
+      .sort((a, b) => a.born - b.born || a.key.localeCompare(b.key))
+      .forEach((s, index) => ordinals.set(s.key, index + 1));
+  }
+  return ordinals;
+}
+
 function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
   const out: SeedPerson[] = [];
   const placed = new Set<string>();
@@ -202,9 +271,13 @@ function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
 }
 
 /**
- * The founding cast's own bias. The rule itself lives in
- * `genetics/meiosis.ts` now, because a minted suitor's template carries the
- * same field and used to have it silently discarded.
+ * Bias for a seed person whose genome is rolled from a house pool rather than
+ * conceived from two named parents. Two-parent seed children pass their bias
+ * into normal meiosis, where it can lean the chromosome-start haplotype but
+ * cannot invent an allele or splice around a crossover.
+ *
+ * The generic rule itself lives in `genetics/meiosis.ts` because minted
+ * character templates carry the same field.
  */
 function biasSeedPerson(genome: ReturnType<typeof randomGenome>, s: SeedPerson, ctx: GeneticsCtx, rng: Rng): void {
   applyBias(genome, s.bias, ctx.table, rng);

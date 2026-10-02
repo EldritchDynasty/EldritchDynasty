@@ -139,18 +139,23 @@ describe('a commitment left standing for a whole run', () => {
  *
  * `buy_the_banner` is NOT asserted here. Measured at 250 runs (gate 8's own
  * batch, `npm run gate`), it resolves in 0.4% of runs — under one expected
- * hit at this file's 80-run scale, so a `toEqual([])` on it would be exactly
+ * hit even at this file's 160-run position scale, so a `toEqual([])` on it would be exactly
  * the thin-margin failure this codebase has paid for five times over
  * (BALANCE-LOG). Gate 8 is the instrument sized for that tail and it is
  * already green in CI; this file only needs to prove reachability at a
  * batch size it can actually carry.
  */
 describe('the content reaches its positions, and both settlements', () => {
-  const RUNS = 80;
+  // #344's honest-inheritance reroll moved captaincy out of the first 120
+  // deterministic outcomeReach runs; the branch diagnostic reaches it by 160.
+  // Keep the settlement check at its existing 80-run scale instead of doubling
+  // that separate instrument just to satisfy the rarer position fixture.
+  const POSITION_RUNS = 160;
+  const SETTLEMENT_RUNS = 80;
   const YEARS = CAMPAIGN_YEARS;
 
   it('the three reachable-at-this-scale position choices resolve', () => {
-    const reach = outcomeReach(bundle, RUNS, YEARS);
+    const reach = outcomeReach(bundle, POSITION_RUNS, YEARS);
     const choices: [string, string][] = [
       ['buy_the_serjeanty', 'bought_serjeanty'],
       ['buy_the_captaincy', 'bought_captaincy'],
@@ -159,12 +164,12 @@ describe('the content reaches its positions, and both settlements', () => {
     const unreached = choices.filter(([choiceId, outcomeId]) => (
       !reach.runs.has(outcomeKey('the_position_offered', choiceId, outcomeId))
     ));
-    expect(unreached, `never bought in ${RUNS} runs x ${YEARS}y: ${unreached.map((c) => c[0]).join(', ')}`)
+    expect(unreached, `never bought in ${POSITION_RUNS} runs x ${YEARS}y: ${unreached.map((c) => c[0]).join(', ')}`)
       .toEqual([]);
   });
 
   it('both the honest settlement and the with-a-banner settlement resolve', () => {
-    const reach = outcomeReach(bundle, RUNS, YEARS);
+    const reach = outcomeReach(bundle, SETTLEMENT_RUNS, YEARS);
     const noBanner = reach.runs.has(outcomeKey('the_settlement', 'count_the_cost', 'counted'))
       || reach.runs.has(outcomeKey('the_settlement', 'take_what_is_owed', 'taken'));
     const withBanner = reach.runs.has(outcomeKey('the_settlement_with_banner', 'write_it_plain', 'written_plain'))
@@ -228,7 +233,9 @@ describe('the dormancy guard, played rather than reverted', () => {
    * these seeds go to war fails loudly here instead of silently proving
    * nothing.
    */
-  const PEACETIME_SEEDS = [6000, 6007, 6014, 6028, 6035, 6042, 6049, 6063];
+  // #344 re-rolled 6000 and 6007 into wars. Its fixture scan confirmed 6021
+  // and 6070 stay peacetime for this same 400-year horizon.
+  const PEACETIME_SEEDS = [6021, 6070, 6014, 6028, 6035, 6042, 6049, 6063];
   const YEARS = 400;
 
   it('never begins a commitment on any seed in the fixture — confirming the fixture itself', () => {

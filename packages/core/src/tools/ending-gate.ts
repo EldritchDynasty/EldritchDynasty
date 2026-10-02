@@ -695,6 +695,15 @@ export const APOTHEOSIS_TARGET_FLOOR = 0.08;
  */
 export const ENDING_JUDGEABLE_BATCH = 100;
 
+/**
+ * The CI/default batch is larger than the minimum judgeable batch. On #344's
+ * honest-inheritance head, a fresh 100-pair diagnostic saw 2 Unmaking takers
+ * and correctly refused to call that 1.4-SE result stable. The shipped 160-pair
+ * batch saw 4 takers against 0 chronicler runs and cleared the same guard.
+ * Keep 160 rather than weakening the comparison or trusting the thin probe.
+ */
+export const ENDING_DEFAULT_BATCH = 160;
+
 export function verdictOver(runs: EndingRun[]): EndingVerdict {
   const lines: string[] = [];
   // THE TWO COLUMNS (issue #61, Stage D). Everything below that existed
@@ -979,7 +988,7 @@ export function verdictOver(runs: EndingRun[]): EndingVerdict {
 
 export function gateEndings(
   source: Source = loadContent(),
-  runs = ENDING_JUDGEABLE_BATCH,
+  runs = ENDING_DEFAULT_BATCH,
   years = CAMPAIGN_YEARS,
 ): EndingVerdict {
   const played: EndingRun[] = [];
@@ -996,7 +1005,7 @@ export function gateEndings(
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('ending-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? ENDING_JUDGEABLE_BATCH);
+  const runs = Number(process.argv[2] ?? ENDING_DEFAULT_BATCH);
   const years = Number(process.argv[3] ?? CAMPAIGN_YEARS);
   const { ok, lines } = gateEndings(loadContent(), runs, years);
   console.log(lines.join('\n'));

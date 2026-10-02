@@ -1,6 +1,6 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-09-30",
+  "measured": "2026-10-02",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
@@ -20,8 +20,8 @@
       "evidence": "Isolated war lane on PR #364 run 36586278258: 38.7 min (2323s), with the war gate itself passing. The issue's successful-run evidence spans 21-39 min; baseline rounded to 39m; 1.25x guard = 48.75m (#333)."
     },
     "endings": {
-      "seconds": 360,
-      "evidence": "Successful CI 2026-09-26 through 2026-09-28: 3-6 min, typically about 6 min (#333)."
+      "seconds": 540,
+      "evidence": "PR #365 check run 36966981175 after #344 raised ENDING_DEFAULT_BATCH from 100 to 160: the endings gate passed at 160 paired chronicler/ascendant runs and completed in 8.6m. The previous 6m baseline described the 100-run lane. Baseline rounded to 9m; 1.25x guard = 11.25m, preserving the runtime-regression check while accounting for the deliberate 60% sample increase (#344)."
     }
   },
   "runner": {

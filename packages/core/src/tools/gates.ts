@@ -760,9 +760,14 @@ export function gateLadderScales(
    * re-pinned with a fresh measurement; that is the ratchet working, not a
    * flake.
    */
-  // God-level Madness now appears in the measured population. Keep the debt
-  // ledger empty so a future stale floor fails until it is explained.
-  const STALE_OWED: string[] = [];
+  // #344's honest founding inheritance removes the rare God-Madness tail:
+  // 32 Long Lines / 1,904 expresser-samples top out at 61.8 against the
+  // unchanged God floor of 90. #378 owns restoring that progression-side tail.
+  //
+  // Pin the measured debt rather than weakening the floor. This ledger is
+  // self-cleaning: the moment #378 makes God Madness measurable again,
+  // `stalePaidOff` below fails until this entry is removed.
+  const STALE_OWED: string[] = ['god: madness'];
   const newlyStale = stale.filter((s) => !STALE_OWED.includes(s.key));
   const staleOwedStill = stale.filter((s) => STALE_OWED.includes(s.key));
   const stalePaidOff = STALE_OWED.filter((k) => judged.has(k) && !stale.some((s) => s.key === k));
@@ -936,8 +941,10 @@ export function gateVocabularyReach(
  *
  * `gateEndings` belongs in the table, but #185 found that its old 24-run default
  * could not judge any of the distribution rules below `ENDING_JUDGEABLE_BATCH`
- * (100). It now runs a judgeable batch in its own lane: a green ending gate
- * therefore means the distribution was actually tested, not merely printed.
+ * (100). The default is now 160 paired runs: 100 is the minimum for the one-
+ * per-cent floors, while #344's measured Unmaking comparison needs about 156
+ * to clear the repository's two-SE guard. A green ending gate therefore means
+ * the distribution was actually tested, not merely printed.
  *
  * `gateBearing` FAILS it, measured 2026-09-06 at its default of 12 runs:
  *

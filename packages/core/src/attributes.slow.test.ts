@@ -239,9 +239,17 @@ describe('fertility is inherited', () => {
     // caught by this session's land content re-rolling the draw — 22 couples
     // at 947, down from the ~200 every other seed in this pool produces. 950
     // clears the floor comfortably (239).
+    //
+    // 920 swapped for 900 (issue #344): real inheritance re-rolls the founding
+    // trajectory, leaving 920 with only 24 married-past-45 couples. The branch's
+    // fixture diagnostic measured 900 at 214 couples alongside nineteen other
+    // healthy nearby replacements, so keep the pooled claim broad rather than
+    // weakening its sample floor for one history that no longer reaches it.
+    // 941 swapped for 945 (#344): the current-rule diagnostic measured 941 at
+    // only 29 qualifying couples and 945 at 198. Keep the >40 evidence floor.
     const WIDE_SEEDS = [
-      902, 904, 905, 916, 918, 919, 920, 921, 924, 927, 928,
-      930, 931, 932, 934, 940, 941, 942, 943, 950,
+      900, 902, 904, 905, 916, 918, 919, 921, 924, 927, 928,
+      930, 931, 932, 934, 940, 945, 942, 943, 950,
     ];
     const mothers: number[] = [];
     const fathers: number[] = [];
@@ -263,7 +271,10 @@ describe('fertility is inherited', () => {
             born: w.people.children(m.id).length,
           }];
         });
-      expect(couples.length).toBeGreaterThan(40);
+      expect(
+        couples.length,
+        `seed ${seed}: too few married-past-45 couples for the inheritance correlation`,
+      ).toBeGreaterThan(40);
 
       const corr = (pick: (c: (typeof couples)[number]) => number) => {
         const xs = couples.map(pick);

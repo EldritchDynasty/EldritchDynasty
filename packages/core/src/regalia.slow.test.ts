@@ -4,22 +4,19 @@ import { END_YEAR, bootstrap, commitOutcome, runYears, testRng } from '@ed/core'
 import { CAMPAIGN_YEARS } from './campaign.js';
 
 const bundle = loadContent();
-// Preserve the old 20 x 1000 sample volume across the 500-year term.
-//
-// 150, not 40: `eight_days_and_then_it_did` is the third node of a three-hop
+// Preserve a broad real-run sample for the far ends of the three Regalia
+// substories. `eight_days_and_then_it_did` is the third node of a three-hop
 // arc (issue #24 item 6's own reading of it — `arcs/eight_days.yaml`'s
 // `two_hands` -> `which_one_we_keep` -> `and_then_it_did`, 175-410 years
-// launch to end) and rival-house descent's real, traceable house_marrow
-// brides are exactly the kind of divergence that reshuffles which of a
-// batch's seeds happen to carry a marriage, a Record answer and a frame
-// draw all the way through that chain. Confirmed still reachable — a scan
-// of this same seed formula extended to 150 terms found it firing in 2 of
-// 150 (5287, 5672), and `npm run gate:outcome-reach`'s 800-run batch does
-// not list it among the rarest authored outcomes — but 40 terms no longer
-// catches it. Widened rather than pinned: this file has no debt-pin
-// convention of its own the way `arcs.slow.test.ts` does, and the wider
-// batch costs about three minutes.
-const SEEDS = Array.from({ length: 150 }, (_, i) => 5000 + i * 7);
+// launch to end), so a genetics correction can re-roll which Long Lines carry
+// a marriage, Record answer and frame draw all the way through the chain.
+//
+// #344 did exactly that: the old 150-run batch lost both of its prior hits.
+// The same formula measured across 240 corrected-inheritance runs finds the
+// far end at 6197, 6421 and 6428. Widen the observation to the measurement
+// rather than pinning one lucky history; outcome-reach remains the authority
+// on whether rare authored outcomes are generally reachable.
+const SEEDS = Array.from({ length: 240 }, (_, i) => 5000 + i * 7);
 
 /**
  * THE REGALIA, OVER REAL RUNS.
