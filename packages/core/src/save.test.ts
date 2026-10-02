@@ -51,6 +51,13 @@ describe('a run survives being written down', () => {
     };
     expect(foundHouse(before, choice).ok).toBe(true);
 
+    // Migrate a save from a run that has actually moved on, rather than only
+    // the untouched 1042 founding state. This makes the compatibility proof
+    // cover replay after the friend windows and ordinary decision log have
+    // had time to evolve.
+    const years = 120;
+    runYears(before, years);
+
     // Model a current-format save written before #391: all durable founding
     // state exists, but the new external-answer entry does not.
     const legacy = JSON.parse(JSON.stringify(saveGame(before)));
@@ -67,7 +74,7 @@ describe('a run survives being written down', () => {
     });
     expect(loaded.world.decisionLog.filter((decision) => decision.kind === 'founding')).toHaveLength(1);
 
-    const rebuilt = replay(content, loaded.world.decisionLog, loaded.world.seed, 1042, 0);
+    const rebuilt = replay(content, loaded.world.decisionLog, loaded.world.seed, 1042, years);
     expect(digestOf(rebuilt)).toBe(digestOf(loaded));
   });
 
