@@ -534,8 +534,9 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     // merely because the 25/50-year sampler saw him repeatedly.
     for (const seed of [5000, 5007]) {
       const rows = lines.filter((line) => line.includes(`seed ${seed} #`));
-      const ids = rows.map((line) => /\bid ([^ ]+)/.exec(line)?.[1]).filter(Boolean);
+      const ids = rows.map((line) => /\bid ([^ ]+)/.exec(line)?.[1]);
       expect(rows.length, `no Madness provenance rows for seed ${seed}`).toBeGreaterThan(0);
+      expect(ids.every(Boolean), `seed ${seed} emitted a provenance row without a person id`).toBe(true);
       expect(new Set(ids).size, `seed ${seed} repeated one holder in its top rows`).toBe(ids.length);
     }
   });
