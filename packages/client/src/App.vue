@@ -241,6 +241,26 @@ function openLine(): void {
 }
 
 /**
+ * Return to the front door without throwing the sitting away.
+ *
+ * App-owned overlays are presentation state just like the store's receipts:
+ * if they survive this transition, Continue can reopen an old book/help panel
+ * over the resumed run. The store owns persistence; this wrapper owns only
+ * what App.vue itself opened.
+ */
+function leaveToStart(): void {
+  bookOpen.value = null;
+  bookFocus.value = undefined;
+  platOpen.value = false;
+  lineOpen.value = null;
+  helpOpen.value = false;
+  selected.value = null;
+  treeReveal.value = null;
+  pane.value = 'house';
+  actions.leave();
+}
+
+/**
  * DATED BACKLINKS FROM A PERSON TO THE BOOK (#268). mentions() gives stable
  * page ids from the engine; the book read supplies years for human labels.
  * No component searches prose for a name, so renames and namesakes cannot
@@ -486,6 +506,12 @@ const yearAndBirths = computed(() => {
           :aria-expanded="helpOpen"
           @click="helpOpen = !helpOpen"
         >{{ helpOpen ? 'Hide reading help' : 'Reading, marks and keys' }}</button>
+
+        <button
+          class="quiet small legend"
+          title="Return to the start screen without deleting this run"
+          @click="leaveToStart"
+        >Saves &amp; new game</button>
 
         <!-- Not a modal: it has no focus to trap and nothing to answer, and a
              second dialog in a client that just got its first one would be two
