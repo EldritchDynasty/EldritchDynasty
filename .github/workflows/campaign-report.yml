@@ -1,0 +1,22 @@
+name: campaign report measurement
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  campaign-report:
+    if: github.head_ref == 'chatgpt/274-fresh-baseline-measurement-20261002'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fresh Short-vs-Long baseline
+        run: npm run gate:campaigns
