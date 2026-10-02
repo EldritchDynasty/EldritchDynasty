@@ -71,6 +71,7 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
     => Promise<{ ok: boolean; out: string }>;
   ciScripts: (workflow: string) => Set<string>;
   issueLeftOpen: (branch: string, commitLog: string, held?: string[]) => string | null;
+  negatedCommitMessageError: (commitLog: string) => string | null;
   deathReading: (dead: { pid: number; started: string; step?: string; target?: string }) => string[];
   ourShed: (tree: unknown, tmp?: string) => boolean;
   finishLanding: (args: {
@@ -399,6 +400,42 @@ describe('the npm launcher is portable', () => {
   it('uses a privilege-free directory junction for the Windows worktree', () => {
     expect(land.nodeModulesLinkType('win32')).toBe('junction');
     expect(land.nodeModulesLinkType('linux')).toBe('dir');
+  });
+});
+
+describe('negated closing keywords in branch commits', () => {
+  it('rejects the historical #61 wording even when another commit has a real close', () => {
+    const msg = land.negatedCommitMessageError(
+      'balance(#61): widen the Apotheosis band\n\n' +
+      'This does not close #61. The issue remains open.\n\n' +
+      'follow-up safety work\n\nCloses #332',
+    );
+
+    expect(msg).not.toBeNull();
+    expect(msg).toContain('#61');
+    expect(msg).toContain('Refs #61');
+    expect(msg).not.toContain('#332:');
+  });
+
+  it('accepts ordinary references and positive closes', () => {
+    expect(
+      land.negatedCommitMessageError('Refs #61\n\nPart of #332\n\nCloses #319'),
+    ).toBeNull();
+  });
+
+  it('runs after an authoritative fetch and before the expensive landing work', () => {
+    const source = readFileSync(TOOL, 'utf8');
+    const fetchAt = source.indexOf("if (!run('git', ['fetch', 'origin', 'main']))");
+    const guardAt = source.indexOf('negatedCommitMessageError(ownCommitMessages())', fetchAt);
+    const rebaseAt = source.indexOf("mark('rebase')", fetchAt);
+
+    expect(fetchAt).toBeGreaterThan(-1);
+    expect(guardAt).toBeGreaterThan(fetchAt);
+    expect(rebaseAt).toBeGreaterThan(guardAt);
+    expect(
+      source.slice(fetchAt, rebaseAt),
+      '--no-issue-check must not bypass the commit-message safety guard',
+    ).not.toContain('NO_ISSUE_CHECK');
   });
 });
 
