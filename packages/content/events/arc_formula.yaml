@@ -30,7 +30,6 @@ events:
             year is out. The chapter house calls it that too, which is the
             first sign that a legal victory has become a thing other people
             can use.
-          effects:
 
   - id: formula_another_house_uses_it
     title: The Ardwen Formula, in Somebody Else's Mouth
