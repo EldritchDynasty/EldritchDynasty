@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, runYears,
+  END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -36,6 +36,39 @@ describe('a run survives being written down', () => {
     const before = bootstrap(content, 1042, 1042);
     const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), content);
     expect(digestOf(after)).toBe(digestOf(before));
+  });
+
+  it('repairs a pre-#391 founded save with the founding decision needed for replay', () => {
+    const before = bootstrap(content, 391, 1042);
+    const choice = {
+      houseName: 'The House Before the Log',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      friends: [
+        { name: 'Alys', sex: 'female' as const },
+        { name: 'Bennet', sex: 'male' as const },
+      ],
+    };
+    expect(foundHouse(before, choice).ok).toBe(true);
+
+    // Model a current-format save written before #391: all durable founding
+    // state exists, but the new external-answer entry does not.
+    const legacy = JSON.parse(JSON.stringify(saveGame(before)));
+    legacy.decisionLog = legacy.decisionLog.filter((decision: { kind: string }) => decision.kind !== 'founding');
+
+    const loaded = loadGame(legacy, content);
+    expect(loaded.world.decisionLog[0]).toEqual({
+      kind: 'founding',
+      year: 1042,
+      houseName: choice.houseName,
+      heirloom: choice.heirloom,
+      grudge: choice.grudge,
+      friends: choice.friends,
+    });
+    expect(loaded.world.decisionLog.filter((decision) => decision.kind === 'founding')).toHaveLength(1);
+
+    const rebuilt = replay(content, loaded.world.decisionLog, loaded.world.seed, 1042, 0);
+    expect(digestOf(rebuilt)).toBe(digestOf(loaded));
   });
 
   it('round-trips non-empty delegation preferences and their Chronicle audit trail', () => {
