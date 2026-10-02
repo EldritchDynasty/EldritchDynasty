@@ -338,7 +338,24 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
 
   world.chronicle = s.chronicle;
   world.log = s.log;
-  world.decisionLog = s.decisionLog;
+  // #391 added the founding answer to the append-only decision log without
+  // changing SAVE_FORMAT: current-format saves written before that change can
+  // therefore carry durable founding state but no founding log entry. Repair
+  // exactly that historical gap from the state those saves already own.
+  //
+  // Only name/sex belong in the external answer. dueFrom/spentIn are generated
+  // friend-window state and replay must re-derive them through foundHouse()
+  // from the same seed rather than turning the decision log into a second save.
+  world.decisionLog = s.founding && !s.decisionLog.some((decision) => decision.kind === 'founding')
+    ? [{
+        kind: 'founding',
+        year: s.founding.year,
+        houseName: s.founding.houseName,
+        heirloom: s.founding.heirloom,
+        grudge: s.founding.grudge,
+        friends: s.friends.map(({ name, sex }) => ({ name, sex })),
+      }, ...s.decisionLog]
+    : s.decisionLog;
   world.frame = s.frame;
 
   if (s.narrator !== undefined) world.narrator = s.narrator;
