@@ -6,6 +6,14 @@
  */
 import { ACHIEVEMENT_IDS, type AchievementId } from './achievements.js';
 
+/**
+ * #323's acceptance has a ~1% rarity floor. As ending-gate.ts documents for
+ * the same statistical question, fewer than 100 runs cannot even represent a
+ * one-per-cent event as one observed run. Keep the report's default at the
+ * first judgeable batch; callers can always request a larger sample.
+ */
+export const ACHIEVEMENT_RATE_JUDGEABLE_RUNS = 100;
+
 const LIBRARY_SCOPED = new Set<AchievementId>(['ending_all_long']);
 
 export interface AchievementSample {
