@@ -268,7 +268,13 @@ describe('the situational roles', () => {
   it('names a widow with children still to raise', () => {
     const ctx = quiet();
     const w = ctx.world;
-    const her = place(ctx, { sex: 'female', age: 34, name: 'Nell' });
+    // Keep this a widow fixture rather than an accidental carrier fixture.
+    // Founding inheritance (#344) legitimately moved which women carry the
+    // strongest font, and a player-house draw for Nell can now make that louder
+    // than one young child. Her origin is outside the blood; only her household
+    // membership is here.
+    const her = place(ctx, { sex: 'female', age: 34, name: 'Nell', house: 'commons' });
+    her.membership = [{ house: asId(w.playerHouse), kind: 'married_in', from: w.year - 10 }];
     const him = place(ctx, { sex: 'male', age: 40, name: 'Gone' });
     marry(ctx, her, him);
     const child = place(ctx, { sex: 'male', age: 6, name: 'Small' });

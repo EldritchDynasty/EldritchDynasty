@@ -4,9 +4,12 @@
 # names the house, not him: names are load-bearing in this world and his is
 # withheld deliberately.
 #
-# `bias` nudges a rolled genome toward an authored intent WITHOUT pinning it.
-# Nobody's stats are written here — they are rolled from the locus table, so
-# even the founder is a draw rather than a decree.
+# `bias` nudges an authored intent WITHOUT pinning it. For a seed person
+# whose genome is rolled, it still selects from the house's allele pool. For a
+# child with two named seeded parents, it may only lean the ordinary meiosis
+# toward a haplotype that parent actually carries; crossovers still decide the
+# gamete, and it cannot invent a post-conception allele with no mutation record.
+# Nobody's stats are written here — even the founder is a draw rather than a decree.
 characters:
   # ── The Eldritch House, the blood ──────────────────────────────────────────────
   - key: founder
@@ -26,10 +29,10 @@ characters:
     # this directory did nothing. 0.9 was therefore never calibrated against
     # anything. Measured over forty seeds, on §22's scale:
     #
-    #     bias 0     font 16.8   power 48.5    (what the house pool alone gave)
-    #     bias 0.2   font 25.6   power 60.4
-    #     bias 0.35  font 34.0   power 71.2
-    #     bias 0.9   font 60.7   power 91.7
+    #     bias 0     font 17.5   power 47.3    (what the house pool alone gave)
+    #     bias 0.2   font 24.8   power 60.1
+    #     bias 0.35  font 31.2   power 67.6
+    #     bias 0.9   font 61.2   power 91.4
     #
     # §22 puts Hierophant at 50, the Vessel at 70 and Demigod at 85. At the
     # authored 0.9 the founder stands past Demigod in the year 1042, which is
@@ -75,6 +78,9 @@ characters:
     membership: blood
     motherKey: founders_wife
     fatherKey: founder
+    # A tendency within inheritance, not a replacement genome: each parent's
+    # strength chromosomes lean toward the stronger carried haplotype before
+    # the ordinary crossover walk makes Aldous's gametes.
     bias: { strength: 0.4 }
     note: The first son. Whether he expresses depends entirely on his mother.
 
@@ -100,6 +106,9 @@ characters:
     membership: blood
     motherKey: founders_wife
     fatherKey: founder
+    # Same provenance rule as Aldous: these tendencies lean ordinary parental
+    # meiosis without splicing around crossovers or rewriting the conceived
+    # child.
     bias: { death: 0.6, mind: 0.4 }
     note: >-
       Threshold blood. She will be able to work Death, which means she can

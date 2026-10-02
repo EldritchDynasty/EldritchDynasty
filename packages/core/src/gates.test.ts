@@ -12,7 +12,7 @@ import {
 import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
-import { gateBlood } from './tools/blood-gate.js';
+import { gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -216,6 +216,15 @@ describe('the gates fail when they should', () => {
 
     expect(verdict.ok, verdict.lines.join('\n')).toBe(false);
     expect(verdict.lines.join('\n')).toMatch(/FAIL treasury/);
+  });
+
+  it('the blood strategies carry their Match policy into automatic marriages', () => {
+    expect(marriagePolicyForBloodStrategy('concentrate')).toBe('in');
+    expect(marriagePolicyForBloodStrategy('dilute')).toBe('out');
+    expect(marriagePolicyForBloodStrategy('marry_in')).toBe('in');
+    expect(marriagePolicyForBloodStrategy('marry_out')).toBe('out');
+    expect(marriagePolicyForBloodStrategy('chronicler')).toBe('as_it_falls');
+    expect(marriagePolicyForBloodStrategy('withhold')).toBe('as_it_falls');
   });
 
   it('the blood gate rejects a game where the font carries no power at all', () => {

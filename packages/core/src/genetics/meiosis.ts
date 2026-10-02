@@ -1,4 +1,4 @@
-import type { Gamete, GenePool, Genome, MutationRecord, Sex } from '@ed/schema';
+import type { Gamete, GenePool, Genome, LocusDef, MutationRecord, Sex } from '@ed/schema';
 import type { Rng } from '../rng.js';
 import { drawAllele, type LocusTable } from './loci.js';
 
@@ -17,21 +17,49 @@ const FONT_UPWARD_BIAS = 0.75;
  * is a genuine bargain — the blessing arrives chained to the curse, and
  * separating them needs a specific crossover a family may wait generations for.
  */
-export function meiosis(g: Genome, table: LocusTable, sex: Sex, rng: Rng, year: number): Gamete {
+export function meiosis(
+  g: Genome,
+  table: LocusTable,
+  sex: Sex,
+  rng: Rng,
+  year: number,
+  offspringSex?: Sex,
+  inheritedBias: Record<string, number> = {},
+): Gamete {
   const mutations: MutationRecord[] = [];
-  const autosomal = recombine(g.autosomal[0], g.autosomal[1], table.autosomal, rng);
+  const autosomal = recombine(
+    g.autosomal[0],
+    g.autosomal[1],
+    table.autosomal,
+    rng,
+    (chromosome) => biasedStartProbability(g, table, 'autosomal', chromosome, 0.5, inheritedBias),
+  );
 
   let x: Int16Array | null;
   if (sex === 'female') {
     // Her two X's recombine. A daughter's X is a mosaic of her mother's pair —
-    // but not a fair one. See `driveToward`.
-    x = recombine(g.sex[0], g.sex[1] ?? g.sex[0], table.x, rng, driveToward(g, table));
+    // but not a fair one. See `driveToward`. A seeded-child bias may lean the
+    // SAME chromosome-start coin further toward one of her actual X haplotypes;
+    // it never splices a locus after the crossover walk has happened.
+    const driven = driveToward(g, table);
+    x = recombine(
+      g.sex[0],
+      g.sex[1] ?? g.sex[0],
+      table.x,
+      rng,
+      (chromosome) => biasedStartProbability(g, table, 'x', chromosome, driven, inheritedBias),
+    );
   } else {
     // A man gives either his single X (-> daughter) or a Y (-> son).
     // Consequence: a son's font comes ONLY from his mother, and a father
     // passes his single X INTACT to every daughter. Both are real biology and
     // both are the reason cousin marriage is the mechanism, not a mechanism.
-    x = rng.bool(0.5) ? Int16Array.from(g.sex[0]) : null;
+    // Founding children already have an authored sex. Let bootstrap ask for
+    // the corresponding paternal gamete directly rather than drawing and
+    // discarding gametes until one happens to match: the conception stream is
+    // still one stream, and ordinary births keep the fair coin.
+    const passesX = offspringSex === undefined ? rng.bool(0.5) : offspringSex === 'female';
+    x = passesX ? Int16Array.from(g.sex[0]) : null;
   }
 
   mutate(autosomal, table, 'autosomal', rng, year, mutations);
@@ -83,7 +111,7 @@ function recombine(
   b: Int16Array,
   loci: { chromosome: unknown; position: number }[],
   rng: Rng,
-  startOnFirst = 0.5,
+  startOnFirst: number | ((chromosome: unknown) => number) = 0.5,
 ): Int16Array {
   const out = new Int16Array(a.length);
   if (a.length === 0) return out;
@@ -101,7 +129,10 @@ function recombine(
     for (let i = 0; i < nCross; i++) points.push(rng.range(loci[start]!.position, loci[end - 1]!.position));
     points.sort((x, y) => x - y);
 
-    let current = rng.bool(startOnFirst) ? 0 : 1;
+    const firstProbability = typeof startOnFirst === 'function'
+      ? startOnFirst(chrom)
+      : startOnFirst;
+    let current = rng.bool(firstProbability) ? 0 : 1;
     let nextPoint = 0;
     for (let i = start; i < end; i++) {
       while (nextPoint < points.length && loci[i]!.position >= points[nextPoint]!) {
@@ -172,7 +203,102 @@ export function conceive(
   return { genome, sex };
 }
 
-/** Roll a fresh genome for an outsider from a house's allele pool. */
+/** Rank one allele by what this locus actually contributes to an authored bias. */
+function contributionRank(
+  allele: { effect: number; tags: string[] },
+  locus: LocusDef,
+  weight: number,
+): number {
+  return locus.kind === 'deleterious'
+    ? (allele.tags.includes('deleterious') || allele.tags.includes('lethal_homozygous') ? -1 : 0)
+    : allele.effect * weight;
+}
+
+/**
+ * Bias a REAL meiosis without manufacturing a recombinant haplotype.
+ *
+ * #344 originally selected a "better" parental allele after recombination at
+ * each biased locus. Every selected allele had a parent, so provenance looked
+ * correct, but linkage did not: two nearby loci could be switched between the
+ * parent's homologues with no crossover between them. The top of this file is
+ * explicit that linkage is load-bearing.
+ *
+ * A seeded-child bias therefore changes only the existing chromosome-start
+ * choice. Crossovers are still drawn normally and the walk still alternates
+ * whole parental haplotypes only at those crossover points. Positive bias
+ * leans toward the homologue whose relevant loci contribute more; negative
+ * bias leans toward the one that contributes less. Multiple authored biases
+ * on one chromosome vote through their signed contribution differences.
+ *
+ * `base` preserves any mechanism already acting on that coin. Autosomes start
+ * at 0.5. The X starts at `driveToward`, so a child bias can lean meiotic
+ * drive but cannot replace it.
+ */
+function biasedStartProbability(
+  genome: Genome,
+  table: LocusTable,
+  where: 'autosomal' | 'x',
+  chromosome: unknown,
+  base: number,
+  bias: Record<string, number>,
+): number {
+  if (!Object.keys(bias).length) return base;
+
+  let signal = 0;
+  let influence = 0;
+
+  const consider = (
+    index: number,
+    strength: number,
+    score: (allele: number) => number,
+  ) => {
+    const first = where === 'autosomal' ? genome.autosomal[0][index]! : genome.sex[0][index]!;
+    const second = where === 'autosomal'
+      ? genome.autosomal[1][index]!
+      : (genome.sex[1]?.[index] ?? genome.sex[0][index]!);
+    signal += (score(first) - score(second)) * strength;
+    influence = Math.max(influence, Math.min(0.95, Math.abs(strength)));
+  };
+
+  for (const [attrKey, strength] of Object.entries(bias)) {
+    if (strength === 0) continue;
+
+    if (attrKey === ELDRITCH_BIAS) {
+      const indices = where === 'x' ? table.fontIndices : table.channelIndices;
+      const loci = where === 'x' ? table.x : table.autosomal;
+      const alleleSets = where === 'x' ? table.xAlleles : table.autosomalAlleles;
+      for (const index of indices) {
+        const locus = loci[index]!;
+        if (locus.chromosome !== chromosome) continue;
+        const alleles = alleleSets[index]!;
+        consider(index, strength, (allele) => alleles[allele]?.effect ?? 0);
+      }
+      continue;
+    }
+
+    for (const contribution of table.byAttribute.get(attrKey) ?? []) {
+      if (contribution.where !== where || contribution.locus.chromosome !== chromosome) continue;
+      const alleles = where === 'x'
+        ? table.xAlleles[contribution.index]!
+        : table.autosomalAlleles[contribution.index]!;
+      consider(
+        contribution.index,
+        strength,
+        (allele) => contributionRank(
+          alleles[allele]!,
+          contribution.locus,
+          contribution.weight,
+        ),
+      );
+    }
+  }
+
+  if (signal === 0 || influence === 0) return base;
+  return signal > 0
+    ? base + (1 - base) * influence
+    : base * (1 - influence);
+}
+
 /**
  * NUDGE A ROLLED GENOME TOWARD AN AUTHORED INTENT, without pinning it.
  *
@@ -182,13 +308,15 @@ export function conceive(
  * allele instead, which is how a template says "thin blood" without saying a
  * number.
  *
- * It lived in `sim.ts` and applied to the founding cast alone, so every
- * `bias` block on a CHARACTER TEMPLATE — the scholar's daughter's mind, the
- * Marrow girl's death affinity, the rival's charm — was authored, validated,
- * saved, and read by nothing. Four templates advertised a person the world
- * then rolled at random. That matters more now than it did: the Match puts
- * those templates in front of the player as cards, and a card that promises
- * a scholar's daughter has to deal one.
+ * This remains the path for founders, rivals and minted templates that do not
+ * name two seeded parents. Two-parent seeded children never come through here:
+ * their bias is folded into real meiosis above so linkage and provenance both
+ * survive.
+ *
+ * Ranking is by the locus's actual contribution, including the sign of its
+ * weight. Deleterious loci are the exception: a positive bias prefers the
+ * clean tagged allele regardless of arithmetic, so a "strong" template can
+ * never buy a named curse merely because a content weight changed sign.
  */
 export function applyBias(
   genome: Genome,
@@ -199,61 +327,36 @@ export function applyBias(
   for (const [attrKey, strength] of Object.entries(bias)) {
     // ELDRITCH IS NOT AN ATTRIBUTE (invariant 4), and `byAttribute` is built
     // from `contributes`, which the font and channel loci deliberately leave
-    // empty — so `bias: { eldritch_power: 0.9 }` matched zero loci and did
-    // nothing at all. It is authored on Daveed Gearithy, who is the founder,
-    // the Narrator and the guardian, and it was the strongest statement of
-    // intent in the whole content directory (invariant 11).
-    if (attrKey === ELDRITCH_BIAS) { biasEldritch(genome, strength, table, rng); continue; }
-    for (const c of table.byAttribute.get(attrKey) ?? []) {
+    // empty. It therefore keeps its explicit path.
+    if (attrKey === ELDRITCH_BIAS) {
+      biasEldritch(genome, strength, table, rng);
+      continue;
+    }
+
+    for (const contribution of table.byAttribute.get(attrKey) ?? []) {
       if (!rng.bool(Math.min(0.95, Math.abs(strength)))) continue;
-      const alleles = c.where === 'autosomal' ? table.autosomalAlleles[c.index]! : table.xAlleles[c.index]!;
-      // RANK BY THE CONTRIBUTION, NOT BY THE ALLELE'S OWN EFFECT.
-      //
-      // A locus contributes `effect * weight`, and a weight can be negative.
-      // Ranking on `effect` alone is therefore backwards at every negative
-      // contributor, and it was: `suitor_widow_with_land` — "worth every one
-      // of them if what you want is a house full" — carries
-      // `bias: { fecundity: 0.6 }`, and `fecundity_drag` contributes to
-      // fecundity at -1.8, so the fertility card in the deck was rolled with
-      // the STRONGEST available fertility-drag allele on her X, once per
-      // locus, every time she was dealt.
-      //
-      // Inert at issue #26's shipped coupling of zero, which is exactly why
-      // nothing caught it — she is dealt, her genome says the opposite of her
-      // blurb, it is passed to her daughters, and the day anyone turns that
-      // constant up she becomes the thinnest woman in the market. Invariant 11
-      // one layer along: the field is read, and read with the sign inverted.
-      //
-      // A DELETERIOUS LOCUS RANKS BY ITS TAG AND NOT BY ITS ARITHMETIC.
-      //
-      // It was written against a live sign error: the five named curses were
-      // authored `effect: -7` against `weight: -0.5`, and a negative times a
-      // negative is +3.5, so by the arithmetic alone the Ashen mark and the
-      // thin bone each made a body STRONGER — and ranking on it would have had
-      // a template asking for a strong man buy him five curses to get there.
-      // The prediction made here at the time was that ranking by the tag is
-      // right whichever way issue #112 resolves, and that it leaves what a
-      // bias does at these loci exactly where it already was.
-      //
-      // #112 IS FIXED NOW — `weight: 0.5`, `dominance: 1`, a carrier pays
-      // nothing and a homozygote pays -3.5 — and the prediction held. The two
-      // rankings were measured against each other at all five loci in both
-      // bias directions and they agree on every one, so nothing a bias does
-      // moved. The exception stays: it is the cheaper guarantee. Ranking a
-      // thing the content calls a curse by the sign of an authored weight is
-      // how this went wrong the first time, and a tag cannot be inverted by a
-      // typo in a number.
-      const rank = (a: { effect: number; tags: string[] }) => (
-        c.locus.kind === 'deleterious'
-          ? (a.tags.includes('deleterious') || a.tags.includes('lethal_homozygous') ? -1 : 0)
-          : a.effect * c.weight
-      );
+      const alleles = contribution.where === 'autosomal'
+        ? table.autosomalAlleles[contribution.index]!
+        : table.xAlleles[contribution.index]!;
       const best = alleles
-        .map((a, i) => ({ v: rank(a), i }))
-        .sort((x, y) => (strength >= 0 ? y.v - x.v : x.v - y.v))[0];
+        .map((allele, index) => ({
+          value: contributionRank(
+            allele,
+            contribution.locus,
+            contribution.weight,
+          ),
+          index,
+        }))
+        .sort((a, b) => (
+          strength >= 0 ? b.value - a.value : a.value - b.value
+        ))[0];
       if (!best) continue;
-      if (c.where === 'autosomal') genome.autosomal[rng.int(2)]![c.index] = best.i;
-      else genome.sex[0][c.index] = best.i;
+
+      if (contribution.where === 'autosomal') {
+        genome.autosomal[rng.int(2)]![contribution.index] = best.index;
+      } else {
+        genome.sex[0][contribution.index] = best.index;
+      }
     }
   }
 }

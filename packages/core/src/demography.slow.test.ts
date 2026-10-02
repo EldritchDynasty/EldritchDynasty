@@ -85,13 +85,21 @@ describe('the house survives its own Long Line', () => {
       const w = ctx.world;
       const roster = w.people.household(w.playerHouse, w.year);
       if (!heirApparent(ctx)) continue;
-      // A standing Wardship is the one state with an heir and no head, by
-      // design (#91): the Warden manages the estate until the ward comes of
-      // age, and `cast.slow.test.ts` makes the same exception. This test
-      // predates Wardship; #341's content re-roll landed seed 8080's sample
-      // on the very year its head died and a Wardship began.
-      if (w.wardship) continue; // bought back or not: buying it back restores the income, not the seat
-      expect(roster.some((p) => p.castSlots.includes('head')), `seed ${seed}`).toBe(true);
+
+      // Wardship is the one deliberate exception: a senior minor keeps the
+      // seal vacant even when an adult fallback exists. `heirApparent()`'s
+      // default age-16 filter returns that fallback, so treating its presence
+      // as proof that a Head must already be seated would make this regression
+      // contradict the succession rule. Prove the exception is real instead
+      // of merely skipping every headless result.
+      const hasHead = roster.some((p) => p.castSlots.includes('head'));
+      if (!hasHead && w.wardship) {
+        const ward = w.people.get(w.wardship.ward);
+        expect(ward?.status, `seed ${seed}: wardship has no living ward`).toBe('alive');
+        expect(w.year - ward!.born, `seed ${seed}: stale adult wardship`).toBeLessThan(16);
+        continue;
+      }
+      expect(hasHead, `seed ${seed}`).toBe(true);
     }
   });
 

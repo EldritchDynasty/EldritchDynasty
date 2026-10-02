@@ -16,12 +16,14 @@ import { expectMean } from './testing.js';
  * second stage of #326, quarrels held against the house — by the sentence
  * frame each line is tagged with, never by its words.
  *
- * Both terms, twelve seeds each, read back through the run corpus. The
- * ceiling and floor are recorded in docs/BALANCE-LOG.md with the measurement
- * they were chosen against.
+ * Both terms read back through the run corpus. The original twelve-run sample
+ * became a 1.7-SE ceiling after #344 re-rolled the histories; `expectMean`
+ * prescribed about twenty runs, so use twenty rather than moving the product
+ * ceiling. The ceiling and floor are recorded in docs/BALANCE-LOG.md with the
+ * measurement they were chosen against.
  */
 const bundle = loadContent();
-const SEEDS = Array.from({ length: 12 }, (_, i) => 901 + i);
+const SEEDS = Array.from({ length: 20 }, (_, i) => 901 + i);
 
 /** No sentence frame more than this many times in one run, on average. */
 const MAX_COPIES_CEILING = 4;

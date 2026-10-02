@@ -32,15 +32,17 @@
  *
  * ─── The policies ───────────────────────────────────────────────────────────
  *
- * `concentrate` is the complete oracle strategy #41 describes: take the card
- * whose person really carries the most font, break ties toward kin, and use
- * the existing withholding order to keep carrying daughters for carrying men.
- * It cheats — it reads genomes the game never shows — and that is the point.
- * It is an upper bound on what any human could do, and if the upper bound does
- * not beat the drift, no human can.
+ * `concentrate` is the complete oracle strategy #41 describes: set the
+ * house's existing standing marriage order inward, take the card whose person
+ * really carries the most font, break ties toward kin, and use the existing
+ * withholding order to keep carrying daughters for compatible men of the
+ * blood. It cheats only in ranking the Match cards — it reads genomes the game
+ * never shows — and that is the point. It is an upper bound on what any human
+ * could do, and if the upper bound does not beat the drift, no human can.
  *
- * `dilute` is its opposite and the control: always marry out. Two columns that
- * do not separate mean the decision does not exist.
+ * `dilute` is its opposite and the control: set the same standing order outward
+ * and always take the least-carried Match card. Two columns that do not
+ * separate mean the decision does not exist.
  *
  * `chronicler` is what every other tool in this directory measures, kept here
  * so the two played columns can be read against the unplayed one.
@@ -69,6 +71,8 @@ import { makeRng, hashSeed } from '../rng.js';
 import { autoResolveAll, declineMatch, resolveMatch, type PendingMatch } from '../events/decisions.js';
 import { clearNamingQueue } from '../sim.js';
 import { phenotypeOf, genomeOf, materialize } from '../people/factory.js';
+import { eligibleToMarry } from '../people/demography.js';
+import { onTheMarket } from '../table.js';
 import { eldritch, realizedHomozygosity, deleteriousLoad } from '../genetics/expression.js';
 import { POWER_FLOOR, rawPowerFor, rungIndex } from '../ascension.js';
 import { closeTheLedger, END_YEAR, selectEnding } from '../ending.js';
@@ -82,6 +86,13 @@ export type Policy = 'concentrate' | 'dilute' | 'chronicler' | 'withhold' | 'mar
   | 'blind' | 'panel'
   /** #61 experiment only: perfect information about the autosomal channel. */
   | 'channel_oracle';
+
+/** The standing table order each played blood strategy carries into automatic marriages. */
+export function marriagePolicyForBloodStrategy(policy: Policy): 'in' | 'out' | 'as_it_falls' {
+  if (policy === 'concentrate' || policy === 'marry_in') return 'in';
+  if (policy === 'dilute' || policy === 'marry_out') return 'out';
+  return 'as_it_falls';
+}
 
 export interface BloodRun {
   seed: number;
@@ -253,15 +264,39 @@ function playTheTable(ctx: SimCtx): void {
   const carriers = household.filter(
     (p) => phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont > 0,
   );
-  const free = (p: typeof household[number]) => !p.marriages.some((m) => m.to === undefined);
+  const activeBlood = (p: typeof household[number]) => p.membership.some((m) =>
+    m.house === w.playerHouse
+      && (m.kind === 'blood' || m.kind === 'cadet')
+      && m.from <= w.year
+      && (m.to === undefined || m.to > w.year),
+  );
 
-  // Somebody of the blood she could actually be married to.
-  const menOfTheBlood = carriers.filter((p) => p.sex === 'male' && free(p));
+  // Somebody of the blood she could ACTUALLY be married to. This is a
+  // genealogy constraint, not a carrier constraint: under real X-linked
+  // founding inheritance a mundane son can still be the man whose marriage
+  // lets a carrying daughter stay inside the line. Requiring him to carry
+  // created a bootstrap deadlock where daughters were withheld until a
+  // carrying man existed, even though carrying men are born from those same
+  // daughters.
+  //
+  // Mirror autoMarry's real candidate rules too. Counting an uncle twenty
+  // years older, a full brother, a cleric, or a man already withheld from the
+  // market would make the oracle release her for a marriage the engine cannot
+  // make and turn an instrumentation bug into a genetics verdict.
+  const menOfTheBlood = household.filter(
+    (p) => p.sex === 'male'
+      && activeBlood(p)
+      && eligibleToMarry(ctx, p)
+      && onTheMarket(ctx, p),
+  );
 
   for (const p of carriers) {
-    if (p.sex !== 'female' || !free(p)) continue;
-    const holdHer = menOfTheBlood.length === 0;
-    if (holdHer) w.withheld[p.id] = w.withheld[p.id] ?? w.year;
+    if (p.sex !== 'female' || !eligibleToMarry(ctx, p)) continue;
+    const hasCompatibleBloodMan = menOfTheBlood.some((q) =>
+      Math.abs(q.born - p.born) < 16
+        && !(q.trueParents.mother && q.trueParents.mother === p.trueParents.mother),
+    );
+    if (!hasCompatibleBloodMan) w.withheld[p.id] = w.withheld[p.id] ?? w.year;
     else delete w.withheld[p.id];
   }
 }
@@ -473,8 +508,13 @@ export function playOnce(bundle: ContentBundle, seed: number, years: number, pol
   const ctx = bootstrap(content, seed, START_YEAR);
   const w = ctx.world;
   // The standing order the player gives once, at the table, and never again.
-  if (policy === 'marry_in') w.marriagePolicy = 'in';
-  if (policy === 'marry_out') w.marriagePolicy = 'out';
+  // `concentrate` / `dilute` are the complete strategies, not only the
+  // Match-card comparators: automatic household marriages are most of the
+  // market, and #41 added this order precisely so those marriages answer the
+  // same policy as the player. Leaving both oracle columns at `as_it_falls`
+  // made the repaired #344 withholding oracle release a carrier for a real
+  // blood match and then let autoMarry send her straight back out.
+  w.marriagePolicy = marriagePolicyForBloodStrategy(policy);
   const tally: Tally = { kin: 0, declined: 0, named: new Map() };
   let hands = 0;
   let fontPeak = 0;
