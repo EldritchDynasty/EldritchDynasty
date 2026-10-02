@@ -525,8 +525,19 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
 
   it('passes the shipped ladder, and says what share clears each floor', () => {
     const { ok, lines } = gateLadderScales(content, cheap);
-    expect(ok, lines.join('\n')).toBe(true);
-    expect(lines.join('\n')).toMatch(/wants mind 70/);
+    const out = lines.join('\n');
+    expect(ok, out).toBe(true);
+    expect(out).toMatch(/wants mind 70/);
+    expect(out).toMatch(/#378 diagnostic — top distinct sampled Madness holders per run/);
+
+    // The diagnostic must not let one long-lived man occupy all three rows
+    // merely because the 25/50-year sampler saw him repeatedly.
+    for (const seed of [5000, 5007]) {
+      const rows = lines.filter((line) => line.includes(`seed ${seed} #`));
+      const ids = rows.map((line) => /\bid ([^ ]+)/.exec(line)?.[1]).filter(Boolean);
+      expect(rows.length, `no Madness provenance rows for seed ${seed}`).toBeGreaterThan(0);
+      expect(new Set(ids).size, `seed ${seed} repeated one holder in its top rows`).toBe(ids.length);
+    }
   });
 
   /**
