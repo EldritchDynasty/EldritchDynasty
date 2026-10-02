@@ -74,7 +74,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { nodeModulesLinkType, npmInvocation } from './portable.mjs';
 import { DOCS_ONLY_STEPS } from './docs-only.mjs';
-import { closingIssues } from './closing-keywords.mjs';
+import { closingIssues, negatedClosings } from './closing-keywords.mjs';
 
 /** This checkout, derived from the script rather than from the cwd. */
 const REPO = join(import.meta.dirname, '..');
@@ -357,6 +357,24 @@ function ownCommitMessages() {
   } catch {
     try { return git('log', '-20', '--format=%B'); } catch { return ''; }
   }
+}
+
+/**
+ * GitHub applies closing keywords in commit messages without understanding
+ * prose-level negation. Reject that dangerous wording independently of the
+ * issue-completion check: `--no-issue-check` may stage an issue, but it must
+ * never authorize an accidental close.
+ */
+export function negatedCommitMessageError(text) {
+  const issues = negatedClosings(text);
+  if (!issues.length) return null;
+  const lines = issues.map((n) =>
+    `#${n}: replace the negated closing keyword with "Refs #${n}" or "Part of #${n}".`
+  );
+  return [
+    'Branch commit messages contain a negated GitHub closing keyword. GitHub ignores the negation and would close the issue:',
+    ...lines,
+  ].join('\n');
 }
 
 /**
@@ -703,6 +721,7 @@ async function main() {
    * a rebase onto a graft boundary is not a rebase. tools/orient.mjs unshallows
    * from the SessionStart hook; this is for the sessions where it did not run.
    */
+  const commitMessages = ownCommitMessages();
   const blockers = [
     lockHolder(),
     git('rev-parse', '--is-shallow-repository') === 'true' &&
@@ -710,7 +729,8 @@ async function main() {
       '  Ancestry answers here are noise, and a rebase is an ancestry answer.',
     git('status', '--porcelain') && 'working tree is dirty. Commit or stash before landing.',
     branch === 'main' && 'already on main — land from the feature branch.',
-    !NO_ISSUE_CHECK && issueLeftOpen(branch, ownCommitMessages(), claimedIssues(branch)),
+    DRY && negatedCommitMessageError(commitMessages),
+    !NO_ISSUE_CHECK && issueLeftOpen(branch, commitMessages, claimedIssues(branch)),
   ].filter(Boolean);
 
   const requestedPlan = verificationPlan({
@@ -740,6 +760,12 @@ async function main() {
   // This is the exact trunk head the queue is about to rebase onto. Capture it
   // after the fetch, not from a workflow event or reconstructed history later.
   const before = git('rev-parse', 'origin/main');
+
+  // The safety decision needs the freshly fetched main. A stale origin/main can
+  // include commits that another landing has already moved to trunk and falsely
+  // call their wording ours. Fetch is cheap; typecheck/tests/gates are not.
+  const negatedCommitError = negatedCommitMessageError(ownCommitMessages());
+  if (negatedCommitError) die(negatedCommitError);
 
   mark('rebase');
   say('\n$ git rebase origin/main');
