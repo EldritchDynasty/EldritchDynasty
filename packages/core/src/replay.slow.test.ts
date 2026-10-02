@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, place, present,
+  applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, foundHouse, heldHeirlooms, place, present,
   replay, ReplayMismatchError, runYears, testRng, testWorld,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -46,6 +46,35 @@ describe('replay reconstructs a run from its decision log', () => {
       causalPages += causes.filter((entry) => entry.cause !== undefined).length;
     }
     expect(causalPages, 'the replay corpus never exercised a causal Chronicle page').toBeGreaterThan(0);
+  });
+
+  it('replays the founding answer before the first year, including the five-name roster', () => {
+    const seed = 910;
+    const years = 120;
+    const ctx = bootstrap(bundle, seed, 1042);
+    const founding = {
+      houseName: 'The House of Replay',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      friends: [
+        { name: 'Iona Vale', sex: 'female' as const },
+        { name: 'Corven Pike', sex: 'male' as const },
+        { name: 'Sella Marr', sex: 'female' as const },
+        { name: 'Toman Grey', sex: 'male' as const },
+        { name: 'Eris Wren', sex: 'female' as const },
+      ],
+    };
+    expect(foundHouse(ctx, founding).ok).toBe(true);
+    runYears(ctx, years);
+
+    expect(ctx.world.decisionLog[0]?.kind).toBe('founding');
+    const replayed = replay(bundle, ctx.world.decisionLog, seed, 1042, years);
+
+    expect(digestOf(replayed)).toBe(digestOf(ctx));
+    expect(replayed.world.founding).toEqual(ctx.world.founding);
+    expect(replayed.world.friends).toEqual(ctx.world.friends);
+    expect(heldHeirlooms(replayed).map((h) => h.id)).toContain('portion_of_agelessness');
+    expect(replayed.world.chronicle.some((entry) => entry.title === 'What Was Asked For')).toBe(true);
   });
 
   it('throws rather than returning a run that silently does not match the log it was given', () => {
