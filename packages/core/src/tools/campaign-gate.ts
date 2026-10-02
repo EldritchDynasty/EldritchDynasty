@@ -1,13 +1,16 @@
 import { loadContent } from '@ed/content';
 import {
-  CampaignIdS, RITE_OF_RUNG, RUNG_ORDER, compare, indexContent,
+  RITE_OF_RUNG, RUNG_ORDER, compare, indexContent,
   type CampaignId, type Condition, type Content, type ContentBundle, type Rung,
 } from '@ed/schema';
-import { CAMPAIGNS, isLateCampaignYear, type CampaignDef } from '../campaign.js';
+import {
+  CAMPAIGNS, FULL_CAMPAIGN_IDS, isLateCampaignYear,
+  type CampaignDef, type FullCampaignId,
+} from '../campaign.js';
 import { minimumArcYears } from '../events/arc-reach.js';
 import { measureDensity, type ChoiceVisit } from './density-gate.js';
 
-type Campaigns = Readonly<Record<CampaignId, CampaignDef>>;
+type Campaigns = Readonly<Record<FullCampaignId, CampaignDef>>;
 type Truths = ReadonlySet<boolean>;
 export type CampaignPolicy = 'chronicler' | 'ascendant';
 
@@ -164,13 +167,13 @@ export function campaignStaticReport(
   campaigns: Campaigns = CAMPAIGNS,
 ): CampaignStaticReport {
   const content = indexContent(source);
-  const ids = CampaignIdS.options;
-  const endingSets = Object.fromEntries(ids.map((id) => [id, new Set(campaigns[id].endings)])) as Record<CampaignId, Set<string>>;
+  const ids = FULL_CAMPAIGN_IDS;
+  const endingSets = Object.fromEntries(ids.map((id) => [id, new Set(campaigns[id].endings)])) as Record<FullCampaignId, Set<string>>;
 
   const possibleEvents = Object.fromEntries(ids.map((id) => [
     id,
     new Set(content.events.filter((event) => canEverFire(event.conditions, campaigns[id], content)).map((event) => String(event.id))),
-  ])) as Record<CampaignId, Set<string>>;
+  ])) as Record<FullCampaignId, Set<string>>;
 
   const possibleArcs = Object.fromEntries(ids.map((id) => [
     id,
@@ -180,7 +183,7 @@ export function campaignStaticReport(
     new Set(content.bundle.arcs
       .filter((arc) => minimumArcYears(arc) <= campaigns[id].years)
       .map((arc) => String(arc.id))),
-  ])) as Record<CampaignId, Set<string>>;
+  ])) as Record<FullCampaignId, Set<string>>;
 
   const rites = Object.entries(RITE_OF_RUNG)
     .map(([rung, rite]) => ({ rung: rung as 'vessel' | 'demigod' | 'god', rite: String(rite) }));
@@ -354,7 +357,7 @@ export async function campaignPlayedReport(
   const { playToTheEnd } = await import('./ending-gate.js');
   const statics = campaignStaticReport(source);
   const runs: CampaignPlayedRun[] = [];
-  for (const campaign of CampaignIdS.options) {
+  for (const campaign of FULL_CAMPAIGN_IDS) {
     const years = CAMPAIGNS[campaign].years;
     for (const policy of ['chronicler', 'ascendant'] as const) {
       for (const seed of seeds) {
@@ -393,7 +396,7 @@ export async function campaignPlayedReport(
 
 export function campaignPlayedLines(report: CampaignPlayedReport): string[] {
   const out: string[] = [];
-  for (const campaign of CampaignIdS.options) {
+  for (const campaign of FULL_CAMPAIGN_IDS) {
     for (const policy of ['chronicler', 'ascendant'] as const) {
       const rows = report.runs.filter((r) => r.campaign === campaign && r.policy === policy);
       if (!rows.length) continue;
