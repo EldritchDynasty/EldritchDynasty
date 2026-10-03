@@ -202,18 +202,43 @@ describe('autosave mutation ordering', () => {
     await turnQueue();
 
     expect(host.saves.get('autosave')).toEqual(fullSave);
-    expect(host.saves.get('demo:autosave')).toMatchObject({ campaign: 'demo' });
+    expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
     await expect(game.actions.listSaves()).resolves.not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ slot: 'demo:autosave' })]),
+      expect.arrayContaining([expect.objectContaining({ slot: 'demo-autosave' })]),
     );
 
     // Restarting the miniature run clears its private slot only. The real
     // sitting remains the thing "Continue the last sitting" will resume.
     game.actions.restart();
     await turnQueue();
-    expect(host.saves.has('demo:autosave')).toBe(false);
+    expect(host.saves.has('demo-autosave')).toBe(false);
     expect(host.saves.get('autosave')).toEqual(fullSave);
     expect(game.resumable.value).toBe(true);
+  });
+
+  it('lets a slow full-autosave read finish while the demo is saving', async () => {
+    const host = memoryPlatform();
+    const source = loadContent();
+    const fullSave = saveGame(bootstrap(source, 32331, 1042, 'short'));
+    let answerRead: ((save: unknown) => void) | undefined;
+    host.readSave = async (slot) => {
+      if (slot !== 'autosave') return host.saves.get(slot) ?? null;
+      return new Promise<unknown>((resolve) => { answerRead = resolve; });
+    };
+
+    const game = createGame(source, host);
+    game.actions.begin(32332, 'demo');
+    await turnQueue();
+
+    expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
+    expect(game.resumable.value).toBe(false);
+
+    answerRead?.(fullSave);
+    await turnQueue();
+
+    expect(game.resumable.value).toBe(true);
+    await expect(game.actions.resume()).resolves.toBe(true);
+    expect(game.view.value?.campaign.id).toBe('short');
   });
 });
 
