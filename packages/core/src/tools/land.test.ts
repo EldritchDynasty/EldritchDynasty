@@ -1244,8 +1244,10 @@ describe('the connector-only remote landing', () => {
       "inputs.pr_number > 0\n        && format('remote-land-bootstrap-{0}', github.run_id)",
     );
     expect(block).not.toContain('inputs.pr_number > 0\n        ||');
-    expect(block).toContain("'remote-land-main-v2'");
-    expect(block, 'the retired queue epoch must not remain the normal landing group')
+    expect(block).toContain("'remote-land-main-v3'");
+    expect(block, 'the retired v2 queue epoch must not remain the normal landing group')
+      .not.toContain("'remote-land-main-v2'");
+    expect(block, 'the retired unversioned queue epoch must not remain the normal landing group')
       .not.toContain("'remote-land-main'");
     expect(block).toContain("format('remote-land-skip-{0}', github.run_id)");
     expect(block).toContain("github.event_name == 'issue_comment'");
@@ -1266,7 +1268,7 @@ describe('the connector-only remote landing', () => {
     const trust =
       `contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)`;
 
-    expect(queueBlock, 'an outsider /land can still join remote-land-main-v2 before authorization')
+    expect(queueBlock, 'an outsider /land can still join remote-land-main-v3 before authorization')
       .toContain(trust);
     expect(jobIf, 'an outsider /land can still start the landing job')
       .toContain(trust);
