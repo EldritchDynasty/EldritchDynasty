@@ -12,6 +12,7 @@ import type { PendingDecision } from './events/decisions.js';
 import type { Rung } from './ascension.js';
 import type { FriendName } from './people/friends.js';
 import type { DelegationPreferences } from './delegation.js';
+import type { ProseRuntime } from './prose.js';
 
 export interface ChronicleEntry {
   /**
@@ -764,6 +765,8 @@ export interface SimCtx {
   content: Content;
   genetics: GeneticsCtx;
   takenNames: Set<string>;
+  /** Prospective wording preference; deliberately not part of WorldState/save. */
+  prose: ProseRuntime;
 }
 
 /**
