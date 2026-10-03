@@ -8,6 +8,8 @@ import {
 
 const ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].outcomes[id=done_by_evening].text';
+const TITLE_ADDRESS =
+  'content:events/the_ladder.yaml#events[id=the_race_silted_through].title';
 const RECORD_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.options.record.chronicle';
 const CHOICE_LABEL_ADDRESS =
@@ -55,18 +57,27 @@ describe('prospective prose selection', () => {
   it('freezes written pages while later pages use the selected authored variant', () => {
     const { bundle, event, outcome } = fixture();
     const ctx = testWorld(bundle);
-    setProseVariants(ctx, [{ address: ADDRESS, plainenglish: 'The work is finished before evening.' }]);
+    const namedEvent: EventTemplate = { ...event, frequency: 'rare' };
+    setProseVariants(ctx, [
+      { address: ADDRESS, plainenglish: 'The work is finished before evening.' },
+      { address: TITLE_ADDRESS, plainenglish: 'The Silted Race' },
+    ]);
 
-    const first = commitOutcome(ctx, event, outcome, {}, undefined, testRng('prose-original'));
+    const first = commitOutcome(ctx, namedEvent, outcome, {}, undefined, testRng('prose-original'));
     expect(first.text).toBe(outcome.text);
+    expect(ctx.world.chronicle.at(-1)?.title).toBe(event.title);
 
     setProseMode(ctx, 'plainenglish');
-    const second = commitOutcome(ctx, event, outcome, {}, undefined, testRng('prose-plain'));
+    const second = commitOutcome(ctx, namedEvent, outcome, {}, undefined, testRng('prose-plain'));
 
     expect(second.text).toBe('The work is finished before evening.');
     expect(ctx.world.chronicle.slice(-2).map((page) => page.text)).toEqual([
       outcome.text,
       'The work is finished before evening.',
+    ]);
+    expect(ctx.world.chronicle.slice(-2).map((page) => page.title)).toEqual([
+      event.title,
+      'The Silted Race',
     ]);
     expect(missingPlainEnglish(ctx)).toEqual([]);
   });

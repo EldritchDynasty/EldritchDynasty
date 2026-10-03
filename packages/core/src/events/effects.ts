@@ -12,7 +12,7 @@ import { addGrudge, relate } from '../people/relationships.js';
 import type { Rng } from '../rng.js';
 import { birthTales } from './tales.js';
 import { WARNING_TAG, noteUnheard, warningWeight } from '../bearing.js';
-import { proseForOutcome } from '../prose.js';
+import { proseForEventTitle, proseForOutcome } from '../prose.js';
 import { performRite } from './rites.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
@@ -533,7 +533,7 @@ export function applyOutcome(
     id: entryId,
     year: ctx.world.year,
     weight: profile.chronicle,
-    title: profile.named ? e.title : undefined,
+    title: profile.named ? proseForEventTitle(ctx, e) : undefined,
     text,
     eventId: e.id,
     named: profile.named,

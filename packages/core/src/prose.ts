@@ -57,6 +57,15 @@ function eventBaseAddress(ctx: SimCtx, event: EventTemplate): string | undefined
     : `content:${file}#events[id=${encodeURIComponent(String(event.id))}]`;
 }
 
+export function eventTitleAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
+  const base = eventBaseAddress(ctx, event);
+  return base === undefined ? undefined : `${base}.title`;
+}
+
+export function proseForEventTitle(ctx: SimCtx, event: EventTemplate): string {
+  return renderProse(ctx, eventTitleAddress(ctx, event), event.title);
+}
+
 export function eventBodyAddress(ctx: SimCtx, event: EventTemplate, absent = false): string | undefined {
   const base = eventBaseAddress(ctx, event);
   return base === undefined ? undefined : `${base}.${absent ? 'absentBody' : 'body'}`;
