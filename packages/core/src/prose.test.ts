@@ -3,7 +3,7 @@ import { loadBundle } from '@ed/content';
 import { missingPlainEnglishAddresses, ProseCatalogueS } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
@@ -42,6 +42,20 @@ function fixture() {
 }
 
 describe('prospective prose selection', () => {
+  it('loads the authored catalogue from content without host-side injection', () => {
+    const { bundle } = fixture();
+    bundle.proseVariants.push({
+      address: ADDRESS,
+      plainenglish: 'The authored catalogue reaches the runtime directly.',
+    });
+
+    const session = newGame(bundle, { proseMode: 'plainenglish' });
+
+    expect(session.ctx.prose.mode).toBe('plainenglish');
+    expect(session.ctx.prose.variants.get(ADDRESS)?.plainenglish)
+      .toBe('The authored catalogue reaches the runtime directly.');
+  });
+
   it('reports migration gaps statically and rejects duplicate stable identities', () => {
     expect(missingPlainEnglishAddresses(
       ['content:a#body', 'content:b#body'],
