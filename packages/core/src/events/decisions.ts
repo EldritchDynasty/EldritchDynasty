@@ -15,6 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
+import { proseForEventBody } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -179,7 +180,7 @@ export function queueChoice(
     id: decisionId(ctx),
     year: ctx.world.year,
     event: { ...e, body },
-    body: renderBody(body, fill, ctx),
+    body: renderBody(proseForEventBody(ctx, e, body), fill, ctx),
     ...(callback ? { callback } : {}),
     fill,
     choices: choices.map((c) => choiceAvailability(c, ctx, fill, e)),
