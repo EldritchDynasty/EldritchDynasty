@@ -97,20 +97,24 @@ describe('the string-source audit (issue #276)', () => {
     ]);
   });
 
-  it('gives generated narrative prose a wording-independent source ordinal', () => {
+  it('gives generated narrative prose a wording-independent source ordinal and keeps template tokens', () => {
     const before = plainEnglishCoreWorkItems('year/example.ts', [
       "const first = 'The house paid and the clerk looked away.';",
-      "const second = 'Nobody in the hall answered the question.';",
+      "const second = `\${name} was born, and \${guardian.name} named the child.`;",
     ].join('\n'));
     const after = plainEnglishCoreWorkItems('year/example.ts', [
       "const first = 'The family paid and the clerk said nothing.';",
-      "const second = 'No one in the hall gave an answer.';",
+      "const second = `\${name} arrived, and \${guardian.name} gave the child a name.`;",
     ].join('\n'));
     expect(before.map((x) => x.address)).toEqual(after.map((x) => x.address));
     expect(before.map((x) => x.address)).toEqual([
       'core:year/example.ts#literal[1]',
       'core:year/example.ts#literal[2]',
     ]);
+    expect(before[1]).toMatchObject({
+      text: '${name} was born, and ${guardian.name} named the child.',
+      interpolations: ['${name}', '${guardian.name}'],
+    });
   });
 
   it('finds sentences in code, and not comments, imports or developer messages', () => {
