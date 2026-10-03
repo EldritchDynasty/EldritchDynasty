@@ -98,8 +98,9 @@ Before applying for production access, the owner should be able to point from
   period;
 - smoke results or linked defects from real devices;
 - the Windows ↔ Android save-transfer smoke for the same release family;
-- the real playtester Chronicle screenshot that replaces the current automated
-  placeholder.
+- the real played-run Chronicle screenshot that replaces the current automated
+  placeholder, with its seed and landed SHA recorded in `listing.md` per
+  #322's owner-waiver follow-up (#324 / #335).
 
 This checklist is evidence for the engineering/readiness side of #322. It does
 not replace Play Console's own eligibility checks or the owner's production
