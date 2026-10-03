@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { missingPlainEnglish, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import { setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -231,20 +231,6 @@ export class GameSession {
 
   get year(): number {
     return this.ctx.world.year;
-  }
-
-  get proseMode(): ProseMode {
-    return this.ctx.prose.mode;
-  }
-
-  /** Change wording for text rendered from this point onward; written artefacts do not move. */
-  setProseMode(mode: ProseMode): void {
-    setRuntimeProseMode(this.ctx, mode);
-  }
-
-  /** Stable #411 addresses encountered in plain-English mode without a counterpart yet. */
-  missingPlainEnglish(): string[] {
-    return missingPlainEnglish(this.ctx);
   }
 
   /**
@@ -615,7 +601,7 @@ export function newGame(source: ContentBundle | Content, opts: SessionOptions = 
   const ctx = bootstrap(source, opts.seed ?? 1042, opts.startYear ?? 1042, opts.campaign ?? 'long', opts.libraryRuns ?? []);
   const session = new GameSession(ctx, opts.decider ?? 'ask');
   if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
-  if (opts.proseMode) session.setProseMode(opts.proseMode);
+  if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
   return session;
 }
 
@@ -627,7 +613,7 @@ export function resumeGame(
   const ctx = loadGame(save, source);
   const session = new GameSession(ctx, opts.decider ?? 'ask');
   if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
-  if (opts.proseMode) session.setProseMode(opts.proseMode);
+  if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
   return session;
 }
 
