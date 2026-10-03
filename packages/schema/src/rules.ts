@@ -469,6 +469,23 @@ const awakeningGate: ValidationRule = {
               at,
               `forced Awakening targets slot '${named}' with role '${slot.role}'; use role 'unwoken' so the authored cast guarantees this is an early Awakening`,
             ));
+            continue;
+          }
+          // The engine helper deliberately supports female carriers, but the
+          // current authoring vocabulary has no "carries a font" filter. Until
+          // it does, authored forcing scenes must use the stronger canExpress
+          // proof so a mundane unwoken person cannot be cast and make the
+          // effect silently do nothing. The shipped Drowning already has this
+          // filter because its Madness cost requires the same gate.
+          const provesFont = slot.filters.some(
+            (f) => 'canExpress' in f && f.canExpress === true,
+          );
+          if (!provesFont) {
+            issues.push(err(
+              this.id,
+              at,
+              `forced Awakening target '${named}' is unwoken but does not prove a carried font; add { canExpress: true } until a carrier-only filter exists`,
+            ));
           }
         }
       }
