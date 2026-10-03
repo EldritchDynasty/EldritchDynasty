@@ -221,7 +221,15 @@ export function unclassifiedContentKeys(text: string): string[] {
 
 // ── Code ────────────────────────────────────────────────────────────────────
 
-export interface Literal { text: string; before: string }
+export interface Literal {
+  /** Text normalized for counting: each template interpolation is one `X`. */
+  text: string;
+  /** Source wording as authored between the quotes/backticks. */
+  sourceText: string;
+  /** Exact template interpolation tokens, in source order. */
+  interpolations: string[];
+  before: string;
+}
 
 /**
  * Every string and template literal in a TypeScript source, comments skipped.
@@ -240,10 +248,18 @@ export function literals(src: string): Literal[] {
     if (c === '\'' || c === '"' || c === '`') {
       const start = i;
       let text = '';
+      let sourceText = '';
+      const interpolations: string[] = [];
       i++;
       while (i < n && src[i] !== c) {
-        if (src[i] === '\\') { text += src[i + 1] ?? ''; i += 2; continue; }
+        if (src[i] === '\\') {
+          text += src[i + 1] ?? '';
+          sourceText += src.slice(i, Math.min(n, i + 2));
+          i += 2;
+          continue;
+        }
         if (c === '`' && src[i] === '$' && src[i + 1] === '{') {
+          const interpolationStart = i;
           let depth = 1;
           i += 2;
           while (i < n && depth > 0) {
@@ -251,15 +267,24 @@ export function literals(src: string): Literal[] {
             else if (src[i] === '}') depth--;
             i++;
           }
+          const interpolation = src.slice(interpolationStart, i);
+          interpolations.push(interpolation);
+          sourceText += interpolation;
           text += 'X';
           continue;
         }
         if (c !== '`' && src[i] === '\n') break; // an unterminated quote: a regex or a stray apostrophe
         text += src[i];
+        sourceText += src[i];
         i++;
       }
       i++;
-      out.push({ text, before: src.slice(Math.max(0, start - 40), start) });
+      out.push({
+        text,
+        sourceText,
+        interpolations,
+        before: src.slice(Math.max(0, start - 40), start),
+      });
       continue;
     }
     i++;
@@ -271,12 +296,15 @@ export function literals(src: string): Literal[] {
 const DEVELOPER_CALL = /(?:\bError|\bassert\w*|\bconsole\.\w+|\bdescribe|\bit|\btest|\bexpect)\s*\(\s*$/;
 
 /** A literal a player could read: three words or more, and not import plumbing. */
-export function sentenceLiterals(src: string): string[] {
+function sentenceLiteralDetails(src: string): Literal[] {
   return literals(src)
     .filter((l) => /[a-z]/.test(l.text) && words(l.text) >= 3)
     .filter((l) => !/\b(?:import|from|require)\s*\(?\s*$/.test(l.before))
-    .filter((l) => !DEVELOPER_CALL.test(l.before))
-    .map((l) => l.text);
+    .filter((l) => !DEVELOPER_CALL.test(l.before));
+}
+
+export function sentenceLiterals(src: string): string[] {
+  return sentenceLiteralDetails(src).map((l) => l.text);
 }
 
 export function auditCoreFile(file: string, text: string): StringCount[] {
@@ -300,14 +328,14 @@ export function auditCoreFile(file: string, text: string): StringCount[] {
  */
 export function plainEnglishCoreWorkItems(file: string, text: string): PlainEnglishWorkItem[] {
   const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
-  return sentenceLiterals(text).map((sentence, i) => ({
+  return sentenceLiteralDetails(text).map((literal, i) => ({
     source: 'core',
     file,
     voice,
     address: `core:${file}#literal[${i + 1}]`,
-    text: sentence,
-    words: words(sentence),
-    interpolations: [],
+    text: literal.sourceText,
+    words: words(literal.text),
+    interpolations: literal.interpolations,
   }));
 }
 
