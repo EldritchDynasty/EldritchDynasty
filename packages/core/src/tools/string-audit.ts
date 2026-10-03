@@ -1,8 +1,9 @@
 /**
  * WHERE THE PLAYER'S WORDS COME FROM (issue #276, step 3).
  *
- *   npm run audit:strings              # the totals, by source and by voice
- *   npm run audit:strings -- --files   # and every file, largest first
+ *   npm run audit:strings                           # the totals, by source and by voice
+ *   npm run audit:strings -- --files                # and every file, largest first
+ *   npm run audit:strings -- --plainenglish-worklist # #410's machine-readable narrative worklist
  *
  * An inventory, never a gate: it prints and exits 0. Localisation is not
  * scheduled and no language is chosen; what this answers is how much text
