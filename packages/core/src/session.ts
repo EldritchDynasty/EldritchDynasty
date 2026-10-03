@@ -1,6 +1,6 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, TaleForm, HouseAmbitionId,
+  SavedGame, TaleForm, HouseAmbitionId, ProseMode,
 } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
@@ -50,6 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
+import { missingPlainEnglish, setProseMode as setRuntimeProseMode } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -95,6 +96,8 @@ export interface SessionOptions {
    * player pressing "to the term" is asking for.
    */
   decider?: 'ask' | 'chronicler';
+  /** Prospective wording only; deliberately not persisted in the save. */
+  proseMode?: ProseMode;
 }
 
 /**
@@ -226,6 +229,20 @@ export class GameSession {
 
   get year(): number {
     return this.ctx.world.year;
+  }
+
+  get proseMode(): ProseMode {
+    return this.ctx.prose.mode;
+  }
+
+  /** Change wording for text rendered from this point onward; written artefacts do not move. */
+  setProseMode(mode: ProseMode): void {
+    setRuntimeProseMode(this.ctx, mode);
+  }
+
+  /** Stable #411 addresses encountered in plain-English mode without a counterpart yet. */
+  missingPlainEnglish(): string[] {
+    return missingPlainEnglish(this.ctx);
   }
 
   /**
@@ -594,7 +611,9 @@ export class GameSession {
 
 export function newGame(source: ContentBundle | Content, opts: SessionOptions = {}): GameSession {
   const ctx = bootstrap(source, opts.seed ?? 1042, opts.startYear ?? 1042, opts.campaign ?? 'long', opts.libraryRuns ?? []);
-  return new GameSession(ctx, opts.decider ?? 'ask');
+  const session = new GameSession(ctx, opts.decider ?? 'ask');
+  if (opts.proseMode) session.setProseMode(opts.proseMode);
+  return session;
 }
 
 export function resumeGame(
@@ -602,7 +621,9 @@ export function resumeGame(
   source: ContentBundle | Content,
   opts: SessionOptions = {},
 ): GameSession {
-  return new GameSession(loadGame(save, source), opts.decider ?? 'ask');
+  const session = new GameSession(loadGame(save, source), opts.decider ?? 'ask');
+  if (opts.proseMode) session.setProseMode(opts.proseMode);
+  return session;
 }
 
 // ── The read model ────────────────────────────────────────────────────────
