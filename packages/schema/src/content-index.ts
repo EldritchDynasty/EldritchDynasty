@@ -16,6 +16,7 @@ import type { PrologueDef } from './prologue.js';
 import type { EndingDef } from './ending.js';
 import type { ParcelDef } from './parcel.js';
 import type { PositionDef } from './position.js';
+import type { ProseVariant } from './prose.js';
 import { desugarInline, inlineArcId, outcomesOf } from './desugar.js';
 import { contentSourcesOf } from './assemble.js';
 
@@ -68,6 +69,7 @@ export interface Content {
   readonly endings: EndingDef[];
   readonly parcels: ParcelDef[];
   readonly positions: PositionDef[];
+  readonly proseVariants: ProseVariant[];
 
   /** True for any compiled or authored content id in this bundle. */
   has(id: string): boolean;
@@ -91,6 +93,8 @@ export interface Content {
   talesAbout(eventId: string): TaleDef[];
   parcel(id: string): ParcelDef | undefined;
   position(id: string): PositionDef | undefined;
+  /** Alternate wording for one stable #411 prose address, if migrated. */
+  prose(address: string): ProseVariant | undefined;
 
   mustEvent(id: string, wantedBy?: string): EventTemplate;
   mustAge(id: string, wantedBy?: string): AgeDef;
@@ -147,6 +151,7 @@ export function indexContent(source: ContentBundle | Content): Content {
   const tales = byId(b.tales);
   const parcels = byId(b.parcels);
   const positions = byId(b.positions);
+  const proseVariants = index(b.proseVariants, (p) => p.address);
 
   // One membership test for the save boundary, with no second copy of
   // CONTENT_LAYOUT. Every authored collection in ContentBundle is an array, so
@@ -219,6 +224,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     endings: b.endings,
     parcels: b.parcels,
     positions: b.positions,
+    proseVariants: b.proseVariants,
 
     has: (id) => allIds.has(id),
     sourceOf: (id) => sourcesById.get(id),
@@ -239,6 +245,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     talesAbout: (eventId) => talesAboutIndex.get(eventId) ?? [],
     parcel: (id) => parcels.get(id),
     position: (id) => positions.get(id),
+    prose: (address) => proseVariants.get(address),
 
     mustEvent: must(events, 'event'),
     mustAge: must(ages, 'age'),
