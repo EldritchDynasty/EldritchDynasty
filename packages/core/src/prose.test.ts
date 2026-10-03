@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, saveGame, setProseMode, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
@@ -10,11 +10,6 @@ const ADDRESS =
 
 function fixture() {
   const bundle = loadBundle();
-  bundle.proseVariants.push({
-    address: ADDRESS,
-    plainenglish: 'The work is finished before evening.',
-  });
-
   const authored = bundle.events.find((event) => event.id === 'the_race_silted_through')!;
   const outcome: Outcome = {
     id: 'done_by_evening',
@@ -35,6 +30,7 @@ describe('prospective prose selection', () => {
   it('freezes written pages while later pages use the selected authored variant', () => {
     const { bundle, event, outcome } = fixture();
     const ctx = testWorld(bundle);
+    setProseVariants(ctx, [{ address: ADDRESS, plainenglish: 'The work is finished before evening.' }]);
 
     const first = commitOutcome(ctx, event, outcome, {}, undefined, testRng('prose-original'));
     expect(first.text).toBe(outcome.text);
@@ -54,6 +50,9 @@ describe('prospective prose selection', () => {
     const { bundle, event, outcome } = fixture();
     const original = testWorld(bundle, 912);
     const plain = testWorld(bundle, 912);
+    const variants = [{ address: ADDRESS, plainenglish: 'The work is finished before evening.' }];
+    setProseVariants(original, variants);
+    setProseVariants(plain, variants);
     setProseMode(plain, 'plainenglish');
 
     commitOutcome(original, event, outcome, {}, undefined, testRng('same-outcome'));
