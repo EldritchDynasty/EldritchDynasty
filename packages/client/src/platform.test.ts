@@ -187,6 +187,34 @@ describe('autosave mutation ordering', () => {
     expect(deletes).toBe(0);
     expect(host.saves.get('autosave')).toBeTruthy();
   });
+
+  it('keeps demo persistence out of the normal full-campaign save namespace', async () => {
+    const host = memoryPlatform();
+    const source = loadContent();
+    const fullSave = saveGame(bootstrap(source, 32321, 1042, 'short'));
+    host.saves.set('autosave', fullSave);
+
+    const game = createGame(source, host);
+    await turnQueue();
+    expect(game.resumable.value).toBe(true);
+
+    game.actions.begin(32322, 'demo');
+    await turnQueue();
+
+    expect(host.saves.get('autosave')).toEqual(fullSave);
+    expect(host.saves.get('demo:autosave')).toMatchObject({ campaign: 'demo' });
+    await expect(game.actions.listSaves()).resolves.not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ slot: 'demo:autosave' })]),
+    );
+
+    // Restarting the miniature run clears its private slot only. The real
+    // sitting remains the thing "Continue the last sitting" will resume.
+    game.actions.restart();
+    await turnQueue();
+    expect(host.saves.has('demo:autosave')).toBe(false);
+    expect(host.saves.get('autosave')).toEqual(fullSave);
+    expect(game.resumable.value).toBe(true);
+  });
 });
 
 describe('the platform seam', () => {
