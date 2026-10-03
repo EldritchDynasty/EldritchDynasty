@@ -515,11 +515,26 @@ describe('the content rules', () => {
       if (e.interaction.kind !== 'narration') throw new Error('unreachable');
       e.slots.CHILD = {
         role: 'unwoken', castBy: 'engine', optional: false,
-        filters: [], bind: 'event',
+        filters: [{ canExpress: true }], bind: 'event',
       };
       e.interaction.outcomes[0]!.effects.push({ kind: 'awakening', target: { slot: 'CHILD' } });
     });
     expect(runRule('awakening/gate', b)).toHaveLength(0);
+  });
+
+  it('rejects an unwoken slot that does not prove the target carries a font', () => {
+    const b = withEvents((x) => {
+      const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;
+      if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+      e.slots.CHILD = {
+        role: 'unwoken', castBy: 'engine', optional: false,
+        filters: [], bind: 'event',
+      };
+      e.interaction.outcomes[0]!.effects.push({ kind: 'awakening', target: { slot: 'CHILD' } });
+    });
+    const issues = runRule('awakening/gate', b);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.message).toMatch(/does not prove a carried font/);
   });
 
   it('rejects broad forced-Awakening targets that have no authored unwoken cast', () => {
