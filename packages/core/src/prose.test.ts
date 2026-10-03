@@ -3,13 +3,17 @@ import { loadBundle } from '@ed/content';
 import { missingPlainEnglishAddresses, ProseCatalogueS } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].outcomes[id=done_by_evening].text';
 const RECORD_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.options.record.chronicle';
+const CHOICE_LABEL_ADDRESS =
+  'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].label';
+const RECORD_SUBJECT_ADDRESS =
+  'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.subject';
 
 function fixture() {
   const bundle = loadBundle();
@@ -107,6 +111,45 @@ describe('prospective prose selection', () => {
       'The plain-English record wording.',
     ]);
   });
+
+  it('selects and freezes pending choice labels and Record prompts', () => {
+    const { bundle, event } = fixture();
+    const recorded: EventTemplate = {
+      ...event,
+      record: {
+        subject: 'What should the book say?',
+        options: {
+          record: { chronicle: 'The original record wording.', effects: [], claims: [] },
+          omit: { chronicle: null, effects: [] },
+          embellish: {
+            chronicle: 'The original embellished wording.',
+            effects: [],
+            claims: [],
+            discrepancy: { id: 'fixture_prompt_lie', severity: 'minor', provableBy: ['archive'] },
+          },
+        },
+      },
+    };
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [
+      { address: CHOICE_LABEL_ADDRESS, plainenglish: 'Ask him to handle it.' },
+      { address: RECORD_SUBJECT_ADDRESS, plainenglish: 'What should we write down?' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const choice = queueChoice(ctx, recorded, recorded.body, {}, []);
+    expect(choice.choices.find((candidate) => candidate.id === 'ask_him')?.label)
+      .toBe('Ask him to handle it.');
+
+    const record = queueRecord(ctx, recorded, 'fixture-entry')!;
+    expect(record.subject).toBe('What should we write down?');
+
+    setProseMode(ctx, 'original');
+    expect(choice.choices.find((candidate) => candidate.id === 'ask_him')?.label)
+      .toBe('Ask him to handle it.');
+    expect(record.subject).toBe('What should we write down?');
+  });
+
 
   it('changes rendered words without changing the structured decision', () => {
     const { bundle, event, outcome } = fixture();

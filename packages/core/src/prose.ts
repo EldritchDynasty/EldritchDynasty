@@ -1,5 +1,5 @@
 import { ProseCatalogueS } from '@ed/schema';
-import type { EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
+import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 /**
@@ -78,6 +78,26 @@ export function proseForRecordChronicle(
   original: string,
 ): string {
   return renderProse(ctx, recordChronicleAddress(ctx, event, option), original);
+}
+
+export function recordSubjectAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
+  const base = eventBaseAddress(ctx, event);
+  return base === undefined ? undefined : `${base}.record.subject`;
+}
+
+export function proseForRecordSubject(ctx: SimCtx, event: EventTemplate, original: string): string {
+  return renderProse(ctx, recordSubjectAddress(ctx, event), original);
+}
+
+export function choiceLabelAddress(ctx: SimCtx, event: EventTemplate, choice: Choice): string | undefined {
+  const base = eventBaseAddress(ctx, event);
+  return base === undefined
+    ? undefined
+    : `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}].label`;
+}
+
+export function proseForChoiceLabel(ctx: SimCtx, event: EventTemplate, choice: Choice): string {
+  return renderProse(ctx, choiceLabelAddress(ctx, event, choice), choice.label);
 }
 
 export function outcomeTextAddress(

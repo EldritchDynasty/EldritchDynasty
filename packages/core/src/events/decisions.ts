@@ -15,7 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
-import { proseForEventBody, proseForRecordChronicle } from '../prose.js';
+import { proseForChoiceLabel, proseForEventBody, proseForRecordChronicle, proseForRecordSubject } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -183,7 +183,10 @@ export function queueChoice(
     body: renderBody(proseForEventBody(ctx, e, body), fill, ctx),
     ...(callback ? { callback } : {}),
     fill,
-    choices: choices.map((c) => choiceAvailability(c, ctx, fill, e)),
+    choices: choices.map((c) => ({
+      ...choiceAvailability(c, ctx, fill, e),
+      label: proseForChoiceLabel(ctx, e, c),
+    })),
     cast: castRequests(e, ctx, fill, playerCast),
     decidedBy,
     choicesAreOpen: decidedBy === 'player',
@@ -202,7 +205,7 @@ export function queueRecord(ctx: SimCtx, e: EventTemplate, entryId: string, fill
     id: decisionId(ctx),
     year: ctx.world.year,
     event: e,
-    subject: e.record.subject,
+    subject: proseForRecordSubject(ctx, e, e.record.subject),
     ...(callback ? { callback } : {}),
     options: [
       { option: 'record', chronicle: proseForRecordChronicle(ctx, e, 'record', o.record.chronicle) },
