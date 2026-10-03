@@ -98,6 +98,35 @@ export type ProseMode = z.infer<typeof ProseModeS>;
  */
 export const ProseVariantS = z.object({
   address: z.string().min(1),
-  plainenglish: z.string(),
+  plainenglish: z.string().min(1),
 });
 export type ProseVariant = z.infer<typeof ProseVariantS>;
+
+/** A catalogue cannot have two answers for one stable prose identity. */
+export const ProseCatalogueS = z.array(ProseVariantS).superRefine((variants, ctx) => {
+  const seen = new Set<string>();
+  for (let i = 0; i < variants.length; i++) {
+    const address = variants[i]!.address;
+    if (seen.has(address)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [i, 'address'],
+        message: `duplicate prose variant address '${address}'`,
+      });
+    }
+    seen.add(address);
+  }
+});
+export type ProseCatalogue = z.infer<typeof ProseCatalogueS>;
+
+/**
+ * Migration gate primitive: compare #411 work-item addresses with the authored
+ * catalogue. #415 can therefore report zero missing without running the game.
+ */
+export function missingPlainEnglishAddresses(
+  narrativeAddresses: readonly string[],
+  variants: readonly ProseVariant[],
+): string[] {
+  const present = new Set(variants.map((variant) => variant.address));
+  return [...new Set(narrativeAddresses)].filter((address) => !present.has(address)).sort();
+}
