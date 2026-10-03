@@ -60,7 +60,7 @@ const AUTOSAVE = 'autosave';
  * sitting". Hosts keep treating slots as opaque strings; the client owns this
  * product boundary.
  */
-const DEMO_SAVE_PREFIX = 'demo:';
+const DEMO_SAVE_PREFIX = 'demo-';
 
 function slotForCampaign(slot: string, campaign: CampaignId): string {
   return campaign === 'demo' ? `${DEMO_SAVE_PREFIX}${slot}` : slot;
@@ -397,6 +397,14 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
    */
   let autosaveTail: Promise<void> = Promise.resolve();
   let autosaveRevision = 0;
+  /**
+   * Revision of the normal Short/Long rolling slot only.
+   *
+   * Demo writes share the serialization tail (hosts may still be asynchronous)
+   * but must not invalidate discovery of an older full-campaign autosave that
+   * a native host is still reading.
+   */
+  let fullAutosaveRevision = 0;
 
   function mutateAutosave(operation: () => Promise<void>): { revision: number; done: Promise<void> } {
     const revision = ++autosaveRevision;
@@ -875,7 +883,9 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
     // `keptSave` and `resumable` are the normal front door's Short/Long
     // continuation. A demo can persist without impersonating that run.
-    if (save.campaign !== 'demo') {
+    const demo = save.campaign === 'demo';
+    if (!demo) {
+      fullAutosaveRevision += 1;
       keptSave = save;
       resumable.value = true;
     }
@@ -893,7 +903,9 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       },
       () => {
         if (revision !== autosaveRevision) return;
-        resumable.value = false;
+        // A failed demo write cannot make an existing Short/Long autosave stop
+        // being resumable; it belongs to a different persistence namespace.
+        if (!demo) resumable.value = false;
         saveStatus.value = 'error';
       },
     );
@@ -927,15 +939,15 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     // Composition starts this read immediately. If the player starts or
     // discards a run before a slow host answers, that stale answer must not
     // overwrite the newer local intent.
-    const revision = autosaveRevision;
+    const revision = fullAutosaveRevision;
     try {
       const found = await platform.readSave(AUTOSAVE);
-      if (revision !== autosaveRevision) return keptSave;
+      if (revision !== fullAutosaveRevision) return keptSave;
       keptSave = found;
       resumable.value = keptSave !== null;
       return keptSave;
     } catch {
-      if (revision !== autosaveRevision) return keptSave;
+      if (revision !== fullAutosaveRevision) return keptSave;
       keptSave = null;
       resumable.value = false;
       return null;
@@ -944,6 +956,7 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
   function forget(campaign: CampaignId = 'long'): void {
     if (campaign !== 'demo') {
+      fullAutosaveRevision += 1;
       keptSave = null;
       resumable.value = false;
     }
