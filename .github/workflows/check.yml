@@ -777,6 +777,7 @@ jobs:
     permissions:
       actions: write
       contents: write
+      issues: write
       pull-requests: read
     uses: ./.github/workflows/remote-land.yml
     with:
