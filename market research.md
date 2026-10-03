@@ -604,6 +604,120 @@ before it tries to answer:
 
 ---
 
+## 18A. Visual merchandising: the store page has to prove this is a game
+
+This is a more important production constraint than the previous version of this report made it.
+
+Steam's current trailer guidance says the first trailer is often one of the first things a potential customer sees, that a Discovery Queue impression may have **less than ten seconds**, and that the trailer should still communicate without audio. Valve explicitly recommends making the **first trailer primarily gameplay**. The first two trailers appear before screenshots on the store page.
+
+That pushes Eldritch Dynasty toward a very specific visual requirement:
+
+> **the player must be able to recognise state changing before they have read a paragraph.**
+
+The current product already has the right raw material. It needs to be staged as visual proof.
+
+### The six strongest screenshot / trailer surfaces
+
+1. **The family tree as change over time.**
+   Show marriages, branches, deaths, sacrifices and one highlighted line of continuity. The tree should look different after a decision, not merely contain more names.
+
+2. **The Match as three futures.**
+   A screenshot should make it obvious that the player is comparing people and consequences, not choosing between three differently worded buttons.
+
+3. **Record / Omit / Embellish.**
+   Show the act and the book together: what happened, what the house chose to say, and the visual treatment of the resulting page.
+
+4. **A delayed callback.**
+   A strong marketing image can pair an old Chronicle page with the later consequence that cites it. This is the product's most distinctive proof of “choices matter”.
+
+5. **A deliberate rite.**
+   Rites should have a before / decision / after visual rhythm that looks unlike an ordinary event. The important image is not spectacle by itself; it is a named person being spent and the house state changing because of it.
+
+6. **The House Afterimage.**
+   A compact end-of-run composition — line, people, ending, one lie, one loss, one achievement — gives the product a visual object that can serve the ending, screenshots, social sharing and press material at once.
+
+### Visual language should carry information
+
+The strongest visual additions are not decorative illustrations between paragraphs. They answer one of five questions:
+
+- **who matters?**
+- **what changed?**
+- **what did this cost?**
+- **what is the house trying to do?**
+- **what is remembered?**
+
+This suggests a restrained visual system:
+
+- **blood / lineage:** branching lines, seals, portraits or silhouettes, inherited marks;
+- **debt / Ledger:** ruled pages, clauses, marginal countersigns, an object accumulating completion without becoming a generic progress bar;
+- **record:** ink, blanks, overwritten lines, marginal annotations, conflicting copies;
+- **Ages:** typography, page material, illumination, wear and framing that make a new Age legible before a label explains it;
+- **rites:** deliberate changes in framing, spacing and motion so the player knows the interaction has exceptional weight.
+
+The concept does not need a conventional strategic world map to become more visual. The **tree, Chronicle, plat/holdings, Match comparison and ending artefact** are more distinctive visual surfaces.
+
+### Steam asset implications
+
+Steam currently requires store screenshots at **1920×1080 or larger in 16:9**, and its required store capsules are artwork plus the game logo rather than miniature feature lists. Base capsules cannot carry review scores, awards, discount copy or similar marketing text.
+
+That means the capsule art has to communicate the tone of **a dynasty under a centuries-long debt** without explanatory copy. Feature explanation belongs in gameplay screenshots, trailers and the written About section.
+
+Steam's About section can embed screenshots and short animations. Valve recommends roughly **1170 px wide** assets for high-DPI presentation and notes that text embedded inside images creates extra localization work. For this game, that argues for:
+
+- textless or minimally textual feature GIFs where possible;
+- real in-game UI text localized by the game rather than baked into marketing art;
+- one visual motif that survives every capsule crop;
+- screenshots captured from actual gameplay states rather than bespoke mock-ups that cannot be reproduced in the product.
+
+### A practical visual proof set
+
+Before a public marketing push, assemble one clean 16:9 capture for each:
+
+| Proof | The player should understand without a caption |
+|---|---|
+| Bloodline | this family has changed over generations |
+| Match | these candidates lead to different futures |
+| Record | the player controls what history claims |
+| Callback | the game remembers an old act |
+| Ambition | the house is trying to reach something over decades |
+| Rite | a named person is being deliberately spent |
+| Ending | this completed house has a specific story |
+
+If those seven images all look like “a paragraph in a parchment panel”, the visual design still has a commercial problem even if the underlying systems are excellent.
+
+Sources:
+- Steamworks, **Trailers**: https://partner.steamgames.com/doc/store/trailer
+- Steamworks, **Graphical Assets - Overview**: https://partner.steamgames.com/doc/store/assets
+- Steamworks, **Graphical Asset Rules**: https://partner.steamgames.com/doc/store/assets/rules
+- Steamworks, **Store Page Written Description**: https://partner.steamgames.com/doc/store/page/description
+- Steamworks, **Store Page Extra Asset Management**: https://partner.steamgames.com/doc/store/page/assets
+
+---
+
+## 18B. Near-term Steam timing: October 2026 Next Fest is now a readiness decision
+
+Steam's official schedule for the October 2026 Next Fest is:
+
+- **28 September 2026:** deadline for required items to be submitted for review;
+- **8 October:** press preview begins;
+- **19 October:** Next Fest begins;
+- **26 October:** Next Fest ends and the wrap-up launches.
+
+As of **3 October 2026**, the review-submission deadline has already passed. A project that did not make that submission should not distort the demo or marketing build to chase the October event. Steam says a title can participate in only **one** Next Fest, and identifies **February 2027** as the next planned edition.
+
+That makes the right question:
+
+> **Is the current demo strong enough that this is the one Next Fest we want to spend?**
+
+If the project is already registered and review-ready for October, the priority is not adding another feature. It is making the demo prove the loop quickly, capturing representative gameplay, and making the store page communicate without audio or long reading.
+
+If it is not already through the September review milestone, February 2027 is the cleaner planning target. Use the extra time to make sure the demo reaches a complete Eldritch shape — debt, person, Match, choice, Record, callback, frame, forward problem — instead of merely being longer.
+
+Source:
+- Steamworks, **Steam Next Fest: October 2026**: https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
+
+---
+
 # 19. Price
 
 The concept brief's **NZD $28–35** target remains defensible as a working band.
@@ -909,7 +1023,7 @@ The next work should make that sentence **faster to understand, harder to doubt,
 
 # Sources checked in this update
 
-Accessed 25–27 September 2026 unless otherwise noted.
+Comparable/store/community sources were checked 25–27 September 2026; the Steamworks platform/merchandising sources added in §18A–B were checked 3 October 2026.
 
 ## Direct Steam/store evidence
 
@@ -951,6 +1065,21 @@ Accessed 25–27 September 2026 unless otherwise noted.
   https://steamcommunity.com/app/2754380/reviews/
 - The King is Watching Steam reviews/discussions  
   https://steamcommunity.com/app/2753900/reviews/
+
+## Steam platform / merchandising guidance
+
+- Steamworks, **Trailers** — gameplay-first trailer guidance and store ordering  
+  https://partner.steamgames.com/doc/store/trailer
+- Steamworks, **Graphical Assets - Overview** — current capsule and screenshot dimensions  
+  https://partner.steamgames.com/doc/store/assets
+- Steamworks, **Graphical Asset Rules** — capsule-content restrictions  
+  https://partner.steamgames.com/doc/store/assets/rules
+- Steamworks, **Store Page Written Description** — embedded visual and localization guidance  
+  https://partner.steamgames.com/doc/store/page/description
+- Steamworks, **Store Page Extra Asset Management** — high-DPI image/animation guidance  
+  https://partner.steamgames.com/doc/store/page/assets
+- Steamworks, **Steam Next Fest: October 2026** — October dates, submission milestone, one-Fest eligibility and February 2027 next edition  
+  https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
 
 ## Narrative/game-design background
 
