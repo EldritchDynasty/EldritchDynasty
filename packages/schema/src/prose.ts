@@ -103,6 +103,162 @@ export const ProseVariantS = z.object({
 export type ProseVariant = z.infer<typeof ProseVariantS>;
 
 /**
+ * Content fields whose string values are player-facing narrative prose.
+ *
+ * This vocabulary is shared by the #411 worklist and the editor. Keeping it
+ * here prevents the authoring tool from growing a second hand-maintained list
+ * of event/arc/character prose fields that can drift from the migration audit.
+ */
+export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
+  'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'description',
+  'teller', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
+  'closing', 'because', 'cause', 'thesis', 'notarisedBy',
+  'friendsPrompt', 'housePrompt', 'campaignText', 'inheritedLine',
+]);
+
+const CONTENT_INTERPOLATION = /\{[A-Z][A-Z0-9_]*\}/g;
+
+export function contentInterpolationTokens(text: string): string[] {
+  return text.match(CONTENT_INTERPOLATION) ?? [];
+}
+
+function proseWordCount(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function isContentProse(text: string): boolean {
+  return /[A-Za-z]/.test(text) && proseWordCount(text) >= 2;
+}
+
+export type ContentProsePathSegment =
+  | { kind: 'key'; key: string }
+  | { kind: 'index'; index: number }
+  | { kind: 'identity'; field: 'id' | 'key'; value: string };
+
+export interface ContentProseEntry {
+  address: string;
+  text: string;
+  words: number;
+  interpolations: string[];
+  /** True when this wording lives under a tier: frame event. */
+  frameTier: boolean;
+  /** Structural path used by the editor to edit Original without parsing the address string. */
+  path: ContentProsePathSegment[];
+}
+
+function authoredIdentity(value: unknown): { field: 'id' | 'key'; value: string } | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const row = value as Record<string, unknown>;
+  if (typeof row.id === 'string') return { field: 'id', value: row.id };
+  if (typeof row.key === 'string') return { field: 'key', value: row.key };
+  return undefined;
+}
+
+function segmentText(segment: ContentProsePathSegment): string {
+  switch (segment.kind) {
+    case 'key': return segment.key;
+    case 'index': return `[${segment.index}]`;
+    case 'identity': return `[${segment.field}=${encodeURIComponent(segment.value)}]`;
+  }
+}
+
+function pathText(path: readonly ContentProsePathSegment[]): string {
+  let out = '';
+  for (const segment of path) {
+    const text = segmentText(segment);
+    if (segment.kind === 'key') out += out ? `.${text}` : text;
+    else out += text;
+  }
+  return out;
+}
+
+/**
+ * Walk authored data exactly once for both #411's migration worklist and #414's
+ * dual-prose editor. Array identity prefers authored id/key over position, so
+ * rewording or reordering an event does not orphan its Plain English partner.
+ */
+export function contentProseEntries(file: string, document: unknown): ContentProseEntry[] {
+  const out: ContentProseEntry[] = [];
+
+  const visit = (
+    value: unknown,
+    key: string,
+    path: ContentProsePathSegment[],
+    frameTier: boolean,
+  ): void => {
+    if (typeof value === 'string') {
+      if (!CONTENT_PROSE_KEYS.has(key) || !isContentProse(value)) return;
+      out.push({
+        address: `content:${file}#${pathText(path)}`,
+        text: value,
+        words: proseWordCount(value),
+        interpolations: contentInterpolationTokens(value),
+        frameTier,
+        path,
+      });
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        const identity = authoredIdentity(item);
+        visit(
+          item,
+          key,
+          [...path, identity
+            ? { kind: 'identity', field: identity.field, value: identity.value }
+            : { kind: 'index', index }],
+          frameTier,
+        );
+      });
+      return;
+    }
+
+    if (!value || typeof value !== 'object') return;
+    const row = value as Record<string, unknown>;
+    const nextFrame = frameTier || row.tier === 'frame';
+    for (const [childKey, child] of Object.entries(row)) {
+      visit(child, childKey, [...path, { kind: 'key', key: childKey }], nextFrame);
+    }
+  };
+
+  visit(document, '', [], false);
+  return out;
+}
+
+/** Mutate one Original prose field using the structural path returned above. */
+export function setContentProseText(
+  document: unknown,
+  path: readonly ContentProsePathSegment[],
+  text: string,
+): boolean {
+  if (!document || typeof document !== 'object' || path.length === 0) return false;
+  let current: unknown = document;
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const segment = path[i]!;
+    if (segment.kind === 'key') {
+      if (!current || typeof current !== 'object' || Array.isArray(current)) return false;
+      current = (current as Record<string, unknown>)[segment.key];
+    } else if (segment.kind === 'index') {
+      if (!Array.isArray(current)) return false;
+      current = current[segment.index];
+    } else {
+      if (!Array.isArray(current)) return false;
+      current = current.find((item) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+        return (item as Record<string, unknown>)[segment.field] === segment.value;
+      });
+    }
+  }
+
+  const last = path[path.length - 1]!;
+  if (last.kind !== 'key' || !current || typeof current !== 'object' || Array.isArray(current)) return false;
+  (current as Record<string, unknown>)[last.key] = text;
+  return true;
+}
+
+/**
  * A catalogue cannot have two answers for one stable prose identity.
  *
  * Storage is intentionally not smuggled into ContentBundle here: every bundle
