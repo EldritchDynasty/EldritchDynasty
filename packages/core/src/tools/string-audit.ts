@@ -86,6 +86,7 @@ export const CONTENT_NOT_PROSE: ReadonlyMap<string, string> = new Map([
   ['note', 'a founding character\'s designer note (`SeedPersonS.note`); never rendered'],
   ['effect', 'a clause\'s designer note on what it changes at 1542; clauses.yaml says it is never shown'],
   ['bias', 'a tale\'s bias is an enum, and a character\'s a record of numbers'],
+  ['plainenglish', 'the authored counterpart itself; it answers a work item and must not recursively create another'],
 ]);
 
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
