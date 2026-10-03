@@ -5,6 +5,7 @@ import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
+import { proseForOutcome } from '../prose.js';
 
 /**
  * THE FRAME (concept §2, Layer 1; issue #13).
@@ -179,7 +180,7 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng): FrameEntr
   const fill = autoCast(e, ctx, res.fill, res.playerCast, rng);
 
   const outcome = pickOutcome(e.interaction.outcomes, rng, ctx);
-  const text = renderBody(outcome.text || e.body, fill, ctx);
+  const text = renderBody(proseForOutcome(ctx, e, outcome), fill, ctx);
   const entry: FrameEntry = { year: w.year, eventId: e.id, outcomeId: outcome.id, text };
 
   w.frame.entries.push(entry);
