@@ -24,6 +24,7 @@ export * from './branch.js';
 export * from './rival.js';
 export * from './clause.js';
 export * from './prologue.js';
+export * from './signing.js';
 export * from './ending.js';
 export * from './campaign.js';
 export * from './ambition.js';
