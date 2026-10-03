@@ -884,8 +884,8 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     // `keptSave` and `resumable` are the normal front door's Short/Long
     // continuation. A demo can persist without impersonating that run.
     const demo = save.campaign === 'demo';
+    const fullRevision = demo ? fullAutosaveRevision : ++fullAutosaveRevision;
     if (!demo) {
-      fullAutosaveRevision += 1;
       keptSave = save;
       resumable.value = true;
     }
@@ -902,10 +902,13 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
         void refreshSaves();
       },
       () => {
+        // Namespace freshness and presentation freshness are separate. A demo
+        // write may be the newest operation overall without superseding a
+        // failed Short/Long write to the ordinary autosave slot.
+        if (!demo && fullRevision === fullAutosaveRevision) resumable.value = false;
         if (revision !== autosaveRevision) return;
-        // A failed demo write cannot make an existing Short/Long autosave stop
-        // being resumable; it belongs to a different persistence namespace.
-        if (!demo) resumable.value = false;
+        // Conversely, a failed demo write cannot clear a real full-campaign
+        // continuation: it belongs to a different persistence namespace.
         saveStatus.value = 'error';
       },
     );
