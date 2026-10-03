@@ -466,10 +466,32 @@ interface MadnessHolder {
   ceiling: number;
 }
 
+type MadnessRoute = 'none' | 'vessel' | 'great_rite' | 'unmaking';
+
+interface MadnessRouteSample {
+  madness: number;
+  mind: number;
+}
+
+function madnessRoute(rites: readonly string[]): MadnessRoute {
+  if (rites.includes('unmaking')) return 'unmaking';
+  if (rites.includes('great_rite')) return 'great_rite';
+  if (rites.includes('vessel')) return 'vessel';
+  return 'none';
+}
+
 interface LadderSamples {
   minds: number[];
   madnesses: number[];
   powers: number[];
+  /**
+   * #378 DIAGNOSTIC. Person-year Madness split by the progression state the
+   * person had at that sample. A person may contribute to more than one route
+   * across his life as he climbs; that is intentional — this asks whether the
+   * tail appears before a rite, after the Vessel, after the Great Rite, or
+   * after an Unmaking without changing the gate's judgement.
+   */
+  madnessByRoute: Record<MadnessRoute, MadnessRouteSample[]>;
   /**
    * THE SECOND MAN (issue #61, Stage E2). One entry per sampled point in
    * time, not per person — the SECOND-highest power among that year's living
@@ -527,7 +549,13 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
 
   const content = indexContent(source);
   const samples: LadderSamples = {
-    minds: [], madnesses: [], powers: [], secondPowers: [], held: new Map(), madnessHolders: [],
+    minds: [],
+    madnesses: [],
+    powers: [],
+    madnessByRoute: { none: [], vessel: [], great_rite: [], unmaking: [] },
+    secondPowers: [],
+    held: new Map(),
+    madnessHolders: [],
   };
   for (let i = 0; i < runs; i++) {
     const seed = 5000 + i * 7;
@@ -549,6 +577,7 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
         samples.minds.push(mind);
         samples.madnesses.push(madness);
         samples.powers.push(power);
+        samples.madnessByRoute[madnessRoute(p.rites)].push({ madness, mind });
         yearPowers.push(power);
         const prior = holderPeaks.get(p.id);
         if (!prior || madness > prior.madness) {
@@ -639,7 +668,7 @@ export function gateLadderScales(
   const every = opts.every ?? 25;
 
   const {
-    minds, madnesses, powers, secondPowers, held, madnessHolders,
+    minds, madnesses, powers, madnessByRoute, secondPowers, held, madnessHolders,
   } = ladderSamples(source, runs, years, every);
 
   const share = (values: number[], floor: number) =>
@@ -647,8 +676,28 @@ export function gateLadderScales(
 
   const lines = [
     `gate 9 (ladder scales): ${runs} runs x ${years}y — ${minds.length} expresser-samples`,
-    '  #378 diagnostic — top distinct sampled Madness holders per run:',
+    '  #378 diagnostic — sampled Madness by progression route:',
   ];
+  const routeOrder: MadnessRoute[] = ['none', 'vessel', 'great_rite', 'unmaking'];
+  for (const route of routeOrder) {
+    const values = madnessByRoute[route];
+    const max = values.length ? Math.max(...values.map((v) => v.madness)) : 0;
+    const atDemigod = values.length
+      ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.demigod!).length / values.length
+      : 0;
+    const atGod = values.length
+      ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.god!).length / values.length
+      : 0;
+    const viableGod = values.length
+      ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.god! && v.mind >= v.madness).length / values.length
+      : 0;
+    lines.push(
+      `    ${route.padEnd(10)} samples ${String(values.length).padStart(4)}`
+      + ` · max ${max.toFixed(1)} · >=60 ${atDemigod.toFixed(1)}%`
+      + ` · >=90 ${atGod.toFixed(1)}% · >=90 with mind>=madness ${viableGod.toFixed(1)}%`,
+    );
+  }
+  lines.push('  #378 diagnostic — top distinct sampled Madness holders per run:');
   let holderSeed = Number.NaN;
   let holderRank = 0;
   for (const h of madnessHolders) {
