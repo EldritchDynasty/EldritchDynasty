@@ -21,10 +21,16 @@ function fixture() {
     tags: [],
     effects: [],
   };
+  if (authored.interaction.kind !== 'choice') throw new Error('fixture event is no longer a choice');
   const event: EventTemplate = {
     ...authored,
     slots: {},
-    interaction: { kind: 'narration', outcomes: [outcome] },
+    interaction: {
+      ...authored.interaction,
+      choices: authored.interaction.choices.map((choice) => choice.id === 'ask_him'
+        ? { ...choice, outcomes: choice.outcomes.map((item) => item.id === outcome.id ? outcome : item) }
+        : choice),
+    },
   };
   return { bundle, event, outcome };
 }
