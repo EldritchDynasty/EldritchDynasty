@@ -49,8 +49,26 @@ export function futureOf(card: MatchCard, priorities: SessionView['ageMatchPrior
   return matchFuture(card, priorities);
 }
 
-/** The rolling slot every host keeps without asking. */
+/** The rolling slot every full campaign keeps without asking. */
 const AUTOSAVE = 'autosave';
+/**
+ * Demo persistence is deliberately a separate namespace (#323 Track C).
+ *
+ * The demo is not offered on the normal front door yet. Letting it write the
+ * ordinary `autosave` slot would make a hidden 33-year product profile replace
+ * a player's Short/Long sitting and then appear behind "Continue the last
+ * sitting". Hosts keep treating slots as opaque strings; the client owns this
+ * product boundary.
+ */
+const DEMO_SAVE_PREFIX = 'demo:';
+
+function slotForCampaign(slot: string, campaign: CampaignId): string {
+  return campaign === 'demo' ? `${DEMO_SAVE_PREFIX}${slot}` : slot;
+}
+
+function isDemoSaveSlot(slot: string): boolean {
+  return slot.startsWith(DEMO_SAVE_PREFIX);
+}
 
 /**
  * HOW MUCH OF THE PASSAGE LOG IS KEPT (issue #49).
@@ -565,8 +583,12 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     },
 
     restart() {
+      // Capture the namespace before clearing the live session. Restarting a
+      // demo must delete only the demo autosave and leave a real Short/Long
+      // sitting available on the front door.
+      const campaign = session.value?.save().campaign ?? 'long';
       clearLiveRun();
-      forget();
+      forget(campaign);
     },
 
     /**
@@ -817,8 +839,9 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
    * partitions the run: two closings never share a year.
    */
   function saveChapterBoundary(g: GameSession, view: ChapterView): void {
-    const slot = `chapter-${view.age}-${view.to}`;
-    void platform.writeSave(slot, g.save()).then(refreshSaves).catch(() => undefined);
+    const save = g.save();
+    const slot = slotForCampaign(`chapter-${view.age}-${view.to}`, save.campaign);
+    void platform.writeSave(slot, save).then(refreshSaves).catch(() => undefined);
   }
 
   function archiveFinished(g: GameSession): void {
@@ -849,11 +872,17 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     const save = g.save();
     archiveFinished(g);
     unlockFinished(save);
-    keptSave = save;
-    resumable.value = true;
+
+    // `keptSave` and `resumable` are the normal front door's Short/Long
+    // continuation. A demo can persist without impersonating that run.
+    if (save.campaign !== 'demo') {
+      keptSave = save;
+      resumable.value = true;
+    }
     saveStatus.value = 'saving';
 
-    const { revision, done } = mutateAutosave(() => platform.writeSave(AUTOSAVE, save));
+    const slot = slotForCampaign(AUTOSAVE, save.campaign);
+    const { revision, done } = mutateAutosave(() => platform.writeSave(slot, save));
     void done.then(
       () => {
         // A newer write/delete is already the player's intent. An older
@@ -885,7 +914,13 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   }
 
   async function refreshSaves(): Promise<void> {
-    try { saves.value = await platform.listSaves(); } catch { saves.value = []; }
+    try {
+      // Until Track C exposes an explicit demo entry point, its private
+      // namespace must not leak into the normal "Runs written down" list.
+      saves.value = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
+    } catch {
+      saves.value = [];
+    }
   }
 
   async function readKept(): Promise<unknown | null> {
@@ -907,11 +942,14 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     }
   }
 
-  function forget(): void {
-    keptSave = null;
-    resumable.value = false;
+  function forget(campaign: CampaignId = 'long'): void {
+    if (campaign !== 'demo') {
+      keptSave = null;
+      resumable.value = false;
+    }
     saveStatus.value = 'idle';
-    const { done } = mutateAutosave(() => platform.deleteSave(AUTOSAVE));
+    const slot = slotForCampaign(AUTOSAVE, campaign);
+    const { done } = mutateAutosave(() => platform.deleteSave(slot));
     void done.catch(() => undefined);
   }
 
