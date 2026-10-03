@@ -391,7 +391,11 @@ jobs:
           CODE_SIGNING_ALLOWED=NO build
 
       - name: install and launch on an iPhone simulator
-        timeout-minutes: 6
+        # #409 exposed the real runner envelope: a successful control took
+        # ~3m40s here, while a slower install/container lookup left too little
+        # of the old six-minute budget for simctl launch. This is a runtime
+        # smoke, not a latency gate; give CoreSimulator room to become ready.
+        timeout-minutes: 10
         working-directory: packages/mobile
         run: |
           DEVICES="$(xcrun simctl list devices available -j)"
@@ -431,11 +435,21 @@ jobs:
             exit 1
           }
 
+          # A device can report Booted before SpringBoard and the app-install
+          # services are actually ready. Wait for CoreSimulator's own boot
+          # readiness signal before judging install/launch latency.
+          echo "Waiting for simulator services at $(date -u +%H:%M:%S)"
+          xcrun simctl bootstatus "$UDID" -b
+
           APP="$RUNNER_TEMP/ed-ios-derived/Build/Products/Debug-iphonesimulator/App.app"
           test -d "$APP" || { echo "Built iOS app missing at $APP"; exit 1; }
+          echo "Installing app at $(date -u +%H:%M:%S)"
           xcrun simctl install "$UDID" "$APP"
+          echo "Resolving app container at $(date -u +%H:%M:%S)"
           xcrun simctl get_app_container "$UDID" nz.eldritchdynasty.game app
+          echo "Launching app at $(date -u +%H:%M:%S)"
           xcrun simctl launch "$UDID" nz.eldritchdynasty.game
+          echo "Simulator launch completed at $(date -u +%H:%M:%S)"
 
   # ── THE TEST LANE, IN FOUR, PACKED BY DURATION ────────────────────────────
   #
