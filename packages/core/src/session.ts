@@ -598,7 +598,7 @@ export class GameSession {
 }
 
 function authoredProseVariants(source: ContentBundle | Content): readonly ProseVariant[] {
-  return 'bundle' in source ? source.proseVariants : source.proseVariants;
+  return source.proseVariants;
 }
 
 export function newGame(source: ContentBundle | Content, opts: SessionOptions = {}): GameSession {
