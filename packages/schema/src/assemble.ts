@@ -44,6 +44,10 @@ export const CONTENT_LAYOUT: readonly CollectionSpec[] = [
   { key: 'tales', source: { kind: 'file', path: 'tales.yaml' } },
   { key: 'parcels', source: { kind: 'file', path: 'parcels.yaml' } },
   { key: 'positions', source: { kind: 'file', path: 'positions.yaml' } },
+  // A counterpart lives beside the Original prose it answers. Scanning every
+  // YAML file keeps #415 batches independent instead of funnelling 127k words
+  // through one global catalogue file.
+  { key: 'proseVariants', source: { kind: 'dir', prefix: '' } },
   { key: 'ages', source: { kind: 'dir', prefix: 'ages/' } },
   { key: 'events', source: { kind: 'dir', prefix: 'events/' } },
   { key: 'arcs', source: { kind: 'dir', prefix: 'arcs/' } },
