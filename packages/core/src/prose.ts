@@ -113,6 +113,7 @@ export function outcomeTextAddress(
   ctx: SimCtx,
   event: EventTemplate,
   outcome: Outcome,
+  choiceId?: string,
 ): string | undefined {
   const base = eventBaseAddress(ctx, event);
   if (base === undefined) return undefined;
@@ -121,15 +122,24 @@ export function outcomeTextAddress(
     return `${base}.interaction.outcomes[id=${encodeURIComponent(outcome.id)}].text`;
   }
 
-  const choice = event.interaction.choices.find((candidate) =>
-    candidate.outcomes.some((item) => item === outcome || item.id === outcome.id));
-  if (!choice) return undefined;
+  // Outcome ids are not guaranteed unique across branches. The commit path
+  // already carries the exact choice id for the decision log; use that same
+  // identity for prose rather than reverse-searching by outcome id.
+  const choice = choiceId === undefined
+    ? event.interaction.choices.find((candidate) => candidate.outcomes.some((item) => item === outcome))
+    : event.interaction.choices.find((candidate) => candidate.id === choiceId);
+  if (!choice || !choice.outcomes.some((item) => item === outcome || item.id === outcome.id)) return undefined;
   return `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}].outcomes[id=${encodeURIComponent(outcome.id)}].text`;
 }
 
 /** Choose the authored variant before slot interpolation freezes the words. */
-export function proseForOutcome(ctx: SimCtx, event: EventTemplate, outcome: Outcome): string {
-  if (outcome.text) return renderProse(ctx, outcomeTextAddress(ctx, event, outcome), outcome.text);
+export function proseForOutcome(
+  ctx: SimCtx,
+  event: EventTemplate,
+  outcome: Outcome,
+  choiceId?: string,
+): string {
+  if (outcome.text) return renderProse(ctx, outcomeTextAddress(ctx, event, outcome, choiceId), outcome.text);
   return renderProse(ctx, eventBodyAddress(ctx, event), event.body);
 }
 

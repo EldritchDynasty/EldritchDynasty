@@ -513,6 +513,7 @@ export function applyOutcome(
   ctx: SimCtx,
   fill: SlotFill,
   scope: EvalScope = {},
+  choiceId?: string,
 ): ResolvedEvent {
   // Allocate before effects: an effect may create a delayed consequence that
   // needs to remember the page this outcome is about to write (#269).
@@ -522,7 +523,7 @@ export function applyOutcome(
   const inner: EvalScope = { ...scope, event: e, page: entryId };
   for (const eff of outcome.effects) applyEffect(eff, ctx, fill, inner);
 
-  const text = renderBody(proseForOutcome(ctx, e, outcome), fill, ctx);
+  const text = renderBody(proseForOutcome(ctx, e, outcome, choiceId), fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
   const people = [...new Set(Object.values(fill).flatMap((cast) =>
     typeof cast === 'string' ? [cast] : cast))];

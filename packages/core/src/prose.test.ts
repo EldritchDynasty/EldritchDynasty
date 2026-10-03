@@ -181,6 +181,35 @@ describe('prospective prose selection', () => {
     expect(plain.world.chronicle.at(-1)?.text).not.toBe(original.world.chronicle.at(-1)?.text);
   });
 
+  it('uses the exact choice identity when two branches reuse an outcome id', () => {
+    const { bundle, event, outcome } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('fixture event is no longer a choice');
+
+    const first: Outcome = { ...outcome, id: 'shared_result', text: 'The first branch used the shared result.' };
+    const second: Outcome = { ...outcome, id: 'shared_result', text: 'The second branch used the shared result.' };
+    const ambiguous: EventTemplate = {
+      ...event,
+      interaction: {
+        ...event.interaction,
+        choices: [
+          { ...event.interaction.choices[0]!, id: 'first_branch', outcomes: [first] },
+          { ...event.interaction.choices[1]!, id: 'second_branch', outcomes: [second] },
+        ],
+      },
+    };
+    const secondAddress =
+      'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=second_branch].outcomes[id=shared_result].text';
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [{ address: secondAddress, plainenglish: 'The second branch finished.' }]);
+    setProseMode(ctx, 'plainenglish');
+
+    const resolved = commitOutcome(ctx, ambiguous, second, {}, 'second_branch', testRng('duplicate-outcome-id'));
+
+    expect(resolved.text).toBe('The second branch finished.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+
   it('reports an unmigrated address and never persists the presentation mode', () => {
     const { bundle, event } = fixture();
     const ctx = testWorld(bundle);

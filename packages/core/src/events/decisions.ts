@@ -260,7 +260,7 @@ export function commitOutcome(
   // The arc, if any, is in scope for the whole commit: `arc_flag` effects write
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
-  const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance });
+  const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
 
   // An arc node is FORCED: `selection.ts` keeps it out of the ambient and
   // pressure pools entirely, so no cooldown and no per-run cap is ever
