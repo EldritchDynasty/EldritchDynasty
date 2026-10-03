@@ -15,7 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
-import { proseForEventBody } from '../prose.js';
+import { proseForEventBody, proseForRecordChronicle } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -205,9 +205,9 @@ export function queueRecord(ctx: SimCtx, e: EventTemplate, entryId: string, fill
     subject: e.record.subject,
     ...(callback ? { callback } : {}),
     options: [
-      { option: 'record', chronicle: o.record.chronicle },
+      { option: 'record', chronicle: proseForRecordChronicle(ctx, e, 'record', o.record.chronicle) },
       { option: 'omit', chronicle: null },
-      { option: 'embellish', chronicle: o.embellish.chronicle, discrepancy: o.embellish.discrepancy.id },
+      { option: 'embellish', chronicle: proseForRecordChronicle(ctx, e, 'embellish', o.embellish.chronicle), discrepancy: o.embellish.discrepancy.id },
     ],
     entryId,
     fill,
@@ -499,7 +499,11 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
   if (!pending || pending.kind !== 'record') return { ok: false };
   drop(ctx, decision);
-  return { ok: true, line: applyRecord(ctx, pending.event, pending.entryId, option, pending.fill) };
+  const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
+  return { ok: true, line: applyRecord(
+    ctx, pending.event, pending.entryId, option, pending.fill,
+    typeof frozen === 'string' ? frozen : undefined,
+  ) };
 }
 
 /**
@@ -508,7 +512,14 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
  * wrong line the moment one template fired twice in a year (two arc steps
  * due the same year sharing a node, most plausibly).
  */
-export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, option: RecordOption, fill: SlotFill = {}): string | null {
+export function applyRecord(
+  ctx: SimCtx,
+  e: EventTemplate,
+  entryId: string,
+  option: RecordOption,
+  fill: SlotFill = {},
+  frozenChronicle?: string,
+): string | null {
   const block = e.record;
   if (!block) return null;
   const w = ctx.world;
@@ -556,7 +567,11 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   // "him/her" copy after the player chooses to record it.
   const text = option === 'omit' || chosen.chronicle === null
     ? null
-    : renderBody(chosen.chronicle, fill, ctx);
+    : renderBody(
+      frozenChronicle ?? proseForRecordChronicle(ctx, e, option, chosen.chronicle),
+      fill,
+      ctx,
+    );
   if (entry) {
     entry.text = text;
     entry.record = option;
