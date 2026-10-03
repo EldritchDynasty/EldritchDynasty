@@ -52,6 +52,25 @@ export interface StringCount {
 }
 
 /**
+ * One narrative string that needs an authored Plain English counterpart (#410).
+ *
+ * The address is identity, not wording. Content prefers authored `id` / `key`
+ * fields over array positions so rewording a sentence cannot orphan its
+ * counterpart. Code prose has no authored message ids yet, so its address is
+ * the deterministic ordinal among player-facing sentence literals in that
+ * source file; #412 owns the eventual runtime message-id seam.
+ */
+export interface PlainEnglishWorkItem {
+  source: 'content' | 'core';
+  file: string;
+  voice: Voice;
+  address: string;
+  text: string;
+  words: number;
+  interpolations: string[];
+}
+
+/**
  * Content keys whose string values reach a player.
  *
  * `CONTENT_NOT_PROSE` is the other half, and the pair is what keeps this
@@ -119,6 +138,69 @@ export function auditContentFile(file: string, text: string): StringCount[] {
   };
   visit(doc, '', contentVoice(file));
   return VOICES.flatMap((v) => (out.has(v) ? [out.get(v)!] : []));
+}
+
+
+interface AuthoredIdentity { field: 'id' | 'key'; value: string }
+
+function authoredIdentity(v: unknown): AuthoredIdentity | undefined {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+  const o = v as Record<string, unknown>;
+  if (typeof o.id === 'string') return { field: 'id', value: o.id };
+  if (typeof o.key === 'string') return { field: 'key', value: o.key };
+  return undefined;
+}
+
+function pathIdentity(v: unknown, index: number): string {
+  const identity = authoredIdentity(v);
+  return identity
+    ? `[${identity.field}=${encodeURIComponent(identity.value)}]`
+    : `[${index}]`;
+}
+
+/**
+ * The authored-content half of #410's worklist.
+ *
+ * This deliberately walks the parsed YAML rather than the compiled content:
+ * the file and semantic object ids are authoring identity, while compiled
+ * `Outcome.next` nodes may be copied/desugared. Fixed-position arrays such as
+ * the prologue triad retain an index because their position is itself the
+ * authored identity; object arrays use `id` or founding-character `key`
+ * whenever either exists.
+ */
+export function plainEnglishContentWorkItems(file: string, text: string): PlainEnglishWorkItem[] {
+  const doc = parse(text) as unknown;
+  const out: PlainEnglishWorkItem[] = [];
+
+  const visit = (v: unknown, key: string, voice: Voice, path: string) => {
+    if (typeof v === 'string') {
+      if (!CONTENT_PROSE_KEYS.has(key) || !isProse(v)) return;
+      out.push({
+        source: 'content',
+        file,
+        voice,
+        address: `content:${file}#${path}`,
+        text: v,
+        words: words(v),
+        interpolations: v.match(INTERPOLATION) ?? [],
+      });
+      return;
+    }
+    if (Array.isArray(v)) {
+      v.forEach((x, i) => visit(x, key, voice, `${path}${pathIdentity(x, i)}`));
+      return;
+    }
+    if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      const here = o.tier === 'frame' ? 'interlude' : voice;
+      for (const [k, x] of Object.entries(o)) {
+        visit(x, k, here, path ? `${path}.${k}` : k);
+      }
+    }
+  };
+
+  visit(doc, '', contentVoice(file), '');
+  return out;
 }
 
 /** Multi-word content keys the two lists above do not account for. */
@@ -208,6 +290,26 @@ export function auditCoreFile(file: string, text: string): StringCount[] {
   }];
 }
 
+
+/**
+ * Generated narrative prose still needs a Plain English counterpart. Until the
+ * runtime acquires explicit message ids (#412), identify those literals by
+ * their order among player-facing sentence literals in the source file. The
+ * ordinal is independent of the sentence wording itself.
+ */
+export function plainEnglishCoreWorkItems(file: string, text: string): PlainEnglishWorkItem[] {
+  const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
+  return sentenceLiterals(text).map((sentence, i) => ({
+    source: 'core',
+    file,
+    voice,
+    address: `core:${file}#literal[${i + 1}]`,
+    text: sentence,
+    words: words(sentence),
+    interpolations: [],
+  }));
+}
+
 const STATIC_ATTRIBUTES = ['title', 'placeholder', 'aria-label', 'alt', 'label'];
 
 /**
@@ -271,6 +373,24 @@ export function auditRepository(repo: string): StringCount[] {
   ];
 }
 
+
+/**
+ * Every non-interface narrative string currently covered by `audit:strings`.
+ * Kept beside `auditRepository` so the summary and the #410 migration list
+ * cannot silently walk different source sets.
+ */
+export function plainEnglishWorklist(repo: string): PlainEnglishWorkItem[] {
+  const content = join(repo, 'packages/content');
+  const core = join(repo, 'packages/core/src');
+  const read = (root: string, rel: string) => readFileSync(join(root, rel), 'utf8');
+  return [
+    ...walk(content, '', (f) => f.endsWith('.yaml') && f !== 'loci.yaml')
+      .flatMap((f) => plainEnglishContentWorkItems(f, read(content, f))),
+    ...walk(core, '', (f) => f.endsWith('.ts') && !f.startsWith('tools/') && !f.startsWith('fixtures/') && !isTest(f))
+      .flatMap((f) => plainEnglishCoreWorkItems(f, read(core, f))),
+  ];
+}
+
 export interface Totals { strings: number; words: number; interpolations: number; files: number }
 
 export function totalBy<K extends keyof StringCount>(rows: StringCount[], key: K): Map<StringCount[K], Totals> {
@@ -318,5 +438,9 @@ export function report(rows: StringCount[], opts: { files?: boolean } = {}): str
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('string-audit.ts');
 if (isMain) {
   const repo = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-  for (const line of report(auditRepository(repo), { files: process.argv.includes('--files') })) console.log(line);
+  if (process.argv.includes('--plainenglish-worklist')) {
+    console.log(JSON.stringify(plainEnglishWorklist(repo), null, 2));
+  } else {
+    for (const line of report(auditRepository(repo), { files: process.argv.includes('--files') })) console.log(line);
+  }
 }
