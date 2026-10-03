@@ -1,6 +1,6 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, TaleForm, HouseAmbitionId, ProseMode,
+  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant,
 } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { missingPlainEnglish, setProseMode as setRuntimeProseMode } from './prose.js';
+import { missingPlainEnglish, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -98,6 +98,8 @@ export interface SessionOptions {
   decider?: 'ask' | 'chronicler';
   /** Prospective wording only; deliberately not persisted in the save. */
   proseMode?: ProseMode;
+  /** Alternate authored wording supplied by the host/editor for this runtime. */
+  proseVariants?: readonly ProseVariant[];
 }
 
 /**
@@ -612,6 +614,7 @@ export class GameSession {
 export function newGame(source: ContentBundle | Content, opts: SessionOptions = {}): GameSession {
   const ctx = bootstrap(source, opts.seed ?? 1042, opts.startYear ?? 1042, opts.campaign ?? 'long', opts.libraryRuns ?? []);
   const session = new GameSession(ctx, opts.decider ?? 'ask');
+  if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
   if (opts.proseMode) session.setProseMode(opts.proseMode);
   return session;
 }
@@ -621,7 +624,9 @@ export function resumeGame(
   source: ContentBundle | Content,
   opts: SessionOptions = {},
 ): GameSession {
-  const session = new GameSession(loadGame(save, source), opts.decider ?? 'ask');
+  const ctx = loadGame(save, source);
+  const session = new GameSession(ctx, opts.decider ?? 'ask');
+  if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
   if (opts.proseMode) session.setProseMode(opts.proseMode);
   return session;
 }
