@@ -50,6 +50,16 @@ export type HouseDef = z.infer<typeof HouseDefS>;
 
 export const HouseFileS = z.object({ houses: z.array(HouseDefS) });
 
+/**
+ * How a grudge survives the person who first held it.
+ *
+ * This is one closed vocabulary shared by authored prologue grudges, event
+ * effects, runtime relationship state, and the Examination's signing terms.
+ * Do not spell the four policies again at a call site.
+ */
+export const GrudgeInheritanceS = z.enum(['none', 'heir_only', 'all_blood', 'house_wide']);
+export type GrudgeInheritance = z.infer<typeof GrudgeInheritanceS>;
+
 /** Enemies are not a type. Hostility is an edge. */
 export interface Relationship {
   from: string;
@@ -67,7 +77,7 @@ export interface Grudge {
   originPage?: string;
   severity: number;
   /** One enum is why the prologue's grudge echoes for a thousand years. */
-  inheritance: 'none' | 'heir_only' | 'all_blood' | 'house_wide';
+  inheritance: GrudgeInheritance;
   decayPerYear: number;
   /** The year its echo line was written (issue #326); absent until then, or held back as a repeat. */
   echoedIn?: number;
