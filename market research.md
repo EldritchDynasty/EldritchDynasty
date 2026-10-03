@@ -1,6 +1,6 @@
 # Eldritch Dynasty — Market Research and Commercial Design Implications
 
-**Research updated:** 27 September 2026  
+**Research updated:** 3 October 2026  
 **Repository context:** current `main` plus every Markdown file in the repository root  
 **Original research issue:** #184  
 **Purpose:** identify the strongest evidence-backed ways to improve the probability that *Eldritch Dynasty* becomes a commercially successful premium game **without turning it into a different game**.
@@ -868,11 +868,12 @@ Major older commercial/design risks also closed:
 
 Those four historical follow-ons are also now closed: **#219** (delegation), **#205** (tools/measurement), **#75** (the post-launch mod-editor issue), and **#36** (Bearing).
 
+The fresh Short-vs-Long evidence is also complete: **#274** closed on 3 October after PR #401 recorded the post-#379 shared-seed baseline. Any future differentiation threshold is a new product decision, not unfinished #274 work.
+
 Current open product work most relevant to this report is instead:
 
 - **#334** — remove or justify write-only and prose-only choice memory;
 - **#341** — reduce recurring-event and money-axis replay sameness;
-- **#274** — finish the fresh Short-vs-Long differentiation evidence;
 - **#343** — the Examination / founder-shaping opening;
 - **#356** — owner-playtest UI and progressive-reveal follow-ups;
 - **#378** — restore a real but rare God-Madness tail.
