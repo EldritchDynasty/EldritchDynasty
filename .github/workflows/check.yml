@@ -674,10 +674,11 @@ jobs:
         with:
           script: |
             const needs = JSON.parse(process.env.NEEDS_JSON);
+            const shortTier = needs.tier?.outputs?.full !== 'true';
             const shortTierJobs = new Set(['windows', 'ios', 'test', 'gates', 'corpus']);
             const failed = Object.entries(needs).filter(([name, job]) => {
               if (job.result === 'success') return false;
-              return !(context.eventName === 'pull_request'
+              return !(shortTier
                 && job.result === 'skipped'
                 && shortTierJobs.has(name));
             });
