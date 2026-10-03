@@ -1023,7 +1023,7 @@ The next work should make that sentence **faster to understand, harder to doubt,
 
 # Sources checked in this update
 
-Accessed 25–27 September 2026 unless otherwise noted.
+Comparable/store/community sources were checked 25–27 September 2026; the Steamworks platform/merchandising sources added in §18A–B were checked 3 October 2026.
 
 ## Direct Steam/store evidence
 
@@ -1068,17 +1068,17 @@ Accessed 25–27 September 2026 unless otherwise noted.
 
 ## Steam platform / merchandising guidance
 
-- Steamworks, **Trailers** — gameplay-first trailer guidance and store ordering  \
+- Steamworks, **Trailers** — gameplay-first trailer guidance and store ordering  
   https://partner.steamgames.com/doc/store/trailer
-- Steamworks, **Graphical Assets - Overview** — current capsule and screenshot dimensions  \
+- Steamworks, **Graphical Assets - Overview** — current capsule and screenshot dimensions  
   https://partner.steamgames.com/doc/store/assets
-- Steamworks, **Graphical Asset Rules** — capsule-content restrictions  \
+- Steamworks, **Graphical Asset Rules** — capsule-content restrictions  
   https://partner.steamgames.com/doc/store/assets/rules
-- Steamworks, **Store Page Written Description** — embedded visual and localization guidance  \
+- Steamworks, **Store Page Written Description** — embedded visual and localization guidance  
   https://partner.steamgames.com/doc/store/page/description
-- Steamworks, **Store Page Extra Asset Management** — high-DPI image/animation guidance  \
+- Steamworks, **Store Page Extra Asset Management** — high-DPI image/animation guidance  
   https://partner.steamgames.com/doc/store/page/assets
-- Steamworks, **Steam Next Fest: October 2026** — October dates, submission milestone, one-Fest eligibility and February 2027 next edition  \
+- Steamworks, **Steam Next Fest: October 2026** — October dates, submission milestone, one-Fest eligibility and February 2027 next edition  
   https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
 
 ## Narrative/game-design background
