@@ -143,12 +143,14 @@ describe('prospective prose selection', () => {
     };
     const ctx = testWorld(bundle);
     setProseVariants(ctx, [
+      { address: TITLE_ADDRESS, plainenglish: 'The Silted Race' },
       { address: CHOICE_LABEL_ADDRESS, plainenglish: 'Ask him to handle it.' },
       { address: RECORD_SUBJECT_ADDRESS, plainenglish: 'What should we write down?' },
     ]);
     setProseMode(ctx, 'plainenglish');
 
     const choice = queueChoice(ctx, recorded, recorded.body, {}, []);
+    expect(choice.event.title).toBe('The Silted Race');
     expect(choice.choices.find((candidate) => candidate.id === 'ask_him')?.label)
       .toBe('Ask him to handle it.');
 
@@ -156,6 +158,7 @@ describe('prospective prose selection', () => {
     expect(record.subject).toBe('What should we write down?');
 
     setProseMode(ctx, 'original');
+    expect(choice.event.title).toBe('The Silted Race');
     expect(choice.choices.find((candidate) => candidate.id === 'ask_him')?.label)
       .toBe('Ask him to handle it.');
     expect(record.subject).toBe('What should we write down?');
