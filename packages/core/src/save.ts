@@ -8,6 +8,7 @@ import { makeGeneticsCtx } from './sim.js';
 import { PersonStore } from './people/store.js';
 import type { PendingMatch } from './events/decisions.js';
 import { campaignDef } from './campaign.js';
+import { createProseRuntime } from './prose.js';
 
 /**
  * SAVING AND LOADING A RUN.
@@ -256,6 +257,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
     content,
     genetics: makeGeneticsCtx(content, s.seed),
     takenNames: new Set(s.takenNames),
+    prose: createProseRuntime(),
   };
 
   world.generation = s.generation;

@@ -15,6 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
+import { proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForRecordChronicle, proseForRecordSubject } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -178,11 +179,14 @@ export function queueChoice(
     kind: 'choice',
     id: decisionId(ctx),
     year: ctx.world.year,
-    event: { ...e, body },
-    body: renderBody(body, fill, ctx),
+    event: { ...e, title: proseForEventTitle(ctx, e), body },
+    body: renderBody(proseForEventBody(ctx, e, body), fill, ctx),
     ...(callback ? { callback } : {}),
     fill,
-    choices: choices.map((c) => choiceAvailability(c, ctx, fill, e)),
+    choices: choices.map((c) => ({
+      ...choiceAvailability(c, ctx, fill, e),
+      label: proseForChoiceLabel(ctx, e, c),
+    })),
     cast: castRequests(e, ctx, fill, playerCast),
     decidedBy,
     choicesAreOpen: decidedBy === 'player',
@@ -201,12 +205,12 @@ export function queueRecord(ctx: SimCtx, e: EventTemplate, entryId: string, fill
     id: decisionId(ctx),
     year: ctx.world.year,
     event: e,
-    subject: e.record.subject,
+    subject: proseForRecordSubject(ctx, e, e.record.subject),
     ...(callback ? { callback } : {}),
     options: [
-      { option: 'record', chronicle: o.record.chronicle },
+      { option: 'record', chronicle: proseForRecordChronicle(ctx, e, 'record', o.record.chronicle) },
       { option: 'omit', chronicle: null },
-      { option: 'embellish', chronicle: o.embellish.chronicle, discrepancy: o.embellish.discrepancy.id },
+      { option: 'embellish', chronicle: proseForRecordChronicle(ctx, e, 'embellish', o.embellish.chronicle), discrepancy: o.embellish.discrepancy.id },
     ],
     entryId,
     fill,
@@ -256,7 +260,7 @@ export function commitOutcome(
   // The arc, if any, is in scope for the whole commit: `arc_flag` effects write
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
-  const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance });
+  const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
 
   // An arc node is FORCED: `selection.ts` keeps it out of the ambient and
   // pressure pools entirely, so no cooldown and no per-run cap is ever
@@ -498,7 +502,11 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
   if (!pending || pending.kind !== 'record') return { ok: false };
   drop(ctx, decision);
-  return { ok: true, line: applyRecord(ctx, pending.event, pending.entryId, option, pending.fill) };
+  const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
+  return { ok: true, line: applyRecord(
+    ctx, pending.event, pending.entryId, option, pending.fill,
+    typeof frozen === 'string' ? frozen : undefined,
+  ) };
 }
 
 /**
@@ -507,7 +515,14 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
  * wrong line the moment one template fired twice in a year (two arc steps
  * due the same year sharing a node, most plausibly).
  */
-export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, option: RecordOption, fill: SlotFill = {}): string | null {
+export function applyRecord(
+  ctx: SimCtx,
+  e: EventTemplate,
+  entryId: string,
+  option: RecordOption,
+  fill: SlotFill = {},
+  frozenChronicle?: string,
+): string | null {
   const block = e.record;
   if (!block) return null;
   const w = ctx.world;
@@ -555,7 +570,11 @@ export function applyRecord(ctx: SimCtx, e: EventTemplate, entryId: string, opti
   // "him/her" copy after the player chooses to record it.
   const text = option === 'omit' || chosen.chronicle === null
     ? null
-    : renderBody(chosen.chronicle, fill, ctx);
+    : renderBody(
+      frozenChronicle ?? proseForRecordChronicle(ctx, e, option, chosen.chronicle),
+      fill,
+      ctx,
+    );
   if (entry) {
     entry.text = text;
     entry.record = option;

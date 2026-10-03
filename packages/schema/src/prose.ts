@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { Issue } from './validate.js';
 
 /**
@@ -76,4 +77,63 @@ export function proseIssues(where: string, body: string, threshold: number = PRO
   }
 
   return out;
+}
+
+
+/**
+ * WHICH AUTHORED WORDING TO USE FOR TEXT THAT HAS NOT YET BECOME HISTORY.
+ *
+ * This is deliberately presentation state, not save state. Once prose is
+ * committed to the Chronicle, frame or Library the rendered words themselves
+ * are the artefact and survive later mode changes unchanged.
+ */
+export const ProseModeS = z.enum(['original', 'plainenglish']);
+export type ProseMode = z.infer<typeof ProseModeS>;
+
+/**
+ * One alternate authored wording, keyed by #411's stable work-item address.
+ *
+ * The original remains where it is authored today; duplicating it here would
+ * create two sources of truth. Migration therefore adds only the counterpart.
+ */
+export const ProseVariantS = z.object({
+  address: z.string().min(1),
+  plainenglish: z.string().min(1),
+});
+export type ProseVariant = z.infer<typeof ProseVariantS>;
+
+/**
+ * A catalogue cannot have two answers for one stable prose identity.
+ *
+ * Storage is intentionally not smuggled into ContentBundle here: every bundle
+ * collection must have a real CONTENT_LAYOUT source. #414 can add that authoring
+ * source explicitly; #412 only defines the validated identity/value contract
+ * and the runtime seam that consumes it.
+ */
+export const ProseCatalogueS = z.array(ProseVariantS).superRefine((variants, ctx) => {
+  const seen = new Set<string>();
+  for (let i = 0; i < variants.length; i++) {
+    const address = variants[i]!.address;
+    if (seen.has(address)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [i, 'address'],
+        message: `duplicate prose variant address '${address}'`,
+      });
+    }
+    seen.add(address);
+  }
+});
+export type ProseCatalogue = z.infer<typeof ProseCatalogueS>;
+
+/**
+ * Migration gate primitive: compare #411 work-item addresses with the authored
+ * catalogue. #415 can therefore report zero missing without running the game.
+ */
+export function missingPlainEnglishAddresses(
+  narrativeAddresses: readonly string[],
+  variants: readonly ProseVariant[],
+): string[] {
+  const present = new Set(variants.map((variant) => variant.address));
+  return [...new Set(narrativeAddresses)].filter((address) => !present.has(address)).sort();
 }

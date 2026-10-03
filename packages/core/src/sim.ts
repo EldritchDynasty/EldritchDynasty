@@ -23,6 +23,7 @@ import { grantHeirloom } from './people/heirlooms.js';
 import { acquireLibraryCopy } from './people/library.js';
 import { pedigreeF, realizedHomozygosityOf, visibleRecordView } from './record.js';
 import { seedLibraryMemories } from './run-library.js';
+import { createProseRuntime } from './prose.js';
 
 export function makeGeneticsCtx(content: Content, seed: number): GeneticsCtx {
   const pools = new Map<string, GenePool>();
@@ -66,7 +67,7 @@ export function bootstrap(
   const content = indexContent(source);
   const world = createWorld(content, seed, startYear, campaign);
   const genetics = makeGeneticsCtx(content, seed);
-  const ctx: SimCtx = { world, content, genetics, takenNames: new Set() };
+  const ctx: SimCtx = { world, content, genetics, takenNames: new Set(), prose: createProseRuntime() };
 
   const byKey = new Map<string, Person>();
   const ordered = orderSeeds(content.characters);

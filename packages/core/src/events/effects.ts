@@ -12,6 +12,7 @@ import { addGrudge, relate } from '../people/relationships.js';
 import type { Rng } from '../rng.js';
 import { birthTales } from './tales.js';
 import { WARNING_TAG, noteUnheard, warningWeight } from '../bearing.js';
+import { proseForEventTitle, proseForOutcome } from '../prose.js';
 import { performRite } from './rites.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
@@ -512,6 +513,7 @@ export function applyOutcome(
   ctx: SimCtx,
   fill: SlotFill,
   scope: EvalScope = {},
+  choiceId?: string,
 ): ResolvedEvent {
   // Allocate before effects: an effect may create a delayed consequence that
   // needs to remember the page this outcome is about to write (#269).
@@ -521,7 +523,7 @@ export function applyOutcome(
   const inner: EvalScope = { ...scope, event: e, page: entryId };
   for (const eff of outcome.effects) applyEffect(eff, ctx, fill, inner);
 
-  const text = renderBody(outcome.text || e.body, fill, ctx);
+  const text = renderBody(proseForOutcome(ctx, e, outcome, choiceId), fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
   const people = [...new Set(Object.values(fill).flatMap((cast) =>
     typeof cast === 'string' ? [cast] : cast))];
@@ -532,7 +534,7 @@ export function applyOutcome(
     id: entryId,
     year: ctx.world.year,
     weight: profile.chronicle,
-    title: profile.named ? e.title : undefined,
+    title: profile.named ? proseForEventTitle(ctx, e) : undefined,
     text,
     eventId: e.id,
     named: profile.named,
