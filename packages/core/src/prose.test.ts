@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
+import { missingPlainEnglishAddresses, ProseCatalogueS } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
   commitOutcome, loadGame, missingPlainEnglish, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
@@ -29,6 +30,18 @@ function fixture() {
 }
 
 describe('prospective prose selection', () => {
+  it('reports migration gaps statically and rejects duplicate stable identities', () => {
+    expect(missingPlainEnglishAddresses(
+      ['content:a#body', 'content:b#body'],
+      [{ address: 'content:a#body', plainenglish: 'A direct sentence.' }],
+    )).toEqual(['content:b#body']);
+
+    expect(() => ProseCatalogueS.parse([
+      { address: 'content:a#body', plainenglish: 'First.' },
+      { address: 'content:a#body', plainenglish: 'Second.' },
+    ])).toThrow(/duplicate prose variant address/);
+  });
+
   it('freezes written pages while later pages use the selected authored variant', () => {
     const { bundle, event, outcome } = fixture();
     const ctx = testWorld(bundle);
