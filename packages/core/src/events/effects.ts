@@ -521,7 +521,7 @@ export function applyOutcome(
   const inner: EvalScope = { ...scope, event: e, page: entryId };
   for (const eff of outcome.effects) applyEffect(eff, ctx, fill, inner);
 
-  const text = renderBody(outcome.text || e.body, fill, ctx);
+  const text = renderBody(proseForOutcome(ctx, e, outcome), fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
   const people = [...new Set(Object.values(fill).flatMap((cast) =>
     typeof cast === 'string' ? [cast] : cast))];
