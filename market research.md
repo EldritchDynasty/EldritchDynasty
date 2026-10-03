@@ -857,14 +857,20 @@ Major older commercial/design risks also closed:
 - **#185** — ending/gate correctness;
 - **#201** — early ladder/empty-late-game issue.
 
-Current open work relevant to this report includes:
+Those four historical follow-ons are also now closed: **#219** (delegation), **#205** (tools/measurement), **#75** (the post-launch mod-editor issue), and **#36** (Bearing).
 
-- **#219** — delegate mastered low-stakes repetition;
-- **#205** — improve tools and measurement;
-- **#75** — post-launch mod editor;
-- **#36** — Bearing epic remains open for remaining evidence/closure work.
+Current open product work most relevant to this report is instead:
 
-Therefore the next market-driven work should focus on gaps **after** those improvements, not restate them.
+- **#334** — remove or justify write-only and prose-only choice memory;
+- **#341** — reduce recurring-event and money-axis replay sameness;
+- **#274** — finish the fresh Short-vs-Long differentiation evidence;
+- **#343** — the Examination / founder-shaping opening;
+- **#356** — owner-playtest UI and progressive-reveal follow-ups;
+- **#378** — restore a real but rare God-Madness tail.
+
+**#277** remains the authoritative commercial-pass tracker and should be preferred over duplicating its execution order here.
+
+Therefore the next market-driven work should focus on the gaps that remain **after** the closed systems above, rather than restating them.
 
 ---
 
@@ -910,9 +916,9 @@ Extend the “next obstacle” philosophy to other complex surfaces through in-w
 
 Make prose, UI and layout structurally translatable now; decide actual launch languages from audience evidence later.
 
-## P2 — post-launch mod editor
+## P2 — post-launch mod support, only if deliberately reopened
 
-Keep #75 post-launch. It can extend the content tail, but it should not displace core-game polish.
+The old mod-editor issue **#75 is closed**. If mod support is deliberately reopened later, keep it post-launch: it can extend the content tail, but it should not displace core-game polish now.
 
 ---
 
