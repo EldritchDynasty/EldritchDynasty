@@ -468,6 +468,26 @@ interface MadnessHolder {
 
 type MadnessRoute = 'none' | 'vessel' | 'great_rite' | 'unmaking';
 
+/**
+ * #378's PURCHASED-MADNESS FUNNEL.
+ *
+ * Route samples tell us where living people ended up; they cannot tell us why
+ * almost nobody got there. These are the authored decisions that can buy
+ * Madness or move a candidate through the upper ladder. Counting their
+ * committed choice/outcome pairs separates "the scene never resolved" from
+ * "the scene resolved and the house declined / missed the taking branch"
+ * without changing a single gameplay constant.
+ */
+const MADNESS_PROGRESSION_EVENTS = [
+  'the_drowning',
+  'the_vessel_rite',
+  'the_great_rite',
+  'the_second_name',
+  'the_second_widening',
+  'the_unmaking',
+] as const;
+type MadnessProgressionEvent = typeof MADNESS_PROGRESSION_EVENTS[number];
+
 interface MadnessRouteSample {
   madness: number;
   mind: number;
@@ -492,6 +512,14 @@ interface LadderSamples {
    * after an Unmaking without changing the gate's judgement.
    */
   madnessByRoute: Record<MadnessRoute, MadnessRouteSample[]>;
+  /**
+   * #378 DIAGNOSTIC. Counts of committed progression decisions, keyed as
+   * event<TAB>choice<TAB>outcome. This is deliberately collected from the
+   * decision log after each whole run, not from sampled person-years: a rite
+   * offered and refused is still evidence about the funnel even though it
+   * leaves no route state behind.
+   */
+  progressionDecisions: Map<string, number>;
   /**
    * THE SECOND MAN (issue #61, Stage E2). One entry per sampled point in
    * time, not per person — the SECOND-highest power among that year's living
@@ -553,6 +581,7 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
     madnesses: [],
     powers: [],
     madnessByRoute: { none: [], vessel: [], great_rite: [], unmaking: [] },
+    progressionDecisions: new Map(),
     secondPowers: [],
     held: new Map(),
     madnessHolders: [],
@@ -604,6 +633,18 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
       yearPowers.sort((a, b) => b - a);
       samples.secondPowers.push(yearPowers[1] ?? 0);
     }
+    // The route table above sees only states that survived until a sampling
+    // boundary. Read the immutable decision log as the other half: which
+    // purchased-Madness / ascension scenes actually resolved, and which branch
+    // was taken when they did. One pass at the end avoids double-counting the
+    // same decision at every 25-year sample.
+    for (const d of ctx.world.decisionLog) {
+      if (d.kind !== 'outcome') continue;
+      if (!MADNESS_PROGRESSION_EVENTS.includes(d.event as MadnessProgressionEvent)) continue;
+      const key = `${d.event}\t${d.choiceId ?? '-'}\t${d.outcomeId}`;
+      samples.progressionDecisions.set(key, (samples.progressionDecisions.get(key) ?? 0) + 1);
+    }
+
     samples.madnessHolders.push(
       ...[...holderPeaks.values()].sort((a, b) => b.madness - a.madness).slice(0, 3),
     );
@@ -668,7 +709,8 @@ export function gateLadderScales(
   const every = opts.every ?? 25;
 
   const {
-    minds, madnesses, powers, madnessByRoute, secondPowers, held, madnessHolders,
+    minds, madnesses, powers, madnessByRoute, progressionDecisions,
+    secondPowers, held, madnessHolders,
   } = ladderSamples(source, runs, years, every);
 
   const share = (values: number[], floor: number) =>
@@ -698,6 +740,24 @@ export function gateLadderScales(
       + ` · >=90 ${atGod.toFixed(1)}% · >=90 viable ${viableGod} of >=90`,
     );
   }
+
+  lines.push('  #378 diagnostic — resolved Madness-progression decisions across batch:');
+  for (const event of MADNESS_PROGRESSION_EVENTS) {
+    const prefix = `${event}\t`;
+    const branches = [...progressionDecisions.entries()]
+      .filter(([key]) => key.startsWith(prefix))
+      .sort(([a], [b]) => a.localeCompare(b));
+    const resolved = branches.reduce((sum, [, count]) => sum + count, 0);
+    const detail = branches.map(([key, count]) => {
+      const [, choice, outcome] = key.split('\t');
+      return `${choice}/${outcome} ${count}`;
+    });
+    lines.push(
+      `    ${event.padEnd(20)} resolved ${String(resolved).padStart(3)}`
+      + ` · ${detail.length ? detail.join(' · ') : '-'}`,
+    );
+  }
+
   lines.push('  #378 diagnostic — top distinct sampled Madness holders per run:');
   let holderSeed = Number.NaN;
   let holderRank = 0;
