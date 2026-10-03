@@ -86,6 +86,15 @@ function scoreOf(e: Effect): number {
     case 'madness':
       return -Math.sign(e.delta) * WEIGHT.madness;
 
+    /**
+     * Awakening unlocks Mind, reading and ascension. The ritual's permanent
+     * Madness cost is authored as its own effect beside this one, so scoring
+     * the transition as a modest boon keeps the bargain visible rather than
+     * hiding either side of it.
+     */
+    case 'awakening':
+      return WEIGHT.book;
+
     /** A thing arrives, a thing is spent, a thing changes hands. */
     case 'heirloom':
       return e.op === 'grant' ? WEIGHT.ordinary : 0;

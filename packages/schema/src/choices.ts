@@ -81,6 +81,7 @@ export function categoryOf(kind: Effect['kind']): ChoiceCategory | 'memory' {
     case 'trait':
     case 'status':
     case 'madness':
+    case 'awakening':
     case 'career':
     case 'bond':
     case 'marriage':

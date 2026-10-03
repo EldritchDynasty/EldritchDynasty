@@ -433,6 +433,50 @@ const madnessGate: ValidationRule = {
   },
 };
 
+/**
+ * Forced Awakening is deliberately less restrictive than Madness: women may
+ * wake, read and carry while remaining unable to express (§10–11). What an
+ * author must prove here is that the scene has selected someone who is still
+ * unwoken. Whether that person actually carries a font is a genetic fact the
+ * static slot vocabulary cannot prove; the runtime effect checks carriedFont
+ * before performing the transition.
+ */
+const awakeningGate: ValidationRule = {
+  id: 'awakening/gate',
+  about: 'Forced Awakening must target one explicitly unwoken slot; runtime separately verifies a carried Eldritch font.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      for (const o of allOutcomes(e)) {
+        for (const eff of o.effects) {
+          if (eff.kind !== 'awakening') continue;
+          const t = eff.target;
+          const named = typeof t === 'object' && 'slot' in t ? t.slot : undefined;
+          const at = `event:${e.id}/${o.id}`;
+          if (named === undefined) {
+            issues.push(err(
+              this.id,
+              at,
+              'forced Awakening must name one explicit slot with role unwoken — a household/party target can include people already awake',
+            ));
+            continue;
+          }
+          const slot = e.slots[named];
+          if (!slot) continue; // slots/references owns undeclared slot names.
+          if (slot.role !== 'unwoken') {
+            issues.push(err(
+              this.id,
+              at,
+              `forced Awakening targets slot '${named}' with role '${slot.role}'; use role 'unwoken' so the authored cast guarantees this is an early Awakening`,
+            ));
+          }
+        }
+      }
+    }
+    return issues;
+  },
+};
+
 // ── The rites (concept §22, issue #43) ────────────────────────────────────
 
 /**
@@ -1936,6 +1980,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   arcBoundSlots,
   countedSlots,
   madnessGate,
+  awakeningGate,
   knownReferences,
   accountsContradict,
   discrepancyWiring,

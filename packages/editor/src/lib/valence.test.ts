@@ -129,6 +129,7 @@ describe('every effect the schema allows is scored', () => {
       trait: { kind: 'trait', target: { slot: 's' }, trait: 'steady', op: 'add' },
       status: { kind: 'status', target: { slot: 's' }, status: 'dead' },
       madness: { kind: 'madness', target: { slot: 's' }, delta: 1 },
+      awakening: { kind: 'awakening', target: { slot: 's' } },
       heirloom: { kind: 'heirloom', op: 'grant', heirloom: 'the_ring' },
       spellbook: { kind: 'spellbook', op: 'gain', target: { slot: 's' }, book: 'b' },
       career: { kind: 'career', target: { slot: 's' }, op: 'assign', career: 'c' },

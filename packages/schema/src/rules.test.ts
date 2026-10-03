@@ -493,6 +493,46 @@ describe('the content rules', () => {
     expect(issues[0]!.level).toBe('error');
   });
 
+  it('catches forced Awakening aimed at a slot that can already be awake', () => {
+    const b = withEvents((x) => {
+      const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;
+      if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+      e.slots.ANYONE = {
+        role: 'family_member', castBy: 'engine', optional: false,
+        filters: [], bind: 'event',
+      };
+      e.interaction.outcomes[0]!.effects.push({ kind: 'awakening', target: { slot: 'ANYONE' } });
+    });
+    const issues = runRule('awakening/gate', b);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.level).toBe('error');
+    expect(issues[0]!.message).toMatch(/role 'unwoken'/);
+  });
+
+  it('accepts forced Awakening on an explicit unwoken slot', () => {
+    const b = withEvents((x) => {
+      const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;
+      if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+      e.slots.CHILD = {
+        role: 'unwoken', castBy: 'engine', optional: false,
+        filters: [], bind: 'event',
+      };
+      e.interaction.outcomes[0]!.effects.push({ kind: 'awakening', target: { slot: 'CHILD' } });
+    });
+    expect(runRule('awakening/gate', b)).toHaveLength(0);
+  });
+
+  it('rejects broad forced-Awakening targets that have no authored unwoken cast', () => {
+    const b = withEvents((x) => {
+      const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;
+      if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+      e.interaction.outcomes[0]!.effects.push({ kind: 'awakening', target: 'household' });
+    });
+    const issues = runRule('awakening/gate', b);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.message).toMatch(/explicit slot/);
+  });
+
   it('catches outcome weights that can never resolve', () => {
     const b = withEvents((x) => {
       const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;

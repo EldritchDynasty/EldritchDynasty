@@ -209,6 +209,12 @@ export const EffectS = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('status'), target: TargetS, status: z.string(), cause: z.string().optional() }),
   /** Guarded: applying this where canExpress is false is a validation error. */
   z.object({ kind: z.literal('madness'), target: TargetS, delta: z.number() }),
+  /**
+   * A ritual that provokes Awakening early (concept §11). This is a state
+   * transition, not prose: runtime refuses a target carrying no Eldritch font,
+   * and the transition records forced=true without altering expression.
+   */
+  z.object({ kind: z.literal('awakening'), target: TargetS }),
   z.object({
     kind: z.literal('heirloom'),
     op: z.enum(['grant', 'use', 'transfer']).default('grant'),

@@ -3,7 +3,7 @@ import { assertNever, canHoldPost, FREQUENCY_PROFILES, MAIN_BRANCH, RESPECT_ORDE
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
-import { phenotypeOf } from '../people/factory.js';
+import { forceAwakening, phenotypeOf } from '../people/factory.js';
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
 import { beginStudy, degradeLibraryCopy, gainSpellbook, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
 import { bindService, freeBond } from '../people/bond.js';
@@ -131,6 +131,18 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       for (const p of resolveTargets(eff.target, ctx, fill)) {
         if (eff.status === 'dead') w.people.kill(p.id, w.year, eff.cause ?? 'unrecorded');
         else p.status = eff.status as Person['status'];
+      }
+      break;
+    }
+    // Concept §11: forcing is an early Awakening, not a substitute route to
+    // Eldritch expression. A carrier of either sex may wake; somebody with no
+    // font cannot. The helper freezes the first transition and dirties derived
+    // attributes so Mind/read/ascension see it immediately.
+    case 'awakening': {
+      for (const p of resolveTargets(eff.target, ctx, fill)) {
+        if (p.status !== 'alive') continue;
+        if (phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont <= 0) continue;
+        forceAwakening(p, w.year);
       }
       break;
     }

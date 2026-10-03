@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { SlotSpecS, type EventTemplate } from '@ed/schema';
-import { applyEffect, bootstrap, place } from '@ed/core';
+import { applyEffect, bootstrap, phenotypeOf, place } from '@ed/core';
 
 const bundle = loadContent();
 
 /**
  * THE VERBS NOBODY HAS SPOKEN.
  *
- * `EffectS` declares twenty-two kinds. Shipped content uses seventeen, and the
- * five it does not divide sharply: `career`, `spellbook` and `schedule` are
- * covered elsewhere, and `rumour` and `recast` were covered by nothing at all —
+ * EffectS is a closed verb set. Some verbs are intentionally engine vocabulary
+ * before content adopts them; every such verb still needs direct coverage.
+ * awakening is one of those: concept §11 requires a mechanical forced-Awakening
+ * path before the serialized ritual content can be wired.
+ *
+ * Historically rumour and recast were covered by nothing at all —
  * never authored, never tested, never once executed in the history of the
  * project. That is not the same as unused. They are live authoring vocabulary,
  * and the day someone reaches for one is a bad day to find out what it does.
@@ -33,6 +36,64 @@ function templateWithSlots(roles: Record<string, string>): EventTemplate {
   );
   return e;
 }
+
+function placedCarrier(ctx: ReturnType<typeof bootstrap>, sex: 'male' | 'female') {
+  for (let i = 0; i < 96; i += 1) {
+    const p = place(ctx, { sex, age: 12, name: 'Forced carrier ' + sex + ' ' + i });
+    if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.carriedFont > 0) return p;
+  }
+  throw new Error('test content produced no carried font for a ' + sex + ' across 96 deterministic placements');
+}
+
+describe('the forced-Awakening effect verb', () => {
+  it('records one forced historical Awakening and invalidates derived attributes', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const child = placedCarrier(ctx, 'male');
+    const before = phenotypeOf(child, ctx.genetics, ctx.world.year);
+    expect(before.dirty).toBe(false);
+
+    applyEffect({ kind: 'awakening', target: { slot: 'CHILD' } }, ctx, { CHILD: child.id });
+
+    expect(child.awakening).toEqual({
+      awakened: true,
+      year: ctx.world.year,
+      age: 12,
+      forced: true,
+      declaredMundane: false,
+    });
+    expect(child.phenotype?.dirty).toBe(true);
+
+    const first = { ...child.awakening };
+    ctx.world.year += 7;
+    applyEffect({ kind: 'awakening', target: { slot: 'CHILD' } }, ctx, { CHILD: child.id });
+    expect(child.awakening).toEqual(first);
+  });
+
+  it('can wake a female carrier without inventing expression or Madness', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const child = placedCarrier(ctx, 'female');
+    expect(phenotypeOf(child, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(false);
+    expect(child.madness).toBe(0);
+
+    applyEffect({ kind: 'awakening', target: { slot: 'CHILD' } }, ctx, { CHILD: child.id });
+
+    expect(child.awakening.awakened).toBe(true);
+    expect(child.awakening.forced).toBe(true);
+    expect(phenotypeOf(child, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(false);
+    expect(child.madness).toBe(0);
+  });
+
+  it('does nothing to a dead carrier', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const child = placedCarrier(ctx, 'male');
+    child.status = 'dead';
+
+    applyEffect({ kind: 'awakening', target: { slot: 'CHILD' } }, ctx, { CHILD: child.id });
+
+    expect(child.awakening.awakened).toBe(false);
+    expect(child.awakening.forced).toBe(false);
+  });
+});
 
 describe('the recast effect frees the role the slot casts for', () => {
   it('frees the Head from the seal when pointed at a head slot', () => {
