@@ -117,6 +117,25 @@ describe('the string-source audit (issue #276)', () => {
     });
   });
 
+  it('does not renumber later core work items when earlier wording stops qualifying as prose', () => {
+    const before = plainEnglishCoreWorkItems('year/example.ts', [
+      "const first = 'The house remembers this sentence.';",
+      "const second = 'The second sentence keeps its identity.';",
+    ].join('\n'));
+    const after = plainEnglishCoreWorkItems('year/example.ts', [
+      "const first = 'Gone now';",
+      "const second = 'The second sentence keeps its identity.';",
+    ].join('\n'));
+
+    expect(before.map((x) => x.address)).toEqual([
+      'core:year/example.ts#literal[1]',
+      'core:year/example.ts#literal[2]',
+    ]);
+    expect(after).toHaveLength(1);
+    expect(after[0]?.address).toBe('core:year/example.ts#literal[2]');
+    expect(after[0]?.address).toBe(before[1]?.address);
+  });
+
   it('finds sentences in code, and not comments, imports or developer messages', () => {
     const found = sentenceLiterals([
       "import { x } from './a module with spaces.js';",
