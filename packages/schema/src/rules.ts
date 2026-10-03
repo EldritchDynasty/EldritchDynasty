@@ -434,12 +434,12 @@ const madnessGate: ValidationRule = {
 };
 
 /**
- * Forced Awakening is deliberately less restrictive than Madness: women may
- * wake, read and carry while remaining unable to express (§10–11). What an
- * author must prove here is that the scene has selected someone who is still
- * unwoken. Whether that person actually carries a font is a genetic fact the
- * static slot vocabulary cannot prove; the runtime effect checks carriedFont
- * before performing the transition.
+ * Forced Awakening is deliberately less restrictive in the engine than
+ * Madness: a female carrier may wake, read and carry while remaining unable to
+ * express (§10–11). Authored content has no carrier-only filter yet, however,
+ * so it must use the stronger canExpress proof as well as role: unwoken; that
+ * keeps a mundane cast from turning this verb into a silent no-op. Runtime
+ * still checks carriedFont defensively before performing the transition.
  */
 const awakeningGate: ValidationRule = {
   id: 'awakening/gate',
