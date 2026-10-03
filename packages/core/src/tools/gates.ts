@@ -44,6 +44,7 @@ import {
 } from '../ascension.js';
 import type { Rung } from '@ed/schema';
 import { phenotypeOf } from '../people/factory.js';
+import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 
 // Not `1000 + i * 7`: under the corrected blood count (issue #42), most of
@@ -446,6 +447,25 @@ export function gateOutcomeReach(
  * restating them, because a gate holding its own copy of "the Vessel wants 70"
  * is the same class of bug one layer out.
  */
+interface MadnessHolder {
+  seed: number;
+  year: number;
+  id: string;
+  name: string;
+  /** §22-normalised values, directly comparable to the ladder floors. */
+  madness: number;
+  mind: number;
+  power: number;
+  /** Stored/raw values that identify which progression route produced the peak. */
+  rawMadness: number;
+  forced: boolean;
+  rites: string[];
+  gift: number;
+  reach: number;
+  carriedFont: number;
+  ceiling: number;
+}
+
 interface LadderSamples {
   minds: number[];
   madnesses: number[];
@@ -467,6 +487,13 @@ interface LadderSamples {
   secondPowers: number[];
   /** How many person-samples ever stood on each rung. */
   held: Map<Rung, number>;
+  /**
+   * #378 DIAGNOSTIC. The top three DISTINCT people by sampled Madness in each
+   * run, rather than the top three person-years (which can all be one long-
+   * lived man sampled every 25 years). This is reporting only: judgement still
+   * reads the pooled arrays above.
+   */
+  madnessHolders: MadnessHolder[];
 }
 
 /**
@@ -500,10 +527,12 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
 
   const content = indexContent(source);
   const samples: LadderSamples = {
-    minds: [], madnesses: [], powers: [], secondPowers: [], held: new Map(),
+    minds: [], madnesses: [], powers: [], secondPowers: [], held: new Map(), madnessHolders: [],
   };
   for (let i = 0; i < runs; i++) {
-    const ctx = bootstrap(content, 5000 + i * 7, START_YEAR);
+    const seed = 5000 + i * 7;
+    const ctx = bootstrap(content, seed, START_YEAR);
+    const holderPeaks = new Map<string, MadnessHolder>();
     for (let y = 0; y < years; y += every) {
       runYears(ctx, Math.min(every, years - y));
       // Collected per sample rather than pushed straight into the pooled
@@ -512,18 +541,43 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
       // powers have been poured into one flat array with everybody else's.
       const yearPowers: number[] = [];
       for (const p of ctx.world.people.living()) {
-        if (!phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) continue;
-        samples.minds.push(mindOf(ctx, p));
-        samples.madnesses.push(madnessOf(ctx, p));
+        const eldritch = phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch;
+        if (!eldritch.canExpress) continue;
+        const mind = mindOf(ctx, p);
+        const madness = madnessOf(ctx, p);
         const power = eldritchPower(ctx, p);
+        samples.minds.push(mind);
+        samples.madnesses.push(madness);
         samples.powers.push(power);
         yearPowers.push(power);
+        const prior = holderPeaks.get(p.id);
+        if (!prior || madness > prior.madness) {
+          holderPeaks.set(p.id, {
+            seed,
+            year: ctx.world.year,
+            id: p.id,
+            name: p.name,
+            madness,
+            mind,
+            power,
+            rawMadness: p.madness,
+            forced: p.awakening.forced,
+            rites: [...p.rites],
+            gift: p.acquired[ELDRITCH_GIFT] ?? 0,
+            reach: p.acquired[ELDRITCH_REACH] ?? 0,
+            carriedFont: eldritch.carriedFont,
+            ceiling: eldritch.ceiling,
+          });
+        }
         const r = standingOf(ctx, p).rung;
         samples.held.set(r, (samples.held.get(r) ?? 0) + 1);
       }
       yearPowers.sort((a, b) => b - a);
       samples.secondPowers.push(yearPowers[1] ?? 0);
     }
+    samples.madnessHolders.push(
+      ...[...holderPeaks.values()].sort((a, b) => b.madness - a.madness).slice(0, 3),
+    );
   }
 
   lastLadder = { source, runs, years, every, samples };
@@ -584,14 +638,34 @@ export function gateLadderScales(
   // the whole question is what the population PRODUCED.
   const every = opts.every ?? 25;
 
-  const { minds, madnesses, powers, secondPowers, held } = ladderSamples(source, runs, years, every);
+  const {
+    minds, madnesses, powers, secondPowers, held, madnessHolders,
+  } = ladderSamples(source, runs, years, every);
 
   const share = (values: number[], floor: number) =>
     (values.length ? 100 * values.filter((v) => v >= floor).length / values.length : 0);
 
   const lines = [
     `gate 9 (ladder scales): ${runs} runs x ${years}y — ${minds.length} expresser-samples`,
+    '  #378 diagnostic — top distinct sampled Madness holders per run:',
   ];
+  let holderSeed = Number.NaN;
+  let holderRank = 0;
+  for (const h of madnessHolders) {
+    if (h.seed !== holderSeed) {
+      holderSeed = h.seed;
+      holderRank = 0;
+    }
+    holderRank += 1;
+    lines.push(
+      `    seed ${h.seed} #${holderRank} y${h.year} id ${h.id} "${h.name}"`
+      + ` — madness ${h.madness.toFixed(1)} (raw ${h.rawMadness.toFixed(1)})`
+      + ` · mind ${h.mind.toFixed(1)} · power ${h.power.toFixed(1)}`
+      + ` · forced ${h.forced ? 'yes' : 'no'} · rites ${h.rites.join(',') || '-'}`
+      + ` · gift ${h.gift.toFixed(2)} · reach ${h.reach.toFixed(2)}`
+      + ` · font ${h.carriedFont.toFixed(2)} · ceiling ${h.ceiling.toFixed(2)}`,
+    );
+  }
   const dead: string[] = [];
   const unproven: string[] = [];
   /**
