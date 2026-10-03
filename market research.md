@@ -703,7 +703,15 @@ Steam's official schedule for the October 2026 Next Fest is:
 - **19 October:** Next Fest begins;
 - **26 October:** Next Fest ends and the wrap-up launches.
 
-As of **3 October 2026**, the review-submission deadline has already passed. A project that did not make that submission should not distort the demo or marketing build to chase the October event. Steam says a title can participate in only **one** Next Fest, and identifies **February 2027** as the next planned edition.
+As of **3 October 2026**, the review-submission deadline has already passed. A project that did not make that submission should not distort the demo or marketing build to chase the October event. Steam says a title can participate in only **one** Next Fest.
+
+The next edition is now scheduled for **22 February–1 March 2027**. Its key planning dates are:
+
+- **10 January 2027:** registration deadline;
+- **25 January:** review submission deadline for a demo intended for the press preview;
+- **8 February:** all required items must be submitted for review;
+- **11 February:** press preview begins;
+- **22 February:** Next Fest begins.
 
 That makes the right question:
 
@@ -713,8 +721,9 @@ If the project is already registered and review-ready for October, the priority 
 
 If it is not already through the September review milestone, February 2027 is the cleaner planning target. Use the extra time to make sure the demo reaches a complete Eldritch shape — debt, person, Match, choice, Record, callback, frame, forward problem — instead of merely being longer.
 
-Source:
+Sources:
 - Steamworks, **Steam Next Fest: October 2026**: https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
+- Steamworks, **Steam Next Fest: February 2027**: https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/feb_2027
 
 ---
 
