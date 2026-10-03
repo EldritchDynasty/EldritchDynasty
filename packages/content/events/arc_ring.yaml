@@ -195,7 +195,6 @@ events:
                 the same thing the first four said and adds the year.
               effects:
                 - { kind: relationship, from: { slot: SECOND }, to: head, sentiment: -30 }
-                - { kind: knowledge, op: grant, flag: knows_the_ring_was_refused_twice }
         - id: follow_the_song
           label: Do what the song did. Let her keep it and see.
           outcomes:
@@ -220,7 +219,6 @@ events:
             and both times the house got someone remarkable and paid for them
             in a coin it could not count until afterwards. Whoever reads this
             and finds it fits them: it is not a reward.
-          grantsKnowledge: knows_the_ring_was_refused_twice
           claims:
             - { kind: deed, target: { slot: SECOND }, text: was the second in four hundred years whom the Ring fit without being worked at }
         omit:
