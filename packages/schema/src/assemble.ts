@@ -139,6 +139,21 @@ export function assembleBundle(
       const doc = parse(files[path]!) as Record<string, unknown> | null;
       const value = doc?.[spec.key as string];
       if (!Array.isArray(value)) continue;
+
+      if (spec.key === 'proseVariants') {
+        for (const item of value) {
+          const address = (item as { address?: unknown } | null)?.address;
+          if (typeof address !== 'string' || !address.startsWith('content:')) continue;
+          const hash = address.indexOf('#');
+          const originalFile = hash < 0 ? '' : address.slice('content:'.length, hash);
+          if (originalFile !== path) {
+            throw new Error(
+              `prose variant '${address}' is in '${path}', but its Original is in '${originalFile}'`,
+            );
+          }
+        }
+      }
+
       out.push(...value);
       for (const item of value) {
         const row = item as { id?: unknown; key?: unknown } | null;
