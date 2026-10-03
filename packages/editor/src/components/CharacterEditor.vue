@@ -8,6 +8,7 @@ import FrequencyPicker from './FrequencyPicker.vue';
 import Sigil from './Sigil.vue';
 import SaveControl from './SaveControl.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
+import ProseVariantEditor from './ProseVariantEditor.vue';
 
 const props = defineProps<{ content: Content }>();
 
@@ -173,6 +174,12 @@ const carrierRateOf = (id: string) => props.content.house(id)?.genePool.fontCarr
         Not one of these carries anything. If this template is meant to be a route into the
         blood, its houses are wrong — and no amount of reading the form would have told you.
       </p>
+
+      <ProseVariantEditor
+        collection-key="characterTemplates"
+        :id="current.id"
+        :model-value="current"
+      />
 
       <SaveControl collection-key="characterTemplates" :id="current.id" />
     </div>
