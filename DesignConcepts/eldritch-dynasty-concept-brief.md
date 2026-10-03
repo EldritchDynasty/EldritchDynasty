@@ -811,4 +811,4 @@ This codebase fails by doing nothing, and a theme fails the same way — silentl
 
 ---
 
-*Related: `.claude/skills/eldritch-story/reference/story-manual.md` (architecture), `.claude/skills/rothfuss-prose/reference/prose-manual.md` (voice), [the issue tracker](https://github.com/JamesFlames/EldritchDynasty/issues) (the systems this brief describes that do not exist yet, one issue each, in build order), `AGENTS.md` (the operating manual for the ones that do).*
+*Related: `.claude/skills/eldritch-story/reference/story-manual.md` (architecture), `.claude/skills/rothfuss-prose/reference/prose-manual.md` (voice), [the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues) (the systems this brief describes that do not exist yet, one issue each, in build order), `AGENTS.md` (the operating manual for the ones that do).*

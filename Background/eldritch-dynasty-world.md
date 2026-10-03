@@ -1129,7 +1129,7 @@ resolutions (§24).
 
 ## 28. Deliberately left empty
 
-Do not fill these in without a decision recorded in [the issue tracker](https://github.com/JamesFlames/EldritchDynasty/issues).
+Do not fill these in without a decision recorded in [the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues).
 
 - **The nine names themselves.** They are never listed in full anywhere the player can read. The
   counting rhyme gets the order wrong on purpose. Authors may quote **one** name in a scene and it

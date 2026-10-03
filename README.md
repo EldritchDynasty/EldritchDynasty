@@ -6,7 +6,7 @@ You are not a character. You are the will of a bloodline — the thing that pers
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
-**Status:** pre-production. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android Capacitor host are working. An iPhone (iOS) build of the same client is planned ([#349](https://github.com/JamesFlames/EldritchDynasty/issues/349)); macOS and Linux desktop builds are out of scope. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
+**Status:** pre-production. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android Capacitor host are working. An iPhone (iOS) build of the same client is planned ([#349](https://github.com/EldritchDynasty/EldritchDynasty/issues/349)); macOS and Linux desktop builds are out of scope. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
 
 New to the design? [docs/GAME-LOOP.md](docs/GAME-LOOP.md) is a plain-language walkthrough
 of the loop and how a family progresses — the Ascension Ladder and the barriers between
@@ -37,7 +37,7 @@ DesignConcepts/   The concept brief. The authority on game rules.
 ```
 
 What is not built yet — and every open design question — lives in
-[the issue tracker](https://github.com/JamesFlames/EldritchDynasty/issues), one issue per system,
+[the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues), one issue per system,
 in build order.
 
 ```bash

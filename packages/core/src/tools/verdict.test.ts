@@ -31,6 +31,19 @@ const REPO = join(import.meta.dirname, '../../../..');
 const TOOL = join(REPO, 'tools/verdict.mjs');
 const RANGE_TOOL = join(REPO, 'tools/verdict-range.mjs');
 
+describe('the canonical repository owner', () => {
+  it('keeps tracked operational references on the organization repository', () => {
+    const formerSlug = ['JamesFlames', 'EldritchDynasty'].join('/');
+    const textFile = /\.(?:md|mjs|ts|vue|ya?ml|json|toml)$/;
+    const files = execFileSync('git', ['ls-files', '-z'], { cwd: REPO })
+      .toString('utf8')
+      .split('\0')
+      .filter((file) => file && textFile.test(file));
+    const stale = files.filter((file) => readFileSync(join(REPO, file), 'utf8').includes(formerSlug));
+    expect(stale, `these files still name the repository's former owner: ${stale.join(', ')}`).toEqual([]);
+  });
+});
+
 const runTool = <T>(name: string, argument: unknown): T => JSON.parse(execFileSync(
   process.execPath,
   ['--input-type=module', '--eval',
@@ -65,7 +78,7 @@ const message = (conclusion: string, jobs: Record<string, string>, sha = 'abc123
     `sha: ${sha}`,
     'branch: main',
     `conclusion: ${conclusion}`,
-    'run: https://github.com/JamesFlames/EldritchDynasty/actions/runs/34058287997',
+    'run: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/34058287997',
     'run_number: 103',
     ...Object.entries(jobs).map(([name, result]) => `job: ${name} = ${result}`),
     'recorded: 2026-09-07T01:00:00Z',
@@ -347,7 +360,7 @@ describe('the commit range covered by an integrated main run', () => {
       `sha: ${sha}`,
       `branch: ${branch}`,
       `conclusion: ${conclusion}`,
-      `run: https://github.com/JamesFlames/EldritchDynasty/actions/runs/${run}`,
+      `run: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/${run}`,
       'recorded: 2026-09-29T05:00:00Z',
     ].join('\n');
     const refCommit = gitAt(cwd, 'commit-tree', EMPTY_TREE, '-m', body);
@@ -548,7 +561,7 @@ describe('historical verdict batch repair', () => {
         `sha: ${sha}`,
         `branch: ${branch}`,
         `conclusion: ${conclusion}`,
-        `run: https://github.com/JamesFlames/EldritchDynasty/actions/runs/${run}`,
+        `run: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/${run}`,
         'recorded: 2026-09-29T05:00:00Z',
       ].join('\n');
       const refCommit = gitAt(root, 'commit-tree', EMPTY_TREE, '-m', body);

@@ -1204,6 +1204,28 @@ describe('a markdown-only change runs the short set, and only then', () => {
 });
 
 
+describe('the native merge queue CI contract', () => {
+  it('runs the check workflow for the synthetic merge-group commit', () => {
+    expect(workflow).toContain('merge_group:\n    types: [checks_requested]');
+    expect(workflow).toContain("github.event_name == 'merge_group'");
+    expect(workflow).toContain('github.event.merge_group.base_sha');
+    expect(workflow).toContain('github.event.merge_group.head_sha');
+  });
+
+  it('publishes one stable required result and permits short-tier skips only on pull requests', () => {
+    const required = workflow.slice(
+      workflow.indexOf('\n  required:\n'),
+      workflow.indexOf('\n  android:\n'),
+    );
+    expect(required).toContain('name: CI required');
+    expect(required).toContain('if: always()');
+    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates, corpus]');
+    expect(required).toContain("context.eventName === 'pull_request'");
+    expect(required).toContain("job.result === 'skipped'");
+    expect(required).toContain('core.setFailed');
+  });
+});
+
 /**
  * CONNECTOR-ONLY SESSIONS GET A REMOTE SHELL, NOT A SECOND LANDING.
  *

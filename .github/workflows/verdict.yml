@@ -13,7 +13,7 @@ name: verdict
 # The obvious fix is to poll the Actions API after a push. It does not work
 # where it is needed. Measured in an agent container on 2026-09-07:
 #
-#   curl https://api.github.com/repos/JamesFlames/EldritchDynasty/actions/runs
+#   curl https://api.github.com/repos/EldritchDynasty/EldritchDynasty/actions/runs
 #   → 403 {"message":"GitHub access is not enabled for this session."}
 #
 # The host is reachable; the session has no credential for it. Only the MCP
