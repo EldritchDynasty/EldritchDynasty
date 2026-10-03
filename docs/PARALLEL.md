@@ -336,8 +336,9 @@ letting those versions share a concurrency group allows old queue semantics to
 cancel the new bootstrap during exactly the workflow change it exists to prove.
 Bootstrap and comment landings can overlap; the final compare-and-swap push
 arbitrates the two queue transports. This exists because a PR
-check can be green on an old base — the rebase and the post-push verdict remain
-mandatory.
+check can be green on an old base — the queue's rebase/check is mandatory, and
+the normal post-push verdict remains mandatory health evidence even though it no
+longer holds the serialized queue slot.
 
 **The queue's full set is derived rather than remembered.**
 `npm run check` is `typecheck && validate && test` — it does not run the gates,

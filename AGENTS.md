@@ -455,9 +455,11 @@ true even if nobody opens it.
   `remote-land.yml` crosses that boundary, using `LAND_DEPLOY_KEY`. The queue
   rebases and checks again at the head of the line, so the checked head is the
   pushed head. `npm run check` is **not** enough: it omits the gates.
-  **A queue push is not finished until a verdict comes back, and an absent verdict
-  is not a pass.** Connector-only: `/land`; staged work that genuinely leaves its
-  issue open: `/land --no-issue-check`. **Never merge the PR directly.** See
+  After that exact checked push, the serialized queue releases immediately; the
+  ordinary push-triggered check/verdict continues asynchronously. **Pushed is
+  not the same as a green post-push verdict, and an absent verdict is not a
+  pass.** Connector-only: `/land`; staged work that genuinely leaves its issue
+  open: `/land --no-issue-check`. **Never merge the PR directly.** See
   [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Landing must outlive the turn; never use `nohup … &`.** Use the harness-tracked background run (Claude Code: `run_in_background`) and read it with `npm run land -- --status`. Details and failure recovery live in [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Never ask a fresh clone what has been merged.** It arrives shallow, and

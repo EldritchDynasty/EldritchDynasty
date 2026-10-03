@@ -127,3 +127,33 @@ deletion, and a mass deletion is a number of branches, not a proportion of
 them. The shallow-clone refusal is untouched and remains the real defence,
 because it removes the condition that produced the false readings instead of
 trying to recognise their shape afterwards.
+
+---
+
+## 2026-10-03 — #353 queue occupancy baseline before #424
+
+#424 isolates one queue-throughput variable: after the serialized landing has
+rebased, run the authoritative set, and pushed the exact checked head, should it
+keep holding the queue while the ordinary push-triggered verdict rechecks that
+same tree?
+
+Live PR #418 landing run `37095188185` provides the before measurement:
+
+| Measure | Before #424 | After #424 |
+|---|---:|---:|
+| Serialized land job started | 04:07:03Z | — |
+| Authoritative check/push step | **2h 12m 13s** (04:07:09Z → 06:19:22Z) | — |
+| Post-push verdict wait began | **06:19:22Z** | — |
+| Normal push-triggered check began | **06:19:23Z** | — |
+| Queue slot released after push | **No** — it remained occupied by the verdict wait | — |
+
+The deploy-key push had already emitted the ordinary `push` event: `check.yml`,
+`verdict.yml`, and `janitor.yml` were running independently while the serialized
+landing still held its concurrency slot. That is the duplicate occupancy #424
+removes; it does **not** remove the normal post-push health verdict.
+
+The after column stays empty until a real landing runs through #424's shipped
+workflow. A successful workflow-source test is not timing evidence, and a push
+reported as successful is not retroactively called green before the asynchronous
+verdict exists.
+

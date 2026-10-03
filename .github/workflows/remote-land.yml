@@ -323,8 +323,9 @@ jobs:
       queue: max
     if: needs.admit.result == 'success'
     runs-on: ubuntu-latest
-    # The queue does the expensive rebased pre-push set, then waits for the
-    # ordinary push-triggered check to publish its refs/verdict/<sha>.
+    # The queue owns only the expensive rebased pre-push set and exact push.
+    # The ordinary push-triggered check/verdict continues independently after
+    # that push and must not hold this serialized landing slot.
     timeout-minutes: 240
     env:
       REQUEST_PR: ${{ needs.admit.outputs.pr_number }}
@@ -610,22 +611,14 @@ jobs:
         if: steps.landing.outcome == 'success'
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Wait for the normal push-triggered verdict
-        id: verdict
-        if: steps.landing.outcome == 'success'
-        env:
-          TARGET_SHA: ${{ steps.target.outputs.sha }}
-        run: npm run --silent verdict -- "$TARGET_SHA" --wait 75
-
-      # The landing can fail before its push; the normal push-triggered check
-      # can fail after it. Always report current trunk rather than collapsing
-      # those states.
+      # The serialized queue ends after the checked push and this short report.
+      # The normal push-triggered check/verdict continues asynchronously; do not
+      # hold later landings merely to re-judge the identical pushed tree.
       - name: Report landing result
         if: always() && steps.pr.outcome == 'success'
         uses: actions/github-script@v7
         env:
           LANDING_OUTCOME: ${{ steps.landing.outcome }}
-          VERDICT_OUTCOME: ${{ steps.verdict.outcome }}
           TARGET_SHA: ${{ steps.target.outputs.sha }}
           REQUEST_PERSISTED: ${{ needs.admit.outputs.persisted }}
           REQUEST_JSON: ${{ needs.admit.outputs.request_json }}
@@ -641,7 +634,6 @@ jobs:
             });
             const sha = main.commit.sha;
             const landed = process.env.LANDING_OUTCOME === 'success';
-            const judged = process.env.VERDICT_OUTCOME === 'success';
             const target = process.env.TARGET_SHA || '';
             const requestIsLater = (candidate, expected) => {
               const at = String(candidate.requestedAt ?? '');
@@ -752,9 +744,7 @@ jobs:
               }
             }
 
-            const body = landed && judged
-              ? `Remote landing finished green. \`main\` is now at \`${sha.slice(0, 7)}\`; \`${target.slice(0, 7)}\` received the normal post-push green verdict.`
-              : landed
-                ? `Remote landing pushed \`${target.slice(0, 7)}\`, but its normal push-triggered check did not return a green verdict. Current \`main\` is \`${sha.slice(0, 7)}\`. Inspect the verdict and check runs before changing code.`
-                : `Remote landing stopped before it completed a push. Current \`main\` is \`${sha.slice(0, 7)}\`. Inspect this workflow's landing log before retrying.`;
+            const body = landed
+              ? `Remote landing pushed \`${target.slice(0, 7)}\`. Its normal post-push verdict is pending asynchronously; current \`main\` is \`${sha.slice(0, 7)}\`.`
+              : `Remote landing stopped before it completed a push. Current \`main\` is \`${sha.slice(0, 7)}\`. Inspect this workflow's landing log before retrying.`;
             await core.summary.addRaw(body).write();

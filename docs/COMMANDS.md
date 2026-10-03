@@ -55,9 +55,11 @@ other ambient variable.
 Because the queue push uses the deploy key rather than `GITHUB_TOKEN`, it
 emits the ordinary GitHub `push` event. The normal `check.yml`,
 `verdict.yml`, and `janitor.yml` paths therefore run without manual dispatch
-workarounds. The queue captures the pushed SHA and waits with `npm run verdict`;
-green, red, pending and **absent** remain distinct, and an absent verdict is not
-a pass.
+workarounds. Once the authoritative rebased check has pushed its exact head, the
+serialized queue releases immediately. The normal push-triggered check and
+verdict continue asynchronously; the landing summary reports that verdict as
+pending rather than inventing a green result. Green, red, pending and **absent**
+remain distinct, and an absent verdict is not a pass.
 
 **The issue-closing guard still applies before either preflight or queue work.**
 A claimed issue needs a real `Closes #N`/equivalent keyword unless this landing
@@ -83,7 +85,7 @@ the keyword.
 
 Remote landing requests are admitted only for trusted collaborators and are
 serialized with the workflow's `queue: max` group. The normal group has an
-explicit epoch suffix (after #427, `remote-land-main-v3`). The queue's final
+explicit epoch suffix (currently `remote-land-main-v2`). The queue's final
 non-force push is authoritative: if `main` moved after the checked rebase,
 Git rejects the stale push rather than letting an old runner overwrite newer
 work.
@@ -91,32 +93,17 @@ work.
 ### Recovering an orphaned remote landing queue
 
 A queue holder that is merely slow is not an orphan. First read its workflow
-run and the serialized `land` job. The timeout clock starts when that **job
-gets a runner** (its job `started_at`, or the first runner timestamp in its
-job log), not when the workflow run was created and not when its request began
-waiting for the concurrency group. Queue wait does not consume
-`timeout-minutes`. If the `land` job has not started, it is queued, not
-orphaned, regardless of the workflow's age.
-
-Only use this recovery when GitHub still reports the running `land` job
-**after `now - land_job.started_at` exceeds the workflow's own
-`timeout-minutes` budget**, and the available GitHub control surface cannot
-cancel that run. Run `36833259028` on 2026-10-01/02 is the first recorded
-example: its 240-minute job remained `in_progress` for more than a day and
-held every later `/land`.
-
-Run `37095227792` is the counterexample that makes the distinction
-load-bearing. It looked older than four hours while queued, but its `land`
-runner started at `2026-10-03T14:46:39Z`, pushed at `17:05:38Z`, and
-finished green at about `17:47:29Z`: roughly 3h01m of actual job runtime,
-inside the 240-minute budget. Treating workflow/queue age as runtime caused an
-unnecessary v2→v3 recovery.
+run and the `land` job. Only use this recovery when GitHub still reports the
+job running **after the workflow's own `timeout-minutes` budget has elapsed**,
+and the available GitHub control surface cannot cancel that run. Run
+`36833259028` on 2026-10-01/02 is the first recorded example: its 240-minute
+job remained `in_progress` for more than a day and held every later `/land`.
 
 Do **not** bypass the queue or click GitHub's merge button. Instead:
 
 1. Change only the normal queue epoch suffix in
-   `.github/workflows/remote-land.yml` (for example, after #427,
-   `remote-land-main-v3` → `remote-land-main-v4`) and update its fast test.
+   `.github/workflows/remote-land.yml` (for example
+   `remote-land-main-v2` → `remote-land-main-v3`) and update its fast test.
 2. Put `<!-- remote-land -->` in that recovery PR's body. The existing
    reusable bootstrap uses `remote-land-bootstrap-<run id>`, a separate,
    run-unique concurrency group, specifically so a proposed queue workflow can

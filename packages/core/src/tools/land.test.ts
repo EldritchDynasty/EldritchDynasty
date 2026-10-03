@@ -1712,13 +1712,13 @@ describe('the connector-only remote landing', () => {
     expect(remote).toContain('--from-queue');
   });
 
-  it('budgets enough job time for landing plus the verdict wait', () => {
+  it('budgets enough job time for the authoritative rebased landing', () => {
     const timeout = /\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1];
     expect(timeout, 'remote landing has no job timeout').toBeTruthy();
     expect(
       Number(timeout),
-      'the queue must fit the rebased landing plus the ordinary post-push verdict window',
-    ).toBeGreaterThanOrEqual(180);
+      'the queue must fit the observed 2h12m rebased landing with headroom',
+    ).toBeGreaterThanOrEqual(150);
   });
 
   it('lets the deploy-key push trigger check, verdict and janitor exactly once', () => {
@@ -1743,15 +1743,14 @@ describe('the connector-only remote landing', () => {
     expect(DEFAULT_WAIT_MINUTES, 'check runs have taken 45m; 40 was too close').toBeGreaterThanOrEqual(60);
   });
 
-  it('waits for the normal push-triggered verdict without Actions write permission', () => {
+  it('releases the serialized queue after push while the normal verdict stays asynchronous', () => {
     expect(remote).toContain('contents: read');
     expect(remote).not.toContain('actions: write');
     expect(remote).not.toContain('createWorkflowDispatch');
-    expect(remote).toContain('npm run --silent verdict -- "$TARGET_SHA" --wait 75');
-
-    const timeout = Number(/\n    timeout-minutes: (\d+)\n/.exec(remote)?.[1]);
-    expect(timeout, 'the job cap must cover a ~103m landing plus the 75m verdict window')
-      .toBeGreaterThanOrEqual(103 + 75 + 15);
+    expect(remote).not.toContain('npm run --silent verdict -- "$TARGET_SHA" --wait 75');
+    expect(remote).not.toContain('steps.verdict.outcome');
+    expect(remote).not.toContain('VERDICT_OUTCOME');
+    expect(remote).toContain('normal post-push verdict is pending asynchronously');
   });
 
   it('has a PR-event bootstrap bridge so the new comment workflow can land itself', () => {
@@ -1786,8 +1785,9 @@ describe('the connector-only remote landing', () => {
     expect(reportStart).toBeGreaterThan(0);
     expect(report).toContain("if: always() && steps.pr.outcome == 'success'");
     expect(report).toContain('steps.landing.outcome');
-    expect(report).toContain('steps.verdict.outcome');
-    expect(report).toContain('normal push-triggered check');
+    expect(report).not.toContain('steps.verdict.outcome');
+    expect(report).not.toContain('VERDICT_OUTCOME');
+    expect(report).toContain('normal post-push verdict is pending asynchronously');
     expect(report).toContain('core.summary.addRaw(body).write()');
     expect(report).toContain("REQUEST_PERSISTED: ${{ needs.admit.outputs.persisted }}");
     expect(report).toContain("REQUEST_JSON: ${{ needs.admit.outputs.request_json }}");
