@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HeirloomIdS, HouseIdS } from './ids.js';
+import { GrudgeInheritanceS } from './house.js';
 
 /**
  * THE PROLOGUE — A DEBT OF THREE PARTS (concept §3, issue #38).
@@ -95,7 +96,7 @@ export const PrologueGrudgeS = z.object({
    * have somebody in the room again, which is what an institutional grievance
    * actually does.
    */
-  inheritance: z.enum(['none', 'heir_only', 'all_blood', 'house_wide']).default('house_wide'),
+  inheritance: GrudgeInheritanceS.default('house_wide'),
 });
 
 export const PrologueDefS = z.object({
