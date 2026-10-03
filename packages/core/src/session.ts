@@ -597,10 +597,14 @@ export class GameSession {
   }
 }
 
+function authoredProseVariants(source: ContentBundle | Content): readonly ProseVariant[] {
+  return 'bundle' in source ? source.proseVariants : source.proseVariants;
+}
+
 export function newGame(source: ContentBundle | Content, opts: SessionOptions = {}): GameSession {
   const ctx = bootstrap(source, opts.seed ?? 1042, opts.startYear ?? 1042, opts.campaign ?? 'long', opts.libraryRuns ?? []);
   const session = new GameSession(ctx, opts.decider ?? 'ask');
-  if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
+  setProseVariants(ctx, opts.proseVariants ?? authoredProseVariants(source));
   if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
   return session;
 }
@@ -612,7 +616,7 @@ export function resumeGame(
 ): GameSession {
   const ctx = loadGame(save, source);
   const session = new GameSession(ctx, opts.decider ?? 'ask');
-  if (opts.proseVariants) setProseVariants(ctx, opts.proseVariants);
+  setProseVariants(ctx, opts.proseVariants ?? authoredProseVariants(source));
   if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
   return session;
 }
