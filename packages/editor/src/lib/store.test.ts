@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { parse } from 'yaml';
+import { assembleBundle } from '@ed/schema';
 
 /**
  * THE WRITE-BACK STORE — the code that touches the author's files.
@@ -65,7 +67,7 @@ vi.mock('./content.js', async () => {
 const {
   store, fileOf, fileOfId, filesHolding, isDirty, markDirty,
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
-  createItem, externalChange,
+  createItem, externalChange, stageProseVariant,
 } = await import('./store.js');
 
 /** A file with a long header comment block and four events in it. */
@@ -447,5 +449,61 @@ describe('creating something new by appending to a file', () => {
     } finally {
       removeDraft();
     }
+  });
+});
+
+
+describe('authored Plain English variants (#414)', () => {
+  it('writes Original and Plain English together and reloads both from the source file', async () => {
+    const target = event(EVENT);
+    const address = `content:${CRUSADE}#events[id=${EVENT}].title`;
+    const originalBefore = target.title;
+
+    target.title = 'A Shelf, Explained More Simply';
+    markDirty('events', EVENT);
+    const staged = stageProseVariant(CRUSADE, address, 'A simpler title for the shelf.');
+
+    expect(staged).toMatchObject({ address, plainenglish: 'A simpler title for the shelf.' });
+    expect(target.title).not.toBe(staged?.plainenglish);
+    expect(store.dirty.has(CRUSADE)).toBe(true);
+
+    const preview = pendingText('events', EVENT);
+    expect(preview?.after).toContain('A Shelf, Explained More Simply');
+    expect(preview?.after).toContain('A simpler title for the shelf.');
+    expect(preview?.after).toContain('proseVariants:');
+
+    const result = await saveEvent(EVENT);
+    expect(result.ok).toBe(true);
+
+    const written = parse(h.disk.get(CRUSADE)!) as {
+      events: { id: string; title: string }[];
+      proseVariants?: { address: string; plainenglish: string }[];
+    };
+    expect(written.events.find((candidate) => candidate.id === EVENT)?.title)
+      .toBe('A Shelf, Explained More Simply');
+    expect(written.proseVariants?.find((candidate) => candidate.address === address)?.plainenglish)
+      .toBe('A simpler title for the shelf.');
+
+    const reloaded = assembleBundle(Object.fromEntries(h.disk), parse);
+    expect(reloaded.events.find((candidate) => candidate.id === EVENT)?.title)
+      .toBe('A Shelf, Explained More Simply');
+    expect(reloaded.proseVariants.find((candidate) => candidate.address === address)?.plainenglish)
+      .toBe('A simpler title for the shelf.');
+
+    // The two columns are independent values: staging/saving the counterpart
+    // did not replace the authored Original.
+    expect(reloaded.events.find((candidate) => candidate.id === EVENT)?.title)
+      .not.toBe(reloaded.proseVariants.find((candidate) => candidate.address === address)?.plainenglish);
+    expect(originalBefore).toBeTruthy();
+  });
+
+  it('does not stage a counterpart into a reference-only Mod Editor source file', () => {
+    h.writable.value = false;
+    const address = `content:${CRUSADE}#events[id=${EVENT}].body`;
+    const before = store.bundle.proseVariants.length;
+
+    expect(stageProseVariant(CRUSADE, address, 'A direct version.')).toBeUndefined();
+    expect(store.bundle.proseVariants).toHaveLength(before);
+    expect(store.dirty.has(CRUSADE)).toBe(false);
   });
 });
