@@ -50,6 +50,34 @@ describe('the content contract', () => {
       .toThrow(/attributes\.yaml is missing/);
   });
 
+  it('keeps content prose counterparts beside the Original file they answer', () => {
+    const files = {
+      'attributes.yaml': 'attributes: []',
+      'loci.yaml': 'loci: []',
+      'traits.yaml': 'traits: []',
+      'houses.yaml': 'houses: []',
+      'heirlooms.yaml': 'heirlooms: []',
+      'spellbooks.yaml': 'spellbooks: []',
+      'careers.yaml': 'careers: []',
+      'clauses.yaml': 'clauses: []',
+      'prologue.yaml': 'prologue: []',
+      'endings.yaml': 'endings: []',
+      'tales.yaml': 'tales: []',
+      'parcels.yaml': 'parcels: []',
+      'positions.yaml': 'positions: []',
+      'events/one.yaml': [
+        'events: []',
+        'proseVariants:',
+        '  - address: content:events/two.yaml#events[id=scene].body',
+        '    plainenglish: A direct version.',
+      ].join('\n'),
+      'events/two.yaml': 'events: []',
+    };
+
+    expect(() => assembleBundle(files, parse))
+      .toThrow(/prose variant.*events\/one\.yaml.*Original.*events\/two\.yaml/);
+  });
+
   it('round-trips through its own schema', () => {
     expect(() => ContentBundleS.parse(bundle)).not.toThrow();
   });
