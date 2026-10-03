@@ -145,6 +145,12 @@ Track:
 
 This is the clearest route to making “That happened because of me” true.
 
+**Failure should usually create a new problem, not merely subtract progress.**
+A lost person, failed rite, broken promise, bad Match, or missed opportunity is
+more engaging when it changes what the house must now decide. Pure subtraction
+can be necessary, but repeated setbacks that only make the same goal farther
+away turn consequence into delay.
+
 ---
 
 ## P0 — Finish the opening as a statement of the whole game
@@ -319,6 +325,13 @@ Useful affordances include:
 
 Do **not** expose the hidden formula (“Bearing +12 caused −0.3 appetite”). The
 goal is causal legibility, not debug telemetry.
+
+Record / Omit / Embellish should also carry **immediate temptation**. The three
+answers are strongest when the player is choosing between a present advantage,
+a present cost, a relationship, standing, or uncertainty **and** the version of
+history the house will leave behind. If the Record choice is merely “truth,
+silence, or lie” with no reason to want the dangerous answer now, it becomes a
+ritual rather than a strategy.
 
 ---
 
@@ -514,6 +527,11 @@ acted on; preserve uncertainty where uncertainty is the fiction.
 Current work already shows that repetition is often about decision shape,
 concentration, callbacks, or missing consequences rather than a shortage of
 prose.
+
+Do **not** lower the global event/docket budget merely to make the repetition
+numbers look better. Fewer questions is not the same as better questions: fix
+the repeater, interaction shape, callback, or owning progression system while
+preserving the measured decision density.
 
 ---
 
