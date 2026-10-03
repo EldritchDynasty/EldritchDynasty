@@ -1,3 +1,4 @@
+import { ProseCatalogueS } from '@ed/schema';
 import type { EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
@@ -18,11 +19,13 @@ export function createProseRuntime(
   mode: ProseMode = 'original',
   variants: readonly ProseVariant[] = [],
 ): ProseRuntime {
-  return { mode, variants: new Map(variants.map((variant) => [variant.address, variant])), missing: new Set() };
+  const parsed = ProseCatalogueS.parse(variants);
+  return { mode, variants: new Map(parsed.map((variant) => [variant.address, variant])), missing: new Set() };
 }
 
 export function setProseVariants(ctx: SimCtx, variants: readonly ProseVariant[]): void {
-  ctx.prose.variants = new Map(variants.map((variant) => [variant.address, variant]));
+  const parsed = ProseCatalogueS.parse(variants);
+  ctx.prose.variants = new Map(parsed.map((variant) => [variant.address, variant]));
   ctx.prose.missing.clear();
 }
 
