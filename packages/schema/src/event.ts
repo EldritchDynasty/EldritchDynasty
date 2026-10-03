@@ -6,6 +6,7 @@ import { TargetS } from './target.js';
 import { ScheduleS } from './arc.js';
 import { DeciderS } from './decider.js';
 import { RiteS } from './rung.js';
+import { GrudgeInheritanceS } from './house.js';
 
 /**
  * The purposes vocabulary is a CLOSED set and every template declares exactly
@@ -281,7 +282,7 @@ export const EffectS = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('treasury'), delta: z.number() }),
   z.object({ kind: z.literal('respect'), delta: z.number() }),
   z.object({ kind: z.literal('flag'), flag: z.string(), set: z.union([z.boolean(), z.number(), z.string()]) }),
-  z.object({ kind: z.literal('relationship'), from: TargetS, to: TargetS, sentiment: z.number().optional(), grudge: z.object({ severity: z.number(), inheritance: z.enum(['none', 'heir_only', 'all_blood', 'house_wide']) }).optional() }),
+  z.object({ kind: z.literal('relationship'), from: TargetS, to: TargetS, sentiment: z.number().optional(), grudge: z.object({ severity: z.number(), inheritance: GrudgeInheritanceS }).optional() }),
   z.object({ kind: z.literal('chronicle'), text: z.string() }),
   z.object({ kind: z.literal('knowledge'), op: z.enum(['grant', 'revoke']), flag: z.string() }),
   /**
