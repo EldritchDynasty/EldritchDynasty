@@ -3,7 +3,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice, report,
+  VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
+  plainEnglishContentWorkItems, plainEnglishCoreWorkItems, plainEnglishWorklist, report,
   sentenceLiterals, unclassifiedContentKeys,
 } from './string-audit.js';
 
@@ -44,6 +45,72 @@ describe('the string-source audit (issue #276)', () => {
       '    note: The first head. Never shown to anybody at all.',
     ].join('\n'));
     expect(rows).toEqual([expect.objectContaining({ voice: 'event', strings: 1, words: 2 })]);
+  });
+
+  it('gives prose stable semantic work-item addresses instead of wording identity', () => {
+    const authored = [
+      'events:',
+      '  - id: a_scene',
+      '    title: The Same Words',
+      '    body: "{HEAD} heard the same words and {KIN} answered."',
+      '    interaction:',
+      '      choices:',
+      '        - id: take_it',
+      '          label: Take the same words',
+      '          outcomes:',
+      '            - id: accepted',
+      '              text: The same words appear here',
+      '  - id: another_scene',
+      '    title: The Same Words',
+      '    body: The same words appear here',
+    ].join('\n');
+    const reworded = authored
+      .replace('The same words appear here', 'Different language appears here')
+      .replace('Take the same words', 'Choose the offered answer');
+
+    const before = plainEnglishContentWorkItems('events/example.yaml', authored);
+    const after = plainEnglishContentWorkItems('events/example.yaml', reworded);
+
+    expect(before.map((x) => x.address)).toEqual(after.map((x) => x.address));
+    expect(new Set(before.map((x) => x.address)).size).toBe(before.length);
+    expect(before.find((x) => x.address.endsWith('events[id=a_scene].body'))?.interpolations)
+      .toEqual(['{HEAD}', '{KIN}']);
+    expect(before.find((x) => x.text === 'The same words appear here')?.address)
+      .toContain('outcomes[id=accepted].text');
+    expect(before.filter((x) => x.text === 'The Same Words').map((x) => x.address)).toEqual([
+      'content:events/example.yaml#events[id=a_scene].title',
+      'content:events/example.yaml#events[id=another_scene].title',
+    ]);
+  });
+
+  it('uses a founding character key rather than its array position', () => {
+    const items = plainEnglishContentWorkItems('characters/founding.yaml', [
+      'characters:',
+      '  - key: founder',
+      '    name: Daveed Gearithy',
+      '  - key: wife',
+      '    name: Eilwen Gearithy',
+    ].join('\n'));
+    expect(items.map((x) => x.address)).toEqual([
+      'content:characters/founding.yaml#characters[key=founder].name',
+      'content:characters/founding.yaml#characters[key=wife].name',
+    ]);
+  });
+
+  it('gives generated narrative prose a wording-independent source ordinal', () => {
+    const before = plainEnglishCoreWorkItems('year/example.ts', [
+      "const first = 'The house paid and the clerk looked away.';",
+      "const second = 'Nobody in the hall answered the question.';",
+    ].join('\n'));
+    const after = plainEnglishCoreWorkItems('year/example.ts', [
+      "const first = 'The family paid and the clerk said nothing.';",
+      "const second = 'No one in the hall gave an answer.';",
+    ].join('\n'));
+    expect(before.map((x) => x.address)).toEqual(after.map((x) => x.address));
+    expect(before.map((x) => x.address)).toEqual([
+      'core:year/example.ts#literal[1]',
+      'core:year/example.ts#literal[2]',
+    ]);
   });
 
   it('finds sentences in code, and not comments, imports or developer messages', () => {
@@ -108,5 +175,18 @@ describe('the string-source audit (issue #276)', () => {
     const voices = new Set(rows.map((r) => r.voice));
     expect(VOICES.filter((v) => !voices.has(v))).toEqual([]);
     expect(report(auditRepository(REPO), { files: true })).toEqual(report(rows, { files: true }));
+  });
+
+  it('makes the #410 worklist exactly cover the audit\'s non-interface narrative strings', () => {
+    const rows = auditRepository(REPO);
+    const expected = rows
+      .filter((r) => r.voice !== 'interface')
+      .reduce((sum, r) => sum + r.strings, 0);
+    const items = plainEnglishWorklist(REPO);
+    expect(items.length).toBe(expected);
+    expect(new Set(items.map((x) => x.address)).size).toBe(items.length);
+    expect(plainEnglishWorklist(REPO)).toEqual(items);
+    expect(items.some((x) => x.voice === 'event')).toBe(true);
+    expect(items.some((x) => x.voice === 'chronicler')).toBe(true);
   });
 });
