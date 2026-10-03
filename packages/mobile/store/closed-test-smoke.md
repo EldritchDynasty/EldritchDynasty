@@ -72,7 +72,7 @@ Notes:
 ```
 
 For a failure, open a GitHub issue at
-<https://github.com/JamesFlames/EldritchDynasty/issues/new> and include:
+<https://github.com/EldritchDynasty/EldritchDynasty/issues/new> and include:
 
 - the device model, Android version, app version name/code, and fresh/update
   status;

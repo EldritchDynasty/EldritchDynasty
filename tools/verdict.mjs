@@ -38,7 +38,7 @@
  * WHY A GIT REF RATHER THAN THE ACTIONS API. Because the API is not reachable
  * from where this has to run. Measured in an agent container, 2026-09-07:
  *
- *   curl https://api.github.com/repos/JamesFlames/EldritchDynasty/actions/runs
+ *   curl https://api.github.com/repos/EldritchDynasty/EldritchDynasty/actions/runs
  *   → 403 {"message":"GitHub access is not enabled for this session."}
  *
  * The host is allowed; the session holds no credential for it. Only the MCP

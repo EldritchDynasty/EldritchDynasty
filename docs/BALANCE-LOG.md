@@ -766,7 +766,7 @@ guard has teeth.
 
 ## Is bearing a moral or a tax? (issue #45's acceptance)
 
-§29 rests on one asymmetry, and [#45](https://github.com/JamesFlames/EldritchDynasty/issues/45)
+§29 rests on one asymmetry, and [#45](https://github.com/EldritchDynasty/EldritchDynasty/issues/45)
 states it as a test rather than as a hope: *high-bearing runs reach HIGHER
 rungs on average AND show materially higher variance in outcome. If they are
 simply worse, this is a difficulty setting and players will play around it
@@ -2124,7 +2124,7 @@ and the shelf is a 2042 one. That is the same two curves as the section above,
 counted rather than plotted, and it is why one scale factor cannot make every
 rung reachable at once. It is also why the Vessel at 4 books is a genuine tail
 — 34 person-years in twelve runs, before its mind, respect and rite gates —
-which is the number [#43](https://github.com/JamesFlames/EldritchDynasty/issues/43)
+which is the number [#43](https://github.com/EldritchDynasty/EldritchDynasty/issues/43)
 should expect to be authored against.
 
 ### The ration that was an accident, and the lane that grew when it went
@@ -2208,7 +2208,7 @@ batches of twenty-four fresh seeds:
 The change moved it the OTHER way on the wider sample, and the twelve-seed
 sample that suggested otherwise was noise. What is real is underneath the
 assertion: **two runs in three recover all nine clauses**, which is §18's own
-worry and is [#42](https://github.com/JamesFlames/EldritchDynasty/issues/42)'s
+worry and is [#42](https://github.com/EldritchDynasty/EldritchDynasty/issues/42)'s
 subject — the run must be losable — not something a `min` over six draws can
 police. The assertion now says the sentence in its own title (some run falls
 short) and that the batch spans at least two clauses, both robust at sixteen
@@ -3762,7 +3762,7 @@ writes a constraint, the pool empties, and the event silently never fires.
 `slots/references` does not catch it: the slot named is real. It is invariant
 11's shape one level down — not a declared field nothing reads, but a declared
 constraint that does the opposite of what it says. Filed as
-[#114](https://github.com/JamesFlames/EldritchDynasty/issues/114) rather than
+[#114](https://github.com/EldritchDynasty/EldritchDynasty/issues/114) rather than
 patched here, because stage 1 is content-only by charter and three-valued
 filter logic is not a thing to bolt on inside a content drop.
 
@@ -4625,7 +4625,7 @@ itself, prove the lever moves anything.
 ### The measurement that actually settles it
 
 `power` — the house's all-time peak — turned out to be the wrong statistic
-regardless of the oracle fix, for a reason [#85](https://github.com/JamesFlames/EldritchDynasty/issues/85)
+regardless of the oracle fix, for a reason [#85](https://github.com/EldritchDynasty/EldritchDynasty/issues/85)
 had already written down: a run's peak sits inside the first 8% of the game,
 set by the founding generation's already-fixed marriages, before there is a
 second generation of cousins for any policy to concentrate onto. A new field,

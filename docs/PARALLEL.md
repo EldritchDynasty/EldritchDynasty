@@ -274,9 +274,9 @@ DRY_RUN=1 node tools/janitor.mjs    # every action it would take, and none perfo
 ```
 
 It needs **Settings → Actions → General → Workflow permissions** set to *Read
-and write* — [`/settings/actions`](https://github.com/JamesFlames/EldritchDynasty/settings/actions)
+and write* — [`/settings/actions`](https://github.com/EldritchDynasty/EldritchDynasty/settings/actions)
 in a browser, since the GitHub mobile app does not carry repository settings; or
-`gh api -X PUT repos/JamesFlames/EldritchDynasty/actions/permissions/workflow -f
+`gh api -X PUT repos/EldritchDynasty/EldritchDynasty/actions/permissions/workflow -f
 default_workflow_permissions=write`. A workflow's own `permissions:` block can
 only NARROW what the repository allows, never exceed it, so a repository capped
 at read-only gives the janitor neither of the two it asks for and every delete
