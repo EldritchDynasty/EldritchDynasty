@@ -1,6 +1,6 @@
 # ELDRITCH DYNASTY — Concept Brief
 
-**Version:** 0.2.2 (bearing)
+**Version:** 0.2.3 (the Examination)
 **Date:** August 2026
 **Genre:** Text-based generational strategy / narrative simulation
 **Platform:** Windows via Steam; Android and iPhone (iOS) on their app stores; browser demo. macOS and Linux desktop builds are out of scope (owner decision, 2026-09-29; #349)
@@ -15,6 +15,8 @@
 > §20 also changes: **Ages now begin and end by chance**, with per-Age duration bands rather than one global 40–150 span, and Ages may own exclusive events.
 >
 > **0.2.2 — one addition, and it is a theme becoming a system.** §29 is new. The story manual has always named **Pride** the line's fatal flaw, alongside the blood and the signing; unlike every other component on that list it was never given a mechanism, and a theme no system reads is decoration. §29 makes it **bearing** — a reading rather than a resource, computed off seven acts the player already performs, never named in a player-facing string, and billed two generations late. Nothing else moves: no section is renumbered, no existing rule changes, and §27 gains two entries.
+>
+> **0.2.3 — the founder has a name, and the signing weighs him.** The player's supplied name becomes the founder's name; leaving it blank keeps **Daveed Gearithy**. Before the house is named, the other party asks four questions whose answers each add one thing given and one thing owed. There are no intended right answers: the Examination is a set of paid-for trade-offs, not point-buy. The prologue is now roughly seven minutes. The founder's name makes the existing Narrator/guardian continuity explicit without turning later generations into player characters. §3, §4, §26 and §27 move with this.
 
 ---
 
@@ -76,12 +78,13 @@ Everything the world says about the world: tavern songs, rival houses' chronicle
 
 ## 3. The Prologue — A Debt of Three Parts
 
-Once, at the head of the run. Non-interactive except for two choices. Roughly four minutes.
+Once, at the head of the run. Interactive at the signing. Roughly seven minutes.
 
-- Year 1042. The founder is **never named**. He is "the man," "your ancestor." The player names the *house*, not the man — names are load-bearing in this world and his is withheld deliberately.
+- Year 1042. The founder takes **the player's supplied name**. Leaving it blank keeps **Daveed Gearithy**. Names remain load-bearing: this one follows the founder into the Chronicle and the guardian continuity rather than being withheld.
 - The counterparty appears **on-screen, once, in the entire game**. Not shown; described by what it displaces. Iron rusting on the table between one sentence and the next. A dog that will not come into the room. The smell of wet ash indoors, in summer.
 - The prologue is structured as an announced triad — **three things given, three things owed** — and delivers three, ascending in weight. The third is the one that hurts.
-- The player's two choices set the founding heirloom and the family's first grudge. Both echo for five hundred years.
+- **The Examination** comes before the house is named: four questions weigh the founder's answers. Every answer adds a thing given and a thing owed; none is meant to be a right answer.
+- The existing heirloom and first-grudge choices remain. Both echo for five hundred years.
 - The prologue closes on a single plain line that states the emotional thesis of the run.
 
 **The epilogue rings it.** Every ending replays the prologue's structure with exactly one element changed. See §24.
@@ -90,9 +93,9 @@ Once, at the head of the run. Non-interactive except for two choices. Roughly fo
 
 ## 4. Player Fantasy
 
-You are not a character. You are the **will of a bloodline** — the thing that persists while individuals are born, ruined, and buried. You never fight, never explore, never speak a line of dialogue.
+You do not play a succession of characters. You are the **will of a bloodline** — the thing that persists while individuals are born, ruined, and buried. The founder is the exception that explains the frame: he bears the player's name, becomes the guardian rather than dying, and remains the Narrator through whom that will is exercised. Later heads are still people the player steers, not avatars the player becomes.
 
-You do three things: you decide **who marries whom**, you decide **who is spent**, and you decide **what gets written down**.
+You never directly fight or explore. Outside the one-off Examination, you do not speak dialogue. You do three things across the line: you decide **who marries whom**, you decide **who is spent**, and you decide **what gets written down**.
 
 The emotional register is **complicity**. The player will do things across five centuries that no single decision would have justified, and then will decide how those things are remembered.
 
@@ -681,6 +684,7 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 | 11 | Endings recast as **variations on the prologue** | Closes the ring; makes the last line land |
 | 12 | Event editor enforces **three declared purposes** | Rothfuss's revision method moved upstream into authoring |
 | 13 | Eldritch Power explicitly **may never become reliable** | Protects the numinous half of the magic design from optimisation |
+| 14 | The founder takes **the player's name**, and the signing gains **the Examination** | Makes the Narrator/guardian continuity explicit and turns the triad's given/owed grammar into paid-for opening choices |
 
 ---
 
@@ -697,6 +701,7 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 - [ ] **Unwritten ending.** The counterparty's true nature must exist in the bible before vertical slice.
 - [ ] **Pride as a penalty.** Bin runs by bearing (§29). High-bearing runs must reach *higher* rungs on average **and** fail harder. If they only fail harder, bearing is a difficulty setting and players will play around it instead of feeling it.
 - [ ] **The named flaw.** Any player-facing string containing *pride*, *arrogance*, *hubris* or *vanity* is a design failure and not a wording one. It is a lint rule, not a review note.
+- [ ] **Examination as point-buy.** If one opening answer is reliably better, or its price can be ignored, the signing has become character optimisation. Every answer must remain a legible given/owed trade-off, and balance evidence must be paired on the same seeds rather than inferred from unpaired runs.
 
 ---
 
