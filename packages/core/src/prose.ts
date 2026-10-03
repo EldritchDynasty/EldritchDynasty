@@ -59,6 +59,24 @@ export function eventBodyAddress(ctx: SimCtx, event: EventTemplate, absent = fal
   return base === undefined ? undefined : `${base}.${absent ? 'absentBody' : 'body'}`;
 }
 
+export function recordChronicleAddress(
+  ctx: SimCtx,
+  event: EventTemplate,
+  option: 'record' | 'embellish',
+): string | undefined {
+  const base = eventBaseAddress(ctx, event);
+  return base === undefined ? undefined : `${base}.record.options.${option}.chronicle`;
+}
+
+export function proseForRecordChronicle(
+  ctx: SimCtx,
+  event: EventTemplate,
+  option: 'record' | 'embellish',
+  original: string,
+): string {
+  return renderProse(ctx, recordChronicleAddress(ctx, event, option), original);
+}
+
 export function outcomeTextAddress(
   ctx: SimCtx,
   event: EventTemplate,
