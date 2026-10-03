@@ -685,16 +685,17 @@ export function gateLadderScales(
     const atDemigod = values.length
       ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.demigod!).length / values.length
       : 0;
+    const godTail = values.filter((v) => v.madness >= MADNESS_FLOOR.god!);
     const atGod = values.length
-      ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.god!).length / values.length
+      ? 100 * godTail.length / values.length
       : 0;
-    const viableGod = values.length
-      ? 100 * values.filter((v) => v.madness >= MADNESS_FLOOR.god! && v.mind >= v.madness).length / values.length
+    const viableGod = godTail.length
+      ? 100 * godTail.filter((v) => v.mind >= v.madness).length / godTail.length
       : 0;
     lines.push(
       `    ${route.padEnd(10)} samples ${String(values.length).padStart(4)}`
       + ` · max ${max.toFixed(1)} · >=60 ${atDemigod.toFixed(1)}%`
-      + ` · >=90 ${atGod.toFixed(1)}% · >=90 with mind>=madness ${viableGod.toFixed(1)}%`,
+      + ` · >=90 ${atGod.toFixed(1)}% · >=90 viable ${viableGod.toFixed(1)}% of >=90`,
     );
   }
   lines.push('  #378 diagnostic — top distinct sampled Madness holders per run:');
