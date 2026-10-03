@@ -1212,7 +1212,7 @@ describe('the native merge queue CI contract', () => {
     expect(workflow).toContain('github.event.merge_group.head_sha');
   });
 
-  it('publishes one stable required result and permits short-tier skips only on pull requests', () => {
+  it('publishes one stable required result and permits skips only for the selected short tier', () => {
     const required = workflow.slice(
       workflow.indexOf('\n  required:\n'),
       workflow.indexOf('\n  android:\n'),
@@ -1220,8 +1220,9 @@ describe('the native merge queue CI contract', () => {
     expect(required).toContain('name: CI required');
     expect(required).toContain('if: always()');
     expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates, corpus]');
-    expect(required).toContain("context.eventName === 'pull_request'");
+    expect(required).toContain("const shortTier = needs.tier?.outputs?.full !== 'true';");
     expect(required).toContain("job.result === 'skipped'");
+    expect(required).not.toContain("context.eventName === 'pull_request'");
     expect(required).toContain('core.setFailed');
   });
 });
