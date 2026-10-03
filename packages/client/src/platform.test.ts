@@ -240,6 +240,33 @@ describe('autosave mutation ordering', () => {
     await expect(game.actions.resume()).resolves.toBe(true);
     expect(game.view.value?.campaign.id).toBe('short');
   });
+
+  it('does not let a later demo write hide a failed full autosave', async () => {
+    const { host, writes } = deferred();
+    const game = createGame(loadContent(), host);
+
+    game.actions.begin(32341, 'short');
+    game.actions.begin(32342, 'demo');
+    await turnQueue();
+
+    // The shared host queue is still serialized, but the second mutation is
+    // a different persistence namespace and must not make the first failure stale.
+    expect(writes).toHaveLength(1);
+    writes[0]!.reject();
+    await turnQueue();
+
+    expect(writes).toHaveLength(2);
+    expect(game.resumable.value).toBe(false);
+    expect(game.saveStatus.value).toBe('saving');
+
+    writes[1]!.resolve();
+    await turnQueue();
+
+    expect(host.saves.has('autosave')).toBe(false);
+    expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
+    expect(game.resumable.value).toBe(false);
+    expect(game.saveStatus.value).toBe('saved');
+  });
 });
 
 describe('the platform seam', () => {
