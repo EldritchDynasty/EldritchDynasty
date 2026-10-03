@@ -1,4 +1,4 @@
-import type { EventTemplate, Outcome, ProseMode } from '@ed/schema';
+import type { EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 /**
@@ -8,12 +8,22 @@ import type { SimCtx } from './world.js';
  */
 export interface ProseRuntime {
   mode: ProseMode;
+  /** Runtime catalogue supplied by the host/editor; not part of the simulation bundle or save. */
+  variants: Map<string, ProseVariant>;
   /** Stable addresses requested in plain-English mode that are not migrated yet. */
   missing: Set<string>;
 }
 
-export function createProseRuntime(mode: ProseMode = 'original'): ProseRuntime {
-  return { mode, missing: new Set() };
+export function createProseRuntime(
+  mode: ProseMode = 'original',
+  variants: readonly ProseVariant[] = [],
+): ProseRuntime {
+  return { mode, variants: new Map(variants.map((variant) => [variant.address, variant])), missing: new Set() };
+}
+
+export function setProseVariants(ctx: SimCtx, variants: readonly ProseVariant[]): void {
+  ctx.prose.variants = new Map(variants.map((variant) => [variant.address, variant]));
+  ctx.prose.missing.clear();
 }
 
 export function setProseMode(ctx: SimCtx, mode: ProseMode): void {
@@ -31,7 +41,7 @@ export function missingPlainEnglish(ctx: SimCtx): string[] {
  */
 export function renderProse(ctx: SimCtx, address: string | undefined, original: string): string {
   if (ctx.prose.mode === 'original' || address === undefined) return original;
-  const variant = ctx.content.prose(address);
+  const variant = ctx.prose.variants.get(address);
   if (variant) return variant.plainenglish;
   ctx.prose.missing.add(address);
   return original;
