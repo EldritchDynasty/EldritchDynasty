@@ -295,12 +295,30 @@ export function literals(src: string): Literal[] {
 /** Arguments to these are for a developer, not a player. */
 const DEVELOPER_CALL = /(?:\bError|\bassert\w*|\bconsole\.\w+|\bdescribe|\bit|\btest|\bexpect)\s*\(\s*$/;
 
-/** A literal a player could read: three words or more, and not import plumbing. */
-function sentenceLiteralDetails(src: string): Literal[] {
+interface IndexedLiteral {
+  literal: Literal;
+  /** 1-based position among every source literal, before prose filtering. */
+  ordinal: number;
+}
+
+/**
+ * A literal a player could read: three words or more, and not import plumbing.
+ *
+ * Preserve the ordinal from the complete literal stream before filtering.
+ * Otherwise rewording an earlier narrative literal so it no longer meets the
+ * heuristic would renumber every later Plain English work item, even though
+ * none of those later strings moved.
+ */
+function sentenceLiteralEntries(src: string): IndexedLiteral[] {
   return literals(src)
-    .filter((l) => /[a-z]/.test(l.text) && words(l.text) >= 3)
-    .filter((l) => !/\b(?:import|from|require)\s*\(?\s*$/.test(l.before))
-    .filter((l) => !DEVELOPER_CALL.test(l.before));
+    .map((literal, index) => ({ literal, ordinal: index + 1 }))
+    .filter(({ literal }) => /[a-z]/.test(literal.text) && words(literal.text) >= 3)
+    .filter(({ literal }) => !/\b(?:import|from|require)\s*\(?\s*$/.test(literal.before))
+    .filter(({ literal }) => !DEVELOPER_CALL.test(literal.before));
+}
+
+function sentenceLiteralDetails(src: string): Literal[] {
+  return sentenceLiteralEntries(src).map(({ literal }) => literal);
 }
 
 export function sentenceLiterals(src: string): string[] {
@@ -328,11 +346,11 @@ export function auditCoreFile(file: string, text: string): StringCount[] {
  */
 export function plainEnglishCoreWorkItems(file: string, text: string): PlainEnglishWorkItem[] {
   const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
-  return sentenceLiteralDetails(text).map((literal, i) => ({
+  return sentenceLiteralEntries(text).map(({ literal, ordinal }) => ({
     source: 'core',
     file,
     voice,
-    address: `core:${file}#literal[${i + 1}]`,
+    address: `core:${file}#literal[${ordinal}]`,
     text: literal.sourceText,
     words: words(literal.text),
     interpolations: literal.interpolations,
