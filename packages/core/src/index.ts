@@ -1,4 +1,5 @@
 export * from './rng.js';
+export * from './prose.js';
 export * from './genetics/loci.js';
 export * from './genetics/meiosis.js';
 export * from './genetics/expression.js';
