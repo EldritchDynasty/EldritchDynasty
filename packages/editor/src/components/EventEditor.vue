@@ -8,6 +8,7 @@ import SaveControl from './SaveControl.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
 import OutcomeGraph from './OutcomeGraph.vue';
 import BodyEditor from './BodyEditor.vue';
+import ProseVariantEditor from './ProseVariantEditor.vue';
 import ChroniclePreview from './ChroniclePreview.vue';
 import NewItem from './NewItem.vue';
 import SlotEditor from './SlotEditor.vue';
@@ -347,6 +348,12 @@ const byFrequency = computed(() => {
           <code>{{ i.rule }}</code> {{ i.message }}
         </div>
       </div>
+
+      <ProseVariantEditor
+        collection-key="events"
+        :id="current.id"
+        :model-value="current"
+      />
 
       <SaveControl collection-key="events" :id="current.id" />
     </div>
