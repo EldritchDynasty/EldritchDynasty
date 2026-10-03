@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { Issue } from './validate.js';
 
 /**
@@ -77,3 +78,26 @@ export function proseIssues(where: string, body: string, threshold: number = PRO
 
   return out;
 }
+
+
+/**
+ * WHICH AUTHORED WORDING TO USE FOR TEXT THAT HAS NOT YET BECOME HISTORY.
+ *
+ * This is deliberately presentation state, not save state. Once prose is
+ * committed to the Chronicle, frame or Library the rendered words themselves
+ * are the artefact and survive later mode changes unchanged.
+ */
+export const ProseModeS = z.enum(['original', 'plainenglish']);
+export type ProseMode = z.infer<typeof ProseModeS>;
+
+/**
+ * One alternate authored wording, keyed by #411's stable work-item address.
+ *
+ * The original remains where it is authored today; duplicating it here would
+ * create two sources of truth. Migration therefore adds only the counterpart.
+ */
+export const ProseVariantS = z.object({
+  address: z.string().min(1),
+  plainenglish: z.string(),
+});
+export type ProseVariant = z.infer<typeof ProseVariantS>;
