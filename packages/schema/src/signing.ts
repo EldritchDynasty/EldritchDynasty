@@ -77,5 +77,17 @@ export const SigningQuestionS = z.object({
   /** Frame-register situation. Answer lines remain plain. */
   situation: z.string().min(1),
   answers: z.array(SigningAnswerS).length(3),
+}).superRefine((question, ctx) => {
+  const seen = new Set<string>();
+  question.answers.forEach((answer, index) => {
+    if (seen.has(answer.id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['answers', index, 'id'],
+        message: 'answer ids must be unique within a signing question',
+      });
+    }
+    seen.add(answer.id);
+  });
 });
 export type SigningQuestion = z.infer<typeof SigningQuestionS>;

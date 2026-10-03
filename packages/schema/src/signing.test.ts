@@ -82,6 +82,14 @@ describe('The Examination signing schema (#343)', () => {
     })).toThrow();
   });
 
+  it('requires answer ids to be unique within a question', () => {
+    expect(() => SigningQuestionS.parse({
+      id: 'the_ford',
+      situation: 'A cart waits in the flooded ford.',
+      answers: [baseAnswer('same'), baseAnswer('same'), baseAnswer('other')],
+    })).toThrow(/answer ids must be unique/);
+  });
+
   it('requires stable slug ids and non-empty choice copy', () => {
     const answer = baseAnswer('valid_answer');
     expect(() => SigningQuestionS.parse({
