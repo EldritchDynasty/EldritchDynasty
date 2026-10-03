@@ -152,6 +152,41 @@ describe('autosave mutation ordering', () => {
     expect(game.resumable.value).toBe(false);
     expect(game.saveStatus.value).toBe('idle');
   });
+
+  it('leaves for the front door without deleting the run and resumes the exact snapshot', async () => {
+    const host = memoryPlatform();
+    let deletes = 0;
+    const deleteSave = host.deleteSave;
+    host.deleteSave = async (slot) => {
+      deletes += 1;
+      await deleteSave(slot);
+    };
+    const game = createGame(loadContent(), host);
+
+    game.actions.begin(35612);
+    game.actions.found({
+      houseName: 'House Kept',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+    });
+    game.actions.enter();
+    const before = game.view.value;
+
+    game.actions.leave();
+
+    expect(game.view.value).toBeNull();
+    expect(game.resumable.value).toBe(true);
+    expect(deletes).toBe(0);
+
+    await expect(game.actions.resume()).resolves.toBe(true);
+    expect(game.view.value).toEqual(before);
+
+    // The serialized autosave tail may still be draining, but leaving must
+    // never enqueue the destructive restart path.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(deletes).toBe(0);
+    expect(host.saves.get('autosave')).toBeTruthy();
+  });
 });
 
 describe('the platform seam', () => {

@@ -275,6 +275,8 @@ export interface GameActions {
   exportSave(slot: string): Promise<boolean>;
   deleteLibraryRun(id: string): Promise<void>;
   clearLibrary(): Promise<void>;
+  /** Return to the front door without discarding the current autosave. */
+  leave(): void;
   restart(): void;
   advance(years: number): void;
   /**
@@ -460,6 +462,35 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
     refresh();
   }
 
+  /**
+   * Clear only the live reading of a run.
+   *
+   * Leaving for the front door and explicitly discarding a run share the same
+   * presentation reset, but only restart() is allowed to forget the autosave.
+   * Keeping that difference here prevents a future menu button from silently
+   * becoming destructive.
+   */
+  function clearLiveRun(): void {
+    session.value = null;
+    view.value = null;
+    table.value = null;
+    land.value = null;
+    prologue.value = null;
+    epilogue.value = null;
+    openingSeen.value = false;
+    interlude.value = null;
+    chapterQueue.value = [];
+    passages.value = [];
+    jump.value = null;
+    refused.value = null;
+    refusal.value = null;
+    musterRefusal.value = null;
+    receipt.value = null;
+    outcome.value = null;
+    refusedCard.value = null;
+    seenFrame = 0;
+  }
+
   const actions: GameActions = {
     begin(seed, campaign = 'short') {
       const begun = newGame(source, { seed, startYear: CAMPAIGNS[campaign].startYear, campaign, libraryRuns: library.value.runs });
@@ -527,20 +558,15 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
       await platform.writeLibrary(library.value);
     },
 
+    leave() {
+      const g = session.value;
+      if (g) keep(g);
+      clearLiveRun();
+    },
+
     restart() {
-      session.value = null;
-      view.value = null;
-      table.value = null;
-      land.value = null;
-      prologue.value = null;
-      epilogue.value = null;
-      openingSeen.value = false;
-      interlude.value = null;
-      chapterQueue.value = [];
-      passages.value = [];
-      jump.value = null;
+      clearLiveRun();
       forget();
-      resumable.value = false;
     },
 
     /**
