@@ -17,6 +17,7 @@ import { EndingDefS } from './ending.js';
 import { TaleDefS } from './tale.js';
 import { ParcelDefS } from './parcel.js';
 import { PositionDefS } from './position.js';
+import { ProseVariantS } from './prose.js';
 
 /** Authored starting cast. Genomes are rolled from the seed, never authored. */
 export const SeedPersonS = z.object({
@@ -85,5 +86,7 @@ export const ContentBundleS = z.object({
   parcels: z.array(ParcelDefS).default([]),
   /** What a war can buy the house in writing, separate from what it costs in men (issue #89, Stage 3). */
   positions: z.array(PositionDefS).default([]),
+  /** Alternate authored wording keyed by #411's stable narrative addresses. */
+  proseVariants: z.array(ProseVariantS).default([]),
 });
 export type ContentBundle = z.infer<typeof ContentBundleS>;
