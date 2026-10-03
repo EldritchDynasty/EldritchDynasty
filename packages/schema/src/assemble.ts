@@ -28,6 +28,12 @@ export interface CollectionSpec {
   /** The document key inside the YAML, and the bundle field it fills. */
   readonly key: keyof ContentBundle;
   readonly source: CollectionSource;
+  /**
+   * Most shipped collections being empty means the checkout is broken.
+   * Migration/catalogue collections may deliberately begin empty before their
+   * authored pass has populated them.
+   */
+  readonly allowEmpty?: boolean;
 }
 
 export const CONTENT_LAYOUT: readonly CollectionSpec[] = [
@@ -47,7 +53,7 @@ export const CONTENT_LAYOUT: readonly CollectionSpec[] = [
   // A counterpart lives beside the Original prose it answers. Scanning every
   // YAML file keeps #415 batches independent instead of funnelling 127k words
   // through one global catalogue file.
-  { key: 'proseVariants', source: { kind: 'dir', prefix: '' } },
+  { key: 'proseVariants', source: { kind: 'dir', prefix: '' }, allowEmpty: true },
   { key: 'ages', source: { kind: 'dir', prefix: 'ages/' } },
   { key: 'events', source: { kind: 'dir', prefix: 'events/' } },
   { key: 'arcs', source: { kind: 'dir', prefix: 'arcs/' } },
