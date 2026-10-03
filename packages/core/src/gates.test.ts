@@ -529,10 +529,10 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     expect(ok, out).toBe(true);
     expect(out).toMatch(/wants mind 70/);
     expect(out).toMatch(/#378 diagnostic — sampled Madness by progression route/);
-    expect(out).toMatch(/none\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 with mind>=madness \d+\.\d%/);
-    expect(out).toMatch(/vessel\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 with mind>=madness \d+\.\d%/);
-    expect(out).toMatch(/great_rite\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 with mind>=madness \d+\.\d%/);
-    expect(out).toMatch(/unmaking\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 with mind>=madness \d+\.\d%/);
+    expect(out).toMatch(/none\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable \d+\.\d% of >=90/);
+    expect(out).toMatch(/vessel\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable \d+\.\d% of >=90/);
+    expect(out).toMatch(/great_rite\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable \d+\.\d% of >=90/);
+    expect(out).toMatch(/unmaking\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable \d+\.\d% of >=90/);
     expect(out).toMatch(/#378 diagnostic — top distinct sampled Madness holders per run/);
 
     // The diagnostic must not let one long-lived man occupy all three rows
