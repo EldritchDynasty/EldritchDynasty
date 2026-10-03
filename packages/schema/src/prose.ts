@@ -102,7 +102,14 @@ export const ProseVariantS = z.object({
 });
 export type ProseVariant = z.infer<typeof ProseVariantS>;
 
-/** A catalogue cannot have two answers for one stable prose identity. */
+/**
+ * A catalogue cannot have two answers for one stable prose identity.
+ *
+ * Storage is intentionally not smuggled into ContentBundle here: every bundle
+ * collection must have a real CONTENT_LAYOUT source. #414 can add that authoring
+ * source explicitly; #412 only defines the validated identity/value contract
+ * and the runtime seam that consumes it.
+ */
 export const ProseCatalogueS = z.array(ProseVariantS).superRefine((variants, ctx) => {
   const seen = new Set<string>();
   for (let i = 0; i < variants.length; i++) {
