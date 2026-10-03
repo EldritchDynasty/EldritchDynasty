@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].outcomes[id=done_by_evening].text';
+const RECORD_ADDRESS =
+  'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.options.record.chronicle';
 
 function fixture() {
   const bundle = loadBundle();
@@ -44,6 +46,47 @@ describe('prospective prose selection', () => {
       'The work is finished before evening.',
     ]);
     expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+
+  it('freezes a pending Record option before a later mode switch', () => {
+    const { bundle, event, outcome } = fixture();
+    const recorded: EventTemplate = {
+      ...event,
+      record: {
+        subject: 'What should the book say?',
+        options: {
+          record: { chronicle: 'The original record wording.', effects: [], claims: [] },
+          omit: { chronicle: null, effects: [] },
+          embellish: {
+            chronicle: 'The original embellished wording.',
+            effects: [],
+            claims: [],
+            discrepancy: { id: 'fixture_prose_lie', severity: 'minor', provableBy: ['archive'] },
+          },
+        },
+      },
+    };
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [
+      { address: ADDRESS, plainenglish: 'The work is finished before evening.' },
+      { address: RECORD_ADDRESS, plainenglish: 'The plain-English record wording.' },
+    ]);
+
+    const first = commitOutcome(ctx, recorded, outcome, {}, undefined, testRng('record-first'));
+    const firstDocket = queueRecord(ctx, recorded, first.entryId)!;
+
+    setProseMode(ctx, 'plainenglish');
+    expect(resolveRecord(ctx, firstDocket.id, 'record').line).toBe('The original record wording.');
+
+    const second = commitOutcome(ctx, recorded, outcome, {}, undefined, testRng('record-second'));
+    const secondDocket = queueRecord(ctx, recorded, second.entryId)!;
+    expect(resolveRecord(ctx, secondDocket.id, 'record').line).toBe('The plain-English record wording.');
+
+    expect(ctx.world.chronicle.slice(-2).map((page) => page.text)).toEqual([
+      'The original record wording.',
+      'The plain-English record wording.',
+    ]);
   });
 
   it('changes rendered words without changing the structured decision', () => {
