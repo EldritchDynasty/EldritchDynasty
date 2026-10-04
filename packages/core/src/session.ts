@@ -592,6 +592,11 @@ export class GameSession {
     return libraryRunOf(this.ctx);
   }
 
+  /** Change future authored wording without changing simulation or save state. */
+  setProseMode(mode: ProseMode): void {
+    setRuntimeProseMode(this.ctx, mode);
+  }
+
   save(): SavedGame {
     return saveGame(this.ctx);
   }

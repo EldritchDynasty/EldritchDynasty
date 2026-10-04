@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { ProseMode } from '@ed/schema';
 import type { ReadingFont, TextScale } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
   textScale: TextScale;
   readingFont: ReadingFont;
+  proseMode: ProseMode;
   skipSeenProse: boolean;
   reduceMotion: boolean;
   showEverythingFromStart?: boolean;
   /** The progressive-reveal option belongs to the in-run "Reading, marks and keys" panel. */
   showProgressiveRevealOption?: boolean;
 }>(), {
+  proseMode: 'original',
   showEverythingFromStart: false,
   showProgressiveRevealOption: false,
 });
@@ -18,6 +21,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:textScale': [value: TextScale];
   'update:readingFont': [value: ReadingFont];
+  'update:proseMode': [value: ProseMode];
   'update:skipSeenProse': [value: boolean];
   'update:reduceMotion': [value: boolean];
   'update:showEverythingFromStart': [value: boolean];
@@ -31,6 +35,11 @@ const textScaleModel = computed<TextScale>({
 const readingFontModel = computed<ReadingFont>({
   get: () => props.readingFont,
   set: (value) => emit('update:readingFont', value),
+});
+
+const proseModeModel = computed<ProseMode>({
+  get: () => props.proseMode,
+  set: (value) => emit('update:proseMode', value),
 });
 
 const skipSeenModel = computed<boolean>({
@@ -69,6 +78,14 @@ const showEverythingModel = computed<boolean>({
     </label>
 
     <label class="small">
+      Prose
+      <select v-model="proseModeModel" aria-label="Prose style">
+        <option value="original">Original</option>
+        <option value="plainenglish">Plain English</option>
+      </select>
+    </label>
+
+    <label class="small">
       Skip reading I've already done
       <input v-model="skipSeenModel" type="checkbox" />
     </label>
@@ -84,8 +101,9 @@ const showEverythingModel = computed<boolean>({
     </label>
 
     <p class="dim small">
-      Exact repeated Age openings are skipped. A repeated prologue reveals its opening and
-      three passive beats at once. Decisions, outcomes, rites and frame scenes still stop for you.
+      Prose changes apply to new material; pages already written in the Chronicle keep the words
+      you saw. Exact repeated Age openings are skipped when enabled. A repeated prologue reveals its
+      passive beats at once. Decisions, outcomes, rites and frame scenes still stop for you.
     </p>
   </div>
 </template>

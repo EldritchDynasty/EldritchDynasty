@@ -38,6 +38,7 @@ describe('reading preferences', () => {
     const wanted: AccessibilityPreferences = {
       textScale: 'largest',
       readingFont: 'readable',
+      proseMode: 'plainenglish',
       skipSeenProse: true,
       reduceMotion: true,
       showEverythingFromStart: false,
@@ -58,6 +59,7 @@ describe('reading preferences', () => {
     expect(loadAccessibility({ getItem: () => '{broken' })).toEqual({
       textScale: 'standard',
       readingFont: 'book',
+      proseMode: 'original',
       skipSeenProse: false,
       reduceMotion: false,
       showEverythingFromStart: null,
@@ -65,6 +67,7 @@ describe('reading preferences', () => {
     expect(loadAccessibility({ getItem: () => JSON.stringify({ textScale: 'huge' }) })).toEqual({
       textScale: 'standard',
       readingFont: 'book',
+      proseMode: 'original',
       skipSeenProse: false,
       reduceMotion: false,
       showEverythingFromStart: null,

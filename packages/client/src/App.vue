@@ -67,6 +67,9 @@ const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 const accessibility = ref(loadAccessibility(
   typeof window === 'undefined' ? null : window.localStorage,
 ));
+// Presentation mode lives with the reader, not the saved world. Seed the store
+// before Begin/Continue so the next GameSession starts in the persisted mode.
+actions.setProseMode(accessibility.value.proseMode);
 watch(accessibility, (preferences) => {
   if (typeof document === 'undefined') return;
   applyAccessibility(document.documentElement, preferences);
@@ -362,10 +365,12 @@ const yearAndBirths = computed(() => {
     :library-ready="libraryReady"
     :text-scale="accessibility.textScale"
     :reading-font="accessibility.readingFont"
+    :prose-mode="accessibility.proseMode"
     :skip-seen-prose="accessibility.skipSeenProse"
     :reduce-motion="accessibility.reduceMotion"
     @update:text-scale="accessibility.textScale = $event"
     @update:reading-font="accessibility.readingFont = $event"
+    @update:prose-mode="accessibility.proseMode = $event"
     @update:skip-seen-prose="accessibility.skipSeenProse = $event"
     @update:reduce-motion="accessibility.reduceMotion = $event"
   />
@@ -522,9 +527,11 @@ const yearAndBirths = computed(() => {
           <ReadingSettings
             v-model:text-scale="accessibility.textScale"
             v-model:reading-font="accessibility.readingFont"
+            :prose-mode="accessibility.proseMode"
             v-model:skip-seen-prose="accessibility.skipSeenProse"
             v-model:reduce-motion="accessibility.reduceMotion"
             v-model:show-everything-from-start="showEverythingFromStart"
+            @update:prose-mode="accessibility.proseMode = $event; actions.setProseMode($event)"
             :show-progressive-reveal-option="true"
           />
           <h3 class="label">Marks</h3>
