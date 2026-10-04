@@ -110,7 +110,10 @@ line of prose on it is genuine simulation output, not placeholder text; the
 house name is the only thing about it that was chosen by the automation
 rather than a person.
 
-Per this issue's own recommendation: use this now so the closed test is not
-waiting on a playtest that has not been scheduled, and swap it for a page
-from a real playtester once #60's first five playtesters exist. Recorded on
-issue #110 as well.
+Use this automated page for engineering/store-layout work only. The later owner
+waiver recorded on #322 (#324 / #335) removed the project requirement for a
+human-acceptance playtest screenshot: before store submission, replace this
+placeholder with a Chronicle page from a **real played run** (for example an
+owner-played or harness-produced Short Line), and record that run's **seed and
+landed SHA here** so the store image is reproducible. Google's closed-test
+tester requirement is separate release evidence and is not waived.
