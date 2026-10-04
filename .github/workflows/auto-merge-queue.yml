@@ -1,0 +1,54 @@
+name: auto merge queue
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  enqueue:
+    name: enqueue ready PR
+    if: >-
+      github.event.pull_request.draft == false
+      && github.event.pull_request.base.ref == 'main'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Mint merge-queue GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Add pull request to native merge queue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          body="$(mktemp)"
+          status="$(
+            curl --silent --show-error               --output "$body"               --write-out '%{http_code}'               --request PUT               --header 'Accept: application/vnd.github+json'               --header "Authorization: Bearer $GH_TOKEN"               --header 'X-GitHub-Api-Version: 2026-03-10'               "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async"               --data "$(jq -nc --arg sha "$HEAD_SHA"                 '{sha:$sha, merge_action:"merge_queue", bypass_rules:false}')"
+          )"
+
+          case "$status" in
+            200|202)
+              echo "PR #$PR_NUMBER accepted by the native merge queue."
+              ;;
+            409)
+              echo "PR #$PR_NUMBER already has an asynchronous merge request; leaving it in place."
+              ;;
+            *)
+              echo "::error::GitHub merge-queue request failed with HTTP $status."
+              cat "$body"
+              exit 1
+              ;;
+          esac
