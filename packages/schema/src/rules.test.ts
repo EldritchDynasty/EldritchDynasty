@@ -367,6 +367,48 @@ describe('the content rules', () => {
     expect(issues.some((i) => i.message.includes('castBy: player'))).toBe(true);
   });
 
+  it('catches a checked outcome that no band can ever resolve', () => {
+    const b = withEvents((x) => {
+      const e = aChoiceEvent(x);
+      if (e.interaction.kind === 'narration') throw new Error('unreachable');
+      const branch = e.interaction.choices[0]!;
+      const original = branch.outcomes[0]!;
+      branch.outcomes.push({ ...structuredClone(original), id: 'outcome_no_band_names' });
+      e.checks.push({
+        id: 'outcome_coverage',
+        pool: { kind: 'family_max', attr: 'strength' },
+        difficulty: 10,
+        variance: 'narrow',
+        bands: [{ atLeast: 0, outcome: original.id }],
+      });
+      branch.check = 'outcome_coverage';
+    });
+    expect(runRule('checks/wiring', b).some((i) =>
+      i.message.includes("outcome 'outcome_no_band_names' is unreachable"),
+    )).toBe(true);
+  });
+
+  it('catches a party-decided branch that no check band can ever select', () => {
+    const b = withEvents((x) => {
+      const e = aChoiceEvent(x);
+      if (e.interaction.kind === 'narration') throw new Error('unreachable');
+      const first = e.interaction.choices[0]!;
+      const omitted = e.interaction.choices[1]!;
+      e.checks.push({
+        id: 'branch_coverage',
+        pool: { kind: 'family_max', attr: 'strength' },
+        difficulty: 10,
+        variance: 'narrow',
+        bands: [{ atLeast: 0, outcome: first.id }],
+      });
+      e.interaction.decidedBy = { party: { check: 'branch_coverage' } };
+      omitted.label = 'This branch is structurally present but no band names it';
+    });
+    expect(runRule('checks/wiring', b).some((i) =>
+      i.message.includes('is unreachable through this party check'),
+    )).toBe(true);
+  });
+
   it('catches a check asked to name both a branch and an outcome', () => {
     const b = withEvents((x) => {
       const e = aChoiceEvent(x);
