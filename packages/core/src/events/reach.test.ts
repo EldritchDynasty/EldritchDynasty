@@ -619,6 +619,52 @@ describe('deterministic outcome execution witnesses', () => {
   });
 });
 
+
+describe('authored basic narration outcome witnesses', () => {
+  it('executes every unscoped conditionless slotless narration outcome', () => {
+    const events = content.events.filter((event) => (
+      event.interaction.kind === 'narration'
+      && event.tier !== 'frame'
+      && event.conditions === undefined
+      && event.ages === undefined
+      && event.arc === undefined
+      && Object.keys(event.slots).length === 0
+    ));
+
+    const declared = events.flatMap((event) =>
+      event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) =>
+            outcomeKey(String(event.id), undefined, String(outcome.id)))
+        : []);
+    const witnessed: string[] = [];
+
+    expect(declared.length).toBeGreaterThan(0);
+
+    let seed = 4050;
+    for (const event of events) {
+      if (event.interaction.kind !== 'narration') continue;
+      for (const outcome of event.interaction.outcomes) {
+        const ctx = testWorld(content, seed);
+        const result = executeOutcomeWitness(ctx, event, {
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: event.interaction.outcomes.length > 1,
+        });
+
+        expect(
+          result.ok,
+          `${event.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));
+        if (result.key) witnessed.push(result.key);
+        seed += 1;
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored state-decider outcome witnesses', () => {
   type StateWitnessCase = {
     eventId: string;
