@@ -136,12 +136,12 @@ describe('the janitor', () => {
    * a number of branches rather than a proportion of them.
    */
   /**
-   * A remote landing dispatches this sweep, and a dispatch has no push event to
-   * derive a range from, so it hands one in as free text. A range is read only
-   * if it is two SHAs: it goes to `git log` as an argument, where `--output=…`
-   * would be an option rather than a range.
+   * The workflow supplies a real push's before..after range through the
+   * environment. Treat it as hostile input anyway: only two full SHAs joined
+   * by `..` may reach `git log`, or an option-shaped string could become a
+   * command-line argument rather than a revision range.
    */
-  it('reads a dispatched range of two SHAs, and nothing else', () => {
+  it('reads an explicit range of two SHAs, and nothing else', () => {
     const full = join(root, 'full');
     const range = `${git(full, 'rev-parse', 'origin/main~2')}..${git(full, 'rev-parse', 'origin/main')}`;
     // An empty summary path sends `say()` to stdout, where this can read it.
