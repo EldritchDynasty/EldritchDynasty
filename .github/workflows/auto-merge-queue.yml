@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: auto-merge-queue-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   enqueue:
     name: enqueue ready PR
@@ -34,21 +38,77 @@ jobs:
         run: |
           set -euo pipefail
 
-          body="$(mktemp)"
+          request_body="$(mktemp)"
           status="$(
-            curl --silent --show-error               --output "$body"               --write-out '%{http_code}'               --request PUT               --header 'Accept: application/vnd.github+json'               --header "Authorization: Bearer $GH_TOKEN"               --header 'X-GitHub-Api-Version: 2026-03-10'               "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async"               --data "$(jq -nc --arg sha "$HEAD_SHA"                 '{sha:$sha, merge_action:"merge_queue", bypass_rules:false}')"
+            curl --silent --show-error               --output "$request_body"               --write-out '%{http_code}'               --request PUT               --header 'Accept: application/vnd.github+json'               --header "Authorization: Bearer $GH_TOKEN"               --header 'X-GitHub-Api-Version: 2026-03-10'               "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async"               --data "$(jq -nc --arg sha "$HEAD_SHA"                 '{sha:$sha, merge_action:"merge_queue", bypass_rules:false}')"
           )"
 
           case "$status" in
-            200|202)
-              echo "PR #$PR_NUMBER accepted by the native merge queue."
+            200)
+              result="$(jq -r '.status // empty' "$request_body")"
+              case "$result" in
+                enqueued|merged)
+                  echo "PR #$PR_NUMBER merge request is already $result."
+                  exit 0
+                  ;;
+                pending)
+                  ;;
+                *)
+                  echo "::error::Unexpected merge-queue response:"
+                  cat "$request_body"
+                  exit 1
+                  ;;
+              esac
               ;;
-            409)
-              echo "PR #$PR_NUMBER already has an asynchronous merge request; leaving it in place."
+            202|409)
               ;;
             *)
               echo "::error::GitHub merge-queue request failed with HTTP $status."
-              cat "$body"
+              cat "$request_body"
               exit 1
               ;;
           esac
+
+          uuid="$(jq -r '.details.uuid // .uuid // empty' "$request_body")"
+          if [[ -z "$uuid" ]]; then
+            echo "::error::GitHub accepted the asynchronous merge request but returned no request UUID."
+            cat "$request_body"
+            exit 1
+          fi
+
+          for attempt in {1..24}; do
+            result_body="$(mktemp)"
+            result_status="$(
+              curl --silent --show-error                 --output "$result_body"                 --write-out '%{http_code}'                 --header 'Accept: application/vnd.github+json'                 --header "Authorization: Bearer $GH_TOKEN"                 --header 'X-GitHub-Api-Version: 2026-03-10'                 "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async/$uuid"
+            )"
+
+            if [[ "$result_status" != 200 ]]; then
+              echo "::error::Could not read asynchronous merge result (HTTP $result_status)."
+              cat "$result_body"
+              exit 1
+            fi
+
+            result="$(jq -r '.status // empty' "$result_body")"
+            case "$result" in
+              enqueued|merged)
+                echo "PR #$PR_NUMBER merge request is $result."
+                exit 0
+                ;;
+              pending)
+                sleep 5
+                ;;
+              failed)
+                echo "::error::GitHub rejected the merge-queue request:"
+                cat "$result_body"
+                exit 1
+                ;;
+              *)
+                echo "::error::Unexpected asynchronous merge result:"
+                cat "$result_body"
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for GitHub to finish the asynchronous merge-queue request."
+          exit 1
