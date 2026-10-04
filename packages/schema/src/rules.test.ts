@@ -1343,6 +1343,8 @@ describe('the rules that had never caught anything', () => {
     });
 
     it('catches a valid node stranded when its only incoming successor is severed', () => {
+      let stranded = '';
+      let entry = '';
       const b = withEvents((x) => {
         const arc = x.arcs.find((candidate) => {
           const incoming = new Map<string, number>();
@@ -1374,12 +1376,13 @@ describe('the rules that had never caught anything', () => {
           successor.to !== 'end'
           && successor.to !== arc.entry
           && incoming.get(successor.to) === 1)!;
-        const stranded = edge.to;
+        stranded = edge.to;
+        entry = arc.entry;
         edge.to = 'end';
-
-        const out = messages('arcs/wiring', x);
-        expect(out).toContain(`node '${stranded}' is unreachable from entry '${arc.entry}'`);
       });
+
+      expect(messages('arcs/wiring', b))
+        .toContain(`node '${stranded}' is unreachable from entry '${entry}'`);
     });
 
     it('catches a successor guarding on a choice the node event does not have', () => {
