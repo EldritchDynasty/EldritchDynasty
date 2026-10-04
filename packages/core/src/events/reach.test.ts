@@ -746,6 +746,90 @@ describe('authored age-scoped head-cast narration outcome witnesses', () => {
     expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
+
+describe('authored age-elapsed head-cast narration outcome witnesses', () => {
+  it('crosses each authored ageElapsed floor through the production ambient selector before executing outcomes', () => {
+    const cases = content.events.flatMap((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      const condition = event.conditions;
+      if (
+        event.interaction.kind !== 'narration'
+        || event.tier === 'frame'
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.arc !== undefined
+        || slotIds.length !== 1
+        || slotIds[0] !== 'HEAD'
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+      ) return [];
+
+      const leaf = condition.all[0];
+      if (!leaf || !('ageElapsed' in leaf) || leaf.ageElapsed.op !== 'gte' || leaf.ageElapsed.years <= 0) {
+        return [];
+      }
+      return [{ event, age: event.ages.only[0]!, years: leaf.ageElapsed.years }];
+    });
+
+    expect(cases.length).toBeGreaterThan(0);
+
+    const declared = cases.flatMap(({ event }) =>
+      event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) =>
+            outcomeKey(String(event.id), undefined, String(outcome.id)))
+        : []);
+    const witnessed: string[] = [];
+
+    for (const [index, { event, age, years }] of cases.entries()) {
+      const before = testWorld(content, 4600 + index);
+      before.world.age.active = [{
+        age,
+        began: before.world.year - (years - 1),
+        named: true,
+        paid: { standing: false },
+      }];
+      expect(
+        ambientPool(before).some((candidate) => candidate.id === event.id),
+        `${event.id} should be blocked one year before ageElapsed >= ${years}`,
+      ).toBe(false);
+
+      if (event.interaction.kind !== 'narration') continue;
+      for (const outcome of event.interaction.outcomes) {
+        const ctx = testWorld(content, 5600 + index);
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year - years,
+          named: true,
+          paid: { standing: false },
+        }];
+
+        expect(
+          ambientPool(ctx).some((candidate) => candidate.id === event.id),
+          `${event.id} should be selectable at ageElapsed >= ${years}`,
+        ).toBe(true);
+
+        const result = executeOutcomeWitness(ctx, event, {
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(6600 + index),
+          targetWeightedOutcome: event.interaction.outcomes.length > 1,
+        });
+
+        expect(
+          result.ok,
+          `${event.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
 describe('authored head-cast player-choice outcome witnesses', () => {
   it('executes every unscoped conditionless unchecked player outcome with only the engine-cast Head', () => {
     const events = content.events.filter((event) => {
