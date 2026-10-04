@@ -3,25 +3,97 @@ name: auto merge queue
 on:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize, edited]
+  workflow_run:
+    workflows: [check]
+    types: [completed]
 
 permissions:
+  actions: read
+  checks: read
   contents: read
+  pull-requests: read
 
 concurrency:
-  group: auto-merge-queue-${{ github.event.pull_request.number }}
+  group: auto-merge-queue-${{ github.event.pull_request.number || github.event.workflow_run.id }}
   cancel-in-progress: true
 
 jobs:
   enqueue:
     name: enqueue ready PR
-    if: >-
-      github.event.pull_request.draft == false
-      && github.event.pull_request.base.ref == 'main'
-      && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Resolve eligible pull request
+        id: pr
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              pr_number="$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH")"
+              expected_head="$(jq -r '.pull_request.head.sha' "$GITHUB_EVENT_PATH")"
+              ;;
+            workflow_run)
+              run_event="$(jq -r '.workflow_run.event' "$GITHUB_EVENT_PATH")"
+              run_conclusion="$(jq -r '.workflow_run.conclusion' "$GITHUB_EVENT_PATH")"
+              if [[ "$run_event" != "pull_request" || "$run_conclusion" != "success" ]]; then
+                echo "eligible=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              pr_number="$(jq -r '.workflow_run.pull_requests[0].number // empty' "$GITHUB_EVENT_PATH")"
+              expected_head="$(jq -r '.workflow_run.pull_requests[0].head.sha // empty' "$GITHUB_EVENT_PATH")"
+              if [[ -z "$pr_number" || -z "$expected_head" ]]; then
+                echo "eligible=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              ;;
+            *)
+              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+
+          pr="$(
+            gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/pulls/$pr_number"
+          )"
+
+          draft="$(jq -r '.draft' <<<"$pr")"
+          state="$(jq -r '.state' <<<"$pr")"
+          base="$(jq -r '.base.ref' <<<"$pr")"
+          head="$(jq -r '.head.sha' <<<"$pr")"
+          head_repo="$(jq -r '.head.repo.full_name // empty' <<<"$pr")"
+
+          if [[ "$state" != "open" || "$draft" != "false" || "$base" != "main" || "$head_repo" != "$GITHUB_REPOSITORY" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A completed workflow_run may describe an older head if a push landed
+          # while CI was finishing. Never let stale green evidence enqueue new code.
+          if [[ "$head" != "$expected_head" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          required="$(
+            gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.completed_at) | last | .conclusion // ""'
+          )"
+
+          if [[ "$required" != "success" ]]; then
+            echo "CI required is not green yet for PR #$pr_number; waiting for the check workflow."
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+
       - name: Mint merge-queue GitHub App token
+        if: steps.pr.outputs.eligible == 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -30,11 +102,12 @@ jobs:
           permission-contents: write
 
       - name: Add pull request to native merge queue
+        if: steps.pr.outputs.eligible == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          HEAD_SHA: ${{ steps.pr.outputs.head }}
         run: |
           set -euo pipefail
 
