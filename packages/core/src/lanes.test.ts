@@ -349,6 +349,23 @@ function shardCount(): number {
   return matrix![1]!.split(',').length;
 }
 
+describe('native merge queue admission', () => {
+  const workflow = readFileSync(join(REPO, '.github/workflows/auto-merge-queue.yml'), 'utf8');
+
+  it('uses the queue-specific App permission and native GraphQL mutation', () => {
+    expect(workflow).toContain('permission-merge-queues: write');
+    expect(workflow).toContain('enqueuePullRequest');
+    expect(workflow).toContain('expectedHeadOid');
+    expect(workflow).not.toContain('/merge-async');
+  });
+
+  it('trusts a successful completed check workflow instead of racing check-runs indexing', () => {
+    expect(workflow).toContain('if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]');
+    expect(workflow).toContain('required="success"');
+    expect(workflow).toContain('the workflow_run event can arrive seconds before that check is');
+  });
+});
+
 describe('the shards are packed by duration', () => {
   const durations: Durations = JSON.parse(readFileSync(DURATIONS, 'utf8'));
   const files = everyTestFile('packages');
