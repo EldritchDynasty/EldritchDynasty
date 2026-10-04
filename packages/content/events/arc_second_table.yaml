@@ -78,7 +78,6 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: branch, op: appease, slot: COUSIN, amount: 24 }
-                - { kind: arc_flag, flag: answered_with_work, set: true }
         - id: praise_it_again
           label: Praise it again. Ardwen has its own officers.
           outcomes:
@@ -133,7 +132,6 @@ events:
                 - { kind: treasury, delta: -18 }
                 - { kind: branch, op: appease, slot: COUSIN, amount: 20 }
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: the_second_table_arc_settled, set: true }
         - id: their_road
           label: It serves their hall. Let them mend what they use.
           outcomes:
@@ -146,7 +144,6 @@ events:
                 enough that nobody has to mention which half belongs to whom.
               effects:
                 - { kind: branch, op: slight, slot: COUSIN, amount: 10 }
-                - { kind: flag, flag: the_second_table_arc_settled, set: true }
     record:
       subject: what the second table was owed
       options:
