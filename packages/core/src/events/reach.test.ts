@@ -8,6 +8,7 @@ import { executeOutcomeWitness, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
+import { TEST_FAMILIES } from '../tools/testFamilies.js';
 
 const content = indexContent(loadContent());
 
@@ -902,3 +903,87 @@ describe('authored choice-requirement witnesses', () => {
   });
 });
 
+
+
+describe('authored weighted player-cast outcome witnesses', () => {
+  function unmakingFixture() {
+    const family = TEST_FAMILIES.find((candidate) => candidate.id === 'demigod_stagnant');
+    if (!family) throw new Error('demigod-stagnant test family is missing');
+    const ctx = family.build(content);
+    const event = content.event('the_unmaking');
+    if (!event || event.interaction.kind === 'narration') {
+      throw new Error('Unmaking fixture changed interaction');
+    }
+    const ascendant = ctx.world.people.living()
+      .find((person) => person.name === 'A Son Who Outgrew Him');
+    if (!ascendant) throw new Error('Unmaking fixture is missing its ascendant');
+    return { ctx, event, ascendant };
+  }
+
+  it('executes both authored Unmaking outcomes through the production player-cast docket', () => {
+    const witnessed: string[] = [];
+
+    for (const [index, outcomeId] of ['taken', 'failed_at_the_last_step'].entries()) {
+      const { ctx, event, ascendant } = unmakingFixture();
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: 'go_through_with_it',
+        expectedOutcomeId: outcomeId,
+        rng: alwaysFirstWeighted(3600 + index),
+        cast: { ASCENDANT: ascendant.id },
+        targetWeightedOutcome: true,
+      });
+
+      expect(result.ok, result.reason).toBe(true);
+      if (result.key) witnessed.push(result.key);
+      expect(ctx.world.decisionLog.some((entry) => (
+        entry.kind === 'outcome'
+        && entry.event === event.id
+        && entry.choiceId === 'go_through_with_it'
+        && entry.outcomeId === outcomeId
+      ))).toBe(true);
+    }
+
+    expect(witnessed.sort()).toEqual([
+      outcomeKey('the_unmaking', 'go_through_with_it', 'failed_at_the_last_step'),
+      outcomeKey('the_unmaking', 'go_through_with_it', 'taken'),
+    ].sort());
+  });
+
+  it('refuses an unweighted multi-outcome docket witness before committing', () => {
+    const { ctx, event, ascendant } = unmakingFixture();
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId: 'go_through_with_it',
+      expectedOutcomeId: 'failed_at_the_last_step',
+      rng: alwaysFirstWeighted(3700),
+      cast: { ASCENDANT: ascendant.id },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('multi-outcome player-cast witness requires targetWeightedOutcome');
+    expect(ctx.world.decisionLog.some((entry) => (
+      entry.kind === 'outcome' && entry.event === event.id
+    ))).toBe(false);
+  });
+
+  it('does not invent a player-cast witness for a zero-weight outcome', () => {
+    const { ctx, event, ascendant } = unmakingFixture();
+    const mutated = structuredClone(event);
+    if (mutated.interaction.kind === 'narration') throw new Error('Unmaking fixture changed interaction');
+    const choice = mutated.interaction.choices.find((candidate) => candidate.id === 'go_through_with_it');
+    const outcome = choice?.outcomes.find((candidate) => candidate.id === 'failed_at_the_last_step');
+    if (!outcome) throw new Error('Unmaking failure outcome is missing');
+    outcome.weight = 0;
+
+    const result = executeOutcomeWitness(ctx, mutated, {
+      choiceId: 'go_through_with_it',
+      expectedOutcomeId: 'failed_at_the_last_step',
+      rng: alwaysFirstWeighted(3701),
+      cast: { ASCENDANT: ascendant.id },
+      targetWeightedOutcome: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("outcome 'failed_at_the_last_step' has no authored weight to target");
+    expect(ctx.world.decisionLog).toHaveLength(0);
+  });
+});
