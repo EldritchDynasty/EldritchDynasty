@@ -7,7 +7,7 @@ import {
   type ContentProseEntry,
 } from '@ed/schema';
 import { isWritableContentPath } from '../lib/content';
-import { fileOf, markDirty, stageProseVariant, store } from '../lib/store';
+import { fileOf, markDirty, removeProseVariant, stageProseVariant, store } from '../lib/store';
 
 const props = withDefaults(defineProps<{
   collectionKey: 'events' | 'arcs' | 'characterTemplates';
@@ -52,6 +52,10 @@ function setPlain(entry: ContentProseEntry, text: string): void {
   if (!writable.value) return;
   const existing = variant(entry.address);
   if (existing) {
+    if (!text.length) {
+      if (sourceFile.value) removeProseVariant(sourceFile.value, entry.address);
+      return;
+    }
     existing.plainenglish = text;
     markDirty('proseVariants', entry.address);
     return;
