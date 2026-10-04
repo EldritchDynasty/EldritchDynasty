@@ -367,6 +367,48 @@ describe('the content rules', () => {
     expect(issues.some((i) => i.message.includes('castBy: player'))).toBe(true);
   });
 
+  it('catches a checked outcome that no band can ever resolve', () => {
+    const b = withEvents((x) => {
+      const e = aChoiceEvent(x);
+      if (e.interaction.kind === 'narration') throw new Error('unreachable');
+      const branch = e.interaction.choices[0]!;
+      const original = branch.outcomes[0]!;
+      branch.outcomes.push({ ...structuredClone(original), id: 'outcome_no_band_names' });
+      e.checks.push({
+        id: 'outcome_coverage',
+        pool: { kind: 'family_max', attr: 'strength' },
+        difficulty: 10,
+        variance: 'narrow',
+        bands: [{ atLeast: 0, outcome: original.id }],
+      });
+      branch.check = 'outcome_coverage';
+    });
+    expect(runRule('checks/wiring', b).some((i) =>
+      i.message.includes("outcome 'outcome_no_band_names' is unreachable"),
+    )).toBe(true);
+  });
+
+  it('catches a party-decided branch that no check band can ever select', () => {
+    const b = withEvents((x) => {
+      const e = aChoiceEvent(x);
+      if (e.interaction.kind === 'narration') throw new Error('unreachable');
+      const first = e.interaction.choices[0]!;
+      const omitted = e.interaction.choices[1]!;
+      e.checks.push({
+        id: 'branch_coverage',
+        pool: { kind: 'family_max', attr: 'strength' },
+        difficulty: 10,
+        variance: 'narrow',
+        bands: [{ atLeast: 0, outcome: first.id }],
+      });
+      e.interaction.decidedBy = { party: { check: 'branch_coverage' } };
+      omitted.label = 'This branch is structurally present but no band names it';
+    });
+    expect(runRule('checks/wiring', b).some((i) =>
+      i.message.includes('is unreachable through this party check'),
+    )).toBe(true);
+  });
+
   it('catches a check asked to name both a branch and an outcome', () => {
     const b = withEvents((x) => {
       const e = aChoiceEvent(x);
@@ -1340,6 +1382,49 @@ describe('the rules that had never caught anything', () => {
         node.successors![0]!.to = 'node_that_is_not';
       });
       expect(messages('arcs/wiring', b)).toMatch(/node_that_is_not/);
+    });
+
+    it('catches a valid node stranded when its only incoming successor is severed', () => {
+      let stranded = '';
+      let entry = '';
+      const b = withEvents((x) => {
+        const arc = x.arcs.find((candidate) => {
+          const incoming = new Map<string, number>();
+          for (const node of candidate.nodes) {
+            for (const successor of node.successors) {
+              if (successor.to === 'end') continue;
+              incoming.set(successor.to, (incoming.get(successor.to) ?? 0) + 1);
+            }
+          }
+          return candidate.nodes.some((node) => node.successors.some((successor) =>
+            successor.to !== 'end'
+            && successor.to !== candidate.entry
+            && incoming.get(successor.to) === 1));
+        });
+        if (!arc) throw new Error('fixture has no arc edge with one incoming path');
+
+        const incoming = new Map<string, number>();
+        for (const node of arc.nodes) {
+          for (const successor of node.successors) {
+            if (successor.to === 'end') continue;
+            incoming.set(successor.to, (incoming.get(successor.to) ?? 0) + 1);
+          }
+        }
+        const predecessor = arc.nodes.find((node) => node.successors.some((successor) =>
+          successor.to !== 'end'
+          && successor.to !== arc.entry
+          && incoming.get(successor.to) === 1))!;
+        const edge = predecessor.successors.find((successor) =>
+          successor.to !== 'end'
+          && successor.to !== arc.entry
+          && incoming.get(successor.to) === 1)!;
+        stranded = edge.to;
+        entry = arc.entry;
+        edge.to = 'end';
+      });
+
+      expect(messages('arcs/wiring', b))
+        .toContain(`node '${stranded}' is unreachable from entry '${entry}'`);
     });
 
     it('catches a successor guarding on a choice the node event does not have', () => {
