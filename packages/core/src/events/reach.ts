@@ -8,7 +8,7 @@ import { resolveSlots, type SlotFill } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
 import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
-import { commitOutcome } from './decisions.js';
+import { commitOutcome, queueChoice, resolveChoice } from './decisions.js';
 import { pickOutcome } from './effects.js';
 import { evalCondition } from './conditions.js';
 import type { ArcStep } from './arcs.js';
@@ -152,6 +152,13 @@ export interface OutcomeWitnessRequest {
    * successor path rather than treating the node like an ambient event.
    */
   arcStep?: ArcStep;
+  /**
+   * Cast supplied through the production decision docket for `castBy: player`
+   * slots. This first witness seam deliberately supports only player-decided,
+   * single-outcome choices: weighted/check targeting remains on the direct
+   * evaluator path until the docket can preserve the same pre-commit guarantee.
+   */
+  cast?: SlotFill;
 }
 
 export interface OutcomeWitnessResult {
@@ -270,10 +277,52 @@ export function executeOutcomeWitness(
   }
 
   if (playerCast.length) {
-    return {
-      ok: false,
-      reason: `player cast required for ${playerCast.join(', ')}; player-cast witnesses need a production docket fixture`,
-    };
+    if (!request.cast) {
+      return {
+        ok: false,
+        reason: `player cast required for ${playerCast.join(', ')}; supply cast through the production docket witness`,
+      };
+    }
+    if (e.interaction.kind === 'narration') {
+      return { ok: false, reason: 'player-cast narration has no choice docket to resolve' };
+    }
+    if (e.interaction.decidedBy !== 'player') {
+      return { ok: false, reason: 'delegated player-cast witness needs a party/state docket fixture' };
+    }
+    if (request.choiceId === undefined) {
+      return { ok: false, reason: 'player-cast witness requires choiceId' };
+    }
+    const choice = e.interaction.choices.find((candidate) => candidate.id === request.choiceId);
+    if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
+    if (
+      choice.check
+      || choice.outcomes.length !== 1
+      || choice.outcomes[0]?.id !== request.expectedOutcomeId
+      || request.targetWeightedOutcome
+      || request.targetCheckedOutcome
+    ) {
+      return {
+        ok: false,
+        reason: 'player-cast docket witness currently requires the named deterministic one-outcome choice',
+      };
+    }
+
+    const before = ctx.world.decisionLog.length;
+    const pending = queueChoice(ctx, e, e.body, fill, playerCast, arcStep);
+    const resolved = resolveChoice(ctx, pending.id, request.choiceId, request.rng, request.cast);
+    if (!resolved.ok) {
+      return { ok: false, reason: resolved.reason ?? 'production docket refused the witness cast' };
+    }
+    const logged = ctx.world.decisionLog[ctx.world.decisionLog.length - 1];
+    const key = outcomeKey(String(e.id), request.choiceId, request.expectedOutcomeId);
+    if (
+      ctx.world.decisionLog.length !== before + 1
+      || logged?.kind !== 'outcome'
+      || outcomeKey(logged.event, logged.choiceId, logged.outcomeId) !== key
+    ) {
+      return { ok: false, reason: `docket commit path did not record ${key}` };
+    }
+    return { ok: true, key };
   }
 
   let choiceId: string | undefined;
