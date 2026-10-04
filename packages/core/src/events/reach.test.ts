@@ -2139,6 +2139,152 @@ describe('authored simple ascension-gated outcome witnesses', () => {
   });
 });
 
+
+describe('authored post-tenure outcome witnesses', () => {
+  function tenureFixture(
+    seed: number,
+    career: string,
+    heldYears: number,
+    frequency: (typeof content.events)[number]['frequency'],
+  ) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[frequency].minGeneration,
+    );
+    place(ctx, {
+      sex: 'male',
+      age: Math.max(30, heldYears + 20),
+      name: 'Witness Career Holder ' + seed,
+      career: { career, heldYears },
+    });
+    return ctx;
+  }
+
+  it('crosses every authored postHeldFor floor, resolves the real career holder and executes every outcome', () => {
+    const cases = content.events.flatMap((event) => {
+      const condition = event.conditions;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('postHeldFor' in condition)
+        || condition.postHeldFor.op !== 'gte'
+        || condition.postHeldFor.years <= 0
+      ) return [];
+
+      const slots = Object.entries(event.slots);
+      if (
+        slots.length !== 1
+        || slots[0]![1].role !== 'family_member'
+        || slots[0]![1].castBy !== 'engine'
+        || !slots[0]![1].filters.some((filter) => (
+          'career' in filter && filter.career.includes(condition.postHeldFor.career)
+        ))
+      ) return [];
+
+      if (event.interaction.kind === 'narration') {
+        return [{ event, condition: condition.postHeldFor }];
+      }
+      if (
+        event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) return [];
+
+      return [{ event, condition: condition.postHeldFor }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
+      'the_advocates_day',
+      'the_berth_becomes_a_share',
+      'the_brass_warrant',
+      'the_year_without_an_invitation',
+    ]);
+
+    const declared = cases.flatMap(({ event }) => {
+      if (event.interaction.kind === 'narration') {
+        return event.interaction.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), undefined, String(outcome.id)));
+      }
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 7800;
+
+    for (const { event, condition } of cases) {
+      const before = tenureFixture(
+        seed,
+        condition.career,
+        condition.years - 1,
+        event.frequency,
+      );
+      expect(
+        evalCondition(event.conditions, before),
+        String(event.id) + ' should be blocked before ' + condition.years + ' years in post',
+      ).toBe(false);
+
+      const selection = tenureFixture(
+        seed,
+        condition.career,
+        condition.years,
+        event.frequency,
+      );
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should pass at ' + condition.years + ' years in post',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored career-holder slot').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, String(event.id) + ' should not require a player cast').toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once its tenure gate and cast are valid',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          const ctx = tenureFixture(seed, condition.career, condition.years, event.frequency);
+          const result = executeOutcomeWitness(ctx, event, {
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: event.interaction.outcomes.length > 1,
+          });
+          expect(result.ok, String(event.id) + '/' + String(outcome.id) + ': ' + result.reason).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+        continue;
+      }
+
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = tenureFixture(seed, condition.career, condition.years, event.frequency);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
