@@ -135,6 +135,15 @@ export interface OutcomeWitnessRequest {
    */
   targetWeightedOutcome?: boolean;
   /**
+   * Steer a `decidedBy: chance` interaction toward `choiceId`.
+   *
+   * The production weighted branch draw is still consumed first, preserving
+   * the RNG cursor. State/party/player deciders are deliberately not rewritten
+   * by this flag; they need their own witness state rather than pretending to
+   * be chance.
+   */
+  targetChanceChoice?: boolean;
+  /**
    * Steer a randomised Choice.check toward the named outcome while still
    * resolving the production score, difficulty and ordered band table.
    *
@@ -176,7 +185,7 @@ export interface OutcomeWitnessResult {
  * draw first, preserving the stream position, then choose the named positive-
  * weight item. Any other RNG operation is passed straight through.
  */
-function targetWeightedOutcomeRng(base: Rng, outcomeId: string): Rng {
+function targetWeightedIdRng(base: Rng, targetId: string): Rng {
   const wrap = (rng: Rng): Rng => ({
     next: () => rng.next(),
     int: (max) => rng.int(max),
@@ -189,7 +198,7 @@ function targetWeightedOutcomeRng(base: Rng, outcomeId: string): Rng {
         typeof x === 'object'
         && x !== null
         && 'id' in x
-        && String((x as { id?: unknown }).id) === outcomeId
+        && String((x as { id?: unknown }).id) === targetId
       ));
       return target !== undefined && weight(target) > 0 ? target : natural;
     },
@@ -304,6 +313,7 @@ export function executeOutcomeWitness(
       || choice.outcomes.length !== 1
       || choice.outcomes[0]?.id !== request.expectedOutcomeId
       || request.targetWeightedOutcome
+      || request.targetChanceChoice
       || request.targetCheckedOutcome
     ) {
       return {
@@ -362,10 +372,13 @@ export function executeOutcomeWitness(
   let choiceId: string | undefined;
   let outcome;
   let outcomeRng = request.targetWeightedOutcome
-    ? targetWeightedOutcomeRng(request.rng, request.expectedOutcomeId)
+    ? targetWeightedIdRng(request.rng, request.expectedOutcomeId)
     : request.rng;
 
   if (e.interaction.kind === 'narration') {
+    if (request.targetChanceChoice) {
+      return { ok: false, reason: 'narration has no chance branch to target' };
+    }
     if (request.choiceId !== undefined) {
       return { ok: false, reason: 'narration has no choice' };
     }
@@ -376,13 +389,26 @@ export function executeOutcomeWitness(
   } else {
     let choice;
     if (e.interaction.decidedBy === 'player') {
+      if (request.targetChanceChoice) {
+        return { ok: false, reason: 'targetChanceChoice cannot override a player decider' };
+      }
       if (request.choiceId === undefined) {
         return { ok: false, reason: 'player-decided witness requires choiceId' };
       }
       choice = e.interaction.choices.find((c) => c.id === request.choiceId);
       if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
     } else {
-      const decided = decideBranch(ctx, e, fill, request.rng, { castReady: true, scope: { arc: arcStep?.instance } });
+      let branchRng = request.rng;
+      if (request.targetChanceChoice) {
+        if (e.interaction.decidedBy !== 'chance') {
+          return { ok: false, reason: 'targetChanceChoice requires a chance decider' };
+        }
+        if (request.choiceId === undefined) {
+          return { ok: false, reason: 'targetChanceChoice requires choiceId' };
+        }
+        branchRng = targetWeightedIdRng(request.rng, request.choiceId);
+      }
+      const decided = decideBranch(ctx, e, fill, branchRng, { castReady: true, scope: { arc: arcStep?.instance } });
       choice = decided.choice;
       if (!choice) return { ok: false, reason: decided.why };
       if (request.choiceId !== undefined && request.choiceId !== choice.id) {
