@@ -1332,6 +1332,192 @@ type GenerationWitnessCase = {
   choices: AuthoredChoice[] | undefined;
 };
 
+describe('authored simple unlock-gated outcome witnesses', () => {
+  function unlockOf(condition: NonNullable<(typeof content.events)[number]['conditions']>) {
+    if ('unlocked' in condition) return condition.unlocked;
+    if (
+      'all' in condition
+      && condition.all.length === 1
+      && condition.all[0]
+      && 'unlocked' in condition.all[0]
+    ) return condition.all[0].unlocked;
+    return undefined;
+  }
+
+  function grantingTraits(grant: string) {
+    return content.traits.filter((trait) =>
+      trait.presence.some((presence) =>
+        presence.modifiers.some((modifier) =>
+          modifier.kind === 'unlock' && modifier.grants === grant)));
+  }
+
+  function unlockFixture(
+    seed: number,
+    event: (typeof content.events)[number],
+    grant: string,
+    enabled: boolean,
+  ) {
+    const ctx = fixture(seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+
+    const onlyAge = event.ages?.only;
+    if (onlyAge?.length === 1) {
+      ctx.world.age.active = [{
+        age: onlyAge[0]!,
+        began: ctx.world.year,
+        named: true,
+        paid: { standing: false },
+      }];
+    }
+
+    const traits = grantingTraits(grant);
+    if (traits.length === 0) throw new Error(`no authored trait grants unlock '${grant}'`);
+
+    for (const person of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+      for (const trait of traits) person.traits.delete(trait.id);
+    }
+
+    if (enabled) {
+      const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'));
+      if (!head) throw new Error('unlock witness fixture has no Head');
+      const trait = traits[0]!;
+      place(ctx, {
+        sex: 'male',
+        age: 48,
+        name: `Witness Unlock Retainer ${grant} ${seed}`,
+        traits: [String(trait.id)],
+        contract: {
+          role: 'steward',
+          term: 'yearly',
+          wage: 8,
+          loyalty: 60,
+          boundTo: head.id,
+          onEmployerDeath: 'passes_to_heir',
+          debt: 0,
+          knowsSecrets: [],
+        },
+      });
+      place(ctx, {
+        sex: 'female',
+        age: 61,
+        name: `Witness Matriarch ${grant} ${seed}`,
+      });
+    }
+    return ctx;
+  }
+
+  it('grants each simple authored unlock through the real trait modifier before selection and commit', () => {
+    const cases = content.events.filter((event) => {
+      if (event.tier === 'frame' || event.arc !== undefined || !event.conditions) return false;
+      const grant = unlockOf(event.conditions);
+      if (!grant) return false;
+
+      if (event.ages !== undefined && event.ages.only?.length !== 1) return false;
+      const slots = Object.values(event.slots);
+      if (
+        slots.length === 0
+        || slots.some((slot) => (
+          slot.castBy !== 'engine'
+          || !['head', 'retainer', 'family_member'].includes(slot.role)
+          || slot.filters.some((filter) => (
+            Object.keys(filter).some((key) =>
+              !['trait', 'has', 'sex', 'age', 'status', 'relation', 'of'].includes(key))
+          ))
+        ))
+      ) return false;
+
+      if (event.interaction.kind === 'narration') return true;
+      return event.interaction.decidedBy === 'player'
+        && event.interaction.choices.every((choice) => (
+          choice.requires.length === 0 && choice.check === undefined
+        ));
+    });
+
+    expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'the_hand_the_warden_accepts',
+      'the_registrar_asks_for_the_book',
+      'the_rule_of_the_sickroom',
+      'the_turn_of_the_stave',
+      'what_the_watch_caught',
+    ]);
+
+    const declared = cases.flatMap((event) => {
+      if (event.interaction.kind === 'narration') {
+        return event.interaction.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), undefined, String(outcome.id)));
+      }
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 8200;
+
+    for (const event of cases) {
+      const grant = unlockOf(event.conditions!);
+      if (!grant) throw new Error(`${event.id} lost its simple unlock gate`);
+
+      const before = unlockFixture(seed, event, grant, false);
+      expect(
+        evalCondition(event.conditions, before),
+        `${event.id} should be blocked without unlock '${grant}'`,
+      ).toBe(false);
+
+      const selection = unlockFixture(seed, event, grant, true);
+      expect(
+        evalCondition(event.conditions, selection),
+        `${event.id} should pass when a household trait grants '${grant}'`,
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, `${event.id} should resolve its real unlock-dependent slots`).toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, `${event.id} should not require a player cast`).toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        `${event.id} should be selectable once its unlock/age/cast state is valid`,
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          const ctx = unlockFixture(seed, event, grant, true);
+          const result = executeOutcomeWitness(ctx, event, {
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: event.interaction.outcomes.length > 1,
+          });
+          expect(result.ok, `${event.id}/${outcome.id}: ${result.reason}`).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+        continue;
+      }
+
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = unlockFixture(seed, event, grant, true);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored simple flag-gated outcome witnesses', () => {
   function gateOf(condition: NonNullable<(typeof content.events)[number]['conditions']>) {
     if ('flag' in condition) {
