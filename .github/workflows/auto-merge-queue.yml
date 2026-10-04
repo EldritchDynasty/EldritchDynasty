@@ -79,9 +79,19 @@ jobs:
             exit 0
           fi
 
-          required="$(
-            gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.completed_at) | last | .conclusion // ""'
-          )"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+            # A successful completed run of the named `check` workflow is the
+            # authoritative green signal for this exact head. Re-querying its
+            # terminal "CI required" check here races GitHub's check-runs index:
+            # the workflow_run event can arrive seconds before that check is
+            # visible, causing a permanent missed enqueue because there is no
+            # later retry event.
+            required="success"
+          else
+            required="$(
+              gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.completed_at) | last | .conclusion // ""'
+            )"
+          fi
 
           if [[ "$required" != "success" ]]; then
             echo "CI required is not green yet for PR #$pr_number; waiting for the check workflow."
