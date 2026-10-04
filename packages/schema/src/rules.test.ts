@@ -1342,6 +1342,46 @@ describe('the rules that had never caught anything', () => {
       expect(messages('arcs/wiring', b)).toMatch(/node_that_is_not/);
     });
 
+    it('catches a valid node stranded when its only incoming successor is severed', () => {
+      const b = withEvents((x) => {
+        const arc = x.arcs.find((candidate) => {
+          const incoming = new Map<string, number>();
+          for (const node of candidate.nodes) {
+            for (const successor of node.successors) {
+              if (successor.to === 'end') continue;
+              incoming.set(successor.to, (incoming.get(successor.to) ?? 0) + 1);
+            }
+          }
+          return candidate.nodes.some((node) => node.successors.some((successor) =>
+            successor.to !== 'end'
+            && successor.to !== candidate.entry
+            && incoming.get(successor.to) === 1));
+        });
+        if (!arc) throw new Error('fixture has no arc edge with one incoming path');
+
+        const incoming = new Map<string, number>();
+        for (const node of arc.nodes) {
+          for (const successor of node.successors) {
+            if (successor.to === 'end') continue;
+            incoming.set(successor.to, (incoming.get(successor.to) ?? 0) + 1);
+          }
+        }
+        const predecessor = arc.nodes.find((node) => node.successors.some((successor) =>
+          successor.to !== 'end'
+          && successor.to !== arc.entry
+          && incoming.get(successor.to) === 1))!;
+        const edge = predecessor.successors.find((successor) =>
+          successor.to !== 'end'
+          && successor.to !== arc.entry
+          && incoming.get(successor.to) === 1)!;
+        const stranded = edge.to;
+        edge.to = 'end';
+
+        const out = messages('arcs/wiring', x);
+        expect(out).toContain(`node '${stranded}' is unreachable from entry '${arc.entry}'`);
+      });
+    });
+
     it('catches a successor guarding on a choice the node event does not have', () => {
       const b = withEvents((x) => {
         const node = x.arcs[0]!.nodes.find((n) => n.successors?.length)!;
