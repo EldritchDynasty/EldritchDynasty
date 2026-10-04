@@ -67,7 +67,7 @@ vi.mock('./content.js', async () => {
 const {
   store, fileOf, fileOfId, filesHolding, isDirty, markDirty,
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
-  createItem, externalChange, stageProseVariant,
+  createItem, externalChange, removeProseVariant, stageProseVariant,
 } = await import('./store.js');
 
 /** A file with a long header comment block and four events in it. */
@@ -495,6 +495,23 @@ describe('authored Plain English variants (#414)', () => {
     expect(reloaded.events.find((candidate) => candidate.id === EVENT)?.title)
       .not.toBe(reloaded.proseVariants.find((candidate) => candidate.address === address)?.plainenglish);
     expect(originalBefore).toBeTruthy();
+  });
+
+  it('removes a cleared counterpart instead of saving schema-invalid empty prose', async () => {
+    const address = `content:${CRUSADE}#events[id=${EVENT}].body`;
+    expect(stageProseVariant(CRUSADE, address, 'A direct version.')).toBeDefined();
+
+    expect(removeProseVariant(CRUSADE, address)).toBe(true);
+    expect(store.bundle.proseVariants.some((variant) => variant.address === address)).toBe(false);
+    expect(store.dirty.has(CRUSADE)).toBe(true);
+
+    const preview = pendingText('events', EVENT);
+    expect(preview?.after).not.toContain(address);
+
+    expect((await saveEvent(EVENT)).ok).toBe(true);
+    expect(() => assembleBundle(Object.fromEntries(h.disk), parse)).not.toThrow();
+    expect(assembleBundle(Object.fromEntries(h.disk), parse).proseVariants
+      .some((variant) => variant.address === address)).toBe(false);
   });
 
   it('does not stage a counterpart into a reference-only Mod Editor source file', () => {
