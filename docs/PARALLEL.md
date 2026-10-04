@@ -192,7 +192,7 @@ claim each, and they close themselves.
 |---|---|---|
 | Claim | `npm run agents -- take 93 --paths …`, once per issue | a ref push each. Every claim records the **branch** holding it, so `npm run agents` reads as an assignment table and one branch may appear on several rows |
 | Say so, for the humans | one comment on the issue naming the branch | optional, and never the lock — an agent's GitHub identity is yours, so a comment cannot arbitrate anything |
-| Land | `Closes #93, closes #94` in the commit message, then PR + `/land` | GitHub closes them when the queued commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
+| Land | `Closes #93, closes #94` in the commit message, then ready PR + **Merge when ready** | GitHub's native queue checks the rebased integration and closes them when that commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
 | Clean up | `.github/workflows/janitor.yml` → `tools/janitor.mjs` | deletes the merged branch, retires **every claim that branch was holding**, and closes anything the keyword missed |
 
 ### One branch, several issues
