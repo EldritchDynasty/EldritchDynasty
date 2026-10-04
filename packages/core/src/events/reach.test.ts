@@ -895,6 +895,80 @@ describe('authored age-scoped head-cast player-choice outcome witnesses', () => 
     expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
+
+describe('authored age-scoped checked player-choice outcome witnesses', () => {
+  it('executes every conditionless randomised checked Head-only player outcome in its active Age', () => {
+    const events = content.events.filter((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      return event.interaction.kind !== 'narration'
+        && event.interaction.decidedBy === 'player'
+        && event.tier !== 'frame'
+        && event.conditions === undefined
+        && event.ages?.only?.length === 1
+        && event.ages.never === undefined
+        && event.ages.register === undefined
+        && event.arc === undefined
+        && slotIds.length === 1
+        && slotIds[0] === 'HEAD'
+        && head?.role === 'head'
+        && head.castBy === 'engine';
+    });
+
+    const cases = events.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) => {
+        if (choice.requires.length || !choice.check) return [];
+        const check = event.checks.find((candidate) => candidate.id === choice.check);
+        if (!check || check.variance === 'none') return [];
+        return choice.outcomes.map((outcome) => ({ event, choice, check, outcome }));
+      });
+    });
+
+    expect(cases.length).toBeGreaterThan(0);
+
+    const declared = cases.map(({ event, choice, outcome }) =>
+      outcomeKey(String(event.id), String(choice.id), String(outcome.id)));
+    const witnessed: string[] = [];
+
+    for (const [index, { event, choice, check, outcome }] of cases.entries()) {
+      const age = event.ages?.only?.[0];
+      if (!age) throw new Error(`${event.id} lost its exclusive Age scope`);
+      expect(
+        check.bands.some((band) => band.outcome === outcome.id),
+        `${event.id}/${choice.id}/${outcome.id} is not named by ${check.id}`,
+      ).toBe(true);
+
+      const ctx = testWorld(content, 4500 + index);
+      ctx.world.age.active = [{
+        age,
+        began: ctx.world.year,
+        named: true,
+        paid: { standing: false },
+      }];
+
+      expect(
+        ambientPool(ctx).some((candidate) => candidate.id === event.id),
+        `${event.id} should be selectable during ${age}`,
+      ).toBe(true);
+
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: choice.id,
+        expectedOutcomeId: outcome.id,
+        rng: makeRng(5500 + index),
+        targetCheckedOutcome: true,
+      });
+
+      expect(
+        result.ok,
+        `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+      ).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
 describe('authored state-decider outcome witnesses', () => {
   type StateWitnessCase = {
     eventId: string;
