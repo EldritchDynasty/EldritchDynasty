@@ -278,6 +278,28 @@ describe('what the rite does to the person it takes', () => {
     ctx.world.people.kill(her.id, ctx.world.year, 'a fever');
     expect(consumeVessel(ctx, him, her).ok).toBe(false);
   });
+
+  it('refuses a second Vessel for the same man before it takes another relative', () => {
+    const ctx = testWorld(content);
+    const him = head(ctx);
+    const first = carrierDaughterOf(ctx, him, 'The First Given');
+    const second = carrierDaughterOf(ctx, him, 'The Second Given');
+
+    expect(consumeVessel(ctx, him, first).ok).toBe(true);
+    const acquiredAfterFirst = { ...him.acquired };
+    const madnessAfterFirst = him.madness;
+
+    const repeated = consumeVessel(ctx, him, second);
+    expect(repeated.ok).toBe(false);
+    expect(repeated.reason).toMatch(/already taken the Vessel rite/);
+
+    // Refusal is before every transfer and before the one death gate.
+    expect(second.status).toBe('alive');
+    expect(him.acquired).toEqual(acquiredAfterFirst);
+    expect(him.madness).toBe(madnessAfterFirst);
+    expect(him.rites.filter((rite) => rite === 'vessel')).toHaveLength(1);
+  });
+
 });
 
 describe('the rite and the ladder', () => {
