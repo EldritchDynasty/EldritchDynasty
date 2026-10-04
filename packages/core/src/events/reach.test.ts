@@ -440,6 +440,88 @@ describe('deterministic outcome execution witnesses', () => {
     throw new Error('fixture has no deterministic player choice suitable for the player-cast docket mutation');
   });
 
+  it('lets the player cast decide a delegated party branch through the production docket', () => {
+    const search = fixture(1107);
+    for (const sourceEvent of content.events) {
+      if (
+        sourceEvent.arc
+        || sourceEvent.record
+        || sourceEvent.interaction.kind === 'narration'
+        || sourceEvent.interaction.decidedBy !== 'player'
+        || sourceEvent.interaction.choices.length < 2
+        || Object.keys(sourceEvent.slots).length === 0
+        || !evalCondition(sourceEvent.conditions, search)
+      ) continue;
+
+      const target = sourceEvent.interaction.choices.find((candidate) => (
+        !candidate.check
+        && candidate.requires.length === 0
+        && candidate.outcomes.length === 1
+      ));
+      const fallback = sourceEvent.interaction.choices.find((candidate) => candidate.id !== target?.id);
+      if (!target || !fallback) continue;
+
+      const original = resolveSlots(sourceEvent, search, makeRng(7));
+      if (!original.ok || original.playerCast.length) continue;
+      const slotId = Object.keys(sourceEvent.slots).find((id) => {
+        const spec = sourceEvent.slots[id]!;
+        return !spec.optional && !spec.count && typeof original.fill[id] === 'string';
+      });
+      if (!slotId) continue;
+      const castId = original.fill[slotId];
+      if (typeof castId !== 'string') continue;
+
+      const event = structuredClone(sourceEvent);
+      if (event.interaction.kind === 'narration') continue;
+      event.slots[slotId]!.castBy = 'player';
+      const checkId = 'witness_party_decider';
+      event.checks.push({
+        id: checkId,
+        pool: { kind: 'party_sum', slots: [slotId], attr: 'strength' },
+        difficulty: 0,
+        variance: 'none',
+        bands: [
+          { atLeast: -1_000_000, outcome: target.id },
+          { atLeast: -2_000_000, outcome: fallback.id },
+        ],
+      });
+      event.interaction.decidedBy = { party: { check: checkId } };
+
+      const wrongCtx = fixture(1107);
+      const wrong = executeOutcomeWitness(wrongCtx, event, {
+        choiceId: fallback.id,
+        expectedOutcomeId: fallback.outcomes[0]!.id,
+        rng: makeRng(7),
+        cast: { [slotId]: castId },
+      });
+      expect(wrong.ok).toBe(false);
+      expect(wrong.reason).toContain(`party decider chose '${target.id}'`);
+      expect(wrongCtx.world.decisionLog).toHaveLength(0);
+
+      const ctx = fixture(1107);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: target.id,
+        expectedOutcomeId: target.outcomes[0]!.id,
+        rng: makeRng(7),
+        cast: { [slotId]: castId },
+      });
+
+      expect(result.ok, result.reason).toBe(true);
+      expect(result.key).toBe(`${event.id}|${target.id}|${target.outcomes[0]!.id}`);
+      expect(ctx.world.pendingDecisions).toHaveLength(0);
+      expect(ctx.world.decisionLog.at(-1)).toMatchObject({
+        kind: 'outcome',
+        event: event.id,
+        choiceId: target.id,
+        outcomeId: target.outcomes[0]!.id,
+        fill: { [slotId]: castId },
+      });
+      return;
+    }
+
+    throw new Error('fixture has no deterministic choice suitable for a delegated party-cast mutation');
+  });
+
   it('does not commit when the named outcome is not the one resolved', () => {
     const event = singleOutcomeNarration();
     const ctx = fixture(1101);

@@ -154,9 +154,10 @@ export interface OutcomeWitnessRequest {
   arcStep?: ArcStep;
   /**
    * Cast supplied through the production decision docket for `castBy: player`
-   * slots. This first witness seam deliberately supports only player-decided,
-   * single-outcome choices: weighted/check targeting remains on the direct
-   * evaluator path until the docket can preserve the same pre-commit guarantee.
+   * slots. Docket witnesses stay on deterministic one-outcome choices. A
+   * delegated `party` branch is supported only when its deciding check has
+   * `variance: none`, so previewing the production decider cannot consume RNG
+   * before `resolveChoice` runs the same decision for the real commit.
    */
   cast?: SlotFill;
 }
@@ -286,12 +287,16 @@ export function executeOutcomeWitness(
     if (e.interaction.kind === 'narration') {
       return { ok: false, reason: 'player-cast narration has no choice docket to resolve' };
     }
-    if (e.interaction.decidedBy !== 'player') {
-      return { ok: false, reason: 'delegated player-cast witness needs a party/state docket fixture' };
-    }
     if (request.choiceId === undefined) {
       return { ok: false, reason: 'player-cast witness requires choiceId' };
     }
+
+    const decider = e.interaction.decidedBy;
+    const party = typeof decider === 'object' && 'party' in decider ? decider.party : undefined;
+    if (decider !== 'player' && !party) {
+      return { ok: false, reason: 'only player and party deciders put a player cast on the decision docket' };
+    }
+
     const choice = e.interaction.choices.find((candidate) => candidate.id === request.choiceId);
     if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
     if (
@@ -307,9 +312,38 @@ export function executeOutcomeWitness(
       };
     }
 
+    if (party) {
+      const check = e.checks.find((candidate) => candidate.id === party.check);
+      if (!check || check.variance !== 'none') {
+        return { ok: false, reason: 'party-cast docket witness requires a variance-none deciding check' };
+      }
+      const castFill: SlotFill = { ...fill };
+      for (const slot of playerCast) {
+        const supplied = request.cast[slot];
+        if (supplied !== undefined) castFill[slot] = supplied;
+      }
+      const availability = choiceAvailability(choice, ctx, castFill, e);
+      if (!availability.available) {
+        return { ok: false, reason: availability.blockedBy ?? `choice '${choice.id}' is unavailable` };
+      }
+      const preview = decideBranch(ctx, e, castFill, request.rng, {
+        castReady: true,
+        scope: { arc: arcStep?.instance },
+      });
+      if (preview.choice?.id !== request.choiceId) {
+        return {
+          ok: false,
+          reason: preview.choice
+            ? `party decider chose '${preview.choice.id}', not '${request.choiceId}'`
+            : preview.why,
+        };
+      }
+    }
+
     const before = ctx.world.decisionLog.length;
     const pending = queueChoice(ctx, e, e.body, fill, playerCast, arcStep);
-    const resolved = resolveChoice(ctx, pending.id, request.choiceId, request.rng, request.cast);
+    const submittedChoice = decider === 'player' ? request.choiceId : undefined;
+    const resolved = resolveChoice(ctx, pending.id, submittedChoice, request.rng, request.cast);
     if (!resolved.ok) {
       return { ok: false, reason: resolved.reason ?? 'production docket refused the witness cast' };
     }
