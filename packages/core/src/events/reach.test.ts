@@ -1036,3 +1036,169 @@ describe('authored weighted player-cast outcome witnesses', () => {
     expect(ctx.world.decisionLog).toHaveLength(0);
   });
 });
+
+
+describe('authored randomised party-decider witnesses', () => {
+  function namedAdults(ctx: ReturnType<typeof fixture>, seed: number) {
+    const young = ctx.world.people.living().find((person) => person.name === `Witness Young Man ${seed}`);
+    const older = ctx.world.people.living().find((person) => person.name === `Witness Older Man ${seed}`);
+    const woman = ctx.world.people.living().find((person) => person.name === `Witness Woman ${seed}`);
+    if (!young || !older || !woman) throw new Error('party witness fixture is missing its adults');
+    return { young, older, woman };
+  }
+
+  it('keeps the authored party-decider inventory explicit', () => {
+    const authored = content.events.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      const decider = event.interaction.decidedBy;
+      return typeof decider === 'object' && 'party' in decider ? [String(event.id)] : [];
+    }).sort();
+
+    expect(authored).toEqual([
+      'riding_the_rents',
+      'the_wheel_stops',
+      'who_leads_them',
+    ].sort());
+  });
+
+  it('executes every branch of the two ambient randomised party dispatches', () => {
+    const cases = [
+      {
+        eventId: 'riding_the_rents',
+        slots: ['RIDER_A', 'RIDER_B', 'RIDER_C'] as const,
+        branches: [
+          ['they_come_back_with_it', 'all_four'],
+          ['they_come_back_with_half', 'half'],
+          ['two_holdings_stand_empty', 'empty'],
+        ] as const,
+      },
+      {
+        eventId: 'the_wheel_stops',
+        slots: ['SENT_A', 'SENT_B', 'SENT_C'] as const,
+        branches: [
+          ['they_clear_it', 'cleared'],
+          ['they_clear_it_hard', 'cleared_hard'],
+          ['they_come_back_wet', 'not_shifted'],
+        ] as const,
+      },
+    ];
+
+    let seed = 3800;
+    for (const testCase of cases) {
+      for (const [choiceId, outcomeId] of testCase.branches) {
+        const ctx = fixture(seed);
+        const { young, older, woman } = namedAdults(ctx, seed);
+        const event = content.event(testCase.eventId);
+        if (!event || event.interaction.kind === 'narration') {
+          throw new Error(`${testCase.eventId} party fixture changed interaction`);
+        }
+        const [a, b, c] = testCase.slots;
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId,
+          expectedOutcomeId: outcomeId,
+          rng: alwaysLowNormal(seed + 50),
+          cast: { [a]: older.id, [b]: young.id, [c]: woman.id },
+          targetPartyChoice: true,
+        });
+
+        expect(result.ok, `${testCase.eventId}/${choiceId}: ${result.reason}`).toBe(true);
+        expect(result.key).toBe(outcomeKey(testCase.eventId, choiceId, outcomeId));
+        seed += 1;
+      }
+    }
+  });
+
+  it('executes every authored Muster leaders branch through its real arc step and docket', () => {
+    const branches = [
+      ['they_are_a_company', 'a_company'],
+      ['they_are_a_levy', 'a_levy'],
+      ['they_are_a_list', 'a_list'],
+    ] as const;
+
+    for (const [index, [choiceId, outcomeId]] of branches.entries()) {
+      const seed = 3900 + index;
+      const ctx = fixture(seed);
+      ctx.world.age.active = [{
+        age: 'the_wars',
+        began: ctx.world.year,
+        named: true,
+        paid: { standing: false },
+      }];
+
+      const arc = content.arc('arc_the_muster');
+      if (!arc) throw new Error('muster arc fixture is missing');
+      const setupRng = makeRng(seed + 20);
+      const instance = startArc(arc, ctx, setupRng);
+      if (!instance) throw new Error('muster arc fixture did not start');
+      const step = dueArcSteps(ctx, setupRng)
+        .find((candidate) => candidate.instance.id === instance.id && candidate.node.id === 'leaders');
+      if (!step) throw new Error('muster leaders entry did not become due');
+
+      const event = content.event(step.node.event);
+      if (!event || event.interaction.kind === 'narration') {
+        throw new Error('muster leaders fixture changed interaction');
+      }
+      const { young, older } = namedAdults(ctx, seed);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId,
+        expectedOutcomeId: outcomeId,
+        rng: alwaysLowNormal(seed + 60),
+        cast: { OFFICER: older.id, SENT: [young.id] },
+        arcStep: step,
+        targetPartyChoice: true,
+      });
+
+      expect(result.ok, `muster/${choiceId}: ${result.reason}`).toBe(true);
+      expect(result.key).toBe(outcomeKey('who_leads_them', choiceId, outcomeId));
+      expect(instance.history.at(-1)).toMatchObject({
+        node: 'leaders',
+        choice: choiceId,
+        outcome: outcomeId,
+      });
+    }
+  });
+
+  it('refuses to guess a randomised party branch without explicit targeting', () => {
+    const seed = 4000;
+    const ctx = fixture(seed);
+    const { young, older, woman } = namedAdults(ctx, seed);
+    const event = content.event('riding_the_rents');
+    if (!event || event.interaction.kind === 'narration') throw new Error('rents fixture changed interaction');
+
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId: 'they_come_back_with_it',
+      expectedOutcomeId: 'all_four',
+      rng: alwaysLowNormal(seed + 50),
+      cast: { RIDER_A: older.id, RIDER_B: young.id, RIDER_C: woman.id },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('randomised party-cast docket witness requires targetPartyChoice');
+    expect(ctx.world.decisionLog).toHaveLength(0);
+  });
+
+  it('does not invent a party branch when the production check has no matching band', () => {
+    const seed = 4001;
+    const ctx = fixture(seed);
+    const { young, older, woman } = namedAdults(ctx, seed);
+    const source = content.event('riding_the_rents');
+    if (!source || source.interaction.kind === 'narration') throw new Error('rents fixture changed interaction');
+    const event = structuredClone(source);
+    const check = event.checks.find((candidate) => candidate.id === 'the_four_doors');
+    const band = check?.bands.find((candidate) => candidate.outcome === 'they_come_back_with_it');
+    if (!check || !band) throw new Error('rents party check fixture is missing');
+    band.outcome = '__missing_party_branch__';
+
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId: 'they_come_back_with_it',
+      expectedOutcomeId: 'all_four',
+      rng: alwaysLowNormal(seed + 50),
+      cast: { RIDER_A: older.id, RIDER_B: young.id, RIDER_C: woman.id },
+      targetPartyChoice: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("party check 'the_four_doors' has no band for 'they_come_back_with_it'");
+    expect(ctx.world.decisionLog).toHaveLength(0);
+  });
+});
