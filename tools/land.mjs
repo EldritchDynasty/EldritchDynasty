@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * THE QUEUED LANDING RUNS THE SAME SET CI RUNS.
+ * LOCAL PREFLIGHT CAN RUN THE SAME FULL SET CI RUNS.
  *
  * The old AGENTS.md rule authorised a session to fast-forward `main` as soon
  * as `npm run check` was green. CI runs THREE jobs. `check` is
@@ -39,28 +39,28 @@
  * `DOCS_ONLY_STEPS` is also the session's default preflight set. That reuse is
  * about the commands, not the reason: CI still calls `tools/docs-only.mjs` to
  * decide when a markdown-only change may take its short tier, while a session
- * now takes the short tier for every diff and leaves the full judgment to the
- * serialized queue.
+ * now takes the short tier for every diff and leaves the full judgment to
+ * GitHub's native merge-group CI.
  *
  * A `--full-preflight` can still outlive a web-session turn. Start that mode
  * with the harness's tracked background run, never `nohup … &`; `--status`
  * reports whether it is still running or where it stopped.
  *
  * What this does NOT do is put the gates in the fix-and-rerun loop. The loop
- * is still `npm run test:fast`; the queue runs the full gate set once on the
- * rebased head it can actually push.
+ * is still `npm run test:fast`; GitHub's merge-group CI runs the full gate set
+ * on the synthetic integration commit that can actually reach `main`.
  *
  * ── A SESSION MAY ASK FOR THE QUEUE'S FULL SET BEFORE ENQUEUEING ───────────
  *
  * `check.yml` is tiered (#144): a DRAFT pull request runs typecheck, validate
  * and the fast lane, and everything else — every push to `main`, every tag,
  * every manual dispatch, every pull request that is not a draft — runs the
- * whole thing. The queue mirrors that full tier before it pushes, and the
- * resulting push is judged by CI again.
+ * whole thing. Native merge-group CI runs that full tier on GitHub's synthetic
+ * integration commit before the queue is allowed to update `main`.
  *
  * A risky draft can opt into the complete local set with `--full-preflight`
- * before handing the branch to the queue. The queue runs it regardless, after
- * rebasing at the head of the serialized line. `land.test.ts` keeps that full
+ * before handing the branch to the queue. GitHub runs the authoritative set
+ * again on the merge-group commit. `land.test.ts` keeps the local full
  * set honest — the step
  * set is still DERIVED from the workflow, and `ciScripts` cannot see an `if:`
  * at all, so a tier can never quietly subtract a job from what this runs.
@@ -244,7 +244,7 @@ export function ciScripts(workflow) {
  *
  * `janitor.mjs` already asks this exact question — "#$slug is still OPEN and
  * no landing commit named it" — but only for a CLAIMED issue, and only after
- * the merge. This asks it before the push, off the branch-naming convention
+ * the merge. This asks it before native-queue handoff, off the branch-naming convention
  * every session gets for free (`claude/issue-<N>-...`), whether or not the
  * claim protocol was used.
  *
@@ -411,15 +411,15 @@ const tryGit = (...args) => {
  * A landing was declared dead — its output file was empty and no `vitest`
  * process was visible — and a second was started against the same working
  * tree. It was not dead; it was between steps. Two landings then ran over one
- * checkout, and the first of them pushed a commit the second had made.
+ * checkout, and the first of them verified a tree the second had changed.
  *
  * An empty log and an absent child process are both equally consistent with
  * "running", so no amount of looking would have settled it. The sentence that
  * was missing is the one this prints.
  *
  * A pid file under `.git/` rather than a ref: this is a single-checkout
- * problem. Two SESSIONS landing at once is already handled, and more strongly
- * — the push is a compare-and-swap and the server rejects the loser.
+ * problem. Integration serialization is GitHub's native merge queue's job;
+ * this lock only prevents two local preflights from corrupting one checkout.
  */
 const GIT_DIR = git('rev-parse', '--git-dir');
 const LOCK = join(GIT_DIR, 'land.lock');
@@ -469,11 +469,10 @@ const alive = (pid) => {
  * can do is make the corpse legible, which is the same trade every other
  * guard in this file makes.
  *
- * So the lock is the black box: it carries where the landing GOT TO, not
- * only who was running it, and `--status` reads it back out. The step past
- * `push` is the one that matters most — that landing put a commit on `main`
- * and did not stay to hear the verdict, which is docs/COMMANDS.md's "an
- * absent verdict is not a pass" arriving by a different road.
+ * So the lock is the black box: it carries where the preflight GOT TO, not
+ * only who was running it, and `--status` reads it back out. `deathReading`
+ * still understands the old `push`/`verdict` steps so an existing pre-migration
+ * lock is diagnosed safely after an update, but new runs never write them.
  */
 function readLock() {
   if (!existsSync(LOCK)) return null;
@@ -751,20 +750,16 @@ async function main() {
   }
 
   /**
-   * THE COMMIT BEING LANDED, NAMED ONCE AND USED FOR EVERYTHING AFTER.
+   * THE COMMIT BEING VERIFIED, NAMED ONCE AND USED FOR EVERYTHING AFTER.
    *
-   * `git push origin HEAD:main` resolves HEAD AT PUSH TIME, half an hour after
-   * the steps that verified it. On 2026-09-07 a landing that started at
-   * 891cac5, and verified 891cac5, pushed 02183f5 — a commit made while it ran
-   * and never seen by a single step. It went to trunk under `9/9 gates pass`
-   * and CI failed it.
-   *
-   * Pushing the SHA instead means a commit made during the run is simply not
-   * landed, which is the right answer and needs no guard to notice.
+   * The session can keep editing its live branch while a long preflight runs.
+   * Pinning `target` before the detached worktree is created makes the evidence
+   * describe one exact commit; later local commits simply need their own
+   * preflight before native-queue handoff.
    */
   const target = git('rev-parse', 'HEAD');
   mark('worktree', { target });
-  say(`\n  landing ${target.slice(0, 7)} — commits made from here on are not in it.`);
+  say(`\n  verifying ${target.slice(0, 7)} — commits made from here on are not in this preflight.`);
 
   /**
    * THE STEPS RUN IN A PRISTINE CHECKOUT, NOT IN YOURS.
@@ -772,15 +767,15 @@ async function main() {
    * They used to run against the live working tree, which meant a landing and
    * its own session could not share a container. On 2026-09-07 a landing was
    * started, the next issue was worked while its half-hour suite ran, and the
-   * suite therefore verified a tree carrying changes the push would not carry.
+   * suite therefore verified a tree different from the commit being handed off.
    * A green run over the wrong tree is worse than a red one, because it is
    * believed.
    *
-   * The guard for that was to re-check the tree before pushing and abandon the
-   * landing if it had moved — correct, and it made a thirty-minute command
-   * that forbids you to type. This removes the condition instead: the steps
-   * run in a detached worktree at `target`, so what they verify is exactly
-   * what will be pushed, and the session's own tree is free the whole time.
+   * The guard for that was to re-check the tree at the end and abandon the
+   * preflight if it had moved — correct, and it made a long command that
+   * forbids you to type. This removes the condition instead: the steps run in
+   * a detached worktree at `target`, so what they verify is exactly the pinned
+   * commit being handed to the native queue, and the live tree stays free.
    *
    * It is what CI does, for the same reason.
    *
@@ -869,25 +864,25 @@ async function main() {
   }
 
   /**
-   * WHAT WAS TESTED MUST BE THE HEAD HANDED TO THE QUEUE.
+   * WHAT WAS TESTED MUST BE AN EXACT, PINNED HEAD BEFORE QUEUE HANDOFF.
    *
    * The tree is checked for cleanliness at the top and then the steps run for
    * half an hour, during which nothing stopped the agent editing files. The
    * session that wrote this did exactly that: it started a landing, worked on
    * the next issue while the suite ran, and the suite therefore verified a
-   * working tree that included uncommitted changes the push would not carry.
+   * working tree that included uncommitted changes outside the pinned commit.
    *
    * A green run over the wrong tree is worse than a red one, because it is
    * believed. So the tree and the commit are both re-checked here, at the last
-   * moment before the push, and a landing that drifted is abandoned rather
-   * than pushed on a verification that does not describe it.
+   * moment before handoff, and a preflight that drifted was abandoned rather
+   * than trusted as evidence for a different commit.
    */
   // NO TREE RE-CHECK HERE, AND THAT IS THE POINT.
   //
   // There used to be one: the steps ran against the live tree, so an edit
   // during the run meant they had verified something else, and the landing was
   // abandoned. The steps run in a worktree at `target` now, so the session's
-  // tree cannot affect what was verified or what is pushed. The guard is gone
+  // tree cannot affect what was verified. The guard is gone
   // because the condition is, which is the better of the two ways to fix a
   // check that keeps firing.
   const finished = finishLanding({ target, branch });
