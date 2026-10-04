@@ -263,7 +263,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
 | `decider/wiring` | A state ladder must name real branches and end in an unguarded rung; a party decider needs a check and a party. |
 | `outcomes/weights` | A group of outcomes whose weights sum to zero can never resolve. |
 | `event/shape` | A choice with one option is narration; a body of twenty words is a stub. |
-| `checks/wiring` | A Check must be declared to be named, its bands ordered highest-first, and every band must name a real outcome — or, for a check a party decider spends, a real branch. |
+| `checks/wiring` | A Check must be declared to be named, its bands ordered highest-first, every band must name a real outcome or branch, and every checked outcome or party-decided branch must be named by a band. |
 | `ages/coverage` | An Age with no content of its own is a modifier wearing a name. |
 | `clause/ages` | CI gate 7. A clause pinned to fewer than two Ages is a clause some runs never see. |
 | `prologue/shape` | One prologue, three beats, and both of its choices pointing at things that exist. |
