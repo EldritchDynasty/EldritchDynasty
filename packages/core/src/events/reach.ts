@@ -4,7 +4,7 @@ import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
 import type { Rng } from '../rng.js';
-import { resolveSlots, type SlotFill } from './slots.js';
+import { resolveSlots } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
 import { resolveChoiceOutcome } from './checks.js';
@@ -121,8 +121,6 @@ export interface OutcomeWitnessRequest {
   expectedOutcomeId: string;
   /** Required for player-decided interactions; for automatic deciders this is an assertion. */
   choiceId?: string;
-  /** Pre-cast people, including any slots whose cast belongs to the player. */
-  preset?: SlotFill;
   rng: Rng;
 }
 
@@ -145,14 +143,14 @@ export function executeOutcomeWitness(
     return { ok: false, reason: 'event conditions are not satisfied by this witness world' };
   }
 
-  const slots = resolveSlots(e, ctx, request.rng, request.preset ?? {});
+  const slots = resolveSlots(e, ctx, request.rng);
   if (!slots.ok) {
     return { ok: false, reason: `slot '${slots.missing ?? '?'}' cannot be filled` };
   }
   if (slots.playerCast.length) {
     return {
       ok: false,
-      reason: `player cast required for ${slots.playerCast.join(', ')}; provide those slots in preset`,
+      reason: `player cast required for ${slots.playerCast.join(', ')}; player-cast witnesses need a production docket fixture`,
     };
   }
 
