@@ -373,40 +373,70 @@ describe('deterministic outcome execution witnesses', () => {
     expect(instance.node).toBe('another_house');
   });
 
-  it('refuses a player-cast slot until a production docket fixture supplies the cast', () => {
+  it('routes a supplied player cast through the production docket', () => {
     const search = fixture(1105);
     for (const sourceEvent of content.events) {
       if (
         sourceEvent.arc
         || sourceEvent.interaction.kind === 'narration'
+        || sourceEvent.interaction.decidedBy !== 'player'
         || Object.keys(sourceEvent.slots).length === 0
         || !evalCondition(sourceEvent.conditions, search)
       ) continue;
 
+      const choice = sourceEvent.interaction.choices.find((candidate) => (
+        !candidate.check
+        && candidate.requires.length === 0
+        && candidate.outcomes.length === 1
+      ));
+      if (!choice) continue;
+
       const original = resolveSlots(sourceEvent, search, makeRng(5));
       if (!original.ok || original.playerCast.length) continue;
-      const slotId = Object.keys(sourceEvent.slots)
-        .find((id) => !sourceEvent.slots[id]!.optional);
+      const slotId = Object.keys(sourceEvent.slots).find((id) => {
+        const spec = sourceEvent.slots[id]!;
+        return !spec.optional && !spec.count && typeof original.fill[id] === 'string';
+      });
       if (!slotId) continue;
 
       const event = structuredClone(sourceEvent);
       if (event.interaction.kind === 'narration') continue;
       event.slots[slotId]!.castBy = 'player';
-      const ctx = fixture(1105);
-      const choice = event.interaction.choices[0]!;
-      const result = executeOutcomeWitness(ctx, event, {
-        ...(event.interaction.decidedBy === 'player' ? { choiceId: choice.id } : {}),
+      const castId = original.fill[slotId];
+      if (typeof castId !== 'string') continue;
+
+      const missingCtx = fixture(1105);
+      const missing = executeOutcomeWitness(missingCtx, event, {
+        choiceId: choice.id,
         expectedOutcomeId: choice.outcomes[0]!.id,
         rng: makeRng(5),
       });
+      expect(missing.ok).toBe(false);
+      expect(missing.reason).toMatch(/player cast required/);
+      expect(missingCtx.world.decisionLog).toHaveLength(0);
 
-      expect(result.ok).toBe(false);
-      expect(result.reason).toMatch(/player cast required/);
-      expect(ctx.world.decisionLog).toHaveLength(0);
+      const ctx = fixture(1105);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: choice.id,
+        expectedOutcomeId: choice.outcomes[0]!.id,
+        rng: makeRng(5),
+        cast: { [slotId]: castId },
+      });
+
+      expect(result.ok, result.reason).toBe(true);
+      expect(result.key).toBe(`${event.id}|${choice.id}|${choice.outcomes[0]!.id}`);
+      expect(ctx.world.pendingDecisions).toHaveLength(0);
+      expect(ctx.world.decisionLog.at(-1)).toMatchObject({
+        kind: 'outcome',
+        event: event.id,
+        choiceId: choice.id,
+        outcomeId: choice.outcomes[0]!.id,
+        fill: { [slotId]: castId },
+      });
       return;
     }
 
-    throw new Error('fixture has no ordinary choice event suitable for the player-cast mutation');
+    throw new Error('fixture has no deterministic player choice suitable for the player-cast docket mutation');
   });
 
   it('does not commit when the named outcome is not the one resolved', () => {
