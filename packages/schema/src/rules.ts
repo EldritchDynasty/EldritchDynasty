@@ -925,9 +925,34 @@ const arcWiring: ValidationRule = {
   check(content) {
     const issues: Issue[] = [];
     for (const arc of content.arcs) {
-      const nodeIds = new Set(arc.nodes.map((n) => n.id));
+      const byId = new Map(arc.nodes.map((n) => [n.id, n]));
+      const nodeIds = new Set(byId.keys());
       if (!nodeIds.has(arc.entry)) {
         issues.push(err(this.id, `arc:${arc.id}`, `entry node '${arc.entry}' not found`));
+      } else {
+        // Existing ids are not enough: a valid successor can be removed or
+        // repointed and leave a real node permanently stranded. Walk only the
+        // declared successor graph here; whether a guard is satisfiable is the
+        // deterministic witness layer's job, not structural wiring's.
+        const reachable = new Set<string>();
+        const visit = (id: string): void => {
+          if (reachable.has(id)) return;
+          const node = byId.get(id);
+          if (!node) return; // the unknown-target error below owns this case
+          reachable.add(id);
+          for (const successor of node.successors) {
+            if (successor.to !== 'end') visit(successor.to);
+          }
+        };
+        visit(arc.entry);
+        for (const node of arc.nodes) {
+          if (reachable.has(node.id)) continue;
+          issues.push(err(
+            this.id,
+            `arc:${arc.id}/${node.id}`,
+            `node '${node.id}' is unreachable from entry '${arc.entry}' — no successor path reaches it`,
+          ));
+        }
       }
       for (const n of arc.nodes) {
         const event = content.event(n.event);
