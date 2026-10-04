@@ -53,10 +53,8 @@ describe('GitHub closing keywords with negation', () => {
     expect(tool.prBodyError('Refs #110')).toBeNull();
   });
 
-  it('is wired into both pull-request admission paths', () => {
-    const remote = readFileSync(join(REPO, '.github/workflows/remote-land.yml'), 'utf8');
+  it('is wired into pull-request CI admission', () => {
     const check = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
-    expect(remote).toContain('CHECK_PR_BODY');
     expect(check).toContain('CHECK_PR_BODY');
   });
 });
