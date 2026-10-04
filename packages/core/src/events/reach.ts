@@ -1,4 +1,4 @@
-import type { Content, ContentBundle, EventTemplate } from '@ed/schema';
+import type { Check, Content, ContentBundle, EventTemplate } from '@ed/schema';
 import { indexContent } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
@@ -7,7 +7,7 @@ import type { Rng } from '../rng.js';
 import { resolveSlots } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
-import { resolveChoiceOutcome } from './checks.js';
+import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
 import { commitOutcome } from './decisions.js';
 import { pickOutcome } from './effects.js';
 import { evalCondition } from './conditions.js';
@@ -133,6 +133,16 @@ export interface OutcomeWitnessRequest {
    * requested band.
    */
   targetWeightedOutcome?: boolean;
+  /**
+   * Steer a randomised Choice.check toward the named outcome while still
+   * resolving the production score, difficulty and ordered band table.
+   *
+   * The underlying normal draw is consumed before the adapter substitutes a
+   * roll on the target band's threshold, preserving RNG cursor cost. A
+   * `variance: none` check has no random draw to steer and is deliberately
+   * left alone: its witness world/cast must clear the requested band honestly.
+   */
+  targetCheckedOutcome?: boolean;
 }
 
 export interface OutcomeWitnessResult {
@@ -173,6 +183,43 @@ function targetWeightedOutcomeRng(base: Rng, outcomeId: string): Rng {
   return wrap(base);
 }
 
+/**
+ * Put one randomised check exactly on the threshold of the band that names the
+ * requested outcome. The production evaluator still computes pool, bonuses,
+ * dynamic difficulty, sorts the authored bands and decides which one clears.
+ *
+ * As with weighted targeting, consume the real RNG operation first so later
+ * draws see the same stream position. Checks with no variance intentionally
+ * expose no RNG operation, so this adapter cannot manufacture a success for
+ * them.
+ */
+function targetCheckedOutcomeRng(
+  base: Rng,
+  ctx: SimCtx,
+  check: Check,
+  outcomeId: string,
+): Rng {
+  const band = check.bands.find((candidate) => candidate.outcome === outcomeId);
+  if (!band || check.variance === 'none') return base;
+
+  const forcedRoll = evalDifficulty(ctx, check.difficulty) + band.atLeast;
+  const wrap = (rng: Rng): Rng => ({
+    next: () => rng.next(),
+    int: (max) => rng.int(max),
+    range: (min, max) => rng.range(min, max),
+    bool: (p) => rng.bool(p),
+    pick: <T>(xs: readonly T[]) => rng.pick(xs),
+    weighted: <T>(xs: readonly T[], weight: (x: T) => number) => rng.weighted(xs, weight),
+    normal(mean, sd) {
+      rng.normal(mean, sd);
+      return forcedRoll;
+    },
+    poisson: (lambda) => rng.poisson(lambda),
+    fork: (salt) => wrap(rng.fork(salt)),
+  });
+  return wrap(base);
+}
+
 export function executeOutcomeWitness(
   ctx: SimCtx,
   e: EventTemplate,
@@ -199,13 +246,16 @@ export function executeOutcomeWitness(
 
   let choiceId: string | undefined;
   let outcome;
-  const outcomeRng = request.targetWeightedOutcome
+  let outcomeRng = request.targetWeightedOutcome
     ? targetWeightedOutcomeRng(request.rng, request.expectedOutcomeId)
     : request.rng;
 
   if (e.interaction.kind === 'narration') {
     if (request.choiceId !== undefined) {
       return { ok: false, reason: 'narration has no choice' };
+    }
+    if (request.targetCheckedOutcome) {
+      return { ok: false, reason: 'narration has no checked choice to target' };
     }
     outcome = pickOutcome(e.interaction.outcomes, outcomeRng, ctx, e);
   } else {
@@ -234,6 +284,22 @@ export function executeOutcomeWitness(
     }
 
     choiceId = choice.id;
+    if (request.targetCheckedOutcome) {
+      if (!choice.check) {
+        return { ok: false, reason: `choice '${choice.id}' has no check to target` };
+      }
+      const check = e.checks.find((candidate) => candidate.id === choice.check);
+      if (!check) {
+        return { ok: false, reason: `choice '${choice.id}' names missing check '${choice.check}'` };
+      }
+      if (!check.bands.some((band) => band.outcome === request.expectedOutcomeId)) {
+        return {
+          ok: false,
+          reason: `check '${check.id}' has no band for '${request.expectedOutcomeId}'`,
+        };
+      }
+      outcomeRng = targetCheckedOutcomeRng(outcomeRng, ctx, check, request.expectedOutcomeId);
+    }
     outcome = resolveChoiceOutcome(ctx, e, choice, slots.fill, outcomeRng);
   }
 
