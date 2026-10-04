@@ -1367,8 +1367,8 @@ const choiceShape: ValidationRule = {
  */
 const checksWiring: ValidationRule = {
   id: 'checks/wiring',
-  about: 'A Check must be declared to be named, its bands ordered highest-first, and every band must name a real '
-    + 'outcome — or, for a check a party decider spends, a real branch.',
+  about: 'A Check must be declared to be named, its bands ordered highest-first, every band must name a real '
+    + 'outcome or branch, and every checked outcome or party-decided branch must be named by a band.',
   check(content) {
     const issues: Issue[] = [];
     for (const e of content.events) {
@@ -1391,11 +1391,20 @@ const checksWiring: ValidationRule = {
         const check = e.checks.find((c) => c.id === branchCheck);
         const branchIds = new Set(e.interaction.choices.map((c) => c.id));
         if (check) {
+          const namedBranches = new Set(check.bands.map((b) => b.outcome));
           for (const b of check.bands) {
             if (!branchIds.has(b.outcome)) {
               issues.push(err(this.id, `${at}/check:${check.id}`,
                 `this check decides the BRANCH, so its bands name choices — '${b.outcome}' is not one of them`));
             }
+          }
+          for (const choice of e.interaction.choices) {
+            if (namedBranches.has(choice.id)) continue;
+            issues.push(err(
+              this.id,
+              `${at}/check:${check.id}`,
+              `choice '${choice.id}' is unreachable through this party check — no band names it`,
+            ));
           }
         }
         if (e.interaction.choices.some((c) => c.check === branchCheck)) {
@@ -1413,10 +1422,19 @@ const checksWiring: ValidationRule = {
           continue;
         }
         const outcomeIds = new Set(choice.outcomes.map((o) => o.id));
+        const namedOutcomes = new Set(check.bands.map((b) => b.outcome));
         for (const b of check.bands) {
           if (!outcomeIds.has(b.outcome)) {
             issues.push(err(this.id, at2, `check '${check.id}' band names outcome '${b.outcome}', which this choice does not have`));
           }
+        }
+        for (const outcome of choice.outcomes) {
+          if (namedOutcomes.has(outcome.id)) continue;
+          issues.push(err(
+            this.id,
+            at2,
+            `outcome '${outcome.id}' is unreachable through check '${check.id}' — no band names it`,
+          ));
         }
       }
     }
