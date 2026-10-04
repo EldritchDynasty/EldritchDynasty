@@ -850,7 +850,9 @@ describe('authored choice-requirement witnesses', () => {
         arcStep: position,
       });
       expect(blocked.ok).toBe(false);
-      expect(ctx.world.decisionLog.at(-1)?.event).not.toBe(event.id);
+      expect(ctx.world.decisionLog.some((entry) => (
+        entry.kind === 'outcome' && entry.event === event.id
+      ))).toBe(false);
 
       setCastAttribute(ctx, position.fill, 'HEAD', 'charm', 10_000);
       const result = executeOutcomeWitness(ctx, event, {
