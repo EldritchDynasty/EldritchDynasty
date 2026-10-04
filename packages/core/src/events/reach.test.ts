@@ -79,6 +79,78 @@ describe('deterministic outcome execution witnesses', () => {
     throw new Error('fixture corpus has no player choice whose ordinary slots can be filled');
   });
 
+  it('rejects a fixture whose required slot was made impossible to fill', () => {
+    for (const sourceEvent of content.events) {
+      if (
+        sourceEvent.arc
+        || Object.keys(sourceEvent.slots).length === 0
+        || Object.values(sourceEvent.slots).some((slot) => slot.castBy === 'player')
+      ) continue;
+
+      const slotId = Object.keys(sourceEvent.slots)
+        .find((id) => !sourceEvent.slots[id]!.optional);
+      if (!slotId) continue;
+
+      for (const family of TEST_FAMILIES) {
+        const baseCtx = family.build(content);
+        if (!evalCondition(sourceEvent.conditions, baseCtx)) continue;
+        const original = resolveSlots(sourceEvent, baseCtx, makeRng(3));
+        if (!original.ok || original.playerCast.length) continue;
+
+        const event = structuredClone(sourceEvent);
+        event.slots[slotId]!.filters.push({ attr: 'mind', op: 'gte', value: 10_000 });
+        const ctx = family.build(content);
+        const firstChoice = event.interaction.kind === 'narration'
+          ? undefined
+          : event.interaction.choices[0];
+        const expectedOutcomeId = event.interaction.kind === 'narration'
+          ? event.interaction.outcomes[0]!.id
+          : firstChoice!.outcomes[0]!.id;
+
+        const result = executeOutcomeWitness(ctx, event, {
+          ...(event.interaction.kind !== 'narration' && event.interaction.decidedBy === 'player'
+            ? { choiceId: firstChoice!.id }
+            : {}),
+          expectedOutcomeId,
+          rng: makeRng(3),
+        });
+
+        if (!result.ok && result.reason === `slot '${slotId}' cannot be filled`) {
+          expect(ctx.world.decisionLog).toHaveLength(0);
+          return;
+        }
+      }
+    }
+
+    throw new Error('fixture corpus has no ordinary required slot suitable for the mutation');
+  });
+
+  it('can witness an automatically decided branch through the production decider', () => {
+    for (const event of content.events) {
+      if (event.arc || event.interaction.kind === 'narration' || event.interaction.decidedBy === 'player') continue;
+
+      for (const family of TEST_FAMILIES) {
+        for (const choice of event.interaction.choices) {
+          for (const outcome of choice.outcomes) {
+            const ctx = family.build(content);
+            if (!evalCondition(event.conditions, ctx)) continue;
+            const result = executeOutcomeWitness(ctx, event, {
+              choiceId: choice.id,
+              expectedOutcomeId: outcome.id,
+              rng: makeRng(4),
+            });
+            if (result.ok) {
+              expect(result.key).toBe(`${event.id}|${choice.id}|${outcome.id}`);
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    throw new Error('fixture corpus has no automatically decided branch reachable by the test families');
+  });
+
   it('does not mutate the world when the named outcome is not the one resolved', () => {
     const { event, family } = singleOutcomeNarration();
     const ctx = family.build(content);
