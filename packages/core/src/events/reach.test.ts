@@ -671,17 +671,22 @@ describe('authored head-cast narration outcome witnesses', () => {
 });
 
 
-describe('authored basic player-choice outcome witnesses', () => {
-  it('executes every unscoped conditionless slotless unchecked player outcome', () => {
-    const events = content.events.filter((event) => (
-      event.interaction.kind !== 'narration'
-      && event.interaction.decidedBy === 'player'
-      && event.tier !== 'frame'
-      && event.conditions === undefined
-      && event.ages === undefined
-      && event.arc === undefined
-      && Object.keys(event.slots).length === 0
-    ));
+describe('authored head-cast player-choice outcome witnesses', () => {
+  it('executes every unscoped conditionless unchecked player outcome with only the engine-cast Head', () => {
+    const events = content.events.filter((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      return event.interaction.kind !== 'narration'
+        && event.interaction.decidedBy === 'player'
+        && event.tier !== 'frame'
+        && event.conditions === undefined
+        && event.ages === undefined
+        && event.arc === undefined
+        && slotIds.length === 1
+        && slotIds[0] === 'HEAD'
+        && head?.role === 'head'
+        && head.castBy === 'engine';
+    });
 
     const declared = events.flatMap((event) => {
       if (event.interaction.kind === 'narration') return [];
