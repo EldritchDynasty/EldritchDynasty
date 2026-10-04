@@ -12,6 +12,7 @@ import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool } from './selection.js';
+import { grantParcel, seizeParcel } from '../land.js';
 
 const content = indexContent(loadContent());
 
@@ -2265,6 +2266,108 @@ describe('authored post-tenure outcome witnesses', () => {
       for (const choice of event.interaction.choices) {
         for (const outcome of choice.outcomes) {
           const ctx = tenureFixture(seed, condition.career, condition.years, event.frequency);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
+describe('authored simple held-parcel outcome witnesses', () => {
+  function parcelFixture(
+    seed: number,
+    parcel: string,
+    held: boolean,
+    frequency: (typeof content.events)[number]['frequency'],
+  ) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[frequency].minGeneration,
+    );
+    seizeParcel(ctx, parcel);
+    if (held) grantParcel(ctx, parcel);
+    return ctx;
+  }
+
+  it('crosses each simple positive holdsParcel gate before executing every Head-only outcome', () => {
+    const cases = content.events.flatMap((event) => {
+      const condition = event.conditions;
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('holdsParcel' in condition)
+        || slotIds.length !== 1
+        || slotIds[0] !== 'HEAD'
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) return [];
+      return [{ event, parcel: condition.holdsParcel }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
+      'the_common_is_grazed_thin',
+      'the_low_ground_floods',
+      'what_the_years_wore_down',
+    ]);
+
+    const declared = cases.flatMap(({ event }) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 8000;
+
+    for (const { event, parcel } of cases) {
+      const before = parcelFixture(seed, parcel, false, event.frequency);
+      expect(
+        evalCondition(event.conditions, before),
+        String(event.id) + ' should be blocked without parcel ' + parcel,
+      ).toBe(false);
+
+      const selection = parcelFixture(seed, parcel, true, event.frequency);
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should pass while parcel ' + parcel + ' is held',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored Head slot').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, String(event.id) + ' should not require a player cast').toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once its parcel is held',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = parcelFixture(seed, parcel, true, event.frequency);
           const result = executeOutcomeWitness(ctx, event, {
             choiceId: choice.id,
             expectedOutcomeId: outcome.id,
