@@ -793,21 +793,3 @@ jobs:
           path: |
             packages/shell/release/*.exe
             packages/shell/release/windows-release-proof.json
-
-
-  # BOOTSTRAP FOR THE COMMENT-TRIGGERED REMOTE LANDING.
-  #
-  # A newly-added issue_comment workflow cannot hear its own PR: GitHub only
-  # listens for repository events through workflow files already on the default
-  # branch. A PR carrying this marker therefore calls the SAME reusable workflow&& github.event.pull_request.draft == false
-      && github.event.pull_request.head.repo.full_name == github.repository
-      && contains(github.event.pull_request.body || '', '<!-- remote-land -->')
-    permissions:
-      actions: write
-      contents: write
-      pull-requests: read
-    uses: ./.github/workflows/remote-land.yml
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
-    secrets:
-      LAND_DEPLOY_KEY: ${{ secrets.LAND_DEPLOY_KEY }}
