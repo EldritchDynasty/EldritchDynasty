@@ -1160,6 +1160,170 @@ describe('authored age-elapsed optional-slot player-choice outcome witnesses', (
   });
 });
 
+describe('authored age-elapsed required-slot player-choice outcome witnesses', () => {
+  function prepareRequiredSlots(
+    ctx: ReturnType<typeof fixture>,
+    eventId: string,
+    seed: number,
+  ): void {
+    switch (eventId) {
+      case 'the_shelf_that_has_to_go':
+        place(ctx, {
+          sex: 'female',
+          age: 38,
+          name: `Witness Archivist ${seed}`,
+          contract: {
+            role: 'archivist',
+            term: 'yearly',
+            wage: 1,
+            loyalty: 50,
+            boundTo: 'witness-house',
+            onEmployerDeath: 'passes_to_heir',
+            debt: 0,
+            knowsSecrets: [],
+          },
+        });
+        return;
+      case 'who_gets_the_physician':
+        // fixture() already carries three ordinary adult household members.
+        return;
+      case 'the_boy_they_send_us':
+        place(ctx, {
+          sex: 'male',
+          age: 35,
+          name: `Witness Envoy ${seed}`,
+          house: 'house_ilm',
+        });
+        return;
+      case 'the_youngest_asks':
+        place(ctx, {
+          sex: 'female',
+          age: 12,
+          name: `Witness Youngest ${seed}`,
+        });
+        return;
+      default:
+        throw new Error(`no required-slot fixture for ${eventId}`);
+    }
+  }
+
+  it('executes every simple ageElapsed player outcome whose extra slots are required engine casts', () => {
+    const cases = content.events.flatMap((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      const condition = event.conditions;
+      const extraSlots = slotIds
+        .filter((slotId) => slotId !== 'HEAD')
+        .map((slotId) => event.slots[slotId]!);
+
+      if (
+        event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.tier === 'frame'
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.arc !== undefined
+        || extraSlots.length === 0
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || head.optional === true
+        || extraSlots.some((slot) => slot.castBy !== 'engine')
+        || !extraSlots.some((slot) => slot.optional !== true)
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+      ) return [];
+
+      const leaf = condition.all[0];
+      if (!leaf || !('ageElapsed' in leaf) || leaf.ageElapsed.op !== 'gte' || leaf.ageElapsed.years <= 0) {
+        return [];
+      }
+
+      const choices = event.interaction.choices.filter((choice) => (
+        choice.requires.length === 0 && choice.check === undefined
+      ));
+      if (choices.length === 0) return [];
+
+      return [{ event, age: event.ages.only[0]!, years: leaf.ageElapsed.years, choices }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
+      'the_boy_they_send_us',
+      'the_shelf_that_has_to_go',
+      'the_youngest_asks',
+      'who_gets_the_physician',
+    ]);
+
+    const declared = cases.flatMap(({ event, choices }) =>
+      choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
+    const witnessed: string[] = [];
+    let seed = 5000;
+
+    for (const { event, age, years, choices } of cases) {
+      const before = fixture(seed);
+      prepareRequiredSlots(before, String(event.id), seed);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      before.world.age.active = [{
+        age,
+        began: before.world.year - (years - 1),
+        named: true,
+        paid: { standing: false },
+      }];
+      expect(
+        ambientPool(before).some((candidate) => candidate.id === event.id),
+        `${event.id} should be blocked one year before ageElapsed >= ${years}`,
+      ).toBe(false);
+
+      for (const choice of choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = fixture(seed);
+          prepareRequiredSlots(ctx, String(event.id), seed);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          ctx.world.age.active = [{
+            age,
+            began: ctx.world.year - years,
+            named: true,
+            paid: { standing: false },
+          }];
+
+          expect(
+            ambientPool(ctx).some((candidate) => candidate.id === event.id),
+            `${event.id} should be selectable at ageElapsed >= ${years}`,
+          ).toBe(true);
+
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 1),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+
+          expect(
+            result.ok,
+            `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+          ).toBe(true);
+          expect(result.key).toBe(
+            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
+          );
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored head-cast player-choice outcome witnesses', () => {
   it('executes every unscoped conditionless unchecked player outcome with only the engine-cast Head', () => {
     const events = content.events.filter((event) => {
