@@ -10,6 +10,7 @@ import { choiceAvailability } from './availability.js';
 import { resolveChoiceOutcome } from './checks.js';
 import { commitOutcome } from './decisions.js';
 import { pickOutcome } from './effects.js';
+import { evalCondition } from './conditions.js';
 
 /**
  * WHICH BRANCHES A RUN ACTUALLY REACHES.
@@ -140,6 +141,9 @@ export function executeOutcomeWitness(
   // Pretending an ambient commit proves an arc path would be worse than having
   // no witness; #442 will give arcs their own fixture layer.
   if (e.arc) return { ok: false, reason: 'arc event requires an arc-step witness' };
+  if (!evalCondition(e.conditions, ctx)) {
+    return { ok: false, reason: 'event conditions are not satisfied by this witness world' };
+  }
 
   const slots = resolveSlots(e, ctx, request.rng, request.preset ?? {});
   if (!slots.ok) {
