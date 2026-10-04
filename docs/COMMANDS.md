@@ -33,114 +33,48 @@ issues other sessions are holding. What that cost before it existed is in
 `npm run land` is a **session preflight**, not a main-pushing command.
 [AGENTS.md](../AGENTS.md#working-style) authorizes running it and enqueueing the
 result without a confirmation prompt, but a session has no code path that may
-push `main`.
+push or directly merge `main`.
 
 The default preflight fetches, rebases onto `origin/main`, installs, then runs
 typecheck, validation and `test:fast` on that rebased head. Risky core, content
 or gate work can opt into the complete local CI-derived set with
 `npm run land -- --full-preflight`; it still has no push authority. On success
-either mode records `preflight-green` and tells the caller to keep/open a ready
-same-repository PR and comment `/land`. It does not create a CI verdict, close
-an issue, or turn "green here" into "landed". The queue always repeats the
-rebase and complete authoritative set on the exact head it can push.
+either mode records `preflight-green`. Keep or open a ready same-repository PR,
+then choose GitHub's **Merge when ready**.
 
-The **only** push boundary is `.github/workflows/remote-land.yml`, which invokes
-the same command with explicit `--from-queue`. The queue serializes requests,
-fetches/rebases again at the head of the line, runs the authoritative full set
-on the exact head it can push, then configures the write-enabled
-`LAND_DEPLOY_KEY` over SSH with checkout credentials disabled. A missing key
-fails before the push. Never infer push authority from `GITHUB_ACTIONS` or any
-other ambient variable.
+The repository ruleset makes GitHub's **native merge queue** the only normal
+landing path. The queue uses **REBASE**, builds one group at a time, and may
+merge up to three green PRs together. GitHub creates a
+`gh-readonly-queue/main/...` synthetic commit and raises the `merge_group`
+event. `.github/workflows/check.yml` always sends that event through the full
+CI tier and publishes the stable required result **`CI required`**. Only after
+that exact integration commit is green does GitHub update `main`.
 
-Because the queue push uses the deploy key rather than `GITHUB_TOKEN`, it
-emits the ordinary GitHub `push` event. The normal `check.yml`,
-`verdict.yml`, and `janitor.yml` paths therefore run without manual dispatch
-workarounds. The queue captures the pushed SHA and waits with `npm run verdict`;
-green, red, pending and **absent** remain distinct, and an absent verdict is not
-a pass.
+That distinction is load-bearing. A green PR-head run says the branch is green
+against the base GitHub tested at that moment. The merge-group run says the
+actual rebased integration GitHub is about to merge is green. The queue proof
+for this cutover is #443: its successful `merge_group` commit became the exact
+new `main` commit.
 
-**The issue-closing guard still applies before either preflight or queue work.**
-A claimed issue needs a real `Closes #N`/equivalent keyword unless this landing
-intentionally leaves it open. For that staged case use
-`npm run land -- --no-issue-check` locally and enqueue the matching remote
-escape hatch:
+A local preflight does not create a CI verdict, close an issue, or turn
+"green here" into "landed". `npm run check` is also not a substitute because
+it omits the gates. The repository-admin bypass is retained only as an
+**emergency pull-request escape hatch**; ordinary work must not use it to skip
+the queue.
 
-```
-/land --no-issue-check
-```
-
-Ordinary work uses:
-
-```
-/land
-```
-
-A Claude Code connector may append its standard generated-by footer; the remote
-parser accepts that exact footer after either command. Other extra text is not a
-landing request. To mention an issue without closing it use `Refs #N` or
-`Part of #N`; do not negate a closing keyword because GitHub still interprets
-the keyword.
-
-Remote landing requests are admitted only for trusted collaborators and are
-serialized with the workflow's `queue: max` group. The normal group has an
-explicit epoch suffix (after #427, `remote-land-main-v3`). The queue's final
-non-force push is authoritative: if `main` moved after the checked rebase,
-Git rejects the stale push rather than letting an old runner overwrite newer
-work.
-
-### Recovering an orphaned remote landing queue
-
-A queue holder that is merely slow is not an orphan. First read its workflow
-run and the serialized `land` job. The timeout clock starts when that **job
-gets a runner** (its job `started_at`, or the first runner timestamp in its
-job log), not when the workflow run was created and not when its request began
-waiting for the concurrency group. Queue wait does not consume
-`timeout-minutes`. If the `land` job has not started, it is queued, not
-orphaned, regardless of the workflow's age.
-
-Only use this recovery when GitHub still reports the running `land` job
-**after `now - land_job.started_at` exceeds the workflow's own
-`timeout-minutes` budget**, and the available GitHub control surface cannot
-cancel that run. Run `36833259028` on 2026-10-01/02 is the first recorded
-example: its 240-minute job remained `in_progress` for more than a day and
-held every later `/land`.
-
-Run `37095227792` is the counterexample that makes the distinction
-load-bearing. It looked older than four hours while queued, but its `land`
-runner started at `2026-10-03T14:46:39Z`, pushed at `17:05:38Z`, and
-finished green at about `17:47:29Z`: roughly 3h01m of actual job runtime,
-inside the 240-minute budget. Treating workflow/queue age as runtime caused an
-unnecessary v2→v3 recovery.
-
-Do **not** bypass the queue or click GitHub's merge button. Instead:
-
-1. Change only the normal queue epoch suffix in
-   `.github/workflows/remote-land.yml` (for example, after #427,
-   `remote-land-main-v3` → `remote-land-main-v4`) and update its fast test.
-2. Put `<!-- remote-land -->` in that recovery PR's body. The existing
-   reusable bootstrap uses `remote-land-bootstrap-<run id>`, a separate,
-   run-unique concurrency group, specifically so a proposed queue workflow can
-   land without joining the broken copy already on `main`.
-3. Land the recovery through that bootstrap path. The old holder may eventually
-   wake, but its previously checked head cannot overwrite newer `main`: the
-   repository landing pushes a specific rebased SHA without force, so Git
-   rejects a stale non-fast-forward push.
-4. Re-comment `/land` (or `/land --no-issue-check`) on any PRs that were
-   waiting behind the retired epoch. Old pending runs stay attached to the old
-   group; do not assume changing the workflow migrates them.
-
-Rotating the epoch is recovery from an observed orphan, not a routine way to
-skip a busy queue. If the existing holder is within its timeout, leave it
-alone.
-
-**Never click GitHub's merge button as a substitute.**
+**The issue-closing guard still applies to local preflight.** A claimed issue
+needs a real `Closes #N`/equivalent keyword unless this slice intentionally
+leaves it open. For staged work use `npm run land -- --no-issue-check` and use
+`Refs #N` or `Part of #N` in the PR/commit text. Do not negate a closing
+keyword because GitHub still interprets the keyword.
 
 ### A change made only of markdown gets the short set
 
-When every file the branch changes is `.md` **and** the commit it lands on has a
-green verdict, the landing runs `typecheck`, `validate` and `test:fast` instead
-of the whole set — exactly CI's short tier — and CI does the same for that push.
-`npm run land -- --full` runs everything anyway.
+When every file in a pull request is `.md` **and** its base has a green verdict,
+the ordinary PR-head workflow may use the short tier: `typecheck`, `validate`
+and `test:fast`. The native merge queue does **not** inherit that shortcut:
+every `merge_group` runs the full tier before it can merge. `npm run land
+-- --full-preflight` is the local way to request the complete set before enqueueing.
 
 This is safe for a reason that can be checked, not assumed: the gates and the
 slow suites load only the simulation sources and the content YAML, and the
@@ -168,10 +102,9 @@ and never with `nohup … &`, which can die when the container is paused and
 leave no useful completion signal.
 
 `npm run land -- --status` reports whether the preflight is running, dead, or
-last reached `preflight-green`. A dead session preflight has pushed nothing:
-sessions do not cross the queue's push boundary. Clear/restart the preflight as
-needed, then enqueue the ready PR with `/land`; the queue performs its own
-fresh rebase and authoritative check.
+last reached `preflight-green`. A dead session preflight has pushed nothing. Clear/restart the preflight as
+needed, then enqueue the ready PR with **Merge when ready**; GitHub's native
+queue performs its own fresh rebase and authoritative merge-group check.
 
 
 ## CI, and the janitor
