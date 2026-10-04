@@ -937,7 +937,7 @@ describe('only the serialized queue can move main after verification', () => {
       expect(preflight.ok).toBe(true);
       expect(preflight.state).toBe('preflight-green');
       expect(preflight.message).toContain('open a PR');
-      expect(preflight.message).toContain('/land');
+      expect(preflight.message).toContain('Merge when ready');
       expect(attemptedPushes, 'session mode still tried to move main').toBe(0);
       expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideOne);
 
