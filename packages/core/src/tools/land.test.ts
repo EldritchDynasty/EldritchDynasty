@@ -651,7 +651,7 @@ describe('a killed landing says what it was and what it left on main', () => {
       expect(r.status).toBe(0);
       expect(out).toContain('preflight-green');
       expect(out).toContain('NOT pushed to main');
-      expect(out).toContain('/land');
+      expect(out).toContain('Merge when ready');
     } finally {
       if (previousLock !== null) writeFileSync(lock, previousLock);
       else if (existsSync(lock)) unlinkSync(lock);
