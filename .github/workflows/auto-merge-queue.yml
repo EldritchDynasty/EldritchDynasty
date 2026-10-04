@@ -65,8 +65,9 @@ jobs:
           base="$(jq -r '.base.ref' <<<"$pr")"
           head="$(jq -r '.head.sha' <<<"$pr")"
           head_repo="$(jq -r '.head.repo.full_name // empty' <<<"$pr")"
+          node_id="$(jq -r '.node_id // empty' <<<"$pr")"
 
-          if [[ "$state" != "open" || "$draft" != "false" || "$base" != "main" || "$head_repo" != "$GITHUB_REPOSITORY" ]]; then
+          if [[ "$state" != "open" || "$draft" != "false" || "$base" != "main" || "$head_repo" != "$GITHUB_REPOSITORY" || -z "$node_id" ]]; then
             echo "eligible=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -91,6 +92,7 @@ jobs:
           echo "eligible=true" >> "$GITHUB_OUTPUT"
           echo "number=$pr_number" >> "$GITHUB_OUTPUT"
           echo "head=$head" >> "$GITHUB_OUTPUT"
+          echo "node=$node_id" >> "$GITHUB_OUTPUT"
 
       - name: Mint merge-queue GitHub App token
         if: steps.pr.outputs.eligible == 'true'
@@ -99,7 +101,7 @@ jobs:
         with:
           client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}
           private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}
-          permission-contents: write
+          permission-merge-queues: write
 
       - name: Add pull request to native merge queue
         if: steps.pr.outputs.eligible == 'true'
@@ -107,81 +109,43 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_NODE_ID: ${{ steps.pr.outputs.node }}
           HEAD_SHA: ${{ steps.pr.outputs.head }}
         run: |
           set -euo pipefail
 
-          request_body="$(mktemp)"
-          status="$(
-            curl --silent --show-error               --output "$request_body"               --write-out '%{http_code}'               --request PUT               --header 'Accept: application/vnd.github+json'               --header "Authorization: Bearer $GH_TOKEN"               --header 'X-GitHub-Api-Version: 2026-03-10'               "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async"               --data "$(jq -nc --arg sha "$HEAD_SHA"                 '{sha:$sha, merge_action:"merge_queue", bypass_rules:false}')"
-          )"
+          # The asynchronous REST merge endpoint documents GitHub App
+          # installation tokens as supported, but its background worker can
+          # reject a valid App actor with "Enqueuer is not authorized to
+          # merge". Use the native GraphQL queue mutation instead.
+          response="$(mktemp)"
+          set +e
+          gh api graphql \
+            -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
+            -F pullRequestId="$PR_NODE_ID" \
+            -F expectedHeadOid="$HEAD_SHA" >"$response" 2>&1
+          status=$?
+          set -e
 
-          case "$status" in
-            200)
-              result="$(jq -r '.status // empty' "$request_body")"
-              case "$result" in
-                enqueued|merged)
-                  echo "PR #$PR_NUMBER merge request is already $result."
-                  exit 0
-                  ;;
-                pending)
-                  ;;
-                *)
-                  echo "::error::Unexpected merge-queue response:"
-                  cat "$request_body"
-                  exit 1
-                  ;;
-              esac
-              ;;
-            202|409)
-              ;;
-            *)
-              echo "::error::GitHub merge-queue request failed with HTTP $status."
-              cat "$request_body"
-              exit 1
-              ;;
-          esac
-
-          uuid="$(jq -r '.details.uuid // .uuid // empty' "$request_body")"
-          if [[ -z "$uuid" ]]; then
-            echo "::error::GitHub accepted the asynchronous merge request but returned no request UUID."
-            cat "$request_body"
+          if [[ "$status" -ne 0 ]]; then
+            # Multiple eligible workflow events can race. Treat an already
+            # queued PR as the same idempotent success as the old REST path.
+            if grep -Eqi 'already (in|on) (the )?merge queue|already in the queue' "$response"; then
+              echo "PR #$PR_NUMBER is already in the native merge queue."
+              exit 0
+            fi
+            echo "::error::GitHub GraphQL merge-queue request failed for PR #$PR_NUMBER:"
+            cat "$response"
             exit 1
           fi
 
-          for attempt in {1..24}; do
-            result_body="$(mktemp)"
-            result_status="$(
-              curl --silent --show-error                 --output "$result_body"                 --write-out '%{http_code}'                 --header 'Accept: application/vnd.github+json'                 --header "Authorization: Bearer $GH_TOKEN"                 --header 'X-GitHub-Api-Version: 2026-03-10'                 "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge-async/$uuid"
-            )"
+          entry_id="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.id // empty' "$response")"
+          state="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.state // "queued"' "$response")"
+          position="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.position // "unknown"' "$response")"
+          if [[ -z "$entry_id" ]]; then
+            echo "::error::GitHub returned no merge-queue entry for PR #$PR_NUMBER:"
+            cat "$response"
+            exit 1
+          fi
 
-            if [[ "$result_status" != 200 ]]; then
-              echo "::error::Could not read asynchronous merge result (HTTP $result_status)."
-              cat "$result_body"
-              exit 1
-            fi
-
-            result="$(jq -r '.status // empty' "$result_body")"
-            case "$result" in
-              enqueued|merged)
-                echo "PR #$PR_NUMBER merge request is $result."
-                exit 0
-                ;;
-              pending)
-                sleep 5
-                ;;
-              failed)
-                echo "::error::GitHub rejected the merge-queue request:"
-                cat "$result_body"
-                exit 1
-                ;;
-              *)
-                echo "::error::Unexpected asynchronous merge result:"
-                cat "$result_body"
-                exit 1
-                ;;
-            esac
-          done
-
-          echo "::error::Timed out waiting for GitHub to finish the asynchronous merge-queue request."
-          exit 1
+          echo "PR #$PR_NUMBER is in the native merge queue (state=$state, position=$position)."
