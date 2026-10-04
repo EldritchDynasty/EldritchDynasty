@@ -163,8 +163,10 @@ export interface OutcomeWitnessRequest {
   arcStep?: ArcStep;
   /**
    * Cast supplied through the production decision docket for `castBy: player`
-   * slots. Docket witnesses stay on deterministic one-outcome choices. A
-   * delegated `party` branch is supported only when its deciding check has
+   * slots. Weighted player-cast outcomes may use `targetWeightedOutcome`;
+   * only the choice's first weighted draw is steered, so weighted mechanics
+   * triggered by the committed outcome keep their production RNG. A delegated
+   * `party` branch is supported only when its deciding check has
    * `variance: none`, so previewing the production decider cannot consume RNG
    * before `resolveChoice` runs the same decision for the real commit.
    */
@@ -201,6 +203,43 @@ function targetWeightedIdRng(base: Rng, targetId: string): Rng {
         && String((x as { id?: unknown }).id) === targetId
       ));
       return target !== undefined && weight(target) > 0 ? target : natural;
+    },
+    normal: (mean, sd) => rng.normal(mean, sd),
+    poisson: (lambda) => rng.poisson(lambda),
+    fork: (salt) => wrap(rng.fork(salt)),
+  });
+  return wrap(base);
+}
+
+/**
+ * The docket owns outcome resolution and commit as one operation, so a witness
+ * cannot resolve a weighted player-cast outcome first and then commit it
+ * separately without bypassing production. Target exactly the FIRST matching
+ * weighted draw instead. Later weighted operations (including effects reached
+ * by the outcome) delegate to the untouched RNG.
+ */
+function targetWeightedIdOnceRng(base: Rng, targetId: string): Rng {
+  let targeted = false;
+  const wrap = (rng: Rng): Rng => ({
+    next: () => rng.next(),
+    int: (max) => rng.int(max),
+    range: (min, max) => rng.range(min, max),
+    bool: (p) => rng.bool(p),
+    pick: <T>(xs: readonly T[]) => rng.pick(xs),
+    weighted<T>(xs: readonly T[], weight: (x: T) => number): T | undefined {
+      const natural = rng.weighted(xs, weight);
+      if (targeted) return natural;
+      const target = xs.find((x) => (
+        typeof x === 'object'
+        && x !== null
+        && 'id' in x
+        && String((x as { id?: unknown }).id) === targetId
+      ));
+      if (target !== undefined && weight(target) > 0) {
+        targeted = true;
+        return target;
+      }
+      return natural;
     },
     normal: (mean, sd) => rng.normal(mean, sd),
     poisson: (lambda) => rng.poisson(lambda),
@@ -308,17 +347,22 @@ export function executeOutcomeWitness(
 
     const choice = e.interaction.choices.find((candidate) => candidate.id === request.choiceId);
     if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
-    if (
-      choice.check
-      || choice.outcomes.length !== 1
-      || choice.outcomes[0]?.id !== request.expectedOutcomeId
-      || request.targetWeightedOutcome
-      || request.targetChanceChoice
-      || request.targetCheckedOutcome
-    ) {
+    const expected = choice.outcomes.find((candidate) => candidate.id === request.expectedOutcomeId);
+    if (!expected) return { ok: false, reason: `choice '${choice.id}' has no outcome '${request.expectedOutcomeId}'` };
+    if (choice.check || request.targetChanceChoice || request.targetCheckedOutcome) {
       return {
         ok: false,
-        reason: 'player-cast docket witness currently requires the named deterministic one-outcome choice',
+        reason: 'player-cast docket witness does not support checked or branch-targeted choices',
+      };
+    }
+    if (request.targetWeightedOutcome) {
+      if (expected.weight <= 0) {
+        return { ok: false, reason: `outcome '${expected.id}' has no authored weight to target` };
+      }
+    } else if (choice.outcomes.length !== 1 || choice.outcomes[0]?.id !== request.expectedOutcomeId) {
+      return {
+        ok: false,
+        reason: 'multi-outcome player-cast witness requires targetWeightedOutcome',
       };
     }
 
@@ -353,7 +397,10 @@ export function executeOutcomeWitness(
     const before = ctx.world.decisionLog.length;
     const pending = queueChoice(ctx, e, e.body, fill, playerCast, arcStep);
     const submittedChoice = decider === 'player' ? request.choiceId : undefined;
-    const resolved = resolveChoice(ctx, pending.id, submittedChoice, request.rng, request.cast);
+    const docketRng = request.targetWeightedOutcome
+      ? targetWeightedIdOnceRng(request.rng, request.expectedOutcomeId)
+      : request.rng;
+    const resolved = resolveChoice(ctx, pending.id, submittedChoice, docketRng, request.cast);
     if (!resolved.ok) {
       return { ok: false, reason: resolved.reason ?? 'production docket refused the witness cast' };
     }
