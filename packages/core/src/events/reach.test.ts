@@ -165,7 +165,35 @@ describe('deterministic outcome execution witnesses', () => {
     throw new Error('fixture has no automatically decided branch reachable by the test world');
   });
 
-  it('does not mutate the world when the named outcome is not the one resolved', () => {
+  it('refuses player-cast events until a production docket fixture supplies the cast', () => {
+    const ctx = fixture(1105);
+    for (const event of content.events) {
+      if (
+        event.arc
+        || event.interaction.kind === 'narration'
+        || !Object.values(event.slots).some((slot) => slot.castBy === 'player')
+        || !evalCondition(event.conditions, ctx)
+      ) continue;
+
+      const slots = resolveSlots(event, ctx, makeRng(5));
+      if (!slots.ok || !slots.playerCast.length) continue;
+      const choice = event.interaction.choices[0]!;
+      const result = executeOutcomeWitness(ctx, event, {
+        ...(event.interaction.decidedBy === 'player' ? { choiceId: choice.id } : {}),
+        expectedOutcomeId: choice.outcomes[0]!.id,
+        rng: makeRng(5),
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toMatch(/player cast required/);
+      expect(ctx.world.decisionLog).toHaveLength(0);
+      return;
+    }
+
+    throw new Error('fixture has no eligible player-cast event');
+  });
+
+  it('does not commit when the named outcome is not the one resolved', () => {
     const event = singleOutcomeNarration();
     const ctx = fixture(1101);
     const before = ctx.world.decisionLog.length;
