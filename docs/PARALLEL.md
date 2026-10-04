@@ -301,9 +301,9 @@ only one of them can be created on the first second of the session.
 
 ## Landing
 
-Sessions do not push `main`. They preflight, open a ready same-repository PR,
-and put the landing in the serialized queue with `/land`
-([AGENTS.md](../AGENTS.md#working-style)). Never use the merge button.
+Sessions do not push or directly merge `main`. They preflight, open a ready
+same-repository PR, and use GitHub's native **Merge when ready** queue
+([AGENTS.md](../AGENTS.md#working-style)).
 
 ```bash
 npm run land            # advisory session preflight: fetch · rebase · install ·
@@ -314,52 +314,27 @@ npm run land -- --dry-run      # the plan, and none of it performed
 npm run verdict                # ask about HEAD on its own
 ```
 
-A connector-only session skips only the local preflight; it still uses a ready
-same-repository PR and comments exactly `/land`. The queue's
-`.github/workflows/remote-land.yml` runner invokes `npm run land` with the
-explicit `--from-queue` capability. That is the sole path that runs the full
-authoritative set and pushes its checked head with `LAND_DEPLOY_KEY`; an ambient
-Actions variable grants no push authority. Trusted exact `/land` /
-`/land --no-issue-check` issue
-comments share `remote-land-main` with `queue: max`, so up to one hundred may
-wait rather than the default single pending request being replaced by the next
-one. Issue comments are prefiltered by `author_association` before queue
-admission, while the in-job collaborator-permission lookup remains the
-authoritative write-access check. Other or outsider comments use a run-unique
-skip group because Actions decides concurrency before it evaluates the job's
-`if`.
+The native queue is the serialization boundary. The ruleset requires a pull
+request, linear history, the stable `CI required` result, and the merge queue.
+The queue uses REBASE, build concurrency 1 and a maximum merge group of 3.
+GitHub creates a synthetic `gh-readonly-queue/main/...` commit and emits
+`merge_group`; `check.yml` always runs the full tier on that exact integration
+head. If it is green, GitHub itself advances `main`. There is no repository
+deploy key or custom queue writer in the normal design.
 
-The PR bootstrap bridge does **not** join `remote-land-main`: it gets a
-run-unique `remote-land-bootstrap-<run id>` group. A bootstrap runs the proposed
-workflow from the PR while issue comments run the version already on `main`;
-letting those versions share a concurrency group allows old queue semantics to
-cancel the new bootstrap during exactly the workflow change it exists to prove.
-Bootstrap and comment landings can overlap; the final compare-and-swap push
-arbitrates the two queue transports. This exists because a PR
-check can be green on an old base — the rebase and the post-push verdict remain
-mandatory.
+The repository-admin bypass is intentionally an emergency **pull-request-only**
+escape hatch. It is not an alternative fast path. A normal session chooses
+**Merge when ready** and lets the required merge-group CI answer.
 
-**The queue's full set is derived rather than remembered.**
-`npm run check` is `typecheck && validate && test` — it does not run the gates,
-which is nine minutes of measured runs and a third of what CI does. Four of the
-eleven red runs of `check.yml` on `main` across runs 61-100 failed at exactly
-that step, each one after the whole test suite had been green for forty-one
-minutes. `packages/core/src/tools/land.test.ts` reads
-`.github/workflows/check.yml` and fails the build if CI grows a job the queued
-landing does not run, so the two sets cannot drift apart again quietly. The
-session default deliberately runs the existing short tier; `--full-preflight`
-selects the queue's set without gaining its push capability.
+Put `Closes #93` in the PR/landing commit when the slice completes that issue.
+When GitHub's queue lands it on the default branch, GitHub closes the issue and
+the janitor retires the claim behind it. For staged work use `Refs #93` or
+`Part of #93` instead.
 
-Put `Closes #93` in the landing commit. When the queue pushes that commit to the
-default branch, GitHub closes the issue and the janitor retires the claim behind
-it. A keyword in a commit that remains on any other branch does nothing but
-leave a reference.
-
-**The check that matters is the queue's one after its rebase.** It runs
-everything on the exact head it can push. A green PR or local preflight against
-the base you forked from says nothing about the base you are landing on — that
-is exactly the case where two content branches each pass and their merge does
-not.
+**The check that matters is the native queue's one after its rebase.** A green
+PR-head run or local preflight against the base you forked from says nothing
+about a later integration after other PRs land. The required `merge_group`
+run is the exact state GitHub is about to merge.
 
 This used to be a table of what you could skip depending on what the rebase
 brought in: the full check for content or `core`, `test:fast` and a gate for
@@ -375,9 +350,9 @@ One thing is still yours to run, because it answers a question no gate asks:
   it was not a refactor — and because each phase draws its own RNG stream, a
   moved block names the system that moved it.
 
-**A push is not finished until a verdict comes back, and there are four
-answers.** The queue waits for it and reports what it says; `npm run verdict`
-reads the same result independently:
+**A landing is not finished until GitHub has merged the queue entry and CI has
+answered.** The native queue waits for its required merge-group result;
+`npm run verdict` can read the resulting commit verdict independently:
 
 | | | |
 |---|---|---|
