@@ -195,10 +195,14 @@ const mentionPages = computed(() =>
            the one the house has, and the other one is what you are checking
            them against. -->
       <table v-if="said.length" class="attrs small">
-        <tr class="dim"><th>attribute</th><th>the book</th><th>the person</th></tr>
-        <tr v-for="a in said" :key="a.attr" :class="{ apart: a.claimed !== a.real }">
-          <td>{{ a.name }}</td><td>{{ a.claimed }}</td><td>{{ a.real }}</td>
-        </tr>
+        <thead>
+          <tr class="dim"><th>attribute</th><th>the book</th><th>the person</th></tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in said" :key="a.attr" :class="{ apart: a.claimed !== a.real }">
+            <td>{{ a.name }}</td><td>{{ a.claimed }}</td><td>{{ a.real }}</td>
+          </tr>
+        </tbody>
       </table>
       <p v-else class="small dim">The book has never said a word about what they were like.</p>
     </div>
