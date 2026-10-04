@@ -53,8 +53,6 @@ events:
             first time in four hundred years this family owns a sentence about
             the rod that can be checked by somebody who does not trust them.
           effects:
-            - { kind: arc_flag, flag: theory_two_in_the_room, set: true }
-            - { kind: knowledge, op: grant, flag: knows_the_rod_wants_two }
             - { kind: attribute, target: { slot: THEORIST }, attr: mind, delta: 5 }
 
   - id: rod_three_generations_of_being_right
@@ -104,9 +102,7 @@ events:
                 true about the rod before. It says one now, and the saying of
                 it is the proudest afternoon in about two centuries.
               effects:
-                - { kind: arc_flag, flag: entered_as_law, set: true }
                 - { kind: respect, delta: 1 }
-                - { kind: knowledge, op: grant, flag: knows_the_rod_wants_two }
         - id: keep_it_a_habit
           label: Leave it out of the book. A house that writes a thing down has to defend it.
           outcomes:
@@ -118,8 +114,8 @@ events:
                 cannot: the two generations after this never quite know
                 whether they are keeping a finding or keeping a superstition,
                 and they do it exactly as carefully either way.
-              effects:
-                - { kind: arc_flag, flag: kept_it_quiet, set: true }
+              tags: [self_expression]
+              effects: []
     record:
       subject: the rule of two in the room
       options:
@@ -129,7 +125,6 @@ events:
             with one. Eleven years of notebook, ninety years of practice, and
             not one exception in either. This is the first checkable sentence
             this family has ever written about the third of the three.
-          grantsKnowledge: knows_the_rod_wants_two
         omit:
           chronicle: null
         embellish:
@@ -183,7 +178,6 @@ events:
                 thing about it.
               effects:
                 - { kind: clause, reveal: clause_of_the_made_thing }
-                - { kind: knowledge, op: revoke, flag: knows_the_rod_wants_two }
                 - { kind: respect, delta: -1 }
         - id: let_it_stand
           label: Let the finding stand. Nobody outside this house can test it.
@@ -210,7 +204,6 @@ events:
             years, and nobody checked because it kept being right. The house
             does not know what the third of the three is for. It has never
             known and it should stop writing as though it has.
-          grantsKnowledge: knows_the_rod_answers_to_nothing
           effects:
             - { kind: respect, delta: -1 }
           claims:
