@@ -11,6 +11,7 @@ import { queueChoice, resolveChoice } from './decisions.js';
 import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
+import { ambientPool } from './selection.js';
 
 const content = indexContent(loadContent());
 
@@ -671,6 +672,80 @@ describe('authored head-cast narration outcome witnesses', () => {
 });
 
 
+
+describe('authored age-scoped head-cast narration outcome witnesses', () => {
+  it('proves the active Age admits every conditionless Head-only narration outcome before executing it', () => {
+    const events = content.events.filter((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      return event.interaction.kind === 'narration'
+        && event.tier !== 'frame'
+        && event.conditions === undefined
+        && event.ages?.only?.length === 1
+        && event.ages.never === undefined
+        && event.ages.register === undefined
+        && event.arc === undefined
+        && slotIds.length === 1
+        && slotIds[0] === 'HEAD'
+        && head?.role === 'head'
+        && head.castBy === 'engine';
+    });
+
+    const declared = events.flatMap((event) =>
+      event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) =>
+            outcomeKey(String(event.id), undefined, String(outcome.id)))
+        : []);
+    const witnessed: string[] = [];
+
+    expect(declared.length).toBeGreaterThan(0);
+
+    let seed = 4300;
+    for (const event of events) {
+      if (event.interaction.kind !== 'narration') continue;
+      const age = event.ages?.only?.[0];
+      if (!age) throw new Error(`${event.id} lost its exclusive Age scope`);
+
+      const outside = testWorld(content, seed);
+      outside.world.age.active = [];
+      expect(
+        ambientPool(outside).some((candidate) => candidate.id === event.id),
+        `${event.id} should be excluded outside ${age}`,
+      ).toBe(false);
+
+      for (const outcome of event.interaction.outcomes) {
+        const ctx = testWorld(content, seed);
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
+
+        expect(
+          ambientPool(ctx).some((candidate) => candidate.id === event.id),
+          `${event.id} should be selectable during ${age}`,
+        ).toBe(true);
+
+        const result = executeOutcomeWitness(ctx, event, {
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: event.interaction.outcomes.length > 1,
+        });
+
+        expect(
+          result.ok,
+          `${event.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));
+        if (result.key) witnessed.push(result.key);
+        seed += 1;
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
 describe('authored head-cast player-choice outcome witnesses', () => {
   it('executes every unscoped conditionless unchecked player outcome with only the engine-cast Head', () => {
     const events = content.events.filter((event) => {
