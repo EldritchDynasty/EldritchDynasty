@@ -165,18 +165,25 @@ describe('deterministic outcome execution witnesses', () => {
     throw new Error('fixture has no automatically decided branch reachable by the test world');
   });
 
-  it('refuses player-cast events until a production docket fixture supplies the cast', () => {
-    const ctx = fixture(1105);
-    for (const event of content.events) {
+  it('refuses a player-cast slot until a production docket fixture supplies the cast', () => {
+    const search = fixture(1105);
+    for (const sourceEvent of content.events) {
       if (
-        event.arc
-        || event.interaction.kind === 'narration'
-        || !Object.values(event.slots).some((slot) => slot.castBy === 'player')
-        || !evalCondition(event.conditions, ctx)
+        sourceEvent.arc
+        || sourceEvent.interaction.kind === 'narration'
+        || Object.keys(sourceEvent.slots).length === 0
+        || !evalCondition(sourceEvent.conditions, search)
       ) continue;
 
-      const slots = resolveSlots(event, ctx, makeRng(5));
-      if (!slots.ok || !slots.playerCast.length) continue;
+      const original = resolveSlots(sourceEvent, search, makeRng(5));
+      if (!original.ok || original.playerCast.length) continue;
+      const slotId = Object.keys(sourceEvent.slots)
+        .find((id) => !sourceEvent.slots[id]!.optional);
+      if (!slotId) continue;
+
+      const event = structuredClone(sourceEvent);
+      event.slots[slotId]!.castBy = 'player';
+      const ctx = fixture(1105);
       const choice = event.interaction.choices[0]!;
       const result = executeOutcomeWitness(ctx, event, {
         ...(event.interaction.decidedBy === 'player' ? { choiceId: choice.id } : {}),
@@ -190,7 +197,7 @@ describe('deterministic outcome execution witnesses', () => {
       return;
     }
 
-    throw new Error('fixture has no eligible player-cast event');
+    throw new Error('fixture has no ordinary choice event suitable for the player-cast mutation');
   });
 
   it('does not commit when the named outcome is not the one resolved', () => {
