@@ -122,12 +122,55 @@ export interface OutcomeWitnessRequest {
   /** Required for player-decided interactions; for automatic deciders this is an assertion. */
   choiceId?: string;
   rng: Rng;
+  /**
+   * Steer only an ordinary weighted outcome group toward the named outcome.
+   *
+   * The adapter still asks the underlying RNG to make its normal weighted draw
+   * first, so the stream advances exactly as it would in production. It then
+   * substitutes the named item only when that item has positive effective
+   * weight. Checks are unaffected: they resolve through `evalCheck`, not
+   * `Rng.weighted`, and therefore still need a witness world that clears the
+   * requested band.
+   */
+  targetWeightedOutcome?: boolean;
 }
 
 export interface OutcomeWitnessResult {
   ok: boolean;
   key?: string;
   reason?: string;
+}
+
+/**
+ * A witness may need to prove a rare weighted branch without seed-mining for
+ * the one draw that happens to land on it. This adapter does not reimplement
+ * outcome weighting: `pickOutcome` still computes the production weight
+ * function and calls `weighted` with it. We consume the underlying weighted
+ * draw first, preserving the stream position, then choose the named positive-
+ * weight item. Any other RNG operation is passed straight through.
+ */
+function targetWeightedOutcomeRng(base: Rng, outcomeId: string): Rng {
+  const wrap = (rng: Rng): Rng => ({
+    next: () => rng.next(),
+    int: (max) => rng.int(max),
+    range: (min, max) => rng.range(min, max),
+    bool: (p) => rng.bool(p),
+    pick: <T>(xs: readonly T[]) => rng.pick(xs),
+    weighted<T>(xs: readonly T[], weight: (x: T) => number): T | undefined {
+      const natural = rng.weighted(xs, weight);
+      const target = xs.find((x) => (
+        typeof x === 'object'
+        && x !== null
+        && 'id' in x
+        && String((x as { id?: unknown }).id) === outcomeId
+      ));
+      return target !== undefined && weight(target) > 0 ? target : natural;
+    },
+    normal: (mean, sd) => rng.normal(mean, sd),
+    poisson: (lambda) => rng.poisson(lambda),
+    fork: (salt) => wrap(rng.fork(salt)),
+  });
+  return wrap(base);
 }
 
 export function executeOutcomeWitness(
@@ -156,12 +199,15 @@ export function executeOutcomeWitness(
 
   let choiceId: string | undefined;
   let outcome;
+  const outcomeRng = request.targetWeightedOutcome
+    ? targetWeightedOutcomeRng(request.rng, request.expectedOutcomeId)
+    : request.rng;
 
   if (e.interaction.kind === 'narration') {
     if (request.choiceId !== undefined) {
       return { ok: false, reason: 'narration has no choice' };
     }
-    outcome = pickOutcome(e.interaction.outcomes, request.rng, ctx, e);
+    outcome = pickOutcome(e.interaction.outcomes, outcomeRng, ctx, e);
   } else {
     let choice;
     if (e.interaction.decidedBy === 'player') {
@@ -188,7 +234,7 @@ export function executeOutcomeWitness(
     }
 
     choiceId = choice.id;
-    outcome = resolveChoiceOutcome(ctx, e, choice, slots.fill, request.rng);
+    outcome = resolveChoiceOutcome(ctx, e, choice, slots.fill, outcomeRng);
   }
 
   if (outcome.id !== request.expectedOutcomeId) {
