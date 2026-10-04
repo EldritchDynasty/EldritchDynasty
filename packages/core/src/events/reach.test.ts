@@ -1038,6 +1038,165 @@ describe('authored weighted player-cast outcome witnesses', () => {
 });
 
 
+describe('authored direct player-cast outcome witnesses', () => {
+  type DirectPlayerEvent = 'the_vessel_rite' | 'the_unmaking' | 'the_second_name';
+
+  function directPlayerFixture(seed: number, eventId: DirectPlayerEvent) {
+    const ctx = testWorld(content, seed);
+    const donor = ctx.world.people.living()
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    if (!donor) throw new Error('direct player-cast fixture has no founding expresser genome');
+
+    // The foremost man is a real Hierophant-shaped body, using the same
+    // production ladder inputs as the weighted Unmaking witness above.
+    const elder = place(ctx, {
+      sex: 'male',
+      age: 70,
+      name: `Witness Direct Elder ${seed}`,
+      castSlots: ['head'],
+    });
+    elder.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    elder.phenotype = undefined;
+    elder.awakening.awakened = true;
+    elder.acquired[ELDRITCH_GIFT] = 26;
+    elder.acquired.mind = 90;
+    elder.madness = 60;
+    elder.traits.add(asId('asked_for_in_wick'));
+    elder.traits.add(asId('went_past_the_book'));
+    const elderBooks = new Set([
+      'lesser_workings_of_fluid', 'lesser_workings_of_thermal', 'lesser_workings_of_aero',
+      'lesser_workings_of_terra', 'lesser_workings_of_life', 'lesser_workings_of_death',
+      'the_marrow_codex',
+    ]);
+    for (const book of content.spellbooks) {
+      if (elderBooks.has(String(book.id))) elder.spellsKnown.push(book.id);
+    }
+    grantHeirloom(ctx, 'the_ninefold_seal');
+    grantHeirloom(ctx, 'the_ring');
+    grantHeirloom(ctx, 'the_rod');
+
+    let selected: ReturnType<typeof place>;
+    if (eventId === 'the_vessel_rite') {
+      // The Vessel need only be living blood. Keep this person ordinary so
+      // the engine's foremost slot still names the elder who takes the rite.
+      selected = place(ctx, {
+        sex: 'female',
+        age: 30,
+        name: `Witness Vessel Subject ${seed}`,
+      });
+      ctx.world.people.setParents(selected.id, { father: elder.id });
+    } else {
+      // Unmaking and Second Name need a second actual expresser. Give him the
+      // measured high-end fixture shape rather than bypassing slot filters.
+      elder.rites.push('vessel', 'great_rite');
+      selected = place(ctx, {
+        sex: 'male',
+        age: 40,
+        name: `Witness Direct Ascendant ${seed}`,
+      });
+      ctx.world.people.setParents(selected.id, { father: elder.id });
+      selected.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+      selected.phenotype = undefined;
+      selected.awakening.awakened = true;
+      selected.acquired[ELDRITCH_GIFT] = 60;
+      selected.acquired[ELDRITCH_REACH] = 6;
+      selected.acquired.mind = 200;
+      for (const book of content.spellbooks.slice(0, 8)) selected.spellsKnown.push(book.id);
+    }
+
+    let vessel = selected;
+    if (eventId === 'the_second_name') {
+      // The second man is the ascendant; the player names a third blood
+      // relative to spend on him.
+      vessel = place(ctx, {
+        sex: 'female',
+        age: 18,
+        name: `Witness Second Vessel ${seed}`,
+      });
+      ctx.world.people.setParents(vessel.id, { father: selected.id });
+    }
+
+    ctx.world.respect = 'eminent';
+    // Event conditions read the annual house measurement; slot filters read
+    // live standing. Pin only the former, exactly as the Unmaking fixture does.
+    ctx.world.ascension.rung = 'hierophant';
+    ctx.world.ascension.best = 'hierophant';
+
+    const event = content.event(eventId);
+    if (!event || event.interaction.kind === 'narration') {
+      throw new Error(`${eventId} direct player-cast fixture changed interaction`);
+    }
+
+    const cast = eventId === 'the_unmaking'
+      ? { ASCENDANT: selected.id }
+      : { VESSEL: vessel.id };
+
+    return { ctx, event, cast };
+  }
+
+  it('keeps the authored direct player-cast outcome inventory explicit', () => {
+    const authored = content.events.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      if (event.interaction.decidedBy !== 'player') return [];
+      if (!Object.values(event.slots).some((slot) => slot.castBy === 'player')) return [];
+
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    }).sort();
+
+    expect(authored).toEqual([
+      outcomeKey('the_vessel_rite', 'speak_the_name', 'taken'),
+      outcomeKey('the_vessel_rite', 'send_them_out_of_the_room', 'spared'),
+      outcomeKey('the_unmaking', 'go_through_with_it', 'taken'),
+      outcomeKey('the_unmaking', 'go_through_with_it', 'failed_at_the_last_step'),
+      outcomeKey('the_unmaking', 'let_him_be', 'left'),
+      outcomeKey('the_second_name', 'name_the_second', 'raised'),
+      outcomeKey('the_second_name', 'one_is_enough', 'refused'),
+    ].sort());
+  });
+
+  it('executes every authored direct player-cast outcome through the real docket', () => {
+    const cases = [
+      ['the_vessel_rite', 'speak_the_name', 'taken'],
+      ['the_vessel_rite', 'send_them_out_of_the_room', 'spared'],
+      ['the_unmaking', 'go_through_with_it', 'taken'],
+      ['the_unmaking', 'go_through_with_it', 'failed_at_the_last_step'],
+      ['the_unmaking', 'let_him_be', 'left'],
+      ['the_second_name', 'name_the_second', 'raised'],
+      ['the_second_name', 'one_is_enough', 'refused'],
+    ] as const satisfies readonly (readonly [DirectPlayerEvent, string, string])[];
+
+    const witnessed: string[] = [];
+    for (const [index, [eventId, choiceId, outcomeId]] of cases.entries()) {
+      const seed = 4100 + index;
+      const { ctx, event, cast } = directPlayerFixture(seed, eventId);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId,
+        expectedOutcomeId: outcomeId,
+        rng: alwaysFirstWeighted(seed + 50),
+        cast,
+        targetWeightedOutcome: eventId === 'the_unmaking'
+          && choiceId === 'go_through_with_it',
+      });
+
+      expect(result.ok, `${eventId}/${choiceId}/${outcomeId}: ${result.reason}`).toBe(true);
+      expect(result.key).toBe(outcomeKey(eventId, choiceId, outcomeId));
+      expect(ctx.world.decisionLog.some((entry) => (
+        entry.kind === 'outcome'
+        && entry.event === event.id
+        && entry.choiceId === choiceId
+        && entry.outcomeId === outcomeId
+      ))).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(cases
+      .map(([eventId, choiceId, outcomeId]) => outcomeKey(eventId, choiceId, outcomeId))
+      .sort());
+  });
+});
+
 describe('authored randomised party-decider witnesses', () => {
   function namedAdults(ctx: ReturnType<typeof fixture>, seed: number) {
     const young = ctx.world.people.living().find((person) => person.name === `Witness Young Man ${seed}`);
