@@ -69,14 +69,14 @@ npm run land         # session preflight: fetch, rebase, install, then run
                      # typecheck + validate + test:fast ON THAT head. It stops
                      # at preflight-green; a session NEVER pushes main. Use
                      # --full-preflight for the complete local CI-derived set.
-                     # Then open/keep a ready PR and comment /land (or
-                     # /land --no-issue-check for staged work).
-                     # The serialized queue rebases/checks again and is the only
-                     # path allowed to push main, using LAND_DEPLOY_KEY.
+                     # Then open/keep a ready same-repository PR and use GitHub's
+                     # "Merge when ready". The native merge queue creates a
+                     # synthetic merge_group commit and required CI runs there
+                     # before GitHub rebases/merges it into main.
                      # Long preflights must use a harness-tracked background run;
                      # `nohup … &` dies with the container silently.
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
-                     # A session preflight never pushes.
+                     # A session preflight never pushes or merges.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
 npm run test:fast    # 31s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
@@ -445,20 +445,18 @@ true even if nobody opens it.
 - **Run the harness before claiming a balance change works.** A full run is multi-hour; batch simulation is the only viable balance method. #133 supplies the measured 500-year playtime.
 - When a test fails, work out whether the test or the code is wrong. Several "failures" here were correct behaviour asserted incorrectly — rare upward font mutation is *designed*.
 - Prefer fixing the model over special-casing the symptom. Nearly every bug in this codebase has been structural: children in the wrong household, widows still married to dead men, cast slots never refilled, counters at module scope.
-- **Preflight with `npm run land`, then land only through the serialized `/land` queue.**
+- **Preflight with `npm run land`, then land only through GitHub's native merge queue.**
   Standing authorization for this project specifically: run the session preflight,
-  keep/open a ready same-repository PR, and enqueue it without stopping to ask.
-  The default preflight runs typecheck, validation and the fast lane; use
-  `--full-preflight` for risky core, content or gate work when the complete
-  local CI-equivalent evidence is useful. Either result is advisory.
-  A session never pushes `main`; only explicit `--from-queue` in
-  `remote-land.yml` crosses that boundary, using `LAND_DEPLOY_KEY`. The queue
-  rebases and checks again at the head of the line, so the checked head is the
-  pushed head. `npm run check` is **not** enough: it omits the gates.
-  **A queue push is not finished until a verdict comes back, and an absent verdict
-  is not a pass.** Connector-only: `/land`; staged work that genuinely leaves its
-  issue open: `/land --no-issue-check`. **Never merge the PR directly.** See
-  [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
+  keep/open a ready same-repository PR, and choose **Merge when ready** without
+  stopping to ask. The default preflight runs typecheck, validation and the fast
+  lane; use `--full-preflight` for risky core, content or gate work when complete
+  local CI-equivalent evidence is useful. Either result is advisory. A session
+  never pushes or directly merges `main`. GitHub rebases the queued PR into a
+  synthetic `merge_group` commit, runs the stable required `CI required`
+  result on that exact integration head, and merges only after it is green.
+  `npm run check` is **not** enough: it omits the gates. The repository-admin
+  bypass is an emergency PR-only escape hatch, not the normal landing path.
+  See [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Landing must outlive the turn; never use `nohup … &`.** Use the harness-tracked background run (Claude Code: `run_in_background`) and read it with `npm run land -- --status`. Details and failure recovery live in [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Never ask a fresh clone what has been merged.** It arrives shallow, and
   `merge-base --is-ancestor` answers FALSE past the graft boundary rather than
@@ -466,7 +464,7 @@ true even if nobody opens it.
   unmerged. `tools/orient.mjs` unshallows at session start; if you are unsure,
   `git rev-parse --is-shallow-repository` before any "has this landed" reasoning.
   See [docs/COMMANDS.md](docs/COMMANDS.md#how-a-session-starts).
-- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases for the session preflight; the queue rebases and re-runs the authoritative set again before its only permitted push. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
+- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases for the session preflight; GitHub's merge queue rebases again and runs the authoritative required CI on the synthetic integration commit before merging. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
 
 ## Do not
 
