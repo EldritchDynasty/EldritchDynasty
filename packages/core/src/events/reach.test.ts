@@ -149,6 +149,75 @@ describe('deterministic outcome execution witnesses', () => {
     });
   });
 
+  it('targets a chance-decided branch without seed-mining the branch draw', () => {
+    const event = structuredClone(singleOutcomeNarration());
+    if (event.interaction.kind !== 'narration') throw new Error('fixture changed kind');
+    const original = event.interaction.outcomes[0]!;
+    const naturalChoice = 'witness_chance_natural';
+    const targetChoice = 'witness_chance_target';
+    const naturalOutcome = `${original.id}_chance_natural` as typeof original.id;
+    const targetOutcome = `${original.id}_chance_target` as typeof original.id;
+    event.interaction = {
+      kind: 'choice',
+      decidedBy: 'chance',
+      choices: [
+        {
+          id: naturalChoice,
+          label: 'Natural branch',
+          requires: [],
+          outcomes: [{ ...structuredClone(original), id: naturalOutcome, weight: 1 }],
+        },
+        {
+          id: targetChoice,
+          label: 'Target branch',
+          requires: [],
+          outcomes: [{ ...structuredClone(original), id: targetOutcome, weight: 1 }],
+        },
+      ],
+    };
+
+    const naturalCtx = fixture(1108);
+    const natural = executeOutcomeWitness(naturalCtx, event, {
+      choiceId: targetChoice,
+      expectedOutcomeId: targetOutcome,
+      rng: alwaysFirstWeighted(31),
+    });
+    expect(natural.ok).toBe(false);
+    expect(natural.reason).toContain(`automatic decider chose '${naturalChoice}'`);
+    expect(naturalCtx.world.decisionLog).toHaveLength(0);
+
+    const targetedCtx = fixture(1108);
+    const targeted = executeOutcomeWitness(targetedCtx, event, {
+      choiceId: targetChoice,
+      expectedOutcomeId: targetOutcome,
+      rng: alwaysFirstWeighted(31),
+      targetChanceChoice: true,
+    });
+
+    expect(targeted.ok, targeted.reason).toBe(true);
+    expect(targeted.key).toBe(`${event.id}|${targetChoice}|${targetOutcome}`);
+    expect(targetedCtx.world.decisionLog.at(-1)).toMatchObject({
+      kind: 'outcome',
+      event: event.id,
+      choiceId: targetChoice,
+      outcomeId: targetOutcome,
+    });
+
+    const zeroWeight = structuredClone(event);
+    if (zeroWeight.interaction.kind === 'narration') throw new Error('fixture changed kind');
+    zeroWeight.interaction.choices[1]!.outcomes[0]!.weight = 0;
+    const zeroCtx = fixture(1108);
+    const zero = executeOutcomeWitness(zeroCtx, zeroWeight, {
+      choiceId: targetChoice,
+      expectedOutcomeId: targetOutcome,
+      rng: alwaysFirstWeighted(31),
+      targetChanceChoice: true,
+    });
+    expect(zero.ok).toBe(false);
+    expect(zero.reason).toContain(`automatic decider chose '${naturalChoice}'`);
+    expect(zeroCtx.world.decisionLog).toHaveLength(0);
+  });
+
   it('targets a randomised check band through the production evaluator', () => {
     const { event, choiceId, lowId, targetId } = checkedChoice('narrow');
 
