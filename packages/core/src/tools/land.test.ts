@@ -544,13 +544,12 @@ describe('a branch named for an issue is refused if nothing closes it', () => {
  * dangerous: "An empty log and an absent child process are both equally
  * consistent with running."
  *
- * The reading that matters most is the one about `main`. A landing killed
- * during `test` pushed nothing; a landing killed at `verdict` PUT A COMMIT ON
- * TRUNK and did not stay to hear the answer, which is docs/COMMANDS.md's
- * "an absent verdict is not a pass" arriving by a different road. Guessing
- * either way is worse than saying which.
+ * New preflights never push `main`, but an upgraded checkout can still contain
+ * a lock written by the retired queue. These legacy-state assertions keep that
+ * one migration edge safe: a pre-migration `push`/`verdict` lock must not be
+ * misreported as a harmless local preflight death.
  */
-describe('a killed landing says what it was and what it left on main', () => {
+describe('a killed preflight safely reads legacy landing locks', () => {
   const dead = { pid: 4194303, started: '2026-09-08T20:41:15.559Z', target: '288afe8ec1f5f4f7fa079ace15e3930c3406c1b8' };
 
   it('names the pid, the start and the step it got to', () => {
@@ -561,30 +560,23 @@ describe('a killed landing says what it was and what it left on main', () => {
     expect(lines, 'the commit it was landing is not named').toContain('288afe8');
   });
 
-  it('says nothing reached main when it died before the push', () => {
+  it('says current preflight steps cannot have reached main', () => {
     for (const step of ['fetch', 'rebase', 'install', 'typecheck', 'validate', 'test', 'gate']) {
       const lines = land.deathReading({ ...dead, step }).join('\n');
       expect(lines, `a landing killed at ${step} was not cleared of touching main`).toContain('Nothing of it reached');
     }
   });
 
-  /**
-   * The one that costs something to get wrong. `verdict` is the only step that
-   * proves the push succeeded, and a commit on trunk nobody judged is the
-   * state this repository has the longest record of mishandling.
-   */
-  it('says a commit is on main, unjudged, when it died after the push', () => {
+  /** Legacy compatibility only: new `land.mjs` runs never write this step. */
+  it('reads a pre-migration verdict lock as already pushed', () => {
     const lines = land.deathReading({ ...dead, step: 'verdict' }).join('\n');
     expect(lines).toContain('ALREADY PUSHED');
     expect(lines, 'it does not send the reader to the verdict it never heard').toContain('npm run verdict');
     expect(lines, 'a landed commit does not need re-landing').not.toContain('Nothing of it reached');
   });
 
-  /**
-   * And the honest middle. Dying DURING the push is genuinely ambiguous, and
-   * this file's whole argument is that a guess is worse than a question.
-   */
-  it('refuses to resolve the push it may or may not have completed', () => {
+  /** Legacy compatibility only: old queue locks can die during an ambiguous push. */
+  it('refuses to guess about a pre-migration push lock', () => {
     const lines = land.deathReading({ ...dead, step: 'push' }).join('\n');
     expect(lines).toContain('may or may not have landed');
     expect(lines).not.toContain('Nothing of it reached');
@@ -698,12 +690,9 @@ describe('a killed landing says what it was and what it left on main', () => {
   });
 
   /**
-   * THE CALL, NOT THE PROSE — and this file has been caught by that once
-   * already, matching `git push origin HEAD:main` inside the comment
-   * explaining the bug. The first cut of THIS test made the same mistake in
-   * the other direction: commenting out `mark('verdict')` left the text on
-   * the line, the regex still matched, and the mutation passed. So the
-   * assertions below run against the source with its comments removed.
+   * THE CALL, NOT THE PROSE. This assertion strips comments before checking
+   * that the surviving local preflight has no direct-main push or post-push
+   * state. Historical examples may still name the retired transport.
    */
   it('records local verification progress without recording a main push', () => {
     const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
@@ -720,28 +709,12 @@ describe('a killed landing says what it was and what it left on main', () => {
 /**
  * A PREFLIGHT VERIFIES A NAMED SHA, AND ONE RUNS PER CHECKOUT.
  *
- * Three failures on 2026-09-07 came from one shape. `land` ran its steps
- * against the live working tree and then pushed `HEAD:main`, which resolves
- * half an hour later:
- *
- *   9/9 gates pass
- *   $ git push origin HEAD:main
- *      ac12cda..02183f5  HEAD -> main
- *
- * That landing started at 891cac5 and verified 891cac5. `02183f5` was
- * committed while it ran and had been through no step at all. It reached trunk
- * under a green banner and CI failed it.
- *
- * It happened because a live landing was read as a dead one — empty log, no
- * `vitest` process, both equally consistent with "between steps" — and a
- * second was started over the same checkout.
- *
- * Both assertions below are from the SECOND actor's point of view, which is
- * the same choice `agents.test.ts` makes about the claim mutex: whether the
- * internals changed is an implementation detail, whether the other party is
- * stopped is the entire point.
+ * The detached worktree exists because the historical direct-push command once
+ * verified one commit and later pushed a different live HEAD. Native merge
+ * queue removed the push capability; pinning the SHA still matters because the
+ * local evidence must describe the exact commit being handed off.
  */
-describe('a landing pushes what it verified, and only one runs at a time', () => {
+describe('a preflight verifies one pinned commit, and only one runs per checkout', () => {
   const TOOL = join(REPO, 'tools/land.mjs');
   const source = readFileSync(TOOL, 'utf8');
 
@@ -780,9 +753,9 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
    *
    * This is the fix that removes the condition rather than guarding it. The
    * steps used to run against the live working tree, so a landing and its own
-   * session could not share a container: a landing was started, the next issue
-   * was worked while its suite ran, and the suite verified a tree carrying
-   * changes the push would not carry.
+   * session could not share a container: a preflight was started, the next issue
+   * was worked while its suite ran, and the suite verified a moving live tree
+   * instead of its pinned commit.
    *
    * Asserted on the SOURCE rather than by running a thirty-minute landing,
    * which is the honest trade: what this can prove cheaply is that the steps
