@@ -1332,6 +1332,173 @@ type GenerationWitnessCase = {
   choices: AuthoredChoice[] | undefined;
 };
 
+describe('authored Assize-gated outcome witnesses', () => {
+  function assizeFixture(seed: number, pressure: number) {
+    const ctx = testWorld(content, seed);
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'));
+    if (!head) throw new Error('Assize witness fixture has no Head');
+
+    place(ctx, {
+      sex: 'male',
+      age: 44,
+      name: `Witness Steward ${seed}`,
+      contract: {
+        role: 'steward',
+        term: 'yearly',
+        wage: 8,
+        loyalty: 60,
+        boundTo: head.id,
+        onEmployerDeath: 'passes_to_heir',
+        debt: 0,
+        knowsSecrets: [],
+      },
+    });
+    ctx.world.assize.pressure = pressure;
+    return ctx;
+  }
+
+  function crossing(op: 'lt' | 'lte' | 'eq' | 'gte' | 'gt' | 'ne', value: number) {
+    const step = 0.01;
+    switch (op) {
+      case 'lt': return { blocked: value, passing: value - step };
+      case 'lte': return { blocked: value + step, passing: value };
+      case 'eq': return { blocked: value + step, passing: value };
+      case 'gte': return { blocked: value - step, passing: value };
+      case 'gt': return { blocked: value, passing: value + step };
+      case 'ne': return { blocked: value, passing: value + step };
+    }
+  }
+
+  it('crosses every authored Assize gate before resolving real Head/retainer casts and committing outcomes', () => {
+    const cases = content.events.filter((event) => {
+      const condition = event.conditions;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('assize' in condition)
+      ) return false;
+
+      const slots = Object.values(event.slots);
+      if (
+        slots.length === 0
+        || slots.some((slot) => (
+          slot.castBy !== 'engine'
+          || !['head', 'retainer'].includes(slot.role)
+          || slot.filters.some((filter) => (
+            Object.keys(filter).some((key) => !['status'].includes(key))
+          ))
+        ))
+      ) return false;
+
+      if (event.interaction.kind === 'narration') return true;
+      return event.interaction.decidedBy === 'player'
+        && event.interaction.choices.every((choice) => (
+          choice.requires.length === 0 && choice.check === undefined
+        ));
+    });
+
+    expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'the_assessor_at_the_door',
+      'the_cart_from_the_chapter_house',
+      'the_offer_in_another_room',
+      'the_price_at_the_mill',
+    ]);
+
+    const declared = cases.flatMap((event) => {
+      if (event.interaction.kind === 'narration') {
+        return event.interaction.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), undefined, String(outcome.id)));
+      }
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 7100;
+
+    for (const event of cases) {
+      const condition = event.conditions;
+      if (!condition || !('assize' in condition)) {
+        throw new Error(`${event.id} lost its Assize gate`);
+      }
+      const { blocked, passing } = crossing(condition.assize.op, condition.assize.value);
+
+      const before = assizeFixture(seed, blocked);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      expect(
+        evalCondition(event.conditions, before),
+        `${event.id} should be blocked at Assize pressure ${blocked}`,
+      ).toBe(false);
+
+      const selection = assizeFixture(seed, passing);
+      selection.world.generation = Math.max(
+        selection.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      expect(
+        evalCondition(event.conditions, selection),
+        `${event.id} should pass at Assize pressure ${passing}`,
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, `${event.id} should resolve its authored Head/retainer slots`).toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, `${event.id} should not require a player cast`).toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        `${event.id} should be selectable once its Assize gate and cast state are valid`,
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          const ctx = assizeFixture(seed, passing);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          const result = executeOutcomeWitness(ctx, event, {
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: event.interaction.outcomes.length > 1,
+          });
+          expect(result.ok, `${event.id}/${outcome.id}: ${result.reason}`).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+        continue;
+      }
+
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = assizeFixture(seed, passing);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
