@@ -223,7 +223,6 @@ describe('deterministic outcome execution witnesses', () => {
     for (const sourceEvent of content.events) {
       if (
         sourceEvent.arc
-        || sourceEvent.record
         || sourceEvent.interaction.kind === 'narration'
         || sourceEvent.interaction.decidedBy !== 'player'
         || Object.keys(sourceEvent.slots).length === 0
@@ -379,6 +378,7 @@ describe('deterministic outcome execution witnesses', () => {
     for (const sourceEvent of content.events) {
       if (
         sourceEvent.arc
+        || sourceEvent.record
         || sourceEvent.interaction.kind === 'narration'
         || sourceEvent.interaction.decidedBy !== 'player'
         || Object.keys(sourceEvent.slots).length === 0
