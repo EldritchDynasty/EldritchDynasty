@@ -31,11 +31,14 @@ describe('the content contract', () => {
     }
   });
 
-  it('populates every one of them', () => {
+  it('populates every collection unless its layout explicitly permits an empty migration state', () => {
+    const specs = new Map(CONTENT_LAYOUT.map((spec) => [spec.key, spec]));
     for (const key of Object.keys(ContentBundleS.shape) as (keyof typeof bundle)[]) {
       const value = bundle[key];
       expect(Array.isArray(value), `${String(key)} is not an array`).toBe(true);
-      expect((value as unknown[]).length, `${String(key)} is empty`).toBeGreaterThan(0);
+      if (!specs.get(key)?.allowEmpty) {
+        expect((value as unknown[]).length, `${String(key)} is empty`).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -45,6 +48,34 @@ describe('the content contract', () => {
     // for a thousand years, with nothing to say what went wrong.
     expect(() => assembleBundle({ 'houses.yaml': 'houses: []' }, parse))
       .toThrow(/attributes\.yaml is missing/);
+  });
+
+  it('keeps content prose counterparts beside the Original file they answer', () => {
+    const files = {
+      'attributes.yaml': 'attributes: []',
+      'loci.yaml': 'loci: []',
+      'traits.yaml': 'traits: []',
+      'houses.yaml': 'houses: []',
+      'heirlooms.yaml': 'heirlooms: []',
+      'spellbooks.yaml': 'spellbooks: []',
+      'careers.yaml': 'careers: []',
+      'clauses.yaml': 'clauses: []',
+      'prologue.yaml': 'prologue: []',
+      'endings.yaml': 'endings: []',
+      'tales.yaml': 'tales: []',
+      'parcels.yaml': 'parcels: []',
+      'positions.yaml': 'positions: []',
+      'events/one.yaml': [
+        'events: []',
+        'proseVariants:',
+        '  - address: content:events/two.yaml#events[id=scene].body',
+        '    plainenglish: A direct version.',
+      ].join('\n'),
+      'events/two.yaml': 'events: []',
+    };
+
+    expect(() => assembleBundle(files, parse))
+      .toThrow(/prose variant.*events\/one\.yaml.*Original.*events\/two\.yaml/);
   });
 
   it('round-trips through its own schema', () => {

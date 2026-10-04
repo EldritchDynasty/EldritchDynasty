@@ -16,6 +16,7 @@ import type { PrologueDef } from './prologue.js';
 import type { EndingDef } from './ending.js';
 import type { ParcelDef } from './parcel.js';
 import type { PositionDef } from './position.js';
+import type { ProseVariant } from './prose.js';
 import { desugarInline, inlineArcId, outcomesOf } from './desugar.js';
 import { contentSourcesOf } from './assemble.js';
 
@@ -68,6 +69,7 @@ export interface Content {
   readonly endings: EndingDef[];
   readonly parcels: ParcelDef[];
   readonly positions: PositionDef[];
+  readonly proseVariants: ProseVariant[];
 
   /** True for any compiled or authored content id in this bundle. */
   has(id: string): boolean;
@@ -219,6 +221,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     endings: b.endings,
     parcels: b.parcels,
     positions: b.positions,
+    proseVariants: b.proseVariants,
 
     has: (id) => allIds.has(id),
     sourceOf: (id) => sourcesById.get(id),

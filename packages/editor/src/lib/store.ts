@@ -1,6 +1,6 @@
 import { parse, parseDocument, type Document } from 'yaml';
 import { reactive } from 'vue';
-import type { ContentBundle } from '@ed/schema';
+import type { ContentBundle, ProseVariant } from '@ed/schema';
 import { assembleBundle, CONTENT_LAYOUT } from '@ed/schema';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
 
@@ -56,13 +56,28 @@ const COLLECTION_YAML_KEY: Record<string, string> = {
   characterTemplates: 'characterTemplates',
 };
 
+type StoreItem = { id?: string; address?: string };
+
+function identityField(collectionKey: string): 'id' | 'address' {
+  return collectionKey === 'proseVariants' ? 'address' : 'id';
+}
+
+function identityOf(collectionKey: string, item: StoreItem): string | undefined {
+  return item[identityField(collectionKey)];
+}
+
+function itemsOf(collectionKey: string): StoreItem[] | undefined {
+  return (store.bundle as unknown as Record<string, StoreItem[]>)[collectionKey];
+}
+
 function locate(collectionKey: string, id: string): { path: string; index: number } | undefined {
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
+  const field = identityField(collectionKey);
   for (const [path, f] of files) {
     const seq = f.doc.get(yamlKey, true) as { items?: unknown[] } | undefined;
     if (!seq?.items) continue;
     for (let i = 0; i < seq.items.length; i++) {
-      if (f.doc.getIn([yamlKey, i, 'id']) === id) return { path, index: i };
+      if (f.doc.getIn([yamlKey, i, field]) === id) return { path, index: i };
     }
   }
   return undefined;
@@ -130,20 +145,89 @@ function node<T>(doc: Document, x: T): unknown {
 
 const STRINGIFY_OPTS = { lineWidth: 78, defaultStringType: 'PLAIN', defaultKeyType: 'PLAIN' } as const;
 
+function syncProseVariants(doc: Document): void {
+  const seq = doc.get('proseVariants', true) as { items?: unknown[] } | undefined;
+  if (!seq?.items) return;
+  for (let i = 0; i < seq.items.length; i++) {
+    const address = doc.getIn(['proseVariants', i, 'address']);
+    if (typeof address !== 'string') continue;
+    const live = store.bundle.proseVariants.find((variant) => variant.address === address);
+    if (live) doc.setIn(['proseVariants', i], node(doc, live));
+  }
+}
+
+/**
+ * Stage a missing Plain English counterpart in the same YAML file as Original.
+ * The normal item SaveControl writes both columns together; staging alone never
+ * writes to disk.
+ */
+export function stageProseVariant(
+  path: string,
+  address: string,
+  plainenglish: string,
+): ProseVariant | undefined {
+  const existing = store.bundle.proseVariants.find((variant) => variant.address === address);
+  if (existing) return existing;
+
+  const file = files.get(path);
+  if (!file || !isWritableContentPath(path)) return undefined;
+
+  const variant: ProseVariant = { address, plainenglish };
+  store.bundle.proseVariants.push(variant);
+
+  const seq = file.doc.get('proseVariants', true) as { items?: unknown[] } | undefined;
+  if (!seq?.items) file.doc.set('proseVariants', node(file.doc, []));
+  file.doc.addIn(['proseVariants'], node(file.doc, variant));
+  store.dirty.add(path);
+  return store.bundle.proseVariants.find((candidate) => candidate.address === address);
+}
+
+/**
+ * Clearing an optional counterpart means "not authored yet", not an authored
+ * empty string (which ProseVariantS rejects). Remove it from both live bundle
+ * and source document so the next reload stays schema-valid and the migration
+ * worklist can report the address missing again.
+ */
+export function removeProseVariant(path: string, address: string): boolean {
+  const file = files.get(path);
+  if (!file || !isWritableContentPath(path)) return false;
+
+  const liveIndex = store.bundle.proseVariants.findIndex((variant) => variant.address === address);
+  if (liveIndex < 0) return false;
+
+  const seq = file.doc.get('proseVariants', true) as { items?: unknown[] } | undefined;
+  if (!seq?.items) return false;
+
+  let sourceIndex = -1;
+  for (let i = 0; i < seq.items.length; i++) {
+    if (file.doc.getIn(['proseVariants', i, 'address']) === address) {
+      sourceIndex = i;
+      break;
+    }
+  }
+  if (sourceIndex < 0) return false;
+
+  store.bundle.proseVariants.splice(liveIndex, 1);
+  file.doc.deleteIn(['proseVariants', sourceIndex]);
+  store.dirty.add(path);
+  return true;
+}
+
 /** The text a save WOULD write, without writing it — what the diff view (issue #21) renders. */
 export function pendingText(collectionKey: string, id: string): { path: string; before: string; after: string } | undefined {
   const located = locate(collectionKey, id);
   if (!located) return undefined;
   const file = files.get(located.path)!;
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
-  const items = (store.bundle as unknown as Record<string, { id: string }[]>)[collectionKey];
-  const item = items?.find((x) => x.id === id);
+  const items = itemsOf(collectionKey);
+  const item = items?.find((x) => identityOf(collectionKey, x) === id);
   if (!item) return undefined;
 
   // Clone the document so previewing a diff never mutates the file the way a
   // save does — the whole point of a preview is that looking at it costs nothing.
   const preview = file.doc.clone();
   preview.setIn([yamlKey, located.index], node(preview, item));
+  syncProseVariants(preview);
   return { path: located.path, before: file.loadedText, after: preview.toString(STRINGIFY_OPTS) };
 }
 
@@ -181,11 +265,12 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
     return { ok: false, error: `'${located.path}' is shipped content and is read-only in Mod Editor` };
   }
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
-  const items = (store.bundle as unknown as Record<string, { id: string }[]>)[collectionKey];
-  const item = items?.find((x) => x.id === id);
+  const items = itemsOf(collectionKey);
+  const item = items?.find((x) => identityOf(collectionKey, x) === id);
   if (!item) return { ok: false, error: `'${id}' is not in the live model` };
 
   file.doc.setIn([yamlKey, located.index], node(file.doc, item));
+  syncProseVariants(file.doc);
   const text = file.doc.toString(STRINGIFY_OPTS);
 
   store.saving.add(located.path);
@@ -251,9 +336,11 @@ export async function createItem(collectionKey: string, path: string, item: { id
   const file = files.get(path);
   if (!file) return { ok: false, error: `no loaded file '${path}'` };
 
-  const items = (store.bundle as unknown as Record<string, { id: string }[]>)[collectionKey];
+  const items = itemsOf(collectionKey);
   if (!items) return { ok: false, error: `no collection '${collectionKey}'` };
-  if (items.some((x) => x.id === item.id)) return { ok: false, error: `'${item.id}' already exists` };
+  if (items.some((x) => identityOf(collectionKey, x) === item.id)) {
+    return { ok: false, error: `'${item.id}' already exists` };
+  }
 
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
   items.push(item);

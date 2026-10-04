@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { contentProseEntries, setContentProseText } from '@ed/schema';
 import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
   plainEnglishContentWorkItems, plainEnglishCoreWorkItems, plainEnglishWorklist, report,
@@ -81,6 +82,24 @@ describe('the string-source audit (issue #276)', () => {
       'content:events/example.yaml#events[id=a_scene].title',
       'content:events/example.yaml#events[id=another_scene].title',
     ]);
+  });
+
+  it('uses the same structural path to edit Original without changing its stable address', () => {
+    const document = {
+      events: [{
+        id: 'a_scene',
+        title: 'The Original Title',
+        body: 'The house opens the old book and reads it.',
+      }],
+    };
+    const before = contentProseEntries('events/example.yaml', document);
+    const title = before.find((entry) => entry.address.endsWith('.title'))!;
+
+    expect(setContentProseText(document, title.path, 'A Clearer Original Title')).toBe(true);
+    const after = contentProseEntries('events/example.yaml', document);
+
+    expect(document.events[0]!.title).toBe('A Clearer Original Title');
+    expect(after.map((entry) => entry.address)).toEqual(before.map((entry) => entry.address));
   });
 
   it('uses a founding character key rather than its array position', () => {

@@ -6,6 +6,7 @@ import ArcGraph from './ArcGraph.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
 import SaveControl from './SaveControl.vue';
 import NewItem from './NewItem.vue';
+import ProseVariantEditor from './ProseVariantEditor.vue';
 
 /**
  * SUBSTORIES, EDITABLE.
@@ -313,6 +314,13 @@ function moveSuccessor(n: ArcNode, i: number, by: number) {
       <div style="margin-top:14px">
         <button v-if="!readOnly" class="btn" @click="addNode">+ add beat</button>
       </div>
+
+      <ProseVariantEditor
+        collection-key="arcs"
+        :id="arc.id"
+        :model-value="arc"
+        :disabled="readOnly"
+      />
 
       <SaveControl v-if="!readOnly" collection-key="arcs" :id="arc.id" />
     </div>
