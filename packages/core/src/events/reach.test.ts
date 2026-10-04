@@ -4,7 +4,7 @@ import { indexContent } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
 import { resolveSlots } from './slots.js';
-import { executeOutcomeWitness } from './reach.js';
+import { executeOutcomeWitness, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 
@@ -606,3 +606,135 @@ describe('deterministic outcome execution witnesses', () => {
     expect(ctx.world.decisionLog).toHaveLength(before);
   });
 });
+
+describe('authored state-decider outcome witnesses', () => {
+  type StateWitnessCase = {
+    eventId: string;
+    choiceId: string;
+    outcomeId: string;
+    prepare: (ctx: ReturnType<typeof fixture>) => void;
+    targetWeightedOutcome?: boolean;
+  };
+
+  const cases: StateWitnessCase[] = [
+    {
+      eventId: 'the_hiring_at_bramme_fair',
+      choiceId: 'take_the_lag_man',
+      outcomeId: 'lag_man',
+      prepare: (ctx) => { ctx.world.treasury = 119; },
+    },
+    {
+      eventId: 'the_hiring_at_bramme_fair',
+      choiceId: 'take_the_reeves_daughter',
+      outcomeId: 'reeves_girl',
+      prepare: (ctx) => { ctx.world.treasury = 120; },
+    },
+    {
+      eventId: 'the_cook_and_the_new_maid',
+      choiceId: 'the_head_settles_it',
+      outcomeId: 'settled_from_above',
+      prepare: (ctx) => { ctx.world.respect = 'known'; },
+    },
+    {
+      eventId: 'the_cook_and_the_new_maid',
+      choiceId: 'let_her_settle_it',
+      outcomeId: 'she_settles_it',
+      prepare: (ctx) => { ctx.world.respect = 'regarded'; },
+    },
+    {
+      eventId: 'the_invitation_from_cawdry',
+      choiceId: 'write_the_regrets',
+      outcomeId: 'regrets',
+      prepare: (ctx) => { ctx.world.treasury = 89; },
+    },
+    {
+      eventId: 'the_invitation_from_cawdry',
+      choiceId: 'go_to_cawdry',
+      outcomeId: 'went',
+      prepare: (ctx) => { ctx.world.treasury = 90; },
+    },
+    {
+      eventId: 'what_hangs_in_smoke',
+      choiceId: 'find_out_who',
+      outcomeId: 'it_was_the_yard_man',
+      prepare: (ctx) => { ctx.world.treasury = 139; },
+      targetWeightedOutcome: true,
+    },
+    {
+      eventId: 'what_hangs_in_smoke',
+      choiceId: 'find_out_who',
+      outcomeId: 'nobody_admits_it',
+      prepare: (ctx) => { ctx.world.treasury = 139; },
+      targetWeightedOutcome: true,
+    },
+    {
+      eventId: 'what_hangs_in_smoke',
+      choiceId: 'buy_the_difference',
+      outcomeId: 'bought_and_locked',
+      prepare: (ctx) => { ctx.world.treasury = 140; },
+    },
+    {
+      eventId: 'the_reeve_at_ingathering',
+      choiceId: 'take_it_whole',
+      outcomeId: 'taken_whole',
+      prepare: (ctx) => {
+        ctx.world.treasury = 149;
+        ctx.world.discontent = 100;
+      },
+    },
+    {
+      eventId: 'the_reeve_at_ingathering',
+      choiceId: 'forgive',
+      outcomeId: 'forgiven',
+      prepare: (ctx) => {
+        ctx.world.treasury = 150;
+        ctx.world.discontent = 25;
+      },
+    },
+    {
+      eventId: 'the_reeve_at_ingathering',
+      choiceId: 'take_in_kind',
+      outcomeId: 'taken_in_kind',
+      prepare: (ctx) => {
+        ctx.world.treasury = 150;
+        ctx.world.discontent = 24;
+      },
+    },
+  ];
+
+  it('executes every authored state-decided outcome from an explicit witness world', () => {
+    const authored = content.events.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      const decider = event.interaction.decidedBy;
+      if (typeof decider !== 'object' || !('state' in decider)) return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) => outcomeKey(String(event.id), choice.id, outcome.id)),
+      );
+    }).sort();
+
+    const witnessed: string[] = [];
+    for (const [index, witness] of cases.entries()) {
+      const event = content.events.find((candidate) => String(candidate.id) === witness.eventId);
+      expect(event, 'missing authored state event ' + witness.eventId).toBeDefined();
+      if (!event) continue;
+
+      const ctx = fixture(1300 + index);
+      witness.prepare(ctx);
+      const result = executeOutcomeWitness(ctx, event, {
+        expectedOutcomeId: witness.outcomeId,
+        choiceId: witness.choiceId,
+        rng: alwaysFirstWeighted(2300 + index),
+        targetWeightedOutcome: witness.targetWeightedOutcome,
+      });
+
+      expect(
+        result.ok,
+        witness.eventId + '/' + witness.choiceId + ' -> ' + witness.outcomeId + ': ' + (result.reason ?? 'no reason'),
+      ).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(authored);
+  });
+});
+
