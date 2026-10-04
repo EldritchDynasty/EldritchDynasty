@@ -4,13 +4,14 @@ import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
 import type { Rng } from '../rng.js';
-import { resolveSlots } from './slots.js';
+import { resolveSlots, type SlotFill } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
 import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
 import { commitOutcome } from './decisions.js';
 import { pickOutcome } from './effects.js';
 import { evalCondition } from './conditions.js';
+import type { ArcStep } from './arcs.js';
 
 /**
  * WHICH BRANCHES A RUN ACTUALLY REACHES.
@@ -143,6 +144,14 @@ export interface OutcomeWitnessRequest {
    * left alone: its witness world/cast must clear the requested band honestly.
    */
   targetCheckedOutcome?: boolean;
+  /**
+   * Supply the exact production arc step for an arc-node event.
+   *
+   * The witness reuses the step's resolved fill and arc scope and passes the
+   * same step into commitOutcome, so success proves the real arc history /
+   * successor path rather than treating the node like an ambient event.
+   */
+  arcStep?: ArcStep;
 }
 
 export interface OutcomeWitnessResult {
@@ -225,22 +234,45 @@ export function executeOutcomeWitness(
   e: EventTemplate,
   request: OutcomeWitnessRequest,
 ): OutcomeWitnessResult {
-  // Arc nodes need an ArcStep so commitOutcome can advance the real instance.
-  // Pretending an ambient commit proves an arc path would be worse than having
-  // no witness; #442 will give arcs their own fixture layer.
-  if (e.arc) return { ok: false, reason: 'arc event requires an arc-step witness' };
-  if (!evalCondition(e.conditions, ctx)) {
+  const arcStep = request.arcStep;
+  if (e.arc) {
+    if (!arcStep) return { ok: false, reason: 'arc event requires an arc-step witness' };
+    if (
+      String(arcStep.instance.arc) !== String(e.arc.of)
+      || String(arcStep.node.id) !== String(e.arc.node)
+      || String(arcStep.node.event) !== String(e.id)
+    ) {
+      return { ok: false, reason: `arc step does not match event '${e.id}'` };
+    }
+  } else if (arcStep) {
+    return { ok: false, reason: 'ambient event cannot use an arc-step witness' };
+  }
+
+  if (!evalCondition(e.conditions, ctx, { arc: arcStep?.instance })) {
     return { ok: false, reason: 'event conditions are not satisfied by this witness world' };
   }
 
-  const slots = resolveSlots(e, ctx, request.rng);
-  if (!slots.ok) {
-    return { ok: false, reason: `slot '${slots.missing ?? '?'}' cannot be filled` };
+  let fill: SlotFill;
+  let playerCast: string[];
+  if (arcStep) {
+    // dueArcSteps already ran the production binding repair and slot resolver.
+    // Re-resolving here could cast different people and would no longer prove
+    // the same arc step that the game actually offered.
+    fill = arcStep.fill;
+    playerCast = arcStep.playerCast;
+  } else {
+    const slots = resolveSlots(e, ctx, request.rng);
+    if (!slots.ok) {
+      return { ok: false, reason: `slot '${slots.missing ?? '?'}' cannot be filled` };
+    }
+    fill = slots.fill;
+    playerCast = slots.playerCast;
   }
-  if (slots.playerCast.length) {
+
+  if (playerCast.length) {
     return {
       ok: false,
-      reason: `player cast required for ${slots.playerCast.join(', ')}; player-cast witnesses need a production docket fixture`,
+      reason: `player cast required for ${playerCast.join(', ')}; player-cast witnesses need a production docket fixture`,
     };
   }
 
@@ -267,7 +299,7 @@ export function executeOutcomeWitness(
       choice = e.interaction.choices.find((c) => c.id === request.choiceId);
       if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
     } else {
-      const decided = decideBranch(ctx, e, slots.fill, request.rng, { castReady: true });
+      const decided = decideBranch(ctx, e, fill, request.rng, { castReady: true, scope: { arc: arcStep?.instance } });
       choice = decided.choice;
       if (!choice) return { ok: false, reason: decided.why };
       if (request.choiceId !== undefined && request.choiceId !== choice.id) {
@@ -278,7 +310,7 @@ export function executeOutcomeWitness(
       }
     }
 
-    const availability = choiceAvailability(choice, ctx, slots.fill, e);
+    const availability = choiceAvailability(choice, ctx, fill, e);
     if (!availability.available) {
       return { ok: false, reason: availability.blockedBy ?? `choice '${choice.id}' is unavailable` };
     }
@@ -300,7 +332,7 @@ export function executeOutcomeWitness(
       }
       outcomeRng = targetCheckedOutcomeRng(outcomeRng, ctx, check, request.expectedOutcomeId);
     }
-    outcome = resolveChoiceOutcome(ctx, e, choice, slots.fill, outcomeRng);
+    outcome = resolveChoiceOutcome(ctx, e, choice, fill, outcomeRng);
   }
 
   if (outcome.id !== request.expectedOutcomeId) {
@@ -311,7 +343,7 @@ export function executeOutcomeWitness(
   }
 
   const before = ctx.world.decisionLog.length;
-  commitOutcome(ctx, e, outcome, slots.fill, choiceId, request.rng);
+  commitOutcome(ctx, e, outcome, fill, choiceId, request.rng, arcStep);
   const logged = ctx.world.decisionLog[ctx.world.decisionLog.length - 1];
   const key = outcomeKey(String(e.id), choiceId, outcome.id);
   if (
