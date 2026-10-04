@@ -75,7 +75,7 @@ describe('deterministic outcome execution witnesses', () => {
       { ...structuredClone(original), id: targetId, weight: 1 },
     ];
 
-    const naturalCtx = fixture(1111);
+    const naturalCtx = fixture(1101);
     const natural = executeOutcomeWitness(naturalCtx, event, {
       expectedOutcomeId: targetId,
       rng: alwaysFirstWeighted(11),
@@ -83,7 +83,7 @@ describe('deterministic outcome execution witnesses', () => {
     expect(natural.ok).toBe(false);
     expect(natural.reason).toContain(`resolved '${naturalId}', not '${targetId}'`);
 
-    const targetedCtx = fixture(1111);
+    const targetedCtx = fixture(1101);
     const targeted = executeOutcomeWitness(targetedCtx, event, {
       expectedOutcomeId: targetId,
       rng: alwaysFirstWeighted(11),
@@ -110,7 +110,7 @@ describe('deterministic outcome execution witnesses', () => {
       { ...structuredClone(original), id: targetId, weight: 0 },
     ];
 
-    const ctx = fixture(1112);
+    const ctx = fixture(1101);
     const result = executeOutcomeWitness(ctx, event, {
       expectedOutcomeId: targetId,
       rng: alwaysFirstWeighted(12),
