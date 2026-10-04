@@ -2025,6 +2025,120 @@ describe('authored Assize-gated outcome witnesses', () => {
   });
 });
 
+
+describe('authored simple ascension-gated outcome witnesses', () => {
+  function ascensionFixture(seed: number, event: (typeof content.events)[number], rung: 'none' | 'adept') {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+    ctx.world.ascension.rung = rung;
+    ctx.world.ascension.best = rung;
+
+    const ascendant = event.slots.ASCENDANT;
+    for (const filter of ascendant?.filters ?? []) {
+      if (!('trait' in filter)) continue;
+      for (const person of ctx.world.people.living()) {
+        if (!phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress) continue;
+        if (filter.has) person.traits.add(asId(filter.trait));
+        else person.traits.delete(asId(filter.trait));
+      }
+    }
+
+    return ctx;
+  }
+
+  it('crosses the authored Adept gate, resolves the real foremost cast and executes every ladder outcome', () => {
+    const cases = content.events.filter((event) => {
+      const condition = event.conditions;
+      const slotIds = Object.keys(event.slots);
+      const ascendant = event.slots.ASCENDANT;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('ascension' in condition)
+        || condition.ascension.atLeast !== 'adept'
+        || condition.ascension.best === true
+        || slotIds.length !== 1
+        || slotIds[0] !== 'ASCENDANT'
+        || ascendant?.role !== 'foremost'
+        || ascendant.castBy !== 'engine'
+        || ascendant.filters.some((filter) => !('trait' in filter))
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) return false;
+      return true;
+    });
+
+    expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'past_what_the_book_says',
+      'the_race_silted_through',
+      'what_he_wrote_past_it',
+      'what_the_province_asks_to_see',
+      'wick_asks_for_him_by_name',
+    ]);
+
+    const declared = cases.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 7600;
+
+    for (const event of cases) {
+      const blocked = ascensionFixture(seed, event, 'none');
+      expect(
+        evalCondition(event.conditions, blocked),
+        String(event.id) + ' should be blocked below Adept',
+      ).toBe(false);
+
+      const selection = ascensionFixture(seed, event, 'adept');
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should satisfy ascension >= adept',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored foremost cast').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, String(event.id) + ' should not require a player cast').toHaveLength(0);
+      expect(typeof slots.fill.ASCENDANT, String(event.id) + ' should cast one foremost expresser').toBe('string');
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once the ladder gate and trait filter are satisfied',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = ascensionFixture(seed, event, 'adept');
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
