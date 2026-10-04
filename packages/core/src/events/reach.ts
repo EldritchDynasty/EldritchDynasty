@@ -3,6 +3,13 @@ import { indexContent } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
+import type { Rng } from '../rng.js';
+import { resolveSlots, type SlotFill } from './slots.js';
+import { decideBranch } from './deciders.js';
+import { choiceAvailability } from './availability.js';
+import { resolveChoiceOutcome } from './checks.js';
+import { commitOutcome } from './decisions.js';
+import { pickOutcome } from './effects.js';
 
 /**
  * WHICH BRANCHES A RUN ACTUALLY REACHES.
@@ -91,6 +98,117 @@ export function declaredOutcomes(source: ContentBundle | Content): Map<string, D
     else for (const c of e.interaction.choices) add(e, c.id, c.outcomes);
   }
   return out;
+}
+
+/**
+ * ONE DETERMINISTIC EXECUTION WITNESS, THROUGH THE REAL EVENT PIPELINE (#442).
+ *
+ * This is deliberately a mechanism seam, not the final gate. A caller has to
+ * construct a world and choose an RNG that make the named branch resolve. The
+ * important property is what happens after that setup: slots are resolved by
+ * the production caster, automatic branches by the production decider, choice
+ * requirements by the production availability check, outcomes by the production
+ * resolver, and success is recorded only after the production commit path wrote
+ * the exact (event, choice, outcome) triple to the decision log.
+ *
+ * The old sampled outcome-reach gate remains blocking until #442 supplies a
+ * witness setup for every authored mechanism. Keeping this helper separate from
+ * the sampled tally lets that migration happen one mechanism at a time without
+ * teaching tests a second definition of event semantics.
+ */
+export interface OutcomeWitnessRequest {
+  expectedOutcomeId: string;
+  /** Required for player-decided interactions; for automatic deciders this is an assertion. */
+  choiceId?: string;
+  /** Pre-cast people, including any slots whose cast belongs to the player. */
+  preset?: SlotFill;
+  rng: Rng;
+}
+
+export interface OutcomeWitnessResult {
+  ok: boolean;
+  key?: string;
+  reason?: string;
+}
+
+export function executeOutcomeWitness(
+  ctx: SimCtx,
+  e: EventTemplate,
+  request: OutcomeWitnessRequest,
+): OutcomeWitnessResult {
+  // Arc nodes need an ArcStep so commitOutcome can advance the real instance.
+  // Pretending an ambient commit proves an arc path would be worse than having
+  // no witness; #442 will give arcs their own fixture layer.
+  if (e.arc) return { ok: false, reason: 'arc event requires an arc-step witness' };
+
+  const slots = resolveSlots(e, ctx, request.rng, request.preset ?? {});
+  if (!slots.ok) {
+    return { ok: false, reason: `slot '${slots.missing ?? '?'}' cannot be filled` };
+  }
+  if (slots.playerCast.length) {
+    return {
+      ok: false,
+      reason: `player cast required for ${slots.playerCast.join(', ')}; provide those slots in preset`,
+    };
+  }
+
+  let choiceId: string | undefined;
+  let outcome;
+
+  if (e.interaction.kind === 'narration') {
+    if (request.choiceId !== undefined) {
+      return { ok: false, reason: 'narration has no choice' };
+    }
+    outcome = pickOutcome(e.interaction.outcomes, request.rng, ctx, e);
+  } else {
+    let choice;
+    if (e.interaction.decidedBy === 'player') {
+      if (request.choiceId === undefined) {
+        return { ok: false, reason: 'player-decided witness requires choiceId' };
+      }
+      choice = e.interaction.choices.find((c) => c.id === request.choiceId);
+      if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
+    } else {
+      const decided = decideBranch(ctx, e, slots.fill, request.rng, { castReady: true });
+      choice = decided.choice;
+      if (!choice) return { ok: false, reason: decided.why };
+      if (request.choiceId !== undefined && request.choiceId !== choice.id) {
+        return {
+          ok: false,
+          reason: `automatic decider chose '${choice.id}', not '${request.choiceId}'`,
+        };
+      }
+    }
+
+    const availability = choiceAvailability(choice, ctx, slots.fill, e);
+    if (!availability.available) {
+      return { ok: false, reason: availability.blockedBy ?? `choice '${choice.id}' is unavailable` };
+    }
+
+    choiceId = choice.id;
+    outcome = resolveChoiceOutcome(ctx, e, choice, slots.fill, request.rng);
+  }
+
+  if (outcome.id !== request.expectedOutcomeId) {
+    return {
+      ok: false,
+      reason: `resolved '${outcome.id}', not '${request.expectedOutcomeId}'`,
+    };
+  }
+
+  const before = ctx.world.decisionLog.length;
+  commitOutcome(ctx, e, outcome, slots.fill, choiceId, request.rng);
+  const logged = ctx.world.decisionLog[ctx.world.decisionLog.length - 1];
+  const key = outcomeKey(String(e.id), choiceId, outcome.id);
+  if (
+    ctx.world.decisionLog.length !== before + 1
+    || logged?.kind !== 'outcome'
+    || outcomeKey(logged.event, logged.choiceId, logged.outcomeId) !== key
+  ) {
+    return { ok: false, reason: `commit path did not record ${key}` };
+  }
+
+  return { ok: true, key };
 }
 
 /**
