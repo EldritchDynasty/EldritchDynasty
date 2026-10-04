@@ -453,12 +453,12 @@ describe('deterministic outcome execution witnesses', () => {
         || !evalCondition(sourceEvent.conditions, search)
       ) continue;
 
-      const target = sourceEvent.interaction.choices.find((candidate) => (
+      const deterministicChoices = sourceEvent.interaction.choices.filter((candidate) => (
         !candidate.check
         && candidate.requires.length === 0
         && candidate.outcomes.length === 1
       ));
-      const fallback = sourceEvent.interaction.choices.find((candidate) => candidate.id !== target?.id);
+      const [target, fallback] = deterministicChoices;
       if (!target || !fallback) continue;
 
       const original = resolveSlots(sourceEvent, search, makeRng(7));
