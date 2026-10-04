@@ -324,9 +324,8 @@ export function finishLanding({ fromQueue, target, branch, push }) {
       ok: true,
       state: 'preflight-green',
       message:
-        `green on ${target.slice(0, 7)} — enqueue it: open a PR from \`${branch}\` and comment \`/land\` ` +
-        '(or `/land --no-issue-check`). The session shell cannot perform that GitHub action; ' +
-        'use the GitHub connector/tooling.',
+        `green on ${target.slice(0, 7)} — enqueue it: open or keep a ready PR from \`${branch}\`, ` +
+        'then choose **Merge when ready** in GitHub. The native merge queue owns the integration check.',
     };
   }
 
@@ -651,7 +650,7 @@ function status() {
     if (last?.step === 'preflight-green') {
       say(`last landing state: preflight-green on ${String(last.target ?? '').slice(0, 7)}.`);
       if (last.branch) say(`  branch ${last.branch} was verified but was NOT pushed to main.`);
-      say('  enqueue it with a PR plus /land (or /land --no-issue-check).');
+      say("  enqueue it with a ready PR and GitHub's Merge when ready action.");
       return 0;
     }
     say('no landing is running, and none left a mark on this checkout.');
