@@ -1127,7 +1127,7 @@ describe('authored direct player-cast outcome witnesses', () => {
       throw new Error(`${eventId} direct player-cast fixture changed interaction`);
     }
 
-    const cast = eventId === 'the_unmaking'
+    const cast: SlotFill = eventId === 'the_unmaking'
       ? { ASCENDANT: selected.id }
       : { VESSEL: vessel.id };
 
