@@ -799,19 +799,7 @@ jobs:
   #
   # A newly-added issue_comment workflow cannot hear its own PR: GitHub only
   # listens for repository events through workflow files already on the default
-  # branch. A PR carrying this marker therefore calls the SAME reusable workflow
-  # from the PR event that already reached this file. After this feature lands,
-  # ordinary connector sessions use the /land comment and never need the marker.
-  #
-  # The implementation lives in remote-land.yml; this is deliberately only a
-  # transport. Referencing a same-repository reusable workflow without @ref uses
-  # the same commit as this caller, so the bootstrap exercises exactly the file
-  # proposed by the PR rather than the copy currently on main.
-  remote-land-bootstrap:
-    name: remote landing transport
-    if: >-
-      github.event_name == 'pull_request'
-      && github.event.pull_request.draft == false
+  # branch. A PR carrying this marker therefore calls the SAME reusable workflow&& github.event.pull_request.draft == false
       && github.event.pull_request.head.repo.full_name == github.repository
       && contains(github.event.pull_request.body || '', '<!-- remote-land -->')
     permissions:
