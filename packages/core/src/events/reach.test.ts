@@ -5,6 +5,7 @@ import { makeRng } from '../rng.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { resolveSlots } from './slots.js';
 import { executeOutcomeWitness } from './reach.js';
+import { evalCondition } from './conditions.js';
 
 const content = indexContent(loadContent());
 
@@ -14,7 +15,7 @@ function singleOutcomeNarration() {
     for (const family of TEST_FAMILIES) {
       const ctx = family.build(content);
       const slots = resolveSlots(event, ctx, makeRng(1));
-      if (slots.ok && slots.playerCast.length === 0) return { event, family };
+      if (evalCondition(event.conditions, ctx) && slots.ok && slots.playerCast.length === 0) return { event, family };
     }
   }
   throw new Error('fixture corpus has no fillable single-outcome narration');
@@ -60,6 +61,7 @@ describe('deterministic outcome execution witnesses', () => {
 
       for (const family of TEST_FAMILIES) {
         const ctx = family.build(content);
+        if (!evalCondition(event.conditions, ctx)) continue;
         const before = ctx.world.decisionLog.length;
         const result = executeOutcomeWitness(ctx, event, {
           choiceId: choice.id,
