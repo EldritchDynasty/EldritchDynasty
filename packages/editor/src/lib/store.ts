@@ -182,6 +182,37 @@ export function stageProseVariant(
   return store.bundle.proseVariants.find((candidate) => candidate.address === address);
 }
 
+/**
+ * Clearing an optional counterpart means "not authored yet", not an authored
+ * empty string (which ProseVariantS rejects). Remove it from both live bundle
+ * and source document so the next reload stays schema-valid and the migration
+ * worklist can report the address missing again.
+ */
+export function removeProseVariant(path: string, address: string): boolean {
+  const file = files.get(path);
+  if (!file || !isWritableContentPath(path)) return false;
+
+  const liveIndex = store.bundle.proseVariants.findIndex((variant) => variant.address === address);
+  if (liveIndex < 0) return false;
+
+  const seq = file.doc.get('proseVariants', true) as { items?: unknown[] } | undefined;
+  if (!seq?.items) return false;
+
+  let sourceIndex = -1;
+  for (let i = 0; i < seq.items.length; i++) {
+    if (file.doc.getIn(['proseVariants', i, 'address']) === address) {
+      sourceIndex = i;
+      break;
+    }
+  }
+  if (sourceIndex < 0) return false;
+
+  store.bundle.proseVariants.splice(liveIndex, 1);
+  file.doc.deleteIn(['proseVariants', sourceIndex]);
+  store.dirty.add(path);
+  return true;
+}
+
 /** The text a save WOULD write, without writing it — what the diff view (issue #21) renders. */
 export function pendingText(collectionKey: string, id: string): { path: string; before: string; after: string } | undefined {
   const located = locate(collectionKey, id);
