@@ -1658,6 +1658,206 @@ describe('authored simple flag-gated outcome witnesses', () => {
   });
 });
 
+
+describe('authored cadet-state outcome witnesses', () => {
+  type CadetGate = {
+    generation?: number;
+    grievance?: number;
+    flag?: { name: string; passing: boolean; blocked: boolean };
+  };
+
+  function gateOf(condition: NonNullable<(typeof content.events)[number]['conditions']>): CadetGate | undefined {
+    if (!('all' in condition)) return undefined;
+
+    let hasBranchFloor = false;
+    const gate: CadetGate = {};
+    for (const leaf of condition.all) {
+      if ('cadetBranches' in leaf) {
+        if (leaf.cadetBranches.op !== 'gte' || leaf.cadetBranches.value !== 1) return undefined;
+        hasBranchFloor = true;
+        continue;
+      }
+      if ('branchGrievance' in leaf) {
+        if (leaf.branchGrievance.op !== 'gte') return undefined;
+        gate.grievance = leaf.branchGrievance.value;
+        continue;
+      }
+      if ('generation' in leaf) {
+        if (leaf.generation.op !== 'gte') return undefined;
+        gate.generation = leaf.generation.value;
+        continue;
+      }
+      if ('not' in leaf && 'flag' in leaf.not) {
+        const blocked = leaf.not.is !== false;
+        gate.flag = { name: leaf.not.flag, passing: !blocked, blocked };
+        continue;
+      }
+      return undefined;
+    }
+    return hasBranchFloor ? gate : undefined;
+  }
+
+  function cadetFixture(
+    seed: number,
+    event: (typeof content.events)[number],
+    gate: CadetGate,
+    options: { withBranch?: boolean; grievance?: number; generation?: number; flag?: boolean } = {},
+  ) {
+    const ctx = fixture(seed);
+    ctx.world.generation = options.generation ?? Math.max(
+      gate.generation ?? ctx.world.generation,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+    if (gate.flag) ctx.world.flags.set(gate.flag.name, options.flag ?? gate.flag.passing);
+
+    if (options.withBranch === false) return ctx;
+
+    const branchId = 'witness_cadet_' + seed;
+    const cousin = place(ctx, {
+      sex: 'male',
+      age: 40,
+      name: 'Witness Cadet ' + seed,
+      branch: branchId,
+    });
+    const membership = cousin.membership.find((entry) => entry.to === undefined);
+    if (!membership) throw new Error('cadet witness has no current house membership');
+    membership.kind = 'cadet';
+    membership.branch = branchId;
+
+    ctx.world.branches.set(branchId, {
+      id: asId(branchId),
+      name: cousin.name + "'s line",
+      house: asId(ctx.world.playerHouse),
+      founder: cousin.id,
+      splitFrom: 'main',
+      foundedYear: ctx.world.year - 40,
+      speaker: cousin.id,
+      grievance: options.grievance ?? gate.grievance ?? 0,
+    });
+    return ctx;
+  }
+
+  it('crosses the authored cadet-branch state gates before real cadet casting, selection and commit', () => {
+    const cases = content.events.flatMap((event) => {
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !event.conditions
+      ) return [];
+      const gate = gateOf(event.conditions);
+      if (!gate) return [];
+
+      const slots = Object.values(event.slots);
+      if (
+        slots.length !== 2
+        || !slots.some((slot) => slot.role === 'head')
+        || !slots.some((slot) => slot.role === 'cadet')
+        || slots.some((slot) => (
+          slot.castBy !== 'engine'
+          || !['head', 'cadet'].includes(slot.role)
+          || slot.filters.some((filter) => (
+            Object.keys(filter).some((key) => !['age', 'status'].includes(key))
+          ))
+        ))
+      ) return [];
+
+      if (event.interaction.kind === 'narration' || event.interaction.decidedBy !== 'player') return [];
+      if (event.interaction.choices.some((choice) => choice.requires.length || choice.check !== undefined)) return [];
+      return [{ event, gate }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
+      'the_accounts_of_the_smaller_house',
+      'the_cousin_who_woke_four_miles_off',
+    ]);
+
+    const declared = cases.flatMap(({ event }) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 8600;
+
+    for (const { event, gate } of cases) {
+      const noBranch = cadetFixture(seed, event, gate, { withBranch: false });
+      expect(
+        evalCondition(event.conditions, noBranch),
+        String(event.id) + ' should be blocked with no active cadet branch',
+      ).toBe(false);
+
+      if (gate.grievance !== undefined) {
+        const lowGrievance = cadetFixture(seed, event, gate, {
+          grievance: gate.grievance - 1,
+        });
+        expect(
+          evalCondition(event.conditions, lowGrievance),
+          String(event.id) + ' should be blocked below branch grievance ' + gate.grievance,
+        ).toBe(false);
+      }
+
+      if (gate.generation !== undefined) {
+        const early = cadetFixture(seed, event, gate, {
+          generation: gate.generation - 1,
+        });
+        expect(
+          evalCondition(event.conditions, early),
+          String(event.id) + ' should be blocked before generation >= ' + gate.generation,
+        ).toBe(false);
+      }
+
+      if (gate.flag) {
+        const blockedFlag = cadetFixture(seed, event, gate, { flag: gate.flag.blocked });
+        expect(
+          evalCondition(event.conditions, blockedFlag),
+          String(event.id) + ' should be blocked when ' + gate.flag.name + '=' + gate.flag.blocked,
+        ).toBe(false);
+      }
+
+      const selection = cadetFixture(seed, event, gate);
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should satisfy its cadet gate',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve the real Head/cadet cast').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, String(event.id) + ' should not require player casting').toHaveLength(0);
+      const cousinId = slots.fill.COUSIN;
+      expect(typeof cousinId).toBe('string');
+      const cousin = typeof cousinId === 'string' ? selection.world.people.get(cousinId) : undefined;
+      expect(cousin?.membership.find((entry) => entry.to === undefined)?.kind).toBe('cadet');
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once its cadet state and cast are valid',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = cadetFixture(seed, event, gate);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored Assize-gated outcome witnesses', () => {
   function assizeFixture(seed: number, pressure: number) {
     const ctx = testWorld(content, seed);
