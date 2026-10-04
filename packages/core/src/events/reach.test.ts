@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, type ActiveAge } from '@ed/schema';
+import { asId, indexContent, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
@@ -8,7 +8,9 @@ import { executeOutcomeWitness, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
-import { TEST_FAMILIES } from '../tools/testFamilies.js';
+import { genomeOf, phenotypeOf } from '../people/factory.js';
+import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
+import { grantHeirloom } from '../people/heirlooms.js';
 
 const content = indexContent(loadContent());
 
@@ -907,16 +909,63 @@ describe('authored choice-requirement witnesses', () => {
 
 describe('authored weighted player-cast outcome witnesses', () => {
   function unmakingFixture() {
-    const family = TEST_FAMILIES.find((candidate) => candidate.id === 'demigod_stagnant');
-    if (!family) throw new Error('demigod-stagnant test family is missing');
-    const ctx = family.build(content);
+    const ctx = testWorld(content, 3599);
+    const donor = ctx.world.people.living()
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    if (!donor) throw new Error('Unmaking fixture has no founding expresser genome');
+
+    const elder = place(ctx, {
+      sex: 'male',
+      age: 70,
+      name: 'Witness Unmaking Elder',
+      castSlots: ['head'],
+    });
+    elder.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    elder.phenotype = undefined;
+    elder.awakening.awakened = true;
+    elder.acquired[ELDRITCH_GIFT] = 26;
+    elder.acquired.mind = 90;
+    elder.madness = 60;
+    elder.rites.push('vessel', 'great_rite');
+    elder.traits.add(asId('asked_for_in_wick'));
+    elder.traits.add(asId('went_past_the_book'));
+    const elderBooks = new Set([
+      'lesser_workings_of_fluid', 'lesser_workings_of_thermal', 'lesser_workings_of_aero',
+      'lesser_workings_of_terra', 'lesser_workings_of_life', 'lesser_workings_of_death',
+      'the_marrow_codex',
+    ]);
+    for (const book of content.spellbooks) {
+      if (elderBooks.has(String(book.id))) elder.spellsKnown.push(book.id);
+    }
+    grantHeirloom(ctx, 'the_ninefold_seal');
+    grantHeirloom(ctx, 'the_ring');
+    grantHeirloom(ctx, 'the_rod');
+
+    const ascendant = place(ctx, {
+      sex: 'male',
+      age: 40,
+      name: 'Witness Unmaking Descendant',
+    });
+    ctx.world.people.setParents(ascendant.id, { father: elder.id });
+    ascendant.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    ascendant.phenotype = undefined;
+    ascendant.awakening.awakened = true;
+    ascendant.acquired[ELDRITCH_GIFT] = 60;
+    ascendant.acquired[ELDRITCH_REACH] = 6;
+    ascendant.acquired.mind = 200;
+    for (const book of content.spellbooks.slice(0, 8)) ascendant.spellsKnown.push(book.id);
+
+    ctx.world.respect = 'eminent';
+    // Authored event conditions read the annual house measurement, while slot
+    // filters below read live standingOf(). This fixture intentionally sets
+    // both sides of that production distinction without playing a year.
+    ctx.world.ascension.rung = 'hierophant';
+    ctx.world.ascension.best = 'hierophant';
+
     const event = content.event('the_unmaking');
     if (!event || event.interaction.kind === 'narration') {
       throw new Error('Unmaking fixture changed interaction');
     }
-    const ascendant = ctx.world.people.living()
-      .find((person) => person.name === 'A Son Who Outgrew Him');
-    if (!ascendant) throw new Error('Unmaking fixture is missing its ascendant');
     return { ctx, event, ascendant };
   }
 
