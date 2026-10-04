@@ -172,6 +172,37 @@ describe('the party the player names decides', () => {
       .toBe('refuse');
   });
 
+  it('does not let the party check bypass a branch requirement', () => {
+    const ctx = testWorld(bundle);
+    const strong = place(ctx, { sex: 'male', age: 30 });
+    setAcquired(strong, 'strength', 400);
+    const e = partyEvent();
+    if (e.interaction.kind === 'narration') throw new Error('expected a choice event');
+    e.interaction.choices[0]!.requires = [
+      { slot: 'COMPANION', attr: 'strength', op: 'gte', value: 10_000 },
+    ];
+
+    const d = decideBranch(ctx, e, { COMPANION: strong.id }, testRng(), { castReady: true });
+
+    expect(d.choice?.id).toBe('refuse');
+    expect(d.why).toContain('unavailable');
+  });
+
+  it('still resolves if every party-decided branch is unavailable', () => {
+    const ctx = testWorld(bundle);
+    const p = place(ctx, { sex: 'male', age: 30 });
+    const e = partyEvent();
+    if (e.interaction.kind === 'narration') throw new Error('expected a choice event');
+    for (const choice of e.interaction.choices) {
+      choice.requires = [{ slot: 'COMPANION', attr: 'strength', op: 'gte', value: 10_000 }];
+    }
+
+    const d = decideBranch(ctx, e, { COMPANION: p.id }, testRng(), { castReady: true });
+
+    expect(d.asks).toBe(false);
+    expect(d.choice).toBeDefined();
+  });
+
   it('resolves rather than stalling when the check names nothing real', () => {
     const ctx = testWorld(bundle);
     const p = place(ctx, { sex: 'male', age: 30 });
