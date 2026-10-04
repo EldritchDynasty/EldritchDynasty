@@ -213,9 +213,17 @@ describe('deterministic outcome execution witnesses', () => {
       rng: alwaysFirstWeighted(31),
       targetChanceChoice: true,
     });
-    expect(zero.ok).toBe(false);
-    expect(zero.reason).toContain(`automatic decider chose '${naturalChoice}'`);
-    expect(zeroCtx.world.decisionLog).toHaveLength(0);
+    // Production branch weighting deliberately floors an empty outcome sum
+    // to 1 so every decision can still resolve. The targeting adapter must
+    // follow that effective weight instead of inventing a stricter rule.
+    expect(zero.ok, zero.reason).toBe(true);
+    expect(zero.key).toBe(`${event.id}|${targetChoice}|${targetOutcome}`);
+    expect(zeroCtx.world.decisionLog.at(-1)).toMatchObject({
+      kind: 'outcome',
+      event: event.id,
+      choiceId: targetChoice,
+      outcomeId: targetOutcome,
+    });
   });
 
   it('targets a randomised check band through the production evaluator', () => {
@@ -522,12 +530,12 @@ describe('deterministic outcome execution witnesses', () => {
         || !evalCondition(sourceEvent.conditions, search)
       ) continue;
 
-      const target = sourceEvent.interaction.choices.find((candidate) => (
+      const deterministicChoices = sourceEvent.interaction.choices.filter((candidate) => (
         !candidate.check
         && candidate.requires.length === 0
         && candidate.outcomes.length === 1
       ));
-      const fallback = sourceEvent.interaction.choices.find((candidate) => candidate.id !== target?.id);
+      const [target, fallback] = deterministicChoices;
       if (!target || !fallback) continue;
 
       const original = resolveSlots(sourceEvent, search, makeRng(7));
