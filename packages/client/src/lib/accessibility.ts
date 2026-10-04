@@ -1,3 +1,5 @@
+import type { ProseMode } from '@ed/schema';
+
 /** Reading choices belong to the reader, not to a saved world. */
 export type TextScale = 'standard' | 'large' | 'largest';
 export type ReadingFont = 'book' | 'readable';
@@ -5,6 +7,8 @@ export type ReadingFont = 'book' | 'readable';
 export interface AccessibilityPreferences {
   textScale: TextScale;
   readingFont: ReadingFont;
+  /** Which authored wording future narrative surfaces should use. */
+  proseMode: ProseMode;
   /** Presentation only: never answers a decision or changes a saved world. */
   skipSeenProse: boolean;
   /** Presentation only: reader-controlled motion, never part of SavedGame. */
@@ -22,6 +26,7 @@ export const SEEN_PROSE_STORAGE_KEY = 'eldritch-dynasty:seen-prose';
 export const DEFAULT_ACCESSIBILITY: AccessibilityPreferences = {
   textScale: 'standard',
   readingFont: 'book',
+  proseMode: 'original',
   skipSeenProse: false,
   reduceMotion: false,
   showEverythingFromStart: null,
@@ -35,6 +40,10 @@ function isReadingFont(value: unknown): value is ReadingFont {
   return value === 'book' || value === 'readable';
 }
 
+function isProseMode(value: unknown): value is ProseMode {
+  return value === 'original' || value === 'plainenglish';
+}
+
 /** A bad or older preference must never stop the title screen from opening. */
 export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): AccessibilityPreferences {
   if (!storage) return { ...DEFAULT_ACCESSIBILITY };
@@ -42,6 +51,7 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
     const parsed = JSON.parse(storage.getItem(ACCESSIBILITY_STORAGE_KEY) ?? 'null') as {
       textScale?: unknown;
       readingFont?: unknown;
+      proseMode?: unknown;
       skipSeenProse?: unknown;
       reduceMotion?: unknown;
       showEverythingFromStart?: unknown;
@@ -49,6 +59,7 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
     return {
       textScale: isTextScale(parsed?.textScale) ? parsed.textScale : DEFAULT_ACCESSIBILITY.textScale,
       readingFont: isReadingFont(parsed?.readingFont) ? parsed.readingFont : DEFAULT_ACCESSIBILITY.readingFont,
+      proseMode: isProseMode(parsed?.proseMode) ? parsed.proseMode : DEFAULT_ACCESSIBILITY.proseMode,
       skipSeenProse: parsed?.skipSeenProse === true,
       reduceMotion: parsed?.reduceMotion === true,
       showEverythingFromStart: typeof parsed?.showEverythingFromStart === 'boolean'

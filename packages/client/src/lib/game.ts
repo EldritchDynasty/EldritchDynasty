@@ -1,5 +1,7 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
-import type { CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, RunLibrary } from '@ed/schema';
+import type {
+  CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
+} from '@ed/schema';
 import { appendLibraryRun, emptyRunLibrary, readRunLibrary } from '@ed/schema';
 import {
   CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
@@ -286,6 +288,8 @@ export interface GameActions {
   found(choice: FoundingChoice): FoundingResult;
   /** Leave the prologue. The thesis has been read; the years start now. */
   enter(): void;
+  /** Presentation only: select wording for material rendered from this point onward. */
+  setProseMode(mode: ProseMode): void;
   resume(): Promise<boolean>;
   load(slot: string): Promise<boolean>;
   listSaves(): Promise<SaveSummary[]>;
@@ -349,12 +353,23 @@ export interface GameActions {
   dismissChapter(): void;
 }
 
-export function createGame(source: ContentBundle | Content, platform: Platform = currentPlatform()): GameStore {
+export interface GameClientOptions {
+  /** Alternate authored wording supplied by composition; never part of SavedGame. */
+  proseVariants?: readonly ProseVariant[];
+}
+
+export function createGame(
+  source: ContentBundle | Content,
+  platform: Platform = currentPlatform(),
+  options: GameClientOptions = {},
+): GameStore {
   // `shallowRef`, because a `GameSession` owns the whole mutable world and
   // making that deeply reactive would have Vue walk every person in the house
   // on every year. Nothing renders off this object — everything renders off
   // the values `refresh` takes from it.
   const session = shallowRef<GameSession | null>(null);
+  /** Reader-local wording preference, carried across begin/resume within this store. */
+  const proseMode = ref<ProseMode>('original');
   const view = ref<SessionView | null>(null);
   const table = ref<TableView | null>(null);
   const land = ref<LandView | null>(null);
@@ -519,7 +534,14 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
   const actions: GameActions = {
     begin(seed, campaign = 'short') {
-      const begun = newGame(source, { seed, startYear: CAMPAIGNS[campaign].startYear, campaign, libraryRuns: library.value.runs });
+      const begun = newGame(source, {
+        seed,
+        startYear: CAMPAIGNS[campaign].startYear,
+        campaign,
+        libraryRuns: library.value.runs,
+        proseMode: proseMode.value,
+        proseVariants: options.proseVariants,
+      });
       // Catalogue availability belongs to GameSession, not Vue; route the read
       // through the same store seam as every other public session method.
       begun.ambitionOptions();
@@ -528,6 +550,11 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
 
     enter() {
       openingSeen.value = true;
+    },
+
+    setProseMode(mode) {
+      proseMode.value = mode;
+      session.value?.setProseMode(mode);
     },
 
     found(choice) {
@@ -917,7 +944,10 @@ export function createGame(source: ContentBundle | Content, platform: Platform =
   function loadSave(save: unknown | null, discardAutosave = false): boolean {
     if (!save) return false;
     try {
-      start(resumeGame(save, source));
+      start(resumeGame(save, source, {
+        proseMode: proseMode.value,
+        proseVariants: options.proseVariants,
+      }));
       return true;
     } catch {
       // A format that cannot be read is not a run we can safely continue. A

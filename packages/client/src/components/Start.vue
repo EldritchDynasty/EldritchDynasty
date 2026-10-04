@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
-import type { LibraryRun, RunLibrary } from '@ed/schema';
+import type { LibraryRun, ProseMode, RunLibrary } from '@ed/schema';
 import ReadingSettings from './ReadingSettings.vue';
 import type { ReadingFont, TextScale } from '../lib/accessibility';
 
@@ -13,12 +13,14 @@ const props = withDefaults(defineProps<{
   libraryReady?: boolean;
   textScale?: TextScale;
   readingFont?: ReadingFont;
+  proseMode?: ProseMode;
   skipSeenProse?: boolean;
   reduceMotion?: boolean;
 }>(), {
   libraryReady: true,
   textScale: 'standard',
   readingFont: 'book',
+  proseMode: 'original',
   skipSeenProse: false,
   reduceMotion: false,
 });
@@ -26,6 +28,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:textScale': [value: TextScale];
   'update:readingFont': [value: ReadingFont];
+  'update:proseMode': [value: ProseMode];
   'update:skipSeenProse': [value: boolean];
   'update:reduceMotion': [value: boolean];
 }>();
@@ -127,10 +130,12 @@ onMounted(() => { void refreshSaves(); });
       <ReadingSettings
         :text-scale="textScale"
         :reading-font="readingFont"
+        :prose-mode="proseMode"
         :skip-seen-prose="skipSeenProse"
         :reduce-motion="reduceMotion"
         @update:text-scale="emit('update:textScale', $event)"
         @update:reading-font="emit('update:readingFont', $event)"
+        @update:prose-mode="emit('update:proseMode', $event); actions.setProseMode($event)"
         @update:skip-seen-prose="emit('update:skipSeenProse', $event)"
         @update:reduce-motion="emit('update:reduceMotion', $event)"
       />
