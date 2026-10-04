@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent } from '@ed/schema';
+import { indexContent, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
-import { resolveSlots } from './slots.js';
+import { resolveSlots, type SlotFill } from './slots.js';
 import { executeOutcomeWitness, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
+import { queueChoice, resolveChoice } from './decisions.js';
 
 const content = indexContent(loadContent());
 
@@ -739,6 +740,159 @@ describe('authored state-decider outcome witnesses', () => {
         result.ok,
         witness.eventId + '/' + witness.choiceId + ' -> ' + witness.outcomeId + ': ' + (result.reason ?? 'no reason'),
       ).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(authored);
+  });
+});
+
+describe('authored choice-requirement witnesses', () => {
+  function setCastAttribute(
+    ctx: ReturnType<typeof fixture>,
+    fill: SlotFill,
+    slot: string,
+    attr: 'charm' | 'strength',
+    acquired: number,
+  ): void {
+    const id = fill[slot];
+    if (typeof id !== 'string') throw new Error('expected a single cast for ' + slot);
+    const person = ctx.world.people.get(id);
+    if (!person) throw new Error('missing cast person ' + id);
+    person.acquired[attr] = acquired;
+    if (person.phenotype) person.phenotype.dirty = true;
+  }
+
+  function activeAge(age: string, began: number): ActiveAge {
+    return { age, began, named: true, paid: { standing: false } };
+  }
+
+  function musterPosition(seed: number) {
+    const ctx = fixture(seed);
+    ctx.world.age.active = [activeAge('the_wars', ctx.world.year)];
+
+    const arc = content.arc('arc_the_muster');
+    if (!arc) throw new Error('muster arc fixture is missing');
+    const rng = makeRng(seed + 100);
+    const instance = startArc(arc, ctx, rng);
+    if (!instance) throw new Error('muster arc fixture did not start');
+
+    const leaders = dueArcSteps(ctx, rng).find((candidate) => candidate.instance.id === instance.id);
+    if (!leaders || leaders.node.id !== 'leaders') {
+      throw new Error('muster leaders entry did not become due');
+    }
+    const leadersEvent = content.event(leaders.node.event);
+    if (!leadersEvent || leadersEvent.interaction.kind === 'narration') {
+      throw new Error('muster leaders fixture changed interaction');
+    }
+
+    const officer = ctx.world.people.living().find((person) => person.name === 'Witness Older Man ' + seed);
+    const sent = ctx.world.people.living().find((person) => person.name === 'Witness Young Man ' + seed);
+    if (!officer || !sent) throw new Error('muster cast fixture is missing');
+
+    const pending = queueChoice(
+      ctx,
+      leadersEvent,
+      leadersEvent.body,
+      leaders.fill,
+      leaders.playerCast,
+      leaders,
+    );
+    const resolved = resolveChoice(ctx, pending.id, undefined, rng, {
+      OFFICER: officer.id,
+      SENT: [sent.id],
+    });
+    if (!resolved.ok) throw new Error(resolved.reason ?? 'muster leaders cast did not resolve');
+
+    for (let year = 0; year <= 5; year++) {
+      const position = dueArcSteps(ctx, rng).find((candidate) => (
+        candidate.instance.id === instance.id && candidate.node.id === 'position'
+      ));
+      if (position) {
+        const event = content.event(position.node.event);
+        if (!event || event.interaction.kind === 'narration') {
+          throw new Error('muster position fixture changed interaction');
+        }
+        if (position.playerCast.length) {
+          throw new Error('muster position unexpectedly still needs player cast');
+        }
+        return { ctx, event, position };
+      }
+      ctx.world.year += 1;
+    }
+
+    throw new Error('muster position did not become due');
+  }
+
+  it('executes every authored requires-gated outcome from an explicit satisfiable cast', () => {
+    const authored = content.events.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) => (
+        choice.requires.length
+          ? choice.outcomes.map((outcome) => outcomeKey(String(event.id), choice.id, outcome.id))
+          : []
+      ));
+    }).sort();
+
+    const witnessed: string[] = [];
+
+    for (const [index, witness] of [
+      { choiceId: 'buy_the_captaincy', outcomeId: 'bought_captaincy' },
+      { choiceId: 'buy_the_banner', outcomeId: 'bought_banner' },
+    ].entries()) {
+      const { ctx, event, position } = musterPosition(1400 + index);
+
+      setCastAttribute(ctx, position.fill, 'HEAD', 'charm', -10_000);
+      const blocked = executeOutcomeWitness(ctx, event, {
+        choiceId: witness.choiceId,
+        expectedOutcomeId: witness.outcomeId,
+        rng: makeRng(3400 + index),
+        arcStep: position,
+      });
+      expect(blocked.ok).toBe(false);
+      expect(ctx.world.decisionLog.at(-1)?.event).not.toBe(event.id);
+
+      setCastAttribute(ctx, position.fill, 'HEAD', 'charm', 10_000);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: witness.choiceId,
+        expectedOutcomeId: witness.outcomeId,
+        rng: makeRng(3400 + index),
+        arcStep: position,
+      });
+      expect(result.ok, result.reason).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    for (const [index, outcomeId] of ['struck', 'fell'].entries()) {
+      const ctx = fixture(1500 + index);
+      ctx.world.generation = 4;
+      const event = content.event('the_seal_questioned');
+      if (!event || event.interaction.kind === 'narration') {
+        throw new Error('seal requirement fixture changed interaction');
+      }
+      const slots = resolveSlots(event, ctx, makeRng(3500 + index));
+      if (!slots.ok || slots.playerCast.length) {
+        throw new Error('seal requirement fixture cannot resolve its cast');
+      }
+
+      setCastAttribute(ctx, slots.fill, 'HEAD', 'strength', -10_000);
+      const blocked = executeOutcomeWitness(ctx, event, {
+        choiceId: 'strike',
+        expectedOutcomeId: outcomeId,
+        rng: makeRng(3500 + index),
+        targetWeightedOutcome: true,
+      });
+      expect(blocked.ok).toBe(false);
+      expect(ctx.world.decisionLog).toHaveLength(0);
+
+      setCastAttribute(ctx, slots.fill, 'HEAD', 'strength', 10_000);
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: 'strike',
+        expectedOutcomeId: outcomeId,
+        rng: makeRng(3500 + index),
+        targetWeightedOutcome: true,
+      });
+      expect(result.ok, result.reason).toBe(true);
       if (result.key) witnessed.push(result.key);
     }
 
