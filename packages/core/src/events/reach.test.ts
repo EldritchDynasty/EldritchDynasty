@@ -182,6 +182,7 @@ describe('deterministic outcome execution witnesses', () => {
       if (!slotId) continue;
 
       const event = structuredClone(sourceEvent);
+      if (event.interaction.kind === 'narration') continue;
       event.slots[slotId]!.castBy = 'player';
       const ctx = fixture(1105);
       const choice = event.interaction.choices[0]!;
