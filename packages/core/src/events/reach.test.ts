@@ -6,6 +6,7 @@ import { place, testWorld } from '../testing.js';
 import { resolveSlots } from './slots.js';
 import { executeOutcomeWitness } from './reach.js';
 import { evalCondition } from './conditions.js';
+import { dueArcSteps, startArc } from './arcs.js';
 
 const content = indexContent(loadContent());
 
@@ -329,6 +330,47 @@ describe('deterministic outcome execution witnesses', () => {
     }
 
     throw new Error('fixture has no automatically decided branch reachable by the test world');
+  });
+
+  it('advances an arc through the production arc-step witness path', () => {
+    const ctx = fixture(1106);
+    const arc = content.arc('arc_the_formula_on_two_desks');
+    if (!arc) throw new Error('formula arc fixture is missing');
+
+    const rng = makeRng(6);
+    const instance = startArc(arc, ctx, rng);
+    if (!instance) throw new Error('formula arc fixture did not start');
+    const step = dueArcSteps(ctx, rng).find((candidate) => candidate.instance.id === instance.id);
+    if (!step) throw new Error('formula arc entry did not become due');
+    if (step.playerCast.length) throw new Error('formula arc fixture unexpectedly needs player cast');
+
+    const event = content.event(step.node.event);
+    if (!event || event.interaction.kind !== 'narration') {
+      throw new Error('formula arc entry fixture changed interaction');
+    }
+    const outcome = event.interaction.outcomes[0]!;
+
+    const missing = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: outcome.id,
+      rng: makeRng(7),
+    });
+    expect(missing.ok).toBe(false);
+    expect(missing.reason).toBe('arc event requires an arc-step witness');
+
+    const result = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: outcome.id,
+      rng,
+      arcStep: step,
+    });
+
+    expect(result.ok, result.reason).toBe(true);
+    expect(result.key).toBe(`${event.id}||${outcome.id}`);
+    expect(instance.history.at(-1)).toMatchObject({
+      node: step.node.id,
+      outcome: outcome.id,
+      year: ctx.world.year,
+    });
+    expect(instance.node).toBe('another_house');
   });
 
   it('refuses a player-cast slot until a production docket fixture supplies the cast', () => {
