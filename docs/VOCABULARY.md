@@ -20,6 +20,7 @@ compile error until it is handled.
 | `trait` | `target: Target` `trait: string` `op: add\|remove` |
 | `status` | `target: Target` `status: string` `cause: string?` |
 | `madness` | `target: Target` `delta: number` |
+| `awakening` | `target: Target` |
 | `heirloom` | `op: grant\|use\|transfer = "grant"` `heirloom: string` `to: string?` |
 | `spellbook` | `op: gain\|study\|lose\|degrade` `target: Target` `book: string` |
 | `career` | `target: Target` `op: assign\|leave = "assign"` `career: string?` |
@@ -250,6 +251,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
 | `slots/arc-bound` | A slot bound for a whole substory needs an arc, and an absent-body if it may go missing. |
 | `slots/counted` | A slot that casts a party may only be referenced as a party — `{ all: }` or `party_sum`. |
 | `madness/gate` | Madness may only be dealt to a target the slot has already gated to someone who can express. |
+| `awakening/gate` | Forced Awakening must target one explicitly unwoken slot; runtime separately verifies a carried Eldritch font. |
 | `refs/known` | Ages, arcs, careers, spellbooks, knowledge flags, tales and their about-events named by content must be things that exist. |
 | `tales/accounts` | CI gate 8. Every pair of an event's accounts must contradict on at least one field — differing bias is the minimum bar (issue #14). Two accounts that agree are one account written twice. |
 | `discrepancy/wiring` | A Discrepancy proved or buried without ever being created cannot be found; provableBy must name a real house. |

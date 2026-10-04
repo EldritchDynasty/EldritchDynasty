@@ -433,6 +433,67 @@ const madnessGate: ValidationRule = {
   },
 };
 
+/**
+ * Forced Awakening is deliberately less restrictive in the engine than
+ * Madness: a female carrier may wake, read and carry while remaining unable to
+ * express (§10–11). Authored content has no carrier-only filter yet, however,
+ * so it must use the stronger canExpress proof as well as role: unwoken; that
+ * keeps a mundane cast from turning this verb into a silent no-op. Runtime
+ * still checks carriedFont defensively before performing the transition.
+ */
+const awakeningGate: ValidationRule = {
+  id: 'awakening/gate',
+  about: 'Forced Awakening must target one explicitly unwoken slot; runtime separately verifies a carried Eldritch font.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      for (const o of allOutcomes(e)) {
+        for (const eff of o.effects) {
+          if (eff.kind !== 'awakening') continue;
+          const t = eff.target;
+          const named = typeof t === 'object' && 'slot' in t ? t.slot : undefined;
+          const at = `event:${e.id}/${o.id}`;
+          if (named === undefined) {
+            issues.push(err(
+              this.id,
+              at,
+              'forced Awakening must name one explicit slot with role unwoken — a household/party target can include people already awake',
+            ));
+            continue;
+          }
+          const slot = e.slots[named];
+          if (!slot) continue; // slots/references owns undeclared slot names.
+          if (slot.role !== 'unwoken') {
+            issues.push(err(
+              this.id,
+              at,
+              `forced Awakening targets slot '${named}' with role '${slot.role}'; use role 'unwoken' so the authored cast guarantees this is an early Awakening`,
+            ));
+            continue;
+          }
+          // The engine helper deliberately supports female carriers, but the
+          // current authoring vocabulary has no "carries a font" filter. Until
+          // it does, authored forcing scenes must use the stronger canExpress
+          // proof so a mundane unwoken person cannot be cast and make the
+          // effect silently do nothing. The shipped Drowning already has this
+          // filter because its Madness cost requires the same gate.
+          const provesFont = slot.filters.some(
+            (f) => 'canExpress' in f && f.canExpress === true,
+          );
+          if (!provesFont) {
+            issues.push(err(
+              this.id,
+              at,
+              `forced Awakening target '${named}' is unwoken but does not prove a carried font; add { canExpress: true } until a carrier-only filter exists`,
+            ));
+          }
+        }
+      }
+    }
+    return issues;
+  },
+};
+
 // ── The rites (concept §22, issue #43) ────────────────────────────────────
 
 /**
@@ -1936,6 +1997,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   arcBoundSlots,
   countedSlots,
   madnessGate,
+  awakeningGate,
   knownReferences,
   accountsContradict,
   discrepancyWiring,

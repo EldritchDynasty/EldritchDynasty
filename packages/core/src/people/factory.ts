@@ -359,6 +359,33 @@ function countLethal(g: Genome, table: LocusTable): number {
   return n;
 }
 
+function recordAwakening(p: Person, year: Year, forced: boolean): boolean {
+  if (p.awakening.awakened) return false;
+  p.awakening = {
+    awakened: true,
+    year,
+    age: year - p.born,
+    forced,
+    declaredMundane: false,
+  };
+  if (p.phenotype) p.phenotype.dirty = true;
+  return true;
+}
+
+/**
+ * Force the historical Awakening transition without rolling its natural clock.
+ *
+ * Eligibility is deliberately NOT decided here. Event effects first establish
+ * that the target actually carries a font; this function owns only the public
+ * forced path. Natural and forced Awakening share `recordAwakening`, so the
+ * state shape and phenotype invalidation cannot drift apart.
+ *
+ * Reapplying it is a no-op: the first Awakening is history.
+ */
+export function forceAwakening(p: Person, year: Year): boolean {
+  return recordAwakening(p, year, true);
+}
+
 /**
  * Awakening. Timing is driven by carried font in BOTH sexes, even though only
  * one of them will ever use it — which makes an early-waking daughter the one
@@ -404,11 +431,7 @@ export function rollAwakening(p: Person, year: Year, ctx: GeneticsCtx, rng: Rng)
   const spread = 7 + font * 0.2;
   const density = Math.exp(-((age - peak) ** 2) / (2 * spread ** 2));
   const chance = density * (0.03 + font * 0.004);
-  if (rng.bool(chance)) {
-    p.awakening = { awakened: true, year, age, forced: false, declaredMundane: false };
-    if (p.phenotype) p.phenotype.dirty = true;
-    return true;
-  }
+  if (rng.bool(chance)) return recordAwakening(p, year, false);
   return false;
 }
 

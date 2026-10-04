@@ -56,6 +56,7 @@ events:
                 He wakes on the ninth day and he is changed, and the change is
                 not the kind anyone had prepared a word for.
               effects:
+                - { kind: awakening, target: { slot: CHILD } }
                 - { kind: madness, target: { slot: CHILD }, delta: 14 }
                 - { kind: knowledge, op: grant, flag: knows_drowning_cost }
             - id: nothing
@@ -154,6 +155,7 @@ events:
             They pay the price again, the whole of it, two hundred years after
             it was first paid and written down by nobody.
           effects:
+            - { kind: awakening, target: { slot: CHILD } }
             - { kind: madness, target: { slot: CHILD }, delta: 22 }
             - { kind: knowledge, op: grant, flag: knows_drowning_cost }
     record:
