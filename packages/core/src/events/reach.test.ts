@@ -1332,6 +1332,146 @@ type GenerationWitnessCase = {
   choices: AuthoredChoice[] | undefined;
 };
 
+describe('authored simple flag-gated outcome witnesses', () => {
+  function gateOf(condition: NonNullable<(typeof content.events)[number]['conditions']>) {
+    if ('flag' in condition) {
+      const passing = condition.is !== false;
+      return { flag: condition.flag, passing, blocked: !passing };
+    }
+    if ('not' in condition && 'flag' in condition.not) {
+      const inner = condition.not;
+      const blocked = inner.is !== false;
+      return { flag: inner.flag, passing: !blocked, blocked };
+    }
+    return undefined;
+  }
+
+  function flagFixture(seed: number, event: (typeof content.events)[number], flag: string, value: boolean) {
+    const ctx = fixture(seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+    ctx.world.flags.set(flag, value);
+
+    const onlyAge = event.ages?.only;
+    if (onlyAge?.length === 1) {
+      ctx.world.age.active = [{
+        age: onlyAge[0]!,
+        began: ctx.world.year,
+        named: true,
+        paid: { standing: false },
+      }];
+    }
+    return ctx;
+  }
+
+  it('crosses each simple flag gate before production slot resolution, selection and outcome commit', () => {
+    const cases = content.events.filter((event) => {
+      if (event.tier === 'frame' || event.arc !== undefined || !event.conditions) return false;
+      const gate = gateOf(event.conditions);
+      if (!gate) return false;
+
+      const slots = Object.values(event.slots);
+      if (
+        slots.length === 0
+        || slots.some((slot) => (
+          slot.castBy !== 'engine'
+          || !['head', 'family_member'].includes(slot.role)
+          || slot.filters.some((filter) => (
+            Object.keys(filter).some((key) => !['sex', 'age', 'status', 'relation', 'of'].includes(key))
+          ))
+        ))
+      ) return false;
+
+      if (event.ages !== undefined && event.ages.only?.length !== 1) return false;
+      if (event.interaction.kind === 'narration') return true;
+      return event.interaction.decidedBy === 'player'
+        && event.interaction.choices.every((choice) => (
+          choice.requires.length === 0 && choice.check === undefined
+        ));
+    });
+
+    expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'the_inquest_that_sits_for_nine_days',
+      'the_muster_is_called',
+      'the_wayfolk_have_it_first',
+    ]);
+
+    const declared = cases.flatMap((event) => {
+      if (event.interaction.kind === 'narration') {
+        return event.interaction.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), undefined, String(outcome.id)));
+      }
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 7600;
+
+    for (const event of cases) {
+      const gate = gateOf(event.conditions!);
+      if (!gate) throw new Error(`${event.id} lost its simple flag gate`);
+
+      const before = flagFixture(seed, event, gate.flag, gate.blocked);
+      expect(
+        evalCondition(event.conditions, before),
+        `${event.id} should be blocked when ${gate.flag}=${gate.blocked}`,
+      ).toBe(false);
+
+      const selection = flagFixture(seed, event, gate.flag, gate.passing);
+      expect(
+        evalCondition(event.conditions, selection),
+        `${event.id} should pass when ${gate.flag}=${gate.passing}`,
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, `${event.id} should resolve its authored slots`).toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, `${event.id} should not require a player cast`).toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        `${event.id} should be selectable once its flag/age/cast state is valid`,
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          const ctx = flagFixture(seed, event, gate.flag, gate.passing);
+          const result = executeOutcomeWitness(ctx, event, {
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: event.interaction.outcomes.length > 1,
+          });
+          expect(result.ok, `${event.id}/${outcome.id}: ${result.reason}`).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+        continue;
+      }
+
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = flagFixture(seed, event, gate.flag, gate.passing);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored Assize-gated outcome witnesses', () => {
   function assizeFixture(seed: number, pressure: number) {
     const ctx = testWorld(content, seed);
