@@ -32,6 +32,55 @@ function alwaysFirstWeighted(seed: number): Rng {
   };
 }
 
+function alwaysLowNormal(seed: number): Rng {
+  const base = makeRng(seed);
+  return {
+    ...base,
+    normal(mean, sd) {
+      // Preserve the Box-Muller cursor cost, then force the hostile natural
+      // witness into the lowest authored band.
+      base.normal(mean, sd);
+      return -1_000_000;
+    },
+  };
+}
+
+function checkedChoice(variance: 'narrow' | 'none') {
+  const event = structuredClone(singleOutcomeNarration());
+  if (event.interaction.kind !== 'narration') throw new Error('fixture changed kind');
+  const original = event.interaction.outcomes[0]!;
+  const lowId = `${original.id}_check_low` as typeof original.id;
+  const targetId = `${original.id}_check_target` as typeof original.id;
+  const choiceId = 'witness_checked_choice';
+  const checkId = 'witness_outcome_check';
+
+  event.checks = [{
+    id: checkId,
+    pool: { kind: 'family_max', attr: 'mind' },
+    difficulty: 10_000,
+    variance,
+    bands: [
+      { atLeast: 0, outcome: targetId },
+      { atLeast: -2_000_000, outcome: lowId },
+    ],
+  }];
+  event.interaction = {
+    kind: 'choice',
+    decidedBy: 'player',
+    choices: [{
+      id: choiceId,
+      label: 'Test the check',
+      requires: [],
+      check: checkId,
+      outcomes: [
+        { ...structuredClone(original), id: targetId, weight: 1 },
+        { ...structuredClone(original), id: lowId, weight: 1 },
+      ],
+    }],
+  };
+  return { event, choiceId, lowId, targetId };
+}
+
 function singleOutcomeNarration() {
   const ctx = fixture(1101);
   for (const event of content.events) {
@@ -97,6 +146,52 @@ describe('deterministic outcome execution witnesses', () => {
       event: event.id,
       outcomeId: targetId,
     });
+  });
+
+  it('targets a randomised check band through the production evaluator', () => {
+    const { event, choiceId, lowId, targetId } = checkedChoice('narrow');
+
+    const naturalCtx = fixture(1101);
+    const natural = executeOutcomeWitness(naturalCtx, event, {
+      choiceId,
+      expectedOutcomeId: targetId,
+      rng: alwaysLowNormal(21),
+    });
+    expect(natural.ok).toBe(false);
+    expect(natural.reason).toContain(`resolved '${lowId}', not '${targetId}'`);
+
+    const targetedCtx = fixture(1101);
+    const targeted = executeOutcomeWitness(targetedCtx, event, {
+      choiceId,
+      expectedOutcomeId: targetId,
+      rng: alwaysLowNormal(21),
+      targetCheckedOutcome: true,
+    });
+
+    expect(targeted.ok, targeted.reason).toBe(true);
+    expect(targeted.key).toBe(`${event.id}|${choiceId}|${targetId}`);
+    expect(targetedCtx.world.decisionLog.at(-1)).toMatchObject({
+      kind: 'outcome',
+      event: event.id,
+      choiceId,
+      outcomeId: targetId,
+    });
+  });
+
+  it('does not invent a band for a variance-none check', () => {
+    const { event, choiceId, lowId, targetId } = checkedChoice('none');
+    const ctx = fixture(1101);
+
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId,
+      expectedOutcomeId: targetId,
+      rng: makeRng(22),
+      targetCheckedOutcome: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain(`resolved '${lowId}', not '${targetId}'`);
+    expect(ctx.world.decisionLog).toHaveLength(0);
   });
 
   it('does not invent a weighted witness for a zero-effective-weight target', () => {
