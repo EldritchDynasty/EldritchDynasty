@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { indexContent } from '@ed/schema';
-import { makeRng } from '../rng.js';
+import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
 import { resolveSlots } from './slots.js';
 import { executeOutcomeWitness } from './reach.js';
@@ -17,6 +17,19 @@ function fixture(seed = 1042) {
   place(ctx, { sex: 'male', age: 41, name: `Witness Older Man ${seed}` });
   place(ctx, { sex: 'female', age: 27, name: `Witness Woman ${seed}` });
   return ctx;
+}
+
+function alwaysFirstWeighted(seed: number): Rng {
+  const base = makeRng(seed);
+  return {
+    ...base,
+    weighted<T>(xs: readonly T[], weight: (x: T) => number): T | undefined {
+      // Consume the production draw so this hostile witness RNG has the same
+      // cursor cost as a real weighted choice, then deliberately return first.
+      base.weighted(xs, weight);
+      return xs[0];
+    },
+  };
 }
 
 function singleOutcomeNarration() {
@@ -49,6 +62,64 @@ describe('deterministic outcome execution witnesses', () => {
       event: event.id,
       outcomeId: outcome.id,
     });
+  });
+
+  it('targets a positive weighted outcome without seed-mining the witness', () => {
+    const event = structuredClone(singleOutcomeNarration());
+    if (event.interaction.kind !== 'narration') throw new Error('fixture changed kind');
+    const original = event.interaction.outcomes[0]!;
+    const naturalId = `${original.id}_natural` as typeof original.id;
+    const targetId = `${original.id}_target` as typeof original.id;
+    event.interaction.outcomes = [
+      { ...structuredClone(original), id: naturalId, weight: 1 },
+      { ...structuredClone(original), id: targetId, weight: 1 },
+    ];
+
+    const naturalCtx = fixture(1111);
+    const natural = executeOutcomeWitness(naturalCtx, event, {
+      expectedOutcomeId: targetId,
+      rng: alwaysFirstWeighted(11),
+    });
+    expect(natural.ok).toBe(false);
+    expect(natural.reason).toContain(`resolved '${naturalId}', not '${targetId}'`);
+
+    const targetedCtx = fixture(1111);
+    const targeted = executeOutcomeWitness(targetedCtx, event, {
+      expectedOutcomeId: targetId,
+      rng: alwaysFirstWeighted(11),
+      targetWeightedOutcome: true,
+    });
+
+    expect(targeted.ok, targeted.reason).toBe(true);
+    expect(targeted.key).toBe(`${event.id}||${targetId}`);
+    expect(targetedCtx.world.decisionLog.at(-1)).toMatchObject({
+      kind: 'outcome',
+      event: event.id,
+      outcomeId: targetId,
+    });
+  });
+
+  it('does not invent a weighted witness for a zero-effective-weight target', () => {
+    const event = structuredClone(singleOutcomeNarration());
+    if (event.interaction.kind !== 'narration') throw new Error('fixture changed kind');
+    const original = event.interaction.outcomes[0]!;
+    const naturalId = `${original.id}_natural` as typeof original.id;
+    const targetId = `${original.id}_zero` as typeof original.id;
+    event.interaction.outcomes = [
+      { ...structuredClone(original), id: naturalId, weight: 1 },
+      { ...structuredClone(original), id: targetId, weight: 0 },
+    ];
+
+    const ctx = fixture(1112);
+    const result = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: targetId,
+      rng: alwaysFirstWeighted(12),
+      targetWeightedOutcome: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain(`resolved '${naturalId}', not '${targetId}'`);
+    expect(ctx.world.decisionLog).toHaveLength(0);
   });
 
   it('rejects an impossible choice requirement deterministically before commit', () => {
