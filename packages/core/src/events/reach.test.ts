@@ -1050,6 +1050,116 @@ describe('authored age-elapsed head-cast player-choice outcome witnesses', () =>
   });
 });
 
+describe('authored age-elapsed optional-slot player-choice outcome witnesses', () => {
+  it('executes simple ageElapsed player outcomes when every non-Head slot is an optional engine cast', () => {
+    const cases = content.events.flatMap((event) => {
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      const condition = event.conditions;
+      const optionalSlots = slotIds
+        .filter((slotId) => slotId !== 'HEAD')
+        .map((slotId) => event.slots[slotId]!);
+
+      if (
+        event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.tier === 'frame'
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.arc !== undefined
+        || slotIds.length <= 1
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || head.optional === true
+        || optionalSlots.some((slot) => slot.castBy !== 'engine' || slot.optional !== true)
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+      ) return [];
+
+      const leaf = condition.all[0];
+      if (!leaf || !('ageElapsed' in leaf) || leaf.ageElapsed.op !== 'gte' || leaf.ageElapsed.years <= 0) {
+        return [];
+      }
+
+      const choices = event.interaction.choices.filter((choice) => (
+        choice.requires.length === 0 && choice.check === undefined
+      ));
+      if (choices.length === 0) return [];
+
+      return [{ event, age: event.ages.only[0]!, years: leaf.ageElapsed.years, choices }];
+    });
+
+    expect(cases.length).toBeGreaterThan(0);
+
+    const declared = cases.flatMap(({ event, choices }) =>
+      choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
+    const witnessed: string[] = [];
+    let seed = 4900;
+
+    for (const { event, age, years, choices } of cases) {
+      const before = testWorld(content, seed);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      before.world.age.active = [{
+        age,
+        began: before.world.year - (years - 1),
+        named: true,
+        paid: { standing: false },
+      }];
+      expect(
+        ambientPool(before).some((candidate) => candidate.id === event.id),
+        `${event.id} should be blocked one year before ageElapsed >= ${years}`,
+      ).toBe(false);
+
+      for (const choice of choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = testWorld(content, seed);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          ctx.world.age.active = [{
+            age,
+            began: ctx.world.year - years,
+            named: true,
+            paid: { standing: false },
+          }];
+
+          expect(
+            ambientPool(ctx).some((candidate) => candidate.id === event.id),
+            `${event.id} should be selectable at ageElapsed >= ${years}`,
+          ).toBe(true);
+
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 1),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+
+          expect(
+            result.ok,
+            `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+          ).toBe(true);
+          expect(result.key).toBe(
+            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
+          );
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored head-cast player-choice outcome witnesses', () => {
   it('executes every unscoped conditionless unchecked player outcome with only the engine-cast Head', () => {
     const events = content.events.filter((event) => {
