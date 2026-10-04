@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, indexContent, type ActiveAge } from '@ed/schema';
+import { asId, FREQUENCY_PROFILES, indexContent, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
@@ -707,6 +707,10 @@ describe('authored age-scoped head-cast narration outcome witnesses', () => {
       if (!age) throw new Error(`${event.id} lost its exclusive Age scope`);
 
       const outside = testWorld(content, seed);
+      outside.world.generation = Math.max(
+        outside.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
       outside.world.age.active = [];
       expect(
         ambientPool(outside).some((candidate) => candidate.id === event.id),
@@ -787,6 +791,10 @@ describe('authored age-elapsed head-cast narration outcome witnesses', () => {
 
     for (const [index, { event, age, years }] of cases.entries()) {
       const before = testWorld(content, 4600 + index);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
       before.world.age.active = [{
         age,
         began: before.world.year - (years - 1),
@@ -801,6 +809,10 @@ describe('authored age-elapsed head-cast narration outcome witnesses', () => {
       if (event.interaction.kind !== 'narration') continue;
       for (const outcome of event.interaction.outcomes) {
         const ctx = testWorld(content, 5600 + index);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
         ctx.world.age.active = [{
           age,
           began: ctx.world.year - years,
@@ -931,6 +943,10 @@ describe('authored age-scoped head-cast player-choice outcome witnesses', () => 
       if (!age) throw new Error(`${event.id} lost its exclusive Age scope`);
 
       const outside = testWorld(content, seed);
+      outside.world.generation = Math.max(
+        outside.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
       outside.world.age.active = [];
       expect(
         ambientPool(outside).some((candidate) => candidate.id === event.id),
@@ -944,6 +960,10 @@ describe('authored age-scoped head-cast player-choice outcome witnesses', () => 
       for (const choice of eligibleChoices) {
         for (const outcome of choice.outcomes) {
           const ctx = testWorld(content, seed);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
           ctx.world.age.active = [{
             age,
             began: ctx.world.year,
@@ -1024,6 +1044,10 @@ describe('authored age-scoped checked player-choice outcome witnesses', () => {
       ).toBe(true);
 
       const ctx = testWorld(content, 4500 + index);
+      ctx.world.generation = Math.max(
+        ctx.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
       ctx.world.age.active = [{
         age,
         began: ctx.world.year,
