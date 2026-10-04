@@ -154,6 +154,13 @@ export interface OutcomeWitnessRequest {
    */
   targetCheckedOutcome?: boolean;
   /**
+   * Steer a randomised `decidedBy: party` check toward `choiceId` after the
+   * player supplies the cast. The production party pool, dynamic difficulty,
+   * band ordering and docket resolution still run unchanged; only that check's
+   * first normal draw is placed exactly on the requested branch threshold.
+   */
+  targetPartyChoice?: boolean;
+  /**
    * Supply the exact production arc step for an arc-node event.
    *
    * The witness reuses the step's resolved fill and arc scope and passes the
@@ -285,6 +292,41 @@ function targetCheckedOutcomeRng(
   return wrap(base);
 }
 
+/**
+ * A delegated party decision is resolved inside `resolveChoice`, after the
+ * player cast has been validated. Target its production check without also
+ * steering any later normal draws reached by the committed outcome.
+ */
+function targetCheckBandOnceRng(
+  base: Rng,
+  ctx: SimCtx,
+  check: Check,
+  branchId: string,
+): Rng {
+  const band = check.bands.find((candidate) => candidate.outcome === branchId);
+  if (!band || check.variance === 'none') return base;
+
+  const forcedRoll = evalDifficulty(ctx, check.difficulty) + band.atLeast;
+  let targeted = false;
+  const wrap = (rng: Rng): Rng => ({
+    next: () => rng.next(),
+    int: (max) => rng.int(max),
+    range: (min, max) => rng.range(min, max),
+    bool: (p) => rng.bool(p),
+    pick: <T>(xs: readonly T[]) => rng.pick(xs),
+    weighted: <T>(xs: readonly T[], weight: (x: T) => number) => rng.weighted(xs, weight),
+    normal(mean, sd) {
+      const natural = rng.normal(mean, sd);
+      if (targeted) return natural;
+      targeted = true;
+      return forcedRoll;
+    },
+    poisson: (lambda) => rng.poisson(lambda),
+    fork: (salt) => wrap(rng.fork(salt)),
+  });
+  return wrap(base);
+}
+
 export function executeOutcomeWitness(
   ctx: SimCtx,
   e: EventTemplate,
@@ -344,6 +386,9 @@ export function executeOutcomeWitness(
     if (decider !== 'player' && !party) {
       return { ok: false, reason: 'only player and party deciders put a player cast on the decision docket' };
     }
+    if (request.targetPartyChoice && !party) {
+      return { ok: false, reason: 'targetPartyChoice requires a party decider' };
+    }
 
     const choice = e.interaction.choices.find((candidate) => candidate.id === request.choiceId);
     if (!choice) return { ok: false, reason: `no choice '${request.choiceId}'` };
@@ -366,10 +411,11 @@ export function executeOutcomeWitness(
       };
     }
 
+    let partyCheck: Check | undefined;
     if (party) {
-      const check = e.checks.find((candidate) => candidate.id === party.check);
-      if (!check || check.variance !== 'none') {
-        return { ok: false, reason: 'party-cast docket witness requires a variance-none deciding check' };
+      partyCheck = e.checks.find((candidate) => candidate.id === party.check);
+      if (!partyCheck) {
+        return { ok: false, reason: `party decider names missing check '${party.check}'` };
       }
       const castFill: SlotFill = { ...fill };
       for (const slot of playerCast) {
@@ -380,26 +426,48 @@ export function executeOutcomeWitness(
       if (!availability.available) {
         return { ok: false, reason: availability.blockedBy ?? `choice '${choice.id}' is unavailable` };
       }
-      const preview = decideBranch(ctx, e, castFill, request.rng, {
-        castReady: true,
-        scope: { arc: arcStep?.instance },
-      });
-      if (preview.choice?.id !== request.choiceId) {
-        return {
-          ok: false,
-          reason: preview.choice
-            ? `party decider chose '${preview.choice.id}', not '${request.choiceId}'`
-            : preview.why,
-        };
+
+      if (request.targetPartyChoice) {
+        if (partyCheck.variance === 'none') {
+          return { ok: false, reason: 'targetPartyChoice requires a randomised party check' };
+        }
+        if (!partyCheck.bands.some((band) => band.outcome === request.choiceId)) {
+          return {
+            ok: false,
+            reason: `party check '${partyCheck.id}' has no band for '${request.choiceId}'`,
+          };
+        }
+      } else {
+        if (partyCheck.variance !== 'none') {
+          return {
+            ok: false,
+            reason: 'randomised party-cast docket witness requires targetPartyChoice',
+          };
+        }
+        const preview = decideBranch(ctx, e, castFill, request.rng, {
+          castReady: true,
+          scope: { arc: arcStep?.instance },
+        });
+        if (preview.choice?.id !== request.choiceId) {
+          return {
+            ok: false,
+            reason: preview.choice
+              ? `party decider chose '${preview.choice.id}', not '${request.choiceId}'`
+              : preview.why,
+          };
+        }
       }
     }
 
     const before = ctx.world.decisionLog.length;
     const pending = queueChoice(ctx, e, e.body, fill, playerCast, arcStep);
     const submittedChoice = decider === 'player' ? request.choiceId : undefined;
-    const docketRng = request.targetWeightedOutcome
-      ? targetWeightedIdOnceRng(request.rng, request.expectedOutcomeId)
+    let docketRng = partyCheck && request.targetPartyChoice
+      ? targetCheckBandOnceRng(request.rng, ctx, partyCheck, request.choiceId)
       : request.rng;
+    if (request.targetWeightedOutcome) {
+      docketRng = targetWeightedIdOnceRng(docketRng, request.expectedOutcomeId);
+    }
     const resolved = resolveChoice(ctx, pending.id, submittedChoice, docketRng, request.cast);
     if (!resolved.ok) {
       return { ok: false, reason: resolved.reason ?? 'production docket refused the witness cast' };
