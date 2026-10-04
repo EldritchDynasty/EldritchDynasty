@@ -30,9 +30,9 @@ const git = (cwd: string, ...args: string[]) =>
  * validate and the whole test suite green, forty-one minutes of it, then
  * `gates` red. Both agents did what the rulebook said and broke trunk anyway.
  *
- * `tools/land.mjs --from-queue` is the command that closes it. This is the test
- * that keeps it closed, and the thing it guards is not today's four steps — it is the
- * FOURTH JOB nobody has written yet. check.yml already makes this argument
+ * Native merge-group CI is now the authoritative integration check. This test
+ * keeps the optional full local preflight aligned with CI, so it cannot silently
+ * omit a newly-added npm-backed check. check.yml already makes this argument
  * about its own gate list:
  *
  *   "The gates are not split by name, deliberately. `npm run gate` runs
@@ -62,7 +62,7 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   ) => { command: string; prefix: string[] };
   nodeModulesLinkType: (platform?: NodeJS.Platform) => 'junction' | 'dir';
   landPhases: (steps?: string[]) => { alone: string[]; together: string[] };
-  verificationPlan: (args: { fromQueue: boolean; fullPreflight: boolean }) => {
+  verificationPlan: (args: { fullPreflight: boolean }) => {
     steps: string[];
     kind: 'fast' | 'full';
     reason: string;
@@ -75,11 +75,9 @@ const land = (await import(pathToFileURL(TOOL).href)) as {
   deathReading: (dead: { pid: number; started: string; step?: string; target?: string }) => string[];
   ourShed: (tree: unknown, tmp?: string) => boolean;
   finishLanding: (args: {
-    fromQueue: boolean;
     target: string;
     branch: string;
-    push: () => boolean;
-  }) => { ok: boolean; state: 'preflight-green' | 'pushed' | 'push-rejected'; message: string };
+  }) => { ok: boolean; state: 'preflight-green'; message: string };
 };
 
 const workflow = readFileSync(WORKFLOW, 'utf8');
@@ -275,46 +273,40 @@ describe('the landing runs its long steps together', () => {
   });
 });
 
-describe('session preflight and queue verification are different authorities', () => {
-  it('runs the fast tier by default in a session', () => {
-    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: false });
+describe('local landing preflight tiers', () => {
+  it('runs the fast tier by default', () => {
+    const plan = land.verificationPlan({ fullPreflight: false });
     expect(plan.kind).toBe('fast');
     expect(plan.steps).toEqual(['typecheck', 'validate', 'test:fast']);
     expect(plan.steps).toEqual(land.SESSION_PREFLIGHT_STEPS);
+    expect(plan.reason).toContain('native merge-group CI');
   });
 
   it('offers the complete local set only through --full-preflight', () => {
-    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: true });
+    const plan = land.verificationPlan({ fullPreflight: true });
     expect(plan.kind).toBe('full');
     expect(plan.steps).toEqual(land.STEPS);
     expect(readFileSync(TOOL, 'utf8')).toContain("process.argv.includes('--full-preflight')");
   });
 
-  it('does not let a full session preflight cross the queue-only push boundary', () => {
-    const plan = land.verificationPlan({ fromQueue: false, fullPreflight: true });
-    let attemptedPushes = 0;
-    const result = land.finishLanding({
-      fromQueue: false,
-      target: '0123456789abcdef',
-      branch: 'feature',
-      push: () => {
-        attemptedPushes += 1;
-        return true;
-      },
-    });
-
-    expect(plan.kind).toBe('full');
-    expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
-    expect(attemptedPushes, '--full-preflight gained queue push authority').toBe(0);
+  it('has no hidden direct-main landing mode', () => {
+    const source = readFileSync(TOOL, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    expect(source).not.toContain('FROM_QUEUE');
+    expect(source).not.toContain('--from-queue');
+    expect(source).not.toContain('LAND_DEPLOY_KEY');
+    expect(source).not.toMatch(/run\('git',\s*\['push'[^\]]*:main/);
   });
 
-  it('always gives the serialized queue the complete set', () => {
-    for (const fullPreflight of [false, true]) {
-      const plan = land.verificationPlan({ fromQueue: true, fullPreflight });
-      expect(plan.kind).toBe('full');
-      expect(plan.steps).toEqual(land.STEPS);
-      expect(plan.reason).toContain('queue');
-    }
+  it('hands a green preflight to the native merge queue without a push callback', () => {
+    const result = land.finishLanding({
+      target: '0123456789abcdef',
+      branch: 'feature',
+    });
+    expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
+    expect(result.message).toContain('Merge when ready');
+    expect(result.message).toContain('native merge queue');
   });
 
   it('uses that plan for the steps the command actually executes', () => {
@@ -322,9 +314,10 @@ describe('session preflight and queue verification are different authorities', (
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
     expect(source).toMatch(
-      /const plan = verificationPlan\(\{ fromQueue: FROM_QUEUE, fullPreflight: FULL_PREFLIGHT \}\)/,
+      /const plan = verificationPlan\(\{ fullPreflight: FULL_PREFLIGHT \}\)/,
     );
     expect(source).toMatch(/landPhases\(plan\.steps\)/);
+    expect(source).toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
   });
 
   it('names only scripts package.json provides', () => {
@@ -712,23 +705,20 @@ describe('a killed landing says what it was and what it left on main', () => {
    * the line, the regex still matched, and the mutation passed. So the
    * assertions below run against the source with its comments removed.
    */
-  it('records where it got to, or the reading has nothing to read', () => {
+  it('records local verification progress without recording a main push', () => {
     const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, '')      // block comments, including the JSDoc
-      .replace(/(^|[^:])\/\/.*$/gm, '$1');   // line comments, sparing `https://`
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
 
-    // The lock is the black box. If nothing writes the step as the landing
-    // moves, every corpse reads "an unrecorded step" and this is decoration.
     expect(code, 'no step is ever written to the lock').toMatch(/mark\(step\)/);
-    expect(code, 'the push is not marked, so the main-vs-nothing reading cannot work').toMatch(/mark\('push'\)/);
-    expect(code, 'nothing marks the landing as having pushed').toMatch(/mark\('verdict'\)/);
-    // And the worktree, so the NEXT landing can sweep what a killed one left.
     expect(code, 'the worktree path is never recorded for cleanup').toMatch(/mark\('worktree', \{ tree \}\)/);
+    expect(code, 'local preflight still records a direct push state').not.toMatch(/mark\('push'\)/);
+    expect(code, 'local preflight still records a post-push verdict state').not.toMatch(/mark\('verdict'\)/);
   });
 });
 
 /**
- * WHAT IT VERIFIES MUST BE WHAT IT PUSHES, AND ONE LANDING AT A TIME.
+ * A PREFLIGHT VERIFIES A NAMED SHA, AND ONE RUNS PER CHECKOUT.
  *
  * Three failures on 2026-09-07 came from one shape. `land` ran its steps
  * against the live working tree and then pushed `HEAD:main`, which resolves
@@ -755,19 +745,13 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
   const TOOL = join(REPO, 'tools/land.mjs');
   const source = readFileSync(TOOL, 'utf8');
 
-  it('pushes a named SHA rather than HEAD', () => {
-    // The CALL, not the prose: land.mjs quotes `git push origin HEAD:main` in
-    // the comment explaining what went wrong, and the first cut of this
-    // assertion matched that — failing on the documentation of the bug.
-    expect(
-      source,
-      '`land` still pushes HEAD:main. HEAD resolves at PUSH time, so a commit ' +
-      'made during the half-hour run is what lands — unverified, under the ' +
-      'green banner of the run that never saw it. Push the SHA captured before ' +
-      'the steps.',
-    ).not.toMatch(/run\('git', \[[^\]]*'HEAD:main'/);
-    expect(source, 'nothing captures the commit being landed').toMatch(/const target = git\('rev-parse', 'HEAD'\)/);
-    expect(source, 'the push does not use the captured commit').toMatch(/\$\{target\}:main/);
+  it('captures a named SHA for the isolated preflight and never pushes main', () => {
+    const code = source
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    expect(source, 'nothing captures the commit being verified').toMatch(/const target = git\('rev-parse', 'HEAD'\)/);
+    expect(code).not.toMatch(/run\('git',\s*\['push'/);
+    expect(code).not.toMatch(/:main/);
   });
 
   it('refuses a second landing and names the process holding it', () => {
@@ -863,130 +847,27 @@ describe('a landing pushes what it verified, and only one runs at a time', () =>
 });
 
 
-describe('only the serialized queue can move main after verification', () => {
-  it('wires the hidden queue flag into the final boundary and records preflight-green', () => {
+describe('local preflight cannot move main', () => {
+  it('contains no legacy queue/deploy-key capability', () => {
     const source = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
 
-    expect(source).toContain("const FROM_QUEUE = process.argv.includes('--from-queue')");
-    expect(source, 'main bypasses finishLanding, so the queue boundary is only test decoration')
-      .toMatch(/finishLanding\(\{\s*fromQueue: FROM_QUEUE,/);
-    expect(source, 'a session-green result is not persisted for --status')
-      .toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
-    expect(source, 'the main push exists outside the finishLanding callback')
-      .not.toMatch(/mark\('push'\);[\s\S]*?finishLanding\(/);
+    expect(source).not.toContain('FROM_QUEUE');
+    expect(source).not.toContain('--from-queue');
+    expect(source).not.toContain('LAND_DEPLOY_KEY');
+    expect(source).not.toMatch(/run\('git',\s*\['push'/);
+    expect(source).toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
   });
 
-  it('reproduces the push race without making a session restart verification', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ed-land-race-'));
-    const remote = join(root, 'remote.git');
-    const session = join(root, 'session');
-    const outsider = join(root, 'outsider');
-    const runGit = (cwd: string, ...args: string[]) =>
-      execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-    const commit = (cwd: string, name: string) => {
-      runGit(cwd, 'config', 'user.name', name);
-      runGit(cwd, 'config', 'user.email', `${name}@example.test`);
-    };
-    const push = (cwd: string, target: string) =>
-      spawnSync('git', ['push', 'origin', `${target}:main`], {
-        cwd,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }).status === 0;
-
-    try {
-      execFileSync('git', ['init', '--bare', remote], { cwd: root, stdio: 'ignore' });
-      execFileSync('git', ['clone', remote, session], { cwd: root, stdio: 'ignore' });
-      commit(session, 'session');
-      writeFileSync(join(session, 'base.txt'), 'base\n');
-      runGit(session, 'add', 'base.txt');
-      runGit(session, 'commit', '-m', 'base');
-      runGit(session, 'branch', '-M', 'main');
-      runGit(session, 'push', '-u', 'origin', 'main');
-      runGit(remote, 'symbolic-ref', 'HEAD', 'refs/heads/main');
-
-      execFileSync('git', ['clone', remote, outsider], { cwd: root, stdio: 'ignore' });
-      commit(outsider, 'outside');
-
-      // Session mode: verification captured this target, then main moved in a
-      // disjoint file. The old landing would attempt a doomed push here.
-      runGit(session, 'checkout', '-b', 'feature');
-      writeFileSync(join(session, 'feature.txt'), 'verified feature\n');
-      runGit(session, 'add', 'feature.txt');
-      runGit(session, 'commit', '-m', 'feature');
-      const preflightTarget = runGit(session, 'rev-parse', 'HEAD');
-
-      writeFileSync(join(outsider, 'outside-1.txt'), 'outside one\n');
-      runGit(outsider, 'add', 'outside-1.txt');
-      runGit(outsider, 'commit', '-m', 'outside one');
-      runGit(outsider, 'push', 'origin', 'main');
-      const outsideOne = runGit(outsider, 'rev-parse', 'HEAD');
-
-      let attemptedPushes = 0;
-      const preflight = land.finishLanding({
-        fromQueue: false,
-        target: preflightTarget,
-        branch: 'feature',
-        push: () => {
-          attemptedPushes += 1;
-          return push(session, preflightTarget);
-        },
-      });
-      expect(preflight.ok).toBe(true);
-      expect(preflight.state).toBe('preflight-green');
-      expect(preflight.message).toContain('Merge when ready');
-      expect(attemptedPushes, 'session mode still tried to move main').toBe(0);
-      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideOne);
-
-      // Queue mode, with no other writer, advances main.
-      runGit(session, 'fetch', 'origin', 'main');
-      runGit(session, 'checkout', '-B', 'queue-ok', 'origin/main');
-      writeFileSync(join(session, 'queue-ok.txt'), 'queue owns the push\n');
-      runGit(session, 'add', 'queue-ok.txt');
-      runGit(session, 'commit', '-m', 'queue ok');
-      const queueTarget = runGit(session, 'rev-parse', 'HEAD');
-      const queued = land.finishLanding({
-        fromQueue: true,
-        target: queueTarget,
-        branch: 'queue-ok',
-        push: () => push(session, queueTarget),
-      });
-      expect(queued).toMatchObject({ ok: true, state: 'pushed' });
-      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(queueTarget);
-
-      // If an outside writer somehow exists despite #351, queue mode diagnoses
-      // the configuration fault. It never tells a human to repeat the checks.
-      runGit(session, 'fetch', 'origin', 'main');
-      runGit(session, 'checkout', '-B', 'queue-race', 'origin/main');
-      writeFileSync(join(session, 'queue-race.txt'), 'already verified\n');
-      runGit(session, 'add', 'queue-race.txt');
-      runGit(session, 'commit', '-m', 'queue race target');
-      const racedTarget = runGit(session, 'rev-parse', 'HEAD');
-
-      runGit(outsider, 'fetch', 'origin', 'main');
-      runGit(outsider, 'reset', '--hard', 'origin/main');
-      writeFileSync(join(outsider, 'outside-2.txt'), 'outside two\n');
-      runGit(outsider, 'add', 'outside-2.txt');
-      runGit(outsider, 'commit', '-m', 'outside two');
-      runGit(outsider, 'push', 'origin', 'main');
-      const outsideTwo = runGit(outsider, 'rev-parse', 'HEAD');
-
-      const rejected = land.finishLanding({
-        fromQueue: true,
-        target: racedTarget,
-        branch: 'queue-race',
-        push: () => push(session, racedTarget),
-      });
-      expect(rejected).toMatchObject({ ok: false, state: 'push-rejected' });
-      expect(rejected.message).toContain('main ruleset');
-      expect(rejected.message).toContain('LAND_DEPLOY_KEY');
-      expect(rejected.message).not.toContain('Run this again');
-      expect(runGit(remote, 'rev-parse', 'refs/heads/main')).toBe(outsideTwo);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
+  it('always returns a native-queue handoff', () => {
+    const result = land.finishLanding({
+      target: '0123456789abcdef',
+      branch: 'feature/native-queue',
+    });
+    expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
+    expect(result.message).toContain('Merge when ready');
+    expect(result.message).toContain('native merge queue');
   });
 });
 
@@ -1226,11 +1107,6 @@ describe('the native merge queue CI contract', () => {
   });
 });
 
-const recorder = (await import(pathToFileURL(join(REPO, 'tools/dispatched-verdict.mjs')).href)) as {
-  verdictMessage: (v: Record<string, unknown>) => string;
-  pickRun: (runs: Record<string, unknown>[], sha: string, at: string) => Record<string, unknown> | undefined;
-  conclusionOf: (run: Record<string, unknown>) => string;
-};
 const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
   parseVerdict: (m: string) => { conclusion: string; sha: string; run: string; jobs: { name: string; result: string }[] } | null;
   stateOf: (v: unknown) => string;
@@ -1253,19 +1129,6 @@ const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs'
 describe('queue landing coverage metadata (#320/#352)', () => {
   const BEFORE = 'a'.repeat(40);
   const TARGET = 'b'.repeat(40);
-
-  it('captures the freshly fetched main head before rebase and hands the pushed target to verdict', () => {
-    const code = readFileSync(join(REPO, 'tools/land.mjs'), 'utf8');
-    const fetch = code.indexOf("run('git', ['fetch', 'origin', 'main'])");
-    const before = code.indexOf("const before = git('rev-parse', 'origin/main')");
-    const rebase = code.indexOf("run('git', ['rebase', 'origin/main'])");
-    const receipt = code.indexOf('writeFileSync(RANGE, JSON.stringify({');
-
-    expect(fetch).toBeGreaterThan(0);
-    expect(before, 'landing does not capture the exact fetched trunk head').toBeGreaterThan(fetch);
-    expect(rebase, 'before must be captured before rebase changes HEAD').toBeGreaterThan(before);
-    expect(receipt, 'successful queue pushes do not leave the verdict hand-off receipt').toBeGreaterThan(rebase);
-  });
 
   it('creates the landing coverage commit without a platform-specific filesystem sentinel', () => {
     const code = readFileSync(join(REPO, 'tools/verdict.mjs'), 'utf8');
@@ -1295,51 +1158,5 @@ describe('queue landing coverage metadata (#320/#352)', () => {
     const code = readFileSync(join(REPO, 'tools/verdict.mjs'), 'utf8');
     expect(code).toContain("const LANDING_NS = 'refs/landing'");
     expect(code).toContain('recordLandingRange(sha, verdict)');
-  });
-});
-
-/**
- * THE REMOTE LANDING'S OWN VERDICT (tools/dispatched-verdict.mjs).
- *
- * verdict.yml never ran for a check github-actions[bot] dispatched, so every
- * remote landing waited on a ref that could not arrive. The recorder writes
- * that ref itself; these pin that what it writes is what every reader reads.
- */
-describe('the dispatched-check verdict recorder', () => {
-  const SHA = '9af68b168a8682003d713e9682d652db1bb43164';
-
-  it('writes a message the ordinary reader parses, green and red alike', () => {
-    for (const [conclusion, state] of [['success', 'green'], ['failure', 'red'], ['pending', 'pending']] as const) {
-      const msg = recorder.verdictMessage({
-        sha: SHA, branch: 'main', conclusion,
-        runUrl: 'https://github.com/o/r/actions/runs/36314218433', runNumber: 412,
-        jobs: conclusion === 'pending' ? [] : [{ name: 'test 1/4', result: conclusion }],
-        recorded: '2026-09-27T11:43:20Z',
-      });
-      const v = verdictReader.parseVerdict(msg)!;
-      expect(v.sha).toBe(SHA);
-      expect(v.run).toMatch(/36314218433$/);
-      expect(verdictReader.stateOf(v)).toBe(state);
-      if (conclusion !== 'pending') expect(v.jobs).toEqual([{ name: 'test 1/4', result: conclusion }]);
-    }
-  });
-
-  it('takes the newest dispatch of this commit, and nothing older than the dispatch', () => {
-    const run = (id: number, created: string, extra: Record<string, unknown> = {}) =>
-      ({ id, head_sha: SHA, event: 'workflow_dispatch', created_at: created, ...extra });
-    const runs = [
-      run(1, '2026-09-27T09:00:00Z'),                                    // an earlier landing's
-      run(2, '2026-09-27T10:58:13Z'),
-      run(3, '2026-09-27T10:59:00Z', { event: 'push' }),
-      run(4, '2026-09-27T11:00:00Z', { head_sha: 'f'.repeat(40) }),
-    ];
-    expect(recorder.pickRun(runs, SHA, '2026-09-27T10:58:10Z')?.id).toBe(2);
-    expect(recorder.pickRun(runs, SHA, '2026-09-27T12:00:00Z')).toBeUndefined();
-  });
-
-  it('says pending while a run is going, and GitHub\'s own word once it stops', () => {
-    expect(recorder.conclusionOf({ status: 'in_progress', conclusion: null })).toBe('pending');
-    expect(recorder.conclusionOf({ status: 'completed', conclusion: 'success' })).toBe('success');
-    expect(recorder.conclusionOf({ status: 'completed', conclusion: 'cancelled' })).toBe('cancelled');
   });
 });

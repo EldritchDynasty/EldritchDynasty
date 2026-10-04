@@ -33,11 +33,8 @@
  *   npm run land -- --no-issue-check # preflight even though the branch names
  *                                    # an issue no commit closes
  *
- * `--from-queue` is intentionally absent from the normal command list. It is the
- * remote /land workflow's capability boundary: only that serialized job may
- * cross from a green preflight to `git push …:main`. Its `--no-verdict`
- * belongs there because remote-land.yml waits for the ordinary push-triggered
- * check and its verdict itself.
+ * This command has no main-pushing mode. GitHub's native merge queue owns the
+ * authoritative integration check and the only normal update of `main`.
  *
  * `DOCS_ONLY_STEPS` is also the session's default preflight set. That reuse is
  * about the commands, not the reason: CI still calls `tools/docs-only.mjs` to
@@ -80,8 +77,7 @@ import { closingIssues, negatedClosings } from './closing-keywords.mjs';
 const REPO = join(import.meta.dirname, '..');
 
 /**
- * The npm scripts the queue (and `--full-preflight`) runs, in order, ON THE
- * REBASED HEAD.
+ * The npm scripts `--full-preflight` runs, in order, on the rebased head.
  *
  * Ordered cheapest-first so a broken template fails in seconds rather than
  * after the suite. CI runs its three jobs in PARALLEL for the opposite reason —
@@ -97,22 +93,18 @@ export const STEPS = ['typecheck', 'validate', 'build:client', 'test', 'gates'];
  * This is deliberately CI's existing short tier rather than another list:
  * typecheck and validation catch broken contracts/content, while the fast lane
  * catches the ordinary implementation regressions without making every author
- * duplicate the queue's authoritative full run. `--full-preflight` selects
- * `STEPS` for risky work; `--from-queue` always selects it.
+ * duplicate native merge-group CI. `--full-preflight` selects `STEPS` for risky work.
  */
 export const SESSION_PREFLIGHT_STEPS = DOCS_ONLY_STEPS;
 
-export function verificationPlan({ fromQueue, fullPreflight }) {
-  if (fromQueue) {
-    return { steps: STEPS, kind: 'full', reason: 'the queue is the authoritative full check' };
-  }
+export function verificationPlan({ fullPreflight }) {
   if (fullPreflight) {
     return { steps: STEPS, kind: 'full', reason: '--full-preflight' };
   }
   return {
     steps: SESSION_PREFLIGHT_STEPS,
     kind: 'fast',
-    reason: 'default session preflight; the queue repeats the rebase and runs the full set',
+    reason: 'default session preflight; GitHub native merge-group CI is authoritative',
   };
 }
 
@@ -304,11 +296,9 @@ export function issueLeftOpen(branch, commitLog, held = []) {
 // ── the landing itself ───────────────────────────────────────────────────────
 
 const DRY = process.argv.includes('--dry-run');
-const NO_VERDICT = process.argv.includes('--no-verdict');
 const NO_ISSUE_CHECK = process.argv.includes('--no-issue-check');
 const STATUS = process.argv.includes('--status');
 const FULL_PREFLIGHT = process.argv.includes('--full-preflight');
-const FROM_QUEUE = process.argv.includes('--from-queue');
 
 /**
  * THE LAST VERIFIED RESULT IS NOT THE LIVE LOCK.
@@ -318,29 +308,14 @@ const FROM_QUEUE = process.argv.includes('--from-queue');
  * process so `npm run land -- --status` can answer "verified, not landed"
  * without leaving a dead pid lock that the next landing mistakes for a crash.
  */
-export function finishLanding({ fromQueue, target, branch, push }) {
-  if (!fromQueue) {
-    return {
-      ok: true,
-      state: 'preflight-green',
-      message:
-        `green on ${target.slice(0, 7)} — enqueue it: open or keep a ready PR from \`${branch}\`, ` +
-        'then choose **Merge when ready** in GitHub. The native merge queue owns the integration check.',
-    };
-  }
-
-  if (!push()) {
-    return {
-      ok: false,
-      state: 'push-rejected',
-      message:
-        'queue push rejected — the /land queue is the only writer allowed to move main. ' +
-        'Check the main ruleset bypass and the LAND_DEPLOY_KEY queue credential. ' +
-        'Do not restart the verification loop; fix the queue/ruleset configuration.',
-    };
-  }
-
-  return { ok: true, state: 'pushed', message: '' };
+export function finishLanding({ target, branch }) {
+  return {
+    ok: true,
+    state: 'preflight-green',
+    message:
+      `green on ${target.slice(0, 7)} — enqueue it: open or keep a ready PR from \`${branch}\`, ` +
+      'then choose **Merge when ready** in GitHub. The native merge queue owns the integration check.',
+  };
 }
 
 /**
@@ -449,16 +424,6 @@ const tryGit = (...args) => {
 const GIT_DIR = git('rev-parse', '--git-dir');
 const LOCK = join(GIT_DIR, 'land.lock');
 const LAST = join(GIT_DIR, 'land.last.json');
-/**
- * Queue-only hand-off to `tools/verdict.mjs`.
- *
- * The queue knows the exact main head it fetched before rebasing and the exact
- * rebased SHA it checked and pushed. The verdict command runs later in the same
- * checkout, after the ordinary push-triggered CI answers, and turns this local
- * receipt into the durable `refs/landing/<sha>` coverage record #320 needs.
- */
-const RANGE = join(GIT_DIR, 'land.range.json');
-
 function readLast() {
   if (!existsSync(LAST)) return null;
   try {
@@ -732,14 +697,10 @@ async function main() {
     !NO_ISSUE_CHECK && issueLeftOpen(branch, commitMessages, claimedIssues(branch)),
   ].filter(Boolean);
 
-  const requestedPlan = verificationPlan({
-    fromQueue: FROM_QUEUE,
-    fullPreflight: FULL_PREFLIGHT,
-  });
-  say(`landing ${branch} → ${FROM_QUEUE ? 'main' : 'preflight'}`);
+  const requestedPlan = verificationPlan({ fullPreflight: FULL_PREFLIGHT });
+  say(`landing ${branch} → preflight`);
   say(
-    `  fetch · rebase · ${requestedPlan.steps.map((s) => `npm run ${s}`).join(' · ')} · ` +
-    (FROM_QUEUE ? 'push' : 'preflight-green'),
+    `  fetch · rebase · ${requestedPlan.steps.map((s) => `npm run ${s}`).join(' · ')} · preflight-green`,
   );
 
   // A dry run REPORTS the preconditions rather than stopping at the first one.
@@ -756,9 +717,6 @@ async function main() {
 
   say('\n$ git fetch origin main');
   if (!run('git', ['fetch', 'origin', 'main'])) die('fetch failed.');
-  // This is the exact trunk head the queue is about to rebase onto. Capture it
-  // after the fetch, not from a workflow event or reconstructed history later.
-  const before = git('rev-parse', 'origin/main');
 
   // The safety decision needs the freshly fetched main. A stale origin/main can
   // include commits that another landing has already moved to trunk and falsely
@@ -863,10 +821,9 @@ async function main() {
   // it lands on — two content branches can each pass every gate and their merge
   // fail gate 4, with no overlap between the two diffs.
   //
-  // Session preflight is advisory. The serialized queue repeats the rebase and
-  // always runs the complete CI-equivalent set on the exact head it pushes.
-  // Risky work can ask for the same local evidence with `--full-preflight`.
-  const plan = verificationPlan({ fromQueue: FROM_QUEUE, fullPreflight: FULL_PREFLIGHT });
+  // Session preflight is advisory. Native merge-group CI is authoritative.
+  // Risky work can ask for the complete local evidence with `--full-preflight`.
+  const plan = verificationPlan({ fullPreflight: FULL_PREFLIGHT });
   say(`\n  ${plan.kind} set — ${plan.reason}.`);
   if (plan.kind === 'fast') {
     say('  use --full-preflight for the complete local CI-equivalent set.');
@@ -933,65 +890,11 @@ async function main() {
   // tree cannot affect what was verified or what is pushed. The guard is gone
   // because the condition is, which is the better of the two ways to fix a
   // check that keeps firing.
-  const finished = finishLanding({
-    fromQueue: FROM_QUEUE,
-    target,
-    branch,
-    push: () => {
-      mark('push');
-      say(`\n$ git push origin ${target.slice(0, 7)}:main`);
-      return run('git', ['push', 'origin', `${target}:main`]);
-    },
-  });
-
-  if (!finished.ok) die(finished.message);
-  if (finished.state === 'preflight-green') {
-    remember('preflight-green', { target, branch });
-    say('\nverdict: preflight-green');
-    say(`  ${finished.message}`);
-    return;
-  }
-
-  // Queue mode has now pushed exactly `target`. Leave the before/checked/pushed
-  // range in .git for the verdict reader that the queue invokes next. A session
-  // preflight never writes this file because it never crosses the push boundary.
-  writeFileSync(RANGE, JSON.stringify({
-    version: 1,
-    before,
-    checked: target,
-    pushed: target,
-    branch,
-  }, null, 2));
-
-  // The step that separates "nothing reached main" from "a commit is on main
-  // and nobody heard the verdict" — the only two readings a corpse can have.
-  mark('verdict');
-
-  // A PUSH IS NOT THE END OF THE WORK.
-  //
-  // This used to print "verify the verdict actually arrived" and leave it
-  // there. A rule that is only asked for is the failure mode this repository
-  // has the longest record of — `lanes.test.ts` exists because one was asked
-  // for and ignored by seven suites for months. So the landing waits for the
-  // verdict itself, and its exit code is the verdict's.
-  //
-  // Waiting costs nothing that is at risk: the push has happened, nothing is
-  // holding a lock, and the alternative is a session that ends believing a
-  // commit was judged when it was not. The remote queue passes `--no-verdict`
-  // because its workflow captures the pushed SHA and performs this wait as a
-  // separate, visible step.
-  if (NO_VERDICT) {
-    say('\nlanded. --no-verdict: nobody is checking whether CI answered.');
-    return;
-  }
-  say('\n$ npm run verdict');
-  const answered = runNpm(['run', '--silent', 'verdict']);
-  if (!answered) {
-    die('the landing is on `main`, and CI has not returned a green verdict for it.\n' +
-        '      Read the lines above: a RED build is yours to fix, an ABSENT one is not\n' +
-        '      yours to fix and is still not a pass.');
-  }
-  say('\nlanded, and judged.');
+  const finished = finishLanding({ target, branch });
+  remember('preflight-green', { target, branch });
+  say('\nverdict: preflight-green');
+  say(`  ${finished.message}`);
+  return;
 }
 
 // Importable for the test that compares STEPS against the workflow, runnable as
