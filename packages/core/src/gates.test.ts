@@ -533,6 +533,17 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     expect(out).toMatch(/vessel\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
     expect(out).toMatch(/great_rite\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
     expect(out).toMatch(/unmaking\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
+    expect(out).toMatch(/#378 diagnostic — resolved Madness-progression decisions across batch/);
+    for (const event of [
+      'the_drowning',
+      'the_vessel_rite',
+      'the_great_rite',
+      'the_second_name',
+      'the_second_widening',
+      'the_unmaking',
+    ]) {
+      expect(out).toMatch(new RegExp(`${event}\\s+resolved\\s+\\d+ ·`));
+    }
     expect(out).toMatch(/#378 diagnostic — top distinct sampled Madness holders per run/);
 
     // The diagnostic must not let one long-lived man occupy all three rows
