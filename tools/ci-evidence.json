@@ -370,10 +370,10 @@
     {
       "path": "packages/core/src/cast.slow.test.ts",
       "claim": "Played/full-run regression assertions: always has somebody, while the house has anybody at all; never grows back into a roster; never names anybody who is not living in the house; fills every role it declares, somewhere in the batch; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "sampled cast-composition/loss regression with merge-blocking cast invariants",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/cast.test.ts deterministically pins cast size/cap, uniqueness, living-household membership, pure derived reads, labels/reasons, situational-role construction, and the non-rota priority behavior. The slow suite remains nightly evidence for role frequencies, generational variation, head/heir prevalence and remembered-loss exposure over played campaigns."
     },
     {
       "path": "packages/core/src/condition.slow.test.ts",
