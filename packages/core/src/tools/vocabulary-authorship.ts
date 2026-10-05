@@ -75,9 +75,9 @@ export function vocabularyAuthorship(source: Source): VocabularyAuthorshipVerdic
       `  FAIL: ${newlyUnauthored.length} declared Effect kind(s) no content authors —`,
     );
     for (const kind of newlyUnauthored) {
-      lines.push(`    ${kind}: the case exists and no outcome asks for it`);
+      lines.push(`    ${kind}: the case in applyEffect exists and no outcome has ever asked for it`);
     }
-    lines.push('  Either author content that uses it, or delete the kind.');
+    lines.push('  Either author content that uses it, or delete the kind (invariant 11).');
   }
   if (paidOff.length) {
     lines.push(
