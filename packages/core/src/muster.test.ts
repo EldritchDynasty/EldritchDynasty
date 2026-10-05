@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { musterEscalation } from '@ed/schema';
 import {
-  activeCommitment, addOfficer, applyEffect, beginCommitment, buyPosition, maxMen, musterMortality,
-  musterOrder, musterUpkeep, place, positionOptions, reinforceCommitment, setPosition,
-  settleCommitment, testRng, testWorld, tickMuster, withdrawCommitment,
+  activeCommitment, addOfficer, applyEffect, beginCommitment, bootstrap, buyPosition, loadGame,
+  maxMen, musterMortality, musterOrder, musterUpkeep, place, positionOptions, reinforceCommitment,
+  saveGame, setPosition, settleCommitment, testRng, testWorld, tickMuster, withdrawCommitment,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -23,6 +23,46 @@ describe('maxMen', () => {
 
     ctx.world.respect = 'exalted';
     expect(maxMen(ctx)).toBeGreaterThan(base);
+  });
+});
+
+describe('muster save durability', () => {
+  it('round-trips a live commitment and the muster ledger', () => {
+    const before = bootstrap(bundle, 1042, 1042);
+    const officer = before.world.people.household(before.world.playerHouse, before.world.year)[0]!;
+
+    const commitment = beginCommitment(before, 5, 'the_wars');
+    reinforceCommitment(before, 3, 'branch_a');
+    addOfficer(before, officer.id);
+    setPosition(before, 'a_captaincy');
+    tickMuster(before, testRng('muster-save'));
+    before.world.muster.tide = 63;
+
+    const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), bundle);
+    const restored = activeCommitment(after)!;
+
+    expect(restored.id).toBe(commitment.id);
+    expect(restored.men).toBe(commitment.men);
+    expect(restored.officers).toEqual(commitment.officers);
+    expect(restored.position).toBe(commitment.position);
+    expect(restored.credit).toBe(commitment.credit);
+    expect(restored.from).toEqual(commitment.from);
+    expect(after.world.muster.tide).toBe(63);
+  });
+
+  it('round-trips tide and lastSettled without a live commitment', () => {
+    const before = bootstrap(bundle, 909, 1042);
+    before.world.muster.tide = 71;
+    beginCommitment(before, 5, 'the_wars');
+    activeCommitment(before)!.status = 'settled';
+    before.world.muster.lastSettled = before.world.year;
+
+    const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), bundle);
+
+    expect(activeCommitment(after)).toBeUndefined();
+    expect(after.world.muster.tide).toBe(71);
+    expect(after.world.muster.lastSettled).toBe(before.world.year);
+    expect(after.world.muster.commitments[0]!.status).toBe('settled');
   });
 });
 
