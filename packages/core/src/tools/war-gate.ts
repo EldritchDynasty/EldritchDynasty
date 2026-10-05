@@ -90,8 +90,10 @@ import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { expectMean } from '../testing.js';
 import type { SimCtx } from '../world.js';
 import {
+  gatePartitionWorkerCount,
   partitionGateInputs,
   reduceGatePartitions,
+  runGatePartitionsInWorkers,
   type GatePartition,
   type GatePartitionResult,
 } from './gate-partition.js';
@@ -566,16 +568,22 @@ export function verdictOver(commit: WarRun[], abstain: WarRun[], years = CAMPAIG
 
 export function gateWar(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number } = {},
+  opts: { seeds?: number[]; years?: number; workers?: number } = {},
 ): WarVerdict {
-  const bundle = indexContent(source);
+  const bundle = indexContent(source).bundle;
   const seeds = opts.seeds ?? Array.from({ length: DEFAULT_SEEDS }, (_, i) => 4000 + i * 13);
   const years = opts.years ?? CAMPAIGN_YEARS;
+  const workers = opts.workers ?? gatePartitionWorkerCount();
+  const plan = partitionGateInputs(warGateInputs(seeds), workers);
 
-  // #440's reducer seam is exercised even by the serial path. Actual workers
-  // may compute these partitions independently; only this reducer may judge.
-  const plan = partitionGateInputs(warGateInputs(seeds), 1);
-  const results = plan.map((partition) => runWarGatePartition(bundle, partition, years));
+  const results = plan.length === 1
+    ? plan.map((partition) => runWarGatePartition(bundle, partition, years))
+    : runGatePartitionsInWorkers<WarGateInput, WarRun>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runWarGatePartition',
+      argsBefore: [bundle],
+      argsAfter: [years],
+    });
   const { commit, abstain } = reduceWarGatePartitions(plan, results);
   return verdictOver(commit, abstain, years);
 }
