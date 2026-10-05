@@ -444,10 +444,10 @@
     {
       "path": "packages/core/src/expression.slow.test.ts",
       "claim": "Played/full-run regression assertions: no incapable character ever holds Madness or expressed Power; applyEffect refuses madness on an incapable target even off authored content; wakes daughters by what they carry, and gives them nothing to overflow; hands the client both facts, so the tree can draw two marks",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "full-run expression/awakening incidence regression with merge-blocking Madness and presentation witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/effect-verbs.test.ts deterministically proves forced female Awakening does not invent expression or Madness and directly proves the Madness effect refuses both a woman and a mundane man. packages/core/src/session-api.test.ts proves an awakened female carrier is surfaced as awakened but not expressing, with `expresses` equal to phenotype.canExpress. Merge-blocking schema/content validation retains the authored madness-target gate. The slow suite remains nightly for multi-century no-incapable-Madness/Power observation and population-level female Awakening incidence."
     },
     {
       "path": "packages/core/src/fecundity-drag.slow.test.ts",
