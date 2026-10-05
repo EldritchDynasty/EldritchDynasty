@@ -4,11 +4,11 @@
   "shards": 4,
   "shardCostsMs": [
     1522214,
-    1522206,
+    1522215,
     1522206,
     1522214
   ],
-  "totalMs": 6088840,
+  "totalMs": 6088849,
   "files": {
     "packages/client/src/components/AdviserHelp.test.ts": 1724,
     "packages/client/src/components/Book.test.ts": 1416,
@@ -205,6 +205,7 @@
     "packages/schema/src/desugar.test.ts": 452,
     "packages/schema/src/muster.test.ts": 12,
     "packages/schema/src/parcel.test.ts": 13,
+    "packages/schema/src/person-name.test.ts": 9,
     "packages/schema/src/reference.test.ts": 15,
     "packages/schema/src/rules.test.ts": 4742,
     "packages/schema/src/signing.test.ts": 12,

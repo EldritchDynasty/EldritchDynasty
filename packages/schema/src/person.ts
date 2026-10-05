@@ -9,6 +9,14 @@ import type { AttributeId, HouseId, PersonId, TraitId, Year, SpellbookId, FlagId
 import type { EldritchProfile, GenomeRef } from './genome.js';
 import type { Sex } from './attributes.js';
 
+/** A person's name is a short identity, not the longer house-name field. */
+export const PERSON_NAME_MAX = 32;
+export const PersonNameS = z.string()
+  .trim()
+  .min(1, 'a person needs a name')
+  .max(PERSON_NAME_MAX, 'a name is not a sentence');
+export type PersonName = z.infer<typeof PersonNameS>;
+
 /**
  * ONE Person type for everyone: family, dead, hirelings, lifetime servants,
  * enemies, rival houses, a name in a forged pedigree. Not five types with five
@@ -181,7 +189,7 @@ export interface PhenotypeCache {
 export interface Person {
   id: PersonId;
   name: string;
-  /** Some people are deliberately unnamed. The founder is "the man". */
+  /** Optional byname or descriptive epithet, separate from the person's name. */
   epithet?: string;
   sex: Sex;
   sigilSeed: number;
