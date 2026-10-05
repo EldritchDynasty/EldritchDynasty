@@ -6,7 +6,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
@@ -21,6 +21,48 @@ jobs:
       BAD_SHA: ${{ github.event.workflow_run.head_sha }}
       RUN_URL: ${{ github.event.workflow_run.html_url }}
     steps:
+      - uses: actions/checkout@v4
+
+      - name: record the scheduled verdict
+        shell: bash
+        env:
+          GIT_AUTHOR_NAME: scheduled-verdict
+          GIT_AUTHOR_EMAIL: scheduled-verdict@users.noreply.github.com
+          GIT_COMMITTER_NAME: scheduled-verdict
+          GIT_COMMITTER_EMAIL: scheduled-verdict@users.noreply.github.com
+        run: |
+          set -euo pipefail
+
+          case "$RUN_NAME" in
+            "nightly regression") KEY="nightly" ;;
+            "weekly statistical") KEY="weekly" ;;
+            *) echo "Unrecognised scheduled workflow: $RUN_NAME"; exit 1 ;;
+          esac
+
+          REF="refs/scheduled/$KEY"
+          git fetch --quiet origin "+$REF:$REF" || true
+
+          PREVIOUS_CONCLUSION=""
+          PREVIOUS_SINCE=""
+          if git show-ref --verify --quiet "$REF"; then
+            PREVIOUS_CONCLUSION="$(git log -1 --format=%B "$REF" | sed -n 's/^conclusion: //p' | head -n 1)"
+            PREVIOUS_SINCE="$(git log -1 --format=%B "$REF" | sed -n 's/^since: //p' | head -n 1)"
+          fi
+
+          if [ "$CONCLUSION" = "success" ]; then
+            SINCE=""
+          elif [ -n "$PREVIOUS_SINCE" ] && [ "$PREVIOUS_CONCLUSION" != "success" ]; then
+            SINCE="$PREVIOUS_SINCE"
+          else
+            SINCE="$BAD_SHA"
+          fi
+
+          msg=$(printf 'scheduled %s %s\n\nsha: %s\nconclusion: %s\nsince: %s\nrun: %s\nrecorded: %s\n' \
+            "$KEY" "$CONCLUSION" "$BAD_SHA" "$CONCLUSION" "$SINCE" "$RUN_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+          empty=$(git hash-object -t tree /dev/null)
+          commit=$(git commit-tree "$empty" -m "$msg")
+          git push --force origin "$commit:$REF"
+
       - name: open, update, or close the persistent regression issue
         shell: bash
         run: |
