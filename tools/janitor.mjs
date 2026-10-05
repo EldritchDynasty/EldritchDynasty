@@ -43,7 +43,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { onPath } from './portable.mjs';
-import { closingIssues } from './closing-keywords.mjs';
+import { closingIssues, mergedPrClosingIssues } from './closing-keywords.mjs';
 
 const DRY = process.env.DRY_RUN === '1';
 const REMOTE = process.env.REMOTE ?? 'origin';
@@ -56,6 +56,8 @@ const SUMMARY = process.env.GITHUB_STEP_SUMMARY ?? '';
  */
 const readRange = (raw) => (/^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$/.test(raw) ? raw : '');
 const RANGE = readRange((process.env.JANITOR_RANGE ?? '').trim());
+const REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
+const DEFAULT_BRANCH = process.env.JANITOR_DEFAULT_BRANCH ?? 'main';
 const CWD = process.cwd();
 
 /**
@@ -95,6 +97,38 @@ function issueState(n) {
   });
   const out = (r.stdout ?? '').trim();
   return !r.error && r.status === 0 && out ? out : 'UNKNOWN';
+}
+
+let reconciliationFailed = false;
+
+/**
+ * GitHub's commit -> pulls association survives native merge-queue rebase
+ * landings even when the PR body is not copied into the resulting commit.
+ * #454 and #485 are the live counterexamples that established this path.
+ */
+function mergedPullRequestsForCommit(sha) {
+  if (!HAS_GH || !REPOSITORY) return [];
+  const r = spawnSync('gh', [
+    'api',
+    '--header', 'Accept: application/vnd.github+json',
+    '--header', 'X-GitHub-Api-Version: 2026-03-10',
+    `/repos/${REPOSITORY}/commits/${sha}/pulls`,
+  ], { cwd: CWD, encoding: 'utf8' });
+
+  if (r.error || r.status !== 0) {
+    reconciliationFailed = true;
+    log(`issue reconciliation: could not read PRs for ${sha}: ${(r.stderr ?? '').trim()}`);
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(r.stdout ?? '[]');
+    if (Array.isArray(parsed)) return parsed;
+  } catch (error) {
+    log(`issue reconciliation: invalid PR response for ${sha}: ${error}`);
+  }
+  reconciliationFailed = true;
+  return [];
 }
 
 /**
@@ -233,12 +267,51 @@ const NAMED = new Set();
 if (RANGE) {
   say('');
   say('### Issues named by this push');
+
+  /** issue -> the strongest auditable source seen in this push */
+  const evidence = new Map();
+  const remember = (n, source) => {
+    if (!evidence.has(n) || source.startsWith('merged PR')) evidence.set(n, source);
+  };
+
   const body = gitOut('log', '--format=%B', RANGE);
-  for (const n of [...new Set(closingIssues(body))].sort((a, b) => Number(a) - Number(b))) {
+  for (const n of closingIssues(body)) remember(n, 'landing commit');
+
+  // Native merge queue may rebase a PR without copying its body to any commit.
+  // Ask GitHub which PRs own each newly-landed commit, then apply the SAME
+  // affirmative/negated parser used by PR admission. Only merged PRs targeting
+  // this repository's default branch can contribute evidence.
+  const commits = gitOut('rev-list', '--reverse', RANGE).split('\n').filter(Boolean);
+  for (const sha of commits) {
+    for (const pr of mergedPullRequestsForCommit(sha)) {
+      const closings = mergedPrClosingIssues(pr, {
+        repository: REPOSITORY,
+        defaultBranch: DEFAULT_BRANCH,
+      });
+      for (const n of closings) {
+        remember(n, `merged PR #${pr.number}`);
+        const mergedAt = Date.parse(pr.merged_at) / 1000;
+        if (Number.isFinite(mergedAt)) {
+          MAIN_LANDED_AT.set(n, Math.max(MAIN_LANDED_AT.get(n) ?? 0, mergedAt));
+        }
+      }
+    }
+  }
+
+  for (const n of [...evidence.keys()].sort((a, b) => Number(a) - Number(b))) {
     NAMED.add(n);
-    if (issueState(n) === 'OPEN') {
-      act('gh', 'issue', 'close', n, '--reason', 'completed', '--comment', 'Landed on `main`.');
-      say(`- closed #${n}`);
+    const source = evidence.get(n);
+    const state = issueState(n);
+    if (state === 'OPEN') {
+      act(
+        'gh', 'issue', 'close', n, '--reason', 'completed',
+        '--comment', `Landed on \`${DEFAULT_BRANCH}\` via ${source}.`,
+      );
+      say(`- closed #${n} — ${source}`);
+    } else if (state === 'CLOSED') {
+      say(`- #${n} already closed — ${source}`);
+    } else {
+      say(`- #${n} named by ${source}; state UNKNOWN, left untouched`);
     }
   }
 }
@@ -347,3 +420,8 @@ for (const claim of CLAIMS) {
 }
 say('');
 say(`${held} claim(s) still open.`);
+
+if (reconciliationFailed) {
+  process.stderr.write('Issue reconciliation was incomplete; see the diagnostics above.\n');
+  process.exitCode = 1;
+}
