@@ -1218,8 +1218,9 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
  *
  * Merge CI now has one blocking lane: batch. Expensive sampled gates are
  * direct scheduled commands in TELEMETRY_GATES; nightly runs fire-rate, war
- * and endings, while weekly runs blood. The fire-rate scheduled wrapper keeps
- * sampled vocabulary reach beside the memoized corpus it reads.
+ * and endings, while weekly evidence runs blood plus outcome-reach in #495's
+ * dedicated telemetry workflow. The fire-rate scheduled wrapper keeps sampled
+ * vocabulary reach beside the memoized corpus it reads.
  *
  * A future merge-blocking gate is still derived into batch automatically.
  * Timing is deliberately absent from this comment. The JSON budget is checked
