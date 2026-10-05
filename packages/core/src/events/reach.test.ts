@@ -12,7 +12,7 @@ import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool } from './selection.js';
-import { grantParcel, seizeParcel } from '../land.js';
+import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 
 const content = indexContent(loadContent());
 
@@ -4351,6 +4351,89 @@ describe('authored compound treasury-respect outcome witnesses', () => {
     for (const choice of event.interaction.choices) {
       for (const outcome of choice.outcomes) {
         const ctx = courtSeatFixture(seed, 'known');
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: choice.outcomes.length > 1,
+        });
+        expect(
+          result.ok,
+          `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+        seed += 1;
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
+describe('authored compound acreage outcome witnesses', () => {
+  function deedFixture(seed: number, enoughAcreage: boolean) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES.uncommon.minGeneration,
+    );
+    grantParcel(ctx, 'ashcroft');
+
+    if (!enoughAcreage) {
+      for (const parcel of content.parcels) {
+        if (String(parcel.id) === 'ashcroft') continue;
+        if (heldAcres(ctx) < 600) break;
+        seizeParcel(ctx, String(parcel.id));
+      }
+      if (heldAcres(ctx) >= 600) {
+        throw new Error('deed fixture could not reduce held acreage below 600 while retaining Ashcroft');
+      }
+    }
+
+    return ctx;
+  }
+
+  it('crosses the Deed Nobody Can Find parcel/acreage gate before selection and every outcome', () => {
+    const event = content.event('the_deed_nobody_can_find');
+    if (!event || event.interaction.kind === 'narration') {
+      throw new Error('deed fixture changed interaction');
+    }
+
+    const missingParcel = deedFixture(4400, true);
+    seizeParcel(missingParcel, 'ashcroft');
+    expect(
+      evalCondition(event.conditions, missingParcel),
+      'deed should be blocked without Ashcroft',
+    ).toBe(false);
+
+    const tooSmall = deedFixture(4401, false);
+    expect(
+      evalCondition(event.conditions, tooSmall),
+      'deed should be blocked below 600 held acres',
+    ).toBe(false);
+
+    const selection = deedFixture(4402, true);
+    expect(heldAcres(selection)).toBeGreaterThanOrEqual(600);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(4403));
+    expect(slots.ok, 'deed should resolve its real Head cast').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'deed should be selectable once Ashcroft and the acreage floor are both satisfied',
+    ).toBe(true);
+
+    const declared = event.interaction.choices.flatMap((choice) =>
+      choice.outcomes.map((outcome) =>
+        outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    const witnessed: string[] = [];
+    let seed = 4410;
+
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        const ctx = deedFixture(seed, true);
         const result = executeOutcomeWitness(ctx, event, {
           choiceId: choice.id,
           expectedOutcomeId: outcome.id,
