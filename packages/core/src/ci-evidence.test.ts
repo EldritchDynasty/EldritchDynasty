@@ -5,6 +5,7 @@ import { join, relative } from 'node:path';
 interface EvidenceInventory {
   jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
   gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
+  gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
   gateAssertions: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
   slowSuites: Array<{ path: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
 }
@@ -67,8 +68,22 @@ describe('CI evidence inventory', () => {
     expect(recorded).toEqual(actual);
   });
 
+  it('classifies every registered gate exactly once', () => {
+    const source = readFileSync(join(root, 'packages/core/src/tools/gates.ts'), 'utf8');
+    const registry = /export const GATES:[^=]+ = \{([\s\S]*?)^\};/m.exec(source);
+    expect(registry, 'gates.ts GATES registry').not.toBeNull();
+
+    const actual = [...registry![1]!.matchAll(/^  (?:'([^']+)'|([A-Za-z0-9_-]+)):\s+/gm)]
+      .map((match) => match[1] ?? match[2]!)
+      .sort();
+    const recorded = inventory.gates.map((entry) => entry.id).sort();
+
+    expect(new Set(recorded).size).toBe(recorded.length);
+    expect(recorded).toEqual(actual);
+  });
+
   it('keeps every proposed move off the merge path explicitly blocked', () => {
-    const entries = [...inventory.jobs, ...inventory.gateLanes, ...inventory.gateAssertions, ...inventory.slowSuites];
+    const entries = [...inventory.jobs, ...inventory.gateLanes, ...inventory.gates, ...inventory.gateAssertions, ...inventory.slowSuites];
     for (const entry of entries) {
       if (!entry.currentTier.startsWith('merge-blocking') || entry.proposedTier === entry.currentTier) continue;
       expect(
@@ -78,7 +93,7 @@ describe('CI evidence inventory', () => {
     }
   });
   it('requires a question and explicit classification for every entry', () => {
-    const entries = [...inventory.jobs, ...inventory.gateLanes, ...inventory.gateAssertions, ...inventory.slowSuites];
+    const entries = [...inventory.jobs, ...inventory.gateLanes, ...inventory.gates, ...inventory.gateAssertions, ...inventory.slowSuites];
     for (const entry of entries) {
       expect(entry.claim.trim(), JSON.stringify(entry)).not.toBe('');
       expect(entry.evidenceType.trim(), JSON.stringify(entry)).not.toBe('');
