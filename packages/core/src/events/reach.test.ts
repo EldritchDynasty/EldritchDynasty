@@ -2444,8 +2444,8 @@ describe('authored open-discrepancy Head-only outcome witnesses', () => {
 
     expect(cases.map((event) => String(event.id)).sort()).toEqual([
       'a_second_hand_that_agrees',
-      'somewhere_quiet_to_be_old',
       'something_the_church_wants_more',
+      'somewhere_quiet_to_be_old',
       'the_cross_reference',
     ]);
 
@@ -2725,8 +2725,8 @@ describe('authored simple positive-knowledge outcome witnesses', () => {
       ) return [];
 
       const leaf = condition.all[0];
-      if (!leaf || !('knowledge' in leaf) || leaf.knowledge.has !== true) return [];
-      return [{ event, flag: leaf.knowledge.knowledge }];
+      if (!leaf || !('knowledge' in leaf) || leaf.has !== true) return [];
+      return [{ event, flag: leaf.knowledge }];
     });
 
     expect(cases.map(({ event }) => String(event.id))).toEqual([
@@ -2836,7 +2836,7 @@ describe('authored founding-bottleneck blood-count outcome witnesses', () => {
         house: 'house_ilm',
       });
       spouse.membership = [{
-        house: ctx.world.playerHouse,
+        house: asId(ctx.world.playerHouse),
         kind: 'married_in',
         from: ctx.world.year,
       }];
@@ -2855,7 +2855,10 @@ describe('authored founding-bottleneck blood-count outcome witnesses', () => {
   }
 
   it('crosses bloodCount <= 2 and resolves both authored bottleneck slot shapes before committing every outcome', () => {
-    const cases = content.events.flatMap((event) => {
+    const cases = content.events.flatMap<{
+      event: (typeof content.events)[number];
+      kind: BottleneckKind;
+    }>((event) => {
       const condition = event.conditions;
       if (
         event.tier === 'frame'
@@ -2978,8 +2981,8 @@ describe('authored negative-knowledge outcome witnesses', () => {
 
       const negativeKnowledge = condition.all.some((leaf) => (
         'knowledge' in leaf
-        && leaf.knowledge.knowledge === 'knows_drowning_cost'
-        && leaf.knowledge.has === false
+        && leaf.knowledge === 'knows_drowning_cost'
+        && leaf.has === false
       ));
       const generation = condition.all.some((leaf) => (
         'generation' in leaf
