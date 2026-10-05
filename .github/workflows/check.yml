@@ -531,14 +531,13 @@ jobs:
 
   # ── THE GATES, PARTITIONED BY MEASURED COST ──────────────────────────────
   #
-  # packages/core/src/tools/gates.ts owns the partition and derives batch
-  # as every registered gate not assigned an independent lane. The fire-rate
-  # lane deliberately keeps outcome-reach and vocabulary-reach beside their
-  # shared process-local corpus. packages/core/src/gates.test.ts proves that
-  # this matrix and the engine lane table agree.
+  # packages/core/src/tools/gates.ts derives the merge-blocking batch from
+  # GATES. Expensive sampled evidence is intentionally absent here and runs in
+  # nightly/weekly workflows; release-only jobs below restore the complete set
+  # before anything is packaged. gates.test.ts proves this matrix and GATES
+  # still agree.
   #
-  # tools/gate-durations.json is the sole current timing authority. Each lane
-  # measures itself below and fails if it exceeds the checked tolerance.
+  # tools/gate-durations.json remains the checked timing authority for batch.
   gates:
     name: gates (${{ matrix.lane }})
     needs: tier
@@ -549,7 +548,7 @@ jobs:
       # these lanes answer unrelated questions.
       fail-fast: false
       matrix:
-        lane: [batch, blood, fire-rate, war, endings]
+        lane: [batch]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -655,13 +654,54 @@ jobs:
                 .join(', ')}`);
             }
 
+  # TAGS KEEP THE COMPLETE EVIDENCE SET.
+  #
+  # PR/merge latency may move sampled evidence to scheduled cadence; a shipped
+  # artifact may not. These jobs restore every slow suite and sampled gate
+  # before Android or Windows packaging can start.
+  release-slow:
+    name: release slow ${{ matrix.shard }}/4
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run complete slow suite
+        run: npm run test:slow -- --shard=${{ matrix.shard }}/4
+
+  release-gates:
+    name: release gates (${{ matrix.gate }})
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: [blood, fire-rate, war, endings]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run scheduled gate at canonical sample
+        run: npm run gates -- ${{ matrix.gate }}
+
   # A release is the same checked client inside an Android activity. It is
   # deliberately downstream of every game check: an AAB that packages an
   # invalid bundle is not a release candidate.
   android:
     name: Android AAB
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [lint, windows, test, gates]
+    needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -718,7 +758,7 @@ jobs:
   windows-release:
     name: Windows installer
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [lint, windows, test, gates]
+    needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
