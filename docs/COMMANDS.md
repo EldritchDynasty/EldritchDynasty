@@ -136,8 +136,12 @@ inventory into an optimistic path-filter list.
 `.github/workflows/nightly-regression.yml` runs daily on `main` (and by
 manual dispatch): **all** slow-test shards, the `fire-rate`, `war` and
 `endings` gate lanes, and the broad iOS build/install/launch smoke.
-`.github/workflows/weekly-statistical.yml` runs the canonical `blood` sample and
-sampled `outcome-reach` telemetry weekly (and by manual dispatch).
+`.github/workflows/weekly-statistical.yml` runs the canonical `blood` sample
+weekly (and by manual dispatch). `.github/workflows/outcome-reach-telemetry.yml`
+runs the canonical sampled `outcome-reach` report weekly on its own cadence.
+The scheduled-regression watcher records all three workflow streams, so a red
+nightly, blood, or outcome-reach run becomes visible to `orient` and persistent
+P0 project work rather than a dashboard-only failure.
 
 The slow-test cadence split is now real rather than aspirational. Full PR and
 merge-group CI still run every fast test plus the slow suites whose checked
