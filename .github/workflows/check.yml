@@ -233,7 +233,7 @@ jobs:
           else
             echo "SHORT SET: typecheck, validate and the fast lane only." >> "$GITHUB_STEP_SUMMARY"
             echo "This is a draft pull request. Mark it ready for review, or add the" >> "$GITHUB_STEP_SUMMARY"
-            echo "'full-ci' label, to run the slow suites, both gate lanes and windows." >> "$GITHUB_STEP_SUMMARY"
+            echo "'full-ci' label, to run the slow suites, all gate lanes and Windows." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   # Seconds, and it is the one that catches the failure this codebase calls
