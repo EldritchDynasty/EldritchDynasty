@@ -12,7 +12,9 @@ import {
 import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
-import { gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
+import { bloodGateInputs, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
+import { partitionGateInputs, reduceGatePartitions } from './tools/gate-partition.js';
+import { warGateInputs } from './tools/war-gate.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -170,6 +172,74 @@ describe('the CI gate lanes cover every gate exactly once', () => {
   it('refuses a lane name that is not one', () => {
     // A typo in the workflow must not run zero gates and exit green.
     expect(() => gatesInLane('batches')).toThrow(/unknown gate lane/);
+  });
+});
+
+describe('#440 expensive gate partitioning', () => {
+  it('partitions every canonical input exactly once for one through four workers', () => {
+    const inputs = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+    for (const workers of [1, 2, 3, 4]) {
+      const plan = partitionGateInputs(inputs, workers);
+      const flattened = plan.flatMap((partition) => partition.items);
+
+      expect(flattened).toEqual(inputs.map((input, index) => ({ index, input })));
+      expect(new Set(flattened.map((item) => item.index)).size).toBe(inputs.length);
+      expect(Math.max(...plan.map((partition) => partition.items.length))
+        - Math.min(...plan.map((partition) => partition.items.length))).toBeLessThanOrEqual(1);
+    }
+
+    expect(() => partitionGateInputs(inputs, 0)).toThrow(/worker count/);
+    expect(() => partitionGateInputs(inputs, 5)).toThrow(/worker count/);
+  });
+
+  it('reduces out-of-order worker completion into canonical observation order', () => {
+    const plan = partitionGateInputs(['a', 'b', 'c', 'd', 'e'], 3);
+    const results = plan.map((partition) => ({
+      id: partition.id,
+      observations: partition.items.map(({ index, input }) => ({
+        index,
+        value: input.toUpperCase(),
+      })),
+    })).reverse();
+
+    expect(reduceGatePartitions(plan, results)).toEqual(['A', 'B', 'C', 'D', 'E']);
+  });
+
+  it('fails closed on missing, duplicate, or malformed worker evidence', () => {
+    const plan = partitionGateInputs(['a', 'b', 'c', 'd'], 2);
+    const valid = plan.map((partition) => ({
+      id: partition.id,
+      observations: partition.items.map(({ index, input }) => ({ index, value: input })),
+    }));
+
+    expect(() => reduceGatePartitions(plan, valid.slice(0, 1))).toThrow(/result count mismatch/);
+    expect(() => reduceGatePartitions(plan, [valid[0]!, valid[0]!])).toThrow(/duplicate gate partition result/);
+
+    const malformed = structuredClone(valid);
+    malformed[0]!.observations[0]!.index = 999;
+    expect(() => reduceGatePartitions(plan, malformed)).toThrow(/unexpected index/);
+  });
+
+  it('preserves the complete historical blood and war input order', () => {
+    const seeds = [4000, 4013, 4026];
+
+    expect(bloodGateInputs(seeds)).toEqual([
+      { seed: 4000, policy: 'concentrate' },
+      { seed: 4013, policy: 'concentrate' },
+      { seed: 4026, policy: 'concentrate' },
+      { seed: 4000, policy: 'dilute' },
+      { seed: 4013, policy: 'dilute' },
+      { seed: 4026, policy: 'dilute' },
+    ]);
+    expect(warGateInputs(seeds)).toEqual([
+      { seed: 4000, policy: 'commit' },
+      { seed: 4013, policy: 'commit' },
+      { seed: 4026, policy: 'commit' },
+      { seed: 4000, policy: 'abstain' },
+      { seed: 4013, policy: 'abstain' },
+      { seed: 4026, policy: 'abstain' },
+    ]);
   });
 });
 
