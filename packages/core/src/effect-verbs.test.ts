@@ -45,6 +45,30 @@ function placedCarrier(ctx: ReturnType<typeof bootstrap>, sex: 'male' | 'female'
   throw new Error('test content produced no carried font for a ' + sex + ' across 96 deterministic placements');
 }
 
+function placedMundaneMan(ctx: ReturnType<typeof bootstrap>) {
+  for (let i = 0; i < 96; i += 1) {
+    const p = place(ctx, { sex: 'male', age: 20, name: 'Mundane man ' + i });
+    if (!phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return p;
+  }
+  throw new Error('test content produced no mundane man across 96 deterministic placements');
+}
+
+describe('the Madness effect is gated by expression', () => {
+  it('refuses Madness to a woman and to a mundane man even when called directly', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const woman = place(ctx, { sex: 'female', age: 30, name: 'Incapable woman' });
+    const mundane = placedMundaneMan(ctx);
+
+    applyEffect({ kind: 'madness', target: { slot: 'TARGET' }, delta: 40 }, ctx, { TARGET: woman.id });
+    applyEffect({ kind: 'madness', target: { slot: 'TARGET' }, delta: 40 }, ctx, { TARGET: mundane.id });
+
+    expect(phenotypeOf(woman, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(false);
+    expect(phenotypeOf(mundane, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(false);
+    expect(woman.madness).toBe(0);
+    expect(mundane.madness).toBe(0);
+  });
+});
+
 describe('the forced-Awakening effect verb', () => {
   it('records one forced historical Awakening and invalidates derived attributes', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
