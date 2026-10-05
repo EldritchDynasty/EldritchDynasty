@@ -192,8 +192,8 @@ jobs:
               --add-label "priority: P0"
             if gh issue view "$NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
-              --json comments \
-              --jq '.comments[].body' \
+              --json body,comments \
+              --jq '[.body, (.comments[].body)] | .[]' \
               | grep -Fq "$RUN_URL"; then
               echo "Run $RUN_URL is already recorded on issue #$NUMBER."
             else
