@@ -432,10 +432,10 @@
     {
       "path": "packages/core/src/economy.slow.test.ts",
       "claim": "Played/full-run regression assertions: survives the year ticking over; accumulates rather than replacing; holds the mythic cap on people; does not let event cooldowns starve the household of staff; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "economic balance regression with merge-blocking economy/effect/frequency witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/economy.test.ts keeps acquired-attribute durability/accumulation, income+upkeep, Wardship income diversion, household labour/upkeep, and Respect-scaled upkeep merge-blocking. packages/core/src/minting.test.ts proves editor preview is side-effect free including the character frequency ledger, plus eligibility/frequency gating. The slow suite retains long-run mythic-population caps, staffing incidence, debt-floor share, hiring affordability and treasury-balance measurements."
     },
     {
       "path": "packages/core/src/expression.slow.test.ts",
