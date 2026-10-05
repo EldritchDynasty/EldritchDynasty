@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, FREQUENCY_PROFILES, indexContent, type ActiveAge } from '@ed/schema';
+import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
@@ -2065,7 +2065,8 @@ describe('authored simple ascension-gated outcome witnesses', () => {
         || condition.ascension.best === true
         || slotIds.length !== 1
         || slotIds[0] !== 'ASCENDANT'
-        || ascendant?.role !== 'foremost'
+        || !ascendant
+        || !isLadderRole(ascendant.role)
         || ascendant.castBy !== 'engine'
         || ascendant.filters.some((filter) => !('trait' in filter))
         || event.interaction.kind === 'narration'
