@@ -44,25 +44,3 @@ jobs:
         with:
           name: weekly-gate-blood
           path: weekly-gate-blood.json
-
-  outcome-reach:
-    name: weekly outcome-reach telemetry
-    needs: main-only
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: run canonical outcome-reach sample
-        run: |
-          npm run gates -- outcome-reach --timings-json weekly-gate-outcome-reach.json
-      - name: retain structured outcome-reach timings
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-gate-outcome-reach
-          path: weekly-gate-outcome-reach.json
