@@ -287,7 +287,31 @@ function storybookHouse(source: ContentBundle | Content): SimCtx {
   }
 
   if (ctx.world.narrator) ctx.world.people.kill(ctx.world.narrator, ctx.world.year, 'so the tale could begin');
-  place(ctx, { sex: 'male', age: 50, name: 'The Current Head', castSlots: ['head'] });
+
+  /**
+   * A HIEROPHANT BEFORE THE VESSEL.
+   *
+   * The Demigod fixture's foremost man deliberately already carries
+   * `vessel` and `great_rite`. Once the Vessel template correctly excluded
+   * a prior taker (#472), gate 2 had no household representing the moment the
+   * rite is actually offered: a living foremost Hierophant who has not taken
+   * it yet. That made honest content look uncastable rather than exposing a
+   * product bug. The storybook house is already exalted, so give its current
+   * head the blood/books/cost of a Hierophant and stop exactly at the unpaid
+   * Vessel gate.
+   */
+  const expresser = ctx.world.people.living()
+    .find((p) => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress);
+  const head = place(ctx, { sex: 'male', age: 50, name: 'The Current Head', castSlots: ['head'] });
+  if (expresser) {
+    head.genome = { kind: 'materialized', genome: genomeOf(expresser, ctx.genetics) };
+    head.phenotype = undefined;
+  }
+  head.awakening.awakened = true;
+  head.acquired[ELDRITCH_GIFT] = 400;
+  head.acquired.mind = 200;
+  head.madness = 25;
+  for (const b of indexContent(source).spellbooks.slice(0, 8)) head.spellsKnown.push(b.id);
 
   const girl = place(ctx, { sex: 'female', age: 10, name: 'A Girl Who Woke Early' });
   girl.awakening.awakened = true;
