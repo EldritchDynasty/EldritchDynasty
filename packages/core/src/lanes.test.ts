@@ -354,6 +354,7 @@ describe('native merge queue admission', () => {
 
   it('uses the queue-specific App permission and native GraphQL mutation', () => {
     expect(workflow).toContain('permission-merge-queues: write');
+    expect(workflow).toContain('permission-pull-requests: write');
     expect(workflow).toContain('enqueuePullRequest');
     expect(workflow).toContain('expectedHeadOid');
     expect(workflow).not.toContain('/merge-async');
