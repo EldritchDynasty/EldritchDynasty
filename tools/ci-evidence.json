@@ -326,10 +326,10 @@
     {
       "path": "packages/core/src/attributes.slow.test.ts",
       "claim": "Played/full-run regression assertions: gives a scholar\\; makes a man stronger than a woman about nineteen times in twenty; does not move the population mean; leaves the attributes nobody declared it on alone; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "statistical/population attribute regression with merge-blocking formula and wiring witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/attributes.test.ts pins dimorphism application, loci-derived fecundity centring, fertility age/sex rules, multiplicative mother-weighted couple fertility, and sex-symmetric health. packages/core/src/minting.test.ts pins authored template bias onto each minted lazy genome. Existing genetics/allele tests cover inheritance and draw mechanics. The slow suite remains nightly evidence for population rates, correlations, Monte Carlo centres, family-size bands and birth-age distributions."
     },
     {
       "path": "packages/core/src/blood.slow.test.ts",
