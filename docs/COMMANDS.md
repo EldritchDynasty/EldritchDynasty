@@ -143,11 +143,14 @@ The slow-test cadence split is now real rather than aspirational. Full PR and
 merge-group CI still run every fast test plus the slow suites whose checked
 inventory entry says `currentTier: merge-blocking`; nightly runs the complete
 slow suite, including the broad population/cadence regressions moved off the
-merge path. The selected merge-slow set is duration-packed into four shards
-and currently measures about 9.5 minutes per shard before hosted-runner setup.
-A slow suite stays merge-blocking when it contains a deterministic/stateful
-contract without a cheaper witness — runtime alone is never permission to move
-it. The broad iOS runtime smoke follows the same policy shape: merge CI runs it
+merge path. The selected merge-slow set is duration-packed into four shards from the
+committed duration table, and `ci-evidence.test.ts` fails if that measured
+merge-slow floor exceeds the issue's ten-minute target. Do not copy the current
+shard stopwatch into prose: the inventory is being deliberately reduced as
+deterministic witnesses replace played-run evidence. A slow suite stays
+merge-blocking when it contains a deterministic/stateful contract without a
+cheaper witness — runtime alone is never permission to move it. The broad iOS
+runtime smoke follows the same policy shape: merge CI runs it
 when native mobile/toolchain inputs change, while nightly exercises it
 regardless of the day's diffs. Gate cutovers remain separately justified by
 their own inventory rows; a scheduled copy is not by itself permission to stop
