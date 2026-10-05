@@ -425,7 +425,7 @@ describe('family planning fields do not read hidden blood', () => {
 describe('the read model a client draws', () => {
   it('keeps Awakening separate from expression for a female carrier', () => {
     const game = newGame(content, { seed: 1042, decider: 'chronicler' });
-    let carrier;
+    let carrier: ReturnType<typeof place> | undefined;
     for (let i = 0; i < 96; i += 1) {
       const p = place(game.ctx, { sex: 'female', age: 12, name: 'View carrier ' + i });
       if (phenotypeOf(p, game.ctx.genetics, game.ctx.world.year).eldritch.carriedFont > 0) {
