@@ -284,11 +284,25 @@ describe('CI evidence inventory', () => {
     expect(releaseSlowEnd, 'check.yml release-gates job after release-slow').toBeGreaterThan(releaseSlowStart);
     const releaseSlowJob = check.slice(releaseSlowStart, releaseSlowEnd);
 
+    const releaseGatesStart = releaseSlowEnd;
+    const releaseGatesEnd = check.indexOf('\n  android:\n', releaseGatesStart);
+    expect(releaseGatesEnd, 'check.yml android job after release-gates').toBeGreaterThan(releaseGatesStart);
+    const releaseGatesJob = check.slice(releaseGatesStart, releaseGatesEnd);
+    const releaseGateMatrix = /\bgate:\s*\[([^\]]+)\]/.exec(releaseGatesJob);
+    expect(releaseGateMatrix, 'release-gates matrix').not.toBeNull();
+    const releaseGateNames = releaseGateMatrix![1]!
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .sort();
+
     expect(check).toContain('tools/ci-evidence.json');
     expect(check).toContain('entry.currentTier === "merge-blocking"');
     expect(mergeTestJob).toContain('npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4');
     expect(mergeTestJob).not.toContain('npm test -- --shard=${{ matrix.shard }}/4');
     expect(releaseSlowJob).toContain('npm test -- --shard=${{ matrix.shard }}/4');
+    expect(releaseGateNames).toEqual(inventory.telemetryGates.map((entry) => entry.id).sort());
+    expect(releaseGatesJob).toContain('npm run gates -- ${{ matrix.gate }}');
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('gate: [fire-rate, war, endings]');
     expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
@@ -301,7 +315,6 @@ describe('CI evidence inventory', () => {
 
     expect(check).toContain('release-slow:');
     expect(check).toContain('release-gates:');
-    expect(check).toContain('gate: [blood, fire-rate, war, endings, outcome-reach]');
     expect(check).toContain('needs: [lint, windows, test, gates, release-slow, release-gates]');
   });
 
