@@ -114,8 +114,11 @@ jobs:
           # enqueuePullRequest mutates the PR as well as the queue. Narrowing
           # the installation token to merge-queues alone reaches GraphQL but
           # GitHub rejects it as "Resource not accessible by integration".
+          # Admission is a merge, so the token needs contents: write too; the
+          # ruleset and the queue's merge_group CI still gate what lands.
           permission-merge-queues: write
           permission-pull-requests: write
+          permission-contents: write
 
       - name: Add pull request to native merge queue
         if: steps.pr.outputs.eligible == 'true'
