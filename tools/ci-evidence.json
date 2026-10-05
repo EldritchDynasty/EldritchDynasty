@@ -232,7 +232,7 @@
       "evidenceType": "deterministic structural verdict + sampled non-failing diagnostic",
       "currentTier": "merge-blocking",
       "proposedTier": "split: structural merge-blocking + reached diagnostic scheduled",
-      "fasterEvidence": "The gate's failure decision is fully determined by vocabulary().effects versus authored outcome effect kinds and the pinned OWED list. playGateBatch is consulted only to populate the non-failing 'authored but never reached' line. Preserve that diagnostic in scheduled occurrence telemetry, but keep the static authorship/debt verdict merge-blocking without an 800-run replay.",
+      "fasterEvidence": "packages/core/src/tools/vocabulary-authorship.ts computes the gate's actual failure decision entirely from vocabulary().effects versus authored outcome Effect kinds plus the pinned debt list, with no simulation. packages/core/src/vocabulary-authorship.test.ts proves shipped content passes and a deliberately broken fixture that removes an authored Effect kind is rejected. Preserve the old non-failing 'authored but never reached' diagnostic in scheduled occurrence telemetry.",
       "moveBlockedBy": "#495/PR #496 currently owns gates.ts/gates.test.ts. After it lands, factor the static vocabulary authorship/debt verdict away from the sampled reach diagnostic before removing the fire-rate lane from merge CI; never move the existing 800-run implementation wholesale into batch."
     },
     {
