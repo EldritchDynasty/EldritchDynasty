@@ -2630,6 +2630,172 @@ describe('authored unheard-warning outcome witnesses', () => {
 });
 
 
+describe('authored simple year-gated outcome witnesses', () => {
+  it('crosses each simple authored calendar-year floor before executing its outcome', () => {
+    const cases = content.events.flatMap((event) => {
+      const condition = event.conditions;
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+        || slotIds.length !== 1
+        || slotIds[0] !== 'HEAD'
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || event.interaction.kind !== 'narration'
+      ) return [];
+
+      const leaf = condition.all[0];
+      if (!leaf || !('year' in leaf) || leaf.year.op !== 'gte') return [];
+      return [{ event, year: leaf.year.value }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id))).toEqual([
+      'the_burning_of_the_nine_libraries',
+    ]);
+
+    for (const { event, year } of cases) {
+      const before = testWorld(content, 8500, year - 1);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      expect(evalCondition(event.conditions, before)).toBe(false);
+
+      const selection = testWorld(content, 8500, year);
+      selection.world.generation = Math.max(
+        selection.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      expect(evalCondition(event.conditions, selection)).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(8501));
+      expect(slots.ok, String(event.id) + ' should resolve its authored Head slot').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast).toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once its calendar-year floor is reached',
+      ).toBe(true);
+
+      const outcome = event.interaction.outcomes[0]!;
+      const ctx = testWorld(content, 8502, year);
+      ctx.world.generation = Math.max(
+        ctx.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      const result = executeOutcomeWitness(ctx, event, {
+        expectedOutcomeId: outcome.id,
+        rng: makeRng(8503),
+      });
+      expect(result.ok, result.reason).toBe(true);
+      expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));
+    }
+  });
+});
+
+
+describe('authored simple positive-knowledge outcome witnesses', () => {
+  it('crosses each simple authored knowledge gate before executing every Head-only outcome', () => {
+    const cases = content.events.flatMap((event) => {
+      const condition = event.conditions;
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+        || slotIds.length !== 1
+        || slotIds[0] !== 'HEAD'
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) return [];
+
+      const leaf = condition.all[0];
+      if (!leaf || !('knowledge' in leaf) || leaf.knowledge.has !== true) return [];
+      return [{ event, flag: leaf.knowledge.knowledge }];
+    });
+
+    expect(cases.map(({ event }) => String(event.id))).toEqual([
+      'what_bramme_calls_a_thin_year',
+    ]);
+
+    const witnessed: string[] = [];
+    const declared = cases.flatMap(({ event }) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    let seed = 8600;
+
+    for (const { event, flag } of cases) {
+      const before = testWorld(content, seed);
+      before.world.generation = Math.max(
+        before.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      before.world.knowledge.delete(flag);
+      expect(evalCondition(event.conditions, before)).toBe(false);
+
+      const selection = testWorld(content, seed);
+      selection.world.generation = Math.max(
+        selection.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      selection.world.knowledge.add(flag);
+      expect(evalCondition(event.conditions, selection)).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored Head slot').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast).toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once its knowledge gate is satisfied',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = testWorld(content, seed);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          ctx.world.knowledge.add(flag);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
