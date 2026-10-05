@@ -112,7 +112,7 @@ queue performs its own fresh rebase and authoritative merge-group check.
 `.github/workflows/check.yml` runs **in two tiers**. The short one — `lint`
 (typecheck + validate + prose annotations) and `fast lane` — runs on every
 event, always. The full one adds `test` as a four-way vitest shard, `gates` in
-five lanes (`batch`, `blood`, `fire-rate`, `war` and `endings`), a `windows` runner and a `corpus` warm that
+one merge-blocking `batch` lane (sampled `fire-rate`, `war`, `endings` run nightly and `blood` weekly), a `windows` runner and a `corpus` warm that
 nothing waits on, and it runs on every push to `main`, every tag, every manual
 dispatch and every pull request that is **not a draft**. A draft pull request
 gets the short tier, and the `full-ci` label raises it without undrafting.
