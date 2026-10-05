@@ -366,6 +366,25 @@ describe('native merge queue admission', () => {
     expect(workflow).toContain('required="success"');
     expect(workflow).toContain('the workflow_run event can arrive seconds before that check is');
   });
+
+  it('judges a pull_request by its newest finished CI required run, never a stale one (#493)', () => {
+    // sort_by(.completed_at) ranked a still-running check (null) first, so a
+    // draft-tier success outranked the full run marking the PR ready started.
+    expect(workflow).not.toContain('sort_by(.completed_at)');
+    expect(workflow).toContain('sort_by(.id) | last');
+    expect(workflow).toContain('elif .status == "completed" then (.conclusion // "") else "pending" end');
+  });
+
+  it('waits out "CI required is expected" instead of failing or giving up silently (#493)', () => {
+    expect(workflow).toContain('Required status check .*CI required.* is expected');
+    // On a pull_request event the workflow_run handoff admits the PR later...
+    expect(workflow).toContain('if [[ "$GITHUB_EVENT_NAME" != "workflow_run" ]]; then');
+    // ...after that handoff the retry is bounded, keeps the same head, and
+    // every other refusal still fails closed.
+    expect(workflow).toContain('for delay in 5 10 20; do');
+    expect(workflow).toContain('-F expectedHeadOid="$HEAD_SHA"');
+    expect(workflow).toContain('echo "::error::GitHub GraphQL merge-queue request failed for PR #$PR_NUMBER:"');
+  });
 });
 
 describe('the shards are packed by duration', () => {
