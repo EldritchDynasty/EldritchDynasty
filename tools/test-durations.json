@@ -3,12 +3,12 @@
   "measured": "2026-10-04",
   "shards": 4,
   "shardCostsMs": [
-    1522214,
-    1522206,
-    1522206,
-    1522214
+    1522222,
+    1522213,
+    1522222,
+    1522221
   ],
-  "totalMs": 6088840,
+  "totalMs": 6088878,
   "files": {
     "packages/client/src/components/AdviserHelp.test.ts": 1724,
     "packages/client/src/components/Book.test.ts": 1416,
@@ -75,6 +75,7 @@
     "packages/core/src/cast.test.ts": 786,
     "packages/core/src/chapter.test.ts": 19518,
     "packages/core/src/checks.test.ts": 614,
+    "packages/core/src/ci-evidence.test.ts": 38,
     "packages/core/src/claims.test.ts": 20,
     "packages/core/src/codemap.test.ts": 50,
     "packages/core/src/condition.slow.test.ts": 2363,

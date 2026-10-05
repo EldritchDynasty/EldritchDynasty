@@ -1,0 +1,74 @@
+name: scheduled regression watch
+
+on:
+  workflow_run:
+    workflows: [nightly regression, weekly statistical]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    name: surface scheduled regression
+    if: github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_NAME: ${{ github.event.workflow_run.name }}
+      CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      BAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+    steps:
+      - name: open, update, or close the persistent regression issue
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$RUN_NAME" in
+            "nightly regression")
+              TITLE="[scheduled-regression] nightly regression is red"
+              ;;
+            "weekly statistical")
+              TITLE="[scheduled-regression] weekly statistical evidence is red"
+              ;;
+            *)
+              echo "Unrecognised scheduled workflow: $RUN_NAME"
+              exit 1
+              ;;
+          esac
+
+          NUMBER="$(
+            gh issue list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state open \
+              --limit 100 \
+              --json number,title \
+              --jq ".[] | select(.title == \"$TITLE\") | .number" \
+              | head -n 1
+          )"
+
+          if [ "$CONCLUSION" = "success" ]; then
+            if [ -n "$NUMBER" ]; then
+              gh issue close "$NUMBER" \
+                --repo "$GITHUB_REPOSITORY" \
+                --comment "Recovered on $BAD_SHA: $RUN_URL"
+            fi
+            exit 0
+          fi
+
+          REPORT="$(cat <<EOF
+          Scheduled evidence **$RUN_NAME** concluded **$CONCLUSION** on $BAD_SHA.
+
+          Run: $RUN_URL
+
+          Treat this as active regression work. The first report in this issue is the first known bad scheduled SHA; later failures are appended here until a successful run closes the issue.
+          EOF
+          )"
+
+          if [ -n "$NUMBER" ]; then
+            gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$REPORT"
+          fi

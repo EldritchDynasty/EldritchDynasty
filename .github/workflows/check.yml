@@ -161,6 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       full: ${{ steps.decide.outputs.full }}
+      ios: ${{ steps.decide.outputs.ios }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -207,6 +208,21 @@ jobs:
             if [ "$SET" = short ]; then FULL=false; fi
           fi
           echo "full=$FULL" >> "$GITHUB_OUTPUT"
+
+          # The broad native iOS runtime smoke is expensive and runner-sensitive.
+          # Keep it merge-blocking only when the PR/integration head can change
+          # the native host/toolchain contract; nightly still exercises it on main.
+          IOS=false
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            IOS=true
+          else
+            IOS_FILES="$(git diff --name-only "$BASE" "$HEAD_SHA")"
+            if printf '%s\n' "$IOS_FILES" | grep -Eq '^(packages/mobile/|packages/client/src/platform(\.test)?\.ts$|package(-lock)?\.json$|\.github/workflows/(check|nightly-regression)\.yml$)'; then
+              IOS=true
+            fi
+          fi
+          echo "ios=$IOS" >> "$GITHUB_OUTPUT"
+
           if [ "$FULL" = true ]; then
             echo "FULL SET: every job in this workflow." >> "$GITHUB_STEP_SUMMARY"
             if [ -n "$DOCS" ]; then echo "$DOCS" >> "$GITHUB_STEP_SUMMARY"; fi
@@ -361,7 +377,7 @@ jobs:
   ios:
     name: iOS simulator build
     needs: tier
-    if: needs.tier.outputs.full == 'true'
+    if: needs.tier.outputs.full == 'true' && needs.tier.outputs.ios == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -675,9 +691,11 @@ jobs:
           script: |
             const needs = JSON.parse(process.env.NEEDS_JSON);
             const shortTier = needs.tier?.outputs?.full !== 'true';
+            const iosRequired = needs.tier?.outputs?.ios === 'true';
             const shortTierJobs = new Set(['windows', 'ios', 'test', 'gates', 'corpus']);
             const failed = Object.entries(needs).filter(([name, job]) => {
               if (job.result === 'success') return false;
+              if (name === 'ios' && job.result === 'skipped' && !iosRequired) return false;
               return !(shortTier
                 && job.result === 'skipped'
                 && shortTierJobs.has(name));

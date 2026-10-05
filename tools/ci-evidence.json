@@ -1,0 +1,606 @@
+{
+  "version": 2,
+  "issue": 451,
+  "note": "Inventory foundation only. proposedTier is a candidate, not permission to move evidence. Any entry with moveBlockedBy must stay on the current merge path until that blocker is resolved and the assertion-level claim has been reviewed.",
+  "jobs": [
+    {
+      "id": "tier",
+      "claim": "Classify the event and diff so required CI cannot silently omit evidence.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "lint",
+      "claim": "Typecheck all supported TypeScript/Vue surfaces and validate authored content/schema contracts.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "fast",
+      "claim": "Run the fast deterministic regression and operating/tooling/portability contract.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "windows",
+      "claim": "Prove the supported Windows tooling contract with the same typecheck/validate/fast commands.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "ios",
+      "claim": "Build/install/launch the supported iOS host: merge-blocking when native-host/toolchain inputs change, plus a broad nightly main-branch runtime smoke.",
+      "evidenceType": "deterministic",
+      "currentTier": "targeted merge-blocking + nightly",
+      "proposedTier": "targeted merge-blocking + nightly"
+    },
+    {
+      "id": "test",
+      "claim": "Run the complete Vitest suite, including century-scale slow regression suites.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Each slow suite below must be assertion-classified; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "id": "gates",
+      "claim": "Run registered simulation/content gates in their measured lanes.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "split-by-lane",
+      "moveBlockedBy": "Use the gate inventory below; do not move a lane wholesale where claims are mixed."
+    },
+    {
+      "id": "corpus",
+      "claim": "Warm the advisory run corpus for later runs; failure never changes correctness.",
+      "evidenceType": "advisory",
+      "currentTier": "advisory",
+      "proposedTier": "nightly"
+    },
+    {
+      "id": "required",
+      "claim": "Publish one stable required verdict for pull_request and merge_group integration heads.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "android",
+      "claim": "Build the signed Android release artifact for tags.",
+      "evidenceType": "release",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
+      "id": "windows-release",
+      "claim": "Build and verify the Windows release artifact for tags.",
+      "evidenceType": "release",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    }
+  ],
+  "gateLanes": [
+    {
+      "id": "batch",
+      "claim": "Cheap registered gates not assigned to a dedicated expensive lane; failures are direct invariant/reference violations or compact deterministic checks.",
+      "evidenceType": "deterministic",
+      "currentMeasuredCost": "~7m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "blood",
+      "claim": "Large-sample bloodline/genetic distribution confidence.",
+      "evidenceType": "statistical",
+      "currentMeasuredCost": "~50m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "weekly",
+      "moveBlockedBy": "Confirm deterministic mechanism coverage before the canonical statistical batch stops blocking; coordinate #440."
+    },
+    {
+      "id": "fire-rate",
+      "claim": "Event occurrence/frequency plus reachability/vocabulary evidence sharing a run corpus.",
+      "evidenceType": "mixed",
+      "currentMeasuredCost": "~21m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "#442 must replace probabilistic outcome reachability as blocking evidence; retain deterministic structural/vocabulary checks on merge path."
+    },
+    {
+      "id": "war",
+      "claim": "Muster/war mechanism and balance evidence; assertion families are mixed and must be decomposed.",
+      "evidenceType": "mixed",
+      "currentMeasuredCost": "~39m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-by-assertion decomposition required by #451; coordinate #440 before any statistical subset moves weekly."
+    },
+    {
+      "id": "endings",
+      "claim": "Campaign ending distribution and ending-system regression evidence.",
+      "evidenceType": "mixed",
+      "currentMeasuredCost": "~9m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Separate authored hard invariants from distribution assertions before moving the lane."
+    }
+  ],
+  "slowSuites": [
+    {
+      "path": "packages/client/src/lib/run.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for run. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/ages.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for ages. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/arcs.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for arcs. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/ascension.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for ascension. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/assize.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for assize. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/attention.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for attention. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/attributes.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for attributes. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/blood.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for blood. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/branches-contentment.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for branches contentment. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/branches-grievance.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for branches grievance. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/branches.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for branches. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/burying.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for burying. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/cast.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for cast. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/condition.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for condition. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/contracts.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for contracts. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/corpus.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for corpus. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/decisions.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for decisions. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/demography.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for demography. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/discrepancies.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for discrepancies. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/echo.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for echo. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/economy.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for economy. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/expression.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for expression. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/fecundity-drag.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for fecundity drag. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/fertility.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for fertility. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/founding-inheritance.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for founding inheritance. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/friends.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for friends. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/genetics.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for genetics. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/ladder.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for ladder. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/land.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for land. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/ledger-clauses.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for ledger clauses. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/ledger.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for ledger. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/lifespan.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for lifespan. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/match.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for match. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/modifiers.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for modifiers. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/motifs.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for motifs. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/muster.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for muster. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/naming-worth.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for naming worth. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/prologue.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for prologue. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/record-claims.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for record claims. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/record.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for record. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/regalia.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for regalia. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/relationships.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for relationships. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/replay.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for replay. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/rites.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for rites. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/run-library.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for run library. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/schooling.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for schooling. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/secrets.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for secrets. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/session-api.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for session api. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/session.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for session. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/sim.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for sim. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/table.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for table. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/tales.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for tales. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/tools/replay-divergence.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for replay divergence. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    },
+    {
+      "path": "packages/core/src/world-health.slow.test.ts",
+      "claim": "Century-scale/full-run regression coverage for world health. Exact assertion-level claim remains authoritative in the suite.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+    }
+  ],
+  "gateAssertions": [
+    {
+      "id": "war:it-pays",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Across settled committed wars, mean Respect at settlement exceeds Respect at war start.",
+      "evidenceType": "statistical",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Keep the canonical full-batch claim blocking until #440 preserves the exact input list/reducer semantics and a trusted nightly failure path is established."
+    },
+    {
+      "id": "war:it-costs",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Report the paired treasury difference between abstaining and committing; the gate intentionally does not assert this content-balance finding.",
+      "evidenceType": "telemetry",
+      "currentTier": "advisory-within-merge-job",
+      "proposedTier": "nightly"
+    },
+    {
+      "id": "war:gap-widens",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "For houses settling multiple wars, later-war attrition share exceeds first-war attrition share on average.",
+      "evidenceType": "statistical",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Keep the canonical full-batch claim blocking until #440 preserves all seeds and the one-reducer assertion over the complete observation set."
+    },
+    {
+      "id": "war:progress-divergence",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Report commit-minus-abstain peak-Respect and treasury divergence at normalized campaign checkpoints; this is explicitly descriptive, not asserted.",
+      "evidenceType": "telemetry",
+      "currentTier": "advisory-within-merge-job",
+      "proposedTier": "nightly"
+    }
+  ]
+}
