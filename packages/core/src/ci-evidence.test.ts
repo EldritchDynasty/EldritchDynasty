@@ -7,7 +7,7 @@ interface EvidenceInventory {
   jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; coveredBy?: string[] }>;
   gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
   gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
-  telemetryGates: Array<{ id: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
+  telemetryGates: Array<{ id: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[]; failureWitness?: string }>;
   gateAssertions: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; coveredBy?: string[] }>;
   slowSuites: Array<{ path: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
 }
@@ -208,6 +208,30 @@ describe('CI evidence inventory', () => {
     expect(vocabulary?.fasterEvidence).toContain('vocabulary-authorship.test.ts');
     expect(outcome?.currentTier).toBe('weekly telemetry');
     expect(outcome?.proposedTier).toBe('weekly telemetry');
+  });
+
+  it('pins each scheduled red tier to a deliberate failing fixture', () => {
+    const failingScheduled = inventory.telemetryGates
+      .filter((entry) => entry.currentTier === 'nightly' || entry.currentTier === 'weekly');
+    expect(failingScheduled.map((entry) => entry.id).sort()).toEqual([
+      'blood', 'endings', 'fire-rate', 'war',
+    ]);
+
+    for (const entry of failingScheduled) {
+      expect(
+        entry.failureWitness?.trim(),
+        `scheduled red gate lacks a failureWitness: ${entry.id}`,
+      ).toBeTruthy();
+      expectTestReference(entry.failureWitness!);
+      const title = entry.failureWitness!.slice(entry.failureWitness!.indexOf('#') + 1);
+      expect(title, `failureWitness should name an explicit red fixture: ${entry.id}`)
+        .toMatch(/\b(fail|reject)/i);
+    }
+
+    const telemetryOnly = inventory.telemetryGates
+      .filter((entry) => entry.currentTier.includes('telemetry'));
+    expect(telemetryOnly.map((entry) => entry.id)).toEqual(['outcome-reach']);
+    expect(telemetryOnly.every((entry) => entry.failureWitness === undefined)).toBe(true);
   });
 
   it('pins every scheduled gate to concrete merge-blocking test titles', () => {
