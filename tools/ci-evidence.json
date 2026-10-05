@@ -523,7 +523,7 @@
     },
     {
       "path": "packages/core/src/ledger.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for ledger. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: starts the player knowing exactly one clause; has nine clauses and never reveals one twice; recovers most of the contract over a run; does not hand every run the whole contract; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -531,7 +531,7 @@
     },
     {
       "path": "packages/core/src/lifespan.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for lifespan. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: centres a typical body on a hundred; varies — a ceiling everybody shares is not a ceiling worth having; is never outlived; is a ceiling most people never reach; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -539,7 +539,7 @@
     },
     {
       "path": "packages/core/src/match.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for match. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: never refuses an open card, over eight seeds played to the term",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -547,7 +547,7 @@
     },
     {
       "path": "packages/core/src/modifiers.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for modifiers. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: unlock: some seed\\; outcome_weight: some seed\\; resource: some seed\\; attribute: some seed\\; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -555,7 +555,7 @@
     },
     {
       "path": "packages/core/src/motifs.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for motifs. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: shows every reading, in a real share of runs; darkens in order, in every run that sees more than one of them; closes at the term, and never before the page it reads exists",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -563,7 +563,7 @@
     },
     {
       "path": "packages/core/src/muster.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for muster. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: round-trips every field a player could have set — men, officers, position, credit, tide; round-trips the tide and lastSettled with no commitment standing, too; never runs men negative, and leaves the world internally coherent at the Long-Line term; does not, on its own, take the player house extinct; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -571,7 +571,7 @@
     },
     {
       "path": "packages/core/src/naming-worth.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for naming worth. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: asks a couple of dozen times a run, down from 188.8; still asks about somebody, in every run; gives every prompt a reason the player can read",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -579,7 +579,7 @@
     },
     {
       "path": "packages/core/src/prologue.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for prologue. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: is still holding the thing the man asked for; changed hands on the rival side, and never on ours; is readable off the save at the Long-Line term",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -587,7 +587,7 @@
     },
     {
       "path": "packages/core/src/record-claims.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for record claims. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: four always-Record 500-year runs produce claimed pages and ourBook rows; PanelPage.embellished has both reachable values across the two record policies",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -595,7 +595,7 @@
     },
     {
       "path": "packages/core/src/record.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for record. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: by 1500, at least one household member has a non-empty divergence; the divergence count tracks the embellish rate",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -603,7 +603,7 @@
     },
     {
       "path": "packages/core/src/regalia.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for regalia. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: is in the house\\; actually lands on a person for every heirloom content tries to use; reaches the far end of each of the three new substories; never lets the family sell what Demigod requires; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -611,7 +611,7 @@
     },
     {
       "path": "packages/core/src/relationships.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for relationships. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: gives the family somewhere to quarrel with itself",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -619,7 +619,7 @@
     },
     {
       "path": "packages/core/src/replay.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for replay. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: digest(replay(log)) equals digest(original) across the standard seed set; replays the founding answer before the first year, including the five-name roster; throws rather than returning a run that silently does not match the log it was given; never lets the chronicler take a choice whose requires fail; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -627,7 +627,7 @@
     },
     {
       "path": "packages/core/src/rites.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for rites. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: is offered at all — an event that never fires is not in the game; is only ever offered to a man who is already standing at Hierophant; is what buys rung four, and refusing it never does; leaves the two columns level everywhere below the rung it buys; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -635,7 +635,7 @@
     },
     {
       "path": "packages/core/src/run-library.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for run library. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: keeps paired runs byte-identical outside the narrative memory field",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
