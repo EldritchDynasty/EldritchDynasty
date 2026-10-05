@@ -385,10 +385,10 @@
     {
       "path": "packages/core/src/contracts.slow.test.ts",
       "claim": "Played/full-run regression assertions: binds a retainer to a person, so the contract can end; never leaves a retainer serving a corpse for a century; passes a hereditary post to the holder\\; does not ratchet — standing falls as well as rises; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run contract/standing regression with merge-blocking mechanism witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/contracts.test.ts directly proves minted retainers bind to a living Head, employer death releases service, hereditary posts pass to an adult child, quiet-standing decay/floor behavior, and preview id-counter restoration. The slow suite remains nightly for whole-campaign stale-employer detection, observed hereditary-post incidence, standing-fall incidence, and the longer preview-vs-clean run equivalence."
     },
     {
       "path": "packages/core/src/corpus.slow.test.ts",
@@ -727,4 +727,4 @@
       "proposedTier": "nightly"
     }
   ]
-}
+}\n
