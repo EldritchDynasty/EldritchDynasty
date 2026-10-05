@@ -567,10 +567,10 @@
     {
       "path": "packages/core/src/record-claims.slow.test.ts",
       "claim": "Played/full-run regression assertions: four always-Record 500-year runs produce claimed pages and ourBook rows; PanelPage.embellished has both reachable values across the two record policies",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run claim/panel reach regression with merge-blocking record and panel witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/record.test.ts deterministically proves truthful versus embellished claim attachment and record-layer divergence, while packages/core/src/panel.test.ts proves a family-authored embellished Chronicle page reaches PanelPage.ourBook with its provenance intact and without adjudicating truth. The slow suite remains nightly evidence that those authored paths are actually encountered across played 500-year runs under both record policies."
     },
     {
       "path": "packages/core/src/record.slow.test.ts",
