@@ -80,7 +80,7 @@ npm run land         # session preflight: fetch, rebase, install, then run
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
                      # A session preflight never pushes or merges.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
-npm run test:fast    # ~2 min, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+npm run test:fast    # ~118s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
