@@ -359,8 +359,13 @@ are, and what a run of them costs, is in the command block above.
   in the command block, and measured by `npm run cost`. That is
   the fix-and-rerun loop, and `lanes.test.ts` keeps it one by failing the build
   when a suite that plays a millennium lands in it.
-  `npm run check` runs both lanes; `npm run land` runs the whole set CI runs,
-  the gates included, and is what a landing goes through.
+  `npm run check` still runs both local lanes. Hosted merge CI instead reads
+  `tools/ci-evidence.json`: slow suites classified `merge-blocking` run on
+  every full PR/merge-group, while suites classified `nightly` run in the
+  daily regression workflow. Nightly is not a weaker copy: it runs the complete
+  slow suite. `npm run land` defaults to typecheck + validate + `test:fast`;
+  `--full-preflight` requests the complete local CI-derived set, but the
+  authoritative landing proof is always the native merge-group `CI required`.
 - **A suite can play whole games with no `advance` in it.** `gates.test.ts` was
   41% of the fast lane; the runs happen inside the gates it calls. Driving a
   batch through `tools/` is declared in `lanes.test.ts` for exactly that reason.
