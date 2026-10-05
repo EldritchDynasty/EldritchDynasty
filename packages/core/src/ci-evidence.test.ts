@@ -184,8 +184,10 @@ describe('CI evidence inventory', () => {
     expect(fire?.fasterEvidence).toContain('events/reach.test.ts');
     expect(fire?.moveBlockedBy).toContain('nightly fire-rate rejection');
 
-    expect(vocabulary?.evidenceType).toBe('deterministic structural invariant');
-    expect(vocabulary?.proposedTier).toBe('merge-blocking');
+    expect(vocabulary?.evidenceType).toBe('deterministic structural verdict + sampled non-failing diagnostic');
+    expect(vocabulary?.proposedTier).toBe('split: structural merge-blocking + reached diagnostic scheduled');
+    expect(vocabulary?.fasterEvidence).toContain('failure decision is fully determined');
+    expect(vocabulary?.moveBlockedBy).toContain('800-run implementation');
     expect(outcome?.proposedTier).toBe('weekly telemetry');
   });
 
