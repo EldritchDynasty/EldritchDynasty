@@ -2682,6 +2682,7 @@ describe('authored simple year-gated outcome witnesses', () => {
         String(event.id) + ' should be selectable once its calendar-year floor is reached',
       ).toBe(true);
 
+      if (event.interaction.kind !== 'narration') continue;
       const outcome = event.interaction.outcomes[0]!;
       const ctx = testWorld(content, 8502, year);
       ctx.world.generation = Math.max(
