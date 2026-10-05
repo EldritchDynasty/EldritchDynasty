@@ -416,10 +416,10 @@
     {
       "path": "packages/core/src/discrepancies.slow.test.ts",
       "claim": "Played/full-run regression assertions: checks existence when state is omitted, and exact state when given; counts open ones for the aggregate form; costs Respect a full tier; never drops standing below the floor; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run Discrepancy incidence with merge-blocking mechanism witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/discrepancies.test.ts directly proves Discrepancy conditions/aggregate counts, prove/bury Respect semantics and floor behavior, phantom-id no-op behavior, heirloom transfer semantics, and the pressure-selection path. The slow suite remains nightly for the only campaign-scale claim: at least one Discrepancy reaches proven across the standard full-run seed batch."
     },
     {
       "path": "packages/core/src/echo.slow.test.ts",
