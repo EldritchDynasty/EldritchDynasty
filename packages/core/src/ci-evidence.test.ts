@@ -336,6 +336,13 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('issues: write');
     expect(watcher).toContain('BAD_SHA: ${{ github.event.workflow_run.head_sha }}');
     expect(watcher).toContain('RUN_URL: ${{ github.event.workflow_run.html_url }}');
+    expect(watcher).toContain('RUN_NUMBER: ${{ github.event.workflow_run.run_number }}');
+    expect(watcher).toContain('RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}');
+    expect(watcher).toContain('run-number: %s');
+    expect(watcher).toContain('run-attempt: %s');
+    expect(watcher).toContain('--force-with-lease=$REF:$PREVIOUS_REF');
+    expect(watcher).toContain('echo "applied=false" >> "$GITHUB_OUTPUT"');
+    expect(watcher).toContain("if: steps.record.outputs.applied == 'true'");
     expect(watcher).toContain('--search "$TITLE in:title"');
     expect(watcher).toContain('gh issue create');
     expect(watcher).toContain('--label "priority: P0"');
