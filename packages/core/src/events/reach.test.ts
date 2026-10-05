@@ -2389,6 +2389,121 @@ describe('authored simple held-parcel outcome witnesses', () => {
   });
 });
 
+describe('authored open-discrepancy Head-only outcome witnesses', () => {
+  function discrepancyFixture(
+    seed: number,
+    open: boolean,
+    frequency: (typeof content.events)[number]['frequency'],
+  ) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES[frequency].minGeneration,
+    );
+    if (open) {
+      ctx.world.discrepancies.set('witness_open_discrepancy', {
+        severity: 'major',
+        provableBy: ['commons', 'the_church'],
+        state: 'open',
+      });
+    }
+    return ctx;
+  }
+
+  it('crosses each simple openDiscrepancies floor before executing every Head-only outcome', () => {
+    const cases = content.events.filter((event) => {
+      const condition = event.conditions;
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('all' in condition)
+        || condition.all.length !== 1
+        || slotIds.length !== 1
+        || slotIds[0] !== 'HEAD'
+        || head?.role !== 'head'
+        || head.castBy !== 'engine'
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) return false;
+
+      const leaf = condition.all[0];
+      return Boolean(
+        leaf
+        && 'openDiscrepancies' in leaf
+        && leaf.openDiscrepancies.op === 'gte'
+        && leaf.openDiscrepancies.value === 1
+      );
+    });
+
+    expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'a_second_hand_that_agrees',
+      'somewhere_quiet_to_be_old',
+      'something_the_church_wants_more',
+      'the_cross_reference',
+    ]);
+
+    const declared = cases.flatMap((event) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 8200;
+
+    for (const event of cases) {
+      const before = discrepancyFixture(seed, false, event.frequency);
+      expect(
+        evalCondition(event.conditions, before),
+        String(event.id) + ' should be blocked with no open discrepancy',
+      ).toBe(false);
+
+      const selection = discrepancyFixture(seed, true, event.frequency);
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should pass with one open discrepancy',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored Head slot').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast, String(event.id) + ' should not require a player cast').toHaveLength(0);
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once an open discrepancy exists',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = discrepancyFixture(seed, true, event.frequency);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: alwaysFirstWeighted(seed + 2),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
