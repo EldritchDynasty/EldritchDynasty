@@ -249,6 +249,7 @@ describe('CI evidence inventory', () => {
 
   it('surfaces persistent scheduled failures as deduplicated project work', () => {
     const watcher = readFileSync(join(root, '.github/workflows/scheduled-regression-watch.yml'), 'utf8');
+    const orient = readFileSync(join(root, 'tools/orient.mjs'), 'utf8');
 
     expect(watcher).toContain('workflow_run:');
     expect(watcher).toContain('workflows: [nightly regression, weekly statistical]');
@@ -261,6 +262,13 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('--add-label "priority: P0"');
     expect(watcher).toContain('gh issue comment');
     expect(watcher).toContain('gh issue close');
+    expect(watcher).toContain('contents: write');
+    expect(watcher).toContain('refs/scheduled/$KEY');
+    expect(watcher).toContain('since: %s');
+    expect(orient).toContain("'+refs/scheduled/*:refs/scheduled/*'");
+    expect(orient).toContain("for (const cadence of ['nightly', 'weekly'])");
+    expect(orient).toContain('red since');
+    expect(orient).toContain('scheduled evidence has not answered yet');
   });
 
 });
