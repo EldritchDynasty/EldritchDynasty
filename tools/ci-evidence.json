@@ -96,7 +96,7 @@
       "id": "blood",
       "claim": "Large-sample bloodline/genetic distribution confidence.",
       "evidenceType": "statistical",
-      "currentMeasuredCost": "~50m",
+      "currentMeasuredCost": "~39m (39m06.5s; merge-group run 37251568594)",
       "currentTier": "merge-blocking",
       "proposedTier": "weekly",
       "moveBlockedBy": "Confirm deterministic mechanism coverage before the canonical statistical batch stops blocking; coordinate #440."
@@ -114,7 +114,7 @@
       "id": "war",
       "claim": "Muster/war mechanism and balance evidence; assertion families are mixed and must be decomposed.",
       "evidenceType": "mixed",
-      "currentMeasuredCost": "~39m",
+      "currentMeasuredCost": "~40m (39m38.0s; merge-group run 37251568594)",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
       "moveBlockedBy": "Assertion-by-assertion decomposition required by #451; coordinate #440 before any statistical subset moves weekly."
