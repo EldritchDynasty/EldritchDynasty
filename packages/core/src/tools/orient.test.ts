@@ -73,6 +73,13 @@ beforeEach(() => {
 
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
+const pushScheduled = (cadence: 'nightly' | 'weekly', body: string) => {
+  const seed = join(root, 'seed');
+  const empty = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+  const verdict = git(seed, 'commit-tree', empty, '-m', body);
+  git(seed, 'push', '-q', 'origin', `${verdict}:refs/scheduled/${cadence}`);
+};
+
 describe('session orientation', () => {
   it('unshallows the clone, so ancestry questions have real answers', () => {
     const work = join(root, 'work');
@@ -96,6 +103,39 @@ describe('session orientation', () => {
     const r = orient(join(root, 'full'));
     expect(r.code).toBe(0);
     expect(r.out).not.toContain('unshallowing');
+  });
+
+  it('prints the first scheduled red SHA and refuses to call a missing cadence green', () => {
+    pushScheduled('nightly', [
+      'scheduled nightly failure',
+      '',
+      'sha: abcdef0123456789abcdef0123456789abcdef01',
+      'conclusion: failure',
+      'since: 1234567890abcdef1234567890abcdef12345678',
+      'run: https://example.invalid/nightly',
+      'recorded: 2026-10-06T00:00:00Z',
+    ].join('\n'));
+
+    const r = orient(join(root, 'work'));
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('nightly: red since 1234567 (failure)');
+    expect(r.out).toContain('weekly: NO VERDICT — scheduled evidence has not answered yet. Not a pass.');
+  });
+
+  it('prints a successful scheduled cadence against the SHA it measured', () => {
+    pushScheduled('weekly', [
+      'scheduled weekly success',
+      '',
+      'sha: fedcba9876543210fedcba9876543210fedcba98',
+      'conclusion: success',
+      'since: fedcba9876543210fedcba9876543210fedcba98',
+      'run: https://example.invalid/weekly',
+      'recorded: 2026-10-06T00:00:00Z',
+    ].join('\n'));
+
+    const r = orient(join(root, 'work'));
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('weekly: green on fedcba9');
   });
 
   it('still exits clean when the remote is unreachable', () => {
