@@ -48,6 +48,16 @@ describe('character templates', () => {
    * retainer's service could ever end. They bind to the HEAD who hired them.
    * The authored literal is still overwritten — that part was always right.
    */
+  it('carries a template attribute bias into the minted person', () => {
+    const ctx = bootstrap(bundle, 10, 1042);
+    const template = bundle.characterTemplates.find((t) => Object.keys(t.bias).length > 0)!;
+    const person = mint(template, ctx, makeRng(10));
+
+    expect(Object.keys(template.bias).length).toBeGreaterThan(0);
+    expect(person.genome.kind).toBe('lazy');
+    if (person.genome.kind === 'lazy') expect(person.genome.bias).toEqual(template.bias);
+  });
+
   it('binds retainer contracts to the head who hired them', () => {
     const ctx = bootstrap(bundle, 5, 1042);
     const rng = makeRng(5);
