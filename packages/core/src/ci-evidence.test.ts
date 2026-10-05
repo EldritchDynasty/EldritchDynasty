@@ -135,6 +135,10 @@ describe('CI evidence inventory', () => {
       expect(workflow).toContain('workflow_dispatch:');
       expect(workflow).toContain('test "$GITHUB_REF" = "refs/heads/main"');
       expect(workflow).toContain('permissions:\n  contents: read');
+      expect(workflow).not.toMatch(/^\s+pull_request:/m);
+      expect(workflow).not.toMatch(/^\s+pull_request_target:/m);
+      expect(workflow).not.toMatch(/^\s+merge_group:/m);
+      expect(workflow).not.toMatch(/^\s+push:/m);
     }
 
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
