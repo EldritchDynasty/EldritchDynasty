@@ -68,7 +68,17 @@ jobs:
           )"
 
           if [ -n "$NUMBER" ]; then
+            # Scheduled regressions are active P0 work under AGENTS.md priority
+            # rules. Repair the priority if somebody removed it while the
+            # regression is still open, then append the newest failing run.
+            gh issue edit "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --add-label "priority: P0"
             gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$REPORT"
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --label "priority: P0" \
+              --body "$REPORT"
           fi
