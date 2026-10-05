@@ -219,6 +219,10 @@ describe('CI evidence inventory', () => {
       expect(entry.coveredBy?.length, `scheduled assertion lacks coveredBy: ${entry.id}`).toBeGreaterThan(0);
       for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
     }
+    for (const entry of inventory.slowSuites.filter((candidate) => candidate.currentTier === 'nightly')) {
+      expect(entry.coveredBy?.length, `nightly slow suite lacks coveredBy: ${entry.path}`).toBeGreaterThan(0);
+      for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
+    }
   });
 
   it('splits slow regression by checked evidence tier without dropping either side', () => {
