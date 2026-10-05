@@ -419,8 +419,10 @@ true even if nobody opens it.
   comes from the harness, before you have read the tracker, so it will not carry
   an issue number and does not need to. Locally: `git checkout -b claude/<topic>`
   before the first edit.
-- **One branch may land several issues.** An epic delivered in stages is the
-  normal case, not an exception.
+- **One issue owns one growing branch and one PR.** Keep adding commits/sub-steps
+  to that branch and PR until the issue is complete; do not open a new stacked
+  or follow-up PR for each slice. If a slice must land independently, make it a
+  child issue first so the branch/PR boundary still matches an issue boundary.
 - **Claim each issue before you start it**: `npm run agents -- take <issue>
   --paths <what you will write>`. Every agent authenticates to GitHub as the
   same user, so an assignee cannot say WHICH agent holds an issue and cannot
