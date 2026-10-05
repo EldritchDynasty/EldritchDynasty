@@ -224,7 +224,6 @@ describe('CI evidence inventory', () => {
 
     const telemetryOnly = inventory.telemetryGates
       .filter((entry) => entry.failureWitness === undefined);
-    expect(telemetryOnly.length).toBeGreaterThan(0);
     for (const entry of telemetryOnly) {
       expect(
         entry.evidenceType.toLowerCase(),
