@@ -16,7 +16,8 @@ import { fileURLToPath } from 'node:url';
  *
  * The plan is deliberately platform-neutral. Worker count is data, not a
  * process-global guess, so Windows/Linux and CI/local callers can exercise the
- * same partitioning logic.
+ * same partitioning logic. GitHub-hosted full-gate CI remains the authority
+ * for before/after performance measurements.
  */
 
 export interface GatePartitionItem<T> {
