@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
-  GATES, LANES, gateTimingJson, gatesInLane, laneMatrix,
+  COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, laneMatrix,
   gateClauses, gateFireRate, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
   gatePostFillability, gateSlotFillability, judgeZeroReach,
@@ -90,14 +90,36 @@ describe('the gates pass the shipped game', () => {
 
   // Keep the literal below sorted: the left-hand side is deliberately sorted,
   // so an out-of-order expected entry is a test bug rather than a gate failure.
-  it('every gate is addressable by name from the CLI table', () => {
+  it('every merge-blocking gate is in the blocking registry', () => {
     expect(Object.keys(GATES).sort()).toEqual(
       [
         'blood', 'bottleneck', 'clauses', 'endings', 'fire-rate', 'ladder', 'ladder-scales',
-        'land', 'library-neutrality', 'outcome-reach', 'post-fillability', 'purposes', 'short-line', 'slot-fillability',
+        'land', 'library-neutrality', 'post-fillability', 'purposes', 'short-line', 'slot-fillability',
         'vocabulary-reach', 'war',
       ],
     );
+  });
+
+  it('keeps sampled outcome reach addressable but outside every blocking lane (#495)', () => {
+    expect(Object.keys(TELEMETRY_GATES)).toEqual(['outcome-reach']);
+    expect(COMMAND_GATES['outcome-reach']).toBe(gateOutcomeReach);
+    expect(Object.keys(GATES)).not.toContain('outcome-reach');
+    expect(LANES.flatMap(gatesInLane)).not.toContain('outcome-reach');
+    expect(Object.keys(GATES).filter((name) => name in TELEMETRY_GATES)).toEqual([]);
+  });
+
+  it('runs sampled outcome reach only from a scheduled/manual telemetry workflow (#495)', () => {
+    const telemetryWorkflow = readFileSync(
+      join(import.meta.dirname, '../../../.github/workflows/outcome-reach-telemetry.yml'),
+      'utf8',
+    );
+    expect(telemetryWorkflow).toContain('schedule:');
+    expect(telemetryWorkflow).toContain('workflow_dispatch:');
+    expect(telemetryWorkflow).toContain('npm run gates -- outcome-reach');
+    expect(telemetryWorkflow).not.toMatch(/^\s+pull_request:/m);
+    expect(telemetryWorkflow).not.toMatch(/^\s+pull_request_target:/m);
+    expect(telemetryWorkflow).not.toMatch(/^\s+merge_group:/m);
+    expect(telemetryWorkflow).not.toMatch(/^\s+push:/m);
   });
 });
 
@@ -106,9 +128,9 @@ describe('the gates pass the shipped game', () => {
  *
  * The gates job runs on five runners now. The independently expensive gates
  * have their own lanes; the JSON duration budget is the checked source for
- * their measured costs. `outcome-reach` and `vocabulary-reach` remain beside
- * `fire-rate` because all three read the same memoized batch. Splitting those
- * readers would replay the corpus merely to make the lane names look tidier.
+ * their measured costs. `vocabulary-reach` remains beside `fire-rate` because
+ * it reads the same memoized batch. Sampled `outcome-reach` is deliberately
+ * outside this partition and runs only as explicit scheduled telemetry (#495).
  *
  * `gatesInLane` DERIVES `batch` rather than listing it, so a gate added
  * tomorrow is in CI the moment it exists. That is deliberate, and it is the
