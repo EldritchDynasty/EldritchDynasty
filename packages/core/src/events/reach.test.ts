@@ -4293,3 +4293,79 @@ describe('authored randomised party-decider witnesses', () => {
     expect(ctx.world.decisionLog).toHaveLength(0);
   });
 });
+
+
+describe('authored compound treasury-respect outcome witnesses', () => {
+  function courtSeatFixture(seed: number, respect: 'unknown' | 'known') {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES.uncommon.minGeneration,
+    );
+    ctx.world.treasury = 300;
+    ctx.world.respect = respect;
+    place(ctx, {
+      sex: 'male',
+      age: 25,
+      name: `Witness Courtier ${seed}`,
+    });
+    return ctx;
+  }
+
+  it('crosses the Seat Near It treasury/respect gate before real casting, selection and every outcome', () => {
+    const event = content.event('a_seat_near_it');
+    if (!event || event.interaction.kind === 'narration') {
+      throw new Error('court-seat fixture changed interaction');
+    }
+
+    const blockedTreasury = courtSeatFixture(4300, 'known');
+    blockedTreasury.world.treasury = 299;
+    expect(
+      evalCondition(event.conditions, blockedTreasury),
+      'court seat should be blocked below treasury 300',
+    ).toBe(false);
+
+    const blockedRespect = courtSeatFixture(4301, 'unknown');
+    expect(
+      evalCondition(event.conditions, blockedRespect),
+      'court seat should be blocked below Respect known',
+    ).toBe(false);
+
+    const selection = courtSeatFixture(4302, 'known');
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(4303));
+    expect(slots.ok, 'court seat should resolve its real family-member cast').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'court seat should be selectable once both authored gates and cast state are valid',
+    ).toBe(true);
+
+    const declared = event.interaction.choices.flatMap((choice) =>
+      choice.outcomes.map((outcome) =>
+        outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    const witnessed: string[] = [];
+
+    let seed = 4310;
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        const ctx = courtSeatFixture(seed, 'known');
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: choice.outcomes.length > 1,
+        });
+        expect(
+          result.ok,
+          `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+        seed += 1;
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
