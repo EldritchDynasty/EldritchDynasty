@@ -6,6 +6,8 @@ import {
 } from '@ed/core';
 import { coupledBundle, phaseFounders, pleiotropicWeight } from './tools/drag-gate.js';
 
+// DRIVES_A_BATCH: drag-gate helpers phase and replay whole campaign batches; keep this suite in the fast lane because these assertions exercise only structural setup and expected-value calibration, not the sampled gate loop.
+
 const contentBundle = loadContent();
 const table = buildLocusTable(contentBundle.loci);
 const dragLoci = table.x.filter((l) => l.kind === 'fecundity_drag');
