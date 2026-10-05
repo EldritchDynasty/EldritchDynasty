@@ -476,48 +476,24 @@ jobs:
           xcrun simctl launch "$UDID" nz.eldritchdynasty.game
           echo "Simulator launch completed at $(date -u +%H:%M:%S)"
 
-  # ── THE TEST LANE, IN FOUR, PACKED BY DURATION ────────────────────────────
+  # ── MERGE-BLOCKING SLOW CONTRACTS, PACKED BY DURATION ─────────────────────
   #
-  # Both vitest lanes are in here — the fast suites and the `*.slow.test.ts`
-  # ones that play whole games.
+  # The fast lane above already runs every non-slow suite. This matrix runs
+  # ONLY the slow suites whose checked evidence classification still says
+  # this exact integration commit needs them. Broad population/cadence
+  # regressions run in nightly-regression.yml instead.
   #
-  # VITEST'S OWN SHARDING IS DURATION-BLIND, AND THAT COST 46 MINUTES A BUILD.
-  # `--shard=i/n` hashes each file's PATH, sorts by the hash and slices into
-  # equal COUNTS (`BaseSequencer.shard`, vitest 2.1.9). Deterministic, and
-  # completely indifferent to what a file costs — so a shard's duration is
-  # whatever suites its hash happened to draw, and adding ONE test file
-  # anywhere in the repository re-rolls it for every shard.
-  #
-  # Run 185 is what that looks like when the dice go badly: 3m02s, 67m47s,
-  # 10m45s, 4m03s. Nothing was slow that had not been slow the week before.
-  # Every shard was green. The build was 68 minutes and three quarters of it
-  # was seven finished jobs waiting on one.
-  #
-  # `vitest.config.ts` names a sequencer now (`tools/shards.mjs`) that
-  # bin-packs the files by recorded cost, longest first. The count stays four:
-  # packed, the shards sit below the gate-lane floor recorded in
-  # `tools/gate-durations.json`, so a fifth runner buys nothing while that remains true — this is sized against the
-  # critical path, the same argument as before, now made against numbers that
-  # are measured rather than remembered.
-  #
-  # WHAT SHARDING STILL CANNOT DO. Vitest parallelises per FILE. A single file
-  # longer than a shard's fair share is a floor no packing and no shard count
-  # can cut, and the fix for one of those is not here — AGENTS.md prescribes
-  # it, with its one prohibition: split it BY TEST, never by seed range,
-  # because these are batch statistics and taking seeds out of a batch changes
-  # what the batch claims. `lanes.test.ts` is where that stops being advice.
-  # It re-packs the real file list from the committed durations and fails the
-  # build when the shards come out further apart than a stated factor, which is
-  # exactly the condition one oversized file produces.
+  # tools/ci-evidence.json is the single source of truth for that boundary.
+  # The selected set is still packed by tools/shards.mjs using the committed
+  # duration table. At the current measurement the four selected-slow bins are
+  # about 9.5 minutes each; keep deterministic/stateful contracts here even
+  # when they are expensive, and move one only after a faster witness exists.
   test:
-    name: test ${{ matrix.shard }}/4
+    name: merge slow ${{ matrix.shard }}/4
     needs: tier
     if: needs.tier.outputs.full == 'true'
     runs-on: ubuntu-latest
     strategy:
-      # See the note above: the default would cancel the other three shards on
-      # the first failure and report one broken test out of however many there
-      # are. That is the serial failure mode this workflow was split to kill.
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
@@ -529,56 +505,29 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # ── THE RUN CORPUS ─────────────────────────────────────────────────
-      #
-      # `record.slow.test.ts` plays 240 runs of 458 years for two assertions
-      # and, because vitest parallelises per FILE, was the 451-second floor
-      # the whole lane waited behind. It reads those runs back through
-      # saveGame/loadGame now — 23 seconds — but only once they are in the
-      # corpus. COLD it is slightly slower than replaying, because playing a
-      # run and then saving and compressing it costs more than playing it.
-      #
-      # So a cache that is never warm is a tax, and CI is exactly where it
-      # would never be warm. The key is a hash of the simulation sources and
-      # the content together, printed by the corpus tool itself: change
-      # either and the key changes, the restore misses, and the warm step
-      # below rebuilds it for next time. There is no invalidation to reason
-      # about and no way to serve a run the current code would not produce.
-      # Invoked through tsx rather than through an npm script, because
-      # `land.test.ts` derives the landing's step set from this file by
-      # matching npm invocations, and a quiet-mode flag in that position reads
-      # to it as the name of a script. It matches comments too, on purpose, so
-      # this one does not spell the flag out either. A workflow line that
-      # confuses the thing checking the workflow is the workflow's to fix.
+      # Some retained slow contracts read played-run cache entries. Restoring
+      # is correctness-neutral: playedRun falls back to executing the run.
       - name: corpus key
         id: corpus
         run: |
           KEY=$(npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/corpus-warm.ts --key)
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
-
-      # RESTORE ONLY. THE WARM IS ITS OWN JOB, AND CONCURRENCY IS WHY.
-      #
-      # The four shards run AT THE SAME TIME, so a warm inside one of them
-      # cannot help the others: they have already restored (and missed) by the
-      # time it finishes writing. Whichever shard draws the one suite that
-      # needs the corpus — `record.slow.test.ts` — warming in a DIFFERENT
-      # shard spends 5m40s to speed up nobody and makes that shard the longest
-      # job in the build for the privilege. (Which shard that is used to be a
-      # fact about a path hash and is now a fact about the packing; either way
-      # it is not a shard this step can name in advance.)
-      #
-      # A warm only ever pays forward, into the NEXT run. So it belongs in a
-      # job that blocks nothing and that nothing waits on — see `corpus`
-      # below. On a cold key the shards play their own runs, which is
-      # `playedRun`'s documented fallback and was always the cold behaviour.
       - name: restore run corpus
         uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/ed-runs
           key: ed-runs-${{ steps.corpus.outputs.key }}-${{ hashFiles('packages/content/**') }}
 
+      - name: select merge-blocking slow suites
+        id: suites
+        run: |
+          FILES="$(node -e 'const fs=require("node:fs"); const inventory=JSON.parse(fs.readFileSync("tools/ci-evidence.json","utf8")); process.stdout.write(inventory.slowSuites.filter((entry) => entry.currentTier === "merge-blocking").map((entry) => entry.path).join(" "));')"
+          test -n "$FILES" || { echo "No merge-blocking slow suites are classified."; exit 1; }
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "Selected merge-blocking slow suites: $FILES" >> "$GITHUB_STEP_SUMMARY"
+
       - name: test
-        run: npm test -- --shard=${{ matrix.shard }}/4
+        run: npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4
 
   # ── THE GATES, PARTITIONED BY MEASURED COST ──────────────────────────────
   #
