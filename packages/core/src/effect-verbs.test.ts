@@ -46,11 +46,12 @@ function placedCarrier(ctx: ReturnType<typeof bootstrap>, sex: 'male' | 'female'
 }
 
 function placedMundaneMan(ctx: ReturnType<typeof bootstrap>) {
-  for (let i = 0; i < 96; i += 1) {
-    const p = place(ctx, { sex: 'male', age: 20, name: 'Mundane man ' + i });
-    if (!phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return p;
-  }
-  throw new Error('test content produced no mundane man across 96 deterministic placements');
+  // The Church's shipped pool has fontCarrierRate: 0. Unlike the player's
+  // founding pool (rate 1), this gives the test a deterministic incapable man
+  // without seed-mining a population state.
+  const p = place(ctx, { sex: 'male', age: 20, house: 'the_church', name: 'Mundane man' });
+  expect(phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(false);
+  return p;
 }
 
 describe('the Madness effect is gated by expression', () => {
