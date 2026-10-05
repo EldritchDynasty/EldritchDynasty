@@ -17,6 +17,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RUN_NAME: ${{ github.event.workflow_run.name }}
+      RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+      RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
       CONCLUSION: ${{ github.event.workflow_run.conclusion }}
       BAD_SHA: ${{ github.event.workflow_run.head_sha }}
       RUN_URL: ${{ github.event.workflow_run.html_url }}
@@ -24,6 +26,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: record the scheduled verdict
+        id: record
         shell: bash
         env:
           GIT_AUTHOR_NAME: scheduled-verdict
@@ -42,11 +45,35 @@ jobs:
           REF="refs/scheduled/$KEY"
           git fetch --quiet origin "+$REF:$REF" || true
 
+          PREVIOUS_REF=""
           PREVIOUS_CONCLUSION=""
           PREVIOUS_SINCE=""
+          PREVIOUS_RUN_NUMBER=""
+          PREVIOUS_RUN_ATTEMPT=""
           if git show-ref --verify --quiet "$REF"; then
+            PREVIOUS_REF="$(git rev-parse "$REF")"
             PREVIOUS_CONCLUSION="$(git log -1 --format=%B "$REF" | sed -n 's/^conclusion: //p' | head -n 1)"
             PREVIOUS_SINCE="$(git log -1 --format=%B "$REF" | sed -n 's/^since: //p' | head -n 1)"
+            PREVIOUS_RUN_NUMBER="$(git log -1 --format=%B "$REF" | sed -n 's/^run-number: //p' | head -n 1)"
+            PREVIOUS_RUN_ATTEMPT="$(git log -1 --format=%B "$REF" | sed -n 's/^run-attempt: //p' | head -n 1)"
+          fi
+
+          at_least_as_new() {
+            local number="${1:-}"
+            local attempt="${2:-1}"
+            [ -n "$number" ] || return 1
+            if [ "$number" -gt "$RUN_NUMBER" ]; then return 0; fi
+            if [ "$number" -eq "$RUN_NUMBER" ] && [ "$attempt" -ge "$RUN_ATTEMPT" ]; then return 0; fi
+            return 1
+          }
+
+          # workflow_run reporters are independent jobs. Hosted-runner delays can
+          # make an older completion execute after a newer one, so never let it
+          # move the cadence ref or persistent issue backwards.
+          if at_least_as_new "$PREVIOUS_RUN_NUMBER" "$PREVIOUS_RUN_ATTEMPT"; then
+            echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is superseded by the recorded verdict."
+            echo "applied=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           if [ "$CONCLUSION" = "success" ]; then
@@ -57,13 +84,43 @@ jobs:
             SINCE="$BAD_SHA"
           fi
 
-          msg=$(printf 'scheduled %s %s\n\nsha: %s\nconclusion: %s\nsince: %s\nrun: %s\nrecorded: %s\n' \
-            "$KEY" "$CONCLUSION" "$BAD_SHA" "$CONCLUSION" "$SINCE" "$RUN_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+          msg=$(printf 'scheduled %s %s\n\nsha: %s\nconclusion: %s\nsince: %s\nrun-number: %s\nrun-attempt: %s\nrun: %s\nrecorded: %s\n' \
+            "$KEY" "$CONCLUSION" "$BAD_SHA" "$CONCLUSION" "$SINCE" "$RUN_NUMBER" "$RUN_ATTEMPT" "$RUN_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
           empty=$(git hash-object -t tree /dev/null)
           commit=$(git commit-tree "$empty" -m "$msg")
-          git push --force origin "$commit:$REF"
+
+          if [ -n "$PREVIOUS_REF" ]; then
+            LEASE="--force-with-lease=$REF:$PREVIOUS_REF"
+          else
+            # An empty expected value means the remote ref must not exist.
+            LEASE="--force-with-lease=$REF:"
+          fi
+
+          if git push "$LEASE" origin "$commit:$REF"; then
+            echo "applied=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Another reporter won the race after our fetch. Accept that only
+          # when it recorded this completion or a newer one; otherwise surface
+          # the lease failure instead of guessing which verdict should win.
+          git fetch --quiet origin "+$REF:$REF" || true
+          CURRENT_RUN_NUMBER=""
+          CURRENT_RUN_ATTEMPT=""
+          if git show-ref --verify --quiet "$REF"; then
+            CURRENT_RUN_NUMBER="$(git log -1 --format=%B "$REF" | sed -n 's/^run-number: //p' | head -n 1)"
+            CURRENT_RUN_ATTEMPT="$(git log -1 --format=%B "$REF" | sed -n 's/^run-attempt: //p' | head -n 1)"
+          fi
+          if at_least_as_new "$CURRENT_RUN_NUMBER" "$CURRENT_RUN_ATTEMPT"; then
+            echo "A newer scheduled $KEY verdict won the ref lease; leaving it authoritative."
+            echo "applied=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Scheduled verdict ref changed without a newer recorded run; refusing to overwrite it." >&2
+          exit 1
 
       - name: open, update, or close the persistent regression issue
+        if: steps.record.outputs.applied == 'true'
         shell: bash
         run: |
           set -euo pipefail
