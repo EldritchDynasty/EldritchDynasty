@@ -304,7 +304,7 @@ describe('CI evidence inventory', () => {
 
     expect(check).toContain('release-slow:');
     expect(check).toContain('release-gates:');
-    expect(check).toContain('gate: [blood, fire-rate, war, endings]');
+    expect(check).toContain('gate: [blood, fire-rate, war, endings, outcome-reach]');
     expect(check).toContain('needs: [lint, windows, test, gates, release-slow, release-gates]');
   });
 
