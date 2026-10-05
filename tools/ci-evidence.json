@@ -112,11 +112,11 @@
     {
       "id": "war",
       "claim": "Muster/war mechanism and balance evidence; assertion families are mixed and must be decomposed.",
-      "evidenceType": "mixed",
+      "evidenceType": "mixed lane: two asserted statistical verdicts + two telemetry-only findings; deterministic mechanism covered fast",
       "currentMeasuredCost": "~17.6m (17m32.3s; PR #490 hosted run 37256335551)",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-by-assertion decomposition required by #451 before any statistical subset moves; #440's canonical partition/reducer is now landed."
+      "moveBlockedBy": "Assertion-by-assertion decomposition is complete in gateAssertions: `war:it-pays` and `war:gap-widens` are sampled statistical verdicts; treasury/progress divergence are telemetry only. Fast muster.test.ts, events/reach.test.ts, and war-gate.test.ts witnesses keep mechanism and rejection logic merge-blocking. Final cutover waits only for #495/PR #496 to release the shared gate registry and for an intentional nightly rejection to be observed."
     },
     {
       "id": "endings",
