@@ -102,7 +102,7 @@ npm run digest  -- 8 400              # fingerprint 8 runs; diff the block acros
 npm run gate                          # every gate — what CI will say, in one command
 npm run gates   -- fire-rate          # one of them on its own, when you know which
 npm run gates   -- --lane batch       # merge-blocking gate lane; sampled gates are scheduled
-                                      # `batch`, `blood`, `fire-rate`, `war`, `endings`.
+                                      # `batch`, `blood`, `fire-rate`, `war`, `endings`, `outcome-reach`.
 npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
 npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
                                       # question is its `//` note in package.json
