@@ -287,10 +287,10 @@
     {
       "path": "packages/client/src/lib/run.slow.test.ts",
       "claim": "Played/full-run regression assertions: stops at the year the other party comes to collect, and is read; still knows what was chosen in 1042; raised every kind of decision the docket draws, in one run; raised the Record block often enough to be the mechanic it is meant to be; …",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic/stateful client end-to-end regression with long-run incidence checks",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast Docket and client-store tests pin individual verbs and receipt rendering, but this suite uniquely proves those pieces compose across a full client-driven campaign: campaign termination/epilogue, founding memory, all docket kinds, chapter boundaries, passage joins and outcome-before-next-decision ordering."
     },
     {
       "path": "packages/core/src/ages.slow.test.ts",
@@ -397,10 +397,10 @@
     {
       "path": "packages/core/src/corpus.slow.test.ts",
       "claim": "Played/full-run regression assertions: and the corpus was actually consulted; every field on the world survives the round trip; and the two worlds hold the same keys; the people, chronicle and decision log come back identical; …",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic run-corpus/save fidelity and cache-key contract",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast save tests cover ordinary serialization, but this suite uniquely proves the run-corpus path returns the played world byte-for-structure, keys on simulation sources/campaign shape, honors ED_RUN_CORPUS=off, and never leaks tools/ imports into simulation."
     },
     {
       "path": "packages/core/src/decisions.slow.test.ts",
@@ -532,10 +532,10 @@
     {
       "path": "packages/core/src/modifiers.slow.test.ts",
       "claim": "Played/full-run regression assertions: unlock: some seed\\; outcome_weight: some seed\\; resource: some seed\\; attribute: some seed\\; …",
-      "evidenceType": "mixed",
+      "evidenceType": "cheap shipped-content reachability smoke plus deterministic modifier wiring",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "The suite is ~1s and proves every implemented modifier kind is reachable through shipped content, with check_bonus directly constructed. Its cost is below the risk of replacing real-content reachability with synthetic-only witnesses."
     },
     {
       "path": "packages/core/src/motifs.slow.test.ts",
@@ -563,10 +563,10 @@
     {
       "path": "packages/core/src/prologue.slow.test.ts",
       "claim": "Played/full-run regression assertions: is still holding the thing the man asked for; changed hands on the rival side, and never on ours; is readable off the save at the Long-Line term",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic century-scale founding-state persistence regression",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast prologue/session tests cover founding input/output, but this suite uniquely proves the chosen heirloom, founding grudge succession, guardian-side target and terminal-save founding view survive centuries of real simulation."
     },
     {
       "path": "packages/core/src/record-claims.slow.test.ts",
@@ -601,10 +601,10 @@
     {
       "path": "packages/core/src/replay.slow.test.ts",
       "claim": "Played/full-run regression assertions: digest(replay(log)) equals digest(original) across the standard seed set; replays the founding answer before the first year, including the five-name roster; throws rather than returning a run that silently does not match the log it was given; never lets the chronicler take a choice whose requires fail; …",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic replay equivalence and replay-failure contract",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "This suite uniquely compares replayed decision logs with original-run digests across the standard seed set and proves mismatch/requires/duplicate-year replay bugs fail rather than silently diverge. Replay correctness is merge-safety evidence, not statistical telemetry."
     },
     {
       "path": "packages/core/src/rites.slow.test.ts",
@@ -639,10 +639,10 @@
     {
       "path": "packages/core/src/session-api.slow.test.ts",
       "claim": "Played/full-run regression assertions: viewOf survives JSON, which is the actual requirement; viewOf takes how much chronicle to hand back; hallOf names the household a person is living in, and nothing for a stranger; branchReport describes every hall, living and extinct alike; …",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic public read-model/diagnostics integration over accumulated world state",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast session-api tests pin individual public verbs, while this suite uniquely exercises JSON-safe views, chronicle truncation, hall/branch/frequency diagnostics and decision rendering after enough real history exists to populate those reports."
     },
     {
       "path": "packages/core/src/session.slow.test.ts",
@@ -655,10 +655,10 @@
     {
       "path": "packages/core/src/sim.slow.test.ts",
       "claim": "Played/full-run regression assertions: validates with no errors; has content in every frequency tier; gives a father the same X in every daughter; gives sons of a null-font mother a font of zero, barring mutation; …",
-      "evidenceType": "mixed",
+      "evidenceType": "mixed full-simulation smoke containing hard invariants and broad regression observations",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Several mechanisms have fast witnesses, but this suite still combines hard cross-system invariants over realised populations (expression/Madness, guardian survival, frequency/content/prose and Age behavior). At ~46s it is cheaper and safer to keep the mixed smoke merge-blocking than split away assertions without complete equivalent witnesses."
     },
     {
       "path": "packages/core/src/table.slow.test.ts",
@@ -678,10 +678,10 @@
     {
       "path": "packages/core/src/tools/replay-divergence.slow.test.ts",
       "claim": "Played/full-run regression assertions: reports every choice it counts, and changes nothing by reporting it; plays the campaign it is given: a Short Line stops at its own term; and the replay stream is that player, on a Short Line, with a shape on every visit",
-      "evidenceType": "mixed",
+      "evidenceType": "deterministic replay-divergence tooling integration",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast replay-divergence unit tests pin local helpers; this suite uniquely proves the observed density player leaves the run unchanged, respects Short-Line termination, and emits a replay shape on every visit through a played campaign."
     },
     {
       "path": "packages/core/src/world-health.slow.test.ts",
