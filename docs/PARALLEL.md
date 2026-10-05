@@ -85,6 +85,37 @@ same orphan-ref push, and a `DENIED` from `agents.mjs` makes the workflow
 fail. The Actions summary contains the tool's output. This is transport to the
 one mutex, not a second mutex.
 
+**If the connector refuses to post the comment** — a ChatGPT session reported
+exactly that, its safety layer blocking the `/claim` write, and then correctly
+stopped, because nothing here offered another route — use the second transport
+(#499). It needs only the two writes a connector session already makes to do
+any work at all: create a branch, commit a file.
+
+1. Create the branch `claim-request/<working-branch>` from `main` — for the
+   examples above, `claim-request/chatgpt/issue-93-topic`.
+2. Commit one file to it, `CLAIM_REQUEST`, whose whole content is the same
+   one-line `/claim …` command you would have commented.
+3. Read `CLAIM_RESULT` on that same branch once the workflow has answered (it
+   usually takes under a minute). Its first line is `verdict: ok` or
+   `verdict: FAILED`; `request-commit:` names the request it answers, so a
+   result for an older request is not mistaken for yours; the rest is
+   `agents.mjs`'s own output. The claim itself is readable too, as the commit
+   message at the tip of the `claim/<issue>` branch.
+4. For the next command — `check`, `release`, a wider `--paths` — update
+   `CLAIM_REQUEST` on the same branch. Each push is answered on its own.
+
+The request branch speaks for its own suffix only: a `CLAIM_REQUEST` on
+`claim-request/a` naming `--agent b` is refused before `agents.mjs` is asked.
+The same workflow runs on `push` to `claim-request/**`, checks out trusted
+`main`, and reads the request out of the pushed commit as data; nothing on the
+request branch executes. Request branches are not claim refs, are never merged,
+and are left for a human or the janitor to sweep.
+
+**If both transports are refused**, stop and say so — that is still the
+correct outcome. Name which write was blocked and the exact text of the
+refusal, so the person running you can grant it or claim on your behalf.
+Starting unclaimed work is not a fallback.
+
 Connector stale recovery uses `/claim steal <issue> --agent <branch>`. It does
 **not** expose `--force`: `agents.mjs` still decides whether the six-hour
 stale threshold is met and performs the compare-and-swap against the exact claim
@@ -146,7 +177,9 @@ These are single files that every second feature wants to touch. Declare them in
 
 1. **Claim before reading code.** Shell: `npm run agents -- take <issue> --paths
    <what you will write>`. Connector-only: create the working branch, then
-   comment `/claim <issue> --agent <branch> --paths <what you will write>`.
+   comment `/claim <issue> --agent <branch> --paths <what you will write>` —
+   or, if the comment is refused, push that line as `CLAIM_REQUEST` on
+   `claim-request/<branch>` and read `CLAIM_RESULT` (above).
    Do this once for each issue this branch intends to land. Denied means denied
    — pick another issue rather than working it in parallel and discovering the
    other agent at merge time. If a claim is older than six hours and the old

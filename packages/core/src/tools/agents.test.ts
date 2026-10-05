@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -380,6 +380,102 @@ describe('the connector-only remote claim transport', () => {
       expect(text).not.toContain('commit-tree');
       expect(text).not.toContain('refs/heads/claim/');
       expect(text).not.toContain('--force-with-lease');
+    }
+  });
+
+  it('runs the branch transport (#499) on trusted main, from a pushed file, never the branch\'s code', () => {
+    const text = readFileSync(remoteWorkflow, 'utf8');
+    const job = text.slice(text.indexOf('  claim-branch:'));
+    expect(text).toContain("branches: ['claim-request/**']");
+    expect(text, 'the comment job must not also fire on the push')
+      .toContain("github.event_name == 'issue_comment'");
+    expect(job).toContain("github.event_name == 'push' && !github.event.deleted");
+    expect(job).toContain('getCollaboratorPermissionLevel');
+    expect(job).toContain('ref: main');
+    expect(job).toContain('ED_CLAIM_REQUEST_BRANCH: ${{ github.ref_name }}');
+    expect(job).toContain('ED_CLAIM_REQUEST_SHA: ${{ github.sha }}');
+    expect(job).toContain('run: node tools/remote-claim.mjs');
+    expect(job, 'the request travels as data read by git show, never as an env-interpolated body')
+      .not.toContain('ED_CLAIM_REQUEST:');
+  });
+
+  it('lets a request branch speak only for its own working branch', async () => {
+    const { assertRequestBranch, parseClaimRequest } = await module() as unknown as {
+      assertRequestBranch: (branch: string, request: Record<string, string | undefined>) => void;
+      parseClaimRequest: (raw: string) => Record<string, string | undefined>;
+    };
+    const take = parseClaimRequest('/claim 93 --agent chatgpt/issue-93-topic --paths tools');
+    expect(() => assertRequestBranch('claim-request/chatgpt/issue-93-topic', take)).not.toThrow();
+    expect(() => assertRequestBranch('claim-request/chatgpt/someone-else', take))
+      .toThrow(/belongs on claim-request\/chatgpt\/issue-93-topic/);
+    expect(() => assertRequestBranch('chatgpt/issue-93-topic', take)).toThrow(/request branch/);
+  });
+
+  it('takes a real claim from a pushed CLAIM_REQUEST and writes the verdict back', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-remote-claim-'));
+    try {
+      git(dir, 'init', '-q', '--bare', 'origin.git');
+      git(dir, '--git-dir', join(dir, 'origin.git'), 'symbolic-ref', 'HEAD', 'refs/heads/main');
+      git(dir, 'init', '-q', 'session');
+      const session = join(dir, 'session');
+      git(session, 'config', 'user.email', 'session@example.com');
+      git(session, 'config', 'user.name', 'session');
+      git(session, 'commit', '-q', '--allow-empty', '-m', 'init');
+      git(session, 'remote', 'add', 'origin', join(dir, 'origin.git'));
+      git(session, 'push', '-q', 'origin', 'HEAD:refs/heads/main',
+        'HEAD:refs/heads/chatgpt/issue-93-topic', 'HEAD:refs/heads/chatgpt/issue-93-rival');
+      const base = git(session, 'rev-parse', 'HEAD');
+
+      // What a connector does: a branch, and one file committed on it.
+      const request = (agent: string) => {
+        git(session, 'checkout', '-q', '--detach', base);
+        writeFileSync(join(session, 'CLAIM_REQUEST'),
+          `/claim 93 --agent ${agent} --paths packages/core/src/economy\n`);
+        git(session, 'add', 'CLAIM_REQUEST');
+        git(session, 'commit', '-q', '-m', 'request');
+        git(session, 'push', '-q', 'origin', `HEAD:refs/heads/claim-request/${agent}`);
+        return git(session, 'rev-parse', 'HEAD');
+      };
+
+      // What the workflow does: a clone of main, told only the branch and sha.
+      git(dir, 'clone', '-q', join(dir, 'origin.git'), 'runner');
+      const runner = join(dir, 'runner');
+      git(runner, 'config', 'user.email', 'bot@example.com');
+      git(runner, 'config', 'user.name', 'bot');
+      const env: NodeJS.ProcessEnv = { ...process.env, GITHUB_STEP_SUMMARY: '' };
+      delete env.ED_CLAIM_REQUEST;
+      const run = (agent: string, sha: string) => {
+        try {
+          execFileSync(process.execPath, [remoteTool], {
+            cwd: runner, encoding: 'utf8', stdio: 'pipe',
+            env: { ...env, ED_CLAIM_REQUEST_BRANCH: `claim-request/${agent}`, ED_CLAIM_REQUEST_SHA: sha },
+          });
+          return 0;
+        } catch (e) {
+          return (e as { status: number }).status;
+        }
+      };
+      const resultOf = (agent: string) => git(dir, '--git-dir', join(dir, 'origin.git'),
+        'show', `claim-request/${agent}:CLAIM_RESULT`);
+
+      const sha = request('chatgpt/issue-93-topic');
+      expect(run('chatgpt/issue-93-topic', sha)).toBe(0);
+      const claim = git(dir, '--git-dir', join(dir, 'origin.git'), 'log', '-1', '--format=%B', 'claim/93');
+      expect(claim).toContain('chatgpt/issue-93-topic');
+      const result = resultOf('chatgpt/issue-93-topic');
+      expect(result).toMatch(/^verdict: ok\nexit: 0\n/);
+      expect(result).toContain(`request-commit: ${sha}`);
+      expect(result).toContain('held: 93');
+
+      // The second agent loses at the same orphan-ref push, and is TOLD so.
+      const rival = request('chatgpt/issue-93-rival');
+      expect(run('chatgpt/issue-93-rival', rival)).not.toBe(0);
+      expect(resultOf('chatgpt/issue-93-rival')).toMatch(/^verdict: FAILED\n/);
+      expect(resultOf('chatgpt/issue-93-rival')).toContain('held by chatgpt/issue-93-topic');
+      expect(git(dir, '--git-dir', join(dir, 'origin.git'), 'log', '-1', '--format=%B', 'claim/93'))
+        .toBe(claim);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 
