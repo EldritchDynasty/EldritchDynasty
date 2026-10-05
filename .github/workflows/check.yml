@@ -726,7 +726,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gate: [blood, fire-rate, war, endings]
+        gate: [blood, fire-rate, war, endings, outcome-reach]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
