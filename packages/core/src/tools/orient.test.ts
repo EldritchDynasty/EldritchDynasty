@@ -133,7 +133,7 @@ describe('session orientation', () => {
       'run: https://example.invalid/outcome-reach',
     ].join('\n'));
 
-    const r = run();
+    const r = orient(join(root, 'work'));
     expect(r.code).toBe(0);
     expect(r.out).toContain('outcome-reach: green on 7654321');
   });
