@@ -666,10 +666,10 @@
     {
       "path": "packages/core/src/tales.slow.test.ts",
       "claim": "Played/full-run regression assertions: leaves every run with accounts in circulation; circulates a broad share of what is authored, not the same few; puts contradicting accounts of one event in front of the player at once; names a teller and a bias on every account it shows; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run tale reach/circulation regression with merge-blocking tale/view mechanics",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/tales.test.ts deterministically covers tale birth, circulation/mutation clocks, player-view exposure, teller+bias, contradictory accounts, hidden authored accuracy, view immutability/order and edited-out content. The slow suite remains nightly proof that a played campaign actually leaves a broad, contested set of tales circulating."
     },
     {
       "path": "packages/core/src/tools/replay-divergence.slow.test.ts",
