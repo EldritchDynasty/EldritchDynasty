@@ -293,6 +293,14 @@ describe('CI evidence inventory', () => {
     expect(nightly).toContain('gate: [fire-rate, war, endings]');
     expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
     expect(weekly).toContain('npm run gates -- blood');
+    expect(weekly).toContain('npm run gates -- outcome-reach');
+    for (const entry of inventory.telemetryGates.filter((candidate) =>
+      candidate.currentTier.startsWith('weekly'))) {
+      expect(
+        weekly,
+        `weekly telemetry is inventoried but not scheduled: ${entry.id}`,
+      ).toContain(`npm run gates -- ${entry.id}`);
+    }
 
     expect(check).toContain('release-slow:');
     expect(check).toContain('release-gates:');
