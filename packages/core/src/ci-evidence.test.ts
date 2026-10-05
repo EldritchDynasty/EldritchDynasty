@@ -4,12 +4,12 @@ import { join, relative } from 'node:path';
 import { shardCosts } from '../../../tools/shards.mjs';
 
 interface EvidenceInventory {
-  jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
-  gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
-  gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
-  telemetryGates: Array<{ id: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
-  gateAssertions: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
-  slowSuites: Array<{ path: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
+  jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; coveredBy?: string[] }>;
+  gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
+  gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
+  telemetryGates: Array<{ id: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
+  gateAssertions: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; coveredBy?: string[] }>;
+  slowSuites: Array<{ path: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string; coveredBy?: string[] }>;
 }
 
 const root = process.cwd();
@@ -26,6 +26,17 @@ function filesUnder(dir: string): string[] {
 
 function relativePosix(path: string): string {
   return relative(root, path).replaceAll('\\', '/');
+}
+
+function expectTestReference(reference: string): void {
+  const split = reference.indexOf('#');
+  expect(split, `coveredBy reference needs path#test-title: ${reference}`).toBeGreaterThan(0);
+  const path = reference.slice(0, split);
+  const expected = reference.slice(split + 1);
+  const source = readFileSync(join(root, path), 'utf8');
+  const titles = [...source.matchAll(/\\bit\\(\\s*(['"`])((?:\\\\.|(?!\\1)[\\s\\S])*)\\1/g)]
+    .map((match) => match[2]!.replace(/\\\\(['"`\\\\])/g, '$1'));
+  expect(titles, `coveredBy test does not exist: ${reference}`).toContain(expected);
 }
 
 describe('CI evidence inventory', () => {
@@ -142,7 +153,7 @@ describe('CI evidence inventory', () => {
       expect(entry.proposedTier.trim(), JSON.stringify(entry)).not.toBe('');
     }
   });
-  it('decomposes the mixed war lane into asserted statistics and telemetry', () => {
+  it('keeps war sampled evidence nightly with concrete merge witnesses', () => {
     const war = inventory.gateAssertions.filter((entry) => entry.lane === 'war');
     expect(war.map((entry) => entry.id).sort()).toEqual([
       'war:gap-widens',
@@ -150,62 +161,64 @@ describe('CI evidence inventory', () => {
       'war:it-pays',
       'war:progress-divergence',
     ]);
+    expect(war.every((entry) => entry.currentTier === 'nightly')).toBe(true);
+    expect(war.every((entry) => entry.proposedTier === 'nightly')).toBe(true);
 
-    const blockers = war.filter((entry) => entry.currentTier === 'merge-blocking');
-    expect(blockers.map((entry) => entry.id).sort()).toEqual([
+    const asserted = war.filter((entry) => entry.evidenceType === 'statistical');
+    expect(asserted.map((entry) => entry.id).sort()).toEqual([
       'war:gap-widens',
       'war:it-pays',
     ]);
-    expect(blockers.every((entry) => entry.evidenceType === 'statistical')).toBe(true);
-    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('muster.test.ts'))).toBe(true);
-    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('war-gate.test.ts'))).toBe(true);
-    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('nightly'))).toBe(true);
+    expect(asserted.every((entry) => (entry.coveredBy?.length ?? 0) > 0)).toBe(true);
 
     const telemetry = war.filter((entry) => entry.evidenceType === 'telemetry');
     expect(telemetry.map((entry) => entry.id).sort()).toEqual([
       'war:it-costs',
       'war:progress-divergence',
     ]);
-    expect(telemetry.every((entry) => !entry.currentTier.startsWith('merge-blocking'))).toBe(true);
   });
 
-  it('keeps sampled ending distribution separate from deterministic ending correctness', () => {
-    const lane = inventory.gateLanes.find((entry) => entry.id === 'endings');
-    const gate = inventory.gates.find((entry) => entry.id === 'endings');
-    expect(lane?.evidenceType).toBe('statistical ending-distribution regression');
-    expect(lane?.proposedTier).toBe('nightly');
-    expect(lane?.moveBlockedBy).toContain('ending.test.ts');
-    expect(lane?.moveBlockedBy).toContain('ending-gate.test.ts');
-
+  it('keeps sampled ending distribution nightly with deterministic merge witnesses', () => {
+    const gate = inventory.telemetryGates.find((entry) => entry.id === 'endings');
     expect(gate?.evidenceType).toBe('statistical ending-distribution regression');
+    expect(gate?.currentTier).toBe('nightly');
     expect(gate?.proposedTier).toBe('nightly');
-    expect(gate?.fasterEvidence).toContain('ending.test.ts');
-    expect(gate?.fasterEvidence).toContain('ending-gate.test.ts');
-    expect(gate?.moveBlockedBy).toContain('nightly rejection');
+    expect(gate?.coveredBy).toContain(
+      'packages/core/src/ending.test.ts#names every one of the five, exhaustively',
+    );
+    expect(gate?.coveredBy).toContain(
+      'packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place',
+    );
   });
 
-  it('splits statistical fire-rate from deterministic vocabulary and outcome evidence', () => {
-    const lane = inventory.gateLanes.find((entry) => entry.id === 'fire-rate');
-    const fire = inventory.gates.find((entry) => entry.id === 'fire-rate');
+  it('splits sampled fire-rate from blocking vocabulary authorship and outcome telemetry', () => {
+    const fire = inventory.telemetryGates.find((entry) => entry.id === 'fire-rate');
     const vocabulary = inventory.gates.find((entry) => entry.id === 'vocabulary-reach');
     const outcome = inventory.telemetryGates.find((entry) => entry.id === 'outcome-reach');
 
-    expect(lane?.proposedTier).toBe('split-by-gate');
-    expect(lane?.moveBlockedBy).toContain('vocabulary-reach');
-    expect(lane?.moveBlockedBy).toContain('vocabulary-reach');
-
+    expect(inventory.gateLanes.map((entry) => entry.id)).toEqual(['batch']);
     expect(fire?.evidenceType).toBe('statistical occurrence-rate regression');
+    expect(fire?.currentTier).toBe('nightly');
     expect(fire?.proposedTier).toBe('nightly');
-    expect(fire?.fasterEvidence).toContain('events/reach.test.ts');
-    expect(fire?.moveBlockedBy).toContain('nightly fire-rate rejection');
-
-    expect(vocabulary?.evidenceType).toBe('deterministic structural verdict + sampled non-failing diagnostic');
-    expect(vocabulary?.proposedTier).toBe('split: structural merge-blocking + reached diagnostic scheduled');
-    expect(vocabulary?.fasterEvidence).toContain('vocabulary-authorship.ts');
+    expect(fire?.source).toContain('gateFireRateNightly');
+    expect(vocabulary?.lane).toBe('batch');
+    expect(vocabulary?.evidenceType).toBe('deterministic structural verdict');
+    expect(vocabulary?.currentTier).toBe('merge-blocking');
+    expect(vocabulary?.proposedTier).toBe('merge-blocking');
     expect(vocabulary?.fasterEvidence).toContain('vocabulary-authorship.test.ts');
-    expect(vocabulary?.moveBlockedBy).toContain('800-run implementation');
     expect(outcome?.currentTier).toBe('weekly telemetry');
     expect(outcome?.proposedTier).toBe('weekly telemetry');
+  });
+
+  it('pins every scheduled gate to concrete merge-blocking test titles', () => {
+    for (const entry of inventory.telemetryGates) {
+      expect(entry.coveredBy?.length, `scheduled gate lacks coveredBy: ${entry.id}`).toBeGreaterThan(0);
+      for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
+    }
+    for (const entry of inventory.gateAssertions.filter((candidate) => candidate.evidenceType === 'statistical')) {
+      expect(entry.coveredBy?.length, `scheduled assertion lacks coveredBy: ${entry.id}`).toBeGreaterThan(0);
+      for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
+    }
   });
 
   it('splits slow regression by checked evidence tier without dropping either side', () => {
@@ -237,8 +250,14 @@ describe('CI evidence inventory', () => {
     expect(check).toContain('npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4');
     expect(check).not.toContain('npm test -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
-    expect(nightly).toContain('lane: [fire-rate, war, endings]');
-    expect(weekly).toContain('npm run gates -- --lane blood');
+    expect(nightly).toContain('gate: [fire-rate, war, endings]');
+    expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
+    expect(weekly).toContain('npm run gates -- blood');
+
+    expect(check).toContain('release-slow:');
+    expect(check).toContain('release-gates:');
+    expect(check).toContain('gate: [blood, fire-rate, war, endings]');
+    expect(check).toContain('needs: [lint, windows, test, gates, release-slow, release-gates]');
   });
 
   it('keeps the broad iOS runtime smoke nightly and targets merge CI to native-host changes', () => {
