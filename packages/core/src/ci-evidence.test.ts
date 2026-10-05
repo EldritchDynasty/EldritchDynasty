@@ -77,16 +77,17 @@ describe('CI evidence inventory', () => {
     expect(recorded).toEqual(actual);
   });
 
-  it('classifies every current gate lane exactly once', () => {
-    const workflow = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
-    const laneMatch = workflow.match(/lane:\s*\[([^\]]+)\]/);
-    expect(laneMatch, 'check.yml gate lane matrix').not.toBeNull();
+  it('classifies every defined gate lane exactly once, regardless of CI cadence', () => {
+    const source = readFileSync(join(root, 'packages/core/src/tools/gates.ts'), 'utf8');
+    const defaultLane = /export const DEFAULT_LANE = '([^']+)'/.exec(source);
+    const ownLane = /const OWN_LANE:[^=]+ = \{([\s\S]*?)^\};/m.exec(source);
 
-    const actual = laneMatch![1]!
-      .split(',')
-      .map((lane) => lane.trim())
-      .filter(Boolean)
-      .sort();
+    expect(defaultLane, 'gates.ts DEFAULT_LANE').not.toBeNull();
+    expect(ownLane, 'gates.ts OWN_LANE registry').not.toBeNull();
+
+    const dedicated = [...ownLane![1]!.matchAll(/^  (?:'([^']+)'|([A-Za-z0-9_-]+)):\s*\[/gm)]
+      .map((match) => match[1] ?? match[2]!);
+    const actual = [defaultLane![1]!, ...dedicated].sort();
     const recorded = inventory.gateLanes.map((entry) => entry.id).sort();
 
     expect(new Set(recorded).size).toBe(recorded.length);
