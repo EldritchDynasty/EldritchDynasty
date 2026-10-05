@@ -101,7 +101,7 @@ npm run harness -- 16 500             # 16 headless Long Lines, with balance num
 npm run digest  -- 8 400              # fingerprint 8 runs; diff the block across commits
 npm run gate                          # every gate — what CI will say, in one command
 npm run gates   -- fire-rate          # one of them on its own, when you know which
-npm run gates   -- --lane war         # one CI lane. Current merge path has five lanes:
+npm run gates   -- --lane batch       # merge-blocking gate lane; sampled gates are scheduled
                                       # `batch`, `blood`, `fire-rate`, `war`, `endings`.
 npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
 npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
