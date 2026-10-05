@@ -283,7 +283,7 @@
   "slowSuites": [
     {
       "path": "packages/client/src/lib/run.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for run. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: stops at the year the other party comes to collect, and is read; still knows what was chosen in 1042; raised every kind of decision the docket draws, in one run; raised the Record block often enough to be the mechanic it is meant to be; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -291,7 +291,7 @@
     },
     {
       "path": "packages/core/src/ages.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for ages. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: realised duration matches the authored shape; every Age occurs in enough runs to justify authoring exclusive content; never leaves a run with no active Age for an unreasonable stretch",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -299,7 +299,7 @@
     },
     {
       "path": "packages/core/src/arcs.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for arcs. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: fires every event at least once across the batch; reaches the last node of a multi-generation arc; keeps the tiers in their intended proportion; fires in every seed of the batch — never a run of total silence; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -307,7 +307,7 @@
     },
     {
       "path": "packages/core/src/ascension.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for ascension. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: gets a house past Touched, and does not hand it the top; remembers the high-water mark after the man holding it dies; puts the rung on the view, which is the whole point of building it",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -315,7 +315,7 @@
     },
     {
       "path": "packages/core/src/assize.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for assize. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: acts about once a generation, from the whole range of what it can do; survives the round trip, cooldowns and all",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -323,7 +323,7 @@
     },
     {
       "path": "packages/core/src/attention.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for attention. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: deals the Match about once a generation, not once every six years; does not let the choice tide rise any further; keeps naming bounded while #133 Stage 5B / #88 recalibrates attention share; asks at the same rate whether the line runs 300 years or 500; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -331,7 +331,7 @@
     },
     {
       "path": "packages/core/src/attributes.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for attributes. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: gives a scholar\\; makes a man stronger than a woman about nineteen times in twenty; does not move the population mean; leaves the attributes nobody declared it on alone; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -339,7 +339,7 @@
     },
     {
       "path": "packages/core/src/blood.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for blood. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: makes the pairing the whole design turns on more than a handful of times; gets somebody onto the ladder in most runs; does not empty the halls doing it",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -347,7 +347,7 @@
     },
     {
       "path": "packages/core/src/branches-contentment.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for branches contentment. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: lets a hall stand for centuries and still be content; does not sit at maximum discontent for the whole run",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -355,7 +355,7 @@
     },
     {
       "path": "packages/core/src/branches-grievance.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for branches grievance. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: keeps grievance and discontent inside a usable range",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -363,7 +363,7 @@
     },
     {
       "path": "packages/core/src/branches.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for branches. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: founds branches rather than keeping every son under one roof; never runs more halls than the cap allows; marks a branch extinct the year its last member dies; leaves nobody in two halls at once; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -371,7 +371,7 @@
     },
     {
       "path": "packages/core/src/burying.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for burying. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: puts the scenes in front of a house that has something to bury; buries what a declining house never touches; answers part of the bill, and only part",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -379,7 +379,7 @@
     },
     {
       "path": "packages/core/src/cast.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for cast. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: always has somebody, while the house has anybody at all; never grows back into a roster; never names anybody who is not living in the house; fills every role it declares, somewhere in the batch; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -387,7 +387,7 @@
     },
     {
       "path": "packages/core/src/condition.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for condition. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: leaves the poorest house-years with smaller completed families without saturating",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -395,7 +395,7 @@
     },
     {
       "path": "packages/core/src/contracts.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for contracts. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: binds a retainer to a person, so the contract can end; never leaves a retainer serving a corpse for a century; passes a hereditary post to the holder\\; does not ratchet — standing falls as well as rises; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
