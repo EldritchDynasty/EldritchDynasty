@@ -366,6 +366,14 @@ describe('native merge queue admission', () => {
     expect(workflow).toContain('required="success"');
     expect(workflow).toContain('the workflow_run event can arrive seconds before that check is');
   });
+
+  it('retries only the transient required-check visibility race for a bounded period', () => {
+    expect(workflow).toContain('max_attempts=6');
+    expect(workflow).toContain('Required status check "CI required" is expected');
+    expect(workflow).toContain('[[ "$attempt" -lt "$max_attempts" ]]');
+    expect(workflow).toContain('sleep "$delay"');
+    expect(workflow).toContain('fail closed on every other GraphQL error');
+  });
 });
 
 describe('the shards are packed by duration', () => {
