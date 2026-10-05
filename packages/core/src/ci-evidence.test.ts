@@ -348,6 +348,9 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('--label "priority: P0"');
     expect(watcher).toContain('--add-label "priority: P0"');
     expect(watcher).toContain('gh issue comment');
+    expect(watcher).toContain('gh issue view "$NUMBER"');
+    expect(watcher).toContain('grep -Fq "$RUN_URL"');
+    expect(watcher).toContain('repairing project surfacing');
     expect(watcher).toContain('gh issue close');
     expect(watcher).toContain('contents: write');
     expect(watcher).toContain('refs/scheduled/$KEY');
