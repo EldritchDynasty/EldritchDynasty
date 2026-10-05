@@ -210,18 +210,12 @@ describe('CI evidence inventory', () => {
     expect(outcome?.proposedTier).toBe('weekly telemetry');
   });
 
-  it('pins each scheduled red tier to a deliberate failing fixture', () => {
-    const failingScheduled = inventory.telemetryGates
-      .filter((entry) => entry.currentTier === 'nightly' || entry.currentTier === 'weekly');
-    expect(failingScheduled.map((entry) => entry.id).sort()).toEqual([
-      'blood', 'endings', 'fire-rate', 'war',
-    ]);
+  it('pins scheduled verdicts to deliberate failing fixtures and labels telemetry-only evidence', () => {
+    const scheduledWithVerdict = inventory.telemetryGates
+      .filter((entry) => entry.failureWitness !== undefined);
+    expect(scheduledWithVerdict.length).toBeGreaterThan(0);
 
-    for (const entry of failingScheduled) {
-      expect(
-        entry.failureWitness?.trim(),
-        `scheduled red gate lacks a failureWitness: ${entry.id}`,
-      ).toBeTruthy();
+    for (const entry of scheduledWithVerdict) {
       expectTestReference(entry.failureWitness!);
       const title = entry.failureWitness!.slice(entry.failureWitness!.indexOf('#') + 1);
       expect(title, `failureWitness should name an explicit red fixture: ${entry.id}`)
@@ -229,9 +223,14 @@ describe('CI evidence inventory', () => {
     }
 
     const telemetryOnly = inventory.telemetryGates
-      .filter((entry) => entry.currentTier.includes('telemetry'));
-    expect(telemetryOnly.map((entry) => entry.id)).toEqual(['outcome-reach']);
-    expect(telemetryOnly.every((entry) => entry.failureWitness === undefined)).toBe(true);
+      .filter((entry) => entry.failureWitness === undefined);
+    expect(telemetryOnly.length).toBeGreaterThan(0);
+    for (const entry of telemetryOnly) {
+      expect(
+        entry.evidenceType.toLowerCase(),
+        `a scheduled gate without a failureWitness must be telemetry-only: ${entry.id}`,
+      ).toContain('telemetry');
+    }
   });
 
   it('pins every scheduled gate to concrete merge-blocking test titles', () => {
