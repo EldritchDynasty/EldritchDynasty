@@ -116,7 +116,7 @@ describe('CI evidence inventory', () => {
       'war:it-pays',
     ]);
     expect(blockers.every((entry) => entry.evidenceType === 'statistical')).toBe(true);
-    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('#440'))).toBe(true);
+    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('trusted nightly failure path'))).toBe(true);
 
     const telemetry = war.filter((entry) => entry.evidenceType === 'telemetry');
     expect(telemetry.map((entry) => entry.id).sort()).toEqual([
