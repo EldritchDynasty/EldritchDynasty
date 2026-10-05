@@ -627,10 +627,10 @@
     {
       "path": "packages/core/src/secrets.slow.test.ts",
       "claim": "Played/full-run regression assertions: lets a secret out of the house at all; gets some of them told, rather than leaving them walking forever; turns every told secret into a Discrepancy, and no untold one; does not flood the record with them; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run secret incidence/balance regression with merge-blocking secret mechanics",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/secrets.test.ts deterministically covers secrets walking on bad service endings, loyalty/service pricing, duplicate suppression, tell timing/idempotence, discrepancy creation/resurrection, and loyalty dynamics. The slow suite remains nightly evidence that secrets actually leave, get told, stay bounded, and vary loyalty across full campaigns."
     },
     {
       "path": "packages/core/src/session-api.slow.test.ts",
