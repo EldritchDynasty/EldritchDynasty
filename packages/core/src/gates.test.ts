@@ -264,13 +264,28 @@ describe('#440 expensive gate partitioning', () => {
     })).toThrow(/not a function/);
   });
 
-  it('blood and war parallel workers reproduce the serial verdict exactly', () => {
+  it('fails closed when a worker exits before returning evidence', () => {
+    const plan = partitionGateInputs(['one'], 1);
+    expect(() => runGatePartitionsInWorkers(plan, {
+      moduleUrl: 'node:process',
+      exportName: 'exit',
+      argsBefore: [17],
+      timeoutMs: 250,
+    })).toThrow(/timed out without returning evidence/);
+  });
+
+  it('blood and war parallel workers reproduce serial output and repeat bit-for-bit', () => {
     const tiny = { seeds: [4000, 4013], years: 5 };
 
-    expect(gateBlood(content, { ...tiny, workers: 2 }))
-      .toEqual(gateBlood(content, { ...tiny, workers: 1 }));
-    expect(gateWar(content, { ...tiny, workers: 2 }))
-      .toEqual(gateWar(content, { ...tiny, workers: 1 }));
+    const bloodSerial = gateBlood(content, { ...tiny, workers: 1 });
+    const bloodParallel = gateBlood(content, { ...tiny, workers: 2 });
+    expect(bloodParallel).toEqual(bloodSerial);
+    expect(gateBlood(content, { ...tiny, workers: 2 })).toEqual(bloodParallel);
+
+    const warSerial = gateWar(content, { ...tiny, workers: 1 });
+    const warParallel = gateWar(content, { ...tiny, workers: 2 });
+    expect(warParallel).toEqual(warSerial);
+    expect(gateWar(content, { ...tiny, workers: 2 })).toEqual(warParallel);
   });
 });
 
