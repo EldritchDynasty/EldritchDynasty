@@ -129,6 +129,157 @@
       "moveBlockedBy": "Separate authored hard invariants from distribution assertions before moving the lane."
     }
   ],
+  "gates": [
+    {
+      "id": "clauses",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateClauses",
+      "claim": "The median completed Long-Line sample recovers at least the authored clause floor, keeping the God-rung record target within reach.",
+      "evidenceType": "sampled regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "blood",
+      "lane": "blood",
+      "source": "packages/core/src/tools/blood-gate.ts#gateBlood",
+      "claim": "The canonical paired bloodline sample preserves the shipped inheritance/distribution claim over the full configured batch.",
+      "evidenceType": "statistical",
+      "currentTier": "merge-blocking",
+      "proposedTier": "weekly",
+      "moveBlockedBy": "#440 must preserve the exact canonical sample and reducer semantics, and deterministic blood mechanism coverage must remain merge-blocking before this statistical batch moves."
+    },
+    {
+      "id": "library-neutrality",
+      "lane": "batch",
+      "source": "packages/core/src/tools/library-gate.ts#gateLibraryNeutrality",
+      "claim": "Inherited narrative/library state may change the record but must not move the material headline it is specified to leave neutral.",
+      "evidenceType": "deterministic paired simulation",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "short-line",
+      "lane": "batch",
+      "source": "packages/core/src/tools/short-line-gate.ts#gateShortLine",
+      "claim": "The 300-year Short Line still reaches its authored ending/verdict contract rather than silently behaving like a truncated Long Line.",
+      "evidenceType": "deterministic regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "fire-rate",
+      "lane": "fire-rate",
+      "source": "packages/core/src/tools/fire-rate-gate.ts#runFireRateGate",
+      "claim": "Authored events meet their explicit occurrence/frequency guard across the canonical played sample.",
+      "evidenceType": "statistical",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Decompose explicit minimum-rate design claims from broad occurrence telemetry before moving this sampled verdict; #495 removes outcome-reach, not the fire-rate claim itself."
+    },
+    {
+      "id": "ladder",
+      "lane": "batch",
+      "source": "packages/core/src/tools/ladder-gate.ts#gateLadder",
+      "claim": "The player-driven ladder policy still changes the intended ascension headline relative to its paired comparison policies.",
+      "evidenceType": "sampled mechanism regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "ladder-scales",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateLadderScales",
+      "claim": "Ascension floors remain measurable against the population that reaches the preceding rung, and newly stale or newly impossible floors fail closed.",
+      "evidenceType": "sampled invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "war",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#gateWar",
+      "claim": "The canonical paired muster/war batch preserves its asserted settlement and repeated-war statistical claims while reporting non-asserted divergence telemetry.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "#440 must preserve the exact canonical sample/reducer and the assertion-level rows below must remain the authority on which war findings are blocking versus telemetry."
+    },
+    {
+      "id": "outcome-reach",
+      "lane": "fire-rate",
+      "source": "packages/core/src/tools/gates.ts#gateOutcomeReach",
+      "claim": "The historical 800-run sample reports whether authored outcomes occur; deterministic structural/execution witnesses now carry the merge-safety reachability proof.",
+      "evidenceType": "statistical telemetry",
+      "currentTier": "merge-blocking",
+      "proposedTier": "weekly telemetry",
+      "moveBlockedBy": "#495 / PR #496 owns removing this probabilistic occurrence verdict from merge CI only after preserving it as scheduled/manual telemetry."
+    },
+    {
+      "id": "purposes",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gatePurposes",
+      "claim": "Every event has exactly three purposes and no three templates share the same purpose triple.",
+      "evidenceType": "deterministic validation",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "vocabulary-reach",
+      "lane": "fire-rate",
+      "source": "packages/core/src/tools/gates.ts#gateVocabularyReach",
+      "claim": "Every declared effect kind is authored or explicitly pinned as debt; paid-off or newly unauthored vocabulary fails rather than drifting silently.",
+      "evidenceType": "deterministic structural invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "endings",
+      "lane": "endings",
+      "source": "packages/core/src/tools/ending-gate.ts#gateEndings",
+      "claim": "The canonical paired ending sample enforces ending-system distribution rules, including the authored losability and comparison claims.",
+      "evidenceType": "mixed statistical/invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "nightly",
+      "moveBlockedBy": "Separate authored hard ending invariants from distribution-only assertions and keep deterministic witnesses blocking before the sampled lane can move."
+    },
+    {
+      "id": "bottleneck",
+      "lane": "batch",
+      "source": "packages/core/src/tools/bottleneck-gate.ts#gateFoundingRecovery",
+      "claim": "The founding bottleneck/recovery verdict remains satisfied on its canonical evidence rather than allowing an opening-state progression dead end.",
+      "evidenceType": "deterministic regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "land",
+      "lane": "batch",
+      "source": "packages/core/src/tools/land-gate.ts#gateLand",
+      "claim": "Land ownership, loss routes, reader state and treasury continue to satisfy the authored long-run land contract.",
+      "evidenceType": "sampled regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "slot-fillability",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateSlotFillability",
+      "claim": "Every slotted ambient event can cast against at least one edge-case test household through the real slot resolver.",
+      "evidenceType": "deterministic mechanism",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "post-fillability",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gatePostFillability",
+      "claim": "Every authored career has at least one event structurally gated on holding that post, so a career cannot exist without content that reads it.",
+      "evidenceType": "deterministic structural invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    }
+  ],
   "slowSuites": [
     {
       "path": "packages/client/src/lib/run.slow.test.ts",
