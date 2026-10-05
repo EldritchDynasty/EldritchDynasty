@@ -186,7 +186,8 @@ describe('CI evidence inventory', () => {
 
     expect(vocabulary?.evidenceType).toBe('deterministic structural verdict + sampled non-failing diagnostic');
     expect(vocabulary?.proposedTier).toBe('split: structural merge-blocking + reached diagnostic scheduled');
-    expect(vocabulary?.fasterEvidence).toContain('failure decision is fully determined');
+    expect(vocabulary?.fasterEvidence).toContain('vocabulary-authorship.ts');
+    expect(vocabulary?.fasterEvidence).toContain('vocabulary-authorship.test.ts');
     expect(vocabulary?.moveBlockedBy).toContain('800-run implementation');
     expect(outcome?.proposedTier).toBe('weekly telemetry');
   });
