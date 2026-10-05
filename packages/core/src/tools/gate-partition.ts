@@ -1,3 +1,11 @@
+import {
+  MessageChannel,
+  Worker,
+  receiveMessageOnPort,
+  type MessagePort,
+} from 'node:worker_threads';
+import { fileURLToPath } from 'node:url';
+
 /**
  * Deterministic partition/reducer substrate for expensive gate batches (#440).
  *
@@ -125,4 +133,177 @@ export function reduceGatePartitions<TInput, TOutput>(
   }
 
   return output;
+}
+
+
+export interface GatePartitionWorkerCall {
+  /** TypeScript module exporting the raw partition function. Usually import.meta.url. */
+  moduleUrl: string;
+  /** Export taking (...argsBefore, partition, ...argsAfter). It must return raw observations. */
+  exportName: string;
+  argsBefore?: readonly unknown[];
+  argsAfter?: readonly unknown[];
+}
+
+interface WorkerSuccess<T> {
+  ok: true;
+  value: GatePartitionResult<T>;
+}
+
+interface WorkerFailure {
+  ok: false;
+  error: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+}
+
+type WorkerMessage<T> = WorkerSuccess<T> | WorkerFailure;
+
+interface WorkerHandle<T> {
+  worker: Worker;
+  receive: MessagePort;
+  signal: Int32Array;
+  partitionId: number;
+}
+
+/**
+ * The worker is deliberately plain JavaScript. It registers tsx inside the
+ * isolated thread, then imports the gate module named by the caller. This
+ * works the same on Windows and Linux and does not depend on shell quoting,
+ * executable suffixes, or a platform-specific process launcher.
+ */
+const WORKER_SOURCE = String.raw`
+const { workerData } = require('node:worker_threads');
+
+(async () => {
+  const signal = new Int32Array(workerData.signal);
+  let message;
+  try {
+    // An eval worker can inherit the parent's argv. Make imported gate modules
+    // unambiguously libraries so their "isMain" CLI blocks cannot fire here.
+    process.argv[1] = '[eldritch-gate-worker]';
+
+    const { tsImport } = await import('tsx/esm/api');
+    const loaded = await tsImport(workerData.moduleUrl, {
+      parentURL: workerData.parentURL,
+      tsconfig: workerData.tsconfig,
+    });
+    const fn = loaded[workerData.exportName];
+    if (typeof fn !== 'function') {
+      throw new Error(
+        'gate worker export ' + workerData.exportName + ' is not a function in ' + workerData.moduleUrl,
+      );
+    }
+
+    const value = await fn(...workerData.args);
+    message = { ok: true, value };
+  } catch (error) {
+    message = {
+      ok: false,
+      error: {
+        name: error && error.name ? String(error.name) : 'Error',
+        message: error && error.message ? String(error.message) : String(error),
+        ...(error && error.stack ? { stack: String(error.stack) } : {}),
+      },
+    };
+  }
+
+  try {
+    workerData.port.postMessage(message);
+  } finally {
+    Atomics.store(signal, 0, 1);
+    Atomics.notify(signal, 0);
+  }
+})();
+`;
+
+const workerTsconfig = fileURLToPath(new URL('../../../../tsconfig.base.json', import.meta.url));
+
+/**
+ * Run every partition concurrently while preserving the existing synchronous
+ * gate API.
+ *
+ * The main thread waits on one SharedArrayBuffer flag per worker, then reads
+ * exactly one raw result from its MessagePort. Workers never return pass/fail
+ * verdicts: the caller must feed these observations to reduceGatePartitions
+ * and the gate's existing aggregate judgement.
+ */
+export function runGatePartitionsInWorkers<TInput, TOutput>(
+  plan: readonly GatePartition<TInput>[],
+  call: GatePartitionWorkerCall,
+): GatePartitionResult<TOutput>[] {
+  if (plan.length === 0) return [];
+
+  const handles: WorkerHandle<TOutput>[] = plan.map((partition) => {
+    const { port1, port2 } = new MessageChannel();
+    const shared = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT);
+    const signal = new Int32Array(shared);
+    const args = [
+      ...(call.argsBefore ?? []),
+      partition,
+      ...(call.argsAfter ?? []),
+    ];
+
+    const worker = new Worker(WORKER_SOURCE, {
+      eval: true,
+      workerData: {
+        signal: shared,
+        port: port2,
+        moduleUrl: call.moduleUrl,
+        exportName: call.exportName,
+        args,
+        parentURL: import.meta.url,
+        tsconfig: workerTsconfig,
+      },
+      transferList: [port2],
+    });
+
+    return { worker, receive: port1, signal, partitionId: partition.id };
+  });
+
+  try {
+    return handles.map(({ receive, signal, partitionId }) => {
+      while (Atomics.load(signal, 0) === 0) {
+        Atomics.wait(signal, 0, 0);
+      }
+
+      const envelope = receiveMessageOnPort(receive)?.message as WorkerMessage<TOutput> | undefined;
+      if (!envelope) {
+        throw new Error(`gate worker ${partitionId} signalled completion without returning evidence`);
+      }
+      if (!envelope.ok) {
+        const detail = envelope.error.stack ?? `${envelope.error.name}: ${envelope.error.message}`;
+        throw new Error(`gate worker ${partitionId} failed: ${detail}`);
+      }
+      if (envelope.value.id !== partitionId) {
+        throw new Error(
+          `gate worker ${partitionId} returned evidence for partition ${envelope.value.id}`,
+        );
+      }
+      return envelope.value;
+    });
+  } finally {
+    for (const { worker, receive } of handles) {
+      receive.close();
+      void worker.terminate();
+    }
+  }
+}
+
+/**
+ * Worker-count configuration shared by blood and war. Four is the measured
+ * experiment ceiling from #440; callers can lower it for diagnosis without
+ * changing the canonical batch or its statistical claim.
+ */
+export function gatePartitionWorkerCount(
+  raw: string | undefined = process.env.ED_GATE_WORKERS,
+): number {
+  if (raw === undefined || raw === '') return MAX_PARTITION_WORKERS;
+  const workers = Number(raw);
+  if (!Number.isInteger(workers) || workers < 1 || workers > MAX_PARTITION_WORKERS) {
+    throw new Error(`ED_GATE_WORKERS must be an integer from 1 to ${MAX_PARTITION_WORKERS}`);
+  }
+  return workers;
 }
