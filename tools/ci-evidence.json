@@ -355,10 +355,10 @@
     {
       "path": "packages/core/src/branches.slow.test.ts",
       "claim": "Played/full-run regression assertions: founds branches rather than keeping every son under one roof; never runs more halls than the cap allows; marks a branch extinct the year its last member dies; leaves nobody in two halls at once; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run branch topology/regression with merge-blocking structural and succession witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/branches.test.ts deterministically proves branch extinction/escheat and branch-grievance mechanics; packages/core/src/succession.test.ts proves cadet eligibility, main-line preference, and that a cadet inheriting the seal is recalled to the main hall. testing.ts worldViolations keeps the one-open-membership and living-Head-in-main-hall invariants merge-blocking. The slow suite remains nightly evidence for realised branch founding, hall spread, cap pressure and long-run determinism across played campaigns."
     },
     {
       "path": "packages/core/src/burying.slow.test.ts",
