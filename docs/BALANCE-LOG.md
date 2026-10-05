@@ -57,6 +57,42 @@ written down is so it is not learned a sixth.
 
 ---
 
+## Sampled outcome occurrence cadence cutover (#495) — 5 October 2026
+
+#442 replaced sampled reachability as merge-safety evidence with deterministic
+structural and execution witnesses. #495 therefore changes the **cadence and
+verdict boundary**, not content probabilities: the historical 800-run
+`outcome-reach` occurrence sample remains runnable, but it no longer belongs
+to `GATES` or any merge-blocking lane.
+
+The before measurement is the retained structured artifact from hosted run
+`37259632196` (PR #490, before this cutover):
+
+| fire-rate lane evidence | seconds |
+|---|---:|
+| whole lane | **664.608** |
+| `fire-rate` | 664.602 |
+| sampled `outcome-reach` | **0.002** |
+| `vocabulary-reach` | 0.003 |
+
+That 0.002s is real and deliberately small: `outcome-reach` reads the same
+already-paid 800-run corpus as `fire-rate`. Moving the sampled verdict off the
+merge path is therefore **not claimed as a meaningful latency win**. It removes
+a probabilistic coin-tail verdict from merge safety while preserving the
+measurement as weekly/manual telemetry. The deterministic #442 witnesses remain
+merge-blocking.
+
+The post-cutover hosted measurement is full CI run `37283158558` on this
+branch. The merge-blocking fire-rate job completed green in **21.3 minutes**
+(hosted wall time, about 1,279s) and ran only `fire-rate` plus
+`vocabulary-reach`; sampled `outcome-reach` is absent from the lane. This
+run was materially slower than the 664.608s before sample for reasons outside
+the 0.002s cadence cutover, so it is evidence of the new boundary rather than
+a speedup claim. The cutover's expected direct latency saving remains
+effectively zero when the 800-run corpus has already been paid; its value is
+removing a probabilistic occurrence verdict from merge safety while keeping
+weekly/manual telemetry.
+
 ## Blood/war partition-worker baseline (#440) — 5 October 2026
 
 #440 changes **computation only** for the two longest gate lanes. The canonical

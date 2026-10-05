@@ -9,7 +9,7 @@ import {
 } from './events/rites.js';
 import { applyEffect } from './events/effects.js';
 import { applyRecord, commitOutcome, queueChoice, queueMatch, type PendingChoice } from './events/decisions.js';
-import type { SlotFill } from './events/slots.js';
+import { candidatesFor, type SlotFill } from './events/slots.js';
 import { order, tableView, type TableOrder } from './table.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js';
 import { standingOf } from './ascension.js';
@@ -278,6 +278,28 @@ describe('what the rite does to the person it takes', () => {
     ctx.world.people.kill(her.id, ctx.world.year, 'a fever');
     expect(consumeVessel(ctx, him, her).ok).toBe(false);
   });
+
+  it('refuses a second Vessel for the same man before it takes another relative', () => {
+    const ctx = testWorld(content);
+    const him = head(ctx);
+    const first = carrierDaughterOf(ctx, him, 'The First Given');
+    const second = carrierDaughterOf(ctx, him, 'The Second Given');
+
+    expect(consumeVessel(ctx, him, first).ok).toBe(true);
+    const acquiredAfterFirst = { ...him.acquired };
+    const madnessAfterFirst = him.madness;
+
+    const repeated = consumeVessel(ctx, him, second);
+    expect(repeated.ok).toBe(false);
+    expect(repeated.reason).toMatch(/already taken the Vessel rite/);
+
+    // Refusal is before every transfer and before the one death gate.
+    expect(second.status).toBe('alive');
+    expect(him.acquired).toEqual(acquiredAfterFirst);
+    expect(him.madness).toBe(madnessAfterFirst);
+    expect(him.rites.filter((rite) => rite === 'vessel')).toHaveLength(1);
+  });
+
 });
 
 describe('the rite and the ladder', () => {
@@ -878,6 +900,21 @@ describe('major rite assembly (#218)', () => {
       'the_vessel_rite',
       vessel.id,
     );
+  });
+
+  it('removes a prior Vessel taker from the authored ASCENDANT cast', () => {
+    const ctx = testWorld(content, 8472);
+    const ascendant = readyClimber(ctx);
+    const event = ctx.content.event('the_vessel_rite');
+    if (!event) throw new Error('the authored Vessel rite is missing');
+    const spec = event.slots.ASCENDANT;
+    if (!spec) throw new Error('the authored Vessel ASCENDANT slot is missing');
+
+    expect(candidatesFor(spec, ctx, {}).map((person) => person.id)).toContain(ascendant.id);
+
+    ascendant.rites.push('vessel');
+
+    expect(candidatesFor(spec, ctx, {}).map((person) => person.id)).not.toContain(ascendant.id);
   });
 
   it('photographs the Great Rite from the same slot resolution the docket uses', () => {

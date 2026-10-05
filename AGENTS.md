@@ -430,7 +430,10 @@ true even if nobody opens it.
   Denied means denied — take another issue rather than working it in parallel
   and meeting the other agent at merge time.
   With no shell (a connector-only session), create the working branch and
-  comment `/claim <issue> --agent <branch> --paths <paths>` instead.
+  comment `/claim <issue> --agent <branch> --paths <paths>` instead. If the
+  connector refuses that comment, commit the same line as `CLAIM_REQUEST` on a
+  `claim-request/<branch>` branch and read `CLAIM_RESULT` there
+  ([docs/PARALLEL.md](docs/PARALLEL.md)); only if both are refused, stop.
 - **Read the issue before building any of it.** Each is self-contained: the
   fact, the file paths, the type shapes, the assertion that has to pass.
 - **Close it from the landing commit**: `Closes #93, closes #94`, a keyword

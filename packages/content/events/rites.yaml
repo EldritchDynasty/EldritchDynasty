@@ -427,6 +427,9 @@ events:
         role: foremost
         filters:
           - { rung: { atLeast: hierophant } }
+          # The cooldown rations the HOUSE; this filter rations the MAN. A prior
+          # taker must not be offered a branch whose engine effect will refuse.
+          - { not: { rite: { taken: vessel } } }
       # §22: "Named, chosen by the player from the tree." Not by the engine,
       # and not by a filter clever enough to guess which relative the family
       # can bear to lose.

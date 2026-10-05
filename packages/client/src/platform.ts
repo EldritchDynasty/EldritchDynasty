@@ -23,7 +23,7 @@ export interface Platform {
   /** Installation/profile-wide history of completed houses. Opaque to the host. */
   readLibrary(): Promise<unknown | null>;
   writeLibrary(library: unknown): Promise<void>;
-  /** Optional profile-wide achievement backend. Browser and Android are no-ops. */
+  /** Optional profile-wide achievement backend. Browser and mobile hosts are no-ops. */
   unlockAchievement?(id: string): Promise<void>;
   /**
    * Optional user-authored YAML, keyed relative to a content root.

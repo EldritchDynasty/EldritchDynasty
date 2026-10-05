@@ -53,6 +53,22 @@ export function negatedClosings(text) {
   return [...new Set(matches(text).filter((m) => isNegated(text, m)).map((m) => Number(m[1])))];
 }
 
+/**
+ * Affirmative same-repository issue closings from a PR GitHub reports as
+ * actually merged into this repository's default branch.
+ *
+ * The caller supplies repository/defaultBranch rather than trusting fields in
+ * the body or a branch name. Bare #N references are then necessarily issues in
+ * that repository, matching GitHub's closing-keyword semantics.
+ */
+export function mergedPrClosingIssues(pr, { repository, defaultBranch }) {
+  if (!pr || !repository || !defaultBranch) return [];
+  if (!pr.merged_at) return [];
+  if (pr.base?.ref !== defaultBranch) return [];
+  if (pr.base?.repo?.full_name !== repository) return [];
+  return [...new Set(closingIssues(pr.body ?? ''))];
+}
+
 export function prBodyError(text) {
   const issues = negatedClosings(text);
   if (!issues.length) return null;

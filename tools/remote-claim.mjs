@@ -4,12 +4,26 @@
  *
  * tools/agents.mjs owns claim semantics: orphan empty-tree commits, CAS pushes,
  * stale handling, path overlap, release tombstones. This file deliberately
- * owns none of that. It accepts one small issue-comment grammar and invokes the
+ * owns none of that. It accepts one small `/claim` grammar and invokes the
  * existing tool with an argument array so a connector-only session can reach
  * exactly the same protocol a shell session uses.
+ *
+ * The grammar arrives by one of two transports (#499):
+ *
+ *   - an issue comment, and
+ *   - a `CLAIM_REQUEST` file pushed to `claim-request/<working-branch>`.
+ *
+ * The second exists because the first is a write a connector's safety layer
+ * may refuse. A session that cannot post the comment cannot claim, and a
+ * session that cannot claim correctly does nothing — so with one transport a
+ * refused comment stopped the agent dead. A branch and a file commit are the
+ * writes a connector session already needs to do any work at all. The branch
+ * transport answers by committing `CLAIM_RESULT` back onto the request branch,
+ * where the session reads it with the same file-read tool it already has.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -128,8 +142,47 @@ export function argsFor(request) {
   }
 }
 
-function runGit(args) {
-  return spawnSync('git', args, { encoding: 'utf8' });
+function runGit(args, options = {}) {
+  return spawnSync('git', args, { encoding: 'utf8', ...options });
+}
+
+export const REQUEST_PREFIX = 'claim-request/';
+export const REQUEST_FILE = 'CLAIM_REQUEST';
+export const RESULT_FILE = 'CLAIM_RESULT';
+
+/**
+ * A request branch speaks for exactly one working branch: its own suffix. A
+ * request filed on `claim-request/a` naming `--agent b` would let one session
+ * claim, release or steal in another's name, so it is refused before
+ * agents.mjs is ever asked.
+ */
+export function assertRequestBranch(branch, request) {
+  if (!branch.startsWith(REQUEST_PREFIX)) {
+    throw new Error(`${branch} is not a ${REQUEST_PREFIX}<working-branch> request branch`);
+  }
+  const expected = `${REQUEST_PREFIX}${request.agent}`;
+  if (branch !== expected) {
+    throw new Error(
+      `request branch ${branch} may only speak for --agent ${branch.slice(REQUEST_PREFIX.length)}; `
+      + `a request for --agent ${request.agent} belongs on ${expected}`,
+    );
+  }
+}
+
+/** What the branch transport writes back. It names the request it answers,
+ *  so a session that has since pushed a newer request cannot misread an older
+ *  verdict as its own. */
+export function resultBody({ request, sha, status, output }) {
+  const verdict = status === 0 ? 'ok' : 'FAILED';
+  return [
+    `verdict: ${verdict}`,
+    `exit: ${status}`,
+    `request: ${String(request ?? '').trim()}`,
+    `request-commit: ${sha}`,
+    '',
+    String(output || '(no output)').trim(),
+    '',
+  ].join('\n');
 }
 
 function assertWorkingBranch(agent) {
@@ -159,9 +212,86 @@ function writeSummary(title, output) {
   appendFileSync(file, `### ${title}\n\n${body}\n`);
 }
 
-export function runRemoteClaim(raw = process.env.ED_CLAIM_REQUEST) {
+/**
+ * Commit CLAIM_RESULT on top of the request commit and fast-forward the request
+ * branch to it. If the session pushed again meanwhile the push is refused, and
+ * that is right: its newer request has a run of its own, whose answer is the
+ * one it should read.
+ */
+function writeBranchResult(branch, sha, body) {
+  const dir = mkdtempSync(join(tmpdir(), 'ed-claim-result-'));
+  try {
+    const add = runGit(['worktree', 'add', '--detach', dir, sha]);
+    if (add.status !== 0) throw new Error(`could not check out ${sha}: ${add.stderr.trim()}`);
+    writeFileSync(join(dir, RESULT_FILE), body);
+    for (const args of [
+      ['add', RESULT_FILE],
+      ['commit', '-m', `claim result for ${sha.slice(0, 12)}`],
+      ['push', 'origin', `HEAD:refs/heads/${branch}`],
+    ]) {
+      const step = runGit(args, { cwd: dir });
+      if (step.status !== 0) {
+        throw new Error(`git ${args[0]} failed: ${`${step.stdout}${step.stderr}`.trim()}`);
+      }
+    }
+  } finally {
+    runGit(['worktree', 'remove', '--force', dir]);
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+/** The pushed request is read from the pushed COMMIT as data; the branch's
+ *  code is never checked out or run. Null when the push carried no request,
+ *  which is the push that created the branch. */
+function readBranchRequest(sha) {
+  const fetched = runGit(['fetch', '--quiet', 'origin', sha]);
+  if (fetched.status !== 0) throw new Error(`could not fetch ${sha}: ${fetched.stderr.trim()}`);
+  const shown = runGit(['show', `${sha}:${REQUEST_FILE}`]);
+  return shown.status === 0 ? shown.stdout : null;
+}
+
+export function runRemoteClaim(
+  raw = process.env.ED_CLAIM_REQUEST,
+  branch = process.env.ED_CLAIM_REQUEST_BRANCH,
+  sha = process.env.ED_CLAIM_REQUEST_SHA,
+) {
+  if (branch) return runBranchClaim(branch, sha);
+  return runClaim(raw);
+}
+
+function runBranchClaim(branch, sha) {
+  let raw;
+  try {
+    raw = readBranchRequest(sha);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`remote-claim: ${message}`);
+    writeSummary('Remote claim — failed', message);
+    process.exitCode = 2;
+    return;
+  }
+  if (raw === null) {
+    const note = `${branch} carries no ${REQUEST_FILE} at ${sha}; nothing to do.`;
+    console.log(note);
+    writeSummary('Remote claim — no request', note);
+    return;
+  }
+
+  const result = runClaim(raw, branch);
+  try {
+    writeBranchResult(branch, sha, resultBody({ request: stripAttribution(raw), sha, ...result }));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`remote-claim: could not write ${RESULT_FILE}: ${message}`);
+    writeSummary(`Remote claim — ${RESULT_FILE} not written`, message);
+    if (!process.exitCode) process.exitCode = 2;
+  }
+}
+
+function runClaim(raw, requestBranch) {
   try {
     const request = parseClaimRequest(raw);
+    if (requestBranch) assertRequestBranch(requestBranch, request);
     assertWorkingBranch(request.agent);
     const args = argsFor(request);
     const child = spawnSync(process.execPath, [AGENTS, ...args], {
@@ -181,11 +311,13 @@ export function runRemoteClaim(raw = process.env.ED_CLAIM_REQUEST) {
 
     if (child.error) throw child.error;
     process.exitCode = child.status ?? 1;
+    return { status: process.exitCode, output };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`remote-claim: ${message}`);
     writeSummary('Remote claim — failed', message);
     process.exitCode = 2;
+    return { status: 2, output: `remote-claim: ${message}` };
   }
 }
 

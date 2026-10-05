@@ -35,8 +35,9 @@ on:
         default: '60'
 
 permissions:
-  contents: write   # delete merged branches and spent claim refs
-  issues: write     # close an issue a landing commit named
+  contents: write       # delete merged branches and spent claim refs
+  issues: write         # close an issue a landing commit / merged PR named
+  pull-requests: read   # recover PR bodies for native merge-queue landings
 
 concurrency:
   group: janitor
@@ -53,6 +54,8 @@ jobs:
       - name: sweep
         env:
           GH_TOKEN: ${{ github.token }}
+          JANITOR_DEFAULT_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+          JANITOR_RECONCILE_MERGED_PRS: '1'
           # A dispatch is dry unless somebody deliberately says otherwise. The
           # default is the safe one because the unsafe one has already cost 29
           # branches once.

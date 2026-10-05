@@ -366,6 +366,97 @@ describe('the platform seam', () => {
     expect(host.unlocks.filter((id) => id === 'ending_forgotten')).toHaveLength(1);
   });
 
+  it('deduplicates an in-flight achievement unlock, then retries after rejection', async () => {
+    const host = memoryPlatform();
+    const source = loadContent();
+    const ctx = bootstrap(source, 82323, 1042, 'short');
+    ctx.world.founding = {
+      houseName: 'House Retry',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      year: 1042,
+    };
+    ctx.world.ending = { id: 'forgotten', year: 1342 };
+    host.saves.set('finished-retry', saveGame(ctx));
+
+    const attempts: Array<{
+      id: string;
+      resolve: () => void;
+      reject: () => void;
+    }> = [];
+    host.unlockAchievement = (id) => new Promise<void>((resolve, reject) => {
+      attempts.push({
+        id,
+        resolve,
+        reject: () => reject(new Error('backend unavailable')),
+      });
+    });
+
+    const game = createGame(source, host);
+    const forgottenAttempts = () => attempts.filter((attempt) => attempt.id === 'ending_forgotten');
+
+    await game.actions.load('finished-retry');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(forgottenAttempts()).toHaveLength(1);
+
+    // Re-evaluation while the backend call is unresolved must not issue a
+    // second request for the same profile-wide achievement.
+    await game.actions.load('finished-retry');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(forgottenAttempts()).toHaveLength(1);
+
+    forgottenAttempts()[0]!.reject();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // A failed call was never delivered, so the next evaluation retries it.
+    await game.actions.load('finished-retry');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(forgottenAttempts()).toHaveLength(2);
+
+    forgottenAttempts()[1]!.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Once the host confirms success, later evaluations stay de-duplicated.
+    await game.actions.load('finished-retry');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(forgottenAttempts()).toHaveLength(2);
+  });
+
+  it('retries an achievement after the host throws synchronously', async () => {
+    const host = memoryPlatform();
+    const source = loadContent();
+    const ctx = bootstrap(source, 82324, 1042, 'short');
+    ctx.world.founding = {
+      houseName: 'House Throw',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      year: 1042,
+    };
+    ctx.world.ending = { id: 'forgotten', year: 1342 };
+    host.saves.set('finished-throw', saveGame(ctx));
+
+    let attempts = 0;
+    host.unlockAchievement = () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error('bridge unavailable');
+      return Promise.resolve();
+    };
+
+    const game = createGame(source, host);
+
+    await expect(game.actions.load('finished-throw')).resolves.toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(attempts).toBe(1);
+
+    await expect(game.actions.load('finished-throw')).resolves.toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(attempts).toBe(2);
+
+    await game.actions.load('finished-throw');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(attempts).toBe(2);
+  });
+
   it('round-trips the same snapshot through separate host implementations', async () => {
     const first = memoryPlatform();
     const source = loadContent();

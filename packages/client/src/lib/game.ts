@@ -395,8 +395,10 @@ export function createGame(
   // because the front door needs to know it exists.
   let keptSave: unknown | null = null;
   let archivedRunId: string | null = null;
-  /** Profile-wide unlocks already handed to this host instance. */
+  /** Profile-wide unlocks confirmed by this host instance. */
   const deliveredAchievements = new Set<AchievementId>();
+  /** Unlock calls currently in flight; repeated evaluation must not duplicate them. */
+  const pendingAchievementUnlocks = new Set<AchievementId>();
 
   /**
    * AUTOSAVE IS ONE LOG, EVEN ON AN ASYNCHRONOUS HOST (#279).
@@ -892,13 +894,30 @@ export function createGame(
     });
   }
 
-  /** Deliver core-owned finished-run achievement ids to the optional host backend. */
+  /**
+   * Deliver core-owned finished-run achievement ids to the optional host backend.
+   *
+   * A backend call is optimistic only about being in flight, never about having
+   * succeeded. Re-evaluating the same finished run while a call is pending must
+   * not issue a duplicate, while a rejected call must become retryable on the
+   * next evaluation. Only a confirmed host success enters deliveredAchievements.
+   */
   function unlockFinished(save: ReturnType<GameSession['save']>): void {
     if (!save.ending || !platform.unlockAchievement) return;
     for (const id of earnedAchievements(save, library.value)) {
-      if (deliveredAchievements.has(id)) continue;
-      deliveredAchievements.add(id);
-      void platform.unlockAchievement(id).catch(() => deliveredAchievements.delete(id));
+      if (deliveredAchievements.has(id) || pendingAchievementUnlocks.has(id)) continue;
+      pendingAchievementUnlocks.add(id);
+      void Promise.resolve()
+        .then(() => platform.unlockAchievement!(id))
+        .then(
+          () => {
+            pendingAchievementUnlocks.delete(id);
+            deliveredAchievements.add(id);
+          },
+          () => {
+            pendingAchievementUnlocks.delete(id);
+          },
+        );
     }
   }
 

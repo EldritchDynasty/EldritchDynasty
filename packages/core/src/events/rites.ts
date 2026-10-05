@@ -146,6 +146,14 @@ export function consumeVessel(
 ): RiteOutcome {
   const w = ctx.world;
   if (ascendant.id === vessel.id) return { ok: false, reason: 'a man cannot be his own Vessel' };
+
+  // ONCE FOR A MAN. The template is repeatable because another climber in the
+  // same house may need the rite centuries later; that must never mean this
+  // ascendant can consume another relative and stack the transfer a second time.
+  if (ascendant.rites.includes('vessel')) {
+    return { ok: false, reason: 'he has already taken the Vessel rite' };
+  }
+
   if (vessel.status !== 'alive') return { ok: false, reason: 'the Vessel is not living' };
 
   // OF THE BLOOD, and checked here rather than left to a filter. §22 says "a

@@ -32,10 +32,11 @@
  * Closing an issue is a different question from releasing a lock, and this
  * script keeps them apart. A claim is retired on merge, always: the branch is
  * gone, so the lock has no owner. An ISSUE is closed only where somebody said
- * so — a closing keyword in a landing commit, which GitHub honours by itself on
- * the default branch. An issue held by a merged branch that nobody named is
- * REPORTED and left open, because a branch that lands part of an epic is the
- * normal case and a script cannot tell it from one that finished.
+ * so — an affirmative closing keyword in a landing commit or in a PR GitHub
+ * reports merged into this repository's default branch. An issue held by a
+ * merged branch that nobody named is REPORTED and left open, because a branch
+ * that lands part of an epic is the normal case and a script cannot tell it
+ * from one that finished.
  *
  *   DRY_RUN=1 node tools/janitor.mjs              # what would happen
  *   JANITOR_RANGE=abc..def node tools/janitor.mjs # also close what those named
@@ -43,7 +44,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 import { onPath } from './portable.mjs';
-import { closingIssues } from './closing-keywords.mjs';
+import { closingIssues, mergedPrClosingIssues } from './closing-keywords.mjs';
 
 const DRY = process.env.DRY_RUN === '1';
 const REMOTE = process.env.REMOTE ?? 'origin';
@@ -56,6 +57,9 @@ const SUMMARY = process.env.GITHUB_STEP_SUMMARY ?? '';
  */
 const readRange = (raw) => (/^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$/.test(raw) ? raw : '');
 const RANGE = readRange((process.env.JANITOR_RANGE ?? '').trim());
+const REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
+const DEFAULT_BRANCH = process.env.JANITOR_DEFAULT_BRANCH ?? 'main';
+const RECONCILE_MERGED_PRS = process.env.JANITOR_RECONCILE_MERGED_PRS === '1';
 const CWD = process.cwd();
 
 /**
@@ -88,6 +92,8 @@ function act(cmd, ...args) {
  * CLOSED, so a missing tool can never close or retire anything.
  */
 const HAS_GH = onPath('gh');
+let reconciliationFailed = false;
+
 function issueState(n) {
   if (!HAS_GH) return 'UNKNOWN';
   const r = spawnSync('gh', ['issue', 'view', String(n), '--json', 'state', '--jq', '.state'], {
@@ -95,6 +101,58 @@ function issueState(n) {
   });
   const out = (r.stdout ?? '').trim();
   return !r.error && r.status === 0 && out ? out : 'UNKNOWN';
+}
+
+/** Close one issue with an explicit repository and verify that GitHub accepted it. */
+function closeReconciledIssue(n, comment) {
+  const args = [
+    'issue', 'close', String(n),
+    '--reason', 'completed',
+    '--comment', comment,
+  ];
+  if (REPOSITORY) args.push('--repo', REPOSITORY);
+
+  if (DRY) {
+    log(`would: gh ${args.join(' ')}`);
+    return true;
+  }
+
+  const r = spawnSync('gh', args, { cwd: CWD, encoding: 'utf8' });
+  if (!r.error && r.status === 0) return true;
+
+  reconciliationFailed = true;
+  log(`issue reconciliation: failed to close #${n}: ${(r.stderr ?? '').trim()}`);
+  return false;
+}
+
+/**
+ * GitHub's commit -> pulls association survives native merge-queue rebase
+ * landings even when the PR body is not copied into the resulting commit.
+ * #454 and #485 are the live counterexamples that established this path.
+ */
+function mergedPullRequestsForCommit(sha) {
+  if (!RECONCILE_MERGED_PRS || !HAS_GH || !REPOSITORY) return [];
+  const r = spawnSync('gh', [
+    'api',
+    '--header', 'Accept: application/vnd.github+json',
+    '--header', 'X-GitHub-Api-Version: 2022-11-28',
+    `/repos/${REPOSITORY}/commits/${sha}/pulls`,
+  ], { cwd: CWD, encoding: 'utf8' });
+
+  if (r.error || r.status !== 0) {
+    reconciliationFailed = true;
+    log(`issue reconciliation: could not read PRs for ${sha}: ${(r.stderr ?? '').trim()}`);
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(r.stdout ?? '[]');
+    if (Array.isArray(parsed)) return parsed;
+  } catch (error) {
+    log(`issue reconciliation: invalid PR response for ${sha}: ${error}`);
+  }
+  reconciliationFailed = true;
+  return [];
 }
 
 /**
@@ -220,9 +278,9 @@ say('');
 say(`${MERGED.size} deleted, ${kept} left standing.`);
 
 // ---------------------------------------------------------------------------
-// 2. The issues a landing commit said it finished. GitHub does this itself and
-//    does it faster; this is the backstop for the shapes it skips, and a no-op
-//    whenever the platform already acted.
+// 2. The issues a landing commit or merged PR said it finished. GitHub usually
+//    does this itself and faster; this is the backstop for the queue/rebase
+//    shapes it skips, and a no-op whenever the platform already acted.
 //
 //    ONE KEYWORD PER ISSUE. `Closes #12, closes #13` closes both; `Closes #12,
 //    #13` closes only #12 — GitHub's rule, and this pattern reads it the same
@@ -233,12 +291,54 @@ const NAMED = new Set();
 if (RANGE) {
   say('');
   say('### Issues named by this push');
+
+  /** issue -> the strongest auditable source seen in this push */
+  const evidence = new Map();
+  const remember = (n, source) => {
+    if (!evidence.has(n) || source.startsWith('merged PR')) evidence.set(n, source);
+  };
+
   const body = gitOut('log', '--format=%B', RANGE);
-  for (const n of [...new Set(closingIssues(body))].sort((a, b) => Number(a) - Number(b))) {
+  for (const n of closingIssues(body)) remember(n, 'landing commit');
+
+  // Native merge queue may rebase a PR without copying its body to any commit.
+  // Ask GitHub which PRs own each newly-landed commit, then apply the SAME
+  // affirmative/negated parser used by PR admission. Only merged PRs targeting
+  // this repository's default branch can contribute evidence.
+  const commits = gitOut('rev-list', '--reverse', RANGE).split('\n').filter(Boolean);
+  for (const sha of commits) {
+    for (const pr of mergedPullRequestsForCommit(sha)) {
+      const closings = mergedPrClosingIssues(pr, {
+        repository: REPOSITORY,
+        defaultBranch: DEFAULT_BRANCH,
+      });
+      for (const n of closings) {
+        remember(n, `merged PR #${pr.number}`);
+        const mergedAt = Date.parse(pr.merged_at) / 1000;
+        if (Number.isFinite(mergedAt)) {
+          MAIN_LANDED_AT.set(n, Math.max(MAIN_LANDED_AT.get(n) ?? 0, mergedAt));
+        }
+      }
+    }
+  }
+
+  for (const n of [...evidence.keys()].sort((a, b) => Number(a) - Number(b))) {
     NAMED.add(n);
-    if (issueState(n) === 'OPEN') {
-      act('gh', 'issue', 'close', n, '--reason', 'completed', '--comment', 'Landed on `main`.');
-      say(`- closed #${n}`);
+    const source = evidence.get(n);
+    const state = issueState(n);
+    if (state === 'OPEN') {
+      const comment = `Landed on \`${DEFAULT_BRANCH}\` via ${source}.`;
+      if (closeReconciledIssue(n, comment)) say(`- closed #${n} — ${source}`);
+      else say(`- FAILED to close #${n} — ${source}`);
+    } else if (state === 'CLOSED') {
+      say(`- #${n} already closed — ${source}`);
+    } else {
+      // A local/dry run has no authenticated repository context and UNKNOWN is
+      // expected there. A live Actions reconciliation does have that context:
+      // if it cannot read a named issue, fail visibly rather than pretending
+      // the post-merge repair succeeded.
+      if (!DRY && HAS_GH && REPOSITORY) reconciliationFailed = true;
+      say(`- #${n} named by ${source}; state UNKNOWN, left untouched`);
     }
   }
 }
@@ -347,3 +447,8 @@ for (const claim of CLAIMS) {
 }
 say('');
 say(`${held} claim(s) still open.`);
+
+if (reconciliationFailed) {
+  process.stderr.write('Issue reconciliation was incomplete; see the diagnostics above.\n');
+  process.exitCode = 1;
+}

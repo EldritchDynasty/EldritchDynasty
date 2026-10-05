@@ -7,6 +7,10 @@ const REPO = join(import.meta.dirname, '../../../..');
 const tool = (await import(pathToFileURL(join(REPO, 'tools/closing-keywords.mjs')).href)) as {
   closingIssues: (text: string) => string[];
   negatedClosings: (text: string) => number[];
+  mergedPrClosingIssues: (
+    pr: unknown,
+    context: { repository: string; defaultBranch: string },
+  ) => string[];
   prBodyError: (text: string) => string | null;
 };
 
@@ -53,8 +57,46 @@ describe('GitHub closing keywords with negation', () => {
     expect(tool.prBodyError('Refs #110')).toBeNull();
   });
 
-  it('is wired into pull-request CI admission', () => {
+  it('reconciles only affirmative closings from a merged PR into this default branch', () => {
+    const pr = {
+      merged_at: '2026-10-05T05:29:14Z',
+      body: 'Closes #123. Fixes #124. Closes #123. Refs #125. This does not resolve #126.',
+      base: { ref: 'main', repo: { full_name: 'EldritchDynasty/EldritchDynasty' } },
+    };
+    expect(tool.mergedPrClosingIssues(pr, {
+      repository: 'EldritchDynasty/EldritchDynasty',
+      defaultBranch: 'main',
+    })).toEqual(['123', '124']);
+  });
+
+  it('never treats an unmerged, wrong-branch, or other-repository PR as closing evidence', () => {
+    const body = 'Closes #123';
+    const base = { ref: 'main', repo: { full_name: 'EldritchDynasty/EldritchDynasty' } };
+    const context = { repository: 'EldritchDynasty/EldritchDynasty', defaultBranch: 'main' };
+
+    expect(tool.mergedPrClosingIssues({ merged_at: null, body, base }, context)).toEqual([]);
+    expect(tool.mergedPrClosingIssues({
+      merged_at: '2026-10-05T05:29:14Z',
+      body,
+      base: { ...base, ref: 'release' },
+    }, context)).toEqual([]);
+    expect(tool.mergedPrClosingIssues({
+      merged_at: '2026-10-05T05:29:14Z',
+      body,
+      base: { ref: 'main', repo: { full_name: 'Elsewhere/Fork' } },
+    }, context)).toEqual([]);
+  });
+
+  it('is wired into pull-request admission and post-merge reconciliation', () => {
     const check = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
     expect(check).toContain('CHECK_PR_BODY');
+
+    const janitor = readFileSync(join(REPO, 'tools/janitor.mjs'), 'utf8');
+    expect(janitor).toContain('mergedPrClosingIssues');
+    expect(janitor).toContain('/commits/${sha}/pulls');
+
+    const janitorWorkflow = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitorWorkflow).toContain('pull-requests: read');
+    expect(janitorWorkflow).toContain("JANITOR_RECONCILE_MERGED_PRS: '1'");
   });
 });
