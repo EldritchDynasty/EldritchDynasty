@@ -59,6 +59,7 @@ const readRange = (raw) => (/^[0-9a-f]{7,40}\.\.[0-9a-f]{7,40}$/.test(raw) ? raw
 const RANGE = readRange((process.env.JANITOR_RANGE ?? '').trim());
 const REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
 const DEFAULT_BRANCH = process.env.JANITOR_DEFAULT_BRANCH ?? 'main';
+const RECONCILE_MERGED_PRS = process.env.JANITOR_RECONCILE_MERGED_PRS === '1';
 const CWD = process.cwd();
 
 /**
@@ -130,7 +131,7 @@ function closeReconciledIssue(n, comment) {
  * #454 and #485 are the live counterexamples that established this path.
  */
 function mergedPullRequestsForCommit(sha) {
-  if (!HAS_GH || !REPOSITORY) return [];
+  if (!RECONCILE_MERGED_PRS || !HAS_GH || !REPOSITORY) return [];
   const r = spawnSync('gh', [
     'api',
     '--header', 'Accept: application/vnd.github+json',
