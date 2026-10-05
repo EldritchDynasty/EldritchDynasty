@@ -544,10 +544,10 @@
     {
       "path": "packages/core/src/muster.slow.test.ts",
       "claim": "Played/full-run regression assertions: round-trips every field a player could have set — men, officers, position, credit, tide; round-trips the tide and lastSettled with no commitment standing, too; never runs men negative, and leaves the world internally coherent at the Long-Line term; does not, on its own, take the player house extinct; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "full-run regression with merge-blocking mechanism/save coverage",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/muster.test.ts now keeps live/no-live muster save durability, mechanism/effect wiring, non-negative attrition, escalation, purchase and order behavior merge-blocking; packages/core/src/events/reach.test.ts keeps authored Muster execution paths merge-blocking. The slow suite retains whole-run survival, content reachability and peacetime digest regression."
     },
     {
       "path": "packages/core/src/naming-worth.slow.test.ts",
