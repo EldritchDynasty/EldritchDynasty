@@ -401,10 +401,10 @@
     {
       "path": "packages/core/src/decisions.slow.test.ts",
       "claim": "Played/full-run regression assertions: parks choice events instead of answering them; does not turn the year while a decision stands; applies the choice the player actually made; refuses a choice that is not on the card; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run decision/delegation regression with deterministic merge-blocking docket witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/decisions.test.ts deterministically proves rendered player-choice queueing, invalid-choice refusal without dropping the docket, exactly-once frequency spending, clock blocking, chronicler draining through the same production path, Record/omit/embellish queue semantics, and honest-record knowledge. packages/core/src/session-api.test.ts keeps the public GameSession decision verbs merge-blocking, while packages/core/src/events/reach.test.ts keeps authored production-docket outcome witnesses merge-blocking. The slow suite remains nightly for full-run option variety, played-path end-to-end coverage, and the 12-seed paired delegation-density measurement."
     },
     {
       "path": "packages/core/src/demography.slow.test.ts",
