@@ -1,6 +1,6 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-10-02",
+  "measured": "2026-10-05",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
@@ -8,16 +8,16 @@
       "evidence": "Projected from per-gate timestamps in green PR #362 run 36561761799 after moving blood (1069s) and fire-rate (871s) out of batch; remaining gates total about 4m20s of execution, with a 7m lane baseline for runner overhead/variance (#333)."
     },
     "blood": {
-      "seconds": 3000,
-      "evidence": "Isolated blood lane on PR #364 run 36772609542: 49.6 min (~2976s) with the post-#341 1,024-pair blood gate passing by 3.8 SE. #341 deliberately doubled the prior 512-pair sample; current main had already measured the same 1,024-pair gate at 49.9 and 53.3 min when blood shared the endings runner. A 50m isolated baseline therefore reflects the repeated 1,024-pair evidence rather than the stale 26m / 512-pair calibration; 1.25x guard = 62.5m (#333/#341)."
+      "seconds": 1260,
+      "evidence": "PR #490 run 37256335551 on GitHub-hosted ubuntu-24.04: the full 1,024-pair x 500y blood gate completed its gate body in 20m59.6s with the default four worker threads, versus 39m06.5s on pre-change merge-group run 37251568594. Same seeds, pair count, years and aggregate verdict; baseline rounded to 21m, 1.25x guard = 26.25m (#440)."
     },
     "fire-rate": {
       "seconds": 1260,
       "evidence": "Isolated fire-rate lane on PR #364 run 36586278258: 20.7 min (1240s) with fire-rate, outcome-reach and vocabulary-reach all passing. Baseline rounded to 21m; 1.25x guard = 26.25m, so runner noise is not treated as a regression (#333)."
     },
     "war": {
-      "seconds": 2340,
-      "evidence": "Isolated war lane on PR #364 run 36586278258: 38.7 min (2323s), with the war gate itself passing. The issue's successful-run evidence spans 21-39 min; baseline rounded to 39m; 1.25x guard = 48.75m (#333)."
+      "seconds": 1056,
+      "evidence": "PR #490 run 37256335551 on GitHub-hosted ubuntu-24.04: the full 768-per-policy x 500y war gate completed its gate body in 17m32.3s with the default four worker threads, versus 39m38.0s on pre-change merge-group run 37251568594. Same seeds, policy rows, years and aggregate verdict; baseline rounded to 17.6m, 1.25x guard = 22.0m (#440)."
     },
     "endings": {
       "seconds": 540,
@@ -28,7 +28,7 @@
     "provider": "GitHub Actions",
     "image": "ubuntu-latest",
     "workflow": ".github/workflows/check.yml",
-    "sourceRun": "36772609542",
+    "sourceRun": "37256335551",
     "node": "22"
   },
   "command": "npm run gates -- --lane <lane>"
