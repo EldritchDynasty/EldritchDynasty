@@ -22,12 +22,12 @@ import { GrudgeInheritanceS } from './house.js';
  * it is the one screen where the mythic layer and the tutorial impulse meet.
  * `prose.ts` holds the frame register to its contract.
  *
- * ─── What is withheld ───────────────────────────────────────────────────────
+ * ─── The founder's name ─────────────────────────────────────────────────────
  *
- * The founder is never named. He is "the man", "your ancestor". Names are
- * load-bearing in this world and his is withheld deliberately — the player
- * names the HOUSE, which is the thing that persists, and that is the whole
- * design of the game stated once before a year has passed.
+ * The frame can still call him "the man" or "your ancestor", but his actual
+ * person name is no longer withheld: #343 lets the player supply it during the
+ * Examination. Unsigned/headless runs keep the authored default, Daveed
+ * Gearithy. The house name remains a separate field with a separate contract.
  */
 
 /**
