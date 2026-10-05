@@ -403,7 +403,7 @@
     },
     {
       "path": "packages/core/src/corpus.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for corpus. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: and the corpus was actually consulted; every field on the world survives the round trip; and the two worlds hold the same keys; the people, chronicle and decision log come back identical; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -411,7 +411,7 @@
     },
     {
       "path": "packages/core/src/decisions.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for decisions. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: parks choice events instead of answering them; does not turn the year while a decision stands; applies the choice the player actually made; refuses a choice that is not on the card; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -419,7 +419,7 @@
     },
     {
       "path": "packages/core/src/demography.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for demography. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: lets children reach adulthood; still has a household after four hundred years; reaches the term with a living house more often than not; does not breed without bound; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -427,7 +427,7 @@
     },
     {
       "path": "packages/core/src/discrepancies.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for discrepancies. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: checks existence when state is omitted, and exact state when given; counts open ones for the aggregate form; costs Respect a full tier; never drops standing below the floor; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -435,7 +435,7 @@
     },
     {
       "path": "packages/core/src/echo.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for echo. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: prints what it measured",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -443,7 +443,7 @@
     },
     {
       "path": "packages/core/src/economy.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for economy. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: survives the year ticking over; accumulates rather than replacing; holds the mythic cap on people; does not let event cooldowns starve the household of staff; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -451,7 +451,7 @@
     },
     {
       "path": "packages/core/src/expression.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for expression. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: no incapable character ever holds Madness or expressed Power; applyEffect refuses madness on an incapable target even off authored content; wakes daughters by what they carry, and gives them nothing to overflow; hands the client both facts, so the tree can draw two marks",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -459,7 +459,7 @@
     },
     {
       "path": "packages/core/src/fecundity-drag.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for fecundity drag. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: ships inert — the coupling constant is zero; is authored: one drag locus per font locus, each linked (a few cM away); contributes to fecundity, never to the eldritch profile; does not move a body\\; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -467,7 +467,7 @@
     },
     {
       "path": "packages/core/src/fertility.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for fertility. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: is authored as a deleterious recessive; appears, and stays well under 3% of an outbred population; shows a measurably higher rate in cousin-married pedigrees than out-married ones; is near-sterile, not lethal — option D is a binary curse on fecundity only; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -475,7 +475,7 @@
     },
     {
       "path": "packages/core/src/founding-inheritance.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for founding inheritance. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: keeps a played world internally healthy after seeded inheritance is real",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -483,7 +483,7 @@
     },
     {
       "path": "packages/core/src/friends.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for friends. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: hands out names the player gave, in every run; spreads them across the centuries rather than emptying the bag at once; leaves a lift on everybody wearing one of the names; never spends a name twice, and never invents a sixth; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -491,7 +491,7 @@
     },
     {
       "path": "packages/core/src/genetics.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for genetics. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: has a polygenic attribute to measure; carries the mid-parent through to the child, at slope one; does not clone the mid-parent — one pair produces varied children; realises F ≈ 0.25 under full-sib mating; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -499,7 +499,7 @@
     },
     {
       "path": "packages/core/src/ladder.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for ladder. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: passes the shipped game: paying separates from refusing; fails a game whose ladder costs are removed",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -507,7 +507,7 @@
     },
     {
       "path": "packages/core/src/land.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for land. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: both buys and sells across a run\\; is refused for want of coin in a measurable share of the years it is tried; does not crowd the auction out — a played run still lands a book at Sarrow (world §16); the Sarrow bottom sinks sometimes and pays its price back across the batch; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -515,7 +515,7 @@
     },
     {
       "path": "packages/core/src/ledger-clauses.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for ledger clauses. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: varies which clauses a run recovers, not merely how many; leaves a typical 500-year house substantially informed without making all nine automatic",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
