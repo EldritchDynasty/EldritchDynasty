@@ -200,8 +200,14 @@ const SETUP = ['ci', 'install'];
  * machine the agent is on, so a green landing says the suite passes there —
  * the Windows job is the only thing that says it passes on Windows, and no
  * arrangement of steps here can stand in for a second runner.
+ *
+ * `test:slow` is the other half: `test` restricted to the `*.slow.test.ts`
+ * suites. CI runs it sharded on tag builds (`release-slow`, #451), where a
+ * shipped artifact restores the complete slow set; `test` already runs every
+ * one of those suites, so it is the same subset declaration in the other
+ * direction.
  */
-const COVERED = { 'test:fast': 'test' };
+const COVERED = { 'test:fast': 'test', 'test:slow': 'test' };
 
 /**
  * Every npm script `check.yml` runs, as script names.

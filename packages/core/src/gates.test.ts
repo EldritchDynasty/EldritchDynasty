@@ -906,7 +906,7 @@ describe('the gates are actually run', () => {
    * a regex.
    *
    * So the check is now what it always meant: no argument CI passes may be
-   * the name of a gate. `npm run gates -- fire-rate` still fails this.
+   * the name of a gate. `npm run gates -- clauses` still fails this.
    */
   it('does not let a per-gate step drift back in', () => {
     const args = [...workflow.matchAll(/npm run gates\s+--\s+(\S+)/g)].map((m) => m[1]!);
@@ -925,8 +925,8 @@ describe('the gates are actually run', () => {
    * anything. This is the exact workflow line it exists to refuse.
    */
   it('catches a workflow that has gone back to naming a gate', () => {
-    const named = 'jobs:\n  gates:\n    steps:\n      - run: npm run gates -- fire-rate\n';
+    const named = 'jobs:\n  gates:\n    steps:\n      - run: npm run gates -- clauses\n';
     const args = [...named.matchAll(/npm run gates\s+--\s+(\S+)/g)].map((m) => m[1]!);
-    expect(args.filter((a) => Object.keys(GATES).includes(a))).toEqual(['fire-rate']);
+    expect(args.filter((a) => Object.keys(GATES).includes(a))).toEqual(['clauses']);
   });
 });
