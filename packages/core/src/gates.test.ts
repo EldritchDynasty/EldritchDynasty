@@ -267,9 +267,8 @@ describe('#440 expensive gate partitioning', () => {
   it('fails closed when a worker exits before returning evidence', () => {
     const plan = partitionGateInputs(['one'], 1);
     expect(() => runGatePartitionsInWorkers(plan, {
-      moduleUrl: 'node:process',
-      exportName: 'exit',
-      argsBefore: [17],
+      moduleUrl: new URL('./tools/gate-partition-worker-fixture.ts', import.meta.url).href,
+      exportName: 'exitWithoutEvidence',
       timeoutMs: 250,
     })).toThrow(/timed out without returning evidence/);
   });
