@@ -582,10 +582,10 @@
     {
       "path": "packages/core/src/regalia.slow.test.ts",
       "claim": "Played/full-run regression assertions: is in the house\\; actually lands on a person for every heirloom content tries to use; reaches the far end of each of the three new substories; never lets the family sell what Demigod requires; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "sampled full-run content reachability with merge-blocking Regalia/ration coverage",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/heirlooms.test.ts keeps founding Regalia ownership, unsellable/rationed definitions, generic heirloom behavior, and rare arc-vs-ambient frequency-ration semantics merge-blocking. The slow suite retains the 240-run proof that authored heirloom uses land on real people and all three Regalia substories reach their far ends."
     },
     {
       "path": "packages/core/src/relationships.slow.test.ts",
