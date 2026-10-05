@@ -32,10 +32,11 @@
  * Closing an issue is a different question from releasing a lock, and this
  * script keeps them apart. A claim is retired on merge, always: the branch is
  * gone, so the lock has no owner. An ISSUE is closed only where somebody said
- * so — a closing keyword in a landing commit, which GitHub honours by itself on
- * the default branch. An issue held by a merged branch that nobody named is
- * REPORTED and left open, because a branch that lands part of an epic is the
- * normal case and a script cannot tell it from one that finished.
+ * so — an affirmative closing keyword in a landing commit or in a PR GitHub
+ * reports merged into this repository's default branch. An issue held by a
+ * merged branch that nobody named is REPORTED and left open, because a branch
+ * that lands part of an epic is the normal case and a script cannot tell it
+ * from one that finished.
  *
  *   DRY_RUN=1 node tools/janitor.mjs              # what would happen
  *   JANITOR_RANGE=abc..def node tools/janitor.mjs # also close what those named
@@ -254,9 +255,9 @@ say('');
 say(`${MERGED.size} deleted, ${kept} left standing.`);
 
 // ---------------------------------------------------------------------------
-// 2. The issues a landing commit said it finished. GitHub does this itself and
-//    does it faster; this is the backstop for the shapes it skips, and a no-op
-//    whenever the platform already acted.
+// 2. The issues a landing commit or merged PR said it finished. GitHub usually
+//    does this itself and faster; this is the backstop for the queue/rebase
+//    shapes it skips, and a no-op whenever the platform already acted.
 //
 //    ONE KEYWORD PER ISSUE. `Closes #12, closes #13` closes both; `Closes #12,
 //    #13` closes only #12 — GitHub's rule, and this pattern reads it the same
