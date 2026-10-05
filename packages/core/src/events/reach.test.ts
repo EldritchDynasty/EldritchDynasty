@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
-import { place, testWorld } from '../testing.js';
+import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import { executeOutcomeWitness, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
@@ -2781,6 +2781,149 @@ describe('authored simple positive-knowledge outcome witnesses', () => {
             expectedOutcomeId: outcome.id,
             rng: alwaysFirstWeighted(seed + 2),
             targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason,
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+          seed += 1;
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
+describe('authored founding-bottleneck blood-count outcome witnesses', () => {
+  type BottleneckKind = 'unwed' | 'spent';
+
+  function bottleneckFixture(seed: number, kind: BottleneckKind, extraBlood = false) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES.common.minGeneration,
+    );
+
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'));
+    if (!head) throw new Error('bottleneck witness fixture has no Head');
+
+    for (const person of ctx.world.people.blood(ctx.world.playerHouse)) {
+      if (person.status === 'alive' && person.id !== head.id) {
+        ctx.world.people.kill(person.id, ctx.world.year, 'removed by deterministic bottleneck fixture');
+      }
+    }
+
+    let heir;
+    if (kind === 'unwed') {
+      heir = place(ctx, {
+        sex: 'female',
+        age: 22,
+        name: 'Witness Last Unwed Heir ' + seed,
+      });
+    } else {
+      heir = place(ctx, {
+        sex: 'male',
+        age: 40,
+        name: 'Witness Last Spent Heir ' + seed,
+      });
+      const spouse = place(ctx, {
+        sex: 'female',
+        age: 55,
+        name: 'Witness Married-In Spouse ' + seed,
+        house: 'house_ilm',
+      });
+      spouse.membership = [{
+        house: ctx.world.playerHouse,
+        kind: 'married_in',
+        from: ctx.world.year,
+      }];
+      marry(ctx, heir, spouse);
+    }
+
+    if (extraBlood) {
+      place(ctx, {
+        sex: 'male',
+        age: 19,
+        name: 'Witness Extra Blood ' + seed,
+      });
+    }
+
+    return { ctx, heir };
+  }
+
+  it('crosses bloodCount <= 2 and resolves both authored bottleneck slot shapes before committing every outcome', () => {
+    const cases = content.events.flatMap((event) => {
+      const condition = event.conditions;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('bloodCount' in condition)
+        || condition.bloodCount.op !== 'lte'
+        || condition.bloodCount.value !== 2
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+      ) return [];
+
+      if (event.id === 'the_house_has_one_name_left') {
+        return [{ event, kind: 'unwed' as const }];
+      }
+      if (event.id === 'the_marriage_that_cannot_answer') {
+        return [{ event, kind: 'spent' as const }];
+      }
+      return [];
+    });
+
+    expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
+      'the_house_has_one_name_left',
+      'the_marriage_that_cannot_answer',
+    ]);
+
+    const declared = cases.flatMap(({ event }) => {
+      if (event.interaction.kind === 'narration') return [];
+      return event.interaction.choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    });
+    const witnessed: string[] = [];
+    let seed = 8700;
+
+    for (const { event, kind } of cases) {
+      const blocked = bottleneckFixture(seed, kind, true).ctx;
+      expect(
+        evalCondition(event.conditions, blocked),
+        String(event.id) + ' should be blocked while three living blood remain',
+      ).toBe(false);
+
+      const selection = bottleneckFixture(seed, kind, false).ctx;
+      expect(
+        evalCondition(event.conditions, selection),
+        String(event.id) + ' should pass when only two living blood remain',
+      ).toBe(true);
+      const slots = resolveSlots(event, selection, makeRng(seed + 1));
+      expect(slots.ok, String(event.id) + ' should resolve its authored bottleneck cast').toBe(true);
+      if (!slots.ok) continue;
+      expect(slots.playerCast).toHaveLength(0);
+      expect(typeof slots.fill.HEAD).toBe('string');
+      expect(typeof slots.fill.SOLE_HEIR).toBe('string');
+      if (kind === 'spent') expect(typeof slots.fill.SPOUSE).toBe('string');
+      expect(
+        ambientPool(selection).some((candidate) => candidate.id === event.id),
+        String(event.id) + ' should be selectable once the bottleneck and cast are real',
+      ).toBe(true);
+
+      if (event.interaction.kind === 'narration') continue;
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = bottleneckFixture(seed, kind, false).ctx;
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(seed + 2),
           });
           expect(
             result.ok,
