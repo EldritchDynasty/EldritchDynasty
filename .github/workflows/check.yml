@@ -674,8 +674,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: run complete slow suite
-        run: npm run test:slow -- --shard=${{ matrix.shard }}/4
+      - name: run complete test suite
+        run: npm test -- --shard=${{ matrix.shard }}/4
 
   release-gates:
     name: release gates (${{ matrix.gate }})
