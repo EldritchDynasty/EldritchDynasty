@@ -5,8 +5,8 @@ import { shardCosts } from '../../../tools/shards.mjs';
 
 interface EvidenceInventory {
   jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
-  gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
-  gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
+  gateLanes: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
+  gates: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string; fasterEvidence?: string }>;
   gateAssertions: Array<{ id: string; lane: string; source: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
   slowSuites: Array<{ path: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
 }
@@ -152,6 +152,41 @@ describe('CI evidence inventory', () => {
       'war:progress-divergence',
     ]);
     expect(telemetry.every((entry) => !entry.currentTier.startsWith('merge-blocking'))).toBe(true);
+  });
+
+  it('keeps sampled ending distribution separate from deterministic ending correctness', () => {
+    const lane = inventory.gateLanes.find((entry) => entry.id === 'endings');
+    const gate = inventory.gates.find((entry) => entry.id === 'endings');
+    expect(lane?.evidenceType).toBe('statistical ending-distribution regression');
+    expect(lane?.proposedTier).toBe('nightly');
+    expect(lane?.moveBlockedBy).toContain('ending.test.ts');
+    expect(lane?.moveBlockedBy).toContain('ending-gate.test.ts');
+
+    expect(gate?.evidenceType).toBe('statistical ending-distribution regression');
+    expect(gate?.proposedTier).toBe('nightly');
+    expect(gate?.fasterEvidence).toContain('ending.test.ts');
+    expect(gate?.fasterEvidence).toContain('ending-gate.test.ts');
+    expect(gate?.moveBlockedBy).toContain('nightly rejection');
+  });
+
+  it('splits statistical fire-rate from deterministic vocabulary and outcome evidence', () => {
+    const lane = inventory.gateLanes.find((entry) => entry.id === 'fire-rate');
+    const fire = inventory.gates.find((entry) => entry.id === 'fire-rate');
+    const vocabulary = inventory.gates.find((entry) => entry.id === 'vocabulary-reach');
+    const outcome = inventory.gates.find((entry) => entry.id === 'outcome-reach');
+
+    expect(lane?.proposedTier).toBe('split-by-gate');
+    expect(lane?.moveBlockedBy).toContain('vocabulary-reach');
+    expect(lane?.moveBlockedBy).toContain('#495/PR #496');
+
+    expect(fire?.evidenceType).toBe('statistical occurrence-rate regression');
+    expect(fire?.proposedTier).toBe('nightly');
+    expect(fire?.fasterEvidence).toContain('events/reach.test.ts');
+    expect(fire?.moveBlockedBy).toContain('nightly fire-rate rejection');
+
+    expect(vocabulary?.evidenceType).toBe('deterministic structural invariant');
+    expect(vocabulary?.proposedTier).toBe('merge-blocking');
+    expect(outcome?.proposedTier).toBe('weekly telemetry');
   });
 
   it('splits slow regression by checked evidence tier without dropping either side', () => {
