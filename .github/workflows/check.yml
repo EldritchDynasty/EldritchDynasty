@@ -472,8 +472,48 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           echo "Resolving app container at $(date -u +%H:%M:%S)"
           xcrun simctl get_app_container "$UDID" nz.eldritchdynasty.game app
+          # simctl has occasionally launched the app but left its client blocked
+          # indefinitely on hosted macOS runners (#349). Bound the client call so
+          # the step can recover instead of spending its entire 15-minute budget
+          # inside one syscall. A retry uses --terminate-running-process so it is
+          # also valid when the first client hung after the app actually started.
+          launch_once() {
+            local retry="${1:-false}"
+            local output="$RUNNER_TEMP/simctl-launch.txt"
+            : > "$output"
+            if [ "$retry" = true ]; then
+              xcrun simctl launch --terminate-running-process "$UDID" nz.eldritchdynasty.game >"$output" 2>&1 &
+            else
+              xcrun simctl launch "$UDID" nz.eldritchdynasty.game >"$output" 2>&1 &
+            fi
+            local launch_pid=$!
+            for attempt in $(seq 1 60); do
+              if ! kill -0 "$launch_pid" 2>/dev/null; then
+                if wait "$launch_pid"; then
+                  cat "$output"
+                  return 0
+                fi
+                local status=$?
+                cat "$output"
+                return "$status"
+              fi
+              sleep 2
+            done
+            echo "simctl launch client did not return within 120 seconds."
+            kill "$launch_pid" 2>/dev/null || true
+            sleep 2
+            kill -9 "$launch_pid" 2>/dev/null || true
+            wait "$launch_pid" 2>/dev/null || true
+            cat "$output"
+            return 124
+          }
+
           echo "Launching app at $(date -u +%H:%M:%S)"
-          xcrun simctl launch "$UDID" nz.eldritchdynasty.game
+          if ! launch_once false; then
+            echo "First simulator launch did not complete; retrying once at $(date -u +%H:%M:%S)"
+            sleep 15
+            launch_once true
+          fi
           echo "Simulator launch completed at $(date -u +%H:%M:%S)"
 
   # ── MERGE-BLOCKING SLOW CONTRACTS, PACKED BY DURATION ─────────────────────
@@ -485,9 +525,10 @@ jobs:
   #
   # tools/ci-evidence.json is the single source of truth for that boundary.
   # The selected set is still packed by tools/shards.mjs using the committed
-  # duration table. At the current measurement the four selected-slow bins are
-  # about 9.5 minutes each; keep deterministic/stateful contracts here even
-  # when they are expensive, and move one only after a faster witness exists.
+  # duration table. Keep deterministic/stateful contracts here even when they
+  # are expensive, and move one only after a faster witness exists. The current
+  # shard costs are checked data in tools/test-durations.json; do not duplicate
+  # their perishable stopwatch values in this workflow.
   test:
     name: merge slow ${{ matrix.shard }}/4
     needs: tier
