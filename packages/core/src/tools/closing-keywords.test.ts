@@ -94,5 +94,8 @@ describe('GitHub closing keywords with negation', () => {
     const janitor = readFileSync(join(REPO, 'tools/janitor.mjs'), 'utf8');
     expect(janitor).toContain('mergedPrClosingIssues');
     expect(janitor).toContain('/commits/${sha}/pulls');
+
+    const janitorWorkflow = readFileSync(join(REPO, '.github/workflows/janitor.yml'), 'utf8');
+    expect(janitorWorkflow).toContain('pull-requests: read');
   });
 });
