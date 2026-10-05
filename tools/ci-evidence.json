@@ -102,12 +102,12 @@
     },
     {
       "id": "fire-rate",
-      "claim": "Event occurrence/frequency plus reachability/vocabulary evidence sharing a run corpus.",
-      "evidenceType": "mixed",
+      "claim": "Sampled event occurrence/frequency confidence plus separately registered deterministic vocabulary/outcome readers that currently share the same corpus lane.",
+      "evidenceType": "mixed lane: statistical fire-rate + deterministic vocabulary + outcome telemetry",
       "currentMeasuredCost": "~21m",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "#442 must replace probabilistic outcome reachability as blocking evidence; retain deterministic structural/vocabulary checks on merge path."
+      "proposedTier": "split-by-gate",
+      "moveBlockedBy": "runFireRateGate itself is statistical occurrence confidence and can run nightly: events/reach.test.ts keeps deterministic authored outcome execution/rejection on the fast lane. vocabulary-reach is a separate deterministic structural gate and must move to batch, not nightly. #495/PR #496 owns outcome-reach's removal to scheduled telemetry and the shared gates.ts/gates.test.ts registry; after it lands, split the lane atomically and observe an intentional nightly fire-rate rejection."
     },
     {
       "id": "war",
@@ -121,11 +121,11 @@
     {
       "id": "endings",
       "claim": "Campaign ending distribution and ending-system regression evidence.",
-      "evidenceType": "mixed",
+      "evidenceType": "statistical ending-distribution regression",
       "currentMeasuredCost": "~9m",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Separate authored hard invariants from distribution assertions before moving the lane."
+      "moveBlockedBy": "Deterministic ending semantics already stay merge-blocking in ending.test.ts, while ending-gate.test.ts feeds verdictOver deliberately bad synthetic distributions and proves every judged band/reachability rule rejects. The sampled endings run is therefore distribution/regression evidence. Final workflow cutover must move the shared lane table and check.yml together after #495/PR #496 releases packages/core/src/tools/gates.ts + gates.test.ts, then observe an intentional nightly rejection before closing #451."
     }
   ],
   "gates": [
@@ -171,10 +171,11 @@
       "lane": "fire-rate",
       "source": "packages/core/src/tools/fire-rate-gate.ts#runFireRateGate",
       "claim": "Authored events meet their explicit occurrence/frequency guard across the canonical played sample.",
-      "evidenceType": "statistical",
+      "evidenceType": "statistical occurrence-rate regression",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Decompose explicit minimum-rate design claims from broad occurrence telemetry before moving this sampled verdict; #495 removes outcome-reach, not the fire-rate claim itself."
+      "moveBlockedBy": "The sampled fire-rate verdict can move nightly once the shared fire-rate lane is split: vocabulary-reach must remain merge-blocking in batch and #495/PR #496 must finish moving outcome-reach to scheduled telemetry. Final cutover also needs an intentional nightly fire-rate rejection proof.",
+      "fasterEvidence": "events/reach.test.ts executes authored outcomes through real slot/condition/decision paths and includes rejection fixtures for incorrect resolution; gates.test.ts keeps the browser-safe CLI/editor fire-rate judgement seam pinned. The expensive batch adds population occurrence confidence, not a unique deterministic mechanism proof."
     },
     {
       "id": "ladder",
@@ -237,10 +238,11 @@
       "lane": "endings",
       "source": "packages/core/src/tools/ending-gate.ts#gateEndings",
       "claim": "The canonical paired ending sample enforces ending-system distribution rules, including the authored losability and comparison claims.",
-      "evidenceType": "mixed statistical/invariant",
+      "evidenceType": "statistical ending-distribution regression",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Separate authored hard ending invariants from distribution-only assertions and keep deterministic witnesses blocking before the sampled lane can move."
+      "moveBlockedBy": "No hard ending invariant depends on the sampled batch itself; deterministic semantics and verdict rejection are already fast. Final cutover waits for #495/PR #496 to release the shared gate-lane registry/test paths so endings can leave the merge lane without weakening the lane-partition fail-closed test, plus an intentional nightly rejection proof.",
+      "fasterEvidence": "ending.test.ts deterministically covers ending selection, ledger substantiation, term closure, Short-Line ending semantics, and epilogue contracts. ending-gate.test.ts directly exercises verdictOver with passing and deliberately failing synthetic ending distributions, including Broken Line/Devoured/Forgotten bands and ascendant/Unmaking claims."
     },
     {
       "id": "bottleneck",
