@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { shardCosts } from '../../../tools/shards.mjs';
 
 interface EvidenceInventory {
   jobs: Array<{ id: string; claim: string; evidenceType: string; currentTier: string; proposedTier: string; moveBlockedBy?: string }>;
@@ -36,6 +37,30 @@ describe('CI evidence inventory', () => {
 
     expect(new Set(recorded).size).toBe(recorded.length);
     expect(recorded).toEqual(actual);
+  });
+
+  it('keeps the measured merge-slow shard floor within ten minutes', () => {
+    const durations = JSON.parse(
+      readFileSync(join(root, 'tools/test-durations.json'), 'utf8'),
+    ) as { files: Record<string, number> };
+    const mergeSlow = inventory.slowSuites
+      .filter((entry) => entry.currentTier === 'merge-blocking')
+      .map((entry) => entry.path);
+    const unmeasured = mergeSlow.filter((path) => durations.files[path] === undefined);
+    expect(unmeasured, 'a merge-blocking slow suite has no committed duration').toEqual([]);
+
+    const workflow = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
+    const shardMatch = workflow.match(/^\s*shard:\s*\[([^\]]+)\]/m);
+    expect(shardMatch, 'check.yml no longer declares the merge-slow shard matrix').not.toBeNull();
+    const shardCount = shardMatch![1]!.split(',').length;
+    const costs = shardCosts(mergeSlow, shardCount, durations.files);
+    const max = Math.max(...costs);
+
+    expect(
+      max,
+      'merge-blocking slow suites pack above the 10-minute measured target: '
+        + costs.map((ms) => `${(ms / 60000).toFixed(2)}m`).join(', '),
+    ).toBeLessThanOrEqual(10 * 60_000);
   });
 
   it('classifies every current CI job exactly once', () => {
