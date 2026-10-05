@@ -647,10 +647,10 @@
     {
       "path": "packages/core/src/session.slow.test.ts",
       "claim": "Played/full-run regression assertions: stops the clock on a decision and says so; lets the player answer, and moves on; says what a Long Line did, as values; runs to the Long-Line term with the chronicler holding the pen, and stops there; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run end-to-end regression with merge-blocking GameSession, docket, ending, save and naming witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/session-api.test.ts deterministically pins the public GameSession verbs, decision blocking/answering, naming and save/resume round-trip; packages/core/src/decisions.test.ts pins the docket clock-stop/clear mechanism; packages/core/src/ending.test.ts pins the 500-year term, one-time clock stop and epilogue semantics. The slow suite remains nightly for long played-run passage traffic, full-term integration, stable old-view snapshots and realised household/Chronicle population."
     },
     {
       "path": "packages/core/src/sim.slow.test.ts",
