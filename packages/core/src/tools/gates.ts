@@ -1177,7 +1177,6 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
   // stays off it entirely (`gateWar` passes the shipped game on the two
   // claims it does assert, so it belongs here — `gateBearing` fails outright).
   war: gateWar,
-  'outcome-reach': gateOutcomeReach,
   purposes: gatePurposes,
   'vocabulary-reach': gateVocabularyReach,
   endings: gateEndings,
@@ -1185,6 +1184,19 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
   land: gateLand,
   'slot-fillability': gateSlotFillability,
   'post-fillability': gatePostFillability,
+};
+
+/**
+ * NON-BLOCKING MEASUREMENT COMMANDS.
+ *
+ * These remain explicit CLI commands and scheduled telemetry, but are not part
+ * of GATES: no pull request or merge-group may fail merely because a finite
+ * sample missed a rare, deterministically-witnessed outcome (#442/#495).
+ * Keeping this table separate makes the cadence boundary executable rather
+ * than a comment somebody can accidentally undo.
+ */
+export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = {
+  'outcome-reach': gateOutcomeReach,
 };
 
 /**
@@ -1196,10 +1208,11 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  *
  * #333 measured a green runner gate-by-gate and found two independent costs
  * dominating the default lane: blood, and the shared fire-rate corpus.
- * fire-rate, outcome-reach and vocabulary-reach MUST remain together: the
- * latter two consume the process-local batch memo built by fire-rate.
- * Splitting them would replay the same corpus on another runner and buy wall
- * clock by wasting compute. Blood has no such sharing and gets its own lane.
+ * fire-rate and vocabulary-reach MUST remain together: vocabulary-reach
+ * consumes the process-local batch memo built by fire-rate. Sampled
+ * outcome-reach moved to scheduled telemetry in #495 after #442's deterministic
+ * witnesses landed; it is intentionally absent from every blocking lane.
+ * Blood has no such sharing and gets its own lane.
  *
  * War and endings remain independent lanes for the same reason: each owns its
  * own played sample. The default batch lane is DERIVED as everything not
@@ -1215,10 +1228,10 @@ const OWN_LANE: Record<string, readonly string[]> = {
   // lane. Giving each its own runner preserves every seed and assertion while
   // removing their serial sum from the critical path.
   blood: ['blood'],
-  // Keep the two readers of fire-rate's batch memo in the same process.
-  // Splitting these across lanes would replay the corpus and trade wall clock
+  // Keep vocabulary-reach beside the fire-rate batch it reads.
+  // Splitting it to another lane would replay the corpus and trade wall clock
   // for duplicate compute.
-  'fire-rate': ['fire-rate', 'outcome-reach', 'vocabulary-reach'],
+  'fire-rate': ['fire-rate', 'vocabulary-reach'],
   war: ['war'],
   endings: ['endings'],
 };
@@ -1284,6 +1297,11 @@ export function gateTimingJson(
   }, null, 2)}\n`;
 }
 
+export const COMMAND_GATES: Record<string, (source?: Source) => GateResult> = {
+  ...GATES,
+  ...TELEMETRY_GATES,
+};
+
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('gates.ts');
 if (isMain) {
   const argv = process.argv.slice(2);
@@ -1311,16 +1329,11 @@ if (isMain) {
   const positional = argv.filter((_arg, i) => !optionIndexes.has(i));
   const name = laneAt >= 0 ? undefined : positional[0];
 
-  // No argument means all of them — `npm run gate`, which is "what will CI
-  // say". The gate names are four things to remember and CI's answer needs
-  // all four; remembering them one at a time is how a gate goes unrun, which
-  // is what happened to slot-fillability for its whole life before someone
-  // noticed it was written for CI and wired into nothing.
-  // No argument at all still means every gate — `npm run gates`, which is what
-  // a landing runs and what "what will CI say" has always meant. `--lane` is
-  // the CI split and never a smaller default: the two lanes together ARE
-  // `Object.keys(GATES)`, which `gates.test.ts` asserts against this file and
-  // against the workflow's matrix.
+  // No argument means every MERGE-BLOCKING gate — `npm run gate`, which is
+  // "what will CI say". Telemetry commands stay individually addressable but
+  // never join this default by accident. `--lane` is the CI split and never a
+  // smaller default: the lanes together ARE `Object.keys(GATES)`, which
+  // `gates.test.ts` asserts against this file and the workflow matrix.
   // A BAD LANE NAME EXITS 2 WITH THE USAGE LINE, not a stack trace. CI passes
   // this straight from the matrix, so the realistic way it goes wrong is a
   // typo in a workflow — and the reader of that failure is somebody looking
@@ -1333,8 +1346,8 @@ if (isMain) {
     console.error(`usage: gates.ts --lane [${LANES.join('|')}]`);
     process.exit(2);
   }
-  if (chosen.some((n) => !GATES[n])) {
-    console.error(`usage: gates.ts [${Object.keys(GATES).join('|')}]  (no argument runs all)`);
+  if (chosen.some((n) => !COMMAND_GATES[n])) {
+    console.error(`usage: gates.ts [${Object.keys(COMMAND_GATES).join('|')}]  (no argument runs blocking gates)`);
     console.error(`   or: gates.ts --lane [${LANES.join('|')}]`);
     process.exit(2);
   }
@@ -1361,7 +1374,7 @@ if (isMain) {
   for (const n of chosen) {
     if (named) console.log(`\n── ${n} ──`);
     const started = Date.now();
-    const { ok, lines } = GATES[n]!(content);
+    const { ok, lines } = COMMAND_GATES[n]!(content);
     timings.push({
       gate: n,
       seconds: Number(((Date.now() - started) / 1000).toFixed(3)),

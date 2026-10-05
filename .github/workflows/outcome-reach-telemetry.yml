@@ -1,0 +1,42 @@
+name: sampled outcome reach telemetry
+
+on:
+  schedule:
+    # Weekly population telemetry. Deterministic execution witnesses remain
+    # merge-blocking; this finite sample is deliberately not a PR/merge-group
+    # requirement (#442/#495).
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: outcome-reach-telemetry
+  cancel-in-progress: true
+
+jobs:
+  outcome-reach:
+    name: sampled outcome occurrence
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: measure sampled outcome occurrence
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run gates -- outcome-reach | tee outcome-reach.txt
+
+      - name: retain sampled report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outcome-reach-${{ github.sha }}
+          path: outcome-reach.txt
