@@ -99,7 +99,7 @@
       "currentMeasuredCost": "~21m (20m59.6s; PR #490 hosted run 37256335551)",
       "currentTier": "merge-blocking",
       "proposedTier": "weekly",
-      "moveBlockedBy": "Confirm deterministic blood mechanism coverage remains merge-blocking before the canonical statistical batch moves weekly."
+      "moveBlockedBy": "Fast merge-blocking blood mechanism witnesses are present in blood.test.ts, founding-inheritance.test.ts, and allele-draw.test.ts. Wait only for #495/PR #496 to release the gate-registry paths before removing this statistical lane from the merge matrix; keep the canonical 1,024-paired-run sample unchanged in weekly-statistical.yml."
     },
     {
       "id": "fire-rate",
@@ -147,7 +147,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "weekly",
-      "moveBlockedBy": "Deterministic blood mechanism coverage must remain merge-blocking before this preserved canonical statistical batch moves weekly; #440's exact-input partition/reducer is landed."
+      "moveBlockedBy": "Fast merge-blocking witnesses already cover the blood mechanism: blood.test.ts exercises meiotic drive and the concentrating-policy lever; founding-inheritance.test.ts proves real parent-to-child X/autosomal provenance and chromosome integrity; allele-draw.test.ts proves pool/font draw rules. #440's exact-input partition/reducer is landed. The remaining cutover blocker is coordination with #495/PR #496, which currently owns packages/core/src/tools/gates.ts and gates.test.ts; once that registry claim is released, remove only the statistical blood lane from merge CI while preserving this canonical sample weekly."
     },
     {
       "id": "library-neutrality",
