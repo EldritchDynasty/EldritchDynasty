@@ -40,11 +40,10 @@
     },
     {
       "id": "test",
-      "claim": "Run the complete Vitest suite, including century-scale slow regression suites.",
-      "evidenceType": "mixed",
+      "claim": "Run only the slow suites whose deterministic/stateful contracts still require this exact integration commit, packed into four duration-aware shards; the complete slow suite remains nightly.",
+      "evidenceType": "deterministic/mixed slow-contract regression",
       "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Each slow suite below must be assertion-classified; deterministic correctness assertions need a fast witness or must remain blocking."
+      "proposedTier": "merge-blocking"
     },
     {
       "id": "gates",
@@ -292,42 +291,37 @@
     {
       "path": "packages/core/src/ages.slow.test.ts",
       "claim": "Played/full-run regression assertions: realised duration matches the authored shape; every Age occurs in enough runs to justify authoring exclusive content; never leaves a run with no active Age for an unreasonable stretch",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/arcs.slow.test.ts",
       "claim": "Played/full-run regression assertions: fires every event at least once across the batch; reaches the last node of a multi-generation arc; keeps the tiers in their intended proportion; fires in every seed of the batch — never a run of total silence; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/ascension.slow.test.ts",
       "claim": "Played/full-run regression assertions: gets a house past Touched, and does not hand it the top; remembers the high-water mark after the man holding it dies; puts the rung on the view, which is the whole point of building it",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/assize.slow.test.ts",
       "claim": "Played/full-run regression assertions: acts about once a generation, from the whole range of what it can do; survives the round trip, cooldowns and all",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/attention.slow.test.ts",
       "claim": "Played/full-run regression assertions: deals the Match about once a generation, not once every six years; does not let the choice tide rise any further; keeps naming bounded while #133 Stage 5B / #88 recalibrates attention share; asks at the same rate whether the line runs 300 years or 500; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/attributes.slow.test.ts",
@@ -340,26 +334,23 @@
     {
       "path": "packages/core/src/blood.slow.test.ts",
       "claim": "Played/full-run regression assertions: makes the pairing the whole design turns on more than a handful of times; gets somebody onto the ladder in most runs; does not empty the halls doing it",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/branches-contentment.slow.test.ts",
       "claim": "Played/full-run regression assertions: lets a hall stand for centuries and still be content; does not sit at maximum discontent for the whole run",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/branches-grievance.slow.test.ts",
       "claim": "Played/full-run regression assertions: keeps grievance and discontent inside a usable range",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/branches.slow.test.ts",
@@ -372,10 +363,9 @@
     {
       "path": "packages/core/src/burying.slow.test.ts",
       "claim": "Played/full-run regression assertions: puts the scenes in front of a house that has something to bury; buries what a declining house never touches; answers part of the bill, and only part",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/cast.slow.test.ts",
@@ -388,10 +378,9 @@
     {
       "path": "packages/core/src/condition.slow.test.ts",
       "claim": "Played/full-run regression assertions: leaves the poorest house-years with smaller completed families without saturating",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/contracts.slow.test.ts",
@@ -420,10 +409,9 @@
     {
       "path": "packages/core/src/demography.slow.test.ts",
       "claim": "Played/full-run regression assertions: lets children reach adulthood; still has a household after four hundred years; reaches the term with a living house more often than not; does not breed without bound; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/discrepancies.slow.test.ts",
@@ -468,18 +456,16 @@
     {
       "path": "packages/core/src/fertility.slow.test.ts",
       "claim": "Played/full-run regression assertions: is authored as a deleterious recessive; appears, and stays well under 3% of an outbred population; shows a measurably higher rate in cousin-married pedigrees than out-married ones; is near-sterile, not lethal — option D is a binary curse on fecundity only; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/founding-inheritance.slow.test.ts",
       "claim": "Played/full-run regression assertions: keeps a played world internally healthy after seeded inheritance is real",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/friends.slow.test.ts",
@@ -492,34 +478,30 @@
     {
       "path": "packages/core/src/genetics.slow.test.ts",
       "claim": "Played/full-run regression assertions: has a polygenic attribute to measure; carries the mid-parent through to the child, at slope one; does not clone the mid-parent — one pair produces varied children; realises F ≈ 0.25 under full-sib mating; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/ladder.slow.test.ts",
       "claim": "Played/full-run regression assertions: passes the shipped game: paying separates from refusing; fails a game whose ladder costs are removed",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/land.slow.test.ts",
       "claim": "Played/full-run regression assertions: both buys and sells across a run\\; is refused for want of coin in a measurable share of the years it is tried; does not crowd the auction out — a played run still lands a book at Sarrow (world §16); the Sarrow bottom sinks sometimes and pays its price back across the batch; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/ledger-clauses.slow.test.ts",
       "claim": "Played/full-run regression assertions: varies which clauses a run recovers, not merely how many; leaves a typical 500-year house substantially informed without making all nine automatic",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/ledger.slow.test.ts",
@@ -532,18 +514,16 @@
     {
       "path": "packages/core/src/lifespan.slow.test.ts",
       "claim": "Played/full-run regression assertions: centres a typical body on a hundred; varies — a ceiling everybody shares is not a ceiling worth having; is never outlived; is a ceiling most people never reach; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/match.slow.test.ts",
       "claim": "Played/full-run regression assertions: never refuses an open card, over eight seeds played to the term",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/modifiers.slow.test.ts",
@@ -572,10 +552,9 @@
     {
       "path": "packages/core/src/naming-worth.slow.test.ts",
       "claim": "Played/full-run regression assertions: asks a couple of dozen times a run, down from 188.8; still asks about somebody, in every run; gives every prompt a reason the player can read",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/prologue.slow.test.ts",
@@ -596,10 +575,9 @@
     {
       "path": "packages/core/src/record.slow.test.ts",
       "claim": "Played/full-run regression assertions: by 1500, at least one household member has a non-empty divergence; the divergence count tracks the embellish rate",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/regalia.slow.test.ts",
@@ -612,10 +590,9 @@
     {
       "path": "packages/core/src/relationships.slow.test.ts",
       "claim": "Played/full-run regression assertions: gives the family somewhere to quarrel with itself",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/replay.slow.test.ts",
@@ -628,10 +605,9 @@
     {
       "path": "packages/core/src/rites.slow.test.ts",
       "claim": "Played/full-run regression assertions: is offered at all — an event that never fires is not in the game; is only ever offered to a man who is already standing at Hierophant; is what buys rung four, and refusing it never does; leaves the two columns level everywhere below the rung it buys; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/run-library.slow.test.ts",
@@ -644,10 +620,9 @@
     {
       "path": "packages/core/src/schooling.slow.test.ts",
       "claim": "Played/full-run regression assertions: reaches the 1542 term in most of the batch, so the ratio below is about a completed house; completes several tutor terms a generation, not the zero the epic opened with",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/secrets.slow.test.ts",
@@ -684,10 +659,9 @@
     {
       "path": "packages/core/src/table.slow.test.ts",
       "claim": "Played/full-run regression assertions: gets books off the shelf and into people, which nothing did before; buys a place, and nothing else; keeps a house solvent enough to keep placing people; names the books, who could read them, and what a term costs",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     },
     {
       "path": "packages/core/src/tales.slow.test.ts",
@@ -708,10 +682,9 @@
     {
       "path": "packages/core/src/world-health.slow.test.ts",
       "claim": "Played/full-run regression assertions: across eight millennia, sampled every fifty years; and every surviving Long-Line world is coherent at the term",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
     }
   ],
   "gateAssertions": [
