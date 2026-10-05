@@ -470,10 +470,10 @@
     {
       "path": "packages/core/src/friends.slow.test.ts",
       "claim": "Played/full-run regression assertions: hands out names the player gave, in every run; spreads them across the centuries rather than emptying the bag at once; leaves a lift on everybody wearing one of the names; never spends a name twice, and never invents a sixth; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run friend-arrival/pacing regression with merge-blocking friend mechanics",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/friends.test.ts pins no-dice empty-bag behavior, sex matching, single-spend/release, pacing-window construction, blessing shape/application, signing validation/state/save semantics, and rename release. The slow suite remains nightly evidence for realised arrival frequency, across-century pacing, lift magnitude and both birth/arrival routes over full campaigns."
     },
     {
       "path": "packages/core/src/genetics.slow.test.ts",
