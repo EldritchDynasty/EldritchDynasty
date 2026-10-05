@@ -1,0 +1,53 @@
+name: one-off duration refresh
+
+on:
+  push:
+    branches: [chore/451-ci-tiers-inventory]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: duration-refresh-451
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chore/451-ci-tiers-inventory
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Measure full suite and regenerate checked duration data
+        run: npm run cost -- --full --write
+
+      - name: Commit generated evidence and remove this one-off workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AGENTS.md tools/test-durations.json
+          git rm .github/workflows/refresh-test-durations.yml
+          git commit -m "#451 refresh generated test durations"
+          git push origin HEAD:chore/451-ci-tiers-inventory
+
+      - name: Run check on the generated-data head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/check.yml/dispatches" \
+            -f ref=chore/451-ci-tiers-inventory
