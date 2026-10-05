@@ -261,7 +261,8 @@
         "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it",
         "packages/core/src/events/reach.test.ts#executes every authored state-decided outcome from an explicit witness world",
         "packages/core/src/events/reach.test.ts#executes every authored requires-gated outcome from an explicit satisfiable cast"
-      ]
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#gate 8 fails a run too short for the branches to be reached"
     },
     {
       "id": "war",
