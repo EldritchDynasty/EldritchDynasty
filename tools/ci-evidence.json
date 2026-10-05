@@ -203,7 +203,7 @@
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "The assertion-level rows below remain the authority on which war findings are blocking versus telemetry; #440's exact-input partition/reducer is landed."
+      "moveBlockedBy": "Fast merge-blocking coverage already separates mechanism from sampled balance: muster.test.ts exercises begin/reinforce/settle/withdraw, the production muster effect, attrition bounds and escalation; events/reach.test.ts executes authored Muster call/leaders/position branches through production selection/arc/docket paths; war-gate.test.ts proves the two asserted verdicts reject bad batches and keeps treasury/progress telemetry non-asserting. Nightly execution plus the P0 scheduled-regression watcher are established. Final cutover waits for #495/PR #496 to release the shared gate-registry paths and for the moved nightly verdict to be observed rejecting an intentional broken fixture."
     },
     {
       "id": "outcome-reach",
@@ -723,7 +723,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Move only after the trusted nightly failure path is established and deterministic Muster/war mechanism coverage remains merge-blocking."
+      "moveBlockedBy": "Fast coverage proves Muster begin/settle/effect wiring (muster.test.ts), authored Muster execution paths (events/reach.test.ts), and this verdict's rejecting logic (war-gate.test.ts). Nightly + P0 regression surfacing are established; final cutover waits for #495/PR #496 to release the shared gate-registry paths and an intentional nightly rejection proof."
     },
     {
       "id": "war:it-costs",
@@ -742,7 +742,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Move only after the trusted nightly failure path is established; keep the landed #440 complete-batch reducer semantics unchanged."
+      "moveBlockedBy": "Fast coverage proves musterEscalation is read through tickMuster, attrition remains bounded (muster.test.ts), and this verdict rejects non-escalating synthetic batches (war-gate.test.ts); #440 preserves complete-batch reducer semantics. Nightly + P0 regression surfacing are established; final cutover waits for #495/PR #496 to release the shared gate-registry paths and an intentional nightly rejection proof."
     },
     {
       "id": "war:progress-divergence",
