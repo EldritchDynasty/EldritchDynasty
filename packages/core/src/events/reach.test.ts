@@ -2504,6 +2504,83 @@ describe('authored open-discrepancy Head-only outcome witnesses', () => {
 });
 
 
+describe('authored compound discrepancy outcome witnesses', () => {
+  function archivistDiscrepancyFixture(seed: number, open: boolean) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      6,
+      FREQUENCY_PROFILES.uncommon.minGeneration,
+    );
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'));
+    if (!head) throw new Error('compound discrepancy fixture has no Head');
+
+    place(ctx, {
+      sex: 'female',
+      age: 45,
+      name: 'Witness Discrepancy Archivist ' + seed,
+      contract: {
+        role: 'steward',
+        term: 'yearly',
+        wage: 8,
+        loyalty: 60,
+        boundTo: head.id,
+        onEmployerDeath: 'passes_to_heir',
+        debt: 0,
+        knowsSecrets: [],
+      },
+    });
+
+    if (open) {
+      ctx.world.discrepancies.set('witness_archivist_discrepancy', {
+        severity: 'minor',
+        provableBy: ['the_church'],
+        state: 'open',
+      });
+    }
+    return ctx;
+  }
+
+  it('crosses the generation plus open-discrepancy gate and executes both archivist outcomes', () => {
+    const event = content.event('the_archivist_asks_for_a_word');
+    if (!event || event.interaction.kind !== 'narration') {
+      throw new Error('archivist discrepancy fixture changed interaction');
+    }
+
+    const blocked = archivistDiscrepancyFixture(8300, false);
+    expect(evalCondition(event.conditions, blocked)).toBe(false);
+
+    const selection = archivistDiscrepancyFixture(8300, true);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(8301));
+    expect(slots.ok, 'archivist discrepancy event should resolve Head and retainer').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(typeof slots.fill.HEAD).toBe('string');
+    expect(typeof slots.fill.ARCHIVIST).toBe('string');
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'archivist discrepancy event should be selectable once both authored gates pass',
+    ).toBe(true);
+
+    const witnessed: string[] = [];
+    for (const [index, outcome] of event.interaction.outcomes.entries()) {
+      const ctx = archivistDiscrepancyFixture(8310 + index, true);
+      const result = executeOutcomeWitness(ctx, event, {
+        expectedOutcomeId: outcome.id,
+        rng: alwaysFirstWeighted(8320 + index),
+        targetWeightedOutcome: true,
+      });
+      expect(result.ok, String(outcome.id) + ': ' + result.reason).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(event.interaction.outcomes
+      .map((outcome) => outcomeKey(String(event.id), undefined, String(outcome.id)))
+      .sort());
+  });
+});
+
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
