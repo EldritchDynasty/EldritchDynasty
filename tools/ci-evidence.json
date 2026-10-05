@@ -1,7 +1,7 @@
 {
   "version": 2,
   "issue": 451,
-  "note": "Inventory foundation only. proposedTier is a candidate, not permission to move evidence. Any entry with moveBlockedBy must stay on the current merge path until that blocker is resolved and the assertion-level claim has been reviewed.",
+  "note": "Checked classification for merge-blocking, scheduled, and release-only evidence. Merge CI keeps deterministic witnesses; nightly/weekly keep sampled claims; tagged releases restore the complete slow/gate set.",
   "jobs": [
     {
       "id": "tier",
@@ -80,52 +80,30 @@
       "evidenceType": "release",
       "currentTier": "release-only",
       "proposedTier": "release-only"
+    },
+    {
+      "id": "release-slow",
+      "claim": "Tagged releases rerun every slow suite, including evidence moved to nightly cadence.",
+      "evidenceType": "release completeness",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
+      "id": "release-gates",
+      "claim": "Tagged releases rerun every sampled gate moved off merge CI before packaging.",
+      "evidenceType": "release completeness",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
     }
   ],
   "gateLanes": [
     {
       "id": "batch",
-      "claim": "Cheap registered gates not assigned to a dedicated expensive lane; failures are direct invariant/reference violations or compact deterministic checks.",
+      "claim": "Every registered merge-blocking gate; the derived batch is the only merge gate lane after the sampled-gate cadence cutover.",
       "evidenceType": "deterministic",
       "currentMeasuredCost": "~7m",
       "currentTier": "merge-blocking",
       "proposedTier": "merge-blocking"
-    },
-    {
-      "id": "blood",
-      "claim": "Large-sample bloodline/genetic distribution confidence.",
-      "evidenceType": "statistical",
-      "currentMeasuredCost": "~21m (20m59.6s; PR #490 hosted run 37256335551)",
-      "currentTier": "merge-blocking",
-      "proposedTier": "weekly",
-      "moveBlockedBy": "Fast merge-blocking blood mechanism witnesses are present in blood.test.ts, founding-inheritance.test.ts, and allele-draw.test.ts. The canonical 1,024-paired-run sample is already preserved in weekly-statistical.yml; final cutover still requires an intentional weekly rejection proof and the merge-matrix change."
-    },
-    {
-      "id": "fire-rate",
-      "claim": "Sampled event occurrence/frequency confidence plus the deterministic vocabulary reader that still shares the fire-rate corpus lane.",
-      "evidenceType": "mixed lane: statistical fire-rate + deterministic vocabulary verdict",
-      "currentMeasuredCost": "~21m",
-      "currentTier": "merge-blocking",
-      "proposedTier": "split-by-gate",
-      "moveBlockedBy": "runFireRateGate itself is statistical occurrence confidence and can run nightly. vocabulary-reach cannot simply move to batch as-is: its FAIL verdict is static, but the current function still replays the 800-run corpus solely to print non-failing authored-but-unreached diagnostics. Split that structural verdict into a cheap merge-blocking gate, preserve the reached diagnostic with scheduled occurrence telemetry, and observe an intentional nightly fire-rate rejection before cutover."
-    },
-    {
-      "id": "war",
-      "claim": "The war lane combines two sampled balance verdicts (settlement Respect and repeated-war attrition escalation) with two telemetry-only divergence findings; Muster mechanics themselves are covered by fast deterministic witnesses.",
-      "evidenceType": "mixed lane: two asserted statistical verdicts + two telemetry-only findings; deterministic mechanism covered fast",
-      "currentMeasuredCost": "~17.6m (17m32.3s; PR #490 hosted run 37256335551)",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-by-assertion decomposition is complete in gateAssertions: `war:it-pays` and `war:gap-widens` are sampled statistical verdicts; treasury/progress divergence are telemetry only. Fast muster.test.ts, events/reach.test.ts, and war-gate.test.ts witnesses keep mechanism and rejection logic merge-blocking. Final cutover still requires an intentional nightly rejection proof and the merge-matrix change."
-    },
-    {
-      "id": "endings",
-      "claim": "Campaign ending distribution and ending-system regression evidence.",
-      "evidenceType": "statistical ending-distribution regression",
-      "currentMeasuredCost": "~9m",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Deterministic ending semantics stay merge-blocking in ending.test.ts, while ending-gate.test.ts feeds verdictOver deliberately bad synthetic distributions and proves every judged band/reachability rule rejects. Final cutover still requires an intentional nightly rejection proof and the merge-matrix change."
     }
   ],
   "gates": [
@@ -137,16 +115,6 @@
       "evidenceType": "sampled regression",
       "currentTier": "merge-blocking",
       "proposedTier": "merge-blocking"
-    },
-    {
-      "id": "blood",
-      "lane": "blood",
-      "source": "packages/core/src/tools/blood-gate.ts#gateBlood",
-      "claim": "The canonical paired bloodline sample preserves the shipped inheritance/distribution claim over the full configured batch.",
-      "evidenceType": "statistical",
-      "currentTier": "merge-blocking",
-      "proposedTier": "weekly",
-      "moveBlockedBy": "Fast merge-blocking witnesses cover the blood mechanism: blood.test.ts exercises meiotic drive and the concentrating-policy lever; founding-inheritance.test.ts proves real parent-to-child X/autosomal provenance and chromosome integrity; allele-draw.test.ts proves pool/font draw rules. #440's exact-input reducer is landed and the canonical sample is preserved weekly. Final cutover still requires an intentional weekly rejection proof and removal of the statistical blood lane from merge CI."
     },
     {
       "id": "library-neutrality",
@@ -167,17 +135,6 @@
       "proposedTier": "merge-blocking"
     },
     {
-      "id": "fire-rate",
-      "lane": "fire-rate",
-      "source": "packages/core/src/tools/fire-rate-gate.ts#runFireRateGate",
-      "claim": "Authored events meet their explicit occurrence/frequency guard across the canonical played sample.",
-      "evidenceType": "statistical occurrence-rate regression",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "The sampled fire-rate verdict can move nightly once vocabulary-reach is factored into a cheap structural merge-blocking gate while its reached diagnostic remains scheduled telemetry. Final cutover also requires an intentional nightly fire-rate rejection proof.",
-      "fasterEvidence": "events/reach.test.ts executes authored outcomes through real slot/condition/decision paths and includes rejection fixtures for incorrect resolution; gates.test.ts keeps the browser-safe CLI/editor fire-rate judgement seam pinned. The expensive batch adds population occurrence confidence, not a unique deterministic mechanism proof."
-    },
-    {
       "id": "ladder",
       "lane": "batch",
       "source": "packages/core/src/tools/ladder-gate.ts#gateLadder",
@@ -196,16 +153,6 @@
       "proposedTier": "merge-blocking"
     },
     {
-      "id": "war",
-      "lane": "war",
-      "source": "packages/core/src/tools/war-gate.ts#gateWar",
-      "claim": "The canonical paired muster/war batch preserves its asserted settlement and repeated-war statistical claims while reporting non-asserted divergence telemetry.",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "Fast merge-blocking coverage separates mechanism from sampled balance: muster.test.ts exercises begin/reinforce/settle/withdraw, the production muster effect, attrition bounds and escalation; events/reach.test.ts executes authored Muster branches; war-gate.test.ts proves both asserted verdicts reject bad batches. Nightly execution plus P0 regression surfacing exist. Final cutover still requires an intentional nightly rejection proof and removal of the statistical war lane from merge CI."
-    },
-    {
       "id": "purposes",
       "lane": "batch",
       "source": "packages/core/src/tools/gates.ts#gatePurposes",
@@ -216,25 +163,13 @@
     },
     {
       "id": "vocabulary-reach",
-      "lane": "fire-rate",
+      "lane": "batch",
       "source": "packages/core/src/tools/gates.ts#gateVocabularyReach",
-      "claim": "Every declared Effect kind is authored or explicitly pinned as debt; sampled 'authored but never reached' information is diagnostic only and does not affect the verdict.",
-      "evidenceType": "deterministic structural verdict + sampled non-failing diagnostic",
+      "claim": "Every declared Effect kind is authored or explicitly pinned as debt; this structural verdict plays no simulation.",
+      "evidenceType": "deterministic structural verdict",
       "currentTier": "merge-blocking",
-      "proposedTier": "split: structural merge-blocking + reached diagnostic scheduled",
-      "fasterEvidence": "packages/core/src/tools/vocabulary-authorship.ts computes the gate's actual failure decision entirely from vocabulary().effects versus authored outcome Effect kinds plus the pinned debt list, with no simulation. packages/core/src/vocabulary-authorship.test.ts proves shipped content passes and a deliberately broken fixture that removes an authored Effect kind is rejected. Preserve the old non-failing 'authored but never reached' diagnostic in scheduled occurrence telemetry.",
-      "moveBlockedBy": "Factor the static vocabulary authorship/debt verdict away from the sampled reached diagnostic before removing the fire-rate lane from merge CI; never move the existing 800-run implementation wholesale into batch."
-    },
-    {
-      "id": "endings",
-      "lane": "endings",
-      "source": "packages/core/src/tools/ending-gate.ts#gateEndings",
-      "claim": "The canonical paired ending sample enforces ending-system distribution rules, including the authored losability and comparison claims.",
-      "evidenceType": "statistical ending-distribution regression",
-      "currentTier": "merge-blocking",
-      "proposedTier": "nightly",
-      "moveBlockedBy": "No hard ending invariant depends on the sampled batch itself; deterministic semantics and verdict rejection are already fast. Final cutover still requires an intentional nightly rejection proof and removal of the statistical endings lane from merge CI.",
-      "fasterEvidence": "ending.test.ts deterministically covers ending selection, ledger substantiation, term closure, Short-Line ending semantics, and epilogue contracts. ending-gate.test.ts directly exercises verdictOver with passing and deliberately failing synthetic ending distributions, including Broken Line/Devoured/Forgotten bands and ascendant/Unmaking claims."
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "packages/core/src/tools/vocabulary-authorship.ts computes the verdict directly; packages/core/src/vocabulary-authorship.test.ts proves shipped content passes and a deliberately broken authored-effect fixture is rejected."
     },
     {
       "id": "bottleneck",
@@ -275,12 +210,69 @@
   ],
   "telemetryGates": [
     {
+      "id": "blood",
+      "source": "packages/core/src/tools/blood-gate.ts#gateBlood",
+      "claim": "The canonical paired bloodline sample preserves the shipped inheritance/distribution claim over the full configured batch.",
+      "evidenceType": "statistical",
+      "currentTier": "weekly",
+      "proposedTier": "weekly",
+      "coveredBy": [
+        "packages/core/src/gates.test.ts#the blood gate rejects a game where the font carries no power at all",
+        "packages/core/src/founding-inheritance.test.ts#builds each seeded child from one maternal and one paternal autosomal allele at every unmutated locus",
+        "packages/core/src/allele-draw.test.ts#an outsider pool draws the font locus at its own weights, not the authored ones"
+      ]
+    },
+    {
+      "id": "endings",
+      "source": "packages/core/src/tools/ending-gate.ts#gateEndings",
+      "claim": "The canonical paired ending sample enforces ending-system distribution rules, including the authored losability and comparison claims.",
+      "evidenceType": "statistical ending-distribution regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ending.test.ts#names every one of the five, exhaustively",
+        "packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place",
+        "packages/core/src/ending-gate.test.ts#fails when the Forgotten stops being reachable"
+      ]
+    },
+    {
+      "id": "fire-rate",
+      "source": "packages/core/src/tools/gates.ts#gateFireRateNightly",
+      "claim": "Canonical sampled event-frequency regression plus the non-failing sampled vocabulary-reach diagnostic, sharing one memoized corpus.",
+      "evidenceType": "statistical occurrence-rate regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/gates.test.ts#gate 4 fails a run too short for the content to fire, and says it tried both policies",
+        "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it"
+      ]
+    },
+    {
       "id": "outcome-reach",
       "source": "packages/core/src/tools/gates.ts#gateOutcomeReach",
       "claim": "The canonical 800-run sample reports whether authored outcomes occur; it remains weekly/manual telemetry while deterministic execution witnesses carry merge-safety reachability evidence.",
       "evidenceType": "statistical telemetry",
       "currentTier": "weekly telemetry",
-      "proposedTier": "weekly telemetry"
+      "proposedTier": "weekly telemetry",
+      "coveredBy": [
+        "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it",
+        "packages/core/src/events/reach.test.ts#executes every authored state-decided outcome from an explicit witness world",
+        "packages/core/src/events/reach.test.ts#executes every authored requires-gated outcome from an explicit satisfiable cast"
+      ]
+    },
+    {
+      "id": "war",
+      "source": "packages/core/src/tools/war-gate.ts#gateWar",
+      "claim": "The canonical paired muster/war batch preserves its asserted settlement and repeated-war statistical claims while reporting non-asserted divergence telemetry.",
+      "evidenceType": "mixed",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/events/reach.test.ts#executes every authored Muster leaders branch through its real arc step and docket",
+        "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war",
+        "packages/core/src/war-gate.test.ts#fails a batch where a house's later wars do not cost more attrition than its first"
+      ]
     }
   ],
   "slowSuites": [
@@ -698,9 +690,13 @@
       "source": "packages/core/src/tools/war-gate.ts#verdictOver",
       "claim": "Across settled committed wars, mean Respect at settlement exceeds Respect at war start.",
       "evidenceType": "statistical",
-      "currentTier": "merge-blocking",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Fast muster.test.ts and events/reach.test.ts cover production wiring, while war-gate.test.ts proves this statistical verdict rejects a deliberately bad batch. Final cutover still requires an intentional nightly rejection proof."
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/events/reach.test.ts#executes every authored Muster leaders branch through its real arc step and docket",
+        "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war"
+      ]
     },
     {
       "id": "war:it-costs",
@@ -708,7 +704,7 @@
       "source": "packages/core/src/tools/war-gate.ts#verdictOver",
       "claim": "Report the paired treasury difference between abstaining and committing; the gate intentionally does not assert this content-balance finding.",
       "evidenceType": "telemetry",
-      "currentTier": "advisory-within-merge-job",
+      "currentTier": "nightly",
       "proposedTier": "nightly"
     },
     {
@@ -717,9 +713,12 @@
       "source": "packages/core/src/tools/war-gate.ts#verdictOver",
       "claim": "For houses settling multiple wars, later-war attrition share exceeds first-war attrition share on average.",
       "evidenceType": "statistical",
-      "currentTier": "merge-blocking",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Fast muster.test.ts covers escalation/attrition mechanics and war-gate.test.ts proves this statistical verdict rejects a non-escalating synthetic batch. Final cutover still requires an intentional nightly rejection proof."
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/war-gate.test.ts#fails a batch where a house's later wars do not cost more attrition than its first"
+      ]
     },
     {
       "id": "war:progress-divergence",
@@ -727,7 +726,7 @@
       "source": "packages/core/src/tools/war-gate.ts#verdictOver",
       "claim": "Report commit-minus-abstain peak-Respect and treasury divergence at normalized campaign checkpoints; this is explicitly descriptive, not asserted.",
       "evidenceType": "telemetry",
-      "currentTier": "advisory-within-merge-job",
+      "currentTier": "nightly",
       "proposedTier": "nightly"
     }
   ]
