@@ -144,6 +144,8 @@ export interface GatePartitionWorkerCall {
   exportName: string;
   argsBefore?: readonly unknown[];
   argsAfter?: readonly unknown[];
+  /** Bound a wedged or crashed worker so the synchronous caller fails closed. */
+  timeoutMs?: number;
 }
 
 interface WorkerSuccess<T> {
@@ -175,6 +177,8 @@ interface WorkerHandle<T> {
  * works the same on Windows and Linux and does not depend on shell quoting,
  * executable suffixes, or a platform-specific process launcher.
  */
+const DEFAULT_WORKER_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+
 const WORKER_SOURCE = String.raw`
 const { workerData } = require('node:worker_threads');
 
@@ -237,37 +241,53 @@ export function runGatePartitionsInWorkers<TInput, TOutput>(
 ): GatePartitionResult<TOutput>[] {
   if (plan.length === 0) return [];
 
-  const handles: WorkerHandle<TOutput>[] = plan.map((partition) => {
-    const { port1, port2 } = new MessageChannel();
-    const shared = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT);
-    const signal = new Int32Array(shared);
-    const args = [
-      ...(call.argsBefore ?? []),
-      partition,
-      ...(call.argsAfter ?? []),
-    ];
+  const timeoutMs = call.timeoutMs ?? DEFAULT_WORKER_TIMEOUT_MS;
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error('gate worker timeout must be a positive finite number');
+  }
 
-    const worker = new Worker(WORKER_SOURCE, {
-      eval: true,
-      workerData: {
-        signal: shared,
-        port: port2,
-        moduleUrl: call.moduleUrl,
-        exportName: call.exportName,
-        args,
-        parentURL: import.meta.url,
-        tsconfig: workerTsconfig,
-      },
-      transferList: [port2],
-    });
-
-    return { worker, receive: port1, signal, partitionId: partition.id };
-  });
+  const handles: WorkerHandle<TOutput>[] = [];
 
   try {
+    // Construct inside the cleanup boundary too: if worker N fails to spawn,
+    // every worker already started for partitions 0..N-1 is still terminated.
+    for (const partition of plan) {
+      const { port1, port2 } = new MessageChannel();
+      const shared = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT);
+      const signal = new Int32Array(shared);
+      const args = [
+        ...(call.argsBefore ?? []),
+        partition,
+        ...(call.argsAfter ?? []),
+      ];
+
+      const worker = new Worker(WORKER_SOURCE, {
+        eval: true,
+        workerData: {
+          signal: shared,
+          port: port2,
+          moduleUrl: call.moduleUrl,
+          exportName: call.exportName,
+          args,
+          parentURL: import.meta.url,
+          tsconfig: workerTsconfig,
+        },
+        transferList: [port2],
+      });
+
+      handles.push({ worker, receive: port1, signal, partitionId: partition.id });
+    }
+
     return handles.map(({ receive, signal, partitionId }) => {
+      const deadline = Date.now() + timeoutMs;
       while (Atomics.load(signal, 0) === 0) {
-        Atomics.wait(signal, 0, 0);
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+          throw new Error(`gate worker ${partitionId} timed out without returning evidence`);
+        }
+        // Wake periodically even if a worker dies before it can notify. The
+        // bounded wait turns a crash/wedge into a closed failure, not a hung CI.
+        Atomics.wait(signal, 0, 0, Math.min(1000, remaining));
       }
 
       const envelope = receiveMessageOnPort(receive)?.message as WorkerMessage<TOutput> | undefined;
