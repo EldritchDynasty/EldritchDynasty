@@ -96,10 +96,10 @@
       "id": "blood",
       "claim": "Large-sample bloodline/genetic distribution confidence.",
       "evidenceType": "statistical",
-      "currentMeasuredCost": "~39m (39m06.5s; merge-group run 37251568594)",
+      "currentMeasuredCost": "~21m (20m59.6s; PR #490 hosted run 37256335551)",
       "currentTier": "merge-blocking",
       "proposedTier": "weekly",
-      "moveBlockedBy": "Confirm deterministic mechanism coverage before the canonical statistical batch stops blocking; coordinate #440."
+      "moveBlockedBy": "Confirm deterministic blood mechanism coverage remains merge-blocking before the canonical statistical batch moves weekly."
     },
     {
       "id": "fire-rate",
@@ -114,10 +114,10 @@
       "id": "war",
       "claim": "Muster/war mechanism and balance evidence; assertion families are mixed and must be decomposed.",
       "evidenceType": "mixed",
-      "currentMeasuredCost": "~40m (39m38.0s; merge-group run 37251568594)",
+      "currentMeasuredCost": "~17.6m (17m32.3s; PR #490 hosted run 37256335551)",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-by-assertion decomposition required by #451; coordinate #440 before any statistical subset moves weekly."
+      "moveBlockedBy": "Assertion-by-assertion decomposition required by #451 before any statistical subset moves; #440's canonical partition/reducer is now landed."
     },
     {
       "id": "endings",
@@ -147,7 +147,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "weekly",
-      "moveBlockedBy": "#440 must preserve the exact canonical sample and reducer semantics, and deterministic blood mechanism coverage must remain merge-blocking before this statistical batch moves."
+      "moveBlockedBy": "Deterministic blood mechanism coverage must remain merge-blocking before this preserved canonical statistical batch moves weekly; #440's exact-input partition/reducer is landed."
     },
     {
       "id": "library-neutrality",
@@ -203,7 +203,7 @@
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "#440 must preserve the exact canonical sample/reducer and the assertion-level rows below must remain the authority on which war findings are blocking versus telemetry."
+      "moveBlockedBy": "The assertion-level rows below remain the authority on which war findings are blocking versus telemetry; #440's exact-input partition/reducer is landed."
     },
     {
       "id": "outcome-reach",
@@ -723,7 +723,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Keep the canonical full-batch claim blocking until #440 preserves the exact input list/reducer semantics and a trusted nightly failure path is established."
+      "moveBlockedBy": "Move only after the trusted nightly failure path is established and deterministic Muster/war mechanism coverage remains merge-blocking."
     },
     {
       "id": "war:it-costs",
@@ -742,7 +742,7 @@
       "evidenceType": "statistical",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Keep the canonical full-batch claim blocking until #440 preserves all seeds and the one-reducer assertion over the complete observation set."
+      "moveBlockedBy": "Move only after the trusted nightly failure path is established; keep the landed #440 complete-batch reducer semantics unchanged."
     },
     {
       "id": "war:progress-divergence",
