@@ -35,8 +35,9 @@ on:
         default: '60'
 
 permissions:
-  contents: write   # delete merged branches and spent claim refs
-  issues: write     # close an issue a landing commit named
+  contents: write       # delete merged branches and spent claim refs
+  issues: write         # close an issue a landing commit / merged PR named
+  pull-requests: read   # recover PR bodies for native merge-queue landings
 
 concurrency:
   group: janitor
