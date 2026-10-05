@@ -332,7 +332,11 @@ if (RANGE) {
     } else if (state === 'CLOSED') {
       say(`- #${n} already closed — ${source}`);
     } else {
-      if (HAS_GH) reconciliationFailed = true;
+      // A local/dry run has no authenticated repository context and UNKNOWN is
+      // expected there. A live Actions reconciliation does have that context:
+      // if it cannot read a named issue, fail visibly rather than pretending
+      // the post-merge repair succeeded.
+      if (!DRY && HAS_GH && REPOSITORY) reconciliationFailed = true;
       say(`- #${n} named by ${source}; state UNKNOWN, left untouched`);
     }
   }
