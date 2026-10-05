@@ -2581,6 +2581,55 @@ describe('authored compound discrepancy outcome witnesses', () => {
 });
 
 
+describe('authored unheard-warning outcome witnesses', () => {
+  function unheardFixture(seed: number, count: number) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      10,
+      FREQUENCY_PROFILES.rare.minGeneration,
+    );
+    ctx.world.bearing.unheard = Array.from({ length: count }, (_, index) => ({
+      year: ctx.world.year - index,
+      event: 'witness_unheard_' + index,
+    }));
+    return ctx;
+  }
+
+  it('crosses the authored unheard-warning floor before executing the Marrow ledger outcome', () => {
+    const event = content.event('the_ledger_at_marrow');
+    if (!event || event.interaction.kind !== 'narration') {
+      throw new Error('unheard-warning fixture changed interaction');
+    }
+
+    const before = unheardFixture(8400, 1);
+    expect(
+      evalCondition(event.conditions, before),
+      'Marrow ledger should be blocked below two unheard warnings',
+    ).toBe(false);
+
+    const selection = unheardFixture(8400, 2);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(8401));
+    expect(slots.ok, 'Marrow ledger should resolve its authored Head slot').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'Marrow ledger should be selectable once generation and unheard gates pass',
+    ).toBe(true);
+
+    const outcome = event.interaction.outcomes[0]!;
+    const ctx = unheardFixture(8402, 2);
+    const result = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: outcome.id,
+      rng: makeRng(8403),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));
+  });
+});
+
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
