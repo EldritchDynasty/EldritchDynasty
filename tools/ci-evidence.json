@@ -448,10 +448,10 @@
     {
       "path": "packages/core/src/fecundity-drag.slow.test.ts",
       "claim": "Played/full-run regression assertions: ships inert — the coupling constant is zero; is authored: one drag locus per font locus, each linked (a few cM away); contributes to fecundity, never to the eldritch profile; does not move a body\\; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "multi-century drag-gate fidelity regression with merge-blocking structural/mechanism witnesses",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/fecundity-drag.test.ts keeps the shipped zero-coupling invariant, linked X-locus authoring and negative fecundity wiring, production attr inertness at k=0, positive-coupling mechanism seam, founder phasing, and pleiotropic structural/calibration claims merge-blocking. The slow suite remains nightly for multi-century k=0 digest identity, k>0 divergence, phasing-inertness, unphased founder distribution, sex/recombination behavior, and longer gate-variant fidelity."
     },
     {
       "path": "packages/core/src/fertility.slow.test.ts",
