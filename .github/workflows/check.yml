@@ -401,10 +401,10 @@ jobs:
 
       - name: install and launch on an iPhone simulator
         # #409 exposed the real runner envelope: a successful control took
-        # ~3m40s here, while a slower install/container lookup left too little
-        # of the old six-minute budget for simctl launch. This is a runtime
-        # smoke, not a latency gate; give CoreSimulator room to become ready.
-        timeout-minutes: 10
+        # ~3m40s here, while slower hosted first-boot data migration has taken
+        # more than 8.5 minutes before install/launch. This is a runtime smoke,
+        # not a latency gate; give CoreSimulator room to become ready.
+        timeout-minutes: 15
         working-directory: packages/mobile
         run: |
           DEVICES="$(xcrun simctl list devices available -j)"
