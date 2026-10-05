@@ -252,6 +252,7 @@ describe('CI evidence inventory', () => {
     const check = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
     const nightly = readFileSync(join(root, '.github/workflows/nightly-regression.yml'), 'utf8');
     const weekly = readFileSync(join(root, '.github/workflows/weekly-statistical.yml'), 'utf8');
+    const outcomeReach = readFileSync(join(root, '.github/workflows/outcome-reach-telemetry.yml'), 'utf8');
 
     for (const workflow of [nightly, weekly]) {
       expect(workflow).toContain('schedule:');
@@ -293,14 +294,11 @@ describe('CI evidence inventory', () => {
     expect(nightly).toContain('gate: [fire-rate, war, endings]');
     expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
     expect(weekly).toContain('npm run gates -- blood');
-    expect(weekly).toContain('npm run gates -- outcome-reach');
-    for (const entry of inventory.telemetryGates.filter((candidate) =>
-      candidate.currentTier.startsWith('weekly'))) {
-      expect(
-        weekly,
-        `weekly telemetry is inventoried but not scheduled: ${entry.id}`,
-      ).toContain(`npm run gates -- ${entry.id}`);
-    }
+    expect(outcomeReach).toContain('schedule:');
+    expect(outcomeReach).toContain('workflow_dispatch:');
+    expect(outcomeReach).toContain('npm run gates -- outcome-reach');
+    expect(outcomeReach).not.toMatch(/^\s+pull_request:/m);
+    expect(outcomeReach).not.toMatch(/^\s+merge_group:/m);
 
     expect(check).toContain('release-slow:');
     expect(check).toContain('release-gates:');
@@ -339,7 +337,7 @@ describe('CI evidence inventory', () => {
     const orient = readFileSync(join(root, 'tools/orient.mjs'), 'utf8');
 
     expect(watcher).toContain('workflow_run:');
-    expect(watcher).toContain('workflows: [nightly regression, weekly statistical]');
+    expect(watcher).toContain('workflows: [nightly regression, weekly statistical, sampled outcome reach telemetry]');
     expect(watcher).toContain("github.event.workflow_run.head_branch == 'main'");
     expect(watcher).toContain('issues: write');
     expect(watcher).toContain('BAD_SHA: ${{ github.event.workflow_run.head_sha }}');
@@ -364,7 +362,7 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('refs/scheduled/$KEY');
     expect(watcher).toContain('since: %s');
     expect(orient).toContain("'+refs/scheduled/*:refs/scheduled/*'");
-    expect(orient).toContain("for (const cadence of ['nightly', 'weekly'])");
+    expect(orient).toContain("for (const cadence of ['nightly', 'weekly', 'outcome-reach'])");
     expect(orient).toContain('red since');
     expect(orient).toContain('scheduled evidence has not answered yet');
   });
