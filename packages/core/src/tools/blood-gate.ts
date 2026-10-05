@@ -81,6 +81,14 @@ import type { SimCtx } from '../world.js';
 import { expectMean } from '../testing.js';
 import { GREAT_RITE_REACH } from '../events/rites.js';
 import { saidScore } from './blood-market.js';
+import {
+  gatePartitionWorkerCount,
+  partitionGateInputs,
+  reduceGatePartitions,
+  runGatePartitionsInWorkers,
+  type GatePartition,
+  type GatePartitionResult,
+} from './gate-partition.js';
 
 export type Policy = 'concentrate' | 'dilute' | 'chronicler' | 'withhold' | 'marry_in' | 'marry_out'
   | 'blind' | 'panel'
@@ -760,6 +768,65 @@ export interface BloodVerdict {
   lines: string[];
 }
 
+export interface BloodGateInput {
+  seed: number;
+  policy: 'concentrate' | 'dilute';
+}
+
+/**
+ * The canonical blood batch in the exact order the serial gate historically
+ * ran it: every concentrate world first, then the matching dilute worlds.
+ */
+export function bloodGateInputs(seeds: readonly number[]): BloodGateInput[] {
+  return [
+    ...seeds.map((seed) => ({ seed, policy: 'concentrate' as const })),
+    ...seeds.map((seed) => ({ seed, policy: 'dilute' as const })),
+  ];
+}
+
+/** Compute raw blood observations for one partition; never judge them here. */
+export function runBloodGatePartition(
+  bundle: ContentBundle,
+  partition: GatePartition<BloodGateInput>,
+  years: number,
+): GatePartitionResult<BloodRun> {
+  return {
+    id: partition.id,
+    observations: partition.items.map(({ index, input }) => ({
+      index,
+      value: playOnce(bundle, input.seed, years, input.policy),
+    })),
+  };
+}
+
+/**
+ * Rebuild the original complete batch in canonical order before the one
+ * existing statistical verdict is allowed to run.
+ */
+export function reduceBloodGatePartitions(
+  plan: readonly GatePartition<BloodGateInput>[],
+  results: readonly GatePartitionResult<BloodRun>[],
+): { concentrate: BloodRun[]; dilute: BloodRun[] } {
+  const runs = reduceGatePartitions(plan, results);
+  const expected = plan.flatMap((partition) => partition.items).sort((a, b) => a.index - b.index);
+
+  for (let i = 0; i < runs.length; i++) {
+    const run = runs[i]!;
+    const input = expected[i]!.input;
+    if (run.seed !== input.seed || run.policy !== input.policy) {
+      throw new Error(
+        `blood gate observation mismatch at canonical row ${i}: expected ${input.seed}/${input.policy}, `
+        + `got ${run.seed}/${run.policy}`,
+      );
+    }
+  }
+
+  return {
+    concentrate: runs.filter((run) => run.policy === 'concentrate'),
+    dilute: runs.filter((run) => run.policy === 'dilute'),
+  };
+}
+
 /**
  * THE REGRESSION #41 WAS MISSING.
  *
@@ -860,13 +927,26 @@ export function bloodVerdict(concentrate: BloodRun[], dilute: BloodRun[]): Blood
  */
 export function gateBlood(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number } = {},
+  opts: { seeds?: number[]; years?: number; workers?: number } = {},
 ): BloodVerdict {
   const bundle = indexContent(source).bundle;
   const seeds = opts.seeds ?? Array.from({ length: 1024 }, (_, i) => 4000 + i * 13);
   const years = opts.years ?? CAMPAIGN_YEARS;
-  const concentrate = seeds.map((seed) => playOnce(bundle, seed, years, 'concentrate'));
-  const dilute = seeds.map((seed) => playOnce(bundle, seed, years, 'dilute'));
+  const workers = opts.workers ?? gatePartitionWorkerCount();
+  const plan = partitionGateInputs(bloodGateInputs(seeds), workers);
+
+  // One worker is the diagnostic/serial path. Two through four use isolated
+  // threads, but both paths return the same raw partition shape to the same
+  // reducer and therefore the same one aggregate verdict.
+  const results = plan.length === 1
+    ? plan.map((partition) => runBloodGatePartition(bundle, partition, years))
+    : runGatePartitionsInWorkers<BloodGateInput, BloodRun>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runBloodGatePartition',
+      argsBefore: [bundle],
+      argsAfter: [years],
+    });
+  const { concentrate, dilute } = reduceBloodGatePartitions(plan, results);
   const verdict = bloodVerdict(concentrate, dilute);
 
   return {

@@ -57,6 +57,41 @@ written down is so it is not learned a sixth.
 
 ---
 
+## Blood/war partition-worker baseline (#440) — 5 October 2026
+
+#440 changes **computation only** for the two longest gate lanes. The canonical
+input lists, seed counts, years, policy ordering and the one aggregate verdict
+remain unchanged; workers return raw observations and one reducer reconstructs
+the historical order before the existing assertion runs.
+
+Measured on the same GitHub-hosted Ubuntu runner class and Node 22:
+
+| measure | before: merge-group 37251568594 | after: PR #490 run 37256335551 | change |
+|---|---:|---:|---:|
+| blood gate body | 2,346.47s / 39m06.5s | **1,259.62s / 20m59.6s** | **46.3% shorter / 1.86x** |
+| war gate body | 2,378.05s / 39m38.0s | **1,052.30s / 17m32.3s** | **55.8% shorter / 2.26x** |
+| CI active critical path | 45.80m | **22.17m** | **51.6% shorter / 2.07x** |
+| total runner-minutes | 162.95m | **131.17m** | **31.78m saved / 19.5% less** |
+
+The after run used the default **four worker threads inside each single gate
+runner**. It did not fan the evidence out to four GitHub runners, so the
+speedup does not multiply runner billing. `ED_GATE_WORKERS=1..4` is the
+portable diagnostic override; one worker exercises the serial computation path
+through the same partition/reducer shape.
+
+The hosted run kept all **1,024 blood pairs x 500 years** and all **768 war
+seeds per policy x 500 years** and both original aggregate verdicts passed.
+The fast lane on the same head also proved serial/parallel equivalence, canonical
+ordering, missing/duplicate/malformed evidence rejection, an optimized-path
+broken blood fixture that still fails its gate, repeated parallel determinism,
+and a real worker process exit that fails closed via a bounded timeout. The
+Windows fast lane exercises the same worker code path, so the implementation is
+not Linux-only.
+
+The checked lane baselines in `tools/gate-durations.json` move only after this
+measurement: blood to 21m and war to 17.6m. The 1.25x regression guard remains
+unchanged.
+
 ## Interaction-shape baseline (#271) — 28 September 2026
 
 The old repetition instrument asked whether an **event id** had appeared before.

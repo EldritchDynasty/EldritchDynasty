@@ -6,7 +6,7 @@ import { AgeDefS } from './age.js';
 import { ArcDefS } from './arc.js';
 import { HouseDefS } from './house.js';
 import { SexS } from './attributes.js';
-import { RetainerContractS } from './person.js';
+import { PersonNameS, RetainerContractS } from './person.js';
 import { CharacterTemplateS } from './character.js';
 import { HeirloomDefS } from './heirloom.js';
 import { SpellbookDefS } from './spellbook.js';
@@ -22,8 +22,8 @@ import { ProseCatalogueS } from './prose.js';
 /** Authored starting cast. Genomes are rolled from the seed, never authored. */
 export const SeedPersonS = z.object({
   key: z.string(),
-  name: z.string(),
-  /** The founder is never named. He is "the man" (concept §3). */
+  name: PersonNameS,
+  /** Optional authored byname; the actual person name uses the shared contract. */
   epithet: z.string().optional(),
   sex: SexS,
   born: z.number(),

@@ -106,8 +106,17 @@ export function decideBranch(
   // A `party` check's bands name CHOICE ids, not outcome ids; `CheckResult`
   // calls the field `outcomeId` because that is what it means in the other,
   // older use. `checks/wiring` validates which is which.
-  const named = open.find((c) => c.id === result.outcomeId) ?? choices.find((c) => c.id === result.outcomeId);
-  if (!named) return fallback(`the check named '${result.outcomeId}', which is not one of the branches`);
+  //
+  // A real branch can still be closed by Choice.requires. State deciders
+  // already skip such a rung; party checks must obey the same availability
+  // contract rather than letting the check bypass a requirement.
+  const named = open.find((c) => c.id === result.outcomeId);
+  if (!named) {
+    const exists = choices.some((c) => c.id === result.outcomeId);
+    return fallback(exists
+      ? `the check named '${result.outcomeId}', but that branch is unavailable`
+      : `the check named '${result.outcomeId}', which is not one of the branches`);
+  }
 
   return {
     choice: named,

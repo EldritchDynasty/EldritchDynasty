@@ -89,6 +89,14 @@ import { END_YEAR } from '../ending.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { expectMean } from '../testing.js';
 import type { SimCtx } from '../world.js';
+import {
+  gatePartitionWorkerCount,
+  partitionGateInputs,
+  reduceGatePartitions,
+  runGatePartitionsInWorkers,
+  type GatePartition,
+  type GatePartitionResult,
+} from './gate-partition.js';
 
 type Source = ContentBundle | Content;
 
@@ -337,6 +345,65 @@ export interface WarVerdict { ok: boolean; lines: string[] }
 // #133 halves a normal run; 256 x 500 preserves the old 128 x 1000 sample volume.
 const DEFAULT_SEEDS = 768;
 
+export interface WarGateInput {
+  seed: number;
+  policy: 'commit' | 'abstain';
+}
+
+/**
+ * The canonical war batch in the exact order the serial gate historically
+ * ran it: every commit world first, then the matching abstain worlds.
+ */
+export function warGateInputs(seeds: readonly number[]): WarGateInput[] {
+  return [
+    ...seeds.map((seed) => ({ seed, policy: 'commit' as const })),
+    ...seeds.map((seed) => ({ seed, policy: 'abstain' as const })),
+  ];
+}
+
+/** Compute raw war observations for one partition; never judge them here. */
+export function runWarGatePartition(
+  bundle: Source,
+  partition: GatePartition<WarGateInput>,
+  years: number,
+): GatePartitionResult<WarRun> {
+  return {
+    id: partition.id,
+    observations: partition.items.map(({ index, input }) => ({
+      index,
+      value: playOnce(bundle, input.seed, years, input.policy),
+    })),
+  };
+}
+
+/**
+ * Rebuild the original complete batch in canonical order before the one
+ * existing statistical verdict is allowed to run.
+ */
+export function reduceWarGatePartitions(
+  plan: readonly GatePartition<WarGateInput>[],
+  results: readonly GatePartitionResult<WarRun>[],
+): { commit: WarRun[]; abstain: WarRun[] } {
+  const runs = reduceGatePartitions(plan, results);
+  const expected = plan.flatMap((partition) => partition.items).sort((a, b) => a.index - b.index);
+
+  for (let i = 0; i < runs.length; i++) {
+    const run = runs[i]!;
+    const input = expected[i]!.input;
+    if (run.seed !== input.seed || run.policy !== input.policy) {
+      throw new Error(
+        `war gate observation mismatch at canonical row ${i}: expected ${input.seed}/${input.policy}, `
+        + `got ${run.seed}/${run.policy}`,
+      );
+    }
+  }
+
+  return {
+    commit: runs.filter((run) => run.policy === 'commit'),
+    abstain: runs.filter((run) => run.policy === 'abstain'),
+  };
+}
+
 /**
  * THE JUDGMENT, SEPARATED FROM THE PLAY (bearing-gate.ts's own pattern,
  * `verdictOver`). Playing 24+ seeds is the expensive, non-deterministic-to-
@@ -501,14 +568,23 @@ export function verdictOver(commit: WarRun[], abstain: WarRun[], years = CAMPAIG
 
 export function gateWar(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number } = {},
+  opts: { seeds?: number[]; years?: number; workers?: number } = {},
 ): WarVerdict {
-  const bundle = indexContent(source);
+  const bundle = indexContent(source).bundle;
   const seeds = opts.seeds ?? Array.from({ length: DEFAULT_SEEDS }, (_, i) => 4000 + i * 13);
   const years = opts.years ?? CAMPAIGN_YEARS;
+  const workers = opts.workers ?? gatePartitionWorkerCount();
+  const plan = partitionGateInputs(warGateInputs(seeds), workers);
 
-  const commit = seeds.map((s) => playOnce(bundle, s, years, 'commit'));
-  const abstain = seeds.map((s) => playOnce(bundle, s, years, 'abstain'));
+  const results = plan.length === 1
+    ? plan.map((partition) => runWarGatePartition(bundle, partition, years))
+    : runGatePartitionsInWorkers<WarGateInput, WarRun>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runWarGatePartition',
+      argsBefore: [bundle],
+      argsAfter: [years],
+    });
+  const { commit, abstain } = reduceWarGatePartitions(plan, results);
   return verdictOver(commit, abstain, years);
 }
 
