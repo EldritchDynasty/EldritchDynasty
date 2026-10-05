@@ -249,10 +249,23 @@ describe('CI evidence inventory', () => {
       new Set(['merge-blocking', 'nightly']),
     );
 
+    const mergeTestStart = check.indexOf('\n  test:\n');
+    const mergeTestEnd = check.indexOf('\n  gates:\n', mergeTestStart);
+    expect(mergeTestStart, 'check.yml merge-slow job').toBeGreaterThanOrEqual(0);
+    expect(mergeTestEnd, 'check.yml gates job after merge-slow').toBeGreaterThan(mergeTestStart);
+    const mergeTestJob = check.slice(mergeTestStart, mergeTestEnd);
+
+    const releaseSlowStart = check.indexOf('\n  release-slow:\n');
+    const releaseSlowEnd = check.indexOf('\n  release-gates:\n', releaseSlowStart);
+    expect(releaseSlowStart, 'check.yml release-slow job').toBeGreaterThanOrEqual(0);
+    expect(releaseSlowEnd, 'check.yml release-gates job after release-slow').toBeGreaterThan(releaseSlowStart);
+    const releaseSlowJob = check.slice(releaseSlowStart, releaseSlowEnd);
+
     expect(check).toContain('tools/ci-evidence.json');
     expect(check).toContain('entry.currentTier === "merge-blocking"');
-    expect(check).toContain('npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4');
-    expect(check).not.toContain('npm test -- --shard=${{ matrix.shard }}/4');
+    expect(mergeTestJob).toContain('npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4');
+    expect(mergeTestJob).not.toContain('npm test -- --shard=${{ matrix.shard }}/4');
+    expect(releaseSlowJob).toContain('npm test -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('gate: [fire-rate, war, endings]');
     expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
