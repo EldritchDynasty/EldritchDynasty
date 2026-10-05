@@ -105,6 +105,7 @@ describe('character templates', () => {
 
     const before = ctx.world.people.size;
     const namesBefore = ctx.takenNames.size;
+    const frequencyBefore = { ...ctx.world.characterFrequency.firedThisRun };
 
     const result = previewTemplate(t, ctx, 24, (p) => {
       const g = genomeOf(p, ctx.genetics);
@@ -114,6 +115,7 @@ describe('character templates', () => {
     expect(result.sample.length).toBe(24);
     expect(ctx.world.people.size).toBe(before);
     expect(ctx.takenNames.size).toBe(namesBefore);
+    expect(ctx.world.characterFrequency.firedThisRun).toEqual(frequencyBefore);
   });
 
   it('produces carriers at roughly the rate the gene pool advertises', () => {
