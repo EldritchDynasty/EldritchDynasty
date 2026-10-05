@@ -35,7 +35,7 @@ jobs:
       - name: run canonical blood sample
         run: |
           started=$(date +%s)
-          npm run gates -- --lane blood --timings-json weekly-gate-blood.json
+          npm run gates -- blood --timings-json weekly-gate-blood.json
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check blood "$elapsed"
       - name: retain structured blood timings
