@@ -155,6 +155,12 @@ describe('CI evidence inventory', () => {
     expect(nightlyWorkflow).toContain('name: nightly iOS simulator build');
     expect(nightlyWorkflow).toContain('xcrun simctl bootstatus "$UDID" -b');
     expect(nightlyWorkflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
+
+    for (const workflow of [checkWorkflow, nightlyWorkflow]) {
+      const smokeStart = workflow.indexOf('- name: install and launch on an iPhone simulator');
+      expect(smokeStart, 'iOS runtime smoke step').toBeGreaterThanOrEqual(0);
+      expect(workflow.slice(smokeStart, smokeStart + 700)).toContain('timeout-minutes: 15');
+    }
   });
 
 
