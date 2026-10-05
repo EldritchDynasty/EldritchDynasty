@@ -135,7 +135,7 @@ function mergedPullRequestsForCommit(sha) {
   const r = spawnSync('gh', [
     'api',
     '--header', 'Accept: application/vnd.github+json',
-    '--header', 'X-GitHub-Api-Version: 2026-03-10',
+    '--header', 'X-GitHub-Api-Version: 2022-11-28',
     `/repos/${REPOSITORY}/commits/${sha}/pulls`,
   ], { cwd: CWD, encoding: 'utf8' });
 
