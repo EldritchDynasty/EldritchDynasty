@@ -111,7 +111,11 @@ jobs:
         with:
           client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}
           private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}
+          # enqueuePullRequest mutates the PR as well as the queue. Narrowing
+          # the installation token to merge-queues alone reaches GraphQL but
+          # GitHub rejects it as "Resource not accessible by integration".
           permission-merge-queues: write
+          permission-pull-requests: write
 
       - name: Add pull request to native merge queue
         if: steps.pr.outputs.eligible == 'true'
