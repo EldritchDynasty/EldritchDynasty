@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  beget, branchReport, consumeVessel, describeDecision, frequencyReport, hallOf, heldBooks, hashSeed,
-  loseLibraryCopy, marry, newGame, place, resumeGame, spellbookDef, gainSpellbook, standingMoved,
+  applyEffect, beget, branchReport, consumeVessel, describeDecision, frequencyReport, hallOf, heldBooks, hashSeed,
+  loseLibraryCopy, marry, newGame, phenotypeOf, place, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
   type ChronicleEntry, type GameSession,
 } from '@ed/core';
@@ -423,6 +423,29 @@ describe('family planning fields do not read hidden blood', () => {
 });
 
 describe('the read model a client draws', () => {
+  it('keeps Awakening separate from expression for a female carrier', () => {
+    const game = newGame(content, { seed: 1042, decider: 'chronicler' });
+    let carrier;
+    for (let i = 0; i < 96; i += 1) {
+      const p = place(game.ctx, { sex: 'female', age: 12, name: 'View carrier ' + i });
+      if (phenotypeOf(p, game.ctx.genetics, game.ctx.world.year).eldritch.carriedFont > 0) {
+        carrier = p;
+        break;
+      }
+    }
+    expect(carrier, 'no female carrier was produced across 96 deterministic placements').toBeDefined();
+
+    applyEffect({ kind: 'awakening', target: { slot: 'CHILD' } }, game.ctx, { CHILD: carrier!.id });
+
+    const shown = viewOf(game.ctx).halls.flatMap((h) => h.members).find((m) => m.id === carrier!.id);
+    expect(shown).toBeDefined();
+    expect(shown!.awakened).toBe(true);
+    expect(shown!.expresses).toBe(false);
+    expect(shown!.expresses).toBe(
+      phenotypeOf(carrier!, game.ctx.genetics, game.ctx.world.year).eldritch.canExpress,
+    );
+  });
+
   it('names the house rather than handing over its id', () => {
     const view = newGame(content, { seed: 1042 }).view();
 
