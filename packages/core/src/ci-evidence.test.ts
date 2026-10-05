@@ -281,7 +281,11 @@ describe('CI evidence inventory', () => {
     for (const workflow of [checkWorkflow, nightlyWorkflow]) {
       const smokeStart = workflow.indexOf('- name: install and launch on an iPhone simulator');
       expect(smokeStart, 'iOS runtime smoke step').toBeGreaterThanOrEqual(0);
-      expect(workflow.slice(smokeStart, smokeStart + 700)).toContain('timeout-minutes: 15');
+      const smoke = workflow.slice(smokeStart);
+      expect(smoke.slice(0, 700)).toContain('timeout-minutes: 15');
+      expect(smoke).toContain('launch_once()');
+      expect(smoke).toContain('simctl launch client did not return within 120 seconds.');
+      expect(smoke).toContain('simctl launch --terminate-running-process "$UDID" nz.eldritchdynasty.game');
     }
   });
 
