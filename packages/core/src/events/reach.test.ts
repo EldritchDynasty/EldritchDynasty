@@ -4452,3 +4452,96 @@ describe('authored compound acreage outcome witnesses', () => {
     expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
+
+
+describe('authored discontent-and-cadet outcome witnesses', () => {
+  function hallFixture(seed: number, discontent: number, withBranch = true) {
+    const ctx = fixture(seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES.uncommon.minGeneration,
+    );
+    ctx.world.discontent = discontent;
+
+    if (!withBranch) return ctx;
+
+    const branchId = 'witness_waiting_hall_' + seed;
+    const cousin = place(ctx, {
+      sex: 'male',
+      age: 40,
+      name: 'Witness Waiting Cousin ' + seed,
+      branch: branchId,
+    });
+    const membership = cousin.membership.find((entry) => entry.to === undefined);
+    if (!membership) throw new Error('waiting-hall witness has no current house membership');
+    membership.kind = 'cadet';
+    membership.branch = branchId;
+
+    ctx.world.branches.set(branchId, {
+      id: asId(branchId),
+      name: cousin.name + "'s line",
+      house: asId(ctx.world.playerHouse),
+      founder: cousin.id,
+      splitFrom: 'main',
+      foundedYear: ctx.world.year - 40,
+      speaker: cousin.id,
+      grievance: 0,
+    });
+    return ctx;
+  }
+
+  it('crosses the Hall That Waited discontent/cadet gate before real casting and every narration outcome', () => {
+    const event = content.event('the_hall_that_waited');
+    if (!event || event.interaction.kind !== 'narration') {
+      throw new Error('waiting-hall fixture changed interaction');
+    }
+
+    const noBranch = hallFixture(4500, 40, false);
+    expect(
+      evalCondition(event.conditions, noBranch),
+      'waiting hall should be blocked without an active cadet branch',
+    ).toBe(false);
+
+    const lowDiscontent = hallFixture(4501, 39);
+    expect(
+      evalCondition(event.conditions, lowDiscontent),
+      'waiting hall should be blocked below discontent 40',
+    ).toBe(false);
+
+    const selection = hallFixture(4502, 40);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(4503));
+    expect(slots.ok, 'waiting hall should resolve the real Head/cadet cast').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    const cousinId = slots.fill.COUSIN;
+    expect(typeof cousinId).toBe('string');
+    const cousin = typeof cousinId === 'string' ? selection.world.people.get(cousinId) : undefined;
+    expect(cousin?.membership.find((entry) => entry.to === undefined)?.kind).toBe('cadet');
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'waiting hall should be selectable once discontent and cadet state are valid',
+    ).toBe(true);
+
+    const declared = event.interaction.outcomes.map((outcome) =>
+      outcomeKey(String(event.id), undefined, String(outcome.id)));
+    const witnessed: string[] = [];
+
+    for (const [index, outcome] of event.interaction.outcomes.entries()) {
+      const seed = 4510 + index;
+      const ctx = hallFixture(seed, 40);
+      const result = executeOutcomeWitness(ctx, event, {
+        expectedOutcomeId: outcome.id,
+        rng: alwaysFirstWeighted(seed + 1),
+        targetWeightedOutcome: event.interaction.outcomes.length > 1,
+      });
+      expect(
+        result.ok,
+        `${event.id}/${outcome.id}: ${result.reason}`,
+      ).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
