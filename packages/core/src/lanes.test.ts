@@ -148,6 +148,8 @@ const DRIVES_A_BATCH: Record<string, string> = {
   'packages/core/src/gates.test.ts':
     'every gate, at 2 runs x 5 years, to prove each still refuses what it must — 16s '
     + '(was 61s: gate 2 rebuilt six worlds per event, and gate 9 replayed one batch per set of floors)',
+  'packages/core/src/fecundity-drag.test.ts':
+    'drag-gate structural helpers only: founder phasing and bundle calibration; no campaign batch — 1.4s hosted',
   'packages/core/src/blood.test.ts':
     'the blood gate\'s founder recipe, one built house, no played years — 1.9s',
   'packages/core/src/bearing-gate.test.ts':
