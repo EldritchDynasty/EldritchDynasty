@@ -4545,3 +4545,69 @@ describe('authored discontent-and-cadet outcome witnesses', () => {
     expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
+
+
+describe('authored derived arc-window outcome witnesses', () => {
+  function cradlemoorFixture(seed: number) {
+    const ctx = fixture(seed);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      FREQUENCY_PROFILES.uncommon.minGeneration,
+    );
+    seizeParcel(ctx, 'cradlemoor');
+    return ctx;
+  }
+
+  it('refuses the Cradlemoor start when its arc cannot finish, then executes both start-scene outcomes while time remains', () => {
+    const event = content.event('cradlemoor_wants_draining');
+    if (!event || event.interaction.kind === 'narration') {
+      throw new Error('Cradlemoor start fixture changed interaction');
+    }
+
+    const tooLate = cradlemoorFixture(4600);
+    tooLate.world.year = 9999;
+    expect(
+      evalCondition(event.conditions, tooLate),
+      'Cradlemoor start should be blocked when no campaign time remains for its arc',
+    ).toBe(false);
+
+    const selection = cradlemoorFixture(4601);
+    expect(
+      evalCondition(event.conditions, selection),
+      'Cradlemoor start should pass while its derived arc window is still open',
+    ).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(4602));
+    expect(slots.ok, 'Cradlemoor start should resolve its real Head cast').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'Cradlemoor start should be selectable while the parcel is unheld and the arc can finish',
+    ).toBe(true);
+
+    const declared = event.interaction.choices.flatMap((choice) =>
+      choice.outcomes.map((outcome) =>
+        outcomeKey(String(event.id), String(choice.id), String(outcome.id))));
+    const witnessed: string[] = [];
+
+    for (const [index, choice] of event.interaction.choices.entries()) {
+      for (const outcome of choice.outcomes) {
+        const seed = 4610 + index;
+        const ctx = cradlemoorFixture(seed);
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: choice.outcomes.length > 1,
+        });
+        expect(
+          result.ok,
+          `${event.id}/${choice.id}/${outcome.id}: ${result.reason}`,
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
