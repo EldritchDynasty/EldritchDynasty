@@ -13,8 +13,13 @@ import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
 import { bloodGateInputs, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
-import { partitionGateInputs, reduceGatePartitions } from './tools/gate-partition.js';
-import { warGateInputs } from './tools/war-gate.js';
+import {
+  gatePartitionWorkerCount,
+  partitionGateInputs,
+  reduceGatePartitions,
+  runGatePartitionsInWorkers,
+} from './tools/gate-partition.js';
+import { gateWar, warGateInputs } from './tools/war-gate.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -241,6 +246,32 @@ describe('#440 expensive gate partitioning', () => {
       { seed: 4026, policy: 'abstain' },
     ]);
   });
+
+  it('parses the portable worker-count override and rejects wider pools', () => {
+    expect(gatePartitionWorkerCount(undefined)).toBe(4);
+    expect(gatePartitionWorkerCount('1')).toBe(1);
+    expect(gatePartitionWorkerCount('4')).toBe(4);
+    expect(() => gatePartitionWorkerCount('0')).toThrow(/ED_GATE_WORKERS/);
+    expect(() => gatePartitionWorkerCount('5')).toThrow(/ED_GATE_WORKERS/);
+    expect(() => gatePartitionWorkerCount('two')).toThrow(/ED_GATE_WORKERS/);
+  });
+
+  it('propagates a worker failure instead of reducing partial evidence', () => {
+    const plan = partitionGateInputs(['one', 'two'], 2);
+    expect(() => runGatePartitionsInWorkers(plan, {
+      moduleUrl: new URL('./tools/gate-partition.ts', import.meta.url).href,
+      exportName: 'thereIsNoSuchWorkerExport',
+    })).toThrow(/not a function/);
+  });
+
+  it('blood and war parallel workers reproduce the serial verdict exactly', () => {
+    const tiny = { seeds: [4000, 4013], years: 5 };
+
+    expect(gateBlood(content, { ...tiny, workers: 2 }))
+      .toEqual(gateBlood(content, { ...tiny, workers: 1 }));
+    expect(gateWar(content, { ...tiny, workers: 2 }))
+      .toEqual(gateWar(content, { ...tiny, workers: 1 }));
+  });
 });
 
 describe('#201 late ladder diagnosis', () => {
@@ -305,7 +336,7 @@ describe('the gates fail when they should', () => {
       }
     });
 
-    const { ok, lines } = gateBlood(bundle, { seeds: [4000, 4013], years: 5 });
+    const { ok, lines } = gateBlood(bundle, { seeds: [4000, 4013], years: 5, workers: 1 });
     expect(ok, lines.join('\n')).toBe(false);
     expect(lines.join('\n')).toMatch(/concentrating marriage policy/);
   });
