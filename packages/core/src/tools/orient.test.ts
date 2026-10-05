@@ -73,7 +73,7 @@ beforeEach(() => {
 
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
-const pushScheduled = (cadence: 'nightly' | 'weekly', body: string) => {
+const pushScheduled = (cadence: 'nightly' | 'weekly' | 'outcome-reach', body: string) => {
   const seed = join(root, 'seed');
   const empty = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
   const verdict = git(seed, 'commit-tree', empty, '-m', body);
@@ -120,6 +120,22 @@ describe('session orientation', () => {
     expect(r.code).toBe(0);
     expect(r.out).toContain('nightly: red since 1234567 (failure)');
     expect(r.out).toContain('weekly: NO VERDICT — scheduled evidence has not answered yet. Not a pass.');
+    expect(r.out).toContain('outcome-reach: NO VERDICT — scheduled evidence has not answered yet. Not a pass.');
+  });
+
+  it('prints the dedicated outcome-reach telemetry verdict', () => {
+    pushScheduled('outcome-reach', [
+      'scheduled outcome-reach success',
+      '',
+      'sha: 7654321fedcba9876543210',
+      'conclusion: success',
+      'since: ',
+      'run: https://example.invalid/outcome-reach',
+    ].join('\n'));
+
+    const r = run();
+    expect(r.code).toBe(0);
+    expect(r.out).toContain('outcome-reach: green on 7654321');
   });
 
   it('prints a successful scheduled cadence against the SHA it measured', () => {
