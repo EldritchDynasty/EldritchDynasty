@@ -2940,6 +2940,96 @@ describe('authored founding-bottleneck blood-count outcome witnesses', () => {
 });
 
 
+describe('authored negative-knowledge outcome witnesses', () => {
+  function forgottenDrowningFixture(seed: number, knowsCost: boolean) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(
+      6,
+      FREQUENCY_PROFILES.rare.minGeneration,
+    );
+
+    const donor = ctx.world.people.living()
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    if (!donor) throw new Error('negative-knowledge fixture has no founding expresser genome');
+
+    const child = place(ctx, {
+      sex: 'male',
+      age: 12,
+      name: 'Witness Forgotten Drowning Child ' + seed,
+    });
+    child.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    child.phenotype = undefined;
+
+    if (knowsCost) ctx.world.knowledge.add('knows_drowning_cost');
+    else ctx.world.knowledge.delete('knows_drowning_cost');
+    return ctx;
+  }
+
+  it('requires the Drowning cost to be forgotten, then resolves a real unwoken expresser and commits the outcome', () => {
+    const cases = content.events.filter((event) => {
+      const condition = event.conditions;
+      if (
+        event.tier === 'frame'
+        || event.ages !== undefined
+        || event.arc !== undefined
+        || !condition
+        || !('all' in condition)
+      ) return false;
+
+      const negativeKnowledge = condition.all.some((leaf) => (
+        'knowledge' in leaf
+        && leaf.knowledge.knowledge === 'knows_drowning_cost'
+        && leaf.knowledge.has === false
+      ));
+      const generation = condition.all.some((leaf) => (
+        'generation' in leaf
+        && leaf.generation.op === 'gte'
+        && leaf.generation.value === 6
+      ));
+      return negativeKnowledge && generation;
+    });
+
+    expect(cases.map((event) => String(event.id))).toEqual([
+      'the_drowning_repeated',
+    ]);
+
+    const event = cases[0]!;
+    if (event.interaction.kind !== 'narration') {
+      throw new Error('forgotten Drowning fixture changed interaction');
+    }
+
+    const blocked = forgottenDrowningFixture(8800, true);
+    expect(
+      evalCondition(event.conditions, blocked),
+      'the repeated Drowning should be blocked once the house knows its cost',
+    ).toBe(false);
+
+    const selection = forgottenDrowningFixture(8800, false);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(8801));
+    expect(slots.ok, 'repeated Drowning should resolve Head and unwoken expresser').toBe(true);
+    if (!slots.ok) return;
+    expect(slots.playerCast).toHaveLength(0);
+    expect(typeof slots.fill.HEAD).toBe('string');
+    expect(typeof slots.fill.CHILD).toBe('string');
+    expect(
+      ambientPool(selection).some((candidate) => candidate.id === event.id),
+      'repeated Drowning should be selectable while its cost is forgotten',
+    ).toBe(true);
+
+    const outcome = event.interaction.outcomes[0]!;
+    const ctx = forgottenDrowningFixture(8802, false);
+    const result = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: outcome.id,
+      rng: makeRng(8803),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));
+    expect(ctx.world.knowledge.has('knows_drowning_cost')).toBe(true);
+  });
+});
+
+
 describe('authored generation-gated Head-only outcome witnesses', () => {
   it('crosses each simple generation floor through the production condition evaluator before executing outcomes', () => {
     const cases = content.events.flatMap<GenerationWitnessCase>((event) => {
