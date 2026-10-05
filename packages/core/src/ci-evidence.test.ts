@@ -116,7 +116,9 @@ describe('CI evidence inventory', () => {
       'war:it-pays',
     ]);
     expect(blockers.every((entry) => entry.evidenceType === 'statistical')).toBe(true);
-    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('trusted nightly failure path'))).toBe(true);
+    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('muster.test.ts'))).toBe(true);
+    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('war-gate.test.ts'))).toBe(true);
+    expect(blockers.every((entry) => entry.moveBlockedBy?.includes('nightly'))).toBe(true);
 
     const telemetry = war.filter((entry) => entry.evidenceType === 'telemetry');
     expect(telemetry.map((entry) => entry.id).sort()).toEqual([
@@ -126,7 +128,8 @@ describe('CI evidence inventory', () => {
     expect(telemetry.every((entry) => !entry.currentTier.startsWith('merge-blocking'))).toBe(true);
   });
 
-  it('checks scheduled evidence on main without weakening merge CI yet', () => {
+  it('splits slow regression by checked evidence tier without dropping either side', () => {
+    const check = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
     const nightly = readFileSync(join(root, '.github/workflows/nightly-regression.yml'), 'utf8');
     const weekly = readFileSync(join(root, '.github/workflows/weekly-statistical.yml'), 'utf8');
 
@@ -141,6 +144,18 @@ describe('CI evidence inventory', () => {
       expect(workflow).not.toMatch(/^\s+push:/m);
     }
 
+    const mergeSlow = inventory.slowSuites.filter((entry) => entry.currentTier === 'merge-blocking');
+    const nightlySlow = inventory.slowSuites.filter((entry) => entry.currentTier === 'nightly');
+    expect(mergeSlow.length).toBeGreaterThan(0);
+    expect(nightlySlow.length).toBeGreaterThan(0);
+    expect(new Set(inventory.slowSuites.map((entry) => entry.currentTier))).toEqual(
+      new Set(['merge-blocking', 'nightly']),
+    );
+
+    expect(check).toContain('tools/ci-evidence.json');
+    expect(check).toContain('entry.currentTier === "merge-blocking"');
+    expect(check).toContain('npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4');
+    expect(check).not.toContain('npm test -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
     expect(nightly).toContain('lane: [fire-rate, war, endings]');
     expect(weekly).toContain('npm run gates -- --lane blood');
