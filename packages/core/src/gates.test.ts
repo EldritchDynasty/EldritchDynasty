@@ -5,7 +5,7 @@ import { loadContent } from '@ed/content';
 import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, laneMatrix,
-  gateClauses, gateFireRate, gateLadderScales, gateOutcomeReach, gatePurposes,
+  gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
   gatePostFillability, gateSlotFillability, judgeZeroReach,
 } from './tools/gates.js';
@@ -88,24 +88,32 @@ describe('the gates pass the shipped game', () => {
     expect(out).toMatch(/owed, and pinned: recast, schedule/);
   });
 
+  it('keeps sampled vocabulary reach beside the scheduled fire-rate corpus', () => {
+    const { lines } = gateFireRateNightly(content, { runs: 2, years: 5, climbRuns: 2 });
+    const out = lines.join('\n');
+    expect(out).toContain('gate 4');
+    expect(out).toContain('vocabulary reach');
+  });
+
   // Keep the literal below sorted: the left-hand side is deliberately sorted,
   // so an out-of-order expected entry is a test bug rather than a gate failure.
   it('every merge-blocking gate is in the blocking registry', () => {
     expect(Object.keys(GATES).sort()).toEqual(
       [
-        'blood', 'bottleneck', 'clauses', 'endings', 'fire-rate', 'ladder', 'ladder-scales',
-        'land', 'library-neutrality', 'post-fillability', 'purposes', 'short-line', 'slot-fillability',
-        'vocabulary-reach', 'war',
+        'bottleneck', 'clauses', 'ladder', 'ladder-scales', 'land', 'library-neutrality',
+        'post-fillability', 'purposes', 'short-line', 'slot-fillability', 'vocabulary-reach',
       ],
     );
   });
 
-  it('keeps sampled outcome reach addressable but outside every blocking lane (#495)', () => {
-    expect(Object.keys(TELEMETRY_GATES)).toEqual(['outcome-reach']);
+  it('keeps scheduled sampled gates addressable but outside every blocking lane', () => {
+    expect(Object.keys(TELEMETRY_GATES).sort()).toEqual([
+      'blood', 'endings', 'fire-rate', 'outcome-reach', 'war',
+    ]);
     expect(COMMAND_GATES['outcome-reach']).toBe(gateOutcomeReach);
-    expect(Object.keys(GATES)).not.toContain('outcome-reach');
-    expect(LANES.flatMap(gatesInLane)).not.toContain('outcome-reach');
+    expect(COMMAND_GATES['fire-rate']).toBe(gateFireRateNightly);
     expect(Object.keys(GATES).filter((name) => name in TELEMETRY_GATES)).toEqual([]);
+    expect(LANES).toEqual(['batch']);
   });
 
   it('runs sampled outcome reach only from a scheduled/manual telemetry workflow (#495)', () => {
@@ -185,8 +193,8 @@ describe('the CI gate lanes cover every gate exactly once', () => {
    * take: the tool grows a lane, the workflow does not.
    */
   it('catches a lane the workflow forgot, which is a gate nothing runs', () => {
-    const dropped = workflow.replace(/^(\s*)lane: \[.*\]$/m, '$1lane: [batch]');
-    expect(laneMatrix(dropped)).toEqual(['batch']);
+    const dropped = workflow.replace(/^(\s*)lane: \[.*\]$/m, '$1lane: []');
+    expect(laneMatrix(dropped)).toEqual([]);
     expect(laneMatrix(dropped)).not.toEqual([...LANES].sort());
   });
 
