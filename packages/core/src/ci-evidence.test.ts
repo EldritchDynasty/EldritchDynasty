@@ -34,8 +34,8 @@ function expectTestReference(reference: string): void {
   const path = reference.slice(0, split);
   const expected = reference.slice(split + 1);
   const source = readFileSync(join(root, path), 'utf8');
-  const titles = [...source.matchAll(/\\bit\\(\\s*(['"`])((?:\\\\.|(?!\\1)[\\s\\S])*)\\1/g)]
-    .map((match) => match[2]!.replace(/\\\\(['"`\\\\])/g, '$1'));
+  const titles = [...source.matchAll(/\bit\(\s*(['"`])((?:\\.|(?!\1)[\s\S])*)\1/g)]
+    .map((match) => match[2]!.replace(/\\(['"`\\])/g, '$1'));
   expect(titles, `coveredBy test does not exist: ${reference}`).toContain(expected);
 }
 
