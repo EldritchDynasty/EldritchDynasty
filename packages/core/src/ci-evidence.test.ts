@@ -304,9 +304,32 @@ describe('CI evidence inventory', () => {
     expect(releaseGateNames).toEqual(inventory.telemetryGates.map((entry) => entry.id).sort());
     expect(releaseGatesJob).toContain('npm run gates -- ${{ matrix.gate }}');
     expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
-    expect(nightly).toContain('gate: [fire-rate, war, endings]');
+    const nightlyGateMatrix = /\bgate:\s*\[([^\]]+)\]/.exec(nightly);
+    expect(nightlyGateMatrix, 'nightly gate matrix').not.toBeNull();
+    const nightlyGateNames = nightlyGateMatrix![1]!
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .sort();
+    expect(nightlyGateNames).toEqual(
+      inventory.telemetryGates
+        .filter((entry) => entry.currentTier === 'nightly')
+        .map((entry) => entry.id)
+        .sort(),
+    );
     expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
-    expect(weekly).toContain('npm run gates -- blood');
+
+    const weeklyGateNames = [...`${weekly}\n${outcomeReach}`
+      .matchAll(/npm run gates -- ([a-z0-9-]+)(?:\s|$)/g)]
+      .map((match) => match[1]!)
+      .sort();
+    expect(weeklyGateNames).toEqual(
+      inventory.telemetryGates
+        .filter((entry) => entry.currentTier.startsWith('weekly'))
+        .map((entry) => entry.id)
+        .sort(),
+    );
+
     expect(outcomeReach).toContain('schedule:');
     expect(outcomeReach).toContain('workflow_dispatch:');
     expect(outcomeReach).toContain('npm run gates -- outcome-reach');
