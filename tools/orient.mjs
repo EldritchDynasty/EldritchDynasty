@@ -92,7 +92,7 @@ if (git('fetch', '--quiet', 'origin', '+refs/verdict/*:refs/verdict/*').ok) {
  * SHA across repeated failures. Missing scheduled evidence is never green.
  */
 if (git('fetch', '--quiet', 'origin', '+refs/scheduled/*:refs/scheduled/*').ok) {
-  for (const cadence of ['nightly', 'weekly']) {
+  for (const cadence of ['nightly', 'weekly', 'outcome-reach']) {
     const ref = `refs/scheduled/${cadence}`;
     if (!git('show-ref', '--verify', '--quiet', ref).ok) {
       say(`${cadence}: NO VERDICT — scheduled evidence has not answered yet. Not a pass.`);
