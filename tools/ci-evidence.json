@@ -643,7 +643,7 @@
     },
     {
       "path": "packages/core/src/schooling.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for schooling. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: reaches the 1542 term in most of the batch, so the ratio below is about a completed house; completes several tutor terms a generation, not the zero the epic opened with",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -651,7 +651,7 @@
     },
     {
       "path": "packages/core/src/secrets.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for secrets. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: lets a secret out of the house at all; gets some of them told, rather than leaving them walking forever; turns every told secret into a Discrepancy, and no untold one; does not flood the record with them; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -659,7 +659,7 @@
     },
     {
       "path": "packages/core/src/session-api.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for session api. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: viewOf survives JSON, which is the actual requirement; viewOf takes how much chronicle to hand back; hallOf names the household a person is living in, and nothing for a stranger; branchReport describes every hall, living and extinct alike; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -667,7 +667,7 @@
     },
     {
       "path": "packages/core/src/session.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for session. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: stops the clock on a decision and says so; lets the player answer, and moves on; says what a Long Line did, as values; runs to the Long-Line term with the chronicler holding the pen, and stops there; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -675,7 +675,7 @@
     },
     {
       "path": "packages/core/src/sim.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for sim. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: validates with no errors; has content in every frequency tier; gives a father the same X in every daughter; gives sons of a null-font mother a font of zero, barring mutation; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -683,7 +683,7 @@
     },
     {
       "path": "packages/core/src/table.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for table. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: gets books off the shelf and into people, which nothing did before; buys a place, and nothing else; keeps a house solvent enough to keep placing people; names the books, who could read them, and what a term costs",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -691,7 +691,7 @@
     },
     {
       "path": "packages/core/src/tales.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for tales. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: leaves every run with accounts in circulation; circulates a broad share of what is authored, not the same few; puts contradicting accounts of one event in front of the player at once; names a teller and a bias on every account it shows; …",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -699,7 +699,7 @@
     },
     {
       "path": "packages/core/src/tools/replay-divergence.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for replay divergence. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: reports every choice it counts, and changes nothing by reporting it; plays the campaign it is given: a Short Line stops at its own term; and the replay stream is that player, on a Short Line, with a shape on every visit",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
@@ -707,7 +707,7 @@
     },
     {
       "path": "packages/core/src/world-health.slow.test.ts",
-      "claim": "Century-scale/full-run regression coverage for world health. Exact assertion-level claim remains authoritative in the suite.",
+      "claim": "Played/full-run regression assertions: across eight millennia, sampled every fifty years; and every surviving Long-Line world is coherent at the term",
       "evidenceType": "mixed",
       "currentTier": "merge-blocking",
       "proposedTier": "nightly",
