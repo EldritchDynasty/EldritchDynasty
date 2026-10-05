@@ -220,7 +220,8 @@
         "packages/core/src/gates.test.ts#the blood gate rejects a game where the font carries no power at all",
         "packages/core/src/founding-inheritance.test.ts#builds each seeded child from one maternal and one paternal autosomal allele at every unmutated locus",
         "packages/core/src/allele-draw.test.ts#an outsider pool draws the font locus at its own weights, not the authored ones"
-      ]
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#the blood gate rejects a game where the font carries no power at all"
     },
     {
       "id": "endings",
@@ -233,7 +234,8 @@
         "packages/core/src/ending.test.ts#names every one of the five, exhaustively",
         "packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place",
         "packages/core/src/ending-gate.test.ts#fails when the Forgotten stops being reachable"
-      ]
+      ],
+      "failureWitness": "packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place"
     },
     {
       "id": "fire-rate",
@@ -245,7 +247,8 @@
       "coveredBy": [
         "packages/core/src/gates.test.ts#gate 4 fails a run too short for the content to fire, and says it tried both policies",
         "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it"
-      ]
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#gate 4 fails a run too short for the content to fire, and says it tried both policies"
     },
     {
       "id": "outcome-reach",
@@ -272,7 +275,8 @@
         "packages/core/src/events/reach.test.ts#executes every authored Muster leaders branch through its real arc step and docket",
         "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war",
         "packages/core/src/war-gate.test.ts#fails a batch where a house's later wars do not cost more attrition than its first"
-      ]
+      ],
+      "failureWitness": "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war"
     }
   ],
   "slowSuites": [
