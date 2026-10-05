@@ -119,11 +119,11 @@ jobs:
           CODE_SIGNING_ALLOWED=NO build
 
       - name: install and launch on an iPhone simulator
-        # #409 exposed the real runner envelope: a successful control took
-        # ~3m40s here, while a slower install/container lookup left too little
-        # of the old six-minute budget for simctl launch. This is a runtime
-        # smoke, not a latency gate; give CoreSimulator room to become ready.
-        timeout-minutes: 10
+        # #409 exposed the real runner envelope, and later hosted runs spent
+        # more than 8.5 minutes in first-boot data migration before install.
+        # This is a runtime smoke, not a latency gate; keep the nightly copy
+        # aligned with merge CI's 15-minute CoreSimulator envelope.
+        timeout-minutes: 15
         working-directory: packages/mobile
         run: |
           DEVICES="$(xcrun simctl list devices available -j)"
