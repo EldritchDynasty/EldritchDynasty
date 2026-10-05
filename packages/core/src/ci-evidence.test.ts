@@ -70,7 +70,7 @@ describe('CI evidence inventory', () => {
 
   it('classifies every registered gate exactly once', () => {
     const source = readFileSync(join(root, 'packages/core/src/tools/gates.ts'), 'utf8');
-    const registry = /export const GATES:[^=]+ = \{([\s\S]*?)^\};/m.exec(source);
+    const registry = /export const GATES:[^\n]+ = \{([\s\S]*?)^\};/m.exec(source);
     expect(registry, 'gates.ts GATES registry').not.toBeNull();
 
     const actual = [...registry![1]!.matchAll(/^  (?:'([^']+)'|([A-Za-z0-9_-]+)):\s+/gm)]
