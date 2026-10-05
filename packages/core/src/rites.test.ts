@@ -9,7 +9,7 @@ import {
 } from './events/rites.js';
 import { applyEffect } from './events/effects.js';
 import { applyRecord, commitOutcome, queueChoice, queueMatch, type PendingChoice } from './events/decisions.js';
-import type { SlotFill } from './events/slots.js';
+import { candidatesFor, type SlotFill } from './events/slots.js';
 import { order, tableView, type TableOrder } from './table.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js';
 import { standingOf } from './ascension.js';
@@ -900,6 +900,21 @@ describe('major rite assembly (#218)', () => {
       'the_vessel_rite',
       vessel.id,
     );
+  });
+
+  it('removes a prior Vessel taker from the authored ASCENDANT cast', () => {
+    const ctx = testWorld(content, 8472);
+    const ascendant = readyClimber(ctx);
+    const event = ctx.content.event('the_vessel_rite');
+    if (!event) throw new Error('the authored Vessel rite is missing');
+    const spec = event.slots.ASCENDANT;
+    if (!spec) throw new Error('the authored Vessel ASCENDANT slot is missing');
+
+    expect(candidatesFor(spec, ctx, {}).map((person) => person.id)).toContain(ascendant.id);
+
+    ascendant.rites.push('vessel');
+
+    expect(candidatesFor(spec, ctx, {}).map((person) => person.id)).not.toContain(ascendant.id);
   });
 
   it('photographs the Great Rite from the same slot resolution the docket uses', () => {
