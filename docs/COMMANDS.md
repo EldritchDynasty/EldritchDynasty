@@ -134,14 +134,24 @@ path until the named deterministic/mechanism proof exists. Do not turn the
 inventory into an optimistic path-filter list.
 
 `.github/workflows/nightly-regression.yml` runs daily on `main` (and by
-manual dispatch): all slow-test shards, the `fire-rate`, `war` and
+manual dispatch): **all** slow-test shards, the `fire-rate`, `war` and
 `endings` gate lanes, and the broad iOS build/install/launch smoke.
 `.github/workflows/weekly-statistical.yml` runs the canonical `blood`
-sample weekly (and by manual dispatch). During the #451 migration these
-scheduled runs are **additional evidence**, not permission to skip the same
-merge-blocking simulation evidence. The one cadence split already made is the
-broad iOS runtime smoke: merge CI still runs it when native mobile/toolchain
-inputs change, while nightly exercises it regardless of the day's diffs.
+sample weekly (and by manual dispatch).
+
+The slow-test cadence split is now real rather than aspirational. Full PR and
+merge-group CI still run every fast test plus the slow suites whose checked
+inventory entry says `currentTier: merge-blocking`; nightly runs the complete
+slow suite, including the broad population/cadence regressions moved off the
+merge path. The selected merge-slow set is duration-packed into four shards
+and currently measures about 9.5 minutes per shard before hosted-runner setup.
+A slow suite stays merge-blocking when it contains a deterministic/stateful
+contract without a cheaper witness — runtime alone is never permission to move
+it. The broad iOS runtime smoke follows the same policy shape: merge CI runs it
+when native mobile/toolchain inputs change, while nightly exercises it
+regardless of the day's diffs. Gate cutovers remain separately justified by
+their own inventory rows; a scheduled copy is not by itself permission to stop
+blocking merges.
 
 `.github/workflows/scheduled-regression-watch.yml` turns a scheduled
 non-success on `main` into active project work: it opens or updates one
