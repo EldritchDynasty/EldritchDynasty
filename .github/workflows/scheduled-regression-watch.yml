@@ -2,7 +2,7 @@ name: scheduled regression watch
 
 on:
   workflow_run:
-    workflows: [nightly regression, weekly statistical]
+    workflows: [nightly regression, weekly statistical, sampled outcome reach telemetry]
     types: [completed]
 
 permissions:
@@ -39,6 +39,7 @@ jobs:
           case "$RUN_NAME" in
             "nightly regression") KEY="nightly" ;;
             "weekly statistical") KEY="weekly" ;;
+            "sampled outcome reach telemetry") KEY="outcome-reach" ;;
             *) echo "Unrecognised scheduled workflow: $RUN_NAME"; exit 1 ;;
           esac
 
@@ -143,6 +144,9 @@ jobs:
               ;;
             "weekly statistical")
               TITLE="[scheduled-regression] weekly statistical evidence is red"
+              ;;
+            "sampled outcome reach telemetry")
+              TITLE="[scheduled-regression] sampled outcome reach telemetry is red"
               ;;
             *)
               echo "Unrecognised scheduled workflow: $RUN_NAME"
