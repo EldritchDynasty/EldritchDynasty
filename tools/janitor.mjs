@@ -91,6 +91,8 @@ function act(cmd, ...args) {
  * CLOSED, so a missing tool can never close or retire anything.
  */
 const HAS_GH = onPath('gh');
+let reconciliationFailed = false;
+
 function issueState(n) {
   if (!HAS_GH) return 'UNKNOWN';
   const r = spawnSync('gh', ['issue', 'view', String(n), '--json', 'state', '--jq', '.state'], {
@@ -100,7 +102,27 @@ function issueState(n) {
   return !r.error && r.status === 0 && out ? out : 'UNKNOWN';
 }
 
-let reconciliationFailed = false;
+/** Close one issue with an explicit repository and verify that GitHub accepted it. */
+function closeReconciledIssue(n, comment) {
+  const args = [
+    'issue', 'close', String(n),
+    '--reason', 'completed',
+    '--comment', comment,
+  ];
+  if (REPOSITORY) args.push('--repo', REPOSITORY);
+
+  if (DRY) {
+    log(`would: gh ${args.join(' ')}`);
+    return true;
+  }
+
+  const r = spawnSync('gh', args, { cwd: CWD, encoding: 'utf8' });
+  if (!r.error && r.status === 0) return true;
+
+  reconciliationFailed = true;
+  log(`issue reconciliation: failed to close #${n}: ${(r.stderr ?? '').trim()}`);
+  return false;
+}
 
 /**
  * GitHub's commit -> pulls association survives native merge-queue rebase
@@ -304,14 +326,13 @@ if (RANGE) {
     const source = evidence.get(n);
     const state = issueState(n);
     if (state === 'OPEN') {
-      act(
-        'gh', 'issue', 'close', n, '--reason', 'completed',
-        '--comment', `Landed on \`${DEFAULT_BRANCH}\` via ${source}.`,
-      );
-      say(`- closed #${n} — ${source}`);
+      const comment = `Landed on \`${DEFAULT_BRANCH}\` via ${source}.`;
+      if (closeReconciledIssue(n, comment)) say(`- closed #${n} — ${source}`);
+      else say(`- FAILED to close #${n} — ${source}`);
     } else if (state === 'CLOSED') {
       say(`- #${n} already closed — ${source}`);
     } else {
+      if (HAS_GH) reconciliationFailed = true;
       say(`- #${n} named by ${source}; state UNKNOWN, left untouched`);
     }
   }
