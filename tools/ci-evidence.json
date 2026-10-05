@@ -612,10 +612,10 @@
     {
       "path": "packages/core/src/run-library.slow.test.ts",
       "claim": "Played/full-run regression assertions: keeps paired runs byte-identical outside the narrative memory field",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "played-run byte-identity regression with merge-blocking Library neutrality gate",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/tools/library-gate.ts runs the same canonical paired Short-Line seeds on the merge-blocking batch lane and fails if inherited Library memory changes treasury, Respect, ascension, living blood, acreage, or ending; libraryNeutralityVerdict has a deterministic bad-batch seam. The slow suite remains nightly as the stronger whole-save byte-identity regression outside the narrative-memory fields."
     },
     {
       "path": "packages/core/src/schooling.slow.test.ts",
