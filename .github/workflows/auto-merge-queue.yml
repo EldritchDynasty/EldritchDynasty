@@ -88,8 +88,15 @@ jobs:
             # later retry event.
             required="success"
           else
+            # The NEWEST "CI required" run decides, and only once it has
+            # finished. Sorting by completed_at put a still-running check
+            # (completed_at: null) first, so a draft-tier success on the same
+            # head outranked the full-tier run that marking the PR ready had
+            # just started (#493). A pending required check may also not exist
+            # yet; the enqueue step below treats GitHub's "is expected" refusal
+            # on this event as not-yet-eligible for that reason.
             required="$(
-              gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.completed_at) | last | .conclusion // ""'
+              gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last | if . == null then "" elif .status == "completed" then (.conclusion // "") else "pending" end'
             )"
           fi
 
@@ -136,13 +143,42 @@ jobs:
           # reject a valid App actor with "Enqueuer is not authorized to
           # merge". Use the native GraphQL queue mutation instead.
           response="$(mktemp)"
-          set +e
-          gh api graphql \
-            -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
-            -F pullRequestId="$PR_NODE_ID" \
-            -F expectedHeadOid="$HEAD_SHA" >"$response" 2>&1
-          status=$?
-          set -e
+          enqueue() {
+            set +e
+            gh api graphql \
+              -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
+              -F pullRequestId="$PR_NODE_ID" \
+              -F expectedHeadOid="$HEAD_SHA" >"$response" 2>&1
+            status=$?
+            set -e
+          }
+          required_check_pending() {
+            grep -q '"UNPROCESSABLE"' "$response" &&
+              grep -Eq 'Required status check .*CI required.* is expected' "$response"
+          }
+
+          # GitHub refuses admission while the required check has not reported
+          # on this exact head (#493). On a pull_request event that is the
+          # normal case, not a failure: the full CI run is still going, and its
+          # workflow_run handoff admits the PR when it finishes. After that
+          # handoff, the same refusal can only be the queue's own index lagging
+          # the completed check, so retry briefly with the same expected head
+          # and then fail closed.
+          enqueue
+          if [[ "$status" -ne 0 ]] && required_check_pending; then
+            if [[ "$GITHUB_EVENT_NAME" != "workflow_run" ]]; then
+              echo "CI required has not reported on $HEAD_SHA yet; the check workflow's handoff will admit PR #$PR_NUMBER."
+              exit 0
+            fi
+            for delay in 5 10 20; do
+              echo "Queue has not seen CI required on $HEAD_SHA yet; retrying in ${delay}s."
+              sleep "$delay"
+              enqueue
+              if [[ "$status" -eq 0 ]] || ! required_check_pending; then
+                break
+              fi
+            done
+          fi
 
           if [[ "$status" -ne 0 ]]; then
             # Multiple eligible workflow events can race. Treat an already
