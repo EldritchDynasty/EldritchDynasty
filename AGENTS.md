@@ -354,18 +354,13 @@ way to play — the chronicler picked a name, and the chronicler is not you.
 Grouped by the kind of failure they catch rather than by module. How many there
 are, and what a run of them costs, is in the command block above.
 
-- **`*.slow.test.ts` plays whole games** — the suites that assert the shape of
-  a healthy run. `npm run test:fast` skips them; what it costs is stated once,
-  in the command block, and measured by `npm run cost`. That is
-  the fix-and-rerun loop, and `lanes.test.ts` keeps it one by failing the build
-  when a suite that plays a millennium lands in it.
-  `npm run check` still runs both local lanes. Hosted merge CI instead reads
-  `tools/ci-evidence.json`: slow suites classified `merge-blocking` run on
-  every full PR/merge-group, while suites classified `nightly` run in the
-  daily regression workflow. Nightly is not a weaker copy: it runs the complete
-  slow suite. `npm run land` defaults to typecheck + validate + `test:fast`;
-  `--full-preflight` requests the complete local CI-derived set, but the
-  authoritative landing proof is always the native merge-group `CI required`.
+- **`*.slow.test.ts` plays whole games.** `test:fast` skips them;
+  `lanes.test.ts` keeps millennium batches out of that loop. `npm run check`
+  runs all tests locally. Hosted CI reads `tools/ci-evidence.json`: checked
+  `merge-blocking` suites run on full PR/merge-group CI; `nightly` suites
+  run in the complete daily slow suite. `npm run land` defaults to typecheck,
+  validate and `test:fast`; `--full-preflight` runs the complete local set.
+  The native merge-group `CI required` remains authoritative.
 - **A suite can play whole games with no `advance` in it.** `gates.test.ts` was
   41% of the fast lane; the runs happen inside the gates it calls. Driving a
   batch through `tools/` is declared in `lanes.test.ts` for exactly that reason.
