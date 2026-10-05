@@ -506,10 +506,10 @@
     {
       "path": "packages/core/src/ledger.slow.test.ts",
       "claim": "Played/full-run regression assertions: starts the player knowing exactly one clause; has nine clauses and never reveals one twice; recovers most of the contract over a run; does not hand every run the whole contract; …",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "sampled Ledger/relationship regression with merge-blocking rule coverage",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/ledger.test.ts pins the opening/nine-clause content contract and every revealClause branch (record-keeper requirement, naming, one reveal per Age, per-Age assignment and order). packages/core/src/relationships.test.ts pins grudge creation, decay, pruning and inheritance. The slow suite remains nightly evidence for realised clause recovery/spread, Chronicle presentation and played-world feud longevity."
     },
     {
       "path": "packages/core/src/lifespan.slow.test.ts",
