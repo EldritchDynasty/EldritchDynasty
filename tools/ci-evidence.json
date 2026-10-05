@@ -111,7 +111,7 @@
     },
     {
       "id": "war",
-      "claim": "Muster/war mechanism and balance evidence; assertion families are mixed and must be decomposed.",
+      "claim": "The war lane combines two sampled balance verdicts (settlement Respect and repeated-war attrition escalation) with two telemetry-only divergence findings; Muster mechanics themselves are covered by fast deterministic witnesses.",
       "evidenceType": "mixed lane: two asserted statistical verdicts + two telemetry-only findings; deterministic mechanism covered fast",
       "currentMeasuredCost": "~17.6m (17m32.3s; PR #490 hosted run 37256335551)",
       "currentTier": "merge-blocking",
