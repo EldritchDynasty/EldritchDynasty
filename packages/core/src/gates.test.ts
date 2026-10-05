@@ -336,7 +336,9 @@ describe('the gates fail when they should', () => {
       }
     });
 
-    const { ok, lines } = gateBlood(bundle, { seeds: [4000, 4013], years: 5, workers: 1 });
+    // Two workers make this a rejection test of the optimized path itself,
+    // not only of the serial diagnostic fallback.
+    const { ok, lines } = gateBlood(bundle, { seeds: [4000, 4013], years: 5, workers: 2 });
     expect(ok, lines.join('\n')).toBe(false);
     expect(lines.join('\n')).toMatch(/concentrating marriage policy/);
   });
