@@ -136,25 +136,43 @@ jobs:
           # reject a valid App actor with "Enqueuer is not authorized to
           # merge". Use the native GraphQL queue mutation instead.
           response="$(mktemp)"
-          set +e
-          gh api graphql \
-            -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
-            -F pullRequestId="$PR_NODE_ID" \
-            -F expectedHeadOid="$HEAD_SHA" >"$response" 2>&1
-          status=$?
-          set -e
+          max_attempts=6
+          for attempt in $(seq 1 "$max_attempts"); do
+            set +e
+            gh api graphql \
+              -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
+              -F pullRequestId="$PR_NODE_ID" \
+              -F expectedHeadOid="$HEAD_SHA" >"$response" 2>&1
+            status=$?
+            set -e
 
-          if [[ "$status" -ne 0 ]]; then
+            if [[ "$status" -eq 0 ]]; then
+              break
+            fi
+
             # Multiple eligible workflow events can race. Treat an already
             # queued PR as the same idempotent success as the old REST path.
             if grep -Eqi 'already (in|on) (the )?merge queue|already in the queue' "$response"; then
               echo "PR #$PR_NUMBER is already in the native merge queue."
               exit 0
             fi
+
+            # The workflow_run event can arrive before GitHub's required-check
+            # index is visible to enqueuePullRequest. That is eventual
+            # consistency, not a failed check: retry this one rejection for a
+            # bounded period, and fail closed on every other GraphQL error.
+            if grep -Fqi 'Required status check "CI required" is expected' "$response" \
+              && [[ "$attempt" -lt "$max_attempts" ]]; then
+              delay=$((attempt * 2))
+              echo "CI required is green but not visible to merge-queue admission yet; attempt $attempt/$max_attempts, retrying in ${delay}s."
+              sleep "$delay"
+              continue
+            fi
+
             echo "::error::GitHub GraphQL merge-queue request failed for PR #$PR_NUMBER:"
             cat "$response"
             exit 1
-          fi
+          done
 
           entry_id="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.id // empty' "$response")"
           state="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.state // "queued"' "$response")"
