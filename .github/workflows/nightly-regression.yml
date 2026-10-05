@@ -51,13 +51,13 @@ jobs:
           path: nightly-slow-${{ matrix.shard }}.json
 
   gates:
-    name: nightly gates (${{ matrix.lane }})
+    name: nightly gates (${{ matrix.gate }})
     needs: main-only
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        lane: [fire-rate, war, endings]
+        gate: [fire-rate, war, endings]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,15 +68,15 @@ jobs:
       - name: run nightly gate lane
         run: |
           started=$(date +%s)
-          npm run gates -- --lane ${{ matrix.lane }} --timings-json nightly-gate-${{ matrix.lane }}.json
+          npm run gates -- ${{ matrix.gate }} --timings-json nightly-gate-${{ matrix.gate }}.json
           elapsed=$(( $(date +%s) - started ))
-          node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
+          node tools/gate-duration.mjs --check ${{ matrix.gate }} "$elapsed"
       - name: retain structured gate timings
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nightly-gate-${{ matrix.lane }}
-          path: nightly-gate-${{ matrix.lane }}.json
+          name: nightly-gate-${{ matrix.gate }}
+          path: nightly-gate-${{ matrix.gate }}.json
 
   ios:
     name: nightly iOS simulator build
