@@ -71,8 +71,15 @@ jobs:
           # make an older completion execute after a newer one, so never let it
           # move the cadence ref or persistent issue backwards.
           if at_least_as_new "$PREVIOUS_RUN_NUMBER" "$PREVIOUS_RUN_ATTEMPT"; then
-            echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is superseded by the recorded verdict."
-            echo "applied=false" >> "$GITHUB_OUTPUT"
+            if [ "$PREVIOUS_RUN_NUMBER" = "$RUN_NUMBER" ] && [ "${PREVIOUS_RUN_ATTEMPT:-1}" = "$RUN_ATTEMPT" ]; then
+              # The ref write may have succeeded while the issue mutation failed.
+              # Let a rerun repair the issue without rewriting the same ref.
+              echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is already recorded; repairing project surfacing."
+              echo "applied=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is superseded by the recorded verdict."
+              echo "applied=false" >> "$GITHUB_OUTPUT"
+            fi
             exit 0
           fi
 
@@ -112,8 +119,13 @@ jobs:
             CURRENT_RUN_ATTEMPT="$(git log -1 --format=%B "$REF" | sed -n 's/^run-attempt: //p' | head -n 1)"
           fi
           if at_least_as_new "$CURRENT_RUN_NUMBER" "$CURRENT_RUN_ATTEMPT"; then
-            echo "A newer scheduled $KEY verdict won the ref lease; leaving it authoritative."
-            echo "applied=false" >> "$GITHUB_OUTPUT"
+            if [ "$CURRENT_RUN_NUMBER" = "$RUN_NUMBER" ] && [ "${CURRENT_RUN_ATTEMPT:-1}" = "$RUN_ATTEMPT" ]; then
+              echo "This scheduled $KEY verdict won the ref lease in another reporter; repairing project surfacing."
+              echo "applied=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "A newer scheduled $KEY verdict won the ref lease; leaving it authoritative."
+              echo "applied=false" >> "$GITHUB_OUTPUT"
+            fi
             exit 0
           fi
           echo "Scheduled verdict ref changed without a newer recorded run; refusing to overwrite it." >&2
@@ -174,7 +186,15 @@ jobs:
             gh issue edit "$NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
               --add-label "priority: P0"
-            gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
+            if gh issue view "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json comments \
+              --jq '.comments[].body' \
+              | grep -Fq "$RUN_URL"; then
+              echo "Run $RUN_URL is already recorded on issue #$NUMBER."
+            else
+              gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
+            fi
           else
             gh issue create \
               --repo "$GITHUB_REPOSITORY" \
