@@ -536,10 +536,10 @@
     {
       "path": "packages/core/src/motifs.slow.test.ts",
       "claim": "Played/full-run regression assertions: shows every reading, in a real share of runs; darkens in order, in every run that sees more than one of them; closes at the term, and never before the page it reads exists",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "sampled motif reach/cadence regression with merge-blocking structural ordering",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/motifs.test.ts proves the three gallery readings occupy ordered campaign thirds and the frame close is structurally tied to the third Chronicle page; frame.test.ts separately proves chronicled reads require that named page. The 120-run slow suite remains nightly evidence that all readings actually occur at useful rates and arrive in order in played worlds."
     },
     {
       "path": "packages/core/src/muster.slow.test.ts",
