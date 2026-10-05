@@ -337,6 +337,7 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('issues: write');
     expect(watcher).toContain('BAD_SHA: ${{ github.event.workflow_run.head_sha }}');
     expect(watcher).toContain('RUN_URL: ${{ github.event.workflow_run.html_url }}');
+    expect(watcher).toContain('--search "$TITLE in:title"');
     expect(watcher).toContain('gh issue create');
     expect(watcher).toContain('--label "priority: P0"');
     expect(watcher).toContain('--add-label "priority: P0"');
