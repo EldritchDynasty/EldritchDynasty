@@ -107,7 +107,7 @@
       "currentMeasuredCost": "~21m",
       "currentTier": "merge-blocking",
       "proposedTier": "split-by-gate",
-      "moveBlockedBy": "runFireRateGate itself is statistical occurrence confidence and can run nightly: events/reach.test.ts keeps deterministic authored outcome execution/rejection on the fast lane. vocabulary-reach is a separate deterministic structural gate and must move to batch, not nightly. #495/PR #496 owns outcome-reach's removal to scheduled telemetry and the shared gates.ts/gates.test.ts registry; after it lands, split the lane atomically and observe an intentional nightly fire-rate rejection."
+      "moveBlockedBy": "runFireRateGate itself is statistical occurrence confidence and can run nightly. vocabulary-reach cannot simply move to batch as-is: its FAIL verdict depends only on static declared-vs-authored Effect kinds, but the current function still replays the shared 800-run corpus solely to print non-failing authored-but-unreached diagnostics. Split that structural verdict into a cheap merge-blocking witness and preserve the reached diagnostic with scheduled occurrence telemetry. #495/PR #496 owns outcome-reach's removal and the shared gates.ts/gates.test.ts registry; after it lands, make this split atomically and observe an intentional nightly fire-rate rejection."
     },
     {
       "id": "war",
@@ -228,10 +228,12 @@
       "id": "vocabulary-reach",
       "lane": "fire-rate",
       "source": "packages/core/src/tools/gates.ts#gateVocabularyReach",
-      "claim": "Every declared effect kind is authored or explicitly pinned as debt; paid-off or newly unauthored vocabulary fails rather than drifting silently.",
-      "evidenceType": "deterministic structural invariant",
+      "claim": "Every declared Effect kind is authored or explicitly pinned as debt; sampled 'authored but never reached' information is diagnostic only and does not affect the verdict.",
+      "evidenceType": "deterministic structural verdict + sampled non-failing diagnostic",
       "currentTier": "merge-blocking",
-      "proposedTier": "merge-blocking"
+      "proposedTier": "split: structural merge-blocking + reached diagnostic scheduled",
+      "fasterEvidence": "The gate's failure decision is fully determined by vocabulary().effects versus authored outcome effect kinds and the pinned OWED list. playGateBatch is consulted only to populate the non-failing 'authored but never reached' line. Preserve that diagnostic in scheduled occurrence telemetry, but keep the static authorship/debt verdict merge-blocking without an 800-run replay.",
+      "moveBlockedBy": "#495/PR #496 currently owns gates.ts/gates.test.ts. After it lands, factor the static vocabulary authorship/debt verdict away from the sampled reach diagnostic before removing the fire-rate lane from merge CI; never move the existing 800-run implementation wholesale into batch."
     },
     {
       "id": "endings",
