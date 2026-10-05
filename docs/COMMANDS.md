@@ -125,6 +125,31 @@ behind a failing test and cost another whole run to find; each job now answers
 independently, and every matrix sets `fail-fast: false` so a shard cannot
 cancel its siblings and rebuild that failure mode one level down.
 
+### Scheduled evidence is CI, not a dashboard
+
+`tools/ci-evidence.json` is the checked inventory for #451. Its
+`currentTier` says what the repository actually enforces; a `proposedTier`
+is only a candidate, and any `moveBlockedBy` keeps that evidence on the merge
+path until the named deterministic/mechanism proof exists. Do not turn the
+inventory into an optimistic path-filter list.
+
+`.github/workflows/nightly-regression.yml` runs daily on `main` (and by
+manual dispatch): all slow-test shards, the `fire-rate`, `war` and
+`endings` gate lanes, and the broad iOS build/install/launch smoke.
+`.github/workflows/weekly-statistical.yml` runs the canonical `blood`
+sample weekly (and by manual dispatch). During the #451 migration these
+scheduled runs are **additional evidence**, not permission to skip the same
+merge-blocking simulation evidence. The one cadence split already made is the
+broad iOS runtime smoke: merge CI still runs it when native mobile/toolchain
+inputs change, while nightly exercises it regardless of the day's diffs.
+
+`.github/workflows/scheduled-regression-watch.yml` turns a scheduled
+non-success on `main` into active project work: it opens or updates one
+`priority: P0` issue per scheduled workflow, records the failing SHA and run
+URL, repairs the priority label if it drifted, and closes the issue when that
+workflow is green again. A missing, cancelled or red scheduled run is never
+substitute green evidence.
+
 **Why the tier exists**, measured over runs 169-198: `codex/issue-61-channel`
 started three full builds in **ten seconds** and two were cancelled on arrival;
 `codex/issue-133-stage5` started eight in seventeen minutes and seven were
