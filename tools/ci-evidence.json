@@ -424,10 +424,10 @@
     {
       "path": "packages/core/src/echo.slow.test.ts",
       "claim": "Played/full-run regression assertions: prints what it measured",
-      "evidenceType": "mixed",
-      "currentTier": "merge-blocking",
+      "evidenceType": "statistical echo-cadence regression with merge-blocking chain/mechanism coverage",
+      "currentTier": "nightly",
       "proposedTier": "nightly",
-      "moveBlockedBy": "Assertion-level review required before this suite can leave merge-blocking CI; deterministic correctness assertions need a fast witness or must remain blocking."
+      "fasterEvidence": "packages/core/src/echo-chains.test.ts deterministically pins grudge and secret echo chains, spacing/deduplication, bill ownership, backlinks, and the frame-based tally. The slow suite is a 20-seed short/long campaign measurement of reader-facing echo frequency and repetition ceilings."
     },
     {
       "path": "packages/core/src/economy.slow.test.ts",
