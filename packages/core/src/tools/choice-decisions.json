@@ -93,6 +93,12 @@
     },
     {
       "kind": "flag",
+      "key": "paid_bracc_whole",
+      "disposition": "read",
+      "reason": "The paid-whole outcome explicitly promises that Bracc offers this house a quarter-point better rate for the next 140 years. Preserve the flag for the later trade/credit reader needed to make that authored long-term consequence real."
+    },
+    {
+      "kind": "flag",
       "key": "regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
@@ -204,6 +210,12 @@
       "key": "knows_an_early_waking",
       "disposition": "read",
       "reason": "A recorded waking at nine directly concerns the blood and the setting's magic rules. Reserve it for a later generational callback so the family's knowledge of an unusually early waking changes how a later sign is interpreted."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_how_the_gate_month_went",
+      "disposition": "delete",
+      "reason": "This is granted only by the Record option. The gate month already persists through large Treasury/Respect/household-relationship effects, rumour, Chronicle, deed claim, and discrepancy, so the extra knowledge key duplicates the same event history."
     },
     {
       "kind": "knowledge",
@@ -399,6 +411,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_seal_is_gone",
+      "disposition": "read",
+      "reason": "The quiet-search outcome says the house conducts its affairs for four years without the instrument its standing rests on and only two people know it. That is a concrete ongoing secret with a natural regalia/succession reader, not redundant Record bookkeeping."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_second_is_uncertain",
       "disposition": "self_expression",
       "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
@@ -453,6 +471,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_three_halls_combined",
+      "disposition": "delete",
+      "reason": "This is granted only by the Record option. The cadet coalition already leaves branch, Respect, relationship, treasury, rumour, Chronicle, and deed-claim consequences; a second Record-only simulation key would duplicate that durable state."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ward_went_home",
       "disposition": "delete",
       "reason": "The Record branch already preserves the ward's return in Chronicle text and a deed claim; the separate knowledge write is unnecessary without a real authored callback."
@@ -501,6 +525,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_the_mill_cost",
+      "disposition": "delete",
+      "reason": "This is Record-only knowledge attached to the Chronicle choice after the Bracc account. The underlying outcome already changes Treasury, Respect, and household relationship, and the Chronicle/deed/discrepancy preserve the mill story without a second simulation key."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_the_office_costs",
       "disposition": "delete",
       "reason": "The chosen Wardenship outcome always writes this knowledge together with the_house_held_the_wardenship. The flag is sufficient to drive any later institutional callback, so keeping a second perfectly co-occurring memory would duplicate state."
@@ -516,6 +546,12 @@
       "key": "knows_what_they_were_reading_for",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve what the marked margins showed without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_where_the_pit_went",
+      "disposition": "delete",
+      "reason": "This is Record-only memory. The plague choice already changes Respect and household relationship and may seed the low-meadow rumour, while the Chronicle/deed/discrepancy preserve where the pit went."
     },
     {
       "kind": "knowledge",
