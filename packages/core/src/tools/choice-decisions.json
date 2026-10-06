@@ -315,6 +315,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_letter_that_was_never_answered",
+      "disposition": "read",
+      "reason": "Letting the matter close otherwise has no lasting effect, and the outcome explicitly promises a 1290 discovery of a Sarrow letter addressed to the house. Preserve the flag for that concrete later letter/record callback."
+    },
+    {
+      "kind": "flag",
       "key": "the_man_who_drank_standing",
       "disposition": "read",
       "reason": "The outcome explicitly promises that somebody repeats the standing insult at exactly the wrong assize thirty years later. Preserve the flag for that authored future callback."
