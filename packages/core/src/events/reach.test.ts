@@ -5486,3 +5486,44 @@ describe('authored frame narration outcome witnesses', () => {
   });
 });
 
+
+
+describe('temporary #442 remaining outcome inventory', () => {
+  it('prints the exact remaining deterministic outcome residue', () => {
+    const manifest = JSON.parse(
+      readFileSync(OUTCOME_WITNESS_MANIFEST, 'utf8'),
+    ) as { outcomes: string[] };
+    const committed = new Set(manifest.outcomes);
+    const remaining = [...declaredOutcomeKeys].filter((key) => !committed.has(key)).sort();
+
+    const rows = remaining.map((key) => {
+      const [eventId, choiceId, outcomeId] = key.split('|');
+      const event = content.event(eventId!);
+      if (!event) return { key, missingEvent: true };
+      if (event.interaction.kind === 'narration') {
+        return {
+          key, event: eventId, outcome: outcomeId, tier: event.tier,
+          arc: event.arc !== undefined, record: event.record !== undefined,
+          ages: event.ages !== undefined, kind: 'narration',
+        };
+      }
+      const choice = event.interaction.choices.find((candidate) => String(candidate.id) === choiceId);
+      const check = choice?.check
+        ? event.checks.find((candidate) => candidate.id === choice.check)
+        : undefined;
+      const decider = typeof event.interaction.decidedBy === 'string'
+        ? event.interaction.decidedBy
+        : Object.keys(event.interaction.decidedBy)[0] ?? 'object';
+      return {
+        key, event: eventId, choice: choiceId, outcome: outcomeId, tier: event.tier,
+        arc: event.arc !== undefined, record: event.record !== undefined,
+        ages: event.ages !== undefined, decider,
+        requires: choice?.requires.length ?? -1,
+        check: choice?.check !== undefined,
+        variance: check?.variance ?? null,
+      };
+    });
+
+    throw new Error('WITNESS_RESIDUE ' + JSON.stringify({ count: remaining.length, rows }));
+  });
+});
