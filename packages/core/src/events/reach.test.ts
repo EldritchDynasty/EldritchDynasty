@@ -6,7 +6,7 @@ import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } 
 import { makeRng, type Rng } from '../rng.js';
 import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
-import { declaredOutcomes, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
+import { declaredOutcomes, executeFrameOutcomeWitness, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
@@ -4772,6 +4772,117 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
           );
           if (result.key) witnessed.push(result.key);
         }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+describe('authored frame narration outcome witnesses', () => {
+  function satisfyFrameReads(
+    ctx: ReturnType<(typeof TEST_FAMILIES)[number]['build']>,
+    event: (typeof content.events)[number],
+  ): void {
+    let synthetic = 0;
+    for (const read of event.reads) {
+      if ('discrepancy' in read) {
+        ctx.world.discrepancies.set(read.discrepancy, {
+          severity: 'major',
+          provableBy: [],
+          state: read.state ?? 'open',
+        });
+        continue;
+      }
+      if ('anyDiscrepancy' in read) {
+        for (let i = 0; i < read.anyDiscrepancy.atLeast; i++) {
+          ctx.world.discrepancies.set(
+            \`witness_frame_\${event.id}_\${synthetic++}\`,
+            {
+              severity: 'major',
+              provableBy: [],
+              state: read.anyDiscrepancy.state ?? 'open',
+            },
+          );
+        }
+        continue;
+      }
+      if ('recorded' in read) {
+        for (let i = 0; i < read.recorded.atLeast; i++) {
+          ctx.world.decisionLog.push({
+            kind: 'record',
+            year: ctx.world.year,
+            event: event.id,
+            option: 'record',
+          });
+        }
+        continue;
+      }
+      if ('omitted' in read) {
+        for (let i = 0; i < read.omitted.atLeast; i++) {
+          ctx.world.decisionLog.push({
+            kind: 'record',
+            year: ctx.world.year,
+            event: event.id,
+            option: 'omit',
+          });
+        }
+        continue;
+      }
+      if ('chronicled' in read) {
+        ctx.world.chronicle.push({
+          year: ctx.world.year,
+          weight: 'page',
+          text: 'A deterministic witness page.',
+          eventId: read.chronicled,
+          named: true,
+          record: 'record',
+        });
+      }
+    }
+  }
+
+  it('admits every authored frame narration through framePool and commits every named outcome', () => {
+    const family = TEST_FAMILIES.find((candidate) => candidate.id === 'storybook_house');
+    if (!family) throw new Error('storybook TEST_FAMILY fixture is missing');
+
+    const events = content.events.filter((event) => (
+      event.tier === 'frame' && event.interaction.kind === 'narration'
+    ));
+    expect(events.length).toBeGreaterThan(0);
+
+    const declared = events.flatMap((event) => (
+      event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) =>
+            outcomeKey(String(event.id), undefined, String(outcome.id)))
+        : []
+    ));
+    const witnessed: string[] = [];
+
+    for (const [eventIndex, event] of events.entries()) {
+      if (event.interaction.kind !== 'narration') continue;
+
+      for (const [outcomeIndex, outcome] of event.interaction.outcomes.entries()) {
+        const ctx = family.build(content);
+        satisfyFrameReads(ctx, event);
+
+        const result = executeFrameOutcomeWitness(ctx, event, {
+          expectedOutcomeId: outcome.id,
+          rng: makeRng(9600 + eventIndex * 20 + outcomeIndex),
+        });
+
+        expect(
+          result.ok,
+          String(event.id) + '/' + String(outcome.id) + ': ' + (result.reason ?? 'no reason'),
+        ).toBe(true);
+        expect(result.key).toBe(
+          outcomeKey(String(event.id), undefined, String(outcome.id)),
+        );
+        expect(ctx.world.frame.entries.at(-1)).toMatchObject({
+          eventId: event.id,
+          outcomeId: outcome.id,
+        });
+        if (result.key) witnessed.push(result.key);
       }
     }
 
