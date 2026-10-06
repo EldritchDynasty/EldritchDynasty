@@ -49,6 +49,7 @@ import { phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { vocabularyAuthorship } from './vocabulary-authorship.js';
+import type { BlockingGateId } from './gate-registry.js';
 
 // Not `1000 + i * 7`: under the corrected blood count (issue #42), most of
 // that formula's terms end their line before 2042, so the clause gate was
@@ -1178,7 +1179,7 @@ export function gateFireRateNightly(
  * adding it is a deliberate edit in two places rather than a thing that
  * happens by accident.
  */
-export const GATES: Record<string, (source?: Source) => GateResult> = {
+export const GATES: Record<BlockingGateId, (source?: Source) => GateResult> = {
   clauses: gateClauses,
   'library-neutrality': gateLibraryNeutrality,
   'outcome-reach-blocking': gateUnwitnessedOutcomeReach,

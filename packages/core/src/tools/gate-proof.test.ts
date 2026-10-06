@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { GATES } from './gates.js';
+import { BLOCKING_GATE_IDS } from './gate-registry.js';
 import {
   GATE_FINGERPRINT_ALGORITHM_VERSION,
   GATE_FINGERPRINT_ENTRIES,
@@ -31,7 +31,7 @@ const fixtureRepo = (): string => {
   writeFileSync(join(root, 'tsconfig.base.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', module: 'ESNext' } }));
   writeFileSync(join(root, 'package-lock.json'), '{"lockfileVersion":3}\n');
   writeFileSync(join(root, 'packages/core/src/dep.ts'), 'export const value = 1;\n');
-  writeFileSync(join(root, 'packages/core/src/gate.ts'), "import { value } from './dep.js'; export const gate = () => value;\n");
+  writeFileSync(join(root, 'packages/core/src/gate.ts'), "import { value } from './dep.js'; export const gate = () => value; export const sameGate = () => value;\n");
   writeFileSync(join(root, 'packages/content/events/a.yaml'), 'id: a\n');
   writeFileSync(join(root, 'packages/client/src/ui.ts'), 'export const ui = 1;\n');
   writeFileSync(join(root, 'README.md'), '# fixture\n');
@@ -47,7 +47,19 @@ const fingerprint = (root: string) => fingerprintGateDependencies({
 
 describe('#441 gate dependency fingerprints', () => {
   it('keeps the fingerprint entry registry in lockstep with the blocking gate registry', () => {
-    expect(Object.keys(GATE_FINGERPRINT_ENTRIES).sort()).toEqual(Object.keys(GATES).sort());
+    expect(Object.keys(GATE_FINGERPRINT_ENTRIES).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
+  });
+
+  it('fingerprints the selected gate entry itself', async () => {
+    const root = fixtureRepo();
+    const before = await fingerprint(root);
+    const changedEntry = await fingerprintGateDependencies({
+      repoRoot: root,
+      gate: 'fixture',
+      entry: { module: 'packages/core/src/gate.ts', exportName: 'sameGate' },
+      toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
+    });
+    expect(changedEntry.fingerprint).not.toBe(before.fingerprint);
   });
 
   it('derives code transitively, includes all content, and ignores unrelated docs/UI', async () => {
@@ -113,6 +125,7 @@ const manifest = (): GateDependencyManifest => ({
   formatVersion: GATE_PROOF_FORMAT_VERSION,
   algorithmVersion: GATE_FINGERPRINT_ALGORITHM_VERSION,
   gate: 'land',
+  entry: { module: 'packages/core/src/tools/land-gate.ts', exportName: 'gateLand' },
   invocation: ['land'],
   toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
   inputs: [],
