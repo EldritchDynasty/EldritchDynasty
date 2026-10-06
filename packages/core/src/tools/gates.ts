@@ -46,6 +46,7 @@ import type { Rung } from '@ed/schema';
 import { phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { vocabularyAuthorship } from './vocabulary-authorship.js';
 
 // Not `1000 + i * 7`: under the corrected blood count (issue #42), most of
 // that formula's terms end their line before 2042, so the clause gate was
@@ -1015,7 +1016,7 @@ export function gateLadderScales(
  * proper power calculation, so convicting on it here would be a second, worse
  * instrument for a question that already has a good one.
  */
-export function gateVocabularyReach(
+export function gateVocabularyReachTelemetry(
   source: Source = loadContent(),
   opts: { runs?: number; years?: number } = {},
 ): GateResult {
@@ -1107,6 +1108,33 @@ export function gateVocabularyReach(
 }
 
 /**
+ * The merge-blocking vocabulary verdict is entirely structural. The sampled
+ * reached/unreached diagnostic remains useful, but belongs beside nightly
+ * fire-rate rather than on the merge path.
+ */
+export function gateVocabularyReach(
+  source: Source = loadContent(),
+  _opts: { runs?: number; years?: number } = {},
+): GateResult {
+  const { ok, lines } = vocabularyAuthorship(source);
+  return { ok, lines };
+}
+
+/**
+ * Scheduled fire-rate evidence carries sampled vocabulary reach in the same
+ * process. Both read the same memoized batch, so cadence separation does not
+ * double the 800-run simulation cost.
+ */
+export function gateFireRateNightly(
+  source: Source = loadContent(),
+  opts: FireRateGateOptions = {},
+): GateResult {
+  const fire = gateFireRate(source, opts);
+  const reach = gateVocabularyReachTelemetry(source, { runs: opts.runs, years: opts.years });
+  return { ok: fire.ok && reach.ok, lines: [...fire.lines, ...reach.lines] };
+}
+
+/**
  * ── TWO GATES THAT EXISTED AND CI RAN NEITHER ─────────────────────────────
  *
  * `gateEndings` (issue #42, "the run must be losable") and `gateBearing`
@@ -1150,36 +1178,12 @@ export function gateVocabularyReach(
  */
 export const GATES: Record<string, (source?: Source) => GateResult> = {
   clauses: gateClauses,
-  // Issue #41. Same paired seeds, one Match comparator apart: the shipped
-  // marriage mechanism must still move its own headline number at the full
-  // campaign term. `bloodVerdict` owns the distributional judgement.
-  blood: gateBlood,
-  // #70: inherited narrative may move the book but no material headline.
   'library-neutrality': gateLibraryNeutrality,
-  // #66 is independent and comparatively cheap. Run it before the shared
-  // fire-rate corpus so a Short-Line regression reports in minutes rather
-  // than after the batch lane's most expensive measurement.
   'short-line': gateShortLine,
-  'fire-rate': gateFireRate,
-  // Issue #41, and issue #61 Stage A. The only gate here that PLAYS — three
-  // columns, `climb`/`spare` one verb apart and `scion` a different one verb
-  // from `spare` — because the question it asks is about the player and
-  // `runYears` is the chronicler. It lives in `ladder-gate.ts` with its own
-  // sweep entry point (`npm run gate:ladder`), and is registered here because
-  // a gate outside this table is a gate CI does not run.
   ladder: gateLadder,
   'ladder-scales': gateLadderScales,
-  // Issue #99 (Muster stage 4). Plays two columns the same shape `gateLadder`
-  // does — one policy answers every muster demand, the chronicler answers
-  // everything else. Claim 2 ("it costs") is measured and printed rather than
-  // asserted; see `war-gate.ts`'s own header for the finding behind that, and
-  // why it does not belong on this table as a red gate the way `gateBearing`
-  // stays off it entirely (`gateWar` passes the shipped game on the two
-  // claims it does assert, so it belongs here — `gateBearing` fails outright).
-  war: gateWar,
   purposes: gatePurposes,
   'vocabulary-reach': gateVocabularyReach,
-  endings: gateEndings,
   bottleneck: gateFoundingRecovery,
   land: gateLand,
   'slot-fillability': gateSlotFillability,
@@ -1196,7 +1200,13 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  * than a comment somebody can accidentally undo.
  */
 export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = {
+  // Scheduled/release commands: failures still fail those workflows, but the
+  // merge path carries deterministic mechanism witnesses instead.
+  blood: gateBlood,
+  endings: gateEndings,
+  'fire-rate': gateFireRateNightly,
   'outcome-reach': gateOutcomeReach,
+  war: gateWar,
 };
 
 /**
@@ -1206,35 +1216,17 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
  * the structural partition: which gates must share a process, and which
  * expensive independent gates can run in parallel.
  *
- * #333 measured a green runner gate-by-gate and found two independent costs
- * dominating the default lane: blood, and the shared fire-rate corpus.
- * fire-rate and vocabulary-reach MUST remain together: vocabulary-reach
- * consumes the process-local batch memo built by fire-rate. Sampled
- * outcome-reach moved to scheduled telemetry in #495 after #442's deterministic
- * witnesses landed; it is intentionally absent from every blocking lane.
- * Blood has no such sharing and gets its own lane.
+ * Merge CI now has one blocking lane: batch. Expensive sampled gates are
+ * direct scheduled commands in TELEMETRY_GATES; nightly runs fire-rate, war
+ * and endings, while weekly evidence runs blood plus outcome-reach in #495's
+ * dedicated telemetry workflow. The fire-rate scheduled wrapper keeps sampled
+ * vocabulary reach beside the memoized corpus it reads.
  *
- * War and endings remain independent lanes for the same reason: each owns its
- * own played sample. The default batch lane is DERIVED as everything not
- * named here, so a newly registered gate is in CI without a second hand-kept
- * list. gates.test.ts proves the partition and proves the workflow matrix
- * names every lane.
- *
+ * A future merge-blocking gate is still derived into batch automatically.
  * Timing is deliberately absent from this comment. The JSON budget is checked
  * by CI; a number written here would be an unchecked second source of truth.
  */
-const OWN_LANE: Record<string, readonly string[]> = {
-  // #333 measured these as the two independent costs dominating the default
-  // lane. Giving each its own runner preserves every seed and assertion while
-  // removing their serial sum from the critical path.
-  blood: ['blood'],
-  // Keep vocabulary-reach beside the fire-rate batch it reads.
-  // Splitting it to another lane would replay the corpus and trade wall clock
-  // for duplicate compute.
-  'fire-rate': ['fire-rate', 'vocabulary-reach'],
-  war: ['war'],
-  endings: ['endings'],
-};
+const OWN_LANE: Record<string, readonly string[]> = {};
 
 /** The lane every gate falls into unless it is named above. */
 export const DEFAULT_LANE = 'batch';

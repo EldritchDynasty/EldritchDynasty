@@ -80,11 +80,11 @@ npm run land         # session preflight: fetch, rebase, install, then run
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
                      # A session preflight never pushes or merges.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
-npm run test:fast    # 31s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+npm run test:fast    # ~118s, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
-npm test             # everything: 3,280 tests in 197 files, ~9 min
+npm test             # everything: 3,526 tests in 215 files, ~36 min
 npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
                      # client's templates. ~29s
 npm run validate     # every content rule; exits non-zero on any error. An error
@@ -101,8 +101,8 @@ npm run harness -- 16 500             # 16 headless Long Lines, with balance num
 npm run digest  -- 8 400              # fingerprint 8 runs; diff the block across commits
 npm run gate                          # every gate — what CI will say, in one command
 npm run gates   -- fire-rate          # one of them on its own, when you know which
-npm run gates   -- --lane war         # one CI lane. THREE runners: `batch` (the floor,
-                                      # mostly fire-rate), `war` and `endings`
+npm run gates   -- --lane batch       # merge-blocking gate lane; sampled gates are scheduled
+                                      # `batch`, `blood`, `fire-rate`, `war`, `endings`, `outcome-reach`.
 npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
 npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
                                       # question is its `//` note in package.json
@@ -354,13 +354,13 @@ way to play — the chronicler picked a name, and the chronicler is not you.
 Grouped by the kind of failure they catch rather than by module. How many there
 are, and what a run of them costs, is in the command block above.
 
-- **`*.slow.test.ts` plays whole games** — the suites that assert the shape of
-  a healthy run. `npm run test:fast` skips them; what it costs is stated once,
-  in the command block, and measured by `npm run cost`. That is
-  the fix-and-rerun loop, and `lanes.test.ts` keeps it one by failing the build
-  when a suite that plays a millennium lands in it.
-  `npm run check` runs both lanes; `npm run land` runs the whole set CI runs,
-  the gates included, and is what a landing goes through.
+- **`*.slow.test.ts` plays whole games.** `test:fast` skips them;
+  `lanes.test.ts` keeps millennium batches out of that loop. `npm run check`
+  runs all tests locally. Hosted CI reads `tools/ci-evidence.json`: checked
+  `merge-blocking` suites run on full PR/merge-group CI; `nightly` suites
+  run in the complete daily slow suite. `npm run land` defaults to typecheck,
+  validate and `test:fast`; `--full-preflight` runs the complete local set.
+  The native merge-group `CI required` remains authoritative.
 - **A suite can play whole games with no `advance` in it.** `gates.test.ts` was
   41% of the fast lane; the runs happen inside the gates it calls. Driving a
   batch through `tools/` is declared in `lanes.test.ts` for exactly that reason.

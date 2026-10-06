@@ -1,0 +1,923 @@
+{
+  "version": 2,
+  "issue": 451,
+  "note": "Checked classification for merge-blocking, scheduled, and release-only evidence. Merge CI keeps deterministic witnesses; nightly/weekly keep sampled claims; tagged releases restore the complete slow/gate set.",
+  "jobs": [
+    {
+      "id": "tier",
+      "claim": "Classify the event and diff so required CI cannot silently omit evidence.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "lint",
+      "claim": "Typecheck all supported TypeScript/Vue surfaces and validate authored content/schema contracts.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "fast",
+      "claim": "Run the fast deterministic regression and operating/tooling/portability contract.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "windows",
+      "claim": "Prove the supported Windows tooling contract with the same typecheck/validate/fast commands.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "ios",
+      "claim": "Build/install/launch the supported iOS host: merge-blocking when native-host/toolchain inputs change, plus a broad nightly main-branch runtime smoke.",
+      "evidenceType": "deterministic",
+      "currentTier": "targeted merge-blocking + nightly",
+      "proposedTier": "targeted merge-blocking + nightly"
+    },
+    {
+      "id": "test",
+      "claim": "Run only the slow suites whose deterministic/stateful contracts still require this exact integration commit, packed into four duration-aware shards; the complete slow suite remains nightly.",
+      "evidenceType": "deterministic/mixed slow-contract regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "gates",
+      "claim": "Run registered simulation/content gates in their measured lanes.",
+      "evidenceType": "mixed",
+      "currentTier": "merge-blocking",
+      "proposedTier": "split-by-lane",
+      "moveBlockedBy": "Use the gate inventory below; do not move a lane wholesale where claims are mixed."
+    },
+    {
+      "id": "corpus",
+      "claim": "Warm the advisory run corpus for later runs; failure never changes correctness.",
+      "evidenceType": "advisory",
+      "currentTier": "advisory",
+      "proposedTier": "nightly"
+    },
+    {
+      "id": "required",
+      "claim": "Publish one stable required verdict for pull_request and merge_group integration heads.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "android",
+      "claim": "Build the signed Android release artifact for tags.",
+      "evidenceType": "release",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
+      "id": "windows-release",
+      "claim": "Build and verify the Windows release artifact for tags.",
+      "evidenceType": "release",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
+      "id": "release-slow",
+      "claim": "Tagged releases rerun every slow suite, including evidence moved to nightly cadence.",
+      "evidenceType": "release completeness",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
+      "id": "release-gates",
+      "claim": "Tagged releases rerun every sampled gate moved off merge CI before packaging.",
+      "evidenceType": "release completeness",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    }
+  ],
+  "gateLanes": [
+    {
+      "id": "batch",
+      "claim": "Every registered merge-blocking gate; the derived batch is the only merge gate lane after the sampled-gate cadence cutover.",
+      "evidenceType": "deterministic",
+      "currentMeasuredCost": "~7m",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    }
+  ],
+  "gates": [
+    {
+      "id": "clauses",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateClauses",
+      "claim": "The median completed Long-Line sample recovers at least the authored clause floor, keeping the God-rung record target within reach.",
+      "evidenceType": "sampled regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "library-neutrality",
+      "lane": "batch",
+      "source": "packages/core/src/tools/library-gate.ts#gateLibraryNeutrality",
+      "claim": "Inherited narrative/library state may change the record but must not move the material headline it is specified to leave neutral.",
+      "evidenceType": "deterministic paired simulation",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "short-line",
+      "lane": "batch",
+      "source": "packages/core/src/tools/short-line-gate.ts#gateShortLine",
+      "claim": "The 300-year Short Line still reaches its authored ending/verdict contract rather than silently behaving like a truncated Long Line.",
+      "evidenceType": "deterministic regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "ladder",
+      "lane": "batch",
+      "source": "packages/core/src/tools/ladder-gate.ts#gateLadder",
+      "claim": "The player-driven ladder policy still changes the intended ascension headline relative to its paired comparison policies.",
+      "evidenceType": "sampled mechanism regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "ladder-scales",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateLadderScales",
+      "claim": "Ascension floors remain measurable against the population that reaches the preceding rung, and newly stale or newly impossible floors fail closed.",
+      "evidenceType": "sampled invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "purposes",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gatePurposes",
+      "claim": "Every event has exactly three purposes and no three templates share the same purpose triple.",
+      "evidenceType": "deterministic validation",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "vocabulary-reach",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateVocabularyReach",
+      "claim": "Every declared Effect kind is authored or explicitly pinned as debt; this structural verdict plays no simulation.",
+      "evidenceType": "deterministic structural verdict",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "packages/core/src/tools/vocabulary-authorship.ts computes the verdict directly; packages/core/src/vocabulary-authorship.test.ts proves shipped content passes and a deliberately broken authored-effect fixture is rejected."
+    },
+    {
+      "id": "bottleneck",
+      "lane": "batch",
+      "source": "packages/core/src/tools/bottleneck-gate.ts#gateFoundingRecovery",
+      "claim": "The founding bottleneck/recovery verdict remains satisfied on its canonical evidence rather than allowing an opening-state progression dead end.",
+      "evidenceType": "deterministic regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "land",
+      "lane": "batch",
+      "source": "packages/core/src/tools/land-gate.ts#gateLand",
+      "claim": "Land ownership, loss routes, reader state and treasury continue to satisfy the authored long-run land contract.",
+      "evidenceType": "sampled regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "slot-fillability",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gateSlotFillability",
+      "claim": "Every slotted ambient event can cast against at least one edge-case test household through the real slot resolver.",
+      "evidenceType": "deterministic mechanism",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
+      "id": "post-fillability",
+      "lane": "batch",
+      "source": "packages/core/src/tools/gates.ts#gatePostFillability",
+      "claim": "Every authored career has at least one event structurally gated on holding that post, so a career cannot exist without content that reads it.",
+      "evidenceType": "deterministic structural invariant",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    }
+  ],
+  "telemetryGates": [
+    {
+      "id": "blood",
+      "source": "packages/core/src/tools/blood-gate.ts#gateBlood",
+      "claim": "The canonical paired bloodline sample preserves the shipped inheritance/distribution claim over the full configured batch.",
+      "evidenceType": "statistical",
+      "currentTier": "weekly",
+      "proposedTier": "weekly",
+      "coveredBy": [
+        "packages/core/src/gates.test.ts#the blood gate rejects a game where the font carries no power at all",
+        "packages/core/src/founding-inheritance.test.ts#builds each seeded child from one maternal and one paternal autosomal allele at every unmutated locus",
+        "packages/core/src/allele-draw.test.ts#an outsider pool draws the font locus at its own weights, not the authored ones"
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#the blood gate rejects a game where the font carries no power at all"
+    },
+    {
+      "id": "endings",
+      "source": "packages/core/src/tools/ending-gate.ts#gateEndings",
+      "claim": "The canonical paired ending sample enforces ending-system distribution rules, including the authored losability and comparison claims.",
+      "evidenceType": "statistical ending-distribution regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ending.test.ts#names every one of the five, exhaustively",
+        "packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place",
+        "packages/core/src/ending-gate.test.ts#fails when the Forgotten stops being reachable"
+      ],
+      "failureWitness": "packages/core/src/ending-gate.test.ts#fails a batch where every house arrives at the same place"
+    },
+    {
+      "id": "fire-rate",
+      "source": "packages/core/src/tools/gates.ts#gateFireRateNightly",
+      "claim": "Canonical sampled event-frequency regression plus the non-failing sampled vocabulary-reach diagnostic, sharing one memoized corpus.",
+      "evidenceType": "statistical occurrence-rate regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/gates.test.ts#gate 4 fails a run too short for the content to fire, and says it tried both policies",
+        "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it"
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#gate 4 fails a run too short for the content to fire, and says it tried both policies"
+    },
+    {
+      "id": "outcome-reach",
+      "source": "packages/core/src/tools/gates.ts#gateOutcomeReach",
+      "claim": "The canonical 800-run sample reports whether authored outcomes occur; it remains weekly/manual telemetry while deterministic execution witnesses carry merge-safety reachability evidence.",
+      "evidenceType": "statistical telemetry",
+      "currentTier": "weekly telemetry",
+      "proposedTier": "weekly telemetry",
+      "coveredBy": [
+        "packages/core/src/events/reach.test.ts#records a witnessed outcome only after the real commit path resolves it",
+        "packages/core/src/events/reach.test.ts#executes every authored state-decided outcome from an explicit witness world",
+        "packages/core/src/events/reach.test.ts#executes every authored requires-gated outcome from an explicit satisfiable cast"
+      ],
+      "failureWitness": "packages/core/src/gates.test.ts#gate 8 fails a run too short for the branches to be reached"
+    },
+    {
+      "id": "war",
+      "source": "packages/core/src/tools/war-gate.ts#gateWar",
+      "claim": "The canonical paired muster/war batch preserves its asserted settlement and repeated-war statistical claims while reporting non-asserted divergence telemetry.",
+      "evidenceType": "mixed",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/events/reach.test.ts#executes every authored Muster leaders branch through its real arc step and docket",
+        "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war",
+        "packages/core/src/war-gate.test.ts#fails a batch where a house's later wars do not cost more attrition than its first"
+      ],
+      "failureWitness": "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war"
+    }
+  ],
+  "slowSuites": [
+    {
+      "path": "packages/client/src/lib/run.slow.test.ts",
+      "claim": "Played/full-run regression assertions: stops at the year the other party comes to collect, and is read; still knows what was chosen in 1042; raised every kind of decision the docket draws, in one run; raised the Record block often enough to be the mechanic it is meant to be; …",
+      "evidenceType": "deterministic/stateful client end-to-end regression with long-run incidence checks",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast Docket and client-store tests pin individual verbs and receipt rendering, but this suite uniquely proves those pieces compose across a full client-driven campaign: campaign termination/epilogue, founding memory, all docket kinds, chapter boundaries, passage joins and outcome-before-next-decision ordering."
+    },
+    {
+      "path": "packages/core/src/ages.slow.test.ts",
+      "claim": "Played/full-run regression assertions: realised duration matches the authored shape; every Age occurs in enough runs to justify authoring exclusive content; never leaves a run with no active Age for an unreasonable stretch",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ages-strategy.test.ts#covers every shipped Age with two date/name-stripped player priorities",
+        "packages/core/src/ages-named.test.ts#carries named and namedAt out of active when it closes"
+      ]
+    },
+    {
+      "path": "packages/core/src/arcs.slow.test.ts",
+      "claim": "Played/full-run regression assertions: fires every event at least once across the batch; reaches the last node of a multi-generation arc; keeps the tiers in their intended proportion; fires in every seed of the batch — never a run of total silence; …",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/arc-term.test.ts#allows an arc that fits exactly and refuses it one year too late",
+        "packages/core/src/arc-memory.test.ts#history records which branch was taken, not only how it ended"
+      ]
+    },
+    {
+      "path": "packages/core/src/ascension.slow.test.ts",
+      "claim": "Played/full-run regression assertions: gets a house past Touched, and does not hand it the top; remembers the high-water mark after the man holding it dies; puts the rung on the view, which is the whole point of building it",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ascension.test.ts#keeps the rung on the view after the man holding it is dead",
+        "packages/core/src/ascension.test.ts#lets a man who meets every gate actually hold the rung"
+      ]
+    },
+    {
+      "path": "packages/core/src/assize.slow.test.ts",
+      "claim": "Played/full-run regression assertions: acts about once a generation, from the whole range of what it can do; survives the round trip, cooldowns and all",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/assize.test.ts#offers both arms, and enough of each to not be read by the fourth century",
+        "packages/core/src/assize.test.ts#charges a house that is plainly doing well"
+      ]
+    },
+    {
+      "path": "packages/core/src/attention.slow.test.ts",
+      "claim": "Played/full-run regression assertions: deals the Match about once a generation, not once every six years; does not let the choice tide rise any further; keeps naming bounded while #133 Stage 5B / #88 recalibrates attention share; asks at the same rate whether the line runs 300 years or 500; …",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/match.test.ts#stops the clock until it is answered, and the chronicler can answer it",
+        "packages/core/src/decisions.test.ts#stops the clock on an open decision and lets it move after the docket clears"
+      ]
+    },
+    {
+      "path": "packages/core/src/attributes.slow.test.ts",
+      "claim": "Played/full-run regression assertions: gives a scholar\\; makes a man stronger than a woman about nineteen times in twenty; does not move the population mean; leaves the attributes nobody declared it on alone; …",
+      "evidenceType": "statistical/population attribute regression with merge-blocking formula and wiring witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/attributes.test.ts pins dimorphism application, loci-derived fecundity centring, fertility age/sex rules, multiplicative mother-weighted couple fertility, and sex-symmetric health. packages/core/src/minting.test.ts pins authored template bias onto each minted lazy genome. Existing genetics/allele tests cover inheritance and draw mechanics. The slow suite remains nightly evidence for population rates, correlations, Monte Carlo centres, family-size bands and birth-age distributions.",
+      "coveredBy": [
+        "packages/core/src/attributes.test.ts#applies sexual dimorphism as opposite shifts without touching undeclared attributes",
+        "packages/core/src/attributes.test.ts#derives the fecundity centre from the locus table"
+      ]
+    },
+    {
+      "path": "packages/core/src/blood.slow.test.ts",
+      "claim": "Played/full-run regression assertions: makes the pairing the whole design turns on more than a handful of times; gets somebody onto the ladder in most runs; does not empty the halls doing it",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/blood.test.ts#hands on the hotter X more often when the font loci drive",
+        "packages/core/src/ascension.test.ts#never puts anyone who cannot express on it, at any rung"
+      ]
+    },
+    {
+      "path": "packages/core/src/branches-contentment.slow.test.ts",
+      "claim": "Played/full-run regression assertions: lets a hall stand for centuries and still be content; does not sit at maximum discontent for the whole run",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/branches.test.ts#a hall holding neither ends more aggrieved than a hall holding one of the pair",
+        "packages/core/src/conditions.test.ts#discontent is the house-wide number"
+      ]
+    },
+    {
+      "path": "packages/core/src/branches-grievance.slow.test.ts",
+      "claim": "Played/full-run regression assertions: keeps grievance and discontent inside a usable range",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/branches.test.ts#raises grievance in the hall that is not his, and not in the one that is",
+        "packages/core/src/conditions.test.ts#branchGrievance reports the ANGRIEST live branch"
+      ]
+    },
+    {
+      "path": "packages/core/src/branches.slow.test.ts",
+      "claim": "Played/full-run regression assertions: founds branches rather than keeping every son under one roof; never runs more halls than the cap allows; marks a branch extinct the year its last member dies; leaves nobody in two halls at once; …",
+      "evidenceType": "played-run branch topology/regression with merge-blocking structural and succession witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/branches.test.ts deterministically proves branch extinction/escheat and branch-grievance mechanics; packages/core/src/succession.test.ts proves cadet eligibility, main-line preference, and that a cadet inheriting the seal is recalled to the main hall. testing.ts worldViolations keeps the one-open-membership and living-Head-in-main-hall invariants merge-blocking. The slow suite remains nightly evidence for realised branch founding, hall spread, cap pressure and long-run determinism across played campaigns.",
+      "coveredBy": [
+        "packages/core/src/branches.test.ts#recalls an endowed parcel to the seat the year its hall goes extinct",
+        "packages/core/src/conditions.test.ts#cadetBranches counts the LIVING halls, not the extinct ones"
+      ]
+    },
+    {
+      "path": "packages/core/src/burying.slow.test.ts",
+      "claim": "Played/full-run regression assertions: puts the scenes in front of a house that has something to bury; buries what a declining house never touches; answers part of the bill, and only part",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/burying.test.ts#takes the worst lie the house is carrying",
+        "packages/core/src/burying.test.ts#buries nothing when the house is carrying nothing, and does not throw"
+      ]
+    },
+    {
+      "path": "packages/core/src/cast.slow.test.ts",
+      "claim": "Played/full-run regression assertions: always has somebody, while the house has anybody at all; never grows back into a roster; never names anybody who is not living in the house; fills every role it declares, somewhere in the batch; …",
+      "evidenceType": "sampled cast-composition/loss regression with merge-blocking cast invariants",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/cast.test.ts deterministically pins cast size/cap, uniqueness, living-household membership, pure derived reads, labels/reasons, situational-role construction, and the non-rota priority behavior. The slow suite remains nightly evidence for role frequencies, generational variation, head/heir prevalence and remembered-loss exposure over played campaigns.",
+      "coveredBy": [
+        "packages/core/src/cast.test.ts#names three to seven people, never seventy",
+        "packages/core/src/cast.test.ts#only ever names the living of this house"
+      ]
+    },
+    {
+      "path": "packages/core/src/condition.slow.test.ts",
+      "claim": "Played/full-run regression assertions: leaves the poorest house-years with smaller completed families without saturating",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/conditions.test.ts#treasury reads a DEBT as the negative number it is",
+        "packages/core/src/demography.test.ts#presses harder the fewer of the blood are left"
+      ]
+    },
+    {
+      "path": "packages/core/src/contracts.slow.test.ts",
+      "claim": "Played/full-run regression assertions: binds a retainer to a person, so the contract can end; never leaves a retainer serving a corpse for a century; passes a hereditary post to the holder\\; does not ratchet — standing falls as well as rises; …",
+      "evidenceType": "played-run contract/standing regression with merge-blocking mechanism witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/contracts.test.ts directly proves minted retainers bind to a living Head, employer death releases service, hereditary posts pass to an adult child, quiet-standing decay/floor behavior, and preview id-counter restoration. The slow suite remains nightly for whole-campaign stale-employer detection, observed hereditary-post incidence, standing-fall incidence, and the longer preview-vs-clean run equivalence.",
+      "coveredBy": [
+        "packages/core/src/contracts.test.ts#binds a minted retainer contract to the living Head",
+        "packages/core/src/contracts.test.ts#releases service when its named employer is dead"
+      ]
+    },
+    {
+      "path": "packages/core/src/corpus.slow.test.ts",
+      "claim": "Played/full-run regression assertions: and the corpus was actually consulted; every field on the world survives the round trip; and the two worlds hold the same keys; the people, chronicle and decision log come back identical; …",
+      "evidenceType": "deterministic run-corpus/save fidelity and cache-key contract",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast save tests cover ordinary serialization, but this suite uniquely proves the run-corpus path returns the played world byte-for-structure, keys on simulation sources/campaign shape, honors ED_RUN_CORPUS=off, and never leaks tools/ imports into simulation."
+    },
+    {
+      "path": "packages/core/src/decisions.slow.test.ts",
+      "claim": "Played/full-run regression assertions: parks choice events instead of answering them; does not turn the year while a decision stands; applies the choice the player actually made; refuses a choice that is not on the card; …",
+      "evidenceType": "played-run decision/delegation regression with deterministic merge-blocking docket witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/decisions.test.ts deterministically proves rendered player-choice queueing, invalid-choice refusal without dropping the docket, exactly-once frequency spending, clock blocking, chronicler draining through the same production path, Record/omit/embellish queue semantics, and honest-record knowledge. packages/core/src/session-api.test.ts keeps the public GameSession decision verbs merge-blocking, while packages/core/src/events/reach.test.ts keeps authored production-docket outcome witnesses merge-blocking. The slow suite remains nightly for full-run option variety, played-path end-to-end coverage, and the 12-seed paired delegation-density measurement.",
+      "coveredBy": [
+        "packages/core/src/decisions.test.ts#keeps an invalid choice standing and spends one ration only on the valid commit",
+        "packages/core/src/decisions.test.ts#drains the same production choice through the chronicler path"
+      ]
+    },
+    {
+      "path": "packages/core/src/demography.slow.test.ts",
+      "claim": "Played/full-run regression assertions: lets children reach adulthood; still has a household after four hundred years; reaches the term with a living house more often than not; does not breed without bound; …",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/demography.test.ts#presses harder the fewer of the blood are left",
+        "packages/core/src/demography.test.ts#is a fact about the blood, not about the household"
+      ]
+    },
+    {
+      "path": "packages/core/src/discrepancies.slow.test.ts",
+      "claim": "Played/full-run regression assertions: checks existence when state is omitted, and exact state when given; counts open ones for the aggregate form; costs Respect a full tier; never drops standing below the floor; …",
+      "evidenceType": "played-run Discrepancy incidence with merge-blocking mechanism witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/discrepancies.test.ts directly proves Discrepancy conditions/aggregate counts, prove/bury Respect semantics and floor behavior, phantom-id no-op behavior, heirloom transfer semantics, and the pressure-selection path. The slow suite remains nightly for the only campaign-scale claim: at least one Discrepancy reaches proven across the standard full-run seed batch.",
+      "coveredBy": [
+        "packages/core/src/discrepancies.test.ts#checks existence, exact state, and the open aggregate",
+        "packages/core/src/discrepancies.test.ts#proving costs one Respect tier and records the change year"
+      ]
+    },
+    {
+      "path": "packages/core/src/echo.slow.test.ts",
+      "claim": "Played/full-run regression assertions: prints what it measured",
+      "evidenceType": "statistical echo-cadence regression with merge-blocking chain/mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/echo-chains.test.ts deterministically pins grudge and secret echo chains, spacing/deduplication, bill ownership, backlinks, and the frame-based tally. The slow suite is a 20-seed short/long campaign measurement of reader-facing echo frequency and repetition ceilings.",
+      "coveredBy": [
+        "packages/core/src/echo-chains.test.ts#echoes once, a generation later, linked to where it began, while it is still held",
+        "packages/core/src/echo-chains.test.ts#hears a house once a generation, however many quarrels it holds"
+      ]
+    },
+    {
+      "path": "packages/core/src/economy.slow.test.ts",
+      "claim": "Played/full-run regression assertions: survives the year ticking over; accumulates rather than replacing; holds the mythic cap on people; does not let event cooldowns starve the household of staff; …",
+      "evidenceType": "economic balance regression with merge-blocking economy/effect/frequency witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/economy.test.ts keeps acquired-attribute durability/accumulation, income+upkeep, Wardship income diversion, household labour/upkeep, and Respect-scaled upkeep merge-blocking. packages/core/src/minting.test.ts proves editor preview is side-effect free including the character frequency ledger, plus eligibility/frequency gating. The slow suite retains long-run mythic-population caps, staffing incidence, debt-floor share, hiring affordability and treasury-balance measurements.",
+      "coveredBy": [
+        "packages/core/src/economy.test.ts#survives a year boundary and accumulates",
+        "packages/core/src/economy.test.ts#produces both income and upkeep"
+      ]
+    },
+    {
+      "path": "packages/core/src/expression.slow.test.ts",
+      "claim": "Played/full-run regression assertions: no incapable character ever holds Madness or expressed Power; applyEffect refuses madness on an incapable target even off authored content; wakes daughters by what they carry, and gives them nothing to overflow; hands the client both facts, so the tree can draw two marks",
+      "evidenceType": "full-run expression/awakening incidence regression with merge-blocking Madness and presentation witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/effect-verbs.test.ts deterministically proves forced female Awakening does not invent expression or Madness and directly proves the Madness effect refuses both a woman and a mundane man. packages/core/src/session-api.test.ts proves an awakened female carrier is surfaced as awakened but not expressing, with `expresses` equal to phenotype.canExpress. Merge-blocking schema/content validation retains the authored madness-target gate. The slow suite remains nightly for multi-century no-incapable-Madness/Power observation and population-level female Awakening incidence.",
+      "coveredBy": [
+        "packages/core/src/effect-verbs.test.ts#can wake a female carrier without inventing expression or Madness",
+        "packages/core/src/session-api.test.ts#keeps Awakening separate from expression for a female carrier"
+      ]
+    },
+    {
+      "path": "packages/core/src/fecundity-drag.slow.test.ts",
+      "claim": "Played/full-run regression assertions: ships inert — the coupling constant is zero; is authored: one drag locus per font locus, each linked (a few cM away); contributes to fecundity, never to the eldritch profile; does not move a body\\; …",
+      "evidenceType": "multi-century drag-gate fidelity regression with merge-blocking structural/mechanism witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/fecundity-drag.test.ts keeps the shipped zero-coupling invariant, linked X-locus authoring and negative fecundity wiring, production attr inertness at k=0, positive-coupling mechanism seam, founder phasing, and pleiotropic structural/calibration claims merge-blocking. The slow suite remains nightly for multi-century k=0 digest identity, k>0 divergence, phasing-inertness, unphased founder distribution, sex/recombination behavior, and longer gate-variant fidelity.",
+      "coveredBy": [
+        "packages/core/src/fecundity-drag.test.ts#ships inert while retaining one linked negative drag locus per font locus",
+        "packages/core/src/fecundity-drag.test.ts#cannot move production fecundity at the shipped zero coupling"
+      ]
+    },
+    {
+      "path": "packages/core/src/fertility.slow.test.ts",
+      "claim": "Played/full-run regression assertions: is authored as a deleterious recessive; appears, and stays well under 3% of an outbred population; shows a measurably higher rate in cousin-married pedigrees than out-married ones; is near-sterile, not lethal — option D is a binary curse on fecundity only; …",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/curses.test.ts#is recessive — one copy is not enough, which is what makes it inheritable",
+        "packages/core/src/attributes.test.ts#makes couple fertility multiplicative and mother-weighted",
+        "packages/core/src/allele-draw.test.ts#a heavier pool draws the curse more often than a lighter one"
+      ]
+    },
+    {
+      "path": "packages/core/src/founding-inheritance.slow.test.ts",
+      "claim": "Played/full-run regression assertions: keeps a played world internally healthy after seeded inheritance is real",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/founding-inheritance.test.ts#builds each seeded child from one maternal and one paternal autosomal allele at every unmutated locus",
+        "packages/core/src/founding-inheritance.test.ts#passes the founder's single X intact to every seeded daughter, except recorded mutations"
+      ]
+    },
+    {
+      "path": "packages/core/src/friends.slow.test.ts",
+      "claim": "Played/full-run regression assertions: hands out names the player gave, in every run; spreads them across the centuries rather than emptying the bag at once; leaves a lift on everybody wearing one of the names; never spends a name twice, and never invents a sixth; …",
+      "evidenceType": "played-run friend-arrival/pacing regression with merge-blocking friend mechanics",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/friends.test.ts pins no-dice empty-bag behavior, sex matching, single-spend/release, pacing-window construction, blessing shape/application, signing validation/state/save semantics, and rename release. The slow suite remains nightly evidence for realised arrival frequency, across-century pacing, lift magnitude and both birth/arrival routes over full campaigns.",
+      "coveredBy": [
+        "packages/core/src/friends.test.ts#spends each name exactly once, and then stops",
+        "packages/core/src/friends.test.ts#deals one name to each band across the span"
+      ]
+    },
+    {
+      "path": "packages/core/src/genetics.slow.test.ts",
+      "claim": "Played/full-run regression assertions: has a polygenic attribute to measure; carries the mid-parent through to the child, at slope one; does not clone the mid-parent — one pair produces varied children; realises F ≈ 0.25 under full-sib mating; …",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/founding-inheritance.test.ts#biases inheritance without splicing a chromosome between crossovers",
+        "packages/core/src/allele-draw.test.ts#the family itself (rate 1): draws its own frequencies, not the outsider cap"
+      ]
+    },
+    {
+      "path": "packages/core/src/ladder.slow.test.ts",
+      "claim": "Played/full-run regression assertions: passes the shipped game: paying separates from refusing; fails a game whose ladder costs are removed",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ladder.test.ts#offers a branch that costs him and a branch that does not, in every one of them",
+        "packages/core/src/ladder.test.ts#lets anything fire that has never fired"
+      ]
+    },
+    {
+      "path": "packages/core/src/land.slow.test.ts",
+      "claim": "Played/full-run regression assertions: both buys and sells across a run\\; is refused for want of coin in a measurable share of the years it is tried; does not crowd the auction out — a played run still lands a book at Sarrow (world §16); the Sarrow bottom sinks sometimes and pays its price back across the batch; …",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/land.test.ts#mints a held parcel, spends the price, and empties the lot",
+        "packages/core/src/land.test.ts#can lose the Sarrow bottom outright to the Grey"
+      ]
+    },
+    {
+      "path": "packages/core/src/ledger-clauses.slow.test.ts",
+      "claim": "Played/full-run regression assertions: varies which clauses a run recovers, not merely how many; leaves a typical 500-year house substantially informed without making all nine automatic",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/ledger.test.ts#keeps the nine-clause contract explicit",
+        "packages/core/src/ledger.test.ts#reveals an Age's assigned clauses in weight order"
+      ]
+    },
+    {
+      "path": "packages/core/src/ledger.slow.test.ts",
+      "claim": "Played/full-run regression assertions: starts the player knowing exactly one clause; has nine clauses and never reveals one twice; recovers most of the contract over a run; does not hand every run the whole contract; …",
+      "evidenceType": "sampled Ledger/relationship regression with merge-blocking rule coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/ledger.test.ts pins the opening/nine-clause content contract and every revealClause branch (record-keeper requirement, naming, one reveal per Age, per-Age assignment and order). packages/core/src/relationships.test.ts pins grudge creation, decay, pruning and inheritance. The slow suite remains nightly evidence for realised clause recovery/spread, Chronicle presentation and played-world feud longevity.",
+      "coveredBy": [
+        "packages/core/src/ledger.test.ts#starts with exactly the one authored opening clause",
+        "packages/core/src/relationships.test.ts#carries a feud through four generations without either party surviving it"
+      ]
+    },
+    {
+      "path": "packages/core/src/lifespan.slow.test.ts",
+      "claim": "Played/full-run regression assertions: centres a typical body on a hundred; varies — a ceiling everybody shares is not a ceiling worth having; is never outlived; is a ceiling most people never reach; …",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/year.test.ts#buries the people it should, and never the Narrator",
+        "packages/core/src/world-health.test.ts#chronology — a death before a birth"
+      ]
+    },
+    {
+      "path": "packages/core/src/match.slow.test.ts",
+      "claim": "Played/full-run regression assertions: never refuses an open card, over eight seeds played to the term",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/match.test.ts#deals distinct recipes — never the same card three times",
+        "packages/core/src/match.test.ts#mints exactly the person the card promised"
+      ]
+    },
+    {
+      "path": "packages/core/src/modifiers.slow.test.ts",
+      "claim": "Played/full-run regression assertions: unlock: some seed\\; outcome_weight: some seed\\; resource: some seed\\; attribute: some seed\\; …",
+      "evidenceType": "cheap shipped-content reachability smoke plus deterministic modifier wiring",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "The suite is ~1s and proves every implemented modifier kind is reachable through shipped content, with check_bonus directly constructed. Its cost is below the risk of replacing real-content reachability with synthetic-only witnesses."
+    },
+    {
+      "path": "packages/core/src/motifs.slow.test.ts",
+      "claim": "Played/full-run regression assertions: shows every reading, in a real share of runs; darkens in order, in every run that sees more than one of them; closes at the term, and never before the page it reads exists",
+      "evidenceType": "sampled motif reach/cadence regression with merge-blocking structural ordering",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/motifs.test.ts proves the three gallery readings occupy ordered campaign thirds and the frame close is structurally tied to the third Chronicle page; frame.test.ts separately proves chronicled reads require that named page. The 120-run slow suite remains nightly evidence that all readings actually occur at useful rates and arrive in order in played worlds.",
+      "coveredBy": [
+        "packages/core/src/motifs.test.ts#assigns its three tale readings to ordered campaign thirds",
+        "packages/core/src/motifs.test.ts#makes the frame close read the third Chronicle page"
+      ]
+    },
+    {
+      "path": "packages/core/src/muster.slow.test.ts",
+      "claim": "Played/full-run regression assertions: round-trips every field a player could have set — men, officers, position, credit, tide; round-trips the tide and lastSettled with no commitment standing, too; never runs men negative, and leaves the world internally coherent at the Long-Line term; does not, on its own, take the player house extinct; …",
+      "evidenceType": "full-run regression with merge-blocking mechanism/save coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/muster.test.ts now keeps live/no-live muster save durability, mechanism/effect wiring, non-negative attrition, escalation, purchase and order behavior merge-blocking; packages/core/src/events/reach.test.ts keeps authored Muster execution paths merge-blocking. The slow suite retains whole-run survival, content reachability and peacetime digest regression.",
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#round-trips a live commitment and the muster ledger",
+        "packages/core/src/muster.test.ts#attrition never takes the commitment below zero men"
+      ]
+    },
+    {
+      "path": "packages/core/src/naming-worth.slow.test.ts",
+      "claim": "Played/full-run regression assertions: asks a couple of dozen times a run, down from 188.8; still asks about somebody, in every run; gives every prompt a reason the player can read",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/naming-worth.test.ts#asks for the Head's first son, and not for his second",
+        "packages/core/src/naming-worth.test.ts#grades the same house harder for carrying the name"
+      ]
+    },
+    {
+      "path": "packages/core/src/prologue.slow.test.ts",
+      "claim": "Played/full-run regression assertions: is still holding the thing the man asked for; changed hands on the rival side, and never on ours; is readable off the save at the Long-Line term",
+      "evidenceType": "deterministic century-scale founding-state persistence regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast prologue/session tests cover founding input/output, but this suite uniquely proves the chosen heirloom, founding grudge succession, guardian-side target and terminal-save founding view survive centuries of real simulation."
+    },
+    {
+      "path": "packages/core/src/record-claims.slow.test.ts",
+      "claim": "Played/full-run regression assertions: four always-Record 500-year runs produce claimed pages and ourBook rows; PanelPage.embellished has both reachable values across the two record policies",
+      "evidenceType": "played-run claim/panel reach regression with merge-blocking record and panel witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/record.test.ts deterministically proves truthful versus embellished claim attachment and record-layer divergence, while packages/core/src/panel.test.ts proves a family-authored embellished Chronicle page reaches PanelPage.ourBook with its provenance intact and without adjudicating truth. The slow suite remains nightly evidence that those authored paths are actually encountered across played 500-year runs under both record policies.",
+      "coveredBy": [
+        "packages/core/src/record.test.ts#the same event writes a truthful claim or a divergent lie about the same person (issue #138)",
+        "packages/core/src/panel.test.ts#shows the rival’s tale and the family’s own lie about the same house"
+      ]
+    },
+    {
+      "path": "packages/core/src/record.slow.test.ts",
+      "claim": "Played/full-run regression assertions: by 1500, at least one household member has a non-empty divergence; the divergence count tracks the embellish rate",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/record.test.ts#an embellished option's claims land on the chronicle entry it rewrites",
+        "packages/core/src/record.test.ts#later claims about the same fact win over earlier ones"
+      ]
+    },
+    {
+      "path": "packages/core/src/regalia.slow.test.ts",
+      "claim": "Played/full-run regression assertions: is in the house\\; actually lands on a person for every heirloom content tries to use; reaches the far end of each of the three new substories; never lets the family sell what Demigod requires; …",
+      "evidenceType": "sampled full-run content reachability with merge-blocking Regalia/ration coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/heirlooms.test.ts keeps founding Regalia ownership, unsellable/rationed definitions, generic heirloom behavior, and rare arc-vs-ambient frequency-ration semantics merge-blocking. The slow suite retains the 240-run proof that authored heirloom uses land on real people and all three Regalia substories reach their far ends.",
+      "coveredBy": [
+        "packages/core/src/heirlooms.test.ts#puts the Regalia in the house's hands in 1042",
+        "packages/core/src/heirlooms.test.ts#leaves the seal reusable and the other two rationed"
+      ]
+    },
+    {
+      "path": "packages/core/src/relationships.slow.test.ts",
+      "claim": "Played/full-run regression assertions: gives the family somewhere to quarrel with itself",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/relationships.test.ts#carries a feud through four generations without either party surviving it",
+        "packages/core/src/relationships.test.ts#moves both ends when both men are dead"
+      ]
+    },
+    {
+      "path": "packages/core/src/replay.slow.test.ts",
+      "claim": "Played/full-run regression assertions: digest(replay(log)) equals digest(original) across the standard seed set; replays the founding answer before the first year, including the five-name roster; throws rather than returning a run that silently does not match the log it was given; never lets the chronicler take a choice whose requires fail; …",
+      "evidenceType": "deterministic replay equivalence and replay-failure contract",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "This suite uniquely compares replayed decision logs with original-run digests across the standard seed set and proves mismatch/requires/duplicate-year replay bugs fail rather than silently diverge. Replay correctness is merge-safety evidence, not statistical telemetry."
+    },
+    {
+      "path": "packages/core/src/rites.slow.test.ts",
+      "claim": "Played/full-run regression assertions: is offered at all — an event that never fires is not in the game; is only ever offered to a man who is already standing at Hierophant; is what buys rung four, and refusing it never does; leaves the two columns level everywhere below the rung it buys; …",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/rites.test.ts#is the last thing rung four asks for, and answering it is what moves him",
+        "packages/core/src/rites.test.ts#is the last thing rung five asks for"
+      ]
+    },
+    {
+      "path": "packages/core/src/run-library.slow.test.ts",
+      "claim": "Played/full-run regression assertions: keeps paired runs byte-identical outside the narrative memory field",
+      "evidenceType": "played-run byte-identity regression with merge-blocking Library neutrality gate",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/tools/library-gate.ts runs the same canonical paired Short-Line seeds on the merge-blocking batch lane and fails if inherited Library memory changes treasury, Respect, ascension, living blood, acreage, or ending; libraryNeutralityVerdict has a deterministic bad-batch seam. The slow suite remains nightly as the stronger whole-save byte-identity regression outside the narrative-memory fields.",
+      "coveredBy": [
+        "packages/core/src/gates.test.ts#the library neutrality gate rejects a material inherited advantage",
+        "packages/core/src/library.test.ts#the shelf copy persists after the person who studied it dies — a great-grandfather's purchase pays out for centuries"
+      ]
+    },
+    {
+      "path": "packages/core/src/schooling.slow.test.ts",
+      "claim": "Played/full-run regression assertions: reaches the 1542 term in most of the batch, so the ratio below is about a completed house; completes several tutor terms a generation, not the zero the epic opened with",
+      "evidenceType": "statistical/full-run regression",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/table.test.ts#pays for a term of tutoring now, and delivers it in eight years",
+        "packages/core/src/table.test.ts#and still teaches every attribute that can be taught"
+      ]
+    },
+    {
+      "path": "packages/core/src/secrets.slow.test.ts",
+      "claim": "Played/full-run regression assertions: lets a secret out of the house at all; gets some of them told, rather than leaving them walking forever; turns every told secret into a Discrepancy, and no untold one; does not flood the record with them; …",
+      "evidenceType": "played-run secret incidence/balance regression with merge-blocking secret mechanics",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/secrets.test.ts deterministically covers secrets walking on bad service endings, loyalty/service pricing, duplicate suppression, tell timing/idempotence, discrepancy creation/resurrection, and loyalty dynamics. The slow suite remains nightly evidence that secrets actually leave, get told, stay bounded, and vary loyalty across full campaigns.",
+      "coveredBy": [
+        "packages/core/src/secrets.test.ts#lets a secret walk when service ends badly",
+        "packages/core/src/secrets.test.ts#becomes an open Discrepancy the house that took her can prove"
+      ]
+    },
+    {
+      "path": "packages/core/src/session-api.slow.test.ts",
+      "claim": "Played/full-run regression assertions: viewOf survives JSON, which is the actual requirement; viewOf takes how much chronicle to hand back; hallOf names the household a person is living in, and nothing for a stranger; branchReport describes every hall, living and extinct alike; …",
+      "evidenceType": "deterministic public read-model/diagnostics integration over accumulated world state",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast session-api tests pin individual public verbs, while this suite uniquely exercises JSON-safe views, chronicle truncation, hall/branch/frequency diagnostics and decision rendering after enough real history exists to populate those reports."
+    },
+    {
+      "path": "packages/core/src/session.slow.test.ts",
+      "claim": "Played/full-run regression assertions: stops the clock on a decision and says so; lets the player answer, and moves on; says what a Long Line did, as values; runs to the Long-Line term with the chronicler holding the pen, and stops there; …",
+      "evidenceType": "played-run end-to-end regression with merge-blocking GameSession, docket, ending, save and naming witnesses",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/session-api.test.ts deterministically pins the public GameSession verbs, decision blocking/answering, naming and save/resume round-trip; packages/core/src/decisions.test.ts pins the docket clock-stop/clear mechanism; packages/core/src/ending.test.ts pins the 500-year term, one-time clock stop and epilogue semantics. The slow suite remains nightly for long played-run passage traffic, full-term integration, stable old-view snapshots and realised household/Chronicle population.",
+      "coveredBy": [
+        "packages/core/src/session-api.test.ts#advance turns years, and stops the clock when the docket fills",
+        "packages/core/src/session-api.test.ts#save round-trips through resumeGame onto the same world"
+      ]
+    },
+    {
+      "path": "packages/core/src/sim.slow.test.ts",
+      "claim": "Played/full-run regression assertions: validates with no errors; has content in every frequency tier; gives a father the same X in every daughter; gives sons of a null-font mother a font of zero, barring mutation; …",
+      "evidenceType": "mixed full-simulation smoke containing hard invariants and broad regression observations",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Several mechanisms have fast witnesses, but this suite still combines hard cross-system invariants over realised populations (expression/Madness, guardian survival, frequency/content/prose and Age behavior). At ~46s it is cheaper and safer to keep the mixed smoke merge-blocking than split away assertions without complete equivalent witnesses."
+    },
+    {
+      "path": "packages/core/src/table.slow.test.ts",
+      "claim": "Played/full-run regression assertions: gets books off the shelf and into people, which nothing did before; buys a place, and nothing else; keeps a house solvent enough to keep placing people; names the books, who could read them, and what a term costs",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/table.test.ts#the table offers exactly what the order accepts",
+        "packages/core/src/table.test.ts#never moves the treasury without reporting it"
+      ]
+    },
+    {
+      "path": "packages/core/src/tales.slow.test.ts",
+      "claim": "Played/full-run regression assertions: leaves every run with accounts in circulation; circulates a broad share of what is authored, not the same few; puts contradicting accounts of one event in front of the player at once; names a teller and a bias on every account it shows; …",
+      "evidenceType": "played-run tale reach/circulation regression with merge-blocking tale/view mechanics",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "fasterEvidence": "packages/core/src/tales.test.ts deterministically covers tale birth, circulation/mutation clocks, player-view exposure, teller+bias, contradictory accounts, hidden authored accuracy, view immutability/order and edited-out content. The slow suite remains nightly proof that a played campaign actually leaves a broad, contested set of tales circulating.",
+      "coveredBy": [
+        "packages/core/src/tales.test.ts#is born, unstarted, the year its about-event fires — and only that event",
+        "packages/core/src/tales.test.ts#lets two accounts of one event stand together, disagreeing"
+      ]
+    },
+    {
+      "path": "packages/core/src/tools/replay-divergence.slow.test.ts",
+      "claim": "Played/full-run regression assertions: reports every choice it counts, and changes nothing by reporting it; plays the campaign it is given: a Short Line stops at its own term; and the replay stream is that player, on a Short Line, with a shape on every visit",
+      "evidenceType": "deterministic replay-divergence tooling integration",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "fasterEvidence": "Fast replay-divergence unit tests pin local helpers; this suite uniquely proves the observed density player leaves the run unchanged, respects Short-Line termination, and emits a replay shape on every visit through a played campaign."
+    },
+    {
+      "path": "packages/core/src/world-health.slow.test.ts",
+      "claim": "Played/full-run regression assertions: across eight millennia, sampled every fifty years; and every surviving Long-Line world is coherent at the term",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/world-health.test.ts#passes the founding cast the game actually starts with",
+        "packages/core/src/world-health.test.ts#INVARIANT 12 — two people hold the seal, or nobody does"
+      ]
+    }
+  ],
+  "gateAssertions": [
+    {
+      "id": "war:it-pays",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Across settled committed wars, mean Respect at settlement exceeds Respect at war start.",
+      "evidenceType": "statistical",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/events/reach.test.ts#executes every authored Muster leaders branch through its real arc step and docket",
+        "packages/core/src/war-gate.test.ts#fails a batch where committing does not pay — Respect does not rise per war"
+      ]
+    },
+    {
+      "id": "war:it-costs",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Report the paired treasury difference between abstaining and committing; the gate intentionally does not assert this content-balance finding.",
+      "evidenceType": "telemetry",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
+    },
+    {
+      "id": "war:gap-widens",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "For houses settling multiple wars, later-war attrition share exceeds first-war attrition share on average.",
+      "evidenceType": "statistical",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/muster.test.ts#reinforce, settle and withdraw each change the standing commitment",
+        "packages/core/src/war-gate.test.ts#fails a batch where a house's later wars do not cost more attrition than its first"
+      ]
+    },
+    {
+      "id": "war:progress-divergence",
+      "lane": "war",
+      "source": "packages/core/src/tools/war-gate.ts#verdictOver",
+      "claim": "Report commit-minus-abstain peak-Respect and treasury divergence at normalized campaign checkpoints; this is explicitly descriptive, not asserted.",
+      "evidenceType": "telemetry",
+      "currentTier": "nightly",
+      "proposedTier": "nightly"
+    }
+  ]
+}

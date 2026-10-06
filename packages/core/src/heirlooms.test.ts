@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { validateBundle } from '@ed/schema';
 import {
-  bootstrap, runYears, attr, applyEffect,
-  canUseHeirloom, eligibleBearers, grantHeirloom, useHeirloom,
+  bootstrap, runYears, attr, applyEffect, commitOutcome,
+  canUseHeirloom, eligibleBearers, grantHeirloom, testRng, useHeirloom,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -57,6 +57,40 @@ describe('the heirloom content', () => {
     for (const h of bundle.heirlooms) {
       expect(reachable.has(h.id), `${h.id} can never be acquired`).toBe(true);
     }
+  });
+});
+
+describe('arc heirlooms do not spend the ambient frequency ration', () => {
+  it('records a rare arc node without moving the rare cap or cooldown', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const led = ctx.world.frequency;
+    const before = { fired: led.firedThisRun.rare, last: led.lastFiredYear.rare };
+    const node = bundle.events.find((e) => e.arc && e.frequency === 'rare')!;
+    const outcome = node.interaction.kind === 'narration'
+      ? node.interaction.outcomes[0]!
+      : node.interaction.choices[0]!.outcomes[0]!;
+    const choiceId = node.interaction.kind === 'narration' ? undefined : node.interaction.choices[0]!.id;
+
+    commitOutcome(ctx, node, outcome, {}, choiceId, testRng('regalia-ration'));
+
+    expect(led.templateFires[String(node.id)]).toBe(1);
+    expect(led.firedThisRun.rare).toBe(before.fired);
+    expect(led.lastFiredYear.rare).toBe(before.last);
+  });
+
+  it('still spends the rare ration for an ambient event', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const led = ctx.world.frequency;
+    const ambient = bundle.events.find((e) => !e.arc && e.frequency === 'rare' && e.tier !== 'frame')!;
+    const outcome = ambient.interaction.kind === 'narration'
+      ? ambient.interaction.outcomes[0]!
+      : ambient.interaction.choices[0]!.outcomes[0]!;
+    const choiceId = ambient.interaction.kind === 'narration' ? undefined : ambient.interaction.choices[0]!.id;
+
+    commitOutcome(ctx, ambient, outcome, {}, choiceId, testRng('ambient-ration'));
+
+    expect(led.firedThisRun.rare).toBe(1);
+    expect(led.lastFiredYear.rare).toBe(ctx.world.year);
   });
 });
 

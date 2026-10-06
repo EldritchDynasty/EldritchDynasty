@@ -5,7 +5,7 @@
   "lanes": {
     "batch": {
       "seconds": 420,
-      "evidence": "Projected from per-gate timestamps in green PR #362 run 36561761799 after moving blood (1069s) and fire-rate (871s) out of batch; remaining gates total about 4m20s of execution, with a 7m lane baseline for runner overhead/variance (#333)."
+      "evidence": "Merge-group run 37300991443 (PR #500 synthetic integration head) on GitHub-hosted ubuntu-latest: the full current batch lane completed green in 6.6m, from gate start 11:08:43Z through duration verdict 11:15:19Z. The committed 7m baseline remains unchanged; 1.25x guard = 8.75m. This is measured evidence, replacing the earlier projection from per-gate timestamps (#451)."
     },
     "blood": {
       "seconds": 1260,

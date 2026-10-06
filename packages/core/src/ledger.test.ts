@@ -66,6 +66,19 @@ function activeNamed(age: string): ActiveAge {
   return { age, began: 1042, named: true, namedAt: 1042, paid: { standing: false } };
 }
 
+describe('Ledger content contract', () => {
+  it('starts with exactly the one authored opening clause', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const opening = bundle.clauses.filter((clause) => clause.known);
+    expect(opening).toHaveLength(1);
+    expect([...ctx.world.clausesRecovered]).toEqual(opening.map((clause) => clause.id));
+  });
+
+  it('keeps the nine-clause contract explicit', () => {
+    expect(bundle.clauses).toHaveLength(9);
+  });
+});
+
 describe('revealClause (concept §18)', () => {
   it('pays a house that is keeping records', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
