@@ -73,7 +73,7 @@ describe('the signing, centuries on', () => {
     const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(g.ctx))), content);
 
     expect(resumed.world.year).toBe(END_YEAR);
-    expect(prologueView(resumed)!.founded).toEqual({ ...CHOICE, year: 1042 });
+    expect(prologueView(resumed)!.founded).toEqual({ ...CHOICE, answers: {}, year: 1042 });
     expect(resumed.world.founding?.houseName).toBe('The House of Salt');
   });
 });
