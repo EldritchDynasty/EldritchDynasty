@@ -45,6 +45,12 @@
     },
     {
       "kind": "flag",
+      "key": "burned_the_dark_shelf",
+      "disposition": "delete",
+      "reason": "Burning the Death/Darkness shelf already leaves a durable Respect gain and the Chronicle preserves the act; the unread flag adds no separate rule or promised callback."
+    },
+    {
+      "kind": "flag",
       "key": "church_holds_a_copy",
       "disposition": "read",
       "reason": "The held inquest outcome explicitly sends the ledger away with the Church. That is durable external evidence with a natural later inquest/record reader, and the branch otherwise has no lasting effect."
@@ -126,6 +132,12 @@
       "key": "let_the_millers_boy_run",
       "disposition": "self_expression",
       "reason": "Letting the village story run is intentionally an expressive choice: the event-level rumour already carries the story and the outcome needs no invented resource cost. Delete the dead flag and tag let_it_run as self_expression in the later content slice."
+    },
+    {
+      "kind": "flag",
+      "key": "looted_library",
+      "disposition": "read",
+      "reason": "Buying the looted library costs 220 crowns and explicitly promises that three volumes enable the house's great-grandchildren. Preserve the flag for the later library/book consequence needed to make that authored long-term promise real."
     },
     {
       "kind": "flag",
@@ -354,6 +366,12 @@
       "key": "tried_the_fourth_shelf_alone",
       "disposition": "delete",
       "reason": "The secret cellar attempt already damages the daughter's relationship to the Head and she tells nobody; the unread flag cannot identify her later and adds no distinct durable consequence beyond that relationship."
+    },
+    {
+      "kind": "flag",
+      "key": "waited_out_the_insurrection",
+      "disposition": "read",
+      "reason": "The successful wait outcome otherwise has no lasting effect and explicitly says the marriage terms improve twice before year end. Preserve the flag for the follow-up match consequence rather than turning the 55% success branch into prose only."
     },
     {
       "kind": "flag",
