@@ -93,6 +93,7 @@
  * that is a claim for #85's own accumulation work to make, not this gate.
  */
 import { loadContent } from '@ed/content';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 import { indexContent, type Content, type ContentBundle, type Rung } from '@ed/schema';
 import { bootstrap, clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
@@ -367,12 +368,13 @@ export function gateLadder(
   source: Source = loadContent(),
   opts: { seeds?: number[]; years?: number; bid?: number } = {},
 ): LadderVerdict {
+  const config = BLOCKING_GATE_CONFIG.ladder;
   const bundle = indexContent(source);
-  const seeds = opts.seeds ?? [4000, 4013, 4026, 4039, 4052, 4065];
-  const years = opts.years ?? CAMPAIGN_YEARS;
-  const bid = opts.bid ?? 600;
+  const seeds = opts.seeds ?? [...config.seeds];
+  const years = opts.years ?? config.years;
+  const bid = opts.bid ?? config.bid;
 
-  const columns = (['climb', 'spare', 'scion', 'pair', 'pair_climb'] as const).map((policy) => ({
+  const columns = config.policies.map((policy) => ({
     policy,
     runs: seeds.map((s) => playOnce(bundle, s, years, policy, bid)),
   }));
@@ -511,10 +513,13 @@ const FLOOR_SHARE_FLOOR = 0.05;
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('ladder-gate.ts');
 if (isMain) {
   const args = process.argv.slice(2);
-  const runs = Number(args[0] ?? 6);
-  const years = Number(args[1] ?? CAMPAIGN_YEARS);
-  const bid = Number(args.find((a) => a.startsWith('--bid='))?.split('=')[1] ?? 600);
-  const seeds = Array.from({ length: runs }, (_, i) => 4000 + i * 13);
+  const config = BLOCKING_GATE_CONFIG.ladder;
+  const runs = Number(args[0] ?? config.seeds.length);
+  const years = Number(args[1] ?? config.years);
+  const bid = Number(args.find((a) => a.startsWith('--bid='))?.split('=')[1] ?? config.bid);
+  const seeds = runs <= config.seeds.length
+    ? [...config.seeds].slice(0, runs)
+    : Array.from({ length: runs }, (_, i) => config.seeds[0] + i * 13);
   const { ok, lines } = gateLadder(loadContent(), { seeds, years, bid });
   for (const l of lines) console.log(l);
   process.exit(ok ? 0 : 1);
