@@ -282,7 +282,7 @@ describe('#441 trusted proof boundary', () => {
       (p: GateProof) => { p.algorithmVersion += 1; },
       (p: GateProof) => { p.fingerprint = 'other'; },
       (p: GateProof) => { p.reusable = false; },
-      (p: GateProof) => { (p as GateProof & { verdict: string }).verdict = 'failure'; },
+      (p: GateProof) => { (p as unknown as { verdict: string }).verdict = 'failure'; },
       (p: GateProof) => { p.unclassifiedReads = ['mystery.json']; },
     ]) {
       const proof = trustedProof();
