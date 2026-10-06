@@ -120,7 +120,7 @@ describe('the gates pass the shipped game', () => {
     expect(LANES).toEqual(['batch']);
   });
 
-  it('runs sampled outcome reach only from a scheduled/manual telemetry workflow (#495)', () => {
+  it('keeps full all-outcome sampled reach in scheduled/manual telemetry (#495/#502)', () => {
     const telemetryWorkflow = readFileSync(
       join(import.meta.dirname, '../../../.github/workflows/outcome-reach-telemetry.yml'),
       'utf8',
@@ -138,11 +138,12 @@ describe('the gates pass the shipped game', () => {
 /**
  * ── THE CI LANES ARE A PARTITION, AND THE WORKFLOW IS THE OTHER HALF ──────
  *
- * The gates job runs on five runners now. The independently expensive gates
- * have their own lanes; the JSON duration budget is the checked source for
- * their measured costs. `vocabulary-reach` remains beside `fire-rate` because
- * it reads the same memoized batch. Sampled `outcome-reach` is deliberately
- * outside this partition and runs only as explicit scheduled telemetry (#495).
+ * The merge-blocking gates job now runs one derived `batch` lane (#451); the
+ * JSON duration budget is the checked source for its measured cost. Full
+ * all-outcome sampled `outcome-reach` stays outside GATES as explicit
+ * scheduled/manual telemetry (#495). #502 adds `outcome-reach-blocking` to
+ * the derived batch: it samples only outcomes absent from the deterministic
+ * witness manifest, so a witnessed finite-sample miss cannot make merge CI red.
  *
  * `gatesInLane` DERIVES `batch` rather than listing it, so a gate added
  * tomorrow is in CI the moment it exists. That is deliberate, and it is the
