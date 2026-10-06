@@ -1,0 +1,10 @@
+verdict: FAILED
+exit: 2
+request: /claim steal 334 --agent chatgpt/334-self-expression-cleanup-20261007 --paths packages/content/events/age_quickening.yaml packages/content/events/arc_eight_days.yaml packages/core/src/tools/choice-decisions.json --lane content
+request-commit: 60b061603d2dd3dd05034106d9c7f18e4bee8efa
+
+remote-claim: invalid request. Expected one of:
+/claim <issue> --agent <working-branch> --paths <path-list> [--lane <lane>]
+/claim check --agent <working-branch>
+/claim release <issue> --agent <working-branch>
+/claim steal <issue> --agent <working-branch>
