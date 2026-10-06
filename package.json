@@ -74,7 +74,7 @@
     "//16": "Issue #272: paired Short-Line run-two freshness and inherited-Library visibility. Shape overlap plugs into #271's canonical shapeOf.",
     "gate:replay": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/replay-divergence.ts",
     "lint:prose": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/prose-lint.ts",
-    "audit:strings": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/string-audit.ts",
+    "audit:strings": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/string-audit-cli.ts",
     "//9": "Warm the run corpus. Cold, the corpus is SLOWER than replaying; CI caches node_modules/.cache/ed-runs under `npm run corpus -- --key`.",
     "corpus": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/corpus-warm.ts",
     "//10": "The mutation probe: break code on purpose, see whether any test notices. A PROBE, run on purpose — never a CI threshold, for the reason docs/TEST-COVERAGE.md gives about coverage.",
