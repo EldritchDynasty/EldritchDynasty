@@ -1,10 +1,6 @@
-verdict: FAILED
-exit: 2
-request: /claim steal 442 --agent chatgpt/442-checked-family-sweep-20261007 --paths packages/core/src/events/reach.test.ts tools/outcome-witnesses.json --lane code
-request-commit: 02235fc757ec59e61bccb07b4b4c22c20e5d1fff
+verdict: ok
+exit: 0
+request: /claim steal 442 --agent chatgpt/442-checked-family-sweep-20261007
+request-commit: 3f938952a0be9c875faef38a39319a90729de312
 
-remote-claim: invalid request. Expected one of:
-/claim <issue> --agent <working-branch> --paths <path-list> [--lane <lane>]
-/claim check --agent <working-branch>
-/claim release <issue> --agent <working-branch>
-/claim steal <issue> --agent <working-branch>
+stolen: 442 → chatgpt/442-checked-family-sweep-20261007 (was chatgpt/442-test-family-sweep-20261006, 6.2h stale)
