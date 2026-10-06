@@ -16,6 +16,7 @@ import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool } from './selection.js';
 import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
+import { campaignDef } from '../campaign.js';
 
 const content = indexContent(loadContent());
 
@@ -5712,5 +5713,321 @@ describe('mature-house TEST_FAMILIES fallback outcome witnesses', () => {
     }
 
     expect(new Set(witnessed).size).toBe(witnessed.length);
+  });
+});
+
+
+describe('campaign-clock TEST_FAMILIES fallback outcome witnesses', () => {
+  function buildAtProgress(
+    family: (typeof TEST_FAMILIES)[number],
+    event: (typeof content.events)[number],
+    progress: number,
+  ) {
+    const ctx = family.build(content);
+    const campaign = campaignDef(ctx.world.campaign);
+    ctx.world.year = campaign.startYear + Math.floor(campaign.years * progress);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      10,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+    ctx.world.treasury = Math.max(ctx.world.treasury, 1_000);
+    return ctx;
+  }
+
+  it('executes authored campaign-progress outcomes at real middle/late campaign clocks', () => {
+    const progressPoints = [0.5, 0.8] as const;
+    const witnessed: string[] = [];
+
+    for (const event of content.events) {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.ages !== undefined
+        || !JSON.stringify(event.conditions).includes('"campaignProgress"')
+      ) continue;
+      if (
+        event.interaction.kind !== 'narration'
+        && (
+          event.interaction.decidedBy !== 'player'
+          || event.interaction.choices.some((choice) => (
+            choice.requires.length > 0 || choice.check !== undefined
+          ))
+        )
+      ) continue;
+
+      const match = progressPoints.flatMap((progress) =>
+        TEST_FAMILIES.map((family) => ({ family, progress })))
+        .find(({ family, progress }) => {
+          const ctx = buildAtProgress(family, event, progress);
+          if (!evalCondition(event.conditions, ctx)) return false;
+          const slots = resolveSlots(event, ctx, makeRng(9961));
+          if (!slots.ok || slots.playerCast.length) return false;
+          return ambientPool(ctx).some((offered) => offered.id === event.id);
+        });
+      if (!match) continue;
+
+      const targets = event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) => ({
+            choiceId: undefined as string | undefined,
+            outcome,
+            weighted: event.interaction.outcomes.length > 1,
+          }))
+        : event.interaction.choices.flatMap((choice) =>
+            choice.outcomes.map((outcome) => ({
+              choiceId: String(choice.id),
+              outcome,
+              weighted: choice.outcomes.length > 1,
+            })));
+
+      for (const target of targets) {
+        const ctx = buildAtProgress(match.family, event, match.progress);
+        const result = executeOutcomeWitness(ctx, event, {
+          ...(target.choiceId ? { choiceId: target.choiceId } : {}),
+          expectedOutcomeId: target.outcome.id,
+          rng: makeRng(9962),
+          ...(target.weighted ? { targetWeightedOutcome: true } : {}),
+        });
+        expect(
+          result.ok,
+          String(event.id) + '/' + String(target.outcome.id)
+            + ' at campaign progress ' + String(match.progress)
+            + ': ' + (result.reason ?? 'no reason'),
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.length).toBeGreaterThan(0);
+    expect(new Set(witnessed).size).toBe(witnessed.length);
+  });
+});
+
+describe('mature-lean TEST_FAMILIES fallback outcome witnesses', () => {
+  it('executes late-house outcomes whose real authored state needs a lean treasury', () => {
+    const witnessed: string[] = [];
+
+    for (const event of content.events) {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.ages !== undefined
+      ) continue;
+      if (
+        event.interaction.kind !== 'narration'
+        && (
+          event.interaction.decidedBy !== 'player'
+          || event.interaction.choices.some((choice) => (
+            choice.requires.length > 0 || choice.check !== undefined
+          ))
+        )
+      ) continue;
+
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          10,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.treasury = 100;
+        if (!evalCondition(event.conditions, ctx)) return false;
+        const slots = resolveSlots(event, ctx, makeRng(9971));
+        if (!slots.ok || slots.playerCast.length) return false;
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+      if (!family) continue;
+
+      const targets = event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) => ({
+            choiceId: undefined as string | undefined,
+            outcome,
+            weighted: event.interaction.outcomes.length > 1,
+          }))
+        : event.interaction.choices.flatMap((choice) =>
+            choice.outcomes.map((outcome) => ({
+              choiceId: String(choice.id),
+              outcome,
+              weighted: choice.outcomes.length > 1,
+            })));
+
+      for (const target of targets) {
+        const ctx = family.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          10,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.treasury = 100;
+        const result = executeOutcomeWitness(ctx, event, {
+          ...(target.choiceId ? { choiceId: target.choiceId } : {}),
+          expectedOutcomeId: target.outcome.id,
+          rng: makeRng(9972),
+          ...(target.weighted ? { targetWeightedOutcome: true } : {}),
+        });
+        expect(
+          result.ok,
+          String(event.id) + '/' + String(target.outcome.id)
+            + ' via mature-lean ' + family.id + ': ' + (result.reason ?? 'no reason'),
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.length).toBeGreaterThan(0);
+  });
+});
+
+describe('late-generation Age TEST_FAMILIES fallback outcome witnesses', () => {
+  it('executes simple single-Age outcomes after the shared household has matured', () => {
+    const witnessed: string[] = [];
+
+    for (const event of content.events) {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.record !== undefined
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+        || event.interaction.choices.some((choice) => (
+          choice.requires.length > 0 || choice.check !== undefined
+        ))
+      ) continue;
+
+      const age = event.ages.only[0]!;
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          10,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
+        if (!evalCondition(event.conditions, ctx)) return false;
+        const slots = resolveSlots(event, ctx, makeRng(9981));
+        if (!slots.ok || slots.playerCast.length) return false;
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+      if (!family) continue;
+
+      for (const choice of event.interaction.choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = family.build(content);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            10,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          ctx.world.age.active = [{
+            age,
+            began: ctx.world.year,
+            named: true,
+            paid: { standing: false },
+          }];
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9982),
+            ...(choice.outcomes.length > 1 ? { targetWeightedOutcome: true } : {}),
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
+              + ' via mature Age ' + family.id + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+        }
+      }
+    }
+
+    expect(witnessed.length).toBeGreaterThan(0);
+  });
+});
+
+describe('higher-ascension TEST_FAMILIES fallback outcome witnesses', () => {
+  it('executes authored ascension-gated narration and player outcomes at Hierophant state', () => {
+    const witnessed: string[] = [];
+
+    for (const event of content.events) {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.ages !== undefined
+        || !JSON.stringify(event.conditions).includes('"ascension"')
+      ) continue;
+      if (
+        event.interaction.kind !== 'narration'
+        && (
+          event.interaction.decidedBy !== 'player'
+          || event.interaction.choices.some((choice) => (
+            choice.requires.length > 0 || choice.check !== undefined
+          ))
+        )
+      ) continue;
+
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          10,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.respect = 'eminent';
+        ctx.world.ascension.rung = 'hierophant';
+        ctx.world.ascension.best = 'hierophant';
+        if (!evalCondition(event.conditions, ctx)) return false;
+        const slots = resolveSlots(event, ctx, makeRng(9991));
+        if (!slots.ok || slots.playerCast.length) return false;
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+      if (!family) continue;
+
+      const targets = event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) => ({
+            choiceId: undefined as string | undefined,
+            outcome,
+            weighted: event.interaction.outcomes.length > 1,
+          }))
+        : event.interaction.choices.flatMap((choice) =>
+            choice.outcomes.map((outcome) => ({
+              choiceId: String(choice.id),
+              outcome,
+              weighted: choice.outcomes.length > 1,
+            })));
+
+      for (const target of targets) {
+        const ctx = family.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          10,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.respect = 'eminent';
+        ctx.world.ascension.rung = 'hierophant';
+        ctx.world.ascension.best = 'hierophant';
+        const result = executeOutcomeWitness(ctx, event, {
+          ...(target.choiceId ? { choiceId: target.choiceId } : {}),
+          expectedOutcomeId: target.outcome.id,
+          rng: makeRng(9992),
+          ...(target.weighted ? { targetWeightedOutcome: true } : {}),
+        });
+        expect(
+          result.ok,
+          String(event.id) + '/' + String(target.outcome.id)
+            + ' via high-ascension ' + family.id + ': ' + (result.reason ?? 'no reason'),
+        ).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.length).toBeGreaterThan(0);
   });
 });
