@@ -621,6 +621,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_heralds_note",
+      "disposition": "delete",
+      "reason": "The herald's external note is already represented by the actual short-descent outcome and its preserved world flag. Record knowledge only mirrors what the player wrote and should not gate the institutional consequence."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_house_held_out",
       "disposition": "delete",
       "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve that the house held through the interdict without paying or signing."
@@ -687,6 +693,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_notarys_register",
+      "disposition": "delete",
+      "reason": "This knowledge exists only when the player records the scene; the external Bramme register exists regardless, and future consequences should depend on that world fact or the heirloom, not on whether the Chronicle option was chosen."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_older_register",
       "disposition": "read",
       "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
@@ -744,6 +756,12 @@
       "key": "knows_the_second_is_uncertain",
       "disposition": "self_expression",
       "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_short_return",
+      "disposition": "delete",
+      "reason": "The actual short return is already preserved by the_short_return for its promised next-relief consequence. Record knowledge only mirrors what the player chose to write and is redundant causal state."
     },
     {
       "kind": "knowledge",
@@ -819,6 +837,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_tops_were_taken",
+      "disposition": "delete",
+      "reason": "This is a Record-only memory of the Chronicle wording. The hill claim's durable state already lives in treasury/Respect/rumour and external assize accounts; no later rule should depend on whether the player recorded it."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ward_was_married_in",
       "disposition": "read",
       "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
@@ -840,6 +864,12 @@
       "key": "knows_the_widow_was_pressed",
       "disposition": "delete",
       "reason": "The Chronicle and deed claim already preserve that the widow was pressed, and the Record keeps its Respect consequence; this separate knowledge write adds no current consequence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_yard_at_dawn",
+      "disposition": "delete",
+      "reason": "The body, Cawdry view and provable discrepancy exist independently of the player's Record choice. This unread Record knowledge duplicates the Chronicle rather than a distinct world consequence."
     },
     {
       "kind": "knowledge",
