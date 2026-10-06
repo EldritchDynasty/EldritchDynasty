@@ -20,6 +20,7 @@ import {
   runGatePartitionsInWorkers,
 } from './tools/gate-partition.js';
 import { gateWar, warGateInputs } from './tools/war-gate.js';
+import { gateSigning } from './tools/signing-gate.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -108,10 +109,11 @@ describe('the gates pass the shipped game', () => {
 
   it('keeps scheduled sampled gates addressable but outside every blocking lane', () => {
     expect(Object.keys(TELEMETRY_GATES).sort()).toEqual([
-      'blood', 'endings', 'fire-rate', 'outcome-reach', 'war',
+      'blood', 'endings', 'fire-rate', 'outcome-reach', 'signing', 'war',
     ]);
     expect(COMMAND_GATES['outcome-reach']).toBe(gateOutcomeReach);
     expect(COMMAND_GATES['fire-rate']).toBe(gateFireRateNightly);
+    expect(COMMAND_GATES.signing).toBe(gateSigning);
     expect(Object.keys(GATES).filter((name) => name in TELEMETRY_GATES)).toEqual([]);
     expect(LANES).toEqual(['batch']);
   });
