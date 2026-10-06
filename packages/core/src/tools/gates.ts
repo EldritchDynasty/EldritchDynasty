@@ -49,14 +49,7 @@ import { phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
 import { vocabularyAuthorship } from './vocabulary-authorship.js';
-import type { BlockingGateId } from './gate-registry.js';
-
-// Not `1000 + i * 7`: under the corrected blood count (issue #42), most of
-// that formula's terms end their line before 2042, so the clause gate was
-// reading how many Ages a DEAD house lived through rather than a living
-// one's. These twelve are individually confirmed to reach the full 1000
-// years post-#42 (see BALANCE-LOG's "the line runs out mid-run" entry).
-const SEEDS = [1001, 1003, 1004, 1008, 1013, 1016, 1019, 1020, 1024, 1025, 1026, 1031];
+import { BLOCKING_GATE_CONFIG, GATE_BATCH_SEED_START, GATE_BATCH_SEED_STEP, type BlockingGateId } from './gate-registry.js';
 
 /** What a gate hands back: the verdict, and the lines it would have printed. */
 export interface GateResult {
@@ -183,9 +176,10 @@ export function gateClauses(
   opts: { seeds?: number[]; years?: number; floor?: number } = {},
 ): GateResult {
   const bundle = indexContent(source);
-  const seeds = opts.seeds ?? SEEDS;
-  const years = opts.years ?? CAMPAIGN_YEARS;
-  const floor = opts.floor ?? 6;
+  const config = BLOCKING_GATE_CONFIG.clauses;
+  const seeds = opts.seeds ?? [...config.seeds];
+  const years = opts.years ?? config.years;
+  const floor = opts.floor ?? config.floor;
 
   const counts = seeds.map((seed) => {
     const ctx = bootstrap(bundle, seed, START_YEAR);
@@ -591,7 +585,7 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
     madnessHolders: [],
   };
   for (let i = 0; i < runs; i++) {
-    const seed = 5000 + i * 7;
+    const seed = GATE_BATCH_SEED_START + i * GATE_BATCH_SEED_STEP;
     const ctx = bootstrap(content, seed, START_YEAR);
     const holderPeaks = new Map<string, MadnessHolder>();
     for (let y = 0; y < years; y += every) {
@@ -705,12 +699,13 @@ export function gateLadderScales(
   // re-roll left eight runs, and sixteen, without him (ceilings 81.3 and 84.2)
   // and 32 and 48 with him again. A ceiling the batch cannot reliably see is
   // not one it can convict a floor on.
-  const runs = opts.runs ?? 32;
-  const years = opts.years ?? CAMPAIGN_YEARS;
+  const config = BLOCKING_GATE_CONFIG['ladder-scales'];
+  const runs = opts.runs ?? config.runs;
+  const years = opts.years ?? config.years;
   // Sampled through the run rather than at the end: a man who stood at
   // Hierophant in 1400 and died in 1440 is not in the household at 2042, and
   // the whole question is what the population PRODUCED.
-  const every = opts.every ?? 25;
+  const every = opts.every ?? config.sampleEveryYears;
 
   const {
     minds, madnesses, powers, madnessByRoute, progressionDecisions,
