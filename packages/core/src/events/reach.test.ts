@@ -5606,3 +5606,111 @@ describe('authored age-scoped record-bearing TEST_FAMILIES outcome witnesses', (
     expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
+
+
+describe('mature-house TEST_FAMILIES fallback outcome witnesses', () => {
+  function buildMatureHouse(
+    family: (typeof TEST_FAMILIES)[number],
+    event: (typeof content.events)[number],
+  ) {
+    const ctx = family.build(content);
+    ctx.world.generation = Math.max(
+      ctx.world.generation,
+      10,
+      FREQUENCY_PROFILES[event.frequency].minGeneration,
+    );
+    ctx.world.treasury = Math.max(ctx.world.treasury, 1_000);
+    return ctx;
+  }
+
+  function offeredByStandardFamily(event: (typeof content.events)[number]): boolean {
+    return TEST_FAMILIES.some((family) => {
+      const ctx = family.build(content);
+      ctx.world.generation = Math.max(
+        ctx.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      if (!evalCondition(event.conditions, ctx)) return false;
+      const slots = resolveSlots(event, ctx, makeRng(9951));
+      if (!slots.ok || slots.playerCast.length) return false;
+      return ambientPool(ctx).some((offered) => offered.id === event.id);
+    });
+  }
+
+  it('executes ordinary late/prosperous outcomes missed by the baseline shared fixtures', () => {
+    type Case = {
+      event: (typeof content.events)[number];
+      family: (typeof TEST_FAMILIES)[number];
+    };
+
+    const cases: Case[] = [];
+    for (const event of content.events) {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.ages !== undefined
+        || offeredByStandardFamily(event)
+      ) continue;
+
+      if (event.interaction.kind !== 'narration') {
+        if (event.interaction.decidedBy !== 'player') continue;
+        if (!event.interaction.choices.some((choice) => (
+          choice.requires.length === 0 && choice.check === undefined
+        ))) continue;
+      }
+
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = buildMatureHouse(candidate, event);
+        if (!evalCondition(event.conditions, ctx)) return false;
+        const slots = resolveSlots(event, ctx, makeRng(9952));
+        if (!slots.ok || slots.playerCast.length) return false;
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+      if (family) cases.push({ event, family });
+    }
+
+    expect(cases.length).toBeGreaterThan(0);
+    const witnessed: string[] = [];
+
+    for (const { event, family } of cases) {
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          const ctx = buildMatureHouse(family, event);
+          const result = executeOutcomeWitness(ctx, event, {
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9953),
+            targetWeightedOutcome: event.interaction.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(outcome.id)
+              + ' via mature ' + family.id + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+        }
+        continue;
+      }
+
+      for (const choice of event.interaction.choices) {
+        if (choice.requires.length !== 0 || choice.check !== undefined) continue;
+        for (const outcome of choice.outcomes) {
+          const ctx = buildMatureHouse(family, event);
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9954),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
+              + ' via mature ' + family.id + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          if (result.key) witnessed.push(result.key);
+        }
+      }
+    }
+
+    expect(new Set(witnessed).size).toBe(witnessed.length);
+  });
+});
