@@ -173,55 +173,79 @@ function mergedPullRequestsForCommit(sha) {
 function mergedPullRequestLandingHeads() {
   if (!RECONCILE_MERGED_PRS || !REPOSITORY) return new Map();
 
-  let prs = [];
+  const landed = new Map();
+  const remember = (pr) => {
+    if (!pr?.merged_at) return;
+    if (pr.base?.ref !== DEFAULT_BRANCH || pr.base?.repo?.full_name !== REPOSITORY) return;
+    if (pr.head?.repo?.full_name !== REPOSITORY) return;
+    if (typeof pr.head?.ref !== 'string' || typeof pr.head?.sha !== 'string') return;
+    landed.set(`${pr.head.ref}\0${pr.head.sha}`, Number(pr.number) || '?');
+  };
+
   const fixture = DRY ? (process.env.JANITOR_MERGED_PRS_JSON ?? '') : '';
   if (fixture) {
     try {
       const parsed = JSON.parse(fixture);
       if (!Array.isArray(parsed)) throw new Error('expected a JSON array');
-      prs = parsed;
+      for (const pr of parsed) remember(pr);
     } catch (error) {
       log(`branch reconciliation: invalid injected PR evidence: ${error}`);
-      return new Map();
     }
-  } else {
-    if (!HAS_GH) {
-      log('branch reconciliation: gh unavailable; keeping non-ancestor branches');
-      if (!DRY) reconciliationFailed = true;
-      return new Map();
-    }
-    const endpoint =
-      `/repos/${REPOSITORY}/pulls?state=closed&base=${encodeURIComponent(DEFAULT_BRANCH)}&per_page=100`;
-    const r = spawnSync('gh', [
-      'api', '--paginate', '--slurp',
-      '--header', 'Accept: application/vnd.github+json',
-      '--header', 'X-GitHub-Api-Version: 2022-11-28',
-      endpoint,
-    ], { cwd: CWD, encoding: 'utf8' });
-    if (r.error || r.status !== 0) {
-      reconciliationFailed = true;
-      log(`branch reconciliation: could not list merged PRs: ${(r.stderr ?? '').trim()}`);
-      return new Map();
-    }
-    try {
-      const pages = JSON.parse(r.stdout ?? '[]');
-      if (!Array.isArray(pages)) throw new Error('expected paginated JSON arrays');
-      prs = pages.flatMap((page) => Array.isArray(page) ? page : []);
-    } catch (error) {
-      reconciliationFailed = true;
-      log(`branch reconciliation: invalid PR response: ${error}`);
-      return new Map();
-    }
+    return landed;
   }
 
-  const landed = new Map();
-  for (const pr of prs) {
-    if (!pr?.merged_at) continue;
-    if (pr.base?.ref !== DEFAULT_BRANCH || pr.base?.repo?.full_name !== REPOSITORY) continue;
-    if (pr.head?.repo?.full_name !== REPOSITORY) continue;
-    if (typeof pr.head?.ref !== 'string' || typeof pr.head?.sha !== 'string') continue;
-    landed.set(`${pr.head.ref}\0${pr.head.sha}`, Number(pr.number) || '?');
+  if (!HAS_GH) {
+    log('branch reconciliation: gh unavailable; keeping non-ancestor branches');
+    if (!DRY) reconciliationFailed = true;
+    return landed;
   }
+
+  const endpoint =
+    `/repos/${REPOSITORY}/pulls?state=closed&base=${encodeURIComponent(DEFAULT_BRANCH)}&per_page=100`;
+
+  // Do not capture the REST objects themselves. At the current repository size
+  // one 100-PR page is already >1 MiB, enough to trip spawnSync's default
+  // maxBuffer before --paginate reaches page two. Have gh/jq discard everything
+  // except the seven scalar fields this proof needs, one TSV record per merged
+  // PR, so Node only captures a few tens of KiB even across the full history.
+  const projection = [
+    '.[]',
+    'select(.merged_at != null)',
+    '[.number, .merged_at, .base.ref, .base.repo.full_name,',
+    ' .head.ref, .head.sha, .head.repo.full_name]',
+    '| @tsv',
+  ].join(' ');
+  const r = spawnSync('gh', [
+    'api', '--paginate',
+    '--jq', projection,
+    '--header', 'Accept: application/vnd.github+json',
+    '--header', 'X-GitHub-Api-Version: 2022-11-28',
+    endpoint,
+  ], { cwd: CWD, encoding: 'utf8' });
+
+  if (r.error || r.status !== 0) {
+    reconciliationFailed = true;
+    const detail = r.error?.message || (r.stderr ?? '').trim() || `exit ${r.status ?? 'unknown'}`;
+    log(`branch reconciliation: could not list merged PRs: ${detail}`);
+    return landed;
+  }
+
+  for (const line of (r.stdout ?? '').split('\n').filter(Boolean)) {
+    const fields = line.split('\t');
+    if (fields.length !== 7) {
+      reconciliationFailed = true;
+      log(`branch reconciliation: invalid projected PR record with ${fields.length} fields`);
+      continue;
+    }
+    const [number, mergedAt, baseRef, baseRepo, headRef, headSha, headRepo] = fields;
+    remember({
+      number,
+      merged_at: mergedAt || null,
+      base: { ref: baseRef, repo: { full_name: baseRepo } },
+      head: { ref: headRef, sha: headSha, repo: { full_name: headRepo } },
+    });
+  }
+
   return landed;
 }
 
