@@ -55,7 +55,6 @@ events:
             argument is still live in four hundred years, and both of those are
             the same fact wearing different clothes.
           effects:
-            - { kind: flag, flag: the_two_half_sheets, set: true }
             - { kind: knowledge, op: grant, flag: knows_the_second_is_uncertain }
 
   - id: eight_days_which_one_we_keep
@@ -107,7 +106,6 @@ events:
                 and signed by two people. It is a good, careful, expensive
                 reading and there is nothing whatever wrong with it.
               effects:
-                - { kind: arc_flag, flag: read_as_the_thing, set: true }
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: create, id: the_second_obligation_lie, severity: major, provableBy: [the_church, house_marrow] }
@@ -124,7 +122,6 @@ events:
                 good, careful, cheap reading and there is nothing whatever
                 wrong with it either.
               effects:
-                - { kind: arc_flag, flag: read_as_the_term, set: true }
                 - { kind: knowledge, op: grant, flag: knows_the_second_is_uncertain }
     record:
       subject: which of the two sheets the house obeys
@@ -207,7 +204,6 @@ events:
                 nine tellings because nobody has dared to improve it.
               effects:
                 - { kind: clause, reveal: clause_of_the_witness }
-                - { kind: knowledge, op: grant, flag: knows_the_ink_went }
                 - { kind: discrepancy, op: create, id: the_afternoon_the_ink_went, severity: major, provableBy: [the_church, commons] }
                 - { kind: rumour, op: seed, id: rumour_the_autumn_they_changed_everything, accuracy: 0.2 }
     record:
@@ -220,7 +216,6 @@ events:
             down wrong, and the other sheet did not. That is all this house
             knows. It is written here so that nobody after us has to be told it
             gently.
-          grantsKnowledge: knows_the_ink_went
           effects:
             - { kind: respect, delta: -1 }
         omit:
