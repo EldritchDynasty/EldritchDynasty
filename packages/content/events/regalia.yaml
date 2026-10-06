@@ -211,7 +211,6 @@ events:
             apart, and they do not agree about the second obligation. Both are
             in the box. Neither has been destroyed and neither will be, by
             anybody who has understood what they are.
-          grantsKnowledge: knows_the_second_is_uncertain
         omit:
           chronicle: null
         embellish:
