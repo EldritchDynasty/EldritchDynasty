@@ -1,11 +1,11 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-10-05",
+  "measured": "2026-10-06",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
-      "seconds": 420,
-      "evidence": "Merge-group run 37300991443 (PR #500 synthetic integration head) on GitHub-hosted ubuntu-latest: the full current batch lane completed green in 6.6m, from gate start 11:08:43Z through duration verdict 11:15:19Z. The committed 7m baseline remains unchanged; 1.25x guard = 8.75m. This is measured evidence, replacing the earlier projection from per-gate timestamps (#451)."
+      "seconds": 1560,
+      "evidence": "PR #505 check run 37401088381 on GitHub-hosted ubuntu-24.04, exact branch head 2da8015b: all 12/12 batch gates passed; the run was red only because the old 7m duration budget rejected the deliberate #502 growth. Structured artifact gate-timings-batch measured 1533.623s total (25.56m), with outcome-reach-blocking accounting for 1154.250s (19.24m) and the other gates 379.373s (6.32m). Baseline rounded to 26m; 1.25x guard = 32.5m. No sample, seed set, reach verdict, or gameplay threshold was reduced (#502)."
     },
     "blood": {
       "seconds": 1260,
