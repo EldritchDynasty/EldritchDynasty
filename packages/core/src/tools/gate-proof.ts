@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
 
@@ -262,4 +262,125 @@ export function judgeTrustedProof(
   if (proof.unclassifiedReads.length) return { reusable: false, reason: 'proof contains unclassified runtime reads' };
   if (proof.fingerprint !== expected.fingerprint) return { reusable: false, reason: 'dependency fingerprint changed' };
   return { reusable: true, reason: `reused trusted main proof from run ${run.id}` };
+}
+
+
+export interface MakeGateProofOptions {
+  repoRoot: string;
+  fingerprint: GateFingerprintResult;
+  sourceSha: string;
+  sourceRunId: number;
+  sourceRepository: string;
+  sourceWorkflow: string;
+  runtimeReads: readonly string[];
+  traceAvailable?: boolean;
+}
+
+export function makeGateProof(options: MakeGateProofOptions): GateProof {
+  const runtimeReads = [...new Set(options.runtimeReads)].sort((a, b) => a.localeCompare(b));
+  const unclassifiedReads = options.traceAvailable === false
+    ? ['<runtime-trace-missing>']
+    : unclassifiedRuntimeReads(options.repoRoot, options.fingerprint.manifest, runtimeReads);
+
+  return {
+    formatVersion: GATE_PROOF_FORMAT_VERSION,
+    algorithmVersion: GATE_FINGERPRINT_ALGORITHM_VERSION,
+    gate: options.fingerprint.manifest.gate,
+    fingerprint: options.fingerprint.fingerprint,
+    sourceSha: options.sourceSha,
+    sourceRunId: options.sourceRunId,
+    sourceRepository: options.sourceRepository,
+    sourceWorkflow: options.sourceWorkflow,
+    reusable: unclassifiedReads.length === 0,
+    manifest: options.fingerprint.manifest,
+    runtimeReads,
+    unclassifiedReads,
+  };
+}
+
+interface TraceLine {
+  gate?: string;
+  path?: string;
+}
+
+const option = (argv: readonly string[], name: string): string | undefined => {
+  const at = argv.indexOf(name);
+  return at >= 0 ? argv[at + 1] : undefined;
+};
+
+async function produceProofFiles(argv: readonly string[]): Promise<void> {
+  const repoRoot = resolve(option(argv, '--repo-root') ?? process.cwd());
+  const tracePath = option(argv, '--trace');
+  const outputDir = resolve(repoRoot, option(argv, '--output-dir') ?? 'gate-proofs');
+  const sourceSha = option(argv, '--source-sha');
+  const sourceRun = option(argv, '--source-run');
+  const sourceRepository = option(argv, '--repository');
+  const sourceWorkflow = option(argv, '--workflow') ?? '.github/workflows/check.yml';
+
+  if (!sourceSha || !sourceRun || !sourceRepository) {
+    throw new Error('produce requires --source-sha, --source-run, and --repository');
+  }
+  const sourceRunId = Number(sourceRun);
+  if (!Number.isSafeInteger(sourceRunId) || sourceRunId <= 0) {
+    throw new Error(`invalid --source-run ${sourceRun}`);
+  }
+
+  const traceAvailable = Boolean(tracePath && existsSync(tracePath));
+  const traces = new Map<string, string[]>();
+  if (traceAvailable && tracePath) {
+    for (const line of readFileSync(tracePath, 'utf8').split(/\r?\n/).filter(Boolean)) {
+      const record = JSON.parse(line) as TraceLine;
+      if (!record.gate || !record.path) continue;
+      const values = traces.get(record.gate) ?? [];
+      values.push(record.path);
+      traces.set(record.gate, values);
+    }
+  }
+
+  const { GATES } = await import('./gates.js');
+  mkdirSync(outputDir, { recursive: true });
+  const summary: Array<{ gate: string; fingerprint: string; reusable: boolean; unclassifiedReads: string[] }> = [];
+
+  for (const gate of Object.keys(GATES)) {
+    const fingerprint = await fingerprintRegisteredGate(repoRoot, gate);
+    const proof = makeGateProof({
+      repoRoot,
+      fingerprint,
+      sourceSha,
+      sourceRunId,
+      sourceRepository,
+      sourceWorkflow,
+      runtimeReads: traces.get(gate) ?? [],
+      traceAvailable,
+    });
+    writeFileSync(
+      join(outputDir, `gate-proof-${gate}.json`),
+      `${JSON.stringify(proof, null, 2)}\n`,
+    );
+    summary.push({
+      gate,
+      fingerprint: proof.fingerprint,
+      reusable: proof.reusable,
+      unclassifiedReads: proof.unclassifiedReads,
+    });
+  }
+
+  writeFileSync(join(outputDir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+  for (const row of summary) {
+    const state = row.reusable ? 'reusable' : `non-reusable: ${row.unclassifiedReads.join(', ')}`;
+    console.log(`${row.gate}: ${row.fingerprint.slice(0, 12)} — ${state}`);
+  }
+}
+
+const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('/gate-proof.ts');
+if (isMain) {
+  const [command, ...argv] = process.argv.slice(2);
+  if (command !== 'produce') {
+    console.error('usage: gate-proof.ts produce --trace <jsonl> --output-dir <dir> --source-sha <sha> --source-run <id> --repository <owner/repo> [--workflow <path>]');
+    process.exit(2);
+  }
+  produceProofFiles(argv).catch((error) => {
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    process.exit(1);
+  });
 }
