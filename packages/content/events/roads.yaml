@@ -105,7 +105,6 @@ events:
                 nothing inside it but dry peat. The house keeps the box.
               effects:
                 - { kind: treasury, delta: -1 }
-                - { kind: flag, flag: the_flat_iron_box, set: true }
         - id: send_him_on
           label: Give him water and send him on.
           outcomes:
@@ -202,7 +201,6 @@ events:
                 it. That is the whole of the service and it is worth the money.
               effects:
                 - { kind: treasury, delta: -4 }
-                - { kind: flag, flag: something_went_down_the_wend, set: true }
         - id: keep_it_here
           label: Keep it. What leaves the house is out of the house's hands.
           outcomes:
@@ -306,7 +304,6 @@ events:
               effects:
                 - { kind: treasury, delta: -31 }
                 - { kind: heirloom, op: grant, heirloom: the_forty_leaves }
-                - { kind: flag, flag: the_forty_leaves_are_in_the_press, set: true }
                 - { kind: respect, delta: -1 }
         - id: send_him_to_cawdry
           label: Send him to the bookseller at Cawdry.

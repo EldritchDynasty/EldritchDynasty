@@ -201,7 +201,6 @@ events:
             way two people say the same thing about a road. There is one word
             between them and eight days.
           effects:
-            - { kind: flag, flag: the_two_half_sheets, set: true }
             - { kind: arc, op: start, arc: arc_the_eight_days }
     record:
       subject: the two half-sheets

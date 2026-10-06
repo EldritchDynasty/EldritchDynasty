@@ -81,7 +81,6 @@ events:
             One of ours married a woman out of the Rimefell who came down with
             her brother in Frostfall, with a name and a horse and no document
             of any kind, and we bought her three generations at Bramme.
-          grantsKnowledge: knows_the_rimefell_marriage
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -358,7 +357,6 @@ events:
             A hundred and twenty crowns bought four generations, three seals
             and two hands, and it is better than the descent we actually have,
             and it is in the press with the lease rolls.
-          grantsKnowledge: knows_the_caster_descent_was_bought
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: bought four generations of descent for a hundred and twenty crowns }
@@ -454,7 +452,6 @@ events:
             The dowry was six generations of maternal record under seal and no
             coin at all, and in the fourth year the sixth seal was found to be
             nine years early.
-          grantsKnowledge: knows_the_sixth_seal_is_wrong
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -636,7 +633,6 @@ events:
             Nine years and no child, and the succession was moved to a cadet
             cousin at the Slaughter board in four sentences that had been
             written out first.
-          grantsKnowledge: knows_the_succession_was_moved
           effects: []
           claims:
             - { kind: deed, target: { slot: WIFE }, text: went nine years without a child before the succession was moved to a cadet cousin }
@@ -731,7 +727,6 @@ events:
             She declined three offers with the same four words and this house
             pressed her for four years in front of its own household, and she
             did not move.
-          grantsKnowledge: knows_the_widow_was_pressed
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -825,7 +820,6 @@ events:
             The ward who came to us at six went home at nineteen with
             thirteen years of this household in her head, and nobody here ever
             asked her what she had seen in it.
-          grantsKnowledge: knows_the_ward_went_home
           effects: []
           claims:
             - { kind: deed, target: { slot: WARD }, text: went home at nineteen after thirteen years in this household }

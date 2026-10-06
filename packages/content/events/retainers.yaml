@@ -142,7 +142,6 @@ events:
             physician's rule and not the family's, and what the third jug did
             in there is written down here because somewhere there has to be one
             account of it that is not a story from Wick.
-          grantsKnowledge: knows_what_the_room_did
         omit:
           chronicle: null
         embellish:
@@ -299,7 +298,6 @@ events:
             The autumn of that fourth year is in the book at length, in the
             chronicler's own hand, and the copy at Cawdry says the same. Later
             heads should know it is there and know it cannot be moved.
-          grantsKnowledge: knows_the_short_copy
           effects:
             - { kind: respect, delta: -1 }
         omit:
