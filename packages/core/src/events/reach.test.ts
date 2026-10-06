@@ -6,7 +6,7 @@ import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } 
 import { makeRng, type Rng } from '../rng.js';
 import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
-import { declaredOutcomes, executeFrameOutcomeWitness, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
+import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
@@ -30,6 +30,16 @@ function executeOutcomeWitness(
   ...args: Parameters<typeof executeOutcomeWitnessRaw>
 ): ReturnType<typeof executeOutcomeWitnessRaw> {
   const result = executeOutcomeWitnessRaw(...args);
+  if (result.ok && result.key && declaredOutcomeKeys.has(result.key)) {
+    witnessedOutcomeKeys.add(result.key);
+  }
+  return result;
+}
+
+function executeFrameOutcomeWitness(
+  ...args: Parameters<typeof executeFrameOutcomeWitnessRaw>
+): ReturnType<typeof executeFrameOutcomeWitnessRaw> {
+  const result = executeFrameOutcomeWitnessRaw(...args);
   if (result.ok && result.key && declaredOutcomeKeys.has(result.key)) {
     witnessedOutcomeKeys.add(result.key);
   }
