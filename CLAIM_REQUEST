@@ -1,1 +1,1 @@
-/claim steal 334 --agent chatgpt/334-self-expression-cleanup-20261007
+/claim 334 --agent chatgpt/334-self-expression-cleanup-20261007 --paths packages/content/events/age_quickening.yaml packages/content/events/arc_eight_days.yaml packages/core/src/tools/choice-decisions.json --lane content
