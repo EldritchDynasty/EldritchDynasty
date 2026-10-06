@@ -393,6 +393,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_house_drank_the_water",
+      "disposition": "read",
+      "reason": "The harmless water outcome explicitly says the house learns a wrong lesson it will act on again in about forty years. Preserve the flag for that promised later well/household callback."
+    },
+    {
+      "kind": "flag",
       "key": "the_house_held_the_wardenship",
       "disposition": "read",
       "reason": "Winning the Wardenship is a durable institutional fact that the event itself says permanently exposes the house to Crown, Assembly, Church, and provincial attention. Keep one callback discriminator for later Warden-era consequences."
@@ -528,6 +534,18 @@
       "key": "west_papers_went_east",
       "disposition": "delete",
       "reason": "No authored reader exists; let_it_go still costs Respect and the Chronicle preserves the choice."
+    },
+    {
+      "kind": "flag",
+      "key": "west_wing_patched_again",
+      "disposition": "read",
+      "reason": "Patching is explicitly temporary and lasts only until the north wind returns. Preserve the flag for a later roof recurrence that distinguishes another patch from the eighty-year slate repair."
+    },
+    {
+      "kind": "flag",
+      "key": "west_wing_slated",
+      "disposition": "read",
+      "reason": "Doing the roof properly explicitly makes the west wing dry for eighty years. Preserve the flag for later hall/upkeep logic so the expensive repair actually suppresses or changes future roof consequences."
     },
     {
       "kind": "knowledge",
