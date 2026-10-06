@@ -81,6 +81,12 @@ describe('Capacitor iOS project', () => {
     expect(workflow).toContain('xcrun simctl bootstatus "$UDID" -b');
     expect(workflow).toContain('xcrun simctl install "$UDID" "$APP"');
     expect(workflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
+    expect(workflow).toContain('node scripts/ios-runtime-smoke.mjs');
+
+    const boot = workflow.indexOf('xcrun simctl boot "$UDID" 2>/dev/null || true');
+    const build = workflow.indexOf('xcodebuild -project ios/App/App.xcodeproj -scheme App');
+    expect(boot).toBeGreaterThan(-1);
+    expect(build).toBeGreaterThan(boot);
   });
 
   it('registers the simulator smoke scheme in Debug and never in Release', () => {
