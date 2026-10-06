@@ -61,9 +61,9 @@ export function playAchievementRun(
       while (w.pendingDecisions.length && guard++ < 200) {
         autoResolveAll(ctx, makeRng(hashSeed(seed, 'achievement-rate', w.year, guard)));
       }
-      if (w.pendingDecisions.length) {
-        throw new Error(`achievement report could not resolve the docket for seed ${seed} in ${w.year}`);
-      }
+    }
+    if (w.pendingDecisions.length) {
+      throw new Error(`achievement report could not resolve the ${policy} docket for seed ${seed} in ${w.year}`);
     }
     clearNamingQueue(ctx);
   }
