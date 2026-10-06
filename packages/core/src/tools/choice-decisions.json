@@ -51,6 +51,12 @@
     },
     {
       "kind": "flag",
+      "key": "butts_at_wick_unkept",
+      "disposition": "read",
+      "reason": "The survey outcome explicitly says the clerk's clause is not read for nine years and then is read when war comes. Preserve the flag for that authored war/survey callback instead of deleting the promised future consequence."
+    },
+    {
+      "kind": "flag",
       "key": "church_holds_a_copy",
       "disposition": "read",
       "reason": "The held inquest outcome explicitly sends the ledger away with the Church. That is durable external evidence with a natural later inquest/record reader, and the branch otherwise has no lasting effect."
