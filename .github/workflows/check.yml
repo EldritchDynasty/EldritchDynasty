@@ -599,11 +599,36 @@ jobs:
           cache: npm
       - run: npm ci
       - name: gates
+        env:
+          ED_GATE_READ_TRACE: ${{ runner.temp }}/gate-read-trace.jsonl
         run: |
           started=$(date +%s)
+          rm -f "$ED_GATE_READ_TRACE"
+          export NODE_OPTIONS="--import=$GITHUB_WORKSPACE/tools/gate-read-trace.mjs ${NODE_OPTIONS:-}"
           npm run gates -- --lane ${{ matrix.lane }} --timings-json gate-timings-${{ matrix.lane }}.json
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
+      - name: produce trusted main gate proofs
+        id: gate-proofs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+        continue-on-error: true
+        env:
+          ED_GATE_READ_TRACE: ${{ runner.temp }}/gate-read-trace.jsonl
+        run: >
+          npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/gate-proof.ts produce
+          --trace "$ED_GATE_READ_TRACE"
+          --output-dir gate-proofs
+          --source-sha "$GITHUB_SHA"
+          --source-run "$GITHUB_RUN_ID"
+          --repository "$GITHUB_REPOSITORY"
+          --workflow ".github/workflows/check.yml"
+      - name: retain trusted main gate proofs
+        if: steps.gate-proofs.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-proofs
+          path: gate-proofs/
+          retention-days: 90
       - name: retain structured gate timings
         if: always()
         uses: actions/upload-artifact@v4
