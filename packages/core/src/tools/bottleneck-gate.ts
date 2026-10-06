@@ -56,7 +56,8 @@ import { indexContent, type Content, type ContentBundle } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { livingBlood, END_YEAR } from '../ending.js';
-import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { START_YEAR } from '../campaign.js';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 
 type Source = ContentBundle | Content;
 
@@ -136,18 +137,20 @@ export function verdictOver(runs: FoundingRun[]): FoundingVerdict {
  */
 export function gateFoundingRecovery(
   source: Source = loadContent(),
-  runs = 24,
-  years = CAMPAIGN_YEARS,
+  runs = BLOCKING_GATE_CONFIG.bottleneck.runs,
+  years = BLOCKING_GATE_CONFIG.bottleneck.years,
 ): FoundingVerdict {
   const out: FoundingRun[] = [];
-  for (let i = 0; i < runs; i++) out.push(playFoundingCase(source, 1000 + i * 13, years));
+  const config = BLOCKING_GATE_CONFIG.bottleneck;
+  for (let i = 0; i < runs; i++) out.push(playFoundingCase(source, config.seedStart + i * config.seedStep, years));
   return verdictOver(out);
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('bottleneck-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2]) || 24;
-  const years = Number(process.argv[3]) || CAMPAIGN_YEARS;
+  const config = BLOCKING_GATE_CONFIG.bottleneck;
+  const runs = Number(process.argv[2]) || config.runs;
+  const years = Number(process.argv[3]) || config.years;
   const v = gateFoundingRecovery(loadContent(), runs, years);
   for (const l of v.lines) console.log(l);
   process.exit(v.ok ? 0 : 1);
