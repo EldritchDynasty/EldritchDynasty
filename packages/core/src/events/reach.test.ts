@@ -3307,7 +3307,6 @@ describe('authored generation-gated ordinary-family outcome witnesses', () => {
     expect(cases.map(({ event }) => String(event.id)).sort()).toEqual([
       'the_advocate_on_retainer',
       'the_book_comes_down',
-      'the_book_that_is_wrong',
       'the_book_that_needs_a_reader',
       'the_box_under_the_leases',
       'the_fair_copy',
