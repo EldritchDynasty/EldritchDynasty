@@ -272,6 +272,21 @@ describe('which job went red names jobs that actually ran', () => {
     ].join('\n');
     expect(scoreboard.advisoryJobs(invented)).toEqual(['ask the sky']);
   });
+
+  it('does not make a required job advisory when only one step continues on error', () => {
+    const invented = [
+      'jobs:',
+      '  gates:',
+      '    name: gates (batch)',
+      '    runs-on: ubuntu-latest',
+      '    steps:',
+      '      - name: optional proof artifact',
+      '        continue-on-error: true',
+      '        run: node optional-proof.mjs',
+      '',
+    ].join('\n');
+    expect(scoreboard.advisoryJobs(invented)).not.toContain('gates');
+  });
 });
 
 /**
