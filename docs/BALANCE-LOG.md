@@ -9499,3 +9499,11 @@ it judged the variety work as a break: Short cleared it by 1.15 SE, under
 both terms clear by two standard errors (Long 3.5, Short 2.3). A broken
 instrument reading near zero still fails. The **15% ceiling**, the guard a
 player would feel, does not move.
+
+**Endings gate, `main` 528c3994 → this slice (160 runs each):** broken_line
+49 → 49 (30.6%, target 22–45%), devoured 23 → 23, survivors 50.7 → 50.6,
+clauses 5.26 → 5.28, and Unmaking takers among ascendant runs 5 → 7. The two
+re-pricings that touch what endings read are Farrowmere's decline losing an
+unexplained Respect point and the chapter-house fee burying a Church-provable
+lie. Together they moved nothing the gate judges. Apotheosis reads 0.0% on
+both heads, a pre-existing #332 diagnostic that this slice does not touch.
