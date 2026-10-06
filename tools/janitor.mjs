@@ -156,6 +156,76 @@ function mergedPullRequestsForCommit(sha) {
 }
 
 /**
+ * Native merge queue lands with REBASE, so the reviewed source branch tip is
+ * deliberately NOT an ancestor of main. GitHub still retains the PR's exact
+ * source ref and source SHA. That pair is safe landing evidence only when the
+ * PR is merged into this repository's default branch and the head repository
+ * is this repository too.
+ *
+ * Read the closed-PR collection once rather than issuing one API request per
+ * surviving branch. Missing or unreadable GitHub evidence simply yields no
+ * extra landing proof: ancestry remains authoritative and branches are kept.
+ *
+ * JANITOR_MERGED_PRS_JSON exists only for DRY runs so the cross-platform test
+ * can inject REST-shaped evidence without depending on a network or a runnable
+ * gh shim on Windows. A live deleting run always asks GitHub itself.
+ */
+function mergedPullRequestLandingHeads() {
+  if (!RECONCILE_MERGED_PRS || !REPOSITORY) return new Map();
+
+  let prs = [];
+  const fixture = DRY ? (process.env.JANITOR_MERGED_PRS_JSON ?? '') : '';
+  if (fixture) {
+    try {
+      const parsed = JSON.parse(fixture);
+      if (!Array.isArray(parsed)) throw new Error('expected a JSON array');
+      prs = parsed;
+    } catch (error) {
+      log(`branch reconciliation: invalid injected PR evidence: ${error}`);
+      return new Map();
+    }
+  } else {
+    if (!HAS_GH) {
+      log('branch reconciliation: gh unavailable; keeping non-ancestor branches');
+      if (!DRY) reconciliationFailed = true;
+      return new Map();
+    }
+    const endpoint =
+      `/repos/${REPOSITORY}/pulls?state=closed&base=${encodeURIComponent(DEFAULT_BRANCH)}&per_page=100`;
+    const r = spawnSync('gh', [
+      'api', '--paginate', '--slurp',
+      '--header', 'Accept: application/vnd.github+json',
+      '--header', 'X-GitHub-Api-Version: 2022-11-28',
+      endpoint,
+    ], { cwd: CWD, encoding: 'utf8' });
+    if (r.error || r.status !== 0) {
+      reconciliationFailed = true;
+      log(`branch reconciliation: could not list merged PRs: ${(r.stderr ?? '').trim()}`);
+      return new Map();
+    }
+    try {
+      const pages = JSON.parse(r.stdout ?? '[]');
+      if (!Array.isArray(pages)) throw new Error('expected paginated JSON arrays');
+      prs = pages.flatMap((page) => Array.isArray(page) ? page : []);
+    } catch (error) {
+      reconciliationFailed = true;
+      log(`branch reconciliation: invalid PR response: ${error}`);
+      return new Map();
+    }
+  }
+
+  const landed = new Map();
+  for (const pr of prs) {
+    if (!pr?.merged_at) continue;
+    if (pr.base?.ref !== DEFAULT_BRANCH || pr.base?.repo?.full_name !== REPOSITORY) continue;
+    if (pr.head?.repo?.full_name !== REPOSITORY) continue;
+    if (typeof pr.head?.ref !== 'string' || typeof pr.head?.sha !== 'string') continue;
+    landed.set(`${pr.head.ref}\0${pr.head.sha}`, Number(pr.number) || '?');
+  }
+  return landed;
+}
+
+/**
  * A SHALLOW CLONE INVERTS EVERY ANSWER THIS SCRIPT GIVES, AND SAYS NOTHING.
  *
  * This is the bug that cost a repository its branch list. An agent container
@@ -205,6 +275,8 @@ const refs = () =>
 const MERGED = new Set();
 const DOOMED = [];
 const ALIVE = [];
+const LANDED_BY = new Map();
+const PR_LANDINGS = mergedPullRequestLandingHeads();
 say('### Branches');
 
 /**
@@ -240,13 +312,21 @@ for (const ref of refs()) {
   const branch = ref.replace(/^refs\/janitor\//, '');
   if (!ordinary(branch)) continue;
   const sha = gitOut('rev-parse', ref);
-  const merged = git('merge-base', '--is-ancestor', sha, MAIN).ok;
-  (merged ? DOOMED : ALIVE).push(branch);
+  const ancestor = git('merge-base', '--is-ancestor', sha, MAIN).ok;
+  const pr = PR_LANDINGS.get(`${branch}\0${sha}`);
+  const merged = ancestor || pr !== undefined;
+  if (merged) {
+    DOOMED.push(branch);
+    LANDED_BY.set(branch, ancestor ? 'ancestor of main' : `merged PR #${pr} at exact head`);
+  } else {
+    ALIVE.push(branch);
+  }
   const behind = gitOut('rev-list', '--count', `${sha}..${MAIN}`) || '?';
   const ahead = gitOut('rev-list', '--count', `${MAIN}..${sha}`) || '?';
   log(`decide ${branch}: ${gitOut('rev-parse', '--short', sha)} vs main `
     + `${gitOut('rev-parse', '--short', MAIN)} → ${merged ? 'MERGED' : 'keep'} `
-    + `· behind ${behind} ahead ${ahead}`);
+    + `· behind ${behind} ahead ${ahead}`
+    + (pr !== undefined && !ancestor ? ` · merged PR #${pr} exact head` : ''));
 }
 
 const total = DOOMED.length + ALIVE.length;
@@ -261,7 +341,7 @@ if (DOOMED.length > MAX_DELETE) {
 for (const branch of DOOMED) {
   MERGED.add(branch);
   act('git', 'push', REMOTE, '--delete', branch);
-  say(`- deleted \`${branch}\` — merged`);
+  say(`- deleted \`${branch}\` — ${LANDED_BY.get(branch) ?? 'merged'}`);
 }
 
 let kept = 0;
