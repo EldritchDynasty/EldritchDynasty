@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { indexContent, type Content, type ContentBundle } from '@ed/schema';
-import { CAMPAIGN_YEARS } from '../campaign.js';
 import { declaredOutcomes } from '../events/reach.js';
 import { playGateBatch } from './gate-batch.js';
 import { scopedOutcomeReachVerdict } from './outcome-reach-verdict.js';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 
 type Source = ContentBundle | Content;
 
@@ -50,8 +50,9 @@ export function gateUnwitnessedOutcomeReach(
   source: Source = loadContent(),
   opts: { runs?: number; years?: number } = {},
 ): { ok: boolean; lines: string[] } {
-  const runs = opts.runs ?? 800;
-  const years = opts.years ?? CAMPAIGN_YEARS;
+  const config = BLOCKING_GATE_CONFIG['outcome-reach-blocking'];
+  const runs = opts.runs ?? config.runs;
+  const years = opts.years ?? config.years;
   const manifest = readOutcomeWitnessManifest();
   const declared = declaredOutcomes(indexContent(source));
   const reach = playGateBatch(source, runs, years).reach;
