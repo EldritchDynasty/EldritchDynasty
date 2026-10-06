@@ -39,6 +39,12 @@
     },
     {
       "kind": "flag",
+      "key": "bramme_copied_a_book",
+      "disposition": "read",
+      "reason": "Sending the Life book to Bramme creates an external institutional touchpoint and returns a correct marginal correction in an unknown hand. Preserve the marker for a later chapter-house/library callback rather than treating the copy as purely private."
+    },
+    {
+      "kind": "flag",
       "key": "church_holds_a_copy",
       "disposition": "read",
       "reason": "The held inquest outcome explicitly sends the ledger away with the Church. That is durable external evidence with a natural later inquest/record reader, and the branch otherwise has no lasting effect."
@@ -126,6 +132,12 @@
       "key": "married_in_the_peace",
       "disposition": "delete",
       "reason": "The cheap Long-Peace match already carries its Treasury cost and the event seeds the cheap-wedding rumour; the unread flag adds no distinct current consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "married_on_paper",
+      "disposition": "delete",
+      "reason": "The accepted match already pays Treasury and writes a forged lineage with its claimed ancestor and provenance. That structured lineage state is the durable consequence, so an unread parallel flag would duplicate it."
     },
     {
       "kind": "flag",
@@ -219,6 +231,12 @@
     },
     {
       "kind": "flag",
+      "key": "steward_left_bitter",
+      "disposition": "read",
+      "reason": "The leaving steward takes eleven years of knowledge about which rooms are never opened. That is a concrete former-insider exposure risk and a natural later household/secret callback, not merely flavour."
+    },
+    {
+      "kind": "flag",
       "key": "stood_pat_in_the_quickening",
       "disposition": "delete",
       "reason": "Standing pat already costs Respect and the outcome explains the house losing relative position; the unread flag duplicates that lasting standing consequence."
@@ -285,6 +303,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_match_answered",
+      "disposition": "read",
+      "reason": "The rare counter-offer success is the first opening in a 110-year sequence of impossible Match letters and the house talks about it for a decade. Preserve it for the natural next Match/courtship callback rather than making the 20% branch consequence-free."
+    },
+    {
+      "kind": "flag",
       "key": "the_reader_was_not_welcomed",
       "disposition": "delete",
       "reason": "Keeping the Crusade reader at arm's length already persists as a -10 relationship to that priest; the unread flag duplicates the same social consequence without a distinct later fact."
@@ -303,6 +327,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_steward_had_nobody_behind_him",
+      "disposition": "read",
+      "reason": "Refusing a successor is explicitly promised to cost four years and about ninety crowns when the steward dies. Preserve the flag for that authored succession/household callback so the future cost can become real."
+    },
+    {
+      "kind": "flag",
       "key": "the_two_half_sheets",
       "disposition": "delete",
       "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
@@ -318,6 +348,12 @@
       "key": "the_youngest_was_answered",
       "disposition": "delete",
       "reason": "Reading the Chronicle to the youngest already changes the child's Mind; the unread flag duplicates that durable outcome without a distinct later promise."
+    },
+    {
+      "kind": "flag",
+      "key": "tried_the_fourth_shelf_alone",
+      "disposition": "delete",
+      "reason": "The secret cellar attempt already damages the daughter's relationship to the Head and she tells nobody; the unread flag cannot identify her later and adds no distinct durable consequence beyond that relationship."
     },
     {
       "kind": "flag",
@@ -345,6 +381,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_about_the_west_passage",
+      "disposition": "read",
+      "reason": "The maid identifies a specific cold between the fourth and fifth step and has now told the Head. Preserve that concrete house-sign discovery for a later passage/sign investigation rather than collapsing it into relationship alone."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_an_early_waking",
       "disposition": "read",
       "reason": "A recorded waking at nine directly concerns the blood and the setting's magic rules. Reserve it for a later generational callback so the family's knowledge of an unusually early waking changes how a later sign is interpreted."
@@ -360,6 +402,12 @@
       "key": "knows_it_was_said_in_court",
       "disposition": "delete",
       "reason": "The memory is unread; repeating the phrase still changes Respect, and the Record preserves what was said in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_mundane_sons_are_safe",
+      "disposition": "delete",
+      "reason": "This is Record-only knowledge about the mundane son. The event already persists concrete status, Treasury/Respect outcomes plus Chronicle/deed/discrepancy state; the unread knowledge key duplicates that history."
     },
     {
       "kind": "knowledge",
@@ -492,6 +540,12 @@
       "key": "knows_the_house_stayed_out_of_the_wardenship",
       "disposition": "delete",
       "reason": "The Record memory is unread by authored content; staying out already changes Respect and the candidate relationship, while the Record preserves the choice in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_ilm_papers_were_thin",
+      "disposition": "delete",
+      "reason": "This is Record-only memory after the notarised-pedigree event. Chronicle, deed claim, Respect effect, discrepancy and forged-lineage data already preserve the paper problem without a second unread key."
     },
     {
       "kind": "knowledge",
@@ -657,6 +711,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_threshold_wall",
+      "disposition": "read",
+      "reason": "The failed fourth-shelf experiment is written down and the prose explicitly says two granddaughters read it before they ask. Preserve the knowledge for that intergenerational magic-rule callback."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ward_was_married_in",
       "disposition": "read",
       "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
@@ -744,6 +804,12 @@
       "key": "knows_what_took_the_doves",
       "disposition": "delete",
       "reason": "The goshawk outcome is a resolved observation with no later consequence promised or reader authored. Delete the dead knowledge write rather than preserving a solved seasonal nuisance."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_wick_already_knows",
+      "disposition": "delete",
+      "reason": "Leaving half-days unchanged already improves the household relationship, and the broad fact that Wick knows the house's business is worldbuilding rather than a concrete actionable secret. The unread generic knowledge bit adds no distinct current consequence."
     },
     {
       "kind": "knowledge",
