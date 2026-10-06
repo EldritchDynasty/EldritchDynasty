@@ -11,6 +11,7 @@ import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
 import { commitOutcome, queueChoice, resolveChoice } from './decisions.js';
 import { pickOutcome } from './effects.js';
 import { evalCondition } from './conditions.js';
+import { framePool, presentFrame } from './frame.js';
 import type { ArcStep } from './arcs.js';
 
 /**
@@ -325,6 +326,67 @@ function targetCheckBandOnceRng(
     fork: (salt) => wrap(rng.fork(salt)),
   });
   return wrap(base);
+}
+
+
+export interface FrameOutcomeWitnessRequest {
+  expectedOutcomeId: string;
+  rng: Rng;
+}
+
+/**
+ * One deterministic frame-narration witness through the real frame pool,
+ * caster, outcome picker and frame-entry commit path.
+ *
+ * Frame templates are deliberately outside ambientPool, so treating them as
+ * ordinary events would prove the wrong eligibility semantics. The caller
+ * builds the record/discrepancy state named by \`reads\`; this seam verifies
+ * that the real frame pool admits the template before presenting it.
+ */
+export function executeFrameOutcomeWitness(
+  ctx: SimCtx,
+  e: EventTemplate,
+  request: FrameOutcomeWitnessRequest,
+): OutcomeWitnessResult {
+  if (e.tier !== 'frame') {
+    return { ok: false, reason: 'frame witness requires a frame-tier event' };
+  }
+  if (e.interaction.kind !== 'narration') {
+    return { ok: false, reason: 'frame witness currently supports narration only' };
+  }
+  if (!framePool(ctx).some((candidate) => candidate.id === e.id)) {
+    return { ok: false, reason: 'frame reads are not satisfied by this witness world' };
+  }
+
+  const beforeLog = ctx.world.decisionLog.length;
+  const entry = presentFrame(
+    ctx,
+    e,
+    targetWeightedIdRng(request.rng, request.expectedOutcomeId),
+  );
+  if (!entry) {
+    return { ok: false, reason: 'frame cast could not be resolved' };
+  }
+  if (String(entry.outcomeId) !== request.expectedOutcomeId) {
+    return {
+      ok: false,
+      reason: \`resolved '\${entry.outcomeId}', not '\${request.expectedOutcomeId}'\`,
+    };
+  }
+
+  const committed = ctx.world.decisionLog.slice(beforeLog).some((row) => (
+    row.kind === 'outcome'
+    && row.event === e.id
+    && row.outcomeId === request.expectedOutcomeId
+  ));
+  if (!committed) {
+    return { ok: false, reason: 'frame outcome was not committed to the decision log' };
+  }
+
+  return {
+    ok: true,
+    key: outcomeKey(String(e.id), undefined, request.expectedOutcomeId),
+  };
 }
 
 export function executeOutcomeWitness(
