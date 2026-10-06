@@ -477,7 +477,7 @@ export function createGame(
    * that writes to `view` and `table` — a component that mutated either would
    * be editing a photograph.
    */
-  function refresh(): void {
+  function refresh(persist = true): void {
     const g = session.value;
     if (!g) return;
     view.value = g.view();
@@ -485,7 +485,7 @@ export function createGame(
     land.value = g.land();
     prologue.value = g.prologue() ?? null;
     epilogue.value = g.epilogue() ?? null;
-    keep(g);
+    if (persist) keep(g);
   }
 
   function start(g: GameSession): void {
@@ -565,7 +565,14 @@ export function createGame(
 
     setProseMode(mode) {
       proseMode.value = mode;
-      session.value?.setProseMode(mode);
+      const g = session.value;
+      if (!g) return;
+      g.setProseMode(mode);
+      // Prose mode is reader-local presentation state, so retake the live
+      // read models immediately without writing an otherwise unchanged save.
+      // Chronicle/frame/Library entries already contain the rendered words the
+      // player saw and therefore remain untouched.
+      refresh(false);
     },
 
     found(choice) {
