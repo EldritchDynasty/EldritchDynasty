@@ -5,7 +5,13 @@ import { loadContent } from '@ed/content';
 import { bootstrap, saveGame } from '@ed/core';
 import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
-import { browserPlatform, platformForWindow, type Platform } from './platform.js';
+import {
+  browserPlatform,
+  platformForWindow,
+  type Platform,
+  type SmokeCommand,
+  type SmokeResult,
+} from './platform.js';
 import { mobileStorage } from '../../mobile/src/storage.js';
 
 function bridge(): Platform {
@@ -512,6 +518,45 @@ describe('the mobile bridge stays interchangeable with every other host', () => 
     expect(acceptList(mobileSource)).toBe(acceptList(clientSource));
     expect(mobileSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
     expect(clientSource).toMatch(/link\.download = `eldritch-\$\{[^}]+\}\.json`/);
+  });
+});
+
+describe('native runtime smoke seam', () => {
+  it('drives a real save, cold resume, export, and import through the client store', async () => {
+    const host = memoryPlatform();
+    const nativeWrite = host.writeSave;
+    host.writeSave = (slot, save) => nativeWrite(slot, JSON.parse(JSON.stringify(save)));
+    const interchange = new Map<string, unknown>();
+    let smoke: ((command: SmokeCommand) => Promise<SmokeResult>) | undefined;
+    host.onSmokeCommand = (listener) => {
+      smoke = listener;
+      return () => { smoke = undefined; };
+    };
+    host.writeSmokeInterchange = async (save) => {
+      interchange.set('eldritch-smoke-export.json', save);
+      return 'eldritch-smoke-export.json';
+    };
+    host.readSmokeInterchange = async (path) => interchange.get(path) ?? null;
+
+    createGame(loadContent(), host);
+    expect(smoke).toBeTypeOf('function');
+    const saved = await smoke!({ kind: 'save', seed: 1042, years: 40 });
+    expect(saved).toMatchObject({ year: 1082, snapshot: { year: 1082, campaign: 'short' } });
+
+    // Reconstruct the store as a terminated/relaunched WebView would. The
+    // platform map is the durable native Data directory shared by both lives.
+    createGame(loadContent(), host);
+    expect(smoke).toBeTypeOf('function');
+    const resumed = await smoke!({ kind: 'resume' });
+    expect(resumed.snapshot).toMatchObject({ year: 1082, campaign: 'short' });
+
+    const exported = await smoke!({ kind: 'export' });
+    expect(exported.path).toBe('eldritch-smoke-export.json');
+    expect(interchange.get(exported.path!)).toEqual(exported.snapshot);
+
+    const imported = await smoke!({ kind: 'import', path: exported.path! });
+    expect(imported.snapshot).toMatchObject({ year: 1082, campaign: 'short' });
+    expect(host.saves.get('autosave')).toEqual(imported.snapshot);
   });
 });
 

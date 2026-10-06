@@ -46,6 +46,16 @@ npm run ios:build                             # unsigned generic iOS Simulator b
 tag CI job creates `keystore.properties` from repository secrets; keys and that
 file are ignored and must never be committed.
 
+## iOS runtime smoke
+
+The Debug target alone registers `eldritchdynasty-smoke://`. The shared bridge
+turns those URLs into generic client smoke commands; the client drives its real
+store/actions, while the bridge owns only Filesystem transport and writes
+`smoke-result.json` in `Directory.Data`. Save/resume hashes compare JSON state
+without the top-level `savedAt`, which is intentionally refreshed by every
+save. Release uses `Info.plist`, which contains no smoke scheme; Debug uses
+`Info-Debug.plist`, and `ios-project.test.ts` guards that separation.
+
 ## Boundaries
 
 - Keep all native dependencies and status/safe-area work here.
