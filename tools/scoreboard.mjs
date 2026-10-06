@@ -223,7 +223,10 @@ export function advisoryJobs(workflow) {
   // is silent, and this only ever moves a job into a softer column.
   const blocks = workflow.split(/\n(?=  [\w-]+:\n)/);
   for (const block of blocks) {
-    if (!/^\s*continue-on-error:\s*true\s*$/m.test(block)) continue;
+    // Only the job-level key (four spaces) makes the whole job advisory.
+    // Steps are indented eight spaces and may use continue-on-error without
+    // weakening the job's required result.
+    if (!/^ {4}continue-on-error:\s*true\s*$/m.test(block)) continue;
     const name = /^\s{4}name:\s*(.+?)\s*$/m.exec(block)?.[1];
     if (name) found.add(jobFamily(name));
   }
