@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
-import { BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
+import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
 
-export const GATE_PROOF_FORMAT_VERSION = 1;
-export const GATE_FINGERPRINT_ALGORITHM_VERSION = 1;
+export const GATE_PROOF_FORMAT_VERSION = 2;
+export const GATE_FINGERPRINT_ALGORITHM_VERSION = 2;
 
 export const GATE_PROOF_RUNTIME_INPUTS = [
   '.github/workflows/check.yml',
@@ -61,6 +61,7 @@ export interface GateDependencyManifest {
   gate: string;
   entry: GateFingerprintEntry;
   invocation: readonly string[];
+  configuration: unknown;
   toolchain: GateToolchainIdentity;
   inputs: GateManifestInput[];
 }
@@ -89,6 +90,7 @@ export interface GateProof {
   sourceRunId: number;
   sourceRepository: string;
   sourceWorkflow: string;
+  sourceRunUrl: string;
   reusable: boolean;
   verdict: 'success';
   manifest: GateDependencyManifest;
@@ -145,6 +147,7 @@ export interface FingerprintOptions {
   gate: string;
   entry: GateFingerprintEntry;
   invocation?: readonly string[];
+  configuration?: unknown;
   toolchain?: GateToolchainIdentity;
 }
 
@@ -214,6 +217,7 @@ export async function fingerprintGateDependencies(
     gate: options.gate,
     entry: { module: modulePath, exportName },
     invocation: [...(options.invocation ?? [options.gate])],
+    configuration: options.configuration ?? null,
     toolchain: options.toolchain ?? defaultToolchain(),
     inputs,
   };
@@ -231,7 +235,13 @@ export async function fingerprintRegisteredGate(
 ): Promise<GateFingerprintResult> {
   if (!isBlockingGateId(gate)) throw new Error(`no fingerprint entry registered for gate ${gate}`);
   const entry = GATE_FINGERPRINT_ENTRIES[gate];
-  return fingerprintGateDependencies({ repoRoot, gate, entry, invocation });
+  return fingerprintGateDependencies({
+    repoRoot,
+    gate,
+    entry,
+    invocation,
+    configuration: BLOCKING_GATE_CONFIG[gate],
+  });
 }
 
 /**
@@ -294,6 +304,7 @@ export function parseGateProof(value: unknown): GateProof | null {
     || typeof proof.sourceRunId !== 'number'
     || typeof proof.sourceRepository !== 'string'
     || typeof proof.sourceWorkflow !== 'string'
+    || typeof proof.sourceRunUrl !== 'string'
     || typeof proof.reusable !== 'boolean'
     || proof.verdict !== 'success'
     || !stringArray(proof.runtimeReads)
@@ -306,6 +317,7 @@ export function parseGateProof(value: unknown): GateProof | null {
     || typeof entry.module !== 'string'
     || typeof entry.exportName !== 'string'
     || !stringArray(manifest.invocation)
+    || !Object.prototype.hasOwnProperty.call(manifest, 'configuration')
     || !toolchain
     || typeof toolchain.node !== 'string'
     || typeof toolchain.runnerOs !== 'string'
@@ -367,6 +379,8 @@ export function judgeTrustedProof(
   if (proof.gate !== expected.gate) return { reusable: false, reason: `proof gate is ${proof.gate}` };
   if (proof.sourceRepository !== expected.repository) return { reusable: false, reason: `proof repository is ${proof.sourceRepository}` };
   if (proof.sourceWorkflow !== expected.workflow) return { reusable: false, reason: `proof workflow is ${proof.sourceWorkflow}` };
+  const sourceRunUrl = `https://github.com/${expected.repository}/actions/runs/${run.id}`;
+  if (proof.sourceRunUrl !== sourceRunUrl) return { reusable: false, reason: 'proof source run URL mismatch' };
   if (proof.sourceRunId !== run.id) return { reusable: false, reason: 'proof source run does not match workflow run' };
   if (proof.sourceSha !== run.head_sha) return { reusable: false, reason: 'proof source SHA does not match workflow run' };
   if (!proof.reusable) return { reusable: false, reason: 'producer marked proof non-reusable' };
@@ -433,6 +447,7 @@ export function makeGateProof(options: MakeGateProofOptions): GateProof {
     sourceRunId: options.sourceRunId,
     sourceRepository: options.sourceRepository,
     sourceWorkflow: options.sourceWorkflow,
+    sourceRunUrl: `https://github.com/${options.sourceRepository}/actions/runs/${options.sourceRunId}`,
     reusable: unclassifiedReads.length === 0,
     verdict: 'success',
     manifest: options.fingerprint.manifest,
