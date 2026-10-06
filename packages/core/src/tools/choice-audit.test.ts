@@ -78,7 +78,7 @@ describe('the #334 choice-debt worklist', () => {
     expect(work.summary.unclassifiedWriteOnlyKeys).toBe(work.summary.writeOnlyKeys - 1);
   });
 
-  it('fails closed on stale, duplicate, or reasonless decisions', () => {
+  it('fails closed on malformed, stale, duplicate, or reasonless decisions', () => {
     const current = choiceWorklist(content).memory[0]!;
     const valid = {
       kind: current.kind,
@@ -86,6 +86,29 @@ describe('the #334 choice-debt worklist', () => {
       disposition: 'delete' as const,
       reason: 'fixture reason',
     };
+
+    expect(() => choiceWorklist(content, null as unknown as ChoiceDecisionFile))
+      .toThrow(/expected an object/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: null,
+    } as unknown as ChoiceDecisionFile)).toThrow(/memory must be an array/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [null],
+    } as unknown as ChoiceDecisionFile)).toThrow(/invalid choice decision at index 0/);
+
+    expect(() => choiceWorklist(content, {
+      version: 2,
+      memory: [],
+    } as unknown as ChoiceDecisionFile)).toThrow(/unsupported choice decision file version/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [{ ...valid, reason: 42 }],
+    } as unknown as ChoiceDecisionFile)).toThrow(/lacks a reason/);
 
     expect(() => choiceWorklist(content, {
       version: 1,
