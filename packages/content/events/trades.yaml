@@ -168,7 +168,6 @@ events:
                 what they were hoping to see.
               effects:
                 - { kind: treasury, delta: -11 }
-                - { kind: knowledge, op: grant, flag: knows_what_a_warrant_buys }
         - id: do_it_ourselves
           label: Do it with men and shovels. It is a race, not a rite.
           outcomes:
@@ -192,7 +191,6 @@ events:
               effects:
                 - { kind: treasury, delta: -22 }
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_what_a_warrant_buys }
 
   - id: the_book_that_needs_a_reader
     title: Nobody Has Opened It in Sixty Years
@@ -235,7 +233,6 @@ events:
                 and both of those go on being true for three hundred years.
               effects:
                 - { kind: treasury, delta: -22 }
-                - { kind: knowledge, op: grant, flag: knows_a_shelf_needs_reading }
         - id: leave_it
           label: Leave it. It has kept sixty years and the roof has not.
           outcomes:
@@ -257,7 +254,6 @@ events:
             years and the spine has gone. A book is a year of a life and this
             house has spent four hundred years buying them and about eleven
             reading them.
-          grantsKnowledge: knows_a_shelf_needs_reading
         omit:
           chronicle: null
         embellish:

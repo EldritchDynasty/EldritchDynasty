@@ -71,8 +71,7 @@ events:
             asking for slates. They are asking whether anybody in that hall
             will hold anything before they are sixty, and they have worked out
             that the honest answer is no.
-          effects:
-            - { kind: knowledge, op: grant, flag: knows_the_halls_are_counting }
+          effects: []
           next: { event: the_hall_is_answered, after: { minYears: 6, maxYears: 18 }, keep: [HEAD, COUSIN] }
         - id: it_is_about_a_roof
           weight: 50

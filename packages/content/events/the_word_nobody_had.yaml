@@ -204,7 +204,6 @@ events:
             We bought a day-book at auction and copied out the parts that were
             about us, and what they were about was the years nobody told us
             anything.
-          grantsKnowledge: knows_the_daybook_is_copied
           effects:
             - { kind: respect, delta: -1 }
         omit:
