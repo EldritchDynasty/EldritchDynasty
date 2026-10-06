@@ -94,6 +94,7 @@ describe('Capacitor iOS project', () => {
     const debugInfo = text('ios/App/App/Info-Debug.plist');
     const releaseInfo = text('ios/App/App/Info.plist');
     const runtimeSmoke = text('scripts/ios-runtime-smoke.mjs');
+    const platformBridge = text('src/platform-bridge.ts');
 
     expect(project).toContain('INFOPLIST_FILE = "App/Info-Debug.plist";');
     expect(project).toContain('INFOPLIST_FILE = App/Info.plist;');
@@ -104,6 +105,9 @@ describe('Capacitor iOS project', () => {
     expect(runtimeSmoke).toContain("simctl(['terminate', udid, APP_ID])");
     expect(runtimeSmoke).toContain('save/resume sha256:');
     expect(runtimeSmoke).toContain('export/import sha256:');
+    expect(platformBridge).toContain("stage: 'received'");
+    expect(runtimeSmoke).toContain('smoke command was not received within');
+    expect(runtimeSmoke).toContain('smoke command was received but produced no final evidence');
   });
 
 });

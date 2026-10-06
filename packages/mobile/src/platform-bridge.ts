@@ -103,19 +103,35 @@ const platform = {
     const registration = App.addListener('appUrlOpen', ({ url }) => {
       const command = parseSmokeCommand(url);
       if (!command) return;
-      void listener(command)
-        .then((result) => smokeEvidence(command, result))
-        .catch((error: unknown) => ({
-          command: command.kind,
-          ok: false as const,
-          error: error instanceof Error ? error.message : String(error),
-        }))
-        .then((evidence) => Filesystem.writeFile({
+      void (async () => {
+        // A hosted simulator may need materially longer to run the 40-year
+        // client command than it needs to deliver the URL. Publish that the
+        // native-to-WebView handoff happened before doing the expensive work
+        // so CI can distinguish a routing failure from slow simulation.
+        await Filesystem.writeFile({
+          path: SMOKE_RESULT,
+          data: JSON.stringify({ command: command.kind, stage: 'received' }),
+          directory: Directory.Data,
+          encoding: Encoding.UTF8,
+        });
+
+        const evidence = await listener(command)
+          .then((result) => smokeEvidence(command, result))
+          .catch((error: unknown) => ({
+            command: command.kind,
+            ok: false as const,
+            error: error instanceof Error ? error.message : String(error),
+          }));
+
+        await Filesystem.writeFile({
           path: SMOKE_RESULT,
           data: JSON.stringify(evidence),
           directory: Directory.Data,
           encoding: Encoding.UTF8,
-        }));
+        });
+      })().catch((error: unknown) => {
+        console.error('iOS runtime smoke evidence write failed', error);
+      });
     });
     return () => { void registration.then((handle) => handle.remove()); };
   },
