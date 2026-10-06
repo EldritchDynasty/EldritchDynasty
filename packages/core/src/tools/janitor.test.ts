@@ -322,7 +322,7 @@ describe('the janitor', () => {
     try {
       const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, f.head)]));
       expect(r.code).toBe(0);
-      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*MERGED.*merged PR #900 exact head`));
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent}:.*MERGED.*merged PR #900 exact head`));
       expect(r.out).toContain(`would: git push origin --delete ${f.agent}`);
       expect(r.out).toContain('would: git push origin --delete claim/528');
     } finally {
@@ -336,7 +336,7 @@ describe('the janitor', () => {
       const older = git(f.sweep, 'rev-parse', 'origin/main~1');
       const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, older)]));
       expect(r.code).toBe(0);
-      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`));
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent}:.*keep`));
       expect(r.out).not.toContain(`delete ${f.agent}`);
     } finally {
       rmSync(f.fixture, { recursive: true, force: true });
@@ -350,7 +350,7 @@ describe('the janitor', () => {
         prEvidence(f.agent, f.head, { merged_at: null }),
       ]));
       expect(r.code).toBe(0);
-      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`));
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent}:.*keep`));
       expect(r.out).not.toContain(`delete ${f.agent}`);
     } finally {
       rmSync(f.fixture, { recursive: true, force: true });
@@ -368,7 +368,7 @@ describe('the janitor', () => {
         const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, f.head, overrides)]));
         expect(r.code, JSON.stringify(overrides)).toBe(0);
         expect(r.out, JSON.stringify(overrides)).toMatch(
-          new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`),
+          new RegExp(`decide ${f.agent}:.*keep`),
         );
         expect(r.out, JSON.stringify(overrides)).not.toContain(`delete ${f.agent}`);
       } finally {
