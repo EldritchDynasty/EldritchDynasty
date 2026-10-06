@@ -165,6 +165,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_house_held_the_wardenship",
+      "disposition": "read",
+      "reason": "Winning the Wardenship is a durable institutional fact that the event itself says permanently exposes the house to Crown, Assembly, Church, and provincial attention. Keep one callback discriminator for later Warden-era consequences."
+    },
+    {
+      "kind": "flag",
       "key": "the_two_half_sheets",
       "disposition": "delete",
       "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
@@ -369,6 +375,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_rimefell_entry",
+      "disposition": "read",
+      "reason": "This weighted outcome discovers a parish entry saying the supposed Rimefell ancestress never left and died there, directly contradicting the house's descent. That is a concrete lineage-record fact with a natural later herald/record payoff, not redundant bookkeeping."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_rimefell_marriage",
       "disposition": "delete",
       "reason": "This Record grant is redundant with the Chronicle and deed claim recording the undocumented Rimefell marriage; the Record branch also keeps its Respect consequence."
@@ -486,6 +498,12 @@
       "key": "knows_what_the_inquest_asked",
       "disposition": "delete",
       "reason": "The memory is unread; the inquest outcome keeps its Respect consequence and the Record preserves what was asked in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_office_costs",
+      "disposition": "delete",
+      "reason": "The chosen Wardenship outcome always writes this knowledge together with the_house_held_the_wardenship. The flag is sufficient to drive any later institutional callback, so keeping a second perfectly co-occurring memory would duplicate state."
     },
     {
       "kind": "knowledge",
