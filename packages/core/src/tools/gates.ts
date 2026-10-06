@@ -22,7 +22,7 @@ import { loadContent } from '@ed/content';
 import { writeFileSync } from 'node:fs';
 import {
   indexContent, validateBundle, vocabulary,
-  type Condition, type Content, type ContentBundle, type EventTemplate,
+  type Condition, type Content, type ContentBundle, type EventTemplate, type Person,
 } from '@ed/schema';
 import { bootstrap, runYears } from '../sim.js';
 import { TEST_FAMILIES } from './testFamilies.js';
@@ -445,7 +445,7 @@ export function gateOutcomeReach(
  * restating them, because a gate holding its own copy of "the Vessel wants 70"
  * is the same class of bug one layer out.
  */
-interface MadnessHolder {
+export interface MadnessHolder {
   seed: number;
   year: number;
   id: string;
@@ -462,6 +462,43 @@ interface MadnessHolder {
   reach: number;
   carriedFont: number;
   ceiling: number;
+}
+
+/**
+ * Build one gate-9 provenance row from already-measured ladder values.
+ *
+ * Kept pure so focused correctness tests can prove that a real forced ritual
+ * reaches the same diagnostic row used by the sampled ladder gate, without
+ * replaying a batch just to inspect provenance.
+ */
+export function madnessHolderRow(
+  seed: number,
+  year: number,
+  p: Person,
+  measured: {
+    madness: number;
+    mind: number;
+    power: number;
+    carriedFont: number;
+    ceiling: number;
+  },
+): MadnessHolder {
+  return {
+    seed,
+    year,
+    id: p.id,
+    name: p.name,
+    madness: measured.madness,
+    mind: measured.mind,
+    power: measured.power,
+    rawMadness: p.madness,
+    forced: p.awakening.forced,
+    rites: [...p.rites],
+    gift: p.acquired[ELDRITCH_GIFT] ?? 0,
+    reach: p.acquired[ELDRITCH_REACH] ?? 0,
+    carriedFont: measured.carriedFont,
+    ceiling: measured.ceiling,
+  };
 }
 
 type MadnessRoute = 'none' | 'vessel' | 'great_rite' | 'unmaking';
@@ -608,22 +645,13 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
         yearPowers.push(power);
         const prior = holderPeaks.get(p.id);
         if (!prior || madness > prior.madness) {
-          holderPeaks.set(p.id, {
-            seed,
-            year: ctx.world.year,
-            id: p.id,
-            name: p.name,
+          holderPeaks.set(p.id, madnessHolderRow(seed, ctx.world.year, p, {
             madness,
             mind,
             power,
-            rawMadness: p.madness,
-            forced: p.awakening.forced,
-            rites: [...p.rites],
-            gift: p.acquired[ELDRITCH_GIFT] ?? 0,
-            reach: p.acquired[ELDRITCH_REACH] ?? 0,
             carriedFont: eldritch.carriedFont,
             ceiling: eldritch.ceiling,
-          });
+          }));
         }
         const r = standingOf(ctx, p).rung;
         samples.held.set(r, (samples.held.get(r) ?? 0) + 1);
