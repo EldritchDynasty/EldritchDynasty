@@ -1,0 +1,1 @@
+/claim steal 442 --agent chatgpt/442-checked-family-sweep-20261007 --paths packages/core/src/events/reach.test.ts tools/outcome-witnesses.json --lane code
