@@ -270,7 +270,7 @@ const refs = () =>
   gitOut('for-each-ref', '--format=%(refname)', 'refs/janitor/').split('\n').filter(Boolean);
 
 // ---------------------------------------------------------------------------
-// 1. Which branches have landed. `main` is the judge; nothing else is consulted.
+// 1. Which branches have landed. Main ancestry or an exact-head merged PR is proof.
 // ---------------------------------------------------------------------------
 const MERGED = new Set();
 const DOOMED = [];
