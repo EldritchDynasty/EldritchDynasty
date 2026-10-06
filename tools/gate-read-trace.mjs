@@ -51,6 +51,7 @@ globalThis.__edGateTrace = {
   start(gate) {
     activeGate = gate;
     process.env.ED_GATE_ACTIVE = gate;
+    if (traceFile) appendFileSync(traceFile, JSON.stringify({ gate, marker: 'start' }) + '\n');
   },
   stop() {
     activeGate = null;

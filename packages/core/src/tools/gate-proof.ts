@@ -444,6 +444,7 @@ export function makeGateProof(options: MakeGateProofOptions): GateProof {
 interface TraceLine {
   gate?: string;
   path?: string;
+  marker?: string;
 }
 
 const option = (argv: readonly string[], name: string): string | undefined => {
@@ -470,10 +471,13 @@ async function produceProofFiles(argv: readonly string[]): Promise<void> {
 
   const traceAvailable = Boolean(tracePath && existsSync(tracePath));
   const traces = new Map<string, string[]>();
+  const tracedPhases = new Set<string>();
   if (traceAvailable && tracePath) {
     for (const line of readFileSync(tracePath, 'utf8').split(/\r?\n/).filter(Boolean)) {
       const record = JSON.parse(line) as TraceLine;
-      if (!record.gate || !record.path) continue;
+      if (!record.gate) continue;
+      if (record.marker === 'start') tracedPhases.add(record.gate);
+      if (!record.path) continue;
       const values = traces.get(record.gate) ?? [];
       values.push(record.path);
       traces.set(record.gate, values);
@@ -492,8 +496,13 @@ async function produceProofFiles(argv: readonly string[]): Promise<void> {
       sourceRunId,
       sourceRepository,
       sourceWorkflow,
-      runtimeReads: traces.get(gate) ?? [],
-      traceAvailable,
+      runtimeReads: [
+        ...(traces.get('__shared__') ?? []),
+        ...(traces.get(gate) ?? []),
+      ],
+      traceAvailable: traceAvailable
+        && tracedPhases.has('__shared__')
+        && tracedPhases.has(gate),
     });
     writeFileSync(
       join(outputDir, `gate-proof-${gate}.json`),
