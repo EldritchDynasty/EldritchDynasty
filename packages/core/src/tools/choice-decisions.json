@@ -75,6 +75,12 @@
     },
     {
       "kind": "flag",
+      "key": "married_without_paper",
+      "disposition": "read",
+      "reason": "The Rimefell bride outcome creates a permanent descent liability: she is married in with no supporting paper and the prose explicitly says the heralds are coming. Preserve this as the natural later herald/pedigree reader rather than deleting the only durable marker of that choice."
+    },
+    {
+      "kind": "flag",
       "key": "mended_the_march_wall",
       "disposition": "read",
       "reason": "This key comes from #341 ranked event the_wall_nobody_mends. Quietly mending the disputed wall instead of taking it to Cawdry is exactly the kind of later neighbour/assize callback that can replace another money-shaped choice with remembered conduct, so #341 gets first refusal on the memory."
@@ -474,6 +480,12 @@
       "key": "knows_the_three_halls_combined",
       "disposition": "delete",
       "reason": "This is granted only by the Record option. The cadet coalition already leaves branch, Respect, relationship, treasury, rumour, Chronicle, and deed-claim consequences; a second Record-only simulation key would duplicate that durable state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_ward_was_married_in",
+      "disposition": "read",
+      "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
     },
     {
       "kind": "knowledge",
