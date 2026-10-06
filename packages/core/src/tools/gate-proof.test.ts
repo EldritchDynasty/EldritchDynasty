@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';\nimport { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -8,7 +8,7 @@ import {
   GATE_FINGERPRINT_ENTRIES,
   GATE_PROOF_FORMAT_VERSION,
   fingerprintGateDependencies,
-  judgeTrustedProof,
+  judgeTrustedProof,\n  makeGateProof,
   type GateDependencyManifest,
   type GateProof,
   type TrustedWorkflowRun,
@@ -137,6 +137,52 @@ const expected = {
   gate: 'land',
   fingerprint: 'fingerprint',
 };
+
+  it('the preload attributes real runtime reads to the active gate', () => {
+    const root = fixtureRepo();
+    const trace = join(root, 'trace.jsonl');
+    const preload = join(import.meta.dirname, '../../../../tools/gate-read-trace.mjs');
+    const target = join(root, 'packages/core/src/dep.ts');
+    execFileSync(process.execPath, [
+      '--import', preload,
+      '-e',
+      `globalThis.__edGateTrace.start('fixture'); require('node:fs').readFileSync(${JSON.stringify(target)}); globalThis.__edGateTrace.stop();`,
+    ], {
+      cwd: root,
+      env: { ...process.env, ED_GATE_READ_TRACE: trace },
+      stdio: 'pipe',
+    });
+    const rows = readFileSync(trace, 'utf8').trim().split(/\\r?\\n/).map((line) => JSON.parse(line));
+    expect(rows).toContainEqual({ gate: 'fixture', path: target });
+  });
+
+  it('marks a missing or unclassified runtime trace non-reusable', async () => {
+    const root = fixtureRepo();
+    const fingerprintResult = await fingerprint(root);
+    const base = {
+      repoRoot: root,
+      fingerprint: fingerprintResult,
+      sourceSha: 'abc',
+      sourceRunId: 1,
+      sourceRepository: 'EldritchDynasty/EldritchDynasty',
+      sourceWorkflow: '.github/workflows/check.yml',
+      runtimeReads: [] as string[],
+    };
+    expect(makeGateProof({ ...base, traceAvailable: false })).toMatchObject({
+      reusable: false,
+      unclassifiedReads: ['<runtime-trace-missing>'],
+    });
+
+    writeFileSync(join(root, 'mystery.json'), '{}\\n');
+    expect(makeGateProof({
+      ...base,
+      runtimeReads: [join(root, 'mystery.json')],
+      traceAvailable: true,
+    })).toMatchObject({
+      reusable: false,
+      unclassifiedReads: ['mystery.json'],
+    });
+  });
 
 describe('#441 trusted proof boundary', () => {
   it('accepts only matching successful main-push evidence', () => {
