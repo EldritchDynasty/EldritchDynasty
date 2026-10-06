@@ -227,6 +227,7 @@ events:
     conditions:
       all:
         - { generation: { op: gte, value: 4 } }
+        - { knowledge: knows_a_book_can_be_wrong, has: false }
     slots:
       HEAD: { role: head }
       READER:
