@@ -340,7 +340,7 @@ export interface FrameOutcomeWitnessRequest {
  *
  * Frame templates are deliberately outside ambientPool, so treating them as
  * ordinary events would prove the wrong eligibility semantics. The caller
- * builds the record/discrepancy state named by \`reads\`; this seam verifies
+ * builds the record/discrepancy state named by `reads`; this seam verifies
  * that the real frame pool admits the template before presenting it.
  */
 export function executeFrameOutcomeWitness(
