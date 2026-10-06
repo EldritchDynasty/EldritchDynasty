@@ -33,9 +33,39 @@
     },
     {
       "kind": "flag",
+      "key": "church_holds_a_copy",
+      "disposition": "read",
+      "reason": "The held inquest outcome explicitly sends the ledger away with the Church. That is durable external evidence with a natural later inquest/record reader, and the branch otherwise has no lasting effect."
+    },
+    {
+      "kind": "flag",
       "key": "corrected_the_list",
       "disposition": "read",
       "reason": "The successful correction outcome explicitly promises that the filed correction becomes 'exactly the right nine days' when it later matters. A future institutional reader must pay off that authored promise."
+    },
+    {
+      "kind": "flag",
+      "key": "cut_the_seventh_stave",
+      "disposition": "delete",
+      "reason": "Cutting the stave already changes Respect and seeds rumour_the_missing_stave; those preserve the social trace of the missing verse, so the unread flag is redundant unless a concrete song reader is authored."
+    },
+    {
+      "kind": "flag",
+      "key": "denied_the_millers_boy",
+      "disposition": "delete",
+      "reason": "Publicly denying the miller's-boy story already damages the steward relationship and the event carries its rumour; the unread denial flag adds no separate durable consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "dismissed_in_the_withering",
+      "disposition": "delete",
+      "reason": "Dismissing the idle tutor already returns Treasury and the prose records the eleven-year teaching gap; the unread flag is redundant state."
+    },
+    {
+      "kind": "flag",
+      "key": "gave_up_the_book",
+      "disposition": "delete",
+      "reason": "This is a weighted narration outcome, not a player choice: the pupil stops trying and the family forgets it. No authored reader consumes the marker, so delete the dead narration write rather than manufacture a callback."
     },
     {
       "kind": "flag",
@@ -81,6 +111,24 @@
     },
     {
       "kind": "flag",
+      "key": "let_the_millers_boy_run",
+      "disposition": "self_expression",
+      "reason": "Letting the village story run is intentionally an expressive choice: the event-level rumour already carries the story and the outcome needs no invented resource cost. Delete the dead flag and tag let_it_run as self_expression in the later content slice."
+    },
+    {
+      "kind": "flag",
+      "key": "married_in_the_peace",
+      "disposition": "delete",
+      "reason": "The cheap Long-Peace match already carries its Treasury cost and the event seeds the cheap-wedding rumour; the unread flag adds no distinct current consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "married_the_ruined",
+      "disposition": "delete",
+      "reason": "Taking the ruined-house match already pays Treasury and Respect consequences; the unread flag adds no separate current result beyond the authored marriage prose."
+    },
+    {
+      "kind": "flag",
       "key": "married_without_paper",
       "disposition": "read",
       "reason": "The Rimefell bride outcome creates a permanent descent liability: she is married in with no supporting paper and the prose explicitly says the heralds are coming. Preserve this as the natural later herald/pedigree reader rather than deleting the only durable marker of that choice."
@@ -117,6 +165,12 @@
     },
     {
       "kind": "flag",
+      "key": "priced_out_of_the_quickening",
+      "disposition": "delete",
+      "reason": "This is narration-only age colour: the house buys nothing in the inflated book market and no later rule reads the marker. Delete the dead write rather than inventing a consequence for a non-choice outcome."
+    },
+    {
+      "kind": "flag",
       "key": "regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
@@ -141,6 +195,12 @@
     },
     {
       "kind": "flag",
+      "key": "sent_the_church_a_copy",
+      "disposition": "read",
+      "reason": "The registrar accepts and leaves with a newly made copy of selected house-book material. That creates durable evidence outside the house and is a natural later Church/record reader, distinct from the local Respect cost."
+    },
+    {
+      "kind": "flag",
       "key": "sheltered_the_wrong_man",
       "disposition": "read",
       "reason": "The losing shelter outcome explicitly leaves the house named in a Cawdry file for two generations. Reserve the flag for a later institutional callback that makes that durable record matter."
@@ -150,6 +210,12 @@
       "key": "shut_the_gate_in_the_plague",
       "disposition": "delete",
       "reason": "Shutting the gate already pays large Treasury and Respect consequences, which are the scene's durable arithmetic/reputation cost; no separate unread flag is required."
+    },
+    {
+      "kind": "flag",
+      "key": "stood_pat_in_the_quickening",
+      "disposition": "delete",
+      "reason": "Standing pat already costs Respect and the outcome explains the house losing relative position; the unread flag duplicates that lasting standing consequence."
     },
     {
       "kind": "flag",
@@ -195,6 +261,18 @@
     },
     {
       "kind": "flag",
+      "key": "the_reader_was_not_welcomed",
+      "disposition": "delete",
+      "reason": "Keeping the Crusade reader at arm's length already persists as a -10 relationship to that priest; the unread flag duplicates the same social consequence without a distinct later fact."
+    },
+    {
+      "kind": "flag",
+      "key": "the_second_cellar_shelf",
+      "disposition": "read",
+      "reason": "The hidden Death and Darkness books are moved to a specific damp second cellar and degraded there. Preserve the location marker for a later Church/library discovery rather than losing the physical secret the choice creates."
+    },
+    {
+      "kind": "flag",
       "key": "the_stair_below_the_turn_bricked",
       "disposition": "read",
       "reason": "Bricking the cellar stair changes the house physically, and the outcome explicitly says somebody unbricks it in 1330. Preserve the flag for that later house/mystery callback rather than losing the only durable marker of the wall."
@@ -204,6 +282,12 @@
       "key": "the_two_half_sheets",
       "disposition": "delete",
       "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
+    },
+    {
+      "kind": "flag",
+      "key": "the_youngest_was_answered",
+      "disposition": "delete",
+      "reason": "Reading the Chronicle to the youngest already changes the child's Mind; the unread flag duplicates that durable outcome without a distinct later promise."
     },
     {
       "kind": "flag",
@@ -474,6 +558,12 @@
       "key": "knows_the_sixth_seal_is_wrong",
       "disposition": "delete",
       "reason": "The Record already preserves the false sixth seal in Chronicle text and a deed claim, with its Respect consequence; no separate simulation-memory key is needed unless a real later reader is authored."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_song_holds_a_clause",
+      "disposition": "delete",
+      "reason": "The same outcome already reveals clause_of_the_term through the clause effect, which is the durable gameplay fact. Keeping a separate unread knowledge key would duplicate that revealed-clause state."
     },
     {
       "kind": "knowledge",
