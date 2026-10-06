@@ -71,10 +71,12 @@ npm run land         # session preflight: fetch, rebase, install, then run
                      # typecheck + validate + test:fast ON THAT head. It stops
                      # at preflight-green; a session NEVER pushes main. Use
                      # --full-preflight for the complete local CI-derived set.
-                     # Then open/keep a ready same-repository PR and use GitHub's
-                     # "Merge when ready". The native merge queue creates a
-                     # synthetic merge_group commit and required CI runs there
-                     # before GitHub rebases/merges it into main.
+                     # Then open/keep a ready same-repository PR. Do not click
+                     # Merge or use /land: .github/workflows/auto-merge-queue.yml
+                     # waits for exact-head CI required=success and enqueues the
+                     # PR into GitHub's native merge queue automatically. The
+                     # queue creates a synthetic merge_group commit and required
+                     # CI runs there before GitHub rebases/merges into main.
                      # Long preflights must use a harness-tracked background run;
                      # `nohup … &` dies with the container silently.
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
@@ -452,17 +454,28 @@ true even if nobody opens it.
 - **Run the harness before claiming a balance change works.** A full run is multi-hour; batch simulation is the only viable balance method. #133 supplies the measured 500-year playtime.
 - When a test fails, work out whether the test or the code is wrong. Several "failures" here were correct behaviour asserted incorrectly — rare upward font mutation is *designed*.
 - Prefer fixing the model over special-casing the symptom. Nearly every bug in this codebase has been structural: children in the wrong household, widows still married to dead men, cast slots never refilled, counters at module scope.
-- **Preflight with `npm run land`, then land only through GitHub's native merge queue.**
-  Standing authorization for this project specifically: run the session preflight,
-  keep/open a ready same-repository PR, and choose **Merge when ready** without
-  stopping to ask. The default preflight runs typecheck, validation and the fast
-  lane; use `--full-preflight` for risky core, content or gate work when complete
-  local CI-equivalent evidence is useful. Either result is advisory. A session
-  never pushes or directly merges `main`. GitHub rebases the queued PR into a
-  synthetic `merge_group` commit, runs the stable required `CI required`
-  result on that exact integration head, and merges only after it is green.
-  `npm run check` is **not** enough: it omits the gates. The repository-admin
-  bypass is an emergency PR-only escape hatch, not the normal landing path.
+- **Preflight with `npm run land`, then leave a ready PR for the automatic native merge-queue path.**
+  Standing authorization for this project specifically: run the session preflight
+  and keep/open a ready same-repository PR without stopping to ask. **Do not click
+  Merge, directly merge `main`, or post `/land`; `/land` is retired.**
+  `.github/workflows/auto-merge-queue.yml` owns admission. It runs on PR
+  `opened`, `reopened`, `ready_for_review`, `synchronize` and `edited`
+  events and again when the `check` workflow completes. A PR event before
+  `CI required` is green exits successfully and waits; the successful
+  `workflow_run` handoff then re-reads the PR, requires the same exact head SHA,
+  mints the merge-queue GitHub App token and calls GitHub's native
+  `enqueuePullRequest` mutation. A stale green run for an older head is ignored.
+  Normally, once exact-head CI is green, **do nothing and let that workflow
+  enqueue the PR**. If admission was missed because its earlier event raced or
+  was cancelled, a factual PR-body edit may retrigger the supported `edited`
+  path; never substitute a direct merge. The default preflight runs typecheck,
+  validation and the fast lane; use `--full-preflight` for risky core, content
+  or gate work when complete local CI-equivalent evidence is useful. Either
+  result is advisory. GitHub rebases the queued PR into a synthetic
+  `merge_group` commit, runs the stable required `CI required` result on that
+  exact integration head, and merges only after it is green. `npm run check`
+  is **not** enough: it omits the gates. The repository-admin bypass is an
+  emergency PR-only escape hatch, not the normal landing path.
   See [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Landing must outlive the turn; never use `nohup … &`.** Use the harness-tracked background run (Claude Code: `run_in_background`) and read it with `npm run land -- --status`. Details and failure recovery live in [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
 - **Never ask a fresh clone what has been merged.** It arrives shallow, and
