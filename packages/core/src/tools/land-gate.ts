@@ -196,8 +196,8 @@ function runLand(source: Source, seed: number, years: number): LandRun {
 
     const afterAcres = acreage(ctx);
     if (afterAcres < beforeAcres) acreageLost = true;
-    const earlyYear = START_YEAR + Math.round(CAMPAIGN_YEARS / 3);
-    const lateYear = START_YEAR + Math.round((CAMPAIGN_YEARS * 2) / 3);
+    const earlyYear = START_YEAR + Math.round(years / 3);
+    const lateYear = START_YEAR + Math.round((years * 2) / 3);
     if (w.year === earlyYear) early = portrait(ctx, latestChange);
     if (w.year === lateYear) late = portrait(ctx, latestChange);
   }
