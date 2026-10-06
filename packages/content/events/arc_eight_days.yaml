@@ -54,8 +54,7 @@ events:
             family has written down in a century, and it will be the reason the
             argument is still live in four hundred years, and both of those are
             the same fact wearing different clothes.
-          effects:
-            - { kind: knowledge, op: grant, flag: knows_the_second_is_uncertain }
+          effects: []
 
   - id: eight_days_which_one_we_keep
     title: Which One We Keep
@@ -114,6 +113,7 @@ events:
           outcomes:
             - id: the_term
               weight: 100
+              tags: [self_expression]
               text: >-
                 It is entered as settled and the house arranges four
                 generations around obeying a term nobody can quote in full: a
@@ -121,8 +121,7 @@ events:
                 by people who could not tell you what they are keeping. It is a
                 good, careful, cheap reading and there is nothing whatever
                 wrong with it either.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_the_second_is_uncertain }
+              effects: []
     record:
       subject: which of the two sheets the house obeys
       options:
@@ -132,7 +131,6 @@ events:
             chose, in a year it can name, without knowing. Everything the
             family does about the second obligation after this date rests on a
             choice and not on a reading. Whoever comes after: it was a choice.
-          grantsKnowledge: knows_the_second_is_uncertain
         omit:
           chronicle: null
         embellish:
