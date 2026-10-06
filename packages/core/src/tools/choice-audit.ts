@@ -165,20 +165,36 @@ function decisionKey(kind: ChoiceMemoryDecision['kind'], key: string): string {
 }
 
 function decisionMapFor(audit: ChoiceAudit, decisions: ChoiceDecisionFile) {
+  if (decisions === null || typeof decisions !== 'object') {
+    throw new Error('invalid choice decision file: expected an object');
+  }
   if (decisions.version !== 1) throw new Error(`unsupported choice decision file version: ${String(decisions.version)}`);
+  if (!Array.isArray(decisions.memory)) {
+    throw new Error('invalid choice decision file: memory must be an array');
+  }
 
   const current = new Set(audit.writeOnly.map((item) => decisionKey(item.kind, item.key)));
   const out = new Map<string, Pick<ChoiceMemoryDecision, 'disposition' | 'reason'>>();
-  for (const decision of decisions.memory) {
+  for (const [index, raw] of decisions.memory.entries()) {
+    if (raw === null || typeof raw !== 'object') {
+      throw new Error(`invalid choice decision at index ${index}: expected an object`);
+    }
+    const decision = raw as ChoiceMemoryDecision;
+    if (typeof decision.kind !== 'string' || typeof decision.key !== 'string' || !decision.key.trim()) {
+      throw new Error(`invalid choice decision at index ${index}: kind and key must be non-empty strings`);
+    }
+    if (!['read', 'delete', 'self_expression'].includes(decision.disposition)) {
+      throw new Error(`invalid choice disposition for ${decision.kind}:${decision.key}: ${String(decision.disposition)}`);
+    }
+    if (typeof decision.reason !== 'string' || !decision.reason.trim()) {
+      throw new Error(`choice decision lacks a reason: ${decision.kind}:${decision.key}`);
+    }
+
     const key = decisionKey(decision.kind, decision.key);
     if (out.has(key)) throw new Error(`duplicate choice decision: ${decision.kind}:${decision.key}`);
     if (!current.has(key)) {
       throw new Error(`stale choice decision: ${decision.kind}:${decision.key} is not a current write-only key`);
     }
-    if (!['read', 'delete', 'self_expression'].includes(decision.disposition)) {
-      throw new Error(`invalid choice disposition for ${decision.kind}:${decision.key}: ${String(decision.disposition)}`);
-    }
-    if (!decision.reason.trim()) throw new Error(`choice decision lacks a reason: ${decision.kind}:${decision.key}`);
     out.set(key, { disposition: decision.disposition, reason: decision.reason.trim() });
   }
   return out;
