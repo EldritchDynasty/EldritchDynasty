@@ -1,4 +1,5 @@
-import fs, { appendFileSync, syncBuiltinESMExports } from 'node:fs';
+import fs, { appendFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 

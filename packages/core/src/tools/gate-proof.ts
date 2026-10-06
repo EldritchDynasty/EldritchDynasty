@@ -159,7 +159,6 @@ export async function fingerprintGateDependencies(
     metafile: true,
     platform: 'node',
     format: 'esm',
-    packages: 'bundle',
     treeShaking: true,
     tsconfig: join(repoRoot, 'tsconfig.base.json'),
     logLevel: 'silent',
