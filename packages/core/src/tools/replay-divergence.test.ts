@@ -107,7 +107,45 @@ describe('shape concentration (#341)', () => {
     expect(c.familiar).toEqual({
       compared: 3, count: 1, share: 1 / 3,
       top: [{ shape: '[lasting+money | money]', count: 1, share: 1 }],
+      events: [{
+        id: 'gallery',
+        count: 1,
+        share: 1,
+        shapes: [{ shape: '[lasting+money | money]', count: 1, share: 1 }],
+      }],
     });
+  });
+
+  it('ranks the new events that contribute familiar choices, with deterministic tie breaks', () => {
+    const first = [
+      v('old', '[money | people]'),
+      v('other', '[record | relationship]'),
+    ];
+    const second = [
+      v('old', '[money | people]'),
+      v('zeta', '[money | people]'),
+      v('zeta', '[money | people]'),
+      v('alpha', '[record | relationship]'),
+      v('beta', '[money | people]'),
+    ];
+    const c = shapeConcentration([first, second], [[0, 1]]);
+
+    expect(c.familiar.events.map(({ id, count }) => ({ id, count }))).toEqual([
+      { id: 'zeta', count: 2 },
+      { id: 'alpha', count: 1 },
+      { id: 'beta', count: 1 },
+    ]);
+    expect(c.familiar.events[0]).toEqual({
+      id: 'zeta',
+      count: 2,
+      share: 0.5,
+      shapes: [{ shape: '[money | people]', count: 2, share: 1 }],
+    });
+
+    const lines = concentrationLines(c);
+    expect(lines).toContain('  ranked familiar-event worklist');
+    expect(lines.some((line) => /2\s+50\.0%\s+50\.0%\s+zeta\s+\[money \| people\] x2/.test(line))).toBe(true);
+    expect(lines.some((line) => /1\s+25\.0%\s+75\.0%\s+alpha/.test(line))).toBe(true);
   });
 
   it('prints the same table every time, and refuses a stream read without shapes', () => {
