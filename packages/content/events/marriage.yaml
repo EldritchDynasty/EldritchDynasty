@@ -42,7 +42,6 @@ events:
                 twenty years, far too late to have informed this.
               effects:
                 - { kind: treasury, delta: -60 }
-                - { kind: flag, flag: married_on_paper, set: true }
                 - {
                     kind: forge_lineage, target: { slot: SUITOR }, parent: mother,
                     claimedAs: NAMED_ANCESTOR, generations: 3,
@@ -71,7 +70,6 @@ events:
       options:
         record:
           chronicle: The papers were poor and we married her regardless, for what she might carry.
-          grantsKnowledge: knows_the_ilm_papers_were_thin
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -215,7 +213,6 @@ events:
       options:
         record:
           chronicle: The second son never woke. He kept the accounts for forty years and kept them well.
-          grantsKnowledge: knows_mundane_sons_are_safe
           effects: []
           claims:
             - { kind: deed, target: { slot: SON }, text: never woke and kept the house's accounts for forty years }

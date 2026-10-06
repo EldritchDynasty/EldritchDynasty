@@ -2,30 +2,6 @@
   "version": 1,
   "memory": [
     {
-      "kind": "arc_flag",
-      "key": "held_on",
-      "disposition": "delete",
-      "reason": "Leaving the men in already persists through household relationship damage and live muster state; this unread arc flag adds no distinct future fact."
-    },
-    {
-      "kind": "arc_flag",
-      "key": "went_out_thin",
-      "disposition": "delete",
-      "reason": "The thin-company result already changes Respect and muster state; this unread arc flag only restates the outcome."
-    },
-    {
-      "kind": "arc_flag",
-      "key": "went_out_well",
-      "disposition": "delete",
-      "reason": "The strong-company result already changes Respect and muster state; this unread arc flag only restates the outcome."
-    },
-    {
-      "kind": "arc_flag",
-      "key": "withdrew",
-      "disposition": "delete",
-      "reason": "Calling the men home already persists through muster withdrawal, Respect, and relationship effects; this unread arc flag is redundant."
-    },
-    {
       "kind": "flag",
       "key": "a_late_entry_on_the_roll",
       "disposition": "read",
@@ -93,18 +69,6 @@
     },
     {
       "kind": "flag",
-      "key": "holds_a_portion",
-      "disposition": "delete",
-      "reason": "Buying the portion already grants the portion_of_agelessness heirloom and costs 240 crowns. The unread flag duplicates concrete heirloom ownership rather than adding a distinct consequence."
-    },
-    {
-      "kind": "flag",
-      "key": "holds_the_unmirrored_eye",
-      "disposition": "delete",
-      "reason": "Buying the object already grants the_unmirrored_eye heirloom, costs treasury, and records ownership directly. The unread flag is redundant parallel state."
-    },
-    {
-      "kind": "flag",
       "key": "kept_an_early_waking_quiet",
       "disposition": "read",
       "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
@@ -120,12 +84,6 @@
       "key": "looted_library",
       "disposition": "read",
       "reason": "Buying the looted library costs 220 crowns and explicitly promises that three volumes enable the house's great-grandchildren. Preserve the flag for the later library/book consequence needed to make that authored long-term promise real."
-    },
-    {
-      "kind": "flag",
-      "key": "married_on_paper",
-      "disposition": "delete",
-      "reason": "The accepted match already pays Treasury and writes a forged lineage with its claimed ancestor and provenance. That structured lineage state is the durable consequence, so an unread parallel flag would duplicate it."
     },
     {
       "kind": "flag",
@@ -168,12 +126,6 @@
       "key": "paid_bracc_whole",
       "disposition": "read",
       "reason": "The paid-whole outcome explicitly promises that Bracc offers this house a quarter-point better rate for the next 140 years. Preserve the flag for the later trade/credit reader needed to make that authored long-term consequence real."
-    },
-    {
-      "kind": "flag",
-      "key": "refused_the_flask",
-      "disposition": "delete",
-      "reason": "Refusing the flask already leaves a durable Respect gain and the Chronicle can preserve the refusal; the unread flag adds no separate current consequence or authored future promise."
     },
     {
       "kind": "flag",
@@ -321,12 +273,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_house_holds_the_register",
-      "disposition": "delete",
-      "reason": "Buying the register already grants the_bramme_register heirloom and pays the treasury cost; the unread parallel flag duplicates ownership state that the heirloom itself records."
-    },
-    {
-      "kind": "flag",
       "key": "the_lent_book_left_alone",
       "disposition": "read",
       "reason": "Leaving the lent book alone explicitly promises that roughly ninety years later someone will find it and write to Cawdry in a worse year. Preserve the flag for that concrete future book/Cawdry callback."
@@ -435,12 +381,6 @@
     },
     {
       "kind": "flag",
-      "key": "took_the_company_in",
-      "disposition": "delete",
-      "reason": "Taking the company in already costs 44 crowns and gains Respect; the outcome explicitly says nothing happens all winter, so the unread flag adds no distinct promised consequence."
-    },
-    {
-      "kind": "flag",
       "key": "waited_out_the_insurrection",
       "disposition": "read",
       "reason": "The successful wait outcome otherwise has no lasting effect and explicitly says the marriage terms improve twice before year end. Preserve the flag for the follow-up match consequence rather than turning the 55% success branch into prose only."
@@ -510,12 +450,6 @@
       "key": "knows_it_was_said_in_court",
       "disposition": "delete",
       "reason": "The memory is unread; repeating the phrase still changes Respect, and the Record preserves what was said in Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_mundane_sons_are_safe",
-      "disposition": "delete",
-      "reason": "This is Record-only knowledge about the mundane son. The event already persists concrete status, Treasury/Respect outcomes plus Chronicle/deed/discrepancy state; the unread knowledge key duplicates that history."
     },
     {
       "kind": "knowledge",
@@ -657,12 +591,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_flask",
-      "disposition": "delete",
-      "reason": "Record-only knowledge duplicates the Chronicle. Buying the fertility portion is already represented by the portion_of_fertility heirloom and treasury cost; no causal rule should depend on recording it."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_four_families",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the finding without a separate simulation-memory key."
@@ -705,12 +633,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_heralds_note",
-      "disposition": "delete",
-      "reason": "The herald's external note is already represented by the actual short-descent outcome and its preserved world flag. Record knowledge only mirrors what the player wrote and should not gate the institutional consequence."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_house_held_out",
       "disposition": "delete",
       "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve that the house held through the interdict without paying or signing."
@@ -732,12 +654,6 @@
       "key": "knows_the_house_stayed_out_of_the_wardenship",
       "disposition": "delete",
       "reason": "The Record memory is unread by authored content; staying out already changes Respect and the candidate relationship, while the Record preserves the choice in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_ilm_papers_were_thin",
-      "disposition": "delete",
-      "reason": "This is Record-only memory after the notarised-pedigree event. Chronicle, deed claim, Respect effect, discrepancy and forged-lineage data already preserve the paper problem without a second unread key."
     },
     {
       "kind": "knowledge",
@@ -783,12 +699,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_notarys_register",
-      "disposition": "delete",
-      "reason": "This knowledge exists only when the player records the scene; the external Bramme register exists regardless, and future consequences should depend on that world fact or the heirloom, not on whether the Chronicle option was chosen."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_older_register",
       "disposition": "read",
       "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
@@ -804,12 +714,6 @@
       "key": "knows_the_orders_disagree",
       "disposition": "delete",
       "reason": "The Record grant duplicates the three conflicting orders already preserved by knows_three_orders and the Chronicle/discrepancy."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_portion",
-      "disposition": "delete",
-      "reason": "This is granted only by the Record option. Actual ownership is already represented by the portion heirloom, so future rules should inspect the heirloom rather than whether the player wrote this Chronicle entry."
     },
     {
       "kind": "knowledge",
@@ -894,12 +798,6 @@
       "key": "knows_the_short_copy",
       "disposition": "delete",
       "reason": "The actual short-copy world state is already represented by the_short_copy and the_short_copy_at_cawdry discrepancy. Record knowledge only mirrors the Chronicle choice and is redundant."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_short_return",
-      "disposition": "delete",
-      "reason": "The actual short return is already preserved by the_short_return for its promised next-relief consequence. Record knowledge only mirrors what the player chose to write and is redundant causal state."
     },
     {
       "kind": "knowledge",
@@ -993,21 +891,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_tops_were_taken",
-      "disposition": "delete",
-      "reason": "This is a Record-only memory of the Chronicle wording. The hill claim's durable state already lives in treasury/Respect/rumour and external assize accounts; no later rule should depend on whether the player recorded it."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_unmaking",
       "disposition": "delete",
       "reason": "The Record grant only says the Unmaking was recorded; rite/death state, claims, discrepancies, and Chronicle already persist what happened."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_unmirrored_eye",
-      "disposition": "delete",
-      "reason": "Record-only knowledge duplicates the Chronicle while actual ownership is represented by the_unmirrored_eye heirloom. Delete the unread parallel memory rather than gate future behavior on the Record choice."
     },
     {
       "kind": "knowledge",
@@ -1044,12 +930,6 @@
       "key": "knows_the_wrong_date_on_the_roll",
       "disposition": "read",
       "reason": "The Hollow Days burial creates the only wrong date in eleven hundred years of the Wick roll."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_yard_at_dawn",
-      "disposition": "delete",
-      "reason": "The body, Cawdry view and provable discrepancy exist independently of the player's Record choice. This unread Record knowledge duplicates the Chronicle rather than a distinct world consequence."
     },
     {
       "kind": "knowledge",
@@ -1173,12 +1053,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_the_war_cost_this_house",
-      "disposition": "delete",
-      "reason": "The settlement Record grant restates war accounting already placed in the Chronicle/claims while muster settlement persists the actual result."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_the_yssene_terms_were",
       "disposition": "read",
       "reason": "Refusing the foreign offer explicitly promises that in 1291 someone works out what the fourth clause would have done."
@@ -1194,12 +1068,6 @@
       "key": "knows_what_was_in_his_press",
       "disposition": "read",
       "reason": "Reading the dead man's private paper preserves a unique personal account that otherwise burns unread and cannot be reconstructed."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_was_lent_in_1061",
-      "disposition": "delete",
-      "reason": "The same outcome already sets the_lent_book_left_alone, whose existing read decision reserves the explicit ninety-years-later Cawdry callback."
     },
     {
       "kind": "knowledge",

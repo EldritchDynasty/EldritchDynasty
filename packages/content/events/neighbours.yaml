@@ -333,7 +333,6 @@ events:
               effects:
                 - { kind: treasury, delta: -44 }
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: took_the_company_in, set: true }
         - id: bar_the_gate
           label: Refuse, and put the tenants' beasts inside the wall.
           outcomes:
@@ -475,4 +474,3 @@ events:
                 within his rights.
               effects:
                 - { kind: flag, flag: the_lent_book_left_alone, set: true }
-                - { kind: knowledge, op: grant, flag: knows_what_was_lent_in_1061 }
