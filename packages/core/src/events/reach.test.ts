@@ -5006,6 +5006,107 @@ describe('authored age-scoped TEST_FAMILIES fixture-sweep outcome witnesses', ()
   });
 });
 
+
+describe('authored randomised checked TEST_FAMILIES fixture-sweep outcome witnesses', () => {
+  it('executes ordinary randomised checked player outcomes through a shared family fixture', () => {
+    const candidates = content.events.flatMap((event) => {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.record !== undefined
+        || event.ages !== undefined
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+      ) return [];
+
+      const choices = event.interaction.choices.flatMap((choice) => {
+        if (choice.requires.length !== 0 || choice.check === undefined) return [];
+        const check = event.checks.find((candidate) => candidate.id === choice.check);
+        if (!check || check.variance === 'none') return [];
+        const outcomes = choice.outcomes.filter((outcome) =>
+          check.bands.some((band) => band.outcome === outcome.id));
+        return outcomes.length ? [{ choice, outcomes }] : [];
+      });
+      if (choices.length === 0) return [];
+
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        if (!evalCondition(event.conditions, ctx)) return false;
+
+        const slots = resolveSlots(event, ctx, makeRng(9301));
+        if (!slots.ok || slots.playerCast.length) return false;
+
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+
+      return family ? [{ event, choices, family }] : [];
+    });
+
+    expect(candidates.length).toBeGreaterThan(0);
+
+    const declared = candidates.flatMap(({ event, choices }) =>
+      choices.flatMap(({ choice, outcomes }) =>
+        outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
+    const witnessed: string[] = [];
+
+    for (const { event, choices, family } of candidates) {
+      for (const { choice, outcomes } of choices) {
+        for (const outcome of outcomes) {
+          const ctx = family.build(content);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+
+          expect(
+            evalCondition(event.conditions, ctx),
+            String(event.id) + ' should satisfy its authored conditions in ' + family.id,
+          ).toBe(true);
+          const slots = resolveSlots(event, ctx, makeRng(9301));
+          expect(
+            slots.ok,
+            String(event.id) + ' should resolve its authored slots in ' + family.id,
+          ).toBe(true);
+          if (!slots.ok) continue;
+          expect(
+            slots.playerCast,
+            String(event.id) + ' should not require player casting in ' + family.id,
+          ).toHaveLength(0);
+          expect(
+            ambientPool(ctx).some((offered) => offered.id === event.id),
+            String(event.id) + ' should be offered by the real ambient selector in ' + family.id,
+          ).toBe(true);
+
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9301),
+            targetCheckedOutcome: true,
+          });
+
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
+              + ' via ' + family.id + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          expect(result.key).toBe(
+            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
+          );
+          if (result.key) witnessed.push(result.key);
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
 describe('authored frame narration outcome witnesses', () => {
   function satisfyFrameReads(
     ctx: ReturnType<(typeof TEST_FAMILIES)[number]['build']>,
