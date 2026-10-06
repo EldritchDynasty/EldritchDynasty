@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
+import { BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
 
 export const GATE_PROOF_FORMAT_VERSION = 1;
 export const GATE_FINGERPRINT_ALGORITHM_VERSION = 1;
@@ -17,7 +18,7 @@ export interface GateFingerprintEntry {
  * is conservative: the handful of gates still implemented in gates.ts inherit
  * that module's broad closure until they are split into smaller modules.
  */
-export const GATE_FINGERPRINT_ENTRIES: Record<string, GateFingerprintEntry> = {
+export const GATE_FINGERPRINT_ENTRIES: Record<BlockingGateId, GateFingerprintEntry> = {
   clauses: { module: 'packages/core/src/tools/gates.ts', exportName: 'gateClauses' },
   'library-neutrality': { module: 'packages/core/src/tools/library-gate.ts', exportName: 'gateLibraryNeutrality' },
   'outcome-reach-blocking': { module: 'packages/core/src/tools/outcome-reach-blocking.ts', exportName: 'gateUnwitnessedOutcomeReach' },
@@ -47,6 +48,7 @@ export interface GateDependencyManifest {
   formatVersion: number;
   algorithmVersion: number;
   gate: string;
+  entry: GateFingerprintEntry;
   invocation: readonly string[];
   toolchain: GateToolchainIdentity;
   inputs: GateManifestInput[];
@@ -150,7 +152,7 @@ export async function fingerprintGateDependencies(
     stdin: {
       contents: `export { ${exportName} as gate } from './${modulePath}';`,
       resolveDir: repoRoot,
-      sourcefile: `gate-proof-${options.gate}.ts`,
+      sourcefile: `<gate-proof-${options.gate}.ts>`,
       loader: 'ts',
     },
     absWorkingDir: repoRoot,
@@ -189,6 +191,7 @@ export async function fingerprintGateDependencies(
     formatVersion: GATE_PROOF_FORMAT_VERSION,
     algorithmVersion: GATE_FINGERPRINT_ALGORITHM_VERSION,
     gate: options.gate,
+    entry: { module: modulePath, exportName },
     invocation: [...(options.invocation ?? [options.gate])],
     toolchain: options.toolchain ?? defaultToolchain(),
     inputs,
@@ -205,8 +208,8 @@ export async function fingerprintRegisteredGate(
   gate: string,
   invocation: readonly string[] = [gate],
 ): Promise<GateFingerprintResult> {
+  if (!isBlockingGateId(gate)) throw new Error(`no fingerprint entry registered for gate ${gate}`);
   const entry = GATE_FINGERPRINT_ENTRIES[gate];
-  if (!entry) throw new Error(`no fingerprint entry registered for gate ${gate}`);
   return fingerprintGateDependencies({ repoRoot, gate, entry, invocation });
 }
 
@@ -337,11 +340,10 @@ async function produceProofFiles(argv: readonly string[]): Promise<void> {
     }
   }
 
-  const { GATES } = await import('./gates.js');
   mkdirSync(outputDir, { recursive: true });
   const summary: Array<{ gate: string; fingerprint: string; reusable: boolean; unclassifiedReads: string[] }> = [];
 
-  for (const gate of Object.keys(GATES)) {
+  for (const gate of BLOCKING_GATE_IDS) {
     const fingerprint = await fingerprintRegisteredGate(repoRoot, gate);
     const proof = makeGateProof({
       repoRoot,
