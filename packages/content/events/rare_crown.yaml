@@ -48,7 +48,6 @@ events:
               effects:
                 - { kind: treasury, delta: -41 }
                 - { kind: respect, delta: 1 }
-                - { kind: knowledge, op: grant, flag: knows_why_the_line_moved }
             - id: it_was_not_an_error
               weight: 48
               text: >-
@@ -59,7 +58,6 @@ events:
                 nobody had ever needed to.
               effects:
                 - { kind: treasury, delta: -41 }
-                - { kind: knowledge, op: grant, flag: knows_why_the_line_moved }
                 - { kind: respect, delta: -1 }
         - id: let_the_reading_stand
           label: Let it stand. Three years is three years.
@@ -84,7 +82,6 @@ events:
             The heralds read us four lines lower and we went to Caster and
             found no error, and were told what a Roll actually measures, and
             it is not what this house had believed.
-          grantsKnowledge: knows_why_the_line_moved
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: went to Caster after the house was read four lines lower and found no clerical error }
@@ -175,7 +172,6 @@ events:
             There was a killing at Wick and this house kept it in the parish
             and put the man on the south road, which was not ours to do, and
             we knew it was not ours to do.
-          grantsKnowledge: knows_the_house_kept_the_high_justice
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -271,7 +267,6 @@ events:
             The levy was called in earnest and this house commuted it at a
             hundred and twenty crowns, and eleven men of Wick stayed on their
             own land while four parishes round us did not.
-          grantsKnowledge: knows_the_levy_was_commuted
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -367,7 +362,6 @@ events:
             The progress lay four nights at Cawdry and this house did the
             haying, being unable to dress four people and buy a gift in the
             same year as the roof.
-          grantsKnowledge: knows_the_house_stayed_home
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -438,7 +432,6 @@ events:
                 - { kind: respect, delta: 3 }
                 - { kind: treasury, delta: -60 }
                 - { kind: flag, flag: the_house_held_the_wardenship, set: true }
-                - { kind: knowledge, op: grant, flag: knows_what_the_office_costs }
         - id: stay_out_of_it
           label: Stay out of it. This family cannot afford to be looked at.
           outcomes:
@@ -461,7 +454,6 @@ events:
             The Warden died and four houses put names forward and this house
             was not one of them, having judged that it could not afford to be
             looked at that closely.
-          grantsKnowledge: knows_the_house_stayed_out_of_the_wardenship
           effects: []
           claims:
             - { kind: deed, target: { slot: CANDIDATE }, text: was kept out of the Wardenship contest because the house would not put a name forward }
@@ -529,7 +521,6 @@ events:
                 in a document about it for four years. This one is not.
               effects:
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: 20 }
-                - { kind: knowledge, op: grant, flag: knows_the_attainder_was_reversed }
     record:
       subject: the attainted land
       options:
@@ -538,7 +529,6 @@ events:
             Their house was attainted and their nine hundred acres offered at
             a third, and this house sent no letter and bought nothing, and in
             1247 the attainder was reversed.
-          grantsKnowledge: knows_the_attainder_was_reversed
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: bought none of the attainted neighbour's nine hundred acres before the attainder was reversed }
@@ -632,7 +622,6 @@ events:
             Nine households were asked for sureties and eight gave children
             and this one gave ninety crowns, and the clerk wrote that down in
             front of us.
-          grantsKnowledge: knows_the_surety_was_refused
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -685,7 +674,6 @@ events:
                 entry says without documents, and the entry is permanent.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_the_fourth_generation_has_no_paper }
             - id: they_go_looking
               weight: 45
               text: >-
@@ -721,7 +709,6 @@ events:
             The heralds opened our descent and we could show three
             generations and not the fourth, she having come out of the
             Rimefell in 1088 with no paper, and we said so.
-          grantsKnowledge: knows_the_fourth_generation_has_no_paper
           effects:
             - { kind: respect, delta: -1 }
           claims:

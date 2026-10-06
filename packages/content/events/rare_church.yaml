@@ -50,7 +50,6 @@ events:
                 house at Cawdry. So is everything true that was said carefully.
               effects:
                 - { kind: respect, delta: 2 }
-                - { kind: knowledge, op: grant, flag: knows_what_the_inquest_asked }
             - id: the_fourth_question
               weight: 45
               text: >-
@@ -85,7 +84,6 @@ events:
             The inquest sat nine days and asked what we read and who taught us
             our liturgy, and we answered it, and every word of what we
             answered is in a satchel at Cawdry.
-          grantsKnowledge: knows_what_the_inquest_asked
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: answered nine days of the inquest, with every answer kept at Cawdry }
@@ -137,7 +135,6 @@ events:
                 a woman lies there and has said so since 1071.
               effects:
                 - { kind: treasury, delta: -12 }
-                - { kind: knowledge, op: grant, flag: knows_the_stone_and_the_roll_disagree }
             - id: nothing_under_it
               weight: 42
               text: >-
@@ -148,7 +145,6 @@ events:
                 the way out of it.
               effects:
                 - { kind: treasury, delta: -12 }
-                - { kind: knowledge, op: grant, flag: knows_the_stone_is_empty }
                 - { kind: rumour, op: seed, id: rumour_the_empty_stone, accuracy: 0.55 }
         - id: refuse_the_ground
           label: Refuse. The chapel is this house's building.
@@ -173,7 +169,6 @@ events:
             The Church asked for a stone in our chapel to be lifted and we
             lifted it, and what is under it does not agree with what the roll
             at Wick has said for a hundred years.
-          grantsKnowledge: knows_the_stone_and_the_roll_disagree
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -265,7 +260,6 @@ events:
             The parish was interdicted for a year and eight months on our
             account, and nineteen of Wick went into our orchard, and we did
             not pay and did not sign.
-          grantsKnowledge: knows_the_house_held_out
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: held through a year and eight months of interdict without paying or signing }
@@ -318,7 +312,6 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 2 }
-                - { kind: flag, flag: the_chapel_is_open_nine_days, set: true }
         - id: decline_the_bone
           label: Decline. This chapel does not open.
           outcomes:
@@ -342,7 +335,6 @@ events:
             A relic was offered to this chapel at sixty crowns and refused,
             being the second thing of the Church's we have refused in a
             hundred years.
-          grantsKnowledge: knows_the_relic_was_refused
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: refused the relic offered to the chapel at sixty crowns }
@@ -393,7 +385,6 @@ events:
                 grant of pasture. It is entirely a grant of pasture, and he is
                 pleased, and he leaves the sheet on the table.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_the_fourth_shelf_says }
                 - { kind: respect, delta: 1 }
                 - { kind: attribute, target: { slot: READER }, attr: mind, delta: 3 }
             - id: he_stops_reading
@@ -428,7 +419,6 @@ events:
             The archdeacon read the fourth shelf and gave us the page in our
             own tongue, and it is a grant of pasture, and we had held it two
             hundred years without knowing that.
-          grantsKnowledge: knows_what_the_fourth_shelf_says
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: showed the archdeacon the fourth shelf and learned it held a pasture grant }
@@ -483,7 +473,6 @@ events:
                 expensive way to do this and the only one that survives.
               effects:
                 - { kind: treasury, delta: -8 }
-                - { kind: knowledge, op: grant, flag: knows_the_file_was_asked_for }
                 - { kind: relationship, from: { slot: PRIEST }, to: head, sentiment: 14 }
             - id: acted_and_seen
               weight: 38
@@ -517,7 +506,6 @@ events:
             One of ours in the chapter house sent word, unsigned, that a file
             of ours had been asked for and by whom, and we acted on it, and he
             was never thanked.
-          grantsKnowledge: knows_the_file_was_asked_for
           effects: []
           claims:
             - { kind: deed, target: { slot: PRIEST }, text: sent home an unsigned warning that the family's file had been asked for }
@@ -594,7 +582,6 @@ events:
                 century after the one it was written in.
               effects:
                 - { kind: treasury, delta: -4 }
-                - { kind: knowledge, op: grant, flag: knows_a_copy_went_instead }
                 - { kind: rumour, op: seed, id: rumour_the_copy_that_went_to_cawdry, accuracy: 0.5 }
     record:
       subject: the roll at Wick, and which of it went down
@@ -604,7 +591,6 @@ events:
             Cawdry called in the roll at Wick and we sent a fair copy and kept
             the original, and it is entered at Cawdry that a copy was what
             they had.
-          grantsKnowledge: knows_a_copy_went_instead
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: sent Cawdry a fair copy of the Wick roll and kept the original }
@@ -660,7 +646,6 @@ events:
                 boundary.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_it_was_said_in_court }
             - id: said_and_nothing
               weight: 45
               text: >-
@@ -671,7 +656,6 @@ events:
                 about it.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_it_was_said_in_court }
         - id: refuse_to_repeat
           label: Refuse. A thing said once by accident is not said twice on purpose.
           outcomes:
@@ -694,7 +678,6 @@ events:
             One of ours named one of the nine aloud in the Church court at
             Bramme, in the middle of an answer about a hedge, and was asked to
             say it again, and did.
-          grantsKnowledge: knows_it_was_said_in_court
           effects:
             - { kind: respect, delta: -1 }
           claims:
