@@ -1,0 +1,208 @@
+name: scheduled regression watch
+
+on:
+  workflow_run:
+    workflows: [nightly regression, weekly statistical, sampled outcome reach telemetry]
+    types: [completed]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  report:
+    name: surface scheduled regression
+    if: github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_NAME: ${{ github.event.workflow_run.name }}
+      RUN_NUMBER: ${{ github.event.workflow_run.run_number }}
+      RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+      CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      BAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: record the scheduled verdict
+        id: record
+        shell: bash
+        env:
+          GIT_AUTHOR_NAME: scheduled-verdict
+          GIT_AUTHOR_EMAIL: scheduled-verdict@users.noreply.github.com
+          GIT_COMMITTER_NAME: scheduled-verdict
+          GIT_COMMITTER_EMAIL: scheduled-verdict@users.noreply.github.com
+        run: |
+          set -euo pipefail
+
+          case "$RUN_NAME" in
+            "nightly regression") KEY="nightly" ;;
+            "weekly statistical") KEY="weekly" ;;
+            "sampled outcome reach telemetry") KEY="outcome-reach" ;;
+            *) echo "Unrecognised scheduled workflow: $RUN_NAME"; exit 1 ;;
+          esac
+
+          REF="refs/scheduled/$KEY"
+          git fetch --quiet origin "+$REF:$REF" || true
+
+          PREVIOUS_REF=""
+          PREVIOUS_CONCLUSION=""
+          PREVIOUS_SINCE=""
+          PREVIOUS_RUN_NUMBER=""
+          PREVIOUS_RUN_ATTEMPT=""
+          if git show-ref --verify --quiet "$REF"; then
+            PREVIOUS_REF="$(git rev-parse "$REF")"
+            PREVIOUS_CONCLUSION="$(git log -1 --format=%B "$REF" | sed -n 's/^conclusion: //p' | head -n 1)"
+            PREVIOUS_SINCE="$(git log -1 --format=%B "$REF" | sed -n 's/^since: //p' | head -n 1)"
+            PREVIOUS_RUN_NUMBER="$(git log -1 --format=%B "$REF" | sed -n 's/^run-number: //p' | head -n 1)"
+            PREVIOUS_RUN_ATTEMPT="$(git log -1 --format=%B "$REF" | sed -n 's/^run-attempt: //p' | head -n 1)"
+          fi
+
+          at_least_as_new() {
+            local number="${1:-}"
+            local attempt="${2:-1}"
+            [ -n "$number" ] || return 1
+            if [ "$number" -gt "$RUN_NUMBER" ]; then return 0; fi
+            if [ "$number" -eq "$RUN_NUMBER" ] && [ "$attempt" -ge "$RUN_ATTEMPT" ]; then return 0; fi
+            return 1
+          }
+
+          # workflow_run reporters are independent jobs. Hosted-runner delays can
+          # make an older completion execute after a newer one, so never let it
+          # move the cadence ref or persistent issue backwards.
+          if at_least_as_new "$PREVIOUS_RUN_NUMBER" "$PREVIOUS_RUN_ATTEMPT"; then
+            if [ "$PREVIOUS_RUN_NUMBER" = "$RUN_NUMBER" ] && [ "${PREVIOUS_RUN_ATTEMPT:-1}" = "$RUN_ATTEMPT" ]; then
+              # The ref write may have succeeded while the issue mutation failed.
+              # Let a rerun repair the issue without rewriting the same ref.
+              echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is already recorded; repairing project surfacing."
+              echo "applied=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Scheduled $KEY run $RUN_NUMBER attempt $RUN_ATTEMPT is superseded by the recorded verdict."
+              echo "applied=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          if [ "$CONCLUSION" = "success" ]; then
+            SINCE=""
+          elif [ -n "$PREVIOUS_SINCE" ] && [ "$PREVIOUS_CONCLUSION" != "success" ]; then
+            SINCE="$PREVIOUS_SINCE"
+          else
+            SINCE="$BAD_SHA"
+          fi
+
+          msg=$(printf 'scheduled %s %s\n\nsha: %s\nconclusion: %s\nsince: %s\nrun-number: %s\nrun-attempt: %s\nrun: %s\nrecorded: %s\n' \
+            "$KEY" "$CONCLUSION" "$BAD_SHA" "$CONCLUSION" "$SINCE" "$RUN_NUMBER" "$RUN_ATTEMPT" "$RUN_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+          empty=$(git hash-object -t tree /dev/null)
+          commit=$(git commit-tree "$empty" -m "$msg")
+
+          if [ -n "$PREVIOUS_REF" ]; then
+            LEASE="--force-with-lease=$REF:$PREVIOUS_REF"
+          else
+            # An empty expected value means the remote ref must not exist.
+            LEASE="--force-with-lease=$REF:"
+          fi
+
+          if git push "$LEASE" origin "$commit:$REF"; then
+            echo "applied=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Another reporter won the race after our fetch. Accept that only
+          # when it recorded this completion or a newer one; otherwise surface
+          # the lease failure instead of guessing which verdict should win.
+          git fetch --quiet origin "+$REF:$REF" || true
+          CURRENT_RUN_NUMBER=""
+          CURRENT_RUN_ATTEMPT=""
+          if git show-ref --verify --quiet "$REF"; then
+            CURRENT_RUN_NUMBER="$(git log -1 --format=%B "$REF" | sed -n 's/^run-number: //p' | head -n 1)"
+            CURRENT_RUN_ATTEMPT="$(git log -1 --format=%B "$REF" | sed -n 's/^run-attempt: //p' | head -n 1)"
+          fi
+          if at_least_as_new "$CURRENT_RUN_NUMBER" "$CURRENT_RUN_ATTEMPT"; then
+            if [ "$CURRENT_RUN_NUMBER" = "$RUN_NUMBER" ] && [ "${CURRENT_RUN_ATTEMPT:-1}" = "$RUN_ATTEMPT" ]; then
+              echo "This scheduled $KEY verdict won the ref lease in another reporter; repairing project surfacing."
+              echo "applied=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "A newer scheduled $KEY verdict won the ref lease; leaving it authoritative."
+              echo "applied=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+          echo "Scheduled verdict ref changed without a newer recorded run; refusing to overwrite it." >&2
+          exit 1
+
+      - name: open, update, or close the persistent regression issue
+        if: steps.record.outputs.applied == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$RUN_NAME" in
+            "nightly regression")
+              TITLE="[scheduled-regression] nightly regression is red"
+              ;;
+            "weekly statistical")
+              TITLE="[scheduled-regression] weekly statistical evidence is red"
+              ;;
+            "sampled outcome reach telemetry")
+              TITLE="[scheduled-regression] sampled outcome reach telemetry is red"
+              ;;
+            *)
+              echo "Unrecognised scheduled workflow: $RUN_NAME"
+              exit 1
+              ;;
+          esac
+
+          NUMBER="$(
+            gh issue list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state open \
+              --search "$TITLE in:title" \
+              --limit 20 \
+              --json number,title \
+              --jq ".[] | select(.title == \"$TITLE\") | .number" \
+              | head -n 1
+          )"
+
+          if [ "$CONCLUSION" = "success" ]; then
+            if [ -n "$NUMBER" ]; then
+              gh issue close "$NUMBER" \
+                --repo "$GITHUB_REPOSITORY" \
+                --comment "Recovered on $BAD_SHA: $RUN_URL"
+            fi
+            exit 0
+          fi
+
+          REPORT="$(cat <<EOF
+          Scheduled evidence **$RUN_NAME** concluded **$CONCLUSION** on $BAD_SHA.
+
+          Run: $RUN_URL
+
+          Treat this as active regression work. The first report in this issue is the first known bad scheduled SHA; later failures are appended here until a successful run closes the issue.
+          EOF
+          )"
+
+          if [ -n "$NUMBER" ]; then
+            # Scheduled regressions are active P0 work under AGENTS.md priority
+            # rules. Repair the priority if somebody removed it while the
+            # regression is still open, then append the newest failing run.
+            gh issue edit "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --add-label "priority: P0"
+            if gh issue view "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json body,comments \
+              --jq '[.body, (.comments[].body)] | .[]' \
+              | grep -Fq "$RUN_URL"; then
+              echo "Run $RUN_URL is already recorded on issue #$NUMBER."
+            else
+              gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
+            fi
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --label "priority: P0" \
+              --body "$REPORT"
+          fi

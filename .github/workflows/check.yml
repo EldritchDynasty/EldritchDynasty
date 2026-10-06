@@ -161,6 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       full: ${{ steps.decide.outputs.full }}
+      ios: ${{ steps.decide.outputs.ios }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -207,6 +208,21 @@ jobs:
             if [ "$SET" = short ]; then FULL=false; fi
           fi
           echo "full=$FULL" >> "$GITHUB_OUTPUT"
+
+          # The broad native iOS runtime smoke is expensive and runner-sensitive.
+          # Keep it merge-blocking only when the PR/integration head can change
+          # the native host/toolchain contract; nightly still exercises it on main.
+          IOS=false
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            IOS=true
+          else
+            IOS_FILES="$(git diff --name-only "$BASE" "$HEAD_SHA")"
+            if printf '%s\n' "$IOS_FILES" | grep -Eq '^(packages/mobile/|packages/client/src/platform(\.test)?\.ts$|package(-lock)?\.json$|\.github/workflows/(check|nightly-regression)\.yml$)'; then
+              IOS=true
+            fi
+          fi
+          echo "ios=$IOS" >> "$GITHUB_OUTPUT"
+
           if [ "$FULL" = true ]; then
             echo "FULL SET: every job in this workflow." >> "$GITHUB_STEP_SUMMARY"
             if [ -n "$DOCS" ]; then echo "$DOCS" >> "$GITHUB_STEP_SUMMARY"; fi
@@ -217,7 +233,7 @@ jobs:
           else
             echo "SHORT SET: typecheck, validate and the fast lane only." >> "$GITHUB_STEP_SUMMARY"
             echo "This is a draft pull request. Mark it ready for review, or add the" >> "$GITHUB_STEP_SUMMARY"
-            echo "'full-ci' label, to run the slow suites, both gate lanes and windows." >> "$GITHUB_STEP_SUMMARY"
+            echo "'full-ci' label, to run the slow suites, all gate lanes and Windows." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   # Seconds, and it is the one that catches the failure this codebase calls
@@ -361,7 +377,7 @@ jobs:
   ios:
     name: iOS simulator build
     needs: tier
-    if: needs.tier.outputs.full == 'true'
+    if: needs.tier.outputs.full == 'true' && needs.tier.outputs.ios == 'true'
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -456,52 +472,70 @@ jobs:
           xcrun simctl install "$UDID" "$APP"
           echo "Resolving app container at $(date -u +%H:%M:%S)"
           xcrun simctl get_app_container "$UDID" nz.eldritchdynasty.game app
+          # simctl has occasionally launched the app but left its client blocked
+          # indefinitely on hosted macOS runners (#349). Bound the client call so
+          # the step can recover instead of spending its entire 15-minute budget
+          # inside one syscall. A retry uses --terminate-running-process so it is
+          # also valid when the first client hung after the app actually started.
+          launch_once() {
+            local retry="${1:-false}"
+            local output="$RUNNER_TEMP/simctl-launch.txt"
+            : > "$output"
+            if [ "$retry" = true ]; then
+              xcrun simctl launch --terminate-running-process "$UDID" nz.eldritchdynasty.game >"$output" 2>&1 &
+            else
+              xcrun simctl launch "$UDID" nz.eldritchdynasty.game >"$output" 2>&1 &
+            fi
+            local launch_pid=$!
+            for attempt in $(seq 1 60); do
+              if ! kill -0 "$launch_pid" 2>/dev/null; then
+                if wait "$launch_pid"; then
+                  cat "$output"
+                  return 0
+                else
+                  local status=$?
+                  cat "$output"
+                  return "$status"
+                fi
+              fi
+              sleep 2
+            done
+            echo "simctl launch client did not return within 120 seconds."
+            kill "$launch_pid" 2>/dev/null || true
+            sleep 2
+            kill -9 "$launch_pid" 2>/dev/null || true
+            wait "$launch_pid" 2>/dev/null || true
+            cat "$output"
+            return 124
+          }
+
           echo "Launching app at $(date -u +%H:%M:%S)"
-          xcrun simctl launch "$UDID" nz.eldritchdynasty.game
+          if ! launch_once false; then
+            echo "First simulator launch did not complete; retrying once at $(date -u +%H:%M:%S)"
+            sleep 15
+            launch_once true
+          fi
           echo "Simulator launch completed at $(date -u +%H:%M:%S)"
 
-  # ── THE TEST LANE, IN FOUR, PACKED BY DURATION ────────────────────────────
+  # ── MERGE-BLOCKING SLOW CONTRACTS, PACKED BY DURATION ─────────────────────
   #
-  # Both vitest lanes are in here — the fast suites and the `*.slow.test.ts`
-  # ones that play whole games.
+  # The fast lane above already runs every non-slow suite. This matrix runs
+  # ONLY the slow suites whose checked evidence classification still says
+  # this exact integration commit needs them. Broad population/cadence
+  # regressions run in nightly-regression.yml instead.
   #
-  # VITEST'S OWN SHARDING IS DURATION-BLIND, AND THAT COST 46 MINUTES A BUILD.
-  # `--shard=i/n` hashes each file's PATH, sorts by the hash and slices into
-  # equal COUNTS (`BaseSequencer.shard`, vitest 2.1.9). Deterministic, and
-  # completely indifferent to what a file costs — so a shard's duration is
-  # whatever suites its hash happened to draw, and adding ONE test file
-  # anywhere in the repository re-rolls it for every shard.
-  #
-  # Run 185 is what that looks like when the dice go badly: 3m02s, 67m47s,
-  # 10m45s, 4m03s. Nothing was slow that had not been slow the week before.
-  # Every shard was green. The build was 68 minutes and three quarters of it
-  # was seven finished jobs waiting on one.
-  #
-  # `vitest.config.ts` names a sequencer now (`tools/shards.mjs`) that
-  # bin-packs the files by recorded cost, longest first. The count stays four:
-  # packed, the shards sit below the gate-lane floor recorded in
-  # `tools/gate-durations.json`, so a fifth runner buys nothing while that remains true — this is sized against the
-  # critical path, the same argument as before, now made against numbers that
-  # are measured rather than remembered.
-  #
-  # WHAT SHARDING STILL CANNOT DO. Vitest parallelises per FILE. A single file
-  # longer than a shard's fair share is a floor no packing and no shard count
-  # can cut, and the fix for one of those is not here — AGENTS.md prescribes
-  # it, with its one prohibition: split it BY TEST, never by seed range,
-  # because these are batch statistics and taking seeds out of a batch changes
-  # what the batch claims. `lanes.test.ts` is where that stops being advice.
-  # It re-packs the real file list from the committed durations and fails the
-  # build when the shards come out further apart than a stated factor, which is
-  # exactly the condition one oversized file produces.
+  # tools/ci-evidence.json is the single source of truth for that boundary.
+  # The selected set is still packed by tools/shards.mjs using the committed
+  # duration table. Keep deterministic/stateful contracts here even when they
+  # are expensive, and move one only after a faster witness exists. The current
+  # shard costs are checked data in tools/test-durations.json; do not duplicate
+  # their perishable stopwatch values in this workflow.
   test:
-    name: test ${{ matrix.shard }}/4
+    name: merge slow ${{ matrix.shard }}/4
     needs: tier
     if: needs.tier.outputs.full == 'true'
     runs-on: ubuntu-latest
     strategy:
-      # See the note above: the default would cancel the other three shards on
-      # the first failure and report one broken test out of however many there
-      # are. That is the serial failure mode this workflow was split to kill.
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
@@ -513,67 +547,39 @@ jobs:
           cache: npm
       - run: npm ci
 
-      # ── THE RUN CORPUS ─────────────────────────────────────────────────
-      #
-      # `record.slow.test.ts` plays 240 runs of 458 years for two assertions
-      # and, because vitest parallelises per FILE, was the 451-second floor
-      # the whole lane waited behind. It reads those runs back through
-      # saveGame/loadGame now — 23 seconds — but only once they are in the
-      # corpus. COLD it is slightly slower than replaying, because playing a
-      # run and then saving and compressing it costs more than playing it.
-      #
-      # So a cache that is never warm is a tax, and CI is exactly where it
-      # would never be warm. The key is a hash of the simulation sources and
-      # the content together, printed by the corpus tool itself: change
-      # either and the key changes, the restore misses, and the warm step
-      # below rebuilds it for next time. There is no invalidation to reason
-      # about and no way to serve a run the current code would not produce.
-      # Invoked through tsx rather than through an npm script, because
-      # `land.test.ts` derives the landing's step set from this file by
-      # matching npm invocations, and a quiet-mode flag in that position reads
-      # to it as the name of a script. It matches comments too, on purpose, so
-      # this one does not spell the flag out either. A workflow line that
-      # confuses the thing checking the workflow is the workflow's to fix.
+      # Some retained slow contracts read played-run cache entries. Restoring
+      # is correctness-neutral: playedRun falls back to executing the run.
       - name: corpus key
         id: corpus
         run: |
           KEY=$(npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/corpus-warm.ts --key)
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
-
-      # RESTORE ONLY. THE WARM IS ITS OWN JOB, AND CONCURRENCY IS WHY.
-      #
-      # The four shards run AT THE SAME TIME, so a warm inside one of them
-      # cannot help the others: they have already restored (and missed) by the
-      # time it finishes writing. Whichever shard draws the one suite that
-      # needs the corpus — `record.slow.test.ts` — warming in a DIFFERENT
-      # shard spends 5m40s to speed up nobody and makes that shard the longest
-      # job in the build for the privilege. (Which shard that is used to be a
-      # fact about a path hash and is now a fact about the packing; either way
-      # it is not a shard this step can name in advance.)
-      #
-      # A warm only ever pays forward, into the NEXT run. So it belongs in a
-      # job that blocks nothing and that nothing waits on — see `corpus`
-      # below. On a cold key the shards play their own runs, which is
-      # `playedRun`'s documented fallback and was always the cold behaviour.
       - name: restore run corpus
         uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/ed-runs
           key: ed-runs-${{ steps.corpus.outputs.key }}-${{ hashFiles('packages/content/**') }}
 
+      - name: select merge-blocking slow suites
+        id: suites
+        run: |
+          FILES="$(node -e 'const fs=require("node:fs"); const inventory=JSON.parse(fs.readFileSync("tools/ci-evidence.json","utf8")); process.stdout.write(inventory.slowSuites.filter((entry) => entry.currentTier === "merge-blocking").map((entry) => entry.path).join(" "));')"
+          test -n "$FILES" || { echo "No merge-blocking slow suites are classified."; exit 1; }
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+          echo "Selected merge-blocking slow suites: $FILES" >> "$GITHUB_STEP_SUMMARY"
+
       - name: test
-        run: npm test -- --shard=${{ matrix.shard }}/4
+        run: npm test -- ${{ steps.suites.outputs.files }} --shard=${{ matrix.shard }}/4
 
   # ── THE GATES, PARTITIONED BY MEASURED COST ──────────────────────────────
   #
-  # packages/core/src/tools/gates.ts owns the partition and derives batch
-  # as every registered gate not assigned an independent lane. The fire-rate
-  # lane deliberately keeps outcome-reach and vocabulary-reach beside their
-  # shared process-local corpus. packages/core/src/gates.test.ts proves that
-  # this matrix and the engine lane table agree.
+  # packages/core/src/tools/gates.ts derives the merge-blocking batch from
+  # GATES. Expensive sampled evidence is intentionally absent here and runs in
+  # nightly/weekly workflows; release-only jobs below restore the complete set
+  # before anything is packaged. gates.test.ts proves this matrix and GATES
+  # still agree.
   #
-  # tools/gate-durations.json is the sole current timing authority. Each lane
-  # measures itself below and fails if it exceeds the checked tolerance.
+  # tools/gate-durations.json remains the checked timing authority for batch.
   gates:
     name: gates (${{ matrix.lane }})
     needs: tier
@@ -584,7 +590,7 @@ jobs:
       # these lanes answer unrelated questions.
       fail-fast: false
       matrix:
-        lane: [batch, blood, fire-rate, war, endings]
+        lane: [batch]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -675,9 +681,11 @@ jobs:
           script: |
             const needs = JSON.parse(process.env.NEEDS_JSON);
             const shortTier = needs.tier?.outputs?.full !== 'true';
+            const iosRequired = needs.tier?.outputs?.ios === 'true';
             const shortTierJobs = new Set(['windows', 'ios', 'test', 'gates', 'corpus']);
             const failed = Object.entries(needs).filter(([name, job]) => {
               if (job.result === 'success') return false;
+              if (name === 'ios' && job.result === 'skipped' && !iosRequired) return false;
               return !(shortTier
                 && job.result === 'skipped'
                 && shortTierJobs.has(name));
@@ -688,13 +696,54 @@ jobs:
                 .join(', ')}`);
             }
 
+  # TAGS KEEP THE COMPLETE EVIDENCE SET.
+  #
+  # PR/merge latency may move sampled evidence to scheduled cadence; a shipped
+  # artifact may not. These jobs restore every slow suite and sampled gate
+  # before Android or Windows packaging can start.
+  release-slow:
+    name: release slow ${{ matrix.shard }}/4
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run complete test suite
+        run: npm test -- --shard=${{ matrix.shard }}/4
+
+  release-gates:
+    name: release gates (${{ matrix.gate }})
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gate: [blood, fire-rate, war, endings, outcome-reach]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run scheduled gate at canonical sample
+        run: npm run gates -- ${{ matrix.gate }}
+
   # A release is the same checked client inside an Android activity. It is
   # deliberately downstream of every game check: an AAB that packages an
   # invalid bundle is not a release candidate.
   android:
     name: Android AAB
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [lint, windows, test, gates]
+    needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -751,7 +800,7 @@ jobs:
   windows-release:
     name: Windows installer
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [lint, windows, test, gates]
+    needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

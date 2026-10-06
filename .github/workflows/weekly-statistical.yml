@@ -1,0 +1,46 @@
+name: weekly statistical
+
+on:
+  schedule:
+    - cron: '23 4 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-statistical
+  cancel-in-progress: false
+
+jobs:
+  main-only:
+    name: require main
+    runs-on: ubuntu-latest
+    steps:
+      - name: refuse non-main manual dispatch
+        run: test "$GITHUB_REF" = "refs/heads/main"
+
+  blood:
+    name: weekly blood
+    needs: main-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run canonical blood sample
+        run: |
+          started=$(date +%s)
+          npm run gates -- blood --timings-json weekly-gate-blood.json
+          elapsed=$(( $(date +%s) - started ))
+          node tools/gate-duration.mjs --check blood "$elapsed"
+      - name: retain structured blood timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-gate-blood
+          path: weekly-gate-blood.json

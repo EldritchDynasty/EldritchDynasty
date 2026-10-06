@@ -44,7 +44,9 @@ describe('gate duration guard', () => {
 
     const ciLanes = matrix![1]!.split(',').map((lane) => lane.trim()).sort();
     const recorded = Object.keys(readGateDurations().lanes).sort();
-    expect(recorded).toEqual(ciLanes);
+    expect(ciLanes).toEqual(['batch']);
+    expect(recorded).toEqual(['batch', 'blood', 'endings', 'fire-rate', 'war']);
+    expect(ciLanes.every((lane) => recorded.includes(lane))).toBe(true);
   });
 
   it('retains structured per-gate timings for every measured lane', () => {

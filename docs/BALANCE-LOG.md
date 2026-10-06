@@ -57,6 +57,62 @@ written down is so it is not learned a sixth.
 
 ---
 
+## CI evidence tiers: merge, nightly, weekly (#451) — 5 October 2026
+
+#451 changes **when evidence runs**, not what it claims. `tools/ci-evidence.json`
+is the checked inventory: every CI job, gate lane and `*.slow.test.ts` suite
+carries its claim, whether it is deterministic or statistical, its tier, and
+the faster merge-path witness that covers the same mechanism. No seed, pair,
+run or batch size moved.
+
+**Before** is the #440 run already logged below, `37256335551`: every lane on
+every merge. **After** is exact-head run `37376616986` on PR #452 at
+`c36b8fe8`, the final shape, green, timed from the GitHub job records.
+
+| measure | before: 37256335551 | after: 37376616986 | change |
+|---|---:|---:|---:|
+| merge critical path (no native-mobile diff) | 22.17m | **7.05m** (7m03s, batch gate is the floor) | **68% shorter** |
+| runner-minutes per ordinary merge | 131.17m | **18.12m** | **113m saved / 86% less** |
+| same, when a native/toolchain diff pulls in iOS | — | 30.40m (iOS job 12m17s) | |
+| slowest test job | 13m57s (`test 1/4`, whole suite) | 55s (`merge slow 1/4`) | |
+
+The 18.12m is the sum of eleven jobs: tier 7s, typecheck + validate 53s, fast
+lane 2m21s, Windows 4m30s, corpus 19s, four merge-slow shards 55s / 42s / 48s /
+37s, batch 6m53s, `CI required` 2s. Windows minutes are counted 1:1 here; the
+repository is public, so GitHub reported every job at 0 billable ms. The
+`pull_request` and `merge_group` events run the same job graph and publish the
+same `CI required` result.
+
+**Nightly and weekly cannot be measured before this lands.** Neither
+`nightly-regression.yml` nor `weekly-statistical.yml` exists on `main` until
+#452 merges. GitHub fires `schedule` only from the default branch, and both
+workflows begin with a `main-only` job that refuses any other ref. Requiring a
+scheduled measurement before landing is a deadlock. Here they are priced from
+the same jobs measured in the before run, which ran the same commands on the
+same runner class:
+
+| tier | jobs, measured in 37256335551 | runner-minutes |
+|---|---|---:|
+| nightly (daily, 03:17 UTC) | slow suite ≤ 43.3m (the four `test` shards there also carried the fast tests), fire-rate 16.0m, war 17.8m, endings 7.7m, iOS smoke 10.9m (macOS), guard < 0.5m | **≈ 96m/day** |
+| weekly (Sunday, 04:23 UTC) | blood 21.3m, guard < 0.5m | **≈ 22m/week** |
+| weekly outcome-reach (Monday, already on `main`) | its own workflow, unchanged by #451; no run recorded yet | not measured |
+
+At one merge a day, merge plus nightly is about 114m against 131m before. At
+two or more merges a day the saving grows by 113m with each merge. The first
+scheduled runs after landing replace these estimates. Each nightly gate job
+already checks itself against `tools/gate-durations.json` at the 1.25x guard,
+and the watcher turns any scheduled run on `main` that does not succeed into a P0 issue, so a
+cost that is badly wrong shows up rather than staying quiet.
+
+**Detection latency** for moved evidence goes from the merge that broke it to
+at most one day for the nightly set (the broad slow suites, fire-rate, war,
+endings, iOS on an unrelated diff) and at most one week for blood and sampled
+outcome reach. Every moved claim that asserts something names merge-path `coveredBy` tests (the two war rows without one only report numbers) that catch
+a broken mechanism at merge time. Every scheduled sampled verdict names a
+deliberate red fixture (`failureWitness`), and `ci-evidence.test.ts` checks both
+on every merge. Tag and release builds still run the complete slow and gate set
+before packaging.
+
 ## Sampled outcome occurrence cadence cutover (#495) — 5 October 2026
 
 #442 replaced sampled reachability as merge-safety evidence with deterministic

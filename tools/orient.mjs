@@ -87,6 +87,31 @@ if (git('fetch', '--quiet', 'origin', '+refs/verdict/*:refs/verdict/*').ok) {
 }
 
 /**
+ * Scheduled evidence uses the same API-free contract as the main verdict.
+ * The watcher writes one orphan ref per cadence and preserves the first red
+ * SHA across repeated failures. Missing scheduled evidence is never green.
+ */
+if (git('fetch', '--quiet', 'origin', '+refs/scheduled/*:refs/scheduled/*').ok) {
+  for (const cadence of ['nightly', 'weekly', 'outcome-reach']) {
+    const ref = `refs/scheduled/${cadence}`;
+    if (!git('show-ref', '--verify', '--quiet', ref).ok) {
+      say(`${cadence}: NO VERDICT — scheduled evidence has not answered yet. Not a pass.`);
+      continue;
+    }
+
+    const body = git('log', '-1', '--format=%B', ref).out;
+    const conclusion = /^conclusion: (.*)$/m.exec(body)?.[1]?.trim() ?? '';
+    const sha = /^sha: (.*)$/m.exec(body)?.[1]?.trim() ?? '';
+    const since = /^since: (.*)$/m.exec(body)?.[1]?.trim() ?? sha;
+    if (conclusion === 'success') {
+      say(`${cadence}: green on ${sha.slice(0, 7) || '?'}`);
+    } else {
+      say(`${cadence}: red since ${since.slice(0, 7) || '?'} (${conclusion || 'unknown'}) — see the P0 scheduled-regression issue.`);
+    }
+  }
+}
+
+/**
  * The claims other sessions are holding right now. `agents.mjs` fetches, so
  * this is current rather than remembered; if the remote is unreachable it says
  * so and the session continues.
