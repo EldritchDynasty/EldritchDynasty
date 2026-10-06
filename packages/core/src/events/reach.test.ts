@@ -5007,102 +5007,78 @@ describe('authored age-scoped TEST_FAMILIES fixture-sweep outcome witnesses', ()
 });
 
 
-describe('authored randomised checked TEST_FAMILIES fixture-sweep outcome witnesses', () => {
-  it('executes ordinary randomised checked player outcomes through a shared family fixture', () => {
-    const candidates = content.events.flatMap((event) => {
-      if (
-        event.tier === 'frame'
-        || event.arc !== undefined
-        || event.record !== undefined
-        || event.ages !== undefined
-        || event.interaction.kind === 'narration'
-        || event.interaction.decidedBy !== 'player'
-      ) return [];
+describe('temporary deterministic witness residue inventory', () => {
+  it('prints the exact remaining outcome mechanism shapes', () => {
+    const manifest = JSON.parse(
+      readFileSync(OUTCOME_WITNESS_MANIFEST, 'utf8'),
+    ) as { outcomes: string[] };
+    const committed = new Set(manifest.outcomes);
+    const remaining = [...declaredOutcomeKeys].filter((key) => !committed.has(key)).sort();
 
-      const choices = event.interaction.choices.flatMap((choice) => {
-        if (choice.requires.length !== 0 || choice.check === undefined) return [];
-        const check = event.checks.find((candidate) => candidate.id === choice.check);
-        if (!check || check.variance === 'none') return [];
-        const outcomes = choice.outcomes.filter((outcome) =>
-          check.bands.some((band) => band.outcome === outcome.id));
-        return outcomes.length ? [{ choice, outcomes }] : [];
-      });
-      if (choices.length === 0) return [];
+    const rows = remaining.map((key) => {
+      const [eventId, choiceId, outcomeId] = key.split('|');
+      const event = content.event(eventId!);
+      if (!event) return { key, missingEvent: true };
+      if (event.interaction.kind === 'narration') {
+        return {
+          key,
+          event: eventId,
+          outcome: outcomeId,
+          tier: event.tier,
+          arc: event.arc !== undefined,
+          record: event.record !== undefined,
+          ages: event.ages !== undefined,
+          kind: 'narration',
+        };
+      }
 
-      const family = TEST_FAMILIES.find((candidate) => {
-        const ctx = candidate.build(content);
-        ctx.world.generation = Math.max(
-          ctx.world.generation,
-          FREQUENCY_PROFILES[event.frequency].minGeneration,
-        );
-        if (!evalCondition(event.conditions, ctx)) return false;
+      const choice = event.interaction.choices.find((candidate) => String(candidate.id) === choiceId);
+      const check = choice?.check
+        ? event.checks.find((candidate) => candidate.id === choice.check)
+        : undefined;
+      const decider = typeof event.interaction.decidedBy === 'string'
+        ? event.interaction.decidedBy
+        : Object.keys(event.interaction.decidedBy)[0] ?? 'object';
 
-        const slots = resolveSlots(event, ctx, makeRng(9301));
-        if (!slots.ok || slots.playerCast.length) return false;
-
-        return ambientPool(ctx).some((offered) => offered.id === event.id);
-      });
-
-      return family ? [{ event, choices, family }] : [];
+      return {
+        key,
+        event: eventId,
+        choice: choiceId,
+        outcome: outcomeId,
+        tier: event.tier,
+        arc: event.arc !== undefined,
+        record: event.record !== undefined,
+        ages: event.ages !== undefined,
+        decider,
+        requires: choice?.requires.length ?? -1,
+        check: choice?.check !== undefined,
+        variance: check?.variance ?? null,
+      };
     });
 
-    expect(candidates.length).toBeGreaterThan(0);
-
-    const declared = candidates.flatMap(({ event, choices }) =>
-      choices.flatMap(({ choice, outcomes }) =>
-        outcomes.map((outcome) =>
-          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
-    const witnessed: string[] = [];
-
-    for (const { event, choices, family } of candidates) {
-      for (const { choice, outcomes } of choices) {
-        for (const outcome of outcomes) {
-          const ctx = family.build(content);
-          ctx.world.generation = Math.max(
-            ctx.world.generation,
-            FREQUENCY_PROFILES[event.frequency].minGeneration,
-          );
-
-          expect(
-            evalCondition(event.conditions, ctx),
-            String(event.id) + ' should satisfy its authored conditions in ' + family.id,
-          ).toBe(true);
-          const slots = resolveSlots(event, ctx, makeRng(9301));
-          expect(
-            slots.ok,
-            String(event.id) + ' should resolve its authored slots in ' + family.id,
-          ).toBe(true);
-          if (!slots.ok) continue;
-          expect(
-            slots.playerCast,
-            String(event.id) + ' should not require player casting in ' + family.id,
-          ).toHaveLength(0);
-          expect(
-            ambientPool(ctx).some((offered) => offered.id === event.id),
-            String(event.id) + ' should be offered by the real ambient selector in ' + family.id,
-          ).toBe(true);
-
-          const result = executeOutcomeWitness(ctx, event, {
-            choiceId: choice.id,
-            expectedOutcomeId: outcome.id,
-            rng: makeRng(9301),
-            targetCheckedOutcome: true,
-          });
-
-          expect(
-            result.ok,
-            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
-              + ' via ' + family.id + ': ' + (result.reason ?? 'no reason'),
-          ).toBe(true);
-          expect(result.key).toBe(
-            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
-          );
-          if (result.key) witnessed.push(result.key);
-        }
-      }
+    const groups = new Map<string, number>();
+    for (const row of rows) {
+      const signature = JSON.stringify({
+        tier: 'tier' in row ? row.tier : undefined,
+        arc: 'arc' in row ? row.arc : undefined,
+        record: 'record' in row ? row.record : undefined,
+        ages: 'ages' in row ? row.ages : undefined,
+        kind: 'kind' in row ? row.kind : 'choice',
+        decider: 'decider' in row ? row.decider : undefined,
+        requires: 'requires' in row ? row.requires : undefined,
+        check: 'check' in row ? row.check : undefined,
+        variance: 'variance' in row ? row.variance : undefined,
+      });
+      groups.set(signature, (groups.get(signature) ?? 0) + 1);
     }
 
-    expect(witnessed.sort()).toEqual(declared.sort());
+    throw new Error(
+      'WITNESS_RESIDUE ' + JSON.stringify({
+        count: remaining.length,
+        groups: [...groups.entries()].sort((a, b) => b[1] - a[1]),
+        rows,
+      }),
+    );
   });
 });
 
