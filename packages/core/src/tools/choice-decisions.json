@@ -291,6 +291,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_crowded_years",
+      "disposition": "delete",
+      "reason": "Both random outcomes of let_it_ride write the same flag, so it cannot preserve whether the hall stayed crowded or settled; the crowded outcome already persists through branch slight +6 and the Chronicle records the scene."
+    },
+    {
+      "kind": "flag",
       "key": "the_hall_was_counted",
       "disposition": "read",
       "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
