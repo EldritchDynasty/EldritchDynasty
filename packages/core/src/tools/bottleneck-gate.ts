@@ -137,8 +137,8 @@ export function verdictOver(runs: FoundingRun[]): FoundingVerdict {
  */
 export function gateFoundingRecovery(
   source: Source = loadContent(),
-  runs = BLOCKING_GATE_CONFIG.bottleneck.runs,
-  years = BLOCKING_GATE_CONFIG.bottleneck.years,
+  runs: number = BLOCKING_GATE_CONFIG.bottleneck.runs,
+  years: number = BLOCKING_GATE_CONFIG.bottleneck.years,
 ): FoundingVerdict {
   const out: FoundingRun[] = [];
   const config = BLOCKING_GATE_CONFIG.bottleneck;
