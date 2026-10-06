@@ -5487,43 +5487,122 @@ describe('authored frame narration outcome witnesses', () => {
 });
 
 
+describe('authored age-scoped record-bearing TEST_FAMILIES outcome witnesses', () => {
+  it('executes simple single-Age record choices through a shared family that can really offer them', () => {
+    const candidates = content.events.flatMap((event) => {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.record === undefined
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+      ) return [];
 
-describe('temporary #442 remaining outcome inventory', () => {
-  it('prints the exact remaining deterministic outcome residue', () => {
-    const manifest = JSON.parse(
-      readFileSync(OUTCOME_WITNESS_MANIFEST, 'utf8'),
-    ) as { outcomes: string[] };
-    const committed = new Set(manifest.outcomes);
-    const remaining = [...declaredOutcomeKeys].filter((key) => !committed.has(key)).sort();
+      const choices = event.interaction.choices.filter((choice) => (
+        choice.requires.length === 0 && choice.check === undefined
+      ));
+      if (choices.length === 0) return [];
 
-    const rows = remaining.map((key) => {
-      const [eventId, choiceId, outcomeId] = key.split('|');
-      const event = content.event(eventId!);
-      if (!event) return { key, missingEvent: true };
-      if (event.interaction.kind === 'narration') {
-        return {
-          key, event: eventId, outcome: outcomeId, tier: event.tier,
-          arc: event.arc !== undefined, record: event.record !== undefined,
-          ages: event.ages !== undefined, kind: 'narration',
-        };
-      }
-      const choice = event.interaction.choices.find((candidate) => String(candidate.id) === choiceId);
-      const check = choice?.check
-        ? event.checks.find((candidate) => candidate.id === choice.check)
-        : undefined;
-      const decider = typeof event.interaction.decidedBy === 'string'
-        ? event.interaction.decidedBy
-        : Object.keys(event.interaction.decidedBy)[0] ?? 'object';
-      return {
-        key, event: eventId, choice: choiceId, outcome: outcomeId, tier: event.tier,
-        arc: event.arc !== undefined, record: event.record !== undefined,
-        ages: event.ages !== undefined, decider,
-        requires: choice?.requires.length ?? -1,
-        check: choice?.check !== undefined,
-        variance: check?.variance ?? null,
-      };
+      const age = event.ages.only[0]!;
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
+        if (!evalCondition(event.conditions, ctx)) return false;
+
+        const slots = resolveSlots(event, ctx, makeRng(9901));
+        if (!slots.ok || slots.playerCast.length) return false;
+
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+
+      return family ? [{ event, choices, family, age }] : [];
     });
 
-    throw new Error('WITNESS_RESIDUE ' + JSON.stringify({ count: remaining.length, rows }));
+    expect(candidates.length).toBeGreaterThan(0);
+
+    const declared = candidates.flatMap(({ event, choices }) =>
+      choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
+    const witnessed: string[] = [];
+
+    for (const { event, choices, family, age } of candidates) {
+      const outside = family.build(content);
+      outside.world.generation = Math.max(
+        outside.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      outside.world.age.active = [];
+      expect(
+        ambientPool(outside).some((offered) => offered.id === event.id),
+        String(event.id) + ' should be excluded outside ' + String(age),
+      ).toBe(false);
+
+      for (const choice of choices) {
+        for (const outcome of choice.outcomes) {
+          const ctx = family.build(content);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+          ctx.world.age.active = [{
+            age,
+            began: ctx.world.year,
+            named: true,
+            paid: { standing: false },
+          }];
+
+          expect(
+            evalCondition(event.conditions, ctx),
+            String(event.id) + ' should satisfy its authored conditions in '
+              + family.id + ' during ' + String(age),
+          ).toBe(true);
+          const slots = resolveSlots(event, ctx, makeRng(9901));
+          expect(
+            slots.ok,
+            String(event.id) + ' should resolve its authored slots in ' + family.id,
+          ).toBe(true);
+          if (!slots.ok) continue;
+          expect(slots.playerCast).toHaveLength(0);
+          expect(
+            ambientPool(ctx).some((offered) => offered.id === event.id),
+            String(event.id) + ' should be offered by the real ambient selector in '
+              + family.id + ' during ' + String(age),
+          ).toBe(true);
+
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9901),
+            targetWeightedOutcome: choice.outcomes.length > 1,
+          });
+
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
+              + ' via ' + family.id + ' during ' + String(age)
+              + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          expect(result.key).toBe(
+            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
+          );
+          if (result.key) witnessed.push(result.key);
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
