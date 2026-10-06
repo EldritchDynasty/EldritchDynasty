@@ -131,7 +131,7 @@ export function shortLineVerdictOver(
 
 export function gateShortLine(
   source: Source = loadContent(),
-  runs = BLOCKING_GATE_CONFIG['short-line'].runs,
+  runs: number = BLOCKING_GATE_CONFIG['short-line'].runs,
 ): ShortLineVerdict {
   const config = BLOCKING_GATE_CONFIG['short-line'];
   const content = indexContent(source);
