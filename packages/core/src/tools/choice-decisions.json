@@ -93,6 +93,12 @@
     },
     {
       "kind": "flag",
+      "key": "never_said_the_quieting_at_home_again",
+      "disposition": "read",
+      "reason": "The close-the-book outcome explicitly says the house says the Quieting at Bramme every year for 211 years without exception. Preserve the flag for the long-lived Church/chapel rule the prose promises."
+    },
+    {
+      "kind": "flag",
       "key": "on_the_caster_list",
       "disposition": "read",
       "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."
@@ -186,6 +192,12 @@
       "key": "the_house_held_the_wardenship",
       "disposition": "read",
       "reason": "Winning the Wardenship is a durable institutional fact that the event itself says permanently exposes the house to Crown, Assembly, Church, and provincial attention. Keep one callback discriminator for later Warden-era consequences."
+    },
+    {
+      "kind": "flag",
+      "key": "the_stair_below_the_turn_bricked",
+      "disposition": "read",
+      "reason": "Bricking the cellar stair changes the house physically, and the outcome explicitly says somebody unbricks it in 1330. Preserve the flag for that later house/mystery callback rather than losing the only durable marker of the wall."
     },
     {
       "kind": "flag",
@@ -393,6 +405,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_ninth_was_answered",
+      "disposition": "read",
+      "reason": "Recording that the ninth petition was answered by nobody in the chapel creates a specific supernatural fact in the family's Chronicle, with Church witnesses and a total discrepancy. That is a natural later liturgy/blood reader, not generic Record boilerplate."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_older_register",
       "disposition": "read",
       "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
@@ -456,6 +474,12 @@
       "key": "knows_the_sixth_seal_is_wrong",
       "disposition": "delete",
       "reason": "The Record already preserves the false sixth seal in Chronicle text and a deed claim, with its Respect consequence; no separate simulation-memory key is needed unless a real later reader is authored."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_stair_was_searched",
+      "disposition": "delete",
+      "reason": "This branch establishes only that the cellar stair was searched and nothing was found; it already costs treasury and the scene itself preserves the failed search. The distinct drain discovery has its own live knowledge, so this marker adds no separate future fact."
     },
     {
       "kind": "knowledge",
