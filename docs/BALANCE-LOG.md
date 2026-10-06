@@ -9385,3 +9385,117 @@ for the 540 outcomes that still lack deterministic witnesses; no sample size,
 seed set, reachability assertion, or gameplay threshold was reduced to recover
 CI time. As deterministic witness coverage grows, the blocking set shrinks
 without weakening the full scheduled telemetry.
+
+## 2026-10-06 — #341 closeout: the ranked slice, and the targets the owner adopted
+
+**Owner decision (2026-10-06, on #341):** rewrite a bounded prefix of the ranked
+worklist, re-measure at 48 pairs, and adopt whatever that measures as the
+target. The < 20% / ≤ 6 candidates are retired as targets rather than weakened
+as checks. What is left over is recorded below as known debt.
+
+### Re-baseline, and why the old figure moved
+
+`gate:replay -- 48` on `main` at `528c3994` (96 Short Lines, seeds 901–996)
+measured **30.1%** new-event, familiar-shape (1,039 / 3,448). The 2026-09-29
+step-3 entry measured 25.0% on the same seeds. The content under the
+instrument has changed since: #334's deletes and classifications, #472 and
+#432. The worklist comment on #341 still said "about 180 choices". That
+figure came from the old 25% baseline. From 30.1%, getting under 20% means
+moving about 350 of the 1,039 familiar choices.
+
+The debt is flat. The heaviest single event is 1.5% of it, the top 14 are
+17.6%, and the top 25 are 28.7%. A slice of the prefix can buy about a fifth.
+If all 14 worklist events landed on shapes no other event shares, the
+counterfactual over the recorded streams gives 24.2% (`shapeConcentration`
+re-run with those events remapped). Getting under 20% would take 35–40
+rewrites.
+
+### The slice
+
+Each change prices a side in what that side's own prose already says, using
+the existing vocabulary. No new `Effect` kind, no change to `shapeOf`, no event
+made rarer, nothing different in prose only. Each change has a `# #341:`
+comment beside it.
+
+| event | side | was | now |
+|---|---|---|---|
+| `an_eviction_remembered` | carry the arrears | −13 crowns, +1 Respect | a chronicle page, household +8 |
+| `a_second_hand_that_agrees` | let it stand alone | write-only flag | a chronicle page |
+| `something_the_church_wants_more` | decline the chantry | flag | flag + a chronicle page |
+| `the_wool_that_will_not_take` | write it down / sell apart | knowledge key / coin + rumour | a chronicle page / + household +6 |
+| `the_wall_nobody_mends` | mend / take it to Cawdry | coin + write-only flag / coin, Respect | coin + page / + page, and household +6 when tenants' word wins it |
+| `the_clipped_coin` | send the four down | household −14, +1 Respect | household −14, a chronicle page |
+| `the_letter_comes_and_is_expected` | pay for the quiet | −120 crowns | −120 crowns, buries a Church-provable lie |
+| `the_farrow_line_ends` | decline Farrowmere | +1 Respect | a chronicle page |
+| `the_second_cup` (rank 17) | name them aloud | Respect, mourner | + Wick's rumour, one name wrong |
+
+Three keys lost their only writer, so their reserved `read` entries leave
+`choice-decisions.json`: `the_house_declined_cawdry`,
+`knows_the_fleece_and_the_fold` and `mended_the_march_wall`. `validate`
+warnings fall from 292 to 286.
+
+**Six of the fourteen were left alone.** In each, the prose prices nothing but
+coin, or the honest price lands on a slot that may be absent:
+
+- `the_relief_falls_due`, `the_hearth_tax_assessment`, `news_before_the_seal`
+  and `the_post_relay_will_take_it` are scenes about money;
+- `a_frost_in_greening` charges both sides the same sum by design, and the
+  goodwill is the choice;
+- `what_he_did_with_the_key` would charge `{CHILD}`, who can be absent, with no
+  sentence that survives both bodies.
+
+Stripping the coin from any of these would be the prose-only false choice that
+#266 and #334 already count as a bug.
+
+### Measured
+
+`gate:replay -- 48`, identical code, content before (`528c3994`) and after:
+
+| | before | after | adopted target |
+|---|---:|---:|---:|
+| B's choices new by event, familiar by shape | 30.1% (1,039 / 3,448) | **27.1%** (935 / 3,455) | **≤ 27.1%** |
+| top category shape's share | 5.4% | **4.7%** | **≤ 4.7%** |
+| money on one side of the top 10 shapes | 9 | 9 | **9, accepted as known debt** |
+| shape overlap across pairs, whole run | 61% | 58% | |
+| distinct shapes | 160 | 164 | |
+| events above 2 fires per Short Line | 0 | 0 | 0 (step 2) |
+
+The offline counterfactual over the recorded streams predicted 27.3% before
+anything was replayed. The real replay reads 27.1%.
+
+**No shape gained more than 1 point.** The largest gain is
+`[money+record | record]` at +0.9. Four of the new shapes occur in no other
+event, so a B-side choice carrying one of them cannot be familiar.
+
+**Money in the top 10 did not move, and that is a finding.** The slots this
+slice emptied were refilled from the tail by other money shapes:
+`[money | money+record]` from 10 other events, and
+`[money+record+relationship | money+relationship]`. Most of what remains is
+honest. It is the draper's dowry, the hearth tax, the factors' gate price, the
+frost that costs both sides the same. Moving it needs new trade-offs written
+on purpose, not corrected prices. That is a content commission, not a sweep.
+
+### Guards
+
+`validate` passed with 0 errors. `test:fast` passed (3,251 tests), including
+the #502 witness manifest, which is unchanged because no outcome id moved.
+Library neutrality is exact on every column.
+
+**`attention.slow.test.ts`: the variety reached a second instrument.** The
+per-generation density bands all hold. The *within-Age* category-shape repeat
+fell, which is the same improvement read inside one run. It now sat too close
+to that band's **floor**. The figures below are the 25-seed pool,
+`measureDensity` at both terms:
+
+| within-Age shape repeat | #341 step 0 (2026-09-29) | `main` 528c3994 | this slice |
+|---|---:|---:|---:|
+| Short Line | 10.6% | 8.61% (se 0.91) | **7.00%** (se 0.87) |
+| Long Line | ~10.3% | 8.04% (se 0.71) | **7.36%** (se 0.68) |
+
+The 6% floor was set against 10.3% to catch "a material structural move",
+with the explicit note that 10.3% is not a target. Read against this slice,
+it judged the variety work as a break: Short cleared it by 1.15 SE, under
+`expectMean`'s 2. The floor is **re-derived to 5%**, the largest round floor
+both terms clear by two standard errors (Long 3.5, Short 2.3). A broken
+instrument reading near zero still fails. The **15% ceiling**, the guard a
+player would feel, does not move.
