@@ -18,7 +18,8 @@ import { bootstrap } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { landRiskRoutes } from './land-routes.js';
 import { expectMean, expectRate } from '../testing.js';
-import { CAMPAIGN_YEARS, END_YEAR, START_YEAR } from '../campaign.js';
+import { END_YEAR, START_YEAR } from '../campaign.js';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 
 type Source = ContentBundle | Content;
 export interface LandGateResult { ok: boolean; lines: string[] }
@@ -240,8 +241,9 @@ export function gateLand(
   const missing = requiredKinds.filter((kind) => !content.parcels.some((p) => p.kind === kind));
   if (missing.length) return { ok: false, lines: [`LAND SHAPES missing: ${missing.join(', ')}`] };
 
-  const seeds = opts.seeds ?? DEFAULT_SEEDS;
-  const years = opts.years ?? CAMPAIGN_YEARS;
+  const config = BLOCKING_GATE_CONFIG.land;
+  const seeds = opts.seeds ?? [...config.seeds];
+  const years = opts.years ?? config.years;
   if (seeds.length < 8) return { ok: false, lines: [`LAND BATCH needs at least 8 seeds; got ${seeds.length}`] };
   const runs = seeds.map((seed) => runLand(content, seed, years));
   const routes = declaredRoutes(content);
@@ -301,10 +303,11 @@ export function gateLand(
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('land-gate.ts');
 if (isMain) {
+  const config = BLOCKING_GATE_CONFIG.land;
   const runs = Number(process.argv[2] ?? 12);
-  const years = Number(process.argv[3] ?? CAMPAIGN_YEARS);
-  const seeds = runs <= DEFAULT_SEEDS.length
-    ? DEFAULT_SEEDS.slice(0, runs)
+  const years = Number(process.argv[3] ?? config.years);
+  const seeds = runs <= config.seeds.length
+    ? [...config.seeds].slice(0, runs)
     : Array.from({ length: runs }, (_, i) => 61_000 + i * 101);
   const result = gateLand(loadContent(), { seeds, years });
   for (const line of result.lines) console.log(line);
