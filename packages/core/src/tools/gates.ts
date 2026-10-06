@@ -1380,7 +1380,17 @@ if (isMain) {
   // batch gate 4 and gate 8 now share is keyed on that object, so it never
   // hit and both of them played the same 250 runs anyway. The sharing was
   // real and the cache was addressing nobody.
-  const content = loadContent();
+  const trace = (globalThis as typeof globalThis & {
+    __edGateTrace?: { start: (gate: string) => void; stop: () => void };
+  }).__edGateTrace;
+  trace?.start('__shared__');
+  const content = (() => {
+    try {
+      return loadContent();
+    } finally {
+      trace?.stop();
+    }
+  })();
 
   // A LANE ALWAYS NAMES ITS GATES, even when it holds only one.
   //
@@ -1396,9 +1406,6 @@ if (isMain) {
   let failed = 0;
   const runStarted = Date.now();
   const timings: GateTimingSample[] = [];
-  const trace = (globalThis as typeof globalThis & {
-    __edGateTrace?: { start: (gate: string) => void; stop: () => void };
-  }).__edGateTrace;
   for (const n of chosen) {
     if (named) console.log(`\n── ${n} ──`);
     const started = Date.now();
