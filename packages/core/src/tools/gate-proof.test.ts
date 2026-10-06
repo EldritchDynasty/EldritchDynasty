@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_IDS } from './gate-registry.js';
+import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_EXTRA_INPUTS, BLOCKING_GATE_IDS } from './gate-registry.js';
 import {
   GATE_FINGERPRINT_ALGORITHM_VERSION,
   GATE_FINGERPRINT_ENTRIES,
@@ -61,6 +61,7 @@ describe('#441 gate dependency fingerprints', () => {
   it('keeps proof entry and execution registries in lockstep with the blocking gate registry', () => {
     expect(Object.keys(GATE_FINGERPRINT_ENTRIES).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
     expect(Object.keys(BLOCKING_GATE_CONFIG).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
+    expect(Object.keys(BLOCKING_GATE_EXTRA_INPUTS).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
   });
 
   it('fingerprints the selected gate entry itself', async () => {
@@ -107,6 +108,27 @@ describe('#441 gate dependency fingerprints', () => {
 
     writeFileSync(join(root, 'packages/core/src/dep.ts'), 'export const value = 2;\n');
     expect((await fingerprint(root)).fingerprint).not.toBe(before.fingerprint);
+  });
+
+  it('invalidates on an imperative repository input', async () => {
+    const root = fixtureRepo();
+    writeFileSync(join(root, 'extra.json'), '{"value":1}\n');
+    const before = await fingerprintGateDependencies({
+      repoRoot: root,
+      gate: 'fixture',
+      entry: { module: 'packages/core/src/gate.ts', exportName: 'gate' },
+      extraInputs: ['extra.json'],
+      toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
+    });
+    writeFileSync(join(root, 'extra.json'), '{"value":2}\n');
+    const changed = await fingerprintGateDependencies({
+      repoRoot: root,
+      gate: 'fixture',
+      entry: { module: 'packages/core/src/gate.ts', exportName: 'gate' },
+      extraInputs: ['extra.json'],
+      toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
+    });
+    expect(changed.fingerprint).not.toBe(before.fingerprint);
   });
 
   it('invalidates on any authored content change', async () => {
