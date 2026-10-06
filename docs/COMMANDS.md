@@ -125,6 +125,45 @@ behind a failing test and cost another whole run to find; each job now answers
 independently, and every matrix sets `fail-fast: false` so a shard cannot
 cancel its siblings and rebuild that failure mode one level down.
 
+### Trusted gate-proof reuse
+
+Merge-blocking simulation gates may reuse a prior result only through the
+#441 proof boundary. **A cache hit is never evidence.** The authority is a
+proof artifact produced by a successful `push` run of
+`.github/workflows/check.yml` on `refs/heads/main` in this repository.
+
+Each proof names its gate, proof-format and fingerprint-algorithm versions,
+normalized dependency manifest, fingerprint, source SHA/run/repository/workflow,
+and whether the producer observed any runtime file read outside that manifest.
+The dependency manifest is conservative by construction: esbuild derives the
+transitive code closure from the gate entry, **all** `packages/content/**`
+files are included, and `package-lock.json`, Node major/minor, runner OS/image
+and the canonical gate invocation are fingerprinted too. During the trusted
+producer run a Node preload traces repository file reads. An unclassified read,
+missing trace, malformed proof, or proof-generation failure yields no reusable
+evidence; the next integration runs the gate.
+
+A PR or merge-group consumer may inherit green only after independently checking
+all of these facts:
+
+- the source workflow run event is `push`, its branch is `main`, its
+  conclusion is `success`, and its head repository is
+  `EldritchDynasty/EldritchDynasty`;
+- the run path is exactly `.github/workflows/check.yml`;
+- the proof's source SHA and run id match that workflow run;
+- proof-format and fingerprint-algorithm versions are current;
+- the gate name and current dependency fingerprint match;
+- the producer marked the proof reusable and recorded zero unclassified reads.
+
+Lookup is by **fingerprint**, not by the PR base SHA: the newest trusted main
+run with an equal fingerprint is eligible. A feature-branch artifact, PR
+artifact, `actions/cache`, mutable label, arbitrary branch/ref, failed or
+pending run, missing artifact, or unverifiable evidence is never an authority.
+Every such uncertainty is a cache miss and executes the real gate. The gate job
+and stable `CI required` result keep the same names whether a gate executed or
+reused proof; their summaries name the fingerprint and inherited main run so
+reuse remains auditable.
+
 ### Scheduled evidence is CI, not a dashboard
 
 `tools/ci-evidence.json` is the checked inventory for #451. Its
