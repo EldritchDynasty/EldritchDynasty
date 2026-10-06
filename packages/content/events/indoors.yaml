@@ -276,7 +276,6 @@ events:
                 business as Wick's business.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
-                - { kind: knowledge, op: grant, flag: knows_what_wick_already_knows }
 
   - id: the_yard_man_who_will_not_go_in
     title: He Does the Outside Work

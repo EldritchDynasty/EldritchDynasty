@@ -214,7 +214,6 @@ events:
                 will go on quoting it as though it had.
               effects:
                 - { kind: relationship, from: { slot: DAUGHTER }, to: head, sentiment: -12 }
-                - { kind: flag, flag: tried_the_fourth_shelf_alone, set: true }
 
   - id: the_book_that_is_wrong
     title: The Book That Is Wrong
