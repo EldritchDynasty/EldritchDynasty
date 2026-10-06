@@ -165,6 +165,7 @@ export async function fingerprintGateDependencies(
     logLevel: 'silent',
   });
 
+  if (!result.metafile) throw new Error('esbuild did not return dependency metadata');
   const paths = new Set<string>();
   for (const input of Object.keys(result.metafile.inputs)) {
     if (input.startsWith('<')) continue;
