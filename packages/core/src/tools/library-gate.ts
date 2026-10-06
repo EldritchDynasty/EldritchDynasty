@@ -27,11 +27,11 @@ import { libraryRunOf } from '../run-library.js';
 import { newGame } from '../session.js';
 import { expectMean } from '../testing.js';
 import type { SimCtx } from '../world.js';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 
 type Source = ContentBundle | Content;
 
 const ZERO_CEILING = 0.001;
-const DEFAULT_SEEDS = [811, 912, 1013, 1114];
 
 export interface LibraryNeutralityMetrics {
   treasury: number;
@@ -125,7 +125,8 @@ export function libraryNeutralityVerdict(
 }
 
 function fixedLibraryRun(source: Source) {
-  const old = newGame(source, { seed: 9090, campaign: 'short', decider: 'chronicler' });
+  const config = BLOCKING_GATE_CONFIG['library-neutrality'];
+  const old = newGame(source, { seed: config.fixedLibrarySeed, campaign: config.campaign, decider: config.decider });
   const person = old.ctx.world.people.household(old.ctx.world.playerHouse, old.year)[0]!;
   old.ctx.world.chronicle.push({
     id: 'library_gate_page',
@@ -136,7 +137,7 @@ function fixedLibraryRun(source: Source) {
     record: 'embellish',
     claims: [{ kind: 'attr', person: person.id, attr: 'madness', value: 0 }],
   });
-  old.ctx.world.ending = { id: 'forgotten', year: CAMPAIGNS.short.endYear };
+  old.ctx.world.ending = { id: 'forgotten', year: CAMPAIGNS[config.campaign].endYear };
   const run = libraryRunOf(old.ctx);
   if (!run) throw new Error('the fixed Library of Houses corpus produced no finished run');
   return run;
@@ -146,23 +147,24 @@ export function gateLibraryNeutrality(
   source: Source = loadContent(),
   opts: { seeds?: number[] } = {},
 ): LibraryNeutralityVerdict {
-  const seeds = opts.seeds ?? DEFAULT_SEEDS;
+  const config = BLOCKING_GATE_CONFIG['library-neutrality'];
+  const seeds = opts.seeds ?? [...config.seeds];
   const oldHouse = fixedLibraryRun(source);
   const empty: LibraryNeutralityMetrics[] = [];
   const seeded: LibraryNeutralityMetrics[] = [];
   const lines = [`gate (library-neutrality): ${seeds.length} paired Short Lines`];
 
   for (const seed of seeds) {
-    const base = newGame(source, { seed, campaign: 'short', decider: 'chronicler', libraryRuns: [] });
+    const base = newGame(source, { seed, campaign: config.campaign, decider: config.decider, libraryRuns: [] });
     const withLibrary = newGame(source, {
       seed,
-      campaign: 'short',
-      decider: 'chronicler',
+      campaign: config.campaign,
+      decider: config.decider,
       libraryRuns: [oldHouse],
     });
 
-    base.advance(CAMPAIGNS.short.years + 1);
-    withLibrary.advance(CAMPAIGNS.short.years + 1);
+    base.advance(config.advanceYears);
+    withLibrary.advance(config.advanceYears);
 
     if (!withLibrary.ctx.world.libraryMemories.length) {
       return {
@@ -181,8 +183,11 @@ export function gateLibraryNeutrality(
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('library-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? DEFAULT_SEEDS.length);
-  const seeds = Array.from({ length: runs }, (_, i) => 811 + i * 101);
+  const config = BLOCKING_GATE_CONFIG['library-neutrality'];
+  const runs = Number(process.argv[2] ?? config.seeds.length);
+  const seeds = runs <= config.seeds.length
+    ? [...config.seeds].slice(0, runs)
+    : Array.from({ length: runs }, (_, i) => config.seeds[0] + i * 101);
   const verdict = gateLibraryNeutrality(loadContent(), { seeds });
   for (const line of verdict.lines) console.log(line);
   process.exit(verdict.ok ? 0 : 1);
