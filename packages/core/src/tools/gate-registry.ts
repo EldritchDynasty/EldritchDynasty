@@ -125,4 +125,24 @@ export const BLOCKING_GATE_CONFIG = {
   'post-fillability': { kind: 'deterministic' },
 } as const satisfies Record<BlockingGateId, Record<string, unknown>>;
 
+/**
+ * Repository inputs read imperatively rather than through the TypeScript import
+ * graph. Runtime tracing verifies this list fail-safe; this table makes the
+ * known reads part of the fingerprint instead of permanently disabling reuse.
+ */
+export const BLOCKING_GATE_EXTRA_INPUTS = {
+  clauses: [],
+  'library-neutrality': [],
+  'outcome-reach-blocking': ['tools/outcome-witnesses.json'],
+  'short-line': [],
+  ladder: [],
+  'ladder-scales': [],
+  purposes: [],
+  'vocabulary-reach': [],
+  bottleneck: [],
+  land: [],
+  'slot-fillability': [],
+  'post-fillability': [],
+} as const satisfies Record<BlockingGateId, readonly string[]>;
+
 export type BlockingGateConfiguration = (typeof BLOCKING_GATE_CONFIG)[BlockingGateId];
