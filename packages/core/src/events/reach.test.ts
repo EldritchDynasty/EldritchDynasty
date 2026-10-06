@@ -4239,10 +4239,11 @@ describe('authored direct player-cast outcome witnesses', () => {
     expect(family, 'a shared family should be able to take the winter advance').toBeDefined();
     if (!family) return;
 
-    for (const [index, [choiceId, outcomeId]] of [
+    const followups = [
       ['tear_it_up', 'freed'],
       ['hold_to_it', 'held'],
-    ].entries()) {
+    ] as const satisfies readonly (readonly [string, string])[];
+    for (const [index, [choiceId, outcomeId]] of followups.entries()) {
       const ctx = family.build(content);
       ctx.world.generation = Math.max(ctx.world.generation, 2);
       ctx.world.treasury = Math.max(ctx.world.treasury, 40);
