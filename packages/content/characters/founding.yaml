@@ -1,8 +1,8 @@
 # THE FOUNDING CAST — 1042
 #
-# The founder is never named. He is "the man", "your ancestor". The player
-# names the house, not him: names are load-bearing in this world and his is
-# withheld deliberately.
+# The founder's authored fallback name is Daveed Gearithy. The Examination
+# lets the player supply his name at bootstrap; a blank answer keeps this one.
+# The house name is a separate answer and remains the name carried by the line.
 #
 # `bias` nudges an authored intent WITHOUT pinning it. For a seed person
 # whose genome is rolled, it still selects from the house's allele pool. For a

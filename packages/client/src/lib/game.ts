@@ -2,7 +2,7 @@ import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type {
   CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
 } from '@ed/schema';
-import { appendLibraryRun, emptyRunLibrary, readRunLibrary } from '@ed/schema';
+import { appendLibraryRun, emptyRunLibrary, PERSON_NAME_MAX, readRunLibrary } from '@ed/schema';
 import {
   CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
@@ -38,6 +38,9 @@ import { currentPlatform, type Platform, type SaveSummary } from '../platform.js
 
 /** The two product profiles the front door may offer, from the engine's one source of truth. */
 export const CAMPAIGN_CHOICES = [CAMPAIGNS.short, CAMPAIGNS.long] as const;
+
+/** Schema-owned limit exposed through the client's one simulation seam. */
+export const FOUNDER_NAME_MAX = PERSON_NAME_MAX;
 
 /**
  * A PRESENTATION READING OF A CARD, still through the client's one door.

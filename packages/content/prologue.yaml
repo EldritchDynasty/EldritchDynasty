@@ -5,7 +5,8 @@
 # what it displaces and never by what it is, and no motive anywhere. The one
 # plain line in the file is `thesis`, and every ending reaches back to it.
 #
-# The founder is never named. The player names the HOUSE.
+# The founder takes the player's supplied name; blank keeps Daveed Gearithy.
+# The house name remains a separate answer after the Examination.
 prologue:
   - id: the_signing
     opening: >-
@@ -70,10 +71,231 @@ prologue:
             the others. He was fifty-one. {years} years was a number, and not a
             thing that happens to anybody.
 
+    namePrompt: >-
+      Before any seal was warmed and before the house was asked what it would
+      call itself, the other party asked the man what he was called, and when
+      he answered the name was written down in a hand that none of the four in
+      the room could afterwards imitate. The page remained open upon the table.
+      What are you called?
+
+    examination:
+      - id: the_ford
+        situation: >-
+          In the year before the signing, at a ford below Cawdry, the river
+          rose after dark and took one wheel of a laden cart between two
+          stones, while the Warden's men watched from the farther bank and the
+          last useful light went out of the sky. The question was what the man
+          had done then.
+        answers:
+          - id: own_back
+            says: I put my own back to the wheel.
+            given: Strength ran a little stronger in the line.
+            owed: Mind ran a little thinner in the line.
+            terms:
+              given:
+                - kind: bias
+                  who: [founder]
+                  attr: strength
+                  amount: 0.15
+              owed:
+                - kind: bias
+                  who: [founder]
+                  attr: mind
+                  amount: -0.15
+          - id: wardens_men
+            says: I talked the Warden's men into lending theirs.
+            given: Charm ran a little stronger in the line.
+            owed: Strength ran a little thinner in the line.
+            terms:
+              given:
+                - kind: bias
+                  who: [founder]
+                  attr: charm
+                  amount: 0.15
+              owed:
+                - kind: bias
+                  who: [founder]
+                  attr: strength
+                  amount: -0.15
+          - id: wait_for_water
+            says: I waited for the water to go down.
+            given: Long life ran a little stronger in the line.
+            owed: A small tithe was taken across the line's heritable strengths.
+            terms:
+              given:
+                - kind: bias
+                  who: [founder]
+                  attr: longevity
+                  amount: 0.15
+              owed:
+                - kind: tithe
+                  who: [founder]
+                  amount: 0.05
+
+      - id: the_two_letters
+        situation: >-
+          Before Eilwen came from Ilm there were two letters, one written by a
+          woman who had known her mother and one by a steward who had counted
+          what travelled with the marriage. Both were kept. The question was
+          not which letter had been believed, but why the man had married her.
+        answers:
+          - id: what_her_mother_bore
+            says: For what her mother bore.
+            given: Eilwen's fecundity was favoured.
+            owed: Some of Eilwen's charm was the price.
+            terms:
+              given:
+                - kind: bias
+                  who: [founders_wife]
+                  attr: fecundity
+                  amount: 0.2
+              owed:
+                - kind: bias
+                  who: [founders_wife]
+                  attr: charm
+                  amount: -0.15
+          - id: light_in_her
+            says: For the light in her.
+            given: Light and Life ran stronger in Eilwen's blood.
+            owed: Eilwen's fecundity ran thinner.
+            terms:
+              given:
+                - kind: bias
+                  who: [founders_wife]
+                  attr: light
+                  amount: 0.2
+                - kind: bias
+                  who: [founders_wife]
+                  attr: life
+                  amount: 0.1
+              owed:
+                - kind: bias
+                  who: [founders_wife]
+                  attr: fecundity
+                  amount: -0.15
+          - id: for_the_dowry
+            says: For the dowry.
+            given: The treasury began with more coin.
+            owed: A small tithe was taken across Eilwen's heritable strengths.
+            terms:
+              given:
+                - kind: treasury
+                  amount: 60
+              owed:
+                - kind: tithe
+                  who: [founders_wife]
+                  amount: 0.05
+
+      - id: the_hard_winter
+        situation: >-
+          There had been bread enough for two through the worst winter anyone
+          then living could remember, and three had stood at the door: a
+          teacher, a midwife, and a man who could make a column of figures
+          agree with itself. The snow had already covered the lower road. The
+          question was who had been let in.
+        answers:
+          - id: the_teacher
+            says: The teacher.
+            given: Osric's loyalty to the house deepened.
+            owed: Hesper was dismissed, and what she knew went with her.
+            terms:
+              given:
+                - kind: loyalty
+                  retainer: tutor
+                  amount: 20
+              owed:
+                - kind: dismiss
+                  retainer: midwife
+          - id: the_midwife
+            says: The midwife.
+            given: Hesper's loyalty to the house deepened.
+            owed: Osric and Bertram trusted the house less.
+            terms:
+              given:
+                - kind: loyalty
+                  retainer: midwife
+                  amount: 20
+              owed:
+                - kind: loyalty
+                  retainer: tutor
+                  amount: -20
+                - kind: loyalty
+                  retainer: steward
+                  amount: -10
+          - id: all_three
+            says: All three, on half a loaf.
+            given: The house kept more coin through the winter.
+            owed: All three retainers trusted the house less.
+            terms:
+              given:
+                - kind: treasury
+                  amount: 40
+              owed:
+                - kind: loyalty
+                  retainer: tutor
+                  amount: -15
+                - kind: loyalty
+                  retainer: midwife
+                  amount: -15
+                - kind: loyalty
+                  retainer: steward
+                  amount: -15
+
+      - id: the_moved_stone
+        situation: >-
+          One morning a boundary stone stood a furrow farther onto the house's
+          land than it had stood the night before, though the ground about it
+          carried no boot-mark and the rain had not been heavy enough to move
+          anything made of stone. The neighbour said nothing. The question was
+          what the man had done.
+        answers:
+          - id: assize_at_cawdry
+            says: I took it to the assize at Cawdry.
+            given: The house's standing rose.
+            owed: The assize, the road, and the winter in lodgings cost dearly.
+            terms:
+              given:
+                - kind: respect
+                  steps: 1
+              owed:
+                - kind: treasury
+                  amount: -80
+          - id: move_it_back
+            says: I moved it back myself, at night.
+            given: The furrow's rent stayed with the house.
+            owed: Calder kept a lesser grudge against the line.
+            terms:
+              given:
+                - kind: treasury
+                  amount: 60
+              owed:
+                - kind: grudge
+                  house: house_calder
+                  severity: 30
+                  inheritance: heir_only
+          - id: let_it_lie
+            says: I let it lie.
+            given: Osric, Hesper, and Bertram trusted the house a little more.
+            owed: The house gave up the value of the furrow.
+            terms:
+              given:
+                - kind: loyalty
+                  retainer: tutor
+                  amount: 10
+                - kind: loyalty
+                  retainer: midwife
+                  amount: 10
+                - kind: loyalty
+                  retainer: steward
+                  amount: 10
+              owed:
+                - kind: treasury
+                  amount: -40
+
     housePrompt: >-
-      He is not named here and will not be. Names are load-bearing in this
-      country and his was the first thing the family agreed to lose. Name the
-      house instead. It is the part that lasts.
+      Only after these answers did the other party ask what the house would be
+      called. The man's own name was already on the page; this one was for the
+      door, the seal, and those who would come after him. Name the house.
 
     friendsPrompt: >-
       There was one further question and it was not about the house, and the

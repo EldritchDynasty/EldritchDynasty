@@ -383,29 +383,58 @@ export interface ServiceEnded {
  * will, which is his last act and the house honouring it.
  */
 const WORTH_WRITING: Record<ReleaseReason, boolean> = {
-  unpaid: true, destitute: true, freed: true, employer_died: false,
+  unpaid: true, destitute: true, freed: true, dismissed: true, employer_died: false,
 };
+
+/**
+ * End one contract through the same secret-release path, whatever caused it.
+ * Dismissal closes household membership only AFTER `walkSecrets` has measured
+ * years of service from that still-open record.
+ */
+function endService(
+  ctx: SimCtx,
+  p: Person,
+  why: string,
+  reason: ReleaseReason,
+  rng: Rng,
+  closeMembership = false,
+): ServiceEnded | undefined {
+  const contract = p.contract;
+  if (!contract) return undefined;
+  const w = ctx.world;
+  p.contract = undefined;
+  const text = `${p.name} ${why}`;
+  const ended = { person: p, text, reason };
+  if (WORTH_WRITING[reason]) {
+    w.chronicle.push({ year: w.year, weight: 'line', text, named: false });
+  }
+  walkSecrets(ctx, p, contract, reason, rng);
+
+  if (closeMembership) {
+    const open = p.membership.find((m) =>
+      m.kind === 'retainer'
+        && m.house === w.playerHouse
+        && m.from <= w.year
+        && (m.to === undefined || m.to > w.year),
+    );
+    if (open) open.to = w.year;
+  }
+  return ended;
+}
+
+/** A founding choice can dismiss one named retainer immediately. */
+export function dismissRetainer(ctx: SimCtx, p: Person, rng: Rng): ServiceEnded | undefined {
+  return endService(ctx, p, 'was dismissed from the house.', 'dismissed', rng, true);
+}
 
 export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
   const w = ctx.world;
   const released: ServiceEnded[] = [];
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
 
-  /**
-   * Read the contract BEFORE clearing it. What a servant knows lives on the
-   * contract, so a secret tested after the release is a secret nobody knows —
-   * which is how `knowsSecrets` would have gone on doing nothing even with a
-   * mechanism behind it (`people/secrets.ts`).
-   */
   const release = (p: Person, why: string, reason: ReleaseReason) => {
-    const contract = p.contract;
-    p.contract = undefined;
-    const text = `${p.name} ${why}`;
-    released.push({ person: p, text, reason });
-    if (WORTH_WRITING[reason]) {
-      w.chronicle.push({ year: w.year, weight: 'line', text, named: false });
-    }
-    if (contract) walkSecrets(ctx, p, contract, reason, rng);
+    const ended = endService(ctx, p, why, reason, rng);
+    if (ended) released.push(ended);
   };
 
   for (const p of w.people.living()) {

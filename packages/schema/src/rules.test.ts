@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, effectSignature, indexContent, inlineArcId, outcomeSignature, runRule, validateBundle, type ContentBundle } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, effectSignature, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
 
 const content = loadContent();
 
@@ -48,6 +48,77 @@ describe('the content rules', () => {
     mutate(b);
     return b;
   };
+
+  const signingQuestion = (): SigningQuestion => SigningQuestionS.parse({
+    id: 'pricing_probe',
+    situation: 'A question with a price on both sides.',
+    answers: ['one', 'two', 'three'].map((id) => ({
+      id,
+      says: `Answer ${id}.`,
+      given: 'Sixty crowns are given.',
+      owed: 'A little is taken from the line.',
+      terms: {
+        given: [{ kind: 'treasury', amount: 60 }],
+        owed: [{ kind: 'tithe', who: ['founder'], amount: 0.05 }],
+      },
+    })),
+  });
+
+  const withSigning = (mutate: (question: SigningQuestion, bundle: ContentBundle) => void): ContentBundle =>
+    withEvents((b) => {
+      const p = b.prologue[0]!;
+      p.namePrompt = 'What are you called?';
+      p.examination = [signingQuestion()];
+      mutate(p.examination[0]!, b);
+    });
+
+  it('accepts a signing whose references, direction and price all agree', () => {
+    const b = withSigning(() => {});
+    expect(runRule('signing/refs', b)).toHaveLength(0);
+    expect(runRule('signing/direction', b)).toHaveLength(0);
+    expect(runRule('signing/priced', b)).toHaveLength(0);
+  });
+
+  it('catches a signing term naming an unknown founding seed key', () => {
+    const b = withSigning((q) => {
+      q.answers[0]!.terms.owed = [SigningTermS.parse({
+        kind: 'tithe', who: ['seed_that_is_not'], amount: 0.05,
+      })];
+    });
+    expect(runRule('signing/refs', b).some((i) =>
+      i.level === 'error' && i.message.includes("seed_that_is_not"),
+    )).toBe(true);
+  });
+
+  it('catches a signing bias on Eldritch Power', () => {
+    const b = withSigning((q) => {
+      q.answers[0]!.terms.given = [SigningTermS.parse({
+        kind: 'bias', who: ['founder'], attr: 'eldritch_power', amount: 0.15,
+      })];
+    });
+    expect(runRule('signing/refs', b).some((i) =>
+      i.level === 'error' && i.message.includes("eldritch_power"),
+    )).toBe(true);
+  });
+
+  it('catches a gain authored on the owed side of the signing', () => {
+    const b = withSigning((q) => {
+      q.answers[0]!.terms.owed = [SigningTermS.parse({ kind: 'treasury', amount: 60 })];
+    });
+    expect(runRule('signing/direction', b).some((i) =>
+      i.level === 'error' && /owed.*loss/.test(i.message),
+    )).toBe(true);
+  });
+
+  it('catches an answer whose static price is plainly one-sided', () => {
+    const b = withSigning((q) => {
+      q.answers[0]!.terms.given = [SigningTermS.parse({ kind: 'treasury', amount: 100 })];
+      q.answers[0]!.terms.owed = [SigningTermS.parse({ kind: 'treasury', amount: -20 })];
+    });
+    expect(runRule('signing/priced', b).some((i) =>
+      i.level === 'error' && /within one point/.test(i.message),
+    )).toBe(true);
+  });
 
   /**
    * THE GUARANTEE, NOT THE ROLE (issue #43).

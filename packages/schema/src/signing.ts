@@ -57,6 +57,28 @@ export const SigningTermS = z.discriminatedUnion('kind', [
 ]);
 export type SigningTerm = z.infer<typeof SigningTermS>;
 
+/**
+ * One deliberately coarse exchange table for the Examination (#343).
+ *
+ * This is only the authoring sanity floor. The paired-seed signing gate owns
+ * the real "no right answers" claim. The rates are calibrated so the four
+ * draft questions in #343 price to within one point without pretending that
+ * a late secret, a grudge, and forty crowns are truly interchangeable.
+ */
+export const SIGNING_RATES = {
+  bias: {
+    core: 20,
+    affinity: 10,
+  },
+  tithe: 60,
+  treasury: 1 / 20,
+  respect: 4,
+  loyalty: 1 / 15,
+  dismiss: 2,
+  grudge: 1 / 10,
+} as const;
+
+
 export const SigningAnswerS = z.object({
   id: SigningIdS,
   /** What the founder says; deliberately plain enough to choose between. */

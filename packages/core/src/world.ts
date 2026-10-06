@@ -538,6 +538,8 @@ export interface WorldState {
     heirloom: string;
     /** Who the house stepped on. Also a `Relationship` edge, where it does its work. */
     grudge: string;
+    /** Stable Examination question id -> selected answer id. */
+    answers: Record<string, string>;
     year: Year;
   };
 

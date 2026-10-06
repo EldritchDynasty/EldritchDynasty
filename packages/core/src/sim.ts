@@ -6,8 +6,10 @@ import { chooseGenerationQuestion } from './generation.js';
  * `people/demography.ts`. This file builds the world, puts the founding cast in
  * it, and holds the handful of things the player does directly to a person.
  */
-import type { CampaignId, Content, ContentBundle, GenePool, LibraryRun, Person, SeedPerson } from '@ed/schema';
-import { asId, indexContent } from '@ed/schema';
+import type {
+  CampaignId, Content, ContentBundle, GenePool, Genome, LibraryRun, Person, SeedPerson, SigningTerm,
+} from '@ed/schema';
+import { PersonNameS, asId, indexContent } from '@ed/schema';
 import { buildLocusTable } from './genetics/loci.js';
 import { applyBias, conceive, meiosis, randomGenome } from './genetics/meiosis.js';
 import { genomeOf, makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
@@ -50,6 +52,165 @@ export function makeGeneticsCtx(content: Content, seed: number): GeneticsCtx {
   };
 }
 
+export interface BootstrapSigning {
+  /** Question id -> answer id, in authored Examination vocabulary. */
+  answers?: Readonly<Record<string, string>>;
+  /** Blank deliberately keeps the authored founder name. */
+  founderName?: string;
+}
+
+export function selectedSigningTerms(content: Content, signing?: BootstrapSigning): SigningTerm[] {
+  const requested = new Map(Object.entries(signing?.answers ?? {}));
+  if (!requested.size) return [];
+
+  const examination = content.prologue?.examination ?? [];
+  const authoredIds = new Set(examination.map((question) => question.id));
+  for (const questionId of requested.keys()) {
+    if (!authoredIds.has(questionId)) {
+      throw new Error(`signing names unknown Examination question '${questionId}'`);
+    }
+  }
+
+  const terms: SigningTerm[] = [];
+  // Authored order, not object-key order: construction order of an answer map
+  // must never become an RNG input.
+  for (const question of examination) {
+    const answerId = requested.get(question.id);
+    if (answerId === undefined) continue;
+    const answer = question.answers.find((candidate) => candidate.id === answerId);
+    if (!answer) {
+      throw new Error(`signing question '${question.id}' has no answer '${answerId}'`);
+    }
+    terms.push(...answer.terms.given, ...answer.terms.owed);
+  }
+  return terms;
+}
+
+function signingBiasDeltaForSeed(
+  seed: SeedPerson,
+  ctx: GeneticsCtx,
+  terms: readonly SigningTerm[],
+): Record<string, number> {
+  const delta: Record<string, number> = {};
+  const add = (attr: string, amount: number) => {
+    delta[attr] = (delta[attr] ?? 0) + amount;
+  };
+
+  for (const term of terms) {
+    if (term.kind === 'bias' && term.who.includes(seed.key)) {
+      add(String(term.attr), term.amount);
+    } else if (term.kind === 'tithe' && term.who.includes(seed.key)) {
+      // A tithe thins every heritable Core tendency. It cannot name affinity
+      // state, Madness, font or Eldritch Power because none enter this loop.
+      for (const attr of ctx.attributes) {
+        if (attr.kind === 'core' && attr.heritable) add(String(attr.id), -term.amount);
+      }
+    }
+  }
+  return delta;
+}
+
+/**
+ * Apply the authored bias on its historical RNG cursor, while Examination
+ * changes use one stable stream per seed+attribute.
+ *
+ * `applyBias` consumes an extra draw only when a probability roll succeeds.
+ * Changing Charm from .5 to .35 on the shared cursor can therefore shift a
+ * later authored Eldritch-channel draw even though the answer never named
+ * Power. For a changed attribute we consume the old authored operation on a
+ * throwaway genome, preserving that cursor, then apply the combined amount
+ * to the real genome on its isolated Examination stream.
+ */
+function applySeedBias(
+  genome: Genome,
+  seedPerson: SeedPerson,
+  signingDelta: Readonly<Record<string, number>>,
+  ctx: GeneticsCtx,
+  rng: Rng,
+): void {
+  const targeted = new Set(Object.keys(signingDelta));
+  if (!targeted.size) {
+    applyBias(genome, seedPerson.bias, ctx.table, rng);
+    return;
+  }
+
+  const applied = new Set<string>();
+  for (const [attr, authored] of Object.entries(seedPerson.bias)) {
+    const delta = signingDelta[attr];
+    if (delta === undefined) {
+      applyBias(genome, { [attr]: authored }, ctx.table, rng);
+      continue;
+    }
+
+    const sink: Genome = {
+      autosomal: [genome.autosomal[0].slice(), genome.autosomal[1].slice()],
+      sex: [genome.sex[0].slice(), genome.sex[1]?.slice() ?? null],
+      mutations: [...genome.mutations],
+    };
+    applyBias(sink, { [attr]: authored }, ctx.table, rng);
+
+    const contributions = ctx.table.byAttribute.get(attr) ?? [];
+    const ordinary = contributions.filter(
+      (entry) => entry.locus.kind !== 'eldritch_channel' && entry.locus.kind !== 'eldritch_font',
+    );
+    // Some channel loci also contribute to Mind. The Examination may alter
+    // Mind, but invariant 4 says it may not alter the channel that sets Power.
+    // Preserve exactly what the pre-Examination authored Mind operation did
+    // there, including its historical RNG result, then apply the combined
+    // amount only to ordinary attribute loci.
+    for (const entry of contributions) {
+      if (entry.locus.kind !== 'eldritch_channel' && entry.locus.kind !== 'eldritch_font') continue;
+      if (entry.where === 'autosomal') {
+        genome.autosomal[0][entry.index] = sink.autosomal[0][entry.index]!;
+        genome.autosomal[1][entry.index] = sink.autosomal[1][entry.index]!;
+      } else {
+        genome.sex[0][entry.index] = sink.sex[0][entry.index]!;
+        if (genome.sex[1] && sink.sex[1]) genome.sex[1][entry.index] = sink.sex[1][entry.index]!;
+      }
+    }
+
+    const combined = Math.max(-0.95, Math.min(0.95, authored + delta));
+    const signingTable = {
+      ...ctx.table,
+      byAttribute: new Map(ctx.table.byAttribute),
+    };
+    signingTable.byAttribute.set(attr, ordinary);
+    applyBias(
+      genome,
+      { [attr]: combined },
+      signingTable,
+      makeRng(hashSeed(ctx.runSeed, 'signing-bias', seedPerson.key, attr)),
+    );
+    applied.add(attr);
+  }
+
+  for (const [attr, delta] of Object.entries(signingDelta)) {
+    if (applied.has(attr)) continue;
+    const combined = Math.max(-0.95, Math.min(0.95, delta));
+    const signingTable = {
+      ...ctx.table,
+      byAttribute: new Map(ctx.table.byAttribute),
+    };
+    signingTable.byAttribute.set(
+      attr,
+      (ctx.table.byAttribute.get(attr) ?? []).filter(
+        (entry) => entry.locus.kind !== 'eldritch_channel' && entry.locus.kind !== 'eldritch_font',
+      ),
+    );
+    applyBias(
+      genome,
+      { [attr]: combined },
+      signingTable,
+      makeRng(hashSeed(ctx.runSeed, 'signing-bias', seedPerson.key, attr)),
+    );
+  }
+}
+
+function signingFounderName(signing?: BootstrapSigning): string | undefined {
+  const raw = signing?.founderName?.trim();
+  return raw ? PersonNameS.parse(raw) : undefined;
+}
+
 /**
  * Build a world and put the founding cast in it.
  *
@@ -63,11 +224,14 @@ export function bootstrap(
   startYear = 1042,
   campaign: CampaignId = 'long',
   libraryRuns: readonly LibraryRun[] = [],
+  signing?: BootstrapSigning,
 ): SimCtx {
   const content = indexContent(source);
   const world = createWorld(content, seed, startYear, campaign);
   const genetics = makeGeneticsCtx(content, seed);
   const ctx: SimCtx = { world, content, genetics, takenNames: new Set(), prose: createProseRuntime() };
+  const signingTerms = selectedSigningTerms(content, signing);
+  const founderName = signingFounderName(signing);
 
   const byKey = new Map<string, Person>();
   const ordered = orderSeeds(content.characters);
@@ -89,6 +253,7 @@ export function bootstrap(
       throw new Error(`seed child ${s.key} could not resolve ${missing}`);
     }
 
+    const signingBias = signingBiasDeltaForSeed(s, genetics, signingTerms);
     let rng: Rng;
     let genome: ReturnType<typeof randomGenome>;
     if (mother && father) {
@@ -104,6 +269,11 @@ export function bootstrap(
       // permission to rewrite a recombinant gamete. It only leans the normal
       // per-chromosome choice of parental haplotype; crossovers and mutations
       // remain the same meiosis mechanics used by every later child.
+      if (Object.keys(signingBias).length) {
+        throw new Error(
+          `signing heritable terms must target a founding parent, not seeded child '${s.key}'`,
+        );
+      }
       const motherGamete = meiosis(
         motherGenome, genetics.table, 'female', rng, s.born, undefined, s.bias,
       );
@@ -120,7 +290,7 @@ export function bootstrap(
       rng = makeRng(hashSeed(seed, 'seed-person', s.key));
       const pool = genetics.pools.get(s.house);
       genome = randomGenome(genetics.table, pool, s.sex, rng);
-      biasSeedPerson(genome, s, genetics, rng);
+      applySeedBias(genome, s, signingBias, genetics, rng);
     }
 
     // Born of one house, living in another. A wife of House Ilm who has
@@ -136,7 +306,7 @@ export function bootstrap(
       sex: s.sex,
       born: s.born,
       house: s.house,
-      name: s.name,
+      name: s.becomesGuardian && founderName ? founderName : s.name,
       epithet: s.epithet,
       genome: { kind: 'materialized', genome },
       membership: s.membership,
@@ -280,9 +450,7 @@ function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
  * The generic rule itself lives in `genetics/meiosis.ts` because minted
  * character templates carry the same field.
  */
-function biasSeedPerson(genome: ReturnType<typeof randomGenome>, s: SeedPerson, ctx: GeneticsCtx, rng: Rng): void {
-  applyBias(genome, s.bias, ctx.table, rng);
-}
+
 
 /**
  * NAMING THE CHILDREN.

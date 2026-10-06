@@ -94,7 +94,7 @@ export function saveGame(ctx: SimCtx): SavedGame {
     // after it was taken.
     friends: w.friends.map((f) => ({ ...f })),
     ascension: { ...w.ascension, reachedAt: { ...w.ascension.reachedAt } },
-    ...(w.founding ? { founding: { ...w.founding } } : {}),
+    ...(w.founding ? { founding: { ...w.founding, answers: { ...w.founding.answers } } } : {}),
     ...(w.ending ? { ending: { ...w.ending } } : {}),
     // Plain data already, but COPIED — `fired` is a live object the Assize
     // writes into every sitting, and a save that shared it would keep changing
@@ -309,7 +309,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   if (s.scionHeirVacant) world.scionHeirVacant = { ...s.scionHeirVacant };
   world.friends = s.friends.map((f) => ({ ...f }));
   world.ascension = { ...s.ascension, reachedAt: { ...s.ascension.reachedAt } };
-  if (s.founding) world.founding = { ...s.founding };
+  if (s.founding) world.founding = { ...s.founding, answers: { ...s.founding.answers } };
   if (s.ending) world.ending = { ...s.ending };
   world.assize = { ...s.assize, fired: { ...s.assize.fired } };
 
@@ -560,6 +560,18 @@ export function digest(save: SavedGame): string {
     // format-22 saves had no field and therefore mean Long; omit the explicit
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
+  }
+  // #343: format 28 adds Examination answers to the founding record. An
+  // unsigned run owns no new simulation state, so preserve the format-27
+  // fingerprint just as the older additive envelopes below preserve theirs.
+  // This is deliberately about EMPTY answers only: a signed run keeps the
+  // new field in the digest and therefore gets a different fingerprint.
+  if (value.format === 28 && (!save.founding || Object.keys(save.founding.answers).length === 0)) {
+    if (save.founding) {
+      const { answers: _answers, ...legacyFounding } = save.founding;
+      value.founding = legacyFounding;
+    }
+    value.format = 27;
   }
   // Issue #149: an EMPTY rival lineage is additive state, just like #70's
   // empty installation library. Peel each additive save envelope back in

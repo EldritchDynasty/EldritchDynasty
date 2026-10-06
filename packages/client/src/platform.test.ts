@@ -335,6 +335,7 @@ describe('the platform seam', () => {
       houseName: 'House Remembered',
       heirloom: 'portion_of_agelessness',
       grudge: 'house_marrow',
+      answers: {},
       year: 1042,
     };
     ctx.world.chronicle.push({
@@ -374,6 +375,7 @@ describe('the platform seam', () => {
       houseName: 'House Retry',
       heirloom: 'portion_of_agelessness',
       grudge: 'house_marrow',
+      answers: {},
       year: 1042,
     };
     ctx.world.ending = { id: 'forgotten', year: 1342 };
@@ -430,6 +432,7 @@ describe('the platform seam', () => {
       houseName: 'House Throw',
       heirloom: 'portion_of_agelessness',
       grudge: 'house_marrow',
+      answers: {},
       year: 1042,
     };
     ctx.world.ending = { id: 'forgotten', year: 1342 };

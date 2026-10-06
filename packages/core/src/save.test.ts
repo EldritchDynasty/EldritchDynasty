@@ -155,7 +155,7 @@ describe('a run survives being written down', () => {
     });
 
     const saved = JSON.parse(JSON.stringify(saveGame(before)));
-    expect(saved.format).toBe(27);
+    expect(saved.format).toBe(SAVE_FORMAT);
     expect(saved.chronicle.at(-1)?.people).toEqual([person.id]);
 
     const after = loadGame(saved, content);
@@ -556,6 +556,28 @@ describe('a run survives being written down', () => {
     expect(digest(current)).toBe(digest(legacy as unknown as typeof current));
   });
 
+  it('keeps an unsigned format-28 save byte-compatible with format 27', () => {
+    const ctx = bootstrap(content, 1042, 1042);
+    const beforeFounding = saveGame(ctx);
+    expect(digest(beforeFounding)).toBe(digest({
+      ...beforeFounding,
+      format: 27,
+    } as unknown as typeof beforeFounding));
+
+    foundHouse(ctx, {
+      houseName: 'The House of Salt',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+    });
+    const current = saveGame(ctx);
+    const { answers: _answers, ...legacyFounding } = current.founding!;
+    expect(digest(current)).toBe(digest({
+      ...current,
+      format: 27,
+      founding: legacyFounding,
+    } as unknown as typeof current));
+  });
+
   it('keeps content provenance out of the deterministic digest', () => {
     const ctx = bootstrap(content, 1042, 1042);
     ctx.world.frequency.templateFires.the_drowning = 1;
@@ -582,6 +604,7 @@ function finishedLibraryHouse() {
     houseName: 'The House That Wrote It Larger',
     heirloom: 'portion_of_agelessness',
     grudge: 'house_marrow',
+    answers: {},
     year: 1042,
   };
   ctx.world.discrepancies.set('old_lie', {

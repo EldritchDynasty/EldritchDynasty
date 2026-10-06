@@ -4,7 +4,7 @@ import type {
 } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
-import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild } from './sim.js';
+import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
 import type { YearReport } from './year/report.js';
 import { passageOf, type Passage } from './year/passage.js';
@@ -222,10 +222,19 @@ export interface AdvanceResult {
   pending: PendingDecision[];
 }
 
+interface FoundingBootstrap {
+  startYear: number;
+  build(signing: BootstrapSigning): SimCtx;
+}
+
 export class GameSession {
   decider: 'ask' | 'chronicler';
 
-  constructor(readonly ctx: SimCtx, decider: 'ask' | 'chronicler' = 'ask') {
+  constructor(
+    public ctx: SimCtx,
+    decider: 'ask' | 'chronicler' = 'ask',
+    private readonly foundingBootstrap?: FoundingBootstrap,
+  ) {
     this.decider = decider;
   }
 
@@ -485,7 +494,37 @@ export class GameSession {
    * in it.
    */
   found(choice: FoundingChoice): FoundingResult {
-    return foundHouse(this.ctx, choice);
+    // A second answer is just the ordinary once-only refusal. Do not rebuild
+    // a finished founding merely because the caller supplied old form fields.
+    if (this.ctx.world.founding) return foundHouse(this.ctx, choice);
+
+    const hasSigning = choice.founderName !== undefined
+      || Object.keys(choice.answers ?? {}).length > 0;
+    if (!hasSigning) return foundHouse(this.ctx, choice);
+
+    const restart = this.foundingBootstrap;
+    if (!restart) {
+      return { ok: false, reason: 'the Examination can only be answered from a new run' };
+    }
+    if (this.ctx.world.year !== restart.startYear || this.ctx.world.decisionLog.length) {
+      return { ok: false, reason: 'the Examination belongs before the first year or decision' };
+    }
+
+    // Build a candidate first. `foundHouse` does all state-term validation
+    // before mutation; only a successful candidate replaces the live ctx.
+    let candidate: SimCtx;
+    try {
+      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName });
+    } catch (error) {
+      return {
+        ok: false,
+        reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
+      };
+    }
+    const result = foundHouse(candidate, choice);
+    if (!result.ok) return result;
+    this.ctx = candidate;
+    return result;
   }
 
   /**
@@ -607,11 +646,25 @@ function authoredProseVariants(source: ContentBundle | Content): readonly ProseV
 }
 
 export function newGame(source: ContentBundle | Content, opts: SessionOptions = {}): GameSession {
-  const ctx = bootstrap(source, opts.seed ?? 1042, opts.startYear ?? 1042, opts.campaign ?? 'long', opts.libraryRuns ?? []);
-  const session = new GameSession(ctx, opts.decider ?? 'ask');
-  setProseVariants(ctx, opts.proseVariants ?? authoredProseVariants(source));
-  if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
-  return session;
+  const seed = opts.seed ?? 1042;
+  const startYear = opts.startYear ?? 1042;
+  const campaign = opts.campaign ?? 'long';
+  const libraryRuns = opts.libraryRuns ?? [];
+  const proseVariants = opts.proseVariants ?? authoredProseVariants(source);
+  const configure = (ctx: SimCtx) => {
+    setProseVariants(ctx, proseVariants);
+    if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
+    return ctx;
+  };
+
+  const ctx = configure(bootstrap(source, seed, startYear, campaign, libraryRuns));
+  // Rebuild from the indexed content snapshot this run actually started with,
+  // not from a host object that might be edited while the prologue is open.
+  const foundingSource = ctx.content;
+  const build = (signing: BootstrapSigning) => configure(
+    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing),
+  );
+  return new GameSession(ctx, opts.decider ?? 'ask', { startYear, build });
 }
 
 export function resumeGame(

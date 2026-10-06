@@ -43,9 +43,29 @@ export function replay(
   startYear: number,
   years: number,
 ): SimCtx {
-  const ctx = bootstrap(source, seed, startYear);
+  const signing = log.filter((d) => d.kind === 'signing');
+  if (signing.length > 1) {
+    throw new ReplayMismatchError(
+      `replay found ${signing.length} signing decisions at seed ${seed}; expected at most one`,
+    );
+  }
+  const signed = signing[0];
+  if (signed && log[0] !== signed) {
+    throw new ReplayMismatchError(`replay signing decision is not first at seed ${seed}`);
+  }
 
-  // Founding is the one external answer made before the first year turns
+  // Examination choices alter bootstrap itself, so they have to be supplied
+  // before any founding-state verb can be replayed.
+  const ctx = bootstrap(
+    source,
+    seed,
+    startYear,
+    'long',
+    [],
+    signed ? { answers: signed.answers, founderName: signed.founderName } : undefined,
+  );
+
+  // Founding is the external answer made before the first year turns
   // (issue #391). It used to be absent from the log, so replay silently
   // rebuilt a different house: no chosen gift, grudge, friends, house name or
   // opening Chronicle page. Apply it through the same verb, never by copying
@@ -68,6 +88,7 @@ export function replay(
       heirloom: first.heirloom,
       grudge: first.grudge,
       friends: first.friends.map((friend) => ({ ...friend })),
+      ...(signed ? { answers: { ...signed.answers }, founderName: signed.founderName } : {}),
     });
     if (!result.ok) {
       throw new ReplayMismatchError(
@@ -100,6 +121,8 @@ export function describeDecision(d: LoggedDecision): string {
       return d.card
         ? `${d.year}  ${d.subject} married ${d.spouse} off ${d.card}`
         : `${d.year}  ${d.subject} was offered a hand and took none of it`;
+    case 'signing':
+      return `${d.year}  signed as ${d.founderName?.trim() || 'the authored founder'}; ${Object.keys(d.answers).length} Examination answer(s)`;
     case 'founding':
       return `${d.year}  founded ${d.houseName}; asked for ${d.heirloom}; wronged ${d.grudge}`;
     case 'name':

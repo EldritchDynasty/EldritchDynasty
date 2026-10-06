@@ -1,10 +1,13 @@
 import type { PrologueDef, PrologueOwed, Sex } from '@ed/schema';
+import { RESPECT_ORDER } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { grantHeirloom } from './people/heirlooms.js';
 import { hashSeed, makeRng } from './rng.js';
 import { addGrudge } from './people/relationships.js';
 import { MAX_FRIENDS, dealWindows, normaliseFriends, type FriendName } from './people/friends.js';
 import { campaignDef, type CampaignDef } from './campaign.js';
+import { dismissRetainer } from './people/succession.js';
+import { selectedSigningTerms } from './sim.js';
 
 /**
  * THE SIGNING (concept §3, issue #38).
@@ -36,6 +39,18 @@ export interface PrologueView {
   id: string;
   opening: string;
   triad: { given: string; owed: string }[];
+  /** The founder-name question. Blank keeps the authored seed name. */
+  namePrompt?: string;
+  /**
+   * Examination copy only. Structured terms stay inside core/schema: a client
+   * chooses authored answer ids and never receives the simulation operations
+   * or numeric weights behind them.
+   */
+  examination: {
+    id: string;
+    situation: string;
+    answers: { id: string; says: string; given: string; owed: string }[];
+  }[];
   housePrompt: string;
   /** The last question, and the only one not about the house. */
   friendsPrompt: string;
@@ -76,6 +91,10 @@ export interface FoundingChoice {
    * `people/friends.ts`.
    */
   friends?: { name: string; sex: Sex }[];
+  /** Stable Examination question id -> selected answer id. */
+  answers?: Readonly<Record<string, string>>;
+  /** GameSession uses this to rebuild the founding cast before this verb runs. */
+  founderName?: string;
 }
 
 /** A house name is a line on a page, not an essay. */
@@ -145,6 +164,17 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
     id: def.id,
     opening: def.opening,
     triad,
+    ...(def.namePrompt !== undefined ? { namePrompt: def.namePrompt } : {}),
+    examination: def.examination.map((question) => ({
+      id: question.id,
+      situation: question.situation,
+      answers: question.answers.map((answer) => ({
+        id: answer.id,
+        says: answer.says,
+        given: answer.given,
+        owed: answer.owed,
+      })),
+    })),
     housePrompt: def.housePrompt,
     friendsPrompt: def.friendsPrompt,
     friendsWanted: MAX_FRIENDS,
@@ -222,6 +252,40 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     roster.push(...dealWindows(checked.friends, w.year, makeRng(hashSeed(w.seed, 'friend-windows'))));
   }
 
+  // THE EXAMINATION, RESOLVED BEFORE THE FIRST MUTATION. Rules validate the
+  // shipped bundle, but user content may still disappear between selection
+  // and this verb. Founding is all-or-nothing either way.
+  let signingTerms: ReturnType<typeof selectedSigningTerms>;
+  try {
+    signingTerms = selectedSigningTerms(ctx.content, { answers: choice.answers });
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
+    };
+  }
+  const signingRetainers = new Map<string, NonNullable<ReturnType<typeof seedPerson>>>();
+  for (const term of signingTerms) {
+    if (term.kind === 'loyalty' || term.kind === 'dismiss') {
+      const person = seedPerson(ctx, term.retainer);
+      if (!person?.contract) {
+        return { ok: false, reason: `the signing names unavailable retainer '${term.retainer}'` };
+      }
+      signingRetainers.set(term.retainer, person);
+    } else if (term.kind === 'grudge' && !ctx.content.house(String(term.house))) {
+      return { ok: false, reason: `the signing names missing house '${String(term.house)}'` };
+    }
+  }
+  const signingAnswers = Object.fromEntries(
+    Object.entries(choice.answers ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  const selectedAnswers = def.examination.flatMap((question) => {
+    const answerId = signingAnswers[question.id];
+    if (answerId === undefined) return [];
+    const answer = question.answers.find((candidate) => candidate.id === answerId);
+    return answer ? [answer] : [];
+  });
+
   grantHeirloom(ctx, String(heirloom.heirloom));
 
   // HELD BY A PERSON, AGAINST A PERSON. Both ends of a grudge are people —
@@ -249,14 +313,75 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     def.id,
   );
 
+  // FOUNDING-STATE TERMS. Heritable terms were already paid into bootstrap;
+  // only state terms belong here. Dismissals run last so a loyalty term on
+  // the same retainer affects the shared release/leak calculation.
+  const dismissals: Extract<(typeof signingTerms)[number], { kind: 'dismiss' }>[] = [];
+  for (const term of signingTerms) {
+    switch (term.kind) {
+      case 'treasury':
+        w.treasury += term.amount;
+        break;
+      case 'respect': {
+        const current = RESPECT_ORDER.indexOf(w.respect);
+        const next = Math.max(0, Math.min(RESPECT_ORDER.length - 1, current + term.steps));
+        if (next !== current) {
+          w.respect = RESPECT_ORDER[next]!;
+          w.respectChanged = w.year;
+        }
+        break;
+      }
+      case 'loyalty': {
+        const retainer = signingRetainers.get(term.retainer)!;
+        const contract = retainer.contract!;
+        contract.loyalty = Math.max(0, Math.min(100, contract.loyalty + term.amount));
+        break;
+      }
+      case 'dismiss':
+        dismissals.push(term);
+        break;
+      case 'grudge': {
+        const grudgeHolder = eldestOf(ctx, String(term.house));
+        const ourHolder = ours(ctx);
+        addGrudge(
+          ctx,
+          grudgeHolder ?? String(term.house),
+          ourHolder ?? w.playerHouse,
+          {
+            severity: term.severity,
+            inheritance: grudgeHolder ? term.inheritance : 'house_wide',
+          },
+          def.id,
+        );
+        break;
+      }
+      case 'bias':
+      case 'tithe':
+        break;
+    }
+  }
+  for (const term of dismissals) {
+    dismissRetainer(
+      ctx,
+      signingRetainers.get(term.retainer)!,
+      makeRng(hashSeed(w.seed, 'signing-dismiss', term.retainer)),
+    );
+  }
+
   w.friends = roster;
 
   w.founding = {
     houseName,
     heirloom: String(heirloom.heirloom),
     grudge: String(grudge.house),
+    answers: { ...signingAnswers },
     year: w.year,
   };
+
+  const examinationReadback = selectedAnswers.map((answer) => {
+    const plain = (line: string) => line.trim().replace(/[.!?]+$/, '');
+    return `${plain(answer.given)}; ${plain(answer.owed)}.`;
+  }).join(' ');
 
   // The chronicle, in the chronicle's own voice — plain, and from inside the
   // house. The frame's register stops at the prologue screen; this is the
@@ -267,7 +392,8 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     weight: 'page',
     title: 'What Was Asked For',
     text: `${object.name} was asked for by name, and given. ${house.name} paid for part of `
-      + 'that night and has not been paid back, and the house has known it the whole time.',
+      + 'that night and has not been paid back, and the house has known it the whole time.'
+      + (examinationReadback ? ` ${examinationReadback}` : ''),
     named: true,
   });
 
@@ -275,6 +401,15 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   // Log it here, at the one verb that applies it, after all validation has
   // succeeded. Replay calls this same verb so heirloom, grudge, friend windows,
   // founding state and the Chronicle page are rebuilt by their real owners.
+  const hasSigning = choice.founderName !== undefined || Object.keys(signingAnswers).length > 0;
+  if (hasSigning) {
+    w.decisionLog.push({
+      kind: 'signing',
+      year: w.year,
+      ...(choice.founderName !== undefined ? { founderName: choice.founderName } : {}),
+      answers: { ...signingAnswers },
+    });
+  }
   w.decisionLog.push({
     kind: 'founding',
     year: w.year,
@@ -298,6 +433,12 @@ function eldestOf(ctx: SimCtx, house: string): string | undefined {
     .filter((p) => p.houseOfOrigin === house)
     .sort((a, b) => a.born - b.born || (a.id < b.id ? -1 : 1));
   return them[0]?.id;
+}
+
+/** Find a founding seed without adding a save-only key to Person. */
+function seedPerson(ctx: SimCtx, key: string) {
+  const sigilSeed = hashSeed(ctx.world.seed, key);
+  return ctx.world.people.all().find((person) => person.sigilSeed === sigilSeed);
 }
 
 /** Whoever holds the seal, or anybody of the house if the seal is between hands. */
