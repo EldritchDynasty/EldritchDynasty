@@ -101,8 +101,6 @@ export interface FoundingChoice {
 /** A house name is a line on a page, not an essay. */
 export const HOUSE_NAME_MAX = 48;
 
-const PROLOGUE_PROSE_FILE = 'prologue.yaml';
-
 function prosePathId(id: string): string {
   return encodeURIComponent(id);
 }
@@ -113,9 +111,11 @@ function prologueProse(
   path: string,
   original: string,
 ): string {
+  const file = ctx.content.sourceOf(String(def.id));
+  if (file === undefined) return original;
   return renderContentProse(
     ctx,
-    PROLOGUE_PROSE_FILE,
+    file,
     `prologue[id=${prosePathId(String(def.id))}].${path}`,
     original,
   );
@@ -123,12 +123,13 @@ function prologueProse(
 
 function identifiedContentProse(
   ctx: SimCtx,
-  file: string,
   collection: string,
   id: string,
   field: string,
   original: string,
 ): string {
+  const file = ctx.content.sourceOf(id);
+  if (file === undefined) return original;
   return renderContentProse(
     ctx,
     file,
@@ -242,8 +243,8 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
       if (!object) return [];
       return [{
         heirloom: id,
-        name: identifiedContentProse(ctx, 'heirlooms.yaml', 'heirlooms', id, 'name', object.name),
-        blurb: identifiedContentProse(ctx, 'heirlooms.yaml', 'heirlooms', id, 'blurb', object.blurb ?? ''),
+        name: identifiedContentProse(ctx, 'heirlooms', id, 'name', object.name),
+        blurb: identifiedContentProse(ctx, 'heirlooms', id, 'blurb', object.blurb ?? ''),
         line: prologueProse(ctx, def, `heirlooms[${index}].line`, h.line),
       }];
     }),
@@ -253,7 +254,7 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
       if (!house) return [];
       return [{
         house: id,
-        houseName: identifiedContentProse(ctx, 'houses.yaml', 'houses', id, 'name', house.name),
+        houseName: identifiedContentProse(ctx, 'houses', id, 'name', house.name),
         line: prologueProse(ctx, def, `grudges[${index}].line`, g.line),
       }];
     }),
