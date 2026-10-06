@@ -294,8 +294,18 @@ describe('what the player is asked across A Long Line', () => {
    * a material structural move without pretending 10.3% is a target. The
    * 20-choice maximum share is logged, not judged: one baseline does not tell
    * us what that local concentration SHOULD be.
+   *
+   * THE FLOOR IS RE-DERIVED, NOT WIDENED (#341, 2026-10-06). Lowering this
+   * repeat is what #341 is for, and content kept doing it: `main` at
+   * 528c3994 measured Long 8.04% (se 0.71) and Short 8.61% (se 0.91), and
+   * #341's closing slice takes them to 7.36% (se 0.68) and 7.00% (se 0.87).
+   * A 6% floor read the variety work as a structural break. 5% is the
+   * largest round floor both terms clear by two standard errors (Long 3.5,
+   * Short 2.3), so it still catches a broken instrument reading near zero.
+   * The ceiling is the guard that matters to the player, and it does not
+   * move.
    */
-  const SHAPE_REPEAT_AGE = { floor: 0.06, ceiling: 0.15 };
+  const SHAPE_REPEAT_AGE = { floor: 0.05, ceiling: 0.15 };
 
   for (const [term, get] of [
     ['a 500-year Long Line', () => runs.map(({ b }) => b.shapeRepeat.category.age)],
