@@ -370,7 +370,7 @@ export function executeFrameOutcomeWitness(
   if (String(entry.outcomeId) !== request.expectedOutcomeId) {
     return {
       ok: false,
-      reason: \`resolved '\${entry.outcomeId}', not '\${request.expectedOutcomeId}'\`,
+      reason: `resolved '${entry.outcomeId}', not '${request.expectedOutcomeId}'`,
     };
   }
 
