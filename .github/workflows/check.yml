@@ -26,6 +26,7 @@ on:
 # the kind of thing that widens a job nobody was thinking about at the time.
 permissions:
   contents: read
+  actions: read
 
 # Supersede a PR's own earlier runs; never a push to `main`. Every commit on
 # `main` is somebody's landed work and is the only verdict it will ever get —
@@ -598,6 +599,64 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: find reusable trusted gate proofs
+        id: reuse
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ROOT="$RUNNER_TEMP/gate-proof-candidates"
+          RUNS="$RUNNER_TEMP/gate-proof-runs.json"
+          IDS="$RUNNER_TEMP/gate-proof-run-ids.txt"
+          PLAN="$RUNNER_TEMP/gate-reuse-plan.json"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT"
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/check.yml/runs?branch=main&event=push&status=success&per_page=30" > "$RUNS"
+          export ROOT RUNS IDS
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const payload = JSON.parse(fs.readFileSync(process.env.RUNS, 'utf8'));
+          const ids = [];
+          for (const run of payload.workflow_runs ?? []) {
+            if (!Number.isSafeInteger(run.id)) continue;
+            const dir = path.join(process.env.ROOT, String(run.id));
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, 'run.json'), JSON.stringify(run));
+            ids.push(String(run.id));
+          }
+          fs.writeFileSync(process.env.IDS, ids.length ? ids.join('\n') + '\n' : '');
+          NODE
+
+          while IFS= read -r run_id; do
+            [ -n "$run_id" ] || continue
+            if ! gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name gate-proofs --dir "$ROOT/$run_id"; then
+              echo "No gate-proofs artifact on trusted main run $run_id; continuing."
+            fi
+          done < "$IDS"
+
+          npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/gate-proof.ts plan             --candidate-root "$ROOT"             --output "$PLAN"             --repository "$GITHUB_REPOSITORY"             --workflow ".github/workflows/check.yml"
+
+          REUSED="$(node -e 'const fs=require("node:fs"); const p=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(p.gates.filter((g)=>g.action==="reuse").map((g)=>g.gate).join(","));' "$PLAN")"
+          echo "gates=$REUSED" >> "$GITHUB_OUTPUT"
+
+          export PLAN
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const plan = JSON.parse(fs.readFileSync(process.env.PLAN, 'utf8'));
+          const lines = ['### Trusted gate-proof reuse', ''];
+          for (const row of plan.gates) {
+            if (row.action === 'reuse') {
+              lines.push(`- **${row.gate}** — reused \`${row.fingerprint.slice(0, 12)}\` from [run ${row.sourceRunId}](https://github.com/${plan.repository}/actions/runs/${row.sourceRunId}) at \`${row.sourceSha.slice(0, 12)}\``);
+            } else {
+              lines.push(`- **${row.gate}** — ran: ${row.reason} (\`${row.fingerprint.slice(0, 12)}\`)`);
+            }
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          NODE
+
       - name: gates
         env:
           ED_GATE_READ_TRACE: ${{ runner.temp }}/gate-read-trace.jsonl
@@ -605,7 +664,15 @@ jobs:
           started=$(date +%s)
           rm -f "$ED_GATE_READ_TRACE"
           export NODE_OPTIONS="--import=$GITHUB_WORKSPACE/tools/gate-read-trace.mjs ${NODE_OPTIONS:-}"
-          npm run gates -- --lane ${{ matrix.lane }} --timings-json gate-timings-${{ matrix.lane }}.json
+          REUSED=""
+          if [[ "${{ steps.reuse.outcome }}" == "success" ]]; then
+            REUSED="${{ steps.reuse.outputs.gates }}"
+          fi
+          ARGS=(--lane "${{ matrix.lane }}" --timings-json "gate-timings-${{ matrix.lane }}.json")
+          if [[ -n "$REUSED" ]]; then
+            ARGS+=(--skip "$REUSED")
+          fi
+          npm run gates -- "${ARGS[@]}"
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
       - name: produce trusted main gate proofs

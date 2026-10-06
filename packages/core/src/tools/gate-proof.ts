@@ -1,11 +1,22 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
 import { BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
 
 export const GATE_PROOF_FORMAT_VERSION = 1;
 export const GATE_FINGERPRINT_ALGORITHM_VERSION = 1;
+
+export const GATE_PROOF_RUNTIME_INPUTS = [
+  '.github/workflows/check.yml',
+  'package.json',
+  'package-lock.json',
+  'tsconfig.base.json',
+  'packages/core/src/tools/gates.ts',
+  'packages/core/src/tools/gate-proof.ts',
+  'packages/core/src/tools/gate-registry.ts',
+  'tools/gate-read-trace.mjs',
+] as const;
 
 export interface GateFingerprintEntry {
   module: string;
@@ -79,6 +90,7 @@ export interface GateProof {
   sourceRepository: string;
   sourceWorkflow: string;
   reusable: boolean;
+  verdict: 'success';
   manifest: GateDependencyManifest;
   runtimeReads: string[];
   unclassifiedReads: string[];
@@ -91,6 +103,9 @@ export interface ProofTrustDecision {
 
 const sha256 = (value: Buffer | string): string =>
   createHash('sha256').update(value).digest('hex');
+
+export const fingerprintGateManifest = (manifest: GateDependencyManifest): string =>
+  sha256(JSON.stringify(manifest));
 
 const slash = (value: string): string => value.split(sep).join('/');
 
@@ -178,7 +193,13 @@ export async function fingerprintGateDependencies(
     const rel = repoRelative(repoRoot, file);
     if (rel) paths.add(rel);
   }
-  paths.add('package-lock.json');
+  for (const required of GATE_PROOF_RUNTIME_INPUTS) {
+    const absolute = join(repoRoot, required);
+    if (!existsSync(absolute)) {
+      throw new Error(`gate proof dependency is missing: ${required}`);
+    }
+    paths.add(required);
+  }
 
   const inputs: GateManifestInput[] = [...paths]
     .sort((a, b) => a.localeCompare(b))
@@ -198,7 +219,7 @@ export async function fingerprintGateDependencies(
   };
 
   return {
-    fingerprint: sha256(JSON.stringify(manifest)),
+    fingerprint: fingerprintGateManifest(manifest),
     manifest,
   };
 }
@@ -228,13 +249,95 @@ export function unclassifiedRuntimeReads(
   const unknown = new Set<string>();
 
   for (const raw of runtimeReads) {
-    const rel = isAbsolute(raw)
-      ? repoRelative(repoRoot, raw)
-      : slash(raw).replace(/^\.\//, '');
+    const absolute = isAbsolute(raw) ? resolve(raw) : resolve(repoRoot, raw);
+    const rel = repoRelative(repoRoot, absolute);
     if (!rel || rel.startsWith('node_modules/') || rel.startsWith('.git/')) continue;
-    if (!declared.has(rel)) unknown.add(rel);
+    if (declared.has(rel)) continue;
+
+    // The content tree is intentionally fingerprinted in full. Directory reads
+    // under that tree are therefore classified by the complete file inventory,
+    // while an enumerated directory anywhere else remains unknown.
+    if (
+      (rel === 'packages/content' || rel.startsWith('packages/content/'))
+      && existsSync(absolute)
+      && statSync(absolute).isDirectory()
+    ) continue;
+
+    unknown.add(rel);
   }
   return [...unknown].sort((a, b) => a.localeCompare(b));
+}
+
+
+const objectRecord = (value: unknown): Record<string, unknown> | null =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+
+const stringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
+
+export function parseGateProof(value: unknown): GateProof | null {
+  const proof = objectRecord(value);
+  const manifest = objectRecord(proof?.manifest);
+  const entry = objectRecord(manifest?.entry);
+  const toolchain = objectRecord(manifest?.toolchain);
+  const inputs = manifest?.inputs;
+
+  if (
+    !proof
+    || typeof proof.formatVersion !== 'number'
+    || typeof proof.algorithmVersion !== 'number'
+    || typeof proof.gate !== 'string'
+    || typeof proof.fingerprint !== 'string'
+    || typeof proof.sourceSha !== 'string'
+    || typeof proof.sourceRunId !== 'number'
+    || typeof proof.sourceRepository !== 'string'
+    || typeof proof.sourceWorkflow !== 'string'
+    || typeof proof.reusable !== 'boolean'
+    || proof.verdict !== 'success'
+    || !stringArray(proof.runtimeReads)
+    || !stringArray(proof.unclassifiedReads)
+    || !manifest
+    || typeof manifest.formatVersion !== 'number'
+    || typeof manifest.algorithmVersion !== 'number'
+    || typeof manifest.gate !== 'string'
+    || !entry
+    || typeof entry.module !== 'string'
+    || typeof entry.exportName !== 'string'
+    || !stringArray(manifest.invocation)
+    || !toolchain
+    || typeof toolchain.node !== 'string'
+    || typeof toolchain.runnerOs !== 'string'
+    || typeof toolchain.runnerImage !== 'string'
+    || !Array.isArray(inputs)
+    || !inputs.every((item) => {
+      const input = objectRecord(item);
+      return Boolean(input && typeof input.path === 'string' && typeof input.sha256 === 'string');
+    })
+  ) return null;
+
+  return value as GateProof;
+}
+
+export function parseTrustedWorkflowRun(value: unknown): TrustedWorkflowRun | null {
+  const run = objectRecord(value);
+  const headRepository = objectRecord(run?.head_repository);
+  if (
+    !run
+    || typeof run.id !== 'number'
+    || !Number.isSafeInteger(run.id)
+    || run.id <= 0
+    || typeof run.event !== 'string'
+    || typeof run.head_branch !== 'string'
+    || typeof run.head_sha !== 'string'
+    || typeof run.path !== 'string'
+    || !(typeof run.conclusion === 'string' || run.conclusion === null)
+    || !headRepository
+    || typeof headRepository.full_name !== 'string'
+  ) return null;
+
+  return value as TrustedWorkflowRun;
 }
 
 export function judgeTrustedProof(
@@ -255,6 +358,11 @@ export function judgeTrustedProof(
     return { reusable: false, reason: `source repository is ${run.head_repository?.full_name ?? 'missing'}` };
   }
   if (proof.formatVersion !== GATE_PROOF_FORMAT_VERSION) return { reusable: false, reason: 'proof format version mismatch' };
+  if (proof.verdict !== 'success') return { reusable: false, reason: `proof verdict is ${String(proof.verdict)}` };
+  if (proof.manifest.formatVersion !== proof.formatVersion) return { reusable: false, reason: 'manifest proof format version mismatch' };
+  if (proof.manifest.algorithmVersion !== proof.algorithmVersion) return { reusable: false, reason: 'manifest fingerprint algorithm version mismatch' };
+  if (proof.manifest.gate !== proof.gate) return { reusable: false, reason: 'manifest gate mismatch' };
+  if (fingerprintGateManifest(proof.manifest) !== proof.fingerprint) return { reusable: false, reason: 'proof fingerprint does not match its manifest' };
   if (proof.algorithmVersion !== GATE_FINGERPRINT_ALGORITHM_VERSION) return { reusable: false, reason: 'fingerprint algorithm version mismatch' };
   if (proof.gate !== expected.gate) return { reusable: false, reason: `proof gate is ${proof.gate}` };
   if (proof.sourceRepository !== expected.repository) return { reusable: false, reason: `proof repository is ${proof.sourceRepository}` };
@@ -267,6 +375,37 @@ export function judgeTrustedProof(
   return { reusable: true, reason: `reused trusted main proof from run ${run.id}` };
 }
 
+
+
+export interface TrustedProofCandidate {
+  run: TrustedWorkflowRun;
+  proof: unknown;
+}
+
+export interface SelectedTrustedProof {
+  run: TrustedWorkflowRun;
+  proof: GateProof;
+  decision: ProofTrustDecision;
+}
+
+export function selectNewestTrustedProof(
+  candidates: readonly TrustedProofCandidate[],
+  expected: {
+    repository: string;
+    workflow: string;
+    gate: string;
+    fingerprint: string;
+  },
+): SelectedTrustedProof | null {
+  const newestFirst = [...candidates].sort((a, b) => b.run.id - a.run.id);
+  for (const candidate of newestFirst) {
+    const proof = parseGateProof(candidate.proof);
+    if (!proof) continue;
+    const decision = judgeTrustedProof(candidate.run, proof, expected);
+    if (decision.reusable) return { run: candidate.run, proof, decision };
+  }
+  return null;
+}
 
 export interface MakeGateProofOptions {
   repoRoot: string;
@@ -295,6 +434,7 @@ export function makeGateProof(options: MakeGateProofOptions): GateProof {
     sourceRepository: options.sourceRepository,
     sourceWorkflow: options.sourceWorkflow,
     reusable: unclassifiedReads.length === 0,
+    verdict: 'success',
     manifest: options.fingerprint.manifest,
     runtimeReads,
     unclassifiedReads,
@@ -374,14 +514,115 @@ async function produceProofFiles(argv: readonly string[]): Promise<void> {
   }
 }
 
+
+const readJsonFile = (path: string): unknown => {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8')) as unknown;
+  } catch {
+    return undefined;
+  }
+};
+
+export interface GateReusePlanRow {
+  gate: BlockingGateId;
+  fingerprint: string;
+  action: 'reuse' | 'run';
+  reason: string;
+  sourceRunId?: number;
+  sourceSha?: string;
+}
+
+export interface GateReusePlan {
+  version: 1;
+  repository: string;
+  workflow: string;
+  gates: GateReusePlanRow[];
+}
+
+async function planProofReuse(argv: readonly string[]): Promise<void> {
+  const repoRoot = resolve(option(argv, '--repo-root') ?? process.cwd());
+  const candidateRootRaw = option(argv, '--candidate-root');
+  const outputRaw = option(argv, '--output');
+  const repository = option(argv, '--repository');
+  const workflow = option(argv, '--workflow') ?? '.github/workflows/check.yml';
+
+  if (!candidateRootRaw || !outputRaw || !repository) {
+    throw new Error('plan requires --candidate-root, --output, and --repository');
+  }
+
+  const candidateRoot = resolve(repoRoot, candidateRootRaw);
+  const output = resolve(repoRoot, outputRaw);
+  const runs: Array<{ run: TrustedWorkflowRun; dir: string }> = [];
+  if (existsSync(candidateRoot)) {
+    for (const entry of readdirSync(candidateRoot, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const dir = join(candidateRoot, entry.name);
+      const run = parseTrustedWorkflowRun(readJsonFile(join(dir, 'run.json')));
+      if (run) runs.push({ run, dir });
+    }
+  }
+
+  const gates: GateReusePlanRow[] = [];
+  for (const gate of BLOCKING_GATE_IDS) {
+    const current = await fingerprintRegisteredGate(repoRoot, gate);
+    const candidates: TrustedProofCandidate[] = runs.map(({ run, dir }) => ({
+      run,
+      proof: readJsonFile(join(dir, `gate-proof-${gate}.json`)),
+    }));
+    const selected = selectNewestTrustedProof(candidates, {
+      repository,
+      workflow,
+      gate,
+      fingerprint: current.fingerprint,
+    });
+
+    if (selected) {
+      gates.push({
+        gate,
+        fingerprint: current.fingerprint,
+        action: 'reuse',
+        reason: selected.decision.reason,
+        sourceRunId: selected.run.id,
+        sourceSha: selected.run.head_sha,
+      });
+    } else {
+      gates.push({
+        gate,
+        fingerprint: current.fingerprint,
+        action: 'run',
+        reason: `no matching trusted main proof among ${runs.length} candidate run(s)`,
+      });
+    }
+  }
+
+  const plan: GateReusePlan = {
+    version: 1,
+    repository,
+    workflow,
+    gates,
+  };
+  mkdirSync(resolve(output, '..'), { recursive: true });
+  writeFileSync(output, `${JSON.stringify(plan, null, 2)}\n`);
+  for (const row of gates) {
+    const source = row.action === 'reuse' ? ` from run ${row.sourceRunId}` : '';
+    console.log(`${row.gate}: ${row.action}${source} — ${row.reason}`);
+  }
+}
+
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('/gate-proof.ts');
 if (isMain) {
   const [command, ...argv] = process.argv.slice(2);
-  if (command !== 'produce') {
+  const run = command === 'produce'
+    ? produceProofFiles(argv)
+    : command === 'plan'
+      ? planProofReuse(argv)
+      : null;
+  if (!run) {
     console.error('usage: gate-proof.ts produce --trace <jsonl> --output-dir <dir> --source-sha <sha> --source-run <id> --repository <owner/repo> [--workflow <path>]');
+    console.error('   or: gate-proof.ts plan --candidate-root <dir> --output <json> --repository <owner/repo> [--workflow <path>]');
     process.exit(2);
   }
-  produceProofFiles(argv).catch((error) => {
+  run.catch((error) => {
     console.error(error instanceof Error ? error.stack ?? error.message : String(error));
     process.exit(1);
   });

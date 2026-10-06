@@ -1255,6 +1255,13 @@ export function gatesInLane(lane: string): string[] {
   return [...own];
 }
 
+export function gatesInLaneAfterReuse(lane: string, reused: readonly string[]): string[] {
+  const unknown = reused.filter((gate) => !Object.prototype.hasOwnProperty.call(GATES, gate));
+  if (unknown.length) throw new Error(`unknown trusted-proof gate: ${unknown.join(', ')}`);
+  const reusedSet = new Set(reused);
+  return gatesInLane(lane).filter((gate) => !reusedSet.has(gate));
+}
+
 /**
  * The lane names `check.yml`'s gates matrix actually carries.
  *
@@ -1308,12 +1315,23 @@ if (isMain) {
   const lane = laneAt >= 0 ? argv[laneAt + 1] : undefined;
   const timingsAt = argv.indexOf('--timings-json');
   const timingsPath = timingsAt >= 0 ? argv[timingsAt + 1] : undefined;
+  const skipAt = argv.indexOf('--skip');
+  const skipRaw = skipAt >= 0 ? argv[skipAt + 1] : undefined;
+  const skippedByProof = skipRaw?.split(',').map((name) => name.trim()).filter(Boolean) ?? [];
   if (laneAt >= 0 && !lane) {
     console.error(`usage: gates.ts --lane [${LANES.join('|')}]`);
     process.exit(2);
   }
   if (timingsAt >= 0 && !timingsPath) {
     console.error('usage: gates.ts --timings-json <file>');
+    process.exit(2);
+  }
+  if (skipAt >= 0 && !skipRaw) {
+    console.error('usage: gates.ts --skip <gate[,gate...]>');
+    process.exit(2);
+  }
+  if (skipAt >= 0 && laneAt < 0) {
+    console.error('--skip is valid only with --lane, where CI owns the candidate set');
     process.exit(2);
   }
   const optionIndexes = new Set<number>();
@@ -1324,6 +1342,10 @@ if (isMain) {
   if (timingsAt >= 0) {
     optionIndexes.add(timingsAt);
     optionIndexes.add(timingsAt + 1);
+  }
+  if (skipAt >= 0) {
+    optionIndexes.add(skipAt);
+    optionIndexes.add(skipAt + 1);
   }
   const positional = argv.filter((_arg, i) => !optionIndexes.has(i));
   const name = laneAt >= 0 ? undefined : positional[0];
@@ -1339,7 +1361,7 @@ if (isMain) {
   // at a log wondering which of two runners did nothing.
   let chosen: string[];
   try {
-    chosen = lane ? gatesInLane(lane) : name ? [name] : Object.keys(GATES);
+    chosen = lane ? gatesInLaneAfterReuse(lane, skippedByProof) : name ? [name] : Object.keys(GATES);
   } catch (e) {
     console.error(String(e instanceof Error ? e.message : e));
     console.error(`usage: gates.ts --lane [${LANES.join('|')}]`);
@@ -1366,6 +1388,10 @@ if (isMain) {
   // measurement boundary: CI retains one structured report per lane, so a
   // drift names the gate that grew without somebody transcribing timestamps.
   const named = chosen.length > 1 || lane !== undefined;
+  if (lane && skippedByProof.length) {
+    const skippedHere = gatesInLane(lane).filter((gate) => skippedByProof.includes(gate));
+    if (skippedHere.length) console.log(`trusted proof reuse: ${skippedHere.join(', ')}`);
+  }
 
   let failed = 0;
   const runStarted = Date.now();

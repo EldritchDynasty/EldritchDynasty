@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
-  COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, laneMatrix,
+  COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
   gatePostFillability, gateSlotFillability, judgeZeroReach,
@@ -27,6 +27,18 @@ import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gat
 import { CAMPAIGN_YEARS } from './campaign.js';
 
 const content = loadContent();
+
+describe('#441 trusted gate proof skips', () => {
+  it('removes only named blocking gates from their lane', () => {
+    const before = gatesInLane('batch');
+    const after = gatesInLaneAfterReuse('batch', ['land', 'clauses']);
+    expect(after).toEqual(before.filter((gate) => gate !== 'land' && gate !== 'clauses'));
+  });
+
+  it('rejects an unknown proof gate instead of silently skipping it', () => {
+    expect(() => gatesInLaneAfterReuse('batch', ['not-a-gate'])).toThrow(/unknown trusted-proof gate/);
+  });
+});
 
 /**
  * WHO GUARDS THE GUARDS.
