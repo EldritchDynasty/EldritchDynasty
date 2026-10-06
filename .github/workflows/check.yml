@@ -407,6 +407,28 @@ jobs:
           node scripts/inject-bridge.mjs
           npx --no-install cap sync ios
 
+      # Boot is intentionally requested before xcodebuild. Hosted runners can
+      # spend minutes on first-boot migration; native compilation is independent
+      # work, so overlap the two rather than paying those clocks serially.
+      - name: start an iPhone simulator while the app builds
+        run: |
+          DEVICES="$(xcrun simctl list devices available -j)"
+          UDID="$(printf '%s' "$DEVICES" | node -e '
+            let input = "";
+            process.stdin.on("data", (chunk) => input += chunk);
+            process.stdin.on("end", () => {
+              const { devices } = JSON.parse(input);
+              const phones = Object.values(devices).flat()
+                .filter((device) => device.isAvailable && device.name.startsWith("iPhone "));
+              const phone = phones.find((device) => device.state === "Booted") ?? phones[0];
+              if (!phone) process.exit(1);
+              process.stdout.write(phone.udid);
+            });
+          ')"
+          test -n "$UDID" || { echo "No available iPhone simulator on macOS runner."; exit 1; }
+          echo "IOS_SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" 2>/dev/null || true
+
       - name: build unsigned iPhone simulator app
         working-directory: packages/mobile
         run: >
@@ -424,21 +446,8 @@ jobs:
         timeout-minutes: 15
         working-directory: packages/mobile
         run: |
-          DEVICES="$(xcrun simctl list devices available -j)"
-          UDID="$(printf '%s' "$DEVICES" | node -e '
-            let input = "";
-            process.stdin.on("data", (chunk) => input += chunk);
-            process.stdin.on("end", () => {
-              const { devices } = JSON.parse(input);
-              const phones = Object.values(devices).flat()
-                .filter((device) => device.isAvailable && device.name.startsWith("iPhone "));
-              const phone = phones.find((device) => device.state === "Booted") ?? phones[0];
-              if (!phone) process.exit(1);
-              process.stdout.write(phone.udid);
-            });
-          ')"
-          test -n "$UDID" || { echo "No available iPhone simulator on macOS runner."; exit 1; }
-          xcrun simctl boot "$UDID" 2>/dev/null || true
+          UDID="$IOS_SIMULATOR_UDID"
+          test -n "$UDID" || { echo "Simulator selection step did not publish IOS_SIMULATOR_UDID."; exit 1; }
 
           STATE=""
           for attempt in $(seq 1 60); do
@@ -517,6 +526,10 @@ jobs:
             launch_once true
           fi
           echo "Simulator launch completed at $(date -u +%H:%M:%S)"
+
+          echo "Running save/resume and export/import smoke at $(date -u +%H:%M:%S)"
+          IOS_SIMULATOR_UDID="$UDID" node scripts/ios-runtime-smoke.mjs
+          echo "iOS runtime smoke completed at $(date -u +%H:%M:%S)"
 
   # ── MERGE-BLOCKING SLOW CONTRACTS, PACKED BY DURATION ─────────────────────
   #
