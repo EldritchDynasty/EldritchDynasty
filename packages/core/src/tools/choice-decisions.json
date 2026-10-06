@@ -51,12 +51,6 @@
     },
     {
       "kind": "flag",
-      "key": "forgave_a_year",
-      "disposition": "delete",
-      "reason": "Forgiving the year already costs 60 crowns, gains Respect, and is immediately carried into local story. The unread flag adds no separate promised future consequence."
-    },
-    {
-      "kind": "flag",
       "key": "god_rite_failed",
       "disposition": "read",
       "reason": "ending.ts already reads GOD_RITE_FAILED even though the content-only audit cannot see it; deleting this would break The Unmade ending."
@@ -150,12 +144,6 @@
       "key": "signs_noticed",
       "disposition": "read",
       "reason": "The midwife notices dulling iron in the birthing room, a concrete early blood-sign clue with a natural later reader."
-    },
-    {
-      "kind": "flag",
-      "key": "someone_has_been_in_the_east_cellar",
-      "disposition": "delete",
-      "reason": "The narration immediately schedules what_he_did_with_the_key via inline next and keeps the same child for 22–34 years. That arc progression already preserves the cellar visit, so the unread parallel flag is redundant."
     },
     {
       "kind": "flag",
@@ -381,12 +369,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_a_shelf_needs_reading",
-      "disposition": "delete",
-      "reason": "The copied-book branch already pays its treasury cost and explicitly says the old copy remains unread for three hundred years; the same key is also granted by the optional Record choice. No authored reader exists, so this mixed write is dead memory rather than a real shelf mechanic."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_about_the_west_passage",
       "disposition": "read",
       "reason": "The maid identifies a specific cold between the fourth and fifth step and has now told the Head. Preserve that concrete house-sign discovery for a later passage/sign investigation rather than collapsing it into relationship alone."
@@ -465,12 +447,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_daybook_is_copied",
-      "disposition": "delete",
-      "reason": "The Record grant only restates that Marrow day-book material was copied into the Chronicle; the record option already persists that fact."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_dogs_and_the_beck",
       "disposition": "read",
       "reason": "The shepherd supplies four years of precise dates about dogs refusing one piece of ground with no explanation."
@@ -495,21 +471,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_fourth_petition",
-      "disposition": "delete",
-      "reason": "The Record grant duplicates knows_the_keeper_does_not_know plus the Chronicle/deed; remove the redundant record key."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_fourth_verse",
       "disposition": "read",
       "reason": "The preserved fourth verse names a place and year nobody can identify and survives after the sung verse disappears."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_halls_are_counting",
-      "disposition": "delete",
-      "reason": "The warning branch already schedules the_hall_is_answered while the other schedules a different successor; the branch-specific next event is the durable payoff."
     },
     {
       "kind": "knowledge",
@@ -525,12 +489,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_ninth_question",
-      "disposition": "delete",
-      "reason": "The Record grant restates the archdeacon exchange already persisted by Chronicle/claims or discrepancy; the early-return flag carries the live branch consequence."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_ninth_was_answered",
       "disposition": "read",
       "reason": "Recording that the ninth petition was answered by nobody in the chapel creates a specific supernatural fact in the family's Chronicle, with Church witnesses and a total discrepancy. That is a natural later liturgy/blood reader, not generic Record boilerplate."
@@ -540,18 +498,6 @@
       "key": "knows_the_older_register",
       "disposition": "read",
       "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_older_stone",
-      "disposition": "delete",
-      "reason": "The Record grant duplicates the anomalous chapel-stone discovery already preserved by knows_the_second_stone and the Chronicle."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_orders_disagree",
-      "disposition": "delete",
-      "reason": "The Record grant duplicates the three conflicting orders already preserved by knows_three_orders and the Chronicle/discrepancy."
     },
     {
       "kind": "knowledge",
@@ -594,12 +540,6 @@
       "key": "knows_the_second_is_uncertain",
       "disposition": "self_expression",
       "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_second_refusal",
-      "disposition": "delete",
-      "reason": "The Record grant duplicates declined_the_chapter_house plus the Chronicle/deed; keep the refusal state and remove redundant Record knowledge."
     },
     {
       "kind": "knowledge",
@@ -696,12 +636,6 @@
       "key": "knows_we_read_our_own_paper",
       "disposition": "read",
       "reason": "Training an in-house advocate changes who can read the family's contracts and starts thirty years of attention to one clause."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_a_warrant_buys",
-      "disposition": "delete",
-      "reason": "The mill event already resolves the warranted wright's practical value through cost, success/failure, and Respect; this generic lesson has no promised callback."
     },
     {
       "kind": "knowledge",

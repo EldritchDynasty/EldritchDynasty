@@ -72,7 +72,6 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: forgave_a_year, set: true }
         - id: take_in_kind
           label: Take it in kind, and take less of it.
           outcomes:
@@ -239,8 +238,7 @@ events:
           text: >-
             Nothing is said about it, which in this house is a decision and
             not an oversight.
-          effects:
-            - { kind: flag, flag: someone_has_been_in_the_east_cellar, set: true }
+          effects: []
           # The second beat, inline. No arc file: `desugar.ts` compiles this
           # into one before the engine sees it. `keep` is what makes it the
           # same person thirty years on rather than a stranger with the same

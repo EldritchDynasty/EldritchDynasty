@@ -72,7 +72,6 @@ events:
       options:
         record:
           chronicle: The keeper was asked what the fourth petition of the Quieting is for and said, in the yard, that he did not know.
-          grantsKnowledge: knows_the_fourth_petition
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: asked what the fourth petition was for and heard the keeper say he did not know }
@@ -143,7 +142,6 @@ events:
       options:
         record:
           chronicle: The chapel stones were lifted and reset, and under the third there was an older stone with a name on it that is in no descent of ours.
-          grantsKnowledge: knows_the_older_stone
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: lifted the chapel stones and found an older name under the third that is in no descent }
@@ -438,7 +436,6 @@ events:
       options:
         record:
           chronicle: The archdeacon asked for a son of this house and was refused, being the second refusal in a hundred years.
-          grantsKnowledge: knows_the_second_refusal
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: refused the archdeacon a son of the house }
@@ -514,7 +511,6 @@ events:
       options:
         record:
           chronicle: The archdeacon asked what books we keep and who reads them, and was not answered, and his clerk wrote the question out in full.
-          grantsKnowledge: knows_the_ninth_question
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: refused to answer the archdeacon's question about what books the house keeps }
@@ -582,7 +578,6 @@ events:
       options:
         record:
           chronicle: The tutor set out three orders of the nine names on one sheet — the rhyme, the liturgy, and a book out of Sarrow — and no two agreed.
-          grantsKnowledge: knows_the_orders_disagree
           effects:
             - { kind: respect, delta: -1 }
           claims:
