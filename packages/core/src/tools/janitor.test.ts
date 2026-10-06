@@ -55,6 +55,71 @@ const janitor = (cwd: string, env: Record<string, string> = {}) => {
 const branches = (bare: string) =>
   git(bare, 'for-each-ref', '--format=%(refname:short)', 'refs/heads/').split('\n').sort();
 
+
+function rebasedFixture(withClaim = false) {
+  const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-rebased-'));
+  const bare = join(fixture, 'origin.git');
+  git(fixture, 'init', '-q', '--bare', '-b', 'main', bare);
+  git(fixture, 'clone', '-q', bare, 'seed');
+  const seed = join(fixture, 'seed');
+  git(seed, 'config', 'user.email', 'a@example.com');
+  git(seed, 'config', 'user.name', 'a');
+  git(seed, 'commit', '-q', '--allow-empty', '-m', 'base');
+  git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+  const agent = 'chatgpt/rebased-landing';
+  git(seed, 'checkout', '-q', '-b', agent);
+  git(seed, 'commit', '-q', '--allow-empty', '-m', 'reviewed source head');
+  const head = git(seed, 'rev-parse', 'HEAD');
+  git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${agent}`);
+
+  if (withClaim) {
+    const claim = git(seed, 'commit-tree', EMPTY_TREE, '-m',
+      `claim 528\n\nagent: ${agent}\nlane: code\npath: tools/janitor.mjs`);
+    git(seed, 'push', '-q', 'origin', `${claim}:refs/heads/claim/528`);
+  }
+
+  // Native queue's REBASE result has a different commit identity on main, so
+  // the reviewed source head remains ahead of and behind main.
+  git(seed, 'checkout', '-q', 'main');
+  git(seed, 'commit', '-q', '--allow-empty', '-m', 'rebased queue landing');
+  git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+  git(fixture, 'clone', '-q', bare, 'sweep');
+  return { fixture, sweep: join(fixture, 'sweep'), agent, head };
+}
+
+const prEvidence = (
+  agent: string,
+  head: string,
+  overrides: {
+    merged_at?: string | null;
+    baseRef?: string;
+    baseRepo?: string;
+    headRepo?: string;
+  } = {},
+) => ({
+  number: 900,
+  merged_at: overrides.merged_at === undefined ? '2026-10-06T17:00:00Z' : overrides.merged_at,
+  base: {
+    ref: overrides.baseRef ?? 'main',
+    repo: { full_name: overrides.baseRepo ?? 'acme/repo' },
+  },
+  head: {
+    ref: agent,
+    sha: head,
+    repo: { full_name: overrides.headRepo ?? 'acme/repo' },
+  },
+});
+
+const withPrEvidence = (prs: unknown[]) => ({
+  DRY_RUN: '1',
+  JANITOR_RECONCILE_MERGED_PRS: '1',
+  GITHUB_REPOSITORY: 'acme/repo',
+  JANITOR_DEFAULT_BRANCH: 'main',
+  JANITOR_MERGED_PRS_JSON: JSON.stringify(prs),
+});
+
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), 'ed-janitor-'));
   const bare = join(root, 'origin.git');
@@ -249,6 +314,66 @@ describe('the janitor', () => {
       expect(r.out).not.toContain('would: git push origin --delete claim/lane-content');
     } finally {
       rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('retires a rebased merge-queue branch and its claim from exact PR head evidence', () => {
+    const f = rebasedFixture(true);
+    try {
+      const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, f.head)]));
+      expect(r.code).toBe(0);
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*MERGED.*merged PR #900 exact head`));
+      expect(r.out).toContain(`would: git push origin --delete ${f.agent}`);
+      expect(r.out).toContain('would: git push origin --delete claim/528');
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps a reused branch when the merged PR names an older head SHA', () => {
+    const f = rebasedFixture();
+    try {
+      const older = git(f.sweep, 'rev-parse', 'origin/main~1');
+      const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, older)]));
+      expect(r.code).toBe(0);
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`));
+      expect(r.out).not.toContain(`delete ${f.agent}`);
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps a branch when the matching PR was closed without merging', () => {
+    const f = rebasedFixture();
+    try {
+      const r = janitor(f.sweep, withPrEvidence([
+        prEvidence(f.agent, f.head, { merged_at: null }),
+      ]));
+      expect(r.code).toBe(0);
+      expect(r.out).toMatch(new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`));
+      expect(r.out).not.toContain(`delete ${f.agent}`);
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps exact-head PR evidence from another base or repository', () => {
+    for (const overrides of [
+      { baseRef: 'release' },
+      { baseRepo: 'elsewhere/repo' },
+      { headRepo: 'elsewhere/repo' },
+    ]) {
+      const f = rebasedFixture();
+      try {
+        const r = janitor(f.sweep, withPrEvidence([prEvidence(f.agent, f.head, overrides)]));
+        expect(r.code, JSON.stringify(overrides)).toBe(0);
+        expect(r.out, JSON.stringify(overrides)).toMatch(
+          new RegExp(`decide ${f.agent.replaceAll('/', '\\\\/')}:.*keep`),
+        );
+        expect(r.out, JSON.stringify(overrides)).not.toContain(`delete ${f.agent}`);
+      } finally {
+        rmSync(f.fixture, { recursive: true, force: true });
+      }
     }
   });
 
