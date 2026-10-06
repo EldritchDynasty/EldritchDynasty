@@ -315,6 +315,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_bridge_right_defended",
+      "disposition": "delete",
+      "reason": "Holding the chain already pays its treasury consequence and keeps the bridge right intact in prose. The 70–95 year callback is scheduled only from the opposite halve_the_rate branch, so this unread flag carries no follow-up and is redundant."
+    },
+    {
+      "kind": "flag",
       "key": "the_burgesses_have_a_grievance",
       "disposition": "read",
       "reason": "Going over Bramme's forty households creates a dated grievance held by the town's Assembly delegates, and the prose explicitly says a dated grievance lasts about four times as long. Preserve it for a later town/Assembly callback."
