@@ -84,7 +84,6 @@ events:
                 years take an afternoon.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: kept_the_forms, set: true }
         - id: settle_it_here
           label: Settle it here, at the gate, this week.
           outcomes:
@@ -255,7 +254,6 @@ events:
       options:
         record:
           chronicle: A list of loyal houses was drawn up at Caster with this house's name on it, and this house had not been asked.
-          grantsKnowledge: knows_the_caster_list
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: was placed on Caster's list of loyal houses without being asked }

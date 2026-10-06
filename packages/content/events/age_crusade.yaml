@@ -64,7 +64,6 @@ events:
                 Nothing is refused him and nothing is offered, and a reader
                 notices the second one faster than he notices the first.
               effects:
-                - { kind: flag, flag: the_reader_was_not_welcomed, set: true }
                 - { kind: relationship, from: head, to: { slot: PRIEST }, sentiment: -10 }
 
   - id: the_shelf_that_has_to_go
@@ -108,7 +107,6 @@ events:
                 the kind of house that can be inspected without an argument.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: burned_the_dark_shelf, set: true }
         - id: hide_them
           label: The second cellar. It has held worse.
           outcomes:
@@ -274,7 +272,6 @@ events:
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: create, id: the_registrars_marginal_note, severity: minor, provableBy: [the_church] }
-                - { kind: knowledge, op: grant, flag: knows_the_book_was_read }
         - id: send_a_copy
           label: Send a copy. Made this week, in his own fair hand, of the parts that are asked for.
           outcomes:
@@ -297,7 +294,6 @@ events:
             The registrar of Bramme required this book in the Crusade and was
             given what he was given. Whoever holds this next: he wrote a minute
             about it, and their minute outlives ours.
-          grantsKnowledge: knows_the_book_was_read
         omit:
           chronicle: null
         embellish:

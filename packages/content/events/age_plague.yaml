@@ -45,7 +45,6 @@ events:
               effects:
                 - { kind: treasury, delta: -20 }
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: kept_the_eleven_days, set: true }
         - id: open_for_the_village
           label: Open to Wick. They are the house's people.
           outcomes:
@@ -123,7 +122,6 @@ events:
               effects:
                 - { kind: treasury, delta: -28 }
                 - { kind: relationship, from: head, to: { slot: PHYSICIAN }, sentiment: 15 }
-                - { kind: flag, flag: retained_the_physician, set: true }
         - id: pay_the_visit
           label: Pay for the visit and send him on to Wick.
           outcomes:
@@ -227,7 +225,6 @@ events:
                 build a rule out of one winter.
               effects:
                 - { kind: treasury, delta: -14 }
-                - { kind: flag, flag: both_came_through, set: true }
 
   - id: the_hall_after
     title: Six Grates of Seven
@@ -286,7 +283,6 @@ events:
       options:
         record:
           chronicle: The fever took what it took. The places were laid for those left, and the number is written here so that it cannot be argued with later.
-          grantsKnowledge: knows_what_the_fever_took
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: counted the places left after the fever and wrote the number down }
@@ -379,7 +375,6 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: shut_the_gate_in_the_plague, set: true }
         - id: keep_it_open
           label: Keep it open. A house that shuts its door is remembered longer than a house that buries.
           outcomes:
@@ -399,4 +394,3 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: kept_the_gate_open, set: true }
