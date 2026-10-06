@@ -4,6 +4,13 @@ import { spawnSync } from 'node:child_process';
 
 const APP_ID = 'nz.eldritchdynasty.game';
 const RESULT_NAME = 'smoke-result.json';
+const DELIVERY_TIMEOUT_MS = 30_000;
+const COMPLETION_TIMEOUT_MS = {
+  save: 300_000,
+  resume: 120_000,
+  export: 120_000,
+  import: 120_000,
+};
 const udid = process.env.IOS_SIMULATOR_UDID;
 
 if (!udid) throw new Error('IOS_SIMULATOR_UDID is required');
@@ -42,9 +49,14 @@ let resultPath = await findResult(dataContainer);
 
 async function command(kind, url) {
   if (resultPath) await rm(resultPath, { force: true });
+  resultPath = null;
   simctl(['openurl', udid, url]);
 
-  for (let attempt = 0; attempt < 120; attempt++) {
+  const deliveryDeadline = Date.now() + DELIVERY_TIMEOUT_MS;
+  let completionDeadline = null;
+  let received = false;
+
+  while (true) {
     resultPath = await findResult(dataContainer);
     if (resultPath) {
       try {
@@ -52,8 +64,16 @@ async function command(kind, url) {
         if (evidence.command !== kind) {
           throw new Error(`expected ${kind} evidence, found ${evidence.command}`);
         }
-        if (!evidence.ok) throw new Error(evidence.error ?? `${kind} smoke command failed`);
-        return evidence;
+        if (evidence.stage === 'received') {
+          if (!received) {
+            received = true;
+            completionDeadline = Date.now() + COMPLETION_TIMEOUT_MS[kind];
+            console.log(`${kind} smoke command received by app`);
+          }
+        } else {
+          if (!evidence.ok) throw new Error(evidence.error ?? `${kind} smoke command failed`);
+          return evidence;
+        }
       } catch (error) {
         if (error instanceof SyntaxError) {
           await delay(250);
@@ -62,9 +82,18 @@ async function command(kind, url) {
         throw error;
       }
     }
+
+    const now = Date.now();
+    if (!received && now >= deliveryDeadline) {
+      throw new Error(`${kind} smoke command was not received within ${DELIVERY_TIMEOUT_MS / 1_000} seconds`);
+    }
+    if (received && completionDeadline !== null && now >= completionDeadline) {
+      throw new Error(
+        `${kind} smoke command was received but produced no final evidence within ${COMPLETION_TIMEOUT_MS[kind] / 1_000} seconds`,
+      );
+    }
     await delay(1_000);
   }
-  throw new Error(`${kind} smoke command produced no evidence within 120 seconds`);
 }
 
 // Let the WebView install its appUrlOpen listener after the simulator launch.
