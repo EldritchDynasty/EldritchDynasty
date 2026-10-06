@@ -4789,17 +4789,28 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
   });
 });
 
-describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () => {
-  it('executes fillable randomised checked player-choice outcomes through the production check evaluator', () => {
+describe('authored age-scoped checked TEST_FAMILIES residue witnesses', () => {
+  it('executes conditionful or multi-slot randomised checked outcomes through a shared family fixture', () => {
     const candidates = content.events.flatMap((event) => {
       if (
         event.tier === 'frame'
         || event.arc !== undefined
         || event.record !== undefined
-        || event.ages !== undefined
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
         || event.interaction.kind === 'narration'
         || event.interaction.decidedBy !== 'player'
       ) return [];
+
+      const slotIds = Object.keys(event.slots);
+      const head = event.slots.HEAD;
+      const alreadyCoveredBySimpleAgeCheckClass = event.conditions === undefined
+        && slotIds.length === 1
+        && slotIds[0] === 'HEAD'
+        && head?.role === 'head'
+        && head.castBy === 'engine';
+      if (alreadyCoveredBySimpleAgeCheckClass) return [];
 
       const choices = event.interaction.choices.filter((choice) => {
         if (choice.requires.length !== 0 || choice.check === undefined) return false;
@@ -4811,12 +4822,19 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
       });
       if (choices.length === 0) return [];
 
+      const age = event.ages.only[0]!;
       const family = TEST_FAMILIES.find((candidate) => {
         const ctx = candidate.build(content);
         ctx.world.generation = Math.max(
           ctx.world.generation,
           FREQUENCY_PROFILES[event.frequency].minGeneration,
         );
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
         if (!evalCondition(event.conditions, ctx)) return false;
 
         const slots = resolveSlots(event, ctx, makeRng(9201));
@@ -4825,7 +4843,7 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
         return ambientPool(ctx).some((offered) => offered.id === event.id);
       });
 
-      return family ? [{ event, choices, family }] : [];
+      return family ? [{ event, choices, family, age }] : [];
     });
 
     expect(candidates.length).toBeGreaterThan(0);
@@ -4836,7 +4854,7 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
           outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
     const witnessed: string[] = [];
 
-    for (const { event, choices, family } of candidates) {
+    for (const { event, choices, family, age } of candidates) {
       for (const choice of choices) {
         const check = event.checks.find((candidate) => candidate.id === choice.check);
         expect(check, String(event.id) + '/' + String(choice.id) + ' should name a real check').toBeDefined();
@@ -4848,10 +4866,17 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
             ctx.world.generation,
             FREQUENCY_PROFILES[event.frequency].minGeneration,
           );
+          ctx.world.age.active = [{
+            age,
+            began: ctx.world.year,
+            named: true,
+            paid: { standing: false },
+          }];
 
           expect(
             evalCondition(event.conditions, ctx),
-            String(event.id) + ' should satisfy its authored conditions in ' + family.id,
+            String(event.id) + ' should satisfy its authored conditions in '
+              + family.id + ' during ' + String(age),
           ).toBe(true);
           const slots = resolveSlots(event, ctx, makeRng(9201));
           expect(
@@ -4865,7 +4890,8 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
           ).toHaveLength(0);
           expect(
             ambientPool(ctx).some((offered) => offered.id === event.id),
-            String(event.id) + ' should be offered by the real ambient selector in ' + family.id,
+            String(event.id) + ' should be offered by the real ambient selector in '
+              + family.id + ' during ' + String(age),
           ).toBe(true);
 
           const result = executeOutcomeWitness(ctx, event, {
@@ -4878,7 +4904,8 @@ describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () =>
           expect(
             result.ok,
             String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
-              + ' via ' + family.id + ': ' + (result.reason ?? 'no reason'),
+              + ' via ' + family.id + ' during ' + String(age)
+              + ': ' + (result.reason ?? 'no reason'),
           ).toBe(true);
           expect(result.key).toBe(
             outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
