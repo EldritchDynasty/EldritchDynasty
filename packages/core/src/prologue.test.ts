@@ -117,8 +117,29 @@ describe('the prologue', () => {
         address: 'content:prologue.yaml#prologue[id=the_signing].thesis',
         plainenglish: 'Later generations did not sign the bargain.',
       },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].inheritedLine',
+        plainenglish: '{house} is remembered by {teller}.',
+      },
     ]);
     setProseMode(ctx, 'plainenglish');
+    ctx.world.libraryMemories = [{
+      id: 'library_memory_plain',
+      sourceRun: 'old',
+      sourceHouse: 'House Salt',
+      sourceYear: 1400,
+      sourceText: 'The old page.',
+      form: 'rhyme',
+      teller: 'the children of the lower hall',
+      bias: 'keeping what children remember',
+      text: 'The remembered account.',
+      about: 'library:old:page_1',
+      since: ctx.world.year,
+      mutations: 1,
+      people: {},
+      sourceClaims: [],
+      claims: [],
+    }];
 
     const view = prologueView(ctx)!;
     expect(view.opening).toBe('A plain opening.');
@@ -140,6 +161,9 @@ describe('the prologue', () => {
       line: 'Marrow remembers the field.',
     });
     expect(view.thesis).toBe('Later generations did not sign the bargain.');
+    expect(view.inherited?.line).toBe(
+      'House Salt is remembered by the children of the lower hall.',
+    );
   });
 
   it('carries the furthest-travelled inherited account without adjudicating it', () => {
