@@ -33,6 +33,12 @@
     },
     {
       "kind": "flag",
+      "key": "kept_an_early_waking_quiet",
+      "disposition": "read",
+      "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
+    },
+    {
+      "kind": "flag",
       "key": "regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
@@ -54,6 +60,12 @@
       "key": "the_chapel_is_open_nine_days",
       "disposition": "delete",
       "reason": "The flag is unread by authored content; accepting the relic already costs treasury and changes Respect, while the Chronicle records the chapel's nine open days."
+    },
+    {
+      "kind": "flag",
+      "key": "the_chapel_stayed_shut",
+      "disposition": "read",
+      "reason": "Keeping the anomalous chapel shut is a durable institutional/myth-layer choice. A later Church or house callback should distinguish the family that concealed it rather than letting the flag remain dead."
     },
     {
       "kind": "flag",
@@ -84,6 +96,12 @@
       "key": "knows_a_head_was_set_aside",
       "disposition": "delete",
       "reason": "The memory is unread; the event still changes the household relationship and seeds the seal-taking rumour, while the Record keeps the act in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_an_early_waking",
+      "disposition": "read",
+      "reason": "A recorded waking at nine directly concerns the blood and the setting's magic rules. Reserve it for a later generational callback so the family's knowledge of an unusually early waking changes how a later sign is interpreted."
     },
     {
       "kind": "knowledge",
@@ -124,8 +142,8 @@
     {
       "kind": "knowledge",
       "key": "knows_the_chapel_stone",
-      "disposition": "delete",
-      "reason": "The chapel-stone fact is already preserved by the Record Chronicle and deed claim; without a real later authored reader, the extra knowledge write is redundant."
+      "disposition": "read",
+      "reason": "The Crusade scene explicitly establishes a myth-layer magic-rule fact: an altar stone older than the chapel that the house did not set there. Reserve it for a later cross-generation reader that narrows this mystery rather than deleting the memory."
     },
     {
       "kind": "knowledge",
