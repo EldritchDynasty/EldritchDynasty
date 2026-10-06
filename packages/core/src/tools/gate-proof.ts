@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
-import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
+import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_EXTRA_INPUTS, BLOCKING_GATE_IDS, isBlockingGateId, type BlockingGateId } from './gate-registry.js';
 
 export const GATE_PROOF_FORMAT_VERSION = 2;
 export const GATE_FINGERPRINT_ALGORITHM_VERSION = 2;
@@ -148,6 +148,7 @@ export interface FingerprintOptions {
   entry: GateFingerprintEntry;
   invocation?: readonly string[];
   configuration?: unknown;
+  extraInputs?: readonly string[];
   toolchain?: GateToolchainIdentity;
 }
 
@@ -196,7 +197,7 @@ export async function fingerprintGateDependencies(
     const rel = repoRelative(repoRoot, file);
     if (rel) paths.add(rel);
   }
-  for (const required of GATE_PROOF_RUNTIME_INPUTS) {
+  for (const required of [...GATE_PROOF_RUNTIME_INPUTS, ...(options.extraInputs ?? [])]) {
     const absolute = join(repoRoot, required);
     if (!existsSync(absolute)) {
       throw new Error(`gate proof dependency is missing: ${required}`);
@@ -241,6 +242,7 @@ export async function fingerprintRegisteredGate(
     entry,
     invocation,
     configuration: BLOCKING_GATE_CONFIG[gate],
+    extraInputs: BLOCKING_GATE_EXTRA_INPUTS[gate],
   });
 }
 
