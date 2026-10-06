@@ -14,6 +14,20 @@ export interface SaveSummary {
   format?: number;
 }
 
+/** Debug-only host commands used by native runtime smokes. No product UI calls these. */
+export type SmokeCommand =
+  | { kind: 'save'; seed: number; years: number }
+  | { kind: 'resume' }
+  | { kind: 'export' }
+  | { kind: 'import'; path: string };
+
+/** A validated client snapshot returned to the host for hashing and evidence. */
+export interface SmokeResult {
+  snapshot: unknown;
+  year?: number;
+  path?: string;
+}
+
 export interface Platform {
   /** Named, opaque snapshots. Their validity belongs to `loadGame` in core. */
   listSaves(): Promise<SaveSummary[]>;
@@ -38,6 +52,15 @@ export interface Platform {
   onPause(listener: () => void): () => void;
   /** A host back gesture. The browser implementation deliberately has none. */
   onBack(listener: () => boolean): () => void;
+  /**
+   * Optional debug-only native smoke seam.
+   *
+   * The host supplies transport and files; the client still drives every
+   * simulation verb and validates every imported snapshot through core.
+   */
+  onSmokeCommand?(listener: (command: SmokeCommand) => Promise<SmokeResult>): () => void;
+  writeSmokeInterchange?(save: unknown): Promise<string>;
+  readSmokeInterchange?(path: string): Promise<unknown | null>;
 }
 
 interface Bridge {
@@ -53,6 +76,9 @@ interface Bridge {
   importSave(): Promise<unknown | null>;
   onPause(listener: () => void): () => void;
   onBack(listener: () => boolean): () => void;
+  onSmokeCommand?(listener: (command: SmokeCommand) => Promise<SmokeResult>): () => void;
+  writeSmokeInterchange?(save: unknown): Promise<string>;
+  readSmokeInterchange?(path: string): Promise<unknown | null>;
 }
 
 declare global {

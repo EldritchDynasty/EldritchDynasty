@@ -83,4 +83,21 @@ describe('Capacitor iOS project', () => {
     expect(workflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
   });
 
+  it('registers the simulator smoke scheme in Debug and never in Release', () => {
+    const project = text('ios/App/App.xcodeproj/project.pbxproj');
+    const debugInfo = text('ios/App/App/Info-Debug.plist');
+    const releaseInfo = text('ios/App/App/Info.plist');
+    const runtimeSmoke = text('scripts/ios-runtime-smoke.mjs');
+
+    expect(project).toContain('INFOPLIST_FILE = "App/Info-Debug.plist";');
+    expect(project).toContain('INFOPLIST_FILE = App/Info.plist;');
+    expect(debugInfo).toContain('<string>eldritchdynasty-smoke</string>');
+    expect(releaseInfo).not.toContain('eldritchdynasty-smoke');
+    expect(releaseInfo).not.toContain('CFBundleURLTypes');
+    expect(runtimeSmoke).toContain('eldritchdynasty-smoke://save?seed=1042&years=40');
+    expect(runtimeSmoke).toContain("simctl(['terminate', udid, APP_ID])");
+    expect(runtimeSmoke).toContain('save/resume sha256:');
+    expect(runtimeSmoke).toContain('export/import sha256:');
+  });
+
 });

@@ -3,8 +3,34 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import type { Platform } from '../../client/src/platform.js';
 import { mobileStorage, saveSummary } from './storage.js';
+import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 
 const storage = mobileStorage();
+const SMOKE_RESULT = 'smoke-result.json';
+const SMOKE_EXPORT = 'eldritch-smoke-export.json';
+
+async function writeInterchange(save: unknown, path = SMOKE_EXPORT): Promise<string> {
+  await Filesystem.writeFile({
+    path,
+    data: JSON.stringify(save, null, 2),
+    directory: Directory.Documents,
+    encoding: Encoding.UTF8,
+  });
+  return path;
+}
+
+async function readInterchange(path: string): Promise<unknown | null> {
+  try {
+    const result = await Filesystem.readFile({
+      path,
+      directory: Directory.Documents,
+      encoding: Encoding.UTF8,
+    });
+    return typeof result.data === 'string' ? JSON.parse(result.data) : null;
+  } catch {
+    return null;
+  }
+}
 
 function chooseFile(): Promise<unknown | null> {
   return new Promise((resolve) => {
@@ -49,12 +75,7 @@ const platform = {
 
   async exportSave(save: unknown): Promise<void> {
     const name = `eldritch-${saveSummary('run', save).year ?? 'run'}.json`;
-    await Filesystem.writeFile({
-      path: name,
-      data: JSON.stringify(save, null, 2),
-      directory: Directory.Documents,
-      encoding: Encoding.UTF8,
-    });
+    await writeInterchange(save, name);
     const uri = await Filesystem.getUri({ path: name, directory: Directory.Documents });
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
   },
@@ -71,6 +92,30 @@ const platform = {
       if (listener()) return;
       if (canGoBack) window.history.back();
       else void App.exitApp();
+    });
+    return () => { void registration.then((handle) => handle.remove()); };
+  },
+
+  writeSmokeInterchange: writeInterchange,
+  readSmokeInterchange: readInterchange,
+
+  onSmokeCommand(listener) {
+    const registration = App.addListener('appUrlOpen', ({ url }) => {
+      const command = parseSmokeCommand(url);
+      if (!command) return;
+      void listener(command)
+        .then((result) => smokeEvidence(command, result))
+        .catch((error: unknown) => ({
+          command: command.kind,
+          ok: false as const,
+          error: error instanceof Error ? error.message : String(error),
+        }))
+        .then((evidence) => Filesystem.writeFile({
+          path: SMOKE_RESULT,
+          data: JSON.stringify(evidence),
+          directory: Directory.Data,
+          encoding: Encoding.UTF8,
+        }));
     });
     return () => { void registration.then((handle) => handle.remove()); };
   },

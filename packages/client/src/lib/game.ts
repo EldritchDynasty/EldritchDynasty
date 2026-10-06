@@ -14,7 +14,13 @@ import {
   type TableOrder, type TableView,
 } from '@ed/core';
 import { foldStanding } from './jump.js';
-import { currentPlatform, type Platform, type SaveSummary } from '../platform.js';
+import {
+  currentPlatform,
+  type Platform,
+  type SaveSummary,
+  type SmokeCommand,
+  type SmokeResult,
+} from '../platform.js';
 
 /**
  * THE CLIENT'S ONLY DOOR INTO THE SIMULATION.
@@ -1021,6 +1027,86 @@ export function createGame(
     void done.catch(() => undefined);
   }
 
+  async function waitForAutosave(): Promise<void> {
+    // Native Filesystem writes are normally quick, but a hosted simulator may
+    // still be finishing its first data-container setup. Keep this below the
+    // driver's 120-second command bound without turning storage latency into a
+    // two-second flake.
+    for (let attempt = 0; attempt < 240; attempt++) {
+      if (saveStatus.value === 'saved') return;
+      if (saveStatus.value === 'error') throw new Error('the native host refused the smoke autosave');
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    throw new Error('the native smoke autosave did not finish');
+  }
+
+  async function smokeSnapshot(): Promise<SmokeResult> {
+    await waitForAutosave();
+    const snapshot = await platform.readSave(AUTOSAVE);
+    if (!snapshot) throw new Error('the native smoke autosave is missing');
+    const year = typeof snapshot === 'object' && snapshot !== null
+      && typeof (snapshot as { year?: unknown }).year === 'number'
+      ? (snapshot as { year: number }).year
+      : undefined;
+    return { snapshot, ...(year === undefined ? {} : { year }) };
+  }
+
+  /**
+   * Drive the real client/store seam while the native host supplies only
+   * transport and filesystem access. The Release iOS target has no URL scheme
+   * capable of reaching this optional diagnostic hook.
+   */
+  async function runSmokeCommand(command: SmokeCommand): Promise<SmokeResult> {
+    if (command.kind === 'save') {
+      actions.begin(command.seed, 'short');
+      const signing = prologue.value;
+      if (!signing) throw new Error('the smoke run has no signing');
+      const founded = actions.found({
+        houseName: 'House Smoke',
+        heirloom: signing.heirlooms[0]?.heirloom ?? '',
+        grudge: signing.grudges[0]?.house ?? '',
+        answers: Object.fromEntries(signing.examination.map((question) => [
+          question.id,
+          question.answers[0]?.id ?? '',
+        ])),
+      });
+      if (!founded.ok) throw new Error(founded.reason ?? 'the smoke signing was refused');
+      actions.enter();
+
+      const startYear = view.value?.year;
+      if (startYear === undefined) throw new Error('the smoke run did not begin');
+      const targetYear = startYear + command.years;
+      for (let guard = 0; guard < 10_000; guard++) {
+        const current = view.value;
+        if (!current) throw new Error('the smoke run disappeared');
+        if (current.year >= targetYear || current.ending) break;
+        if (current.namesWanted.length) actions.keepSuggestedNames();
+        else if (docket.value.length) actions.letHimDecide();
+        else actions.advance(targetYear - current.year);
+      }
+      if ((view.value?.year ?? -Infinity) < targetYear && !view.value?.ending) {
+        throw new Error(`the smoke run did not reach ${targetYear}`);
+      }
+      return smokeSnapshot();
+    }
+
+    if (command.kind === 'resume') {
+      if (!await actions.resume()) throw new Error('the native smoke save did not resume');
+      return smokeSnapshot();
+    }
+
+    if (command.kind === 'export') {
+      if (!platform.writeSmokeInterchange) throw new Error('the host has no smoke export seam');
+      const result = await smokeSnapshot();
+      return { ...result, path: await platform.writeSmokeInterchange(result.snapshot) };
+    }
+
+    if (!platform.readSmokeInterchange) throw new Error('the host has no smoke import seam');
+    const imported = await platform.readSmokeInterchange(command.path);
+    if (!loadSave(imported)) throw new Error('the smoke interchange file is not a valid save');
+    return smokeSnapshot();
+  }
+
   const libraryLoad = platform.readLibrary()
     .then((raw) => { library.value = readRunLibrary(raw); })
     .catch(() => { library.value = emptyRunLibrary(); })
@@ -1042,6 +1128,7 @@ export function createGame(
     const g = session.value;
     if (g) keep(g);
   });
+  platform.onSmokeCommand?.(runSmokeCommand);
 
   return {
     view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
