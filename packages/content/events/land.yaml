@@ -472,8 +472,10 @@ events:
                 year, and the clerk's reply, when it comes, sounds faintly
                 surprised. Farrowmere goes to somebody else's roll before the
                 spring is out. The Farrow name goes nowhere at all.
+              # #341: a faintly surprised clerk is not a point of Respect. The
+              # refusal is a letter, and the letter is kept.
               effects:
-                - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: The Warden offered Farrowmere when the last Farrow died, and the house wrote back that it had ground enough. }
     rumour: { id: rumour_farrowmere_escheated, accuracy: 0.75, spread: 2 }
 
   - id: the_marker_stays_moved

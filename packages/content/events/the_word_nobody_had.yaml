@@ -111,8 +111,12 @@ events:
                 argument. What they take away is accurate, dull, and exactly as
                 long as it needs to be. Nobody at the chapter house says
                 anything afterwards, which is what being ready looks like.
+              # #341: a decade of putting the copies in order is what the fee
+              # buys. The chapter house reads the arranged years and finds
+              # nothing it can prove (burying.yaml's header: never free).
               effects:
                 - { kind: treasury, delta: -120 }
+                - { kind: discrepancy, op: bury, provableBy: [the_church] }
         - id: refuse_them
           label: Refuse. The book is the family's and always has been.
           outcomes:

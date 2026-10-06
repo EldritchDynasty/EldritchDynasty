@@ -231,12 +231,6 @@
     },
     {
       "kind": "flag",
-      "key": "mended_the_march_wall",
-      "disposition": "read",
-      "reason": "This key comes from #341 ranked event the_wall_nobody_mends. Quietly mending the disputed wall instead of taking it to Cawdry is exactly the kind of later neighbour/assize callback that can replace another money-shaped choice with remembered conduct, so #341 gets first refusal on the memory."
-    },
-    {
-      "kind": "flag",
       "key": "never_said_the_quieting_at_home_again",
       "disposition": "read",
       "reason": "The close-the-book outcome explicitly says the house says the Quieting at Bramme every year for 211 years without exception. Preserve the flag for the long-lived Church/chapel rule the prose promises."
@@ -462,12 +456,6 @@
       "key": "the_hall_was_counted",
       "disposition": "read",
       "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
-    },
-    {
-      "kind": "flag",
-      "key": "the_house_declined_cawdry",
-      "disposition": "read",
-      "reason": "This key comes from #341 ranked event a_second_hand_that_agrees. Letting the lone paper stand otherwise persists only through this flag; a later Cawdry/legal reader can make that refusal matter and turn a familiar price shape into a callback consequence."
     },
     {
       "kind": "flag",
@@ -882,12 +870,6 @@
       "key": "knows_the_flask",
       "disposition": "delete",
       "reason": "Record-only knowledge duplicates the Chronicle. Buying the fertility portion is already represented by the portion_of_fertility heirloom and treasury cost; no causal rule should depend on recording it."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_fleece_and_the_fold",
-      "disposition": "read",
-      "reason": "This key comes from #341 ranked event the_wool_that_will_not_take. Writing down which fold and ewes produced the odd fleece has no other outcome effect, so a later cloth/stock reader is the natural payoff and gives #341 a non-money consequence instead of deleting the evidence."
     },
     {
       "kind": "knowledge",

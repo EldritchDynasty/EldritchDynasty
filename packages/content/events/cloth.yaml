@@ -152,8 +152,10 @@ events:
                 same ewes take colour perfectly the year they are moved. The
                 house has established something true about its own land and
                 has absolutely no idea what to do with it.
+              # #341: "write it down" now writes it down. The knowledge key it
+              # replaced was read by nothing (#334).
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_fleece_and_the_fold }
+                - { kind: chronicle, text: "Four years of the upper fold's clip, written down: it is the ground and not the beast." }
         - id: sell_them_separately
           label: Sell that fold's clip separately and say nothing.
           outcomes:
@@ -168,6 +170,7 @@ events:
                 is.
               effects:
                 - { kind: treasury, delta: 4 }
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
                 - { kind: rumour, op: seed, id: rumour_the_fold_that_will_not_dye, accuracy: 0.4 }
 
   - id: the_yssene_silk_in_the_chest
