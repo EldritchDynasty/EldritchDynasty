@@ -2,6 +2,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_EXTRA_INPUTS, BLOCKING_GATE_IDS } from './gate-registry.js';
 import {
@@ -228,7 +229,7 @@ const expected = (proof: GateProof = trustedProof()) => ({
     const preload = join(import.meta.dirname, '../../../../tools/gate-read-trace.mjs');
     const target = join(root, 'packages/core/src/dep.ts');
     execFileSync(process.execPath, [
-      '--import', preload,
+      '--import', pathToFileURL(preload).href,
       '-e',
       `globalThis.__edGateTrace.start('fixture'); require('node:fs').readFileSync(${JSON.stringify(target)}); globalThis.__edGateTrace.stop();`,
     ], {
