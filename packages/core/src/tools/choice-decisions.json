@@ -39,9 +39,21 @@
     },
     {
       "kind": "flag",
+      "key": "high_justice_at_the_gate",
+      "disposition": "read",
+      "reason": "The outcome explicitly says a Warden will later use the legal word for what the house did. Reserve this flag for that later institutional consequence rather than deleting an authored payoff promise."
+    },
+    {
+      "kind": "flag",
       "key": "kept_an_early_waking_quiet",
       "disposition": "read",
       "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "kept_the_forms",
+      "disposition": "delete",
+      "reason": "Keeping the forms already pays a durable Respect consequence and the outcome itself contains the assize payoff; no later rule needs a second memory flag merely to restate that paperwork was kept."
     },
     {
       "kind": "flag",
@@ -66,6 +78,12 @@
       "key": "seal_recovered",
       "disposition": "delete",
       "reason": "No authored reader exists; buy_it_back still pays the treasury cost and the Chronicle records the recovery."
+    },
+    {
+      "kind": "flag",
+      "key": "sheltered_the_wrong_man",
+      "disposition": "read",
+      "reason": "The losing shelter outcome explicitly leaves the house named in a Cawdry file for two generations. Reserve the flag for a later institutional callback that makes that durable record matter."
     },
     {
       "kind": "flag",
