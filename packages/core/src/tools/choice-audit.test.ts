@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { auditChoices, isProseOnly, type ContentSources } from '@ed/schema';
-import { choiceWorklist, renderChoiceWorklistJson } from './choice-audit.js';
+import {
+  choiceWorklist,
+  loadChoiceDecisions,
+  renderChoiceWorklistJson,
+  type ChoiceDecisionFile,
+} from './choice-audit.js';
 
 function shipped() {
   const sources: ContentSources = new Map();
@@ -36,6 +41,71 @@ describe('the #334 choice-debt worklist', () => {
 
     expect(work.proseOnly.map((row) => [row.event, row.choice, row.decider]).sort())
       .toEqual(prose.map((row) => [row.event, row.choice, row.decider]).sort());
+  });
+
+  it('loads the committed decision ledger and accounts for classified versus unclassified keys', () => {
+    const decisions = loadChoiceDecisions();
+    const work = choiceWorklist(content, decisions);
+
+    expect(work.summary.classifiedWriteOnlyKeys + work.summary.unclassifiedWriteOnlyKeys)
+      .toBe(work.summary.writeOnlyKeys);
+    expect(JSON.parse(renderChoiceWorklistJson(content, decisions))).toEqual(work);
+  });
+
+  it('attaches a persisted disposition and reason to the exact current unread key', () => {
+    const current = choiceWorklist(content).memory[0]!;
+    const decisions: ChoiceDecisionFile = {
+      version: 1,
+      memory: [{
+        kind: current.kind,
+        key: current.key,
+        disposition: 'delete',
+        reason: 'fixture: no later rule should read this key',
+      }],
+    };
+
+    const work = choiceWorklist(content, decisions);
+    const row = work.memory.find((item) => item.kind === current.kind && item.key === current.key)!;
+    expect(row.decision).toEqual({
+      disposition: 'delete',
+      reason: 'fixture: no later rule should read this key',
+    });
+    const fileRows = work.files.flatMap((file) =>
+      file.memory.filter((item) => item.kind === current.kind && item.key === current.key));
+    expect(fileRows.length).toBeGreaterThan(0);
+    expect(fileRows.every((item) => item.decision?.disposition === 'delete')).toBe(true);
+    expect(work.summary.classifiedWriteOnlyKeys).toBe(1);
+    expect(work.summary.unclassifiedWriteOnlyKeys).toBe(work.summary.writeOnlyKeys - 1);
+  });
+
+  it('fails closed on stale, duplicate, or reasonless decisions', () => {
+    const current = choiceWorklist(content).memory[0]!;
+    const valid = {
+      kind: current.kind,
+      key: current.key,
+      disposition: 'delete' as const,
+      reason: 'fixture reason',
+    };
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [{ ...valid, key: '__not_a_current_write_only_key__' }],
+    })).toThrow(/stale choice decision/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [valid, valid],
+    })).toThrow(/duplicate choice decision/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [{ ...valid, reason: '   ' }],
+    })).toThrow(/lacks a reason/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
+      memory: [{ ...valid, disposition: 'maybe' }],
+    } as unknown as ChoiceDecisionFile)).toThrow(/invalid choice disposition/);
   });
 
   it('regroups the same debt by source file without losing or inventing provenance', () => {
