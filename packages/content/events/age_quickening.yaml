@@ -211,10 +211,10 @@ events:
           outcomes:
             - id: ran
               weight: 100
+              tags: [self_expression]
               text: >-
                 It runs. In four years the boy is apprenticed at Bramme by
                 somebody who heard the story and wanted whatever was in it, and
                 he turns out to be an unusually good miller.
-              effects:
-                - { kind: flag, flag: let_the_millers_boy_run, set: true }
+              effects: []
     rumour: { id: rumour_the_millers_boy, accuracy: 0.15, spread: 3 }

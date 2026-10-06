@@ -69,12 +69,6 @@
     },
     {
       "kind": "flag",
-      "key": "let_the_millers_boy_run",
-      "disposition": "self_expression",
-      "reason": "Letting the village story run is intentionally an expressive choice: the event-level rumour already carries the story and the outcome needs no invented resource cost. Delete the dead flag and tag let_it_run as self_expression in the later content slice."
-    },
-    {
-      "kind": "flag",
       "key": "looted_library",
       "disposition": "read",
       "reason": "Buying the looted library costs 220 crowns and explicitly promises that three volumes enable the house's great-grandchildren. Preserve the flag for the later library/book consequence needed to make that authored long-term promise real."
@@ -534,12 +528,6 @@
       "key": "knows_the_seal_is_gone",
       "disposition": "read",
       "reason": "The quiet-search outcome says the house conducts its affairs for four years without the instrument its standing rests on and only two people know it. That is a concrete ongoing secret with a natural regalia/succession reader, not redundant Record bookkeeping."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_second_is_uncertain",
-      "disposition": "self_expression",
-      "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
     },
     {
       "kind": "knowledge",
