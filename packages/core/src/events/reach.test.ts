@@ -5007,6 +5007,124 @@ describe('authored age-scoped TEST_FAMILIES fixture-sweep outcome witnesses', ()
 });
 
 
+describe('authored age-scoped narration TEST_FAMILIES fixture-sweep outcome witnesses', () => {
+  it('executes simple single-Age narration outcomes through a shared family that can really offer them', () => {
+    const candidates = content.events.flatMap((event) => {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.ages?.only?.length !== 1
+        || event.ages.never !== undefined
+        || event.ages.register !== undefined
+        || event.interaction.kind !== 'narration'
+      ) return [];
+
+      const age = event.ages.only[0]!;
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
+        if (!evalCondition(event.conditions, ctx)) return false;
+
+        const slots = resolveSlots(event, ctx, makeRng(9801));
+        if (!slots.ok || slots.playerCast.length) return false;
+
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+
+      return family ? [{ event, family, age }] : [];
+    });
+
+    expect(candidates.length).toBeGreaterThan(0);
+
+    const declared = candidates.flatMap(({ event }) => (
+      event.interaction.kind === 'narration'
+        ? event.interaction.outcomes.map((outcome) =>
+            outcomeKey(String(event.id), undefined, String(outcome.id)))
+        : []
+    ));
+    const witnessed: string[] = [];
+
+    for (const { event, family, age } of candidates) {
+      if (event.interaction.kind !== 'narration') continue;
+
+      const outside = family.build(content);
+      outside.world.generation = Math.max(
+        outside.world.generation,
+        FREQUENCY_PROFILES[event.frequency].minGeneration,
+      );
+      outside.world.age.active = [];
+      expect(
+        ambientPool(outside).some((offered) => offered.id === event.id),
+        String(event.id) + ' should be excluded outside ' + String(age),
+      ).toBe(false);
+
+      for (const outcome of event.interaction.outcomes) {
+        const ctx = family.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        ctx.world.age.active = [{
+          age,
+          began: ctx.world.year,
+          named: true,
+          paid: { standing: false },
+        }];
+
+        expect(
+          evalCondition(event.conditions, ctx),
+          String(event.id) + ' should satisfy its authored conditions in '
+            + family.id + ' during ' + String(age),
+        ).toBe(true);
+        const slots = resolveSlots(event, ctx, makeRng(9801));
+        expect(
+          slots.ok,
+          String(event.id) + ' should resolve its authored slots in ' + family.id,
+        ).toBe(true);
+        if (!slots.ok) continue;
+        expect(
+          slots.playerCast,
+          String(event.id) + ' should not require player casting in ' + family.id,
+        ).toHaveLength(0);
+        expect(
+          ambientPool(ctx).some((offered) => offered.id === event.id),
+          String(event.id) + ' should be offered by the real ambient selector in '
+            + family.id + ' during ' + String(age),
+        ).toBe(true);
+
+        const result = executeOutcomeWitness(ctx, event, {
+          expectedOutcomeId: outcome.id,
+          rng: makeRng(9801),
+          targetWeightedOutcome: event.interaction.outcomes.length > 1,
+        });
+
+        expect(
+          result.ok,
+          String(event.id) + '/' + String(outcome.id)
+            + ' via ' + family.id + ' during ' + String(age)
+            + ': ' + (result.reason ?? 'no reason'),
+        ).toBe(true);
+        expect(result.key).toBe(
+          outcomeKey(String(event.id), undefined, String(outcome.id)),
+        );
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
 describe('authored narration TEST_FAMILIES fixture-sweep outcome witnesses', () => {
   it('executes fillable non-Age ambient narration outcomes through a shared family fixture', () => {
     const candidates = content.events.flatMap((event) => {
