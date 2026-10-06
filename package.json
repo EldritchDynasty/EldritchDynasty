@@ -84,7 +84,8 @@
     "//8": "Who is working on what, when several agents run at once. The claim is a git ref because every agent authenticates to GitHub as the same user — docs/PARALLEL.md.",
     "agents": "node tools/agents.mjs",
     "test:e2e": "playwright test",
-    "playwright:install": "playwright install chromium"
+    "playwright:install": "playwright install chromium",
+    "gen:witnesses": "node tools/gen-outcome-witnesses.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

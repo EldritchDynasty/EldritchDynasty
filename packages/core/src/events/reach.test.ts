@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
-import { executeOutcomeWitness, outcomeKey } from './reach.js';
+import { declaredOutcomes, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
@@ -15,6 +17,74 @@ import { ambientPool } from './selection.js';
 import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 
 const content = indexContent(loadContent());
+
+const OUTCOME_WITNESS_MANIFEST = join(
+  import.meta.dirname,
+  '../../../../tools/outcome-witnesses.json',
+);
+const declaredOutcomeKeys = new Set(declaredOutcomes(content).keys());
+const witnessedOutcomeKeys = new Set<string>();
+
+function executeOutcomeWitness(
+  ...args: Parameters<typeof executeOutcomeWitnessRaw>
+): ReturnType<typeof executeOutcomeWitnessRaw> {
+  const result = executeOutcomeWitnessRaw(...args);
+  if (result.ok && result.key && declaredOutcomeKeys.has(result.key)) {
+    witnessedOutcomeKeys.add(result.key);
+  }
+  return result;
+}
+
+afterAll(() => {
+  const outcomes = [...witnessedOutcomeKeys].sort();
+  const generated = { version: 1, outcomes };
+  if (process.env.UPDATE_OUTCOME_WITNESSES === '1') {
+    writeFileSync(
+      OUTCOME_WITNESS_MANIFEST,
+      `${JSON.stringify(generated, null, 2)}\n`,
+      'utf8',
+    );
+    return;
+  }
+
+  const manifest = JSON.parse(
+    readFileSync(OUTCOME_WITNESS_MANIFEST, 'utf8'),
+  ) as { version?: unknown; outcomes?: unknown };
+
+  if (
+    manifest.version !== 1
+    || !Array.isArray(manifest.outcomes)
+    || manifest.outcomes.some((key) => typeof key !== 'string')
+  ) {
+    throw new Error(
+      'tools/outcome-witnesses.json has an invalid shape; run npm run gen:witnesses',
+    );
+  }
+
+  const committed = manifest.outcomes as string[];
+  const canonicalCommitted = [...new Set(committed)].sort();
+  if (
+    committed.length !== canonicalCommitted.length
+    || committed.some((key, index) => key !== canonicalCommitted[index])
+  ) {
+    throw new Error(
+      'tools/outcome-witnesses.json must contain unique sorted outcome keys; run npm run gen:witnesses',
+    );
+  }
+
+  if (
+    committed.length !== outcomes.length
+    || committed.some((key, index) => key !== outcomes[index])
+  ) {
+    throw new Error([
+      'tools/outcome-witnesses.json drifted from deterministic reach.test.ts execution witnesses.',
+      'Run npm run gen:witnesses and commit the generated file.',
+      'GENERATED_OUTCOME_WITNESSES_START',
+      JSON.stringify(generated, null, 2),
+      'GENERATED_OUTCOME_WITNESSES_END',
+    ].join('\n'));
+  }
+});
 
 function fixture(seed = 1042) {
   const ctx = testWorld(content, seed);
