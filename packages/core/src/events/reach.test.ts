@@ -4789,6 +4789,109 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
   });
 });
 
+describe('authored checked TEST_FAMILIES fixture-sweep outcome witnesses', () => {
+  it('executes fillable randomised checked player-choice outcomes through the production check evaluator', () => {
+    const candidates = content.events.flatMap((event) => {
+      if (
+        event.tier === 'frame'
+        || event.arc !== undefined
+        || event.record !== undefined
+        || event.ages !== undefined
+        || event.interaction.kind === 'narration'
+        || event.interaction.decidedBy !== 'player'
+      ) return [];
+
+      const choices = event.interaction.choices.filter((choice) => {
+        if (choice.requires.length !== 0 || choice.check === undefined) return false;
+        const check = event.checks.find((candidate) => candidate.id === choice.check);
+        return check !== undefined
+          && check.variance !== 'none'
+          && choice.outcomes.every((outcome) =>
+            check.bands.some((band) => band.outcome === outcome.id));
+      });
+      if (choices.length === 0) return [];
+
+      const family = TEST_FAMILIES.find((candidate) => {
+        const ctx = candidate.build(content);
+        ctx.world.generation = Math.max(
+          ctx.world.generation,
+          FREQUENCY_PROFILES[event.frequency].minGeneration,
+        );
+        if (!evalCondition(event.conditions, ctx)) return false;
+
+        const slots = resolveSlots(event, ctx, makeRng(9201));
+        if (!slots.ok || slots.playerCast.length) return false;
+
+        return ambientPool(ctx).some((offered) => offered.id === event.id);
+      });
+
+      return family ? [{ event, choices, family }] : [];
+    });
+
+    expect(candidates.length).toBeGreaterThan(0);
+
+    const declared = candidates.flatMap(({ event, choices }) =>
+      choices.flatMap((choice) =>
+        choice.outcomes.map((outcome) =>
+          outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
+    const witnessed: string[] = [];
+
+    for (const { event, choices, family } of candidates) {
+      for (const choice of choices) {
+        const check = event.checks.find((candidate) => candidate.id === choice.check);
+        expect(check, String(event.id) + '/' + String(choice.id) + ' should name a real check').toBeDefined();
+        expect(check?.variance).not.toBe('none');
+
+        for (const outcome of choice.outcomes) {
+          const ctx = family.build(content);
+          ctx.world.generation = Math.max(
+            ctx.world.generation,
+            FREQUENCY_PROFILES[event.frequency].minGeneration,
+          );
+
+          expect(
+            evalCondition(event.conditions, ctx),
+            String(event.id) + ' should satisfy its authored conditions in ' + family.id,
+          ).toBe(true);
+          const slots = resolveSlots(event, ctx, makeRng(9201));
+          expect(
+            slots.ok,
+            String(event.id) + ' should resolve its authored slots in ' + family.id,
+          ).toBe(true);
+          if (!slots.ok) continue;
+          expect(
+            slots.playerCast,
+            String(event.id) + ' should not require player casting in ' + family.id,
+          ).toHaveLength(0);
+          expect(
+            ambientPool(ctx).some((offered) => offered.id === event.id),
+            String(event.id) + ' should be offered by the real ambient selector in ' + family.id,
+          ).toBe(true);
+
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id,
+            expectedOutcomeId: outcome.id,
+            rng: makeRng(9201),
+            targetCheckedOutcome: true,
+          });
+
+          expect(
+            result.ok,
+            String(event.id) + '/' + String(choice.id) + '/' + String(outcome.id)
+              + ' via ' + family.id + ': ' + (result.reason ?? 'no reason'),
+          ).toBe(true);
+          expect(result.key).toBe(
+            outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
+          );
+          if (result.key) witnessed.push(result.key);
+        }
+      }
+    }
+
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
 describe('authored age-scoped TEST_FAMILIES fixture-sweep outcome witnesses', () => {
   it('executes simple single-Age player-choice outcomes through a shared family that can really offer them', () => {
     const candidates = content.events.flatMap((event) => {
