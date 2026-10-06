@@ -1,10 +1,8 @@
 verdict: ok
 exit: 0
-request: /claim 334 --agent chatgpt/334-self-expression-cleanup-20261007 --paths packages/content/events/age_quickening.yaml packages/content/events/arc_eight_days.yaml packages/core/src/tools/choice-decisions.json --lane content
-request-commit: 5bb533ba99e5f623ea06938b7619105f72595f43
+request: /claim 334 --agent chatgpt/334-self-expression-cleanup-20261007 --paths packages/content/events/age_quickening.yaml packages/content/events/arc_eight_days.yaml packages/content/events/regalia.yaml packages/core/src/tools/choice-decisions.json --lane content
+request-commit: 9fec89c271f17fa1f6d102c1c5ab171b6bc3b367
 
-widened 334: + packages/content/events/age_quickening.yaml, packages/content/events/arc_eight_days.yaml
-  narrowed 334: − packages/content/events, packages/content/arcs
 held: 334 → chatgpt/334-self-expression-cleanup-20261007 (lane content)
   land it with: Closes #334
   the janitor retires the claims and deletes the branch behind that.
