@@ -9349,3 +9349,39 @@ reaches no Long-exclusive ending in this 12-run sample and the static inventory
 contains no Long-only event deck. Any future floor must cite an explicit owner
 decision; none is introduced by this baseline.
 
+## 2026-10-06 — #502: deterministic outcome witnesses scope merge-blocking reach
+
+The generated deterministic witness manifest now proves an execution path for
+**466 of 1,006 declared outcomes**. Merge CI therefore samples only the
+remaining **540 unwitnessed outcomes**. A witnessed outcome may still be absent
+from a finite random batch, but that miss is diagnostic rather than a merge
+failure; a newly declared outcome is fail-safe and stays in the blocking set
+until the generated manifest proves a deterministic witness.
+
+The full all-outcome `outcome-reach` gate remains scheduled/manual telemetry.
+Merge-blocking `outcome-reach-blocking` uses the same canonical
+**800 runs × 500 years** but applies its sampled verdict only to the unwitnessed
+set. Fast fixtures pin all three policy edges: a witnessed sampled miss stays
+green, an unwitnessed never-firing branch goes red with event/choice/outcome
+provenance, and a newly declared outcome blocks until witnessed.
+
+### Merge-lane cost
+
+PR #505 check run `37401088381`, exact branch head `2da8015b`, produced the
+structured `gate-timings-batch` artifact below. **All 12/12 gameplay gates
+passed**; the run was red only because the previous 7-minute duration budget
+correctly detected the deliberate new cost.
+
+| batch component | measured elapsed |
+|---|---:|
+| outcome-reach-blocking | 1,154.250 s / 19.24m |
+| all other batch gates combined | 379.373 s / 6.32m |
+| **batch total** | **1,533.623 s / 25.56m** |
+
+The checked batch baseline is therefore remeasured from 7 minutes to
+**26 minutes** (1,560 s), with the existing 1.25× regression guard at
+**32.5 minutes**. The change is attributed to restoring sampled merge evidence
+for the 540 outcomes that still lack deterministic witnesses; no sample size,
+seed set, reachability assertion, or gameplay threshold was reduced to recover
+CI time. As deterministic witness coverage grows, the blocking set shrinks
+without weakening the full scheduled telemetry.
