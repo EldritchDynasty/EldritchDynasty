@@ -53,7 +53,6 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: heirloom, op: grant, heirloom: the_bramme_register }
-                - { kind: flag, flag: the_house_holds_the_register, set: true }
         - id: leave_it
           label: Leave it. A register nobody has read is a register nobody has read.
           outcomes:
@@ -71,7 +70,6 @@ events:
       options:
         record:
           chronicle: The Bramme register carries forty-one entries in this house's name, running back to 1088, and we have read none of them.
-          grantsKnowledge: knows_the_notarys_register
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: found forty-one Bramme register entries in the house's name and had read none of them }
@@ -210,7 +208,6 @@ events:
       options:
         record:
           chronicle: The herald had of us four generations and the acreage, and asked twice for the elder descent, and did not have it.
-          grantsKnowledge: knows_the_heralds_note
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: gave the herald four generations and the acreage, but not the elder descent }
@@ -428,7 +425,6 @@ events:
       options:
         record:
           chronicle: The tops were entered to this house at the assize, the graziers having held them by custom and by nothing written.
-          grantsKnowledge: knows_the_tops_were_taken
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: had the tops entered to the house while the graziers held them by custom and no writing }
@@ -498,7 +494,6 @@ events:
       options:
         record:
           chronicle: A hired man was found dead inside the yard wall at dawn, the gate being shut, and the hounds would not come in until noon.
-          grantsKnowledge: knows_the_yard_at_dawn
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: had a hired man found dead inside the shut yard wall at dawn }
@@ -565,7 +560,6 @@ events:
       options:
         record:
           chronicle: The relief was assessed at forty-one crowns on a return this house wrote short, the fold being better than we said.
-          grantsKnowledge: knows_the_short_return
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: made a short return at the relief and was assessed forty-one crowns on it }

@@ -279,7 +279,6 @@ events:
                 attempt.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: arc_flag, flag: went_out_well, set: true }
                 - { kind: muster, op: add_officer, officer: { slot: OFFICER } }
         - id: they_are_a_levy
           label: They go down the road looking like a levy.
@@ -307,7 +306,6 @@ events:
                 writes the number down and moves to the next gate.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: arc_flag, flag: went_out_thin, set: true }
                 - { kind: muster, op: add_officer, officer: { slot: OFFICER } }
 
   # ── Arc node: buy the position, or do not ────────────────────────────────
@@ -534,7 +532,6 @@ events:
               effects:
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: 16 }
-                - { kind: arc_flag, flag: withdrew, set: true }
                 - { kind: branch, op: appease, amount: 12 }
                 - { kind: muster, op: withdraw }
         - id: leave_them_in
@@ -548,7 +545,6 @@ events:
                 out at length at supper by a man who is not being argued with,
                 and every part of it is about what has already been spent.
               effects:
-                - { kind: arc_flag, flag: held_on, set: true }
                 - { kind: relationship, from: household, to: head, sentiment: -8 }
 
   # ── Arc node: the thesis beat ────────────────────────────────────────────
@@ -625,7 +621,6 @@ events:
             The house sent men to the war and they went under no banner of its
             own, and this is the number that went and the number that came
             back, and the second number is the smaller.
-          grantsKnowledge: knows_what_the_war_cost_this_house
           claims:
             - { kind: deed, target: { slot: OFFICER }, text: went to war with the house's men under another banner, not one of their own }
         omit:

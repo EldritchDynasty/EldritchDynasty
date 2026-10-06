@@ -41,7 +41,6 @@ events:
               effects:
                 - { kind: treasury, delta: -240 }
                 - { kind: heirloom, op: grant, heirloom: portion_of_agelessness }
-                - { kind: flag, flag: holds_a_portion, set: true }
         - id: decline
           label: Leave it on the counter.
           outcomes:
@@ -61,7 +60,6 @@ events:
           chronicle: >-
             We bought forty years from a woman who would not name what she was
             selling, and we have not yet decided who is to have them.
-          grantsKnowledge: knows_the_portion
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -119,7 +117,6 @@ events:
               effects:
                 - { kind: treasury, delta: -170 }
                 - { kind: heirloom, op: grant, heirloom: portion_of_fertility }
-                - { kind: flag, flag: holds_a_portion, set: true }
         - id: refuse
           label: Send him away. A house that buys this is a house that needs it.
           outcomes:
@@ -132,7 +129,6 @@ events:
                 than closing a door takes.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: refused_the_flask, set: true }
     record:
       subject: the flask, and why it was bought
       options:
@@ -140,7 +136,6 @@ events:
           chronicle: >-
             The line was thin and we knew it, and we bought three chances from
             a frightened man in the road.
-          grantsKnowledge: knows_the_flask
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -205,7 +200,6 @@ events:
               effects:
                 - { kind: treasury, delta: -380 }
                 - { kind: heirloom, op: grant, heirloom: the_unmirrored_eye }
-                - { kind: flag, flag: holds_the_unmirrored_eye, set: true }
         - id: decline
           label: Leave it on the dealer's table.
           outcomes:
@@ -224,7 +218,6 @@ events:
           chronicle: >-
             We bought something we cannot describe, from a man we did not ask
             the name of, and we have used it since.
-          grantsKnowledge: knows_the_unmirrored_eye
           effects:
             - { kind: respect, delta: -1 }
           claims:
