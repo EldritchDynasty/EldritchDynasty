@@ -117,9 +117,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_cousins_refused",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; the failed recall already costs treasury and Respect, so the Chronicle can preserve the refused cousins without a separate simulation key."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_day_book_was_kept",
       "disposition": "delete",
       "reason": "This knowledge is write-only in the choice audit; the affected player outcome still changes treasury and discrepancy state, and the Record branch preserves the fact with Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_eighty_one_leaves",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; writing the eighty-one leaves already changes Respect, while the Record preserves the document in Chronicle text and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -195,6 +207,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_muniments_burned",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; losing the muniments already costs treasury and Respect, while the Record preserves the fire and lost press in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_quire_is_gone",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the missing-quire discovery without a separate simulation-memory key."
@@ -204,6 +222,12 @@
       "key": "knows_the_relic_was_refused",
       "disposition": "delete",
       "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve the refusal without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_rows_were_cut",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; investigating the cut grave rows already costs treasury, while the Record preserves the finding in Chronicle text, Respect, and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -249,6 +273,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_is_in_the_orchard",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; covering the orchard already costs treasury and seeds the orchard rumour, so the act remains mechanically consequential without the dead key."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_the_fourth_shelf_says",
       "disposition": "delete",
       "reason": "The memory is unread; the reading outcome still changes Respect and the reader's Mind, while the Record preserves the pasture-grant finding in Chronicle text and a deed claim."
@@ -261,9 +291,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_the_second_book_holds",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; buying the steward's second book already costs treasury and changes the steward relationship, while the Record preserves what it held."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_they_were_reading_for",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve what the marked margins showed without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_where_the_seal_was_found",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; finding the seal during the search already changes Respect and the household relationship, so the result remains mechanically consequential without the dead key."
     },
     {
       "kind": "knowledge",
