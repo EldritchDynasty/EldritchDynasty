@@ -1369,10 +1369,22 @@ if (isMain) {
   let failed = 0;
   const runStarted = Date.now();
   const timings: GateTimingSample[] = [];
+  const trace = (globalThis as typeof globalThis & {
+    __edGateTrace?: { start: (gate: string) => void; stop: () => void };
+  }).__edGateTrace;
   for (const n of chosen) {
     if (named) console.log(`\n── ${n} ──`);
     const started = Date.now();
-    const { ok, lines } = COMMAND_GATES[n]!(content);
+    trace?.start(n);
+    process.env.ED_GATE_ACTIVE = n;
+    let result: GateResult;
+    try {
+      result = COMMAND_GATES[n]!(content);
+    } finally {
+      trace?.stop();
+      delete process.env.ED_GATE_ACTIVE;
+    }
+    const { ok, lines } = result;
     timings.push({
       gate: n,
       seconds: Number(((Date.now() - started) / 1000).toFixed(3)),
