@@ -40,6 +40,7 @@ import { gateLand } from './land-gate.js';
 import { gateBlood } from './blood-gate.js';
 import { gateLibraryNeutrality } from './library-gate.js';
 import { gateSigning } from './signing-gate.js';
+import { gateUnwitnessedOutcomeReach } from './outcome-reach-blocking.js';
 import {
   MADNESS_FLOOR, MIND_FLOOR, POWER_FLOOR, eldritchPower, madnessOf, mindOf, standingOf,
 } from '../ascension.js';
@@ -1180,6 +1181,7 @@ export function gateFireRateNightly(
 export const GATES: Record<string, (source?: Source) => GateResult> = {
   clauses: gateClauses,
   'library-neutrality': gateLibraryNeutrality,
+  'outcome-reach-blocking': gateUnwitnessedOutcomeReach,
   'short-line': gateShortLine,
   ladder: gateLadder,
   'ladder-scales': gateLadderScales,
@@ -1195,8 +1197,9 @@ export const GATES: Record<string, (source?: Source) => GateResult> = {
  * NON-BLOCKING MEASUREMENT COMMANDS.
  *
  * These remain explicit CLI commands and scheduled telemetry, but are not part
- * of GATES: no pull request or merge-group may fail merely because a finite
- * sample missed a rare, deterministically-witnessed outcome (#442/#495).
+ * of GATES: the full all-outcome sample stays scheduled telemetry, while
+ * `outcome-reach-blocking` judges only outcomes with no deterministic witness
+ * (#442/#502). A witnessed finite-sample miss can never make merge CI red.
  * Keeping this table separate makes the cadence boundary executable rather
  * than a comment somebody can accidentally undo.
  */
@@ -1220,8 +1223,9 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
  *
  * Merge CI now has one blocking lane: batch. Expensive sampled gates are
  * direct scheduled commands in TELEMETRY_GATES; nightly runs fire-rate, war
- * and endings, while weekly evidence runs blood and signing plus outcome-reach
- * in #495's dedicated telemetry workflow. The fire-rate scheduled wrapper keeps sampled
+ * and endings, while weekly evidence runs blood and signing plus full outcome-reach
+ * telemetry. The derived batch also carries `outcome-reach-blocking`, scoped by
+ * the generated deterministic witness manifest. The fire-rate scheduled wrapper keeps sampled
  * vocabulary reach beside the memoized corpus it reads.
  *
  * A future merge-blocking gate is still derived into batch automatically.

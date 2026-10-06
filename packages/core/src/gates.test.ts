@@ -21,6 +21,7 @@ import {
 } from './tools/gate-partition.js';
 import { gateWar, warGateInputs } from './tools/war-gate.js';
 import { gateSigning } from './tools/signing-gate.js';
+import { gateUnwitnessedOutcomeReach } from './tools/outcome-reach-blocking.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -102,7 +103,7 @@ describe('the gates pass the shipped game', () => {
     expect(Object.keys(GATES).sort()).toEqual(
       [
         'bottleneck', 'clauses', 'ladder', 'ladder-scales', 'land', 'library-neutrality',
-        'post-fillability', 'purposes', 'short-line', 'slot-fillability', 'vocabulary-reach',
+        'outcome-reach-blocking', 'post-fillability', 'purposes', 'short-line', 'slot-fillability', 'vocabulary-reach',
       ],
     );
   });
@@ -112,6 +113,7 @@ describe('the gates pass the shipped game', () => {
       'blood', 'endings', 'fire-rate', 'outcome-reach', 'signing', 'war',
     ]);
     expect(COMMAND_GATES['outcome-reach']).toBe(gateOutcomeReach);
+    expect(COMMAND_GATES['outcome-reach-blocking']).toBe(gateUnwitnessedOutcomeReach);
     expect(COMMAND_GATES['fire-rate']).toBe(gateFireRateNightly);
     expect(COMMAND_GATES.signing).toBe(gateSigning);
     expect(Object.keys(GATES).filter((name) => name in TELEMETRY_GATES)).toEqual([]);

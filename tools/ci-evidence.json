@@ -199,6 +199,21 @@
       "proposedTier": "merge-blocking"
     },
     {
+      "id": "outcome-reach-blocking",
+      "lane": "batch",
+      "source": "packages/core/src/tools/outcome-reach-blocking.ts#gateUnwitnessedOutcomeReach",
+      "claim": "Merge CI samples outcome reach only for declared outcomes that do not yet have a deterministic execution witness; witnessed sample misses remain report-only and newly authored outcomes fail safe into the blocking set.",
+      "evidenceType": "sampled fail-safe reachability regression",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking",
+      "coveredBy": [
+        "packages/core/src/tools/outcome-reach-verdict.test.ts#keeps a witnessed outcome green when the fixture batch never resolves it",
+        "packages/core/src/tools/outcome-reach-verdict.test.ts#fails an unwitnessed outcome whose choice never fires and names the authored branch",
+        "packages/core/src/tools/outcome-reach-verdict.test.ts#treats a newly declared outcome as blocking until the manifest proves it"
+      ],
+      "failureWitness": "packages/core/src/tools/outcome-reach-verdict.test.ts#fails an unwitnessed outcome whose choice never fires and names the authored branch"
+    },
+    {
       "id": "post-fillability",
       "lane": "batch",
       "source": "packages/core/src/tools/gates.ts#gatePostFillability",
