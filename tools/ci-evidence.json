@@ -272,12 +272,12 @@
       "currentTier": "weekly",
       "proposedTier": "weekly",
       "coveredBy": [
-        "packages/core/src/tools/signing-gate.test.ts#goes red on a deliberately lopsided answer",
+        "packages/core/src/tools/signing-gate.test.ts#fails a deliberately lopsided answer",
         "packages/core/src/founding-inheritance.test.ts#feeds a selected heritable bias into the founder without rerolling his wife",
         "packages/core/src/prologue.test.ts#applies every founding-state Examination term exactly once and writes the answer",
         "packages/core/src/session-api.test.ts#rebuilds, saves and replays the signed founding inputs"
       ],
-      "failureWitness": "packages/core/src/tools/signing-gate.test.ts#goes red on a deliberately lopsided answer"
+      "failureWitness": "packages/core/src/tools/signing-gate.test.ts#fails a deliberately lopsided answer"
     },
     {
       "id": "war",
