@@ -41,17 +41,7 @@ export interface LandGateResult { ok: boolean; lines: string[] }
 // problem: the fifty seeds below are individually confirmed to reach the
 // full 500-year campaign, and every route this gate checks clears 3+ SE
 // against the combined ninety.
-const DEFAULT_SEEDS = [
-  61101, 61707, 61808, 61909, 62010, 62212, 62313, 62414, 62515, 62616,
-  62818, 62919, 63020, 63121, 63222, 63323, 63424, 63525, 63727, 64232,
-  64434, 64939, 65040, 65545, 65646, 65747, 66050, 66353, 66454, 66555,
-  66656, 66757, 66959, 67161, 67262, 67363, 67464, 67767, 68070, 68171,
-  70001, 70018, 70069, 70086, 70120, 70137, 70171, 70188, 70205, 70239,
-  70256, 70307, 70324, 70341, 70358, 70375, 70392, 70409, 70460, 70528,
-  70545, 70579, 70613, 70630, 70647, 70664, 70698, 70766, 70800, 70817,
-  70834, 70851, 70868, 70885, 70936, 70953, 70970, 70987, 71021, 71055,
-  71072, 71089, 71106, 71123, 71140, 71157, 71174, 71191, 71208, 71225,
-];
+// The exact seed corpus lives in gate-registry.ts so #441 proves the sample it executes.
 
 export interface HoldingPortrait {
   acres: number;
