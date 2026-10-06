@@ -15,6 +15,12 @@
     },
     {
       "kind": "flag",
+      "key": "a_late_entry_on_the_roll",
+      "disposition": "read",
+      "reason": "Keeping the iron down creates two Church records that disagree by ten days about when the child began. That is a concrete pedigree/record contradiction with a natural later reader, distinct from the immediate rumour and cost."
+    },
+    {
+      "kind": "flag",
       "key": "a_warrant_hangs_in_the_hall",
       "disposition": "read",
       "reason": "The public-warrant outcome explicitly says licensed practice becomes the cheapest cover the house has ever been offered. Preserve the flag for the later standing/visitor/magic-cover consequence that authored prose promises."
@@ -219,6 +225,18 @@
     },
     {
       "kind": "flag",
+      "key": "the_archivist_was_refused",
+      "disposition": "read",
+      "reason": "The refused Bramme archivist still controls the index that makes records findable and has learned exactly what this house will not pay for. That is a direct later discrepancy/exposure hook, so preserve the marker for a reader."
+    },
+    {
+      "kind": "flag",
+      "key": "the_burgesses_have_a_grievance",
+      "disposition": "read",
+      "reason": "Going over Bramme's forty households creates a dated grievance held by the town's Assembly delegates, and the prose explicitly says a dated grievance lasts about four times as long. Preserve it for a later town/Assembly callback."
+    },
+    {
+      "kind": "flag",
       "key": "the_chantry_was_declined",
       "disposition": "read",
       "reason": "This key comes from #341 ranked event something_the_church_wants_more. The decline branch otherwise carries only this memory, and a later Church callback can make refusing the chantry a durable non-money consequence rather than collapsing the choice into prose."
@@ -261,6 +279,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_man_who_drank_standing",
+      "disposition": "read",
+      "reason": "The outcome explicitly promises that somebody repeats the standing insult at exactly the wrong assize thirty years later. Preserve the flag for that authored future callback."
+    },
+    {
+      "kind": "flag",
       "key": "the_reader_was_not_welcomed",
       "disposition": "delete",
       "reason": "Keeping the Crusade reader at arm's length already persists as a -10 relationship to that priest; the unread flag duplicates the same social consequence without a distinct later fact."
@@ -282,6 +306,12 @@
       "key": "the_two_half_sheets",
       "disposition": "delete",
       "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
+    },
+    {
+      "kind": "flag",
+      "key": "the_witness_went_to_the_parish",
+      "disposition": "read",
+      "reason": "Leaving the last witness to the parish puts her final statements in a curate's written record outside the house. Preserve this as durable external evidence for a later discrepancy/Church reader."
     },
     {
       "kind": "flag",
@@ -342,6 +372,12 @@
       "key": "knows_the_attainder_was_reversed",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; staying clear already changes the rival relationship, while the Record preserves the reversed attainder in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_bees_were_told_the_whole_of_it",
+      "disposition": "delete",
+      "reason": "Telling the bees the whole truth already changes the household relationship by +8; the unread knowledge bit duplicates that durable trust consequence."
     },
     {
       "kind": "knowledge",
@@ -657,6 +693,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_the_clerk_writes",
+      "disposition": "delete",
+      "reason": "Seating the Warden's clerk high already costs Respect and the gained provincial gossip is not represented as any concrete actionable fact. The generic unread knowledge bit adds no distinct future state."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_the_fever_took",
       "disposition": "delete",
       "reason": "The Plague Record already preserves the household count in Chronicle/deed state; no separate knowledge key is needed merely to remember the recorded number."
@@ -699,6 +741,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_took_the_doves",
+      "disposition": "delete",
+      "reason": "The goshawk outcome is a resolved observation with no later consequence promised or reader authored. Delete the dead knowledge write rather than preserving a solved seasonal nuisance."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_where_the_pit_went",
       "disposition": "delete",
       "reason": "This is Record-only memory. The plague choice already changes Respect and household relationship and may seed the low-meadow rumour, while the Chronicle/deed/discrepancy preserve where the pit went."
@@ -708,6 +756,18 @@
       "key": "knows_where_the_seal_was_found",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; finding the seal during the search already changes Respect and the household relationship, so the result remains mechanically consequential without the dead key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_which_horse_will_not_take_the_gate",
+      "disposition": "delete",
+      "reason": "Keeping the gate-shy horse already costs eight crowns and the outcome is complete in prose; no later rule needs a permanent knowledge bit for one horse's unexplained habit."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_who_took_the_doves",
+      "disposition": "read",
+      "reason": "Catching the cottager's boy explicitly hands the matter to the house's low justice with the whole yard watching. Preserve this branch marker for the natural justice/household follow-up the authored outcome points to."
     },
     {
       "kind": "knowledge",
