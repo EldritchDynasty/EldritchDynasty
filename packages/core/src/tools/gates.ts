@@ -39,6 +39,7 @@ import { gateFoundingRecovery } from './bottleneck-gate.js';
 import { gateLand } from './land-gate.js';
 import { gateBlood } from './blood-gate.js';
 import { gateLibraryNeutrality } from './library-gate.js';
+import { gateSigning } from './signing-gate.js';
 import {
   MADNESS_FLOOR, MIND_FLOOR, POWER_FLOOR, eldritchPower, madnessOf, mindOf, standingOf,
 } from '../ascension.js';
@@ -1206,6 +1207,7 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
   endings: gateEndings,
   'fire-rate': gateFireRateNightly,
   'outcome-reach': gateOutcomeReach,
+  signing: gateSigning,
   war: gateWar,
 };
 
@@ -1218,8 +1220,8 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
  *
  * Merge CI now has one blocking lane: batch. Expensive sampled gates are
  * direct scheduled commands in TELEMETRY_GATES; nightly runs fire-rate, war
- * and endings, while weekly evidence runs blood plus outcome-reach in #495's
- * dedicated telemetry workflow. The fire-rate scheduled wrapper keeps sampled
+ * and endings, while weekly evidence runs blood and signing plus outcome-reach
+ * in #495's dedicated telemetry workflow. The fire-rate scheduled wrapper keeps sampled
  * vocabulary reach beside the memoized corpus it reads.
  *
  * A future merge-blocking gate is still derived into batch automatically.
