@@ -5744,7 +5744,7 @@ describe('campaign-clock TEST_FAMILIES fallback outcome witnesses', () => {
         event.tier === 'frame'
         || event.arc !== undefined
         || event.ages !== undefined
-        || !JSON.stringify(event.conditions).includes('"campaignProgress"')
+        || !JSON.stringify(event.conditions ?? []).includes('"campaignProgress"')
       ) continue;
       if (
         event.interaction.kind !== 'narration'
@@ -5767,13 +5767,14 @@ describe('campaign-clock TEST_FAMILIES fallback outcome witnesses', () => {
         });
       if (!match) continue;
 
-      const targets = event.interaction.kind === 'narration'
-        ? event.interaction.outcomes.map((outcome) => ({
+      const interaction = event.interaction;
+      const targets = interaction.kind === 'narration'
+        ? interaction.outcomes.map((outcome) => ({
             choiceId: undefined as string | undefined,
             outcome,
-            weighted: event.interaction.outcomes.length > 1,
+            weighted: interaction.outcomes.length > 1,
           }))
-        : event.interaction.choices.flatMap((choice) =>
+        : interaction.choices.flatMap((choice) =>
             choice.outcomes.map((outcome) => ({
               choiceId: String(choice.id),
               outcome,
@@ -5838,13 +5839,14 @@ describe('mature-lean TEST_FAMILIES fallback outcome witnesses', () => {
       });
       if (!family) continue;
 
-      const targets = event.interaction.kind === 'narration'
-        ? event.interaction.outcomes.map((outcome) => ({
+      const interaction = event.interaction;
+      const targets = interaction.kind === 'narration'
+        ? interaction.outcomes.map((outcome) => ({
             choiceId: undefined as string | undefined,
             outcome,
-            weighted: event.interaction.outcomes.length > 1,
+            weighted: interaction.outcomes.length > 1,
           }))
-        : event.interaction.choices.flatMap((choice) =>
+        : interaction.choices.flatMap((choice) =>
             choice.outcomes.map((outcome) => ({
               choiceId: String(choice.id),
               outcome,
@@ -5961,7 +5963,7 @@ describe('higher-ascension TEST_FAMILIES fallback outcome witnesses', () => {
         event.tier === 'frame'
         || event.arc !== undefined
         || event.ages !== undefined
-        || !JSON.stringify(event.conditions).includes('"ascension"')
+        || !JSON.stringify(event.conditions ?? []).includes('"ascension"')
       ) continue;
       if (
         event.interaction.kind !== 'narration'
@@ -5990,13 +5992,14 @@ describe('higher-ascension TEST_FAMILIES fallback outcome witnesses', () => {
       });
       if (!family) continue;
 
-      const targets = event.interaction.kind === 'narration'
-        ? event.interaction.outcomes.map((outcome) => ({
+      const interaction = event.interaction;
+      const targets = interaction.kind === 'narration'
+        ? interaction.outcomes.map((outcome) => ({
             choiceId: undefined as string | undefined,
             outcome,
-            weighted: event.interaction.outcomes.length > 1,
+            weighted: interaction.outcomes.length > 1,
           }))
-        : event.interaction.choices.flatMap((choice) =>
+        : interaction.choices.flatMap((choice) =>
             choice.outcomes.map((outcome) => ({
               choiceId: String(choice.id),
               outcome,
