@@ -87,6 +87,12 @@
     },
     {
       "kind": "flag",
+      "key": "forgave_a_year",
+      "disposition": "delete",
+      "reason": "Forgiving the year already costs 60 crowns, gains Respect, and is immediately carried into local story. The unread flag adds no separate promised future consequence."
+    },
+    {
+      "kind": "flag",
       "key": "gave_up_the_book",
       "disposition": "delete",
       "reason": "This is a weighted narration outcome, not a player choice: the pupil stops trying and the family forgets it. No authored reader consumes the marker, so delete the dead narration write rather than manufacture a callback."
@@ -195,6 +201,12 @@
     },
     {
       "kind": "flag",
+      "key": "no_carpenter_at_wick",
+      "disposition": "read",
+      "reason": "Paying Bramme rates explicitly removes the parish trade and says the full arithmetic takes two generations to become visible. Preserve the flag for the later local-cost/trade consequence that makes that promise real."
+    },
+    {
+      "kind": "flag",
       "key": "on_the_caster_list",
       "disposition": "read",
       "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."
@@ -273,6 +285,12 @@
     },
     {
       "kind": "flag",
+      "key": "someone_has_been_in_the_east_cellar",
+      "disposition": "delete",
+      "reason": "The narration immediately schedules what_he_did_with_the_key via inline next and keeps the same child for 22–34 years. That arc progression already preserves the cellar visit, so the unread parallel flag is redundant."
+    },
+    {
+      "kind": "flag",
       "key": "something_went_down_the_wend",
       "disposition": "delete",
       "reason": "The boat-family service is completed in the scene and already costs treasury. The generic unread flag does not identify what was moved and carries no concrete promised callback, so it is unusable durable state."
@@ -330,6 +348,12 @@
       "key": "the_crowded_years",
       "disposition": "delete",
       "reason": "Both random outcomes of let_it_ride write the same flag, so it cannot preserve whether the hall stayed crowded or settled; the crowded outcome already persists through branch slight +6 and the Chronicle records the scene."
+    },
+    {
+      "kind": "flag",
+      "key": "the_customary_terms_were_written",
+      "disposition": "read",
+      "reason": "Signing the customary terms starts a long argument about what the house agreed to 'for ever'. Preserve the flag for a later tenancy/title callback that distinguishes the written custom from the refusal branch."
     },
     {
       "kind": "flag",
@@ -465,6 +489,12 @@
     },
     {
       "kind": "flag",
+      "key": "they_taught_their_children_to_read",
+      "disposition": "read",
+      "reason": "Sending her to the steward explicitly promises that her children learn to read and that one decides a Cawdry boundary case in 1247. Preserve the flag for that concrete future legal callback."
+    },
+    {
+      "kind": "flag",
       "key": "took_the_company_in",
       "disposition": "delete",
       "reason": "Taking the company in already costs 44 crowns and gains Respect; the outcome explicitly says nothing happens all winter, so the unread flag adds no distinct promised consequence."
@@ -504,6 +534,12 @@
       "key": "knows_a_head_was_set_aside",
       "disposition": "delete",
       "reason": "The memory is unread; the event still changes the household relationship and seeds the seal-taking rumour, while the Record keeps the act in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_a_shelf_needs_reading",
+      "disposition": "delete",
+      "reason": "The copied-book branch already pays its treasury cost and explicitly says the old copy remains unread for three hundred years; the same key is also granted by the optional Record choice. No authored reader exists, so this mixed write is dead memory rather than a real shelf mechanic."
     },
     {
       "kind": "knowledge",
