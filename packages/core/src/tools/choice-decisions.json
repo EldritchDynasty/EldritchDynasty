@@ -207,6 +207,12 @@
     },
     {
       "kind": "flag",
+      "key": "opened_the_sickroom",
+      "disposition": "read",
+      "reason": "Opening the sickroom creates a witnessed dull-iron incident, a Wick rumour, and eleven years of the physician's silence. Preserve the flag for a later physician/rumour callback that distinguishes this specific exposure."
+    },
+    {
+      "kind": "flag",
       "key": "paid_bracc_whole",
       "disposition": "read",
       "reason": "The paid-whole outcome explicitly promises that Bracc offers this house a quarter-point better rate for the next 140 years. Preserve the flag for the later trade/credit reader needed to make that authored long-term consequence real."
@@ -264,6 +270,12 @@
       "key": "shut_the_gate_in_the_plague",
       "disposition": "delete",
       "reason": "Shutting the gate already pays large Treasury and Respect consequences, which are the scene's durable arithmetic/reputation cost; no separate unread flag is required."
+    },
+    {
+      "kind": "flag",
+      "key": "something_went_down_the_wend",
+      "disposition": "delete",
+      "reason": "The boat-family service is completed in the scene and already costs treasury. The generic unread flag does not identify what was moved and carries no concrete promised callback, so it is unusable durable state."
     },
     {
       "kind": "flag",
@@ -327,6 +339,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_flat_iron_box",
+      "disposition": "delete",
+      "reason": "The box is opened three days later and contains only dry peat; the choice already costs a crown and the Chronicle can remember the curiosity. No authored future consequence is promised by the empty object."
+    },
+    {
+      "kind": "flag",
       "key": "the_forty_leaves_are_in_the_press",
       "disposition": "delete",
       "reason": "Buying the leaves already grants the_forty_leaves heirloom, costs treasury, and changes Respect. The unread flag merely duplicates the heirloom's durable ownership state."
@@ -378,6 +396,12 @@
       "key": "the_match_answered",
       "disposition": "read",
       "reason": "The rare counter-offer success is the first opening in a 110-year sequence of impossible Match letters and the house talks about it for a decade. Preserve it for the natural next Match/courtship callback rather than making the 20% branch consequence-free."
+    },
+    {
+      "kind": "flag",
+      "key": "the_physician_was_in_the_room",
+      "disposition": "read",
+      "reason": "Backing the physician leaves a paid outsider as one of only two people who knows what the third jug did. Preserve that concrete exposure fact for a later physician/house-secret callback rather than reducing the branch to relationship arithmetic."
     },
     {
       "kind": "flag",
@@ -597,6 +621,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_flask",
+      "disposition": "delete",
+      "reason": "Record-only knowledge duplicates the Chronicle. Buying the fertility portion is already represented by the portion_of_fertility heirloom and treasury cost; no causal rule should depend on recording it."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_fleece_and_the_fold",
       "disposition": "read",
       "reason": "This key comes from #341 ranked event the_wool_that_will_not_take. Writing down which fold and ewes produced the odd fleece has no other outcome effect, so a later cloth/stock reader is the natural payoff and gives #341 a non-money consequence instead of deleting the evidence."
@@ -705,6 +735,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_portion",
+      "disposition": "delete",
+      "reason": "This is granted only by the Record option. Actual ownership is already represented by the portion heirloom, so future rules should inspect the heirloom rather than whether the player wrote this Chronicle entry."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_quire_is_gone",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the missing-quire discovery without a separate simulation-memory key."
@@ -756,6 +792,12 @@
       "key": "knows_the_second_is_uncertain",
       "disposition": "self_expression",
       "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_short_copy",
+      "disposition": "delete",
+      "reason": "The actual short-copy world state is already represented by the_short_copy and the_short_copy_at_cawdry discrepancy. Record knowledge only mirrors the Chronicle choice and is redundant."
     },
     {
       "kind": "knowledge",
@@ -843,6 +885,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_unmirrored_eye",
+      "disposition": "delete",
+      "reason": "Record-only knowledge duplicates the Chronicle while actual ownership is represented by the_unmirrored_eye heirloom. Delete the unread parallel memory rather than gate future behavior on the Record choice."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ward_was_married_in",
       "disposition": "read",
       "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
@@ -918,6 +966,12 @@
       "key": "knows_what_the_office_costs",
       "disposition": "delete",
       "reason": "The chosen Wardenship outcome always writes this knowledge together with the_house_held_the_wardenship. The flag is sufficient to drive any later institutional callback, so keeping a second perfectly co-occurring memory would duplicate state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_room_did",
+      "disposition": "delete",
+      "reason": "This key is granted only by the Record option, whose wording can itself be a chosen account. The actual sickroom outcome and rumour/relationship state are separate world facts; future consequences should not depend on Chronicle bookkeeping."
     },
     {
       "kind": "knowledge",
