@@ -4212,6 +4212,101 @@ describe('authored direct player-cast outcome witnesses', () => {
       .map(([eventId, choiceId, outcomeId]) => outcomeKey(eventId, choiceId, outcomeId))
       .sort());
   });
+
+  it('executes the bonded-servant follow-up through the inline arc created by the real advance', () => {
+    const parent = content.event('the_winter_advance');
+    const follow = content.event('the_book_is_opened');
+    if (!parent || parent.interaction.kind === 'narration' || !follow) {
+      throw new Error('bond follow-up fixture changed authored events');
+    }
+
+    const family = TEST_FAMILIES.find((candidate) => {
+      const ctx = candidate.build(content);
+      ctx.world.generation = Math.max(ctx.world.generation, 2);
+      ctx.world.treasury = Math.max(ctx.world.treasury, 40);
+      const result = executeOutcomeWitnessRaw(ctx, parent, {
+        choiceId: 'advance_it',
+        expectedOutcomeId: 'bound',
+        rng: makeRng(4190),
+      });
+      if (!result.ok) return false;
+      return [...ctx.world.arcs.values()].some((instance) => {
+        const arc = content.arc(instance.arc);
+        const node = arc?.nodes.find((candidateNode) => candidateNode.id === instance.node);
+        return node?.event === follow.id;
+      });
+    });
+    expect(family, 'a shared family should be able to take the winter advance').toBeDefined();
+    if (!family) return;
+
+    for (const [index, [choiceId, outcomeId]] of [
+      ['tear_it_up', 'freed'],
+      ['hold_to_it', 'held'],
+    ].entries()) {
+      const ctx = family.build(content);
+      ctx.world.generation = Math.max(ctx.world.generation, 2);
+      ctx.world.treasury = Math.max(ctx.world.treasury, 40);
+      const parentResult = executeOutcomeWitness(ctx, parent, {
+        choiceId: 'advance_it',
+        expectedOutcomeId: 'bound',
+        rng: makeRng(4200 + index * 10),
+      });
+      expect(parentResult.ok, parentResult.reason).toBe(true);
+
+      const instance = [...ctx.world.arcs.values()].find((candidate) => {
+        const arc = content.arc(candidate.arc);
+        const node = arc?.nodes.find((candidateNode) => candidateNode.id === candidate.node);
+        return node?.event === follow.id;
+      });
+      expect(instance, 'the advance should create the_book_is_opened arc').toBeDefined();
+      if (!instance) continue;
+
+      ctx.world.year = instance.dueYear ?? ctx.world.year;
+      const step = dueArcSteps(ctx, makeRng(4201 + index * 10)).find((candidate) => (
+        candidate.instance.id === instance.id && candidate.node.event === follow.id
+      ));
+      expect(step, 'the bonded-servant follow-up should become due').toBeDefined();
+      if (!step) continue;
+
+      const result = executeOutcomeWitness(ctx, follow, {
+        choiceId,
+        expectedOutcomeId: outcomeId,
+        rng: makeRng(4202 + index * 10),
+        arcStep: step,
+      });
+      expect(result.ok, `the_book_is_opened/${choiceId}/${outcomeId}: ${result.reason}`).toBe(true);
+      expect(result.key).toBe(outcomeKey('the_book_is_opened', choiceId, outcomeId));
+    }
+  });
+
+  it('executes the vessel record follow-up through the inline arc created by the real rite', () => {
+    const seed = 4230;
+    const { ctx, event, cast } = directPlayerFixture(seed, 'the_vessel_rite');
+    const parentResult = executeOutcomeWitness(ctx, event, {
+      choiceId: 'speak_the_name',
+      expectedOutcomeId: 'taken',
+      rng: makeRng(seed + 1),
+      cast,
+    });
+    expect(parentResult.ok, parentResult.reason).toBe(true);
+
+    const follow = content.event('the_vessel_remembered');
+    if (!follow) throw new Error('the_vessel_remembered fixture changed authored event');
+
+    const step = dueArcSteps(ctx, makeRng(seed + 2)).find((candidate) => (
+      candidate.node.event === follow.id
+    ));
+    expect(step, 'the taken Vessel should schedule its immediate record follow-up').toBeDefined();
+    if (!step) return;
+
+    const result = executeOutcomeWitness(ctx, follow, {
+      expectedOutcomeId: 'the_page',
+      rng: makeRng(seed + 3),
+      arcStep: step,
+    });
+    expect(result.ok, `the_vessel_remembered/the_page: ${result.reason}`).toBe(true);
+    expect(result.key).toBe(outcomeKey('the_vessel_remembered', undefined, 'the_page'));
+  });
 });
 
 describe('authored randomised party-decider witnesses', () => {
