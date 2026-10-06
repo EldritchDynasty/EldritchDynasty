@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { RetainerContract } from '@ed/schema';
 import {
-  bootstrap, DEBT_FLOOR, driftLoyalty, leakChance, place, releaseContracts,
-  tellSecrets, testRng, walkSecrets,
+  bootstrap, DEBT_FLOOR, dismissRetainer, driftLoyalty, leakChance, place, releaseContracts,
+  tellSecrets, testRng, walkSecrets, yearsOfService,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -86,6 +86,7 @@ describe('what leaves with them', () => {
     const sullen = contract({ loyalty: 20 });
     expect(leakChance(sullen, 'employer_died', 0)).toBeGreaterThan(leakChance(loyal, 'employer_died', 0));
     expect(leakChance(loyal, 'destitute', 0)).toBeGreaterThan(leakChance(loyal, 'employer_died', 0));
+    expect(leakChance(loyal, 'dismissed', 0)).toBeGreaterThan(leakChance(loyal, 'employer_died', 0));
     expect(leakChance(loyal, 'unpaid', 30)).toBeLessThan(leakChance(loyal, 'unpaid', 0));
   });
 
@@ -103,6 +104,25 @@ describe('what leaves with them', () => {
       leaked += ctx.world.looseSecrets.length;
     }
     // Read after the release rather than before, this is zero every time.
+    expect(leaked).toBeGreaterThan(0);
+  });
+
+  it('dismisses through the same secret path, then closes the retainer membership', () => {
+    let leaked = 0;
+    for (let i = 0; i < 20; i++) {
+      const { ctx, servant } = staffed({ loyalty: 0 }, 25);
+      expect(yearsOfService(ctx, servant)).toBe(25);
+
+      const ended = dismissRetainer(ctx, servant, testRng(`dismiss-${i}`));
+
+      expect(ended?.reason).toBe('dismissed');
+      expect(servant.contract).toBeUndefined();
+      expect(servant.membership[0]?.to).toBe(ctx.world.year);
+      leaked += ctx.world.looseSecrets.length;
+    }
+    // The release path reads service length and the contract before either is
+    // closed. A second dismissal-specific secret formula would make this test
+    // pass for the wrong reason, so the assertion exercises the shared path.
     expect(leaked).toBeGreaterThan(0);
   });
 

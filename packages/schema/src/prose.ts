@@ -113,7 +113,8 @@ export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
   'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'description',
   'teller', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
   'closing', 'because', 'cause', 'thesis', 'notarisedBy',
-  'friendsPrompt', 'housePrompt', 'campaignText', 'inheritedLine',
+  'friendsPrompt', 'housePrompt', 'namePrompt', 'campaignText', 'inheritedLine',
+  'situation', 'says',
 ]);
 
 const CONTENT_INTERPOLATION = /\{[A-Z][A-Z0-9_]*\}/g;

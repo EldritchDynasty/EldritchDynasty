@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { HouseIdS, type SigningTerm } from '@ed/schema';
 import {
   CAMPAIGNS, HOUSE_NAME_MAX, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
   prologueView, saveGame, testWorld, viewOf,
@@ -12,6 +13,40 @@ const CHOICE = {
   heirloom: 'portion_of_agelessness',
   grudge: 'house_marrow',
 };
+
+function examinationBundle(given: SigningTerm[], owed: SigningTerm[]) {
+  const prologue = content.prologue!;
+  const neutralGiven: SigningTerm = { kind: 'treasury', amount: 20 };
+  const neutralOwed: SigningTerm = { kind: 'treasury', amount: -20 };
+  const answer = (
+    id: string,
+    benefit: SigningTerm[],
+    cost: SigningTerm[],
+    givenLine: string,
+    owedLine: string,
+  ) => ({
+    id,
+    says: id,
+    given: givenLine,
+    owed: owedLine,
+    terms: { given: benefit, owed: cost },
+  });
+  return {
+    ...content.bundle,
+    prologue: [{
+      ...prologue,
+      examination: [{
+        id: 'test_question',
+        situation: 'The signing asks one measurable thing.',
+        answers: [
+          answer('chosen', given, owed, 'The house took the advantage.', 'The house accepted the cost.'),
+          answer('other_one', [neutralGiven], [neutralOwed], 'Another advantage.', 'Another cost.'),
+          answer('other_two', [neutralGiven], [neutralOwed], 'A third advantage.', 'A third cost.'),
+        ],
+      }],
+    }],
+  };
+}
 
 /**
  * THE SIGNING (concept §3, issue #38).
@@ -28,6 +63,11 @@ describe('the prologue', () => {
     const view = prologueView(testWorld(content))!;
 
     expect(view.triad).toHaveLength(3);
+    expect(view.namePrompt).toContain('What are you called?');
+    expect(view.examination).toHaveLength(4);
+    expect(view.examination.every((question) => question.answers.length === 3)).toBe(true);
+    expect(view.examination.flatMap((question) => question.answers)
+      .every((answer) => !('terms' in answer))).toBe(true);
     expect(view.heirlooms.length).toBeGreaterThan(1);
     expect(view.grudges.length).toBeGreaterThan(1);
     // The option carries the object's own name and blurb, so a client never
@@ -215,6 +255,67 @@ describe('the prologue', () => {
     expect(refusal.reason?.length).toBeGreaterThan(0);
   });
 
+  it('applies every founding-state Examination term exactly once and writes the answer', () => {
+    const ctx = testWorld(examinationBundle(
+      [
+        { kind: 'treasury', amount: 60 },
+        { kind: 'respect', steps: 1 },
+        { kind: 'loyalty', retainer: 'tutor', amount: 20 },
+        { kind: 'grudge', house: HouseIdS.parse(content.house('house_calder')!.id), severity: 30, inheritance: 'heir_only' },
+      ],
+      [
+        { kind: 'treasury', amount: -40 },
+        { kind: 'loyalty', retainer: 'steward', amount: -10 },
+        { kind: 'dismiss', retainer: 'midwife' },
+      ],
+    ));
+    const tutor = ctx.world.people.all().find((person) => person.name === 'Osric')!;
+    const midwife = ctx.world.people.all().find((person) => person.name === 'Hesper')!;
+    const steward = ctx.world.people.all().find((person) => person.name === 'Bertram')!;
+    const beforeTreasury = ctx.world.treasury;
+
+    expect(foundHouse(ctx, {
+      ...CHOICE,
+      answers: { test_question: 'chosen' },
+    }).ok).toBe(true);
+
+    expect(ctx.world.treasury).toBe(beforeTreasury + 20);
+    expect(ctx.world.respect).toBe('regarded');
+    expect(ctx.world.respectChanged).toBe(ctx.world.year);
+    expect(tutor.contract?.loyalty).toBe(98);
+    expect(steward.contract?.loyalty).toBe(45);
+    expect(midwife.contract).toBeUndefined();
+    expect(midwife.membership.find((m) => m.kind === 'retainer')?.to).toBe(ctx.world.year);
+
+    const calder = [...ctx.world.relationships.values()].find((relationship) =>
+      ctx.world.people.get(relationship.from)?.houseOfOrigin === 'house_calder'
+        && relationship.grudges.some((grudge) => grudge.severity === 30 && grudge.inheritance === 'heir_only'),
+    );
+    expect(calder).toBeDefined();
+    const signingPage = ctx.world.chronicle.find((entry) => entry.title === 'What Was Asked For');
+    expect(signingPage?.text).toContain(
+      'The house took the advantage; The house accepted the cost.',
+    );
+  });
+
+  it('validates all Examination state references before mutating the founding', () => {
+    const ctx = testWorld(examinationBundle(
+      [{ kind: 'treasury', amount: 60 }],
+      [{ kind: 'dismiss', retainer: 'not_a_retainer' }],
+    ));
+    const beforeTreasury = ctx.world.treasury;
+    const beforeChronicle = ctx.world.chronicle.length;
+
+    const result = foundHouse(ctx, { ...CHOICE, answers: { test_question: 'chosen' } });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain('not_a_retainer');
+    expect(ctx.world.treasury).toBe(beforeTreasury);
+    expect(ctx.world.founding).toBeUndefined();
+    expect(ctx.world.chronicle).toHaveLength(beforeChronicle);
+    expect(heldHeirlooms(ctx).map((h) => h.id)).not.toContain('portion_of_agelessness');
+  });
+
   it('happens once', () => {
     const ctx = testWorld(content);
     expect(foundHouse(ctx, CHOICE).ok).toBe(true);
@@ -268,6 +369,7 @@ describe('the prologue', () => {
       houseName: 'The House of Salt',
       heirloom: 'portion_of_agelessness',
       grudge: 'house_marrow',
+      answers: {},
       year: 1042,
     });
     expect(prologueView(resumed)!.founded?.houseName).toBe('The House of Salt');

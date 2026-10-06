@@ -189,13 +189,13 @@ import { CommitmentS } from './muster.js';
  * change must advance the number again rather than reuse this format.
  */
 /**
- * Bumped to 27 for Chronicle person links (#268), on top of format 26's
- * causal Chronicle provenance (#269): authored pages retain the people cast
- * in them so the family tree can point back into the book. Older formats did
- * not persist that cast, so the existing loader policy refuses them rather
- * than inventing links.
+ * Bumped to 28 for Examination selections (#343), on top of format 27's
+ * Chronicle person links (#268) and format 26's causal Chronicle provenance
+ * (#269). The founding record now carries the selected Examination answer
+ * ids; replay needs those bootstrap inputs, so the exact-current-format loader
+ * refuses older shapes rather than inventing them.
  */
-export const SAVE_FORMAT = 27;
+export const SAVE_FORMAT = 28;
 
 // ── Person, in its stored form ────────────────────────────────────────────
 
@@ -916,6 +916,7 @@ export const SavedGameS = z.object({
     houseName: z.string(),
     heirloom: z.string(),
     grudge: z.string(),
+    answers: z.record(z.string(), z.string()),
     year: z.number(),
   }).optional(),
   /** WHERE IT LANDED (concept §23, issue #39). Set once, at the term, and never again. */

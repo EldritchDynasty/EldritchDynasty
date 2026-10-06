@@ -39,13 +39,15 @@ import { isBonded } from './bond.js';
  */
 
 /** Why service ended. A servant who was not paid talks; one whose master died does not. */
-export type ReleaseReason = 'unpaid' | 'destitute' | 'employer_died' | 'freed';
+export type ReleaseReason = 'unpaid' | 'destitute' | 'employer_died' | 'freed' | 'dismissed';
 
 const BITTERNESS: Record<ReleaseReason, number> = {
   /** Let go because the quarter's wages were what they were. */
   unpaid: 0.20,
   /** The house could not pay anyone. Worse: they watched it coming. */
   destitute: 0.30,
+  /** Dismissal is a deliberate act by the house, not an impersonal ending. */
+  dismissed: 0.20,
   /** Nobody wronged them. The man who hired them is some years dead. */
   employer_died: 0,
   /**

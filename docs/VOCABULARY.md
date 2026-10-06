@@ -267,6 +267,9 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
 | `ages/coverage` | An Age with no content of its own is a modifier wearing a name. |
 | `clause/ages` | CI gate 7. A clause pinned to fewer than two Ages is a clause some runs never see. |
 | `prologue/shape` | One prologue, three beats, and both of its choices pointing at things that exist. |
+| `signing/refs` | Examination terms name real seed people, real houses, and only heritable Core or affinity attributes. |
+| `signing/direction` | Every given signing term is a gain and every owed signing term is a loss; zero-value terms are neither. |
+| `signing/priced` | Each Examination answer has given and owed terms within one point on the shared SIGNING_RATES exchange table. |
 | `ending/complete` | All five endings, once each. An ending nobody wrote is an ending that cannot fire. |
 | `ending/ring` | Every ending replays the prologue with EXACTLY ONE element changed. Two is a rewrite, none is not a ring. |
 | `traits/mystic-restriction` | Women practise only the Threshold four (concept §9), so a female-tagged elemental trait is unlearnable. |

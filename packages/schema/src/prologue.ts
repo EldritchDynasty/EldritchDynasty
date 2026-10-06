@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { HeirloomIdS, HouseIdS } from './ids.js';
 import { GrudgeInheritanceS } from './house.js';
+import { SigningQuestionS } from './signing.js';
 
 /**
  * THE PROLOGUE — A DEBT OF THREE PARTS (concept §3, issue #38).
@@ -109,6 +110,17 @@ export const PrologueDefS = z.object({
   opening: z.string(),
   /** Three things given, three things owed, ascending in weight. */
   triad: z.array(PrologueBeatS).length(3, 'three things given, three things owed'),
+  /**
+   * The founder-name prompt is authored with the Examination. It stays
+   * optional until that later content-lane slice lands, so this schema/rules
+   * slice does not force placeholder frame prose into shipped content.
+   */
+  namePrompt: z.string().min(1).optional(),
+  /**
+   * The four paid-for questions. Defaulting empty is the migration seam:
+   * current authored prologue remains valid until #343's content slice lands.
+   */
+  examination: z.array(SigningQuestionS).max(4).default([]),
   /** What the player is asked, above the box where the house gets its name. */
   housePrompt: z.string(),
   /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { Genome, Person } from '@ed/schema';
+import { PERSON_NAME_MAX, type Genome, type Person, type SigningTerm } from '@ed/schema';
 import { bootstrap } from './sim.js';
 import { conceive, meiosis } from './genetics/meiosis.js';
 import { conceptionSeed, makeRng } from './rng.js';
@@ -33,12 +33,145 @@ function mutationExplains(
   );
 }
 
+function examinationBundle(given: SigningTerm, owed: SigningTerm) {
+  const prologue = bundle.prologue!;
+  const answer = (id: string, benefit: SigningTerm, cost: SigningTerm) => ({
+    id,
+    says: id,
+    given: 'A benefit.',
+    owed: 'A cost.',
+    terms: { given: [benefit], owed: [cost] },
+  });
+  const neutralGiven: SigningTerm = { kind: 'treasury', amount: 20 };
+  const neutralOwed: SigningTerm = { kind: 'treasury', amount: -20 };
+  return {
+    ...bundle.bundle,
+    prologue: [{
+      ...prologue,
+      examination: [{
+        id: 'test_question',
+        situation: 'A test question.',
+        answers: [
+          answer('chosen', given, owed),
+          answer('other_one', neutralGiven, neutralOwed),
+          answer('other_two', neutralGiven, neutralOwed),
+        ],
+      }],
+    }],
+  };
+}
+
+function genomeDiffersAt(
+  a: Genome,
+  b: Genome,
+  loci: readonly { where: 'autosomal' | 'x'; index: number }[],
+): boolean {
+  return loci.some(({ where, index }) => where === 'autosomal'
+    ? a.autosomal[0][index] !== b.autosomal[0][index]
+      || a.autosomal[1][index] !== b.autosomal[1][index]
+    : a.sex[0][index] !== b.sex[0][index]
+      || (a.sex[1]?.[index] ?? -1) !== (b.sex[1]?.[index] ?? -1));
+}
+
 describe('founding inheritance', () => {
   const founderSeed = bundle.characters.find((s) => s.key === 'founder')!;
   const seededChildren = bundle.characters.filter((s) => s.motherKey && s.fatherKey);
   const foundingDaughters = seededChildren.filter(
     (s) => s.fatherKey === founderSeed.key && s.sex === 'female',
   );
+
+  it('keeps unsigned bootstrap byte-for-byte on the existing path', () => {
+    const unsigned = bootstrap(bundle, 34_296);
+    const emptySigning = bootstrap(bundle, 34_296, 1042, 'long', [], {});
+    expect(emptySigning.world).toEqual(unsigned.world);
+    expect(emptySigning.takenNames).toEqual(unsigned.takenNames);
+  });
+
+  it('puts the player name on the founder, succession and first page', () => {
+    const ctx = bootstrap(bundle, 34_297, 1042, 'long', [], { founderName: '  Arlen Gearithy  ' });
+    const founder = ctx.world.people.all().find((person) => person.becomesGuardian)!;
+
+    expect(founder.name).toBe('Arlen Gearithy');
+    expect(ctx.world.succession[0]?.name).toBe('Arlen Gearithy');
+    expect(ctx.world.chronicle[0]?.text).toContain('Arlen Gearithy');
+    expect(ctx.takenNames.has('Arlen Gearithy')).toBe(true);
+
+    const blank = bootstrap(bundle, 34_297, 1042, 'long', [], { founderName: '   ' });
+    expect(blank.world.people.all().find((person) => person.becomesGuardian)?.name).toBe(founderSeed.name);
+    expect(blank.world.succession[0]?.name).toBe(founderSeed.name);
+    expect(blank.world.chronicle[0]?.text).toContain(founderSeed.name);
+    expect(() => bootstrap(bundle, 34_297, 1042, 'long', [], {
+      founderName: 'x'.repeat(PERSON_NAME_MAX + 1),
+    })).toThrow();
+  });
+
+  it('feeds a selected heritable bias into the founder without rerolling his wife', () => {
+    const strength = bundle.attributes.find((attr) => String(attr.id) === 'strength')!.id;
+    const signedBundle = examinationBundle(
+      { kind: 'bias', who: ['founder'], attr: strength, amount: 0.5 },
+      { kind: 'treasury', amount: -100 },
+    );
+    let changedFounder = 0;
+
+    for (let sample = 0; sample < 16; sample++) {
+      const runSeed = 34_500 + sample;
+      const unsigned = bootstrap(signedBundle, runSeed);
+      const signed = bootstrap(signedBundle, runSeed, 1042, 'long', [], {
+        answers: { test_question: 'chosen' },
+      });
+      const unsignedFounder = genomeOf(personNamed(unsigned, founderSeed.name));
+      const signedFounder = genomeOf(personNamed(signed, founderSeed.name));
+      const strength = signed.genetics.table.byAttribute.get('strength') ?? [];
+      if (genomeDiffersAt(unsignedFounder, signedFounder, strength)) changedFounder++;
+
+      // Independent seed streams are the determinism boundary. An answer about
+      // the founder may change what his children inherit, but it cannot reroll
+      // a separate founding seed.
+      expect(genomeOf(personNamed(signed, 'Eilwen')))
+        .toEqual(genomeOf(personNamed(unsigned, 'Eilwen')));
+    }
+
+    // Direction/calibration belongs to the paired-seed gate. This unit test is
+    // the cheaper liveness proof: a term that validates must reach real loci.
+    expect(changedFounder).toBeGreaterThan(4);
+  });
+
+  it('applies a tithe to heritable Core loci without touching font or channel loci', () => {
+    const signedBundle = examinationBundle(
+      { kind: 'treasury', amount: 60 },
+      { kind: 'tithe', who: ['founder'], amount: 0.2 },
+    );
+    let changedCore = 0;
+
+    for (let sample = 0; sample < 12; sample++) {
+      const runSeed = 35_000 + sample;
+      const unsigned = bootstrap(signedBundle, runSeed);
+      const signed = bootstrap(signedBundle, runSeed, 1042, 'long', [], {
+        answers: { test_question: 'chosen' },
+      });
+      const a = genomeOf(personNamed(unsigned, founderSeed.name));
+      const b = genomeOf(personNamed(signed, founderSeed.name));
+      const core = signed.genetics.attributes
+        .filter((attr) => attr.kind === 'core' && attr.heritable)
+        .flatMap((attr) => signed.genetics.table.byAttribute.get(String(attr.id)) ?? []);
+      if (genomeDiffersAt(a, b, core)) changedCore++;
+
+      for (const index of signed.genetics.table.fontIndices) {
+        expect(b.sex[0][index]).toBe(a.sex[0][index]);
+      }
+      for (const index of signed.genetics.table.channelIndices) {
+        expect(b.autosomal[0][index]).toBe(a.autosomal[0][index]);
+        expect(b.autosomal[1][index]).toBe(a.autosomal[1][index]);
+      }
+    }
+    expect(changedCore).toBeGreaterThan(4);
+  });
+
+  it('refuses unknown Examination ids instead of silently dropping a term', () => {
+    expect(() => bootstrap(bundle, 35_500, 1042, 'long', [], {
+      answers: { missing_question: 'answer' },
+    })).toThrow(/unknown Examination question/);
+  });
 
   it('fails instead of rolling an unrelated genome when a seeded parent cannot resolve', () => {
     const broken = {

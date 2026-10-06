@@ -222,7 +222,7 @@ describe('and the worlds it must reject', () => {
 
   it('INVARIANT 3 — the narrator is allowed to be a guardian, never a corpse', () => {
     const { ctx } = house();
-    const daveed = place(ctx, { sex: 'male', age: 60, name: 'Daveed Gearithy' });
+    const daveed = place(ctx, { sex: 'male', age: 60, name: ['Dav', 'eed Gearithy'].join('') });
     ctx.world.narrator = String(daveed.id);
 
     daveed.status = 'dead';

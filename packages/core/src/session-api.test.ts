@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import type { SigningTerm } from '@ed/schema';
 import {
-  applyEffect, beget, branchReport, consumeVessel, describeDecision, frequencyReport, hallOf, heldBooks, hashSeed,
-  loseLibraryCopy, marry, newGame, phenotypeOf, place, resumeGame, spellbookDef, gainSpellbook, standingMoved,
+  applyEffect, beget, branchReport, consumeVessel, describeDecision, digestOf, frequencyReport, hallOf, heldBooks, hashSeed,
+  loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
   type ChronicleEntry, type GameSession,
 } from '@ed/core';
@@ -11,6 +12,42 @@ import {
 } from '../../../tools/blind-reader-material.js';
 
 const content = loadContent();
+
+function signingBundle() {
+  const prologue = content.prologue!;
+  const strength = content.attributes.find((attr) => String(attr.id) === 'strength')!.id;
+  const answer = (id: string, given: SigningTerm[], owed: SigningTerm[]) => ({
+    id,
+    says: id,
+    given: `${id} was given.`,
+    owed: `${id} was owed.`,
+    terms: { given, owed },
+  });
+  const neutralGiven: SigningTerm = { kind: 'treasury', amount: 20 };
+  const neutralOwed: SigningTerm = { kind: 'treasury', amount: -20 };
+  return {
+    ...content.bundle,
+    prologue: [{
+      ...prologue,
+      examination: [{
+        id: 'public_question',
+        situation: 'One public-API question.',
+        answers: [
+          answer(
+            'chosen',
+            [
+              { kind: 'bias', who: ['founder'], attr: strength, amount: 0.5 },
+              { kind: 'treasury', amount: 60 },
+            ],
+            [{ kind: 'treasury', amount: -40 }],
+          ),
+          answer('other_one', [neutralGiven], [neutralOwed]),
+          answer('other_two', [neutralGiven], [neutralOwed]),
+        ],
+      }],
+    }],
+  };
+}
 
 /**
  * THE FAÇADE, DRIVEN THE WAY A CLIENT DRIVES IT.
@@ -378,6 +415,81 @@ describe('the two ends of the run, through the façade', () => {
     expect(g.prologue()!.founded?.houseName).toBe('The House of Salt');
     expect(g.found(choice).ok).toBe(false);
     expect(g.view().houseName).toBe('The House of Salt');
+  });
+
+  it('rebuilds, saves and replays the signed founding inputs', () => {
+    const source = signingBundle();
+    const g = newGame(source, { seed: 34_297 });
+    const beforeCtx = g.ctx;
+    const beforeTreasury = g.ctx.world.treasury;
+    const p = g.prologue()!;
+
+    const result = g.found({
+      houseName: 'The House of Salt',
+      heirloom: p.heirlooms[0]!.heirloom,
+      grudge: p.grudges[0]!.house,
+      founderName: '  Arlen Gearithy  ',
+      answers: { public_question: 'chosen' },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(g.ctx).not.toBe(beforeCtx);
+    expect(g.ctx.world.people.all().some((person) => person.name === 'Arlen Gearithy')).toBe(true);
+    expect(g.ctx.world.succession[0]?.name).toBe('Arlen Gearithy');
+    expect(g.ctx.world.chronicle[0]?.text).toContain('Arlen Gearithy');
+    expect(g.ctx.world.treasury).toBe(beforeTreasury + 20);
+    expect(g.ctx.world.founding?.answers).toEqual({ public_question: 'chosen' });
+    expect(g.ctx.world.decisionLog.slice(0, 2).map((decision) => decision.kind))
+      .toEqual(['signing', 'founding']);
+    expect(describeDecision(g.ctx.world.decisionLog[0]!)).toContain('Arlen Gearithy');
+
+    const resumed = resumeGame(g.save(), source);
+    expect(resumed.ctx.world.founding?.answers).toEqual({ public_question: 'chosen' });
+    expect(resumed.ctx.world.succession[0]?.name).toBe('Arlen Gearithy');
+
+    const replayed = replay(source, g.ctx.world.decisionLog, 34_297, 1042, 0);
+    expect(digestOf(replayed)).toBe(digestOf(g.ctx));
+    expect(replayed.world.founding).toEqual(g.ctx.world.founding);
+    expect(replayed.world.succession[0]?.name).toBe('Arlen Gearithy');
+  });
+
+  it('keeps the original session when a signed founding is invalid', () => {
+    const g = newGame(signingBundle(), { seed: 34_298 });
+    const beforeCtx = g.ctx;
+    const p = g.prologue()!;
+
+    const result = g.found({
+      houseName: 'The House of Salt',
+      heirloom: p.heirlooms[0]!.heirloom,
+      grudge: p.grudges[0]!.house,
+      founderName: 'Arlen Gearithy',
+      answers: { public_question: 'not_an_answer' },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(g.ctx).toBe(beforeCtx);
+    expect(g.ctx.world.founding).toBeUndefined();
+    expect(g.ctx.world.people.all().some((person) => person.name === 'Arlen Gearithy')).toBe(false);
+  });
+
+  it('refuses Examination answers after the first year has moved', () => {
+    const g = newGame(signingBundle(), { seed: 34_299, decider: 'chronicler' });
+    g.advance(1);
+    const beforeCtx = g.ctx;
+    const p = g.prologue()!;
+
+    const result = g.found({
+      houseName: 'The House of Salt',
+      heirloom: p.heirlooms[0]!.heirloom,
+      grudge: p.grudges[0]!.house,
+      founderName: 'Arlen Gearithy',
+      answers: { public_question: 'chosen' },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain('before the first year');
+    expect(g.ctx).toBe(beforeCtx);
+    expect(g.ctx.world.founding).toBeUndefined();
   });
 
   it('has no epilogue until there has been a last night', () => {

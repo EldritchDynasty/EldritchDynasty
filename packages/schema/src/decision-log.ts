@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { SlotFillS } from './slot-fill.js';
 import { SexS } from './attributes.js';
+import { SigningIdS } from './signing.js';
 
 /**
  * THE DECISION LOG (issue #8, phase 1).
@@ -63,12 +64,24 @@ export const LoggedDecisionS = z.discriminatedUnion('kind', [
     spouse: z.string(),
   }),
   /**
+   * The Examination answer (#343), which changes bootstrap inputs before the
+   * existing founding verb runs. Kept separate from `founding`: this is the
+   * founder/name + bargain input needed to rebuild the opening cast, while the
+   * next entry records the house/gift/grudge/friends chosen after bootstrap.
+   */
+  z.object({
+    kind: z.literal('signing'),
+    year: z.number(),
+    founderName: z.string().optional(),
+    answers: z.record(SigningIdS, SigningIdS),
+  }),
+  /**
    * The founding answer (issue #391): the house name, gift, first grudge and
    * the finite friend-name roster. These are external player answers just as
    * surely as a later Match choice; without them replay can only rebuild an
    * unsigned/headless world.
    *
-   * Kept separate from #343's future bootstrap-time `signing` decision. The
+   * Kept separate from #343's bootstrap-time `signing` decision. The
    * Examination changes inputs to bootstrap; this entry records the existing
    * post-bootstrap `foundHouse` answer.
    */

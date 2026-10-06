@@ -12,6 +12,7 @@ import { isInlineArcId } from './desugar.js';
 import { ENDING_ORDER } from './ending.js';
 import { assertNever } from './exhaustive.js';
 import { auditChoices, isProseOnly, SELF_EXPRESSION_TAG } from './choices.js';
+import { SIGNING_RATES, type SigningTerm } from './signing.js';
 
 /**
  * THE RULES.
@@ -1649,6 +1650,198 @@ const prologueShape: ValidationRule = {
   },
 };
 
+type SigningSide = 'given' | 'owed';
+
+function signingTerms(content: Content): {
+  at: string;
+  side: SigningSide;
+  term: SigningTerm;
+}[] {
+  const p = content.prologue;
+  if (!p) return [];
+  const terms: { at: string; side: SigningSide; term: SigningTerm }[] = [];
+  for (const question of p.examination) {
+    for (const answer of question.answers) {
+      for (const side of ['given', 'owed'] as const) {
+        for (const term of answer.terms[side]) {
+          terms.push({
+            at: `prologue:${p.id}/${question.id}/${answer.id}/${side}`,
+            side,
+            term,
+          });
+        }
+      }
+    }
+  }
+  return terms;
+}
+
+/**
+ * THE EXAMINATION MUST NAME THINGS THAT EXIST (#343).
+ *
+ * Signing terms run before ordinary event selection, so a bad seed key cannot
+ * be rescued by a slot cast and a bad house cannot be discovered by a later
+ * event. A bias also has a stronger promise than AttributeIdS can express:
+ * it must be an inherited authored attribute, never derived state, Madness,
+ * or Eldritch Power.
+ */
+const signingReferences: ValidationRule = {
+  id: 'signing/refs',
+  about: 'Examination terms name real seed people, real houses, and only heritable Core or affinity attributes.',
+  check(content) {
+    const issues: Issue[] = [];
+    const seedKeys = new Set(content.characters.map((person) => person.key));
+
+    for (const { at, term } of signingTerms(content)) {
+      switch (term.kind) {
+        case 'bias': {
+          for (const who of term.who) {
+            if (!seedKeys.has(who)) {
+              issues.push(err(this.id, at, `bias names unknown founding seed '${who}'`));
+            }
+          }
+          const attr = content.attribute(String(term.attr));
+          if (!attr) {
+            issues.push(err(this.id, at, `bias names unknown attribute '${term.attr}'`));
+          } else if (!attr.heritable || (attr.kind !== 'core' && attr.kind !== 'affinity')) {
+            issues.push(err(
+              this.id,
+              at,
+              `bias names '${term.attr}', which is ${attr.kind}${attr.heritable ? '' : ' and non-heritable'} — `
+              + 'the Examination may bias only heritable Core or affinity attributes, never derived state, Madness, or Eldritch Power',
+            ));
+          }
+          break;
+        }
+        case 'tithe':
+          for (const who of term.who) {
+            if (!seedKeys.has(who)) {
+              issues.push(err(this.id, at, `tithe names unknown founding seed '${who}'`));
+            }
+          }
+          break;
+        case 'loyalty':
+        case 'dismiss':
+          if (!seedKeys.has(term.retainer)) {
+            issues.push(err(this.id, at, `${term.kind} names unknown founding seed '${term.retainer}'`));
+          }
+          break;
+        case 'grudge':
+          if (!content.house(String(term.house))) {
+            issues.push(err(this.id, at, `grudge names unknown house '${term.house}'`));
+          }
+          break;
+        case 'treasury':
+        case 'respect':
+          break;
+        default:
+          assertNever(term, 'signing term');
+      }
+    }
+    return issues;
+  },
+};
+
+function signingDirection(term: SigningTerm): 'gain' | 'loss' | 'neutral' {
+  switch (term.kind) {
+    case 'bias':
+      return term.amount > 0 ? 'gain' : term.amount < 0 ? 'loss' : 'neutral';
+    case 'tithe':
+    case 'dismiss':
+    case 'grudge':
+      return 'loss';
+    case 'treasury':
+      return term.amount > 0 ? 'gain' : term.amount < 0 ? 'loss' : 'neutral';
+    case 'respect':
+      return term.steps > 0 ? 'gain' : 'loss';
+    case 'loyalty':
+      return term.amount > 0 ? 'gain' : term.amount < 0 ? 'loss' : 'neutral';
+    default:
+      return assertNever(term, 'signing term');
+  }
+}
+
+/** The labels given and owed are mechanical, not decorative. */
+const signingDirectionRule: ValidationRule = {
+  id: 'signing/direction',
+  about: 'Every given signing term is a gain and every owed signing term is a loss; zero-value terms are neither.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const { at, side, term } of signingTerms(content)) {
+      const direction = signingDirection(term);
+      const expected = side === 'given' ? 'gain' : 'loss';
+      if (direction !== expected) {
+        issues.push(err(
+          this.id,
+          at,
+          `${term.kind} is a ${direction}, but '${side}' must contain only ${expected}s`,
+        ));
+      }
+    }
+    return issues;
+  },
+};
+
+function signingPrice(content: Content, term: SigningTerm): number | undefined {
+  switch (term.kind) {
+    case 'bias': {
+      const attr = content.attribute(String(term.attr));
+      if (!attr || (attr.kind !== 'core' && attr.kind !== 'affinity') || !attr.heritable) return undefined;
+      return Math.abs(term.amount) * SIGNING_RATES.bias[attr.kind];
+    }
+    case 'tithe':
+      return term.amount * SIGNING_RATES.tithe;
+    case 'treasury':
+      return Math.abs(term.amount) * SIGNING_RATES.treasury;
+    case 'respect':
+      return Math.abs(term.steps) * SIGNING_RATES.respect;
+    case 'loyalty':
+      return Math.abs(term.amount) * SIGNING_RATES.loyalty;
+    case 'dismiss':
+      return SIGNING_RATES.dismiss;
+    case 'grudge':
+      return term.severity * SIGNING_RATES.grudge;
+    default:
+      return assertNever(term, 'signing term');
+  }
+}
+
+/**
+ * A cheap static sanity floor before the paired-seed balance gate.
+ * One point is deliberately generous: delayed secrets and inherited grudges
+ * are not honestly reducible to coin.
+ */
+const signingPriced: ValidationRule = {
+  id: 'signing/priced',
+  about: 'Each Examination answer has given and owed terms within one point on the shared SIGNING_RATES exchange table.',
+  check(content) {
+    const issues: Issue[] = [];
+    const p = content.prologue;
+    if (!p) return issues;
+
+    for (const question of p.examination) {
+      for (const answer of question.answers) {
+        const givenPrices = answer.terms.given.map((term) => signingPrice(content, term));
+        const owedPrices = answer.terms.owed.map((term) => signingPrice(content, term));
+        // signing/refs owns invalid or unpriceable attribute references.
+        if ([...givenPrices, ...owedPrices].some((price) => price === undefined)) continue;
+
+        const given = (givenPrices as number[]).reduce((sum, price) => sum + price, 0);
+        const owed = (owedPrices as number[]).reduce((sum, price) => sum + price, 0);
+        if (Math.abs(given - owed) > 1 + Number.EPSILON) {
+          issues.push(err(
+            this.id,
+            `prologue:${p.id}/${question.id}/${answer.id}`,
+            `given prices at ${given.toFixed(2)} points but owed prices at ${owed.toFixed(2)} `
+            + '— every answer must be within one point on SIGNING_RATES',
+          ));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
 const endingsComplete: ValidationRule = {
   id: 'ending/complete',
   about: 'All five endings, once each. An ending nobody wrote is an ending that cannot fire.',
@@ -2056,6 +2249,9 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   ageCoverage,
   clauseAssignment,
   prologueShape,
+  signingReferences,
+  signingDirectionRule,
+  signingPriced,
   endingsComplete,
   endingRing,
   mysticRestriction,

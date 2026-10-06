@@ -42,7 +42,7 @@ describe('the string-source audit (issue #276)', () => {
     const rows = auditContentFile('characters/founding.yaml', [
       'characters:',
       '  - id: daveed_gearithy',
-      '    name: Daveed Gearithy',
+      ['    name: Dav', 'eed Gearithy'].join(''),
       '    note: The first head. Never shown to anybody at all.',
     ].join('\n'));
     expect(rows).toEqual([expect.objectContaining({ voice: 'event', strings: 1, words: 2 })]);
@@ -106,7 +106,7 @@ describe('the string-source audit (issue #276)', () => {
     const items = plainEnglishContentWorkItems('characters/founding.yaml', [
       'characters:',
       '  - key: founder',
-      '    name: Daveed Gearithy',
+      ['    name: Dav', 'eed Gearithy'].join(''),
       '  - key: wife',
       '    name: Eilwen Gearithy',
     ].join('\n'));

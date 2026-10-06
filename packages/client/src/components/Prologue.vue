@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { PrologueView } from '@ed/core';
-import type { GameActions } from '../lib/game';
+import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
 import { initialProloguePresentation, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
@@ -31,8 +31,8 @@ const replayText = prologueSeenText(
 /**
  * A DEBT OF THREE PARTS (concept §3, issue #38).
  *
- * Four minutes, non-interactive except for two choices, and the reason the
- * frame has anything to refer back to: twelve to eighteen interludes a run
+ * Four minutes of paced framing before the founding choices, and the reason
+ * the frame has anything to refer back to: twelve to eighteen interludes a run
  * point at a signing, and until this screen the signing had happened
  * off-screen to nobody.
  *
@@ -50,9 +50,27 @@ const initial = initialProloguePresentation(
   props.prologue.inherited !== undefined,
 );
 const shown = ref(initial.shown);
+const founderName = ref('');
+const answers = ref<Record<string, string>>({});
 const houseName = ref('');
 const heirloom = ref('');
 const grudge = ref('');
+
+/**
+ * Owner decision #343. The recommended behaviour is to show the paid-for
+ * terms immediately after a choice. Keeping that presentation behind one
+ * constant makes "Chronicle page only" a one-line review change without
+ * changing the simulation payload or authored copy.
+ */
+const REVEAL_SIGNING_TERMS_ON_CHOICE = true;
+
+function chooseAnswer(questionId: string, answerId: string): void {
+  answers.value = { ...answers.value, [questionId]: answerId };
+}
+
+function selectedAnswer(questionId: string): string | undefined {
+  return answers.value[questionId];
+}
 
 /**
  * THE FIVE (`core/src/people/friends.ts`).
@@ -83,7 +101,7 @@ function on(): void {
 /**
  * WHAT THE SIGNING IS STILL WAITING FOR (issue #59).
  *
- * Three requirements, one dead button, and a page long enough that all three
+ * Four requirements, one dead button, and a page long enough that several
  * are off-screen from it by the time you reach it. This is the first
  * interaction in the game and the last beat of a set piece the frame refers
  * back to across a Long Line, and a player who filled in the house name,
@@ -98,6 +116,9 @@ function on(): void {
  */
 const wanted = computed(() => {
   const out: string[] = [];
+  if (props.prologue.examination.some((question) => !answers.value[question.id])) {
+    out.push('an answer to each Examination question');
+  }
   if (!heirloom.value) out.push('the thing he asked for by name');
   if (!grudge.value) out.push('who paid for the rest of it');
   if (!houseName.value.trim()) out.push('what the family will be called');
@@ -110,6 +131,8 @@ function sign(): void {
     heirloom: heirloom.value,
     grudge: grudge.value,
     friends: friends.value.filter((f) => f.name.trim()),
+    ...(props.prologue.namePrompt !== undefined ? { founderName: founderName.value } : {}),
+    ...(props.prologue.examination.length > 0 ? { answers: { ...answers.value } } : {}),
   });
   // The thesis takes the screen on its own. Landing the reader halfway down
   // the page they were already reading would waste it.
@@ -145,8 +168,48 @@ function sign(): void {
     </button>
 
     <template v-else-if="!prologue.founded">
-      <!-- THE TWO CHOICES. Both are simulation inputs: the gift goes into the
-           house's hands and the grudge into the world, and at the term the ending
+      <section v-if="prologue.namePrompt" class="choice founder-name">
+        <h3 class="label">The name</h3>
+        <p class="prompt">{{ prologue.namePrompt }}</p>
+        <input
+          v-model="founderName"
+          :maxlength="FOUNDER_NAME_MAX"
+          placeholder="what are you called?"
+          aria-label="Name the founder"
+        />
+      </section>
+
+      <section
+        v-if="prologue.examination.length"
+        class="choice examination"
+        aria-labelledby="examination-heading"
+      >
+        <h3 id="examination-heading" class="label">The Examination</h3>
+        <fieldset v-for="question in prologue.examination" :key="question.id" class="question">
+          <legend class="prompt">{{ question.situation }}</legend>
+          <button
+            v-for="answer in question.answers"
+            :key="answer.id"
+            class="option"
+            :class="{ on: selectedAnswer(question.id) === answer.id }"
+            :aria-pressed="selectedAnswer(question.id) === answer.id"
+            @click="chooseAnswer(question.id, answer.id)"
+          >
+            <strong>{{ answer.says }}</strong>
+            <span
+              v-if="REVEAL_SIGNING_TERMS_ON_CHOICE && selectedAnswer(question.id) === answer.id"
+              class="signing-terms"
+              aria-live="polite"
+            >
+              <span class="given">{{ answer.given }}</span>
+              <span class="owed">{{ answer.owed }}</span>
+            </span>
+          </button>
+        </fieldset>
+      </section>
+
+      <!-- THE FOUNDING CHOICES. Both are simulation inputs: the gift goes into
+           the house's hands and the grudge into the world, and at the term the ending
            names which of them the selected line changed. -->
       <section class="choice">
         <h3 class="label">He asked for one thing by name</h3>
@@ -271,6 +334,14 @@ button.on, .on { }
 .on { margin-top: 10px; }
 .choice { margin-top: 30px; }
 .choice .prompt { margin: 0 0 12px; line-height: 1.7; color: var(--ink-soft); font-size: var(--t-card); }
+.question { border: 0; padding: 0; margin: 0 0 24px; min-width: 0; }
+.question legend { padding: 0; width: 100%; }
+.signing-terms { display: block; margin-top: 7px; }
+.signing-terms .given, .signing-terms .owed {
+  display: block; margin: 3px 0 0; font-size: var(--t-fine); line-height: 1.55;
+}
+.signing-terms .given { color: var(--ink); }
+.signing-terms .owed { color: var(--ink-soft); font-style: italic; }
 .option {
   display: block; width: 100%; text-align: left; margin-bottom: 8px;
   padding: 10px 12px; line-height: 1.55;
