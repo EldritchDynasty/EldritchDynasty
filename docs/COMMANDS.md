@@ -39,12 +39,31 @@ The default preflight fetches, rebases onto `origin/main`, installs, then runs
 typecheck, validation and `test:fast` on that rebased head. Risky core, content
 or gate work can opt into the complete local CI-derived set with
 `npm run land -- --full-preflight`; it still has no push authority. On success
-either mode records `preflight-green`. Keep or open a ready same-repository PR,
-then choose GitHub's **Merge when ready**.
+either mode records `preflight-green`. Keep or open a ready same-repository PR
+and leave it ready. **Do not click Merge, directly merge `main`, or post
+`/land`; `/land` is retired.**
 
-The repository ruleset makes GitHub's **native merge queue** the only normal
-landing path. The queue uses **REBASE**, builds one group at a time, and may
-merge up to three green PRs together. GitHub creates a
+`.github/workflows/auto-merge-queue.yml` owns admission to GitHub's **native
+merge queue**. It runs on PR `opened`, `reopened`, `ready_for_review`,
+`synchronize` and `edited` events, and on completion of the `check`
+workflow. On an early PR event it may find `CI required` absent or pending;
+that is a normal successful no-op. When the `check` workflow later completes
+successfully, the workflow-run handoff re-reads the PR and accepts it only when
+the PR is still open and ready, still targets `main`, still belongs to this
+repository, and still has the exact head SHA that went green. It then mints the
+merge-queue GitHub App token and calls GitHub's native `enqueuePullRequest`
+GraphQL mutation. A completed check for an older head can never enqueue newer
+code.
+
+Normally an agent does nothing after exact-head CI becomes green; the
+workflow-run handoff enqueues it. If admission was missed because the earlier
+event raced or was cancelled, a factual PR-body edit can retrigger the supported
+`edited` path. That is recovery for the automatic path, not permission to
+merge directly.
+
+The repository ruleset makes the native merge queue the only normal landing
+path. The queue uses **REBASE**, builds one group at a time, and may merge up to
+three green PRs together. GitHub creates a
 `gh-readonly-queue/main/...` synthetic commit and raises the `merge_group`
 event. `.github/workflows/check.yml` always sends that event through the full
 CI tier and publishes the stable required result **`CI required`**. Only after
@@ -103,8 +122,9 @@ leave no useful completion signal.
 
 `npm run land -- --status` reports whether the preflight is running, dead, or
 last reached `preflight-green`. A dead session preflight has pushed nothing. Clear/restart the preflight as
-needed, then enqueue the ready PR with **Merge when ready**; GitHub's native
-queue performs its own fresh rebase and authoritative merge-group check.
+needed, then keep the same-repository PR ready; `auto-merge-queue.yml` admits
+it after exact-head CI is green, and GitHub's native queue performs its own
+fresh rebase and authoritative merge-group check.
 
 
 ## CI, and the janitor
