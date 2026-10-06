@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import { HouseIdS, type SigningTerm } from '@ed/schema';
 import {
   CAMPAIGNS, HOUSE_NAME_MAX, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
-  prologueView, saveGame, testWorld, viewOf,
+  prologueView, saveGame, setProseMode, setProseVariants, testWorld, viewOf,
 } from '@ed/core';
 
 const content = loadContent();
@@ -76,6 +76,70 @@ describe('the prologue', () => {
     for (const option of view.grudges) expect(option.houseName.length).toBeGreaterThan(0);
     expect(view.thesis.length).toBeGreaterThan(0);
     expect(view.founded).toBeUndefined();
+  });
+
+  it('renders prologue and embedded content through stable Plain English addresses before interpolation', () => {
+    const ctx = testWorld(content);
+    setProseVariants(ctx, [
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].opening',
+        plainenglish: 'A plain opening.',
+      },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].triad[2].owed.campaignText',
+        plainenglish: 'The term is {years} years and ends in {endYear}.',
+      },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].says',
+        plainenglish: 'I pushed the cart myself.',
+      },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].heirlooms[0].line',
+        plainenglish: 'He asked for more time.',
+      },
+      {
+        address: 'content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].name',
+        plainenglish: 'More Years',
+      },
+      {
+        address: 'content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].blurb',
+        plainenglish: 'It extends one life.',
+      },
+      {
+        address: 'content:houses.yaml#houses[id=house_marrow].name',
+        plainenglish: 'The Marrow family',
+      },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].grudges[0].line',
+        plainenglish: 'Marrow remembers the field.',
+      },
+      {
+        address: 'content:prologue.yaml#prologue[id=the_signing].thesis',
+        plainenglish: 'Later generations did not sign the bargain.',
+      },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const view = prologueView(ctx)!;
+    expect(view.opening).toBe('A plain opening.');
+    expect(view.triad[2]!.owed).toBe(
+      `The term is ${CAMPAIGNS.long.years} years and ends in ${CAMPAIGNS.long.endYear}.`,
+    );
+    expect(view.examination[0]!.answers[0]!.says).toBe('I pushed the cart myself.');
+
+    const heirloom = view.heirlooms.find((option) => option.heirloom === 'portion_of_agelessness');
+    expect(heirloom).toMatchObject({
+      name: 'More Years',
+      blurb: 'It extends one life.',
+      line: 'He asked for more time.',
+    });
+
+    const grudge = view.grudges.find((option) => option.house === 'house_marrow');
+    expect(grudge).toMatchObject({
+      houseName: 'The Marrow family',
+      line: 'Marrow remembers the field.',
+    });
+    expect(view.thesis).toBe('Later generations did not sign the bargain.');
   });
 
   it('carries the furthest-travelled inherited account without adjudicating it', () => {
