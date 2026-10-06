@@ -111,6 +111,18 @@
     },
     {
       "kind": "flag",
+      "key": "holds_a_portion",
+      "disposition": "delete",
+      "reason": "Buying the portion already grants the portion_of_agelessness heirloom and costs 240 crowns. The unread flag duplicates concrete heirloom ownership rather than adding a distinct consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "holds_the_unmirrored_eye",
+      "disposition": "delete",
+      "reason": "Buying the object already grants the_unmirrored_eye heirloom, costs treasury, and records ownership directly. The unread flag is redundant parallel state."
+    },
+    {
+      "kind": "flag",
       "key": "kept_an_early_waking_quiet",
       "disposition": "read",
       "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
@@ -204,6 +216,12 @@
       "key": "priced_out_of_the_quickening",
       "disposition": "delete",
       "reason": "This is narration-only age colour: the house buys nothing in the inflated book market and no later rule reads the marker. Delete the dead write rather than inventing a consequence for a non-choice outcome."
+    },
+    {
+      "kind": "flag",
+      "key": "refused_the_flask",
+      "disposition": "delete",
+      "reason": "Refusing the flask already leaves a durable Respect gain and the Chronicle can preserve the refusal; the unread flag adds no separate current consequence or authored future promise."
     },
     {
       "kind": "flag",
@@ -303,6 +321,18 @@
     },
     {
       "kind": "flag",
+      "key": "the_elder_descent_not_produced",
+      "disposition": "read",
+      "reason": "The herald's shorthand becomes a standing question in a book read every third year for centuries. Preserve the flag for the later heraldic/descent consequence explicitly promised by the outcome."
+    },
+    {
+      "kind": "flag",
+      "key": "the_forty_leaves_are_in_the_press",
+      "disposition": "delete",
+      "reason": "Buying the leaves already grants the_forty_leaves heirloom, costs treasury, and changes Respect. The unread flag merely duplicates the heirloom's durable ownership state."
+    },
+    {
+      "kind": "flag",
       "key": "the_hall_was_counted",
       "disposition": "read",
       "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
@@ -318,6 +348,18 @@
       "key": "the_house_held_the_wardenship",
       "disposition": "read",
       "reason": "Winning the Wardenship is a durable institutional fact that the event itself says permanently exposes the house to Crown, Assembly, Church, and provincial attention. Keep one callback discriminator for later Warden-era consequences."
+    },
+    {
+      "kind": "flag",
+      "key": "the_house_holds_the_register",
+      "disposition": "delete",
+      "reason": "Buying the register already grants the_bramme_register heirloom and pays the treasury cost; the unread parallel flag duplicates ownership state that the heirloom itself records."
+    },
+    {
+      "kind": "flag",
+      "key": "the_lent_book_left_alone",
+      "disposition": "read",
+      "reason": "Leaving the lent book alone explicitly promises that roughly ninety years later someone will find it and write to Cawdry in a worse year. Preserve the flag for that concrete future book/Cawdry callback."
     },
     {
       "kind": "flag",
@@ -351,6 +393,18 @@
     },
     {
       "kind": "flag",
+      "key": "the_short_copy",
+      "disposition": "read",
+      "reason": "The outcome explicitly creates two divergent documents: a short copy at Cawdry and the original still open in the house. Preserve the flag for the later discrepancy/records callback that physical contradiction supports."
+    },
+    {
+      "kind": "flag",
+      "key": "the_short_return",
+      "disposition": "read",
+      "reason": "The short relief return explicitly says the next relief, about thirty years later, will be assessed against this number by someone with both books open. Preserve the flag for that concrete future assessment callback."
+    },
+    {
+      "kind": "flag",
       "key": "the_stair_below_the_turn_bricked",
       "disposition": "read",
       "reason": "Bricking the cellar stair changes the house physically, and the outcome explicitly says somebody unbricks it in 1330. Preserve the flag for that later house/mystery callback rather than losing the only durable marker of the wall."
@@ -378,6 +432,18 @@
       "key": "the_youngest_was_answered",
       "disposition": "delete",
       "reason": "Reading the Chronicle to the youngest already changes the child's Mind; the unread flag duplicates that durable outcome without a distinct later promise."
+    },
+    {
+      "kind": "flag",
+      "key": "the_yssene_question_unanswered",
+      "disposition": "read",
+      "reason": "The unanswered descent question is explicitly entered in Yssene's own house record and leaves their reckoning at five generations. Preserve it for the later external-record/descent callback that this outcome creates."
+    },
+    {
+      "kind": "flag",
+      "key": "took_the_company_in",
+      "disposition": "delete",
+      "reason": "Taking the company in already costs 44 crowns and gains Respect; the outcome explicitly says nothing happens all winter, so the unread flag adds no distinct promised consequence."
     },
     {
       "kind": "flag",
