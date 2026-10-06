@@ -573,12 +573,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_threshold_wall",
-      "disposition": "read",
-      "reason": "The failed fourth-shelf experiment is written down and the prose explicitly says two granddaughters read it before they ask. Preserve the knowledge for that intergenerational magic-rule callback."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_ward_was_married_in",
       "disposition": "read",
       "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
