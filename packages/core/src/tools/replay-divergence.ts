@@ -179,12 +179,25 @@ export interface ShapeCount {
   share: number;
 }
 
+export interface FamiliarEventCount {
+  id: string;
+  count: number;
+  share: number;
+  shapes: ShapeCount[];
+}
+
 export interface ShapeConcentration {
   choices: number;
   shapes: number;
   events: number;
   top: (ShapeCount & { events: number; heaviest: { id: string; fires: number }[] })[];
-  familiar: { compared: number; count: number; share: number; top: ShapeCount[] };
+  familiar: {
+    compared: number;
+    count: number;
+    share: number;
+    top: ShapeCount[];
+    events: FamiliarEventCount[];
+  };
   moneyInTop: number;
 }
 
@@ -217,6 +230,7 @@ export function shapeConcentration(
 
   let compared = 0;
   const familiarByShape = new Map<string, number>();
+  const familiarByEvent = new Map<string, Map<string, number>>();
   for (const [ia, ib] of pairs) {
     const a = streams[ia] ?? [];
     const b = streams[ib] ?? [];
@@ -224,8 +238,13 @@ export function shapeConcentration(
     const shapes = new Set(a.map(shapeOfVisit));
     compared += b.length;
     for (const visit of b) {
-      if (ids.has(visit.id) || !shapes.has(shapeOfVisit(visit))) continue;
-      familiarByShape.set(shapeOfVisit(visit), (familiarByShape.get(shapeOfVisit(visit)) ?? 0) + 1);
+      const shape = shapeOfVisit(visit);
+      if (ids.has(visit.id) || !shapes.has(shape)) continue;
+      familiarByShape.set(shape, (familiarByShape.get(shape) ?? 0) + 1);
+
+      const eventShapes = familiarByEvent.get(visit.id) ?? new Map<string, number>();
+      eventShapes.set(shape, (eventShapes.get(shape) ?? 0) + 1);
+      familiarByEvent.set(visit.id, eventShapes);
     }
   }
   const familiarCount = [...familiarByShape.values()].reduce((a, n) => a + n, 0);
@@ -243,6 +262,23 @@ export function shapeConcentration(
         .sort(([sa, a], [sb, b]) => b - a || sa.localeCompare(sb))
         .slice(0, 5)
         .map(([shape, count]) => ({ shape, count, share: familiarCount ? count / familiarCount : 0 })),
+      events: [...familiarByEvent]
+        .sort(([ia, a], [ib, b]) => total(b) - total(a) || ia.localeCompare(ib))
+        .map(([id, shapes]) => {
+          const count = total(shapes);
+          return {
+            id,
+            count,
+            share: familiarCount ? count / familiarCount : 0,
+            shapes: [...shapes]
+              .sort(([sa, a], [sb, b]) => b - a || sa.localeCompare(sb))
+              .map(([shape, shapeCount]) => ({
+                shape,
+                count: shapeCount,
+                share: count ? shapeCount / count : 0,
+              })),
+          };
+        }),
     },
     moneyInTop: top.filter(({ shape }) => /\bmoney\b/.test(shape)).length,
   };
@@ -264,6 +300,28 @@ export function concentrationLines(c: ShapeConcentration): string[] {
     `  money on one side of ${c.moneyInTop} of the top ${c.top.length} shapes`,
     `  new event, familiar shape: ${pct(c.familiar.share)} of B's choices (${c.familiar.count} of ${c.familiar.compared})`,
     ...c.familiar.top.map((row) => `    ${pct(row.share)} of that  ${row.shape}`),
+    ...(c.familiar.events.length
+      ? [
+        '  ranked familiar-event worklist',
+        ...(() => {
+          let cumulative = 0;
+          const rows = c.familiar.events.map((row) => {
+            cumulative += row.share;
+            return [
+              String(row.count),
+              pct(row.share),
+              pct(cumulative),
+              row.id,
+              row.shapes.map(({ shape, count }) => `${shape} x${count}`).join(', '),
+            ];
+          });
+          return table(
+            ['choices', 'share', 'cumulative', 'event', 'familiar shapes'],
+            rows,
+          ).map((line) => `    ${line}`);
+        })(),
+      ]
+      : []),
   ];
 }
 
