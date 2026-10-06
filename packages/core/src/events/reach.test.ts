@@ -5214,6 +5214,167 @@ describe('authored narration TEST_FAMILIES fixture-sweep outcome witnesses', () 
 });
 
 
+
+describe('authored arc-step TEST_FAMILIES fixture-sweep outcome witnesses', () => {
+  function buildArcStep(
+    arc: (typeof content.arcs)[number],
+    node: (typeof content.arcs)[number]['nodes'][number],
+    event: (typeof content.events)[number],
+    family: (typeof TEST_FAMILIES)[number],
+    seed: number,
+  ) {
+    const ctx = family.build(content);
+    const rng = makeRng(seed);
+
+    // Seed only the arc-wide bindings from a real slot resolution. This models
+    // the cast an earlier beat would have carried forward without pretending
+    // every slot on this later beat persisted across the story.
+    const initial = resolveSlots(event, ctx, rng);
+    if (!initial.ok || initial.playerCast.length) return undefined;
+    const seedBindings: SlotFill = {};
+    for (const slotId of arc.bindings) {
+      const cast = initial.fill[slotId];
+      if (cast !== undefined) seedBindings[slotId] = cast;
+    }
+
+    const instance = startArc(arc, ctx, rng, seedBindings);
+    if (!instance) return undefined;
+    instance.node = node.id;
+    instance.dueYear = ctx.world.year;
+
+    const step = dueArcSteps(ctx, rng).find((candidate) => (
+      candidate.instance.id === instance.id && candidate.node.id === node.id
+    ));
+    if (!step || step.playerCast.length) return undefined;
+    if (!evalCondition(event.conditions, ctx, { arc: instance })) return undefined;
+
+    return { ctx, rng, instance, step };
+  }
+
+  it('executes every arc-node outcome a shared family can satisfy through dueArcSteps and the real commit path', () => {
+    type Case = {
+      arc: (typeof content.arcs)[number];
+      node: (typeof content.arcs)[number]['nodes'][number];
+      event: (typeof content.events)[number];
+      family: (typeof TEST_FAMILIES)[number];
+      seed: number;
+      choiceId?: string;
+      outcomeId: string;
+      targetChanceChoice: boolean;
+      targetCheckedOutcome: boolean;
+      targetWeightedOutcome: boolean;
+    };
+
+    const cases: Case[] = [];
+    let seed = 10_000;
+
+    for (const arc of content.arcs) {
+      for (const node of arc.nodes) {
+        const event = content.event(node.event);
+        if (!event) continue;
+
+        const targets = event.interaction.kind === 'narration'
+          ? event.interaction.outcomes.map((outcome) => ({
+              choiceId: undefined,
+              choice: undefined,
+              outcome,
+            }))
+          : event.interaction.choices.flatMap((choice) => (
+              choice.outcomes.map((outcome) => ({ choiceId: String(choice.id), choice, outcome }))
+            ));
+
+        for (const target of targets) {
+          const targetSeed = seed++;
+          const targetChanceChoice = (
+            event.interaction.kind !== 'narration'
+            && event.interaction.decidedBy === 'chance'
+          );
+          const targetCheckedOutcome = target.choice?.check !== undefined;
+          const targetWeightedOutcome = (
+            !targetCheckedOutcome
+            && (
+              event.interaction.kind === 'narration'
+                ? event.interaction.outcomes.length > 1
+                : target.choice!.outcomes.length > 1
+            )
+          );
+
+          const family = TEST_FAMILIES.find((candidate) => {
+            const built = buildArcStep(arc, node, event, candidate, targetSeed);
+            if (!built) return false;
+
+            const result = executeOutcomeWitnessRaw(built.ctx, event, {
+              ...(target.choiceId !== undefined ? { choiceId: target.choiceId } : {}),
+              expectedOutcomeId: target.outcome.id,
+              rng: built.rng,
+              arcStep: built.step,
+              ...(targetChanceChoice ? { targetChanceChoice: true } : {}),
+              ...(targetCheckedOutcome ? { targetCheckedOutcome: true } : {}),
+              ...(targetWeightedOutcome ? { targetWeightedOutcome: true } : {}),
+            });
+            return result.ok;
+          });
+
+          if (family) {
+            cases.push({
+              arc,
+              node,
+              event,
+              family,
+              seed: targetSeed,
+              ...(target.choiceId !== undefined ? { choiceId: target.choiceId } : {}),
+              outcomeId: String(target.outcome.id),
+              targetChanceChoice,
+              targetCheckedOutcome,
+              targetWeightedOutcome,
+            });
+          }
+        }
+      }
+    }
+
+    expect(cases.length).toBeGreaterThan(0);
+
+    const witnessed: string[] = [];
+    for (const testCase of cases) {
+      const built = buildArcStep(
+        testCase.arc,
+        testCase.node,
+        testCase.event,
+        testCase.family,
+        testCase.seed,
+      );
+      if (!built) {
+        throw new Error(
+          String(testCase.event.id) + ' stopped building in ' + testCase.family.id,
+        );
+      }
+
+      const result = executeOutcomeWitness(built.ctx, testCase.event, {
+        ...(testCase.choiceId !== undefined ? { choiceId: testCase.choiceId } : {}),
+        expectedOutcomeId: testCase.outcomeId,
+        rng: built.rng,
+        arcStep: built.step,
+        ...(testCase.targetChanceChoice ? { targetChanceChoice: true } : {}),
+        ...(testCase.targetCheckedOutcome ? { targetCheckedOutcome: true } : {}),
+        ...(testCase.targetWeightedOutcome ? { targetWeightedOutcome: true } : {}),
+      });
+
+      expect(
+        result.ok,
+        String(testCase.event.id)
+          + (testCase.choiceId ? '/' + testCase.choiceId : '')
+          + '/' + testCase.outcomeId
+          + ' via ' + testCase.family.id
+          + ': ' + (result.reason ?? 'no reason'),
+      ).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    expect(new Set(witnessed).size).toBe(witnessed.length);
+  });
+});
+
 describe('authored frame narration outcome witnesses', () => {
   function satisfyFrameReads(
     ctx: ReturnType<(typeof TEST_FAMILIES)[number]['build']>,
