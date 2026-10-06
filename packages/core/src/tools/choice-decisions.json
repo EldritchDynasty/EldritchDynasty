@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "memory": [
+    {
+      "kind": "arc_flag",
+      "key": "read_as_the_term",
+      "disposition": "delete",
+      "reason": "No authored condition or Eight Days arc successor reads this flag; delete the dead write and let the choice's intentional interpretation be handled explicitly."
+    },
+    {
+      "kind": "arc_flag",
+      "key": "read_as_the_thing",
+      "disposition": "delete",
+      "reason": "No authored condition or Eight Days arc successor reads this flag; the choice still changes treasury, Respect, and discrepancy state."
+    },
+    {
+      "kind": "flag",
+      "key": "bought_the_west_papers",
+      "disposition": "delete",
+      "reason": "No authored reader exists; buying the bundle already carries its treasury consequence and Chronicle record."
+    },
+    {
+      "kind": "flag",
+      "key": "head_defied_guardian",
+      "disposition": "delete",
+      "reason": "No authored condition reads this flag, and no core/client runtime string reader exists; the held branch still changes Respect and the Chronicle records the decision."
+    },
+    {
+      "kind": "flag",
+      "key": "head_yielded_to_guardian",
+      "disposition": "delete",
+      "reason": "No authored condition reads this flag, and no core/client runtime string reader exists; yielding still changes treasury and the Chronicle preserves who ruled the house."
+    },
+    {
+      "kind": "flag",
+      "key": "regalia_incomplete",
+      "disposition": "delete",
+      "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
+    },
+    {
+      "kind": "flag",
+      "key": "seal_in_the_west_house",
+      "disposition": "delete",
+      "reason": "No authored reader exists; the aftermath narration retains the inherited relationship and grudge consequences."
+    },
+    {
+      "kind": "flag",
+      "key": "seal_recovered",
+      "disposition": "delete",
+      "reason": "No authored reader exists; buy_it_back still pays the treasury cost and the Chronicle records the recovery."
+    },
+    {
+      "kind": "flag",
+      "key": "the_two_half_sheets",
+      "disposition": "delete",
+      "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
+    },
+    {
+      "kind": "flag",
+      "key": "west_house_senior",
+      "disposition": "delete",
+      "reason": "No authored reader exists; both branches still create seal_gift_lie and the writing branch keeps treasury and Respect effects."
+    },
+    {
+      "kind": "flag",
+      "key": "west_papers_went_east",
+      "disposition": "delete",
+      "reason": "No authored reader exists; let_it_go still costs Respect and the Chronicle preserves the choice."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_a_copy_went_instead",
+      "disposition": "delete",
+      "reason": "The memory is unread; sending the copy still costs treasury and seeds the Cawdry-copy rumour, while the Record preserves the substitution in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_a_head_was_set_aside",
+      "disposition": "delete",
+      "reason": "The memory is unread; the event still changes the household relationship and seeds the seal-taking rumour, while the Record keeps the act in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_it_was_said_in_court",
+      "disposition": "delete",
+      "reason": "The memory is unread; repeating the phrase still changes Respect, and the Record preserves what was said in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_regalia_incomplete",
+      "disposition": "delete",
+      "reason": "No authored condition reads this Record grant; the Record branch itself already preserves the knowledge in the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_book_was_copied_twice",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the copyist's finding without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_codex_stayed_at_marrow",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Record branch already preserves the Codex disposition through Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_day_book_was_kept",
+      "disposition": "delete",
+      "reason": "This knowledge is write-only in the choice audit; the affected player outcome still changes treasury and discrepancy state, and the Record branch preserves the fact with Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_file_was_asked_for",
+      "disposition": "delete",
+      "reason": "The memory is unread; acting on the warning still changes treasury and relationship state, while the Record preserves the warning in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_four_families",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the finding without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_guardian_rules",
+      "disposition": "delete",
+      "reason": "No authored condition reads this Record grant, and no core/client runtime string reader exists; the Record option already preserves the fact through its Chronicle, claim, and Respect effect."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_house_held_out",
+      "disposition": "delete",
+      "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve that the house held through the interdict without paying or signing."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_ink_went",
+      "disposition": "delete",
+      "reason": "No authored condition reads this knowledge; the event still reveals the clause, creates the discrepancy, and seeds the rumour."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_letter_conceded",
+      "disposition": "delete",
+      "reason": "No authored condition reads this Record grant; the Record branch already preserves the concession in the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_main_line_went_quiet",
+      "disposition": "delete",
+      "reason": "The memory is unread; the event still changes branch standing and Respect, and the Record preserves the quiet generation in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_quire_is_gone",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the missing-quire discovery without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_relic_was_refused",
+      "disposition": "delete",
+      "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve the refusal without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_second_is_uncertain",
+      "disposition": "self_expression",
+      "reason": "The knowledge is unread; delete its writes and explicitly tag the_term as self_expression instead of inventing a fake callback or resource cost."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_stone_and_the_roll_disagree",
+      "disposition": "delete",
+      "reason": "The memory is unread; lifting the stone still carries its treasury cost and the Record preserves the disagreement in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_third_night_was_used",
+      "disposition": "delete",
+      "reason": "The memory is unread; keeping the witness still changes treasury and household relationship, and the Record preserves the choice in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_warrant_is_in_the_press",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve that the warrant was kept in the press without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_west_house_claim",
+      "disposition": "delete",
+      "reason": "No authored condition reads this Record grant; the Record branch already preserves the west-house claim in the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_fourth_shelf_says",
+      "disposition": "delete",
+      "reason": "The memory is unread; the reading outcome still changes Respect and the reader's Mind, while the Record preserves the pasture-grant finding in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_inquest_asked",
+      "disposition": "delete",
+      "reason": "The memory is unread; the inquest outcome keeps its Respect consequence and the Record preserves what was asked in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_they_were_reading_for",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve what the marked margins showed without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_who_was_in_the_room_at_sarrow",
+      "disposition": "delete",
+      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the Sarrow-room fact without a separate simulation-memory key."
+    }
+  ]
+}

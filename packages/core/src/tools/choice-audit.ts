@@ -13,6 +13,8 @@
  * `choices/consequence` in `schema/src/rules.ts` turns the same audit into
  * validation issues; this prints the whole picture those issues are drawn from.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import {
   auditChoices, isProseOnly, type ChoiceAudit, type ChoiceRow, type Content, type ContentSources,
@@ -73,10 +75,25 @@ export interface ChoiceWorklistWriter {
   file: string;
 }
 
+export type ChoiceDebtDisposition = 'read' | 'delete' | 'self_expression';
+
+export interface ChoiceMemoryDecision {
+  kind: ChoiceAudit['writeOnly'][number]['kind'];
+  key: string;
+  disposition: ChoiceDebtDisposition;
+  reason: string;
+}
+
+export interface ChoiceDecisionFile {
+  version: 1;
+  memory: ChoiceMemoryDecision[];
+}
+
 export interface ChoiceWorklistMemory {
   kind: ChoiceAudit['writeOnly'][number]['kind'];
   key: string;
   writers: ChoiceWorklistWriter[];
+  decision?: Pick<ChoiceMemoryDecision, 'disposition' | 'reason'>;
 }
 
 export interface ChoiceWorklistProseOnly {
@@ -92,6 +109,7 @@ export interface ChoiceWorklistFile {
     kind: ChoiceAudit['writeOnly'][number]['kind'];
     key: string;
     writers: string[];
+    decision?: Pick<ChoiceMemoryDecision, 'disposition' | 'reason'>;
   }[];
   proseOnly: {
     event: string;
@@ -105,6 +123,8 @@ export interface ChoiceWorklist {
   summary: {
     writeOnlyKeys: number;
     writeOnlyWrites: number;
+    classifiedWriteOnlyKeys: number;
+    unclassifiedWriteOnlyKeys: number;
     proseOnly: number;
     files: number;
   };
@@ -138,8 +158,44 @@ export function baseline(audit: ChoiceAudit): ChoiceBaseline {
   };
 }
 
-export function choiceWorklist(content: Content): ChoiceWorklist {
+const EMPTY_DECISIONS: ChoiceDecisionFile = { version: 1, memory: [] };
+
+function decisionKey(kind: ChoiceMemoryDecision['kind'], key: string): string {
+  return `${kind}\u0000${key}`;
+}
+
+function decisionMapFor(audit: ChoiceAudit, decisions: ChoiceDecisionFile) {
+  if (decisions.version !== 1) throw new Error(`unsupported choice decision file version: ${String(decisions.version)}`);
+
+  const current = new Set(audit.writeOnly.map((item) => decisionKey(item.kind, item.key)));
+  const out = new Map<string, Pick<ChoiceMemoryDecision, 'disposition' | 'reason'>>();
+  for (const decision of decisions.memory) {
+    const key = decisionKey(decision.kind, decision.key);
+    if (out.has(key)) throw new Error(`duplicate choice decision: ${decision.kind}:${decision.key}`);
+    if (!current.has(key)) {
+      throw new Error(`stale choice decision: ${decision.kind}:${decision.key} is not a current write-only key`);
+    }
+    if (!['read', 'delete', 'self_expression'].includes(decision.disposition)) {
+      throw new Error(`invalid choice disposition for ${decision.kind}:${decision.key}: ${String(decision.disposition)}`);
+    }
+    if (!decision.reason.trim()) throw new Error(`choice decision lacks a reason: ${decision.kind}:${decision.key}`);
+    out.set(key, { disposition: decision.disposition, reason: decision.reason.trim() });
+  }
+  return out;
+}
+
+export function loadChoiceDecisions(
+  path = join(import.meta.dirname, 'choice-decisions.json'),
+): ChoiceDecisionFile {
+  return JSON.parse(readFileSync(path, 'utf8')) as ChoiceDecisionFile;
+}
+
+export function choiceWorklist(
+  content: Content,
+  decisions: ChoiceDecisionFile = EMPTY_DECISIONS,
+): ChoiceWorklist {
   const audit = auditChoices(content);
+  const decisionMap = decisionMapFor(audit, decisions);
 
   const memory: ChoiceWorklistMemory[] = audit.writeOnly.map((item) => ({
     kind: item.kind,
@@ -147,6 +203,9 @@ export function choiceWorklist(content: Content): ChoiceWorklist {
     writers: item.writers
       .map((where) => ({ where, file: fileOf(where, content) }))
       .sort((a, b) => a.file.localeCompare(b.file) || a.where.localeCompare(b.where)),
+    ...(decisionMap.has(decisionKey(item.kind, item.key))
+      ? { decision: decisionMap.get(decisionKey(item.kind, item.key))! }
+      : {}),
   }));
 
   const proseOnly: ChoiceWorklistProseOnly[] = audit.rows
@@ -177,6 +236,7 @@ export function choiceWorklist(content: Content): ChoiceWorklist {
         kind: item.kind,
         key: item.key,
         writers: sourceWriters.map((writer) => writer.where).sort(),
+        ...(item.decision ? { decision: item.decision } : {}),
       });
     }
   }
@@ -201,6 +261,8 @@ export function choiceWorklist(content: Content): ChoiceWorklist {
     summary: {
       writeOnlyKeys: memory.length,
       writeOnlyWrites: memory.reduce((sum, item) => sum + item.writers.length, 0),
+      classifiedWriteOnlyKeys: memory.filter((item) => item.decision !== undefined).length,
+      unclassifiedWriteOnlyKeys: memory.filter((item) => item.decision === undefined).length,
       proseOnly: proseOnly.length,
       files: files.length,
     },
@@ -211,8 +273,11 @@ export function choiceWorklist(content: Content): ChoiceWorklist {
 }
 
 /** Byte-stable JSON for agents and one-file-at-a-time #334 content slices. */
-export function renderChoiceWorklistJson(content: Content): string {
-  return JSON.stringify(choiceWorklist(content), null, 2) + '\n';
+export function renderChoiceWorklistJson(
+  content: Content,
+  decisions: ChoiceDecisionFile = EMPTY_DECISIONS,
+): string {
+  return JSON.stringify(choiceWorklist(content, decisions), null, 2) + '\n';
 }
 
 export function renderChoiceAudit(content: Content): string {
@@ -292,6 +357,6 @@ if (isMain) {
   const sources: ContentSources = new Map();
   const content = loadContent(undefined, sources);
   process.stdout.write(process.argv.includes('--json')
-    ? renderChoiceWorklistJson(content)
+    ? renderChoiceWorklistJson(content, loadChoiceDecisions())
     : renderChoiceAudit(content));
 }
