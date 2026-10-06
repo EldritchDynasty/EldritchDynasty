@@ -4797,7 +4797,7 @@ describe('authored frame narration outcome witnesses', () => {
       if ('anyDiscrepancy' in read) {
         for (let i = 0; i < read.anyDiscrepancy.atLeast; i++) {
           ctx.world.discrepancies.set(
-            \`witness_frame_\${event.id}_\${synthetic++}\`,
+            `witness_frame_${event.id}_${synthetic++}`,
             {
               severity: 'major',
               provableBy: [],
