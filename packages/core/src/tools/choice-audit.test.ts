@@ -46,7 +46,7 @@ describe('the #334 choice-debt worklist', () => {
   it('loads the committed decision ledger and accounts for classified versus unclassified keys', () => {
     const decisions = loadChoiceDecisions();
     const work = choiceWorklist(content, decisions);
-    console.log('CHOICE-UNCLASSIFIED', JSON.stringify(work.memory.filter((item) => item.decision === undefined)));
+    expect(work.summary.unclassifiedWriteOnlyKeys).toBe(0);
 
     expect(work.summary.classifiedWriteOnlyKeys + work.summary.unclassifiedWriteOnlyKeys)
       .toBe(work.summary.writeOnlyKeys);
