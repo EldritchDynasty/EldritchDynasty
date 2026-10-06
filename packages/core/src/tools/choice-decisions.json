@@ -75,6 +75,12 @@
     },
     {
       "kind": "flag",
+      "key": "mended_the_march_wall",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event the_wall_nobody_mends. Quietly mending the disputed wall instead of taking it to Cawdry is exactly the kind of later neighbour/assize callback that can replace another money-shaped choice with remembered conduct, so #341 gets first refusal on the memory."
+    },
+    {
+      "kind": "flag",
       "key": "on_the_caster_list",
       "disposition": "read",
       "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."
@@ -123,6 +129,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_chantry_was_declined",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event something_the_church_wants_more. The decline branch otherwise carries only this memory, and a later Church callback can make refusing the chantry a durable non-money consequence rather than collapsing the choice into prose."
+    },
+    {
+      "kind": "flag",
       "key": "the_chapel_is_open_nine_days",
       "disposition": "delete",
       "reason": "The flag is unread by authored content; accepting the relic already costs treasury and changes Respect, while the Chronicle records the chapel's nine open days."
@@ -135,9 +147,21 @@
     },
     {
       "kind": "flag",
+      "key": "the_clerk_asked_again",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event what_he_did_with_the_key. The clerk asking again after receiving the short list is a natural later records/Crown callback and gives #341 a remembered institutional consequence without adding another money price."
+    },
+    {
+      "kind": "flag",
       "key": "the_hall_was_counted",
       "disposition": "read",
       "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
+    },
+    {
+      "kind": "flag",
+      "key": "the_house_declined_cawdry",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event a_second_hand_that_agrees. Letting the lone paper stand otherwise persists only through this flag; a later Cawdry/legal reader can make that refusal matter and turn a familiar price shape into a callback consequence."
     },
     {
       "kind": "flag",
@@ -252,6 +276,12 @@
       "key": "knows_the_file_was_asked_for",
       "disposition": "delete",
       "reason": "The memory is unread; acting on the warning still changes treasury and relationship state, while the Record preserves the warning in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_fleece_and_the_fold",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event the_wool_that_will_not_take. Writing down which fold and ewes produced the odd fleece has no other outcome effect, so a later cloth/stock reader is the natural payoff and gives #341 a non-money consequence instead of deleting the evidence."
     },
     {
       "kind": "knowledge",
@@ -402,6 +432,12 @@
       "key": "knows_the_third_night_was_used",
       "disposition": "delete",
       "reason": "The memory is unread; keeping the witness still changes treasury and household relationship, and the Record preserves the choice in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_third_room",
+      "disposition": "read",
+      "reason": "This key comes from #341 ranked event what_he_did_with_the_key. Knowledge of the third room is an unusually concrete hidden-house fact and a strong later records/visitor callback; preserve it for #341 rather than bulk-deleting the event's cheapest non-money memory."
     },
     {
       "kind": "knowledge",
