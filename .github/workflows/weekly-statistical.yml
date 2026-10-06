@@ -44,3 +44,24 @@ jobs:
         with:
           name: weekly-gate-blood
           path: weekly-gate-blood.json
+
+  signing:
+    name: weekly signing balance
+    needs: main-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: run canonical Examination balance sample
+        run: npm run gates -- signing --timings-json weekly-gate-signing.json
+      - name: retain structured signing timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-gate-signing
+          path: weekly-gate-signing.json
