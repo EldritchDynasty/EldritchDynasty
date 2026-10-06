@@ -16,7 +16,7 @@
   "devDependencies": {
     "@ed/content": "*",
     "@ed/core": "*",
-    "electron": "^41.10.7",
+    "electron": "^44.5.1",
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
