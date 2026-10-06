@@ -1,0 +1,12 @@
+verdict: ok
+exit: 0
+request: /claim 356 --agent chatgpt/356-founder-house-verification-20261007 --paths packages/client/src packages/core/src packages/content/events --lane code
+request-commit: 433d2476316429e2e9d1a59478f41cf63d219936
+
+held: 356 → chatgpt/356-founder-house-verification-20261007 (lane code)
+  land it with: Closes #356
+  the janitor retires the claims and deletes the branch behind that.
+  ⚠ chatgpt/334-bulk-delete-memory-20261006 declared overlapping paths on 334: packages/content/events, packages/content/arcs, packages/core/src/tools/choice-decisions.json
+  ⚠ chatgpt/431-forced-awakening-downstream-20261006 declared overlapping paths on 431: packages/core/src/forced-awakening.test.ts, packages/core/src/effect-verbs.test.ts
+  ⚠ chatgpt/441-proof-reuse-feasibility-20261006 declared overlapping paths on 441: packages/core/src/tools/gates.ts, packages/core/src/gates.test.ts, packages/core/src/tools/gate-proof.ts, packages/core/src/tools/gate-proof.test.ts, tools, docs/COMMANDS.md, docs/BALANCE-LOG.md, .github/workflows/check.yml, package.json, package-lock.json
+  ⚠ chatgpt/442-test-family-sweep-20261006 declared overlapping paths on 442: packages/core/src/events/reach.ts, packages/core/src/events/reach.test.ts, packages/core/src/lanes.test.ts, tools/outcome-witnesses.json
