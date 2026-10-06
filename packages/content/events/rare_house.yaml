@@ -78,7 +78,6 @@ events:
               effects:
                 - { kind: treasury, delta: -160 }
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_the_muniments_burned }
     record:
       subject: the fire, and what came out of it
       options:
@@ -87,7 +86,6 @@ events:
             The west wing burned in Longnight and nineteen of us stood in the
             yard and counted, and nobody went back in, and the press went with
             the wing.
-          grantsKnowledge: knows_the_muniments_burned
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -180,7 +178,6 @@ events:
             Three of our own halls signed one letter asking for a voice and a
             share, which has not happened before, and we refused it, and they
             went to the assize.
-          grantsKnowledge: knows_the_three_halls_combined
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -271,7 +268,6 @@ events:
             we refused it, and ninety-four went into the low meadow above the
             summer water, and the flux the following Highsun was the worst
             anyone remembers.
-          grantsKnowledge: knows_where_the_pit_went
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -326,7 +322,6 @@ events:
                 nearly the worst.
               effects:
                 - { kind: treasury, delta: -12 }
-                - { kind: knowledge, op: grant, flag: knows_what_the_second_book_holds }
                 - { kind: relationship, from: { slot: STEWARD }, to: head, sentiment: 26 }
         - id: dismiss_him
           label: Dismiss him. A man who keeps a second book has a second employer somewhere.
@@ -359,7 +354,6 @@ events:
             The steward kept a second book for nineteen years agreeing with
             ours to the mite, with four hundred notes of what was said in the
             room, and we bought it and raised him.
-          grantsKnowledge: knows_what_the_second_book_holds
           effects: []
           claims:
             - { kind: deed, target: { slot: STEWARD }, text: kept a second book for nineteen years with four hundred notes of what was said in the room }
@@ -423,7 +417,6 @@ events:
                 anybody of anything and he has written it down.
               effects:
                 - { kind: treasury, delta: -18 }
-                - { kind: knowledge, op: grant, flag: knows_the_rows_were_cut }
         - id: put_the_ground_back
           label: Put the ground back before anybody else walks down there.
           outcomes:
@@ -438,7 +431,6 @@ events:
                 in anybody's memory, which everybody at Wick notices.
               effects:
                 - { kind: treasury, delta: -6 }
-                - { kind: knowledge, op: grant, flag: knows_what_is_in_the_orchard }
                 - { kind: rumour, op: seed, id: rumour_why_they_planted_the_orchard, accuracy: 0.5 }
     record:
       subject: what came up in the orchard
@@ -448,7 +440,6 @@ events:
             The Wend came over and scoured the orchard corner and there are
             thirty-one in rows down there, cut and regular, on no roll, and we
             had the keeper enter them.
-          grantsKnowledge: knows_the_rows_were_cut
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -505,7 +496,6 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: -20 }
-                - { kind: knowledge, op: grant, flag: knows_where_the_seal_was_found }
             - id: not_found
               weight: 55
               text: >-
@@ -634,7 +624,6 @@ events:
             The gate was shut for twenty-eight days and sixty of Wick were
             inside it, and we rationed by household and said so, and on the
             ninth night forty of them went back over the wall.
-          grantsKnowledge: knows_how_the_gate_month_went
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -728,7 +717,6 @@ events:
             The Braccish called nineteen years of the account, two hundred and
             thirty crowns, and we could not pay it, and the mill went to them
             for eleven years under a clause we signed in 1197.
-          grantsKnowledge: knows_what_the_mill_cost
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -795,7 +783,6 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_the_cousins_refused }
         - id: write_it_all_down
           label: Write it all down. Everything, in one place, for whoever comes.
           outcomes:
@@ -810,7 +797,6 @@ events:
                 or will not, and there is no third thing, and it is out of
                 {HEAD}'s hands the moment the ink is dry.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_eighty_one_leaves }
                 - { kind: respect, delta: -1 }
     record:
       subject: what was left, and what was written
@@ -820,7 +806,6 @@ events:
             There was one of the blood in this hall and a contract with a date
             on it, and he sat down for four tendays and wrote eighty-one
             leaves of everything, plainly, once.
-          grantsKnowledge: knows_the_eighty_one_leaves
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: sat down as the last of the blood in the hall and wrote eighty-one leaves plainly }

@@ -207,12 +207,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_chapel_is_open_nine_days",
-      "disposition": "delete",
-      "reason": "The flag is unread by authored content; accepting the relic already costs treasury and changes Respect, while the Chronicle records the chapel's nine open days."
-    },
-    {
-      "kind": "flag",
       "key": "the_chapel_stayed_shut",
       "disposition": "read",
       "reason": "Keeping the anomalous chapel shut is a durable institutional/myth-layer choice. A later Church or house callback should distinguish the family that concealed it rather than letting the flag remain dead."
@@ -405,18 +399,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_a_copy_went_instead",
-      "disposition": "delete",
-      "reason": "The memory is unread; sending the copy still costs treasury and seeds the Cawdry-copy rumour, while the Record preserves the substitution in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_a_head_was_set_aside",
-      "disposition": "delete",
-      "reason": "The memory is unread; the event still changes the household relationship and seeds the seal-taking rumour, while the Record keeps the act in Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_a_shelf_needs_reading",
       "disposition": "delete",
       "reason": "The copied-book branch already pays its treasury cost and explicitly says the old copy remains unread for three hundred years; the same key is also granted by the optional Record choice. No authored reader exists, so this mixed write is dead memory rather than a real shelf mechanic."
@@ -435,21 +417,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_how_the_gate_month_went",
-      "disposition": "delete",
-      "reason": "This is granted only by the Record option. The gate month already persists through large Treasury/Respect/household-relationship effects, rumour, Chronicle, deed claim, and discrepancy, so the extra knowledge key duplicates the same event history."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_it_cannot_be_called",
       "disposition": "read",
       "reason": "Three failed nights establish a core magic rule: expression cannot be summoned on a schedule."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_it_was_said_in_court",
-      "disposition": "delete",
-      "reason": "The memory is unread; repeating the phrase still changes Respect, and the Record preserves what was said in Chronicle text, Respect, and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -474,18 +444,6 @@
       "key": "knows_someone_was_asking",
       "disposition": "read",
       "reason": "A Braccish-looking stranger paid for information about this family and then stopped asking; preserve the unresolved external inquiry."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_attainder_was_reversed",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; staying clear already changes the rival relationship, while the Record preserves the reversed attainder in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_book_was_copied_twice",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the copyist's finding without a separate simulation-memory key."
     },
     {
       "kind": "knowledge",
@@ -525,12 +483,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_codex_stayed_at_marrow",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Record branch already preserves the Codex disposition through Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_codex_went_east",
       "disposition": "read",
       "reason": "This weighted outcome establishes the Marrow Codex left the province in a crate and has not been seen since. The location/fate of a named spellbook is durable world state with a natural later library/rival/recovery reader."
@@ -540,18 +492,6 @@
       "key": "knows_the_count_of_the_nine_nights",
       "disposition": "read",
       "reason": "The comet tally is the only Nethering record and explicitly gets bought by a Corran man in 1288."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_cousins_refused",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; the failed recall already costs treasury and Respect, so the Chronicle can preserve the refused cousins without a separate simulation key."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_day_book_was_kept",
-      "disposition": "delete",
-      "reason": "This knowledge is write-only in the choice audit; the affected player outcome still changes treasury and discrepancy state, and the Record branch preserves the fact with Chronicle text, Respect, and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -576,30 +516,6 @@
       "key": "knows_the_edge_follows_the_man",
       "disposition": "read",
       "reason": "Moving the expresser proves the dulling iron follows the man rather than the room; the Record tells future heads to remember it."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_eighty_one_leaves",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; writing the eighty-one leaves already changes Respect, while the Record preserves the document in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_file_was_asked_for",
-      "disposition": "delete",
-      "reason": "The memory is unread; acting on the warning still changes treasury and relationship state, while the Record preserves the warning in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_four_families",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the finding without a separate simulation-memory key."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_fourth_generation_has_no_paper",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; admitting the gap already changes Respect, while the Record preserves the missing fourth-generation paper in Chronicle text, Respect, and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -633,30 +549,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_house_held_out",
-      "disposition": "delete",
-      "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve that the house held through the interdict without paying or signing."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_house_kept_the_high_justice",
-      "disposition": "delete",
-      "reason": "The Record memory is unread by authored content; the Record itself preserves the unlawful high-justice choice in Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_house_stayed_home",
-      "disposition": "delete",
-      "reason": "The Record memory is unread by authored content; staying home already changes Respect and seeds a rumour, while the Record preserves the decision in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_house_stayed_out_of_the_wardenship",
-      "disposition": "delete",
-      "reason": "The Record memory is unread by authored content; staying out already changes Respect and the candidate relationship, while the Record preserves the choice in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_keeper_did_not_ask",
       "disposition": "read",
       "reason": "The keeper pointedly walks under the birthing-room iron without asking, and the prose calls that omission the part worth noticing."
@@ -666,24 +558,6 @@
       "key": "knows_the_keeper_does_not_know",
       "disposition": "read",
       "reason": "The keeper admits he has said the fourth petition four thousand times without knowing what it means and asks that it not reach Bramme."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_levy_was_commuted",
-      "disposition": "delete",
-      "reason": "The Record memory is unread by authored content; commuting the levy already changes household relationship and Respect, while the Record preserves who stayed home in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_main_line_went_quiet",
-      "disposition": "delete",
-      "reason": "The memory is unread; the event still changes branch standing and Respect, and the Record preserves the quiet generation in Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_muniments_burned",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; losing the muniments already costs treasury and Respect, while the Record preserves the fire and lost press in Chronicle text and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -717,21 +591,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_quire_is_gone",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the missing-quire discovery without a separate simulation-memory key."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_quire_was_kept",
       "disposition": "read",
       "reason": "The found quire contains four generations of a genealogy that contradicts the heralds while matching the male line exactly. That is a major lineage mystery with an obvious later descent/library reader and should not be deleted as dead bookkeeping."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_relic_was_refused",
-      "disposition": "delete",
-      "reason": "This Record knowledge is unread; the Chronicle and deed claim already preserve the refusal without a separate simulation-memory key."
     },
     {
       "kind": "knowledge",
@@ -762,12 +624,6 @@
       "key": "knows_the_roll_has_seen_them",
       "disposition": "read",
       "reason": "Showing all three regalia creates the oldest independent surviving minute of the objects, durable external evidence."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_rows_were_cut",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; investigating the cut grave rows already costs treasury, while the Record preserves the finding in Chronicle text, Respect, and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -825,27 +681,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_stair_was_searched",
-      "disposition": "delete",
-      "reason": "This branch establishes only that the cellar stair was searched and nothing was found; it already costs treasury and the scene itself preserves the failed search. The distinct drain discovery has its own live knowledge, so this marker adds no separate future fact."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_stave_reached_coln",
       "disposition": "read",
       "reason": "The licensed beggar proves a house story travelled forty miles to Coln through Wayfolk song."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_stone_and_the_roll_disagree",
-      "disposition": "delete",
-      "reason": "The memory is unread; lifting the stone still carries its treasury cost and the Record preserves the disagreement in Chronicle text, Respect, and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_stone_is_empty",
-      "disposition": "delete",
-      "reason": "The knowledge is unread by authored content; finding the empty stone still costs treasury and seeds the empty-stone rumour, while the event's Record preserves the inquiry."
     },
     {
       "kind": "knowledge",
@@ -855,33 +693,15 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_surety_was_refused",
-      "disposition": "delete",
-      "reason": "The Record memory is unread by authored content; refusing the child surety already changes Respect and seeds a rumour, while the Record preserves the refusal in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_tenth_petition",
       "disposition": "read",
       "reason": "Proceeding after the answered ninth establishes that an older tenth petition exists and produces no second answer."
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_third_night_was_used",
-      "disposition": "delete",
-      "reason": "The memory is unread; keeping the witness still changes treasury and household relationship, and the Record preserves the choice in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_third_room",
       "disposition": "read",
       "reason": "This key comes from #341 ranked event what_he_did_with_the_key. Knowledge of the third room is an unusually concrete hidden-house fact and a strong later records/visitor callback; preserve it for #341 rather than bulk-deleting the event's cheapest non-money memory."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_three_halls_combined",
-      "disposition": "delete",
-      "reason": "This is granted only by the Record option. The cadet coalition already leaves branch, Respect, relationship, treasury, rumour, Chronicle, and deed-claim consequences; a second Record-only simulation key would duplicate that durable state."
     },
     {
       "kind": "knowledge",
@@ -912,12 +732,6 @@
       "key": "knows_the_ward_went_home",
       "disposition": "delete",
       "reason": "The Record branch already preserves the ward's return in Chronicle text and a deed claim; the separate knowledge write is unnecessary without a real authored callback."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_warrant_is_in_the_press",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve that the warrant was kept in the press without a separate simulation-memory key."
     },
     {
       "kind": "knowledge",
@@ -993,12 +807,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_is_in_the_orchard",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; covering the orchard already costs treasury and seeds the orchard rumour, so the act remains mechanically consequential without the dead key."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_she_remembers_of_1131",
       "disposition": "read",
       "reason": "Writing the grandmother's account adds roughly forty facts beyond the Chronicle, including one the family cannot face."
@@ -1017,51 +825,15 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_the_fourth_shelf_says",
-      "disposition": "delete",
-      "reason": "The memory is unread; the reading outcome still changes Respect and the reader's Mind, while the Record preserves the pasture-grant finding in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_inquest_asked",
-      "disposition": "delete",
-      "reason": "The memory is unread; the inquest outcome keeps its Respect consequence and the Record preserves what was asked in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_mill_cost",
-      "disposition": "delete",
-      "reason": "This is Record-only knowledge attached to the Chronicle choice after the Bracc account. The underlying outcome already changes Treasury, Respect, and household relationship, and the Chronicle/deed/discrepancy preserve the mill story without a second simulation key."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_office_costs",
-      "disposition": "delete",
-      "reason": "The chosen Wardenship outcome always writes this knowledge together with the_house_held_the_wardenship. The flag is sufficient to drive any later institutional callback, so keeping a second perfectly co-occurring memory would duplicate state."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_the_room_did",
       "disposition": "delete",
       "reason": "This key is granted only by the Record option, whose wording can itself be a chosen account. The actual sickroom outcome and rumour/relationship state are separate world facts; future consequences should not depend on Chronicle bookkeeping."
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_the_second_book_holds",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; buying the steward's second book already costs treasury and changes the steward relationship, while the Record preserves what it held."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_the_yssene_terms_were",
       "disposition": "read",
       "reason": "Refusing the foreign offer explicitly promises that in 1291 someone works out what the fourth clause would have done."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_they_were_reading_for",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve what the marked margins showed without a separate simulation-memory key."
     },
     {
       "kind": "knowledge",
@@ -1089,18 +861,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_where_the_pit_went",
-      "disposition": "delete",
-      "reason": "This is Record-only memory. The plague choice already changes Respect and household relationship and may seed the low-meadow rumour, while the Chronicle/deed/discrepancy preserve where the pit went."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_where_the_seal_was_found",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; finding the seal during the search already changes Respect and the household relationship, so the result remains mechanically consequential without the dead key."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_which_receipts_work",
       "disposition": "read",
       "reason": "The physician classifies the still-room book into useful, harmless, and dangerous receipts, durable household medical knowledge beyond the immediate health effect."
@@ -1116,18 +876,6 @@
       "key": "knows_who_took_the_doves",
       "disposition": "read",
       "reason": "Catching the cottager's boy explicitly hands the matter to the house's low justice with the whole yard watching. Preserve this branch marker for the natural justice/household follow-up the authored outcome points to."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_who_was_in_the_room_at_sarrow",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the Sarrow-room fact without a separate simulation-memory key."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_why_the_line_moved",
-      "disposition": "delete",
-      "reason": "The memory is unread by authored content; investigating the Roll already costs treasury and changes Respect, while the Record preserves what the house learned in Chronicle text and a deed claim."
     }
   ]
 }

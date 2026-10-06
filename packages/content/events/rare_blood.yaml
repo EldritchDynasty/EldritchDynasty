@@ -375,7 +375,6 @@ events:
                 1180 and every one of them tells it differently.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -12 }
-                - { kind: knowledge, op: grant, flag: knows_a_head_was_set_aside }
                 - { kind: rumour, op: seed, id: rumour_the_seal_taken_in_the_long_room, accuracy: 0.6 }
     record:
       subject: how the seal left his hand
@@ -385,7 +384,6 @@ events:
             The Head of this house was set aside by his own household in the
             long room, being reasonable to the last, and the seal was carried
             out of the room by somebody else.
-          grantsKnowledge: knows_a_head_was_set_aside
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -468,7 +466,6 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
-                - { kind: knowledge, op: grant, flag: knows_the_third_night_was_used }
     record:
       subject: the man at the wall
       options:
@@ -477,7 +474,6 @@ events:
             There was a man at the wall at the wrong hour and he saw what
             there was to see, and this house kept him rather than paid him,
             and he was of our household for thirty-one years afterwards.
-          grantsKnowledge: knows_the_third_night_was_used
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: kept the man who saw the wall that night in the household for thirty-one years }
@@ -559,7 +555,6 @@ events:
               effects:
                 - { kind: branch, op: appease, amount: 8 }
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_the_main_line_went_quiet }
     record:
       subject: the generation in which nobody woke
       options:
@@ -568,7 +563,6 @@ events:
             Four sons reached the age in this generation and not one of them
             woke, and the entries were checked twice. It has happened once
             before, in 1096, and the house did not write down what it did.
-          grantsKnowledge: knows_the_main_line_went_quiet
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -623,7 +617,6 @@ events:
                 turn. They stop at it for eleven more years and then one
                 spring they do not, and nobody can tell you what changed.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_stair_was_searched }
                 - { kind: treasury, delta: -2 }
             - id: the_drain
               weight: 52
