@@ -137,28 +137,25 @@ describe('a commitment left standing for a whole run', () => {
  * same one `gateVocabularyReach`/gate 8 use — read off `world.decisionLog`
  * over a real played batch, not asserted by calling `buyPosition` directly.
  *
- * `buy_the_banner` is NOT asserted here. Measured at 250 runs (gate 8's own
- * batch, `npm run gate`), it resolves in 0.4% of runs — under one expected
- * hit even at this file's 160-run position scale, so a `toEqual([])` on it would be exactly
- * the thin-margin failure this codebase has paid for five times over
- * (BALANCE-LOG). Gate 8 is the instrument sized for that tail and it is
- * already green in CI; this file only needs to prove reachability at a
- * batch size it can actually carry.
+ * The two requires-gated position choices are no longer proved by hoping they
+ * occur in a finite campaign sample. #442 gives both `buy_the_captaincy` and
+ * `buy_the_banner` deterministic execution witnesses through the real Muster
+ * arc, cast, requirement and commit paths. That is the right reachability
+ * evidence for rare gated branches.
+ *
+ * Keep this played batch for the two ungated choices and the settlement fork:
+ * they are common occurrence evidence at the original 80-run scale, not a
+ * substitute for the deterministic witness seam.
  */
 describe('the content reaches its positions, and both settlements', () => {
-  // #344's honest-inheritance reroll moved captaincy out of the first 120
-  // deterministic outcomeReach runs; the branch diagnostic reaches it by 160.
-  // Keep the settlement check at its existing 80-run scale instead of doubling
-  // that separate instrument just to satisfy the rarer position fixture.
-  const POSITION_RUNS = 160;
+  const POSITION_RUNS = 80;
   const SETTLEMENT_RUNS = 80;
   const YEARS = CAMPAIGN_YEARS;
 
-  it('the three reachable-at-this-scale position choices resolve', () => {
+  it('the ungated position choices resolve across a played batch', () => {
     const reach = outcomeReach(bundle, POSITION_RUNS, YEARS);
     const choices: [string, string][] = [
       ['buy_the_serjeanty', 'bought_serjeanty'],
-      ['buy_the_captaincy', 'bought_captaincy'],
       ['buy_nothing', 'bought_nothing'],
     ];
     const unreached = choices.filter(([choiceId, outcomeId]) => (
@@ -224,34 +221,39 @@ function runYearsExcluding(ctx: SimCtx, n: number, exclude: ReadonlySet<string>)
 
 describe('the dormancy guard, played rather than reverted', () => {
   /**
-   * Hand-picked by scanning seeds 6000+7i for a 400-year run (starting
-   * 1042) that never begins a single commitment — `the_muster_is_called`
-   * calls in ~71% of thousand-year runs (events/muster.yaml's own measure),
-   * so peacetime seeds at this shorter horizon are common but not universal,
-   * and have to be found rather than assumed. Re-verified below as the
-   * test's own first assertion, so a future content drop that makes one of
-   * these seeds go to war fails loudly here instead of silently proving
-   * nothing.
+   * The invariant is about a dormant PHASE, not about preserving a lucky set
+   * of campaign seeds. #344 already re-rolled two hand-picked peacetime seeds;
+   * #519 re-rolled another. Re-seed-mining would only reset that clock.
+   *
+   * `the_muster_is_called` documents itself as the front door to the whole
+   * system. Remove exactly that event from an otherwise shipped content bundle,
+   * then play the same 400-year worlds through every ordinary phase. The first
+   * assertion proves the fixture really remained commitment-free; the second
+   * compares those played worlds with only the yearly `muster` phase omitted.
+   * Any write or RNG consumption by a supposedly dormant phase still changes
+   * the digest, but unrelated content can no longer invalidate the fixture.
    */
-  // #344 re-rolled 6000 and 6007 into wars. Its fixture scan confirmed 6021
-  // and 6070 stay peacetime for this same 400-year horizon.
-  const PEACETIME_SEEDS = [6021, 6070, 6014, 6028, 6035, 6042, 6049, 6063];
+  const DORMANT_BUNDLE = {
+    ...bundle,
+    events: bundle.events.filter((event) => String(event.id) !== 'the_muster_is_called'),
+  };
+  const DORMANCY_SEEDS = Array.from({ length: 8 }, (_, i) => 6000 + i * 7);
   const YEARS = 400;
 
-  it('never begins a commitment on any seed in the fixture — confirming the fixture itself', () => {
-    for (const seed of PEACETIME_SEEDS) {
-      const ctx = bootstrap(bundle, seed, 1042);
+  it('never begins a commitment when the Muster front door is disabled', () => {
+    for (const seed of DORMANCY_SEEDS) {
+      const ctx = bootstrap(DORMANT_BUNDLE, seed, 1042);
       runYears(ctx, YEARS);
-      expect(ctx.world.muster.commitments.length, `seed ${seed} went to war — pick a new peacetime seed`).toBe(0);
+      expect(ctx.world.muster.commitments.length, `seed ${seed}: dormant fixture began a commitment`).toBe(0);
     }
   });
 
-  it('digests bit-identical with the muster phase present or removed entirely, on every peacetime seed', () => {
-    for (const seed of PEACETIME_SEEDS) {
-      const withMuster = bootstrap(bundle, seed, 1042);
+  it('digests bit-identical with the dormant muster phase present or removed entirely', () => {
+    for (const seed of DORMANCY_SEEDS) {
+      const withMuster = bootstrap(DORMANT_BUNDLE, seed, 1042);
       runYears(withMuster, YEARS);
 
-      const withoutMuster = bootstrap(bundle, seed, 1042);
+      const withoutMuster = bootstrap(DORMANT_BUNDLE, seed, 1042);
       runYearsExcluding(withoutMuster, YEARS, new Set(['muster']));
 
       expect(digestOf(withoutMuster), `seed ${seed}: removing the dormant muster phase changed the run`)
