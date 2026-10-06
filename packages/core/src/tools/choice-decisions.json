@@ -3,6 +3,12 @@
   "memory": [
     {
       "kind": "arc_flag",
+      "key": "held_on",
+      "disposition": "delete",
+      "reason": "Leaving the men in already persists through household relationship damage and live muster state; this unread arc flag adds no distinct future fact."
+    },
+    {
+      "kind": "arc_flag",
       "key": "read_as_the_term",
       "disposition": "delete",
       "reason": "No authored condition or Eight Days arc successor reads this flag; delete the dead write and let the choice's intentional interpretation be handled explicitly."
@@ -12,6 +18,24 @@
       "key": "read_as_the_thing",
       "disposition": "delete",
       "reason": "No authored condition or Eight Days arc successor reads this flag; the choice still changes treasury, Respect, and discrepancy state."
+    },
+    {
+      "kind": "arc_flag",
+      "key": "went_out_thin",
+      "disposition": "delete",
+      "reason": "The thin-company result already changes Respect and muster state; this unread arc flag only restates the outcome."
+    },
+    {
+      "kind": "arc_flag",
+      "key": "went_out_well",
+      "disposition": "delete",
+      "reason": "The strong-company result already changes Respect and muster state; this unread arc flag only restates the outcome."
+    },
+    {
+      "kind": "arc_flag",
+      "key": "withdrew",
+      "disposition": "delete",
+      "reason": "Calling the men home already persists through muster withdrawal, Respect, and relationship effects; this unread arc flag is redundant."
     },
     {
       "kind": "flag",
@@ -63,6 +87,12 @@
     },
     {
       "kind": "flag",
+      "key": "church_hostile",
+      "disposition": "read",
+      "reason": "Defying either widening explicitly makes the Church permanently hostile, a state the Great Rite design says the house carries into later ascension."
+    },
+    {
+      "kind": "flag",
       "key": "corrected_the_list",
       "disposition": "read",
       "reason": "The successful correction outcome explicitly promises that the filed correction becomes 'exactly the right nine days' when it later matters. A future institutional reader must pay off that authored promise."
@@ -72,6 +102,12 @@
       "key": "cut_the_seventh_stave",
       "disposition": "delete",
       "reason": "Cutting the stave already changes Respect and seeds rumour_the_missing_stave; those preserve the social trace of the missing verse, so the unread flag is redundant unless a concrete song reader is authored."
+    },
+    {
+      "kind": "flag",
+      "key": "declined_the_chapter_house",
+      "disposition": "read",
+      "reason": "The refusal is the second Church refusal in a century and explicitly makes the Church begin to find the house interesting."
     },
     {
       "kind": "flag",
@@ -96,6 +132,12 @@
       "key": "gave_up_the_book",
       "disposition": "delete",
       "reason": "This is a weighted narration outcome, not a player choice: the pupil stops trying and the family forgets it. No authored reader consumes the marker, so delete the dead narration write rather than manufacture a callback."
+    },
+    {
+      "kind": "flag",
+      "key": "god_rite_failed",
+      "disposition": "read",
+      "reason": "ending.ts already reads GOD_RITE_FAILED even though the content-only audit cannot see it; deleting this would break The Unmade ending."
     },
     {
       "kind": "flag",
@@ -255,6 +297,12 @@
     },
     {
       "kind": "flag",
+      "key": "seal_held_sideways",
+      "disposition": "read",
+      "reason": "Conceding the Seal creates a two-century succession/regalia condition distinct from merely starting the given-seal arc."
+    },
+    {
+      "kind": "flag",
       "key": "seal_in_the_west_house",
       "disposition": "delete",
       "reason": "No authored reader exists; the aftermath narration retains the inherited relationship and grudge consequences."
@@ -285,6 +333,12 @@
     },
     {
       "kind": "flag",
+      "key": "signs_noticed",
+      "disposition": "read",
+      "reason": "The midwife notices dulling iron in the birthing room, a concrete early blood-sign clue with a natural later reader."
+    },
+    {
+      "kind": "flag",
       "key": "someone_has_been_in_the_east_cellar",
       "disposition": "delete",
       "reason": "The narration immediately schedules what_he_did_with_the_key via inline next and keeps the same child for 22–34 years. That arc progression already preserves the cellar visit, so the unread parallel flag is redundant."
@@ -309,9 +363,27 @@
     },
     {
       "kind": "flag",
+      "key": "succession_crisis",
+      "disposition": "read",
+      "reason": "Losing the Head in the Seal challenge creates a distinct succession crisis on top of the given-seal arc."
+    },
+    {
+      "kind": "flag",
+      "key": "the_1131_account_died_with_her",
+      "disposition": "read",
+      "reason": "Leaving the grandmother alone makes the four Chronicle lines the only surviving account of 1131 forever."
+    },
+    {
+      "kind": "flag",
       "key": "the_archivist_was_refused",
       "disposition": "read",
       "reason": "The refused Bramme archivist still controls the index that makes records findable and has learned exactly what this house will not pay for. That is a direct later discrepancy/exposure hook, so preserve the marker for a reader."
+    },
+    {
+      "kind": "flag",
+      "key": "the_argument_went_underground",
+      "disposition": "read",
+      "reason": "The outcome explicitly says the next Head inherits and reopens the argument in a bad year."
     },
     {
       "kind": "flag",
@@ -342,6 +414,12 @@
       "key": "the_chapel_stayed_shut",
       "disposition": "read",
       "reason": "Keeping the anomalous chapel shut is a durable institutional/myth-layer choice. A later Church or house callback should distinguish the family that concealed it rather than letting the flag remain dead."
+    },
+    {
+      "kind": "flag",
+      "key": "the_church_sanctioned_the_rite",
+      "disposition": "read",
+      "reason": "Church sanction is durable institutional permission for the Great Rite and the intended political opposite of defiance."
     },
     {
       "kind": "flag",
@@ -435,15 +513,33 @@
     },
     {
       "kind": "flag",
+      "key": "the_nine_libraries_burned",
+      "disposition": "read",
+      "reason": "The mythic burning changes the world's book economy for four hundred years; preserve the world-state marker for later library consequences."
+    },
+    {
+      "kind": "flag",
       "key": "the_physician_was_in_the_room",
       "disposition": "read",
       "reason": "Backing the physician leaves a paid outsider as one of only two people who knows what the third jug did. Preserve that concrete exposure fact for a later physician/house-secret callback rather than reducing the branch to relationship arithmetic."
     },
     {
       "kind": "flag",
+      "key": "the_press_was_burned_unread",
+      "disposition": "read",
+      "reason": "Burning the dead man's papers destroys unique evidence unread; preserve that deliberate loss for later family-record content."
+    },
+    {
+      "kind": "flag",
       "key": "the_reader_was_not_welcomed",
       "disposition": "delete",
       "reason": "Keeping the Crusade reader at arm's length already persists as a -10 relationship to that priest; the unread flag duplicates the same social consequence without a distinct later fact."
+    },
+    {
+      "kind": "flag",
+      "key": "the_rhyme_in_the_chapter_yard",
+      "disposition": "read",
+      "reason": "Standing ground explicitly promises that another Church office asks for the day book nineteen years later."
     },
     {
       "kind": "flag",
@@ -483,6 +579,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_visitation_comes_back_early",
+      "disposition": "read",
+      "reason": "The ninth-question hesitation explicitly makes the visitation return in four years instead of eleven."
+    },
+    {
+      "kind": "flag",
       "key": "the_witness_went_to_the_parish",
       "disposition": "read",
       "reason": "Leaving the last witness to the parish puts her final statements in a curate's written record outside the house. Preserve this as durable external evidence for a later discrepancy/Church reader."
@@ -504,6 +606,12 @@
       "key": "they_taught_their_children_to_read",
       "disposition": "read",
       "reason": "Sending her to the steward explicitly promises that her children learn to read and that one decides a Cawdry boundary case in 1247. Preserve the flag for that concrete future legal callback."
+    },
+    {
+      "kind": "flag",
+      "key": "took_a_deer_across_the_boundary",
+      "disposition": "read",
+      "reason": "Taking the Warden's deer creates an unresolved boundary/legal breach and a rumour with a natural later assize reader."
     },
     {
       "kind": "flag",
@@ -549,6 +657,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_a_book_can_be_wrong",
+      "disposition": "read",
+      "reason": "The wrong Thermal volume teaches a concrete magic/library rule and leaves uniquely useful notes even after the book is burned or sold."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_a_copy_went_instead",
       "disposition": "delete",
       "reason": "The memory is unread; sending the copy still costs treasury and seeds the Cawdry-copy rumour, while the Record preserves the substitution in Chronicle text and a deed claim."
@@ -585,6 +699,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_it_cannot_be_called",
+      "disposition": "read",
+      "reason": "Three failed nights establish a core magic rule: expression cannot be summoned on a schedule."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_it_was_said_in_court",
       "disposition": "delete",
       "reason": "The memory is unread; repeating the phrase still changes Respect, and the Record preserves what was said in Chronicle text, Respect, and a deed claim."
@@ -600,6 +720,30 @@
       "key": "knows_regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored condition reads this Record grant; the Record branch itself already preserves the knowledge in the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_seal_went_sideways",
+      "disposition": "delete",
+      "reason": "The Record grant restates seal_held_sideways plus the Chronicle/deed; keep the underlying Seal state and remove duplicate bookkeeping."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_she_was_told_not_to_speak_of_it",
+      "disposition": "read",
+      "reason": "The grandmother's refusal reveals a specific unresolved 1131 secret and an earlier generation's imposed silence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_someone_at_wick_reads",
+      "disposition": "read",
+      "reason": "The literate cottager changes how eleven Wick households understand the posted terms, a durable tenant/legal fact."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_someone_was_asking",
+      "disposition": "read",
+      "reason": "A Braccish-looking stranger paid for information about this family and then stopped asking; preserve the unresolved external inquiry."
     },
     {
       "kind": "knowledge",
@@ -627,6 +771,24 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_book_went_entire",
+      "disposition": "read",
+      "reason": "The complete copy becomes an irreversible Cawdry record for eight hundred years and is the truthful counterpart to the short-copy discrepancy."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_brokers_list",
+      "disposition": "read",
+      "reason": "The broker's sheets contain thirty years of marriages, grandmothers, and signs, with another copy at Cawdry; preserve this rare evidence corpus."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_byname_stuck",
+      "disposition": "read",
+      "reason": "The byname determines what the man is called centuries later while songs and heraldic ordinals diverge."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_caster_descent_was_bought",
       "disposition": "delete",
       "reason": "This Record grant is write-only choice debt; the Chronicle and deed claim already preserve that the Caster-grade descent was bought, so a second simulation-memory key adds no consequence."
@@ -645,6 +807,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_church_refused",
+      "disposition": "read",
+      "reason": "The Church's disguised refusal is a distinct institutional answer to a Great Rite request, separate from sanction and defiance."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_codex_stayed_at_marrow",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Record branch already preserves the Codex disposition through Chronicle text, Respect, and a deed claim."
@@ -657,6 +825,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_count_of_the_nine_nights",
+      "disposition": "read",
+      "reason": "The comet tally is the only Nethering record and explicitly gets bought by a Corran man in 1288."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_cousins_refused",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; the failed recall already costs treasury and Respect, so the Chronicle can preserve the refused cousins without a separate simulation key."
@@ -666,6 +840,30 @@
       "key": "knows_the_day_book_was_kept",
       "disposition": "delete",
       "reason": "This knowledge is write-only in the choice audit; the affected player outcome still changes treasury and discrepancy state, and the Record branch preserves the fact with Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_daybook_is_copied",
+      "disposition": "delete",
+      "reason": "The Record grant only restates that Marrow day-book material was copied into the Chronicle; the record option already persists that fact."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_dogs_and_the_beck",
+      "disposition": "read",
+      "reason": "The shepherd supplies four years of precise dates about dogs refusing one piece of ground with no explanation."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_drovers_are_worth_asking",
+      "disposition": "read",
+      "reason": "The successful price call explicitly establishes an eleven-year information relationship with the drover."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_edge_follows_the_man",
+      "disposition": "read",
+      "reason": "Moving the expresser proves the dulling iron follows the man rather than the room; the Record tells future heads to remember it."
     },
     {
       "kind": "knowledge",
@@ -705,9 +903,39 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_fourth_item_is_missing",
+      "disposition": "read",
+      "reason": "The inventory leaves one unexplained wrapping missing with no record of what it held, a concrete physical mystery."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_fourth_petition",
+      "disposition": "delete",
+      "reason": "The Record grant duplicates knows_the_keeper_does_not_know plus the Chronicle/deed; remove the redundant record key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_fourth_verse",
+      "disposition": "read",
+      "reason": "The preserved fourth verse names a place and year nobody can identify and survives after the sung verse disappears."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_great_rite",
+      "disposition": "delete",
+      "reason": "Actual Great Rites already persist through rite state plus sanction/hostility, while Record choices persist claims/discrepancies; this generic key duplicates stronger state."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_guardian_rules",
       "disposition": "delete",
       "reason": "No authored condition reads this Record grant, and no core/client runtime string reader exists; the Record option already preserves the fact through its Chronicle, claim, and Respect effect."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_halls_are_counting",
+      "disposition": "delete",
+      "reason": "The warning branch already schedules the_hall_is_answered while the other schedules a different successor; the branch-specific next event is the durable payoff."
     },
     {
       "kind": "knowledge",
@@ -753,6 +981,18 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_keeper_did_not_ask",
+      "disposition": "read",
+      "reason": "The keeper pointedly walks under the birthing-room iron without asking, and the prose calls that omission the part worth noticing."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_keeper_does_not_know",
+      "disposition": "read",
+      "reason": "The keeper admits he has said the fourth petition four thousand times without knowing what it means and asks that it not reach Bramme."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_letter_conceded",
       "disposition": "delete",
       "reason": "No authored condition reads this Record grant; the Record branch already preserves the concession in the Chronicle."
@@ -777,6 +1017,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_ninth_question",
+      "disposition": "delete",
+      "reason": "The Record grant restates the archdeacon exchange already persisted by Chronicle/claims or discrepancy; the early-return flag carries the live branch consequence."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ninth_was_answered",
       "disposition": "read",
       "reason": "Recording that the ninth petition was answered by nobody in the chapel creates a specific supernatural fact in the family's Chronicle, with Church witnesses and a total discrepancy. That is a natural later liturgy/blood reader, not generic Record boilerplate."
@@ -792,6 +1038,18 @@
       "key": "knows_the_older_register",
       "disposition": "read",
       "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_older_stone",
+      "disposition": "delete",
+      "reason": "The Record grant duplicates the anomalous chapel-stone discovery already preserved by knows_the_second_stone and the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_orders_disagree",
+      "disposition": "delete",
+      "reason": "The Record grant duplicates the three conflicting orders already preserved by knows_three_orders and the Chronicle/discrepancy."
     },
     {
       "kind": "knowledge",
@@ -819,6 +1077,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_rhyme_from_wick",
+      "disposition": "read",
+      "reason": "The child brings the wrong-order Quiet Names rhyme from Wick, linking village folklore directly to the house's liturgy mysteries."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_rimefell_entry",
       "disposition": "read",
       "reason": "This weighted outcome discovers a parish entry saying the supposed Rimefell ancestress never left and died there, directly contradicting the house's descent. That is a concrete lineage-record fact with a natural later herald/record payoff, not redundant bookkeeping."
@@ -831,9 +1095,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_rings_in_the_cellar",
+      "disposition": "read",
+      "reason": "Opening the repeatedly bricked cellar reveals a bench, cut drain, and four man-height iron rings, a concrete hidden-house discovery."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_river_road",
       "disposition": "delete",
       "reason": "This Record grant duplicates durable Chronicle/deed state about meeting the six men from the river road; no current authored consequence depends on a second knowledge key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_roll_has_seen_them",
+      "disposition": "read",
+      "reason": "Showing all three regalia creates the oldest independent surviving minute of the objects, durable external evidence."
     },
     {
       "kind": "knowledge",
@@ -855,6 +1131,18 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_second_refusal",
+      "disposition": "delete",
+      "reason": "The Record grant duplicates declined_the_chapter_house plus the Chronicle/deed; keep the refusal state and remove redundant Record knowledge."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_second_stone",
+      "disposition": "read",
+      "reason": "The chapel floor reveals an older stone bearing a name absent from every roll and descent, a concrete lineage mystery."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_short_copy",
       "disposition": "delete",
       "reason": "The actual short-copy world state is already represented by the_short_copy and the_short_copy_at_cawdry discrepancy. Record knowledge only mirrors the Chronicle choice and is redundant."
@@ -864,6 +1152,24 @@
       "key": "knows_the_short_return",
       "disposition": "delete",
       "reason": "The actual short return is already preserved by the_short_return for its promised next-relief consequence. Record knowledge only mirrors what the player chose to write and is redundant causal state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_signs_are_not_expression",
+      "disposition": "read",
+      "reason": "The daughter produces blood signs while examination finds no expression, leaving contradictory evidence in the press for two centuries."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_signs_disagree",
+      "disposition": "read",
+      "reason": "Buying all three broker readings creates direct proof that common sign theories contradict one another."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_silk_has_no_provenance",
+      "disposition": "read",
+      "reason": "The uncut Yssene silk remains through 1500 as the house's oldest object with no written origin."
     },
     {
       "kind": "knowledge",
@@ -882,6 +1188,12 @@
       "key": "knows_the_stair_was_searched",
       "disposition": "delete",
       "reason": "This branch establishes only that the cellar stair was searched and nothing was found; it already costs treasury and the scene itself preserves the failed search. The distinct drain discovery has its own live knowledge, so this marker adds no separate future fact."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_stave_reached_coln",
+      "disposition": "read",
+      "reason": "The licensed beggar proves a house story travelled forty miles to Coln through Wayfolk song."
     },
     {
       "kind": "knowledge",
@@ -915,6 +1227,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_tenth_petition",
+      "disposition": "read",
+      "reason": "Proceeding after the answered ninth establishes that an older tenth petition exists and produces no second answer."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_third_night_was_used",
       "disposition": "delete",
       "reason": "The memory is unread; keeping the witness still changes treasury and household relationship, and the Record preserves the choice in Chronicle text and a deed claim."
@@ -945,9 +1263,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_unmaking",
+      "disposition": "delete",
+      "reason": "The Record grant only says the Unmaking was recorded; rite/death state, claims, discrepancies, and Chronicle already persist what happened."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_unmirrored_eye",
       "disposition": "delete",
       "reason": "Record-only knowledge duplicates the Chronicle while actual ownership is represented by the_unmirrored_eye heirloom. Delete the unread parallel memory rather than gate future behavior on the Record choice."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_vessel_rite",
+      "disposition": "delete",
+      "reason": "The Record grant restates a completed Vessel rite already visible in vessel status, rite history, claims/discrepancies, and Chronicle."
     },
     {
       "kind": "knowledge",
@@ -975,9 +1305,57 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_wrong_date_on_the_roll",
+      "disposition": "read",
+      "reason": "The Hollow Days burial creates the only wrong date in eleven hundred years of the Wick roll."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_yard_at_dawn",
       "disposition": "delete",
       "reason": "The body, Cawdry view and provable discrepancy exist independently of the player's Record choice. This unread Record knowledge duplicates the Chronicle rather than a distinct world consequence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_yssene_descent",
+      "disposition": "read",
+      "reason": "Answering Yssanne sends the fullest written account of the family line abroad, where the receiving house keeps paper permanently."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_they_are_reading_us",
+      "disposition": "read",
+      "reason": "The archivist warns that the chapter house has requested family pages for four years and schedules the expected-letter follow-up."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_three_orders",
+      "disposition": "read",
+      "reason": "The tutor's sheet proves three orders of the Nine Names disagree, and the prose says nobody yet knows what it is worth or to whom."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_to_copy_the_first_letter_in",
+      "disposition": "read",
+      "reason": "The second-letter technique is explicitly used by the house for four hundred years."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_two_can_wake_together",
+      "disposition": "read",
+      "reason": "The rare event proves two of the blood can wake in one year and explicitly tells future readers this is possible."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_we_read_our_own_paper",
+      "disposition": "read",
+      "reason": "Training an in-house advocate changes who can read the family's contracts and starts thirty years of attention to one clause."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_we_shut_the_doors",
+      "disposition": "delete",
+      "reason": "The Record grant only restates the Chronicle/deed about shutting the doors during the Nine Libraries burning; the world-state flag already persists the event."
     },
     {
       "kind": "knowledge",
@@ -987,15 +1365,57 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_a_warrant_buys",
+      "disposition": "delete",
+      "reason": "The mill event already resolves the warranted wright's practical value through cost, success/failure, and Respect; this generic lesson has no promised callback."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_a_warranted_trade_looks_like",
+      "disposition": "read",
+      "reason": "The healer demonstrates a licensed magic trade's published rate and, crucially, a boundary the practitioner refuses to cross."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_he_was_told_before_he_came",
+      "disposition": "read",
+      "reason": "The dead man's papers reveal outsiders accurately described the family before he joined it, a concrete unresolved exposure fact."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_is_being_said_four_parishes_off",
+      "disposition": "delete",
+      "reason": "The tinker branch already seeds the specific family rumour it uncovers; this generic knowledge duplicates that live rumour state."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_is_in_the_orchard",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; covering the orchard already costs treasury and seeds the orchard rumour, so the act remains mechanically consequential without the dead key."
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_she_remembers_of_1131",
+      "disposition": "read",
+      "reason": "Writing the grandmother's account adds roughly forty facts beyond the Chronicle, including one the family cannot face."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_case_book_holds",
+      "disposition": "read",
+      "reason": "The physician's case-book contains forty family entries including three truths the house recorded nowhere, and can even be acquired."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_the_clerk_writes",
       "disposition": "delete",
       "reason": "Seating the Warden's clerk high already costs Respect and the gained provincial gossip is not represented as any concrete actionable fact. The generic unread knowledge bit adds no distinct future state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_drain_is_for",
+      "disposition": "read",
+      "reason": "The cut cellar drain and paid 1211 deposition are concrete physical evidence with an unresolved purpose."
     },
     {
       "kind": "knowledge",
@@ -1029,6 +1449,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_the_roads_are_carrying",
+      "disposition": "delete",
+      "reason": "The tinker buys one round of ordinary road intelligence and already pays its cost; unlike the family-rumour branch it has no durable promised payoff."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_the_room_did",
       "disposition": "delete",
       "reason": "This key is granted only by the Record option, whose wording can itself be a chosen account. The actual sickroom outcome and rumour/relationship state are separate world facts; future consequences should not depend on Chronicle bookkeeping."
@@ -1038,6 +1464,24 @@
       "key": "knows_what_the_second_book_holds",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; buying the steward's second book already costs treasury and changes the steward relationship, while the Record preserves what it held."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_war_cost_this_house",
+      "disposition": "delete",
+      "reason": "The settlement Record grant restates war accounting already placed in the Chronicle/claims while muster settlement persists the actual result."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_wayfolk_are_for",
+      "disposition": "delete",
+      "reason": "The corrected-song branch already starts arc_the_song_we_taught_them and sets the_song_arc_started; this knowledge duplicates live arc state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_yssene_terms_were",
+      "disposition": "read",
+      "reason": "Refusing the foreign offer explicitly promises that in 1291 someone works out what the fourth clause would have done."
     },
     {
       "kind": "knowledge",
@@ -1053,9 +1497,39 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_what_was_in_his_press",
+      "disposition": "read",
+      "reason": "Reading the dead man's private paper preserves a unique personal account that otherwise burns unread and cannot be reconstructed."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_was_lent_in_1061",
+      "disposition": "delete",
+      "reason": "The same outcome already sets the_lent_book_left_alone, whose existing read decision reserves the explicit ninety-years-later Cawdry callback."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_was_never_said",
+      "disposition": "read",
+      "reason": "The Marrow day-book supplies dated external evidence of the family's unheard conversations, exactly the trace this late-game event exists to reveal."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_was_said_in_the_room",
+      "disposition": "read",
+      "reason": "Keeping the sickroom clear leaves four witnesses to nine days of fever speech, including one who lives until 1247."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_what_wick_already_knows",
       "disposition": "delete",
       "reason": "Leaving half-days unchanged already improves the household relationship, and the broad fact that Wick knows the house's business is worldbuilding rather than a concrete actionable secret. The unread generic knowledge bit adds no distinct current consequence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_wick_says_first",
+      "disposition": "read",
+      "reason": "Thanking the reeve creates a thirty-year unwritten arrangement under which the hall hears Wick's rumours first."
     },
     {
       "kind": "knowledge",
@@ -1074,6 +1548,18 @@
       "key": "knows_which_horse_will_not_take_the_gate",
       "disposition": "delete",
       "reason": "Keeping the gate-shy horse already costs eight crowns and the outcome is complete in prose; no later rule needs a permanent knowledge bit for one horse's unexplained habit."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_which_receipts_work",
+      "disposition": "read",
+      "reason": "The physician classifies the still-room book into useful, harmless, and dangerous receipts, durable household medical knowledge beyond the immediate health effect."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_who_has_heard_the_rent_book",
+      "disposition": "read",
+      "reason": "The maid hears every rent figure for nine years before marrying a Bramme carter in 1216, a concrete information-leak state."
     },
     {
       "kind": "knowledge",
