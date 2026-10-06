@@ -90,7 +90,6 @@ events:
                 the man who makes them. He is forty-one. He will not try again.
               effects:
                 - { kind: treasury, delta: 120 }
-                - { kind: flag, flag: head_yielded_to_guardian, set: true }
         - id: defy
           label: Do it anyway.
           outcomes:
@@ -101,7 +100,6 @@ events:
                 stopped, because now he has to find out whether he was right.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: head_defied_guardian, set: true }
             - id: ruined
               weight: 56
               text: >-
@@ -117,7 +115,6 @@ events:
           chronicle: >-
             The Head was overruled. Not by the Assembly, not by the Church,
             and not by any living person in this house.
-          grantsKnowledge: knows_the_guardian_rules
           effects:
             - { kind: respect, delta: -1 }
           claims:

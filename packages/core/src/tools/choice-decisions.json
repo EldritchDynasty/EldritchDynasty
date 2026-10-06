@@ -87,18 +87,6 @@
     },
     {
       "kind": "flag",
-      "key": "head_defied_guardian",
-      "disposition": "delete",
-      "reason": "No authored condition reads this flag, and no core/client runtime string reader exists; the held branch still changes Respect and the Chronicle records the decision."
-    },
-    {
-      "kind": "flag",
-      "key": "head_yielded_to_guardian",
-      "disposition": "delete",
-      "reason": "No authored condition reads this flag, and no core/client runtime string reader exists; yielding still changes treasury and the Chronicle preserves who ruled the house."
-    },
-    {
-      "kind": "flag",
       "key": "high_justice_at_the_gate",
       "disposition": "read",
       "reason": "The outcome explicitly says a Warden will later use the legal word for what the house did. Reserve this flag for that later institutional consequence rather than deleting an authored payoff promise."
@@ -252,12 +240,6 @@
       "key": "the_argument_went_underground",
       "disposition": "read",
       "reason": "The outcome explicitly says the next Head inherits and reopens the argument in a bad year."
-    },
-    {
-      "kind": "flag",
-      "key": "the_bridge_right_defended",
-      "disposition": "delete",
-      "reason": "Holding the chain already pays its treasury consequence and keeps the bridge right intact in prose. The 70–95 year callback is scheduled only from the opposite halve_the_rate branch, so this unread flag carries no follow-up and is redundant."
     },
     {
       "kind": "flag",
@@ -456,12 +438,6 @@
       "key": "took_the_company_in",
       "disposition": "delete",
       "reason": "Taking the company in already costs 44 crowns and gains Respect; the outcome explicitly says nothing happens all winter, so the unread flag adds no distinct promised consequence."
-    },
-    {
-      "kind": "flag",
-      "key": "tried_the_fourth_shelf_alone",
-      "disposition": "delete",
-      "reason": "The secret cellar attempt already damages the daughter's relationship to the Head and she tells nobody; the unread flag cannot identify her later and adds no distinct durable consequence beyond that relationship."
     },
     {
       "kind": "flag",
@@ -720,12 +696,6 @@
       "key": "knows_the_great_rite",
       "disposition": "delete",
       "reason": "Actual Great Rites already persist through rite state plus sanction/hostility, while Record choices persist claims/discrepancies; this generic key duplicates stronger state."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_guardian_rules",
-      "disposition": "delete",
-      "reason": "No authored condition reads this Record grant, and no core/client runtime string reader exists; the Record option already preserves the fact through its Chronicle, claim, and Respect effect."
     },
     {
       "kind": "knowledge",
@@ -1143,12 +1113,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_is_being_said_four_parishes_off",
-      "disposition": "delete",
-      "reason": "The tinker branch already seeds the specific family rumour it uncovers; this generic knowledge duplicates that live rumour state."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_is_in_the_orchard",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; covering the orchard already costs treasury and seeds the orchard rumour, so the act remains mechanically consequential without the dead key."
@@ -1164,12 +1128,6 @@
       "key": "knows_what_the_case_book_holds",
       "disposition": "read",
       "reason": "The physician's case-book contains forty family entries including three truths the house recorded nowhere, and can even be acquired."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_clerk_writes",
-      "disposition": "delete",
-      "reason": "Seating the Warden's clerk high already costs Respect and the gained provincial gossip is not represented as any concrete actionable fact. The generic unread knowledge bit adds no distinct future state."
     },
     {
       "kind": "knowledge",
@@ -1203,12 +1161,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_the_roads_are_carrying",
-      "disposition": "delete",
-      "reason": "The tinker buys one round of ordinary road intelligence and already pays its cost; unlike the family-rumour branch it has no durable promised payoff."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_the_room_did",
       "disposition": "delete",
       "reason": "This key is granted only by the Record option, whose wording can itself be a chosen account. The actual sickroom outcome and rumour/relationship state are separate world facts; future consequences should not depend on Chronicle bookkeeping."
@@ -1224,12 +1176,6 @@
       "key": "knows_what_the_war_cost_this_house",
       "disposition": "delete",
       "reason": "The settlement Record grant restates war accounting already placed in the Chronicle/claims while muster settlement persists the actual result."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_wayfolk_are_for",
-      "disposition": "delete",
-      "reason": "The corrected-song branch already starts arc_the_song_we_taught_them and sets the_song_arc_started; this knowledge duplicates live arc state."
     },
     {
       "kind": "knowledge",
@@ -1266,12 +1212,6 @@
       "key": "knows_what_was_said_in_the_room",
       "disposition": "read",
       "reason": "Keeping the sickroom clear leaves four witnesses to nine days of fever speech, including one who lives until 1247."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_wick_already_knows",
-      "disposition": "delete",
-      "reason": "Leaving half-days unchanged already improves the household relationship, and the broad fact that Wick knows the house's business is worldbuilding rather than a concrete actionable secret. The unread generic knowledge bit adds no distinct current consequence."
     },
     {
       "kind": "knowledge",

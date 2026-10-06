@@ -150,7 +150,6 @@ events:
                 in this world and has no idea yet what it has found.
               effects:
                 - { kind: treasury, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_what_the_wayfolk_are_for }
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: the_song_arc_started, set: true }
                 - { kind: arc, op: start, arc: arc_the_song_we_taught_them }
@@ -298,7 +297,6 @@ events:
                 exactly what this house pays to know things.
               effects:
                 - { kind: treasury, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_what_the_roads_are_carrying }
             - id: it_is_about_us
               weight: 38
               text: >-
@@ -309,7 +307,6 @@ events:
                 either, and he can say where he had it.
               effects:
                 - { kind: treasury, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_what_is_being_said_four_parishes_off }
                 - { kind: rumour, op: seed, id: rumour_what_the_tinker_was_carrying, accuracy: 0.5 }
         - id: mend_the_pot_only
           label: The pot only. This house does not buy talk.

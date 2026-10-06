@@ -273,7 +273,6 @@ events:
                 right is intact, and the right is the asset.
               effects:
                 - { kind: treasury, delta: -6 }
-                - { kind: flag, flag: the_bridge_right_defended, set: true }
 
 
   # #341: `halved` said the house had agreed to something it "may need to
@@ -425,7 +424,6 @@ events:
                 at Cawdry, twice.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_what_the_clerk_writes }
         - id: keep_the_precedence
           label: The low table. That is where a clerk sits.
           outcomes:
