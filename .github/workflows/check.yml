@@ -668,11 +668,11 @@ jobs:
           if [[ "${{ steps.reuse.outcome }}" == "success" ]]; then
             REUSED="${{ steps.reuse.outputs.gates }}"
           fi
-          ARGS=(--lane "${{ matrix.lane }}" --timings-json "gate-timings-${{ matrix.lane }}.json")
           if [[ -n "$REUSED" ]]; then
-            ARGS+=(--skip "$REUSED")
+            npm run gates -- --lane ${{ matrix.lane }} --skip "$REUSED" --timings-json gate-timings-${{ matrix.lane }}.json
+          else
+            npm run gates -- --lane ${{ matrix.lane }} --timings-json gate-timings-${{ matrix.lane }}.json
           fi
-          npm run gates -- "${ARGS[@]}"
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
       - name: produce trusted main gate proofs
