@@ -143,6 +143,8 @@ const BATCH_SEED = /\b(bootstrap|runYears|newGame|TEST_FAMILIES)\b/;
  * exactly the right size to mean something about the gate.
  */
 const DRIVES_A_BATCH: Record<string, string> = {
+  'packages/core/src/events/reach.test.ts':
+    'the six shared TEST_FAMILIES are hand-built witness worlds; plays no years — 13.3s hosted',
   'packages/core/src/ascension.test.ts':
     'one hand-built test family to check the Unmaking cast; plays no years',
   'packages/core/src/gates.test.ts':
