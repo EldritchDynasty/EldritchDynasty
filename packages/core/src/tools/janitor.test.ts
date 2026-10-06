@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -315,6 +315,14 @@ describe('the janitor', () => {
     } finally {
       rmSync(fixture, { recursive: true, force: true });
     }
+  });
+
+  it('projects paginated PR evidence before Node captures it', () => {
+    const source = readFileSync(TOOL, 'utf8');
+    expect(source).toContain("'api', '--paginate',");
+    expect(source).toContain("'--jq', projection,");
+    expect(source).not.toContain("'api', '--paginate', '--slurp'");
+    expect(source).toContain("r.error?.message || (r.stderr ?? '').trim()");
   });
 
   it('retires a rebased merge-queue branch and its claim from exact PR head evidence', () => {
