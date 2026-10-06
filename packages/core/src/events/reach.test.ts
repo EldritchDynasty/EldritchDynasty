@@ -4727,8 +4727,6 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
         choice.outcomes.map((outcome) =>
           outcomeKey(String(event.id), String(choice.id), String(outcome.id)))));
     const witnessed: string[] = [];
-    let seed = 9100;
-
     for (const { event, choices, family } of candidates) {
       for (const choice of choices) {
         for (const outcome of choice.outcomes) {
@@ -4742,7 +4740,7 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
             evalCondition(event.conditions, ctx),
             String(event.id) + ' should satisfy its authored conditions in ' + family.id,
           ).toBe(true);
-          const slots = resolveSlots(event, ctx, makeRng(seed));
+          const slots = resolveSlots(event, ctx, makeRng(9001));
           expect(
             slots.ok,
             String(event.id) + ' should resolve its authored slots in ' + family.id,
@@ -4760,7 +4758,7 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
           const result = executeOutcomeWitness(ctx, event, {
             choiceId: choice.id,
             expectedOutcomeId: outcome.id,
-            rng: makeRng(seed + 1),
+            rng: makeRng(9001),
             targetWeightedOutcome: choice.outcomes.length > 1,
           });
 
@@ -4773,7 +4771,6 @@ describe('authored TEST_FAMILIES fixture-sweep outcome witnesses', () => {
             outcomeKey(String(event.id), String(choice.id), String(outcome.id)),
           );
           if (result.key) witnessed.push(result.key);
-          seed += 2;
         }
       }
     }
