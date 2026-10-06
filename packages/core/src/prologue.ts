@@ -8,6 +8,7 @@ import { MAX_FRIENDS, dealWindows, normaliseFriends, type FriendName } from './p
 import { campaignDef, type CampaignDef } from './campaign.js';
 import { dismissRetainer } from './people/succession.js';
 import { selectedSigningTerms } from './sim.js';
+import { renderContentProse } from './prose.js';
 
 /**
  * THE SIGNING (concept §3, issue #38).
@@ -100,6 +101,42 @@ export interface FoundingChoice {
 /** A house name is a line on a page, not an essay. */
 export const HOUSE_NAME_MAX = 48;
 
+const PROLOGUE_PROSE_FILE = 'prologue.yaml';
+
+function prosePathId(id: string): string {
+  return encodeURIComponent(id);
+}
+
+function prologueProse(
+  ctx: SimCtx,
+  def: PrologueDef,
+  path: string,
+  original: string,
+): string {
+  return renderContentProse(
+    ctx,
+    PROLOGUE_PROSE_FILE,
+    `prologue[id=${prosePathId(String(def.id))}].${path}`,
+    original,
+  );
+}
+
+function identifiedContentProse(
+  ctx: SimCtx,
+  file: string,
+  collection: string,
+  id: string,
+  field: string,
+  original: string,
+): string {
+  return renderContentProse(
+    ctx,
+    file,
+    `${collection}[id=${prosePathId(id)}].${field}`,
+    original,
+  );
+}
+
 export function prologueDef(ctx: SimCtx): PrologueDef | undefined {
   return ctx.content.prologue;
 }
@@ -120,15 +157,24 @@ function inheritedRumour(
     text: memory.text,
     // Authored frame prose: it names where the account came from and whose
     // voice carries it, and never tells the player whether it is true.
-    line: def.inheritedLine
+    line: prologueProse(ctx, def, 'inheritedLine', def.inheritedLine)
       .replaceAll('{house}', memory.sourceHouse)
       .replaceAll('{teller}', memory.teller),
   };
 }
 
-function renderOwed(owed: PrologueOwed, campaign: CampaignDef): string {
-  if (typeof owed === 'string') return owed;
-  return owed.campaignText
+function renderOwed(
+  ctx: SimCtx,
+  def: PrologueDef,
+  owed: PrologueOwed,
+  campaign: CampaignDef,
+  index: number,
+): string {
+  const path = `triad[${index}].owed`;
+  const authored = typeof owed === 'string'
+    ? prologueProse(ctx, def, path, owed)
+    : prologueProse(ctx, def, `${path}.campaignText`, owed.campaignText);
+  return authored
     .replaceAll('{years}', String(campaign.years))
     .replaceAll('{endYear}', String(campaign.endYear));
 }
@@ -144,9 +190,9 @@ export function prologueTriad(ctx: SimCtx): PrologueView['triad'] | undefined {
   const def = prologueDef(ctx);
   if (!def) return undefined;
   const campaign = campaignDef(ctx.world.campaign);
-  return def.triad.map((beat) => ({
-    given: beat.given,
-    owed: renderOwed(beat.owed, campaign),
+  return def.triad.map((beat, index) => ({
+    given: prologueProse(ctx, def, `triad[${index}].given`, beat.given),
+    owed: renderOwed(ctx, def, beat.owed, campaign, index),
   }));
 }
 
@@ -162,40 +208,56 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
 
   const view: PrologueView = {
     id: def.id,
-    opening: def.opening,
+    opening: prologueProse(ctx, def, 'opening', def.opening),
     triad,
-    ...(def.namePrompt !== undefined ? { namePrompt: def.namePrompt } : {}),
+    ...(def.namePrompt !== undefined
+      ? { namePrompt: prologueProse(ctx, def, 'namePrompt', def.namePrompt) }
+      : {}),
     examination: def.examination.map((question) => ({
       id: question.id,
-      situation: question.situation,
-      answers: question.answers.map((answer) => ({
-        id: answer.id,
-        says: answer.says,
-        given: answer.given,
-        owed: answer.owed,
-      })),
+      situation: prologueProse(
+        ctx,
+        def,
+        `examination[id=${prosePathId(question.id)}].situation`,
+        question.situation,
+      ),
+      answers: question.answers.map((answer) => {
+        const base = `examination[id=${prosePathId(question.id)}].answers[id=${prosePathId(answer.id)}]`;
+        return {
+          id: answer.id,
+          says: prologueProse(ctx, def, `${base}.says`, answer.says),
+          given: prologueProse(ctx, def, `${base}.given`, answer.given),
+          owed: prologueProse(ctx, def, `${base}.owed`, answer.owed),
+        };
+      }),
     })),
-    housePrompt: def.housePrompt,
-    friendsPrompt: def.friendsPrompt,
+    housePrompt: prologueProse(ctx, def, 'housePrompt', def.housePrompt),
+    friendsPrompt: prologueProse(ctx, def, 'friendsPrompt', def.friendsPrompt),
     friendsWanted: MAX_FRIENDS,
-    heirlooms: def.heirlooms.flatMap((h) => {
-      const object = ctx.content.heirloom(String(h.heirloom));
+    heirlooms: def.heirlooms.flatMap((h, index) => {
+      const id = String(h.heirloom);
+      const object = ctx.content.heirloom(id);
       // Content edited out from under a save — the same shrug `tickTales`
       // makes. An option pointing at nothing is not an option.
       if (!object) return [];
       return [{
-        heirloom: String(h.heirloom),
-        name: object.name,
-        blurb: object.blurb ?? '',
-        line: h.line,
+        heirloom: id,
+        name: identifiedContentProse(ctx, 'heirlooms.yaml', 'heirlooms', id, 'name', object.name),
+        blurb: identifiedContentProse(ctx, 'heirlooms.yaml', 'heirlooms', id, 'blurb', object.blurb ?? ''),
+        line: prologueProse(ctx, def, `heirlooms[${index}].line`, h.line),
       }];
     }),
-    grudges: def.grudges.flatMap((g) => {
-      const house = ctx.content.house(String(g.house));
+    grudges: def.grudges.flatMap((g, index) => {
+      const id = String(g.house);
+      const house = ctx.content.house(id);
       if (!house) return [];
-      return [{ house: String(g.house), houseName: house.name, line: g.line }];
+      return [{
+        house: id,
+        houseName: identifiedContentProse(ctx, 'houses.yaml', 'houses', id, 'name', house.name),
+        line: prologueProse(ctx, def, `grudges[${index}].line`, g.line),
+      }];
     }),
-    thesis: def.thesis,
+    thesis: prologueProse(ctx, def, 'thesis', def.thesis),
   };
   const inherited = inheritedRumour(ctx, def);
   if (inherited) view.inherited = inherited;
