@@ -51,12 +51,6 @@
     },
     {
       "kind": "flag",
-      "key": "both_came_through",
-      "disposition": "delete",
-      "reason": "The triage branch is already distinguished by who remains alive plus its Treasury/relationship effects; the unread 'both came through' flag is redundant state."
-    },
-    {
-      "kind": "flag",
       "key": "bought_the_west_papers",
       "disposition": "delete",
       "reason": "No authored reader exists; buying the bundle already carries its treasury consequence and Chronicle record."
@@ -66,12 +60,6 @@
       "key": "bramme_copied_a_book",
       "disposition": "read",
       "reason": "Sending the Life book to Bramme creates an external institutional touchpoint and returns a correct marginal correction in an unknown hand. Preserve the marker for a later chapter-house/library callback rather than treating the copy as purely private."
-    },
-    {
-      "kind": "flag",
-      "key": "burned_the_dark_shelf",
-      "disposition": "delete",
-      "reason": "Burning the Death/Darkness shelf already leaves a durable Respect gain and the Chronicle preserves the act; the unread flag adds no separate rule or promised callback."
     },
     {
       "kind": "flag",
@@ -99,21 +87,9 @@
     },
     {
       "kind": "flag",
-      "key": "cut_the_seventh_stave",
-      "disposition": "delete",
-      "reason": "Cutting the stave already changes Respect and seeds rumour_the_missing_stave; those preserve the social trace of the missing verse, so the unread flag is redundant unless a concrete song reader is authored."
-    },
-    {
-      "kind": "flag",
       "key": "declined_the_chapter_house",
       "disposition": "read",
       "reason": "The refusal is the second Church refusal in a century and explicitly makes the Church begin to find the house interesting."
-    },
-    {
-      "kind": "flag",
-      "key": "denied_the_millers_boy",
-      "disposition": "delete",
-      "reason": "Publicly denying the miller's-boy story already damages the steward relationship and the event carries its rumour; the unread denial flag adds no separate durable consequence."
     },
     {
       "kind": "flag",
@@ -177,24 +153,6 @@
     },
     {
       "kind": "flag",
-      "key": "kept_the_eleven_days",
-      "disposition": "delete",
-      "reason": "Keeping the quarantine already pays durable Treasury and Respect consequences; the outcome's Wick reputation is represented there, so this unread flag adds no distinct current consequence."
-    },
-    {
-      "kind": "flag",
-      "key": "kept_the_forms",
-      "disposition": "delete",
-      "reason": "Keeping the forms already pays a durable Respect consequence and the outcome itself contains the assize payoff; no later rule needs a second memory flag merely to restate that paperwork was kept."
-    },
-    {
-      "kind": "flag",
-      "key": "kept_the_gate_open",
-      "disposition": "delete",
-      "reason": "Keeping the gate open already pays distinct Treasury and Respect consequences and the outcome records the human cost in prose; the unread flag duplicates current lasting state."
-    },
-    {
-      "kind": "flag",
       "key": "let_the_millers_boy_run",
       "disposition": "self_expression",
       "reason": "Letting the village story run is intentionally an expressive choice: the event-level rumour already carries the story and the outcome needs no invented resource cost. Delete the dead flag and tag let_it_run as self_expression in the later content slice."
@@ -204,12 +162,6 @@
       "key": "looted_library",
       "disposition": "read",
       "reason": "Buying the looted library costs 220 crowns and explicitly promises that three volumes enable the house's great-grandchildren. Preserve the flag for the later library/book consequence needed to make that authored long-term promise real."
-    },
-    {
-      "kind": "flag",
-      "key": "married_in_the_peace",
-      "disposition": "delete",
-      "reason": "The cheap Long-Peace match already carries its Treasury cost and the event seeds the cheap-wedding rumour; the unread flag adds no distinct current consequence."
     },
     {
       "kind": "flag",
@@ -267,12 +219,6 @@
     },
     {
       "kind": "flag",
-      "key": "priced_out_of_the_quickening",
-      "disposition": "delete",
-      "reason": "This is narration-only age colour: the house buys nothing in the inflated book market and no later rule reads the marker. Delete the dead write rather than inventing a consequence for a non-choice outcome."
-    },
-    {
-      "kind": "flag",
       "key": "refused_the_flask",
       "disposition": "delete",
       "reason": "Refusing the flask already leaves a durable Respect gain and the Chronicle can preserve the refusal; the unread flag adds no separate current consequence or authored future promise."
@@ -282,12 +228,6 @@
       "key": "regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
-    },
-    {
-      "kind": "flag",
-      "key": "retained_the_physician",
-      "disposition": "delete",
-      "reason": "Retaining the physician already persists through Treasury cost and a positive relationship to the physician; this unread flag duplicates those durable consequences."
     },
     {
       "kind": "flag",
@@ -321,12 +261,6 @@
     },
     {
       "kind": "flag",
-      "key": "shut_the_gate_in_the_plague",
-      "disposition": "delete",
-      "reason": "Shutting the gate already pays large Treasury and Respect consequences, which are the scene's durable arithmetic/reputation cost; no separate unread flag is required."
-    },
-    {
-      "kind": "flag",
       "key": "signs_noticed",
       "disposition": "read",
       "reason": "The midwife notices dulling iron in the birthing room, a concrete early blood-sign clue with a natural later reader."
@@ -348,12 +282,6 @@
       "key": "steward_left_bitter",
       "disposition": "read",
       "reason": "The leaving steward takes eleven years of knowledge about which rooms are never opened. That is a concrete former-insider exposure risk and a natural later household/secret callback, not merely flavour."
-    },
-    {
-      "kind": "flag",
-      "key": "stood_pat_in_the_quickening",
-      "disposition": "delete",
-      "reason": "Standing pat already costs Respect and the outcome explains the house losing relative position; the unread flag duplicates that lasting standing consequence."
     },
     {
       "kind": "flag",
@@ -420,12 +348,6 @@
       "key": "the_clerk_asked_again",
       "disposition": "read",
       "reason": "This key comes from #341 ranked event what_he_did_with_the_key. The clerk asking again after receiving the short list is a natural later records/Crown callback and gives #341 a remembered institutional consequence without adding another money price."
-    },
-    {
-      "kind": "flag",
-      "key": "the_crowded_years",
-      "disposition": "delete",
-      "reason": "Both random outcomes of let_it_ride write the same flag, so it cannot preserve whether the hall stayed crowded or settled; the crowded outcome already persists through branch slight +6 and the Chronicle records the scene."
     },
     {
       "kind": "flag",
@@ -516,12 +438,6 @@
       "key": "the_press_was_burned_unread",
       "disposition": "read",
       "reason": "Burning the dead man's papers destroys unique evidence unread; preserve that deliberate loss for later family-record content."
-    },
-    {
-      "kind": "flag",
-      "key": "the_reader_was_not_welcomed",
-      "disposition": "delete",
-      "reason": "Keeping the Crusade reader at arm's length already persists as a -10 relationship to that priest; the unread flag duplicates the same social consequence without a distinct later fact."
     },
     {
       "kind": "flag",
@@ -753,12 +669,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_book_was_read",
-      "disposition": "delete",
-      "reason": "The Record Chronicle already preserves that Bramme's registrar read the book and left a minute; the separate knowledge write has no current authored reader."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_book_went_entire",
       "disposition": "read",
       "reason": "The complete copy becomes an irreversible Cawdry record for eight hundred years and is the truthful counterpart to the short-copy discrepancy."
@@ -780,12 +690,6 @@
       "key": "knows_the_caster_descent_was_bought",
       "disposition": "delete",
       "reason": "This Record grant is write-only choice debt; the Chronicle and deed claim already preserve that the Caster-grade descent was bought, so a second simulation-memory key adds no consequence."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_caster_list",
-      "disposition": "delete",
-      "reason": "The family receives the Caster letter regardless of how the Record is written; the durable political state belongs in the interaction flags. The Chronicle/deed already preserves the list fact, so this Record-only knowledge key is redundant."
     },
     {
       "kind": "knowledge",
@@ -1161,12 +1065,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_song_holds_a_clause",
-      "disposition": "delete",
-      "reason": "The same outcome already reveals clause_of_the_term through the clause effect, which is the durable gameplay fact. Keeping a separate unread knowledge key would duplicate that revealed-clause state."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_stair_was_searched",
       "disposition": "delete",
       "reason": "This branch establishes only that the cellar stair was searched and nothing was found; it already costs treasury and the scene itself preserves the failed search. The distinct drain discovery has its own live knowledge, so this marker adds no separate future fact."
@@ -1398,12 +1296,6 @@
       "key": "knows_what_the_drain_is_for",
       "disposition": "read",
       "reason": "The cut cellar drain and paid 1211 deposition are concrete physical evidence with an unresolved purpose."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_fever_took",
-      "disposition": "delete",
-      "reason": "The Plague Record already preserves the household count in Chronicle/deed state; no separate knowledge key is needed merely to remember the recorded number."
     },
     {
       "kind": "knowledge",

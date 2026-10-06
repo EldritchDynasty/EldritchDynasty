@@ -114,8 +114,7 @@ events:
             The house buys nothing this year and is worth more at the end of it
             than at the start, which is the least useful way there is to become
             wealthier.
-          effects:
-            - { kind: flag, flag: priced_out_of_the_quickening, set: true }
+          effects: []
 
   - id: the_ladder_gets_crowded
     title: The Line Got Longer
@@ -169,7 +168,6 @@ events:
                 is other people's names that have moved.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: stood_pat_in_the_quickening, set: true }
 
   - id: the_millers_boy
     title: What They Decided at the Second Cup
@@ -208,7 +206,6 @@ events:
                 which is a better story than the one it had before.
               effects:
                 - { kind: relationship, from: head, to: { slot: STEWARD }, sentiment: -5 }
-                - { kind: flag, flag: denied_the_millers_boy, set: true }
         - id: let_it_run
           label: Let it run. Wick has invented worse.
           outcomes:

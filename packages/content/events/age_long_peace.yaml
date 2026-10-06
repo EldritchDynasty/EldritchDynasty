@@ -54,7 +54,6 @@ events:
                 It is not a crisis. It is eleven small grievances that all
                 agree to be about the seating.
               effects:
-                - { kind: flag, flag: the_crowded_years, set: true }
                 - { kind: branch, op: slight, amount: 6 }
             - id: settled
               weight: 36
@@ -62,8 +61,7 @@ events:
                 Two of them sort themselves out without being asked, which is
                 the reward for having done nothing, and it is not a reward the
                 house can count on twice.
-              effects:
-                - { kind: flag, flag: the_crowded_years, set: true }
+              effects: []
     record:
       subject: the crowded years
       options:
@@ -181,7 +179,6 @@ events:
                 purchase nobody is ever impressed by.
               effects:
                 - { kind: treasury, delta: -10 }
-                - { kind: flag, flag: married_in_the_peace, set: true }
         - id: hold_out
           label: Hold out. A match should cost the other house something.
           outcomes:
@@ -296,7 +293,6 @@ events:
                 tenants, by people who thought it was about a road.
               effects:
                 - { kind: clause, reveal: clause_of_the_term }
-                - { kind: knowledge, op: grant, flag: knows_the_song_holds_a_clause }
         - id: have_it_dropped
           label: Have the seventh stave dropped. Quietly, from this year onward.
           outcomes:
@@ -311,6 +307,5 @@ events:
                 time, like caution.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: cut_the_seventh_stave, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_missing_stave, accuracy: 0.55 }
     rumour: { id: rumour_the_missing_stave, accuracy: 0.4, spread: 1 }
