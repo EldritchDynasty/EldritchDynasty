@@ -21,6 +21,12 @@
     },
     {
       "kind": "flag",
+      "key": "corrected_the_list",
+      "disposition": "read",
+      "reason": "The successful correction outcome explicitly promises that the filed correction becomes 'exactly the right nine days' when it later matters. A future institutional reader must pay off that authored promise."
+    },
+    {
+      "kind": "flag",
       "key": "head_defied_guardian",
       "disposition": "delete",
       "reason": "No authored condition reads this flag, and no core/client runtime string reader exists; the held branch still changes Respect and the Chronicle records the decision."
@@ -36,6 +42,12 @@
       "key": "kept_an_early_waking_quiet",
       "disposition": "read",
       "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
+    },
+    {
+      "kind": "flag",
+      "key": "on_the_caster_list",
+      "disposition": "read",
+      "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."
     },
     {
       "kind": "flag",
@@ -66,6 +78,12 @@
       "key": "the_chapel_stayed_shut",
       "disposition": "read",
       "reason": "Keeping the anomalous chapel shut is a durable institutional/myth-layer choice. A later Church or house callback should distinguish the family that concealed it rather than letting the flag remain dead."
+    },
+    {
+      "kind": "flag",
+      "key": "the_hall_was_counted",
+      "disposition": "read",
+      "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
     },
     {
       "kind": "flag",
@@ -138,6 +156,12 @@
       "key": "knows_the_caster_descent_was_bought",
       "disposition": "delete",
       "reason": "This Record grant is write-only choice debt; the Chronicle and deed claim already preserve that the Caster-grade descent was bought, so a second simulation-memory key adds no consequence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_caster_list",
+      "disposition": "delete",
+      "reason": "The family receives the Caster letter regardless of how the Record is written; the durable political state belongs in the interaction flags. The Chronicle/deed already preserves the list fact, so this Record-only knowledge key is redundant."
     },
     {
       "kind": "knowledge",
@@ -354,6 +378,12 @@
       "key": "knows_what_is_in_the_orchard",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; covering the orchard already costs treasury and seeds the orchard rumour, so the act remains mechanically consequential without the dead key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_what_the_fever_took",
+      "disposition": "delete",
+      "reason": "The Plague Record already preserves the household count in Chronicle/deed state; no separate knowledge key is needed merely to remember the recorded number."
     },
     {
       "kind": "knowledge",
