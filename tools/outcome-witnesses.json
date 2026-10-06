@@ -209,6 +209,8 @@
     "the_book_that_was_returned|read_the_margins|the_question_in_the_margin",
     "the_book_that_was_returned|wash_the_margins|the_wash_takes_the_text",
     "the_book_that_was_returned|wash_the_margins|washed",
+    "the_book_that_will_not_take||nothing",
+    "the_book_that_will_not_take||stops_trying",
     "the_book_they_never_returned|ask_for_it_back|asked",
     "the_book_they_never_returned|ask_for_it_back|they_deny_it",
     "the_book_they_never_returned|leave_it_on_their_shelf|left",
