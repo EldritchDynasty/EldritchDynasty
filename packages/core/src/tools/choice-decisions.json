@@ -15,6 +15,12 @@
     },
     {
       "kind": "flag",
+      "key": "both_came_through",
+      "disposition": "delete",
+      "reason": "The triage branch is already distinguished by who remains alive plus its Treasury/relationship effects; the unread 'both came through' flag is redundant state."
+    },
+    {
+      "kind": "flag",
       "key": "bought_the_west_papers",
       "disposition": "delete",
       "reason": "No authored reader exists; buying the bundle already carries its treasury consequence and Chronicle record."
@@ -51,9 +57,21 @@
     },
     {
       "kind": "flag",
+      "key": "kept_the_eleven_days",
+      "disposition": "delete",
+      "reason": "Keeping the quarantine already pays durable Treasury and Respect consequences; the outcome's Wick reputation is represented there, so this unread flag adds no distinct current consequence."
+    },
+    {
+      "kind": "flag",
       "key": "kept_the_forms",
       "disposition": "delete",
       "reason": "Keeping the forms already pays a durable Respect consequence and the outcome itself contains the assize payoff; no later rule needs a second memory flag merely to restate that paperwork was kept."
+    },
+    {
+      "kind": "flag",
+      "key": "kept_the_gate_open",
+      "disposition": "delete",
+      "reason": "Keeping the gate open already pays distinct Treasury and Respect consequences and the outcome records the human cost in prose; the unread flag duplicates current lasting state."
     },
     {
       "kind": "flag",
@@ -63,9 +81,21 @@
     },
     {
       "kind": "flag",
+      "key": "opened_the_gate_to_wick",
+      "disposition": "read",
+      "reason": "This flag is the only durable distinction between opening to Wick and being spared versus opening and the hall taking the fever; reserve it for a later household/village reader so the weighted outcome remains meaningfully distinct."
+    },
+    {
+      "kind": "flag",
       "key": "regalia_incomplete",
       "disposition": "delete",
       "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
+    },
+    {
+      "kind": "flag",
+      "key": "retained_the_physician",
+      "disposition": "delete",
+      "reason": "Retaining the physician already persists through Treasury cost and a positive relationship to the physician; this unread flag duplicates those durable consequences."
     },
     {
       "kind": "flag",
@@ -84,6 +114,12 @@
       "key": "sheltered_the_wrong_man",
       "disposition": "read",
       "reason": "The losing shelter outcome explicitly leaves the house named in a Cawdry file for two generations. Reserve the flag for a later institutional callback that makes that durable record matter."
+    },
+    {
+      "kind": "flag",
+      "key": "shut_the_gate_in_the_plague",
+      "disposition": "delete",
+      "reason": "Shutting the gate already pays large Treasury and Respect consequences, which are the scene's durable arithmetic/reputation cost; no separate unread flag is required."
     },
     {
       "kind": "flag",
