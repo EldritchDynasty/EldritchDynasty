@@ -192,7 +192,7 @@ const expected = (proof: GateProof = trustedProof()) => ({
       env: { ...process.env, ED_GATE_READ_TRACE: trace },
       stdio: 'pipe',
     });
-    const rows = readFileSync(trace, 'utf8').trim().split(/\\r?\\n/).map((line) => JSON.parse(line));
+    const rows = readFileSync(trace, 'utf8').trim().split(/\r?\n/).map((line) => JSON.parse(line));
     expect(rows).toContainEqual({ gate: 'fixture', marker: 'start' });
     expect(rows).toContainEqual({ gate: 'fixture', path: target });
   });
