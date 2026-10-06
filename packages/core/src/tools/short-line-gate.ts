@@ -13,6 +13,7 @@ import { loadContent } from '@ed/content';
 import { indexContent, type Content, type ContentBundle, type EndingId } from '@ed/schema';
 import { campaignDef } from '../campaign.js';
 import { playToTheEnd, type EndingRun } from './ending-gate.js';
+import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 
 type Source = ContentBundle | Content;
 
@@ -128,11 +129,21 @@ export function shortLineVerdictOver(
   return { ok: failures.length === 0, lines };
 }
 
-export function gateShortLine(source: Source = loadContent(), runs = 100): ShortLineVerdict {
+export function gateShortLine(
+  source: Source = loadContent(),
+  runs = BLOCKING_GATE_CONFIG['short-line'].runs,
+): ShortLineVerdict {
+  const config = BLOCKING_GATE_CONFIG['short-line'];
   const content = indexContent(source);
-  const def = campaignDef('short');
+  const def = campaignDef(config.campaign);
   const played = Array.from({ length: runs }, (_, i) =>
-    playToTheEnd(content, 6600 + i, def.years, 'chronicler', 'short'));
+    playToTheEnd(
+      content,
+      config.seedStart + i * config.seedStep,
+      config.years,
+      config.decider,
+      config.campaign,
+    ));
 
   const authoredEvents = content.events.filter((event) => event.tier !== 'frame').map((event) => String(event.id));
   const verdict = shortLineVerdictOver(played, def.clauses, authoredEvents);
@@ -144,7 +155,7 @@ export function gateShortLine(source: Source = loadContent(), runs = 100): Short
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('short-line-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? 100);
+  const runs = Number(process.argv[2] ?? BLOCKING_GATE_CONFIG['short-line'].runs);
   const verdict = gateShortLine(loadContent(), runs);
   for (const line of verdict.lines) console.log(line);
   process.exit(verdict.ok ? 0 : 1);
