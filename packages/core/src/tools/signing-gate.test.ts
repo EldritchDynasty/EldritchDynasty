@@ -22,7 +22,7 @@ describe('signing balance verdict (#343)', () => {
     expect(verdict.ok, verdict.lines.join('\n')).toBe(true);
   });
 
-  it('goes red on a deliberately lopsided answer', () => {
+  it('fails a deliberately lopsided answer', () => {
     const verdict = verdictOver([
       ...samples('right_answer', { reachedTerm: 1, bestRung: 3, clauses: 3, ending: 'settled' }),
       ...samples('wrong_answer', { reachedTerm: 0, bestRung: 1, clauses: 0, ending: undefined }),
