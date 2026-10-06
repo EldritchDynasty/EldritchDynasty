@@ -50,6 +50,25 @@ export function renderProse(ctx: SimCtx, address: string | undefined, original: 
   return original;
 }
 
+/**
+ * The content worklist and runtime must spell authored prose identity exactly
+ * the same way. Callers own the structural path because they own the schema
+ * that produced it; this helper owns only the stable `content:<file>#<path>`
+ * envelope shared with `contentProseEntries`.
+ */
+export function contentProseAddress(file: string, path: string): string {
+  return `content:${file}#${path}`;
+}
+
+export function renderContentProse(
+  ctx: SimCtx,
+  file: string,
+  path: string,
+  original: string,
+): string {
+  return renderProse(ctx, contentProseAddress(file, path), original);
+}
+
 function eventBaseAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
   const file = ctx.content.sourceOf(String(event.id));
   return file === undefined
