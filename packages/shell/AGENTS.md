@@ -47,6 +47,12 @@ that flag through makes Electron behave as Node and fail before it can create a
 window. The launcher removes that one inherited host flag before starting the
 real Electron binary.
 
+Electron is pinned to the 41 line, which clears every reported advisory but is
+out of upstream support. Moving past it means taking on 42's on-demand binary
+download, which `scripts/electron.mjs` assumes away, and 43's dialog default
+path. Both are scoped in #514; the audit record is
+[docs/DEPENDENCIES.md](../../docs/DEPENDENCIES.md).
+
 ## Boundaries
 
 - `electron-builder.yml` is the single packaging configuration for both Windows

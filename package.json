@@ -91,11 +91,12 @@
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.2",
     "@vue/test-utils": "^2.5.0",
-    "esbuild": "^0.21.5",
+    "esbuild": "^0.25.12",
     "jsdom": "^25.0.1",
     "tsx": "^4.23.11",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.3.9"
   }
 }

@@ -1,11 +1,11 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
 import { DurationSequencer } from './tools/shards.mjs';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
-/** Where the suites that mount a component live. See `poolMatchGlobs` below. */
+/** Where the suites that mount a component live. See `projects` below. */
 export const DOM_SUITES = '**/packages/client/src/components/**/*.test.ts';
 
 /**
@@ -74,6 +74,28 @@ export const DOM_SUITES = '**/packages/client/src/components/**/*.test.ts';
  */
 export const SLOW_SUITES = 'packages/**/*.slow.test.ts';
 
+/**
+ * `--exclude` REACHES EVERY PROJECT, BECAUSE VITEST 4 DOES NOT SEND IT THERE.
+ *
+ * Vitest 4 forwards a fixed list of CLI options into inline `projects`, and
+ * `exclude` is not on it (#506). So `test:fast`'s `--exclude` on the slow
+ * suites excluded them from the root project — which runs no files — and the
+ * "fast" lane quietly played every `*.slow.test.ts` in the repository: past
+ * ten minutes on a lane that takes two, with nothing in the output saying the
+ * flag had been dropped. `configureVitest` runs once per project after they
+ * resolve and before any file is globbed, which is the one point where the
+ * CLI's patterns can still be handed down. `lanes.test.ts` asserts this lane
+ * excludes what it says it does.
+ */
+const cliExcludeReachesProjects = {
+  name: 'ed:cli-exclude-reaches-projects',
+  configureVitest({ vitest, project }: { vitest: { config: { cliExclude?: string[] } }; project: { config: { exclude: string[] } } }) {
+    for (const glob of vitest.config.cliExclude ?? []) {
+      if (!project.config.exclude.includes(glob)) project.config.exclude.push(glob);
+    }
+  },
+};
+
 export default defineConfig({
   /**
    * THE VUE PLUGIN IS HERE FOR THE CLIENT'S COMPONENT TESTS.
@@ -89,7 +111,7 @@ export default defineConfig({
    * the 125 suites do not want a DOM and jsdom costs about 300ms per file to
    * stand up.
    */
-  plugins: [vue()],
+  plugins: [vue(), cliExcludeReachesProjects],
   resolve: {
     alias: {
       '@ed/schema': r('./packages/schema/src/index.ts'),
@@ -98,8 +120,22 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['packages/**/*.test.ts'],
     environment: 'node',
+    /**
+     * NO WALL-CLOCK LIMIT, WHICH IS WHAT EVERY SUITE HERE WAS WRITTEN AGAINST.
+     *
+     * Nearly every test and `beforeAll` in this repository is SYNCHRONOUS —
+     * it plays years or a batch of runs and then asserts. Vitest 2 never
+     * failed one of those for taking long. Vitest 4 does (#506): it times the
+     * call and fails it AFTER it has finished if it ran past the limit, so
+     * the 5s/10s defaults turned six fast-lane suites red on the day of the
+     * upgrade, and would have turned red whichever ones a busy runner slowed
+     * down on any day after. A sync test cannot be interrupted, so a limit on
+     * one is not a guard against a hang; it is a load-dependent coin. A real
+     * hang is still bounded, by the CI job's own timeout.
+     */
+    testTimeout: 0,
+    hookTimeout: 0,
     /**
      * ISOLATION OFF, AND INVARIANT 8 IS WHY IT IS SAFE.
      *
@@ -126,7 +162,7 @@ export default defineConfig({
      * `// @vitest-environment` or its own describe-level setup, rather than by
      * turning this back on for all 132.
      *
-     * Set per pool, below, because a top-level `isolate` overrides both.
+     * Set per project, below, because a top-level `isolate` overrides both.
      */
     /**
      * ── EXCEPT A DOM, WHICH IS MODULE-LEVEL STATE BY CONSTRUCTION ──────────
@@ -142,9 +178,31 @@ export default defineConfig({
      * So the suites that mount a component (`DOM_SUITES`) run in the `threads`
      * pool, isolated per file; everything else keeps the shared registry.
      * `lanes.test.ts` fails the build if a suite mounts one anywhere else.
+     *
+     * Two PROJECTS, because vitest 4 removed `poolMatchGlobs` and
+     * `poolOptions` (#506). Left in place they are ignored without a word,
+     * and every file — the DOM suites included — lands in one pool on one
+     * isolation setting, which is the #269 bug again with nothing to say so.
+     * `extends: true` gives both projects the plugin, the aliases and the
+     * environment above; the sequencer below stays global, so the shards are
+     * still packed over the whole file list rather than per project.
      */
-    poolMatchGlobs: [[DOM_SUITES, 'threads']],
-    poolOptions: { forks: { isolate: false }, threads: { isolate: true } },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          include: ['packages/**/*.test.ts'],
+          exclude: [...configDefaults.exclude, DOM_SUITES],
+          pool: 'forks',
+          isolate: false,
+        },
+      },
+      {
+        extends: true,
+        test: { name: 'dom', include: [DOM_SUITES], pool: 'threads', isolate: true },
+      },
+    ],
     sequence: {
       /**
        * ── THE SHARDS ARE PACKED BY DURATION, NOT BY PATH HASH ─────────────
