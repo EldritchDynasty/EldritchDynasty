@@ -7,7 +7,7 @@ import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
-  gatePostFillability, gateSlotFillability, judgeZeroReach,
+  gatePostFillability, gateSlotFillability, judgeZeroReach, madnessHolderRow,
 } from './tools/gates.js';
 import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
@@ -25,8 +25,65 @@ import { gateUnwitnessedOutcomeReach } from './tools/outcome-reach-blocking.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
 import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
+import { makeRng } from './rng.js';
+import { place, testWorld } from './testing.js';
+import { genomeOf, phenotypeOf } from './people/factory.js';
+import { executeOutcomeWitness } from './events/reach.js';
+import { eldritchPower, madnessOf, mindOf } from './ascension.js';
 
 const content = loadContent();
+
+describe('#431 forced-Awakening provenance', () => {
+  it('records the Drowning survivor as forced in the same row gate 9 reports', () => {
+    const ctx = testWorld(content, 9431);
+    const donor = ctx.world.people.living()
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    if (!donor) throw new Error('Drowning provenance fixture has no founding expresser genome');
+
+    const child = place(ctx, {
+      sex: 'male',
+      age: 12,
+      name: 'Drowning Provenance Witness',
+    });
+    child.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    child.phenotype = undefined;
+
+    // Make CHILD unambiguous without bypassing the real slot resolver: every
+    // other living person is outside the authored 7–15 Drowning cast window.
+    for (const person of ctx.world.people.living()) {
+      if (person.id !== child.id) person.born = ctx.world.year - 30;
+    }
+
+    const drowning = content.events.find((event) => event.id === 'the_drowning');
+    if (!drowning) throw new Error('authored Drowning event is missing');
+    expect(child.awakening.awakened).toBe(false);
+
+    const result = executeOutcomeWitness(ctx, drowning, {
+      choiceId: 'full_count',
+      expectedOutcomeId: 'woke',
+      targetWeightedOutcome: true,
+      rng: makeRng(9432),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(child.awakening.awakened).toBe(true);
+    expect(child.awakening.forced).toBe(true);
+
+    const eldritch = phenotypeOf(child, ctx.genetics, ctx.world.year).eldritch;
+    const row = madnessHolderRow(9431, ctx.world.year, child, {
+      madness: madnessOf(ctx, child),
+      mind: mindOf(ctx, child),
+      power: eldritchPower(ctx, child),
+      carriedFont: eldritch.carriedFont,
+      ceiling: eldritch.ceiling,
+    });
+    expect(row).toMatchObject({
+      id: child.id,
+      name: child.name,
+      rawMadness: child.madness,
+      forced: true,
+    });
+  });
+});
 
 describe('#441 trusted gate proof skips', () => {
   it('removes only named blocking gates from their lane', () => {
