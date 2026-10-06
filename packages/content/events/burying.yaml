@@ -258,8 +258,9 @@ events:
                 It stands alone, as it has for years, and the house goes on
                 being the only house that says so. That is a position, and it
                 is not a strong one, and it does not get stronger.
+              # #341: the refusal was a flag nothing read (#334). It is a page now.
               effects:
-                - { kind: flag, flag: the_house_declined_cawdry, set: true }
+                - { kind: chronicle, text: The house was offered a second paper from Cawdry and would not buy it. Its account stands on one. }
 
   - id: something_the_church_wants_more
     title: Something The Church Wants More
@@ -307,5 +308,8 @@ events:
                 He takes it well and goes elsewhere for the roof, which he gets
                 inside a year from a house with less to be careful about. The
                 other matter is not raised. It is also not closed.
+              # #341: a refusal the house's own book can see, beside the flag a
+              # later Church scene may read (#334 keeps that key reserved).
               effects:
                 - { kind: flag, flag: the_chantry_was_declined, set: true }
+                - { kind: chronicle, text: The Deacon came about a chantry and the house sent him to roof it elsewhere. }

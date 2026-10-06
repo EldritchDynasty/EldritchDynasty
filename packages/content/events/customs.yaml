@@ -59,9 +59,12 @@ events:
                 where to look. Wick has the whole of it by Thaw, with one of
                 the names wrong, and holds the house higher for it than for
                 anything it did that year with money.
+              # #341: Wick's version, one name wrong, is a rumour the prose
+              # already tells.
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: MOURNER }, to: head, sentiment: 14 }
+                - { kind: rumour, op: seed, id: rumour_the_two_names_at_slaughter, accuracy: 0.5 }
 
   - id: a_man_who_drinks_standing
     title: A Man Who Drinks Standing

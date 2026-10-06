@@ -107,9 +107,11 @@ events:
                 one. Nobody is hanged, which is a relief to everybody. Three
                 families on this land were questioned about their honesty by a
                 court because the hall sent four marks down a hill.
+              # #341: the prose prices this in the three questioned families,
+              # and nobody in it thinks better of the hall for it.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -14 }
-                - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: Four light marks out of the rents were sent to the magistrate at Bramme, and three households were questioned. }
 
   - id: the_pledge_in_the_box
     title: A Ring, Against Two Marks

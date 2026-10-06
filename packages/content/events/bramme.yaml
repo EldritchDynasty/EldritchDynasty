@@ -116,9 +116,11 @@ events:
                 it instead of a quarrel with a memory. He comes up the hill at
                 Thaw for the first time in three years. It is not settled in
                 his lifetime and it is settled.
+              # #341: carrying a debt nobody was paying cost the box nothing new.
+              # What it buys is a page and a man back on the hill.
               effects:
-                - { kind: treasury, delta: -13 }
-                - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: The arrears on the holding at the top of the lane were written into its terms as a charge, and carried. }
+                - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: the_burgesses_answer_is_no
     title: Bramme's Answer Is No

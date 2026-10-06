@@ -150,9 +150,11 @@ events:
                 Haying. In 1148 a clerk finds it written that this house
                 mended that wall, and reads it exactly the way the other side
                 would want it read.
+              # #341: the clerk in 1148 needs something to find. The flag that
+              # stood in for it was read by nothing (#334).
               effects:
                 - { kind: treasury, delta: -7 }
-                - { kind: flag, flag: mended_the_march_wall, set: true }
+                - { kind: chronicle, text: The house mended the march wall on the high pasture with its own men, and said nothing about whose wall it was. }
         - id: take_it_to_cawdry
           label: Take it to the assize and make them produce something.
           outcomes:
@@ -168,6 +170,8 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: The march wall was found for the house at Cawdry, on the word of its own tenants. }
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
             - id: found_against
               weight: 38
               text: >-
@@ -180,6 +184,7 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: -1 }
+                - { kind: chronicle, text: The march wall was found against the house at Cawdry, and the line entered. }
 
   - id: the_invitation_from_cawdry
     title: What It Costs to Be Seen There
