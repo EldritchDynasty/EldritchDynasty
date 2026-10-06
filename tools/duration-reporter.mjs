@@ -59,26 +59,24 @@ export default class DurationReporter {
    * nothing saying so. A reporter already holds the tasks — so it counts them
    * here, and nothing has to parse anybody's prose.
    */
-  onFinished(files = []) {
+  onTestRunEnd(testModules = []) {
+    // Vitest 4 removed `onFinished` and its raw file tasks (#506). A reporter
+    // still declaring only that hook is never called, writes nothing, and
+    // `cost.mjs` reads the stale table back as if it were this run's.
     const rows = {};
     let tests = 0;
-    const countTests = (task) => {
-      for (const t of task.tasks ?? []) {
-        if (t.type === 'test' || t.type === 'custom') tests += 1;
-        else countTests(t);
-      }
-    };
-    for (const f of files) {
-      if (!f.filepath) continue;
-      countTests(f);
+    for (const m of testModules) {
+      if (!m.moduleId) continue;
+      tests += [...m.children.allTests()].length;
+      const d = m.diagnostic();
       const parts = {
-        prepare: f.prepareDuration ?? 0,
-        environment: f.environmentLoad ?? 0,
-        setup: f.setupDuration ?? 0,
-        collect: f.collectDuration ?? 0,
-        tests: f.result?.duration ?? 0,
+        prepare: d.prepareDuration ?? 0,
+        environment: d.environmentSetupDuration ?? 0,
+        setup: d.setupDuration ?? 0,
+        collect: d.collectDuration ?? 0,
+        tests: d.duration ?? 0,
       };
-      rows[f.filepath] = {
+      rows[m.moduleId] = {
         ...parts,
         total: Math.round(Object.values(parts).reduce((a, b) => a + b, 0)),
       };

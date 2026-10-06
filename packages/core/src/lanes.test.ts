@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -507,7 +508,7 @@ describe('the shards are packed by duration', () => {
  * Vue's renderer keeps the `document` it was first imported under, and the
  * shared registry this config runs with hands it to the next jsdom file in the
  * worker, whose elements then land in a document its selectors do not search.
- * `vitest.config.ts` sends the mounting suites to an isolating pool by GLOB;
+ * `vitest.config.ts` sends the mounting suites to an isolating project by GLOB;
  * a suite that mounts outside that glob would pass alone and fail the day the
  * scheduler put it behind another one.
  */
@@ -519,8 +520,12 @@ describe('a suite that mounts a component', () => {
 
   it('names where the mounting suites live, and isolates that pool', () => {
     expect(glob, 'DOM_SUITES is no longer a `**/<dir>/**/*.test.ts` glob this test can read').toBeDefined();
-    expect(config).toContain("poolMatchGlobs: [[DOM_SUITES, 'threads']]");
-    expect(config).toMatch(/threads: \{ isolate: true \}/);
+    // Vitest 4 dropped `poolMatchGlobs`/`poolOptions` and ignores them
+    // silently (#506), so the split is two projects: the DOM suites in an
+    // isolating `threads` project, and excluded from the shared-registry one.
+    expect(config).toContain("include: [DOM_SUITES], pool: 'threads', isolate: true");
+    expect(config).toContain('exclude: [...configDefaults.exclude, DOM_SUITES]');
+    expect(config).not.toMatch(/^\s*(poolMatchGlobs|poolOptions):/m);
   });
 
   it('lives inside that glob', () => {
@@ -540,5 +545,42 @@ describe('a suite that mounts a component', () => {
     expect(mounting.length, 'found no suite that mounts a component — has the walker gone blind?').toBeGreaterThan(0);
     const outside = mounting.filter((f) => !f.startsWith(glob!));
     expect(outside, `these mount a component outside ${glob}, where the registry is shared`).toEqual([]);
+  });
+});
+
+/**
+ * THE FAST LANE EXCLUDES WHAT IT SAYS IT DOES — ASKED OF VITEST, NOT GREPPED.
+ *
+ * Vitest 4 stopped passing `--exclude` down into `projects` (#506), and the
+ * fast lane went on running every `*.slow.test.ts` with no error and a green
+ * result at the end of it. Every text-level check above would still have
+ * passed: the script said the right thing, and vitest ignored it. So this asks
+ * vitest which files `test:fast` would collect, using the script's own glob,
+ * and which project each lands in.
+ */
+describe('the fast lane, as vitest resolves it', () => {
+  const script = JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')).scripts['test:fast'] as string;
+  const exclude = /--exclude "([^"]+)"/.exec(script)?.[1];
+  const listed = (args: string[]): { file: string; projectName: string }[] => {
+    const run = spawnSync(
+      process.execPath,
+      [join(REPO, 'node_modules/vitest/vitest.mjs'), 'list', '--filesOnly', '--json', ...args],
+      { cwd: REPO, encoding: 'utf8' },
+    );
+    expect(run.status, run.stderr).toBe(0);
+    return JSON.parse(run.stdout);
+  };
+
+  it('collects no slow suite, and the DOM suites only in the isolating project', () => {
+    expect(exclude, '`test:fast` no longer carries an `--exclude "<glob>"` this test can read').toBeDefined();
+    const files = listed(['--exclude', exclude!]).map((f) => ({
+      path: f.file.replace(/\\/g, '/'),
+      project: f.projectName,
+    }));
+    expect(files.length, 'vitest listed no files at all').toBeGreaterThan(0);
+    expect(files.filter((f) => f.path.endsWith('.slow.test.ts')).map((f) => f.path)).toEqual([]);
+    const dom = files.filter((f) => f.path.includes('/packages/client/src/components/'));
+    expect(dom.length, 'no DOM suite was listed — has DOM_SUITES moved?').toBeGreaterThan(0);
+    expect(files.filter((f) => (f.project === 'dom') !== dom.includes(f)).map((f) => f.path)).toEqual([]);
   });
 });

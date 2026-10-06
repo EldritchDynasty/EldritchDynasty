@@ -216,7 +216,7 @@ function measureFull() {
 
     const raw = JSON.parse(readFileSync(out, 'utf8'));
     // The COUNTS come from the reporter, not from a regex over the default
-    // reporter's summary — see that file's `onFinished`. The regex version
+    // reporter's summary — see that file's `onTestRunEnd`. The regex version
     // stopped matching the moment a second reporter was attached, and left a
     // stale line in AGENTS.md without failing anything.
     if (raw.summary) {
