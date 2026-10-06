@@ -75,6 +75,25 @@ describe('#441 gate dependency fingerprints', () => {
     expect(changedEntry.fingerprint).not.toBe(before.fingerprint);
   });
 
+  it('invalidates when the recorded execution configuration changes', async () => {
+    const root = fixtureRepo();
+    const before = await fingerprintGateDependencies({
+      repoRoot: root,
+      gate: 'fixture',
+      entry: { module: 'packages/core/src/gate.ts', exportName: 'gate' },
+      configuration: { runs: 12, seeds: [1, 2, 3] },
+      toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
+    });
+    const changed = await fingerprintGateDependencies({
+      repoRoot: root,
+      gate: 'fixture',
+      entry: { module: 'packages/core/src/gate.ts', exportName: 'gate' },
+      configuration: { runs: 13, seeds: [1, 2, 3] },
+      toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
+    });
+    expect(changed.fingerprint).not.toBe(before.fingerprint);
+  });
+
   it('derives code transitively, includes all content, and ignores unrelated docs/UI', async () => {
     const root = fixtureRepo();
     const before = await fingerprint(root);
