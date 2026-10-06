@@ -40,7 +40,6 @@ events:
             It is a loan the way the sea is a loan. Somebody will be back for
             it, and the somebody will not be anyone currently in this room.
           effects:
-            - { kind: flag, flag: seal_in_the_west_house, set: true }
             - { kind: relationship, from: head, to: { slot: CHALLENGER }, sentiment: -30, grudge: { severity: 60, inheritance: all_blood } }
 
   - id: seal_the_grandson_presses
@@ -82,7 +81,6 @@ events:
                 arguments a hundred years from now.
               effects:
                 - { kind: treasury, delta: -400 }
-                - { kind: flag, flag: seal_recovered, set: true }
         # The branch the arc REMEMBERS. `arc_flag` writes onto this run of
         # the story and onto nothing else, which is what lets the fourth beat
         # below exist at all without a world flag every event in the game can
@@ -113,7 +111,6 @@ events:
                 # last-night frame reads, and adding a third branch to this scene halved
                 # how often the only branch that created it was taken.
                 - { kind: discrepancy, op: create, id: seal_gift_lie, severity: major, provableBy: [house_marrow] }
-                - { kind: flag, flag: west_house_senior, set: true }
         - id: let_it_lie
           label: Let it lie. It has lain this long.
           outcomes:
@@ -124,13 +121,11 @@ events:
                 itself as the senior line.
               effects:
                 - { kind: discrepancy, op: create, id: seal_gift_lie, severity: major, provableBy: [house_marrow] }
-                - { kind: flag, flag: west_house_senior, set: true }
     record:
       subject: the west house's claim
       options:
         record:
           chronicle: The west line holds the Seal and calls itself senior. Neither of those is our doing and both are our fault.
-          grantsKnowledge: knows_west_house_claim
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -175,14 +170,12 @@ events:
             Two of three. Everything the house has bred for, for six hundred
             years, and it is stopped by a box in somebody else's hallway.
           effects:
-            - { kind: flag, flag: regalia_incomplete, set: true }
             - { kind: respect, delta: -1 }
     record:
       subject: the incomplete Regalia
       options:
         record:
           chronicle: Two of three. We did not have the third and everyone present saw that we did not have it.
-          grantsKnowledge: knows_regalia_incomplete
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -240,7 +233,6 @@ events:
                 for himself.
               effects:
                 - { kind: treasury, delta: -220 }
-                - { kind: flag, flag: bought_the_west_papers, set: true }
         - id: let_it_go
           label: Let it go. It is forty years of somebody else's letters.
           outcomes:
@@ -253,13 +245,11 @@ events:
                 of it.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: west_papers_went_east, set: true }
     record:
       subject: the letter the house wrote
       options:
         record:
           chronicle: We answered the west line in writing, and our answer conceded more than any of us remembered conceding.
-          grantsKnowledge: knows_the_letter_conceded
           effects:
             - { kind: respect, delta: -1 }
           claims:

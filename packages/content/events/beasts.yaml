@@ -61,7 +61,6 @@ events:
                 Nothing is ever said about any of it aloud in that yard.
               effects:
                 - { kind: treasury, delta: -8 }
-                - { kind: knowledge, op: grant, flag: knows_which_horse_will_not_take_the_gate }
 
   - id: the_mill_cat
     title: The Mill Cat Is Always Named the Same Thing
@@ -123,8 +122,7 @@ events:
                 falconer at Cawdry would give six crowns for it and cannot
                 catch it either. It moves on in Slaughter. The dovecote is
                 fine after that for nine years.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_what_took_the_doves }
+              effects: []
             - id: it_is_a_person
               weight: 45
               text: >-
@@ -329,7 +327,6 @@ events:
                 are people in this household who regard that as the only clean
                 thing about it.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_bees_were_told_the_whole_of_it }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
         - id: tell_them_the_short_version
           label: Tell them what the chronicle says. It is a custom about bees.

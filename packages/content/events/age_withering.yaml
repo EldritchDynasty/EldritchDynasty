@@ -60,7 +60,6 @@ events:
                 not know which volume to start with.
               effects:
                 - { kind: treasury, delta: 4 }
-                - { kind: flag, flag: dismissed_in_the_withering, set: true }
 
   - id: the_book_that_will_not_take
     title: The Water Sits
@@ -102,8 +101,7 @@ events:
             The book goes back on the shelf and is not taken down again, and
             nobody in the house makes anything of it, which is the kindest
             available handling and is also how a family forgets a thing.
-          effects:
-            - { kind: flag, flag: gave_up_the_book, set: true }
+          effects: []
 
   - id: the_youngest_asks
     title: Whether It Was Ever True
@@ -146,7 +144,6 @@ events:
                 them down. It is a better question than the first one.
               effects:
                 - { kind: attribute, target: { slot: YOUNGEST }, attr: mind, delta: 2 }
-                - { kind: flag, flag: the_youngest_was_answered, set: true }
         - id: answer_honestly
           label: Say that you do not know either.
           outcomes:

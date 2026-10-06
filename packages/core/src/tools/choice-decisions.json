@@ -9,18 +9,6 @@
     },
     {
       "kind": "arc_flag",
-      "key": "read_as_the_term",
-      "disposition": "delete",
-      "reason": "No authored condition or Eight Days arc successor reads this flag; delete the dead write and let the choice's intentional interpretation be handled explicitly."
-    },
-    {
-      "kind": "arc_flag",
-      "key": "read_as_the_thing",
-      "disposition": "delete",
-      "reason": "No authored condition or Eight Days arc successor reads this flag; the choice still changes treasury, Respect, and discrepancy state."
-    },
-    {
-      "kind": "arc_flag",
       "key": "went_out_thin",
       "disposition": "delete",
       "reason": "The thin-company result already changes Respect and muster state; this unread arc flag only restates the outcome."
@@ -48,12 +36,6 @@
       "key": "a_warrant_hangs_in_the_hall",
       "disposition": "read",
       "reason": "The public-warrant outcome explicitly says licensed practice becomes the cheapest cover the house has ever been offered. Preserve the flag for the later standing/visitor/magic-cover consequence that authored prose promises."
-    },
-    {
-      "kind": "flag",
-      "key": "bought_the_west_papers",
-      "disposition": "delete",
-      "reason": "No authored reader exists; buying the bundle already carries its treasury consequence and Chronicle record."
     },
     {
       "kind": "flag",
@@ -93,21 +75,9 @@
     },
     {
       "kind": "flag",
-      "key": "dismissed_in_the_withering",
-      "disposition": "delete",
-      "reason": "Dismissing the idle tutor already returns Treasury and the prose records the eleven-year teaching gap; the unread flag is redundant state."
-    },
-    {
-      "kind": "flag",
       "key": "forgave_a_year",
       "disposition": "delete",
       "reason": "Forgiving the year already costs 60 crowns, gains Respect, and is immediately carried into local story. The unread flag adds no separate promised future consequence."
-    },
-    {
-      "kind": "flag",
-      "key": "gave_up_the_book",
-      "disposition": "delete",
-      "reason": "This is a weighted narration outcome, not a player choice: the pupil stops trying and the family forgets it. No authored reader consumes the marker, so delete the dead narration write rather than manufacture a callback."
     },
     {
       "kind": "flag",
@@ -171,12 +141,6 @@
     },
     {
       "kind": "flag",
-      "key": "married_the_ruined",
-      "disposition": "delete",
-      "reason": "Taking the ruined-house match already pays Treasury and Respect consequences; the unread flag adds no separate current result beyond the authored marriage prose."
-    },
-    {
-      "kind": "flag",
       "key": "married_without_paper",
       "disposition": "read",
       "reason": "The Rimefell bride outcome creates a permanent descent liability: she is married in with no supporting paper and the prose explicitly says the heralds are coming. Preserve this as the natural later herald/pedigree reader rather than deleting the only durable marker of that choice."
@@ -225,27 +189,9 @@
     },
     {
       "kind": "flag",
-      "key": "regalia_incomplete",
-      "disposition": "delete",
-      "reason": "No authored reader exists; the narration keeps its Respect consequence and the Chronicle already records the state."
-    },
-    {
-      "kind": "flag",
       "key": "seal_held_sideways",
       "disposition": "read",
       "reason": "Conceding the Seal creates a two-century succession/regalia condition distinct from merely starting the given-seal arc."
-    },
-    {
-      "kind": "flag",
-      "key": "seal_in_the_west_house",
-      "disposition": "delete",
-      "reason": "No authored reader exists; the aftermath narration retains the inherited relationship and grudge consequences."
-    },
-    {
-      "kind": "flag",
-      "key": "seal_recovered",
-      "disposition": "delete",
-      "reason": "No authored reader exists; buy_it_back still pays the treasury cost and the Chronicle records the recovery."
     },
     {
       "kind": "flag",
@@ -477,12 +423,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_two_half_sheets",
-      "disposition": "delete",
-      "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
-    },
-    {
-      "kind": "flag",
       "key": "the_visitation_comes_back_early",
       "disposition": "read",
       "reason": "The ninth-question hesitation explicitly makes the visitation return in four years instead of eleven."
@@ -492,12 +432,6 @@
       "key": "the_witness_went_to_the_parish",
       "disposition": "read",
       "reason": "Leaving the last witness to the parish puts her final statements in a curate's written record outside the house. Preserve this as durable external evidence for a later discrepancy/Church reader."
-    },
-    {
-      "kind": "flag",
-      "key": "the_youngest_was_answered",
-      "disposition": "delete",
-      "reason": "Reading the Chronicle to the youngest already changes the child's Mind; the unread flag duplicates that durable outcome without a distinct later promise."
     },
     {
       "kind": "flag",
@@ -534,18 +468,6 @@
       "key": "waited_out_the_insurrection",
       "disposition": "read",
       "reason": "The successful wait outcome otherwise has no lasting effect and explicitly says the marriage terms improve twice before year end. Preserve the flag for the follow-up match consequence rather than turning the 55% success branch into prose only."
-    },
-    {
-      "kind": "flag",
-      "key": "west_house_senior",
-      "disposition": "delete",
-      "reason": "No authored reader exists; both branches still create seal_gift_lie and the writing branch keeps treasury and Respect effects."
-    },
-    {
-      "kind": "flag",
-      "key": "west_papers_went_east",
-      "disposition": "delete",
-      "reason": "No authored reader exists; let_it_go still costs Respect and the Chronicle preserves the choice."
     },
     {
       "kind": "flag",
@@ -621,12 +543,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_regalia_incomplete",
-      "disposition": "delete",
-      "reason": "No authored condition reads this Record grant; the Record branch itself already preserves the knowledge in the Chronicle."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_seal_went_sideways",
       "disposition": "delete",
       "reason": "The Record grant restates seal_held_sideways plus the Chronicle/deed; keep the underlying Seal state and remove duplicate bookkeeping."
@@ -654,12 +570,6 @@
       "key": "knows_the_attainder_was_reversed",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; staying clear already changes the rival relationship, while the Record preserves the reversed attainder in Chronicle text and a deed claim."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_bees_were_told_the_whole_of_it",
-      "disposition": "delete",
-      "reason": "Telling the bees the whole truth already changes the household relationship by +8; the unread knowledge bit duplicates that durable trust consequence."
     },
     {
       "kind": "knowledge",
@@ -861,12 +771,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_ink_went",
-      "disposition": "delete",
-      "reason": "No authored condition reads this knowledge; the event still reveals the clause, creates the discrepancy, and seeds the rumour."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_keeper_did_not_ask",
       "disposition": "read",
       "reason": "The keeper pointedly walks under the birthing-room iron without asking, and the prose calls that omission the part worth noticing."
@@ -876,12 +780,6 @@
       "key": "knows_the_keeper_does_not_know",
       "disposition": "read",
       "reason": "The keeper admits he has said the fourth petition four thousand times without knowing what it means and asks that it not reach Bramme."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_letter_conceded",
-      "disposition": "delete",
-      "reason": "No authored condition reads this Record grant; the Record branch already preserves the concession in the Chronicle."
     },
     {
       "kind": "knowledge",
@@ -987,12 +885,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_river_road",
-      "disposition": "delete",
-      "reason": "This Record grant duplicates durable Chronicle/deed state about meeting the six men from the river road; no current authored consequence depends on a second knowledge key."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_roll_has_seen_them",
       "disposition": "read",
       "reason": "Showing all three regalia creates the oldest independent surviving minute of the objects, durable external evidence."
@@ -1092,12 +984,6 @@
       "key": "knows_the_succession_was_moved",
       "disposition": "delete",
       "reason": "The Record branch already preserves the succession move in Chronicle text and a deed claim, so this otherwise unread knowledge key duplicates durable record state."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_surety_boy",
-      "disposition": "delete",
-      "reason": "The Record itself preserves the eleven-year-old surety in Chronicle text and a deed claim, so the separate knowledge write adds no current authored consequence."
     },
     {
       "kind": "knowledge",
@@ -1239,12 +1125,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_west_house_claim",
-      "disposition": "delete",
-      "reason": "No authored condition reads this Record grant; the Record branch already preserves the west-house claim in the Chronicle."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_a_warrant_buys",
       "disposition": "delete",
       "reason": "The mill event already resolves the warranted wright's practical value through cost, success/failure, and Respect; this generic lesson has no promised callback."
@@ -1365,12 +1245,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_took_the_doves",
-      "disposition": "delete",
-      "reason": "The goshawk outcome is a resolved observation with no later consequence promised or reader authored. Delete the dead knowledge write rather than preserving a solved seasonal nuisance."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_was_in_his_press",
       "disposition": "read",
       "reason": "Reading the dead man's private paper preserves a unique personal account that otherwise burns unread and cannot be reconstructed."
@@ -1416,12 +1290,6 @@
       "key": "knows_where_the_seal_was_found",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; finding the seal during the search already changes Respect and the household relationship, so the result remains mechanically consequential without the dead key."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_which_horse_will_not_take_the_gate",
-      "disposition": "delete",
-      "reason": "Keeping the gate-shy horse already costs eight crowns and the outcome is complete in prose; no later rule needs a permanent knowledge bit for one horse's unexplained habit."
     },
     {
       "kind": "knowledge",

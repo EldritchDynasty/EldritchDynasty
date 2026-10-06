@@ -204,7 +204,6 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: married_the_ruined, set: true }
         - id: wait
           label: Wait. Desperation deepens.
           outcomes:
@@ -315,7 +314,6 @@ events:
       options:
         record:
           chronicle: Six came up the river road and the house met them at the gate. Not everyone did.
-          grantsKnowledge: knows_the_river_road
           effects:
             - { kind: respect, delta: 1 }
           claims:
@@ -401,7 +399,6 @@ events:
       options:
         record:
           chronicle: A boy of eleven was held here as surety for his house during the war, and the word used in the papers was fostering.
-          grantsKnowledge: knows_the_surety_boy
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: held an eleven-year-old boy as surety while the papers called it fostering }
