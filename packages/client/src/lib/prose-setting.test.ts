@@ -55,6 +55,32 @@ function stepUntil(
 }
 
 describe('Plain English client setting (#413)', () => {
+  it('refreshes uncommitted prose immediately when the reader changes mode', () => {
+    window.localStorage.clear();
+    const bundle = loadBundle();
+    const prologue = bundle.prologue[0]!;
+    const original = prologue.opening;
+    const address = `content:prologue.yaml#prologue[id=${prologue.id}].opening`;
+    bundle.proseVariants.splice(
+      0,
+      bundle.proseVariants.length,
+      { address, plainenglish: 'The signing happened on the last night of the old year.' },
+    );
+
+    const game = createGame(bundle, browserPlatform());
+    game.actions.begin(1042, 'short');
+
+    expect(game.prologue.value?.opening).toBe(original);
+
+    game.actions.setProseMode('plainenglish');
+    expect(game.prologue.value?.opening).toBe(
+      'The signing happened on the last night of the old year.',
+    );
+
+    game.actions.setProseMode('original');
+    expect(game.prologue.value?.opening).toBe(original);
+  });
+
   it('changes future prose while preserving Chronicle wording already written', () => {
     window.localStorage.clear();
     const game = createGame(fixtureBundle(), browserPlatform());
