@@ -261,7 +261,6 @@ events:
       options:
         record:
           chronicle: The Seal passed sideways, and was never fully recovered.
-          grantsKnowledge: knows_seal_went_sideways
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -319,7 +318,6 @@ events:
       options:
         record:
           chronicle: We shut the doors and we did not open them, and nine libraries burned.
-          grantsKnowledge: knows_we_shut_the_doors
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -544,7 +542,6 @@ events:
           chronicle: >-
             We gave {VESSEL}, one of our own, by name, into {ASCENDANT}, and
             we wrote the name down so that it would be a name and not a number.
-          grantsKnowledge: knows_the_vessel_rite
           effects:
             - { kind: respect, delta: -2 }
           claims:
@@ -685,7 +682,6 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: the_church_sanctioned_the_rite, set: true }
                 - { kind: respect, delta: -1 }
-                - { kind: knowledge, op: grant, flag: knows_the_great_rite }
             - id: refused_permission
               weight: 38
               text: >-
@@ -712,7 +708,6 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_the_great_rite }
         - id: let_him_carry_it
           label: Let him carry it. He has carried it this long.
           outcomes:
@@ -738,7 +733,6 @@ events:
           chronicle: >-
             We made {ASCENDANT} wider, on purpose, and we wrote down that
             {WITNESS} stood in the room while it happened.
-          grantsKnowledge: knows_the_great_rite
           effects:
             - { kind: respect, delta: -1 }
         omit:
@@ -906,7 +900,6 @@ events:
             We took apart {ELDER}, a man of our own blood who had spent years
             becoming what he was, to raise {ASCENDANT}, in front of eleven
             witnesses, and we have written down that we did it and why.
-          grantsKnowledge: knows_the_unmaking
           effects:
             - { kind: respect, delta: -2 }
           claims:
@@ -1134,7 +1127,6 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_the_great_rite }
         - id: leave_him_as_he_is
           label: Leave him as he is. He was filled; he was not promised more.
           outcomes:
@@ -1157,7 +1149,6 @@ events:
             A second of the blood was raised in the same year as the first,
             and a cousin of that hall was given to the rite to do it. Both
             names are written here. Neither is written anywhere else.
-          grantsKnowledge: knows_the_great_rite
           effects:
             - { kind: respect, delta: -1 }
         # A DATED BLANK LINE IS A CLAIM. The Church counts men, not pages —

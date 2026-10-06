@@ -159,12 +159,6 @@
     },
     {
       "kind": "flag",
-      "key": "something_went_down_the_wend",
-      "disposition": "delete",
-      "reason": "The boat-family service is completed in the scene and already costs treasury. The generic unread flag does not identify what was moved and carries no concrete promised callback, so it is unusable durable state."
-    },
-    {
-      "kind": "flag",
       "key": "steward_left_bitter",
       "disposition": "read",
       "reason": "The leaving steward takes eleven years of knowledge about which rooms are never opened. That is a concrete former-insider exposure risk and a natural later household/secret callback, not merely flavour."
@@ -234,18 +228,6 @@
       "key": "the_elder_descent_not_produced",
       "disposition": "read",
       "reason": "The herald's shorthand becomes a standing question in a book read every third year for centuries. Preserve the flag for the later heraldic/descent consequence explicitly promised by the outcome."
-    },
-    {
-      "kind": "flag",
-      "key": "the_flat_iron_box",
-      "disposition": "delete",
-      "reason": "The box is opened three days later and contains only dry peat; the choice already costs a crown and the Chronicle can remember the curiosity. No authored future consequence is promised by the empty object."
-    },
-    {
-      "kind": "flag",
-      "key": "the_forty_leaves_are_in_the_press",
-      "disposition": "delete",
-      "reason": "Buying the leaves already grants the_forty_leaves heirloom, costs treasury, and changes Respect. The unread flag merely duplicates the heirloom's durable ownership state."
     },
     {
       "kind": "flag",
@@ -423,12 +405,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_seal_went_sideways",
-      "disposition": "delete",
-      "reason": "The Record grant restates seal_held_sideways plus the Chronicle/deed; keep the underlying Seal state and remove duplicate bookkeeping."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_she_was_told_not_to_speak_of_it",
       "disposition": "read",
       "reason": "The grandmother's refusal reveals a specific unresolved 1131 secret and an earlier generation's imposed silence."
@@ -462,12 +438,6 @@
       "key": "knows_the_byname_stuck",
       "disposition": "read",
       "reason": "The byname determines what the man is called centuries later while songs and heraldic ordinals diverge."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_caster_descent_was_bought",
-      "disposition": "delete",
-      "reason": "This Record grant is write-only choice debt; the Chronicle and deed claim already preserve that the Caster-grade descent was bought, so a second simulation-memory key adds no consequence."
     },
     {
       "kind": "knowledge",
@@ -537,12 +507,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_great_rite",
-      "disposition": "delete",
-      "reason": "Actual Great Rites already persist through rite state plus sanction/hostility, while Record choices persist claims/discrepancies; this generic key duplicates stronger state."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_halls_are_counting",
       "disposition": "delete",
       "reason": "The warning branch already schedules the_hall_is_answered while the other schedules a different successor; the branch-specific next event is the durable payoff."
@@ -609,12 +573,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_rimefell_marriage",
-      "disposition": "delete",
-      "reason": "This Record grant is redundant with the Chronicle and deed claim recording the undocumented Rimefell marriage; the Record branch also keeps its Respect consequence."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_rings_in_the_cellar",
       "disposition": "read",
       "reason": "Opening the repeatedly bricked cellar reveals a bench, cut drain, and four man-height iron rings, a concrete hidden-house discovery."
@@ -651,12 +609,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_short_copy",
-      "disposition": "delete",
-      "reason": "The actual short-copy world state is already represented by the_short_copy and the_short_copy_at_cawdry discrepancy. Record knowledge only mirrors the Chronicle choice and is redundant."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_signs_are_not_expression",
       "disposition": "read",
       "reason": "The daughter produces blood signs while examination finds no expression, leaving contradictory evidence in the press for two centuries."
@@ -675,21 +627,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_sixth_seal_is_wrong",
-      "disposition": "delete",
-      "reason": "The Record already preserves the false sixth seal in Chronicle text and a deed claim, with its Respect consequence; no separate simulation-memory key is needed unless a real later reader is authored."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_stave_reached_coln",
       "disposition": "read",
       "reason": "The licensed beggar proves a house story travelled forty miles to Coln through Wayfolk song."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_succession_was_moved",
-      "disposition": "delete",
-      "reason": "The Record branch already preserves the succession move in Chronicle text and a deed claim, so this otherwise unread knowledge key duplicates durable record state."
     },
     {
       "kind": "knowledge",
@@ -711,33 +651,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_unmaking",
-      "disposition": "delete",
-      "reason": "The Record grant only says the Unmaking was recorded; rite/death state, claims, discrepancies, and Chronicle already persist what happened."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_vessel_rite",
-      "disposition": "delete",
-      "reason": "The Record grant restates a completed Vessel rite already visible in vessel status, rite history, claims/discrepancies, and Chronicle."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_ward_was_married_in",
       "disposition": "read",
       "reason": "The married-in ward outcome says her thirteen years of household knowledge are now inside the wall permanently. This key is the only durable marker for a later rival/secrecy callback, so deleting it would erase the authored long-term distinction."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_ward_went_home",
-      "disposition": "delete",
-      "reason": "The Record branch already preserves the ward's return in Chronicle text and a deed claim; the separate knowledge write is unnecessary without a real authored callback."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_widow_was_pressed",
-      "disposition": "delete",
-      "reason": "The Chronicle and deed claim already preserve that the widow was pressed, and the Record keeps its Respect consequence; this separate knowledge write adds no current consequence."
     },
     {
       "kind": "knowledge",
@@ -783,12 +699,6 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_we_shut_the_doors",
-      "disposition": "delete",
-      "reason": "The Record grant only restates the Chronicle/deed about shutting the doors during the Nine Libraries burning; the world-state flag already persists the event."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_a_warrant_buys",
       "disposition": "delete",
       "reason": "The mill event already resolves the warranted wright's practical value through cost, success/failure, and Respect; this generic lesson has no promised callback."
@@ -822,12 +732,6 @@
       "key": "knows_what_the_drain_is_for",
       "disposition": "read",
       "reason": "The cut cellar drain and paid 1211 deposition are concrete physical evidence with an unresolved purpose."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_room_did",
-      "disposition": "delete",
-      "reason": "This key is granted only by the Record option, whose wording can itself be a chosen account. The actual sickroom outcome and rumour/relationship state are separate world facts; future consequences should not depend on Chronicle bookkeeping."
     },
     {
       "kind": "knowledge",
