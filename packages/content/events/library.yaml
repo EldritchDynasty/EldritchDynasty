@@ -21,7 +21,6 @@ events:
     conditions:
       all:
         - { generation: { op: gte, value: 2 } }
-        - { knowledge: knows_the_threshold_wall, has: false }
     slots:
       READER:
         role: family_member
@@ -152,6 +151,7 @@ events:
     conditions:
       all:
         - { generation: { op: gte, value: 2 } }
+        - { knowledge: knows_the_threshold_wall, has: false }
     slots:
       TUTOR: { role: tutor, filters: [{ status: [alive] }] }
       DAUGHTER:
