@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { BLOCKING_GATE_IDS } from './gate-registry.js';
+import { BLOCKING_GATE_CONFIG, BLOCKING_GATE_IDS } from './gate-registry.js';
 import {
   GATE_FINGERPRINT_ALGORITHM_VERSION,
   GATE_FINGERPRINT_ENTRIES,
@@ -58,8 +58,9 @@ const fingerprint = (root: string) => fingerprintGateDependencies({
 });
 
 describe('#441 gate dependency fingerprints', () => {
-  it('keeps the fingerprint entry registry in lockstep with the blocking gate registry', () => {
+  it('keeps proof entry and execution registries in lockstep with the blocking gate registry', () => {
     expect(Object.keys(GATE_FINGERPRINT_ENTRIES).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
+    expect(Object.keys(BLOCKING_GATE_CONFIG).sort()).toEqual([...BLOCKING_GATE_IDS].sort());
   });
 
   it('fingerprints the selected gate entry itself', async () => {
@@ -148,6 +149,7 @@ const manifest = (): GateDependencyManifest => ({
   gate: 'land',
   entry: { module: 'packages/core/src/tools/land-gate.ts', exportName: 'gateLand' },
   invocation: ['land'],
+  configuration: BLOCKING_GATE_CONFIG.land,
   toolchain: { node: '22.20', runnerOs: 'Linux', runnerImage: 'ubuntu24@fixture' },
   inputs: [],
 });
@@ -163,6 +165,7 @@ const trustedProof = (): GateProof => {
     sourceRunId: 42,
     sourceRepository: 'EldritchDynasty/EldritchDynasty',
     sourceWorkflow: '.github/workflows/check.yml',
+    sourceRunUrl: 'https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42',
     reusable: true,
     verdict: 'success',
     manifest: value,
@@ -280,6 +283,7 @@ describe('#441 trusted proof boundary', () => {
     for (const mutate of [
       (p: GateProof) => { p.sourceSha = 'other'; },
       (p: GateProof) => { p.sourceRunId = 99; },
+      (p: GateProof) => { p.sourceRunUrl = 'https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/99'; },
       (p: GateProof) => { p.algorithmVersion += 1; },
       (p: GateProof) => { p.fingerprint = 'other'; },
       (p: GateProof) => { p.reusable = false; },
