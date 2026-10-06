@@ -231,6 +231,7 @@ ipcMain.handle('ed:import-save', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     const { canceled, filePaths } = await dialog.showOpenDialog(win, {
       title: 'Open a run',
+      defaultPath: app.getPath('documents'),
       properties: ['openFile'],
       filters: [{ name: 'Eldritch Dynasty save', extensions: ['json'] }],
     });
