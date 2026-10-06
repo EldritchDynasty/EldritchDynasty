@@ -111,9 +111,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_book_was_read",
+      "disposition": "delete",
+      "reason": "The Record Chronicle already preserves that Bramme's registrar read the book and left a minute; the separate knowledge write has no current authored reader."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_caster_descent_was_bought",
       "disposition": "delete",
       "reason": "This Record grant is write-only choice debt; the Chronicle and deed claim already preserve that the Caster-grade descent was bought, so a second simulation-memory key adds no consequence."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_chapel_stone",
+      "disposition": "delete",
+      "reason": "The chapel-stone fact is already preserved by the Record Chronicle and deed claim; without a real later authored reader, the extra knowledge write is redundant."
     },
     {
       "kind": "knowledge",
@@ -237,6 +249,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_river_road",
+      "disposition": "delete",
+      "reason": "This Record grant duplicates durable Chronicle/deed state about meeting the six men from the river road; no current authored consequence depends on a second knowledge key."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_rows_were_cut",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; investigating the cut grave rows already costs treasury, while the Record preserves the finding in Chronicle text, Respect, and a deed claim."
@@ -270,6 +288,12 @@
       "key": "knows_the_succession_was_moved",
       "disposition": "delete",
       "reason": "The Record branch already preserves the succession move in Chronicle text and a deed claim, so this otherwise unread knowledge key duplicates durable record state."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_surety_boy",
+      "disposition": "delete",
+      "reason": "The Record itself preserves the eleven-year-old surety in Chronicle text and a deed claim, so the separate knowledge write adds no current authored consequence."
     },
     {
       "kind": "knowledge",
