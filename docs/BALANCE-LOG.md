@@ -9507,3 +9507,32 @@ re-pricings that touch what endings read are Farrowmere's decline losing an
 unexplained Respect point and the chapter-house fee burying a Church-provable
 lie. Together they moved nothing the gate judges. Apotheosis reads 0.0% on
 both heads, a pre-existing #332 diagnostic that this slice does not touch.
+
+## 2026-10-07 — #442 deterministic outcome witness coverage complete
+
+The deterministic execution-witness ledger now covers **1,006 / 1,006 authored
+outcomes (100%)**, with **no `UNWITNESSABLE` entries**. The plan-refresh
+baseline was 466 / 1,006, so the deterministic corpus added 540 proofs and the
+unwitnessed residue fell **540 → 0**. The last three were inline-arc follow-ups:
+both `the_book_is_opened` choices and `the_vessel_remembered/the_page`.
+Their fixtures do not forge the target state: they execute the real predecessor
+outcome first, let production create the inline arc and carried bindings, then
+resolve the due `ArcStep` through the normal commit path.
+
+Exact-head PR #532 run `37522452809` executed **3,321 fast tests**; every test
+passed and Vitest reported **96.27 s** wall time. The job was red only because
+the generated ledger had intentionally not yet been committed. The CI inventory
+used by #451 recorded `test:fast` at about **31 s** before the deterministic
+witness expansion, so the replacement costs roughly one extra minute of
+merge-path fast-test time while turning reachability into deterministic
+evidence. No content weight or probability was raised to obtain coverage.
+
+The probabilistic occurrence sample remains telemetry under #495. Its own
+cutover entry above records why this is not a wall-clock-savings claim: once
+the shared 800-run corpus had been paid, sampled `outcome-reach` itself cost
+only 0.002 s. The reliability win is removal of a coin-tail merge verdict.
+Historically the landing queue treated **Gate 8 / sampled outcome reach** as a
+retryable coin-tail failure and reran it once before blaming a PR; deterministic
+#442 coverage plus #495's cadence cutover removes that outcome-reach retry from
+merge safety. The separate historical `arcs.slow.test.ts` coin-tail retry is
+not claimed by this work.
