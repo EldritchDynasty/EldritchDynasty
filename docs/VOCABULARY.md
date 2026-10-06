@@ -238,7 +238,7 @@ Source: `core/src/year/phases.ts`.
 
 ## Validation rules
 
-Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
+Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 
 | rule | what it is for |
 |---|---|
@@ -284,3 +284,4 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.
 | `events/player-share` | At least a quarter of the library must actually ask the player something. |
 | `rites/wiring` | A rite names declared slots, casts its ascendant from a pool that can express, and takes its subject. |
 | `choices/consequence` | Every choice must change something that lasts, and every flag or knowledge key written must be read somewhere. |
+| `prose/variants` | Plain English variants must resolve an Original, preserve interpolation tokens, and say which Original wording they were reviewed against. |

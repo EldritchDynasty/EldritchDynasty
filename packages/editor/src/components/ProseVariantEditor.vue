@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import {
   contentInterpolationTokens,
   contentProseEntries,
+  proseOriginalHash,
   setContentProseText,
   type ContentProseEntry,
 } from '@ed/schema';
@@ -57,6 +58,7 @@ function setPlain(entry: ContentProseEntry, text: string): void {
       return;
     }
     existing.plainenglish = text;
+    existing.of = proseOriginalHash(entry.text);
     markDirty('proseVariants', entry.address);
     return;
   }
@@ -65,7 +67,11 @@ function setPlain(entry: ContentProseEntry, text: string): void {
   // author focused the field. The first real character stages the counterpart;
   // the normal SaveControl for the source item writes both columns together.
   if (!text.length || !sourceFile.value) return;
-  stageProseVariant(sourceFile.value, entry.address, text);
+  const staged = stageProseVariant(sourceFile.value, entry.address, text);
+  if (staged) {
+    staged.of = proseOriginalHash(entry.text);
+    markDirty('proseVariants', entry.address);
+  }
 }
 
 function counts(tokens: readonly string[]): Map<string, number> {

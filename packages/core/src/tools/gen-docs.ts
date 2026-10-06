@@ -10,7 +10,7 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { vocabulary } from '@ed/schema';
+import { CONTENT_RULES, vocabulary } from '@ed/schema';
 import { YEAR_PHASES } from '../year/phases.js';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -131,9 +131,9 @@ export function renderVocabulary(): string {
 
   out.push('## Validation rules');
   out.push('');
-  out.push('Run one with `runRule(id, bundle)`. Source: `schema/src/rules.ts`.');
+  out.push('Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.');
   out.push('');
-  out.push(table(['rule', 'what it is for'], v.rules.map((r) => [code(r.id), r.about])));
+  out.push(table(['rule', 'what it is for'], CONTENT_RULES.map((r) => [code(r.id), r.about])));
   out.push('');
 
   return out.join('\n');

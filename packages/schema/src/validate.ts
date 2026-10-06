@@ -1,7 +1,8 @@
 import type { ContentBundle } from './content.js';
 import type { Content } from './content-index.js';
 import { indexContent } from './content-index.js';
-import { CONTENT_RULES } from './rules.js';
+import { CONTENT_RULES as BASE_CONTENT_RULES } from './rules.js';
+import { proseVariantsRule } from './prose-variants.js';
 
 export interface Issue {
   level: 'error' | 'warning';
@@ -38,6 +39,16 @@ export interface ValidationRule {
   check(content: Content): Issue[];
 }
 
+/**
+ * Keep the large long-lived registry in rules.ts, while #415's prose migration
+ * guardrail lives beside the prose schema it protects. Public callers still
+ * see one authoritative list through @ed/schema.
+ */
+export const CONTENT_RULES: readonly ValidationRule[] = [
+  ...BASE_CONTENT_RULES,
+  proseVariantsRule,
+];
+
 export function validateBundle(source: ContentBundle | Content, only?: readonly string[]): Issue[] {
   const content = indexContent(source);
   const rules = only ? CONTENT_RULES.filter((r) => only.includes(r.id)) : CONTENT_RULES;
@@ -51,5 +62,4 @@ export function runRule(id: string, source: ContentBundle | Content): Issue[] {
   return rule.check(indexContent(source));
 }
 
-export { CONTENT_RULES } from './rules.js';
 export { PROSE_SENTENCE_THRESHOLD, proseIssues, splitSentences } from './prose.js';

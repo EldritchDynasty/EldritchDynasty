@@ -39,8 +39,9 @@ export * from './save.js';
 export * from './assemble.js';
 export * from './content-index.js';
 export * from './prose.js';
+export * from './prose-variants.js';
 export * from './choices.js';
-export * from './rules.js';
+export { PLAYER_SHARE_FLOOR, bearingWordsIn } from './rules.js';
 export * from './reference.js';
 export * from './validate.js';
 
