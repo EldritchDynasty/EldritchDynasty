@@ -154,10 +154,14 @@ describe('achievement earn-rate report (#323)', () => {
   });
 
   const samples: AchievementSample[] = [
-    { campaign: 'short', seed: 1, earned: ['ending_settled', 'ladder_touched', 'ladder_touched'] },
-    { campaign: 'short', seed: 2, earned: ['ending_settled'] },
-    { campaign: 'long', seed: 1, earned: ['ending_unmade', 'ladder_touched'] },
-    { campaign: 'long', seed: 2, earned: ['ending_forgotten'] },
+    { campaign: 'short', policy: 'chronicler', seed: 1, earned: ['ending_settled', 'ladder_touched', 'ladder_touched'] },
+    { campaign: 'short', policy: 'chronicler', seed: 2, earned: ['ending_settled'] },
+    { campaign: 'short', policy: 'ascendant', seed: 1, earned: ['ending_settled', 'ladder_touched'] },
+    { campaign: 'short', policy: 'ascendant', seed: 2, earned: ['ladder_touched'] },
+    { campaign: 'long', policy: 'chronicler', seed: 1, earned: ['ending_unmade', 'ladder_touched'] },
+    { campaign: 'long', policy: 'chronicler', seed: 2, earned: ['ending_forgotten'] },
+    { campaign: 'long', policy: 'ascendant', seed: 1, earned: ['ending_unmade', 'ladder_touched', 'ladder_adept'] },
+    { campaign: 'long', policy: 'ascendant', seed: 2, earned: ['ending_unmade', 'ladder_touched'] },
   ];
 
   it('prints every stable id in catalogue order and counts at most once per run', () => {
@@ -166,12 +170,24 @@ describe('achievement earn-rate report (#323)', () => {
 
     expect(rows.find((row) => row.id === 'ending_settled')).toMatchObject({
       scope: 'run',
-      short: { earned: 2, runs: 2, pct: 100 },
-      long: { earned: 0, runs: 2, pct: 0 },
+      short: {
+        chronicler: { earned: 2, runs: 2, pct: 100 },
+        ascendant: { earned: 1, runs: 2, pct: 50 },
+      },
+      long: {
+        chronicler: { earned: 0, runs: 2, pct: 0 },
+        ascendant: { earned: 0, runs: 2, pct: 0 },
+      },
     });
     expect(rows.find((row) => row.id === 'ladder_touched')).toMatchObject({
-      short: { earned: 1, runs: 2, pct: 50 },
-      long: { earned: 1, runs: 2, pct: 50 },
+      short: {
+        chronicler: { earned: 1, runs: 2, pct: 50 },
+        ascendant: { earned: 2, runs: 2, pct: 100 },
+      },
+      long: {
+        chronicler: { earned: 1, runs: 2, pct: 50 },
+        ascendant: { earned: 2, runs: 2, pct: 100 },
+      },
     });
   });
 
@@ -190,16 +206,17 @@ describe('achievement earn-rate report (#323)', () => {
 
   it('labels smoke-sized samples as unjudgeable for the 1% rarity floor', () => {
     const text = renderAchievementRates(samples);
-    expect(text).toContain('sample: Short 2 · Long 2');
+    expect(text).toContain('sample: Short chronicler 2 · ascendant 2 · Long chronicler 2 · ascendant 2');
     expect(text).toContain('NOT JUDGEABLE for the ~1% rarity floor');
 
     const judgeable: AchievementSample[] = [
-      ...Array.from({ length: ACHIEVEMENT_RATE_JUDGEABLE_RUNS }, (_, i) => ({
-        campaign: 'short' as const, seed: i, earned: [] as const,
-      })),
-      ...Array.from({ length: ACHIEVEMENT_RATE_JUDGEABLE_RUNS }, (_, i) => ({
-        campaign: 'long' as const, seed: i, earned: [] as const,
-      })),
+      ...(['short', 'long'] as const).flatMap((campaign) =>
+        (['chronicler', 'ascendant'] as const).flatMap((policy) =>
+          Array.from({ length: ACHIEVEMENT_RATE_JUDGEABLE_RUNS }, (_, i) => ({
+            campaign, policy, seed: i, earned: [] as const,
+          })),
+        ),
+      ),
     ];
     expect(renderAchievementRates(judgeable)).not.toContain('NOT JUDGEABLE');
   });
