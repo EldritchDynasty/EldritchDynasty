@@ -93,10 +93,11 @@ function playARun(seed: number) {
 
 describe('a run played through the client', () => {
   // 1042 breaks its own line at 1136 under the corrected blood count (issue
-  // #42), well short of the collection year. 901 is confirmed to clear the full
-  // thousand years against the current `main` (issue #27's fortune-shaped
-  // fertility having invalidated the seed this test used before that).
-  const { game, kinds, interludes, records, openings, closings, boundaries } = playARun(901);
+  // #42), well short of the collection year. Authored eligibility changes can
+  // legitimately move a seed's whole trace; #334's new knowledge reader made
+  // 901 end early. 906 is a previously confirmed full-term survivor (#91), and
+  // this suite re-checks that property while exercising the complete client path.
+  const { game, kinds, interludes, records, openings, closings, boundaries } = playARun(906);
   const view = game.view.value!;
 
   it('stops at the year the other party comes to collect, and is read', () => {
