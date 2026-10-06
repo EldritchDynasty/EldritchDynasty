@@ -1,4 +1,5 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';\nimport { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -8,7 +9,8 @@ import {
   GATE_FINGERPRINT_ENTRIES,
   GATE_PROOF_FORMAT_VERSION,
   fingerprintGateDependencies,
-  judgeTrustedProof,\n  makeGateProof,
+  judgeTrustedProof,
+  makeGateProof,
   type GateDependencyManifest,
   type GateProof,
   type TrustedWorkflowRun,
