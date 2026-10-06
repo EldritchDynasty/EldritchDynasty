@@ -51,6 +51,12 @@
     },
     {
       "kind": "flag",
+      "key": "the_chapel_is_open_nine_days",
+      "disposition": "delete",
+      "reason": "The flag is unread by authored content; accepting the relic already costs treasury and changes Respect, while the Chronicle records the chapel's nine open days."
+    },
+    {
+      "kind": "flag",
       "key": "the_two_half_sheets",
       "disposition": "delete",
       "reason": "Both writes are narration/arc-start memory only; Eight Days progression is carried by authored arc nodes rather than this unread flag."
@@ -174,6 +180,12 @@
       "key": "knows_the_stone_and_the_roll_disagree",
       "disposition": "delete",
       "reason": "The memory is unread; lifting the stone still carries its treasury cost and the Record preserves the disagreement in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_stone_is_empty",
+      "disposition": "delete",
+      "reason": "The knowledge is unread by authored content; finding the empty stone still costs treasury and seeds the empty-stone rumour, while the event's Record preserves the inquiry."
     },
     {
       "kind": "knowledge",
