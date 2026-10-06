@@ -9,8 +9,11 @@ import {
   GATE_FINGERPRINT_ENTRIES,
   GATE_PROOF_FORMAT_VERSION,
   fingerprintGateDependencies,
+  fingerprintGateManifest,
   judgeTrustedProof,
   makeGateProof,
+  parseGateProof,
+  selectNewestTrustedProof,
   type GateDependencyManifest,
   type GateProof,
   type TrustedWorkflowRun,
@@ -28,8 +31,17 @@ const fixtureRepo = (): string => {
   mkdirSync(join(root, 'packages/core/src'), { recursive: true });
   mkdirSync(join(root, 'packages/content/events'), { recursive: true });
   mkdirSync(join(root, 'packages/client/src'), { recursive: true });
+  mkdirSync(join(root, 'packages/core/src/tools'), { recursive: true });
+  mkdirSync(join(root, '.github/workflows'), { recursive: true });
+  mkdirSync(join(root, 'tools'), { recursive: true });
   writeFileSync(join(root, 'tsconfig.base.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', module: 'ESNext' } }));
   writeFileSync(join(root, 'package-lock.json'), '{"lockfileVersion":3}\n');
+  writeFileSync(join(root, 'package.json'), '{"name":"fixture"}\n');
+  writeFileSync(join(root, '.github/workflows/check.yml'), 'name: check\n');
+  writeFileSync(join(root, 'packages/core/src/tools/gates.ts'), 'export const gates = true;\n');
+  writeFileSync(join(root, 'packages/core/src/tools/gate-proof.ts'), 'export const proof = true;\n');
+  writeFileSync(join(root, 'packages/core/src/tools/gate-registry.ts'), 'export const registry = true;\n');
+  writeFileSync(join(root, 'tools/gate-read-trace.mjs'), 'export const trace = true;\n');
   writeFileSync(join(root, 'packages/core/src/dep.ts'), 'export const value = 1;\n');
   writeFileSync(join(root, 'packages/core/src/gate.ts'), "import { value } from './dep.js'; export const gate = () => value; export const sameGate = () => value;\n");
   writeFileSync(join(root, 'packages/content/events/a.yaml'), 'id: a\n');
@@ -84,6 +96,13 @@ describe('#441 gate dependency fingerprints', () => {
     expect((await fingerprint(root)).fingerprint).not.toBe(before.fingerprint);
   });
 
+  it('invalidates on proof runtime and workflow configuration', async () => {
+    const root = fixtureRepo();
+    const before = await fingerprint(root);
+    writeFileSync(join(root, '.github/workflows/check.yml'), 'name: changed\n');
+    expect((await fingerprint(root)).fingerprint).not.toBe(before.fingerprint);
+  });
+
   it('invalidates on the lockfile and toolchain identity', async () => {
     const root = fixtureRepo();
     const before = await fingerprint(root);
@@ -105,6 +124,8 @@ describe('#441 gate dependency fingerprints', () => {
     const { manifest } = await fingerprint(root);
     expect(unclassifiedRuntimeReads(root, manifest, [
       join(root, 'packages/core/src/dep.ts'),
+      join(root, 'packages/content'),
+      join(root, 'packages/content/events'),
       join(root, 'node_modules/some-package/index.js'),
       join(root, 'unclassified.json'),
     ])).toEqual(['unclassified.json']);
@@ -131,27 +152,31 @@ const manifest = (): GateDependencyManifest => ({
   inputs: [],
 });
 
-const trustedProof = (): GateProof => ({
-  formatVersion: GATE_PROOF_FORMAT_VERSION,
-  algorithmVersion: GATE_FINGERPRINT_ALGORITHM_VERSION,
-  gate: 'land',
-  fingerprint: 'fingerprint',
-  sourceSha: 'abc123',
-  sourceRunId: 42,
-  sourceRepository: 'EldritchDynasty/EldritchDynasty',
-  sourceWorkflow: '.github/workflows/check.yml',
-  reusable: true,
-  manifest: manifest(),
-  runtimeReads: [],
-  unclassifiedReads: [],
-});
+const trustedProof = (): GateProof => {
+  const value = manifest();
+  return {
+    formatVersion: GATE_PROOF_FORMAT_VERSION,
+    algorithmVersion: GATE_FINGERPRINT_ALGORITHM_VERSION,
+    gate: 'land',
+    fingerprint: fingerprintGateManifest(value),
+    sourceSha: 'abc123',
+    sourceRunId: 42,
+    sourceRepository: 'EldritchDynasty/EldritchDynasty',
+    sourceWorkflow: '.github/workflows/check.yml',
+    reusable: true,
+    verdict: 'success',
+    manifest: value,
+    runtimeReads: [],
+    unclassifiedReads: [],
+  };
+};
 
-const expected = {
+const expected = (proof: GateProof = trustedProof()) => ({
   repository: 'EldritchDynasty/EldritchDynasty',
   workflow: '.github/workflows/check.yml',
   gate: 'land',
-  fingerprint: 'fingerprint',
-};
+  fingerprint: proof.fingerprint,
+});
 
   it('the preload attributes real runtime reads to the active gate', () => {
     const root = fixtureRepo();
@@ -201,7 +226,7 @@ const expected = {
 
 describe('#441 trusted proof boundary', () => {
   it('accepts only matching successful main-push evidence', () => {
-    expect(judgeTrustedProof(trustedRun(), trustedProof(), expected)).toEqual({
+    expect(judgeTrustedProof(trustedRun(), trustedProof(), expected())).toEqual({
       reusable: true,
       reason: 'reused trusted main proof from run 42',
     });
@@ -216,7 +241,38 @@ describe('#441 trusted proof boundary', () => {
   ])('rejects a poisoned source: %s', (_name, poison) => {
     const run = trustedRun();
     poison(run);
-    expect(judgeTrustedProof(run, trustedProof(), expected).reusable).toBe(false);
+    expect(judgeTrustedProof(run, trustedProof(), expected()).reusable).toBe(false);
+  });
+
+  it('treats malformed evidence as a miss instead of throwing', () => {
+    expect(parseGateProof({})).toBeNull();
+    expect(selectNewestTrustedProof([
+      { run: trustedRun(), proof: { malformed: true } },
+    ], expected())).toBeNull();
+  });
+
+  it('selects the newest matching trusted proof, skipping newer poison', () => {
+    const olderRun = trustedRun();
+    const olderProof = trustedProof();
+    const newerRun = trustedRun();
+    newerRun.id = 43;
+    newerRun.head_sha = 'newer';
+    newerRun.head_branch = 'feature';
+    const newerProof = trustedProof();
+    newerProof.sourceRunId = 43;
+    newerProof.sourceSha = 'newer';
+
+    const selected = selectNewestTrustedProof([
+      { run: olderRun, proof: olderProof },
+      { run: newerRun, proof: newerProof },
+    ], expected(olderProof));
+    expect(selected?.run.id).toBe(42);
+  });
+
+  it('rejects a proof whose manifest was changed after fingerprinting', () => {
+    const proof = trustedProof();
+    proof.manifest.invocation = ['tampered'];
+    expect(judgeTrustedProof(trustedRun(), proof, expected(proof)).reusable).toBe(false);
   });
 
   it('rejects source-SHA, run-id, algorithm, and fingerprint mismatches', () => {
@@ -226,11 +282,12 @@ describe('#441 trusted proof boundary', () => {
       (p: GateProof) => { p.algorithmVersion += 1; },
       (p: GateProof) => { p.fingerprint = 'other'; },
       (p: GateProof) => { p.reusable = false; },
+      (p: GateProof) => { (p as GateProof & { verdict: string }).verdict = 'failure'; },
       (p: GateProof) => { p.unclassifiedReads = ['mystery.json']; },
     ]) {
       const proof = trustedProof();
       mutate(proof);
-      expect(judgeTrustedProof(trustedRun(), proof, expected).reusable).toBe(false);
+      expect(judgeTrustedProof(trustedRun(), proof, expected(proof)).reusable).toBe(false);
     }
   });
 });
