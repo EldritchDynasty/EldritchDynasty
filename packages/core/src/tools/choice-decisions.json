@@ -15,6 +15,12 @@
     },
     {
       "kind": "flag",
+      "key": "a_warrant_hangs_in_the_hall",
+      "disposition": "read",
+      "reason": "The public-warrant outcome explicitly says licensed practice becomes the cheapest cover the house has ever been offered. Preserve the flag for the later standing/visitor/magic-cover consequence that authored prose promises."
+    },
+    {
+      "kind": "flag",
       "key": "both_came_through",
       "disposition": "delete",
       "reason": "The triage branch is already distinguished by who remains alive plus its Treasury/relationship effects; the unread 'both came through' flag is redundant state."
@@ -279,6 +285,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_codex_went_east",
+      "disposition": "read",
+      "reason": "This weighted outcome establishes the Marrow Codex left the province in a crate and has not been seen since. The location/fate of a named spellbook is durable world state with a natural later library/rival/recovery reader."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_cousins_refused",
       "disposition": "delete",
       "reason": "The memory is unread by authored content; the failed recall already costs treasury and Respect, so the Chronicle can preserve the refused cousins without a separate simulation key."
@@ -381,9 +393,21 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_older_register",
+      "disposition": "read",
+      "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_quire_is_gone",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the missing-quire discovery without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_quire_was_kept",
+      "disposition": "read",
+      "reason": "The found quire contains four generations of a genealogy that contradicts the heralds while matching the male line exactly. That is a major lineage mystery with an obvious later descent/library reader and should not be deleted as dead bookkeeping."
     },
     {
       "kind": "knowledge",
