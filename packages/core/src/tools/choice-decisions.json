@@ -99,6 +99,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_attainder_was_reversed",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; staying clear already changes the rival relationship, while the Record preserves the reversed attainder in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_book_was_copied_twice",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the copyist's finding without a separate simulation-memory key."
@@ -129,6 +135,12 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_fourth_generation_has_no_paper",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; admitting the gap already changes Respect, while the Record preserves the missing fourth-generation paper in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_guardian_rules",
       "disposition": "delete",
       "reason": "No authored condition reads this Record grant, and no core/client runtime string reader exists; the Record option already preserves the fact through its Chronicle, claim, and Respect effect."
@@ -141,6 +153,24 @@
     },
     {
       "kind": "knowledge",
+      "key": "knows_the_house_kept_the_high_justice",
+      "disposition": "delete",
+      "reason": "The Record memory is unread by authored content; the Record itself preserves the unlawful high-justice choice in Chronicle text, Respect, and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_house_stayed_home",
+      "disposition": "delete",
+      "reason": "The Record memory is unread by authored content; staying home already changes Respect and seeds a rumour, while the Record preserves the decision in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_house_stayed_out_of_the_wardenship",
+      "disposition": "delete",
+      "reason": "The Record memory is unread by authored content; staying out already changes Respect and the candidate relationship, while the Record preserves the choice in Chronicle text and a deed claim."
+    },
+    {
+      "kind": "knowledge",
       "key": "knows_the_ink_went",
       "disposition": "delete",
       "reason": "No authored condition reads this knowledge; the event still reveals the clause, creates the discrepancy, and seeds the rumour."
@@ -150,6 +180,12 @@
       "key": "knows_the_letter_conceded",
       "disposition": "delete",
       "reason": "No authored condition reads this Record grant; the Record branch already preserves the concession in the Chronicle."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_levy_was_commuted",
+      "disposition": "delete",
+      "reason": "The Record memory is unread by authored content; commuting the levy already changes household relationship and Respect, while the Record preserves who stayed home in Chronicle text and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -186,6 +222,12 @@
       "key": "knows_the_stone_is_empty",
       "disposition": "delete",
       "reason": "The knowledge is unread by authored content; finding the empty stone still costs treasury and seeds the empty-stone rumour, while the event's Record preserves the inquiry."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_the_surety_was_refused",
+      "disposition": "delete",
+      "reason": "The Record memory is unread by authored content; refusing the child surety already changes Respect and seeds a rumour, while the Record preserves the refusal in Chronicle text and a deed claim."
     },
     {
       "kind": "knowledge",
@@ -228,6 +270,12 @@
       "key": "knows_who_was_in_the_room_at_sarrow",
       "disposition": "delete",
       "reason": "This Record grant is write-only in the choice audit; the Chronicle and deed claim already preserve the Sarrow-room fact without a separate simulation-memory key."
+    },
+    {
+      "kind": "knowledge",
+      "key": "knows_why_the_line_moved",
+      "disposition": "delete",
+      "reason": "The memory is unread by authored content; investigating the Roll already costs treasury and changes Respect, while the Record preserves what the house learned in Chronicle text and a deed claim."
     }
   ]
 }
