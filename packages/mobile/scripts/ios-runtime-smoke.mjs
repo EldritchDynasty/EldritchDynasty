@@ -17,10 +17,11 @@ const udid = process.env.IOS_SIMULATOR_UDID;
 
 if (!udid) throw new Error('IOS_SIMULATOR_UDID is required');
 
-function simctl(args, timeout = 30_000) {
+function simctl(args, timeout = 30_000, env = {}) {
   const result = spawnSync('xcrun', ['simctl', ...args], {
     encoding: 'utf8',
     timeout,
+    env: { ...process.env, ...env },
   });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
@@ -66,14 +67,17 @@ async function command(kind, url) {
   if (resultPath) await rm(resultPath, { force: true });
   resultPath = null;
 
-  // CoreSimulator has proven unreliable at delivering a custom URL to an
-  // already-foreground hosted app. Make the URL itself launch a fresh process.
-  // Capacitor 8.5's SceneDelegateProxy deliberately replays cold-launch URL
-  // contexts after capacitorViewDidAppear, when the App plugin can consume them.
+  // Hosted CoreSimulator has proven unreliable at delivering a custom URL
+  // through `simctl openurl`, both warm and as a cold launcher. Launch the
+  // Debug app explicitly and pass the same URL through simctl's child
+  // environment. SceneDelegate forwards that value through Capacitor's
+  // `.capacitorOpenURL` notification after `.capacitorViewDidAppear`.
   const readyPath = await findNamedFile(dataContainer, READY_NAME);
   if (readyPath) await rm(readyPath, { force: true });
   simctl(['terminate', udid, APP_ID]);
-  simctl(['openurl', udid, url], 120_000);
+  simctl(['launch', udid, APP_ID], 120_000, {
+    SIMCTL_CHILD_ED_SMOKE_URL: url,
+  });
   await waitForReady();
 
   const deliveryDeadline = Date.now() + DELIVERY_TIMEOUT_MS;
@@ -120,9 +124,9 @@ async function command(kind, url) {
   }
 }
 
-// The workflow's ordinary launch above proves the built app can start. Commands
-// below deliberately cold-launch through their URLs so the smoke also exercises
-// Capacitor 8.5's UIScene launch-context delivery path.
+// The workflow's ordinary launch above proves the built app can start. Each
+// command below terminates and relaunches the Debug app, so save/resume proves
+// native persistence across an actual process boundary.
 await waitForReady();
 const saved = await command('save', 'eldritchdynasty-smoke://save?seed=1042&years=40');
 if (saved.year !== 1082) throw new Error(`save reached ${saved.year}, expected 1082`);
