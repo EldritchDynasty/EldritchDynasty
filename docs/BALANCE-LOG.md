@@ -9536,3 +9536,75 @@ retryable coin-tail failure and reran it once before blaming a PR; deterministic
 #442 coverage plus #495's cadence cutover removes that outcome-reach retry from
 merge safety. The separate historical `arcs.slow.test.ts` coin-tail retry is
 not claimed by this work.
+
+## 2026-10-07 — #540: v1 achievement copy from a judgeable 100×4 batch
+
+PR #541 measured the landed #523 instrument on game code from `main`
+`307708003b88d328e494c5adbcf3376a93a84085`. The measurement workflow head
+was `6ab7bbe5964246656aa3832a28e12f74e686d021`; its only extra file was the
+temporary hosted measurement workflow. Actions run `37570328142`, artifact
+`achievement-rates` (`11460642169`), played seeds **32300–32399** in each
+of four cells: Short chronicler, Short ascendant, Long chronicler and Long
+ascendant. The report completed successfully with **100 runs in every cell**.
+
+The ascendant column is the trying policy used to judge #323's approximate
+1–90% launch band. The table below is the report output, not a golden gameplay
+threshold:
+
+| achievement id | Short chronicler | Short ascendant | Long chronicler | Long ascendant |
+|---|---:|---:|---:|---:|
+| `ending_apotheosis` | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) |
+| `ending_unmade` | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) | 3/100 (3%) |
+| `ending_broken_line` | 25/100 (25%) | 29/100 (29%) | 23/100 (23%) | 30/100 (30%) |
+| `ending_forgotten` | 32/100 (32%) | 19/100 (19%) | 60/100 (60%) | 34/100 (34%) |
+| `ending_devoured` | 16/100 (16%) | 38/100 (38%) | 17/100 (17%) | 33/100 (33%) |
+| `ending_settled` | 27/100 (27%) | 14/100 (14%) | 0/100 (0%) | 0/100 (0%) |
+| `ending_all_long` | Library | Library | Library | Library |
+| `ladder_touched` | 91/100 (91%) | 90/100 (90%) | 89/100 (89%) | 92/100 (92%) |
+| `ladder_adept` | 82/100 (82%) | 83/100 (83%) | 84/100 (84%) | 87/100 (87%) |
+| `ladder_hierophant` | 19/100 (19%) | 48/100 (48%) | 20/100 (20%) | 47/100 (47%) |
+| `ladder_vessel` | 1/100 (1%) | 39/100 (39%) | 1/100 (1%) | 33/100 (33%) |
+| `ladder_demigod` | 0/100 (0%) | 4/100 (4%) | 0/100 (0%) | 8/100 (8%) |
+| `ladder_god` | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) |
+| `clauses_3` | 85/100 (85%) | 87/100 (87%) | 91/100 (91%) | 87/100 (87%) |
+| `clauses_5` | 0/100 (0%) | 0/100 (0%) | 75/100 (75%) | 71/100 (71%) |
+| `clauses_7` | 0/100 (0%) | 0/100 (0%) | 42/100 (42%) | 53/100 (53%) |
+| `clauses_9` | 0/100 (0%) | 0/100 (0%) | 2/100 (2%) | 6/100 (6%) |
+| `record_never_embellished` | 20/100 (20%) | 8/100 (8%) | 9/100 (9%) | 5/100 (5%) |
+| `record_never_truthful` | 2/100 (2%) | 3/100 (3%) | 0/100 (0%) | 4/100 (4%) |
+| `record_never_omitted` | 14/100 (14%) | 15/100 (15%) | 9/100 (9%) | 8/100 (8%) |
+| `record_all_truthful` | 7/100 (7%) | 4/100 (4%) | 6/100 (6%) | 1/100 (1%) |
+| `record_all_embellished` | 0/100 (0%) | 1/100 (1%) | 0/100 (0%) | 2/100 (2%) |
+| `record_all_omitted` | 1/100 (1%) | 2/100 (2%) | 0/100 (0%) | 2/100 (2%) |
+| `discrepancy_unproven_at_term` | 84/100 (84%) | 78/100 (78%) | 91/100 (91%) | 86/100 (86%) |
+| `regency_survived` | 59/100 (59%) | 46/100 (46%) | 71/100 (71%) | 54/100 (54%) |
+| `cadet_took_seal` | 91/100 (91%) | 87/100 (87%) | 93/100 (93%) | 91/100 (91%) |
+| `muster_settled_under_banner` | 20/100 (20%) | 13/100 (13%) | 24/100 (24%) | 21/100 (21%) |
+| `muster_withdrew_every_time` | 1/100 (1%) | 1/100 (1%) | 2/100 (2%) | 2/100 (2%) |
+| `match_never_refused` | 100/100 (100%) | 100/100 (100%) | 100/100 (100%) | 100/100 (100%) |
+| `five_names_returned` | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) | 0/100 (0%) |
+
+### Launch-band interpretation
+
+Zeros caused by product shape are **not rarity claims**. Short does not offer
+`apotheosis` or `unmade`, and cannot exceed three Ledger clauses; Long does
+not offer `settled`. `ending_all_long` is a cross-run Library condition and
+is not measurable from isolated runs.
+
+Against the trying/ascendant policy, the applicable cells outside the ~1–90%
+band are frozen as explicit v1 calibration notes beside the player-facing
+catalogue:
+
+- **rare / unobserved:** Long `ending_apotheosis` **0/100**; `ladder_god`
+  **0/100 Short and 0/100 Long**; `five_names_returned` **0/100 Short and
+  0/100 Long**. Apotheosis' zero is consistent with the already-tracked #332
+  ending-reach debt; this achievement slice does not rebalance it.
+- **common:** Long `ladder_touched` **92/100**; Long `cadet_took_seal`
+  **91/100**; `match_never_refused` **100/100 Short and 100/100 Long**.
+
+Everything else with an applicable ascendant cell is inside the launch band.
+The copy catalogue therefore freezes names/descriptions without changing a
+single evaluator condition, event weight, ending rule or campaign rule. The
+temporary measurement workflow used to obtain this evidence is deleted in the
+same final #540 branch change and is not intended to land on `main`.
+

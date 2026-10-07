@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { RunLibrary, SavedGame } from '@ed/schema';
+import { bearingWordsIn, type RunLibrary, type SavedGame } from '@ed/schema';
 import { newGame } from './session.js';
-import { ACHIEVEMENT_IDS, earnedAchievements } from './achievements.js';
+import { ACHIEVEMENT_CATALOG, ACHIEVEMENT_IDS, earnedAchievements } from './achievements.js';
 import { ACHIEVEMENT_RATE_JUDGEABLE_RUNS, achievementRates, renderAchievementRates, type AchievementSample } from './achievement-rates.js';
 
 const content = loadContent();
@@ -18,6 +18,33 @@ describe('achievements (issue #323)', () => {
     expect(ACHIEVEMENT_IDS).toHaveLength(30);
     expect(new Set(ACHIEVEMENT_IDS).size).toBe(ACHIEVEMENT_IDS.length);
     for (const id of ACHIEVEMENT_IDS) expect(id).toMatch(/^[a-z0-9_]+$/);
+  });
+
+  it('freezes unique plain-register v1 copy and measured band exceptions for every backend id', () => {
+    expect(Object.keys(ACHIEVEMENT_CATALOG)).toEqual([...ACHIEVEMENT_IDS]);
+
+    const titles = ACHIEVEMENT_IDS.map((id) => ACHIEVEMENT_CATALOG[id].title);
+    expect(new Set(titles).size).toBe(titles.length);
+
+    for (const id of ACHIEVEMENT_IDS) {
+      const entry = ACHIEVEMENT_CATALOG[id];
+      expect(entry.title.trim()).toBe(entry.title);
+      expect(entry.description.trim()).toBe(entry.description);
+      expect(entry.title.length).toBeGreaterThan(0);
+      expect(entry.description.length).toBeGreaterThan(0);
+      expect(bearingWordsIn(`${entry.title} ${entry.description}`)).toEqual([]);
+    }
+
+    expect(
+      ACHIEVEMENT_IDS.filter((id) => 'calibration' in ACHIEVEMENT_CATALOG[id]),
+    ).toEqual([
+      'ending_apotheosis',
+      'ladder_touched',
+      'ladder_god',
+      'cadet_took_seal',
+      'match_never_refused',
+      'five_names_returned',
+    ]);
   });
 
   it('does not award a live run, and Short Lines do earn finished-run achievements', () => {
