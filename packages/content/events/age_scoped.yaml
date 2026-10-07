@@ -414,3 +414,173 @@ events:
             id: the_fostering_lie
             severity: minor
             provableBy: [house_calder, commons]
+
+proseVariants:
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].title"
+    of: df34ef0408b00980
+    plainenglish: "The Levy Arrives"
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].body"
+    of: f503ac50bed128cc
+    plainenglish: "The levy officers arrive with a list and a cart. They are taking men from two in every five households, and for the first time this house counts as one of those households. {HEAD} can send {SON}, pay money instead, or appeal the demand to higher authorities."
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].label"
+    of: 4cfa2edaaee84fc6
+    plainenglish: "Send him to serve."
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].outcomes[id=honour].text"
+    of: 6cafe410f1aac7d4
+    plainenglish: "He returns four years later with a limp and a good reputation."
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].outcomes[id=gone].text"
+    of: 97a72ef6ed86e0aa
+    plainenglish: "He never returns. The house receives a standard letter, and even his name is misspelled."
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=pay].label"
+    of: 26268033e19ce847
+    plainenglish: "Pay the levy instead of sending a son."
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=pay].outcomes[id=paid].text"
+    of: bb3d68a83434bbdc
+    plainenglish: "The payment saves a son, but everyone in the province knows exactly how much the house paid to avoid sending him."
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].title"
+    of: 1811675f0d2f901b
+    plainenglish: "A Looted Library for Sale"
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].body"
+    of: 520cb39faab61b2b
+    plainenglish: "A new market has appeared because of the war. A seller has forty books taken from a ruined house in the east and is pricing them by weight because he does not know their value. {HEAD} recognises three important volumes. The war is disastrous, but it has also made rare books unusually cheap."
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].interaction.choices[id=buy].label"
+    of: c0d98682525eb1ce
+    plainenglish: "Buy all forty books and sort them later."
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].interaction.choices[id=buy].outcomes[id=bought].text"
+    of: 13164bdaf3eb8f56
+    plainenglish: "Eleven books are worthless and twenty-six are ordinary. The remaining three will matter to the family for generations."
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].interaction.choices[id=walk].label"
+    of: 917c29c9c02c3ccd
+    plainenglish: "Keep the money and leave the books."
+  - address: "content:events/age_scoped.yaml#events[id=the_looted_library].interaction.choices[id=walk].outcomes[id=walked].text"
+    of: bbc9be3c02d656e8
+    plainenglish: "Someone from House Ilm buys the books on Thursday."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].title"
+    of: 8c0edf8eed16c5e2
+    plainenglish: "The Church Checks the Records"
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].body"
+    of: 30d24a6df4371099
+    plainenglish: "The investigators say they are not accusing the house. They have this house's account of 1341 and three other accounts of the same year, and they want to know why {HEAD}'s version is shorter. Tea is served, but nobody drinks it."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=stand_on_it].label"
+    of: 8f0224c75a4d6c13
+    plainenglish: "Defend the written record without changing it."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=stand_on_it].outcomes[id=held].text"
+    of: 5c2023897b2a7355
+    plainenglish: "They thank the house and leave, taking the ledger with them."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=stand_on_it].outcomes[id=cracked].text"
+    of: 00bea79cacb005d8
+    plainenglish: "One investigator asks a question that only makes sense if he already knows part of the answer."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=concede_a_little].label"
+    of: 4a43597850545fe4
+    plainenglish: "Admit a small offence to protect the larger secret."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=concede_a_little].outcomes[id=bought_off].text"
+    of: 24b75104e1e13380
+    plainenglish: "The house admits a minor heresy, pays a fine, and avoids close scrutiny for eighty years."
+  - address: "content:events/age_scoped.yaml#events[id=nothing_gained].title"
+    of: d323770fe9a4b5eb
+    plainenglish: "Thirty Years Without an Awakening"
+  - address: "content:events/age_scoped.yaml#events[id=nothing_gained].body"
+    of: 69f479977741c7db
+    plainenglish: "Nobody in the family awakens, including the children who seemed most promising. {HEAD} keeps the accounts, the peace, and the house running, but after thirty years the family has made no magical progress. The Ledger keeps counting during a Withering just as it always does."
+  - address: "content:events/age_scoped.yaml#events[id=nothing_gained].interaction.outcomes[id=drift].text"
+    of: 1d1b101316bc3c0f
+    plainenglish: "The family chronicle records only four lines for the decade, and three are about the weather."
+  - address: "content:events/age_scoped.yaml#events[id=nothing_gained].interaction.outcomes[id=drift].effects[0].text"
+    of: 7eff5b32646d958e
+    plainenglish: "A quiet decade, with a good rye harvest."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].title"
+    of: 4a3a7d074c9f96d3
+    plainenglish: "A Desperate Marriage Offer"
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].body"
+    of: 25c18af1498a8125
+    plainenglish: "Six months ago the house of {SUITOR} would not have received {HEAD}'s steward. Now it sends a four-line letter asking for an immediate match. The bloodline is excellent, the house's standing is ruined, and the proposed terms would normally have been insulting."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].interaction.choices[id=take_it].label"
+    of: 8c43dba20d3fd67e
+    plainenglish: "Accept the offer before another house does."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].interaction.choices[id=take_it].outcomes[id=taken].text"
+    of: 1031fcc7404b4363
+    plainenglish: "The house buys excellent blood at an unusually low price, and everyone remembers that it took advantage of the other family's weakness."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].interaction.choices[id=wait].label"
+    of: ffb0e5925e264d5e
+    plainenglish: "Wait for their situation to get worse."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].interaction.choices[id=wait].outcomes[id=waited].text"
+    of: 6b8e9a8e50910e22
+    plainenglish: "Their position worsens, and they improve the terms twice before the year ends."
+  - address: "content:events/age_scoped.yaml#events[id=the_desperate_offer].interaction.choices[id=wait].outcomes[id=lost].text"
+    of: bbe59a805e71bb74
+    plainenglish: "House Marrow accepts the opportunity first."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].title"
+    of: c11cbd11e688a825
+    plainenglish: "Raiders on the River Road"
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].body"
+    of: ca9dad09943f1f45
+    plainenglish: "The dogs suddenly go quiet, warning {HEAD}. Six experienced raiders are coming along the river road. The nearest garrison is two days away if the roads remain passable, and the house gates are only wood."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].label"
+    of: 6bf056f7415df7cb
+    plainenglish: "Defend the gate personally."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=driven_off].text"
+    of: bf9b4374b06a69c8
+    plainenglish: "The fight ends quickly. The raiders expected the gate to stop them, but the defenders drive them off and leave two raiders dead in the mud."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=held].text"
+    of: c2ddad3886ecbf04
+    plainenglish: "Neither side wins. The raiders pull back before dark, but {HEAD} stays at the gate all night because they have not truly gone."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=broken_through].text"
+    of: 4e5e3c9ba7374057
+    plainenglish: "The gate fails quickly. The raiders take the grain and horses and escape before the garrison is halfway there."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].label"
+    of: 81c21e6f0aa3ea8b
+    plainenglish: "Barricade the house and wait for the garrison."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=waited_out].text"
+    of: 48902a6acc78f13e
+    plainenglish: "The household waits in darkness while a nearby barn burns. By the time the garrison arrives, the raiders have already left."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=found_the_side_door].text"
+    of: 26a288321e39055e
+    plainenglish: "The raiders know about a side door that was never built to withstand an attack, and they use it."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.subject"
+    of: f85f1f7e8112c692
+    plainenglish: "the six raiders who came by the river road"
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.record.chronicle"
+    of: 7e03699d862c1729
+    plainenglish: "Six raiders came by the river road, and the house met them at the gate. Other households did not."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.record.claims[0].text"
+    of: a035561437c8cc68
+    plainenglish: "met six raiders from the river road at the gate with the household"
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.embellish.chronicle"
+    of: 429c6b63e302d05f
+    plainenglish: "A whole company of raiders attacked the walls, and the house defeated them before the garrison arrived."
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.embellish.claims[0].text"
+    of: 1b65885cf8fa3758
+    plainenglish: "defeated a company of raiders at the walls without help"
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].title"
+    of: 2e9fe6eebe676eaa
+    plainenglish: "The Boy Sent as Surety"
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].body"
+    of: 5d1461c25c00790e
+    plainenglish: "Six cold escorts arrive and want to leave before dark. {ENVOY} speaks for them without getting off his horse. They bring an eleven-year-old boy from a house four valleys away that has backed the losing side twice. His family needs another house to hold him as security. Everyone calls the arrangement fostering rather than hostage-taking, but the practical difference will depend on who wins the war. For nine years he will eat, learn, and live here until someone allows him to go home. He has brought his own horse."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].interaction.choices[id=raise_him_as_ours].label"
+    of: 4d53196917eba415
+    plainenglish: "Raise him with the house's own children."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].interaction.choices[id=raise_him_as_ours].outcomes[id=raised].text"
+    of: c588dccd8e0c5951
+    plainenglish: "He studies with the other children and joins the family table on his third night. Nine years later he returns home loyal to this house, which proves more valuable than the original surety."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].interaction.choices[id=keep_him_apart].label"
+    of: 21f471b760ef3e73
+    plainenglish: "Give him food and a room, but keep him separate."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].interaction.choices[id=keep_him_apart].outcomes[id=kept_apart].text"
+    of: fe133ccdcfa0b6c1
+    plainenglish: "He is fed and housed but taught nothing, and he notices every door kept closed to him. He returns home at nineteen remembering all of them."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.subject"
+    of: d95adf8ba18c6d67
+    plainenglish: "the eleven-year-old boy held as surety"
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.options.record.chronicle"
+    of: ff2e3d777d4d30e3
+    plainenglish: "An eleven-year-old boy was held here as security for his house during the war, though the documents called the arrangement fostering."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.options.record.claims[0].text"
+    of: d8ce50aa61254646
+    plainenglish: "held an eleven-year-old boy as surety while the official papers called it fostering"
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.options.embellish.chronicle"
+    of: eb23e066366b189a
+    plainenglish: "A boy from a great house was fostered here during the war at this family's invitation and expense."
+  - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.options.embellish.claims[0].text"
+    of: e2584ab8dbb98b34
+    plainenglish: "fostered the heir of an allied house during the war at his own expense"
