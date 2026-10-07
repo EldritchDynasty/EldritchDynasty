@@ -1047,8 +1047,14 @@ export function createGame(
     throw new Error('the native smoke autosave did not finish');
   }
 
-  async function smokeSnapshot(): Promise<SmokeResult> {
-    await waitForAutosave();
+  async function smokeSnapshot(waitForCurrentWrite = true): Promise<SmokeResult> {
+    // Save/resume/import all initiate a write in this process, so wait for that
+    // exact native mutation before reading it back. Export is intentionally
+    // different: the simulator driver cold-relaunches the app for every smoke
+    // command, and export is proving that a PREVIOUS process left a durable
+    // autosave behind. Waiting for this fresh process to perform a write would
+    // deadlock the proof on an operation export neither needs nor starts.
+    if (waitForCurrentWrite) await waitForAutosave();
     const snapshot = await platform.readSave(AUTOSAVE);
     if (!snapshot) throw new Error('the native smoke autosave is missing');
     const year = typeof snapshot === 'object' && snapshot !== null
@@ -1104,7 +1110,7 @@ export function createGame(
 
     if (command.kind === 'export') {
       if (!platform.writeSmokeInterchange) throw new Error('the host has no smoke export seam');
-      const result = await smokeSnapshot();
+      const result = await smokeSnapshot(false);
       return { ...result, path: await platform.writeSmokeInterchange(result.snapshot) };
     }
 
