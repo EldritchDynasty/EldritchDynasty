@@ -24,7 +24,7 @@ events:
       HEAD: { role: head }
       CHILD:
         role: unwoken
-        filters: [{ age: { op: gte, value: 7 } }, { age: { op: lte, value: 13 } }]
+        filters: [{ age: { op: gte, value: 9 } }, { age: { op: lte, value: 9 } }]
     body: >-
       The house hears it before anybody sees it, which is usual — a dog that
       will not come into the long room, and then a second dog. {CHILD} is nine.
