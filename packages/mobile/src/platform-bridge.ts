@@ -94,21 +94,6 @@ const platform = {
       if (canGoBack) window.history.back();
       else void App.exitApp();
     });
-
-    // The simulator driver must not infer listener readiness from wall-clock
-    // time. App.addListener resolves only after Capacitor has installed the
-    // native-backed listener, so this durable marker is an explicit handshake.
-    void registration
-      .then(() => Filesystem.writeFile({
-        path: SMOKE_READY,
-        data: JSON.stringify({ ready: true }),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8,
-      }))
-      .catch((error: unknown) => {
-        console.error('iOS runtime smoke listener registration failed', error);
-      });
-
     return () => { void registration.then((handle) => handle.remove()); };
   },
 
@@ -149,6 +134,22 @@ const platform = {
         console.error('iOS runtime smoke evidence write failed', error);
       });
     });
+
+    // The simulator driver must not infer listener readiness from wall-clock
+    // time. App.addListener resolves only after Capacitor has installed the
+    // native-backed appUrlOpen listener, so this durable marker is an explicit
+    // handshake for the listener the smoke driver actually depends on.
+    void registration
+      .then(() => Filesystem.writeFile({
+        path: SMOKE_READY,
+        data: JSON.stringify({ ready: true }),
+        directory: Directory.Data,
+        encoding: Encoding.UTF8,
+      }))
+      .catch((error: unknown) => {
+        console.error('iOS runtime smoke listener registration failed', error);
+      });
+
     return () => { void registration.then((handle) => handle.remove()); };
   },
 } satisfies Platform;
