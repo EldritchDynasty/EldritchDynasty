@@ -164,10 +164,10 @@ jobs:
       full: ${{ steps.decide.outputs.full }}
       ios: ${{ steps.decide.outputs.ios }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Reject negated closing keywords in pull request body
@@ -244,8 +244,8 @@ jobs:
     name: typecheck + validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -284,8 +284,8 @@ jobs:
     name: fast lane
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -336,8 +336,8 @@ jobs:
     if: needs.tier.outputs.full == 'true'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -381,8 +381,8 @@ jobs:
     if: needs.tier.outputs.full == 'true' && needs.tier.outputs.ios == 'true'
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -554,8 +554,8 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -569,7 +569,7 @@ jobs:
           KEY=$(npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/corpus-warm.ts --key)
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
       - name: restore run corpus
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: node_modules/.cache/ed-runs
           key: ed-runs-${{ steps.corpus.outputs.key }}-${{ hashFiles('packages/content/**') }}
@@ -606,8 +606,8 @@ jobs:
       matrix:
         lane: [batch]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -704,14 +704,14 @@ jobs:
           --workflow ".github/workflows/check.yml"
       - name: retain trusted main gate proofs
         if: steps.gate-proofs.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gate-proofs
           path: gate-proofs/
           retention-days: 90
       - name: retain structured gate timings
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gate-timings-${{ matrix.lane }}
           path: gate-timings-${{ matrix.lane }}.json
@@ -738,8 +738,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -751,7 +751,7 @@ jobs:
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
       - name: restore run corpus
         id: restored
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: node_modules/.cache/ed-runs
           key: ed-runs-${{ steps.corpus.outputs.key }}-${{ hashFiles('packages/content/**') }}
@@ -763,7 +763,7 @@ jobs:
         run: npm run corpus
       - name: save run corpus
         if: steps.restored.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: node_modules/.cache/ed-runs
           key: ed-runs-${{ steps.corpus.outputs.key }}-${{ hashFiles('packages/content/**') }}
@@ -779,7 +779,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: require the event's complete CI tier
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
         with:
@@ -815,8 +815,8 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -833,8 +833,8 @@ jobs:
       matrix:
         gate: [blood, fire-rate, war, endings, outcome-reach, signing]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -851,12 +851,12 @@ jobs:
     needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -889,7 +889,7 @@ jobs:
             echo 'The AAB now contains native libraries; add and verify 16 KB alignment before release.'
             exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Eldritch-Dynasty-${{ github.ref_name }}.aab
           path: packages/mobile/android/app/build/outputs/bundle/release/app-release.aab
@@ -908,8 +908,8 @@ jobs:
     needs: [lint, windows, test, gates, release-slow, release-gates]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -941,7 +941,7 @@ jobs:
         working-directory: packages/shell
         run: node scripts/dist-windows.mjs --require-signature
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Eldritch-Dynasty-${{ github.ref_name }}-windows
           path: |
