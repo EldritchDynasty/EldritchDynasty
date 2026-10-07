@@ -1,1 +1,1 @@
-/claim check --agent chatgpt/543-node24-actions-20261007
+/claim 543 --agent chatgpt/543-node24-actions-20261007 --paths .github/workflows/check.yml .github/workflows/janitor.yml .github/workflows/nightly-regression.yml .github/workflows/outcome-reach-telemetry.yml .github/workflows/remote-claim.yml .github/workflows/scheduled-regression-watch.yml .github/workflows/verdict.yml .github/workflows/weekly-statistical.yml --lane code
