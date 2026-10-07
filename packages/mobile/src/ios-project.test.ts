@@ -112,6 +112,16 @@ describe('Capacitor iOS project', () => {
     expect(runtimeSmoke).not.toContain('await delay(5_000);');
     expect(runtimeSmoke).toContain('smoke command was not received within');
     expect(runtimeSmoke).toContain('smoke command was received but produced no final evidence');
+
+    const onBack = platformBridge.indexOf('onBack(');
+    const onSmokeCommand = platformBridge.indexOf('onSmokeCommand(');
+    const appUrlListener = platformBridge.indexOf("App.addListener('appUrlOpen'");
+    const readyWrite = platformBridge.indexOf('path: SMOKE_READY');
+    expect(onBack).toBeGreaterThan(-1);
+    expect(onSmokeCommand).toBeGreaterThan(onBack);
+    expect(platformBridge.slice(onBack, onSmokeCommand)).not.toContain('SMOKE_READY');
+    expect(appUrlListener).toBeGreaterThan(onSmokeCommand);
+    expect(readyWrite).toBeGreaterThan(appUrlListener);
   });
 
 });
