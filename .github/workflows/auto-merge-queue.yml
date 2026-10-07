@@ -45,6 +45,38 @@ jobs:
               fi
               pr_number="$(jq -r '.workflow_run.pull_requests[0].number // empty' "$GITHUB_EVENT_PATH")"
               expected_head="$(jq -r '.workflow_run.pull_requests[0].head.sha // empty' "$GITHUB_EVENT_PATH")"
+
+              # GitHub can emit workflow_run with an empty pull_requests array
+              # even though the triggering pull_request check run itself had
+              # the association (#560). Recover only from same-repo open PRs
+              # whose branch and exact current head match the successful run.
+              if [[ -z "$pr_number" || -z "$expected_head" ]]; then
+                run_branch="$(jq -r '.workflow_run.head_branch // empty' "$GITHUB_EVENT_PATH")"
+                run_head="$(jq -r '.workflow_run.head_sha // empty' "$GITHUB_EVENT_PATH")"
+                repo_owner="${GITHUB_REPOSITORY%%/*}"
+                if [[ -z "$run_branch" || -z "$run_head" ]]; then
+                  echo "eligible=false" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+
+                candidates="$(
+                  gh api --method GET "/repos/$GITHUB_REPOSITORY/pulls" \
+                    -f state=open \
+                    -f base=main \
+                    -f head="$repo_owner:$run_branch"
+                )"
+                pr_number="$(
+                  jq -r --arg repo "$GITHUB_REPOSITORY" --arg branch "$run_branch" --arg head "$run_head" \
+                    '[.[] | select(
+                      .base.ref == "main"
+                      and .head.repo.full_name == $repo
+                      and .head.ref == $branch
+                      and .head.sha == $head
+                    )] | if length == 1 then .[0].number else empty end' <<<"$candidates"
+                )"
+                expected_head="$run_head"
+              fi
+
               if [[ -z "$pr_number" || -z "$expected_head" ]]; then
                 echo "eligible=false" >> "$GITHUB_OUTPUT"
                 exit 0
