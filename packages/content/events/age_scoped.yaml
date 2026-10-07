@@ -584,3 +584,6 @@ proseVariants:
   - address: "content:events/age_scoped.yaml#events[id=the_boy_they_send_us].record.options.embellish.claims[0].text"
     of: e2584ab8dbb98b34
     plainenglish: "fostered the heir of an allied house during the war at his own expense"
+  - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].outcomes[id=gone].effects[0].cause"
+    of: 08025d3e222bf67a
+    plainenglish: "the military levy"
