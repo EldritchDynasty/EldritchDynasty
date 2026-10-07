@@ -9654,3 +9654,39 @@ Awakening works. It is whether/how the game should restore or judge reach of
 God-level Madness; that policy/supply question remains #378. No threshold,
 content weight or gameplay rule changes in this measurement landing.
 
+## 2026-10-08 — #441 trusted gate-proof reuse: 30-merge hosted verdict
+
+The post-landing acceptance window is complete: **30 successful native
+merge-group integrations after #507**. Six integrations reused at least one
+trusted blocking-gate proof (**6/30, 20.0%**); two reused the complete 12/12
+batch lane (**2/30, 6.7%**). The six useful-reuse integrations were #520,
+#521, #525, #531, #530 and #532. Every later integration through #550 ran the
+full blocking lane.
+
+The final integration, PR #550, is a useful fail-safe witness rather than a
+reuse hit. It changes `packages/content/events/age_withering.yaml`; the proof
+fingerprint deliberately includes the whole authored content tree, so no
+pre-#550 trusted-main proof can match and the integration contributes **0/12
+reused**. That preserves the acceptance rule that a content change still runs
+every affected gate.
+
+Hosted timing on the six reuse hits shows about **88.4 minutes of gate-job
+elapsed time avoided in aggregate** across the 30 integrations: about 38.9
+minutes across #520/#521/#525, then about 49m28s across #531/#530/#532. Because
+`gates (batch)` is one runner job, that is also about **88.4 gate
+runner-minutes**, or **2.95 minutes per landed integration** over this observed
+window. The first 14 integrations also had whole-workflow critical-path timing
+available and showed **34.3 minutes** avoided there; later comments retain the
+per-job hosted timings rather than inventing whole-workflow figures where the
+connector did not expose them.
+
+The observed reuse rate (**20%**) is below the offline 30-landing feasibility
+sample's 26% push-proof estimate, but the measured saving still clears the
+issue's ~2-minute value bar: **~2.95 gate runner-minutes saved per landing** in
+the representative post-landing window. The mechanism therefore remains worth
+keeping. Its fail-safe behavior was repeatedly observed on content, gate-code
+and workflow changes, while UI/tooling-compatible changes supplied the actual
+reuse wins.
+
+#441's implementation and measurement acceptance are complete. #439 owns the
+broader CI-performance roll-up.
