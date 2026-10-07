@@ -4,7 +4,28 @@ def signing = new Properties()
 def signingFile = rootProject.file('keystore.properties')
 if (signingFile.exists()) signingFile.withInputStream { signing.load(it) }
 
-def buildNumber = System.getenv('GITHUB_RUN_NUMBER') ?: '1'
+def githubRunNumber = System.getenv('GITHUB_RUN_NUMBER')
+def githubRunAttempt = System.getenv('GITHUB_RUN_ATTEMPT') ?: '1'
+def versionCodeAttemptStride = 100L
+def androidVersionCode = 1
+
+if (githubRunNumber) {
+    def runNumber = githubRunNumber.toLong()
+    def runAttempt = githubRunAttempt.toLong()
+    if (runNumber < 1L) throw new GradleException('GITHUB_RUN_NUMBER must be positive')
+    if (runAttempt < 1L || runAttempt >= versionCodeAttemptStride) {
+        throw new GradleException(
+            "GITHUB_RUN_ATTEMPT must be between 1 and ${versionCodeAttemptStride - 1}"
+        )
+    }
+    def computedVersionCode = runNumber * versionCodeAttemptStride + runAttempt
+    // Android/Play caps versionCode at 2,100,000,000.
+    if (computedVersionCode > 2100000000L) {
+        throw new GradleException("Computed Android versionCode ${computedVersionCode} exceeds Play's limit")
+    }
+    androidVersionCode = computedVersionCode.toInteger()
+}
+
 def releaseName = System.getenv('GITHUB_REF_NAME') ?: '0.1.0'
 
 android {
@@ -14,7 +35,7 @@ android {
         applicationId "nz.eldritchdynasty.game"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode buildNumber.toInteger()
+        versionCode androidVersionCode
         versionName releaseName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
