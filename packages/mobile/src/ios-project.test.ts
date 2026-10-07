@@ -113,6 +113,13 @@ describe('Capacitor iOS project', () => {
     expect(runtimeSmoke).toContain('smoke command was not received within');
     expect(runtimeSmoke).toContain('smoke command was received but produced no final evidence');
 
+    const terminate = runtimeSmoke.indexOf("simctl(['terminate', udid, APP_ID])");
+    const openUrl = runtimeSmoke.indexOf("simctl(['openurl', udid, url], 120_000)");
+    const readyAfterOpen = runtimeSmoke.indexOf('await waitForReady();', openUrl);
+    expect(terminate).toBeGreaterThan(-1);
+    expect(openUrl).toBeGreaterThan(terminate);
+    expect(readyAfterOpen).toBeGreaterThan(openUrl);
+
     const onBack = platformBridge.indexOf('onBack(');
     const onSmokeCommand = platformBridge.indexOf('onSmokeCommand(');
     const appUrlListener = platformBridge.indexOf("App.addListener('appUrlOpen'");
