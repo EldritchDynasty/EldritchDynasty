@@ -210,9 +210,9 @@ function mergedPullRequestLandingHeads() {
   // PR, so Node only captures a few tens of KiB even across the full history.
   const projection = [
     '.[]',
-    'select(.merged_at != null)',
-    '[.number, .merged_at, .base.ref, .base.repo.full_name,',
-    ' .head.ref, .head.sha, .head.repo.full_name]',
+    '| select(.merged_at != null)',
+    '| [.number, .merged_at, .base.ref, .base.repo.full_name,',
+    '   .head.ref, .head.sha, .head.repo.full_name]',
     '| @tsv',
   ].join(' ');
   const r = spawnSync('gh', [
@@ -293,6 +293,31 @@ for (let i = 0; i + 1 < mainLog.length; i += 2) {
 const refs = () =>
   gitOut('for-each-ref', '--format=%(refname)', 'refs/janitor/').split('\n').filter(Boolean);
 
+/**
+ * Active claim refs answer whether a branch is still somebody's mutex. A newly
+ * created working branch normally points at main until its first work commit,
+ * so ancestry alone cannot distinguish "freshly claimed" from "already landed".
+ */
+function activeClaimTimesByAgent() {
+  const claimedAt = new Map();
+  for (const ref of refs()) {
+    const name = ref.replace(/^refs\/janitor\//, '');
+    if (!name.startsWith('claim/')) continue;
+    const body = gitOut('log', '-1', '--format=%B', ref);
+    if (!/^claim\s+\S+(?:\n|$)/.test(body)) continue;
+
+    const agent = body.match(/^agent:\s*(.+)$/m)?.[1]?.trim();
+    if (!agent) continue;
+    const taken = body.match(/^taken:\s*(.+)$/m)?.[1]?.trim();
+    const parsed = taken ? Date.parse(taken) / 1000 : Number.NaN;
+    const fallback = Number(gitOut('log', '-1', '--format=%ct', ref));
+    const at = Number.isFinite(parsed) ? parsed : fallback;
+    if (!Number.isFinite(at)) continue;
+    claimedAt.set(agent, Math.max(claimedAt.get(agent) ?? -Infinity, at));
+  }
+  return claimedAt;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Which branches have landed. Main ancestry or an exact-head merged PR is proof.
 // ---------------------------------------------------------------------------
@@ -301,6 +326,7 @@ const DOOMED = [];
 const ALIVE = [];
 const LANDED_BY = new Map();
 const PR_LANDINGS = mergedPullRequestLandingHeads();
+const ACTIVE_CLAIMED_AT = activeClaimTimesByAgent();
 say('### Branches');
 
 /**
@@ -338,10 +364,24 @@ for (const ref of refs()) {
   const sha = gitOut('rev-parse', ref);
   const ancestor = git('merge-base', '--is-ancestor', sha, MAIN).ok;
   const pr = PR_LANDINGS.get(`${branch}\0${sha}`);
-  const merged = ancestor || pr !== undefined;
+  const tipAt = Number(gitOut('log', '-1', '--format=%ct', ref));
+  const claimedAt = ACTIVE_CLAIMED_AT.get(branch);
+  // A claim at or after the current tip means no branch work has happened
+  // since that mutex was acquired. Keep it even if the untouched tip is
+  // already on main. Exact-head merged-PR evidence is stronger and still
+  // retires native merge-queue REBASE landings.
+  const freshUntouchedClaim = claimedAt !== undefined
+    && Number.isFinite(tipAt)
+    && claimedAt >= tipAt;
+  const merged = pr !== undefined || (ancestor && !freshUntouchedClaim);
   if (merged) {
     DOOMED.push(branch);
-    LANDED_BY.set(branch, ancestor ? 'ancestor of main' : `merged PR #${pr} at exact head`);
+    LANDED_BY.set(
+      branch,
+      pr !== undefined && (!ancestor || freshUntouchedClaim)
+        ? `merged PR #${pr} at exact head`
+        : 'ancestor of main',
+    );
   } else {
     ALIVE.push(branch);
   }
@@ -350,7 +390,8 @@ for (const ref of refs()) {
   log(`decide ${branch}: ${gitOut('rev-parse', '--short', sha)} vs main `
     + `${gitOut('rev-parse', '--short', MAIN)} → ${merged ? 'MERGED' : 'keep'} `
     + `· behind ${behind} ahead ${ahead}`
-    + (pr !== undefined && !ancestor ? ` · merged PR #${pr} exact head` : ''));
+    + (freshUntouchedClaim && pr === undefined ? ' · active claim newer than branch tip' : '')
+    + (pr !== undefined && (!ancestor || freshUntouchedClaim) ? ` · merged PR #${pr} exact head` : ''));
 }
 
 const total = DOOMED.length + ALIVE.length;
