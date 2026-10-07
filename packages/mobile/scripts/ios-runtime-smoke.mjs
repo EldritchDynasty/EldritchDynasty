@@ -65,7 +65,16 @@ async function waitForReady() {
 async function command(kind, url) {
   if (resultPath) await rm(resultPath, { force: true });
   resultPath = null;
-  simctl(['openurl', udid, url]);
+
+  // CoreSimulator has proven unreliable at delivering a custom URL to an
+  // already-foreground hosted app. Make the URL itself launch a fresh process.
+  // Capacitor 8.5's SceneDelegateProxy deliberately replays cold-launch URL
+  // contexts after capacitorViewDidAppear, when the App plugin can consume them.
+  const readyPath = await findNamedFile(dataContainer, READY_NAME);
+  if (readyPath) await rm(readyPath, { force: true });
+  simctl(['terminate', udid, APP_ID]);
+  simctl(['openurl', udid, url], 120_000);
+  await waitForReady();
 
   const deliveryDeadline = Date.now() + DELIVERY_TIMEOUT_MS;
   let completionDeadline = null;
@@ -111,17 +120,13 @@ async function command(kind, url) {
   }
 }
 
-// Do not race the first deep link against client composition. The bridge writes
-// this marker only after Capacitor has accepted the appUrlOpen listener.
+// The workflow's ordinary launch above proves the built app can start. Commands
+// below deliberately cold-launch through their URLs so the smoke also exercises
+// Capacitor 8.5's UIScene launch-context delivery path.
 await waitForReady();
 const saved = await command('save', 'eldritchdynasty-smoke://save?seed=1042&years=40');
 if (saved.year !== 1082) throw new Error(`save reached ${saved.year}, expected 1082`);
 
-simctl(['terminate', udid, APP_ID]);
-const oldReadyPath = await findNamedFile(dataContainer, READY_NAME);
-if (oldReadyPath) await rm(oldReadyPath, { force: true });
-simctl(['launch', udid, APP_ID], 120_000);
-await waitForReady();
 const resumed = await command('resume', 'eldritchdynasty-smoke://resume');
 if (resumed.sha256 !== saved.sha256) {
   throw new Error(`save/resume mismatch: ${saved.sha256} != ${resumed.sha256}`);
