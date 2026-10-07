@@ -330,13 +330,15 @@ const ACTIVE_CLAIMED_AT = activeClaimTimesByAgent();
 say('### Branches');
 
 /**
- * DECIDE FIRST, DELETE AFTER, AND REFUSE A SWEEP THAT WANTS EVERYTHING.
+ * DECIDE FIRST, DELETE AFTER, AND BOUND EVERY SWEEP.
  *
  * The first run of this script deleted 29 branches it should have kept. The
  * decision was wrong on the runner and right in two local runs over the same
  * refs, and the reason it could act on that wrongness is that it deleted inside
  * the loop that decided — no pass ever saw the whole answer, so nothing could
- * notice the answer was absurd.
+ * notice the answer was absurd. The full decision pass remains mandatory, but
+ * a large backlog is not itself an error: once every candidate is proven, drain
+ * it in deterministic bounded batches instead of deadlocking cleanup forever.
  *
  * THE CEILING IS A COUNT, NOT A SHARE, AND THAT CHANGE IS LOAD-BEARING.
  *
@@ -395,15 +397,25 @@ for (const ref of refs()) {
 }
 
 const total = DOOMED.length + ALIVE.length;
-if (DOOMED.length > MAX_DELETE) {
-  say(`**PAUSED** — ${DOOMED.length} branches came back "merged", over the ${MAX_DELETE} ceiling.`);
-  say('Nothing was deleted. Read the per-branch decisions in the log; if they are right,');
-  say('re-run with a higher `max_delete`. A backlog nobody could tidy legitimately looks like this.');
-  process.stderr.write(`REFUSED: ${DOOMED.length} doomed of ${total}, over ${MAX_DELETE}\n`);
+if (!Number.isInteger(MAX_DELETE) || MAX_DELETE < 1) {
+  say(`**PAUSED** — invalid deletion ceiling \`${MAX_DELETE}\`; it must be a positive integer.`);
+  process.stderr.write(`REFUSED: invalid JANITOR_MAX_DELETE=${MAX_DELETE}\n`);
   process.exit(1);
 }
 
-for (const branch of DOOMED) {
+const DELETE_BATCH = [...DOOMED]
+  .sort((a, b) => a.localeCompare(b))
+  .slice(0, MAX_DELETE);
+
+if (DOOMED.length > DELETE_BATCH.length) {
+  const remaining = DOOMED.length - DELETE_BATCH.length;
+  say(`**BOUNDED SWEEP** — ${DOOMED.length} of ${total} branches are proven merged; `
+    + `deleting ${DELETE_BATCH.length} this run and leaving ${remaining} for a later sweep.`);
+  log(`bounded sweep: ${DOOMED.length} proven merged branches; deleting `
+    + `${DELETE_BATCH.length}, deferring ${remaining}`);
+}
+
+for (const branch of DELETE_BATCH) {
   MERGED.add(branch);
   act('git', 'push', REMOTE, '--delete', branch);
   say(`- deleted \`${branch}\` — ${LANDED_BY.get(branch) ?? 'merged'}`);
