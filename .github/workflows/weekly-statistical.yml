@@ -26,8 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -40,7 +40,7 @@ jobs:
           node tools/gate-duration.mjs --check blood "$elapsed"
       - name: retain structured blood timings
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: weekly-gate-blood
           path: weekly-gate-blood.json
@@ -51,8 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -61,7 +61,7 @@ jobs:
         run: npm run gates -- signing --timings-json weekly-gate-signing.json
       - name: retain structured signing timings
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: weekly-gate-signing
           path: weekly-gate-signing.json
