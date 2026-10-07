@@ -176,3 +176,122 @@ events:
             id: the_youngest_who_knew
             severity: minor
             provableBy: [commons, house_ilm]
+
+proseVariants:
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].title"
+    of: 7cfe69df7ddbb9f3
+    plainenglish: >-
+      He Keeps the Teaching Hour
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].body"
+    of: 90771d6516fb6741
+    plainenglish: >-
+      The long room is quiet at the hour when it used to be noisy, but {TUTOR}
+      keeps the teaching hour anyway. He sets out the books, opens the shutters,
+      waits until the sunlight has left the floor, then closes the books and puts
+      them away. There is nobody to teach. The house has four children and none
+      has woken. The youngest is eleven, which is late but not conclusive, and the
+      eldest is nineteen, which is. The tutor costs four marks a year plus room
+      and board, and he has held the post since before two of the children were
+      born. He still keeps the hour.
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].interaction.choices[id=keep_him].label"
+    of: 48df996fd52fe9a3
+    plainenglish: >-
+      Keep him. The teaching post matters even when there is no pupil.
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].interaction.choices[id=keep_him].outcomes[id=kept].text"
+    of: 927e199939d9e1b5
+    plainenglish: >-
+      The house pays four marks a year for a man to open shutters. He is still
+      there when the next child wakes eleven years later, though nobody in the
+      room knows that will happen.
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].interaction.choices[id=let_him_go].label"
+    of: d3a3b6900c0d5e74
+    plainenglish: >-
+      Let him go. The house should pay only for work it uses.
+  - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].interaction.choices[id=let_him_go].outcomes[id=released].text"
+    of: 48a2fc27c41e35a3
+    plainenglish: >-
+      He is thanked, paid through the quarter, and gone by the Ingathering. The
+      books stay where he left them. Eleven years later, the next person who
+      opens the shutters does not know which volume to begin with.
+  - address: "content:events/age_withering.yaml#events[id=the_book_that_will_not_take].title"
+    of: b6d24140a5021e44
+    plainenglish: >-
+      The Water Does Not Move
+  - address: "content:events/age_withering.yaml#events[id=the_book_that_will_not_take].body"
+    of: 1cb4ec3d68a69c39
+    plainenglish: >-
+      The still-glass and the water in the dish are cold. Neither has moved for
+      an hour and a quarter. {PUPIL} knows the entire fourth chapter by heart in
+      Old Ambric, including the two lines everyone agrees are a copyist's error.
+      Understanding the words is not the problem. The pupil can remember every
+      line, but nothing happens in the dish. No page in the book and no scholar
+      at the Colleges can explain why a working succeeds for one reader and not
+      another. During a Withering, it fails for nearly everyone. Knowing that
+      other people have the same problem does not help. The water does not move.
+  - address: "content:events/age_withering.yaml#events[id=the_book_that_will_not_take].interaction.outcomes[id=nothing].text"
+    of: 79c448a8c824d704
+    plainenglish: >-
+      The water is thrown out of the window, and the chapter is started again on
+      Monday. That may be discipline, or simply the lack of a better idea.
+  - address: "content:events/age_withering.yaml#events[id=the_book_that_will_not_take].interaction.outcomes[id=stops_trying].text"
+    of: 30a391e0ff27fd4c
+    plainenglish: >-
+      The book goes back on the shelf and is never taken down again. Nobody in
+      the house treats the failure as important. That is kind, but it is also how
+      a family forgets something.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].title"
+    of: 33f0347203185ec6
+    plainenglish: >-
+      Was It Ever True?
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].body"
+    of: 06a6b97a36092946
+    plainenglish: >-
+      It is warm for the first time in a month, and all the doors are open. That
+      is why {YOUNGEST} asks the question in front of five people instead of
+      privately. The child wants to know whether the family's power was ever
+      real. Not whether the family is out of favour, resting, or being punished
+      for something an ancestor did, but whether there was ever anything there
+      at all. Perhaps four hundred years of the family chronicle is only four
+      hundred years of people agreeing with one another. {HEAD} asked the same
+      question inwardly at about that age. The book contains an answer, but the
+      answer is a story. Nobody at the table can demonstrate the power now.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].interaction.choices[id=answer_with_the_book].label"
+    of: e6e860c7511477eb
+    plainenglish: >-
+      Read the chronicle aloud. This is what the chronicle is for.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].interaction.choices[id=answer_with_the_book].outcomes[id=read_out].text"
+    of: f315005944f5f175
+    plainenglish: >-
+      You read three entries, two written before anyone at the table was born.
+      The child listens to all of them and then asks who wrote them down. That is
+      a better question than the first one.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].interaction.choices[id=answer_honestly].label"
+    of: 7bdbc284034ce0c8
+    plainenglish: >-
+      Admit that you do not know either.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].interaction.choices[id=answer_honestly].outcomes[id=told].text"
+    of: ac5f99f22c400d6e
+    plainenglish: >-
+      Saying it in front of five people costs the house some standing, but the
+      child is more likely to believe the next thing the family says. The
+      Withering does not end any sooner.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.subject"
+    of: 1599830257cb8f76
+    plainenglish: >-
+      the question asked at the table about whether the blood was ever real
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.options.record.chronicle"
+    of: 1f60ad8951ab140d
+    plainenglish: >-
+      The youngest asked in front of five people whether the family's power had
+      ever been real, and the house answered as honestly as it could.
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.options.record.claims[0].text"
+    of: 93a59f077405729b
+    plainenglish: >-
+      asked whether the blood had ever been real before anyone at the table
+      could prove it
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.options.embellish.chronicle"
+    of: 773cd6958a4bed31
+    plainenglish: >-
+      The youngest member of the house understood the signs before any adult at
+      the table spoke, and asked only for confirmation.
+
