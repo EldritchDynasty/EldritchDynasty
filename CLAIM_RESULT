@@ -1,0 +1,8 @@
+verdict: FAILED
+exit: 1
+request: /claim check --agent chatgpt/543-node24-actions-20261007
+request-commit: 30faafc7315beb286d5020bc1c0eab37e969f3a5
+
+holding 543 (lane code, 6m)
+  ⚠ chatgpt/509-ios-smoke-workflow-20261007 (509) is writing the same paths: .github/workflows/check.yml
+landing commit needs: Closes #543
