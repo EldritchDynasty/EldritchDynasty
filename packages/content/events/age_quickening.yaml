@@ -22,6 +22,7 @@ events:
     ages: { only: [the_quickening] }
     slots:
       HEAD: { role: head }
+      # The body and durable record both name age nine; keep the cast exact (#547).
       CHILD:
         role: unwoken
         filters: [{ age: { op: gte, value: 9 } }, { age: { op: lte, value: 9 } }]
