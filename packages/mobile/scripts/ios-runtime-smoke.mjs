@@ -34,7 +34,18 @@ function simctl(args, timeout = 30_000, env = {}) {
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function findNamedFile(directory, name) {
-  const entries = await readdir(directory, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    // WebKit/CoreSimulator mutates cache directories while the app is running.
+    // A directory discovered by its parent can therefore disappear before we
+    // descend into it. Treat only that race as "not found"; surface every
+    // other filesystem failure.
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+
   for (const entry of entries) {
     const candidate = path.join(directory, entry.name);
     if (entry.isDirectory()) {
