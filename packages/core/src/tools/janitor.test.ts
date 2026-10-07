@@ -22,8 +22,8 @@ import { pathToFileURL } from 'node:url';
  * nothing throws, so the failure is always something quietly not happening.
  *
  * These tests pin the three things that matter: it refuses on a shallow clone,
- * it is correct on a full one, and it pauses before a MASS deletion — a count,
- * not a share, since a repository that fast-forwards without pull requests has
+ * it is correct on a full one, and it bounds a MASS deletion — a count, not a
+ * share, since a repository that fast-forwards without pull requests has
  * "nearly every branch merged" as its normal state rather than its alarm.
  */
 
@@ -475,7 +475,45 @@ describe('the janitor', () => {
     }
   });
 
-  it('still pauses on a mass deletion, which is what the guard was ever for', () => {
+  it('drains a proven merged backlog in deterministic bounded batches', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-bounded-backlog-'));
+    try {
+      const bare = join(fixture, 'origin.git');
+      git(fixture, 'init', '-q', '--bare', '-b', 'main', bare);
+      git(fixture, 'clone', '-q', bare, 'seed');
+      const seed = join(fixture, 'seed');
+      git(seed, 'config', 'user.email', 'a@example.com');
+      git(seed, 'config', 'user.name', 'a');
+      git(seed, 'commit', '-q', '--allow-empty', '-m', 'base');
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+      // Twenty-seven independently named refs all point at the proven main
+      // ancestor. The default production cap is 25, so one successful sweep
+      // must make bounded progress without pretending the final two are unsafe.
+      for (let i = 0; i < 27; i += 1) {
+        const name = `merged/${String(i).padStart(2, '0')}`;
+        git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${name}`);
+      }
+
+      git(fixture, 'clone', '-q', bare, 'sweep');
+      const sweep = join(fixture, 'sweep');
+
+      const first = janitor(sweep, { JANITOR_MAX_DELETE: '25' });
+      expect(first.code).toBe(0);
+      expect(first.out).toContain(
+        'bounded sweep: 27 proven merged branches; deleting 25, deferring 2',
+      );
+      expect(branches(bare)).toEqual(['main', 'merged/25', 'merged/26']);
+
+      const second = janitor(sweep, { JANITOR_MAX_DELETE: '25' });
+      expect(second.code).toBe(0);
+      expect(branches(bare)).toEqual(['main']);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('still refuses an invalid deletion ceiling', () => {
     const r = janitor(join(root, 'full'), { DRY_RUN: '1', JANITOR_MAX_DELETE: '0' });
     expect(r.code).toBe(1);
     expect(r.out).toContain('REFUSED');
