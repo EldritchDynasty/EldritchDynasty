@@ -69,7 +69,7 @@ jobs:
     name: record the verdict
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # An ORPHAN commit with an EMPTY TREE, exactly as a claim is: it belongs
       # to no history, can never be a fast-forward of anything, and can never
