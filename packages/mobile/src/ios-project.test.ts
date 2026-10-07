@@ -105,7 +105,11 @@ describe('Capacitor iOS project', () => {
     expect(runtimeSmoke).toContain("simctl(['terminate', udid, APP_ID])");
     expect(runtimeSmoke).toContain('save/resume sha256:');
     expect(runtimeSmoke).toContain('export/import sha256:');
+    expect(platformBridge).toContain("const SMOKE_READY = 'smoke-ready.json'");
     expect(platformBridge).toContain("stage: 'received'");
+    expect(runtimeSmoke).toContain('iOS smoke listener did not become ready within');
+    expect(runtimeSmoke).toContain('await waitForReady();');
+    expect(runtimeSmoke).not.toContain('await delay(5_000);');
     expect(runtimeSmoke).toContain('smoke command was not received within');
     expect(runtimeSmoke).toContain('smoke command was received but produced no final evidence');
   });

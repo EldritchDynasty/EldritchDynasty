@@ -7,6 +7,7 @@ import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
+const SMOKE_READY = 'smoke-ready.json';
 const SMOKE_EXPORT = 'eldritch-smoke-export.json';
 
 async function writeInterchange(save: unknown, path = SMOKE_EXPORT): Promise<string> {
@@ -93,6 +94,21 @@ const platform = {
       if (canGoBack) window.history.back();
       else void App.exitApp();
     });
+
+    // The simulator driver must not infer listener readiness from wall-clock
+    // time. App.addListener resolves only after Capacitor has installed the
+    // native-backed listener, so this durable marker is an explicit handshake.
+    void registration
+      .then(() => Filesystem.writeFile({
+        path: SMOKE_READY,
+        data: JSON.stringify({ ready: true }),
+        directory: Directory.Data,
+        encoding: Encoding.UTF8,
+      }))
+      .catch((error: unknown) => {
+        console.error('iOS runtime smoke listener registration failed', error);
+      });
+
     return () => { void registration.then((handle) => handle.remove()); };
   },
 
