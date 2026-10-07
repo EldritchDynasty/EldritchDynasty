@@ -372,6 +372,21 @@ describe('native merge queue admission', () => {
     expect(workflow).toContain('the workflow_run event can arrive seconds before that check is');
   });
 
+  it('recovers an empty workflow_run PR association only from the exact same-repo head (#560)', () => {
+    expect(workflow).toContain("run_branch=\"$(jq -r '.workflow_run.head_branch // empty'");
+    expect(workflow).toContain("run_head=\"$(jq -r '.workflow_run.head_sha // empty'");
+    expect(workflow).toContain('gh api --method GET "/repos/$GITHUB_REPOSITORY/pulls"');
+    expect(workflow).toContain('-f state=open');
+    expect(workflow).toContain('-f base=main');
+    expect(workflow).toContain('-f head="$repo_owner:$run_branch"');
+    expect(workflow).toContain('.base.ref == "main"');
+    expect(workflow).toContain('.head.repo.full_name == $repo');
+    expect(workflow).toContain('.head.ref == $branch');
+    expect(workflow).toContain('.head.sha == $head');
+    expect(workflow).toContain('if length == 1 then .[0].number else empty end');
+    expect(workflow).toContain('expected_head="$run_head"');
+  });
+
   it('judges a pull_request by its newest finished CI required run, never a stale one (#493)', () => {
     // sort_by(.completed_at) ranked a still-running check (null) first, so a
     // draft-tier success outranked the full run marking the PR ready started.
