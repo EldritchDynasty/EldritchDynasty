@@ -70,7 +70,7 @@ events:
           grantsKnowledge: knows_an_early_waking
           effects: []
           claims:
-            - { kind: deed, target: { slot: CHILD }, text: woke at nine, when the iron and the milk both turned }
+            - { kind: deed, target: { slot: CHILD }, text: "woke at nine, when the iron and the milk both turned" }
         omit:
           chronicle: null
         embellish:
@@ -218,3 +218,151 @@ events:
                 he turns out to be an unusually good miller.
               effects: []
     rumour: { id: rumour_the_millers_boy, accuracy: 0.15, spread: 3 }
+
+proseVariants:
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].title"
+    of: 386d09df0365f733
+    plainenglish: >-
+      The Dogs Stay Outside
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].body"
+    of: 80cb888a0d159b1e
+    plainenglish: >-
+      The house notices the signs before anyone sees the cause. One dog refuses to
+      enter the long room, then another. {CHILD} is nine. The midwife's
+      grandmother said the iron turns dull first and the milk turns sweet later.
+      The iron went dull on Tuesday, and the milk turned on Friday. Her rule is
+      right about two times in three. Nine is an early age to wake. In an ordinary
+      century, this happens once in a generation and the house talks about it for
+      two generations. But this year the Colleges are turning applicants away, and
+      every market town in Aubren has gained a warranted practitioner since
+      spring. The dogs still refuse to come in.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].interaction.choices[id=say_nothing].label"
+    of: 1aa75dceecb1c9aa
+    plainenglish: >-
+      Keep quiet. Nine is early, and early waking attracts attention.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].interaction.choices[id=say_nothing].outcomes[id=quiet].text"
+    of: fb7aacb338cbfbe7
+    plainenglish: >-
+      The dogs stay out of the long room, and the milk is handled in the kitchen.
+      Within two weeks, the household treats this as routine instead of a
+      discovery.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].interaction.choices[id=mark_it].label"
+    of: 33b8cfb12bffd185
+    plainenglish: >-
+      Record it. An early waking can improve a future betrothal.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].interaction.choices[id=mark_it].outcomes[id=marked].text"
+    of: f6b5e9547b555738
+    plainenglish: >-
+      The chronicle records the date and both signs. Within three years, two
+      houses write to ask about a child of nine. The attention is unwelcome.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.subject"
+    of: f07ad41fec769b7b
+    plainenglish: >-
+      the child who woke at age nine
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.options.record.chronicle"
+    of: 2aec5208913d52a4
+    plainenglish: >-
+      A child of this house woke at age nine. The iron turned first, then the
+      milk.
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.options.record.claims[0].text"
+    of: 4f2eb89b447f2aef
+    plainenglish: >-
+      woke at nine after the iron and milk both turned
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.options.embellish.chronicle"
+    of: d91d1cff846a07c3
+    plainenglish: >-
+      A child of this house woke at age seven with the sign of the blood, as the
+      founder is said to have done.
+  - address: "content:events/age_quickening.yaml#events[id=the_price_of_books].title"
+    of: e359f48f852b83f3
+    plainenglish: >-
+      A Book Sells for a Hundred and Ten at Cawdry
+  - address: "content:events/age_quickening.yaml#events[id=the_price_of_books].body"
+    of: 87ff6c447729b1b8
+    plainenglish: >-
+      The bookseller at Cawdry is crowded and busier than ever. A lesser working
+      that sold for sixty crowns in spring is offered at a hundred and forty and
+      sells for a hundred and ten. The books have not changed. Demand has risen
+      because, during a Quickening, workings answer some readers they would not
+      have answered before. A man who spent nine years on a book that never
+      answered him may spend another sixty crowns to learn whether the book was
+      the problem. The house owns a shelf of books but has no money set aside to
+      buy more. Every book on that shelf is worth half again as much as before,
+      and nobody is selling.
+  - address: "content:events/age_quickening.yaml#events[id=the_price_of_books].interaction.outcomes[id=priced_out].text"
+    of: 8af632da42141e96
+    plainenglish: >-
+      The house buys no books this year. Its books are worth more by year's end,
+      so the house is wealthier on paper without gaining useful money.
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].title"
+    of: 0d6fb955dca07939
+    plainenglish: >-
+      The Line Is Longer
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].body"
+    of: 83bdaad29c4ebec6
+    plainenglish: >-
+      The counting house at Bramme is crowded with people who were not there five
+      years ago, and half are buying books. House Ilm has sent two lamp-wrights
+      through the Colleges and paid for a third. House Calder, which never cared
+      about this before, has hired a stone-wright to survey every wall it owns and
+      is telling the province about it. The Eldritch House still has the same
+      inherited advantage. It does not improve when the rest of the world
+      improves. It cannot be bought or taught, and it cannot be shown to a herald
+      in a form the herald can record. Standing is relative: the house has not
+      moved, but many more people now stand in the same line.
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].interaction.choices[id=buy_in].label"
+    of: 5e230575e7962171
+    plainenglish: >-
+      Join in. Send someone to the Colleges.
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].interaction.choices[id=buy_in].outcomes[id=enrolled].text"
+    of: 55c2d99a40146026
+    plainenglish: >-
+      After nine years at Corran and seven hundred miles of travel, the house gets
+      back a competent lamp-wright and a young man who now says the family name
+      the way people say it in Anvary.
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].interaction.choices[id=stand_pat].label"
+    of: 1f407a3766c3bbab
+    plainenglish: >-
+      Hold position. This house's advantage is not on that ladder.
+  - address: "content:events/age_quickening.yaml#events[id=the_ladder_gets_crowded].interaction.choices[id=stand_pat].outcomes[id=stood].text"
+    of: 6318c871ddb548a5
+    plainenglish: >-
+      The house spends nothing and explains itself to nobody. The Roll is read
+      twice in the next fifteen years, and both times other people's names have
+      moved.
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].title"
+    of: 73c68a05a75a8c59
+    plainenglish: >-
+      The Story Told Over the Second Cup
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].body"
+    of: 5611c1cf3f4768db
+    plainenglish: >-
+      The alehouse at Wick goes quiet when {STEWARD} enters, something it has not
+      done in thirty years. The miller's second boy is twelve, quick, and odd. He
+      has told three people that he can hear the water in the mill race change
+      before it does. The village has decided this is the old gift. From there,
+      people connect the gift to the house, then to the miller's wife spending a
+      season at Ardwen in the year the boy was conceived. The story has already
+      been told twice over the second cup. The boy is probably just good at
+      listening to a mill race, and his mother was at Ardwen because the house
+      needed extra hands at the Ingathering. Those facts will not stop the story.
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].interaction.choices[id=deny_it].label"
+    of: dc22d975a0f27439
+    plainenglish: >-
+      Deny the story in the alehouse, in front of everyone.
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].interaction.choices[id=deny_it].outcomes[id=denied].text"
+    of: 374ecff424478420
+    plainenglish: >-
+      A public denial in the alehouse makes the story sound more believable. By
+      the Greening, the tale includes the house denying it, which makes the story
+      stronger.
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].interaction.choices[id=let_it_run].label"
+    of: bebfc23bb00bccf7
+    plainenglish: >-
+      Let it spread. Wick has made up worse stories.
+  - address: "content:events/age_quickening.yaml#events[id=the_millers_boy].interaction.choices[id=let_it_run].outcomes[id=ran].text"
+    of: 7b4671adb55543d9
+    plainenglish: >-
+      The story spreads. Four years later, someone who heard it arranges an
+      apprenticeship for the boy at Bramme because they want whatever gift the
+      story promised. He proves to be an unusually good miller.
