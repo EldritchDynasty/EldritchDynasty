@@ -27,14 +27,29 @@ describe('iOS runtime smoke protocol', () => {
     });
   });
 
-  it('ignores only JSON representation noise and the refreshed save timestamp', async () => {
+  it('ignores JSON representation noise, key order, and the refreshed save timestamp', async () => {
     const first = await smokeEvidence(
       { kind: 'save', seed: 7, years: 1 },
-      { snapshot: { format: 28, year: 1043, savedAt: 'first', absent: undefined } },
+      {
+        snapshot: {
+          format: 28,
+          year: 1043,
+          savedAt: 'first',
+          absent: undefined,
+          world: { people: [{ name: 'Daveed', born: 1042 }], counters: { person: 1, branch: 0 } },
+        },
+      },
     );
     const second = await smokeEvidence(
       { kind: 'resume' },
-      { snapshot: { format: 28, year: 1043, savedAt: 'second' } },
+      {
+        snapshot: {
+          world: { counters: { branch: 0, person: 1 }, people: [{ born: 1042, name: 'Daveed' }] },
+          savedAt: 'second',
+          year: 1043,
+          format: 28,
+        },
+      },
     );
 
     expect(second.sha256).toBe(first.sha256);
