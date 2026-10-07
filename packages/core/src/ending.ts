@@ -2,8 +2,9 @@ import type { EndingDef, EndingId, Rung } from '@ed/schema';
 import { assertNever } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
-import { prologueDef, prologueTriad } from './prologue.js';
+import { prologueTriad, prologueView } from './prologue.js';
 import { END_YEAR, campaignDef } from './campaign.js';
+import { renderContentProse } from './prose.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -495,6 +496,17 @@ export function endingDef(ctx: SimCtx, id: EndingId): EndingDef | undefined {
   return ctx.content.ending(id);
 }
 
+function endingProse(ctx: SimCtx, def: EndingDef, path: string, original: string): string {
+  const file = ctx.content.sourceOf(String(def.id));
+  if (file === undefined) return original;
+  return renderContentProse(
+    ctx,
+    file,
+    `endings[id=${encodeURIComponent(String(def.id))}].${path}`,
+    original,
+  );
+}
+
 /**
  * The closing text, assembled from the chronicle the player wrote.
  *
@@ -506,14 +518,18 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
   if (!w.ending) return undefined;
 
   const def = endingDef(ctx, w.ending.id);
-  const prologue = prologueDef(ctx);
+  const prologue = prologueView(ctx);
   const signing = prologueTriad(ctx);
   if (!def || !prologue || !signing) return undefined;
 
   const ring: RingBeat[] = signing.map((beat, i) => {
     if (i + 1 !== def.ring.beat) return { given: beat.given, owed: beat.owed };
-    if (def.ring.given !== undefined) return { given: def.ring.given, owed: beat.owed, changed: 'given' };
-    if (def.ring.owed !== undefined) return { given: beat.given, owed: def.ring.owed, changed: 'owed' };
+    if (def.ring.given !== undefined) {
+      return { given: endingProse(ctx, def, 'ring.given', def.ring.given), owed: beat.owed, changed: 'given' };
+    }
+    if (def.ring.owed !== undefined) {
+      return { given: beat.given, owed: endingProse(ctx, def, 'ring.owed', def.ring.owed), changed: 'owed' };
+    }
     return { given: beat.given, owed: beat.owed };
   });
 
@@ -528,11 +544,11 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
 
   const view: EpilogueView = {
     id: w.ending.id,
-    title: def.title,
-    opening: def.opening,
+    title: endingProse(ctx, def, 'title', def.title),
+    opening: endingProse(ctx, def, 'opening', def.opening),
     ring,
     thesis: prologue.thesis,
-    closing: def.closing,
+    closing: endingProse(ctx, def, 'closing', def.closing),
     summary: `${endingSummary(w.ending.id, reckoning)} ${ledger}`,
     reckoning,
     read,
