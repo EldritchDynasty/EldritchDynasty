@@ -4,6 +4,8 @@ import { spawnSync } from 'node:child_process';
 
 const APP_ID = 'nz.eldritchdynasty.game';
 const RESULT_NAME = 'smoke-result.json';
+const READY_NAME = 'smoke-ready.json';
+const READY_TIMEOUT_MS = 120_000;
 const DELIVERY_TIMEOUT_MS = 30_000;
 const COMPLETION_TIMEOUT_MS = {
   save: 300_000,
@@ -30,14 +32,14 @@ function simctl(args, timeout = 30_000) {
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-async function findResult(directory) {
+async function findNamedFile(directory, name) {
   const entries = await readdir(directory, { withFileTypes: true });
   for (const entry of entries) {
     const candidate = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      const nested = await findResult(candidate);
+      const nested = await findNamedFile(candidate, name);
       if (nested) return nested;
-    } else if (entry.name === RESULT_NAME) {
+    } else if (entry.name === name) {
       return candidate;
     }
   }
@@ -45,7 +47,20 @@ async function findResult(directory) {
 }
 
 const dataContainer = simctl(['get_app_container', udid, APP_ID, 'data']);
-let resultPath = await findResult(dataContainer);
+let resultPath = await findNamedFile(dataContainer, RESULT_NAME);
+
+async function waitForReady() {
+  const deadline = Date.now() + READY_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const readyPath = await findNamedFile(dataContainer, READY_NAME);
+    if (readyPath) {
+      console.log('iOS smoke listener ready');
+      return readyPath;
+    }
+    await delay(1_000);
+  }
+  throw new Error(`iOS smoke listener did not become ready within ${READY_TIMEOUT_MS / 1_000} seconds`);
+}
 
 async function command(kind, url) {
   if (resultPath) await rm(resultPath, { force: true });
@@ -57,7 +72,7 @@ async function command(kind, url) {
   let received = false;
 
   while (true) {
-    resultPath = await findResult(dataContainer);
+    resultPath = await findNamedFile(dataContainer, RESULT_NAME);
     if (resultPath) {
       try {
         const evidence = JSON.parse(await readFile(resultPath, 'utf8'));
@@ -96,14 +111,17 @@ async function command(kind, url) {
   }
 }
 
-// Let the WebView install its appUrlOpen listener after the simulator launch.
-await delay(5_000);
+// Do not race the first deep link against client composition. The bridge writes
+// this marker only after Capacitor has accepted the appUrlOpen listener.
+await waitForReady();
 const saved = await command('save', 'eldritchdynasty-smoke://save?seed=1042&years=40');
 if (saved.year !== 1082) throw new Error(`save reached ${saved.year}, expected 1082`);
 
 simctl(['terminate', udid, APP_ID]);
+const oldReadyPath = await findNamedFile(dataContainer, READY_NAME);
+if (oldReadyPath) await rm(oldReadyPath, { force: true });
 simctl(['launch', udid, APP_ID], 120_000);
-await delay(5_000);
+await waitForReady();
 const resumed = await command('resume', 'eldritchdynasty-smoke://resume');
 if (resumed.sha256 !== saved.sha256) {
   throw new Error(`save/resume mismatch: ${saved.sha256} != ${resumed.sha256}`);
