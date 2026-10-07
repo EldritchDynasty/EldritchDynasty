@@ -57,6 +57,53 @@ written down is so it is not learned a sixth.
 
 ---
 
+## Forced-Awakening hosted re-baseline (#431, #551) — 8 October 2026
+
+The Drowning's successful `full_count/woke` path now mechanically forces
+Awakening, not merely prose: #432 installed the structured transition, #515
+proved downstream Mind, Library-study and ascension eligibility, and #533
+proved that executing the authored outcome surfaces `forced: true` in gate
+9's real sampled-holder provenance. The other two §11 rites are separately
+tracked in #518; this correctness slice does not author or balance them.
+
+The **before** sample is the pre-#432 queue-parent `47b31565`
+(`04a7c233^`), verified by byte-identical gate, test, content and
+simulation-input blobs in [PR #426's hosted check](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37153239351).
+The **current** sample is the successful scheduled
+[2026-10-07 nightly run 37606408056, endings job 112742878236](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37606408056/job/112742878236)
+on `417653860499f1aa6459a09c3734954b2ee1e264` (160 played
+500-year runs per policy). Subsequent #544 CI/action-pin and mobile-smoke
+maintenance does not change the measured simulation inputs. These are
+**two different sample epochs**, not paired-seed evidence that the mechanic
+caused the numerical changes.
+
+| Ascendant endings measure | Before: 37153239351 | Current: 37606408056 |
+|---|---:|---:|
+| Ascendant Apotheosis | 0/160 (0.0%) | 0/160 (0.0%) |
+| Ascendant Unmaking | 12/160 (7.5%) | 11/160 (6.9%) |
+| Unmaking takers | 4 | 6 |
+| Taker Madness peak | not recorded in this comparison | **77** |
+| Joint gates: alive / power / books / circle / Madness / Mind / clauses / respect / God | `4/3/3/3/1/0/0/0/0` | `6/3/2/2/0/0/0/0/0` |
+
+Gate 9's 32-run, 500-year *ordinary auto-resolve* provenance is separate
+from the ascendant-policy endings batches. Before: 1,904 expresser samples,
+seven Drowning resolutions, one `full_count/woke`, and all sampled top-holder
+rows `forced no`. On the current-main ladder proof (merge-group
+[37525233085](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37525233085),
+reusing trusted main proof [37515939435](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37515939435)):
+1,981 expresser samples, seven Drowning resolutions, one `full_count/woke`,
+and seed 5035's top holder **Kelwin the third** reports `forced yes`
+(Madness 32.7, raw 22.0; Mind 43.5; Power 37.0). This confirms that the
+mechanical transition and its provenance participate in actual played runs.
+
+**Conclusion:** #431's forced-Awakening correctness and provenance requirements
+are satisfied; these hosted measurements complete its re-baseline. They do
+**not** establish a recovered God-Madness tail: gate 9 still reports an
+ordinary-population ceiling of 61.8, below the unchanged God Madness floor of
+90, while the ascendant taker peak here is 77 and the joint Madness gate is
+0/6. The progression/supply question and any owner route choice remain open in
+[#378](https://github.com/EldritchDynasty/EldritchDynasty/issues/378).
+
 ## CI evidence tiers: merge, nightly, weekly (#451) — 5 October 2026
 
 #451 changes **when evidence runs**, not what it claims. `tools/ci-evidence.json`
