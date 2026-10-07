@@ -9608,3 +9608,49 @@ single evaluator condition, event weight, ending rule or campaign rule. The
 temporary measurement workflow used to obtain this evidence is deleted in the
 same final #540 branch change and is not intended to land on `main`.
 
+## 2026-10-08 — #431 forced-Awakening hosted re-baseline
+
+#431's mechanical path is now measured end to end. The pre-change comparison
+comes from PR #426 exact-head run `37153239351` on `47b31565`; the current
+gate-9 sample comes from the landed #533 evidence on current code, and the
+fresh endings sample is scheduled nightly run `37606408056`, job
+`112742878236`, on `417653860499f1aa6459a09c3734954b2ee1e264`. That
+nightly completed successfully. The subsequent #544 landing changes CI action
+pins and the iOS simulator smoke helper, not the simulation/content inputs
+measured here.
+
+**Gate 9 / provenance.** Before forced Awakening participated mechanically, the
+32 × 500-year sample held 1,904 expresser-samples; the Drowning resolved seven
+times, `full_count/woke` once, and every reported top-holder row was
+`forced no`. On the current path the corresponding 32-run sample holds 1,981
+expresser-samples; the Drowning again resolves seven times with one
+`full_count/woke`, and seed 5035's top holder, Kelwin the third, is reported
+`forced yes` (Madness 32.7, raw 22.0; Mind 43.5; Power 37.0). The authored
+rite therefore reaches the same downstream holder/progression instrumentation
+as a natural Awakening rather than existing only in prose.
+
+**Endings / purchased-Madness funnel.** The before and fresh hosted samples are
+both 160 played Long Lines under the ascendant policy:
+
+| measure | before | current nightly |
+|---|---:|---:|
+| Ascendant Unmaking runs | 12/160 (7.5%) | 11/160 (6.9%) |
+| Unmaking takers | 4 | 6 |
+| Taker Madness peak | — | 77.0 |
+| Joint gates alive / power / books / circle / Madness / Mind / clauses / Respect / God | 4 / 3 / 3 / 3 / 1 / 0 / 0 / 0 / 0 | 6 / 3 / 2 / 2 / 0 / 0 / 0 / 0 / 0 |
+| Apotheosis | 0/160 (0.0%) | 0/160 (0.0%) |
+
+The current nightly also reports taker peaks of Power 100.0, eight personal
+affinities and Mind 64.0. It does **not** manufacture a God-Madness tail:
+the taker Madness peak is 77.0 and the joint Madness gate is 0/6, while gate
+9's unchanged God floor remains 90 against the measured ordinary-population
+ceiling of 61.8.
+
+**Conclusion.** #431 is complete: forced Awakening is a real state transition,
+its Drowning outcome is deterministically witnessed, forced provenance appears
+in played gate-9 output, and forced survivors use the ordinary downstream
+Mind/Library/ascension paths. The remaining question is not whether forced
+Awakening works. It is whether/how the game should restore or judge reach of
+God-level Madness; that policy/supply question remains #378. No threshold,
+content weight or gameplay rule changes in this measurement landing.
+
