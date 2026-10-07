@@ -26,11 +26,24 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
   return null;
 }
 
+function canonicalJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (value === null || typeof value !== 'object') return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => [key, canonicalJson(item)]),
+  );
+}
+
 async function sha256(value: unknown): Promise<string> {
-  // Native storage is JSON, so compare the value after that boundary has
-  // removed `undefined`. `savedAt` is deliberately refreshed by every
-  // GameSession.save(); it is transport metadata, not simulation state.
-  const serializable = JSON.parse(JSON.stringify(value)) as unknown;
+  // Native storage is JSON, so compare semantic JSON rather than insertion
+  // order. Zod/load-save reconstruction is allowed to rebuild objects in a
+  // different key order without changing the saved world. `savedAt` is
+  // deliberately refreshed by every GameSession.save(); it is transport
+  // metadata, not simulation state.
+  const serializable = canonicalJson(value);
   if (serializable !== null && typeof serializable === 'object' && !Array.isArray(serializable)) {
     delete (serializable as Record<string, unknown>).savedAt;
   }
