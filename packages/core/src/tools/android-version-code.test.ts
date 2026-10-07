@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const BUILD_GRADLE = join(
   import.meta.dirname,
-  '../../../../mobile/android/app/build.gradle',
+  '../../../mobile/android/app/build.gradle',
 );
 const source = readFileSync(BUILD_GRADLE, 'utf8');
 
