@@ -33,6 +33,12 @@ const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 let root: string;
 const git = (cwd: string, ...args: string[]) =>
   execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+const gitWithEnv = (cwd: string, env: Record<string, string>, ...args: string[]) =>
+  execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+  }).trim();
 
 const janitor = (cwd: string, env: Record<string, string> = {}) => {
   try {
@@ -317,11 +323,95 @@ describe('the janitor', () => {
     }
   });
 
-  it('projects paginated PR evidence before Node captures it', () => {
+  it('keeps a branch at main when its active claim was taken after that tip', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-fresh-claim-'));
+    try {
+      const bare = join(fixture, 'origin.git');
+      git(fixture, 'init', '-q', '--bare', '-b', 'main', bare);
+      git(fixture, 'clone', '-q', bare, 'seed');
+      const seed = join(fixture, 'seed');
+      git(seed, 'config', 'user.email', 'a@example.com');
+      git(seed, 'config', 'user.name', 'a');
+      const atBase = { GIT_AUTHOR_DATE: '2026-10-07T00:00:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:00:00Z' };
+      gitWithEnv(seed, atBase, 'commit', '-q', '--allow-empty', '-m', 'base');
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+      const agent = 'chatgpt/fresh-claim';
+      git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${agent}`);
+      const claim = gitWithEnv(
+        seed,
+        { GIT_AUTHOR_DATE: '2026-10-07T00:01:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:01:00Z' },
+        'commit-tree', EMPTY_TREE, '-m',
+        `claim 538\n\nagent: ${agent}\nlane: code\npath: tools/janitor.mjs\ntaken: 2026-10-07T00:01:00.000Z`,
+      );
+      git(seed, 'push', '-q', 'origin', `${claim}:refs/heads/claim/538`);
+
+      git(fixture, 'clone', '-q', bare, 'sweep');
+      const r = janitor(join(fixture, 'sweep'), { DRY_RUN: '1' });
+
+      expect(r.code).toBe(0);
+      expect(r.out).toMatch(new RegExp(`decide ${agent}:.*keep.*active claim newer than branch tip`));
+      expect(r.out).not.toContain(`delete ${agent}`);
+      expect(r.out).not.toContain('delete claim/538');
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('retires a claimed branch once a post-claim work commit lands by ancestry', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-post-claim-landed-'));
+    try {
+      const bare = join(fixture, 'origin.git');
+      git(fixture, 'init', '-q', '--bare', '-b', 'main', bare);
+      git(fixture, 'clone', '-q', bare, 'seed');
+      const seed = join(fixture, 'seed');
+      git(seed, 'config', 'user.email', 'a@example.com');
+      git(seed, 'config', 'user.name', 'a');
+      const atBase = { GIT_AUTHOR_DATE: '2026-10-07T00:00:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:00:00Z' };
+      gitWithEnv(seed, atBase, 'commit', '-q', '--allow-empty', '-m', 'base');
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+      const agent = 'chatgpt/post-claim-landed';
+      git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${agent}`);
+      const claim = gitWithEnv(
+        seed,
+        { GIT_AUTHOR_DATE: '2026-10-07T00:01:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:01:00Z' },
+        'commit-tree', EMPTY_TREE, '-m',
+        `claim 538\n\nagent: ${agent}\nlane: code\npath: tools/janitor.mjs\ntaken: 2026-10-07T00:01:00.000Z`,
+      );
+      git(seed, 'push', '-q', 'origin', `${claim}:refs/heads/claim/538`);
+
+      git(seed, 'checkout', '-q', agent);
+      gitWithEnv(
+        seed,
+        { GIT_AUTHOR_DATE: '2026-10-07T00:02:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:02:00Z' },
+        'commit', '-q', '--allow-empty', '-m', 'fix(#538): janitor evidence', '-m', 'Closes #538',
+      );
+      git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${agent}`);
+      git(seed, 'checkout', '-q', 'main');
+      git(seed, 'merge', '-q', '--ff-only', agent);
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+      git(fixture, 'clone', '-q', bare, 'sweep');
+      const r = janitor(join(fixture, 'sweep'), { DRY_RUN: '1' });
+
+      expect(r.code).toBe(0);
+      expect(r.out).toMatch(new RegExp(`decide ${agent}:.*MERGED`));
+      expect(r.out).toContain(`would: git push origin --delete ${agent}`);
+      expect(r.out).toContain('would: git push origin --delete claim/538');
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('projects paginated PR evidence through one composable jq pipeline', () => {
     const source = readFileSync(TOOL, 'utf8');
     expect(source).toContain("'api', '--paginate',");
     expect(source).toContain("'--jq', projection,");
     expect(source).not.toContain("'api', '--paginate', '--slurp'");
+    expect(source).toContain("'.[]',\n    '| select(.merged_at != null)',");
+    expect(source).toContain("'| [.number, .merged_at, .base.ref, .base.repo.full_name,'");
+    expect(source).toContain("'| @tsv',");
     expect(source).toContain("r.error?.message || (r.stderr ?? '').trim()");
   });
 
