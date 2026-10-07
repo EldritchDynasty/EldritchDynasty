@@ -95,6 +95,7 @@ describe('Capacitor iOS project', () => {
     const releaseInfo = text('ios/App/App/Info.plist');
     const runtimeSmoke = text('scripts/ios-runtime-smoke.mjs');
     const platformBridge = text('src/platform-bridge.ts');
+    const sceneDelegate = text('ios/App/App/SceneDelegate.swift');
 
     expect(project).toContain('INFOPLIST_FILE = "App/Info-Debug.plist";');
     expect(project).toContain('INFOPLIST_FILE = App/Info.plist;');
@@ -114,11 +115,19 @@ describe('Capacitor iOS project', () => {
     expect(runtimeSmoke).toContain('smoke command was received but produced no final evidence');
 
     const terminate = runtimeSmoke.indexOf("simctl(['terminate', udid, APP_ID])");
-    const openUrl = runtimeSmoke.indexOf("simctl(['openurl', udid, url], 120_000)");
-    const readyAfterOpen = runtimeSmoke.indexOf('await waitForReady();', openUrl);
+    const relaunch = runtimeSmoke.indexOf("simctl(['launch', udid, APP_ID], 120_000");
+    const launchUrl = runtimeSmoke.indexOf('SIMCTL_CHILD_ED_SMOKE_URL: url');
+    const readyAfterLaunch = runtimeSmoke.indexOf('await waitForReady();', relaunch);
     expect(terminate).toBeGreaterThan(-1);
-    expect(openUrl).toBeGreaterThan(terminate);
-    expect(readyAfterOpen).toBeGreaterThan(openUrl);
+    expect(relaunch).toBeGreaterThan(terminate);
+    expect(launchUrl).toBeGreaterThan(relaunch);
+    expect(readyAfterLaunch).toBeGreaterThan(launchUrl);
+    expect(runtimeSmoke).not.toContain("simctl(['openurl'");
+
+    expect(sceneDelegate).toContain('#if DEBUG');
+    expect(sceneDelegate).toContain('ProcessInfo.processInfo.environment["ED_SMOKE_URL"]');
+    expect(sceneDelegate).toContain('forName: .capacitorViewDidAppear');
+    expect(sceneDelegate).toContain('NotificationCenter.default.post(name: .capacitorOpenURL');
 
     const onBack = platformBridge.indexOf('onBack(');
     const onSmokeCommand = platformBridge.indexOf('onSmokeCommand(');
