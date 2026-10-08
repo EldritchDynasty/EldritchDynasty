@@ -1,7 +1,10 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { proseOriginalHash, type ProseVariant } from '@ed/schema';
 import type { PlainEnglishWorkItem } from './string-audit.js';
-import { pendingPlainEnglishWorklist } from './string-audit-cli.js';
+import { auditStringsOutput, pendingPlainEnglishWorklist } from './string-audit-cli.js';
 
 const item = (
   address: string,
@@ -63,5 +66,47 @@ describe('the Plain English migration worklist (#415)', () => {
     expect(pendingPlainEnglishWorklist([original], variants)).toEqual([
       expect.objectContaining({ address: original.address, variantStatus: 'stale' }),
     ]);
+  });
+});
+
+describe('audit:strings CLI dispatch (#623)', () => {
+  it('emits the JSON coverage report through the npm entry point, not the inventory', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'ed-audit-cli-'));
+    try {
+      const dir = join(repo, 'packages/content/events');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'tiny.yaml'), [
+        'events:',
+        '  - id: example',
+        '    body: The house keeps the written record.',
+        '',
+      ].join('\n'), 'utf8');
+
+      const coverage = JSON.parse(auditStringsOutput(['--plainenglish-coverage'], repo));
+      expect(coverage).toMatchObject({
+        total: 1,
+        current: 0,
+        missing: 1,
+        stale: 0,
+        invalid: 0,
+        remaining: [{
+          source: 'content',
+          file: 'events/tiny.yaml',
+          address: 'content:events/tiny.yaml#events[id=example].body',
+          status: 'missing',
+          expectedOf: proseOriginalHash('The house keeps the written record.'),
+        }],
+      });
+      expect(coverage.remaining).toHaveLength(1);
+
+      // Coverage wins over the legacy worklist flag; --files retains the
+      // original human-readable inventory output.
+      expect(JSON.parse(auditStringsOutput([
+        '--plainenglish-worklist', '--plainenglish-coverage',
+      ], repo))).toEqual(coverage);
+      expect(auditStringsOutput(['--files'], repo)).toContain('STRING SOURCES');
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
