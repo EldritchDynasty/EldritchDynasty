@@ -127,3 +127,65 @@ events:
             - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_terra }
             - { kind: treasury, delta: -40 }
     rumour: { id: rumour_the_damp_at_ardwen, accuracy: 0.45, spread: 2 }
+
+proseVariants:
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_keeper_of_the_long_room].title"
+    of: aae01541d2f2291d
+    plainenglish: >-
+      The Library Keeper Has a Warning
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_keeper_of_the_long_room].body"
+    of: ba483bd35e52b567
+    plainenglish: >-
+      {KEEPER} has managed the long room for nineteen years. He keeps books that people
+      rarely request along the north wall and puts more popular books near the door. He has
+      noticed a problem with the north wall on three separate occasions. Each time, he has
+      reached the doorway of a room where {HEAD} was busy, but has not managed to give the
+      warning.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_keeper_of_the_long_room].interaction.outcomes[id=he_gets_it_said].text"
+    of: 6008edffba9c3f8b
+    plainenglish: >-
+      While going down the stairs, the keeper finally says his warning in nine words. The
+      north wall is wet and has been wet since before he started keeping track. The damage
+      is not a disaster yet, but it could become one in about fifteen years.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_keeper_of_the_long_room].interaction.outcomes[id=the_moment_never_comes].text"
+    of: 6910ad30c4d21d34
+    plainenglish: >-
+      The keeper goes back upstairs and moves four books away from the wet wall. This
+      protects those four books but not the rest. He has already failed twice to tell anyone
+      about the problem. Because moving the books helps a little, he eventually stops
+      thinking about the warning he never gave.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_dealt_with].title"
+    of: 3a332514c0f884b0
+    plainenglish: >-
+      Paying for Repairs to the North Wall
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_dealt_with].body"
+    of: 17cce3a2f138abde
+    plainenglish: >-
+      Knowing about the problem ten years in advance gives the house time to hire a roofer
+      for two weeks. The bill covers lead, slate, and a man from Bramme who complains about
+      whoever installed the roof flashing the first time.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_dealt_with].interaction.outcomes[id=paid].text"
+    of: befc57b117578ebd
+    plainenglish: >-
+      Before the roofers arrive, {KEEPER} packs every book from the north wall into crates
+      and moves them to a dry room. After the repairs, he puts the books back in their
+      proper order. The house loses only the repair money and spends a summer walking around
+      the crates.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_found_out].title"
+    of: f90ce94ae40ba45e
+    plainenglish: >-
+      The Damage Behind the North Wall
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_found_out].body"
+    of: a8d192fb22b543c7
+    plainenglish: >-
+      One afternoon, someone needs a particular book for a particular reason and goes
+      looking for it. They find that the book can no longer provide the information they
+      need.
+  - address: "content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_found_out].interaction.outcomes[id=the_quires_are_gone].text"
+    of: af73eb694d72c54d
+    plainenglish: >-
+      The book's cover and binding are still sound. But damp has destroyed the inner margins
+      of about one third of its folded sections, including the handwritten corrections.
+      Those corrections were the part of the book that the house actually owned. Nobody
+      blames {KEEPER}, and he finds that worse than being blamed. He had spoken the warning
+      on the stairs, but no one was there to hear it.
