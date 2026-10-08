@@ -73,9 +73,10 @@ export function buildProof({ bytes, metadata, tag, sourceSha, runUrl, signing })
   if (!['verified', 'unsigned-prerelease'].includes(signing)) {
     throw new Error('Android signing must be verified or explicitly unsigned-prerelease');
   }
-  if (!signingPolicy(tag, {}).production && signing === 'unsigned-prerelease') {
-    // The only release permitted to ship unsigned is an explicitly marked pre-release.
-  } else if (signing !== 'verified') {
+  // The upload key is not passed to this step. Validate the tag's release
+  // policy without calling signingPolicy (which correctly requires secrets).
+  const prerelease = /^v\d+\.\d+\.\d+-[0-9A-Za-z.-]+(?:\+[0-9A-Za-z.-]+)?$/.test(tag);
+  if (signing === 'unsigned-prerelease' && !prerelease) {
     throw new Error('Production Android AAB cannot be unsigned');
   }
   return {
