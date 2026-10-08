@@ -135,6 +135,7 @@ events:
     accounts: [ballad_of_the_empty_chair, church_inquest_minute_1604]
 
 # Plain English alternatives for the above Original event prose (#569).
+# Companion batch: household.yaml. Only variant text is added; mechanics are untouched.
 proseVariants:
   - address: content:events/guardian.yaml#events[id=the_guardian_at_the_table].title
     of: 8b57d80e36a19b12
