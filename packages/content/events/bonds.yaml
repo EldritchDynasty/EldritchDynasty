@@ -175,3 +175,82 @@ events:
               effects:
                 - { kind: relationship, from: { slot: SERVANT }, to: { slot: HEAD }, sentiment: -12 }
               tags: [service]
+
+# Plain English counterparts. The Original above remains authoritative.
+proseVariants:
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].title"
+    of: "6c3dc3d807229a1c"
+    plainenglish: >-
+      The Cost of Winter
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].body"
+    of: "72b845446852c5b0"
+    plainenglish: >-
+      Since the frost arrived, the kitchen fire has been kept low. Everyone avoids the room.
+      {SERVANT} comes to the counting room holding his hat. His brother in Wick has lost his
+      roof, so he asks for 120 marks. He earns only six marks a year, making this a huge sum
+      for him. The house has the money. But the only way for him to repay it is to spend the
+      rest of his working life doing so.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=advance_it].label"
+    of: "85ab18a3ac90a4ef"
+    plainenglish: >-
+      Lend him the money and count his future years of work against the debt.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=advance_it].outcomes[id=bound].text"
+    of: "c7f4960997258905"
+    plainenglish: >-
+      The steward records the date, the amount and the terms of the loan. He reads the terms
+      aloud twice. No one says what this means for the servant. He stops receiving wages. His
+      work slowly reduces the debt, and he cannot leave until he has paid it all back.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=make_it_a_gift].label"
+    of: "d8599ef8b9911c0c"
+    plainenglish: >-
+      Give him the money instead. Counting this as a debt would drive people away from the
+      house.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=make_it_a_gift].outcomes[id=given].text"
+    of: "97646adca5c5c0f8"
+    plainenglish: >-
+      The steward takes four crowns from the box but makes no entry in the accounts. He is
+      more bothered by the missing record than by the money. People in the village talk about
+      the gift for a season, then forget it. The servant's brother in Wick gets his roof.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=refuse].label"
+    of: "97495d0012fb6c9c"
+    plainenglish: >-
+      Refuse the request. The house is not a bank.
+  - address: "content:events/bonds.yaml#events[id=the_winter_advance].interaction.choices[id=refuse].outcomes[id=refused].text"
+    of: "0a882b406d61576c"
+    plainenglish: >-
+      He says he understands, and he means it. That makes the refusal worse. He leaves the
+      counting room before its fire has settled. Outside, he puts his hat back on.
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].title"
+    of: "24b0371ef77f62ea"
+    plainenglish: >-
+      The Old Debt Entry
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].body"
+    of: "b27bcb8cb0592718"
+    plainenglish: >-
+      At the turn of the year, the steward brings the account book as usual. It falls open at
+      an old debt entry. {SERVANT} has worked to repay that sum since before the youngest
+      member of the house could walk. The book says he still owes nine years of work. It has
+      said nine years for a long time, because poor harvests reduce how much of his unpaid
+      wages can clear the debt. Nobody in the room will say aloud what this arrangement has
+      become.
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].interaction.choices[id=tear_it_up].label"
+    of: "1506fdae3829848a"
+    plainenglish: >-
+      Tear out the debt entry in front of everyone.
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].interaction.choices[id=tear_it_up].outcomes[id=freed].text"
+    of: "f3e2547a13717dfe"
+    plainenglish: >-
+      The steward tears out the page and writes DISCHARGED in large letters on the remaining
+      stub. The servant says nothing for a long time. He chooses to stay, but he now receives
+      wages. The house feels that cost in the spring. He never repeats anything he heard in
+      the counting room.
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].interaction.choices[id=hold_to_it].label"
+    of: "41b4bc1f2dc6d943"
+    plainenglish: >-
+      Keep the agreement. He signed the terms.
+  - address: "content:events/bonds.yaml#events[id=the_book_is_opened].interaction.choices[id=hold_to_it].outcomes[id=held].text"
+    of: "8a8ecb13a9b0cc97"
+    plainenglish: >-
+      Everyone in the counting room knows he signed the agreement. They also know that this
+      fact does not help him. The book goes back on the shelf. He still owes nine years of
+      work.
