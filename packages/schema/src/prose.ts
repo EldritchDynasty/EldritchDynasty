@@ -133,6 +133,11 @@ function isContentProse(text: string): boolean {
   return /[A-Za-z]/.test(text) && proseWordCount(text) >= 2;
 }
 
+/** Use the same prose eligibility in the worklist and variant-address validation. */
+export function isContentProseField(key: string, text: string): boolean {
+  return CONTENT_PROSE_KEYS.has(key) && isContentProse(text);
+}
+
 export type ContentProsePathSegment =
   | { kind: 'key'; key: string }
   | { kind: 'index'; index: number }
@@ -190,7 +195,7 @@ export function contentProseEntries(file: string, document: unknown): ContentPro
     frameTier: boolean,
   ): void => {
     if (typeof value === 'string') {
-      if (!CONTENT_PROSE_KEYS.has(key) || !isContentProse(value)) return;
+      if (!isContentProseField(key, value)) return;
       out.push({
         address: `content:${file}#${pathText(path)}`,
         text: value,
