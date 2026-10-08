@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { canonical, loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
+import { canonical, chapterOf, loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
 const bundle = loadContent();
@@ -189,5 +189,63 @@ describe('prospective Age-opening prose (#580)', () => {
     expect(canonical(saveGame(ctx))).toBe(savedBeforeMode);
     const loaded = loadGame(saveGame(ctx), bundle);
     expect(loaded.world.chronicle.at(-1)!.text).toBe(earlierWords);
+  });
+});
+
+describe('named chapter Age labels in the selected prose mode (#599)', () => {
+  const ageId = 'the_withering';
+  const address = 'content:ages/ages.yaml#ages[id=the_withering].name';
+
+  it('switches a named Age label prospectively without rewriting the Chronicle or save', () => {
+    const { ctx, age } = withAge(ageId, true, 5990);
+    const done = runOut(ctx, age, 5990);
+    expect(done).toBeDefined();
+    const original = chapterOf(ctx, done!)!;
+    const originalName = ctx.content.age(ageId)!.name;
+    expect(ctx.content.sourceOf(ageId)).toBe('ages/ages.yaml');
+    expect(original.name).toBe(originalName);
+
+    ctx.world.chronicle.push({
+      year: ctx.world.year, weight: 'line', named: false,
+      text: 'These words are already written in the record.',
+    });
+    const saved = canonical(saveGame(ctx));
+    setProseVariants(ctx, [{ address, plainenglish: 'The Years of Loss' }]);
+    setProseMode(ctx, 'plainenglish');
+    const plain = chapterOf(ctx, done!)!;
+    expect(plain.name).toBe('The Years of Loss');
+    expect(plain.age).toBe(ageId);
+    expect(plain.register).toBe(original.register);
+    expect(plain.verdict).toEqual(original.verdict);
+    expect(ctx.world.chronicle.at(-1)!.text).toBe('These words are already written in the record.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+
+    setProseMode(ctx, 'original');
+    expect(chapterOf(ctx, done!)!.name).toBe(originalName);
+    expect(plain.name).toBe('The Years of Loss');
+  });
+
+  it('falls back to the authored Age name and records a missing visible variant', () => {
+    const { ctx, age } = withAge(ageId, true, 5991);
+    const done = runOut(ctx, age, 5991);
+    expect(done).toBeDefined();
+    setProseMode(ctx, 'plainenglish');
+    expect(chapterOf(ctx, done!)!.name).toBe(ctx.content.age(ageId)!.name);
+    expect(missingPlainEnglish(ctx)).toEqual([address]);
+  });
+
+  it('never reveals or requests a translation for an unnamed Age', () => {
+    const { ctx, age } = withAge('the_plague', false, 1);
+    const done = runOut(ctx, age, 1);
+    expect(done).toBeDefined();
+    expect(done!.named).toBe(false);
+    setProseMode(ctx, 'plainenglish');
+    setProseVariants(ctx, [{
+      address: 'content:ages/ages.yaml#ages[id=the_plague].name',
+      plainenglish: 'The Plague Age',
+    }]);
+    expect(chapterOf(ctx, done!)!.name).toBeUndefined();
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 });
