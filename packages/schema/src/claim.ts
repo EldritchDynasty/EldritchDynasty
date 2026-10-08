@@ -16,14 +16,17 @@ import { TargetS } from './target.js';
  * whoever was actually cast. `resolveClaim` in `core/src/record.ts` turns one
  * into a `ResolvedClaim` per person the target names.
  */
+// #587: YAML flow-map commas can create unknown null-valued keys. Never strip
+// those keys from authored claims: reject them rather than silently truncating
+// what a Record claims happened.
 export const ClaimS = z.discriminatedUnion('kind', [
   /** Only meaningful on an `AttributeDef` with `recordable: true`. */
-  z.object({ kind: z.literal('attr'), target: TargetS, attr: z.string(), value: z.number() }),
-  z.object({ kind: z.literal('trait'), target: TargetS, trait: z.string(), has: z.boolean() }),
+  z.object({ kind: z.literal('attr'), target: TargetS, attr: z.string(), value: z.number() }).strict(),
+  z.object({ kind: z.literal('trait'), target: TargetS, trait: z.string(), has: z.boolean() }).strict(),
   /** `year` omitted means "the year this claim was made" — resolved at apply time, like a `status: dead` effect. */
-  z.object({ kind: z.literal('death'), target: TargetS, year: z.number().optional(), cause: z.string() }),
+  z.object({ kind: z.literal('death'), target: TargetS, year: z.number().optional(), cause: z.string() }).strict(),
   /** A claimed deed, with nothing to mechanically verify it against — see `deriveRecordView`. */
-  z.object({ kind: z.literal('deed'), target: TargetS, text: z.string() }),
+  z.object({ kind: z.literal('deed'), target: TargetS, text: z.string() }).strict(),
 ]);
 export type Claim = z.infer<typeof ClaimS>;
 
