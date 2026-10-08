@@ -332,7 +332,12 @@ describe('the janitor', () => {
       const seed = join(fixture, 'seed');
       git(seed, 'config', 'user.email', 'a@example.com');
       git(seed, 'config', 'user.name', 'a');
-      const atBase = { GIT_AUTHOR_DATE: '2026-10-07T00:00:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:00:00Z' };
+      // Keep this fixture fresh relative to the janitor's real Date.now():
+      // a hardcoded October 7 claim became >24h old on October 8, so stale
+      // reaping correctly removed it and made this "fresh claim" test fail.
+      const baseTime = new Date(Date.now() - 120_000).toISOString();
+      const claimTime = new Date(Date.now() - 60_000).toISOString();
+      const atBase = { GIT_AUTHOR_DATE: baseTime, GIT_COMMITTER_DATE: baseTime };
       gitWithEnv(seed, atBase, 'commit', '-q', '--allow-empty', '-m', 'base');
       git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
 
@@ -340,9 +345,9 @@ describe('the janitor', () => {
       git(seed, 'push', '-q', 'origin', `HEAD:refs/heads/${agent}`);
       const claim = gitWithEnv(
         seed,
-        { GIT_AUTHOR_DATE: '2026-10-07T00:01:00Z', GIT_COMMITTER_DATE: '2026-10-07T00:01:00Z' },
+        { GIT_AUTHOR_DATE: claimTime, GIT_COMMITTER_DATE: claimTime },
         'commit-tree', EMPTY_TREE, '-m',
-        `claim 538\n\nagent: ${agent}\nlane: code\npath: tools/janitor.mjs\ntaken: 2026-10-07T00:01:00.000Z`,
+        `claim 538\n\nagent: ${agent}\nlane: code\npath: tools/janitor.mjs\ntaken: ${claimTime}`,
       );
       git(seed, 'push', '-q', 'origin', `${claim}:refs/heads/claim/538`);
 
