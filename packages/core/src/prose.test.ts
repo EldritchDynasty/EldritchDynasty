@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
-import { missingPlainEnglishAddresses, ProseCatalogueS } from '@ed/schema';
+import { missingPlainEnglishAddresses, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
@@ -54,6 +54,46 @@ describe('prospective prose selection', () => {
     expect(session.ctx.prose.mode).toBe('plainenglish');
     expect(session.ctx.prose.variants.get(ADDRESS)?.plainenglish)
       .toBe('The authored catalogue reaches the runtime directly.');
+  });
+
+  it('falls back to current Original when its reviewed fingerprint becomes stale', () => {
+    const { bundle } = fixture();
+    const ctx = testWorld(bundle);
+    const original = 'The book is safe in the tower.';
+    const changed = 'The book was stolen from the tower.';
+    const reviewed = 'The book is safe.';
+    setProseVariants(ctx, [{
+      address: ADDRESS, of: proseOriginalHash(original), plainenglish: reviewed,
+    }]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(renderProse(ctx, ADDRESS, original)).toBe(reviewed);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    // The author edits Original without reviewing the counterpart. Its stable
+    // address survives, but showing the old translation would change meaning.
+    expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
+    expect(missingPlainEnglish(ctx)).toEqual([ADDRESS]);
+
+    // Re-review and reload the catalogue to clear the missing marker.
+    setProseVariants(ctx, [{
+      address: ADDRESS, of: proseOriginalHash(changed), plainenglish: 'The book was stolen.',
+    }]);
+    expect(renderProse(ctx, ADDRESS, changed)).toBe('The book was stolen.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    setProseMode(ctx, 'original');
+    expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
+  });
+
+  it('keeps un-fingerprinted legacy counterparts selectable while validation warns', () => {
+    const { bundle } = fixture();
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [{ address: ADDRESS, plainenglish: 'The direct version.' }]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(renderProse(ctx, ADDRESS, 'Any original wording.')).toBe('The direct version.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 
   it('reports migration gaps statically and rejects duplicate stable identities', () => {
