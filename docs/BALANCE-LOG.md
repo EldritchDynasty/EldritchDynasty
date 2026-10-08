@@ -9737,3 +9737,53 @@ reuse wins.
 
 #441's implementation and measurement acceptance are complete. #439 owns the
 broader CI-performance roll-up.
+
+## 2026-10-08 — #439 merge-queue regression: zero unwitnessed outcomes, 800 unnecessary runs
+
+The #502 scoped outcome-reach gate is still present in the blocking batch, but
+the generated manifest has reached **1,006 / 1,006 deterministic execution
+witnesses**. The canonical 800 × 500-year sample in
+`gateUnwitnessedOutcomeReach` was nevertheless played on each integration
+even when its blocking scope was empty. This is a performance regression, not
+new evidence: no sampled miss can affect the merge verdict when every declared
+outcome is witnessed.
+
+**Hosted before-fix window.** The most recent 30 successful `check.yml`
+`merge_group` integrations, from
+[run 37475813250](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37475813250)
+through [run 37728700844](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37728700844),
+were measured from GitHub's workflow timestamps and job start/completion
+timestamps. Durations below are minutes, rounded to two decimals, and include
+both full and proof-reuse/short-tier integrations:
+
+| Measure across 30 green integrations | Mean | Median | Range |
+| --- | ---: | ---: | ---: |
+| Whole-workflow elapsed | 23.73 | 27.47 | 4.67–32.33 |
+| Sum of non-skipped job execution (runner-minutes) | 37.34 | 41.10 | 11.45–48.40 |
+| Blocking `gates (batch)` job elapsed | 23.11 | 27.12 | 0.70–31.98 |
+
+The batch gate exceeded 20 minutes in **25/30** integrations, including
+non-reuse ones. On
+[run 37719038621](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37719038621)
+its `gates` step spent ~21m31s in `outcome-reach-blocking` alone
+(02:41:55–03:02:26 UTC); the trusted-proof lookup took only 17 seconds.
+The contemporaneous `tools/gate-durations.json` records the deliberate #502
+batch expansion as **1,154.250 seconds** of the 1,533.623-second gate
+execution on PR #505; the other eleven gates totalled 379.373 seconds
+(~6.32 minutes). That is the source of the difference from #451's earlier
+~7-minute blocking baseline, not runner checkout or proof infrastructure.
+
+**Fix on #439.** When and only when every `declaredOutcomes(indexContent(source))`
+key is in the checked `tools/outcome-witnesses.json` manifest, skip
+`playGateBatch` entirely. The gate prints that the canonical sample was
+skipped and that zero outcomes are still sampled. Any new or changed outcome
+key without a witness takes the **existing** 800-run path and unchanged scoped
+verdict. The full all-outcome distribution sample stays in the weekly
+`outcome-reach` telemetry workflow. Regression tests exercise both paths.
+
+The previous 26-minute budget is deliberately **not** revised on this branch:
+the short-path speedup is an expectation from the hosted attribution, not a
+post-change measurement. Re-measure the green exact-head CI and queue run
+first, then reduce the checked `batch` budget to its hosted baseline in a
+separate coordinated CI/gate change. No samples or outcomes are removed from
+the path where statistical evidence is still required.
