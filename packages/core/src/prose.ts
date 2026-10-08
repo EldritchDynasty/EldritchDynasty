@@ -1,4 +1,4 @@
-import { ProseCatalogueS } from '@ed/schema';
+import { ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { Choice, ClauseDef, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
@@ -45,7 +45,12 @@ export function missingPlainEnglish(ctx: SimCtx): string[] {
 export function renderProse(ctx: SimCtx, address: string | undefined, original: string): string {
   if (ctx.prose.mode === 'original' || address === undefined) return original;
   const variant = ctx.prose.variants.get(address);
-  if (variant) return variant.plainenglish;
+  // A reworded Original invalidates the wording reviewed against it. The wire
+  // format still accepts un-fingerprinted legacy rows; the content validator
+  // flags those for review separately.
+  if (variant && (variant.of === undefined || variant.of === proseOriginalHash(original))) {
+    return variant.plainenglish;
+  }
   ctx.prose.missing.add(address);
   return original;
 }
