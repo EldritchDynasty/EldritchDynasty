@@ -394,3 +394,213 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
+
+proseVariants:
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].title"
+    of: 7d4fde79825faa8d
+    plainenglish: >-
+      The Reeve Counts Eleven Days
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].body"
+    of: 5a97db35a3c853d1
+    plainenglish: >-
+      The gate closes for the first time in ninety years. The children will remember the
+      sound. The custom is to wait eleven days after the last house in Wick has the
+      fever. If another house becomes infected, the count starts again. No law or
+      physician supports the number, but no household in the province will end the
+      quarantine early. The house has bread, water from the Wend, and forty-one days with
+      nothing to do. No Life-affine healer can be hired this year, whatever the price.
+      Every wealthy family has already tried. The reeve counts the days aloud.
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].interaction.choices[id=keep_the_gate].label"
+    of: 1016435058e4cf54
+    plainenglish: >-
+      Keep the gate closed for eleven days, and another eleven if needed.
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].interaction.choices[id=keep_the_gate].outcomes[id=held].text"
+    of: 9b9f1205410c0e99
+    plainenglish: >-
+      The gate stays closed for forty-one days. Nobody in the hall catches the fever, but
+      three tenant families do. For the rest of the century, people in Wick choose their
+      words carefully when they call the house a neighbour.
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].interaction.choices[id=open_for_the_village].label"
+    of: cdab8f9081406c4c
+    plainenglish: >-
+      Open the gate to Wick. The villagers are the house's people.
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].interaction.choices[id=open_for_the_village].outcomes[id=opened_and_spared].text"
+    of: 8aefa6c083ceb0ac
+    plainenglish: >-
+      Fourteen villagers come up to stay in the west wing. Nobody in the hall catches the
+      fever. Afterwards, people disagree about what stroke of luck spared them.
+  - address: "content:events/age_plague.yaml#events[id=the_eleven_days].interaction.choices[id=open_for_the_village].outcomes[id=opened_and_took_it].text"
+    of: b5a93c52b2fb41ee
+    plainenglish: >-
+      Fourteen villagers move into the west wing. On the sixth day the fever reaches the
+      hall. Nobody can say who brought it in, but the household cannot stop asking.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].title"
+    of: b8b612b9538a8075
+    plainenglish: >-
+      A Physician's Lens Costs Fourteen Crowns
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].body"
+    of: d94c4ace4a446722
+    plainenglish: >-
+      {PHYSICIAN} arrives on the ninth day, earlier than expected. He is dry, so he must
+      have travelled without walking. He charges fourteen crowns for his lens and two
+      marks a day for his services. He admits that the lens helps him examine patients
+      but will not cure them. He can set broken bones, open swellings, and tell by the
+      second morning whether a patient is likely to recover. That knowledge is what the
+      house is buying. Both he and the household admit it, and each respects the other's
+      honesty. He asks where he can wash.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].interaction.choices[id=retain_him].label"
+    of: b1509d89d8c963fd
+    plainenglish: >-
+      Keep him until the fever ends, whatever the cost.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].interaction.choices[id=retain_him].outcomes[id=retained].text"
+    of: 1a5d27d80f92939c
+    plainenglish: >-
+      The physician receives two marks every day until the fever ends. The house cannot
+      buy survival, but by the second morning it can know how each patient is likely to
+      fare. That knowledge matters to the people in the room, even if they cannot explain
+      why.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].interaction.choices[id=pay_the_visit].label"
+    of: 1e2e061f1489b9a3
+    plainenglish: >-
+      Pay for today's visit, then send him to Wick.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_from_bramme].interaction.choices[id=pay_the_visit].outcomes[id=sent_on].text"
+    of: adf30c73171e1087
+    plainenglish: >-
+      He receives his day's pay and a meal, then goes down the hill to Wick. The
+      villagers cannot afford to pay him. The house never sees him again, but people tell
+      stories about him for twenty years.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].title"
+    of: 29881996347a8a4a
+    plainenglish: >-
+      Choosing Who Gets the Physician
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].body"
+    of: 9828eead27659bd1
+    plainenglish: >-
+      The fever has reached three rooms at once. There is only one physician, and he
+      charges two marks a day. {HEAD} must choose which of three people receives his
+      care. All three sat at his table on the third night. The physician has explained
+      that moving from room to room may carry the fever between patients. Stronger people
+      are more likely to survive, and everyone in the house knows it. Everyone has worked
+      out each person's chances. The difficult part is saying one of those names aloud.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_strong_one].label"
+    of: 890d8ee61ab2f8e2
+    plainenglish: >-
+      Choose the person most likely to survive.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_strong_one].outcomes[id=spent_well].text"
+    of: 5f488a478540a483
+    plainenglish: >-
+      He survives, as he probably would have anyway. The other two survive too. Nobody in
+      the household speaks about that evening for the next thirty years.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_strong_one].outcomes[id=spent_badly].text"
+    of: 208a7e83c189f5e7
+    plainenglish: >-
+      He survives, but the youngest of the three dies. The house paid two marks a day for
+      eleven days, yet choosing by the numbers could not save everyone.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_weak_one].label"
+    of: 067321f08ad59bc4
+    plainenglish: >-
+      Choose the person least likely to survive.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_weak_one].outcomes[id=bought_days].text"
+    of: bf874704f89eaf98
+    plainenglish: >-
+      The care buys the patient nine more days in a bed beside a window. Someone stays
+      with them until the end. Afterwards, three different people tell the house that
+      those nine days mattered.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_weak_one].outcomes[id=kept_them_both].text"
+    of: 5189c49a33fefbe6
+    plainenglish: >-
+      Both patients survive. Nobody knows why. For the next forty years, the house is
+      careful not to treat that one winter as proof of a rule.
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].title"
+    of: 2bdeb0c795f93bab
+    plainenglish: >-
+      Six of Seven Hearths Are Cold
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].body"
+    of: ba5eb7215362324d
+    plainenglish: >-
+      The hall has the same number of rooms, but fewer people. Six of its seven
+      fireplaces are cold, though nobody ordered them left unlit. Nobody has used the
+      west stairs since Tuesday. {HEAD} counts the household by the number of places
+      needed at the table. It is as small as it was in his grandmother's day, when she
+      was unhappy with the count too. The Plague Age has not ended. Ages end without an
+      announcement. The hall is simply much quieter, and the fireplaces stay cold.
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].interaction.outcomes[id=counted].text"
+    of: d51780ca358d443e
+    plainenglish: >-
+      The kitchen lays enough places for the people who remain. Nobody at the table gives
+      the order. It is the first practical decision the house has made in a month.
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].record.subject"
+    of: 4113cf999b07bd45
+    plainenglish: >-
+      the year the hall lost so many people
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].record.options.record.chronicle"
+    of: 9584e9bc7ead2958
+    plainenglish: >-
+      The fever took members of the household. The kitchen laid places for those who
+      remained. We wrote down the number so nobody can dispute it later.
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].record.options.record.claims[0].text"
+    of: 7902f070c7414db4
+    plainenglish: >-
+      counted the places remaining after the fever and wrote down the number
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].record.options.embellish.chronicle"
+    of: 85443abd4894aaf9
+    plainenglish: >-
+      The fever took fewer people from this house than from any other hall in the
+      Nethering. Villagers said the family's blood was the reason.
+  - address: "content:events/age_plague.yaml#events[id=the_hall_after].record.options.embellish.claims[0].text"
+    of: a6d4b9c5d7926a01
+    plainenglish: >-
+      led the house through the fever with fewer losses than any other hall in the
+      province
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].title"
+    of: 456a6b8795b43373
+    plainenglish: >-
+      The Physician's Advice at the Gate
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].body"
+    of: 66f7a899ff705add
+    plainenglish: >-
+      The fever has reached Bramme, eleven miles away. A good horse can cover that
+      distance in four hours, but the illness may take about eleven days to arrive.
+      {PHYSICIAN} wants the gate closed now, before the fever comes closer, and closed to
+      tenants too. She says there should be no market or fair, no visitors from Wick, and
+      that the two carters should be turned back at the ford. She cannot explain to
+      {HEAD} why these steps work. During the last plague she was at Hesk, where two
+      houses took these precautions and survived. A house with Life magic on the fourth
+      shelf might have another option if it had a licensed practitioner. Unlicensed
+      practice is a crime in both courts, and this family cannot be seen using it. For
+      now, they can only boil the linen.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].absentBody"
+    of: 7f842e2b805a7167
+    plainenglish: >-
+      The fever has reached Bramme, eleven miles away. Nobody in this house knows more
+      about it than the tenants do. The steward has one theory and the cook has a
+      different one. Someone remembers that houses which closed their gates early
+      survived the last plague. Someone else remembers exactly the opposite. There is
+      nobody else to ask. Life magic on the fourth shelf might help if the family had a
+      licensed practitioner, but unlicensed practice is a crime in both courts. This
+      afternoon {HEAD} must rely on the cook, the steward, and their conflicting
+      memories. None of it provides a useful answer.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].interaction.choices[id=shut_it].label"
+    of: ab6a3dbabe4c7986
+    plainenglish: >-
+      Close the gate to everyone, including tenants, whatever people say.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].interaction.choices[id=shut_it].outcomes[id=held].text"
+    of: 98b018e3b9eada1f
+    plainenglish: >-
+      The gate stays closed for eleven weeks. The mill stops working, and a guard stands
+      at the ford each night with a lamp. In the fourth week the fever reaches the dairy
+      and kills one person before it stops there. Nine people die in Wick. {HEAD} has
+      known every one of them since childhood. The gate stays closed through all nine
+      deaths. Afterwards the household knows the numbers, but nobody can bear to say them
+      aloud.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].interaction.choices[id=keep_it_open].label"
+    of: b6289ce0e02a40a4
+    plainenglish: >-
+      Keep the gate open. People remember a closed door longer than a burial.
+  - address: "content:events/age_plague.yaml#events[id=the_physician_shuts_the_gate].interaction.choices[id=keep_it_open].outcomes[id=open_and_not].text"
+    of: e77976e4b62fa8a8
+    plainenglish: >-
+      By the third week the fever is in the hall. Nobody mentions the choice to leave the
+      gate open, then or in later years. People keep working for nineteen days without
+      sleeping properly. When the household counts, the number of people left is bad.
+      What the house remembers most is that nobody went away.
