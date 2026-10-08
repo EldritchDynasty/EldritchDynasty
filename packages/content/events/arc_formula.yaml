@@ -147,3 +147,110 @@ events:
             id: the_formula_always_favoured_ardwen
             severity: major
             provableBy: [the_church, house_marrow]
+
+proseVariants:
+  - address: "content:events/arc_formula.yaml#events[id=formula_two_copies].title"
+    of: 2797282131751ad5
+    plainenglish: >-
+      The Same Sentence in Two Copies
+  - address: "content:events/arc_formula.yaml#events[id=formula_two_copies].body"
+    of: e854539c71d2ccf8
+    plainenglish: >-
+      Two copies of a legal formula arrive at Ardwen. One carries the Warden's seal; the
+      other carries the Church chapter house's seal. Both copies have exactly the same
+      wording, including the comma before the final clause. {HEAD} reads both carefully
+      because the house paid advocates to make every word count. Ardwen has won the immediate
+      dispute. Both courts have saved that same wording, so it may matter in future cases.
+  - address: "content:events/arc_formula.yaml#events[id=formula_two_copies].interaction.outcomes[id=filed_twice].text"
+    of: bf9b55d8c6c101fc
+    plainenglish: >-
+      The household puts one copy in storage and sends the other back to Cawdry with a
+      receipt. Before the end of the year, the Warden's clerk calls the wording the Ardwen
+      formula. The Church's chapter house uses the same name. Other houses can now refer to
+      the wording in their own disputes.
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].title"
+    of: f628943015f08da4
+    plainenglish: >-
+      Another House Uses the Ardwen Formula
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].body"
+    of: 387ddd8c6290c660
+    plainenglish: >-
+      The Church has questioned a house two counties to the south about an oath. That house
+      uses the legal wording that once protected Ardwen. Its advocate copied the sentence
+      from the Warden's records at Cawdry and changed only the names. The Church's chapter
+      house asks whether {HEAD} agrees with that use of the wording. Any reply will tell one
+      court how useful Ardwen thinks the formula is against the other court.
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].interaction.choices[id=stand_by_it].label"
+    of: 229e174e0f5c5bda
+    plainenglish: >-
+      Stand by the original wording. It protected Ardwen before.
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].interaction.choices[id=stand_by_it].outcomes[id=precedent_kept].text"
+    of: 5794b0e6a409f66a
+    plainenglish: >-
+      Ardwen sends a one-page reply supporting the southern house. The southern house keeps
+      its legal defence about which court has authority and sends Ardwen a case of wine in
+      thanks. Both courts add the case to their records of the formula. The sentence now sets
+      a precedent that other houses can use.
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].interaction.choices[id=distinguish_it].label"
+    of: 30decbe5e5ecc4f1
+    plainenglish: >-
+      Say the southern house's case is different. Limit what our ruling means.
+  - address: "content:events/arc_formula.yaml#events[id=formula_another_house_uses_it].interaction.choices[id=distinguish_it].outcomes[id=precedent_narrowed].text"
+    of: d0c1adeb05c1483f
+    plainenglish: >-
+      Ardwen spends eight crowns on an advocate and exchanges letters for three weeks to
+      argue that the cases are different. The argument is technical enough that the household
+      finds it hard to explain. The southern house loses its defence. The Church adds the new
+      distinction alongside the original formula, leaving two separate rulings linked to
+      Ardwen.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].title"
+    of: 58d22c762934aad2
+    plainenglish: >-
+      What the Final Clause Allows
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].body"
+    of: eafa5a96c43a01aa
+    plainenglish: >-
+      A court has summoned Ardwen and cited the house's own legal formula against it. The
+      summons quotes only the last clause, which says a court must establish its authority
+      before asking what a landed house reads. The Church's advocate says the clause does not
+      prevent the question; it only determines which court may ask first. {HEAD} has the old
+      copy in front of them. The wording, including the comma, has not changed.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].interaction.choices[id=accept_the_reading].label"
+    of: 9db6c47496b7dba0
+    plainenglish: >-
+      Accept that interpretation. We must follow the wording we agreed to.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].interaction.choices[id=accept_the_reading].outcomes[id=accepted].text"
+    of: 72e5bb93516e23df
+    plainenglish: >-
+      The house answers the Church's question and pays an advocate for one day rather than a
+      long case. Nothing else happens immediately. Both courts keep the formula in their
+      records and add a note about this interpretation. The law now includes another decision
+      explaining what the sentence means.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].interaction.choices[id=fight_our_words].label"
+    of: 0657add9c017d1b5
+    plainenglish: >-
+      Contest the interpretation. The earlier ruling does not settle every issue.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].interaction.choices[id=fight_our_words].outcomes[id=fought].text"
+    of: 36563305df68fd41
+    plainenglish: >-
+      After seven weeks and twenty-four crowns in legal costs, the court gives a narrower
+      answer. Ardwen keeps its protection on one limited point but loses the broader
+      protection it claimed. The ruling repeats the original formula in full. A sentence once
+      used to stop an inquiry now fills three pages of the Church's records.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].record.subject"
+    of: d9793e426fbd4876
+    plainenglish: >-
+      the Ardwen formula and what it ultimately allowed the Church to ask
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].record.options.record.chronicle"
+    of: 2e3c2a6eb1ea4d72
+    plainenglish: >-
+      We persuaded the Warden's court and the Church's court to agree on the same wording
+      when it helped Ardwen. Years later that same sentence was used against the house, even
+      though the comma had not moved. The two preserved copies show both our original victory
+      and the later interpretation.
+  - address: "content:events/arc_formula.yaml#events[id=formula_returns_to_ardwen].record.options.embellish.chronicle"
+    of: 0fdc9b407d345d6c
+    plainenglish: >-
+      The Ardwen formula settled which court could ask questions of this house in Ardwen's
+      favour. Whenever the Church tried to claim authority beyond its own court, the formula
+      protected the house.
