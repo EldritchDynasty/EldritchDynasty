@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
+import { canonical, loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
 const bundle = loadContent();
@@ -147,7 +147,7 @@ describe('prospective Age-opening prose (#580)', () => {
     expect(original.text).toBe(def.opening);
     expect(original.age).toBe(age);
     expect(original.register).toBe(def.register);
-    const saved = JSON.stringify(saveGame(ctx));
+    const saved = canonical(saveGame(ctx));
 
     setProseVariants(ctx, [{
       address,
@@ -158,7 +158,7 @@ describe('prospective Age-opening prose (#580)', () => {
     expect(plain.text).toBe('The fever did not care which families had power.');
     expect(plain.register).toBe(original.register);
     expect(missingPlainEnglish(ctx)).toEqual([]);
-    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+    expect(canonical(saveGame(ctx))).toBe(saved);
 
     setProseMode(ctx, 'original');
     expect(openingOf(ctx, age)!.text).toBe(def.opening);
@@ -180,13 +180,13 @@ describe('prospective Age-opening prose (#580)', () => {
     ctx.world.chronicle.push({
       year: 1042, weight: 'paragraph', named: false, text: earlierWords,
     });
-    const savedBeforeMode = JSON.stringify(saveGame(ctx));
+    const savedBeforeMode = canonical(saveGame(ctx));
     setProseVariants(ctx, [{ address, plainenglish: 'Different opening wording.' }]);
     setProseMode(ctx, 'plainenglish');
 
     expect(openingOf(ctx, age)!.text).toBe('Different opening wording.');
     expect(ctx.world.chronicle.at(-1)!.text).toBe(earlierWords);
-    expect(JSON.stringify(saveGame(ctx))).toBe(savedBeforeMode);
+    expect(canonical(saveGame(ctx))).toBe(savedBeforeMode);
     const loaded = loadGame(saveGame(ctx), bundle);
     expect(loaded.world.chronicle.at(-1)!.text).toBe(earlierWords);
   });
