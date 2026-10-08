@@ -196,3 +196,121 @@ events:
             the mill uses it.
           effects:
             - { kind: treasury, delta: -18 }
+
+# Plain English alternatives for the Assize scenes (#617, #415).
+proseVariants:
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].title
+    of: e0b92126f4022302
+    plainenglish: >-
+      The Assessor Arrives With His Records
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].body
+    of: cc0b95afff7488f3
+    plainenglish: >-
+      The assessor arrives before the fires are lit. He measures the front hall with a
+      knotted cord while his assistant writes down the figures. He counts nine glass
+      panes on the south side and four on the west. He ignores the four grates that have
+      been cold since the previous head died. When {HEAD} points them out, he politely
+      agrees that this is unfortunate but does not record it. He puts the cord back in
+      his coat.
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=pay_it].label
+    of: cda7005dd4e470a1
+    plainenglish: >-
+      Pay the amount he records without arguing.
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=pay_it].outcomes[id=paid].text
+    of: 69e4c6bd0bf14e71
+    plainenglish: >-
+      The assessment is expensive. The house pays it within a month, and people notice
+      that it paid promptly. The high charge was intended to make that payment visible.
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=argue].label
+    of: 9e73b6b3afc9dba7
+    plainenglish: >-
+      Ask the steward to challenge each item in the assessment.
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=argue].outcomes[id=shaved].text
+    of: ec7cecb45763a150
+    plainenglish: >-
+      A technical rule about the west side removes four panes from the count. The house
+      saves money, but everyone involved knows that the argument has cost it something
+      more valuable.
+  - address: content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=argue].outcomes[id=worse].text
+    of: 9d3d29a5135a3299
+    plainenglish: >-
+      He listens to every objection, then adds the stable to the assessment. He had been
+      prepared to leave it out.
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].title
+    of: 3954cab9fdea5a65
+    plainenglish: >-
+      Food Delivered Quietly by the Chapter House
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].body
+    of: c5549502b77e0956
+    plainenglish: >-
+      A cart arrives when no one is watching the lane. It carries two sacks of grain, a
+      pot of fat and a young clerk who refuses to enter the house or give his name. He
+      claims that the chapter house has extra supplies, although it has had none to
+      spare for eleven years. Both he and {HEAD} know this is untrue.
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].interaction.choices[id=take_it].label
+    of: 3fe967dbd84cfe9f
+    plainenglish: >-
+      Accept the supplies and thank the clerk.
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].interaction.choices[id=take_it].outcomes[id=taken].text
+    of: 04159fe8c2ca9334
+    plainenglish: >-
+      The supplies feed the house through spring. At the chapter house, eighteen miles
+      away, someone writes the family's name in a record book.
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].interaction.choices[id=refuse].label
+    of: 6d02069ad366c396
+    plainenglish: >-
+      Return the cart with all the supplies.
+  - address: content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].interaction.choices[id=refuse].outcomes[id=refused].text
+    of: 8794b0e4df473048
+    plainenglish: >-
+      The clerk turns the cart around without arguing. The house remains hungry but owes
+      nothing to the chapter house. Being free of that debt will not feed anyone.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].title
+    of: ce06c596f865bc42
+    plainenglish: >-
+      The Offer Made to the Steward
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].body
+    of: 9221adfb0d830d8f
+    plainenglish: >-
+      {SERVANT} returns from the market a week late and says nothing about the missing
+      week. Someone else tells the house that he was offered more money in a private
+      meeting than the house has paid anyone in living memory. He came back anyway. He
+      has not explained why or asked for more pay.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].interaction.choices[id=raise_him].label
+    of: 7c88bc83a232a627
+    plainenglish: >-
+      Raise his pay before he asks.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].interaction.choices[id=raise_him].outcomes[id=raised].text
+    of: 9db267f972592845
+    plainenglish: >-
+      He accepts the raise without comment and stays. The house now knows how much it
+      costs to keep him.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].interaction.choices[id=say_nothing].label
+    of: 0130ee616a3486a5
+    plainenglish: >-
+      Say nothing about the offer.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].interaction.choices[id=say_nothing].outcomes[id=held].text
+    of: 7b897bd6397c3e6a
+    plainenglish: >-
+      He stays. Money was not the reason he came back, but the house will never find out
+      what brought him back.
+  - address: content:events/assize.yaml#events[id=the_offer_in_another_room].interaction.choices[id=say_nothing].outcomes[id=cooled].text
+    of: 788a418104e604ed
+    plainenglish: >-
+      He stays, but the warmth has gone from his morning greeting. It never returns.
+  - address: content:events/assize.yaml#events[id=the_price_at_the_mill].title
+    of: 8200d836d2e827f2
+    plainenglish: >-
+      The Mill Charges Half a Mark More
+  - address: content:events/assize.yaml#events[id=the_price_at_the_mill].body
+    of: fedd3f55cf8348b9
+    plainenglish: >-
+      Since spring, the mill has charged the village four marks per load but charged
+      this house four and a half. When {STEWARD} asks why, the miller apologises without
+      offering to change the price. Another mill is eleven miles farther away, and
+      buying there would still cost about four and a half marks per load.
+  - address: content:events/assize.yaml#events[id=the_price_at_the_mill].interaction.outcomes[id=only].text
+    of: 3f711a7930ac1c05
+    plainenglish: >-
+      The house pays the higher price. The mill is taking advantage of the house, but
+      nobody there will admit it.
