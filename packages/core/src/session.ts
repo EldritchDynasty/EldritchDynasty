@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import { proseForTale, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -1102,9 +1102,7 @@ function circulatingTales(ctx: SimCtx): CirculatingTale[] {
     out.push({
       id,
       form: def.form,
-      teller: def.teller,
-      bias: def.bias,
-      text: def.text,
+      ...proseForTale(ctx, def),
       about: def.about,
       since: state.circulatesFrom,
       mutations: state.mutations,

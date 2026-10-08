@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { loadContent } from '@ed/content';
+import { loadBundle, loadContent } from '@ed/content';
 import { applyOutcome, phase, place, testWorld, viewOf } from '@ed/core';
+
+import { contentProseEntries, proseOriginalHash } from '@ed/schema';
+import type { ProseVariant } from '@ed/schema';
+import { missingPlainEnglish } from './prose.js';
+import { newGame, resumeGame } from './session.js';
+import { queueMatch } from './events/decisions.js';
+import { emptyPanel, readPanel } from './people/panel.js';
+import type { MatchCard } from './people/match.js';
 
 const content = loadContent();
 
@@ -221,5 +229,143 @@ describe('tales reaching the player', () => {
     });
     expect(() => viewOf(ctx)).not.toThrow();
     expect(viewOf(ctx).tales.map((t) => t.id)).not.toContain('a_tale_edited_out_of_the_content');
+  });
+});
+
+const TALE = 'marrow_chronicle_fragment_1188';
+const BASE = `content:tales.yaml#tales[id=${TALE}]`;
+const PLAIN = {
+  teller: 'The clerks who keep the rival book',
+  bias: 'They want their house to seem stronger.',
+  text: 'Their account describes the dispute in simple words.',
+};
+
+function fixture(variants?: ProseVariant[], provenance = true) {
+  const bundle = loadBundle();
+  const tale = bundle.tales.find((item) => item.id === TALE)!;
+  const authored = Object.entries(PLAIN).map(([field, plainenglish]) => ({
+    address: `${BASE}.${field}`,
+    plainenglish,
+    of: proseOriginalHash(tale[field as keyof typeof PLAIN]),
+  }));
+  bundle.proseVariants = [
+    ...bundle.proseVariants.filter((item) => !item.address.startsWith(`${BASE}.`)),
+    ...(variants ?? authored),
+  ];
+  const game = newGame(provenance ? bundle : structuredClone(bundle), { seed: 1042, startYear: 1200 });
+  game.ctx.world.tales.set(TALE, {
+    bornYear: 1188, circulatesFrom: 1193, circulating: true, mutations: 2, lastMutated: 1199,
+  });
+  return { game, tale };
+}
+
+describe('Plain English tales reaching the player', () => {
+  it('uses worklist identities and switches live wording without changing circulation or exposing accuracy', () => {
+    const { game, tale } = fixture();
+    const entries = contentProseEntries('tales.yaml', { tales: [tale] });
+    expect(entries.map((entry) => entry.address)).toEqual(expect.arrayContaining([
+      `${BASE}.teller`, `${BASE}.text`,
+    ]));
+    const unheard = game.ctx.content.tale('ballad_of_the_nine_days')!;
+    game.ctx.world.tales.set(unheard.id, {
+      bornYear: 1200, circulatesFrom: 1220, circulating: false, mutations: 0,
+    });
+    game.ctx.world.tales.set('removed_tale', {
+      bornYear: 1188, circulatesFrom: 1193, circulating: true, mutations: 0,
+    });
+    const original = game.view().tales;
+    expect(original).toEqual([{
+      id: TALE, form: tale.form, teller: tale.teller, bias: tale.bias, text: tale.text,
+      about: tale.about, since: 1193, mutations: 2,
+    }]);
+
+    game.setProseMode('plainenglish');
+    expect(game.view().tales).toEqual([{ ...original[0], ...PLAIN }]);
+    expect(game.view().tales[0]).not.toHaveProperty('accuracy');
+    expect(missingPlainEnglish(game.ctx)).not.toContain(`content:tales.yaml#tales[id=${unheard.id}].text`);
+    expect(original[0]?.text).toBe(tale.text);
+
+    game.setProseMode('original');
+    expect(game.view().tales).toEqual(original);
+  });
+
+  it('falls back field by field and reports unmigrated visible addresses', () => {
+    const { game, tale } = fixture([{ address: `${BASE}.text`, plainenglish: PLAIN.text }]);
+    game.setProseMode('plainenglish');
+    expect(game.view().tales[0]).toMatchObject({
+      teller: tale.teller, bias: tale.bias, text: PLAIN.text,
+    });
+    expect(missingPlainEnglish(game.ctx)).toEqual([`${BASE}.bias`, `${BASE}.teller`]);
+  });
+
+  it('keeps Original when an untracked bundle cannot identify the source file', () => {
+    const { game, tale } = fixture(undefined, false);
+    expect(game.ctx.content.sourceOf(TALE)).toBeUndefined();
+    game.setProseMode('plainenglish');
+    expect(game.view().tales[0]).toMatchObject({
+      teller: tale.teller, bias: tale.bias, text: tale.text,
+    });
+    expect(missingPlainEnglish(game.ctx)).toEqual([]);
+  });
+
+  it('leaves saved Chronicle, frame and inherited Library wording intact across switching and reload', () => {
+    const { game } = fixture();
+    const w = game.ctx.world;
+    w.chronicle.push({ year: 1199, weight: 'line', text: 'The words already written.', named: false });
+    const frame = game.ctx.content.bundle.events.find((event) => event.tier === 'frame')!;
+    if (frame.interaction.kind !== 'narration') throw new Error('fixture frame is no longer narration');
+    w.frame.entries.push({
+      year: 1199, eventId: frame.id, outcomeId: frame.interaction.outcomes[0]!.id,
+      text: 'The frame words already heard.',
+    });
+    w.libraryMemories.push({
+      id: 'library_fixture', sourceRun: 'earlier_run', sourceHouse: 'Earlier House',
+      sourceYear: 1100, sourceText: 'The old book said this.', form: 'footnote',
+      teller: 'The earlier chronicler', bias: 'protective', text: 'The inherited account.',
+      about: 'library_fixture', since: 1200, mutations: 0, people: {}, sourceClaims: [], claims: [],
+    });
+    const original = game.view();
+    const saved = JSON.parse(JSON.stringify(game.save()));
+
+    game.setProseMode('plainenglish');
+    const plain = game.view();
+    expect(plain.tales.find((item) => item.id === TALE)?.text).toBe(PLAIN.text);
+    expect(plain.tales.find((item) => item.id === 'library_fixture'))
+      .toEqual(original.tales.find((item) => item.id === 'library_fixture'));
+    expect(plain.chronicle).toEqual(original.chronicle);
+    expect(plain.frame).toEqual(original.frame);
+    expect(JSON.parse(JSON.stringify(game.save()))).toEqual({ ...saved, savedAt: expect.any(String) });
+
+    const resumed = resumeGame(JSON.parse(JSON.stringify(saved)), game.ctx.content, { proseMode: 'plainenglish' });
+    expect(resumed.view().tales).toEqual(plain.tales);
+    expect(JSON.parse(JSON.stringify(resumed.save()))).toEqual({ ...saved, savedAt: expect.any(String) });
+  });
+
+  it('renders new Match panels and freezes the wording on a dealt hand across switching and reload', () => {
+    const { game, tale } = fixture();
+    const card = (): MatchCard => ({
+      id: 'card_1', kind: 'outsider', name: 'Marra', sex: 'female', age: 20,
+      house: 'house_marrow', houseName: 'Marrow', blurb: '', dowry: 0, kinship: 0,
+      line: 'unknown', lineSeen: 0, words: '', papersAsked: 0, papersShown: 0,
+      available: true, panel: emptyPanel(),
+    });
+    const census = { borne: new Map(), counted: new Set<string>(), byHouse: new Map(), mean: 0 };
+    const before = card();
+    readPanel(game.ctx, before, census);
+    expect(before.panel.said).toEqual([{ tale: TALE, teller: tale.teller, bias: tale.bias, text: tale.text }]);
+
+    game.setProseMode('plainenglish');
+    const dealt = card();
+    readPanel(game.ctx, dealt, census);
+    expect(dealt.panel.said).toEqual([{ tale: TALE, ...PLAIN }]);
+    const head = game.ctx.world.people.household(game.ctx.world.playerHouse, game.year)
+      .find((person) => person.castSlots.includes('head'))!;
+    queueMatch(game.ctx, { subject: { id: head.id, name: head.name, sex: head.sex, age: 40 }, cards: [dealt] });
+    const promised = game.view().docket;
+    game.setProseMode('original');
+    expect(game.view().docket).toEqual(promised);
+    const resumed = resumeGame(JSON.parse(JSON.stringify(game.save())), game.ctx.content);
+    expect(resumed.view().docket).toEqual(promised);
+    expect(dealt.panel.said[0]).not.toHaveProperty('accuracy');
   });
 });

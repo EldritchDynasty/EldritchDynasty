@@ -1,5 +1,5 @@
 import { ProseCatalogueS } from '@ed/schema';
-import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
+import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 /**
@@ -67,6 +67,22 @@ export function renderContentProse(
   original: string,
 ): string {
   return renderProse(ctx, contentProseAddress(file, path), original);
+}
+
+/** Live tale views render now; Match panels freeze these words when dealt. */
+export function proseForTale(
+  ctx: SimCtx,
+  tale: Pick<TaleDef, 'id' | 'teller' | 'bias' | 'text'>,
+): Pick<TaleDef, 'teller' | 'bias' | 'text'> {
+  const file = ctx.content.sourceOf(tale.id);
+  const base = file === undefined
+    ? undefined
+    : contentProseAddress(file, `tales[id=${encodeURIComponent(tale.id)}]`);
+  return {
+    teller: renderProse(ctx, base === undefined ? undefined : `${base}.teller`, tale.teller),
+    bias: renderProse(ctx, base === undefined ? undefined : `${base}.bias`, tale.bias),
+    text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, tale.text),
+  };
 }
 
 function eventBaseAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
