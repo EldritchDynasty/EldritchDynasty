@@ -126,7 +126,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: reconsidered of his own wisdom, and the house prospered by it }
+            - { kind: deed, target: { slot: HEAD }, text: 'reconsidered of his own wisdom, and the house prospered by it' }
           discrepancy:
             id: the_empty_chair_lie
             severity: major
