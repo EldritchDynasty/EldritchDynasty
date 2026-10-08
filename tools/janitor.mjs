@@ -136,6 +136,9 @@ function closeReconciledIssue(n, comment) {
  * #454 and #485 are the live counterexamples that established this path.
  */
 function mergedPullRequestsForCommit(sha) {
+  // The injected dry-run PR inventory replaces GitHub in cross-platform
+  // fixture tests. Never consult a real API for a synthetic commit SHA.
+  if (DRY && process.env.JANITOR_MERGED_PRS_JSON) return [];
   if (!RECONCILE_MERGED_PRS || !HAS_GH || !REPOSITORY) return [];
   const r = spawnSync('gh', [
     'api',
