@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import { proseForTaleField, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -1102,9 +1102,11 @@ function circulatingTales(ctx: SimCtx): CirculatingTale[] {
     out.push({
       id,
       form: def.form,
-      teller: def.teller,
+      // Prospective mode selection belongs on the authored tale, not on
+      // frozen Library memories below (their wording is part of the save).
+      teller: proseForTaleField(ctx, def, 'teller'),
       bias: def.bias,
-      text: def.text,
+      text: proseForTaleField(ctx, def, 'text'),
       about: def.about,
       since: state.circulatesFrom,
       mutations: state.mutations,
