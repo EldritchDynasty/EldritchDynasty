@@ -4,6 +4,7 @@ import { loadContent } from '@ed/content';
 import { proseOriginalHash, type ProseVariant } from '@ed/schema';
 import {
   auditRepository,
+  plainEnglishCoverage,
   plainEnglishWorklist,
   report,
   type PlainEnglishWorkItem,
@@ -57,16 +58,25 @@ export function pendingPlainEnglishWorklist(
   return pending;
 }
 
+/**
+ * One CLI entry point owns all npm run audit:strings modes. Keep --coverage
+ * ahead of the legacy worklist so the documented report cannot silently
+ * fall through to the human-readable inventory.
+ */
+export function auditStringsOutput(args: readonly string[], repo: string): string {
+  if (args.includes('--plainenglish-coverage')) {
+    return JSON.stringify(plainEnglishCoverage(repo), null, 2);
+  }
+  if (args.includes('--plainenglish-worklist')) {
+    const bundle = loadContent();
+    const pending = pendingPlainEnglishWorklist(plainEnglishWorklist(repo), bundle.proseVariants);
+    return JSON.stringify(pending, null, 2);
+  }
+  return report(auditRepository(repo), { files: args.includes('--files') }).join('\n');
+}
+
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('string-audit-cli.ts');
 if (isMain) {
   const repo = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-  if (process.argv.includes('--plainenglish-worklist')) {
-    const bundle = loadContent();
-    const pending = pendingPlainEnglishWorklist(plainEnglishWorklist(repo), bundle.proseVariants);
-    console.log(JSON.stringify(pending, null, 2));
-  } else {
-    for (const line of report(auditRepository(repo), { files: process.argv.includes('--files') })) {
-      console.log(line);
-    }
-  }
+  console.log(auditStringsOutput(process.argv.slice(2), repo));
 }
