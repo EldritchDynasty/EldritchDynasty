@@ -73,3 +73,42 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: relationship, from: { slot: SON }, to: head, sentiment: -14 }
+
+proseVariants:
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].title"
+    of: 4f30c895cfe2fd09
+    plainenglish: >-
+      Seven Hundred Miles Away for Nine Years
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].body"
+    of: aa0ea180e0e73244
+    plainenglish: >-
+      The Colleges at Corran are in Anvary, six weeks away by road or four weeks by ship during
+      sailing season. They accept a boy at fifteen and return him at twenty-four with a warrant and a
+      trade. Tuition costs ninety-five crowns in advance, plus the journey. Mystic magic is the only
+      power that can be bought: it can be taught, tested and licensed. Eldritch Power cannot be
+      taught, tested or improved through travel. Nobody has managed it in four hundred years. {HEAD}
+      and everyone else at the table know this. Others have said it aloud twice already this evening,
+      though none of them enjoyed saying it. That does not make the decision any easier.
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=send_him].label"
+    of: 8c181228a2373fb4
+    plainenglish: >-
+      Send him to Corran. Pay ninety-five crowns for nine years of training.
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=send_him].outcomes[id=sent].text"
+    of: 5a562eec0c6bfdd8
+    plainenglish: >-
+      He travels down to Sarrow with a chest and a letter of credit from a Braccish house that
+      charges two per cent. His ship leaves in the second week of the season. No one at Ardwen will
+      see him again for a very long time. The family has paid for his education, but cannot be sure
+      what it has bought. Everyone knows exactly how much it cost. For the next decade, that
+      uncertainty is hard to live with.
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].label"
+    of: 9797a8cd4e3f36c9
+    plainenglish: >-
+      Keep him here. Ninety-five crowns could repair the west wing, and the house needs him.
+  - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].outcomes[id=kept].text"
+    of: 204fbabf92eedb23
+    plainenglish: >-
+      For the first time since about 1090, the family repairs the roof properly. It lasts ninety
+      years and proves to be the best purchase they make that century. He stays, marries someone
+      local, helps the household and attends every Greening for forty years. Near the end of his
+      life, he mentions the ship twice, both times to his own children.
