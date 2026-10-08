@@ -816,7 +816,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: restored the house by the recall of its kin, in full number }
+            - { kind: deed, target: { slot: HEAD }, text: 'restored the house by the recall of its kin, in full number' }
           discrepancy:
             id: how_many_were_left
             severity: total
