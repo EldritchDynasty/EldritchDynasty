@@ -1,5 +1,5 @@
 import { ProseCatalogueS } from '@ed/schema';
-import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
+import type { Choice, ClauseDef, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 /**
@@ -82,6 +82,21 @@ export function proseForTale(
     teller: renderProse(ctx, base === undefined ? undefined : `${base}.teller`, tale.teller),
     bias: renderProse(ctx, base === undefined ? undefined : `${base}.bias`, tale.bias),
     text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, tale.text),
+  };
+}
+
+/** Both Ledger reveal routes freeze the selected wording when writing the page. */
+export function proseForClause(
+  ctx: SimCtx,
+  clause: Pick<ClauseDef, 'id' | 'name' | 'text'>,
+): Pick<ClauseDef, 'name' | 'text'> {
+  const file = ctx.content.sourceOf(clause.id);
+  const base = file === undefined
+    ? undefined
+    : contentProseAddress(file, `clauses[id=${encodeURIComponent(clause.id)}]`);
+  return {
+    name: renderProse(ctx, base === undefined ? undefined : `${base}.name`, clause.name),
+    text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, clause.text),
   };
 }
 
