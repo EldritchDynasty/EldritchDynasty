@@ -9787,3 +9787,49 @@ post-change measurement. Re-measure the green exact-head CI and queue run
 first, then reduce the checked `batch` budget to its hosted baseline in a
 separate coordinated CI/gate change. No samples or outcomes are removed from
 the path where statistical evidence is still required.
+
+## 2026-10-08 — #573 post-#439 merge-blocking batch budget re-baseline
+
+The #439 fast path landed with **1,006/1,006 deterministic outcome
+witnesses**. `outcome-reach-blocking` now skips its 800 × 500-year sample
+when no declared outcome is unwitnessed. That sample still runs, unchanged,
+if even one new outcome lacks a witness; the full distribution sample
+remains in scheduled outcome-reach telemetry. Only the elapsed-time
+regression guard is being recalibrated here, not simulation evidence.
+
+The 26-minute `batch` baseline in `tools/gate-durations.json` came from
+the expensive #502 gate as it ran before #439's zero-unwitnessed fast path.
+It would tolerate **32m30s** at the existing 1.25x threshold, so it could
+not detect a return of the unnecessary 800-run pass.
+
+| Successful hosted `check.yml` run | Whole workflow | Non-skipped runner-minutes | `gates (batch)` job | Guard's timed gate command |
+| --- | ---: | ---: | ---: | ---: |
+| [37728700844](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37728700844), prior merge-group, `bb8d1d25` | 22m42s | 44.03 | 22m25s | pre-fix |
+| [37732468827](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37732468827), first post-fix merge-group, `49df486f` | 7m32s | 18.98 | 7m13s | **6.4m** |
+| [37733144405](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37733144405), post-fix main push, same `49df486f` | 6m05s | 16.92 | 5m49s | **5.5m** |
+
+Workflow elapsed is GitHub run `created_at → updated_at`; runner-minutes
+sum each non-skipped job's `started_at → completed_at`; the job column
+includes runner setup/proof lookup/artifact upload. The last column is
+**the actual number printed by `tools/gate-duration.mjs`** in the hosted
+gate-job logs, and therefore the quantity the checked budget controls.
+Both post-fix runs show **12/12 batch gates green**, with logs confirming
+the all-witnessed outcome-reach short circuit. The pre/post comparison
+includes different integration inputs (and prior merge-group iOS smoke),
+so the difference is an observed adjacent-window result, not a controlled
+benchmark or proof of one exact causal saving.
+
+**Guard change:** `batch.seconds` **1560 → 420** (7 minutes), keeping
+`maxFactor=1.25`; CI now rejects a gate-command wall clock above
+**525 seconds (8m45s)** instead of 1950 seconds (32m30s). Seven minutes
+is above both observed 6.4m and 5.5m exact-code hosted measurements, and
+agrees with #451's pre-regression ~7-minute target. The evidence string
+in the duration data names both hosted runs and the old regression.
+Other lane budgets are unchanged. Because the short-circuit change has
+only two completed exact-code samples, monitor runner variance and update
+the budget only against new hosted evidence, not by suppressing the guard.
+
+This completes the independently landable #573 calibration. **Parent #439
+remains open** for its first post-cutover weekly statistical run (scheduled
+for Sunday 2026-10-11 UTC), the final night/week runner-minute roll-up,
+and closing acceptance; no pre-Sunday weekly result is claimed.
