@@ -166,11 +166,13 @@ export function stageProseVariant(
   address: string,
   plainenglish: string,
 ): ProseVariant | undefined {
-  const existing = store.bundle.proseVariants.find((variant) => variant.address === address);
-  if (existing) return existing;
-
+  // Refuse read-only sources even when a counterpart is already present: callers
+  // receive a mutable live row and could otherwise edit shipped content.
   const file = files.get(path);
   if (!file || !isWritableContentPath(path)) return undefined;
+
+  const existing = store.bundle.proseVariants.find((variant) => variant.address === address);
+  if (existing) return existing;
 
   const variant: ProseVariant = { address, plainenglish };
   store.bundle.proseVariants.push(variant);
