@@ -84,7 +84,7 @@ events:
           effects:
             - { kind: respect, delta: -1 }
           claims:
-            - { kind: deed, target: { slot: BRIDE }, text: came from the Rimefell with no document, and had three generations bought for her at Bramme }
+            - { kind: deed, target: { slot: BRIDE }, text: 'came from the Rimefell with no document, and had three generations bought for her at Bramme' }
         omit:
           chronicle: null
         embellish:
@@ -545,7 +545,7 @@ events:
           chronicle: A foreign house made an offer for a daughter of ours which the house declined, the terms being unsuitable and the distance being what it is.
           effects: []
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: declined the foreign offer, the terms being unsuitable }
+            - { kind: deed, target: { slot: HEAD }, text: 'declined the foreign offer, the terms being unsuitable' }
           discrepancy:
             id: what_the_grey_offer_was_worth
             severity: major
