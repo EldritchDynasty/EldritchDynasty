@@ -104,6 +104,9 @@ describe('Plain English variant guardrails (#415)', () => {
     const address = fixture.address.replace(`[id=${id}]`, `[id=${encoded}]`);
 
     expect(proseOriginalAt(content, address)).toBe(fixture.text);
+    expect(runRule('prose/variants', withVariant((variant) => {
+      variant.address = address;
+    }))).toEqual([]);
   });
 
   it('rejects a counterpart that drops one occurrence of an interpolation token', () => {
