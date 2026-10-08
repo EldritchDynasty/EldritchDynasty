@@ -73,7 +73,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: received the bottle as a gift, unbought }
+            - { kind: deed, target: { slot: HEAD }, text: 'received the bottle as a gift, unbought' }
           discrepancy:
             id: the_gift_that_was_bought
             severity: major
@@ -149,7 +149,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: engaged a physician of standing, rather than bought the flask }
+            - { kind: deed, target: { slot: HEAD }, text: 'engaged a physician of standing, rather than bought the flask' }
           discrepancy:
             id: the_physician_who_was_not
             severity: minor
