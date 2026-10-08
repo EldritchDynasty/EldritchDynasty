@@ -4,6 +4,7 @@
  *   npm run audit:strings                           # the totals, by source and by voice
  *   npm run audit:strings -- --files                # and every file, largest first
  *   npm run audit:strings -- --plainenglish-worklist # #410's machine-readable narrative worklist
+ *   npm run audit:strings -- --plainenglish-coverage # #615's actionable missing/stale/invalid counts
  *
  * An inventory, never a gate: it prints and exits 0. Localisation is not
  * scheduled and no language is chosen; what this answers is how much text
