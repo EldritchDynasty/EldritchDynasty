@@ -2,6 +2,7 @@ import type { HeirloomDef, HeirloomState, Person } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalFilter } from '../events/conditions.js';
 import { applyEffect } from '../events/effects.js';
+import { renderContentProse } from '../prose.js';
 
 /**
  * APPLYING AN HEIRLOOM TO A PERSON — one mechanism, for every heirloom there
@@ -132,11 +133,21 @@ export function useHeirloom(ctx: SimCtx, id: string, bearer: Person): UseResult 
   if (def.use.spends === 'consumed' || outOfCharges) state.spent = true;
 
   if (def.chronicle) {
+    // Select the authored words before interpolating the bearer, then freeze
+    // them in the Chronicle. A later reading-mode change must not rewrite it.
+    const file = ctx.content.sourceOf(id);
+    const address = `heirlooms[id=${encodeURIComponent(id)}]`;
+    const title = file === undefined
+      ? def.name
+      : renderContentProse(ctx, file, `${address}.name`, def.name);
+    const chronicle = file === undefined
+      ? def.chronicle
+      : renderContentProse(ctx, file, `${address}.chronicle`, def.chronicle);
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',
-      title: def.name,
-      text: def.chronicle.replace(/\{BEARER\}/g, bearer.name),
+      title,
+      text: chronicle.replace(/\{BEARER\}/g, bearer.name),
       named: false,
     });
   }
