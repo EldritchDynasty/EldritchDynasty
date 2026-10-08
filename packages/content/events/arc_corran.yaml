@@ -242,3 +242,156 @@ events:
             provableBy: [the_church, house_ilm]
     rumour: { id: rumour_the_one_who_went_to_anvary, accuracy: 0.4, spread: 2 }
     accounts: [corran_register_entry, wick_on_the_man_who_came_back]
+
+proseVariants:
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].title"
+    of: d11ec2d9a07299c5
+    plainenglish: >-
+      The Letters from Corran
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].body"
+    of: 706887b7175395b3
+    plainenglish: >-
+      The letters arrive by ship during sailing season and by road at other times. There are four in
+      a good year and two in a bad one. Each is already two to four months old when {HEAD} opens it.
+      {SON} writes that he is well, but that news is old by the time it arrives. {SON} studies at the
+      Colleges, where men learn the four elemental affinities and everyone can learn the four
+      Threshold affinities. He has been assigned Terra. He did not choose it and cannot change it.
+      His letters explain why at length, in writing that gets smaller to save paper. In his fourth
+      year, he asks a careful question about the family. Nobody at Ardwen understands what he really
+      wants to know. By the time an answer arrives, he may no longer want it. A letter takes four
+      months each way.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].absentBody"
+    of: ab9b78245baf45c0
+    plainenglish: >-
+      There are four letters in a good year and two in a bad one. Each is already two to four months
+      old when it arrives. He says he is well, but that news is old. In his fourth year, he asks a
+      careful question about the family. Nobody at Ardwen understands what he really means. By the
+      time an answer reaches Anvary, he may no longer want to know. The journey takes four months
+      each way.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].interaction.choices[id=answer_plainly].label"
+    of: 55d9a853ad749387
+    plainenglish: >-
+      Tell him the truth. He is family, even seven hundred miles away.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].interaction.choices[id=answer_plainly].outcomes[id=answered].text"
+    of: 0075133b9dc1baa7
+    plainenglish: >-
+      The family sends four sheets explaining the truth about itself by ship. For a whole season, the
+      household knows that those pages are travelling across the water to Anvary among strangers'
+      letters. They reach him, and he reads them in a room shared with two Braccish boys. Nothing
+      comes of it. The family does not learn that for two years, and remains frightened in the
+      meantime.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].interaction.choices[id=answer_nothing].label"
+    of: 5a526237175ae0ab
+    plainenglish: >-
+      Avoid his question. Write about the weather, prices and his sister's marriage.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters].interaction.choices[id=answer_nothing].outcomes[id=deflected].text"
+    of: 42b6baeea0e7e9f2
+    plainenglish: >-
+      He is nineteen and seven hundred miles away, but he knows when a letter avoids his question. He
+      learned to recognise that kind of letter from the family who wrote it. His next letter is
+      shorter. The one after that talks only about the weather.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].title"
+    of: 82dd7360be2bffcc
+    plainenglish: >-
+      No Letters Since Last Spring
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].body"
+    of: e97acccf2ba48a5b
+    plainenglish: >-
+      No letter has arrived since last spring, and another spring has begun. A ship could have been
+      lost, a mailbag could have fallen into the sea, or the term could have run late. The family has
+      repeated these explanations every month for fourteen months. A letter asking the Colleges for
+      news costs two marks and takes four months to get a reply, if one comes at all. Sending a man
+      to ask in person costs eleven crowns. He would spend four months travelling there and four
+      returning, and the family could not contact him once he left. They are two ways of asking the
+      same question at different costs. {HEAD} has weighed the choices every morning since autumn.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].absentBody"
+    of: 829962a194bb1a3d
+    plainenglish: >-
+      There has been no letter since last spring. Another spring has arrived. The family has spent
+      fourteen months repeating the same explanations: a ship may have been delayed, a bag lost at
+      sea, or a school term extended. A letter to the Colleges costs two marks and may take four
+      months to get an answer, if anyone answers. Sending a man costs eleven crowns and eight months
+      of travel, and the family cannot contact him once he leaves.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=send_a_man].label"
+    of: a308680667dc91aa
+    plainenglish: >-
+      Send someone to find out. It costs eleven crowns and eight months.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=send_a_man].outcomes[id=sent].text"
+    of: a88a7f510ad9112d
+    plainenglish: >-
+      A capable man travels to Corran. He finds a register where the boy's name has been crossed out,
+      a proctor who apologises but cannot help, and a room that was emptied eleven months earlier.
+      Nobody is hiding information from him. The boy used to be at the Colleges and is no longer
+      there. The foreign institution says it does not know where he went, and that is all it can tell
+      him.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=write_again].label"
+    of: 5ceb96848385b7b8
+    plainenglish: >-
+      Write again, even twice more. Eleven crowns would buy a horse.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=write_again].outcomes[id=wrote].text"
+    of: 98cb62703729687c
+    plainenglish: >-
+      The family sends three letters over two years. A clerk answers the third and encloses a copy of
+      the crossed-out register entry. The clerk says the Colleges cannot help further. The copy is a
+      courtesy, but it is also the only document the family will ever have about the boy's
+      disappearance. It is four lines long and cost six marks to obtain.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].title"
+    of: 8aefdac647fd402a
+    plainenglish: >-
+      The Man Who Came Back
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].body"
+    of: 3f9e8ca1722b749d
+    plainenglish: >-
+      In autumn, a man rides up from Bramme on a hired horse and gives the gate a name nobody has
+      heard spoken in nine years. He is the right age. He knows the west passage, the bad step on the
+      cellar stairs and the family's name for the second cup. He also knows three things about the
+      house that appeared in no letter or book. He has a proper Terra warrant, issued after an
+      examination and wrapped in oilcloth. No one from this family has ever held such a warrant, and
+      the Church has strong views about it. Nobody in the yard has called him a son yet. They have
+      all been standing there for a long time.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].absentBody"
+    of: fe6c4fcccf0c4a10
+    plainenglish: >-
+      A man arrives from Bramme on a hired horse and gives the gate a name nobody has heard spoken in
+      nine years. He is the right age. He knows the west passage, the bad cellar step and what the
+      family calls the second cup. He carries a Terra warrant wrapped in oilcloth, though no one in
+      this family has ever held one before. Nobody in the yard has called him a son.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].interaction.choices[id=he_is_ours].label"
+    of: 6499f693189b782f
+    plainenglish: >-
+      Accept him as family. Open the gate and ask no questions for a week.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].interaction.choices[id=he_is_ours].outcomes[id=taken_back].text"
+    of: fee982c353949c27
+    plainenglish: >-
+      He eats with the household that night and works in the long room within a month. He is skilled
+      and earns money for his work. For eleven years, the house has the only warranted practitioner
+      in the Nethering living under its roof. He never discusses the missing years. Two members of
+      the household remain privately convinced that he is not the boy who left. Both die without
+      telling the other what they suspect.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].interaction.choices[id=pay_him_off].label"
+    of: 9516467e853c6ec2
+    plainenglish: >-
+      Pay him and send him away. Knowing a name does not prove who he is.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].interaction.choices[id=pay_him_off].outcomes[id=paid].text"
+    of: 0daeea0586fc8481
+    plainenglish: >-
+      The family pays him four crowns and gives him a night in the gatehouse. He accepts without
+      arguing, which unsettles everyone. Before dawn he takes the road to Bramme. The house is no
+      less safe than it was, but the family feels colder towards one another. There is nobody they
+      can clearly blame.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].record.subject"
+    of: e711debf9504ddf3
+    plainenglish: >-
+      the man who arrived from Bramme
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].record.options.record.chronicle"
+    of: 859ecc7adf03d24e
+    plainenglish: >-
+      Nine years after the boy left for Corran, a man came from Bramme. He knew three things about
+      the house that no letter had mentioned. He had passed a Terra examination and carried a
+      warrant. The family's decision about him is recorded below. Nobody established who he really
+      was.
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].record.options.embellish.chronicle"
+    of: 048c353db764f6f1
+    plainenglish: >-
+      After nine years of study at the Colleges, the family's son returned with his warrant and
+      examination completed. His family welcomed him home at their own gate.
