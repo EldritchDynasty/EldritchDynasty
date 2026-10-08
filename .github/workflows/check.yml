@@ -185,8 +185,12 @@ jobs:
           # Check the fetched synthetic PR merge head or merge-group head, not
           # an unrelated branch tip. The full checkout above includes every
           # commit in this range; missing revisions fail closed in the script.
+          # The pull_request base.sha can lag main while the checked-out
+          # synthetic merge already has a newer main first parent. The script
+          # verifies the real merge parents and audits from that exact parent.
           CLOSINGS_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
           CLOSINGS_HEAD: ${{ github.sha }}
+          CLOSINGS_PR_HEAD: ${{ github.event.pull_request.head.sha || '' }}
         run: node tools/closing-keywords.mjs
       - id: decide
         env:

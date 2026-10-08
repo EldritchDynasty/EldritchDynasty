@@ -13,6 +13,8 @@ const tool = (await import(pathToFileURL(join(REPO, 'tools/closing-keywords.mjs'
   ) => string[];
   prBodyError: (text: string) => string | null;
   commitMessagesError: (body: string, commits: string, opts?: { mergeGroup?: boolean }) => string | null;
+  commitAuditBase: (event: string, base: string, head: string,
+    prHead: string | undefined, parentsLine: string | null) => string;
 };
 
 describe('GitHub closing keywords with negation', () => {
@@ -123,12 +125,39 @@ describe('GitHub closing keywords with negation', () => {
       .toContain('#595');
   });
 
+  it('audits only PR commits when event base SHA trails the fetched synthetic merge parent (#605)', () => {
+    const staleEventBase = 'a'.repeat(40);
+    const realMainParent = 'b'.repeat(40);
+    const exactPrHead = 'c'.repeat(40);
+    const mergeHead = 'd'.repeat(40);
+    const parents = [mergeHead, realMainParent, exactPrHead].join(' ');
+
+    // PR #597 encountered exactly this shape: the event base was old but
+    // actions/checkout checked out a merge whose first parent was newer main.
+    expect(tool.commitAuditBase('pull_request', staleEventBase, mergeHead, exactPrHead, parents))
+      .toBe(realMainParent);
+    // Queue merges keep using the event's merge_group.base_sha.
+    expect(tool.commitAuditBase('merge_group', staleEventBase, mergeHead, undefined, null))
+      .toBe(staleEventBase);
+    expect(() => tool.commitAuditBase('pull_request', staleEventBase, mergeHead, undefined, parents))
+      .toThrow(/missing or invalid PR head/);
+    expect(() => tool.commitAuditBase('pull_request', staleEventBase, mergeHead, 'e'.repeat(40), parents))
+      .toThrow(/expected exact-head synthetic merge/);
+    expect(() => tool.commitAuditBase('pull_request', staleEventBase, mergeHead, exactPrHead,
+      [mergeHead, realMainParent].join(' ')))
+      .toThrow(/expected exact-head synthetic merge/);
+    expect(() => tool.commitAuditBase('pull_request', staleEventBase, mergeHead, exactPrHead,
+      ['e'.repeat(40), realMainParent, exactPrHead].join(' ')))
+      .toThrow(/expected exact-head synthetic merge/);
+  });
+
   it('keeps the commit check on the authoritative PR and merge-group CI paths', () => {
     const check = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
     expect(check).toContain("github.event_name == 'pull_request' || github.event_name == 'merge_group'");
     expect(check).toContain("CHECK_COMMIT_CLOSINGS: '1'");
     expect(check).toContain('CLOSINGS_BASE:');
     expect(check).toContain('CLOSINGS_HEAD:');
+    expect(check).toContain('CLOSINGS_PR_HEAD:');
     expect(check).toContain('fetch-depth: 0');
   });
 

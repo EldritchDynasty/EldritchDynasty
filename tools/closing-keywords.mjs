@@ -110,12 +110,41 @@ export function commitMessagesError(prBody, commitLog, { mergeGroup = false } = 
   return ['Unsafe closing keywords in PR commit messages:', ...lines].join('\n');
 }
 
+/**
+ * GitHub's pull_request base.sha can lag main, even when actions/checkout has
+ * checked out a newer synthetic merge commit. Only audit the PR commits:
+ * the merge's *actual* first parent is the base of that exact integration.
+ * Confirm its second parent is the exact PR head from the webhook. Otherwise
+ * fail closed rather than silently blessing unrelated commits or a wrong head.
+ */
+export function commitAuditBase(event, advertisedBase, head, prHead, parentsLine) {
+  if (event !== 'pull_request') return advertisedBase;
+  if (!/^[0-9a-f]{40}$/i.test(prHead ?? '')) {
+    throw new Error('missing or invalid PR head SHA for commit-closure audit');
+  }
+  const commits = (parentsLine ?? '').trim().split(/\s+/);
+  if (commits.length !== 3 || commits[0] !== head || commits[2] !== prHead ||
+      !/^[0-9a-f]{40}$/i.test(commits[1])) {
+    throw new Error('PR checkout is not the expected exact-head synthetic merge commit');
+  }
+  return commits[1];
+}
+
 /** Fail closed if the complete, exact revision range cannot be inspected. */
-function checkedCommitLog(base, head) {
+function checkedCommitLog(base, head, { event, prHead } = {}) {
   if (!/^[0-9a-f]{40}$/i.test(base ?? '') || !/^[0-9a-f]{40}$/i.test(head ?? '')) {
     throw new Error('missing or invalid full base/head SHA for commit-closure audit');
   }
-  const range = `${base}..${head}`;
+  const parentLine = event === 'pull_request'
+    ? execFileSync('git', ['rev-list', '--parents', '-n', '1', head], { encoding: 'utf8' })
+    : null;
+  const auditBase = commitAuditBase(event, base, head, prHead, parentLine);
+  if (event === 'pull_request') {
+    // Event base may be stale, but must still be an ancestor of the actual
+    // synthetic merge's first parent; a divergent target is not safe to audit.
+    execFileSync('git', ['merge-base', '--is-ancestor', base, auditBase]);
+  }
+  const range = `${auditBase}..${head}`;
   const count = Number(execFileSync('git', ['rev-list', '--count', range], { encoding: 'utf8' }).trim());
   if (!Number.isSafeInteger(count) || count < 1) {
     throw new Error(`no PR/merge-group commits found in ${range}; refusing to skip the closure audit`);
@@ -141,7 +170,9 @@ if (process.env.CHECK_COMMIT_CLOSINGS === '1') {
     if (event !== 'pull_request' && event !== 'merge_group') {
       throw new Error(`commit-closure audit needs pull_request or merge_group, got ${String(event)}`);
     }
-    const log = checkedCommitLog(process.env.CLOSINGS_BASE, process.env.CLOSINGS_HEAD);
+    const log = checkedCommitLog(process.env.CLOSINGS_BASE, process.env.CLOSINGS_HEAD, {
+      event, prHead: process.env.CLOSINGS_PR_HEAD,
+    });
     const error = commitMessagesError(process.env.PR_BODY ?? '', log, {
       mergeGroup: event === 'merge_group',
     });
