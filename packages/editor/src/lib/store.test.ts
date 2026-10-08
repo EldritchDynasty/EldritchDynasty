@@ -462,6 +462,10 @@ describe('authored Plain English variants (#414)', () => {
     target.title = 'A Shelf, Explained More Simply';
     markDirty('events', EVENT);
     const staged = stageProseVariant(CRUSADE, address, 'A simpler title for the shelf.');
+    expect(staged).toBeDefined();
+    // The shipped fixture may already have a counterpart. Staging returns that
+    // live row; editing it is what the editor does in the second prose column.
+    staged!.plainenglish = 'A simpler title for the shelf.';
 
     expect(staged).toMatchObject({ address, plainenglish: 'A simpler title for the shelf.' });
     expect(target.title).not.toBe(staged?.plainenglish);
@@ -514,12 +518,20 @@ describe('authored Plain English variants (#414)', () => {
       .some((variant) => variant.address === address)).toBe(false);
   });
 
-  it('does not stage a counterpart into a reference-only Mod Editor source file', () => {
+  it('does not expose an already-authored counterpart in a read-only Mod Editor source file', () => {
+    const authored = `content:${CRUSADE}#events[id=${EVENT}].title`;
+    // Existing entries used to bypass the read-only check because staging
+    // returned the mutable live row before testing source writability.
+    const existing = store.bundle.proseVariants.find((variant) => variant.address === authored);
+    expect(existing).toBeDefined();
+    const originalWording = existing!.plainenglish;
     h.writable.value = false;
-    const address = `content:${CRUSADE}#events[id=${EVENT}].body`;
     const before = store.bundle.proseVariants.length;
 
-    expect(stageProseVariant(CRUSADE, address, 'A direct version.')).toBeUndefined();
+    expect(stageProseVariant(CRUSADE, authored, 'An unauthorised edit.')).toBeUndefined();
+    expect(stageProseVariant(CRUSADE, `content:${CRUSADE}#events[id=${EVENT}].body`, 'A direct version.'))
+      .toBeUndefined();
+    expect(existing!.plainenglish).toBe(originalWording);
     expect(store.bundle.proseVariants).toHaveLength(before);
     expect(store.dirty.has(CRUSADE)).toBe(false);
   });
