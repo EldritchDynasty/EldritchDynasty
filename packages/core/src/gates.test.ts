@@ -85,6 +85,29 @@ describe('#431 forced-Awakening provenance', () => {
   });
 });
 
+describe('#439 merge outcome-reach cost', () => {
+  it('skips the 800-run played batch when every declared outcome is witnessed', () => {
+    const { ok, lines } = gateUnwitnessedOutcomeReach(content, { runs: 1, years: 1 });
+    expect(ok, lines.join('\n')).toBe(true);
+    expect(lines[0]).toMatch(/skipped 1 runs x 1y/);
+    expect(lines[1]).toMatch(/deterministic witnesses; 0 outcome\(s\) still sampled/);
+    expect(lines).toHaveLength(2);
+  });
+
+  it('runs the canonical sampled verdict again when an authored outcome has no witness', () => {
+    const bundle = structuredClone(content.bundle);
+    const event = bundle.events.find((entry) =>
+      entry.interaction.kind === 'narration' && entry.interaction.outcomes.length > 0);
+    if (!event || event.interaction.kind !== 'narration') {
+      throw new Error('no narration event for an unwitnessed outcome fixture');
+    }
+    event.interaction.outcomes[0]!.id = 'new_unwitnessed_outcome' as typeof event.interaction.outcomes[0]['id'];
+    const { lines } = gateUnwitnessedOutcomeReach(bundle, { runs: 1, years: 1 });
+    expect(lines[0]).not.toContain('skipped');
+    expect(lines.join('\n')).toMatch(/1 outcome\(s\) still sampled/);
+  });
+});
+
 describe('#441 trusted gate proof skips', () => {
   it('removes only named blocking gates from their lane', () => {
     const before = gatesInLane('batch');
