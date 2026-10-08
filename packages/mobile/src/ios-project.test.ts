@@ -141,3 +141,34 @@ describe('Capacitor iOS project', () => {
   });
 
 });
+
+// Android and iOS native-project checks share this measured mobile test suite.
+// Keep rerun-safety assertions here so adding a tiny static check does not
+// exhaust the CI budget for as-yet-unmeasured standalone test files.
+describe('Android release versionCode', () => {
+  const source = text('android/app/build.gradle');
+
+  it('includes the workflow rerun attempt in a bounded run-number stride', () => {
+    expect(source).toContain("System.getenv('GITHUB_RUN_NUMBER')");
+    expect(source).toContain("System.getenv('GITHUB_RUN_ATTEMPT')");
+    expect(source).toContain(
+      'def computedVersionCode = runNumber * versionCodeAttemptStride + runAttempt',
+    );
+
+    const stride = Number(source.match(/def versionCodeAttemptStride = (\\d+)L/)?.[1]);
+    expect(stride).toBeGreaterThan(2);
+
+    const code = (run: number, attempt: number) => run * stride + attempt;
+    expect(code(42, 1)).not.toBe(code(42, 2));
+    expect(code(42, stride - 1)).toBeLessThan(code(43, 1));
+  });
+
+  it('keeps local builds on the deterministic fallback code', () => {
+    expect(source).toContain('def androidVersionCode = 1');
+    expect(source).toContain('versionCode androidVersionCode');
+  });
+
+  it('guards the Android/Play versionCode ceiling', () => {
+    expect(source).toContain('computedVersionCode > 2100000000L');
+  });
+});
