@@ -4,6 +4,7 @@ import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
   canUseHeirloom, eligibleBearers, grantHeirloom, testRng, useHeirloom,
+  loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -99,6 +100,53 @@ describe('applying an heirloom is generic', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const p = someone(ctx);
     expect(canUseHeirloom(ctx, 'portion_of_agelessness', p).ok).toBe(false);
+  });
+
+  it('selects heirloom-use prose prospectively and freezes Chronicle pages', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const bearer = someone(ctx);
+    const def = ctx.content.mustHeirloom('the_ninefold_seal');
+    const file = ctx.content.sourceOf(def.id);
+    expect(file).toBe('heirlooms.yaml');
+    const base = `content:${file}#heirlooms[id=${def.id}]`;
+    setProseVariants(ctx, [
+      { address: `${base}.name`, plainenglish: 'The Seal in Plain English' },
+      { address: `${base}.chronicle`, plainenglish: '{BEARER} pressed the seal into wax.' },
+    ]);
+
+    expect(useHeirloom(ctx, def.id, bearer).ok).toBe(true);
+    const originalPage = { ...ctx.world.chronicle.at(-1)! };
+    expect(originalPage.title).toBe(def.name);
+    expect(originalPage.text).toBe(def.chronicle!.replace(/\{BEARER\}/g, bearer.name));
+
+    setProseMode(ctx, 'plainenglish');
+    expect(useHeirloom(ctx, def.id, bearer).ok).toBe(true);
+    const plainPage = { ...ctx.world.chronicle.at(-1)! };
+    expect(plainPage.title).toBe('The Seal in Plain English');
+    expect(plainPage.text).toBe(`${bearer.name} pressed the seal into wax.`);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    setProseMode(ctx, 'original');
+    expect(ctx.world.chronicle.slice(-2)).toEqual([originalPage, plainPage]);
+    const reloaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(reloaded.world.chronicle.slice(-2)).toEqual([originalPage, plainPage]);
+  });
+
+  it('falls back to Original heirloom-use prose and reports missing variants', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const bearer = someone(ctx);
+    const def = ctx.content.mustHeirloom('the_ninefold_seal');
+    setProseVariants(ctx, []);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(useHeirloom(ctx, def.id, bearer).ok).toBe(true);
+    expect(ctx.world.chronicle.at(-1)?.title).toBe(def.name);
+    expect(ctx.world.chronicle.at(-1)?.text)
+      .toBe(def.chronicle!.replace(/\{BEARER\}/g, bearer.name));
+    expect(missingPlainEnglish(ctx)).toEqual([
+      'content:heirlooms.yaml#heirlooms[id=the_ninefold_seal].chronicle',
+      'content:heirlooms.yaml#heirlooms[id=the_ninefold_seal].name',
+    ]);
   });
 
   it('applies its effects to the bearer through the normal effect path', () => {
