@@ -101,7 +101,8 @@ describe('#439 merge outcome-reach cost', () => {
     if (!event || event.interaction.kind !== 'narration') {
       throw new Error('no narration event for an unwitnessed outcome fixture');
     }
-    event.interaction.outcomes[0]!.id = 'new_unwitnessed_outcome' as typeof event.interaction.outcomes[0]['id'];
+    const originalOutcome = event.interaction.outcomes[0]!;
+    originalOutcome.id = 'new_unwitnessed_outcome' as typeof originalOutcome.id;
     const { lines } = gateUnwitnessedOutcomeReach(bundle, { runs: 1, years: 1 });
     expect(lines[0]).not.toContain('skipped');
     expect(lines.join('\n')).toMatch(/1 outcome\(s\) still sampled/);
