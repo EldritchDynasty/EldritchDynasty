@@ -4,7 +4,7 @@ import { canBeTaught, type SlotSpec } from '@ed/schema';
 import {
   applyEffect, autoMarry, candidatesFor, DEBT_FLOOR, DEMIGOD_AGEING_STOPPED, expectRate, LEDGER_SEARCH_FEE,
   resolveSlots, TUTOR_FEE, TUTOR_GAIN, TUTOR_YEARS, loadGame, newGame, onTheMarket, order, phase, place,
-  resumeGame, saveGame, tableView, testRng, testWorld,
+  resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   type TableOrder,
 } from '@ed/core';
 
@@ -57,6 +57,43 @@ describe('searching the old contracts for a Ledger clause', () => {
     expect(order(ctx, { kind: 'seekClause' }).ok).toBe(true);
     expect(ctx.world.clausesRecovered.size).toBe(before + 2);
   });
+
+  it.each(['complete', 'partial', 'untracked'] as const)(
+    'writes archival-search pages in Plain English with %s variants and preserves them on reload',
+    (coverage) => {
+      const ctx = coverage === 'untracked'
+        ? loadGame(saveGame(waitingHouse()), structuredClone(bundle.bundle))
+        : waitingHouse();
+      const clause = [...ctx.content.clauses]
+        .filter((item) => !ctx.world.clausesRecovered.has(item.id))
+        .sort((a, b) => a.weight - b.weight)[0]!;
+      const base = `content:clauses.yaml#clauses[id=${clause.id}]`;
+      setProseVariants(ctx, [
+        { address: `${base}.name`, plainenglish: 'The Kept Gift' },
+        ...(coverage === 'complete' ? [{ address: `${base}.text`, plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
+      ]);
+      setProseMode(ctx, 'plainenglish');
+      // Readiness does not render a clause the player has not recovered yet.
+      expect(tableView(ctx).ledgerSearch.ready).toBe(true);
+      expect(missingPlainEnglish(ctx)).toEqual([]);
+      const before = ctx.world.clausesRecovered.size;
+      const result = order(ctx, { kind: 'seekClause' });
+      expect(result).toMatchObject({ ok: true, spent: LEDGER_SEARCH_FEE, left: 500 - LEDGER_SEARCH_FEE });
+      expect(ctx.world.clausesRecovered.size).toBe(before + 1);
+      expect(ctx.world.clausesRecovered.has(clause.id)).toBe(true);
+      expect(ctx.world.chronicle.at(-1)).toMatchObject({
+        weight: 'illuminated', named: true,
+        title: coverage === 'untracked' ? clause.name : 'The Kept Gift',
+        text: coverage === 'complete' ? 'The gift must stay with the hand that owes it.' : clause.text,
+      });
+      expect(missingPlainEnglish(ctx)).toEqual(coverage === 'partial' ? [`${base}.text`] : []);
+      expect(order(ctx, { kind: 'seekClause' }).ok).toBe(false);
+      const written = structuredClone(ctx.world.chronicle);
+      setProseMode(ctx, 'original');
+      expect(ctx.world.chronicle).toEqual(written);
+      expect(loadGame(saveGame(ctx), bundle).world.chronicle).toEqual(written);
+    },
+  );
 
   it('exists only for the Demigod wait and stops at the existing seven-clause gate', () => {
     const notWaiting = testWorld(bundle, 7111, 1400);

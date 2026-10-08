@@ -3,6 +3,7 @@ import type { SimCtx } from '../world.js';
 import { evalCondition } from '../events/conditions.js';
 import type { Rng } from '../rng.js';
 import { campaignDef, isLateCampaignYear } from '../campaign.js';
+import { proseForClause } from '../prose.js';
 
 const MAX_CONCURRENT = 2;
 
@@ -216,11 +217,12 @@ export function revealClause(ctx: SimCtx, active: ActiveAge): string | undefined
   // In the contract's own hand. No chronicler edits this and no Record choice
   // is offered on it — it is the one thing in the book nobody in the family
   // wrote.
+  const prose = proseForClause(ctx, next);
   w.chronicle.push({
     year: w.year,
     weight: 'illuminated',
-    title: next.name,
-    text: next.text,
+    title: prose.name,
+    text: prose.text,
     named: true,
   });
   return next.id;

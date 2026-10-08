@@ -21,6 +21,7 @@ import {
 } from './land.js';
 import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
+import { proseForClause } from './prose.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -495,11 +496,12 @@ function seekLedgerClause(ctx: SimCtx): OrderResult {
     text: 'The record-keepers were paid to compare the old contracts against the house copy.',
     named: false,
   });
+  const prose = proseForClause(ctx, offer.clause);
   w.chronicle.push({
     year: w.year,
     weight: 'illuminated',
-    title: offer.clause.name,
-    text: offer.clause.text,
+    title: prose.name,
+    text: prose.text,
     named: true,
   });
   return { ok: true };

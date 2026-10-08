@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, type ActiveAge, type Person } from '@ed/schema';
-import { bootstrap, place, revealClause } from '@ed/core';
+import { asId, contentProseEntries, type ActiveAge, type Person } from '@ed/schema';
+import {
+  bootstrap, loadGame, missingPlainEnglish, place, revealClause, saveGame, setProseMode, setProseVariants,
+} from '@ed/core';
 
 const bundle = loadContent();
 
@@ -76,6 +78,72 @@ describe('Ledger content contract', () => {
 
   it('keeps the nine-clause contract explicit', () => {
     expect(bundle.clauses).toHaveLength(9);
+  });
+});
+
+describe('Ledger pages in the selected prose mode', () => {
+  const clause = bundle.clauses.find((item) => item.id === 'clause_of_the_blood_entire')!;
+  const base = `content:clauses.yaml#clauses[id=${clause.id}]`;
+  const plain = { name: 'The Whole Bloodline', text: 'The whole bloodline owes the debt. Dividing it among heirs does not reduce it.' };
+
+  it.each([
+    { mode: 'original' as const, translatedName: false, translatedText: false, provenance: true },
+    { mode: 'plainenglish' as const, translatedName: true, translatedText: true, provenance: true },
+    { mode: 'plainenglish' as const, translatedName: true, translatedText: false, provenance: true },
+    { mode: 'plainenglish' as const, translatedName: false, translatedText: false, provenance: false },
+  ])('writes the selected fields with Original fallback: %j', ({ mode, translatedName, translatedText, provenance }) => {
+    const ctx = bootstrap(provenance ? bundle : structuredClone(bundle.bundle), 1042, 1042);
+    hireArchivist(ctx);
+    const active = activeNamed('the_long_peace');
+    setProseVariants(ctx, [
+      { address: `${base}.name`, plainenglish: plain.name },
+      ...(translatedText ? [{ address: `${base}.text`, plainenglish: plain.text }] : []),
+    ]);
+    setProseMode(ctx, mode);
+
+    const entries = contentProseEntries('clauses.yaml', { clauses: [clause] });
+    expect(entries.map((entry) => entry.address)).toContain(`${base}.name`);
+    expect(entries.map((entry) => entry.address)).toContain(`${base}.text`);
+    expect(revealClause(ctx, active)).toBe(clause.id);
+    expect(active.paid.clause).toBe(clause.id);
+    expect(ctx.world.clausesRecovered.has(clause.id)).toBe(true);
+    expect(ctx.world.chronicle.at(-1)).toMatchObject({
+      weight: 'illuminated', named: true,
+      title: translatedName ? plain.name : clause.name,
+      text: translatedText ? plain.text : clause.text,
+    });
+    expect(missingPlainEnglish(ctx)).toEqual(
+      mode === 'plainenglish' && provenance && !translatedText ? [`${base}.text`] : [],
+    );
+    expect(revealClause(ctx, active)).toBeUndefined();
+  });
+
+  it('preserves written wording across mode changes and reload while later reveals use the new mode', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    hireArchivist(ctx);
+    revealClause(ctx, activeNamed('the_long_peace'));
+    const originalPage = structuredClone(ctx.world.chronicle.at(-1)!);
+    setProseMode(ctx, 'plainenglish');
+    expect(ctx.world.chronicle.at(-1)).toEqual(originalPage);
+
+    const restored = loadGame(saveGame(ctx), bundle);
+    setProseMode(restored, 'plainenglish');
+    expect(restored.world.chronicle.at(-1)).toEqual(originalPage);
+    const next = restored.content.clauses
+      .filter((item) => item.ages.includes('the_long_peace') && !restored.world.clausesRecovered.has(item.id))
+      .sort((a, b) => a.weight - b.weight)[0]!;
+    const address = `content:clauses.yaml#clauses[id=${next.id}]`;
+    setProseVariants(restored, [
+      { address: `${address}.name`, plainenglish: 'The Newly Read Clause' },
+      { address: `${address}.text`, plainenglish: 'The words chosen for the next page.' },
+    ]);
+    expect(revealClause(restored, activeNamed('the_long_peace'))).toBe(next.id);
+    expect(restored.world.chronicle.slice(-2)).toEqual([
+      originalPage,
+      expect.objectContaining({ title: 'The Newly Read Clause', text: 'The words chosen for the next page.' }),
+    ]);
+    setProseMode(restored, 'original');
+    expect(loadGame(saveGame(restored), bundle).world.chronicle).toEqual(restored.world.chronicle);
   });
 });
 
