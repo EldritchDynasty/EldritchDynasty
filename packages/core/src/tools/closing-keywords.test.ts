@@ -12,6 +12,7 @@ const tool = (await import(pathToFileURL(join(REPO, 'tools/closing-keywords.mjs'
     context: { repository: string; defaultBranch: string },
   ) => string[];
   prBodyError: (text: string) => string | null;
+  commitMessagesError: (body: string, commits: string, opts?: { mergeGroup?: boolean }) => string | null;
 };
 
 describe('GitHub closing keywords with negation', () => {
@@ -85,6 +86,50 @@ describe('GitHub closing keywords with negation', () => {
       body,
       base: { ref: 'main', repo: { full_name: 'Elsewhere/Fork' } },
     }, context)).toEqual([]);
+  });
+
+
+  it('rejects the historical negated #61 commit even if the PR body calls it open', () => {
+    const historical = [
+      'balance(#61): widen the Apotheosis acceptance band',
+      '',
+      'This does not close #61. Apotheosis still fires in 0% of measured runs.',
+    ].join('\n');
+    expect(tool.commitMessagesError('Refs #61. Part of #332.', historical))
+      .toMatch(/#61: commit message negates/);
+    // An affirmative PR body cannot sanitize a negated commit message.
+    expect(tool.commitMessagesError('Closes #61.', historical))
+      .toMatch(/#61: commit message negates/);
+    expect(tool.commitMessagesError('', historical, { mergeGroup: true }))
+      .toMatch(/#61: commit message negates/);
+  });
+
+  it('rejects the historical positive Fix #378 when the PR only says Part of #378', () => {
+    const historical = 'Fix #378 ladder diagnostic; preserve the other balance blockers.';
+    expect(tool.commitMessagesError('Part of #378.', historical))
+      .toMatch(/#378: commit message closes the issue, but the PR body does not/);
+    expect(tool.commitMessagesError('Refs #378.', historical)).toContain('Closes #378');
+    expect(tool.commitMessagesError('', historical)).toContain('Closes #378');
+  });
+
+  it('accepts matching explicit closings and ordinary nonclosing references', () => {
+    expect(tool.commitMessagesError('Closes #594. Refs #332.', 'Fixes #594\n\nPart of #332.'))
+      .toBeNull();
+    expect(tool.commitMessagesError('Refs #332.', 'Docs polish. Part of #332.'))
+      .toBeNull();
+    expect(tool.commitMessagesError('Part of #378.', 'Fix #378', { mergeGroup: true }))
+      .toBeNull();
+    expect(tool.commitMessagesError('Closes #594', 'Closes #594 and resolves #595.'))
+      .toContain('#595');
+  });
+
+  it('keeps the commit check on the authoritative PR and merge-group CI paths', () => {
+    const check = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
+    expect(check).toContain("github.event_name == 'pull_request' || github.event_name == 'merge_group'");
+    expect(check).toContain("CHECK_COMMIT_CLOSINGS: '1'");
+    expect(check).toContain('CLOSINGS_BASE:');
+    expect(check).toContain('CLOSINGS_HEAD:');
+    expect(check).toContain('fetch-depth: 0');
   });
 
   it('is wired into pull-request admission and post-merge reconciliation', () => {
