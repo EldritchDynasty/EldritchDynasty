@@ -210,7 +210,7 @@ events:
           chronicle: The herald had of us four generations and the acreage, and asked twice for the elder descent, and did not have it.
           effects: []
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: gave the herald four generations and the acreage, but not the elder descent }
+            - { kind: deed, target: { slot: HEAD }, text: 'gave the herald four generations and the acreage, but not the elder descent' }
         omit:
           chronicle: null
         embellish:
@@ -355,7 +355,7 @@ events:
           chronicle: The boundary at the assize was won on a ninety-year deed, and the four witnesses from Wick were bought by neither side in the end.
           effects: []
           claims:
-            - { kind: deed, target: { slot: KIN }, text: was cleared at the assize on a ninety-year deed, not on the witnesses }
+            - { kind: deed, target: { slot: KIN }, text: 'was cleared at the assize on a ninety-year deed, not on the witnesses' }
         omit:
           chronicle: null
         embellish:
