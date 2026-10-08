@@ -129,7 +129,7 @@ events:
           effects:
             - { kind: respect, delta: -1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: lost the Seal to the west line, which now calls itself senior }
+            - { kind: deed, target: { slot: HEAD }, text: 'lost the Seal to the west line, which now calls itself senior' }
         omit:
           chronicle: null
         embellish:
@@ -137,7 +137,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: kept the Seal in the house, in a trusted branch's keeping }
+            - { kind: deed, target: { slot: HEAD }, text: 'kept the Seal in the house, in a trusted branch''s keeping' }
           discrepancy:
             id: seal_keeping_lie
             severity: major
