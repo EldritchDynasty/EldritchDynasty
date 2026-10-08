@@ -221,7 +221,7 @@ events:
             house decided about him is written below. What he actually was is
             not written anywhere, because nobody ever established it.
           claims:
-            - { kind: deed, target: { slot: SON }, text: came back from Bramme nine years later warranted in Terra, with his identity unproved }
+            - { kind: deed, target: { slot: SON }, text: 'came back from Bramme nine years later warranted in Terra, with his identity unproved' }
         omit:
           chronicle: null
         embellish:
