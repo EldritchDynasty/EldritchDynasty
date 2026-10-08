@@ -91,3 +91,18 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// #601: write the version identity from the same Gradle configuration as the
+// actual bundle. The proof script never re-derives versionCode from CI variables.
+tasks.register('writeReleaseProofMetadata') {
+    dependsOn 'bundleRelease'
+    doLast {
+        def output = layout.buildDirectory.file('outputs/bundle/release/release-metadata.json').get().asFile
+        output.parentFile.mkdirs()
+        output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+            bundle: 'app-release.aab',
+            versionCode: androidVersionCode,
+            versionName: releaseName
+        ])) + '\n'
+    }
+}
