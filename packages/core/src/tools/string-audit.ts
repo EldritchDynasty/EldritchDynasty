@@ -22,7 +22,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { CONTENT_PROSE_KEYS, contentProseEntries } from '@ed/schema';
+import { CONTENT_PROSE_KEYS, contentInterpolationTokens, contentProseEntries, proseOriginalHash, ProseVariantS, type ProseVariant } from '@ed/schema';
 
 export { CONTENT_PROSE_KEYS } from '@ed/schema';
 
@@ -380,6 +380,89 @@ export function plainEnglishWorklist(repo: string): PlainEnglishWorkItem[] {
   ];
 }
 
+
+/**
+ * Actionable #415 migration queue. The old --plainenglish-worklist inventory
+ * remains unchanged; this report separates work still owed from reviewed
+ * counterparts. A changed Original invalidates its previously reviewed text.
+ */
+export type PlainEnglishCoverageStatus = 'missing' | 'stale' | 'invalid';
+
+export interface PlainEnglishCoverageRow extends PlainEnglishWorkItem {
+  status: PlainEnglishCoverageStatus;
+  /** Expected fingerprint to put in the next reviewed content variant's of field. */
+  expectedOf?: string;
+}
+
+export interface PlainEnglishCoverage {
+  total: number;
+  current: number;
+  missing: number;
+  stale: number;
+  invalid: number;
+  remaining: PlainEnglishCoverageRow[];
+}
+
+function equalInterpolationTokens(original: string, alternate: string): boolean {
+  const a = [...contentInterpolationTokens(original)].sort();
+  const b = [...contentInterpolationTokens(alternate)].sort();
+  return a.length === b.length && a.every((token, i) => token === b[i]);
+}
+
+/** Pure accounting, so a changed Original is caught without a filesystem fixture. */
+export function plainEnglishCoverageFor(
+  items: readonly PlainEnglishWorkItem[],
+  variants: readonly ProseVariant[],
+): PlainEnglishCoverage {
+  const byAddress = new Map(variants.map((variant) => [variant.address, variant]));
+  const result: PlainEnglishCoverage = {
+    total: items.length, current: 0, missing: 0, stale: 0, invalid: 0, remaining: [],
+  };
+  for (const item of items) {
+    const variant = byAddress.get(item.address);
+    const expectedOf = item.source === 'content' ? proseOriginalHash(item.text) : undefined;
+    let status: PlainEnglishCoverageStatus | 'current';
+    if (!variant) status = 'missing';
+    else if (expectedOf !== undefined && variant.of !== expectedOf) status = 'stale';
+    else if (variant.plainenglish === item.text
+      || !equalInterpolationTokens(item.text, variant.plainenglish)) status = 'invalid';
+    else status = 'current';
+
+    result[status]++;
+    if (status !== 'current') {
+      result.remaining.push({
+        ...item, status,
+        ...(expectedOf === undefined ? {} : { expectedOf }),
+      });
+    }
+  }
+  return result;
+}
+
+/**
+ * Count only variants physically stored in the YAML file named by the address.
+ * The assembly validator rejects misplaced/orphaned variants; the worklist
+ * must never credit one as done before that validation succeeds.
+ */
+export function plainEnglishCoverage(repo: string): PlainEnglishCoverage {
+  const content = join(repo, 'packages/content');
+  const variants: ProseVariant[] = [];
+  for (const file of walk(content, '', (f) => f.endsWith('.yaml') && f !== 'loci.yaml')) {
+    const document = parse(readFileSync(join(content, file), 'utf8')) as
+      | { proseVariants?: unknown }
+      | null;
+    const rows = document?.proseVariants;
+    if (!Array.isArray(rows)) continue;
+    for (const candidate of rows) {
+      const parsed = ProseVariantS.safeParse(candidate);
+      if (parsed.success && parsed.data.address.startsWith('content:' + file + '#')) {
+        variants.push(parsed.data);
+      }
+    }
+  }
+  return plainEnglishCoverageFor(plainEnglishWorklist(repo), variants);
+}
+
 export interface Totals { strings: number; words: number; interpolations: number; files: number }
 
 export function totalBy<K extends keyof StringCount>(rows: StringCount[], key: K): Map<StringCount[K], Totals> {
@@ -427,7 +510,9 @@ export function report(rows: StringCount[], opts: { files?: boolean } = {}): str
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('string-audit.ts');
 if (isMain) {
   const repo = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
-  if (process.argv.includes('--plainenglish-worklist')) {
+  if (process.argv.includes('--plainenglish-coverage')) {
+    console.log(JSON.stringify(plainEnglishCoverage(repo), null, 2));
+  } else if (process.argv.includes('--plainenglish-worklist')) {
     console.log(JSON.stringify(plainEnglishWorklist(repo), null, 2));
   } else {
     for (const line of report(auditRepository(repo), { files: process.argv.includes('--files') })) console.log(line);
