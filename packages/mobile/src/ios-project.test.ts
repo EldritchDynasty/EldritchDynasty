@@ -155,7 +155,7 @@ describe('Android release versionCode', () => {
       'def computedVersionCode = runNumber * versionCodeAttemptStride + runAttempt',
     );
 
-    const stride = Number(source.match(/def versionCodeAttemptStride = (\\d+)L/)?.[1]);
+    const stride = Number(source.match(/def versionCodeAttemptStride = (\d+)L/)?.[1]);
     expect(stride).toBeGreaterThan(2);
 
     const code = (run: number, attempt: number) => run * stride + attempt;
