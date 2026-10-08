@@ -131,7 +131,7 @@ function issueState(n) {
  * to close. Comparing against the latest eligible landing allows a genuinely
  * newer merged PR to close an issue reopened after an older merge.
  */
-function reopenVerdict(n, landedAtMs) {
+function reopenVerdict(n, landedAtMs, trustedMergeTime) {
   if (!Number.isFinite(landedAtMs) || landedAtMs <= 0) return 'UNKNOWN';
 
   let reopenings;
@@ -158,6 +158,10 @@ function reopenVerdict(n, landedAtMs) {
     typeof at !== 'string' || !at.trim() || !Number.isFinite(Date.parse(at)))) {
     return 'UNKNOWN';
   }
+  // Committer dates are supplied by the committer, not GitHub. A pushed
+  // commit with a future timestamp cannot prove it landed after a reopen.
+  // Only GitHub's PR merged_at may establish that ordering.
+  if (!trustedMergeTime && reopenings.length > 0) return 'UNKNOWN';
   return reopenings.some((at) => Date.parse(at) >= landedAtMs) ? 'REOPENED' : 'CLEAR';
 }
 
@@ -522,8 +526,12 @@ if (RANGE || RECENT_MERGED_PRS.length) {
   const remember = (n, source, landedAtMs) => {
     if (!Number.isFinite(landedAtMs) || landedAtMs <= 0) return;
     const previous = evidence.get(n);
-    if (!previous || landedAtMs > previous.landedAtMs
-      || (landedAtMs === previous.landedAtMs && source.startsWith('merged PR'))) {
+    const trusted = source.startsWith('merged PR');
+    const previousTrusted = previous?.source.startsWith('merged PR') ?? false;
+    // A GitHub PR merge timestamp always outranks a user-supplied commit
+    // timestamp; within the same evidence class use the latest landing.
+    if (!previous || (trusted && !previousTrusted)
+      || (trusted === previousTrusted && landedAtMs > previous.landedAtMs)) {
       evidence.set(n, { source, landedAtMs });
     }
   };
@@ -576,7 +584,7 @@ if (RANGE || RECENT_MERGED_PRS.length) {
     const { source, landedAtMs } = evidence.get(n);
     const state = issueState(n);
     if (state === 'OPEN') {
-      const verdict = reopenVerdict(n, landedAtMs);
+      const verdict = reopenVerdict(n, landedAtMs, source.startsWith('merged PR'));
       if (verdict === 'REOPENED') {
         say(`- kept #${n} open — reopened after ${source}`);
         continue;
