@@ -3,7 +3,7 @@ import { CONTENT_ROOT, loadContent } from '@ed/content';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import { asId, proseOriginalHash } from '@ed/schema';
+import { asId, ClaimS, proseOriginalHash } from '@ed/schema';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry,
   pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, visibleRecordView,
@@ -477,5 +477,81 @@ describe('Crusade chapel deed parsing (#584)', () => {
     });
     const variant = bundle.proseVariants.find((row) => row.address === address);
     expect(variant?.of).toBe(proseOriginalHash(fullText));
+  });
+});
+
+/**
+ * #587: YAML flow-map commas silently truncated twenty-two Record deeds.
+ * Keep the repair as an observable gameplay contract, not only a raw text edit.
+ * A future author may intentionally reword a deed but must update this fixture.
+ */
+describe('authored deed claims with internal commas (#587)', () => {
+  const repairedDeeds = [
+  "broke a company of raiders against these walls, unaided", // age_scoped
+  "came back from Bramme nine years later warranted in Terra, with his identity unproved", // arc_corran
+  "learned that the rod's rule of two had been tracking fire, not the blood", // arc_rod
+  "lost the Seal to the west line, which now calls itself senior", // arc_seal
+  "kept the Seal in the house, in a trusted branch's keeping", // arc_seal
+  "was sought out by the recruiting captain, and taken without payment", // careers
+  "was released with the thanks of his colonel, having been carried from the field", // careers
+  "reconsidered of his own wisdom, and the house prospered by it", // guardian
+  "declined the blood, choosing service over power", // marriage
+  "went to war with the house's men under another banner, not one of their own", // muster
+  "gave the herald four generations and the acreage, but not the elder descent", // papers
+  "was cleared at the assize on a ninety-year deed, not on the witnesses", // papers
+  "received the bottle as a gift, unbought", // portions
+  "engaged a physician of standing, rather than bought the flask", // portions
+  "learned the iron went soft in whatever room he sat in, not only the east chamber", // rare_blood
+  "answered nine days of the inquest, with every answer kept at Cawdry", // rare_church
+  "could not receive the relic, the chapel being under repair", // rare_church
+  "restored the house by the recall of its kin, in full number", // rare_house
+  "came from the Rimefell with no document, and had three generations bought for her at Bramme", // rare_match
+  "declined the foreign offer, the terms being unsuitable", // rare_match
+  "gave the Seal away as a gift, to a cousin of good blood", // rites
+  "agreed to be given by name as the vessel, and the house wrote her name down", // rites
+  ] as const;
+
+  it('loads all twenty-two complete deeds into the game', () => {
+    const deeds = bundle.events.flatMap((event) => [
+      ...(event.record?.options.record.claims ?? []),
+      ...(event.record?.options.embellish.claims ?? []),
+    ]).filter((claim) => claim.kind === 'deed').map((claim) => claim.text);
+    expect(repairedDeeds).toHaveLength(22);
+    for (const text of repairedDeeds) expect(deeds).toContain(text);
+  });
+
+  it('rejects a comma-truncated YAML flow claim instead of stripping the extra key', () => {
+    const malformed = parse(
+      '- { kind: deed, target: { slot: HEAD }, text: lost the Seal to the west line, which now calls itself senior }',
+    ) as unknown[];
+    expect(malformed).toHaveLength(1);
+    expect(malformed[0]).toMatchObject({
+      kind: 'deed',
+      text: 'lost the Seal to the west line',
+      'which now calls itself senior': null,
+    });
+    expect(ClaimS.safeParse(malformed[0]).success).toBe(false);
+
+    const fixed = parse(
+      '- { kind: deed, target: { slot: HEAD }, text: "lost the Seal to the west line, which now calls itself senior" }',
+    ) as unknown[];
+    expect(ClaimS.parse(fixed[0])).toMatchObject({
+      kind: 'deed',
+      text: 'lost the Seal to the west line, which now calls itself senior',
+    });
+  });
+
+  it('rejects unexpected authored keys for all four structured claim kinds', () => {
+    const target = { slot: 'HEAD' };
+    const samples = [
+      { kind: 'deed', target, text: 'kept the old chapel' },
+      { kind: 'death', target, cause: 'a fall' },
+      { kind: 'trait', target, trait: 'brave', has: true },
+      { kind: 'attr', target, attr: 'madness', value: 12 },
+    ];
+    for (const sample of samples) {
+      expect(ClaimS.safeParse(sample).success).toBe(true);
+      expect(ClaimS.safeParse({ ...sample, 'silent extra key': null }).success).toBe(false);
+    }
   });
 });
