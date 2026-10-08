@@ -119,9 +119,19 @@ export function chapterOf(ctx: SimCtx, ended: EndedAge): ChapterView | undefined
     .reduce((max, e) => Math.max(max, e.ended), founded);
   const to = ended.ended;
 
+  // A hidden Age has no name to render (and no missing translation to report).
+  // For named Ages this is a prospective read-model label, not a rewrite of
+  // the Chronicle page the family actually saved.
+  const file = ended.named ? ctx.content.sourceOf(ended.age) : undefined;
+  const name = !ended.named
+    ? undefined
+    : file === undefined
+      ? def.name
+      : renderContentProse(ctx, file, `ages[id=${encodeURIComponent(ended.age)}].name`, def.name);
+
   return {
     age: ended.age,
-    name: ended.named ? def.name : undefined,
+    name,
     register: def.register,
     from,
     to,
