@@ -202,7 +202,7 @@ events:
           effects:
             - { kind: respect, delta: -1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: learned the iron went soft in whatever room he sat in, not only the east chamber }
+            - { kind: deed, target: { slot: HEAD }, text: 'learned the iron went soft in whatever room he sat in, not only the east chamber' }
         omit:
           chronicle: null
         embellish:
