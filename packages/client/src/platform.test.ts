@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { bootstrap, saveGame } from '@ed/core';
+import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
 import {
@@ -13,6 +14,7 @@ import {
   type SmokeResult,
 } from './platform.js';
 import { mobileStorage } from '../../mobile/src/storage.js';
+import { readSave as readDesktopSave, saveRoot, writeSave as writeDesktopSave } from '../../shell/src/saves.mjs';
 
 function bridge(): Platform {
   return {
@@ -619,6 +621,43 @@ function mobilePreferenceStore(initial: Record<string, string> = {}) {
     async remove({ key }: { key: string }) { data.delete(key); },
   };
 }
+
+describe('Windows to Android saved-game transfer (Refs #322)', () => {
+  it('reads the real shell JSON from disk and continues bit-identically through mobile storage', async () => {
+    const content = loadContent();
+    const original = bootstrap(content, 32209, 1042, 'short');
+    runYears(original, 24);
+
+    // The Electron host writes a JSON file; the Capacitor host persists the
+    // imported JSON in Directory.Data. Exercise those real storage functions
+    // rather than two memoryPlatform mocks, without booting either native UI.
+    const userData = mkdtempSync(join(tmpdir(), 'ed-cross-host-'));
+    try {
+      const desktopRoot = saveRoot(userData);
+      const file = writeDesktopSave(desktopRoot, 'windows run', saveGame(original));
+      const transferJson = readFileSync(file, 'utf8');
+      const mobileFiles = mobileFileStore();
+      const android = mobileStorage(mobileFiles, mobilePreferenceStore());
+
+      await android.writeSave('imported Windows run', JSON.parse(transferJson));
+      expect(mobileFiles.data.get('eldritch/saves/imported%20Windows%20run.json'))
+        .toBe(transferJson);
+
+      const fromWindows = loadGame(readDesktopSave(desktopRoot, 'windows run'), content);
+      const fromAndroid = loadGame(await android.readSave('imported Windows run'), content);
+      runYears(original, 20);
+      runYears(fromWindows, 20);
+      runYears(fromAndroid, 20);
+
+      // The digest ignores serialization/property order but not simulation
+      // state. Both hosts must continue like the unpaused original timeline.
+      expect(digestOf(fromAndroid)).toBe(digestOf(fromWindows));
+      expect(digestOf(fromAndroid)).toBe(digestOf(original));
+    } finally {
+      rmSync(userData, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('mobile durable storage', () => {
   it('stores opaque saves and the Library in the app-owned Data directory', async () => {
