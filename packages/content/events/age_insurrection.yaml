@@ -269,3 +269,177 @@ events:
             id: the_declaration_lie
             severity: major
             provableBy: [house_ilm, house_calder]
+
+proseVariants:
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].title"
+    of: a1228806a2f58c92
+    plainenglish: >-
+      A Market Day Without News
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].body"
+    of: 960d4cba764850ce
+    plainenglish: >-
+      The road to Bramme is unusually quiet for market day. That is the first
+      sign that the government has stopped working. The Assembly has not met
+      since spring. The magistrate went to Cawdry and has not returned. The
+      assize court has been postponed, with no new date in writing. Orders from
+      Caster are still sent, but there is nobody here to enforce them. {HEAD} can
+      still settle local disputes for the eleven tenant farms, with help from the
+      reeve who knows every family. The higher court is no longer working. For
+      now, nobody in authority can challenge what the house decides. The road
+      remains quiet.
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].interaction.choices[id=keep_the_forms].label"
+    of: 3cfe52f3088832af
+    plainenglish: >-
+      Keep proper court records. When the courts return, they will remember who
+      did not.
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].interaction.choices[id=keep_the_forms].outcomes[id=kept].text"
+    of: 8d71b96a3ae24d7e
+    plainenglish: >-
+      Every judgement is dated, written down and witnessed by two tenants who
+      cannot read the record. When the assize court returns, it takes four years
+      to clear its backlog. It reviews this house's four years of decisions in a
+      single afternoon.
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].interaction.choices[id=settle_it_here].label"
+    of: f759403aef71210e
+    plainenglish: >-
+      Settle these disputes at the house gate this week.
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].interaction.choices[id=settle_it_here].outcomes[id=settled].text"
+    of: c534d28d333428d1
+    plainenglish: >-
+      The house settles three disputes within a month. Each would have waited two
+      years for the assize court. The village is pleased, but a Warden will later
+      have a name for the authority the house took.
+  - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].interaction.choices[id=settle_it_here].outcomes[id=overreached].text"
+    of: ca4e525cc3eb40e8
+    plainenglish: >-
+      One of the three people involved has a cousin in Cawdry. That cousin writes
+      down what happened and keeps the document. It survives long after everyone
+      who stood in the yard that day has died.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].title"
+    of: 6cea8178fa9f8c0c
+    plainenglish: >-
+      A Man Asks for Winter Shelter
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].body"
+    of: 5c81e23a9a7b1d7e
+    plainenglish: >-
+      The dogs do not bark when a man arrives at the gate. {HEAD} takes that to
+      mean the house has little reason to fear him. The man is forty years old
+      and soaked by the rain. He travels with a daughter and a steward, carrying
+      almost nothing. Six months ago, his name opened doors in three provinces.
+      He may regain that standing within five years. But if the wrong side wins
+      the rising, a Warden might later put someone on trial for sheltering him.
+      The man is not asking for money. He wants somewhere to stay for the winter,
+      and he asks the house to protect him. That may cost more than money. The
+      house has kept its gate open for ninety years.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=take_him_in].label"
+    of: 595ed361599c8855
+    plainenglish: >-
+      Give them shelter. Keep the gate open.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=take_him_in].outcomes[id=sheltered].text"
+    of: 1edac4f5b8903111
+    plainenglish: >-
+      They stay for eleven weeks, then leave when the weather warms. Four years
+      later, the man holds an official position again. He sends the house a short
+      letter of thanks. The letter is enough.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=take_him_in].outcomes[id=cost_it].text"
+    of: fc3dc669e33a2cb5
+    plainenglish: >-
+      They stay for eleven weeks, then leave when the weather warms. His side
+      loses the rising. For the next two generations, a file at Cawdry contains a
+      record linking this house to him.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=send_him_on].label"
+    of: 3d60dc85070e6309
+    plainenglish: >-
+      Give them food and a lantern, then send them to Bramme.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=send_him_on].outcomes[id=sent].text"
+    of: 0a4c32e606248a12
+    plainenglish: >-
+      The travellers receive food and a lantern before they set out along the
+      eleven-mile road to Bramme in the dark. At dinner, nobody at Ardwen
+      mentions turning them away. The silence makes everyone's feelings clear.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.subject"
+    of: dcddbe7e4d02b55a
+    plainenglish: >-
+      the man who asked the house for winter shelter
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.record.chronicle"
+    of: 7368e7aa5b1f550e
+    plainenglish: >-
+      A ruined house asked our house for shelter through the winter. Our house
+      gave the answer it chose.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.record.claims[0].text"
+    of: 1783ba7c26303970
+    plainenglish: >-
+      was asked to shelter a man from a ruined house for the winter at his gate
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.embellish.chronicle"
+    of: 55eb2153b45226c7
+    plainenglish: >-
+      During the worst winter of the rising, our house sheltered a powerful man
+      who was in danger. We took considerable risks and paid the costs ourselves.
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.embellish.claims[0].text"
+    of: 39a82b6a0ee7d016
+    plainenglish: >-
+      sheltered a banned house during the rising and paid the costs himself
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].title"
+    of: 31acb0ceb8c18b3a
+    plainenglish: >-
+      A Letter That Expects Loyalty
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].body"
+    of: a8ad489d0863e189
+    plainenglish: >-
+      A letter arrives by post relay from Caster, a journey of three days.
+      Sending it costs more than the paper itself. The letter does not ask the
+      house to make a choice. Instead, it politely praises the loyalty of the
+      houses of the Nethering and lists their names. The Eldritch House is on
+      that list, although nobody asked for its agreement. {HEAD} can write back
+      to correct the record or allow the house to be counted as loyal. There is
+      no way to reply without taking a side. A correction takes nine days to
+      reach Caster.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].interaction.choices[id=let_it_stand].label"
+    of: 9d50367b3b024c6f
+    plainenglish: >-
+      Leave the house on the list. Accept being counted.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].interaction.choices[id=let_it_stand].outcomes[id=counted].text"
+    of: 8092eb14ba277610
+    plainenglish: >-
+      The house remains on a list it did not help write. The list is copied twice
+      more before the end of the year. By the third copy, nobody remembers that
+      the house was never asked.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].interaction.choices[id=correct_it].label"
+    of: 25ded8706a41eacc
+    plainenglish: >-
+      Write a correction, even though delivery takes nine days.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].interaction.choices[id=correct_it].outcomes[id=corrected].text"
+    of: 3a485b710b5d588d
+    plainenglish: >-
+      The correction arrives and is filed away. Nobody important reads it until
+      the matter becomes important. By then, sending the correction has proved
+      worth the nine days it took.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].interaction.choices[id=correct_it].outcomes[id=too_late].text"
+    of: c70ed0027241a72e
+    plainenglish: >-
+      The correction arrives four days after the list has been sent to the
+      heralds. Because it arrives after the official list, people read it as
+      proof that the house has changed its mind.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.subject"
+    of: aa9399c331fb8b3f
+    plainenglish: >-
+      the list sent from Caster
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.record.chronicle"
+    of: e9ca83a282d3be36
+    plainenglish: >-
+      Officials at Caster made a list of loyal houses and put our house on it
+      without asking us.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.record.claims[0].text"
+    of: a22ae850173f2564
+    plainenglish: >-
+      was put on Caster's list of loyal houses without being asked
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.embellish.chronicle"
+    of: 369838cddbc446d1
+    plainenglish: >-
+      In the first year of the rising, our house declared its loyalty to the
+      Crown at Caster, before neighbouring houses had decided which side to
+      support.
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.embellish.claims[0].text"
+    of: 6230bc8376b0c8f7
+    plainenglish: >-
+      declared loyalty to the Crown in the first year of the rising
