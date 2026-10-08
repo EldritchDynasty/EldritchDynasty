@@ -475,6 +475,52 @@ describe('the janitor', () => {
     }
   });
 
+  it('recovers recent merged-PR closings after the original push sweep was lost', () => {
+    const f = rebasedFixture();
+    try {
+      const recently = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const tooOld = new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString();
+      const pr = {
+        ...prEvidence(f.agent, f.head, { merged_at: recently }),
+        body: 'Closes #701.\nCloses #701.\nRefs #702.\nPart of #703.\nDoes not close #704.',
+      };
+      const rejected = [
+        { ...pr, number: 901, merged_at: tooOld, body: 'Closes #705.' },
+        { ...pr, number: 902, base: { ref: 'release', repo: { full_name: 'acme/repo' } }, body: 'Closes #706.' },
+        { ...pr, number: 903, head: { ...pr.head, repo: { full_name: 'other/repo' } }, body: 'Closes #707.' },
+        { ...pr, number: 904, merged_at: null, body: 'Closes #708.' },
+      ];
+
+      // A scheduled run has no JANITOR_RANGE. Previously it could never
+      // recover closures whose landing push crashed or was cancelled.
+      const scheduled = janitor(f.sweep, {
+        ...withPrEvidence([pr, ...rejected]),
+        GITHUB_STEP_SUMMARY: '',
+      });
+      expect(scheduled.code).toBe(0);
+      expect(scheduled.out).toContain('### Issues from recent merged PRs');
+      expect(scheduled.out).toContain('#701 named by merged PR #900 (48h retry)');
+      for (const n of [702, 703, 704, 705, 706, 707, 708]) {
+        expect(scheduled.out).not.toContain(`#${n} named by`);
+      }
+
+      // A later successful push only sees its NEW range; the earlier PR
+      // still needs to be considered, but only once in the issue map.
+      const from = git(f.sweep, 'rev-parse', 'origin/main~1');
+      const to = git(f.sweep, 'rev-parse', 'origin/main');
+      const nextPush = janitor(f.sweep, {
+        ...withPrEvidence([pr, ...rejected]),
+        GITHUB_STEP_SUMMARY: '',
+        JANITOR_RANGE: `${from}..${to}`,
+      });
+      expect(nextPush.code).toBe(0);
+      expect(nextPush.out).toContain('#701 named by merged PR #900 (48h retry)');
+      expect((nextPush.out.match(/#701 named by/g) ?? []).length).toBe(1);
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
   it('drains a proven merged backlog in deterministic bounded batches', () => {
     const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-bounded-backlog-'));
     try {
