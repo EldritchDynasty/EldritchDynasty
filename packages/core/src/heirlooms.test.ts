@@ -125,6 +125,10 @@ describe('applying an heirloom is generic', () => {
     expect(plainPage.title).toBe('The Seal in Plain English');
     expect(plainPage.text).toBe(`${bearer.name} pressed the seal into wax.`);
     expect(missingPlainEnglish(ctx)).toEqual([]);
+    // The reading preference affects words, not how many times the reusable
+    // seal was spent or who wore it.
+    expect(ctx.world.heirlooms.get(def.id)?.spent).toBe(false);
+    expect(ctx.world.heirlooms.get(def.id)?.usedOn).toHaveLength(2);
 
     setProseMode(ctx, 'original');
     expect(ctx.world.chronicle.slice(-2)).toEqual([originalPage, plainPage]);
