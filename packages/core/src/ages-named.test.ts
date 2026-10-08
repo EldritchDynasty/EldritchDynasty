@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { loadGame, makeRng, saveGame, testWorld, tickAges } from '@ed/core';
+import { loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
 const bundle = loadContent();
@@ -132,5 +132,62 @@ describe('a finished Age remembers whether it was named', () => {
     const done = back.world.age.ended.find((e) => e.age === age)!;
     expect(done.named).toBe(false);
     expect(done.namedAt).toBeUndefined();
+  });
+});
+
+describe('prospective Age-opening prose (#580)', () => {
+  const age = 'the_plague';
+  const address = 'content:ages/ages.yaml#ages[id=the_plague].opening';
+
+  it('uses the authored variant only for new opening views and never changes the save', () => {
+    const ctx = testWorld(bundle, 5800, 1042);
+    const def = ctx.content.age(age)!;
+    expect(ctx.content.sourceOf(age)).toBe('ages/ages.yaml');
+    const original = openingOf(ctx, age)!;
+    expect(original.text).toBe(def.opening);
+    expect(original.age).toBe(age);
+    expect(original.register).toBe(def.register);
+    const saved = JSON.stringify(saveGame(ctx));
+
+    setProseVariants(ctx, [{
+      address,
+      plainenglish: 'The fever did not care which families had power.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const plain = openingOf(ctx, age)!;
+    expect(plain.text).toBe('The fever did not care which families had power.');
+    expect(plain.register).toBe(original.register);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+
+    setProseMode(ctx, 'original');
+    expect(openingOf(ctx, age)!.text).toBe(def.opening);
+    expect(plain.text).toBe('The fever did not care which families had power.');
+    expect(original.text).toBe(def.opening);
+  });
+
+  it('falls back to Original when an Age has no counterpart and reports the gap', () => {
+    const ctx = testWorld(bundle, 5801, 1042);
+    setProseMode(ctx, 'plainenglish');
+    expect(openingOf(ctx, age)!.text).toBe(ctx.content.age(age)!.opening);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+    expect(openingOf(ctx, 'no_such_age')).toBeUndefined();
+  });
+
+  it('does not rewrite Chronicle wording that was already recorded', () => {
+    const ctx = testWorld(bundle, 5802, 1042);
+    const earlierWords = 'The older Chronicle recorded these exact words.';
+    ctx.world.chronicle.push({
+      year: 1042, weight: 'paragraph', named: false, text: earlierWords,
+    });
+    const savedBeforeMode = JSON.stringify(saveGame(ctx));
+    setProseVariants(ctx, [{ address, plainenglish: 'Different opening wording.' }]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(openingOf(ctx, age)!.text).toBe('Different opening wording.');
+    expect(ctx.world.chronicle.at(-1)!.text).toBe(earlierWords);
+    expect(JSON.stringify(saveGame(ctx))).toBe(savedBeforeMode);
+    const loaded = loadGame(saveGame(ctx), bundle);
+    expect(loaded.world.chronicle.at(-1)!.text).toBe(earlierWords);
   });
 });
