@@ -309,3 +309,215 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_missing_stave, accuracy: 0.55 }
     rumour: { id: rumour_the_missing_stave, accuracy: 0.4, spread: 1 }
+
+
+# Plain English counterparts for the five Long Peace events (#567).
+proseVariants:
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].title"
+    of: ea9a5b0c9219fe08
+    plainenglish: >-
+      Sixteen People at a Nine-Person Table
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].body"
+    of: 84bcce57f1e0709b
+    plainenglish: >-
+      The long room is much noisier than it was twenty years ago. {STEWARD} counts sixteen
+      people at a table built for nine. Nobody has died, not even in war or fever. Three
+      harvests have been good. Sons who might once have become soldiers or died are now
+      thirty-year-old men arguing about where to sit. The food stores are full and the roof
+      leaks, but neither causes the arguments. The house has enough supplies. It does not
+      have enough room.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].interaction.choices[id=portion_them_out].label"
+    of: 1f4615e310fbd877
+    plainenglish: >-
+      Give some of them their portions now. Paying dowries is cheaper than future quarrels.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].interaction.choices[id=portion_them_out].outcomes[id=placed].text"
+    of: 22a2562ef0a7da2a
+    plainenglish: >-
+      Four people leave within two years. The table has room again. Providing their portions
+      costs more than anyone admitted it would.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].interaction.choices[id=let_it_ride].label"
+    of: cc44673799dac45b
+    plainenglish: >-
+      Leave everyone where they are. A crowded hall is not an emergency.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].interaction.choices[id=let_it_ride].outcomes[id=crowded].text"
+    of: 255d239a5a5ebe76
+    plainenglish: >-
+      There is no emergency. Instead, eleven small disputes develop, all supposedly about
+      the seating.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].interaction.choices[id=let_it_ride].outcomes[id=settled].text"
+    of: a0d64b1b21bb3be7
+    plainenglish: >-
+      Two people solve their own disagreements without help. Doing nothing works this time,
+      but the house cannot rely on it working again.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].record.subject"
+    of: 36caafda342a0526
+    plainenglish: >-
+      the years when the hall was overcrowded
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].record.options.record.chronicle"
+    of: f8797dd2656f61be
+    plainenglish: >-
+      Sixteen people sat at a table built for nine. Four were given portions and sent away
+      because the house had no room for them.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].record.options.record.claims[0].text"
+    of: 9d03b996f18990c2
+    plainenglish: >-
+      gave four people their portions because sixteen could not fit at the table
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].record.options.embellish.chronicle"
+    of: 42c1720199375a85
+    plainenglish: >-
+      The house was full during these years. It generously provided for four family members
+      and sent them to live elsewhere in the province.
+  - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].record.options.embellish.claims[0].text"
+    of: 3c9240e17be08e95
+    plainenglish: >-
+      provided portions for four children of the house within one decade
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].title"
+    of: e85567ea214371c6
+    plainenglish: >-
+      Four Miles of Damaged Gravel Road
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].body"
+    of: 205eb1472565f2db
+    plainenglish: >-
+      The cart from the smaller house makes noise on all four miles of damaged gravel.
+      {CADET} arrives at noon but does not complain about the road. He discusses the mill,
+      the tithe and the west pasture, which he has raised twice before. Beneath those
+      complaints is the road, which has not been repaired since his grandfather's childhood.
+      Peace allows repairs to be postponed. Nothing forces the house to do the work, and the
+      delays now cost hours of travel. The road is still four miles long.
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].absentBody"
+    of: a150770f9aa19823
+    plainenglish: >-
+      The cart from the smaller house makes noise on all four miles of damaged gravel. It
+      brings the tithe, a letter about the mill and another question about the west pasture.
+      That question has already been asked twice. None of the messages mentions the road.
+      During peace the house can keep postponing repairs, and the delays now cost hours of
+      travel. The road is still four miles long.
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].interaction.choices[id=mend_it].label"
+    of: 850c46629de8428e
+    plainenglish: >-
+      Repair the road. It is four miles of gravel.
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].interaction.choices[id=mend_it].outcomes[id=mended].text"
+    of: 2f9ff07bba1f0b77
+    plainenglish: >-
+      The repair takes one season, eleven workers from Wick and more cart transport than
+      estimated. The journey from the smaller house now takes an hour and a quarter. Nobody
+      comments on the improvement.
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].interaction.choices[id=leave_it].label"
+    of: ac07afb2f4f72616
+    plainenglish: >-
+      Do not repair it. The work can wait until next year.
+  - address: "content:events/age_long_peace.yaml#events[id=the_road_nobody_mends].interaction.choices[id=leave_it].outcomes[id=left].text"
+    of: f98fa4b473cf5ce8
+    plainenglish: >-
+      The house keeps postponing the repairs, as it has for thirty years. The people at the
+      smaller house have begun counting how long they have waited.
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].title"
+    of: bf60eb647bf91528
+    plainenglish: >-
+      A Year When Nobody Needs Your House
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].body"
+    of: fa347d1223630d7e
+    plainenglish: >-
+      The notary in Bramme is bored, which shows how little competition there is for
+      marriages. Six provincial houses have daughters available this year; four have already
+      written to ask about matches. In a difficult year, a marriage might secure grain,
+      protection, influence at the assize or someone's silence. This year it secures only a
+      wedding. {HEAD} can make a good, inexpensive match now or wait for marriages to become
+      more valuable. But the Long Peace has already lasted through two Heads and may
+      continue through a third. Many matches are available, but none is urgently needed.
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].interaction.choices[id=buy_cheap].label"
+    of: 1d428360cf21627c
+    plainenglish: >-
+      Make the marriage arrangement while it costs little.
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].interaction.choices[id=buy_cheap].outcomes[id=bought].text"
+    of: 3074f3ef0ef73143
+    plainenglish: >-
+      The terms are favourable and the wedding is small. People across the province notice
+      both. A cheap marriage made in a prosperous year wins the house little admiration.
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].interaction.choices[id=hold_out].label"
+    of: f47b33751aac44d9
+    plainenglish: >-
+      Wait. A marriage should also benefit the house at the other family's expense.
+  - address: "content:events/age_long_peace.yaml#events[id=the_flat_market].interaction.choices[id=hold_out].outcomes[id=waited].text"
+    of: 80e6acf7fecb7cdb
+    plainenglish: >-
+      The house waits. The Long Peace continues for another two years. By the third year,
+      the daughters from those six houses have married elsewhere.
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].title"
+    of: 9ee4e4957e61a4c1
+    plainenglish: >-
+      The Third Reading of the Roll
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].body"
+    of: 43c4640c440cbd38
+    plainenglish: >-
+      The heralds' clerk is polite, the room is cold and the meeting lasts less than an
+      hour. At Caster, the Roll of Houses is read every seven years. For the third reading
+      in a row, the Eldritch House remains at exactly the same rank. It has not fallen, but
+      it has not risen. The smaller house will discuss this for years: during three
+      prosperous periods, the family has held its position because it owns land, not because
+      anyone achieved something new. {HEAD} must write this year's chronicle but has little
+      to report. The clerk asks whether there is anything to add.
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].interaction.outcomes[id=read_out].text"
+    of: 4af73c2683c3fd7a
+    plainenglish: >-
+      The clerk reads the house's name at the same rank as before, then continues to House
+      Calder without stopping.
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.subject"
+    of: 138dba983fb6672c
+    plainenglish: >-
+      the third reading of the list of houses
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.record.chronicle"
+    of: dfda28a5b24f8c89
+    plainenglish: >-
+      At Caster, the Roll was read and our house kept the same rank it held at the previous
+      two readings.
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.record.claims[0].text"
+    of: baa936c75d2d16eb
+    plainenglish: >-
+      kept the house at the same rank through three readings of the Roll
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.embellish.chronicle"
+    of: a0e8374cbef124e8
+    plainenglish: >-
+      At Caster, our house was named among the houses that set the standard for the
+      province, and everyone heard it.
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.embellish.claims[0].text"
+    of: 31fb79237a7607af
+    plainenglish: >-
+      was named at Caster among the leading houses of the province
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].title"
+    of: 729ff902f691223e
+    plainenglish: >-
+      The Song Verse Nobody Removed
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].body"
+    of: 89c23d3ad9e06bfe
+    plainenglish: >-
+      Nothing important has happened for sixty years. The hall is warm and full, people
+      share a second cup and nobody has died this year. {SINGER} sings the familiar long
+      song about a road, two men and the weather. Everyone has known it since childhood. The
+      seventh of its eleven verses names a term of years and something counted from the
+      signing date. That line has stayed in the song for two hundred years, partly because
+      it rhymes. {HEAD} has read the contract, but nobody else at the table has read it or
+      thought to do so. The song's line matches the contract exactly.
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].interaction.choices[id=say_nothing_and_listen].label"
+    of: 92f33338fc062b4c
+    plainenglish: >-
+      Say nothing while the song ends, then ask the singer to speak with you.
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].interaction.choices[id=say_nothing_and_listen].outcomes[id=written_down].text"
+    of: 05f3f9105bd06a74
+    plainenglish: >-
+      The singer gladly recites all eleven verses. He only knows that his mother taught them
+      to him. Four verses make no sense and three describe the weather. The seventh contains
+      a contract clause. Tenants have heard people sing it at this table twice a year
+      without knowing it was about anything more than a road.
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].interaction.choices[id=have_it_dropped].label"
+    of: 433054370999a193
+    plainenglish: >-
+      Quietly remove the seventh verse from the song from now on.
+  - address: "content:events/age_long_peace.yaml#events[id=the_stave_nobody_edited].interaction.choices[id=have_it_dropped].outcomes[id=dropped].text"
+    of: 56c311383d162064
+    plainenglish: >-
+      The seventh verse disappears from the song within one season and from the valley
+      within thirty years. The Wayfolk who knew it die without teaching it to anyone. By the
+      fourth generation, everyone believes the long song always had ten verses. The house
+      has destroyed the only surviving copy of something it did not know it owned. At the
+      time, that seemed like a cautious decision.
