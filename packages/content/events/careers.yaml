@@ -137,7 +137,7 @@ events:
             # with the body for the next ten years. If he serves them, it stops
             # being a lie, which is the best thing a lie in this game can do.
             - { kind: trait, target: { slot: SON }, trait: hardened_by_the_line, has: true }
-            - { kind: deed, target: { slot: SON }, text: was sought out by the recruiting captain, and taken without payment }
+            - { kind: deed, target: { slot: SON }, text: 'was sought out by the recruiting captain, and taken without payment' }
           discrepancy:
             id: the_coat_that_was_bought
             severity: minor
@@ -561,7 +561,7 @@ events:
             # The claim does, which is the point: a house that says this about a
             # man who came home early has said something the record can check.
             - { kind: trait, target: { slot: VETERAN }, trait: hardened_by_the_line, has: true }
-            - { kind: deed, target: { slot: VETERAN }, text: was released with the thanks of his colonel, having been carried from the field }
+            - { kind: deed, target: { slot: VETERAN }, text: 'was released with the thanks of his colonel, having been carried from the field' }
           discrepancy:
             id: what_happened_to_the_horse
             severity: minor
