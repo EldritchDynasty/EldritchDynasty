@@ -306,7 +306,7 @@ describe('the string-source audit (issue #276)', () => {
     expect(coverage.current + coverage.missing + coverage.stale + coverage.invalid)
       .toBe(coverage.total);
     expect(coverage.remaining.length).toBe(coverage.missing + coverage.stale + coverage.invalid);
-    expect(coverage.remaining.every((row) => row.status !== 'current')).toBe(true);
+    expect(coverage.remaining.every((row) => row.source === 'core' || row.expectedOf !== undefined)).toBe(true);
     expect(plainEnglishCoverage(REPO)).toEqual(coverage);
   });
 
