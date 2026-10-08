@@ -1,5 +1,5 @@
 import type { Content } from './content-index.js';
-import { contentInterpolationTokens } from './prose.js';
+import { contentInterpolationTokens, isContentProseField } from './prose.js';
 import type { Issue, ValidationRule } from './validate.js';
 
 /**
@@ -47,19 +47,28 @@ export function proseOriginalAt(content: Content, address: string): string | und
   const file = parsed[1]!;
   const parts = parsed[2]!.split('.');
   let current: unknown = content.bundle;
+  let finalKey = '';
 
   for (let i = 0; i < parts.length; i++) {
     const segment = SEGMENT.exec(parts[i]!);
     if (!segment || !current || typeof current !== 'object' || Array.isArray(current)) return undefined;
 
-    current = (current as Record<string, unknown>)[segment[1]!];
+    finalKey = segment[1]!;
+    current = (current as Record<string, unknown>)[finalKey];
     const identityField = segment[2] as 'id' | 'key' | undefined;
     const identityValue = segment[3];
     const indexText = segment[4];
 
     if (identityField !== undefined && identityValue !== undefined) {
       if (!Array.isArray(current)) return undefined;
-      const wanted = decodeURIComponent(identityValue);
+      // An author can type an invalid percent escape; a validator must report
+      // a bad address rather than aborting the whole content validation pass.
+      let wanted: string;
+      try { wanted = decodeURIComponent(identityValue); }
+      catch (error) {
+        if (error instanceof URIError) return undefined;
+        throw error;
+      }
       current = current.find((item) => (
         item !== null
         && typeof item === 'object'
@@ -80,7 +89,10 @@ export function proseOriginalAt(content: Content, address: string): string | und
     }
   }
 
-  return typeof current === 'string' ? current : undefined;
+  // Resolving an arbitrary string (e.g. event.id) is not enough: it must
+  // be a narrative prose field the shared #411 worklist can actually author.
+  return typeof current === 'string' && isContentProseField(finalKey, current)
+    ? current : undefined;
 }
 
 function sameTokens(a: string, b: string): boolean {
