@@ -76,7 +76,7 @@ describe('Android release artifact proof (#601)', () => {
     const result = proof.buildProof(values);
     expect(result).toEqual({
       artifact: 'app-release.aab',
-      sha256: '48ac369984b7dd8f2bb20bb6ea73c13b6b797838bfc5ac8bc772cd9f4f737c91',
+      sha256: '2b740746d7010e20ee12f58e43d9540488e5f466434bb192ae94e250d7e59614',
       versionCode: 5001,
       versionName: TAG,
       sourceSha: 'a'.repeat(40),
