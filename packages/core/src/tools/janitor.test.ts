@@ -610,6 +610,55 @@ describe('the janitor', () => {
     }
   });
 
+  it('never lets a future-dated commit override GitHub merge or reopening evidence', () => {
+    const f = rebasedFixture();
+    try {
+      git(f.sweep, 'config', 'user.email', 'a@example.com');
+      git(f.sweep, 'config', 'user.name', 'a');
+      // Commit dates are under the author's control. This one is deliberately
+      // newer than the reopening, despite its PR having merged before it.
+      const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      gitWithEnv(f.sweep, {
+        GIT_AUTHOR_DATE: future,
+        GIT_COMMITTER_DATE: future,
+      }, 'commit', '-q', '--allow-empty', '-m', 'Closes #730');
+      const before = git(f.sweep, 'rev-parse', 'HEAD~1');
+      const after = git(f.sweep, 'rev-parse', 'HEAD');
+      git(f.sweep, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+
+      const oldMerge = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const reopened = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const baseEnv = {
+        DRY_RUN: '1',
+        GITHUB_STEP_SUMMARY: '',
+        GITHUB_REPOSITORY: 'acme/repo',
+        JANITOR_RANGE: `${before}..${after}`,
+        JANITOR_ISSUES_JSON: JSON.stringify({
+          730: { state: 'OPEN', reopenings: [reopened] },
+        }),
+      };
+
+      // Direct commit timestamps alone cannot establish a new trusted close.
+      const withoutPr = janitor(f.sweep, baseEnv);
+      expect(withoutPr.code).toBe(0);
+      expect(withoutPr.out).toContain('kept #730 open — reopening history UNKNOWN');
+      expect(withoutPr.out).not.toContain('would: gh issue close 730');
+
+      // A genuine merged PR is the stronger timestamp, even if its merge
+      // precedes the authored commit's intentionally false future date.
+      const pr = {
+        ...prEvidence(f.agent, f.head, { merged_at: oldMerge }),
+        body: 'Closes #730.',
+      };
+      const withPr = janitor(f.sweep, { ...baseEnv, ...withPrEvidence([pr]) });
+      expect(withPr.code).toBe(0);
+      expect(withPr.out).toContain('kept #730 open — reopened after merged PR #900');
+      expect(withPr.out).not.toContain('would: gh issue close 730');
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
   it('drains a proven merged backlog in deterministic bounded batches', () => {
     const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-bounded-backlog-'));
     try {
