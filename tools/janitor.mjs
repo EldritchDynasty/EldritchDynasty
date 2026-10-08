@@ -60,6 +60,11 @@ const RANGE = readRange((process.env.JANITOR_RANGE ?? '').trim());
 const REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
 const DEFAULT_BRANCH = process.env.JANITOR_DEFAULT_BRANCH ?? 'main';
 const RECONCILE_MERGED_PRS = process.env.JANITOR_RECONCILE_MERGED_PRS === '1';
+// A failed/cancelled push sweep must not permanently lose its closing evidence.
+// Keep the recovery window bounded, and avoid hydrating old PR bodies.
+const MERGED_PR_RETRY_HOURS = 48;
+const MERGED_PR_RETRY_CUTOFF_MS = Date.now() - MERGED_PR_RETRY_HOURS * 60 * 60 * 1000;
+const RECENT_MERGED_PRS = [];
 const CWD = process.cwd();
 
 /**
@@ -180,6 +185,10 @@ function mergedPullRequestLandingHeads() {
     if (pr.head?.repo?.full_name !== REPOSITORY) return;
     if (typeof pr.head?.ref !== 'string' || typeof pr.head?.sha !== 'string') return;
     landed.set(`${pr.head.ref}\0${pr.head.sha}`, Number(pr.number) || '?');
+    const mergedAt = Date.parse(pr.merged_at);
+    if (Number.isFinite(mergedAt) && mergedAt >= MERGED_PR_RETRY_CUTOFF_MS) {
+      RECENT_MERGED_PRS.push(pr);
+    }
   };
 
   const fixture = DRY ? (process.env.JANITOR_MERGED_PRS_JSON ?? '') : '';
@@ -203,16 +212,18 @@ function mergedPullRequestLandingHeads() {
   const endpoint =
     `/repos/${REPOSITORY}/pulls?state=closed&base=${encodeURIComponent(DEFAULT_BRANCH)}&per_page=100`;
 
-  // Do not capture the REST objects themselves. At the current repository size
-  // one 100-PR page is already >1 MiB, enough to trip spawnSync's default
-  // maxBuffer before --paginate reaches page two. Have gh/jq discard everything
-  // except the seven scalar fields this proof needs, one TSV record per merged
-  // PR, so Node only captures a few tens of KiB even across the full history.
+  // Do not capture full REST objects: a 100-PR page exceeds spawnSync's
+  // default maxBuffer. Project seven scalar fields and only the BASE64-encoded
+  // bodies of PRs merged in the last 48 hours, for bounded closing recovery.
+  // Older PRs have an empty eighth field; their bodies never enter Node.
+  const retryCutoffSeconds = Math.floor(MERGED_PR_RETRY_CUTOFF_MS / 1000);
   const projection = [
     '.[]',
     '| select(.merged_at != null)',
     '| [.number, .merged_at, .base.ref, .base.repo.full_name,',
-    '   .head.ref, .head.sha, .head.repo.full_name]',
+    '   .head.ref, .head.sha, .head.repo.full_name,',
+    `   (if (.merged_at | fromdateiso8601) >= ${retryCutoffSeconds}`,
+    '    then (.body // "" | @base64) else "" end)]',
     '| @tsv',
   ].join(' ');
   const r = spawnSync('gh', [
@@ -232,17 +243,18 @@ function mergedPullRequestLandingHeads() {
 
   for (const line of (r.stdout ?? '').split('\n').filter(Boolean)) {
     const fields = line.split('\t');
-    if (fields.length !== 7) {
+    if (fields.length !== 8) {
       reconciliationFailed = true;
       log(`branch reconciliation: invalid projected PR record with ${fields.length} fields`);
       continue;
     }
-    const [number, mergedAt, baseRef, baseRepo, headRef, headSha, headRepo] = fields;
+    const [number, mergedAt, baseRef, baseRepo, headRef, headSha, headRepo, encodedBody] = fields;
     remember({
       number,
       merged_at: mergedAt || null,
       base: { ref: baseRef, repo: { full_name: baseRepo } },
       head: { ref: headRef, sha: headSha, repo: { full_name: headRepo } },
+      body: encodedBody ? Buffer.from(encodedBody, 'base64').toString('utf8') : '',
     });
   }
 
@@ -445,9 +457,9 @@ say(`${MERGED.size} deleted, ${kept} left standing.`);
 //    diverge.
 // ---------------------------------------------------------------------------
 const NAMED = new Set();
-if (RANGE) {
+if (RANGE || RECENT_MERGED_PRS.length) {
   say('');
-  say('### Issues named by this push');
+  say(RANGE ? '### Issues named by this push' : '### Issues from recent merged PRs');
 
   /** issue -> the strongest auditable source seen in this push */
   const evidence = new Map();
@@ -455,14 +467,30 @@ if (RANGE) {
     if (!evidence.has(n) || source.startsWith('merged PR')) evidence.set(n, source);
   };
 
-  const body = gitOut('log', '--format=%B', RANGE);
-  for (const n of closingIssues(body)) remember(n, 'landing commit');
+  if (RANGE) {
+    const body = gitOut('log', '--format=%B', RANGE);
+    for (const n of closingIssues(body)) remember(n, 'landing commit');
+  }
+
+  // Replay the recent merged-PR inventory on every run, including schedules.
+  // This recovers closes skipped by a failed or cancelled landing-push sweep.
+  // The same positive-keyword and same-repo/default-branch checks still apply.
+  for (const pr of RECENT_MERGED_PRS) {
+    for (const n of mergedPrClosingIssues(pr, {
+      repository: REPOSITORY,
+      defaultBranch: DEFAULT_BRANCH,
+    })) {
+      remember(n, `merged PR #${pr.number} (48h retry)`);
+    }
+  }
 
   // Native merge queue may rebase a PR without copying its body to any commit.
   // Ask GitHub which PRs own each newly-landed commit, then apply the SAME
   // affirmative/negated parser used by PR admission. Only merged PRs targeting
   // this repository's default branch can contribute evidence.
-  const commits = gitOut('rev-list', '--reverse', RANGE).split('\n').filter(Boolean);
+  const commits = RANGE
+    ? gitOut('rev-list', '--reverse', RANGE).split('\n').filter(Boolean)
+    : [];
   for (const sha of commits) {
     for (const pr of mergedPullRequestsForCommit(sha)) {
       const closings = mergedPrClosingIssues(pr, {
