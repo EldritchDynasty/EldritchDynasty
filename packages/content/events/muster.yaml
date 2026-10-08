@@ -622,7 +622,7 @@ events:
             own, and this is the number that went and the number that came
             back, and the second number is the smaller.
           claims:
-            - { kind: deed, target: { slot: OFFICER }, text: went to war with the house's men under another banner, not one of their own }
+            - { kind: deed, target: { slot: OFFICER }, text: 'went to war with the house''s men under another banner, not one of their own' }
         omit:
           chronicle: null
         embellish:
