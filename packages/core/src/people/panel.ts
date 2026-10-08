@@ -3,6 +3,7 @@ import { ageAt } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { LineCensus, MatchCard } from './match.js';
 import { bloodWomenOf, lineWomen } from './match.js';
+import { proseForTale } from '../prose.js';
 
 /**
  * THE MATCHMAKER'S PANEL (issue #68) — WHAT IS OBSERVED, NEVER WHAT IS TRUE.
@@ -371,7 +372,7 @@ function readSaid(ctx: SimCtx, house: string, pages: ChronicleEntry[]): PanelSay
     const state = w.tales.get(t.id);
     if (!state?.circulating || seen.has(t.id)) return;
     seen.add(t.id);
-    out.push({ tale: t.id, teller: t.teller, bias: t.bias, text: t.text });
+    out.push({ tale: t.id, ...proseForTale(ctx, t) });
   };
 
   for (const eventId of events) for (const t of ctx.content.talesAbout(eventId)) take(t);
