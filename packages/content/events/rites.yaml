@@ -191,6 +191,142 @@ events:
     rumour: { id: rumour_the_bricked_room, accuracy: 0.2, spread: 1 }
     accounts: [ballad_of_the_ninth_day, a_scholars_footnote]
 
+  # #518: rare forced-Awakening rites, using the existing awakening gate.
+  # Only a young unwoken expressing male can be offered either ceremony.
+  # The full ritual risks death, and its surviving branch costs Madness;
+  # abandoning it carries an ordinary and lasting nursing bill.
+  - id: the_seven_lamp_vigil
+    title: The Seven-Lamp Vigil
+    tier: individual
+    frequency: rare
+    weight: 240
+    repeatable: true
+    tags: [ritual, awakening, madness]
+    purposes: [test_magic_rule, force_record_choice, plant_rumour]
+    slots:
+      HEAD: { role: head }
+      CHILD:
+        role: unwoken
+        filters: [{ sex: male }, { canExpress: true }, { age: { op: gte, value: 7 } }, { age: { op: lte, value: 15 } }]
+    body: >-
+      The seven lamps have been trimmed and set around the bed, and for seven
+      nights {CHILD} is to be kept from sleep. {HEAD} has paid for the oil
+      and dismissed the servants who ask what the light is for. The instruction
+      names the number of nights but is silent about the morning after.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_the_lamps
+          label: Keep every lamp alight until the seventh dawn.
+          outcomes:
+            - id: woke
+              weight: 68
+              text: >-
+                At the seventh dawn he answers a question nobody has spoken.
+                He knows what was asked. His hands will not be still again.
+              effects:
+                - { kind: awakening, target: { slot: CHILD } }
+                - { kind: madness, target: { slot: CHILD }, delta: 18 }
+            - id: died
+              weight: 32
+              text: >-
+                In the sixth night the boy begins to sleep. At the seventh
+                dawn the lamps are still burning and he cannot be woken.
+              effects:
+                - { kind: status, target: { slot: CHILD }, status: dead, cause: the seven-lamp Vigil }
+        - id: put_out_the_lamps
+          label: Put out the lamps and send for a physician.
+          outcomes:
+            - id: spared
+              weight: 100
+              text: >-
+                He sleeps before the physician comes. The house pays for a
+                treatment no one claims was needed, and leaves the lamps cold.
+              effects:
+                - { kind: treasury, delta: -25 }
+    record:
+      subject: the price of the seven-lamp Vigil
+      options:
+        record:
+          chronicle: >-
+            Seven lamps were brought to a child's bed to force his waking.
+            The house chose when to snuff them, and paid for that choice.
+          effects: [{ kind: respect, delta: -1 }]
+        omit: { chronicle: null }
+        embellish:
+          chronicle: >-
+            No lamps were ever lit in the child's room. The house made no
+            attempt to force an awakening, and there was no danger.
+          effects: [{ kind: respect, delta: 1 }]
+          discrepancy: { id: the_vigil_safety_lie, severity: major, provableBy: [the_church, house_marrow] }
+    rumour: { id: rumour_seven_lamps, accuracy: 0.3, spread: 1 }
+
+  - id: the_dark_year_fast
+    title: The Fast of the Dark Year
+    tier: individual
+    frequency: rare
+    weight: 240
+    repeatable: true
+    tags: [ritual, awakening, madness]
+    purposes: [test_magic_rule, force_record_choice, plant_rumour]
+    slots:
+      HEAD: { role: head }
+      CHILD:
+        role: unwoken
+        filters: [{ sex: male }, { canExpress: true }, { age: { op: gte, value: 10 } }, { age: { op: lte, value: 18 } }]
+    body: >-
+      An old calendar calls the year dark, though the harvest and the sun
+      have kept their ordinary dates. The instructions forbid {CHILD} bread
+      by day and light by night until the turning. {HEAD} has the key to the
+      shuttered room. The last page of the instructions is missing.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_the_fast
+          label: Keep the Dark Year fast through its last night.
+          outcomes:
+            - id: woke
+              weight: 62
+              text: >-
+                He rises before the doors are opened. No one tells him it
+                is morning; he has heard it coming through the stone.
+              effects:
+                - { kind: awakening, target: { slot: CHILD } }
+                - { kind: madness, target: { slot: CHILD }, delta: 24 }
+            - id: died
+              weight: 38
+              text: >-
+                They find him against the door, where he had crawled in the
+                dark. The key turns easily and does him no good.
+              effects:
+                - { kind: status, target: { slot: CHILD }, status: dead, cause: the Dark Year fast }
+        - id: break_the_fast
+          label: Break the fast and bring him to the table.
+          outcomes:
+            - id: fed
+              weight: 100
+              text: >-
+                He eats little and keeps it down. The house sends for a
+                physician anyway and buys the first food he will take.
+              effects:
+                - { kind: treasury, delta: -30 }
+    record:
+      subject: the Dark Year fast
+      options:
+        record:
+          chronicle: >-
+            The house had instructions to keep a young man from daylight and
+            bread. It chose when to open the door and counted the price after.
+          effects: [{ kind: respect, delta: -1 }]
+        omit: { chronicle: null }
+        embellish:
+          chronicle: >-
+            No instructions were kept and no shuttered room prepared. This
+            was an ordinary household fast, and no one was put in danger.
+          effects: [{ kind: respect, delta: 1 }]
+          discrepancy: { id: the_dark_year_fast_lie, severity: major, provableBy: [the_church, house_ilm] }
+    rumour: { id: rumour_dark_year_fast, accuracy: 0.25, spread: 1 }
+
   - id: the_seal_questioned
     title: The Question of the Seal
     tier: head

@@ -57,6 +57,71 @@ written down is so it is not learned a sixth.
 
 ---
 
+## #518 — Vigil and Dark Year: rare-pool impact (9 October 2026)
+
+Two rare, individual-tier forced-Awakening rites were added alongside the
+Drowning: `the_seven_lamp_vigil` and `the_dark_year_fast`, each at
+template weight 240. Their surviving full-ritual outcomes use the existing
+`awakening` and gated `madness` effects. The six new authored outcomes have
+six deterministic execution witnesses, bringing the checked manifest from
+1,006 to **1,012 / 1,012** witnessed outcome keys on this branch.
+
+**Static selection-pool calculation, not a simulated fire-rate:** enumerating
+all `packages/content/events/*.yaml` templates on the pre-#518 `main`
+snapshot, excluding `tier: frame` and arc-bound events, gives **65 potential
+ambient rare templates** with total authored template weight **14,585**.
+The two new 240-weight rites make that **67** and **15,065**, an additional
+480 weight (+3.29% of the former pool). If every rare template were eligible
+and no presence/age multiplier applied, the new rites together account for
+**480 / 15,065 = 3.19%** of rare template weight; the Drowning's nominal
+share becomes **600 / 15,065 = 3.98%**, compared with **600 / 14,585 =
+4.11%** before. The nominal Drowning share is diluted about **3.19% relative**.
+The actual selection also applies age scope, conditions, slot fillability,
+per-tier cooldowns, presence modifiers and competition with other frequencies;
+these fractions **must not be reported as observed encounter rates**.
+
+**Hosted correctness, old PR head `64135005`:**
+[PR #597 full CI run 37757055323](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37757055323)
+passed `CI required`, all 12/12 blocking batch gates, the slow shard jobs,
+Windows validation, and the fast lane. Content validation reported 43 rules,
+zero errors, 141 warnings (not all caused by these rites).
+This is integration/correctness evidence, **not** the scheduled
+`fire-rate` sample. Follow-up content-prose fixes require fresh exact-head CI.
+
+**Hosted sampled fire-rate evidence (8 October 2026):**
+[paired run 37772602524](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37772602524)
+completed successfully, with independent before
+[job 113295591405](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37772602524/job/113295591405)
+and after
+[job 113295591930](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37772602524/job/113295591930)
+samples. Both used the canonical gate-4 fire-rate sweep (the same 800 seeds
+over 500 years), while a temporary instrument counted **run incidences**:
+a named event appearing in one campaign contributes one, even if it fired
+multiple times in that campaign. These counts are not raw firing totals.
+
+| Sample, 800 Long Lines | Pre-rite | With Vigil and Dark Year |
+| --- | ---: | ---: |
+| Potential ambient rare templates in sampled snapshot | 63 | 65 |
+| All rare-template run incidences | 4,980 | 4,956 |
+| `the_drowning` | 88 | 72 |
+| `the_drowning_repeated` | 30 | 44 |
+| `the_seven_lamp_vigil` | 0 | 35 |
+| `the_dark_year_fast` | 0 | 29 |
+
+The Vigil was seen in **35/800 campaigns (4.375%)**, the Dark Year in
+**29/800 (3.625%)**; both demonstrably enter the simulated event pool.
+The two Drowning variants together account for **118 vs 116 template-run
+incidences**, with opposite shifts between variants. These are paired
+deterministic samples, not a confidence interval or a guarantee that future
+reweighting will preserve Drowning frequency. The measured **63 → 65**
+template count describes the fixed sampled snapshots; the **65 → 67**
+static inventory above describes a later main snapshot with a different
+baseline. Do not mix the denominators.
+
+Both hosted fire-rate jobs exited successfully. The former missing empirical
+balance requirement is now satisfied; the separate **exact-head CI required**
+verdict remains the landing gate.
+
 ## Forced-Awakening hosted re-baseline (#431, #551) — 8 October 2026
 
 The Drowning's successful `full_count/woke` path now mechanically forces
