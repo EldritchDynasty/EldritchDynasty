@@ -309,11 +309,11 @@ events:
 
 proseVariants:
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].title"
-    of: 1afb0dd82b8254cc
+    of: "1afb0dd82b8254cc"
     plainenglish: >-
       A Church Reader Comes to Stay
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].body"
-    of: c3fbe158fa692e1c
+    of: "c3fbe158fa692e1c"
     plainenglish: >-
       A second bell now rings at four in the morning, and the household has learned to wake
       for it. The chapter house at Bramme has sent a reader to live at Ardwen for the
@@ -322,35 +322,35 @@ proseVariants:
       unused chapel and once about the second cellar. He has not told {HEAD} what he came to
       investigate. Nobody has officially said the house is under watch.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].label"
-    of: 030d3f6ef01b0eb2
+    of: "030d3f6ef01b0eb2"
     plainenglish: >-
       Give him a comfortable welcome. A well-treated guest may write a kinder report.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].outcomes[id=warmed].text"
-    of: ed5b91ed3351a3a9
+    of: "ed5b91ed3351a3a9"
     plainenglish: >-
       He gets the best room, good wine, and a place at the table on the third night. His
       report that winter says very little of interest. That is the best result the house
       could hope for.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].outcomes[id=unmoved].text"
-    of: 11eb7bfa4a1800e6
+    of: "11eb7bfa4a1800e6"
     plainenglish: >-
       He thanks the house for the room, then writes exactly the report he had already
       planned. The welcome has not changed his mind.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=arms_length].label"
-    of: 19a84cc896cb46d4
+    of: "19a84cc896cb46d4"
     plainenglish: >-
       Be formally polite, but offer him nothing extra.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=arms_length].outcomes[id=noted].text"
-    of: a0dcd95b434cf73f
+    of: "a0dcd95b434cf73f"
     plainenglish: >-
       The house refuses none of his requests, but offers nothing beyond them. He notices the
       lack of welcome sooner than he notices their cooperation.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].title"
-    of: 6612053550727461
+    of: "6612053550727461"
     plainenglish: >-
       Two Rows of Books on a Table
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].body"
-    of: 620205bf6dbd3ce3
+    of: "620205bf6dbd3ce3"
     plainenglish: >-
       The east cellar is dry, which has helped preserve the family's books. {ARCHIVIST} lays
       them in two rows on a table, not sorted by subject, age, or price. The first row holds
@@ -361,41 +361,41 @@ proseVariants:
       decides. Church doctrine has not changed; the Church is simply inspecting houses more
       closely. The books are still on the table, awaiting a decision.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=burn_them].label"
-    of: bbd938c02f3092ec
+    of: "bbd938c02f3092ec"
     plainenglish: >-
       Burn the Death and Darkness books. Books can be replaced, but a court hearing cannot
       be undone.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=burn_them].outcomes[id=burned].text"
-    of: 8af113031372dbf7
+    of: "8af113031372dbf7"
     plainenglish: >-
       The books take an afternoon to burn in the yard. People in Wick can see the smoke,
       which is why the fire was lit outside. The house destroys four hundred crowns' worth
       of books and the result of nine years of someone's work. Inspectors can now examine
       the house without arguing over those books.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=hide_them].label"
-    of: 9244822fb078595b
+    of: "9244822fb078595b"
     plainenglish: >-
       Hide the books in the second cellar. It has concealed worse things.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=hide_them].outcomes[id=hidden].text"
-    of: ddbc3b6a684627a6
+    of: "ddbc3b6a684627a6"
     plainenglish: >-
       The second cellar is cold but damp. Every winter that the books stay there, the
       moisture damages them a little more.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=sell_them].label"
-    of: 04e8ff51d08a9525
+    of: "04e8ff51d08a9525"
     plainenglish: >-
       Sell the books to a buyer in the east while someone will still buy them.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=sell_them].outcomes[id=sold].text"
-    of: 7a774badfbe51cb1
+    of: "7a774badfbe51cb1"
     plainenglish: >-
       A broker in Sarrow pays only one-third of what the books are worth. He asks nothing
       about where they came from. His silence explains his low offer.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].title"
-    of: 69dc584acc12a5de
+    of: "69dc584acc12a5de"
     plainenglish: >-
       The Old Stone in the Chapel
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].body"
-    of: 0bd99c90047fbbac
+    of: "0bd99c90047fbbac"
     plainenglish: >-
       No fire has burned in the chapel for sixty years, so it is colder than the rest of the
       house. It has a roof, a door, eight seats, and a stone that the family cannot explain.
@@ -405,7 +405,7 @@ proseVariants:
       the chapel. Nobody in the family put it there, and the house chronicle never mentions
       it. Nobody wants to sweep around it.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].absentBody"
-    of: d2231c42abb7418e
+    of: "d2231c42abb7418e"
     plainenglish: >-
       No fire has burned in the chapel for sixty years, so it is colder than the rest of the
       house. It has a roof, a door, eight seats, and a stone that the family cannot explain.
@@ -416,53 +416,53 @@ proseVariants:
       than the chapel. Nobody in the family put it there, and the house chronicle never
       mentions it. Nobody wants to sweep around it.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].interaction.choices[id=open_it].label"
-    of: a61ca71340292867
+    of: "a61ca71340292867"
     plainenglish: >-
       Open and clean the chapel, then use it on the third night. Show the Church an ordinary
       chapel.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].interaction.choices[id=open_it].outcomes[id=opened].text"
-    of: 8db91a3ad0d6f4d6
+    of: "8db91a3ad0d6f4d6"
     plainenglish: >-
       The chapel is swept and aired, then used on the third night. The province records that
       the Eldritch House keeps its chapel like other households. The old stone stays where
       it was, but somebody has covered it with a cloth.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].interaction.choices[id=keep_it_shut].label"
-    of: ac6097518c1cf175
+    of: "ac6097518c1cf175"
     plainenglish: >-
       Keep the chapel shut. A clean chapel might attract a visitor.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].interaction.choices[id=keep_it_shut].outcomes[id=shut].text"
-    of: faeb794993858dcd
+    of: "faeb794993858dcd"
     plainenglish: >-
       The door stays closed. The family continues to blame the roof, and two of the children
       have heard that excuse so often that they believe it.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.subject"
-    of: 1e9547aa6f7ab27e
+    of: "1e9547aa6f7ab27e"
     plainenglish: >-
       the old stone in the chapel
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.record.chronicle"
-    of: 61e4062f065ee793
+    of: "61e4062f065ee793"
     plainenglish: >-
       The chapel was opened for the third night. Its stone is older than the building, and
       our house did not put it there.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.record.claims[0].text"
-    of: fc1a82c51269f2e1
+    of: "fc1a82c51269f2e1"
     plainenglish: >-
       keeps an altar stone older than the chapel, which this house did not put there
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.embellish.chronicle"
-    of: 8bb05ca6b8a92aea
+    of: "8bb05ca6b8a92aea"
     plainenglish: >-
       The chapel was opened for the third night. Its altar stone was placed there by the
       founder of this house.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.embellish.claims[0].text"
-    of: f3d60de9316c01e5
+    of: "f3d60de9316c01e5"
     plainenglish: >-
       keeps the altar stone that the founder placed in the house chapel
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].title"
-    of: 7f88c14c2b3efe20
+    of: "7f88c14c2b3efe20"
     plainenglish: >-
       The Church Registrar Requests the House Book
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].body"
-    of: 3a6f6fdfd5eba5eb
+    of: "3a6f6fdfd5eba5eb"
     plainenglish: >-
       The registrar arrives from the chapter house at Bramme with two clerks and a letter.
       He is polite, but seems to have made up his mind. The Church court has always had the
@@ -473,11 +473,11 @@ proseVariants:
       a clerk walks the horses between the yard and the trough. The clerks are in no hurry,
       but the house has almost no time to prepare.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].interaction.choices[id=hand_it_over].label"
-    of: e388206906610625
+    of: "e388206906610625"
     plainenglish: >-
       Give him all nine hundred pages of the book. Let him read for as long as he wants.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].interaction.choices[id=hand_it_over].outcomes[id=read_and_returned].text"
-    of: 0afaae3de7282341
+    of: "0afaae3de7282341"
     plainenglish: >-
       The registrar spends six days in the long room while a clerk turns the pages for him.
       On the sixth afternoon, he stops at the fourth of the four entries, reads it twice,
@@ -487,29 +487,29 @@ proseVariants:
       was handed over and read. One day, that record may protect the house more than its
       roof.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].interaction.choices[id=send_a_copy].label"
-    of: bcbbcbf43d87ed90
+    of: "bcbbcbf43d87ed90"
     plainenglish: >-
       Send only copies of the requested passages, made this week in the chronicler's own
       careful handwriting.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].interaction.choices[id=send_a_copy].outcomes[id=copy_accepted].text"
-    of: b7430ebc1e4be168
+    of: "b7430ebc1e4be168"
     plainenglish: >-
       The registrar accepts the copy because he trusts the handwriting, and rejecting it
       would force him to explain why he came. He leaves before noon. Everyone in the yard
       understands that the house has gained something, but nobody knows what the price will
       be.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].record.subject"
-    of: c1dd2f7b60b7c617
+    of: "c1dd2f7b60b7c617"
     plainenglish: >-
       what the house gave to the Church
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].record.options.record.chronicle"
-    of: 0c5f0eba1aedb706
+    of: "0c5f0eba1aedb706"
     plainenglish: >-
       During the Crusade, the registrar from Bramme demanded the house book and received
       what he received. To whoever reads this next: he wrote an official minute about it,
       and the Church's record will outlast ours.
   - address: "content:events/age_crusade.yaml#events[id=the_registrar_asks_for_the_book].record.options.embellish.chronicle"
-    of: 440c5ef4427f9910
+    of: "440c5ef4427f9910"
     plainenglish: >-
       The Church asked to inspect the house book, found every page in perfect order, and
       left satisfied. Every time the Church has inspected our book, it has reached the same
