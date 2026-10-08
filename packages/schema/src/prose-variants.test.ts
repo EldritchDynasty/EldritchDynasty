@@ -65,6 +65,47 @@ describe('Plain English variant guardrails (#415)', () => {
     expect(proseOriginalAt(content, wrongFile)).toBeUndefined();
   });
 
+  it('reports malformed percent escapes without aborting validation of other variants', () => {
+    const malformed = fixture.address.replace('[id=', '[id=%ZZ');
+    const bundle = withVariant();
+    bundle.proseVariants.unshift({
+      address: malformed,
+      plainenglish: 'This selector contains an invalid escape.',
+    });
+
+    expect(proseOriginalAt(content, malformed)).toBeUndefined();
+    expect(runRule('prose/variants', bundle)).toEqual([
+      expect.objectContaining({
+        level: 'error',
+        rule: 'prose/variants',
+        where: `prose:${malformed}`,
+        message: expect.stringMatching(/does not resolve/),
+      }),
+    ]);
+  });
+
+  it('rejects a resolved string that is not a narrative prose field', () => {
+    const issues = runRule('prose/variants', withVariant((variant) => {
+      variant.address = variant.address.replace(/\\.body$/, '.id');
+    }));
+    expect(issues).toEqual([
+      expect.objectContaining({
+        level: 'error',
+        rule: 'prose/variants',
+        message: expect.stringMatching(/does not resolve/),
+      }),
+    ]);
+  });
+
+  it('still resolves valid percent-encoded authored identities', () => {
+    const id = /\\[id=([^\\]]+)\\]/.exec(fixture.address)?.[1];
+    if (!id) throw new Error('fixture has no identity segment');
+    const encoded = `%${id.charCodeAt(0).toString(16).padStart(2, '0')}${id.slice(1)}`;
+    const address = fixture.address.replace(`[id=${id}]`, `[id=${encoded}]`);
+
+    expect(proseOriginalAt(content, address)).toBe(fixture.text);
+  });
+
   it('rejects a counterpart that drops one occurrence of an interpolation token', () => {
     const token = fixture.interpolations[0]!;
     const issues = runRule('prose/variants', withVariant((variant) => {
