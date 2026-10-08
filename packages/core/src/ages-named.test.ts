@@ -197,8 +197,8 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
   const address = 'content:ages/ages.yaml#ages[id=the_withering].name';
 
   it('switches a named Age label prospectively without rewriting the Chronicle or save', () => {
-    const { ctx, age } = withAge(ageId, true, 5990);
-    const done = runOut(ctx, age, 5990);
+    const { ctx, age } = withAge(ageId, true, 1);
+    const done = runOut(ctx, age, 1);
     expect(done).toBeDefined();
     const original = chapterOf(ctx, done!)!;
     const originalName = ctx.content.age(ageId)!.name;
@@ -227,8 +227,8 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
   });
 
   it('falls back to the authored Age name and records a missing visible variant', () => {
-    const { ctx, age } = withAge(ageId, true, 5991);
-    const done = runOut(ctx, age, 5991);
+    const { ctx, age } = withAge(ageId, true, 1);
+    const done = runOut(ctx, age, 1);
     expect(done).toBeDefined();
     setProseMode(ctx, 'plainenglish');
     expect(chapterOf(ctx, done!)!.name).toBe(ctx.content.age(ageId)!.name);
