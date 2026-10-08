@@ -445,7 +445,7 @@ proseVariants:
       The chapel was opened for the third night. Its stone is older than the building, and
       our house did not put it there.
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.record.claims[0].text"
-    of: "fc1a82c51269f2e1"
+    of: "a6c51268170aae14"
     plainenglish: >-
       keeps an altar stone older than the chapel, which this house did not put there
   - address: "content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.embellish.chronicle"
