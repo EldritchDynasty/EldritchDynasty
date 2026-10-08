@@ -340,7 +340,7 @@ proseVariants:
     plainenglish: >-
       They stay for eleven weeks, then leave when the weather warms. Four years
       later, the man holds an official position again. He sends the house a short
-      letter of thanks. The letter is enough.
+      letter. It says little, but it is enough.
   - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].interaction.choices[id=take_him_in].outcomes[id=cost_it].text"
     of: fc3dc669e33a2cb5
     plainenglish: >-
