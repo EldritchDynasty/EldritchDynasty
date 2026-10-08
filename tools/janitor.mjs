@@ -99,13 +99,66 @@ function act(cmd, ...args) {
 const HAS_GH = onPath('gh');
 let reconciliationFailed = false;
 
+/** Injected issue history is used only for dry-run fixtures, never for live repair. */
+function dryIssueEvidence(n) {
+  if (!DRY || !process.env.JANITOR_ISSUES_JSON) return null;
+  try {
+    const issues = JSON.parse(process.env.JANITOR_ISSUES_JSON);
+    return issues && Object.hasOwn(issues, String(n)) ? issues[String(n)] : null;
+  } catch {
+    return null;
+  }
+}
+
 function issueState(n) {
+  if (DRY && process.env.JANITOR_ISSUES_JSON) {
+    const state = dryIssueEvidence(n)?.state;
+    return state === 'OPEN' || state === 'CLOSED' ? state : 'UNKNOWN';
+  }
   if (!HAS_GH) return 'UNKNOWN';
   const r = spawnSync('gh', ['issue', 'view', String(n), '--json', 'state', '--jq', '.state'], {
     cwd: CWD, encoding: 'utf8',
   });
   const out = (r.stdout ?? '').trim();
   return !r.error && r.status === 0 && out ? out : 'UNKNOWN';
+}
+
+/**
+ * Retry closing evidence is valid only if the issue has NOT been reopened
+ * after that landing. GitHub's issue event history is the authority: an OPEN
+ * state alone cannot distinguish a missed close from an owner's deliberate
+ * reopen. Read ALL event pages; missing or malformed evidence is not consent
+ * to close. Comparing against the latest eligible landing allows a genuinely
+ * newer merged PR to close an issue reopened after an older merge.
+ */
+function reopenVerdict(n, landedAtMs) {
+  if (!Number.isFinite(landedAtMs) || landedAtMs <= 0) return 'UNKNOWN';
+
+  let reopenings;
+  if (DRY && process.env.JANITOR_ISSUES_JSON) {
+    reopenings = dryIssueEvidence(n)?.reopenings;
+  } else {
+    if (!HAS_GH || !REPOSITORY) return 'UNKNOWN';
+    const endpoint = `/repos/${REPOSITORY}/issues/${n}/events?per_page=100`;
+    const r = spawnSync('gh', [
+      'api', '--paginate',
+      '--jq', '.[] | select(.event == "reopened") | .created_at',
+      '--header', 'Accept: application/vnd.github+json',
+      '--header', 'X-GitHub-Api-Version: 2022-11-28',
+      endpoint,
+    ], { cwd: CWD, encoding: 'utf8' });
+    if (r.error || r.status !== 0) {
+      log(`issue reconciliation: could not read reopen events for #${n}: ${r.error?.message || (r.stderr ?? '').trim()}`);
+      return 'UNKNOWN';
+    }
+    reopenings = (r.stdout ?? '').split('\n').filter(Boolean);
+  }
+
+  if (!Array.isArray(reopenings) || reopenings.some((at) =>
+    typeof at !== 'string' || !at.trim() || !Number.isFinite(Date.parse(at)))) {
+    return 'UNKNOWN';
+  }
+  return reopenings.some((at) => Date.parse(at) >= landedAtMs) ? 'REOPENED' : 'CLEAR';
 }
 
 /** Close one issue with an explicit repository and verify that GitHub accepted it. */
@@ -464,15 +517,23 @@ if (RANGE || RECENT_MERGED_PRS.length) {
   say('');
   say(RANGE ? '### Issues named by this push' : '### Issues from recent merged PRs');
 
-  /** issue -> the strongest auditable source seen in this push */
+  /** issue -> latest eligible closing landing, including its timestamp. */
   const evidence = new Map();
-  const remember = (n, source) => {
-    if (!evidence.has(n) || source.startsWith('merged PR')) evidence.set(n, source);
+  const remember = (n, source, landedAtMs) => {
+    if (!Number.isFinite(landedAtMs) || landedAtMs <= 0) return;
+    const previous = evidence.get(n);
+    if (!previous || landedAtMs > previous.landedAtMs
+      || (landedAtMs === previous.landedAtMs && source.startsWith('merged PR'))) {
+      evidence.set(n, { source, landedAtMs });
+    }
   };
 
   if (RANGE) {
-    const body = gitOut('log', '--format=%B', RANGE);
-    for (const n of closingIssues(body)) remember(n, 'landing commit');
+    const commits = gitOut('log', '--format=%ct%x00%B%x00', RANGE).split('\0');
+    for (let i = 0; i + 1 < commits.length; i += 2) {
+      const committedAt = Number(commits[i].trim()) * 1000;
+      for (const n of closingIssues(commits[i + 1])) remember(n, 'landing commit', committedAt);
+    }
   }
 
   // Replay the recent merged-PR inventory on every run, including schedules.
@@ -483,7 +544,7 @@ if (RANGE || RECENT_MERGED_PRS.length) {
       repository: REPOSITORY,
       defaultBranch: DEFAULT_BRANCH,
     })) {
-      remember(n, `merged PR #${pr.number} (48h retry)`);
+      remember(n, `merged PR #${pr.number} (48h retry)`, Date.parse(pr.merged_at));
     }
   }
 
@@ -501,7 +562,7 @@ if (RANGE || RECENT_MERGED_PRS.length) {
         defaultBranch: DEFAULT_BRANCH,
       });
       for (const n of closings) {
-        remember(n, `merged PR #${pr.number}`);
+        remember(n, `merged PR #${pr.number}`, Date.parse(pr.merged_at));
         const mergedAt = Date.parse(pr.merged_at) / 1000;
         if (Number.isFinite(mergedAt)) {
           MAIN_LANDED_AT.set(n, Math.max(MAIN_LANDED_AT.get(n) ?? 0, mergedAt));
@@ -512,9 +573,19 @@ if (RANGE || RECENT_MERGED_PRS.length) {
 
   for (const n of [...evidence.keys()].sort((a, b) => Number(a) - Number(b))) {
     NAMED.add(n);
-    const source = evidence.get(n);
+    const { source, landedAtMs } = evidence.get(n);
     const state = issueState(n);
     if (state === 'OPEN') {
+      const verdict = reopenVerdict(n, landedAtMs);
+      if (verdict === 'REOPENED') {
+        say(`- kept #${n} open — reopened after ${source}`);
+        continue;
+      }
+      if (verdict === 'UNKNOWN') {
+        if (!DRY && HAS_GH && REPOSITORY) reconciliationFailed = true;
+        say(`- kept #${n} open — reopening history UNKNOWN for ${source}`);
+        continue;
+      }
       const comment = `Landed on \`${DEFAULT_BRANCH}\` via ${source}.`;
       if (closeReconciledIssue(n, comment)) say(`- closed #${n} — ${source}`);
       else say(`- FAILED to close #${n} — ${source}`);
