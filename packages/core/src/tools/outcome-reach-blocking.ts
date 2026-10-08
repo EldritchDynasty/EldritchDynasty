@@ -55,11 +55,28 @@ export function gateUnwitnessedOutcomeReach(
   const years = opts.years ?? config.years;
   const manifest = readOutcomeWitnessManifest();
   const declared = declaredOutcomes(indexContent(source));
+  const witnessed = new Set(manifest.outcomes);
+
+  // #439: When every declared outcome has a deterministic execution witness,
+  // the 800-run merge sample cannot contribute a blocking verdict. Avoid
+  // replaying it; the full frequency sample remains weekly telemetry.
+  // Fail safe for newly authored outcomes: a missing witness still runs the
+  // unchanged canonical sample and scoped verdict.
+  if ([...declared.keys()].every((key) => witnessed.has(key))) {
+    return {
+      ok: true,
+      lines: [
+        `merge outcome reach: skipped ${runs} runs x ${years}y — every declared outcome has a deterministic witness`,
+        `outcome reach blocking scope: ${declared.size}/${declared.size} deterministic witnesses; 0 outcome(s) still sampled`,
+      ],
+    };
+  }
+
   const reach = playGateBatch(source, runs, years).reach;
   const verdict = scopedOutcomeReachVerdict(
     declared,
     reach,
-    new Set(manifest.outcomes),
+    witnessed,
     runs,
   );
 
