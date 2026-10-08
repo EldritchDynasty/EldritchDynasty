@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contentProseEntries, setContentProseText } from '@ed/schema';
+import { contentProseEntries, proseOriginalHash, setContentProseText } from '@ed/schema';
 import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
+  plainEnglishCoverage, plainEnglishCoverageFor,
   plainEnglishContentWorkItems, plainEnglishCoreWorkItems, plainEnglishWorklist, report,
   sentenceLiterals, unclassifiedContentKeys,
 } from './string-audit.js';
@@ -231,4 +233,81 @@ describe('the string-source audit (issue #276)', () => {
     expect(items.some((x) => x.voice === 'event')).toBe(true);
     expect(items.some((x) => x.voice === 'chronicler')).toBe(true);
   });
+  it('reports missing, stale, current, unsafe tokens and identical Plain English counterparts', () => {
+    const items = plainEnglishContentWorkItems('events/prose.yaml', [
+      'events:',
+      '  - id: offered',
+      '    body: "{HEAD} gave the book to {HEAD} once more."',
+    ].join('\n'));
+    expect(items).toHaveLength(1);
+    const item = items[0]!;
+    const valid = {
+      address: item.address,
+      of: proseOriginalHash(item.text),
+      plainenglish: '{HEAD} handed {HEAD} the book again.',
+    };
+
+    expect(plainEnglishCoverageFor(items, [])).toMatchObject({
+      total: 1, current: 0, missing: 1, stale: 0, invalid: 0,
+      remaining: [{ status: 'missing', address: item.address, expectedOf: valid.of }],
+    });
+    expect(plainEnglishCoverageFor(items, [valid])).toMatchObject({
+      total: 1, current: 1, missing: 0, stale: 0, invalid: 0, remaining: [],
+    });
+    expect(plainEnglishCoverageFor(items, [{ ...valid, of: '0000000000000000' }]))
+      .toMatchObject({ current: 0, stale: 1, missing: 0, invalid: 0,
+        remaining: [{ status: 'stale', expectedOf: valid.of }] });
+    expect(plainEnglishCoverageFor(items, [{ ...valid, of: undefined }]))
+      .toMatchObject({ current: 0, stale: 1, missing: 0, invalid: 0 });
+    expect(plainEnglishCoverageFor(items, [{ ...valid, plainenglish: '{HEAD} took the book.' }]))
+      .toMatchObject({ current: 0, stale: 0, invalid: 1, missing: 0 });
+    expect(plainEnglishCoverageFor(items, [{ ...valid, plainenglish: item.text }]))
+      .toMatchObject({ current: 0, invalid: 1, missing: 0, stale: 0 });
+  });
+
+  it('credits only variants authored beside the Original YAML', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-prose-coverage-'));
+    const events = join(root, 'packages/content/events');
+    mkdirSync(events, { recursive: true });
+    const original = [
+      'events:',
+      '  - id: a_scene',
+      '    body: The clerk brought the deed back from town.',
+    ].join('\n');
+    const item = plainEnglishContentWorkItems('events/one.yaml', original)[0]!;
+    const variant = [
+      'proseVariants:',
+      '  - address: ' + JSON.stringify(item.address),
+      '    of: ' + proseOriginalHash(item.text),
+      '    plainenglish: The clerk returned with the deed.',
+    ].join('\n');
+
+    try {
+      writeFileSync(join(events, 'one.yaml'), original);
+      writeFileSync(join(events, 'two.yaml'), variant);
+      expect(plainEnglishCoverage(root)).toMatchObject({
+        total: 1, current: 0, missing: 1, stale: 0, invalid: 0,
+      });
+
+      writeFileSync(join(events, 'one.yaml'), original + '\n' + variant);
+      rmSync(join(events, 'two.yaml'));
+      expect(plainEnglishCoverage(root)).toMatchObject({
+        total: 1, current: 1, missing: 0, stale: 0, invalid: 0,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('accounts for the complete source inventory without changing the old worklist', () => {
+    const full = plainEnglishWorklist(REPO);
+    const coverage = plainEnglishCoverage(REPO);
+    expect(coverage.total).toBe(full.length);
+    expect(coverage.current + coverage.missing + coverage.stale + coverage.invalid)
+      .toBe(coverage.total);
+    expect(coverage.remaining.length).toBe(coverage.missing + coverage.stale + coverage.invalid);
+    expect(coverage.remaining.every((row) => row.status !== 'current')).toBe(true);
+    expect(plainEnglishCoverage(REPO)).toEqual(coverage);
+  });
+
 });
