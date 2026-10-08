@@ -86,7 +86,7 @@ events:
             answered is in a satchel at Cawdry.
           effects: []
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: answered nine days of the inquest, with every answer kept at Cawdry }
+            - { kind: deed, target: { slot: HEAD }, text: 'answered nine days of the inquest, with every answer kept at Cawdry' }
         omit:
           chronicle: null
         embellish:
@@ -344,7 +344,7 @@ events:
           chronicle: A relic was offered to this chapel and could not be received, the chapel being under repair that year and the year following.
           effects: []
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: could not receive the relic, the chapel being under repair }
+            - { kind: deed, target: { slot: HEAD }, text: 'could not receive the relic, the chapel being under repair' }
           discrepancy:
             id: the_chapel_under_repair
             severity: minor
