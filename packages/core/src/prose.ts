@@ -1,5 +1,5 @@
 import { ProseCatalogueS } from '@ed/schema';
-import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant } from '@ed/schema';
+import type { Choice, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 /**
@@ -67,6 +67,21 @@ export function renderContentProse(
   original: string,
 ): string {
   return renderProse(ctx, contentProseAddress(file, path), original);
+}
+
+/**
+ * Tales are heard from the authored content while they circulate. Select their
+ * teller and wording for the CURRENT view; a Library memory copied from an
+ * earlier run is already written history and must never pass through here.
+ *
+ * The identity mirrors contentProseEntries: tales[id=...].teller / .text.
+ */
+export function proseForTaleField(ctx: SimCtx, tale: TaleDef, field: 'teller' | 'text'): string {
+  const file = ctx.content.sourceOf(String(tale.id));
+  if (file === undefined) return tale[field];
+  return renderContentProse(
+    ctx, file, `tales[id=${encodeURIComponent(String(tale.id))}].${field}`, tale[field],
+  );
 }
 
 function eventBaseAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
