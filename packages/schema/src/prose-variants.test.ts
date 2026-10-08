@@ -86,7 +86,7 @@ describe('Plain English variant guardrails (#415)', () => {
 
   it('rejects a resolved string that is not a narrative prose field', () => {
     const issues = runRule('prose/variants', withVariant((variant) => {
-      variant.address = variant.address.replace(/\\.body$/, '.id');
+      variant.address = variant.address.replace(/\.body$/, '.id');
     }));
     expect(issues).toEqual([
       expect.objectContaining({
@@ -98,7 +98,7 @@ describe('Plain English variant guardrails (#415)', () => {
   });
 
   it('still resolves valid percent-encoded authored identities', () => {
-    const id = /\\[id=([^\\]]+)\\]/.exec(fixture.address)?.[1];
+    const id = /\[id=([^\]]+)\]/.exec(fixture.address)?.[1];
     if (!id) throw new Error('fixture has no identity segment');
     const encoded = `%${id.charCodeAt(0).toString(16).padStart(2, '0')}${id.slice(1)}`;
     const address = fixture.address.replace(`[id=${id}]`, `[id=${encoded}]`);
