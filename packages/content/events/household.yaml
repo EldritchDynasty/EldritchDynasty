@@ -180,3 +180,124 @@ events:
             large room and it carries beautifully.
           effects:
             - { kind: relationship, from: head, to: { slot: RIVAL }, sentiment: -8 }
+
+# Plain English alternatives for the above Original event prose (#569).
+proseVariants:
+  - address: content:events/household.yaml#events[id=hard_winter].title
+    of: e908051e48823372
+    plainenglish: >-
+      A Difficult Winter
+  - address: content:events/household.yaml#events[id=hard_winter].body
+    of: 47b87ef8f1976d7c
+    plainenglish: >-
+      Winter arrives early and will not end. {STEWARD} reports that the east grate is broken
+       and the second cellar has flooded, then frozen over. There is enough bread to last
+       until spring, but only if the house does not give any away. Even the dogs refuse to go
+       into the yard, though no one has told them to stay inside.
+  - address: content:events/household.yaml#events[id=hard_winter].interaction.choices[id=ration].label
+    of: 948f13012aed7745
+    plainenglish: >-
+      Ration the food. Everyone survives, but no one eats well.
+  - address: content:events/household.yaml#events[id=hard_winter].interaction.choices[id=ration].outcomes[id=held].text
+    of: 7aacc9f7c587b493
+    plainenglish: >-
+      The house makes it through a hard winter. Every night until the thaw, {STEWARD} has to
+       turn people away from the kitchen. The kitchen staff remember that he was the one who
+       refused them. Eighty years later, everyone else has forgotten the winter.
+  - address: content:events/household.yaml#events[id=hard_winter].interaction.choices[id=generous].label
+    of: 232e6198c0d7dc14
+    plainenglish: >-
+      Share the stored food with the village.
+  - address: content:events/household.yaml#events[id=hard_winter].interaction.choices[id=generous].outcomes[id=remembered].text
+    of: 8f4e23330d7a56ff
+    plainenglish: >-
+      The villagers remember your generosity for a while, although they do not remember the
+       details correctly.
+  - address: content:events/household.yaml#events[id=hard_winter].interaction.choices[id=generous].outcomes[id=wasted].text
+    of: 264f292de262acc1
+    plainenglish: >-
+      The thaw arrives two weeks early. The village did not actually need the extra food,
+       which makes the cost feel even worse.
+  - address: content:events/household.yaml#events[id=tutors_lesson].title
+    of: 0890edfd2611dbe9
+    plainenglish: >-
+      Learning in the Long Room
+  - address: content:events/household.yaml#events[id=tutors_lesson].body
+    of: 06af90af5b26344b
+    plainenglish: >-
+      {TUTOR} puts a book within {PUPIL}'s reach but does not hand it over. He says that
+       learning from it takes a year of your life, not just a year of study. You cannot get
+       that year back or spend it again. Some men in this house have devoted forty years to
+       learning magic and still cannot summon water.
+  - address: content:events/household.yaml#events[id=tutors_lesson].interaction.outcomes[id=taken].text
+    of: 9d465c510b97b91d
+    plainenglish: >-
+      The child picks up the book. The old tutor watches in silence. The child will remember
+       that silence longer than the lesson.
+  - address: content:events/household.yaml#events[id=servants_petition].title
+    of: 8acccbf2af346786
+    plainenglish: >-
+      The Steward Requests a Raise
+  - address: content:events/household.yaml#events[id=servants_petition].body
+    of: d81b02a8cbdeacec
+    plainenglish: >-
+      {SERVANT} has worked for the house for eleven years, earning three marks each year. He
+       points out that he has served longer than the west wing has had its roof. He asks the
+       house to reconsider his pay, but does not say that he is owed more.
+  - address: content:events/household.yaml#events[id=servants_petition].interaction.choices[id=raise].label
+    of: 6d465b6686c01b9a
+    plainenglish: >-
+      Increase his pay.
+  - address: content:events/household.yaml#events[id=servants_petition].interaction.choices[id=raise].outcomes[id=loyal].text
+    of: 60cd4c2574f172b9
+    plainenglish: >-
+      He accepts without saying anything and stays for another thirty years.
+  - address: content:events/household.yaml#events[id=servants_petition].interaction.choices[id=refuse].label
+    of: da343c4b4b5b5727
+    plainenglish: >-
+      Refuse the raise. There always seems to be a war somewhere.
+  - address: content:events/household.yaml#events[id=servants_petition].interaction.choices[id=refuse].outcomes[id=kept].text
+    of: 11ee2422031f8d46
+    plainenglish: >-
+      He stays, but he no longer speaks of the house with the same feeling.
+  - address: content:events/household.yaml#events[id=servants_petition].interaction.choices[id=refuse].outcomes[id=leaves].text
+    of: 9e2140fdba825b59
+    plainenglish: >-
+      He leaves by spring. He takes with him eleven years of knowledge about which rooms are
+       never opened.
+  - address: content:events/household.yaml#events[id=a_birth_in_the_house].title
+    of: 9001eaab3ff5da67
+    plainenglish: >-
+      A Child Is Born in the House
+  - address: content:events/household.yaml#events[id=a_birth_in_the_house].body
+    of: 89fa0dcf3ab3ef33
+    plainenglish: >-
+      The night is long and cold. The household heats water three times before it is needed.
+       {MIDWIFE} works in silence. Afterward, she stays in the passage for longer than
+       necessary. Something about the room disturbed her, but she does not want {MOTHER} to
+       hear her say so.
+  - address: content:events/household.yaml#events[id=a_birth_in_the_house].interaction.outcomes[id=well].text
+    of: 72acd22debe6e141
+    plainenglish: >-
+      The child survives. The midwife says there was nothing wrong with the room, although she
+       is not telling the whole truth.
+  - address: content:events/household.yaml#events[id=a_birth_in_the_house].interaction.outcomes[id=watchful].text
+    of: d9c7cdf4e9249588
+    plainenglish: >-
+      The child survives. The midwife quietly asks whether anyone has noticed the iron in that
+       room losing its shine.
+  - address: content:events/household.yaml#events[id=the_rival_at_court].title
+    of: 141ce7ba78ce7206
+    plainenglish: >-
+      An Unsettling Comment at Court
+  - address: content:events/household.yaml#events[id=the_rival_at_court].body
+    of: a735d2789271c2dc
+    plainenglish: >-
+      {RIVAL} speaks calmly and says nothing that could be reported to a magistrate. That
+       makes the exchange more threatening. He asks about {HEAD}'s cousins, naming each one
+       and their exact family relationship. He keeps asking long after an ordinary polite
+       question would have ended.
+  - address: content:events/household.yaml#events[id=the_rival_at_court].interaction.outcomes[id=landed].text
+    of: cc82f8a1aea1173d
+    plainenglish: >-
+      Someone laughs and then stops. Even that brief sound is heard across the large room.
