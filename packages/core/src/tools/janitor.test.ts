@@ -526,6 +526,90 @@ describe('the janitor', () => {
     }
   });
 
+  it('retries never-closed issues but preserves manual reopenings, including repeated sweeps', () => {
+    const f = rebasedFixture();
+    try {
+      const mergedAt = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+      const reopenedAt = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const pr = {
+        ...prEvidence(f.agent, f.head, { merged_at: mergedAt }),
+        body: 'Closes #701. Closes #702. Closes #703. Closes #704.',
+      };
+      const issues = {
+        701: { state: 'OPEN', reopenings: [] },
+        702: { state: 'OPEN', reopenings: [reopenedAt] },
+        703: { state: 'OPEN' }, // Unavailable history fails safe.
+        704: { state: 'OPEN', reopenings: ['not-a-timestamp'] },
+      };
+      const sweep = (state: typeof issues) => janitor(f.sweep, {
+        ...withPrEvidence([pr]),
+        GITHUB_STEP_SUMMARY: '',
+        JANITOR_ISSUES_JSON: JSON.stringify(state),
+      });
+
+      const first = sweep(issues);
+      expect(first.code).toBe(0);
+      expect(first.out).toContain('would: gh issue close 701');
+      expect(first.out).toContain('kept #702 open — reopened after merged PR #900');
+      expect(first.out).toContain('kept #703 open — reopening history UNKNOWN');
+      expect(first.out).toContain('kept #704 open — reopening history UNKNOWN');
+      for (const n of [702, 703, 704]) {
+        expect(first.out).not.toContain(`would: gh issue close ${n}`);
+      }
+
+      // Model GitHub having accepted the first close. A later push/schedule
+      // retries the same inventory without ever re-closing the reopened issue.
+      const again = sweep({ ...issues, 701: { state: 'CLOSED', reopenings: [] } });
+      expect(again.code).toBe(0);
+      expect(again.out).toContain('#701 already closed');
+      expect(again.out).not.toContain('would: gh issue close 701');
+      expect(again.out).toContain('kept #702 open — reopened after');
+      expect(again.out).not.toContain('would: gh issue close 702');
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
+  it('lets a genuinely newer merged PR close an issue reopened after an older merge', () => {
+    const f = rebasedFixture();
+    try {
+      const oldMerge = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const reopened = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const newMerge = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const oldPr = {
+        ...prEvidence(f.agent, f.head, { merged_at: oldMerge }),
+        number: 910,
+        body: 'Closes #720.',
+      };
+      const newPr = {
+        ...prEvidence(f.agent, f.head, { merged_at: newMerge }),
+        number: 911,
+        body: 'Closes #720.',
+      };
+      // Newest is first to ensure evidence selection uses merge time, not
+      // the order the PR inventory happened to arrive in.
+      const run = (prs: unknown[]) => janitor(f.sweep, {
+        ...withPrEvidence(prs),
+        GITHUB_STEP_SUMMARY: '',
+        JANITOR_ISSUES_JSON: JSON.stringify({
+          720: { state: 'OPEN', reopenings: [reopened] },
+        }),
+      });
+
+      const previousOnly = run([oldPr]);
+      expect(previousOnly.out).toContain('kept #720 open — reopened after merged PR #910');
+      expect(previousOnly.out).not.toContain('would: gh issue close 720');
+
+      const latest = run([newPr, oldPr]);
+      expect(latest.code).toBe(0);
+      expect(latest.out).toContain('would: gh issue close 720');
+      expect(latest.out).toContain('closed #720 — merged PR #911');
+      expect(latest.out).not.toContain('kept #720 open');
+    } finally {
+      rmSync(f.fixture, { recursive: true, force: true });
+    }
+  });
+
   it('drains a proven merged backlog in deterministic bounded batches', () => {
     const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-bounded-backlog-'));
     try {
