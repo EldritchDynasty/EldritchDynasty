@@ -47,11 +47,19 @@ that flag through makes Electron behave as Node and fail before it can create a
 window. The launcher removes that one inherited host flag before starting the
 real Electron binary.
 
-Electron is pinned to the 41 line, which clears every reported advisory but is
-out of upstream support. Moving past it means taking on 42's on-demand binary
-download, which `scripts/electron.mjs` assumes away, and 43's dialog default
-path. Both are scoped in #514; the audit record is
-[docs/DEPENDENCIES.md](../../docs/DEPENDENCIES.md).
+Electron is currently declared at **^44.5.1**, a supported major at the
+time of the #522 upgrade. On Electron 42+, `npm ci` does not download the
+runtime binary in `postinstall`. The launcher keeps `require('electron')`:
+Electron 44's own entrypoint installs its binary lazily if it is missing,
+then returns the executable path. `scripts/electron.mjs` launches that binary
+with the inherited `ELECTRON_RUN_AS_NODE` flag removed. The Open-a-run dialog
+explicitly starts in Documents, avoiding Electron 43+'s Downloads default.
+See the dependency history in [docs/DEPENDENCIES.md](../../docs/DEPENDENCIES.md).
+
+**The code upgrade is not the complete release proof.** #514 remains open for
+a fresh-`npm ci` shell smoke, tagged Windows installer/packaged smoke, and
+a current Electron advisory check. Do not mistake an ordinary green PR CI run
+for the tag-only packaging evidence.
 
 ## Boundaries
 
