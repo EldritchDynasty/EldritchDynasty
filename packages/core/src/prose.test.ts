@@ -3,7 +3,7 @@ import { loadBundle } from '@ed/content';
 import { missingPlainEnglishAddresses, ProseCatalogueS } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld, viewOf,
 } from '@ed/core';
 
 const ADDRESS =
@@ -250,4 +250,93 @@ describe('prospective prose selection', () => {
     expect(resumed.prose.mode).toBe('original');
     expect(resumed.world.chronicle.at(-1)?.text).toBe(missing.text);
   });
+
+  it('renders circulating tale text and teller in the selected mode, without changing the save', () => {
+    const ctx = testWorld(loadBundle(), 1042, 1403);
+    const id = 'ilm_lament_for_the_burned';
+    const authored = ctx.content.tale(id)!;
+    const file = ctx.content.sourceOf(id);
+    expect(file).toBe('tales.yaml');
+    const address = `content:${file}#tales[id=${id}]`;
+
+    ctx.world.tales.set(id, {
+      bornYear: 1400, circulatesFrom: 1403, circulating: true, mutations: 0,
+    });
+    const originalView = viewOf(ctx).tales.find((tale) => tale.id === id)!;
+    expect(originalView.text).toBe(authored.text);
+    expect(originalView.teller).toBe(authored.teller);
+    const beforeSave = JSON.stringify(saveGame(ctx));
+
+    setProseVariants(ctx, [
+      { address: `${address}.teller`, plainenglish: 'Scholars from House Ilm' },
+      { address: `${address}.text`, plainenglish: 'They sing of the libraries that burned.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    const plainView = viewOf(ctx).tales.find((tale) => tale.id === id)!;
+    expect(plainView.teller).toBe('Scholars from House Ilm');
+    expect(plainView.text).toBe('They sing of the libraries that burned.');
+    expect(plainView.bias).toBe(originalView.bias);
+    expect(plainView.about).toBe(originalView.about);
+    expect(plainView.mutations).toBe(originalView.mutations);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(JSON.stringify(saveGame(ctx))).toBe(beforeSave);
+
+    setProseMode(ctx, 'original');
+    expect(viewOf(ctx).tales.find((tale) => tale.id === id)!.text).toBe(authored.text);
+    expect(plainView.text).toBe('They sing of the libraries that burned.');
+    expect(originalView.teller).toBe(authored.teller);
+  });
+
+  it('falls back to Original for an untranslated tale field, without concealing the gap', () => {
+    const ctx = testWorld(loadBundle(), 1042, 1403);
+    const id = 'ilm_lament_for_the_burned';
+    const authored = ctx.content.tale(id)!;
+    const file = ctx.content.sourceOf(id)!;
+    ctx.world.tales.set(id, {
+      bornYear: 1400, circulatesFrom: 1403, circulating: true, mutations: 0,
+    });
+    setProseVariants(ctx, [
+      { address: `content:${file}#tales[id=${id}].teller`, plainenglish: 'Scholars of Ilm' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const tale = viewOf(ctx).tales.find((item) => item.id === id)!;
+    expect(tale.teller).toBe('Scholars of Ilm');
+    expect(tale.text).toBe(authored.text);
+    expect(missingPlainEnglish(ctx))
+      .toContain(`content:${file}#tales[id=${id}].text`);
+  });
+
+  it('never re-renders the saved words of an imported Library memory', () => {
+    const ctx = testWorld(loadBundle(), 1042, 1403);
+    ctx.world.libraryMemories.push({
+      id: 'library_memory_prior',
+      sourceRun: 'prior-run',
+      sourceHouse: 'House Ilm',
+      sourceYear: 1390,
+      sourceText: 'What the earlier house recorded.',
+      form: 'rhyme',
+      teller: 'A teller from the earlier run',
+      bias: 'grieving',
+      text: 'The earlier run wrote these exact words.',
+      about: 'library:prior-run:record',
+      since: 1403,
+      mutations: 0,
+      people: {},
+      sourceClaims: [],
+      claims: [],
+    });
+    const beforeSave = JSON.stringify(saveGame(ctx));
+    setProseVariants(ctx, [{
+      address: 'content:tales.yaml#tales[id=library_memory_prior].text',
+      plainenglish: 'These new words must not replace saved history.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+
+    const remembered = viewOf(ctx).tales.find((tale) => tale.id === 'library_memory_prior')!;
+    expect(remembered.text).toBe('The earlier run wrote these exact words.');
+    expect(remembered.teller).toBe('A teller from the earlier run');
+    expect(JSON.stringify(saveGame(ctx))).toBe(beforeSave);
+  });
+
 });
