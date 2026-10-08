@@ -23,7 +23,7 @@ Measured on `main` at `2141779`: **24 (2 critical, 8 high, 14 moderate)**.
 | `vue`/`@vue/server-renderer` <3.5.42 (SSR XSS) | high | shipped, but no SSR | direct | lockfile 3.5.41 → 3.5.43, in range |
 | `brace-expansion`, `source-map-js`, `http-cache-semantics` | high | dev | transitive | lockfile, in range (`npm audit fix`) |
 
-### Electron 41 is a stopgap
+### Electron 41 was a stopgap (historical 2026-10-06 note)
 
 41.10.7 is the smallest version that clears every Electron advisory reported,
 and it does it without crossing two breaking changes: 42 stops downloading the
@@ -31,8 +31,24 @@ binary in `postinstall` (which `packages/shell/scripts/electron.mjs` depends on)
 and 43 starts every file dialog without a `defaultPath` in Downloads. **But
 41 is out of upstream support** — Electron supports the newest three majors —
 so the next advisory will have no 41.x fix.
-[#514](https://github.com/EldritchDynasty/EldritchDynasty/issues/514) moves the
-shell to a supported line and takes on both of those changes deliberately.
+[#514](https://github.com/EldritchDynasty/EldritchDynasty/issues/514) was
+opened to move the shell to a supported line and take on both changes.
+
+### 2026-10-08 — Electron 44 code landed; release proof still outstanding
+
+[#522](https://github.com/EldritchDynasty/EldritchDynasty/pull/522) updated
+`@ed/shell` and the lockfile to **Electron 44.5.1**. Its launcher uses Electron
+44's on-demand binary installation through `require('electron')`, and the
+Open-a-run dialog now sets Documents as its explicit `defaultPath`. The
+41.10.7 table above records the **2026-10-06 audit**, not the currently
+installed Electron version.
+
+The code slice passed hosted PR CI, including clean dependency installation,
+but that is not evidence that a freshly installed Electron shell has launched
+successfully or that the tag-only Windows installer has packaged and passed
+its packaged smoke. [#514](https://github.com/EldritchDynasty/EldritchDynasty/issues/514)
+remains open for those proofs and a fresh `npm audit` check. Do not treat
+the historical advisory totals in this document as a current audit result.
 
 ### Vitest 4 changed three things the repository leaned on
 
