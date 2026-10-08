@@ -9944,3 +9944,52 @@ critical-path bound or a controlled A/B experiment. The remaining #439
 acceptance is to collect and record the first post-cutover **weekly** blood /
 signing runner-minutes and the final comparable merge/night/week roll-up
 after that workflow executes.
+
+## 2026-10-09 — #439 seventeen post-cutover merge-group integrations (interim)
+
+This extends the five-integration post-cutover snapshot above to **17
+successful native merge-group check.yml runs** on 2026-10-08 UTC, from
+[37732468827](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37732468827)
+through
+[37783444016](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37783444016).
+All 17 workflow conclusions were `success`; the additional twelve runs are
+new observations, not twelve more runs added to the original five for purposes
+of any double-counted total.
+
+The data source is GitHub Actions' `actions/runs?event=merge_group`
+and each run's `actions/runs/{id}/jobs?per_page=100`. The workflow
+clock is `created_at → updated_at`; runner-minutes are the sum of
+`completed_at − started_at` for jobs whose conclusion is not `skipped`.
+The latter are *execution-time estimates*, not GitHub billing figures.
+The batch column is **job wall time**, including setup, trusted-proof
+lookup and artifacts; it is not the timed gate command checked by
+`tools/gate-duration.mjs`.
+
+| Measure across 17 successful integrations | Mean | Median | Range |
+| --- | ---: | ---: | ---: |
+| Whole-workflow elapsed (min) | 7.67 | 7.53 | 5.73–10.57 |
+| Non-skipped job execution (runner-min) | 24.31 | 24.13 | 12.55–35.42 |
+| `gates (batch)` job wall time (min) | 6.65 | 7.15 | 0.87–8.37 |
+
+The one sub-two-minute batch job is
+[37737831585](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37737831585),
+which the earlier snapshot identified as a trusted-proof reuse. The other
+sixteen batch jobs range from **5.45 to 8.37 minutes**; job-wall-time values
+must not be compared directly to the `batch.seconds=420` command budget.
+The highest whole-workflow elapsed sample,
+[37779626322](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37779626322),
+also ran an iOS simulator build (about ten minutes), demonstrating that
+platform-triggered jobs can dominate the critical path independently of the
+blocking batch gate. It finished successfully.
+
+**Interpretation.** The hosted data supports the post-#439 reduction from
+roughly 24-minute pre-fix workflow means to roughly 8-minute post-fix means,
+but the before and after windows are different commits, input mixes and
+triggered jobs; the difference is descriptive, **not** a controlled causal
+estimate. This update changes no gate, threshold, sample count or CI policy.
+
+**Still pending for #439 completion:** the first *post-cutover weekly
+statistical* workflow scheduled for **2026-10-11 UTC**, including its actual
+runner-minutes and a final like-for-like merge/night/week roll-up. The one
+post-cutover nightly measurement recorded above remains the current nightly
+reference. Do **not** close #439 on this interim sample.
