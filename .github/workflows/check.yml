@@ -875,23 +875,30 @@ jobs:
       - run: npm ci
       - name: build the offline client
         run: npm run build:client
-      - name: install the release key
+      # Production tags must have every upload-key secret. A SemVer pre-release
+      # may intentionally produce an unsigned AAB for pipeline verification;
+      # partial secret sets never silently downgrade to unsigned.
+      - name: enforce Android signing policy
+        id: android-signing
         env:
-          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "$KEYSTORE" | base64 --decode > packages/mobile/android/release.keystore
-          cat > packages/mobile/android/keystore.properties <<EOF
-          storeFile=release.keystore
-          storePassword=$STORE_PASSWORD
-          keyAlias=$KEY_ALIAS
-          keyPassword=$KEY_PASSWORD
-          EOF
-      - name: build signed app bundle
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node tools/android-release-proof.mjs prepare
+      - name: build release bundle and Gradle version metadata
         working-directory: packages/mobile/android
-        run: ./gradlew bundleRelease
+        run: ./gradlew writeReleaseProofMetadata
+      - name: verify upload-key AAB signature
+        if: steps.android-signing.outputs.signed == 'true'
+        run: |
+          set -euo pipefail
+          AAB=packages/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify -verbose "$AAB" > "$RUNNER_TEMP/android-jarsigner.txt"
+          if ! grep -q 'jar verified.' "$RUNNER_TEMP/android-jarsigner.txt"; then
+            echo 'The Android AAB is not signed/verified. Refusing this release.'
+            exit 1
+          fi
       # Page-size alignment is a property of native shared libraries. This
       # shell deliberately ships none: fail if a transitive dependency changes
       # that fact, instead of treating "we have no native code" as folklore.
@@ -901,10 +908,17 @@ jobs:
             echo 'The AAB now contains native libraries; add and verify 16 KB alignment before release.'
             exit 1
           fi
+      - name: write Android release proof
+        env:
+          ANDROID_SIGNING_RESULT: ${{ steps.android-signing.outputs.signed == 'true' && 'verified' || 'unsigned-prerelease' }}
+          ANDROID_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node tools/android-release-proof.mjs proof
       - uses: actions/upload-artifact@v7
         with:
           name: Eldritch-Dynasty-${{ github.ref_name }}.aab
-          path: packages/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          path: |
+            packages/mobile/android/app/build/outputs/bundle/release/app-release.aab
+            packages/mobile/android/app/build/outputs/bundle/release/android-release-proof.json
 
   # A release is the same checked client inside a Windows installer —
   # the desktop half of the same rule `android` states above. Windows only:
