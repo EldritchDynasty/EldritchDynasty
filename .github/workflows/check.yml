@@ -176,6 +176,18 @@ jobs:
           CHECK_PR_BODY: '1'
           PR_BODY: ${{ github.event.pull_request.body || '' }}
         run: node tools/closing-keywords.mjs
+      - name: Reject unsafe issue closures in PR and merge-group commits
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        env:
+          CHECK_COMMIT_CLOSINGS: '1'
+          CLOSINGS_EVENT: ${{ github.event_name }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
+          # Check the fetched synthetic PR merge head or merge-group head, not
+          # an unrelated branch tip. The full checkout above includes every
+          # commit in this range; missing revisions fail closed in the script.
+          CLOSINGS_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          CLOSINGS_HEAD: ${{ github.sha }}
+        run: node tools/closing-keywords.mjs
       - id: decide
         env:
           # `>-` FOLDS TO ONE LINE ONLY IF EVERY LINE IS INDENTED THE SAME.
