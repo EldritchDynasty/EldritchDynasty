@@ -272,7 +272,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: gave the Seal away as a gift, to a cousin of good blood }
+            - { kind: deed, target: { slot: HEAD }, text: 'gave the Seal away as a gift, to a cousin of good blood' }
           discrepancy:
             id: seal_gift_lie
             severity: major
@@ -545,7 +545,7 @@ events:
           effects:
             - { kind: respect, delta: -2 }
           claims:
-            - { kind: deed, target: { slot: VESSEL }, text: agreed to be given by name as the vessel, and the house wrote her name down }
+            - { kind: deed, target: { slot: VESSEL }, text: 'agreed to be given by name as the vessel, and the house wrote her name down' }
         omit:
           chronicle: null
           # §22, and the half of it the shipped block did not have: "record it
