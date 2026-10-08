@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { loadContent } from '@ed/content';
-import { asId } from '@ed/schema';
+import { CONTENT_ROOT, loadContent } from '@ed/content';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
+import { asId, proseOriginalHash } from '@ed/schema';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry,
   pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, visibleRecordView,
@@ -437,5 +440,42 @@ describe('the pen may claim one rung, and only while it is believed (issue #77)'
       applyRecord(ctx, event, id, option, { CHILD: child.id });
       expect(ctx.world.chronicle.find((c) => c.id === id)!.rung).toBeUndefined();
     }
+  });
+});
+
+/**
+ * #584: an unquoted comma inside a YAML flow-map claim silently split
+ * the deed into a shortened text and an unknown null-valued key. The
+ * schema discarded the latter, leaving an apparently valid Record.
+ */
+describe('Crusade chapel deed parsing (#584)', () => {
+  const eventId = 'what_the_chapel_is_for';
+  const fullText = 'keeps an altar stone older than the chapel, which this house did not set there';
+  const address = 'content:events/age_crusade.yaml#events[id=what_the_chapel_is_for].record.options.record.claims[0].text';
+
+  it('keeps all deed words and no extra keys when parsing the authored YAML', () => {
+    const raw = readFileSync(join(CONTENT_ROOT, 'events', 'age_crusade.yaml'), 'utf8');
+    const doc = parse(raw) as {
+      events: Array<{ id: string; record?: {
+        options: { record: { claims: Array<Record<string, unknown>> } };
+      } }>;
+    };
+    const claim = doc.events.find((event) => event.id === eventId)?.record?.options.record.claims[0];
+    expect(claim).toStrictEqual({
+      kind: 'deed',
+      target: { slot: 'HEAD' },
+      text: fullText,
+    });
+  });
+
+  it('keeps the complete gameplay claim and its reviewed Plain English fingerprint', () => {
+    const claim = bundle.mustEvent(eventId).record?.options.record.claims[0];
+    expect(claim).toStrictEqual({
+      kind: 'deed',
+      target: { slot: 'HEAD' },
+      text: fullText,
+    });
+    const variant = bundle.proseVariants.find((row) => row.address === address);
+    expect(variant?.of).toBe(proseOriginalHash(fullText));
   });
 });
