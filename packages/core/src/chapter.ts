@@ -1,5 +1,6 @@
 import type { EndedAge, Register } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from './world.js';
+import { renderContentProse } from './prose.js';
 
 /**
  * THE AGE IS THE SESSION (issue #65).
@@ -81,7 +82,14 @@ const CHRONICLE_RANK: Partial<Record<ChronicleEntry['weight'], number>> = {
 export function openingOf(ctx: SimCtx, ageId: string): ChapterOpening | undefined {
   const def = ctx.content.age(ageId);
   if (!def) return undefined;
-  return { age: ageId, register: def.register, text: def.opening };
+  // The opening is a prospective presentation beat, never a saved Chronicle
+  // rewrite. Address identity follows the authored id, not the Age's name or
+  // its position in ages.yaml, and missing variants keep Original playable.
+  const file = ctx.content.sourceOf(ageId);
+  const text = file === undefined
+    ? def.opening
+    : renderContentProse(ctx, file, `ages[id=${encodeURIComponent(ageId)}].opening`, def.opening);
+  return { age: ageId, register: def.register, text };
 }
 
 /**
