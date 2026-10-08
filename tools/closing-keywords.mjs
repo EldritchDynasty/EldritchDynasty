@@ -8,6 +8,8 @@
  * repeats the same mistake locally and in the janitor.
  */
 
+import { execFileSync } from 'node:child_process';
+
 const CLOSING = /\b(?:clos(?:e|es|ed)|fix(?:e[sd])?|resolv(?:e|es|ed))\s+#(\d+)\b/gi;
 const MARKDOWN = /[*_`~]/g;
 const NEGATION = /(?:\bnot\b|\bnever\b|\bwithout\b|\brather\s+than\b|\binstead\s+of\b|\b\w+n['’]t\b)[^.;:!?\n]{0,120}$/i;
@@ -81,11 +83,71 @@ export function prBodyError(text) {
   ].join('\n');
 }
 
+/**
+ * Commit messages are landing instructions too. GitHub ignores grammatical
+ * negation and can close an issue that a PR author explicitly kept open.
+ *
+ * On a PR we additionally require every affirmative commit closure to appear
+ * affirmatively in its PR body. A mere "Refs" or "Part of" is not consent to
+ * close. Merge groups have no authoritative single PR body (a group can
+ * contain several PRs), so they recheck dangerous negations; each constituent
+ * PR's affirmative declarations are checked on its exact-head CI before the
+ * automatic merge-queue admission.
+ */
+export function commitMessagesError(prBody, commitLog, { mergeGroup = false } = {}) {
+  const negated = negatedClosings(commitLog);
+  const declared = new Set(closingIssues(prBody));
+  const undeclared = mergeGroup ? [] :
+    [...new Set(closingIssues(commitLog).filter((n) => !declared.has(n)))];
+  if (!negated.length && !undeclared.length) return null;
+
+  const lines = [
+    ...negated.map((n) =>
+      `#${n}: commit message negates a GitHub closing keyword; use "Refs #${n}" or "Part of #${n}".`),
+    ...undeclared.map((n) =>
+      `#${n}: commit message closes the issue, but the PR body does not. Declare "Closes #${n}" in the PR body, or replace the commit keyword with "Refs #${n}" or "Part of #${n}".`),
+  ];
+  return ['Unsafe closing keywords in PR commit messages:', ...lines].join('\n');
+}
+
+/** Fail closed if the complete, exact revision range cannot be inspected. */
+function checkedCommitLog(base, head) {
+  if (!/^[0-9a-f]{40}$/i.test(base ?? '') || !/^[0-9a-f]{40}$/i.test(head ?? '')) {
+    throw new Error('missing or invalid full base/head SHA for commit-closure audit');
+  }
+  const range = `${base}..${head}`;
+  const count = Number(execFileSync('git', ['rev-list', '--count', range], { encoding: 'utf8' }).trim());
+  if (!Number.isSafeInteger(count) || count < 1) {
+    throw new Error(`no PR/merge-group commits found in ${range}; refusing to skip the closure audit`);
+  }
+  return execFileSync('git', ['log', '--format=%B', range], {
+    encoding: 'utf8',
+    maxBuffer: 8 * 1024 * 1024,
+  });
+}
+
 // CI workflows set this explicitly; normal imports from land/janitor remain pure.
 if (process.env.CHECK_PR_BODY === '1') {
   const error = prBodyError(process.env.PR_BODY ?? '');
   if (error) {
     process.stderr.write(`${error}\n`);
+    process.exitCode = 1;
+  }
+}
+
+if (process.env.CHECK_COMMIT_CLOSINGS === '1') {
+  try {
+    const event = process.env.CLOSINGS_EVENT;
+    if (event !== 'pull_request' && event !== 'merge_group') {
+      throw new Error(`commit-closure audit needs pull_request or merge_group, got ${String(event)}`);
+    }
+    const log = checkedCommitLog(process.env.CLOSINGS_BASE, process.env.CLOSINGS_HEAD);
+    const error = commitMessagesError(process.env.PR_BODY ?? '', log, {
+      mergeGroup: event === 'merge_group',
+    });
+    if (error) throw new Error(error);
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
   }
 }
