@@ -9833,3 +9833,49 @@ This completes the independently landable #573 calibration. **Parent #439
 remains open** for its first post-cutover weekly statistical run (scheduled
 for Sunday 2026-10-11 UTC), the final night/week runner-minute roll-up,
 and closing acceptance; no pre-Sunday weekly result is claimed.
+
+
+## 2026-10-08 — #439 post-cutover nightly and five-merge hosted measurement
+
+This is **interim hosted evidence**, not #439's final night/week sign-off. The
+first post-cutover weekly statistical workflow is scheduled for **Sunday
+2026-10-11 UTC**; its runner-minutes cannot be reported in advance. No gate
+inputs, sample sizes, budgets, CI selection policy, or gameplay were changed.
+
+**Latest five successful native merge-group integrations after #573's
+short-path calibration** (oldest to newest): [37732468827](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37732468827),
+[37737831585](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37737831585),
+[37742045570](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37742045570),
+[37743148233](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37743148233),
+[37745750994](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37745750994).
+Each completed successfully on 2026-10-08 UTC. Runner-minutes are the sum of
+each **non-skipped** job's `completed_at - started_at`, including setup,
+rather than a sum of step durations or a billed-minutes claim. Whole-workflow
+elapsed is `updated_at - created_at`. The run in the queue for PR #586 was
+still in progress at this measurement point and is deliberately excluded.
+
+| Measure | Mean | Median | Range |
+| --- | ---: | ---: | ---: |
+| Whole workflow elapsed (minutes) | 7.15 | 7.53 | 5.73–7.65 |
+| Non-skipped runner-minutes per integration | 21.12 | 23.97 | 12.55–25.37 |
+| Blocking `gates (batch)` job (minutes, includes proof lookup) | 5.93 | 7.22 | 0.87–7.33 |
+
+The **0.87-minute** batch job on run 37737831585 reused trusted proof;
+the four other batch jobs ran for **6.97–7.33 minutes**. These observed hosted
+job times remain consistent with the #573 seven-minute command budget and do
+not warrant weakening its 1.25x guard.
+
+**Nightly:** [scheduled successful nightly regression run
+37606408056](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37606408056),
+on main `41765386`, started 2026-10-07 10:17 UTC and completed around
+10:34 UTC: **91.16 non-skipped runner-minutes**, across four slow-test shards,
+three sampled gate jobs, the iOS simulator job, and the main guard. Its
+whole-workflow elapsed was **16m31s** (from the run timestamps). All nine jobs
+were successful. Runner cost includes the nightly iOS job; this is important
+when comparing the former merged slow/gate workload to the scheduled tier.
+
+These samples describe what the hosted runners actually did, not a promised
+critical-path bound or a controlled A/B experiment. The remaining #439
+acceptance is to collect and record the first post-cutover **weekly** blood /
+signing runner-minutes and the final comparable merge/night/week roll-up
+after that workflow executes.
