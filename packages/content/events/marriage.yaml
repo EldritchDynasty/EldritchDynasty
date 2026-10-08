@@ -223,7 +223,7 @@ events:
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: SON }, text: declined the blood, choosing service over power }
+            - { kind: deed, target: { slot: SON }, text: 'declined the blood, choosing service over power' }
           discrepancy:
             id: the_declining_son
             severity: minor
