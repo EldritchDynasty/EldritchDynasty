@@ -977,3 +977,25 @@ jobs:
           path: |
             packages/shell/release/*.exe
             packages/shell/release/windows-release-proof.json
+
+  # A Windows installer is not proven just because win-unpacked booted.
+  # Download the *retained artifact* onto another clean hosted Windows VM.
+  # Verify SHA-256 before executing the NSIS file, install into a fresh
+  # directory, verify the installed exe and run its game-mode bridge smoke.
+  # This is tag-only: ordinary PRs keep their existing source CI budget.
+  windows-install-smoke:
+    name: Windows installed artifact smoke
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows-release]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          name: Eldritch-Dynasty-${{ github.ref_name }}-windows
+          path: windows-artifact
+      - name: verify downloaded hashes, install and boot the installed game
+        run: node packages/shell/scripts/installed-smoke.mjs windows-artifact
