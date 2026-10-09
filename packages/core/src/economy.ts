@@ -1,5 +1,5 @@
 import type { RespectTier } from '@ed/schema';
-import { MAIN_BRANCH, RESPECT_ORDER } from '@ed/schema';
+import { assertNever, MAIN_BRANCH, RESPECT_ORDER } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { assizeFavour } from './assize.js';
 import { attr } from './people/factory.js';
@@ -55,12 +55,26 @@ const STANDING_COST: Record<RespectTier, number> = {
  */
 type RespectSlipCause = 'madness' | 'quiet' | 'debt';
 
-/** Complete sentences let the translator change grammar without reassembling fragments. */
-const RESPECT_SLIP_TEXT: Record<RespectSlipCause, string> = {
-  madness: 'The house was {TIER} and then it was not, because of what people had started to say about the son in the east rooms. Nobody announced it. It was simply the case by the following spring.',
-  quiet: 'The house was {TIER} and then it was not, because nothing had been done in thirty years worth telling anyone about. Nobody announced it. It was simply the case by the following spring.',
-  debt: 'The house was {TIER} and then it was not, because the house was visibly broke, and everybody could see it. Nobody announced it. It was simply the case by the following spring.',
-};
+/** The string audit inventories literal keys and templates, not computed lookup tables. */
+function slipText(ctx: SimCtx, cause: RespectSlipCause, tier: RespectTier): string {
+  const values = { TIER: tier };
+  switch (cause) {
+    case 'madness':
+      return msg(ctx, 'respect.slip.madness',
+        'The house was {TIER} and then it was not, because of what people had started to say about the son in the east rooms. Nobody announced it. It was simply the case by the following spring.',
+        values);
+    case 'quiet':
+      return msg(ctx, 'respect.slip.quiet',
+        'The house was {TIER} and then it was not, because nothing had been done in thirty years worth telling anyone about. Nobody announced it. It was simply the case by the following spring.',
+        values);
+    case 'debt':
+      return msg(ctx, 'respect.slip.debt',
+        'The house was {TIER} and then it was not, because the house was visibly broke, and everybody could see it. Nobody announced it. It was simply the case by the following spring.',
+        values);
+    default:
+      return assertNever(cause, 'Respect-slip cause');
+  }
+}
 
 function slip(ctx: SimCtx, cause: RespectSlipCause, floor = 1): boolean {
   const w = ctx.world;
@@ -72,7 +86,7 @@ function slip(ctx: SimCtx, cause: RespectSlipCause, floor = 1): boolean {
     year: w.year,
     weight: 'paragraph',
     title: msg(ctx, 'respect.slip.title', 'They Were Spoken Of Differently'),
-    text: msg(ctx, `respect.slip.${cause}`, RESPECT_SLIP_TEXT[cause], { TIER: RESPECT_ORDER[i]! }),
+    text: slipText(ctx, cause, RESPECT_ORDER[i]!),
     named: false,
   });
   return true;
