@@ -199,8 +199,8 @@ describe('mobile native save import picker', () => {
     const { input, listeners } = fakeNativePicker();
     const choice = chooseSaveFile(input as unknown as HTMLInputElement);
 
-    expect(input.type).toBe('file');
-    expect(input.accept).toBe('application/json,.json,.edsave');
+    // The bridge configures type/accept (cross-host platform.test.ts
+    // protects that contract); the helper must complete on native cancel.
     expect(input.click).toHaveBeenCalledOnce();
     expect(listeners.has('cancel')).toBe(true);
     listeners.get('cancel')!();
