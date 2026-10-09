@@ -8,6 +8,7 @@ import {
   verifyAuthenticode,
   writeWindowsReleaseProof,
 } from './windows-release-proof.mjs';
+import { checkedWindowsReleaseProof, smokeInstalledWindowsArtifact } from './installed-smoke.mjs';
 
 const temporaryDirectories: string[] = [];
 
