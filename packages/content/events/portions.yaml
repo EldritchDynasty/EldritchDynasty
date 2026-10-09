@@ -238,3 +238,168 @@ events:
             provableBy: [house_marrow, the_church]
     rumour: { id: rumour_the_dealers_table, accuracy: 0.25, spread: 2 }
     accounts: [ballad_of_the_thumb_sized_bottle, church_inquest_minute_1604]
+
+proseVariants:
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].title"
+    of: "ae030099f286a51d"
+    plainenglish: >-
+      A Bottle of Agelessness
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].body"
+    of: "6c21bc597c0c166d"
+    plainenglish: >-
+      The woman refuses to call the bottle agelessness, but she will not give it
+      another name. Her shop is colder than the street outside. A bottle the size
+      of a thumb sits on the counter. Its price could buy nine years of bread for
+      the house, and the woman knows {HEAD} can afford it. She says nothing about
+      what it will take from the person who drinks it. She says it has never
+      failed.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].interaction.choices[id=buy].label"
+    of: "09d5d2aef656132a"
+    plainenglish: >-
+      Pay for the bottle and take it home without opening it.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].interaction.choices[id=buy].outcomes[id=bought].text"
+    of: "adf77d5d2805e5b1"
+    plainenglish: >-
+      The bottle stays in the east cellar for as long as the family can resist
+      using it. Each new Head learns where it is on the day he takes the seal. He
+      is also told that his father managed without it.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].interaction.choices[id=decline].label"
+    of: "bc202c457c233f51"
+    plainenglish: >-
+      Leave the bottle on the counter instead of buying it.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].interaction.choices[id=decline].outcomes[id=left].text"
+    of: "523ca6b90e209c9d"
+    plainenglish: >-
+      The woman does not argue or lower the price. Eleven years later, she and
+      the bottle are still there. By then, the house has held two funerals. It
+      might have needed only one.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.subject"
+    of: "b7f50ad458b09648"
+    plainenglish: >-
+      the bottle stored in the east cellar
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.record.chronicle"
+    of: "22f3d4aa7cc537fe"
+    plainenglish: >-
+      We bought forty more years from a woman who refused to name what she sold
+      us. We have not yet decided who will get those years.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.record.claims[0].text"
+    of: "bbdb7d5121a5e40d"
+    plainenglish: >-
+      purchased the bottle from a woman in the east
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.embellish.chronicle"
+    of: "1c25a94e340ac2a2"
+    plainenglish: >-
+      The bottle was a gift from a grateful house in the east, given in thanks
+      for a private kindness that nobody discussed.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.embellish.claims[0].text"
+    of: "c25ee5a4bb2524f0"
+    plainenglish: >-
+      accepted the bottle as a gift without paying for it
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].title"
+    of: "1a4ecb72069f225e"
+    plainenglish: >-
+      A Bottle of Fertility
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].body"
+    of: "8f28d3562c69afaa"
+    plainenglish: >-
+      This seller is a frightened man. He keeps the flask inside his coat while
+      they talk. He will not put it in {HEAD}'s hand until the coins have been
+      counted twice. He says it holds three doses. At least sixty years must pass
+      between doses or the contents will change. He repeats that warning but will
+      not explain it. Outside, the dogs have fallen silent.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].interaction.choices[id=buy].label"
+    of: "97daae3a134c6eae"
+    plainenglish: >-
+      Count the coins twice, then take the flask.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].interaction.choices[id=buy].outcomes[id=bought].text"
+    of: "6390c6b66bb7409a"
+    plainenglish: >-
+      The man leaves before the money is put away. The flask contains three
+      doses. Nobody says aloud, in the room where it is stored, that the house
+      will probably need all three during its lifetime.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].interaction.choices[id=refuse].label"
+    of: "89eccc18f4f03f24"
+    plainenglish: >-
+      Send him away. Buying this flask would show that the house needs it.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].interaction.choices[id=refuse].outcomes[id=refused].text"
+    of: "00df43ac9ffc5fa0"
+    plainenglish: >-
+      He leaves without arguing. If he had argued, it would have meant he thought
+      the house might be wrong to refuse. His silence is more troubling. The
+      steward keeps his hand on the closed door for a while.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].record.subject"
+    of: "3b65be214ce45955"
+    plainenglish: >-
+      the fertility flask and the reason it was purchased
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].record.options.record.chronicle"
+    of: "7b6ea443df8af5c7"
+    plainenglish: >-
+      Our family line had grown thin, and we knew it. We bought three chances
+      from a frightened man on the road.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].record.options.record.claims[0].text"
+    of: "8c62137e344ae6e2"
+    plainenglish: >-
+      paid a frightened man on the road for three chances
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].record.options.embellish.chronicle"
+    of: "7d4772094c3bcef5"
+    plainenglish: >-
+      A respected physician visited the house that year, and the household became
+      healthier because of the visit.
+  - address: "content:events/portions.yaml#events[id=the_portion_of_fertility].record.options.embellish.claims[0].text"
+    of: "fc332932e67b4516"
+    plainenglish: >-
+      hired a respected physician instead of buying the flask
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].title"
+    of: "77137a9060d25384"
+    plainenglish: >-
+      The Unmirrored Eye Is for Sale
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].body"
+    of: "ebf52addab6493d1"
+    plainenglish: >-
+      The dealer refuses to say where the object came from, and {HEAD} does not
+      ask again. It is neither a book nor a bottle. It is unusually heavy for its
+      size. Its price suggests the dealer wants to get rid of it. Every account
+      agrees on one thing: it works only on someone who could already have
+      followed that path.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].interaction.choices[id=buy].label"
+    of: "29e6cb35bfe100b1"
+    plainenglish: >-
+      Pay the stated price and take the wrapped object home.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].interaction.choices[id=buy].outcomes[id=bought].text"
+    of: "774c2cf4907b2db0"
+    plainenglish: >-
+      The object is stored in the cellar with the other things the family avoids
+      discussing. {HEAD} tells nobody where it is, but the household finds it
+      anyway. People tend to find the one door they were warned not to open.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].interaction.choices[id=decline].label"
+    of: "7b842f3a12260016"
+    plainenglish: >-
+      Do not buy it. Leave it on the dealer's table.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].interaction.choices[id=decline].outcomes[id=left].text"
+    of: "250c10c981b843cd"
+    plainenglish: >-
+      The dealer does not lower the price or seem surprised. Ten years later, the
+      object is still on his table at exactly the same price, waiting for a less
+      careful house to buy it.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.subject"
+    of: "1b89708f9ff3780b"
+    plainenglish: >-
+      the object purchased that year
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.record.chronicle"
+    of: "14975c34388c8878"
+    plainenglish: >-
+      We bought an object we cannot describe. We did not ask the seller's name,
+      and we have used the object since buying it.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.record.claims[0].text"
+    of: "1fab4895eab01b19"
+    plainenglish: >-
+      bought the object from a man without asking his name
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.embellish.chronicle"
+    of: "850190a309fd216f"
+    plainenglish: >-
+      That year, we recovered a relic from our house's founding and returned it
+      to its proper place.
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.embellish.claims[0].text"
+    of: "457baf9a8a779886"
+    plainenglish: >-
+      recovered and returned a relic from the founding of our house
