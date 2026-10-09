@@ -162,3 +162,96 @@ events:
                 - { kind: branch, op: slight, slot: COUSIN, amount: 12 }
                 - { kind: rumour, op: seed, id: rumour_the_boy_from_the_smaller_house, accuracy: 0.7 }
     rumour: { id: rumour_the_boy_from_the_smaller_house, accuracy: 0.45, spread: 2 }
+
+proseVariants:
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].title"
+    of: "19453a56f799c42a"
+    plainenglish: >-
+      The Smaller House Brings Its Accounts
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].body"
+    of: "b320962d17d134b9"
+    plainenglish: >-
+      The road to the smaller house is four miles of bad gravel. Nobody has
+      repaired it for thirty years. {COUSIN} travels it twice each year for the two
+      feasts. He sits near the end of the table, not with the most important
+      guests. Each time he brings a gift. This year he brings his hall's accounts,
+      neatly copied by a clerk. He puts them beside {HEAD}'s plate without saying
+      anything. Everyone near that end of the table reads the accounts before the
+      meat is served. Nobody mentions them, although the figures are good.
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].interaction.choices[id=give_him_the_ledger].label"
+    of: "3b57e14331e63e9f"
+    plainenglish: >-
+      Give him responsibility for the ledger. He knows how to keep accounts.
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].interaction.choices[id=give_him_the_ledger].outcomes[id=he_takes_it].text"
+    of: "81d458da49dd9abe"
+    plainenglish: >-
+      He accepts the books, the work and the two rooms that come with them. He is
+      careful never to say he deserved any of it. Within four years, the main house
+      is richer. People in his own hall say Ardwen bought his loyalty. They are not
+      entirely wrong.
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].interaction.choices[id=give_him_the_ledger].outcomes[id=he_declines].text"
+    of: "c1c722992ea19045"
+    plainenglish: >-
+      He thanks the family in front of everyone. In the morning he goes home
+      without taking the work. He wanted Ardwen to offer it to him. Now that they
+      have asked, he finds that he does not actually want the job.
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].interaction.choices[id=praise_and_nothing].label"
+    of: "65696ad6463f68a2"
+    plainenglish: >-
+      Praise his work warmly, but change nothing.
+  - address: "content:events/cadets.yaml#events[id=the_accounts_of_the_smaller_house].interaction.choices[id=praise_and_nothing].outcomes[id=warmly].text"
+    of: "692bf14d5a5d3731"
+    plainenglish: >-
+      The family praises him all along the table. He rides home in the dark over
+      the bad road. For twenty years his sons hear him tell the story of that toast
+      every winter. They hear how much it matters to him, and how often he needs to
+      repeat it.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].title"
+    of: "3176321fe6e7963b"
+    plainenglish: >-
+      A Warning from Four Miles Away
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].body"
+    of: "b6c00f256f8995e9"
+    plainenglish: >-
+      {COUSIN} comes to Ardwen on a weekday, something he has never done before. He
+      asks to speak in the small room instead of the hall. His second son is
+      fourteen. Something happened in the smaller house's yard, in front of a
+      farrier and the farrier's two sons. The boy has not spoken since, and the
+      farrier will not speak about it. Nobody told the smaller house what the
+      family blood could do. Ardwen has kept that knowledge from them for eighty
+      years, helped by four miles of bad road. For four hundred years, nobody
+      thought to write down that moving away does not weaken the blood. They never
+      thought someone would need to be told.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].interaction.choices[id=bring_him_up].label"
+    of: "f518bb4cc0e0c750"
+    plainenglish: >-
+      Bring the boy to Ardwen, whatever his family thinks about it.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].interaction.choices[id=bring_him_up].outcomes[id=taken_in].text"
+    of: "6f9353c59b8e6259"
+    plainenglish: >-
+      The boy arrives by cart with his own box and never returns home. At fourteen
+      he begins lessons he should have started at nine, taught late by strangers.
+      His father is thanked publicly in Ardwen's hall, with the good cups brought
+      out. Then his father goes home. He misses Greening that year, the next year
+      and every year afterwards.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].interaction.choices[id=send_the_tutor_down].label"
+    of: "acc789735872a1ff"
+    plainenglish: >-
+      Send a tutor to the smaller house. Teach the boy there and make his place
+      clear.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].interaction.choices[id=send_the_tutor_down].outcomes[id=taught_there].text"
+    of: "ae693cfb84f00f67"
+    plainenglish: >-
+      A sixty-year-old tutor travels four miles twice a week for six years,
+      whatever the weather. He never complains anywhere {HEAD} might hear him. The
+      boy receives his lessons. His smaller house is treated with respect, and its
+      family understands both what Ardwen has given them and what it has withheld.
+  - address: "content:events/cadets.yaml#events[id=the_cousin_who_woke_four_miles_off].interaction.choices[id=send_the_tutor_down].outcomes[id=taught_badly].text"
+    of: "e14febe08e58fc2c"
+    plainenglish: >-
+      At first the tutor visits twice a week. Then he visits once a month, and
+      eventually he sends letters instead. The letters are good, but they cannot
+      show him how the boy moves his hands. The boy learns incorrectly and without
+      proper company, which is exactly what this family has tried to prevent for
+      four hundred years. He is nineteen before anyone at Ardwen examines him
+      carefully. By then, he holds his left hand in a way the tutor cannot explain.
