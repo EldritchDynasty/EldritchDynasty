@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { SigningTerm } from '@ed/schema';
+import { proseOriginalHash, type SigningTerm } from '@ed/schema';
 import {
   applyEffect, beget, branchReport, consumeVessel, describeDecision, digestOf, frequencyReport, hallOf, heldBooks, hashSeed,
   loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
@@ -10,6 +10,7 @@ import {
 import {
   buildPair, earlyComesFirst, parseArgs, renderAnswerKey, renderReaderSheet, stripClockTells,
 } from '../../../tools/blind-reader-material.js';
+import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
 
@@ -451,6 +452,59 @@ describe('the two ends of the run, through the façade', () => {
     expect(digestOf(replayed)).toBe(digestOf(g.ctx));
     expect(replayed.world.founding).toEqual(g.ctx.world.founding);
     expect(replayed.world.succession[0]?.name).toBe('Arlen Gearithy');
+  });
+
+  /**
+   * THE READER'S SETTING ON THE SIGNING SCREEN (#751, review on #754). The
+   * founding page is written inside the rebuild `found()` triggers, so the
+   * wording chosen while the signing is open — mode or a catalogue arriving
+   * late — has to reach `bootstrap` before that page is written.
+   */
+  it('founds in the wording the reader chose on the signing screen, either way round', () => {
+    const debt = {
+      title: 'A Debt of Three Parts',
+      text: 'In the year 1042 {FOUNDER} signed something, and the house has been paying for it ever since.',
+    };
+    const variants = [
+      { address: coreMessageAddress('founding.debt_title'), of: proseOriginalHash(debt.title), plainenglish: 'A Three-Part Debt' },
+      {
+        address: coreMessageAddress('founding.debt'),
+        of: proseOriginalHash(debt.text),
+        plainenglish: 'In 1042, {FOUNDER} signed an agreement, and the family has been paying for it ever since.',
+      },
+    ];
+    const sign = (g: ReturnType<typeof newGame>) => {
+      const p = g.prologue()!;
+      expect(g.found({
+        houseName: 'The House of Salt', heirloom: p.heirlooms[0]!.heirloom, grudge: p.grudges[0]!.house,
+        founderName: 'Marek', answers: { public_question: 'chosen' },
+      }).ok).toBe(true);
+      return g.ctx.world.chronicle.find((page) => page.year === 1042 && page.weight === 'illuminated')!;
+    };
+    const plainPage = { title: 'A Three-Part Debt', text: 'In 1042, Marek signed an agreement, and the family has been paying for it ever since.' };
+    const originalPage = { title: debt.title, text: debt.text.replace('{FOUNDER}', 'Marek') };
+
+    // Original at creation; a catalogue and Plain English chosen before signing.
+    const late = newGame(signingBundle(), { seed: 34_300 });
+    late.setProseVariants(variants);
+    late.setProseMode('plainenglish');
+    expect(sign(late)).toMatchObject(plainPage);
+
+    // Plain English at creation; Original chosen before signing.
+    const back = newGame(signingBundle(), { seed: 34_300, proseMode: 'plainenglish', proseVariants: variants });
+    back.setProseMode('original');
+    expect(sign(back)).toMatchObject(originalPage);
+
+    // Words only: the founded house is the same house either way.
+    const words = (key: string, value: unknown) => (key === 'savedAt' || key === 'title' || key === 'text' ? undefined : value);
+    expect(JSON.stringify(late.save(), words)).toBe(JSON.stringify(back.save(), words));
+    expect(late.ctx.prose.mode).toBe('plainenglish');
+    expect(back.ctx.prose.mode).toBe('original');
+
+    // And a change after signing is prospective: the founding page keeps its words.
+    late.setProseMode('original');
+    expect(late.ctx.world.chronicle.find((page) => page.year === 1042 && page.weight === 'illuminated'))
+      .toMatchObject(plainPage);
   });
 
   it('keeps the original session when a signed founding is invalid', () => {
