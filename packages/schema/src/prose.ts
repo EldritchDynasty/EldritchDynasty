@@ -119,7 +119,8 @@ export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
   'situation', 'says',
 ]);
 
-const CONTENT_INTERPOLATION = /\{[A-Z][A-Z0-9_]*\}/g;
+/** Preserve uppercase slot names and lower/mixed-case runtime substitutions alike. */
+const CONTENT_INTERPOLATION = /\{[A-Za-z][A-Za-z0-9_]*\}/g;
 
 export function contentInterpolationTokens(text: string): string[] {
   return text.match(CONTENT_INTERPOLATION) ?? [];
