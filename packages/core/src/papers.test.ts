@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import {
   applyEffect, beget, bootstrap, dealMatch, filePedigree, hashSeed, makeRng, maternalDepth,
-  order, papersDemanded, papersHeld, phase, place, saveGame, loadGame, testWorld,
+  order, papersDemanded, papersHeld, phase, place, saveGame, loadGame, setProseMode,
+  setProseVariants, testRng, testWorld, tickPapers,
   PEDIGREE_PRICE, FULL_PEDIGREE,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -250,5 +253,65 @@ describe('and getting caught', () => {
     const reloaded = back.world.people.get(girl.id)!;
     expect(reloaded.lineageDocuments[0]?.exposed).toBe(1300);
     expect(papersHeld(back, reloaded)).toBe(0);
+  });
+});
+
+describe('the exposure page speaks the reader\'s setting (#733)', () => {
+  const TITLE = 'The seal';
+  const BODY = "Somebody set {PERSON}'s pedigree beside the parish roll and asked whose seal that was, "
+    + '{NOTARY} being no longer anywhere anyone could point to. '
+    + 'Nothing was proved. It does not need to be proved to be repeated.';
+
+  /** One cheap forgery, ticked on fresh streams until somebody notices it. */
+  function expose(mode: 'original' | 'plainenglish') {
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [
+      {
+        address: coreMessageAddress('papers.exposed_title'),
+        of: proseOriginalHash(TITLE),
+        plainenglish: 'A forged seal',
+      },
+      {
+        address: coreMessageAddress('papers.exposed'),
+        of: proseOriginalHash(BODY),
+        plainenglish: "Someone compared {PERSON}'s pedigree with the parish roll and asked about the seal. "
+          + '{NOTARY} could no longer be found to vouch for it. Nothing was proved, but people repeated it anyway.',
+      },
+    ]);
+    setProseMode(ctx, mode);
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Girl' });
+    const doc = filePedigree(ctx, girl, 'bramme');
+    let caught = 0;
+    for (let i = 0; i < 2000 && caught === 0; i += 1) caught = tickPapers(ctx, testRng('expose', i));
+    expect(caught).toBe(1);
+    return { ctx, doc, page: ctx.world.chronicle.at(-1)! };
+  }
+
+  it('keeps the Original byte for byte', () => {
+    const { page, doc } = expose('original');
+    expect(page.title).toBe('The seal');
+    expect(page.text).toBe(
+      "Somebody set Girl's pedigree beside the parish roll and asked whose seal that was, "
+        + `${doc.notarisedBy} being no longer anywhere anyone could point to. `
+        + 'Nothing was proved. It does not need to be proved to be repeated.',
+    );
+  });
+
+  it('renders the reviewed Plain English, linked to the same Discrepancy, and keeps it', () => {
+    const { ctx, page, doc } = expose('plainenglish');
+    expect(page.title).toBe('A forged seal');
+    expect(page.text).toBe(
+      "Someone compared Girl's pedigree with the parish roll and asked about the seal. "
+        + `${doc.notarisedBy} could no longer be found to vouch for it. Nothing was proved, but people repeated it anyway.`,
+    );
+    const d = ctx.world.discrepancies.get(page.discrepancyId!);
+    expect(d?.state).toBe('open');
+    expect(d?.provableBy).toContain('the parish roll');
+    expect(doc.exposed).toBe(ctx.world.year);
+
+    setProseMode(ctx, 'original');
+    expect(page.title).toBe('A forged seal');
+    const back = loadGame(saveGame(ctx), bundle);
+    expect(back.world.chronicle.at(-1)!.text).toBe(page.text);
   });
 });
