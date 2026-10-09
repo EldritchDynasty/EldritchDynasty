@@ -11,6 +11,7 @@ import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
 import { handleExternalPopup } from './external-links.mjs';
+import { inspectSeedDisclosure } from './seed-disclosure.mjs';
 
 /**
  * THE SHELL.
@@ -290,6 +291,17 @@ function smokeTest(win) {
         return;
       }
 
+      // The clean installed game must not display the word "seed" or its
+      // input on the Start screen until the player asks for Advanced (#321).
+      // Serialize the same pure DOM inspector unit-tested in the shell suite;
+      // no Node bridge or debug globals enter the renderer.
+      const seedDisclosure = await win.webContents.executeJavaScript(
+        `(${inspectSeedDisclosure.toString()})(document)`,
+      );
+      if (seedDisclosure !== 'ok') {
+        done(false, `game seed disclosure — ${seedDisclosure}`);
+        return;
+      }
       // Steam itself does not have to be running on a packaging worker. The
       // native module DOES have to be loadable, otherwise an installed build
       // would discover a missing .node/DLL only after somebody finished a run.
