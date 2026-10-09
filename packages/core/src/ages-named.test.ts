@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import { canonical, chapterOf, loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -151,6 +152,7 @@ describe('prospective Age-opening prose (#580)', () => {
 
     setProseVariants(ctx, [{
       address,
+      of: proseOriginalHash(def.opening),
       plainenglish: 'The fever did not care which families had power.',
     }]);
     setProseMode(ctx, 'plainenglish');
@@ -181,7 +183,7 @@ describe('prospective Age-opening prose (#580)', () => {
       year: 1042, weight: 'paragraph', named: false, text: earlierWords,
     });
     const savedBeforeMode = canonical(saveGame(ctx));
-    setProseVariants(ctx, [{ address, plainenglish: 'Different opening wording.' }]);
+    setProseVariants(ctx, [{ address, of: proseOriginalHash(ctx.content.age(age)!.opening), plainenglish: 'Different opening wording.' }]);
     setProseMode(ctx, 'plainenglish');
 
     expect(openingOf(ctx, age)!.text).toBe('Different opening wording.');
@@ -210,7 +212,7 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
       text: 'These words are already written in the record.',
     });
     const saved = canonical(saveGame(ctx));
-    setProseVariants(ctx, [{ address, plainenglish: 'The Years of Loss' }]);
+    setProseVariants(ctx, [{ address, of: proseOriginalHash(originalName), plainenglish: 'The Years of Loss' }]);
     setProseMode(ctx, 'plainenglish');
     const plain = chapterOf(ctx, done!)!;
     expect(plain.name).toBe('The Years of Loss');
@@ -243,6 +245,7 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
     setProseMode(ctx, 'plainenglish');
     setProseVariants(ctx, [{
       address: 'content:ages/ages.yaml#ages[id=the_plague].name',
+      of: proseOriginalHash(ctx.content.age('the_plague')!.name),
       plainenglish: 'The Plague Age',
     }]);
     expect(chapterOf(ctx, done!)!.name).toBeUndefined();
