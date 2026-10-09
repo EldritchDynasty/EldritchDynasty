@@ -4,7 +4,7 @@ import { parse } from 'yaml';
 import { loadContent } from '@ed/content';
 import { contentProseEntries, proseOriginalHash, type CharacterTemplate, type Person } from '@ed/schema';
 import {
-  CARDS_DEALT, dealMatch, declineMatch, matchFuture, matchSubjects, queueMatch, resolveMatch, takeCard,
+  CARDS_DEALT, dealMatch, declineMatch, matchFuture, matchSubjects, queueMatch, refreshHand, resolveMatch, takeCard,
   beget, bootstrap, genomeOf, hashSeed, loadGame, makeRng, marry, newGame, order, phase, place, runYears,
   saveGame, testRng, testWorld,
 } from '@ed/core';
@@ -824,6 +824,68 @@ describe('the hand is a decision, not a comparison', () => {
       if (offer.cards.length < 2) continue;
       const kin = offer.cards.filter((c) => c.kind === 'household').length;
       expect(kin).toBeLessThan(offer.cards.length);
+    }
+  });
+});
+
+describe('priority Match subject eligibility is consistent throughout a hand (#782)', () => {
+  function olderPrioritySubject() {
+    const ctx = testWorld(bundle, 782, 1042);
+    const subject = place(ctx, { sex: 'male', age: 52, name: 'The Elder' });
+    ctx.world.priorityMatch.push(subject.id);
+    return { ctx, subject };
+  }
+
+  it('deals a priority subject past age 45 without immediately closing every card', () => {
+    const { ctx, subject } = olderPrioritySubject();
+    expect(matchSubjects(ctx).map((p) => p.id)).toContain(subject.id);
+    const offer = dealMatch(ctx, subject, testRng('older-priority'));
+    expect(offer.cards.length).toBeGreaterThan(0);
+    // Price and papers may still shut an offer, but the SUBJECT must not be
+    // marked ineligible when selection and acceptance permit him to marry.
+    expect(offer.cards.every((c) => c.blockedBy !== 'The Elder cannot marry')).toBe(true);
+
+    const outsider = offer.cards.find((c) => c.kind === 'outsider');
+    expect(outsider, 'a priority hand needs an outside option').toBeDefined();
+    outsider!.available = true;
+    outsider!.blockedBy = undefined;
+    outsider!.dowry = 0; // Isolate the eligibility invariant from purse/papers.
+    expect(refreshHand(ctx, subject.id, [outsider!])).toBe(true);
+    expect(outsider!.available).toBe(true);
+    expect(takeCard(ctx, subject.id, outsider!).ok).toBe(true);
+  });
+
+  it('closes an older non-priority hand on docket refresh, not an older priority one', () => {
+    const { ctx, subject } = olderPrioritySubject();
+    const card = visibleCard({ available: true, dowry: 0 });
+    const pending = queueMatch(ctx, {
+      subject: { id: subject.id, name: subject.name, sex: subject.sex, age: 52 },
+      cards: [card],
+    });
+    phase('docket', ctx);
+    expect(ctx.world.pendingDecisions.some((p) => p.id === pending.id)).toBe(true);
+    expect(card.available).toBe(true);
+
+    ctx.world.priorityMatch = ctx.world.priorityMatch.filter((id) => id !== subject.id);
+    phase('docket', ctx);
+    expect(card.available).toBe(false);
+    expect(card.blockedBy).toBe('The Elder cannot marry');
+    expect(ctx.world.pendingDecisions.some((p) => p.id === pending.id)).toBe(false);
+  });
+
+  it('does not waive the minimum age or marriage status for priority people', () => {
+    const ctx = testWorld(bundle, 783, 1042);
+    const child = place(ctx, { sex: 'male', age: 16, name: 'A Child' });
+    const married = place(ctx, { sex: 'male', age: 52, name: 'Already Wed' });
+    const spouse = place(ctx, { sex: 'female', age: 29, name: 'Their Spouse' });
+    marry(ctx, married, spouse);
+    ctx.world.priorityMatch.push(child.id, married.id);
+
+    for (const person of [child, married]) {
+      const card = visibleCard({ available: true });
+      expect(refreshHand(ctx, person.id, [card])).toBe(false);
+      expect(card.available).toBe(false);
+      expect(card.blockedBy).toBe(person.name + ' cannot marry');
     }
   });
 });
