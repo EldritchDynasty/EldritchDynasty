@@ -42,6 +42,7 @@ import {
   applyRecord, autoResolveDecision, autoRecordOption, choiceAvailability, commitOutcome,
   queueChoice, queueMatch, queueRecord,
 } from '../events/decisions.js';
+import { msg } from '../messages.js';
 
 /**
  * A YEAR IS A LIST OF PHASES, and the list is the file.
@@ -147,7 +148,7 @@ export const YEAR_PHASES: readonly Phase[] = [
           year: w.year,
           weight: 'page',
           title: a.name,
-          text: a.opening ?? `They began to call it ${a.name}.`,
+          text: a.opening ?? msg(ctx, 'age.named_fallback', 'They began to call it {AGE}.', { AGE: a.name }),
           named: true,
         });
       }
@@ -204,11 +205,10 @@ export const YEAR_PHASES: readonly Phase[] = [
       w.chronicle.push({
         year: w.year,
         weight: 'illuminated',
-        title: 'The House Does Not Empty',
-        text: `They buried ${g.name} in the spring and the house did not feel emptier for it, `
-          + 'which everyone noticed and nobody said. The fires were laid before anyone laid them. '
-          + 'The accounts stayed balanced through a year in which nobody balanced them. '
-          + 'He had not gone anywhere. He had only stopped being someone they had to feed.',
+        title: msg(ctx, 'guardian.crossed_title', 'The House Does Not Empty'),
+        text: msg(ctx, 'guardian.crossed',
+          'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. He had not gone anywhere. He had only stopped being someone they had to feed.',
+          { NARRATOR: g.name }),
         named: true,
       });
     },
@@ -332,7 +332,8 @@ export const YEAR_PHASES: readonly Phase[] = [
         ctx.world.chronicle.push({
           year: ctx.world.year,
           weight: 'line',
-          text: `${p.name} finished ${def.name}. Nobody in the house had read it before.`,
+          text: msg(ctx, 'library.first_reading', '{PERSON} finished {BOOK}. Nobody in the house had read it before.',
+            { PERSON: p.name, BOOK: def.name }),
           named: false,
         });
       }

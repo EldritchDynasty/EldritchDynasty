@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { loadContent } from '@ed/content';
+import { loadBundle, loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { coreMessageAddress } from '../messages.js';
 import { setProseMode, setProseVariants } from '../prose.js';
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
-import { beget, place, testWorld } from '../testing.js';
+import { beget, phase, place, testWorld } from '../testing.js';
+import { beginStudy } from '../people/library.js';
+import type { SimCtx } from '../world.js';
 import { emptyReport } from './report.js';
 import { passageOf } from './passage.js';
 
@@ -215,4 +217,74 @@ describe('year-passage prose identities (#710)', () => {
     expect(passageOf(ctx, report)!.lines[0]!.text)
       .toBe('Mara awakened, and it will not come through.');
   });
+});
+
+describe('the year-phase pages speak the reader\'s setting (#752)', () => {
+  const PAGES: Record<string, [string, string]> = {
+    'age.named_fallback': ['They began to call it {AGE}.', 'People started calling this time {AGE}.'],
+    'guardian.crossed_title': ['The House Does Not Empty', 'He Did Not Leave'],
+    'guardian.crossed': [
+      'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. He had not gone anywhere. He had only stopped being someone they had to feed.',
+      'They buried {NARRATOR} in the spring, but the house did not feel emptier. Fires were lit and accounts were kept with no one doing it. He had not gone; he simply no longer needed feeding.',
+    ],
+    'library.first_reading': [
+      '{PERSON} finished {BOOK}. Nobody in the house had read it before.',
+      '{PERSON} finished reading {BOOK}, the first in the family to do so.',
+    ],
+  };
+  type Mode = 'original' | 'plainenglish';
+  const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
+    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+  function speak(ctx: SimCtx, mode: Mode): SimCtx {
+    setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+    })));
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+
+  // Every authored Age carries an `opening`; the fallback is for one that does not.
+  const raw = loadBundle();
+  const unopened = {
+    ...raw,
+    ages: raw.ages.map((a, i) => {
+      if (i !== 0) return a;
+      const { opening: _dropped, ...rest } = a;
+      return rest as typeof a;
+    }),
+  };
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`names an Age with no opening of its own in ${mode}`, () => {
+      const ctx = speak(testWorld(unopened), mode);
+      const age = unopened.ages[0]!;
+      ctx.world.age.active = [{ age: age.id, began: ctx.world.year - age.namedAfterYears, named: false, paid: { standing: false } }];
+      phase('ages', ctx);
+      const page = ctx.world.chronicle.find((e) => e.weight === 'page' && e.title === age.name)!;
+      expect(page.text).toBe(say(mode, 'age.named_fallback', { AGE: age.name }));
+    });
+
+    it(`writes the Narrator's crossing in ${mode}`, () => {
+      const ctx = speak(testWorld(bundle), mode);
+      const narrator = ctx.world.people.living().find((p) => bundle.characters.some((c) => c.becomesGuardian && c.name === p.name))!;
+      ctx.world.people.kill(narrator.id, ctx.world.year, 'test');
+      phase('guardian', ctx);
+      const page = ctx.world.chronicle.at(-1)!;
+      expect(page.title).toBe(say(mode, 'guardian.crossed_title'));
+      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name }));
+      expect(ctx.world.guardianSince).toBe(ctx.world.year);
+      setProseMode(ctx, mode === 'original' ? 'plainenglish' : 'original');
+      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name }));
+    });
+
+    it(`writes the house's first reading of a book in ${mode}`, () => {
+      const ctx = speak(testWorld(bundle), mode);
+      const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+      const reader = place(ctx, { sex: 'male', age: 30, name: 'Ivo', awakened: true });
+      expect(beginStudy(ctx, reader, def)).toBe(true);
+      ctx.world.year = ctx.world.studies.find((st) => st.person === reader.id)!.completes;
+      phase('library', ctx);
+      expect(ctx.world.chronicle.map((e) => e.text)).toContain(say(mode, 'library.first_reading', { PERSON: 'Ivo', BOOK: def.name }));
+    });
+  }
 });
