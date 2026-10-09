@@ -315,3 +315,83 @@ proseVariants:
       The book sells for less than it originally cost. The boy takes a position with a factor in the
       lower town and does reasonably well. For the rest of his life, he avoids saying what he would
       rather have done.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].title"
+    of: 2231e67599669f49
+    plainenglish: >-
+      Six Months of a Person's Life
+  - address: "content:events/library.yaml#events[id=the_fair_copy].body"
+    of: 9a21f0bbfcdb1c5f
+    plainenglish: >-
+      There are no printing presses, and there will not be any. Making a second copy of a book takes half a year of someone's work. {HEAD} wants the Life book copied. If the only volume burns in its cellar, four hundred years of knowledge could be lost. {COPYIST} can draw straight lines and write steadily for six hours. Those skills are rare, and they are all this job requires. The copying will take six hours each day, from the Greening to the Ingathering. Nobody at Corran would call it practice, but nobody has asked Corran.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=copy_it_here].label"
+    of: 0884f400f949192c
+    plainenglish: >-
+      Make the copy in the long room, where anyone can watch the work.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=copy_it_here].outcomes[id=two_volumes].text"
+    of: 5746767e08a236a2
+    plainenglish: >-
+      Seven months later, the copy is finished without errors. The house now has the same book in two different cellars, so one fire cannot destroy both copies. For all seven months, the tenants have watched a gentleman's daughter writing beside a window. Nobody in the long room thought to ask what the tenants might make of that.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].label"
+    of: 30b3cd7d36003ae1
+    plainenglish: >-
+      Pay the chapter house at Bramme to make the copy quickly.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].outcomes[id=came_back].text"
+    of: 75526dd665189fa2
+    plainenglish: >-
+      After eleven weeks and a payment of fourteen crowns, the copy arrives. Its binding is better than the original's. In the margin of the fourth quire is a small, neatly written note in handwriting nobody at Ardwen recognises. The note corrects an error. The correction is right.
+  - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].outcomes[id=read_before_returned].text"
+    of: cb6f14b7e60cd923
+    plainenglish: >-
+      After eleven weeks and a payment of fourteen crowns, the house receives a fine copy and a polite letter. The letter asks whether the house owns other books of this kind and whether someone could see them. It does not name the person who wants to see the books. The chapter house is asking on someone else's behalf; it never asks for itself.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].title"
+    of: 85825470a7336e8c
+    plainenglish: >-
+      The Books on the Fourth Shelf
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].body"
+    of: 9d6d417dd797d751
+    plainenglish: >-
+      There are four shelves of books in the north room. {DAUGHTER} has read all the books on three of them twice. The fourth holds Fluid, Thermal, Aero and Terra books, but she cannot use any of those four kinds of magic. No family rule, College decree or Church law is stopping her. It is a limit that nobody can argue away or pay to remove. She has asked {TUTOR} why eleven times over four years. He has offered eleven explanations, none satisfactory, because he does not know. Neither does Corran, nor anyone else. She no longer expects an answer. Now she wants to attempt a working while someone watches.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].interaction.choices[id=let_her_try].label"
+    of: 1977e71780c38cb3
+    plainenglish: >-
+      Allow her to try the working in the yard, with only her tutor watching.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].interaction.choices[id=let_her_try].outcomes[id=nothing_at_all].text"
+    of: ea56d6a4ebe70058
+    plainenglish: >-
+      Over four days she spends nine hours performing the working correctly. She knows the Thermal book so well that she can recite it backward, yet nothing happens. There is no mistake or stray spark. The magic simply does not respond to her, like words in a language she cannot speak. She records every attempt and puts her account on the third shelf. Two of her granddaughters read it before they ask the same question.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].interaction.choices[id=forbid_it].label"
+    of: 698a353ba6adc737
+    plainenglish: >-
+      Forbid the attempt. Trying costs nothing, but being seen could cost everything.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].interaction.choices[id=forbid_it].outcomes[id=obeyed].text"
+    of: b05b982bb9fc3fff
+    plainenglish: >-
+      She obeys the order. In doing so, the house discourages her from asking questions, with nothing gained in return. She leaves the fourth shelf alone. The family will not discover why it is closed to her until an accident two hundred years later.
+  - address: "content:events/library.yaml#events[id=the_fourth_shelf].interaction.choices[id=forbid_it].outcomes[id=tried_anyway].text"
+    of: 7f2c09aa1289bffe
+    plainenglish: >-
+      She secretly attempts the working at night in the second cellar, using a candle and with nobody watching. This is exactly the kind of unwitnessed attempt the ban was meant to prevent. Nothing happens. She tells no one. The house keeps repeating a rule that, as far as anyone knows, has never been tested.
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].title"
+    of: e3e692fb56075b9f
+    plainenglish: >-
+      The Faulty Magic Book
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].body"
+    of: 7582b397fc837253
+    plainenglish: >-
+      The beautiful Thermal book cost ninety crowns at Sarrow. {READER} has studied it for eleven months without learning anything. Even a difficult book normally shows a student where he is going wrong, but this one offers no clues. In the ninth month he starts comparing it line by line with the Fluid book, where the instructions ought to agree. They disagree everywhere. The Thermal book was copied repeatedly from a version written by a man who could not perform the working and refused to admit it. Four generations of another family suffered from his silence before this house bought the book for ninety crowns. Despite being useless, it is the finest-made object in the house.
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].interaction.choices[id=burn_it].label"
+    of: fea1c0c975b8b8dd
+    plainenglish: >-
+      Burn the false book. Its mistakes could mislead people long after we are gone.
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].interaction.choices[id=burn_it].outcomes[id=burned].text"
+    of: e3f645dda22e9191
+    plainenglish: >-
+      On an ordinary Tuesday, the house burns a book worth ninety crowns in the west grate. Three people watch while the steward keeps his expression still. They retain the notes from eleven months of study explaining why the book is wrong. Those notes have become the most useful volume in the north room, and no other house owns a copy.
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].interaction.choices[id=sell_it_on].label"
+    of: b5f76cb1b6962635
+    plainenglish: >-
+      Sell it at the next auction. Someone will pay for a beautiful Thermal book.
+  - address: "content:events/library.yaml#events[id=the_book_that_is_wrong].interaction.choices[id=sell_it_on].outcomes[id=sold_on].text"
+    of: 4a321fef95b51b23
+    plainenglish: >-
+      At the next sale, another house buys the book for seventy crowns, pleased with the price. This house loses twenty crowns and passes on a danger whose cost has not yet come due. It keeps the notes explaining the errors. The notes also contain the buyer's name, written in the margin by {HEAD} without explanation. Somebody intended that name to be found.
