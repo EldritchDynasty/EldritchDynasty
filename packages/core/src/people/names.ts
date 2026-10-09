@@ -99,7 +99,13 @@ function shuffled(xs: readonly string[], rng: Rng): string[] {
 /** Ordinals for the chronicle: "Edric, third of that name". */
 export function ordinalSuffix(n: number): string {
   const words = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth'];
-  return words[n - 1] ?? `${n}th`;
+  if (words[n - 1]) return words[n - 1]!;
+  const lastTwo = n % 100;
+  const last = n % 10;
+  // Eleven through thirteen always use -th, even in 111, 112 and 113.
+  const suffix = lastTwo >= 11 && lastTwo <= 13 ? 'th'
+    : last === 1 ? 'st' : last === 2 ? 'nd' : last === 3 ? 'rd' : 'th';
+  return `${n}${suffix}`;
 }
 
 /**
