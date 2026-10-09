@@ -163,8 +163,9 @@ export function knownSuccession(ctx: SimCtx): SuccessionView {
     possible,
     ...(named
       ? {
-        because: named + ' ' + (names.length === 1 ? 'has' : 'have')
-          + ' not yet awakened; the house does not know what the blood will reveal.',
+        because: names.length === 1
+          ? msg(ctx, 'succession.uncertain.single', '{PERSON} has not yet awakened; the house does not know what the blood will reveal.', { PERSON: named })
+          : msg(ctx, 'succession.uncertain.plural', '{PEOPLE} have not yet awakened; the house does not know what the blood will reveal.', { PEOPLE: named }),
       }
       : {}),
   };

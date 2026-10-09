@@ -250,6 +250,75 @@ const contract = (over: Partial<RetainerContract> = {}): RetainerContract => ({
   ...over,
 });
 
+describe('live succession uncertainty prose (#761)', () => {
+  const translations: Record<string, string> = {
+    'core:messages#succession.uncertain.single': '{PERSON} has not awakened. The house still does not know what his blood might reveal.',
+    'core:messages#succession.uncertain.plural': '{PEOPLE} have not awakened. The house still does not know what their blood might reveal.',
+  };
+  const messages = coreMessageEntries(readFileSync(new URL('./people/succession.ts', import.meta.url), 'utf8'))
+    .filter((entry) => entry.address in translations);
+  const variants = messages.map((entry) => ({
+    address: entry.address, of: proseOriginalHash(entry.text), plainenglish: translations[entry.address]!,
+  }));
+
+  function uncertain(names: string[]) {
+    const ctx = emptyHouse(761);
+    const regent = place(ctx, { sex: 'female', age: 40, name: 'Ina' });
+    const sons = names.map((name, index) => place(ctx, { sex: 'male', age: 30 - index, name }));
+    return { ctx, possible: [regent.id, ...sons.map((person) => person.id)] };
+  }
+
+  it.each([
+    { names: ['Oren'], named: 'Oren', verb: 'has', pronoun: 'his' },
+    { names: ['Oren', 'Edric'], named: 'Oren and Edric', verb: 'have', pronoun: 'their' },
+    { names: ['Oren', 'Edric', 'Tomas'], named: 'Oren, Edric and Tomas', verb: 'have', pronoun: 'their' },
+  ])('switches the live explanation for $named without revealing or changing the succession', ({ names, named, verb, pronoun }) => {
+    expect(messages.map((entry) => entry.address).sort()).toEqual(Object.keys(translations).sort());
+    const { ctx, possible } = uncertain(names);
+    setProseVariants(ctx, variants);
+    const saved = canonical(saveGame(ctx));
+    const original = { possible, because: `${named} ${verb} not yet awakened; the house does not know what the blood will reveal.` };
+    expect(knownSuccession(ctx)).toEqual(original);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+
+    setProseMode(ctx, 'plainenglish');
+    expect(knownSuccession(ctx)).toEqual({
+      possible, because: `${named} ${verb} not awakened. The house still does not know what ${pronoun} blood might reveal.`,
+    });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+
+    setProseMode(ctx, 'original');
+    expect(knownSuccession(ctx)).toEqual(original);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+  });
+
+  it.each(['missing', 'stale', 'invalid tokens'] as const)('falls back to Original for a %s alternate', (failure) => {
+    const { ctx, possible } = uncertain(['Oren']);
+    const single = variants.find((entry) => entry.address.endsWith('.single'))!;
+    setProseVariants(ctx, failure === 'missing' ? [] : [{
+      ...single,
+      ...(failure === 'stale' ? { of: proseOriginalHash('Earlier wording.') } : { plainenglish: 'The house is unsure about {OTHER}.' }),
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const saved = canonical(saveGame(ctx));
+    expect(knownSuccession(ctx)).toEqual({
+      possible, because: 'Oren has not yet awakened; the house does not know what the blood will reveal.',
+    });
+    expect(missingPlainEnglish(ctx)).toEqual([single.address]);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+  });
+
+  it('requests no uncertainty prose when the succession is certain or empty', () => {
+    const ctx = emptyHouse(761);
+    setProseMode(ctx, 'plainenglish');
+    expect(knownSuccession(ctx)).toEqual({ possible: [] });
+    const regent = place(ctx, { sex: 'female', age: 40, name: 'Ina' });
+    expect(knownSuccession(ctx)).toEqual({ heir: regent.id, possible: [regent.id] });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
+
 describe('known succession', () => {
   it('keeps an unwoken son uncertain instead of leaking what his genome will reveal', () => {
     const ctx = emptyHouse();
