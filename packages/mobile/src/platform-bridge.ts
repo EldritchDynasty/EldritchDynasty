@@ -63,7 +63,12 @@ const platform = {
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
   },
 
-  importSave: chooseSaveFile,
+  importSave() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json,.edsave';
+    return chooseSaveFile(input);
+  },
 
   onPause(listener: () => void): () => void {
     const registration = App.addListener('pause', listener);
