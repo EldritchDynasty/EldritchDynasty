@@ -1,4 +1,4 @@
-import { ProseCatalogueS, proseOriginalHash } from '@ed/schema';
+import { isContentProseField, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { Choice, ClauseDef, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
@@ -71,6 +71,26 @@ export function renderContentProse(
   original: string,
 ): string {
   return renderProse(ctx, contentProseAddress(file, path), original);
+}
+
+/**
+ * Read-model text for a marriage pledge: name what the family traded a future
+ * marriage for, without changing the promise or the world it describes.
+ *
+ * The migration worklist excludes one-word names, so only request a prose
+ * variant when the underlying name is eligible for one.
+ */
+export function proseForPromiseLot(ctx: SimCtx, id: string): string {
+  const book = ctx.content.spellbook(id);
+  const heirloom = book === undefined ? ctx.content.heirloom(id) : undefined;
+  const item = book ?? heirloom;
+  if (!item) return id;
+
+  const file = ctx.content.sourceOf(id);
+  if (file === undefined || !isContentProseField('name', item.name)) return item.name;
+
+  const collection = book === undefined ? 'heirlooms' : 'spellbooks';
+  return renderContentProse(ctx, file, `${collection}[id=${encodeURIComponent(id)}].name`, item.name);
 }
 
 /** Live tale views render now; Match panels freeze these words when dealt. */
