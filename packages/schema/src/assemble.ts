@@ -140,8 +140,24 @@ export function assembleBundle(
       const value = doc?.[spec.key as string];
       if (!Array.isArray(value)) continue;
 
+      // The browser's precompiled docs use compact per-file tuples for Plain
+      // English counterparts. Node/editor YAML still supplies full objects.
+      // Reconstitute the canonical shape before source checks and Zod, so the
+      // simulation, save and editor never see a second variant representation.
+      const entries: unknown[] = spec.key === 'proseVariants'
+        ? value.map((item: unknown) => {
+          if (!Array.isArray(item) || item.length !== 3 || typeof item[0] !== 'string') return item;
+          const [suffix, of, plainenglish] = item;
+          return {
+            address: `content:${path}#${suffix}`,
+            ...(of === null ? {} : { of }),
+            plainenglish,
+          };
+        })
+        : value;
+
       if (spec.key === 'proseVariants') {
-        for (const item of value) {
+        for (const item of entries) {
           const address = (item as { address?: unknown } | null)?.address;
           if (typeof address !== 'string' || !address.startsWith('content:')) continue;
           const hash = address.indexOf('#');
@@ -154,8 +170,8 @@ export function assembleBundle(
         }
       }
 
-      out.push(...value);
-      for (const item of value) {
+      out.push(...entries);
+      for (const item of entries) {
         const row = item as { id?: unknown; key?: unknown } | null;
         const id = typeof row?.id === 'string' ? row.id : typeof row?.key === 'string' ? row.key : undefined;
         if (id === undefined) continue;
