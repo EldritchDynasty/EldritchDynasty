@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { proseOriginalHash } from '@ed/schema';
 import { loadContent } from '@ed/content';
 import { bearingWordsIn } from '@ed/schema';
 import {
-  ECHO_AFTER, ECHO_SPACING, ECHO_VARIANTS, REMEMBERED_AFTER, answeredBy, echoTally, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
+  ECHO_AFTER, ECHO_SPACING, ECHO_VARIANTS, setProseMode, setProseVariants, REMEMBERED_AFTER, answeredBy, echoTally, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
   testWorld, tickBearing, type BearingAct,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
 
@@ -123,7 +125,7 @@ describe('bearing is read off acts, not off fortune', () => {
     expect(echo).toContain('Ysabel');
     expect(ctx.world.bearing.score, 'the refusal is not in the reading yet').toBe(0);
     for (let v = 0; v < ECHO_VARIANTS; v++) {
-      const line = echoText({ year: 1042, kind: 'refused_a_hand', about: 'x' }, v);
+      const line = echoText(ctx, { year: 1042, kind: 'refused_a_hand', about: 'x' }, v);
       expect(line, 'an echo reports a thinner market the engine has not dealt').not.toMatch(/fewer|less|thinn|no longer/i);
     }
   });
@@ -174,9 +176,10 @@ describe('bearing is read off acts, not off fortune', () => {
     const every: Record<BearingAct, true> = {
       wrote_it_larger: true, refused_a_hand: true, kept_her_back: true, took_the_cousin: true, bit_the_common: true,
     };
+    const ctx = testWorld(content);
     for (const kind of Object.keys(every) as BearingAct[]) {
       for (let v = 0; v < ECHO_VARIANTS; v++) {
-        expect(bearingWordsIn(echoText({ year: 1100, kind, about: 'the matter' }, v)), `${kind} #${v}`).toEqual([]);
+        expect(bearingWordsIn(echoText(ctx, { year: 1100, kind, about: 'the matter' }, v)), `${kind} #${v}`).toEqual([]);
       }
     }
   });
@@ -327,5 +330,69 @@ describe('the market answers it', () => {
     const thin = dealMatch(ctx, her, makeRng(7013));
     expect(thin.cards.length, 'the world offers a proud house no less than a modest one')
       .toBeLessThan(open.cards.length);
+  });
+});
+
+describe('the echo lines speak the reader\'s setting (#756)', () => {
+  const KINDS: BearingAct[] = ['wrote_it_larger', 'refused_a_hand', 'took_the_cousin', 'bit_the_common', 'kept_her_back'];
+  const ORIGINAL: Record<string, string> = {
+    'bearing.echo.wrote_it_larger.0': 'A copy kept elsewhere still named the page, and did not tell it quite as the house had.',
+    'bearing.echo.wrote_it_larger.1': "A clerk from another house asked about the page, and wrote down an answer that was not the house's.",
+    'bearing.echo.wrote_it_larger.2': "The page was read aloud at somebody else's table, from somebody else's copy.",
+    'bearing.echo.refused_a_hand.0': 'A matchmaker remembered the page, and said as much to the next house that asked.',
+    'bearing.echo.refused_a_hand.1': 'The page was still told in the market towns, by people who had not been in the room.',
+    'bearing.echo.refused_a_hand.2': "An old broker's book still had a line against the page.",
+    'bearing.echo.took_the_cousin.0': 'People still spoke of the page: the outside hand had been there, and the house had chosen its own blood.',
+    'bearing.echo.took_the_cousin.1': "At a wedding in another hall somebody's aunt brought up the page, and nobody changed the subject.",
+    'bearing.echo.took_the_cousin.2': 'The page was the example a priest reached for, a generation on, when a family asked him about cousins.',
+    'bearing.echo.bit_the_common.0': "At the page, old boundary stones were still pointed out in the village, though the house's map had moved on.",
+    'bearing.echo.bit_the_common.1': 'Children at the page still walked the old line on feast days, the way their grandparents had.',
+    'bearing.echo.bit_the_common.2': "A tenant's widow at the page still called the field by the name it had before the house took it.",
+    'bearing.echo.kept_her_back.0': 'The market had not forgotten the page, who had been kept from it when a hand might still have been made.',
+    'bearing.echo.kept_her_back.1': 'A broker asked after the page a generation late, as if the offer might still stand.',
+    'bearing.echo.kept_her_back.2': 'The page came up in a letter from another house, as the daughter this one had kept at home.',
+  };
+
+  it('keeps every echo Original byte for byte, in both casings of its subject', () => {
+    const ctx = testWorld(content);
+    for (const kind of KINDS) {
+      for (let v = 0; v < ECHO_VARIANTS; v++) {
+        expect(echoText(ctx, { year: 1100, kind, about: 'the page' }, v)).toBe(ORIGINAL[`bearing.echo.${kind}.${v}`]);
+      }
+    }
+    expect(echoText(ctx, { year: 1100, kind: 'refused_a_hand' }, 0))
+      .toBe('A matchmaker remembered what the house did in 1100, and said as much to the next house that asked.');
+  });
+
+  it('renders the reviewed Plain English for the chosen line, and keeps it', () => {
+    const ctx = testWorld(content, 7015);
+    // Every variant keeps its tokens: the plain line names the subject the same way the Original does.
+    const original = (kind: BearingAct, v: number) => ORIGINAL[`bearing.echo.${kind}.${v}`]!
+      .replace('The page', '{ABOUT_CAP}').replace('the page', '{ABOUT}');
+    setProseVariants(ctx, [
+      ...KINDS.flatMap((kind) => [0, 1, 2].map((v) => ({
+        address: coreMessageAddress(`bearing.echo.${kind}.${v}`),
+        of: proseOriginalHash(original(kind, v)),
+        plainenglish: original(kind, v).includes('{ABOUT_CAP}')
+          ? `{ABOUT_CAP} was still talked about (${kind} ${v}).`
+          : `People still talked about {ABOUT} (${kind} ${v}).`,
+      }))),
+      { address: coreMessageAddress('bearing.about_year'), of: proseOriginalHash('what the house did in {YEAR}'), plainenglish: "the family's actions in {YEAR}" },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(echoText(ctx, { year: 1100, kind: 'took_the_cousin', about: 'the page' }, 2))
+      .toBe('The page was still talked about (took_the_cousin 2).');
+    expect(echoText(ctx, { year: 1100, kind: 'refused_a_hand' }, 0))
+      .toBe("People still talked about the family's actions in 1100 (refused_a_hand 0).");
+
+    ctx.world.year = 1042;
+    noteBearing(ctx, 'kept_her_back', 'Ysabel');
+    ctx.world.year += ECHO_AFTER;
+    tickBearing(ctx);
+    const page = ctx.world.chronicle.at(-1)!;
+    expect(page.text).toBe('People still talked about Ysabel (kept_her_back 0).');
+    expect(page.echoFrame).toBe('bearing:kept_her_back:0');
+    setProseMode(ctx, 'original');
+    expect(page.text).toBe('People still talked about Ysabel (kept_her_back 0).');
   });
 });
