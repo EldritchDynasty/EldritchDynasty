@@ -12,7 +12,7 @@ import {
 import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
-import { bloodGateInputs, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
+import { bloodGateInputs, canonicalBloodSeeds, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
 import {
   gatePartitionWorkerCount,
   partitionGateInputs,
@@ -373,6 +373,20 @@ describe('#440 expensive gate partitioning', () => {
       { seed: 4013, policy: 'abstain' },
       { seed: 4026, policy: 'abstain' },
     ]);
+  });
+
+  it('retains every historical blood pair when widening past the observed confidence shortfall (#644)', () => {
+    const seeds = canonicalBloodSeeds();
+    const historical = Array.from({ length: 1024 }, (_, i) => 4000 + i * 13);
+    expect(seeds.slice(0, historical.length)).toEqual(historical);
+    expect(seeds.length).toBeGreaterThanOrEqual(1304);
+    expect(new Set(seeds).size).toBe(seeds.length);
+    expect(seeds.every((seed, i) => seed === 4000 + i * 13)).toBe(true);
+    const input = bloodGateInputs(seeds);
+    expect(input.slice(0, seeds.length).map((row) => row.seed)).toEqual(seeds);
+    expect(input.slice(seeds.length).map((row) => row.seed)).toEqual(seeds);
+    expect(input.slice(0, seeds.length).every((row) => row.policy === 'concentrate')).toBe(true);
+    expect(input.slice(seeds.length).every((row) => row.policy === 'dilute')).toBe(true);
   });
 
   it('parses the portable worker-count override and rejects wider pools', () => {
