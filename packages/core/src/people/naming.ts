@@ -2,6 +2,7 @@ import { MAIN_BRANCH, type Person } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { attr, phenotypeOf } from './factory.js';
 import { baseName } from './names.js';
+import { msg } from '../messages.js';
 
 /**
  * WHO IS WORTH NAMING (issue #62).
@@ -92,7 +93,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
     if (!fatheredBy(child, state.founder)) return undefined;
     const older = w.people.children(state.founder).some((c) =>
       c.id !== child.id && c.born > state.foundedYear);
-    return older ? undefined : 'the first child of a new cadet branch';
+    return older ? undefined : msg(ctx, 'naming.worth.first_cadet_child', 'the first child of a new cadet branch');
   }
 
   // ── The heir ────────────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   if (head && child.sex === 'male' && fatheredBy(child, head.id)) {
     const others = w.people.children(head.id).filter((c) =>
       c.id !== child.id && c.sex === 'male' && c.status === 'alive');
-    if (!others.length) return 'the Head has a son, and had none before today';
+    if (!others.length) return msg(ctx, 'naming.worth.heads_first_son', 'the Head has a son, and had none before today');
   }
 
   // ── The blood, after a drought ──────────────────────────────────────────
@@ -115,7 +116,9 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
       && p.houseOfOrigin === w.playerHouse
       && p.born >= since
       && phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont !== null);
-    if (!anyOther) return 'the first of the blood to carry it in three generations';
+    if (!anyOther) {
+      return msg(ctx, 'naming.worth.blood_returns', 'the first of the blood to carry it in three generations');
+    }
   }
 
   // NO TWIN RULE. #62 asks for one and this simulation cannot produce a twin:
@@ -129,8 +132,8 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   const run = sameSexRun(ctx, child);
   if (run >= SAME_SEX_RUN) {
     return child.sex === 'female'
-      ? `the first daughter after ${run} sons`
-      : `the first son after ${run} daughters`;
+      ? msg(ctx, 'naming.worth.daughter_after_sons', 'the first daughter after {COUNT} sons', { COUNT: String(run) })
+      : msg(ctx, 'naming.worth.son_after_daughters', 'the first son after {COUNT} daughters', { COUNT: String(run) });
   }
 
   // ── Born the year the seat changed hands ────────────────────────────────
@@ -141,7 +144,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   // father is a different sentence.
   if (head && w.headSince === w.year && w.succession.length > 1
     && fatheredBy(child, head.id)) {
-    return 'born to the new Head in the year he took the seal';
+    return msg(ctx, 'naming.worth.born_to_new_head', 'born to the new Head in the year he took the seal');
   }
 
   // ── A throwback ─────────────────────────────────────────────────────────
@@ -152,7 +155,10 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   // noise. It is the tie-breaker rather than the headline: where the house
   // has something plainer to say about a child, it says that.
   const throwback = outsideTheLine(ctx, child);
-  if (throwback) return `${throwback} well outside anything the line has produced`;
+  if (throwback) {
+    return msg(ctx, 'naming.worth.throwback', '{ATTRIBUTE} well outside anything the line has produced',
+      { ATTRIBUTE: throwback });
+  }
 
   return undefined;
 }
