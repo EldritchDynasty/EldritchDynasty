@@ -10,6 +10,7 @@ import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
+import { handleExternalPopup } from './external-links.mjs';
 
 /**
  * THE SHELL.
@@ -121,10 +122,12 @@ function createWindow() {
 
   // A link to a rival house's chronicle opens in the browser, not in a window
   // with no address bar and our preload attached to it.
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
+  win.webContents.setWindowOpenHandler(({ url }) =>
+    handleExternalPopup(
+      url,
+      (target) => shell.openExternal(target),
+      (error) => console.warn('[shell] external browser launch failed:', error?.message ?? error),
+    ));
 
   return win;
 }
