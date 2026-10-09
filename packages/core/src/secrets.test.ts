@@ -176,6 +176,33 @@ describe('what leaves with them', () => {
     expect(leaked).toBeGreaterThan(0);
   });
 
+  it('treats repeated entries in one contract as one secret and one roll', () => {
+    const first = 'what_the_archive_holds' as never;
+    const second = 'what_the_locked_chest_holds' as never;
+    const duplicate = staffed({
+      loyalty: 0,
+      knowsSecrets: [first, first, second, first, second],
+    });
+    const unique = staffed({
+      loyalty: 0,
+      knowsSecrets: [first, second],
+    });
+
+    const walked = walkSecrets(
+      duplicate.ctx, duplicate.servant, duplicate.servant.contract!, 'unpaid', testRng('walk'),
+    );
+    const expected = walkSecrets(
+      unique.ctx, unique.servant, unique.servant.contract!, 'unpaid', testRng('walk'),
+    );
+
+    // An ignored duplicate must not roll an extra chance or choose a second
+    // employer, which would also change the fate of the next distinct secret.
+    expect(walked).toEqual(expected);
+    expect(duplicate.ctx.world.looseSecrets).toEqual(unique.ctx.world.looseSecrets);
+    expect(walked.filter((entry) => entry.secret === first)).toHaveLength(1);
+    expect(new Set(walked.map((entry) => entry.secret)).size).toBe(walked.length);
+  });
+
   it('does not let two servants make the same secret loose twice', () => {
     const { ctx, servant } = staffed({ loyalty: 0 });
     const second = place(ctx, { sex: 'male', age: 45, name: 'Other' });
