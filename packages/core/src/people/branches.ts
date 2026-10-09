@@ -3,6 +3,7 @@ import { MAIN_BRANCH, asId, isActiveBranch } from '@ed/schema';
 import type { SimCtx, WorldState } from '../world.js';
 import { phenotypeOf } from './factory.js';
 import { escheatBranchLand } from '../land.js';
+import { msg } from '../messages.js';
 
 /**
  * CADET BRANCHES (concept §16). See `schema/src/branch.ts` for what a branch
@@ -208,7 +209,7 @@ function foundBranch(ctx: SimCtx, founder: Person, splitFrom: string): BranchSta
 
   const branch: BranchState = {
     id,
-    name: `${founder.name}'s line`,
+    name: msg(ctx, 'branches.name', "{FOUNDER}'s line", { FOUNDER: founder.name }),
     house: asId(w.playerHouse),
     founder: founder.id,
     splitFrom,
@@ -247,10 +248,8 @@ function foundBranch(ctx: SimCtx, founder: Person, splitFrom: string): BranchSta
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: 'A Second Roof',
-    text: `${founder.name} took the east rooms and then took a house of his own, `
-      + 'which the family called generous and the family called sensible, and which was both. '
-      + 'He kept the name. He did not keep the seal.',
+    title: msg(ctx, 'branches.founded.title', 'A Second Roof'),
+    text: msg(ctx, 'branches.founded.text', '{FOUNDER} took the east rooms and then took a house of his own, which the family called generous and the family called sensible, and which was both. He kept the name. He did not keep the seal.', { FOUNDER: founder.name }),
     named: false,
   });
 
@@ -339,7 +338,9 @@ function reapExtinct(ctx: SimCtx): void {
     w.chronicle.push({
       year: w.year,
       weight: 'line',
-      text: `${b.name} ended, ${w.year - b.foundedYear} years after it began.`,
+      text: msg(ctx, 'branches.extinct', '{BRANCH} ended, {YEARS} years after it began.', {
+        BRANCH: b.name, YEARS: String(w.year - b.foundedYear),
+      }),
       named: false,
       greyed: true,
     });
@@ -383,10 +384,8 @@ export function recallToMain(ctx: SimCtx, p: Person): void {
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: 'They Sent for the Cousin',
-    text: `${p.name} was born in the smaller house and had not expected to see the inside of the seal room. `
-      + 'He was sent for in the winter and the road was bad. '
-      + 'Nobody in the main line had thought about him in thirty years, and every one of them knew his name by spring.',
+    title: msg(ctx, 'branches.recalled.title', 'They Sent for the Cousin'),
+    text: msg(ctx, 'branches.recalled.text', '{PERSON} was born in the smaller house and had not expected to see the inside of the seal room. He was sent for in the winter and the road was bad. Nobody in the main line had thought about him in thirty years, and every one of them knew his name by spring.', { PERSON: p.name }),
     named: false,
   });
 }
