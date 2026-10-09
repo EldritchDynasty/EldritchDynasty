@@ -12,6 +12,7 @@ import { walkSecrets, type ReleaseReason } from './secrets.js';
 import { headNamesake } from './naming.js';
 import { MAIN_BRANCH } from '@ed/schema';
 import { answerGenerationQuestion, chooseGenerationQuestion } from '../generation.js';
+import { characterProse } from './character-prose.js';
 
 /**
  * Succession, and keeping the recurring cast filled.
@@ -622,8 +623,8 @@ export function maintainCast(ctx: SimCtx, rng: Rng): Person[] {
     w.chronicle.push({
       year: w.year,
       weight: 'illuminated',
-      title: wanderer.title,
-      text: wanderer.blurb ?? `${p.name} arrived, and nobody had sent for them.`,
+      title: characterProse(ctx, wanderer, 'title'),
+      text: characterProse(ctx, wanderer, 'blurb') ?? `${p.name} arrived, and nobody had sent for them.`,
       named: true,
     });
   }

@@ -1,14 +1,79 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
 import { loadContent } from '@ed/content';
-import type { Person } from '@ed/schema';
+import { contentProseEntries, proseOriginalHash, type CharacterTemplate, type Person } from '@ed/schema';
 import {
   CARDS_DEALT, dealMatch, declineMatch, matchFuture, matchSubjects, queueMatch, resolveMatch, takeCard,
   beget, bootstrap, genomeOf, hashSeed, loadGame, makeRng, marry, newGame, order, phase, place, runYears,
   saveGame, testRng, testWorld,
 } from '@ed/core';
 import type { MatchCard, SimCtx } from '@ed/core';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
+import { canonical } from './save.js';
 
 const bundle = loadContent();
+
+describe('prospective character-template prose on Match cards (#646)', () => {
+  const original = bundle.characterTemplates.find((template) => template.id === 'suitor_common_stock')!;
+  const entries = contentProseEntries('characters/templates.yaml', parse(readFileSync(
+    new URL('../../content/characters/templates.yaml', import.meta.url), 'utf8',
+  )));
+  function variant(field: 'title' | 'blurb', plainenglish: string) {
+    const entry = entries.find((item) => item.address.endsWith(`[id=${original.id}].${field}`))!;
+    expect(entry).toBeDefined();
+    return { address: entry.address, of: proseOriginalHash(entry.text), plainenglish };
+  }
+  function offered(template: CharacterTemplate = original) {
+    const source = { ...bundle, characterTemplates: [template] };
+    const ctx = testWorld(source, 646);
+    const subject = place(ctx, { sex: 'male', age: 19, name: 'Test Son' });
+    return { ctx, subject, source };
+  }
+
+  it('renders real worklist variants without changing recipes or simulation state and freezes dealt wording', () => {
+    const control = offered();
+    const plain = offered();
+    setProseVariants(plain.ctx, [variant('blurb', 'She is an ordinary outsider.')]);
+    setProseMode(plain.ctx, 'plainenglish');
+    const originalHand = dealMatch(control.ctx, control.subject, makeRng(646));
+    const plainHand = dealMatch(plain.ctx, plain.subject, makeRng(646));
+    const card = plainHand.cards.find((item) => item.kind === 'outsider')!;
+    expect(card).toBeDefined();
+    expect(card.blurb).toBe('She is an ordinary outsider.');
+    expect(originalHand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe(original.blurb);
+    expect(plainHand).toEqual({ ...originalHand, cards: originalHand.cards.map((item) =>
+      item.kind === 'outsider' ? { ...item, blurb: 'She is an ordinary outsider.' } : item) });
+    expect(canonical(saveGame(plain.ctx))).toBe(canonical(saveGame(control.ctx)));
+    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+    const pending = queueMatch(plain.ctx, plainHand);
+    setProseMode(plain.ctx, 'original');
+    expect(pending.cards).toEqual(plainHand.cards);
+    const loaded = loadGame(saveGame(plain.ctx), plain.source);
+    expect(loaded.world.pendingDecisions).toEqual(plain.ctx.world.pendingDecisions);
+  });
+
+  it('renders the title fallback without requesting a nonexistent blurb', () => {
+    const { ctx, subject } = offered({ ...original, blurb: undefined });
+    setProseVariants(ctx, [variant('title', 'An ordinary daughter.')]);
+    setProseMode(ctx, 'plainenglish');
+    const hand = dealMatch(ctx, subject, makeRng(646));
+    expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe('An ordinary daughter.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('falls back and reports only the visible blurb when its variant is missing or stale', () => {
+    for (const stale of [false, true]) {
+      const { ctx, subject } = offered();
+      const row = variant('blurb', 'An obsolete description.');
+      setProseVariants(ctx, stale ? [{ ...row, of: proseOriginalHash('Old words.') }] : []);
+      setProseMode(ctx, 'plainenglish');
+      const hand = dealMatch(ctx, subject, makeRng(646));
+      expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe(original.blurb);
+      expect(missingPlainEnglish(ctx)).toEqual([row.address]);
+    }
+  });
+});
 
 /**
  * THE MATCH (concept §5, step 2) — the player draws one partner from three
