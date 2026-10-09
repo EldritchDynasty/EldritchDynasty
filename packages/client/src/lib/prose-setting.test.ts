@@ -84,6 +84,28 @@ describe('Plain English client setting (#413)', () => {
     expect(game.prologue.value?.opening).toBe(original);
   });
 
+  it('refreshes an uncommitted reading surface when optional prose arrives late (#728)', () => {
+    window.localStorage.clear();
+    const bundle = loadBundle();
+    const opening = bundle.prologue[0]!;
+    const original = opening.opening;
+    const address = `content:prologue.yaml#prologue[id=${opening.id}].opening`;
+    const game = createGame(bundle, browserPlatform(), { proseVariants: [] });
+    game.actions.begin(1042, 'short');
+    game.actions.setProseMode('plainenglish');
+    expect(game.prologue.value?.opening).toBe(original);
+
+    game.actions.setProseVariants([{
+      address,
+      of: proseOriginalHash(original),
+      plainenglish: 'The signing happened after the last night of the old year.',
+    }]);
+    expect(game.prologue.value?.opening).toBe('The signing happened after the last night of the old year.');
+
+    game.actions.setProseMode('original');
+    expect(game.prologue.value?.opening).toBe(original);
+  });
+
   it('changes future prose while preserving Chronicle wording already written', () => {
     window.localStorage.clear();
     const game = createGame(fixtureBundle(), browserPlatform());
