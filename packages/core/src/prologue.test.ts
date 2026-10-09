@@ -87,7 +87,7 @@ describe('the prologue', () => {
       },
       {
         address: 'content:prologue.yaml#prologue[id=the_signing].triad[2].owed.campaignText',
-        plainenglish: 'The term is {years} years and ends in {endYear}.',
+        plainenglish: 'The term is {years} years and ends in {endYear}. {years} years of the line are promised.',
       },
       {
         address: 'content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].says',
@@ -147,7 +147,7 @@ describe('the prologue', () => {
     const view = prologueView(ctx)!;
     expect(view.opening).toBe('A plain opening.');
     expect(view.triad[2]!.owed).toBe(
-      `The term is ${CAMPAIGNS.long.years} years and ends in ${CAMPAIGNS.long.endYear}.`,
+      `The term is ${CAMPAIGNS.long.years} years and ends in ${CAMPAIGNS.long.endYear}. ${CAMPAIGNS.long.years} years of the line are promised.`,
     );
     expect(view.examination[0]!.answers[0]!.says).toBe('I pushed the cart myself.');
 
