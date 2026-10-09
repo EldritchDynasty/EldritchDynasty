@@ -3,6 +3,7 @@ import type { SimCtx } from '../world.js';
 import { measureAscension } from '../ascension.js';
 import { halls } from './branches.js';
 import { knownSuccession } from './succession.js';
+import { msg } from '../messages.js';
 
 function add(out: Map<PersonId, string[]>, person: PersonId, reason: string): void {
   const reasons = out.get(person) ?? [];
@@ -30,13 +31,19 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
   const w = ctx.world;
 
   const succession = knownSuccession(ctx);
-  if (succession.heir) add(out, succession.heir as PersonId, 'next to hold the seal');
-  else for (const id of succession.possible) add(out, id as PersonId, 'may hold the seal');
+  if (succession.heir) add(out, succession.heir as PersonId, msg(ctx, 'relevance.heir', 'next to hold the seal'));
+  else {
+    for (const id of succession.possible) {
+      add(out, id as PersonId, msg(ctx, 'relevance.possible_heir', 'may hold the seal'));
+    }
+  }
 
   for (const [hall, members] of halls(w, w.year)) {
     const branch = w.branches.get(hall);
     if ((branch?.grievance ?? 0) > 0) {
-      for (const person of members) add(out, person.id, 'their hall holds a grievance');
+      for (const person of members) {
+        add(out, person.id, msg(ctx, 'relevance.hall_grievance', 'their hall holds a grievance'));
+      }
     }
   }
 
@@ -47,7 +54,8 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
     case 'raise_ascendant': {
       const foremost = measureAscension(ctx).foremost;
       if (foremost) {
-        add(out, foremost.person as PersonId, foremost.standing.blocked ?? 'foremost candidate for the ascent');
+        add(out, foremost.person as PersonId,
+          foremost.standing.blocked ?? msg(ctx, 'relevance.ascent_candidate', 'foremost candidate for the ascent'));
       }
       break;
     }
@@ -59,13 +67,15 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
           && age >= 17
           && age <= 45
           && !person.marriages.some((m) => m.to === undefined)
-        ) add(out, person.id, 'unmarried, of the blood');
+        ) add(out, person.id, msg(ctx, 'relevance.unmarried_blood', 'unmarried, of the blood'));
       }
       break;
     case 'secure_branches':
       for (const [hall, members] of halls(w, w.year)) {
         if (hall === MAIN_BRANCH || members.length >= 2) continue;
-        for (const person of members) add(out, person.id, 'keeps a thin cadet hall alive');
+        for (const person of members) {
+          add(out, person.id, msg(ctx, 'relevance.thin_hall', 'keeps a thin cadet hall alive'));
+        }
       }
       break;
     case 'restore_ledger':
