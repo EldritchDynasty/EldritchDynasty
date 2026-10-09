@@ -136,9 +136,14 @@ export function walkSecrets(
   const years = yearsOfService(ctx, p);
   const chance = leakChance(contract, reason, years);
   const walked: LooseSecret[] = [];
+  const seen = new Set<string>();
 
   for (const secret of contract.knowsSecrets) {
     const id = String(secret);
+    // One contract may repeat a secret; only the first occurrence gets a roll.
+    // Checking world.looseSecrets alone is too late: walked is appended below.
+    if (seen.has(id)) continue;
+    seen.add(id);
     // Once it is out it is out. A second retainer knowing the same thing does
     // not make it twice as loose, and two entries would tell it twice.
     if (w.looseSecrets.some((l) => l.secret === id)) continue;
