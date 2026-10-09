@@ -2,6 +2,7 @@ import type { Grudge, Person, PersonId, Relationship } from '@ed/schema';
 import { asId } from '@ed/schema';
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import { ECHO_AFTER, ECHO_SPACING } from '../bearing.js';
+import { msg } from '../messages.js';
 
 /**
  * RELATIONSHIPS AND GRUDGES.
@@ -237,13 +238,11 @@ export function tickRelationships(ctx: SimCtx): void {
  * written, or no line is written — and a house that holds several quarrels
  * against this one is heard from once a generation, not once a quarrel.
  */
-function grudgeLines(house: string, about: string): string[] {
-  return [
-    `At ${house} they had not let go of ${about}.`,
-    `${house} still told ${about} their own way, and still told it against this house.`,
-    `A guest from ${house} was civil at the table and never once mentioned ${about}, which was how everybody knew.`,
-  ];
-}
+const GRUDGE_LINES = [
+  'At {HOUSE} they had not let go of {ABOUT}.',
+  '{HOUSE} still told {ABOUT} their own way, and still told it against this house.',
+  'A guest from {HOUSE} was civil at the table and never once mentioned {ABOUT}, which was how everybody knew.',
+] as const;
 
 /**
  * Which line, keyed on the generation and the house rather than on a count of
@@ -283,15 +282,16 @@ export function echoGrudges(ctx: SimCtx): number {
       if (heard.some((x) => w.year - x.echoedIn! < ECHO_SPACING)) continue;
       g.echoedIn = w.year;
       const title = ctx.content.event(g.originEvent)?.title;
-      const about = title ? `what happened in "${title}"` : `what the house did in ${g.originYear}`;
+      const about = title
+        ? msg(ctx, 'grudge.about.event', 'what happened in "{TITLE}"', { TITLE: title })
+        : msg(ctx, 'grudge.about.year', 'what the house did in {YEAR}', { YEAR: String(g.originYear) });
       const name = w.houses.get(house)?.name ?? house;
-      const lines = grudgeLines(name, about);
-      const line = grudgeLineIndex(w.year, house, lines.length);
+      const line = grudgeLineIndex(w.year, house, GRUDGE_LINES.length);
       w.chronicle.push({
         id: chronicleEntryId(ctx),
         year: w.year,
         weight: 'line',
-        text: lines[line]!,
+        text: msg(ctx, `grudge.echo.${line}`, GRUDGE_LINES[line]!, { HOUSE: name, ABOUT: about }),
         echoFrame: `grudge:${line}`,
         named: false,
         cause: { year: g.originYear, ...(g.originPage ? { page: g.originPage } : {}) },
@@ -393,8 +393,9 @@ export function tickFamilyQuarrels(ctx: SimCtx): Grudge[] {
     w.chronicle.push({
       year: w.year,
       weight: 'line',
-      text: `${speaker.name} stopped writing to the seat, and told the hall why, and the hall `
-        + 'remembered it longer than he did.',
+      text: msg(ctx, 'grudge.hall_quarrel',
+          '{SPEAKER} stopped writing to the seat, and told the hall why, and the hall remembered it longer than he did.',
+          { SPEAKER: speaker.name }),
       named: false,
     });
   }
