@@ -7,6 +7,7 @@ import { DEBT_FLOOR } from './economy.js';
 import { addGrudge, relate } from './people/relationships.js';
 import { head } from './world.js';
 import { noteBearing } from './bearing.js';
+import { msg } from './messages.js';
 
 /**
  * LAND INCOME (concept §13, world §5/§12; issue #91, Phase A — issue #93).
@@ -193,7 +194,8 @@ export function buyParcel(ctx: SimCtx, parcel: string): OrderResult {
   }
   w.chronicle.push({
     year: w.year, weight: 'line',
-    text: `${def.name} was bought outright, for ${lot.price} crowns.`,
+    text: msg(ctx, 'land.bought', '{PARCEL} was bought outright, for {PRICE} crowns.',
+      { PARCEL: def.name, PRICE: String(lot.price) }),
     named: false,
   });
   return { ok: true };
@@ -239,7 +241,7 @@ export function sellParcel(ctx: SimCtx, parcel: string): OrderResult {
   w.treasury += price;
   w.chronicle.push({
     year: w.year, weight: 'line',
-    text: `${def.name} was sold, for ${price} crowns.`,
+    text: msg(ctx, 'land.sold', '{PARCEL} was sold, for {PRICE} crowns.', { PARCEL: def.name, PRICE: String(price) }),
     named: false,
   });
   return { ok: true };
@@ -310,7 +312,10 @@ export function tickLandImprovements(ctx: SimCtx): void {
     const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
     w.chronicle.push({
       year: w.year, weight: 'line',
-      text: `The drainage at ${def?.name ?? 'the holding'} was finished, and it yields better for it.`,
+      text: def
+        ? msg(ctx, 'land.drained', 'The drainage at {PARCEL} was finished, and it yields better for it.',
+          { PARCEL: def.name })
+        : msg(ctx, 'land.drained_unnamed', 'The drainage at the holding was finished, and it yields better for it.'),
       named: false,
     });
   }
@@ -393,7 +398,9 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
           struck.push({ route: 'blight', parcel: def.id });
           w.chronicle.push({
             year: w.year, weight: 'line', named: false,
-            text: `Blight took hold in ${def.name} this year, and the timber that would have paid for it did not.`,
+            text: msg(ctx, 'land.blight',
+              'Blight took hold in {PARCEL} this year, and the timber that would have paid for it did not.',
+              { PARCEL: def.name }),
           });
         }
         break;
@@ -412,7 +419,9 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
           struck.push({ route: 'sarrow_sink', parcel: def.id });
           w.chronicle.push({
             year: w.year, weight: 'line', named: false,
-            text: `${def.name} went down in black water off Sarrow, with its cargo and every crown laid into it.`,
+            text: msg(ctx, 'land.sarrow_sank',
+              '{PARCEL} went down in black water off Sarrow, with its cargo and every crown laid into it.',
+              { PARCEL: def.name }),
           });
         }
         break;
@@ -520,7 +529,8 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
   state.holder = branch;
   w.chronicle.push({
     year: w.year, weight: 'line', named: false,
-    text: `${displayName(state, def)} was endowed to ${b.name}.`,
+    text: msg(ctx, 'land.endowed', '{PARCEL} was endowed to {BRANCH}.',
+      { PARCEL: displayName(state, def), BRANCH: b.name }),
   });
   return { ok: true };
 }
@@ -538,7 +548,10 @@ export function recallParcel(ctx: SimCtx, parcel: string): OrderResult {
   state.holder = undefined;
   w.chronicle.push({
     year: w.year, weight: 'line', named: false,
-    text: `${displayName(state, def)} was recalled to the seat${b ? ` from ${b.name}` : ''}.`,
+    text: b
+      ? msg(ctx, 'land.recalled_from', '{PARCEL} was recalled to the seat from {BRANCH}.',
+        { PARCEL: displayName(state, def), BRANCH: b.name })
+      : msg(ctx, 'land.recalled', '{PARCEL} was recalled to the seat.', { PARCEL: displayName(state, def) }),
   });
   return { ok: true };
 }
@@ -581,7 +594,9 @@ export function nameParcel(ctx: SimCtx, parcel: string, name: string): OrderResu
   state.name = trimmed;
   w.chronicle.push({
     year: w.year, weight: 'line',
-    text: was === trimmed ? `${trimmed} was named, again.` : `${was} was named ${trimmed}.`,
+    text: was === trimmed
+      ? msg(ctx, 'land.renamed_same', '{PARCEL} was named, again.', { PARCEL: trimmed })
+      : msg(ctx, 'land.renamed', '{WAS} was named {PARCEL}.', { WAS: was, PARCEL: trimmed }),
     named: false,
   });
   return { ok: true };
@@ -610,8 +625,9 @@ export function tickPlatIllumination(ctx: SimCtx): void {
   w.platIlluminated = true;
   w.chronicle.push({
     year: w.year, weight: 'illuminated',
-    title: 'The House Has Grown Its Ground',
-    text: 'The terrier was drawn again, and it no longer fits the page it was first written on.',
+    title: msg(ctx, 'land.terrier_title', 'The House Has Grown Its Ground'),
+    text: msg(ctx, 'land.terrier',
+      'The terrier was drawn again, and it no longer fits the page it was first written on.'),
     named: false,
   });
 }

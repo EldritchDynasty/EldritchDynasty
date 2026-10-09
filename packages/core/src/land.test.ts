@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { loadContent } from '@ed/content';
-import { RESPECT_ORDER } from '@ed/schema';
+import { loadBundle, loadContent } from '@ed/content';
+import { proseOriginalHash, RESPECT_ORDER } from '@ed/schema';
 import {
   ambientPool, beginImprovement, buyParcel, damageParcel, encroachParcel, endowParcel, grantParcel,
-  heldParcels, isCaput, landIncome, landView, recallParcel,
-  grudgeAgainstUs, parcelPrice, restoreParcel, seizeParcel, sellParcel,
-  setRentsPolicy, testWorld, tickLandImprovements, tickLandMarket, tickLandRisks,
+  heldParcels, isCaput, landIncome, landView, nameParcel, recallParcel,
+  grudgeAgainstUs, parcelPrice, restoreParcel, seizeParcel, sellParcel, setProseMode, setProseVariants,
+  setRentsPolicy, testWorld, tickLandImprovements, tickLandMarket, tickLandRisks, tickPlatIllumination,
   type Rng,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -732,5 +733,141 @@ describe('landView', () => {
     const row = landView(ctx).held.find((p) => p.parcel === 'hallowfield');
     expect(row?.improving).toBeDefined();
     expect(row?.canImprove).toBe(false);
+  });
+});
+
+describe('the land pages speak the reader\'s setting (#744)', () => {
+  const PAGES: Record<string, [string, string]> = {
+    'land.bought': ['{PARCEL} was bought outright, for {PRICE} crowns.', 'The family bought {PARCEL} for {PRICE} crowns.'],
+    'land.sold': ['{PARCEL} was sold, for {PRICE} crowns.', 'The family sold {PARCEL} for {PRICE} crowns.'],
+    'land.drained': [
+      'The drainage at {PARCEL} was finished, and it yields better for it.',
+      'Work to drain {PARCEL} was finished, so it now produces more.',
+    ],
+    'land.drained_unnamed': [
+      'The drainage at the holding was finished, and it yields better for it.',
+      'Work to drain the land was finished, so it now produces more.',
+    ],
+    'land.blight': [
+      'Blight took hold in {PARCEL} this year, and the timber that would have paid for it did not.',
+      'Disease struck the trees in {PARCEL} this year, so the timber earned nothing.',
+    ],
+    'land.sarrow_sank': [
+      '{PARCEL} went down in black water off Sarrow, with its cargo and every crown laid into it.',
+      '{PARCEL} sank off Sarrow, and the cargo and all the money in it were lost.',
+    ],
+    'land.endowed': ['{PARCEL} was endowed to {BRANCH}.', '{PARCEL} was given to {BRANCH}.'],
+    'land.recalled_from': [
+      '{PARCEL} was recalled to the seat from {BRANCH}.',
+      '{PARCEL} was taken back from {BRANCH} by the head of the family.',
+    ],
+    'land.recalled': ['{PARCEL} was recalled to the seat.', '{PARCEL} was taken back by the head of the family.'],
+    'land.renamed_same': ['{PARCEL} was named, again.', '{PARCEL} kept its name.'],
+    'land.renamed': ['{WAS} was named {PARCEL}.', '{WAS} was renamed {PARCEL}.'],
+    'land.terrier_title': ['The House Has Grown Its Ground', 'The Estate Has Grown'],
+    'land.terrier': [
+      'The terrier was drawn again, and it no longer fits the page it was first written on.',
+      'The land map was redrawn because the estate no longer fit on the original page.',
+    ],
+  };
+  type Mode = 'original' | 'plainenglish';
+  const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
+    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+
+  // The authored catalogue (1,990 acres) cannot reach the terrier's 1.5x of the
+  // 1,425 founding acres on its own, so the estate gets one large waste to grow into.
+  const raw = loadBundle();
+  const roomy = {
+    ...raw,
+    parcels: [...raw.parcels, { ...raw.parcels.find((p) => !p.foundingHolding)!, id: 'the_great_waste' as (typeof raw.parcels)[number]['id'], acres: 2000 }],
+  };
+
+  function world(mode: Mode) {
+    const ctx = testWorld(roomy);
+    setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+    })));
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+
+  /** Every order and hazard that writes a land page, in one estate, in order. */
+  function play(mode: Mode) {
+    const ctx = world(mode);
+    const w = ctx.world;
+    const name = (id: string) => ctx.content.parcel(id)!.name;
+    const from = w.chronicle.length;
+    w.treasury = 10_000;
+    w.landMarket.lots.push({ parcel: 'sowerhay', price: 84, closesYear: w.year + 3, reason: 'fair' });
+    expect(buyParcel(ctx, 'sowerhay').ok).toBe(true);
+    beginImprovement(ctx, 'hallowfield');
+    w.year = w.landImprovements[0]!.completes;
+    tickLandImprovements(ctx);
+    makeBranch(ctx, 'branch_a');
+    endowParcel(ctx, 'hallowfield', 'branch_a');
+    recallParcel(ctx, 'hallowfield');
+    endowParcel(ctx, 'hallowfield', 'branch_a');
+    w.branches.delete('branch_a');
+    recallParcel(ctx, 'hallowfield');
+    nameParcel(ctx, 'hallowfield', 'Long Acre');
+    nameParcel(ctx, 'hallowfield', 'Long Acre');
+    const before = w.treasury;
+    sellParcel(ctx, 'hallowfield');
+    const price = String(w.treasury - before);
+    tickLandRisks(ctx, riskRng([1], [false]));
+    tickLandRisks(ctx, riskRng([1], [true]));
+    grantParcel(ctx, 'sarrow_bottom');
+    tickLandRisks(ctx, riskRng([1, 3.4], [true]));
+    for (const def of ctx.content.parcels) grantParcel(ctx, def.id);
+    tickPlatIllumination(ctx);
+    const pages = w.chronicle.slice(from).filter((e) => e.year >= 0);
+    const expected = [
+      say(mode, 'land.bought', { PARCEL: name('sowerhay'), PRICE: '84' }),
+      say(mode, 'land.drained', { PARCEL: name('hallowfield') }),
+      say(mode, 'land.endowed', { PARCEL: name('hallowfield'), BRANCH: 'branch_a Hall' }),
+      say(mode, 'land.recalled_from', { PARCEL: name('hallowfield'), BRANCH: 'branch_a Hall' }),
+      say(mode, 'land.endowed', { PARCEL: name('hallowfield'), BRANCH: 'branch_a Hall' }),
+      say(mode, 'land.recalled', { PARCEL: name('hallowfield') }),
+      say(mode, 'land.renamed', { WAS: name('hallowfield'), PARCEL: 'Long Acre' }),
+      say(mode, 'land.renamed_same', { PARCEL: 'Long Acre' }),
+      // The sale page names the authored parcel, not the player's name for it —
+      // as it always has; this slice changes words, not which name is read.
+      say(mode, 'land.sold', { PARCEL: name('hallowfield'), PRICE: price }),
+    ];
+    return { ctx, pages, expected, name };
+  }
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`renders every land page in ${mode}`, () => {
+      const { pages, expected, name } = play(mode);
+      const texts = pages.map((e) => e.text);
+      expect(texts.slice(0, expected.length)).toEqual(expected);
+      expect(texts).toContain(say(mode, 'land.blight', { PARCEL: name('ardwen_wood') }));
+      expect(texts).toContain(say(mode, 'land.sarrow_sank', { PARCEL: name('sarrow_bottom') }));
+      const terrier = pages.find((e) => e.weight === 'illuminated')!;
+      expect(terrier.title).toBe(say(mode, 'land.terrier_title'));
+      expect(terrier.text).toBe(say(mode, 'land.terrier'));
+    });
+  }
+
+  it('changes words only, and a page keeps the words it was written with', () => {
+    const original = play('original');
+    const plain = play('plainenglish');
+    expect(plain.ctx.world.treasury).toBe(original.ctx.world.treasury);
+    expect([...plain.ctx.world.parcels.values()]).toEqual([...original.ctx.world.parcels.values()]);
+    setProseMode(plain.ctx, 'original');
+    expect(plain.pages[0]!.text).toBe(plain.expected[0]);
+  });
+
+  it('names the holding generically when the parcel has no authored definition', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const ctx = world(mode);
+      beginImprovement(ctx, 'hallowfield');
+      ctx.world.year = ctx.world.landImprovements[0]!.completes;
+      const state = [...ctx.world.parcels.values()].find((p) => p.defId === 'hallowfield')!;
+      delete state.defId;
+      tickLandImprovements(ctx);
+      expect(ctx.world.chronicle.at(-1)!.text).toBe(say(mode, 'land.drained_unnamed'));
+    }
   });
 });
