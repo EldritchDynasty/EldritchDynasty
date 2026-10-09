@@ -4,6 +4,11 @@ import {
   AGE_STRATEGIES, activeMatchPriorities, activeRecordPriorities,
   matchFuture, strategicPressures, tableView, testWorld, type MatchCard,
 } from '@ed/core';
+import { readFileSync } from 'node:fs';
+import { proseOriginalHash } from '@ed/schema';
+import { coreMessageAddress } from './messages.js';
+import { setProseMode, setProseVariants } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -100,5 +105,31 @@ describe('Age strategic identity', () => {
     expect(activeMatchPriorities(ctx)).toEqual(['continuity', 'standing']);
     expect(activeRecordPriorities(ctx)).toEqual(['omit']);
     expect(strategicPressures(ctx)).toHaveLength(4);
+  });
+});
+
+describe('the Age priorities speak the reader\'s setting (#781)', () => {
+  const source = readFileSync(new URL('./ages/strategy.ts', import.meta.url), 'utf8');
+  const keyed = coreMessageEntries(source).filter((entry) => entry.address.includes('#age_strategy.'));
+
+  it('keys exactly two priorities for every shipped Age', () => {
+    expect(keyed).toHaveLength(bundle.ages.length * 2);
+    for (const def of bundle.ages) {
+      const ctx = inAge(def.id);
+      expect(strategicPressures(ctx)).toEqual([0, 1].map((i) =>
+        keyed.find((entry) => entry.address === coreMessageAddress(`age_strategy.${def.id}.${i}`))!.text));
+    }
+  });
+
+  it('gives the reviewed Plain English priorities, the same count of them', () => {
+    for (const def of bundle.ages) {
+      const ctx = inAge(def.id);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      const original = strategicPressures(ctx);
+      setProseMode(ctx, 'plainenglish');
+      expect(strategicPressures(ctx)).toEqual(original.map((text) => `plain: ${text}`));
+    }
   });
 });

@@ -1,4 +1,5 @@
 import type { SimCtx } from '../world.js';
+import { msg } from '../messages.js';
 
 export type AgeMatchPriority = 'blood' | 'standing' | 'continuity' | 'mystery';
 export type AgeRecordPriority = 'record' | 'omit' | 'embellish';
@@ -7,7 +8,8 @@ export interface AgeStrategy {
   match?: AgeMatchPriority;
   career?: string;
   record?: AgeRecordPriority;
-  priorities: readonly [string, string];
+  /** In the reader's setting. One literal key each, so the words have a stable identity. */
+  priorities(ctx: SimCtx): readonly [string, string];
 }
 
 /**
@@ -25,37 +27,59 @@ export const AGE_STRATEGIES: Readonly<Record<string, AgeStrategy>> = {
   the_long_peace: {
     match: 'continuity',
     career: 'merchant',
-    priorities: ['large, well-attested families are worth marrying into', 'commercial places are cheaper for the house to obtain'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_long_peace.0', 'large, well-attested families are worth marrying into'),
+      msg(ctx, 'age_strategy.the_long_peace.1', 'commercial places are cheaper for the house to obtain'),
+    ],
   },
   the_wars: {
     match: 'continuity',
     career: 'military',
-    priorities: ['surviving, proven lines matter more than concentrated blood', 'military commissions are cheaper for the house to obtain'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_wars.0', 'surviving, proven lines matter more than concentrated blood'),
+      msg(ctx, 'age_strategy.the_wars.1', 'military commissions are cheaper for the house to obtain'),
+    ],
   },
   the_crusade: {
     match: 'standing',
     record: 'omit',
-    priorities: ['a house already legible to institutions is safer to marry', 'the chronicler is more tempted to leave dangerous truths blank'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_crusade.0', 'a house already legible to institutions is safer to marry'),
+      msg(ctx, 'age_strategy.the_crusade.1', 'the chronicler is more tempted to leave dangerous truths blank'),
+    ],
   },
   the_insurrection: {
     match: 'standing',
     career: 'advocate',
-    priorities: ['alliances and public standing matter more at the marriage table', 'advocate places are cheaper while old claims are contested'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_insurrection.0', 'alliances and public standing matter more at the marriage table'),
+      msg(ctx, 'age_strategy.the_insurrection.1', 'advocate places are cheaper while old claims are contested'),
+    ],
   },
   the_withering: {
     match: 'blood',
     career: 'scholar',
-    priorities: ['known blood matters more while the gift is thinning', 'scholars are unusually valuable while books and knowledge disappear'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_withering.0', 'known blood matters more while the gift is thinning'),
+      msg(ctx, 'age_strategy.the_withering.1', 'scholars are unusually valuable while books and knowledge disappear'),
+    ],
   },
   the_quickening: {
     match: 'blood',
     record: 'embellish',
-    priorities: ['deep blood becomes unusually attractive at the marriage table', 'the chronicler is more tempted to write sudden greatness larger'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_quickening.0', 'deep blood becomes unusually attractive at the marriage table'),
+      msg(ctx, 'age_strategy.the_quickening.1', 'the chronicler is more tempted to write sudden greatness larger'),
+    ],
   },
   the_plague: {
     match: 'continuity',
     career: 'clergy',
-    priorities: ['fertile lines with grown children become unusually attractive', 'ordination is cheaper to obtain while the household is under mortal pressure'],
+    priorities: (ctx) => [
+      msg(ctx, 'age_strategy.the_plague.0', 'fertile lines with grown children become unusually attractive'),
+      msg(ctx, 'age_strategy.the_plague.1',
+        'ordination is cheaper to obtain while the household is under mortal pressure'),
+    ],
   },
 };
 
@@ -90,5 +114,5 @@ export function ageCareerFactor(ctx: SimCtx, career: string): number {
  * contains an Age id, display name, onset year or elapsed duration.
  */
 export function strategicPressures(ctx: SimCtx): string[] {
-  return [...new Set(activeStrategies(ctx).flatMap((s) => s.priorities))];
+  return [...new Set(activeStrategies(ctx).flatMap((s) => s.priorities(ctx)))];
 }
