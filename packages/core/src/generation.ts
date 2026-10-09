@@ -4,8 +4,15 @@ import { heirApparent } from './people/succession.js';
 import { branchOf } from './people/branches.js';
 import { rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
+import { msg } from './messages.js';
 
-type Candidate = GenerationQuestion & { score: number };
+/**
+ * `say` renders the question only once it is chosen, so a Plain English miss
+ * is reported for the words the player is shown and not for every pressure
+ * that lost. `text` stays in place, empty, so the chosen question keeps the
+ * key order it has always been saved in.
+ */
+type Candidate = GenerationQuestion & { score: number; say: () => string };
 
 const openDiscrepancies = (ctx: SimCtx): number =>
   [...ctx.world.discrepancies.values()].filter((d) => d.state === 'open').length;
@@ -16,15 +23,16 @@ const livingBlood = (ctx: SimCtx): Person[] =>
 function candidate(
   kind: GenerationQuestion['kind'],
   score: number,
-  text: string,
+  say: () => string,
   opened: number,
   baseline: number,
   subject?: Person,
 ): Candidate {
   const signature = `${kind}:${subject?.id ?? '-'}`;
   return {
-    kind, score, text, opened, baseline, signature,
+    kind, score, text: '', opened, baseline, signature,
     ...(subject ? { subject: subject.id, subjectName: subject.name } : {}),
+    say,
   };
 }
 
@@ -49,7 +57,9 @@ export function chooseGenerationQuestion(
   if (heir && heir.madness >= 25) {
     candidates.push(candidate(
       'unstable_heir', 100,
-      `${heir.name} stands nearest the seal, and the strain is already visible. Do we risk the line on him?`,
+      () => msg(ctx, 'generation.question.unstable_heir',
+        '{HEIR} stands nearest the seal, and the strain is already visible. Do we risk the line on him?',
+        { HEIR: heir.name }),
       w.year, heir.madness, heir,
     ));
   }
@@ -59,7 +69,9 @@ export function chooseGenerationQuestion(
   if (blood.length <= thinAt) {
     candidates.push(candidate(
       'thin_line', 90,
-      `Only ${blood.length} of the blood are living. Can ${head.name} leave the line stronger than he found it?`,
+      () => msg(ctx, 'generation.question.thin_line',
+        'Only {COUNT} of the blood are living. Can {HEAD} leave the line stronger than he found it?',
+        { COUNT: String(blood.length), HEAD: head.name }),
       w.year, blood.length, head,
     ));
   }
@@ -68,7 +80,9 @@ export function chooseGenerationQuestion(
   if (discrepancies >= 2) {
     candidates.push(candidate(
       'record', 80,
-      `The chronicle carries ${discrepancies} open contradictions. Does ${head.name} protect the legend, or leave something the house can prove?`,
+      () => msg(ctx, 'generation.question.record',
+        'The chronicle carries {COUNT} open contradictions. Does {HEAD} protect the legend, or leave something the house can prove?',
+        { COUNT: String(discrepancies), HEAD: head.name }),
       w.year, discrepancies, head,
     ));
   }
@@ -78,7 +92,13 @@ export function chooseGenerationQuestion(
   if (remaining > 0 && remaining <= 2) {
     candidates.push(candidate(
       'ledger', 70,
-      `The Ledger is ${remaining === 1 ? 'one clause' : `${remaining} clauses`} from complete. Does ${head.name} fund the reading, or the house that must survive it?`,
+      () => (remaining === 1
+        ? msg(ctx, 'generation.question.ledger_one',
+          'The Ledger is one clause from complete. Does {HEAD} fund the reading, or the house that must survive it?',
+          { HEAD: head.name })
+        : msg(ctx, 'generation.question.ledger',
+          'The Ledger is {COUNT} clauses from complete. Does {HEAD} fund the reading, or the house that must survive it?',
+          { COUNT: String(remaining), HEAD: head.name })),
       w.year, w.clausesRecovered.size, head,
     ));
   }
@@ -90,12 +110,15 @@ export function chooseGenerationQuestion(
     candidates.push({
       kind: 'branch',
       score: 60,
-      text: `${troubled.name} is close to breaking with the seat. Can ${head.name} keep that hall in the family?`,
+      text: '',
       opened: w.year,
       baseline: troubled.grievance,
       subject: troubled.id,
       subjectName: troubled.name,
       signature: `branch:${troubled.id}`,
+      say: () => msg(ctx, 'generation.question.branch',
+        '{BRANCH} is close to breaking with the seat. Can {HEAD} keep that hall in the family?',
+        { BRANCH: troubled.name, HEAD: head.name }),
     });
   }
 
@@ -106,7 +129,9 @@ export function chooseGenerationQuestion(
   if (daughter) {
     candidates.push(candidate(
       'match', 50,
-      `${daughter.name} is old enough for the Match. Is her blood kept close, or spent outward for what the house needs now?`,
+      () => msg(ctx, 'generation.question.match',
+        '{DAUGHTER} is old enough for the Match. Is her blood kept close, or spent outward for what the house needs now?',
+        { DAUGHTER: daughter.name }),
       w.year, 0, daughter,
     ));
   }
@@ -114,7 +139,9 @@ export function chooseGenerationQuestion(
   if (w.ascension.rung !== 'none') {
     candidates.push(candidate(
       'ascension', 40,
-      `${head.name} inherits a house standing at ${rungTitle(w.ascension.rung)}. Can this generation hold the climb without spending the line beneath it?`,
+      () => msg(ctx, 'generation.question.ascension',
+        '{HEAD} inherits a house standing at {RUNG}. Can this generation hold the climb without spending the line beneath it?',
+        { HEAD: head.name, RUNG: rungTitle(w.ascension.rung) }),
       w.year, Object.keys(w.ascension.reachedAt).length, head,
     ));
   }
@@ -122,8 +149,8 @@ export function chooseGenerationQuestion(
   candidates.sort((a, b) => b.score - a.score || a.signature.localeCompare(b.signature));
   const picked = candidates.find((c) => c.signature !== previous?.signature);
   if (!picked) return undefined;
-  const { score: _score, ...question } = picked;
-  return question;
+  const { score: _score, say, ...question } = picked;
+  return { ...question, text: say() };
 }
 
 /** What actually became of a generation's opening question. No projected outcomes. */
@@ -134,43 +161,77 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
   switch (q.kind) {
     case 'unstable_heir': {
       if (!subject || subject.status !== 'alive') {
-        return `${q.subjectName ?? 'The heir'} did not live to take the seal.`;
+        return q.subjectName !== undefined
+          ? msg(ctx, 'generation.answer.heir_died', '{HEIR} did not live to take the seal.', { HEIR: q.subjectName })
+          : msg(ctx, 'generation.answer.heir_died_unnamed', 'The heir did not live to take the seal.');
       }
       if (subject.castSlots.includes('head')) {
-        return `${subject.name} took the seal. His Madness now stands at ${Math.round(subject.madness)}, against ${Math.round(q.baseline)} when the question opened.`;
+        return msg(ctx, 'generation.answer.heir_sealed',
+          '{HEIR} took the seal. His Madness now stands at {MADNESS}, against {BASELINE} when the question opened.',
+          { HEIR: subject.name, MADNESS: String(Math.round(subject.madness)), BASELINE: String(Math.round(q.baseline)) });
       }
-      return `${subject.name} lived through the generation but did not take the seal; his Madness now stands at ${Math.round(subject.madness)}.`;
+      return msg(ctx, 'generation.answer.heir_passed_over',
+        '{HEIR} lived through the generation but did not take the seal; his Madness now stands at {MADNESS}.',
+        { HEIR: subject.name, MADNESS: String(Math.round(subject.madness)) });
     }
     case 'thin_line': {
       const now = livingBlood(ctx).length;
-      const direction = now > q.baseline ? 'grew' : now < q.baseline ? 'thinned' : 'held';
-      return `The living blood ${direction}: ${q.baseline} when the generation opened, ${now} when it closed.`;
+      const v = { BASELINE: String(q.baseline), NOW: String(now) };
+      return now > q.baseline
+        ? msg(ctx, 'generation.answer.blood_grew', 'The living blood grew: {BASELINE} when the generation opened, {NOW} when it closed.', v)
+        : now < q.baseline
+          ? msg(ctx, 'generation.answer.blood_thinned', 'The living blood thinned: {BASELINE} when the generation opened, {NOW} when it closed.', v)
+          : msg(ctx, 'generation.answer.blood_held', 'The living blood held: {BASELINE} when the generation opened, {NOW} when it closed.', v);
     }
     case 'record': {
       const now = openDiscrepancies(ctx);
       const proved = [...w.discrepancies.values()].filter((d) => d.state === 'proven').length;
-      return `The book closed the generation with ${now} open contradictions; ${proved} had been proven by then.`;
+      return msg(ctx, 'generation.answer.record',
+        'The book closed the generation with {NOW} open contradictions; {PROVED} had been proven by then.',
+        { NOW: String(now), PROVED: String(proved) });
     }
     case 'ledger': {
       const now = w.clausesRecovered.size;
-      return `The house recovered ${Math.max(0, now - q.baseline)} Ledger clause${now - q.baseline === 1 ? '' : 's'} during the generation, bringing the total to ${now}.`;
+      const v = { GAINED: String(Math.max(0, now - q.baseline)), NOW: String(now) };
+      return now - q.baseline === 1
+        ? msg(ctx, 'generation.answer.ledger_one',
+          'The house recovered {GAINED} Ledger clause during the generation, bringing the total to {NOW}.', v)
+        : msg(ctx, 'generation.answer.ledger',
+          'The house recovered {GAINED} Ledger clauses during the generation, bringing the total to {NOW}.', v);
     }
     case 'branch': {
       const branch = q.subject ? w.branches.get(q.subject) : undefined;
-      if (!branch) return `${q.subjectName ?? 'The troubled hall'} did not remain a standing cadet hall.`;
-      return `${branch.name}'s grievance stands at ${Math.round(branch.grievance)}, against ${Math.round(q.baseline)} when the generation opened.`;
+      if (!branch) {
+        return q.subjectName !== undefined
+          ? msg(ctx, 'generation.answer.branch_gone', '{BRANCH} did not remain a standing cadet hall.', { BRANCH: q.subjectName })
+          : msg(ctx, 'generation.answer.branch_gone_unnamed', 'The troubled hall did not remain a standing cadet hall.');
+      }
+      return msg(ctx, 'generation.answer.branch',
+        "{BRANCH}'s grievance stands at {GRIEVANCE}, against {BASELINE} when the generation opened.",
+        { BRANCH: branch.name, GRIEVANCE: String(Math.round(branch.grievance)), BASELINE: String(Math.round(q.baseline)) });
     }
     case 'match': {
-      if (!subject || subject.status !== 'alive') return `${q.subjectName ?? 'The daughter'} did not live to make that marriage.`;
+      if (!subject || subject.status !== 'alive') {
+        return q.subjectName !== undefined
+          ? msg(ctx, 'generation.answer.daughter_died', '{DAUGHTER} did not live to make that marriage.', { DAUGHTER: q.subjectName })
+          : msg(ctx, 'generation.answer.daughter_died_unnamed', 'The daughter did not live to make that marriage.');
+      }
       const marriage = subject.marriages.find((m) => m.to === undefined);
-      if (!marriage) return `${subject.name} remained unmarried when the generation closed.`;
+      if (!marriage) {
+        return msg(ctx, 'generation.answer.unmarried', '{DAUGHTER} remained unmarried when the generation closed.',
+          { DAUGHTER: subject.name });
+      }
       const spouse = w.people.get(marriage.spouse);
       const outward = spouse && spouse.houseOfOrigin !== w.playerHouse;
       return outward
-        ? `${subject.name} married outward, into ${ctx.content.house(spouse!.houseOfOrigin)?.name ?? spouse!.houseOfOrigin}.`
-        : `${subject.name} married within the house's own blood.`;
+        ? msg(ctx, 'generation.answer.married_out', '{DAUGHTER} married outward, into {HOUSE}.',
+          { DAUGHTER: subject.name, HOUSE: ctx.content.house(spouse!.houseOfOrigin)?.name ?? spouse!.houseOfOrigin })
+        : msg(ctx, 'generation.answer.married_in', "{DAUGHTER} married within the house's own blood.",
+          { DAUGHTER: subject.name });
     }
     case 'ascension':
-      return `The house closes the generation at ${rungTitle(w.ascension.rung)}; its high-water mark is ${rungTitle(w.ascension.best)}.`;
+      return msg(ctx, 'generation.answer.ascension',
+        'The house closes the generation at {RUNG}; its high-water mark is {BEST}.',
+        { RUNG: rungTitle(w.ascension.rung), BEST: rungTitle(w.ascension.best) });
   }
 }
