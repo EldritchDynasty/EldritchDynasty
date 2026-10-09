@@ -15,3 +15,9 @@ declare module 'virtual:ed-content' {
   const docs: Record<string, string>;
   export default docs;
 }
+
+/** Reviewed counterparts live in a separate chunk, loaded only on demand. */
+declare module 'virtual:ed-prose-variants' {
+  const packed: Record<string, unknown[]>;
+  export default packed;
+}
