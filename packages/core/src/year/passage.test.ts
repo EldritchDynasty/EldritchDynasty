@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { coreMessageAddress } from '../messages.js';
+import { setProseMode, setProseVariants } from '../prose.js';
+import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
 import { beget, place, testWorld } from '../testing.js';
 import { emptyReport } from './report.js';
 import { passageOf } from './passage.js';
@@ -133,5 +139,80 @@ describe('a year, as lines', () => {
 
     expect(passageOf(ctx, report)!.lines[0]!.text)
       .toBe('Selwyn awakened, and it will not come through.');
+  });
+});
+
+/**
+ * The yearly report is a view, not saved history. A reader may switch wording
+ * before asking for the next report without changing the people it records.
+ */
+describe('year-passage prose identities (#710)', () => {
+  it('uses stable authored keys for every passage sentence', () => {
+    const source = readFileSync(join(import.meta.dirname, 'passage.ts'), 'utf8');
+    const keys = plainEnglishCoreWorkItems('year/passage.ts', source)
+      .map((entry) => entry.address)
+      .filter((address) => address.startsWith('core:messages#passage.'));
+    expect(keys).toEqual(expect.arrayContaining([
+      coreMessageAddress('passage.study.finished'),
+      coreMessageAddress('passage.awakening.expressing'),
+      coreMessageAddress('passage.awakening.unexpressed'),
+      coreMessageAddress('passage.death.cause'),
+      coreMessageAddress('passage.death.plain'),
+      coreMessageAddress('passage.birth.daughter.named'),
+      coreMessageAddress('passage.birth.son.named'),
+      coreMessageAddress('passage.birth.daughter.unknown'),
+      coreMessageAddress('passage.birth.son.unknown'),
+    ]));
+    expect(keys).toHaveLength(9);
+    // New preceding literals may move old ordinal positions, but cannot
+    // renumber a reviewed core:messages key.
+    const inserted = plainEnglishCoreWorkItems(
+      'year/passage.ts',
+      'const earlier = "A new sentence before the passage."\\n' + source,
+    ).map((entry) => entry.address).filter((address) => address.startsWith('core:messages#passage.'));
+    expect(inserted).toEqual(keys);
+  });
+
+  it('switches death wording prospectively and restores unchanged Original', () => {
+    const ctx = testWorld(bundle, 4410);
+    const w = ctx.world;
+    const person = place(ctx, { sex: 'female', age: 35, name: 'Mara' });
+    w.people.kill(person.id, w.year, 'unrecorded');
+    const report = emptyReport(w.year);
+    report.deaths.push(person);
+
+    const original = passageOf(ctx, report)!;
+    expect(original.lines[0]!.text).toBe('Mara died at 35.');
+
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('passage.death.plain'),
+      of: proseOriginalHash('{NAME} died at {AGE}.'),
+      plainenglish: 'At age {AGE}, {NAME} died.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const alternative = passageOf(ctx, report)!;
+    expect(alternative.lines[0]!.text).toBe('At age 35, Mara died.');
+    expect(alternative.lines[0]!.person).toBe(person.id);
+    expect(alternative.lines[0]!.kind).toBe('death');
+    // Switching cannot rewrite a line already handed to the player.
+    expect(original.lines[0]!.text).toBe('Mara died at 35.');
+
+    setProseMode(ctx, 'original');
+    expect(passageOf(ctx, report)).toEqual(original);
+  });
+
+  it('falls back to Original if the supplied alternative loses a token', () => {
+    const ctx = testWorld(bundle, 4411);
+    const person = place(ctx, { sex: 'female', age: 20, name: 'Mara' });
+    const report = emptyReport(ctx.world.year);
+    report.awakenings.push(person);
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('passage.awakening.unexpressed'),
+      of: proseOriginalHash('{NAME} awakened, and it will not come through.'),
+      plainenglish: 'The power does not pass through.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(passageOf(ctx, report)!.lines[0]!.text)
+      .toBe('Mara awakened, and it will not come through.');
   });
 });
