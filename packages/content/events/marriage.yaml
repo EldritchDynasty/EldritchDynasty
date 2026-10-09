@@ -271,7 +271,7 @@ events:
               effects:
                 - { kind: priorityMatch, target: { slot: SOLE_HEIR } }
                 - { kind: respect, delta: -1 }
-                - { kind: chronicle, text: Word went out that the house was down to one, and asking. }
+                - { kind: chronicle, text: "Word went out that the house was down to one, and asking." }
         - id: leave_it
           label: Leave it. It is nobody's business but the house's.
           outcomes:
@@ -326,7 +326,7 @@ events:
                 - { kind: priorityMatch, target: { slot: SOLE_HEIR } }
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: { slot: SPOUSE }, to: head, sentiment: -8 }
-                - { kind: chronicle, text: The Church set the marriage aside, and the house went back to market for the only name it has left. }
+                - { kind: chronicle, text: "The Church set the marriage aside, and the house went back to market for the only name it has left." }
         - id: let_it_stand
           label: Let the marriage stand.
           outcomes:
