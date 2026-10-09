@@ -168,7 +168,7 @@ describe('year-passage prose identities (#710)', () => {
     // renumber a reviewed core:messages key.
     const inserted = plainEnglishCoreWorkItems(
       'year/passage.ts',
-      'const earlier = "A new sentence before the passage."\\n' + source,
+      'const earlier = "A new sentence before the passage."\n' + source,
     ).map((entry) => entry.address).filter((address) => address.startsWith('core:messages#passage.'));
     expect(inserted).toEqual(keys);
   });
