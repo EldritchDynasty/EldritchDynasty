@@ -6,6 +6,7 @@ import {
 } from '@ed/core';
 import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type Rung } from '@ed/schema';
 import type { SimCtx } from './world.js';
+import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
 
@@ -242,6 +243,49 @@ describe('what the book cannot hold up', () => {
     attest(ctx, 'hierophant');
     closeTheLedger(ctx);
     expect(ctx.world.chronicle.some((e) => e.title === 'What Could Not Be Shown')).toBe(false);
+  });
+
+  it('writes both closing pages in the reader\'s setting, and reads the same ending either way (#753)', () => {
+    const PAGES: Record<string, [string, string]> = {
+      'ending.term_title': ['The Term', 'The End of the Record'],
+      'ending.term': [
+        'The book was read, from the first page to the last, and the blanks were read too.',
+        'The whole record was read, including the missing pages.',
+      ],
+      'ending.withheld_title': ['What Could Not Be Shown', 'What Could Not Be Proved'],
+      'ending.withheld': [
+        'The house was written as {ATTESTED} and was read as {SUBSTANTIATED}. {LIES} pages were asked after, and the family had nothing to set beside them but the pages themselves.',
+        'The record claimed {ATTESTED}, but it could only support {SUBSTANTIATED}. {LIES} pages were questioned, and the family had no other proof.',
+      ],
+    };
+    const close = (mode: 'original' | 'plainenglish') => {
+      const ctx = atTheTerm();
+      setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
+        address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+      })));
+      setProseMode(ctx, mode);
+      attest(ctx, 'hierophant');
+      lie(ctx, 3);
+      const ending = closeTheLedger(ctx);
+      return { ctx, ending, pages: ctx.world.chronicle.slice(-2) };
+    };
+    const original = close('original');
+    expect(original.pages.map((e) => [e.title, e.text])).toEqual([
+      ['The Term', 'The book was read, from the first page to the last, and the blanks were read too.'],
+      ['What Could Not Be Shown', 'The house was written as Hierophant and was read as Adept. 3 pages were asked after, '
+        + 'and the family had nothing to set beside them but the pages themselves.'],
+    ]);
+    const plain = close('plainenglish');
+    expect(plain.pages.map((e) => [e.title, e.text])).toEqual([
+      ['The End of the Record', 'The whole record was read, including the missing pages.'],
+      ['What Could Not Be Proved', 'The record claimed Hierophant, but it could only support Adept. 3 pages were questioned, '
+        + 'and the family had no other proof.'],
+    ]);
+    expect(plain.ending).toBe(original.ending);
+    expect(plain.ctx.world.ending).toEqual(original.ctx.world.ending);
+    expect(plain.pages.every((e) => e.rung === undefined)).toBe(true);
+    setProseMode(plain.ctx, 'original');
+    expect(plain.pages[0]!.title).toBe('The End of the Record');
   });
 
   it('tells the two Forgottens apart', () => {
