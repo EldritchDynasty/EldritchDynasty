@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadBundle, loadContent } from '@ed/content';
 import { PurposeS, assembleBundle, bundleWithUserContent, indexContent, type EventTemplate, type Purpose } from '@ed/schema';
@@ -34,6 +35,38 @@ describe('the content is parsed on the build machine', () => {
     const live = clientBundle();
     expect({ ...built, proseVariants: [] }).toEqual({ ...live, proseVariants: [] });
     expect(built.proseVariants).toEqual([]);
+  });
+
+  it('keeps first-frame bytes constant across a 5,000-word translation batch', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-prose-chunk-'));
+    const eventsDir = join(root, 'events');
+    mkdirSync(eventsDir);
+    const file = join(eventsDir, 'sample.yaml');
+    const original = [
+      'events:',
+      '  - id: sample',
+      '    body: The archive stayed closed for many years.',
+    ].join('\n');
+    try {
+      writeFileSync(file, original);
+      const before = readStartupDocs(root);
+      const bytesBefore = Buffer.byteLength(JSON.stringify(before));
+
+      writeFileSync(file, [
+        original,
+        'proseVariants:',
+        '  - address: "content:events/sample.yaml#events[id=sample].body"',
+        '    of: "0000000000000000"',
+        '    plainenglish: >-',
+        '      ' + Array(5000).fill('translated').join(' '),
+      ].join('\n'));
+      const after = readStartupDocs(root);
+      expect(after).toEqual(before);
+      expect(Buffer.byteLength(JSON.stringify(after))).toBe(bytesBefore);
+      expect(JSON.stringify(readProseDocs(root)).length).toBeGreaterThan(50_000);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('restores all reviewed variants from a separate optional chunk', async () => {
