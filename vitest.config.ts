@@ -2,6 +2,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
 import { DurationSequencer } from './tools/shards.mjs';
+import { edContent } from './packages/client/build/content-plugin.js';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -111,7 +112,10 @@ export default defineConfig({
    * the 125 suites do not want a DOM and jsdom costs about 300ms per file to
    * stand up.
    */
-  plugins: [vue(), cliExcludeReachesProjects],
+  // Client content is loaded from virtual:ed-content at runtime. Vitest must
+  // register the same provider before collecting tests that import content.ts;
+  // otherwise Node treats the virtual id as an unresolved npm package.
+  plugins: [vue(), edContent(r('./packages/content')), cliExcludeReachesProjects],
   resolve: {
     alias: {
       '@ed/schema': r('./packages/schema/src/index.ts'),
