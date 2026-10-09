@@ -5,6 +5,7 @@ import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
 import { END_YEAR, campaignDef } from './campaign.js';
 import { renderContentProse } from './prose.js';
+import { msg } from './messages.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -424,8 +425,8 @@ export function closeTheLedger(ctx: SimCtx): EndingId {
   w.chronicle.push({
     year: w.year,
     weight: 'illuminated',
-    title: 'The Term',
-    text: 'The book was read, from the first page to the last, and the blanks were read too.',
+    title: msg(ctx, 'ending.term_title', 'The Term'),
+    text: msg(ctx, 'ending.term', 'The book was read, from the first page to the last, and the blanks were read too.'),
     named: true,
   });
 
@@ -444,10 +445,10 @@ export function closeTheLedger(ctx: SimCtx): EndingId {
     w.chronicle.push({
       year: w.year,
       weight: 'illuminated',
-      title: 'What Could Not Be Shown',
-      text: `The house was written as ${rungTitle(r.attested)} and was read as `
-        + `${rungTitle(r.substantiated)}. ${r.standingLies} pages were asked after, `
-        + 'and the family had nothing to set beside them but the pages themselves.',
+      title: msg(ctx, 'ending.withheld_title', 'What Could Not Be Shown'),
+      text: msg(ctx, 'ending.withheld',
+        'The house was written as {ATTESTED} and was read as {SUBSTANTIATED}. {LIES} pages were asked after, and the family had nothing to set beside them but the pages themselves.',
+        { ATTESTED: rungTitle(r.attested), SUBSTANTIATED: rungTitle(r.substantiated), LIES: String(r.standingLies) }),
       named: true,
     });
   }
