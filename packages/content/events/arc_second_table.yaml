@@ -167,3 +167,113 @@ events:
             id: the_second_table_was_always_honoured
             severity: major
             provableBy: [commons, house_marrow]
+
+proseVariants:
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_toast_in_the_book].title"
+    of: "a1e3b5538608dd47"
+    plainenglish: >-
+      The Toast Recorded in the Hall Book
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_toast_in_the_book].body"
+    of: "0a19720db9bcb001"
+    plainenglish: >-
+      The smaller house keeps a hall book, even though its hall stands four
+      miles away along a road nobody repairs. Before the next Greening, a neat
+      copy arrives, opened to last year's accounts. Someone has copied the toast
+      word for word below the figures. It is not presented as a complaint, which
+      makes it harder to dismiss. Everyone knows the compliment replaced
+      something more useful. The smaller house can pass down that memory just as
+      it passes down land.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_toast_in_the_book].interaction.outcomes[id=copied].text"
+    of: "dfc5fe58b77ec634"
+    plainenglish: >-
+      {COUSIN} does not ask for the page back. He lets {HEAD} read the toast,
+      shuts the book, and takes it home. By winter, three people in Wick can
+      quote the toast, but none can recall the accounts.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].title"
+    of: "55a42b0ba9c13f07"
+    plainenglish: >-
+      The Smaller House Sends Its Accounts Again
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].body"
+    of: "1b323a8b52faa57f"
+    plainenglish: >-
+      A generation later, the smaller house sends its accounts again. The
+      handwriting is different, but the columns are laid out the same way.
+      Whoever taught {COUSIN} to keep accounts also taught him to write the
+      final total twice at the bottom. This time there is no gift or feast. On a
+      wet morning, a boy delivers the book with a note asking whether Ardwen has
+      any use for the skills the smaller house has developed.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].interaction.choices[id=make_it_material].label"
+    of: "5833a5ce0345bd12"
+    plainenglish: >-
+      Give the smaller house worthwhile work and pay for it.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].interaction.choices[id=make_it_material].outcomes[id=work_given].text"
+    of: "f93ef92d415e00d1"
+    plainenglish: >-
+      Ardwen gives the smaller house ordinary estate work and pays for it with
+      money. For the first time, the main house answers useful work with
+      something equally useful. Their hall book still contains the old toast,
+      but people no longer point to it as the latest example of how they were
+      treated.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].interaction.choices[id=praise_it_again].label"
+    of: "d7131f70a17856dc"
+    plainenglish: >-
+      Praise their work again, but keep Ardwen's own officers.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_accounts_return].interaction.choices[id=praise_it_again].outcomes[id=praised_again].text"
+    of: "9d8fd531949f87a5"
+    plainenglish: >-
+      Ardwen sends a warm, detailed letter with a fine seal. The smaller house
+      reads it aloud at its table as a courtesy. Then they put it into the hall
+      book, directly after the first toast. Nothing practical changes, and the
+      road between the houses remains exactly four miles long.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].title"
+    of: "e85567ea214371c6"
+    plainenglish: >-
+      The Four-Mile Road Needs Repair
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].body"
+    of: "bbd6a18c367ef7e8"
+    plainenglish: >-
+      The road between Ardwen and the smaller hall is still four miles long and
+      still in poor condition. For three generations, the smaller house has
+      carried gifts up it to the two annual feasts and brought stories home. For
+      just as long, Ardwen has called four miles a short distance. This spring,
+      the bridge over the brook halfway along the road becomes unusable.
+      {COUSIN} offers to repair his hall's half if Ardwen repairs the other
+      half.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].interaction.choices[id=meet_halfway].label"
+    of: "7771b5bb7f141eef"
+    plainenglish: >-
+      Repair our half. Meet them at the brook and complete the road together.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].interaction.choices[id=meet_halfway].outcomes[id=road_mended].text"
+    of: "fb764146ed9ce66a"
+    plainenglish: >-
+      The repairs cost eighteen crowns and take two work gangs six weeks,
+      including arguments about the gravel. By Greening, a cart can travel the
+      road without losing a wheel. That practical improvement matters more than
+      a century of polite words. The first cart to arrive carries no gift.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].interaction.choices[id=their_road].label"
+    of: "64dac0b3989c2327"
+    plainenglish: >-
+      The road serves their hall. Let them repair the part they use.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].interaction.choices[id=their_road].outcomes[id=road_left].text"
+    of: "4fedee7e621eef2a"
+    plainenglish: >-
+      The smaller house repairs the road as far as the brook and stops. Ardwen
+      leaves its half full of ruts. At the next feast, the family travels two
+      good miles and two bad miles and arrives covered in mud. Nobody has to say
+      which half Ardwen failed to repair.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].record.subject"
+    of: "1d23531099750e24"
+    plainenglish: >-
+      What Ardwen owed the smaller house
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].record.options.record.chronicle"
+    of: "9fc57466b286ab4a"
+    plainenglish: >-
+      The smaller house sent us useful accounts, and we first replied with
+      praise. Their hall book preserved that praise. Generations passed before
+      we could no longer pretend that a compliment was enough to address the
+      road between our halls.
+  - address: "content:events/arc_second_table.yaml#events[id=second_table_the_road_between_them].record.options.embellish.chronicle"
+    of: "8948c5c742a559f3"
+    plainenglish: >-
+      We have always honoured the smaller house according to its place, and both
+      halls have always maintained the road between them by mutual agreement.
