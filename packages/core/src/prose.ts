@@ -1,4 +1,4 @@
-import { isContentProseField, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
+import { contentInterpolationTokens, isContentProseField, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { Choice, ClauseDef, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
@@ -48,7 +48,15 @@ export function renderProse(ctx: SimCtx, address: string | undefined, original: 
   // An alternative is safe to show only when it was reviewed against these
   // exact Original words. Legacy rows without a fingerprint remain loadable but stale.
   if (variant?.of === proseOriginalHash(original)) {
-    return variant.plainenglish;
+    // Authored YAML is guarded by the content validator, but a host can also
+    // inject variants directly. Never let an unchecked variant silently lose
+    // a slot or runtime placeholder (including lowercase and repeated ones).
+    const originalTokens = contentInterpolationTokens(original).sort();
+    const variantTokens = contentInterpolationTokens(variant.plainenglish).sort();
+    if (originalTokens.length === variantTokens.length
+      && originalTokens.every((token, i) => token === variantTokens[i])) {
+      return variant.plainenglish;
+    }
   }
   ctx.prose.missing.add(address);
   return original;
