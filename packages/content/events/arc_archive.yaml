@@ -245,3 +245,151 @@ events:
             provableBy: [the_church, house_marrow, house_ilm]
     rumour: { id: rumour_the_gentleman_at_the_assize, accuracy: 0.5, spread: 2 }
     accounts: [cawdry_assize_roll_item_nine, the_advocates_dinner_story]
+
+# Plain English variants for arc_what_went_with_her (#415).
+# Original text, choices, effects and arc scheduling stay intact.
+proseVariants:
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_morning_after].title"
+    of: 599b3e5edf81a50a
+    plainenglish: >-
+      The Morning After the Archivist Left
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_morning_after].body"
+    of: b075c938959a40a4
+    plainenglish: >-
+      The document presses look unchanged. Nothing physical is missing, because none of the records
+      belonged to the archivist. {HEAD} had the cellar counted on the second morning, and everything
+      was there. But the eleven quires of index were only in {ARCHIVIST}'s memory. She knew where to
+      find four hundred years of records and never wrote the locations down. Now the house can
+      consult only its own account of its history. She spent nineteen years building that knowledge.
+      In one rainy afternoon, she takes it down the hill on a cart, with her cloak wrapped around
+      it.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_morning_after].absentBody"
+    of: e95be49815d55464
+    plainenglish: >-
+      The presses are unchanged, and the cellar inventory was correct on the second morning. Even
+      so, the house has been unable to find what it needs for four months. Nineteen years of
+      knowledge about the records left on a cart. Nobody asked the archivist to write that knowledge
+      down, because for those nineteen years they never needed to.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_morning_after].interaction.outcomes[id=gone].text"
+    of: 6826ce7a82d84866
+    plainenglish: >-
+      Within a year she takes an indoor job cataloguing books for the chapter house at Bramme. It
+      pays four marks. People there politely ask, more than once, what the old house keeps in its
+      record presses. She tells them there is not much to see, at least at first.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].title"
+    of: ff9ac99a247feba6
+    plainenglish: >-
+      Eleven Handwritten Sections for Sale
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].body"
+    of: c4bed47ef81f8ec2
+    plainenglish: >-
+      A bookseller at Cawdry sends a catalogue twice a year. Most of it is inaccurate, but everyone
+      reads it. Item forty-one offers eleven handwritten quires: an index to a gentleman's library
+      in the Nethering, for nine crowns, bundled with a chest of unwanted sermons. {ARCHIVIST}'s
+      family has lived in Bramme for two generations without speaking badly of this house. Nobody
+      ever asked them for the index. Making a copy was not theft; the law is clear. Nine crowns is
+      four days of income in a good year. The index describes where everything in the house is kept,
+      and the bookseller has sent the catalogue to eleven houses.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].absentBody"
+    of: a123496600bc5242
+    plainenglish: >-
+      Item forty-one offers eleven quires of handwritten index to a gentleman's library in the
+      Nethering. They cost nine crowns, along with a chest of unwanted sermons. Nobody alive at
+      Ardwen recognises the handwriting; everyone who saw it before has died. Eleven houses have
+      received the catalogue, including Marrow.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].interaction.choices[id=buy_the_lot].label"
+    of: 1ea051c6d4240be2
+    plainenglish: >-
+      Send a rider today to buy the whole lot, including the sermons.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].interaction.choices[id=buy_the_lot].outcomes[id=bought].text"
+    of: 5c059f3634fec8da
+    plainenglish: >-
+      The house pays nine crowns and uses two days of a man's time. It may be the most valuable
+      purchase the house ever makes for so little money. The handwritten index is locked in the
+      second cellar. Nobody reads it. For four generations, each new Head is told where it is and
+      ordered to leave it there.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].interaction.choices[id=let_it_go].label"
+    of: d0e19f683931ebac
+    plainenglish: >-
+      Do not bid. Bidding would tell eleven houses the index matters.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].interaction.choices[id=let_it_go].outcomes[id=sold_on].text"
+    of: b991502cd926fc58
+    plainenglish: >-
+      The index stays in the catalogue for two years. Its price falls first to six crowns, then to
+      four. Then it disappears from the list. The bookseller genuinely does not know who bought it,
+      which is more worrying than a refusal to answer. He writes to ask whether the house has any
+      more documents like it.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].record.subject"
+    of: 2ec9381183dcaa6d
+    plainenglish: >-
+      the index of our records that was sold outside the house
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].record.options.record.chronicle"
+    of: d7aa2fa1caae5d55
+    plainenglish: >-
+      A bookseller at Cawdry offered an index of our records for nine crowns. A woman we dismissed
+      during a difficult year wrote it, and it is not ours. She made it for us, but she was not
+      family. The ninth line of her contract confirms this.
+  - address: "content:events/arc_archive.yaml#events[id=archive_the_bookseller_at_cawdry].record.options.embellish.chronicle"
+    of: d60e0fc7df0d4b43
+    plainenglish: >-
+      A false index of our records appeared in a Cawdry bookseller's catalogue. We dealt with the
+      forgery. Only members of the family have ever indexed these records.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].title"
+    of: 2479e25ba42b9807
+    plainenglish: >-
+      The Index Is Read Aloud at the Assize
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].body"
+    of: af141959978671a5
+    plainenglish: >-
+      The case concerns a mill and a weir. It has dragged on for nine years, and nobody at Cawdry
+      cares about it, including the advocate speaking. He reads from eleven quires written in one
+      hand. One entry says where a particular box is kept in a cellar at Ardwen. He uses it only to
+      establish the date of a property boundary. {HEAD} is in the room, and the Warden's clerk
+      records the words as usual. But the box's location is now in the provincial record, supplied
+      by someone outside the family. The contract kept in the second cellar contains a clause about
+      exactly this situation. {HEAD} has read that clause before but did not understand its meaning
+      until today.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].absentBody"
+    of: 43eedef5d9c94639
+    plainenglish: >-
+      The advocate reads from eleven handwritten quires, without knowing what they contain. The
+      court and its clerk do not know either. To them, the passage establishes only a boundary and a
+      date. But the ninth line of a contract nobody here has read means that an outsider's account
+      of the house will now count as evidence.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].interaction.choices[id=say_nothing].label"
+    of: ce86795b8e3ab467
+    plainenglish: >-
+      Say nothing. Objecting to a boundary date may reveal that we are hiding something in the
+      cellar.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].interaction.choices[id=say_nothing].outcomes[id=silence].text"
+    of: 0b9bf908e2822f64
+    plainenglish: >-
+      The court decides the case about the weir, and the mill goes to the other party. Nobody gives
+      item nine another thought for a hundred years. But it remains in Cawdry's provincial record,
+      written by someone who never worked for this house. The clause is now clear: a debtor's own
+      written account is not evidence.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].interaction.choices[id=object].label"
+    of: 4d8fa254bde8dae0
+    plainenglish: >-
+      Challenge the boundary date and ask the court to remove the quires from the record.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].interaction.choices[id=object].outcomes[id=overruled].text"
+    of: 3d61f8684a638014
+    plainenglish: >-
+      The court hears the objection, records it and refuses it. The refusal is entered beside the
+      objector's name. Now the location of the box appears in the provincial record twice: once to
+      establish a boundary, and once because a gentleman rode forty miles in the rain to try to have
+      it removed. Three men will retell this as a joke for years. One man will never mention it.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].record.subject"
+    of: 512444b8feb8fb8c
+    plainenglish: >-
+      what the assize learned about the second cellar
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].record.options.record.chronicle"
+    of: 2aee49484c0fa2c4
+    plainenglish: >-
+      An advocate at Cawdry read out the location of our box from an index we do not own. The
+      provincial record now contains it. This explains the meaning of the contract's ninth clause.
+  - address: "content:events/arc_archive.yaml#events[id=archive_read_back_at_the_assize].record.options.embellish.chronicle"
+    of: 83751c01d6605a0d
+    plainenglish: >-
+      A boundary case at Cawdry mentioned the house's papers and ended in our favour. None of our
+      papers was read aloud or entered into the record.
