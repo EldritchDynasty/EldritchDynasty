@@ -230,3 +230,133 @@ events:
             severity: minor
             provableBy: [house_marrow, house_calder]
     rumour: { id: rumour_cradlemoor_finally_pays, accuracy: 0.7, spread: 2 }
+proseVariants:
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].title"
+    of: f0c842b05fa6f374
+    plainenglish: >-
+      What Cradlemoor Needs
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].body"
+    of: 92ef9c9709367643
+    plainenglish: >-
+      Cradlemoor has changed owners four times in living memory. Each family said the land would be
+      valuable if someone drained it, but draining it was too expensive. It lies near the bogs
+      toward Wick and floods every wet spring. Old Renn now wants to sell it. His asking price
+      reflects how eager he is to leave. {HEAD} has heard three generations of conflicting advice
+      about what the drainage would actually cost.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].interaction.choices[id=commit_to_draining].label"
+    of: e28ccb5bbc339a4f
+    plainenglish: >-
+      Buy Cradlemoor and begin draining it properly.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].interaction.choices[id=commit_to_draining].outcomes[id=bought_and_begun].text"
+    of: e73e62b8071a6164
+    plainenglish: >-
+      Cradlemoor is cheap because it is a bog. {HEAD} signs the purchase that afternoon. A digger
+      from Bramme walks the boundary and says the drainage will take years, not seasons. {HEAD} pays
+      for the first stage, without knowing which descendant will pay for the last.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].interaction.choices[id=leave_it_be].label"
+    of: 91ebdfb28b36f27e
+    plainenglish: >-
+      Leave Cradlemoor for Renn to sell to another family.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].interaction.choices[id=leave_it_be].outcomes[id=declined].text"
+    of: 97021c0c7cfc26b0
+    plainenglish: >-
+      Someone else buys Cradlemoor before the year ends. It will probably be sold again within a
+      generation, as it has been before. Draining some land costs more than that land will ever
+      earn. The house has other fields that do not require this much work.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_first_season].title"
+    of: 6df4600944058505
+    plainenglish: >-
+      The First Drainage Channel
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_first_season].body"
+    of: a0db163dd3c5d4b1
+    plainenglish: >-
+      The digger from Bramme keeps his promise, but the work costs as much as he warned. During the
+      first season, his workers cut a main channel down to an old streambed. They find it two feet
+      beneath the reeds; no one alive knew it was there. {HEAD} walks the channel and ruins his
+      boots. He records the expense in the accounts under a new heading. More expenses will follow.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_first_season].interaction.outcomes[id=channel_cut].text"
+    of: fbf4861533a5ed09
+    plainenglish: >-
+      The new channel survives the autumn rain. The digger calls that a good sign. {HEAD} thinks it
+      is the least the land can do after so much expense. The drainage is still unfinished, but the
+      work has begun.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].title"
+    of: 1f35c1ec784b9b58
+    plainenglish: >-
+      Whether the Ditches Will Hold
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].body"
+    of: fc7784fae30280a6
+    plainenglish: >-
+      {HEAD} did not buy Cradlemoor or decide to drain it. He inherits the estate and the unfinished
+      work when he inherits the family seal. The channel stays open in dry years but floods in wet
+      ones. Because the field is only partly drained, its rent is still as low as a bog's. The
+      family has already spent two generations of money on it. The diggers say one more generation
+      of spending should finish the work, just as the previous digger said.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=keep_paying].label"
+    of: a78b5437efa3b4fb
+    plainenglish: >-
+      Finish the drainage work his grandfather started.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=keep_paying].outcomes[id=kept_paying].text"
+    of: 3b7733ded6668a9a
+    plainenglish: >-
+      {HEAD} signs the same order that his father and grandfather signed. It still costs just as
+      much. The diggers cut a second channel to carry water the first cannot handle alone.
+      Cradlemoor starts to earn a little more rent, but the investment has not yet paid off.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=let_it_lapse].label"
+    of: 643d1bff6d5a00db
+    plainenglish: >-
+      Stop paying for the drainage and let the ditches fill with silt.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=let_it_lapse].outcomes[id=lapsed].text"
+    of: 8625cb572b3af933
+    plainenglish: >-
+      {HEAD} refuses to spend more, so the diggers do not return. Over the next few winters, silt
+      gradually fills the channels. Cradlemoor becomes the same wet ground Old Renn sold: it might
+      be valuable after drainage, but draining it costs too much.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].record.subject"
+    of: 5207a647f725b18b
+    plainenglish: >-
+      what happened to Cradlemoor
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].record.options.record.chronicle"
+    of: c54747b4a5311e90
+    plainenglish: >-
+      Two earlier generations paid to drain Cradlemoor. This generation had to decide whether to pay
+      for a third. The decision is recorded below. The house still keeps the digging accounts, so
+      anyone can compare the actual spending with what this record claims.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].record.options.embellish.chronicle"
+    of: f21f24df6521740b
+    plainenglish: >-
+      Our family has always known how to improve poor land. Once we work it properly, it becomes
+      good land.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].title"
+    of: 9cdac0d7b944a8bb
+    plainenglish: >-
+      What Three Generations Paid For
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].body"
+    of: bde5e119f408fa55
+    plainenglish: >-
+      {HEAD} is the third generation to inherit the drainage work at Cradlemoor. Unlike his
+      predecessors, he finally inherits usable ground. The channel his grandfather dug and his
+      father maintained now stays open through a wet spring. That is what the family has spent sixty
+      years trying to achieve. The tenant thinks this is normal, because he has never known the land
+      any other way. People outside the family will never know how much work it took.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].interaction.outcomes[id=finally_holds].text"
+    of: 0533d6e4b0b88878
+    plainenglish: >-
+      For the first time anyone remembers, Cradlemoor's rent accounts look like those of an ordinary
+      farm. {HEAD} does not hold a celebration for a drainage ditch. He writes down the year, using
+      the same handwriting style as his grandfather did when the work began. That is how the family
+      acknowledges what it cost.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].record.subject"
+    of: df45c01e862829d2
+    plainenglish: >-
+      Cradlemoor after drainage
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].record.options.record.chronicle"
+    of: 0ffcc5a7431a7b9b
+    plainenglish: >-
+      Draining one poor field took sixty years and three family Heads. The full account is kept
+      here. This time the house really paid off the debt it took on, rather than merely claiming it
+      had done so.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].record.options.embellish.chronicle"
+    of: bfb1d10f70c32253
+    plainenglish: >-
+      Our house never wastes good land, and it never has.
