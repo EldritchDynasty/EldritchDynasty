@@ -1,5 +1,5 @@
 import docs from 'virtual:ed-content';
-import { assembleBundle, type ContentBundle } from '@ed/schema';
+import { assembleBundle, ProseCatalogueS, type ContentBundle, type ProseVariant } from '@ed/schema';
 import type { Platform } from '../platform.js';
 
 /**
@@ -8,6 +8,47 @@ import type { Platform } from '../platform.js';
  * #75 deliberately makes user-authored desktop content the sole exception.
  */
 let current: ContentBundle = assembleBundle(docs, JSON.parse);
+let cataloguePromise: Promise<readonly ProseVariant[]> | undefined;
+let catalogueInstalled = false;
+
+/**
+ * Fetch reviewed alternatives only when the reader requests Plain English.
+ * Original-mode startup never imports or parses the optional chunk.
+ * Validation and source-relative identities are the same as in the Node
+ * loader, and installing a catalogue does not alter a saved world.
+ */
+export async function installPlainEnglishCatalogue(): Promise<readonly ProseVariant[]> {
+  cataloguePromise ??= import('virtual:ed-prose-variants').then(({ default: packed }) => {
+    const variants: ProseVariant[] = [];
+    for (const [file, rows] of Object.entries(packed)) {
+      for (const row of rows) {
+        if (!Array.isArray(row) || row.length !== 3 || typeof row[0] !== 'string') {
+          throw new Error(`Invalid precompiled prose variant in ${file}`);
+        }
+        const [suffix, of, plainenglish] = row;
+        variants.push({
+          address: `content:${file}#${suffix}`,
+          ...(of === null ? {} : { of }),
+          plainenglish,
+        } as ProseVariant);
+      }
+    }
+    return ProseCatalogueS.parse(variants);
+  }).catch((error: unknown) => {
+    cataloguePromise = undefined; // A failed chunk download may be retried.
+    throw error;
+  });
+
+  const shipped = await cataloguePromise;
+  if (!catalogueInstalled) {
+    // User-authored desktop counterparts, if present, were installed first.
+    // The full uniqueness check must catch collisions instead of replacing
+    // one variant behind the author's back.
+    current.proseVariants = ProseCatalogueS.parse([...current.proseVariants, ...shipped]);
+    catalogueInstalled = true;
+  }
+  return current.proseVariants;
+}
 
 /** Compose optional user files before Vue mounts. The host is read-only here. */
 export async function installUserContent(platform: Platform): Promise<ContentBundle> {
@@ -19,7 +60,13 @@ export async function installUserContent(platform: Platform): Promise<ContentBun
     import('yaml'),
     import('@ed/schema'),
   ]);
-  current = bundleWithUserContent(docs, files, parse);
+  const bundled = bundleWithUserContent(docs, files, parse);
+  if (catalogueInstalled) {
+    // Reapply already-loaded shipped variants after a user-content refresh.
+    const loaded = await cataloguePromise!;
+    bundled.proseVariants = ProseCatalogueS.parse([...bundled.proseVariants, ...loaded]);
+  }
+  current = bundled;
   return current;
 }
 
