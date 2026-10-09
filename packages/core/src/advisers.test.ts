@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { bearingWordsIn, indexContent } from '@ed/schema';
+import { bearingWordsIn, indexContent, proseOriginalHash } from '@ed/schema';
 import { beget, place, testWorld } from './testing.js';
 import { queueChoice } from './events/decisions.js';
 import {
@@ -12,6 +12,10 @@ import {
 } from './advisers.js';
 import type { SimCtx } from './world.js';
 import { GameSession } from './session.js';
+import { coreMessageAddress, msg } from './messages.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
+import { saveGame } from './save.js';
+import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 
 const contentBundle = indexContent(loadContent());
 const HELP_SURFACES: HelpSurface[] = ['tree', 'chronicle', 'branches'];
@@ -62,8 +66,14 @@ describe('adviser knowledge boundary (#273)', () => {
       './world.js',
       './events/decisions.js',
       './people/match.js',
+      './messages.js',
     ]);
     expect(imports.some((path) => /genetics\/|bearing|rng|checks/i.test(path ?? ''))).toBe(false);
+    const renderer = readFileSync(new URL('./messages.ts', import.meta.url), 'utf8');
+    expect([...renderer.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1])).toEqual([
+      '@ed/schema', './prose.js', './world.js',
+    ]);
+    expect(renderer).not.toContain('ctx.world');
   });
 
   it('keeps advice templates out of the Bearing vocabulary', () => {
@@ -183,5 +193,100 @@ describe('adviser knowledge boundary (#273)', () => {
     const session = new GameSession(ctx);
 
     expect(session.advice('tree', target.id, 1)).toEqual(adviceFor(ctx, 'tree', target.id, 1));
+  });
+});
+
+describe('stable adviser prose (#641)', () => {
+  const source = readFileSync(new URL('./advisers.ts', import.meta.url), 'utf8');
+  const entries = plainEnglishCoreWorkItems('advisers.ts', source);
+
+  function variant(key: string, plainenglish: string) {
+    const address = coreMessageAddress(key);
+    const entry = entries.find((item) => item.address === address);
+    expect(entry, `missing worklist identity for ${key}`).toBeDefined();
+    return { address, of: proseOriginalHash(entry!.text), plainenglish };
+  }
+
+  it('inventories every adviser line with a unique stable key and its template tokens', () => {
+    expect(entries).toHaveLength(56);
+    expect(new Set(entries.map((item) => item.address)).size).toBe(entries.length);
+    expect(entries.every((item) => item.address.startsWith('core:messages#adviser.'))).toBe(true);
+    expect(plainEnglishCoreWorkItems('moved/advisers.ts', `const unrelated = 'An unrelated new sentence.';\n${source}`)
+      .filter((item) => item.address.startsWith('core:messages#'))).toEqual(entries.map((item) => ({
+        ...item, file: 'moved/advisers.ts',
+      })));
+    expect(entries.find((item) => item.address === coreMessageAddress('adviser.match.dowry')))
+      .toMatchObject({ interpolations: ['{NAME}'] });
+  });
+
+  it('switches live help and pronouns through GameSession without changing the world', () => {
+    const { ctx, target } = helpWorld();
+    const session = new GameSession(ctx);
+    const original = session.advice('tree', target.id, 1);
+    const saved = saveGame(ctx);
+    setProseVariants(ctx, [
+      variant('adviser.cares.reader', '{SUBJECT} reads the house records.'),
+      variant('adviser.help.reader.tree', 'Start with a name, then follow their family.'),
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(session.advice('tree', target.id, 1)).toEqual([{
+      ...original[0],
+      cares: 'she reads the house records.',
+      position: 'Start with a name, then follow their family.',
+    }]);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+    setProseMode(ctx, 'original');
+    expect(session.advice('tree', target.id, 1)).toEqual(original);
+    expect(saveGame(ctx)).toEqual(saved);
+  });
+
+  it('selects the same rite advice and inserts the already-visible choice label', () => {
+    const ctx = testWorld(contentBundle, 641);
+    clearLiving(ctx);
+    place(ctx, { sex: 'male', age: 40, name: 'Elian', career: { career: 'clergy' } });
+    const event = ctx.content.mustEvent('the_vessel_rite');
+    const pending = queueChoice(ctx, event, event.body, {}, []);
+    const original = adviceForDecision(ctx, pending);
+    const label = pending.choices.find((choice) => choice.available)!.label;
+    setProseVariants(ctx, [
+      variant('adviser.cares.priest', '{SUBJECT} serves the Church.'),
+      variant('adviser.rite.priest', 'I would choose “{LABEL}”. We can only control our caution.'),
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(adviceForDecision(ctx, pending)).toEqual([{
+      ...original[0],
+      cares: 'he serves the Church.',
+      position: `I would choose “${label}”. We can only control our caution.`,
+    }]);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('reports missing and stale templates while retaining the Original advice', () => {
+    const { ctx, target } = helpWorld();
+    const original = adviceFor(ctx, 'tree', target.id, 1);
+    setProseVariants(ctx, [{
+      ...variant('adviser.help.reader.tree', 'Start with a name.'),
+      of: proseOriginalHash('An obsolete Original.'),
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(adviceFor(ctx, 'tree', target.id, 1)).toEqual(original);
+    expect(missingPlainEnglish(ctx)).toEqual([
+      coreMessageAddress('adviser.cares.reader'),
+      coreMessageAddress('adviser.help.reader.tree'),
+    ].sort());
+  });
+
+  it('rejects invalid interpolation multisets and never reinterprets an inserted name', () => {
+    const { ctx } = helpWorld();
+    const key = 'adviser.match.dowry';
+    const entry = entries.find((item) => item.address === coreMessageAddress(key))!;
+    setProseVariants(ctx, [variant(key, 'I would choose somebody else.')]);
+    setProseMode(ctx, 'plainenglish');
+    const name = 'Edren {LABEL}';
+    expect(msg(ctx, key, entry.text, { NAME: name })).toBe(entry.text.replace('{NAME}', name));
+    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress(key)]);
+    setProseVariants(ctx, [variant(key, 'Choose {NAME}, then choose {NAME} again.')]);
+    expect(msg(ctx, key, entry.text, { NAME: name })).toBe(entry.text.replace('{NAME}', name));
+    expect(() => msg(ctx, key, entry.text)).toThrow('Missing {NAME}');
   });
 });
