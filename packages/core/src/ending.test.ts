@@ -483,6 +483,58 @@ describe('the epilogue rings the prologue', () => {
     expect(epilogue.reckoning.blanks).toBeGreaterThan(0);
   });
 
+  it('names the founding heirloom and rival in the same reviewed register as the prologue', () => {
+    const ctx = atTheTerm();
+    expect(foundHouse(ctx, {
+      houseName: 'The House of Salt',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+    }).ok).toBe(true);
+    ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
+    const originalFounding = structuredClone(ctx.world.founding);
+    const original = epilogueOf(ctx)!.founding!;
+
+    const heirloomAddress = 'content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].name';
+    const grudgeAddress = 'content:houses.yaml#houses[id=house_marrow].name';
+    const plainHeirloom = 'A draught that extends a life';
+    const plainGrudge = 'The Marrow family';
+    setProseVariants(ctx, [
+      {
+        address: heirloomAddress,
+        of: proseOriginalHash(proseOriginalAt(ctx.content, heirloomAddress)!),
+        plainenglish: plainHeirloom,
+      },
+      {
+        address: grudgeAddress,
+        of: proseOriginalHash(proseOriginalAt(ctx.content, grudgeAddress)!),
+        plainenglish: plainGrudge,
+      },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const selected = epilogueOf(ctx)!.founding!;
+    const signing = prologueView(ctx)!;
+    expect(selected.heirloomName).toBe(plainHeirloom);
+    expect(selected.grudgeName).toBe(plainGrudge);
+    expect(selected.heirloomName).toBe(signing.heirlooms.find((h) => h.heirloom === selected.heirloom)?.name);
+    expect(selected.grudgeName).toBe(signing.grudges.find((g) => g.house === selected.grudge)?.houseName);
+    expect(selected.heirloom).toBe(original.heirloom);
+    expect(selected.grudge).toBe(original.grudge);
+    expect(ctx.world.founding).toEqual(originalFounding);
+
+    setProseMode(ctx, 'original');
+    expect(epilogueOf(ctx)!.founding).toEqual(original);
+
+    setProseMode(ctx, 'plainenglish');
+    setProseVariants(ctx, [{
+      address: heirloomAddress,
+      of: '0000000000000000',
+      plainenglish: plainHeirloom,
+    }]);
+    expect(epilogueOf(ctx)!.founding).toEqual(original);
+    expect(ctx.world.founding).toEqual(originalFounding);
+  });
+
   it('reports what the house could and could not prove', () => {
     const ctx = atTheTerm();
     ctx.world.discrepancies.set('a_lie', { severity: 'grave', provableBy: [], state: 'open' });
