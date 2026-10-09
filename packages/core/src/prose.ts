@@ -85,7 +85,9 @@ export function proseForTale(
     : contentProseAddress(file, `tales[id=${encodeURIComponent(tale.id)}]`);
   return {
     teller: renderProse(ctx, base === undefined ? undefined : `${base}.teller`, tale.teller),
-    bias: renderProse(ctx, base === undefined ? undefined : `${base}.bias`, tale.bias),
+    // Bias is account metadata, not narrative prose (CONTENT_NOT_PROSE).
+    // Asking for a bias variant would report an impossible migration gap.
+    bias: tale.bias,
     text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, tale.text),
   };
 }
