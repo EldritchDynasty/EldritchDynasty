@@ -141,7 +141,15 @@ export const proseVariantsRule: ValidationRule = {
   about: 'Plain English variants must resolve an Original, preserve interpolation tokens, and say which Original wording they were reviewed against.',
   check(content) {
     const issues: Issue[] = [];
+    const seen = new Set<string>();
     for (const variant of content.proseVariants) {
+      // Two individually valid rows must not silently compete for one displayed text.
+      if (seen.has(variant.address)) {
+        issues.push(issue('error', this.id, variant.address,
+          'duplicate Plain English variant address — each Original may have only one counterpart'));
+      } else {
+        seen.add(variant.address);
+      }
       const original = proseOriginalAt(content, variant.address);
       if (original === undefined) {
         issues.push(issue('error', this.id, variant.address,
