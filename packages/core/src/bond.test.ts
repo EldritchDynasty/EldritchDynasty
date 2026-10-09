@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import { proseOriginalHash, type RetainerContract } from '@ed/schema';
 import {
   bindService, bondsmen, CROWN, DEBT_FLOOR, driftLoyalty, freeBond, isBonded, leakChance,
-  MAX_BOND, order, phase, place, serviceBonds, setProseMode, setProseVariants, testWorld, tickEconomy,
+  loadGame, MAX_BOND, order, phase, place, saveGame, serviceBonds, setProseMode, setProseVariants, testWorld, tickEconomy,
   FREEDOM_LOYALTY, RESENTMENT_OF_FREEDOM,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
@@ -359,7 +359,8 @@ describe('the bond pages speak the reader\'s setting (#732)', () => {
     'bond.freed_title': 'The bond',
     'bond.forgiven':
       'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear.',
-    'bond.forgiven_resented': 'Not everybody who heard it was glad.',
+    'bond.forgiven_with_resentment':
+      'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear. Not everybody who heard it was glad.',
     'bond.ended_empty': "{PERSON}'s bond was ended, there being nothing left on it worth the ink.",
     'bond.discharged': '{PERSON} finished paying the house what {PERSON} had borrowed, and stayed on for wages.',
   } as const;
@@ -367,7 +368,9 @@ describe('the bond pages speak the reader\'s setting (#732)', () => {
     'bond.advanced': '{PERSON} borrowed {MARKS} marks from the house and agreed to work it off.',
     'bond.freed_title': 'The debt',
     'bond.forgiven': 'The house publicly cancelled the {MARKS} marks {PERSON} still owed.',
-    'bond.forgiven_resented': 'Some of the people who heard were not pleased.',
+    // Different clause order proves the resentment case selects one whole
+    // template instead of stitching an independently translated suffix.
+    'bond.forgiven_with_resentment': 'Some who heard were displeased when the house publicly cancelled the {MARKS} marks {PERSON} still owed.',
     'bond.ended_empty': "{PERSON}'s debt was closed because nothing was left on it.",
     'bond.discharged': '{PERSON} paid off what {PERSON} owed the house and stayed on as a paid servant.',
   };
@@ -417,15 +420,21 @@ describe('the bond pages speak the reader\'s setting (#732)', () => {
     expect(pages.map((e) => e.text)).toEqual([
       'Anselm borrowed 100 marks from the house and agreed to work it off.',
       'Berrin borrowed 80 marks from the house and agreed to work it off.',
-      'The house publicly cancelled the 100 marks Anselm still owed. Some of the people who heard were not pleased.',
+      'Some who heard were displeased when the house publicly cancelled the 100 marks Anselm still owed.',
       "Cole's debt was closed because nothing was left on it.",
       'Dunn paid off what Dunn owed the house and stayed on as a paid servant.',
       'The house publicly cancelled the 74 marks Berrin still owed.',
     ]);
     expect(pages.filter((e) => e.title === 'The debt')).toHaveLength(3);
 
+    const chosenParagraph = pages[2]!.text;
     setProseMode(ctx, 'original');
     expect(pages[0]!.text).toBe('Anselm borrowed 100 marks from the house and agreed to work it off.');
+    expect(pages[2]!.text).toBe(chosenParagraph);
+    // A completed Chronicle page is frozen. Saving and loading do not render
+    // the now-Original setting over what the reader saw before switching.
+    const reloaded = loadGame(saveGame(ctx), bundle);
+    expect(reloaded.world.chronicle.some((entry) => entry.text === chosenParagraph)).toBe(true);
   });
 
   it('changes words only: the debts, terms and loyalties are the same in both settings', () => {
