@@ -88,6 +88,11 @@ function livingRival(p: RivalPerson): boolean {
   return p.died === undefined && p.left === undefined;
 }
 
+/** A dead or departed partner cannot continue to bar a rival from marriage. */
+function hasLivingSpouse(people: readonly RivalPerson[], p: RivalPerson): boolean {
+  return p.spouse !== undefined && people.some((partner) => partner.id === p.spouse && livingRival(partner));
+}
+
 /**
  * Grow one house's shadow lineage by one year. Draws only from this house's
  * own stream (`streamFor(world, 'rivals', houseId)`), so adding, removing or
@@ -119,6 +124,13 @@ export function growRivalLineage(ctx: SimCtx, houseId: string): void {
   }
 
   const survivors = living.filter((p) => p.died === undefined);
+
+  // A death ends the surviving partner's active marriage. Keep the deceased
+  // person's link as history, but allow the widow(er) to marry or be offered
+  // by the Match again. An intact marriage stays untouched.
+  for (const p of survivors) {
+    if (p.spouse && !hasLivingSpouse(lineage.people, p)) delete p.spouse;
+  }
 
   // MARRIAGE. Cousins first, in effect: an unmarried man and woman already IN
   // the lineage are paired before anyone reaches outside it. A lineage with
@@ -213,7 +225,7 @@ export function pickRivalCandidate(
   if (!lineage) return undefined;
   const w = ctx.world;
   const candidates = lineage.people.filter((p) => {
-    if (p.sex !== sex || p.spouse || !livingRival(p)) return false;
+    if (p.sex !== sex || hasLivingSpouse(lineage.people, p) || !livingRival(p)) return false;
     const age = w.year - p.born;
     return age >= Math.max(MARRY_FROM, ageRange.min) && age <= ageRange.max;
   });
