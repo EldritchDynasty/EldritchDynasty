@@ -306,6 +306,52 @@ describe('prospective prose selection', () => {
   });
 
 
+  it('renders the names of pledged books and heirlooms using reviewed Plain English', () => {
+    const bundle = loadBundle();
+    const book = bundle.spellbooks.find((item) => item.name.split(/\\s+/).length > 1)!;
+    const heirloom = bundle.heirlooms.find((item) => item.name.split(/\\s+/).length > 1)!;
+    expect(book).toBeDefined();
+    expect(heirloom).toBeDefined();
+
+    const bookAddress = `content:spellbooks.yaml#spellbooks[id=${encodeURIComponent(book.id)}].name`;
+    const heirloomAddress = `content:heirlooms.yaml#heirlooms[id=${encodeURIComponent(heirloom.id)}].name`;
+    const session = newGame(bundle, { proseMode: 'plainenglish' });
+    session.ctx.world.marriagePromises.push(
+      { toHouse: 'house_marrow', year: 1080, lot: book.id },
+      { toHouse: 'house_marrow', year: 1081, lot: heirloom.id },
+      { toHouse: 'house_marrow', year: 1082, lot: 'unknown_lot' },
+    );
+    const originalPromises = structuredClone(session.ctx.world.marriagePromises);
+
+    const plainBook = 'The plain book name';
+    const plainHeirloom = 'The plain heirloom name';
+    setProseVariants(session.ctx, [
+      { address: bookAddress, of: proseOriginalHash(book.name), plainenglish: plainBook },
+      { address: heirloomAddress, of: proseOriginalHash(heirloom.name), plainenglish: plainHeirloom },
+    ]);
+
+    const first = session.view().marriagePromises;
+    expect(first.map((promise) => promise.lotName))
+      .toEqual([plainBook, plainHeirloom, 'unknown_lot']);
+    expect(first.map((promise) => [promise.year, promise.lot]))
+      .toEqual([[1080, book.id], [1081, heirloom.id], [1082, 'unknown_lot']]);
+    expect(session.ctx.world.marriagePromises).toEqual(originalPromises);
+    expect(missingPlainEnglish(session.ctx)).toEqual([]);
+
+    session.setProseMode('original');
+    expect(session.view().marriagePromises.map((promise) => promise.lotName))
+      .toEqual([book.name, heirloom.name, 'unknown_lot']);
+
+    session.setProseMode('plainenglish');
+    setProseVariants(session.ctx, [
+      { address: bookAddress, of: '0000000000000000', plainenglish: plainBook },
+    ]);
+    expect(session.view().marriagePromises.map((promise) => promise.lotName))
+      .toEqual([book.name, heirloom.name, 'unknown_lot']);
+    expect(missingPlainEnglish(session.ctx)).toEqual([bookAddress, heirloomAddress].sort());
+    expect(session.ctx.world.marriagePromises).toEqual(originalPromises);
+  });
+
   it('reports an unmigrated address and never persists the presentation mode', () => {
     const { bundle, event } = fixture();
     const ctx = testWorld(bundle);
