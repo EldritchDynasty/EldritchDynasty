@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { musterEscalation } from '@ed/schema';
+import { musterEscalation, proseOriginalHash } from '@ed/schema';
 import {
   activeCommitment, addOfficer, applyEffect, beginCommitment, bootstrap, buyPosition, loadGame,
   maxMen, musterMortality, musterOrder, musterUpkeep, place, positionOptions, reinforceCommitment,
-  saveGame, setPosition, settleCommitment, testRng, testWorld, tickMuster, withdrawCommitment,
+  saveGame, setPosition, setProseMode, setProseVariants, settleCommitment, testRng, testWorld, tickMuster,
+  withdrawCommitment,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -439,4 +441,59 @@ describe('the muster effect', () => {
     applyEffect({ kind: 'muster', op: 'set_position', position: 'serjeanty' }, ctx, {});
     expect(activeCommitment(ctx)!.position).toBe('serjeanty');
   });
+});
+
+describe('the war line speaks the reader\'s setting (#739)', () => {
+  const TIDES = {
+    favour: { at: 90, words: "in the house's favour", plain: 'the war is going well' },
+    against: { at: 10, words: 'against the house', plain: 'the war is going badly' },
+    holding: { at: 50, words: 'holding, for now', plain: 'neither side is winning yet' },
+  } as const;
+  const original = (tide: keyof typeof TIDES, losses: boolean) =>
+    "The war goes on. {MEN} of the house's men remain in the field, "
+    + (losses ? '{LOST} lost this year, ' : '') + `and the tide runs ${TIDES[tide].words}.`;
+  const plain = (tide: keyof typeof TIDES, losses: boolean) =>
+    `The war continues with {MEN} of the family's soldiers still fighting${losses ? ' after {LOST} were lost this year' : ''}; `
+    + `${TIDES[tide].plain}.`;
+
+  /** One tick of a commitment with the tide pinned far enough that the walk cannot cross a band. */
+  function tick(mode: 'original' | 'plainenglish', tide: keyof typeof TIDES, men: number) {
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, (Object.keys(TIDES) as (keyof typeof TIDES)[]).flatMap((t) => [false, true].map((l) => ({
+      address: coreMessageAddress(`muster.war_line.${t}${l ? '_lost' : ''}`),
+      of: proseOriginalHash(original(t, l)),
+      plainenglish: plain(t, l),
+    }))));
+    setProseMode(ctx, mode);
+    // `beginCommitment` clamps to the levy; reinforcing is how a large force exists.
+    const c = beginCommitment(ctx, 1, 'the_wars');
+    reinforceCommitment(ctx, men - c.men);
+    const before = c.men;
+    ctx.world.muster.tide = TIDES[tide].at;
+    tickMuster(ctx, testRng('war-line', tide, men));
+    const fill = (t: string) => t.replace('{MEN}', String(c.men)).replace('{LOST}', String(before - c.men));
+    return { ctx, c, lost: before - c.men, line: ctx.world.chronicle.at(-1)!, fill };
+  }
+
+  for (const tide of Object.keys(TIDES) as (keyof typeof TIDES)[]) {
+    it(`renders both ${tide} shapes in both settings, Original byte for byte`, () => {
+      const quiet = tick('original', tide, 1);
+      expect(quiet.lost).toBe(0);
+      expect(quiet.line.text).toBe(quiet.fill(original(tide, false)));
+      const bloody = tick('original', tide, 400);
+      expect(bloody.lost).toBeGreaterThan(0);
+      expect(bloody.line.text).toBe(bloody.fill(original(tide, true)));
+
+      const plainQuiet = tick('plainenglish', tide, 1);
+      expect(plainQuiet.line.text).toBe(plainQuiet.fill(plain(tide, false)));
+      const plainBloody = tick('plainenglish', tide, 400);
+      expect(plainBloody.line.text).toBe(plainBloody.fill(plain(tide, true)));
+      // Words only: the same draws move the same men and the same credit.
+      expect(plainBloody.c).toEqual(bloody.c);
+      expect(plainBloody.ctx.world.muster.tide).toBe(bloody.ctx.world.muster.tide);
+
+      setProseMode(plainBloody.ctx, 'original');
+      expect(plainBloody.line.text).toBe(plainBloody.fill(plain(tide, true)));
+    });
+  }
 });
