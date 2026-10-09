@@ -213,3 +213,133 @@ events:
           text: >-
             The candle allowance is the part the steward argues about. It is
             always the candle allowance.
+
+proseVariants:
+  - address: "content:events/table.yaml#events[id=the_house_decides_for_him].title"
+    of: af9df5ce73f8559a
+    plainenglish: >-
+      A Decision Made Before the Child Can Ask
+  - address: "content:events/table.yaml#events[id=the_house_decides_for_him].body"
+    of: d0bfd164a5fa5770
+    plainenglish: >-
+      No one asks {CHILD} for an opinion. {HEAD} decides to hire a tutor at the family
+      table, without the child present. The tutor arrives before {CHILD} understands what
+      the adults have agreed to.
+  - address: "content:events/table.yaml#events[id=the_house_decides_for_him].interaction.outcomes[id=begun].text"
+    of: d3b632705b795474
+    plainenglish: >-
+      {CHILD} might enjoy the lessons or dislike them. Either way, the house has
+      committed eight years of the child's life to tutoring without asking first.
+  - address: "content:events/table.yaml#events[id=the_term_begins].title"
+    of: e1c2216c1ba5ae38
+    plainenglish: >-
+      A Tutor's Term Costs Forty Crowns
+  - address: "content:events/table.yaml#events[id=the_term_begins].body"
+    of: 46aa424c20216958
+    plainenglish: >-
+      A full term of tutoring costs forty crowns. The tutor demands half of that money in
+      advance, counted out in the hall where the household can hear. {PUPIL} will
+      remember the counting more than the lessons. Forty crowns equals thirteen years of
+      a servant's wages or the price of a minor spellbook. The adults know that
+      comparison but do not say it in front of the child.
+  - address: "content:events/table.yaml#events[id=the_term_begins].interaction.outcomes[id=only].text"
+    of: 9f35d17600265bea
+    plainenglish: >-
+      The tutor is careful but boring. He never questions the family's purpose. The house
+      has paid tutors who were less useful than this one.
+  - address: "content:events/table.yaml#events[id=the_commission_bought].title"
+    of: f2c30170a7d75c7c
+    plainenglish: >-
+      The Price of a Position
+  - address: "content:events/table.yaml#events[id=the_commission_bought].body"
+    of: 63a0878ccd5a30a8
+    plainenglish: >-
+      The family buys a position from a man who refuses to describe the transaction as a
+      sale. The negotiations take two days and involve plenty of wine. They agree on the
+      price before discussing the duties of the post. {SON} is not present. By the time
+      {HEAD} returns, the purchase is settled and the position has a start date.
+  - address: "content:events/table.yaml#events[id=the_commission_bought].interaction.choices[id=tell_him].label"
+    of: c1b6cdfa62d212c6
+    plainenglish: >-
+      Tell him how much the position cost.
+  - address: "content:events/table.yaml#events[id=the_commission_bought].interaction.choices[id=tell_him].outcomes[id=told].text"
+    of: 9dacecc7eaf4cad3
+    plainenglish: >-
+      He is upset by the price but accepts the position. He works as though he has a debt
+      to repay, because he does.
+  - address: "content:events/table.yaml#events[id=the_commission_bought].interaction.choices[id=never_say].label"
+    of: 4f0758eaafccfc7e
+    plainenglish: >-
+      Do not tell him the price.
+  - address: "content:events/table.yaml#events[id=the_commission_bought].interaction.choices[id=never_say].outcomes[id=unsaid].text"
+    of: d900d36e9b9c0b62
+    plainenglish: >-
+      Nine years later, someone outside the family tells him the price. What upsets him
+      most is that his own family hid it from him for nine years.
+  - address: "content:events/table.yaml#events[id=the_boy_who_woke].title"
+    of: 6faf09ab5a3938b7
+    plainenglish: >-
+      They Say It Worked
+  - address: "content:events/table.yaml#events[id=the_boy_who_woke].body"
+    of: e34614e5c5ae5dc1
+    plainenglish: >-
+      No one in the house says the word for what happened. The midwife's mother said it
+      once forty years ago and was sent to work in the kitchens for a season. Instead,
+      the family says that it took, as they might say of a graft or a fever. {HEAD} does
+      not correct them. There is no better word, and both comparisons are closer to the
+      truth than the family wants to admit.
+  - address: "content:events/table.yaml#events[id=the_boy_who_woke].interaction.outcomes[id=only].text"
+    of: f6729a87f3ed8703
+    plainenglish: >-
+      {WOKEN} sleeps all afternoon, then wakes up hungry. The rest of that day is
+      completely ordinary.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].title"
+    of: c504022476797368
+    plainenglish: >-
+      A Dispute Inherited from Earlier Generations
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].body"
+    of: 5a75a1689c0af054
+    plainenglish: >-
+      {COUSIN} refuses to attend a burial and blames the roads, though the roads are in
+      good condition. The real dispute began before either person was born. It involved
+      people they never met and a room in a house that has since been sold. Neither of
+      them knows the details, but both are certain which side was wrong.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].interaction.choices[id=send_word].label"
+    of: 162616a12f7bf7c5
+    plainenglish: >-
+      Write to the cousin and ask how to settle the dispute.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].interaction.choices[id=send_word].outcomes[id=mended].text"
+    of: a4941f5480d5c788
+    plainenglish: >-
+      Settling the dispute takes a letter, a visit and a piece of land the house did not
+      particularly want. The cousin attends the next burial.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].interaction.choices[id=send_word].outcomes[id=refused].text"
+    of: 17af466685ecc3ba
+    plainenglish: >-
+      The cousin sends the letter back without breaking its seal. Returning it unopened
+      took a deliberate decision and some time.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].interaction.choices[id=let_it_stand].label"
+    of: 82d174f101d9ba95
+    plainenglish: >-
+      Leave the old dispute unresolved.
+  - address: "content:events/table.yaml#events[id=the_quarrel_nobody_started].interaction.choices[id=let_it_stand].outcomes[id=stood].text"
+    of: f2652024fb0dc978
+    plainenglish: >-
+      The dispute continues. In sixty years someone will inherit it along with the
+      furniture and be told which chair not to offer the other person.
+  - address: "content:events/table.yaml#events[id=the_shelf_and_the_boy].title"
+    of: c6c7bd682cd568c4
+    plainenglish: >-
+      Someone Must Study the Books
+  - address: "content:events/table.yaml#events[id=the_shelf_and_the_boy].body"
+    of: f08824ed083b6789
+    plainenglish: >-
+      The house keeps its books in the second room off the long hall because the first
+      room is damp. Whoever the family can spare studies them, usually someone with few
+      other duties. Learning a minor working takes six years. A more valuable working
+      takes nine. {READER} receives money for candles and a chair by the window, but no
+      guidance about what to do if the study goes badly.
+  - address: "content:events/table.yaml#events[id=the_shelf_and_the_boy].interaction.outcomes[id=only].text"
+    of: a8577d883ea69104
+    plainenglish: >-
+      The steward repeatedly argues about how much money to allow for the candles.
