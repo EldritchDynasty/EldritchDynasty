@@ -220,3 +220,108 @@ events:
             provableBy: [house_marrow]
     rumour: { id: rumour_the_marrow_daybook, accuracy: 0.7, spread: 2 }
     accounts: [marrow_daybook_entry, the_house_on_the_daybook]
+
+proseVariants:
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_archivist_asks_for_a_word].title
+    of: 0466e8a759503a5b
+    plainenglish: >-
+      The Archivist Wants to Speak
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_archivist_asks_for_a_word].body
+    of: 65d1695a874eaa56
+    plainenglish: >-
+      {ARCHIVIST} waits in the records room doorway for most of the afternoon. She
+      holds a closed book and looks for a moment to speak. Twice she starts, then
+      stops. When she tries again, {HEAD} is talking to someone else.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_archivist_asks_for_a_word].interaction.outcomes[id=she_says_it].text
+    of: 617384fd1aec6ed1
+    plainenglish: >-
+      She quickly tells them in the corridor: someone at the Church's chapter house
+      has asked for copies of the family's records, sorted by year, for the past
+      four years. The house can begin acting that afternoon and has ten years to
+      decide what to do.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_archivist_asks_for_a_word].interaction.outcomes[id=she_thinks_better_of_it].text
+    of: 08eeac7040cfafa4
+    plainenglish: >-
+      She returns to the records room and puts the book away without speaking. She
+      does not decide to stay silent. The right moment never comes. Four years pass,
+      and by then she feels she can no longer raise the matter.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].title
+    of: 4552d18fb91333b3
+    plainenglish: >-
+      The Letter and the Two Weeks Before It
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].body
+    of: 3d1389277a80e853
+    plainenglish: >-
+      The Church's chapter house sends a polite letter of four lines asking to
+      inspect the family's records for three specific years. {HEAD} has expected
+      this since the warning in the corridor. The house has had ten years to arrange
+      its copies in a way it can accept.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].interaction.choices[id=pay_for_the_quiet].label
+    of: 6b7a9def51fea733
+    plainenglish: >-
+      Pay the fee and lend the volumes prepared for the clerks to read.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].interaction.choices[id=pay_for_the_quiet].outcomes[id=arranged].text
+    of: 52b5f1db24084b37
+    plainenglish: >-
+      Three clerks work for eleven days, and the house pays their bill without
+      arguing. The records they take away are accurate, uninteresting, and no longer
+      than needed. Nobody at the chapter house says anything afterward. That silence
+      is the benefit of being prepared.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].interaction.choices[id=refuse_them].label
+    of: 51b265c618830bba
+    plainenglish: >-
+      Refuse. The records belong to the family and always have.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_expected].interaction.choices[id=refuse_them].outcomes[id=refused].text
+    of: ff64e144c9b529c8
+    plainenglish: >-
+      The house has the right to refuse. People remember that it chose to do so
+      rather than making a mistake. Some people value that choice; others hold it
+      against the house. The gain and the loss affect different parts of its
+      standing.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_not].title
+    of: d72ea7f78160b7ab
+    plainenglish: >-
+      The Clerks Arrive Without Warning
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_not].body
+    of: 8bb8e04593679a19
+    plainenglish: >-
+      The Church's clerks enter the records room before anyone asks why they are
+      there. They have a list of specific years. {HEAD} learns what the family's own
+      book says about those years at the same time as the Church does.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_not].interaction.outcomes[id=at_the_same_time].text
+    of: 7159dec4d8a498f8
+    plainenglish: >-
+      The clerks are polite for eleven days and then leave. The house waits two
+      years to learn what they concluded, but nobody tells it. Invitations become
+      less common, and eventually the important invitations stop.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].title
+    of: 17218ed38bc9b807
+    plainenglish: >-
+      A Line in Another House's Ledger
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].body
+    of: 4aba6cdc5ebc8648
+    plainenglish: >-
+      The Marrow steward's day-book is sold at auction as part of a lot of nine. The
+      house pays more than the book is worth. Inside is a dated list of times when
+      one member of this family tried to tell another something and was not heard.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].interaction.outcomes[id=with_years].text
+    of: ee77e124a6de7470
+    plainenglish: >-
+      The person who kept the book was not trying to be cruel. Most entries are
+      short and concern the weather. But House Marrow has a long memory and poor
+      manners. It kept better notes about this family than the family kept about
+      itself. Every year in the list is correct.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].record.subject
+    of: aecccb998ed9cdbd
+    plainenglish: >-
+      what was in the Marrow day-book
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].record.options.record.chronicle
+    of: 5f77d5a94de2bb8d
+    plainenglish: >-
+      We bought a day-book at auction and copied the parts about our family. They
+      recorded the years when nobody told us anything.
+  - address: content:events/the_word_nobody_had.yaml#events[id=the_ledger_at_marrow].record.options.embellish.chronicle
+    of: 17a6086cc00e2468
+    plainenglish: >-
+      We bought a day-book at auction. It contained nothing worth noting about this
+      house. That fact is worth recording.
