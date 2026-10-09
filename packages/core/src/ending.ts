@@ -559,9 +559,14 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     view.founding = {
       houseName: w.founding.houseName,
       heirloom: w.founding.heirloom,
-      heirloomName: ctx.content.heirloom(w.founding.heirloom)?.name ?? w.founding.heirloom,
+      // Use exactly the reviewed wording offered at the signing. The founding
+      // identity and save remain untouched; a changed/removed content item
+      // still falls back to its original name or id.
+      heirloomName: prologue.heirlooms.find((h) => h.heirloom === w.founding!.heirloom)?.name
+        ?? ctx.content.heirloom(w.founding.heirloom)?.name ?? w.founding.heirloom,
       grudge: w.founding.grudge,
-      grudgeName: ctx.content.house(w.founding.grudge)?.name ?? w.founding.grudge,
+      grudgeName: prologue.grudges.find((g) => g.house === w.founding!.grudge)?.houseName
+        ?? ctx.content.house(w.founding.grudge)?.name ?? w.founding.grudge,
     };
   }
   return view;
