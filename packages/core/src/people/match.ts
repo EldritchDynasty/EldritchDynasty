@@ -14,6 +14,7 @@ import { marketAppetite } from '../bearing.js';
 import { papersDemanded, papersHeld } from './papers.js';
 import { emptyPanel, readPanel, type MatchPanel } from './panel.js';
 import { externalThreadFor } from '../relationship-threads.js';
+import { characterProse } from './character-prose.js';
 
 /**
  * THE MATCH — draft one partner from three cards.
@@ -852,7 +853,7 @@ function outsiderCard(ctx: SimCtx, template: CharacterTemplate, rng: Rng, index:
     age: recipe.age,
     house: recipe.house,
     houseName: house?.name ?? recipe.house,
-    blurb: template.blurb ?? template.title,
+    blurb: characterProse(ctx, template, 'blurb') ?? characterProse(ctx, template, 'title'),
     dowry: DOWRY[template.frequency] ?? DOWRY.common!,
     // An outsider's claimed pedigree may still meet the family's somewhere —
     // which is what makes a rival house's daughter a different proposition

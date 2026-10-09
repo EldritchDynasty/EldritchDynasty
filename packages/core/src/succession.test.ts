@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
 import { loadContent } from '@ed/content';
 import type { Person, RetainerContract, RetainerRole } from '@ed/schema';
-import { asId, RetainerRoleS } from '@ed/schema';
+import { asId, contentProseEntries, proseOriginalHash, RetainerRoleS } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import {
   beget, bootstrap, buyBackWardship, DEBT_FLOOR, ensureHead, hashSeed, head, heirApparent, inheritPost,
@@ -9,8 +11,70 @@ import {
   testWorld,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
+import { canonical } from './save.js';
 
 const bundle = loadContent();
+
+describe('prospective wanderer arrival prose (#646)', () => {
+  const original = bundle.characterTemplates.find((template) => template.role === 'wanderer' && template.blurb)!;
+  const entries = contentProseEntries('characters/templates.yaml', parse(readFileSync(
+    new URL('../../content/characters/templates.yaml', import.meta.url), 'utf8',
+  )));
+  function variant(field: 'title' | 'blurb', plainenglish: string) {
+    const entry = entries.find((item) => item.address.endsWith(`[id=${original.id}].${field}`))!;
+    expect(entry).toBeDefined();
+    return { address: entry.address, of: proseOriginalHash(entry.text), plainenglish };
+  }
+  function arrival(withBlurb = true) {
+    const source = { ...bundle, characterTemplates: [{
+      ...original, frequency: 'common' as const, conditions: undefined,
+      ...(withBlurb ? {} : { blurb: undefined }),
+    }] };
+    const ctx = testWorld(source, 646);
+    // Isolate the arrival mechanism: hire nobody, keep recurring posts quiet,
+    // and admit the one explicitly eligible wanderer without a century batch.
+    const rng = { ...testRng(646), bool: (chance: number) => chance === 0.05 };
+    return { ctx, source, rng };
+  }
+
+  it('selects actual worklist wording at arrival, retains the same person and freezes the Chronicle across reload', () => {
+    const control = arrival();
+    const plain = arrival();
+    setProseVariants(plain.ctx, [
+      variant('title', 'An unexpected arrival'),
+      variant('blurb', 'A traveller came to the house.'),
+    ]);
+    setProseMode(plain.ctx, 'plainenglish');
+    const originalPeople = maintainCast(control.ctx, control.rng);
+    const plainPeople = maintainCast(plain.ctx, plain.rng);
+    expect(plainPeople.map((person) => person.id)).toEqual(originalPeople.map((person) => person.id));
+    const page = plain.ctx.world.chronicle.find((entry) => entry.title === 'An unexpected arrival')!;
+    expect(page).toMatchObject({ text: 'A traveller came to the house.', weight: 'illuminated', named: true });
+    expect(control.ctx.world.chronicle.find((entry) => entry.title === original.title)!.text).toBe(original.blurb);
+    const expected = saveGame(control.ctx);
+    expected.chronicle = expected.chronicle.map((entry) => entry.title === original.title
+      ? { ...entry, title: page.title, text: page.text } : entry);
+    expect(canonical(saveGame(plain.ctx))).toBe(canonical(expected));
+    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+    setProseMode(plain.ctx, 'original');
+    const loaded = loadGame(saveGame(plain.ctx), plain.source);
+    expect(loaded.world.chronicle).toEqual(plain.ctx.world.chronicle);
+    expect(page.text).toBe('A traveller came to the house.');
+  });
+
+  it('preserves the generated arrival fallback without reporting a missing optional blurb', () => {
+    const { ctx, rng } = arrival(false);
+    setProseVariants(ctx, [variant('title', 'An unexpected arrival')]);
+    setProseMode(ctx, 'plainenglish');
+    const people = maintainCast(ctx, rng);
+    const person = people.find((person) => person.mintedFrom === original.id)!;
+    expect(person).toBeDefined();
+    expect(ctx.world.chronicle.find((entry) => entry.title === 'An unexpected arrival')!.text)
+      .toBe(`${person.name} arrived, and nobody had sent for them.`);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
 
 /**
  * SUCCESSION, AND THE STAFF.
@@ -764,4 +828,3 @@ describe('which endings of service the book keeps', () => {
     expect(ctx.world.chronicle.at(-1)!.text).toContain('freed by the will');
   });
 });
-
