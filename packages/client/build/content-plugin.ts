@@ -105,7 +105,8 @@ export function readStartupDocs(dir: string): Record<string, string> {
   return Object.fromEntries(Object.entries(readContentDocs(dir)).map(([file, text]) => {
     const doc = JSON.parse(text) as Record<string, unknown> | null;
     if (!doc || typeof doc !== 'object' || !Array.isArray(doc.proseVariants)) return [file, text];
-    const { proseVariants: _variants, ...original } = doc;
+    const original = { ...doc };
+    delete original.proseVariants;
     return [file, JSON.stringify(original)];
   }));
 }
