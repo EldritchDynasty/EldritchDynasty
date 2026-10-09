@@ -52,6 +52,7 @@ import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
 import {
   createProseRuntime, proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
+  type ProseRuntime,
 } from './prose.js';
 
 /**
@@ -226,7 +227,8 @@ export interface AdvanceResult {
 
 interface FoundingBootstrap {
   startYear: number;
-  build(signing: BootstrapSigning): SimCtx;
+  /** `prose` is the reader's setting NOW: the founding page is written inside the rebuild. */
+  build(signing: BootstrapSigning, prose: ProseRuntime): SimCtx;
 }
 
 export class GameSession {
@@ -516,18 +518,17 @@ export class GameSession {
     // before mutation; only a successful candidate replaces the live ctx.
     let candidate: SimCtx;
     try {
-      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName });
+      // A catalogue or reading mode can be installed while the signing is on
+      // screen. The rebuild writes the founding page, so it is handed the
+      // setting as it stands now, not as it was when the run was created.
+      const prose = createProseRuntime(this.ctx.prose.mode, [...this.ctx.prose.variants.values()]);
+      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName }, prose);
     } catch (error) {
       return {
         ok: false,
         reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
       };
     }
-    // A catalogue or reading mode can be installed while the signing is on
-    // screen. Founding rebuilds from its original seed, but must not discard
-    // those newly selected presentation options.
-    setProseVariants(candidate, [...this.ctx.prose.variants.values()]);
-    setRuntimeProseMode(candidate, this.ctx.prose.mode);
     const result = foundHouse(candidate, choice);
     if (!result.ok) return result;
     this.ctx = candidate;
@@ -663,22 +664,16 @@ export function newGame(source: ContentBundle | Content, opts: SessionOptions = 
   const campaign = opts.campaign ?? 'long';
   const libraryRuns = opts.libraryRuns ?? [];
   const proseVariants = opts.proseVariants ?? authoredProseVariants(source);
-  const configure = (ctx: SimCtx) => {
-    setProseVariants(ctx, proseVariants);
-    if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
-    return ctx;
-  };
-
   // The founding page is written inside `bootstrap`, so the wording has to be
-  // chosen before it is called, not configured afterwards.
-  const prose = () => createProseRuntime(opts.proseMode ?? 'original', proseVariants);
-  const ctx = configure(bootstrap(source, seed, startYear, campaign, libraryRuns, undefined, prose()));
+  // chosen before it is called, not configured afterwards — here, and again in
+  // `found()`'s rebuild with whatever the reader has chosen since.
+  const prose = createProseRuntime(opts.proseMode ?? 'original', proseVariants);
+  const ctx = bootstrap(source, seed, startYear, campaign, libraryRuns, undefined, prose);
   // Rebuild from the indexed content snapshot this run actually started with,
   // not from a host object that might be edited while the prologue is open.
   const foundingSource = ctx.content;
-  const build = (signing: BootstrapSigning) => configure(
-    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing, prose()),
-  );
+  const build = (signing: BootstrapSigning, live: ProseRuntime) =>
+    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing, live);
   return new GameSession(ctx, opts.decider ?? 'ask', { startYear, build });
 }
 
