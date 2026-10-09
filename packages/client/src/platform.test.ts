@@ -340,6 +340,81 @@ describe('the platform seam', () => {
     }
   });
 
+  it('settles browser imports for a cancelled picker, empty selection and JSON content', async () => {
+    // Node-hosted fake: exercise the actual browser Platform without opening a
+    // window, using the file input's distinct cancel and change events.
+    let input: {
+      files: File[];
+      accept: string;
+      onchange: (() => void) | null;
+      cancel: (() => void) | null;
+    } | undefined;
+    const oldDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    const oldReader = Object.getOwnPropertyDescriptor(globalThis, 'FileReader');
+
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        createElement(tag: string) {
+          expect(tag).toBe('input');
+          const picker = {
+            type: '',
+            accept: '',
+            files: [] as File[],
+            onchange: null as (() => void) | null,
+            cancel: null as (() => void) | null,
+            addEventListener(event: string, listener: () => void) {
+              if (event === 'cancel') picker.cancel = listener;
+            },
+            click() {},
+          };
+          input = picker;
+          return picker;
+        },
+      },
+    });
+    Object.defineProperty(globalThis, 'FileReader', {
+      configurable: true,
+      value: class {
+        result: string | null = null;
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        readAsText(file: File) {
+          this.result = (file as File & { fixture: string }).fixture;
+          this.onload?.();
+        }
+      },
+    });
+
+    try {
+      const host = browserPlatform();
+      const cancelled = host.importSave();
+      expect(input?.accept).toBe('application/json,.json,.edsave');
+      expect(input?.cancel).toBeTypeOf('function');
+      input!.cancel!();
+      await expect(cancelled).resolves.toBeNull();
+
+      const empty = host.importSave();
+      input!.onchange!();
+      await expect(empty).resolves.toBeNull();
+
+      const valid = host.importSave();
+      input!.files = [{ fixture: '{"format":28,"year":1142}' } as File & { fixture: string }];
+      input!.onchange!();
+      await expect(valid).resolves.toEqual({ format: 28, year: 1142 });
+
+      const invalid = host.importSave();
+      input!.files = [{ fixture: '{bad JSON' } as File & { fixture: string }];
+      input!.onchange!();
+      await expect(invalid).resolves.toBeNull();
+    } finally {
+      if (oldDocument) Object.defineProperty(globalThis, 'document', oldDocument);
+      else Reflect.deleteProperty(globalThis, 'document');
+      if (oldReader) Object.defineProperty(globalThis, 'FileReader', oldReader);
+      else Reflect.deleteProperty(globalThis, 'FileReader');
+    }
+  });
+
   it('round-trips the profile library separately from save slots in a browser', async () => {
     const values = new Map<string, string>();
     const storage = {
