@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import { proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants, type ProseRuntime } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -224,7 +224,7 @@ export interface AdvanceResult {
 
 interface FoundingBootstrap {
   startYear: number;
-  build(signing: BootstrapSigning): SimCtx;
+  build(signing: BootstrapSigning, currentProse: ProseRuntime): SimCtx;
 }
 
 export class GameSession {
@@ -514,18 +514,15 @@ export class GameSession {
     // before mutation; only a successful candidate replaces the live ctx.
     let candidate: SimCtx;
     try {
-      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName });
+      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName }, this.ctx.prose);
     } catch (error) {
       return {
         ok: false,
         reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
       };
     }
-    // A catalogue or reading mode can be installed while the signing is on
-    // screen. Founding rebuilds from its original seed, but must not discard
-    // those newly selected presentation options.
-    setProseVariants(candidate, [...this.ctx.prose.variants.values()]);
-    setRuntimeProseMode(candidate, this.ctx.prose.mode);
+    // Rebuild received the live prose mode and catalogue before writing its
+    // founding page. Reapplying them here would erase missing-variant evidence.
     const result = foundHouse(candidate, choice);
     if (!result.ok) return result;
     this.ctx = candidate;
@@ -661,19 +658,20 @@ export function newGame(source: ContentBundle | Content, opts: SessionOptions = 
   const campaign = opts.campaign ?? 'long';
   const libraryRuns = opts.libraryRuns ?? [];
   const proseVariants = opts.proseVariants ?? authoredProseVariants(source);
-  const configure = (ctx: SimCtx) => {
-    setProseVariants(ctx, proseVariants);
-    if (opts.proseMode) setRuntimeProseMode(ctx, opts.proseMode);
-    return ctx;
-  };
-
-  const ctx = configure(bootstrap(source, seed, startYear, campaign, libraryRuns));
+  // Set prose before bootstrap writes the opening Chronicle page. Configuring
+  // after bootstrap changes future text but cannot rewrite saved history.
+  const ctx = bootstrap(source, seed, startYear, campaign, libraryRuns, undefined, {
+    mode: opts.proseMode ?? 'original',
+    variants: proseVariants,
+  });
   // Rebuild from the indexed content snapshot this run actually started with,
   // not from a host object that might be edited while the prologue is open.
   const foundingSource = ctx.content;
-  const build = (signing: BootstrapSigning) => configure(
-    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing),
-  );
+  const build = (signing: BootstrapSigning, currentProse: ProseRuntime) =>
+    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing, {
+      mode: currentProse.mode,
+      variants: [...currentProse.variants.values()],
+    });
   return new GameSession(ctx, opts.decider ?? 'ask', { startYear, build });
 }
 
