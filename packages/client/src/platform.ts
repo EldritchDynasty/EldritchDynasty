@@ -122,9 +122,14 @@ export function browserPlatform(): Platform {
           const key = storage.key(i);
           if (!key?.startsWith(PREFIX)) continue;
           const slot = key.slice(PREFIX.length);
-          const text = storage.getItem(key);
-          if (!text) continue;
-          saves.push(summary(slot, JSON.parse(text)));
+          try {
+            const text = storage.getItem(key);
+            if (!text) continue;
+            saves.push(summary(slot, JSON.parse(text)));
+          } catch {
+            // An unreadable slot must not conceal the other, healthy runs.
+            // The player can still resume them; readSave handles the bad slot.
+          }
         }
       } catch {
         return [];
