@@ -86,6 +86,38 @@ describe('prospective prose selection', () => {
     expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
   });
 
+  it('rejects runtime variants whose interpolation tokens differ even with a current fingerprint', () => {
+    const ctx = testWorld(loadBundle());
+    const original = 'The {HEAD} showed {house} to {HEAD} before {endYear}.';
+    const of = proseOriginalHash(original);
+
+    // Ordering of tokens in a translated sentence may differ, but the exact
+    // multiset (including repeated and lower-case placeholders) must survive.
+    setProseVariants(ctx, [{
+      address: ADDRESS, of,
+      plainenglish: 'Before {endYear}, {house} saw {HEAD} speak to {HEAD}.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(renderProse(ctx, ADDRESS, original))
+      .toBe('Before {endYear}, {house} saw {HEAD} speak to {HEAD}.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    for (const plainenglish of [
+      'Before {endYear}, the house saw {HEAD} speak to {HEAD}.', // dropped {house}
+      'Before {endYear}, {house} saw {HEAD} speak.', // dropped a repeated {HEAD}
+      'Before {EndYear}, {house} saw {HEAD} speak to {HEAD}.', // changed case
+      'Before {endYear}, {house} saw {HEAD} speak to {HEAD} and {teller}.', // added one
+    ]) {
+      setProseVariants(ctx, [{ address: ADDRESS, of, plainenglish }]);
+      expect(renderProse(ctx, ADDRESS, original)).toBe(original);
+      expect(missingPlainEnglish(ctx)).toEqual([ADDRESS]);
+    }
+
+    // Presentation mode never changes the source string or the game state.
+    setProseMode(ctx, 'original');
+    expect(renderProse(ctx, ADDRESS, original)).toBe(original);
+  });
+
   it('loads legacy rows without fingerprints but marks them missing rather than rendering them', () => {
     const { bundle } = fixture();
     const ctx = testWorld(bundle);
