@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import { loadContent } from '@ed/content';
-import type { Person, RetainerContract, RetainerRole } from '@ed/schema';
+import type { Person, ProseMode, RetainerContract, RetainerRole } from '@ed/schema';
 import { asId, contentProseEntries, proseOriginalHash, RetainerRoleS } from '@ed/schema';
 import { MAIN_BRANCH } from '@ed/schema';
 import {
@@ -13,8 +13,135 @@ import {
 import type { SimCtx } from '@ed/core';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { canonical } from './save.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
+
+describe('prospective succession and wardship prose (#736)', () => {
+  const translations: Record<string, string> = {
+    'core:messages#succession.namesake.title': 'Another {NAME}',
+    'core:messages#succession.namesake.text': 'People remember the earlier {NAME} and expect this Head to match him.',
+    'core:messages#succession.regency.title': 'A Woman Takes the Seal',
+    'core:messages#succession.regency.text': '{PERSON} became Regent because no son had awakened. She could lead the house but could not advance its Eldritch Power.',
+    'core:messages#succession.majority.title': 'The Ward Turns Sixteen',
+    'core:messages#succession.majority.text': '{PERSON} turned sixteen. The clerk returned the keys {PRONOUN} had never held.',
+    'core:messages#succession.wardship.title': 'The Warden Manages the Estate',
+    'core:messages#succession.wardship.text': '{PERSON} is under sixteen. Cawdry manages the estate until {PRONOUN} comes of age or the house buys the wardship back.',
+    'core:messages#succession.buyback.title': 'The House Regains Its Harvest',
+    'core:messages#succession.buyback.text': "The house paid to keep its harvest again. {PERSON} must still turn sixteen before taking the seal.",
+    'core:messages#succession.buyback.without_ward': 'The house paid the clerk to stop taking its harvest.',
+  };
+  const messages = coreMessageEntries(readFileSync(new URL('./people/succession.ts', import.meta.url), 'utf8'))
+    .filter((entry) => entry.address in translations);
+  const variants = messages.map((entry) => ({
+    address: entry.address, of: proseOriginalHash(entry.text), plainenglish: translations[entry.address]!,
+  }));
+
+  function fixture(mode: ProseMode = 'original', reviewed = true) {
+    const ctx = emptyHouse(736);
+    ctx.world.chronicle = [];
+    ctx.world.succession = [];
+    if (reviewed) setProseVariants(ctx, variants);
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+
+  function wardLife(sex: Person['sex'], mode: ProseMode = 'original', reviewed = true) {
+    const ctx = fixture(mode, reviewed);
+    const ward = place(ctx, { sex, age: 9, name: 'The Ward' });
+    ensureHead(ctx, testRng('wardship'));
+    expect(ctx.world.wardship?.ward).toBe(ward.id);
+    expect(head(ctx.world)).toBeUndefined();
+    ctx.world.treasury = 10000;
+    const buyback = buyBackWardship(ctx);
+    expect(buyback.ok).toBe(true);
+    expect(ctx.world.wardship?.boughtBack).toBe(true);
+    ctx.world.year += 7;
+    const majority = ensureHead(ctx, testRng('majority'));
+    expect(majority.newHead?.id).toBe(ward.id);
+    expect(majority.regency).toBe(sex === 'female');
+    expect(ctx.world.wardship).toBeUndefined();
+    return { ctx, buyback, ward };
+  }
+
+  function structure(ctx: SimCtx) {
+    const saved = saveGame(ctx);
+    return canonical({
+      ...saved, chronicle: saved.chronicle.map((page) => ({ ...page, title: undefined, text: undefined })),
+    });
+  }
+
+  it.each(['male', 'female'] as const)('selects wardship, buyback and majority words for a %s ward without changing the succession', (sex) => {
+    expect(messages.map((entry) => entry.address).sort()).toEqual(Object.keys(translations).sort());
+    const original = wardLife(sex);
+    const plain = wardLife(sex, 'plainenglish');
+    const pronoun = sex === 'female' ? 'she' : 'he';
+    expect(plain.ctx.world.chronicle.map((page) => [page.title, page.text])).toEqual([
+      ['The Warden Manages the Estate', `The Ward is under sixteen. Cawdry manages the estate until ${pronoun} comes of age or the house buys the wardship back.`],
+      ['The House Regains Its Harvest', 'The house paid to keep its harvest again. The Ward must still turn sixteen before taking the seal.'],
+      ...(sex === 'female' ? [['A Woman Takes the Seal', 'The Ward became Regent because no son had awakened. She could lead the house but could not advance its Eldritch Power.']] : []),
+      ['The Ward Turns Sixteen', `The Ward turned sixteen. The clerk returned the keys ${pronoun} had never held.`],
+    ]);
+    expect(original.ctx.world.chronicle[0]?.text).toBe(`The Ward is not yet sixteen, and by the Warden's right the estate's management passes to Cawdry until ${pronoun} comes of age — or until the house can buy the wardship back.`);
+    expect(original.ctx.world.chronicle[1]?.text).toBe("The Warden's clerk took the house's coin and stopped taking the harvest. The Ward is still not the Head — that waits on sixteen — but the land is the house's again.");
+    expect(original.ctx.world.chronicle.at(-1)?.text).toBe(`The Ward turned sixteen this year, and the Warden's clerk rode out to hand back the keys ${pronoun} had never yet held.`);
+    expect(plain.buyback).toEqual(original.buyback);
+    expect(structure(plain.ctx)).toBe(structure(original.ctx));
+    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+    const fallback = wardLife(sex, 'plainenglish', false);
+    expect(canonical(saveGame(fallback.ctx))).toBe(canonical(saveGame(original.ctx)));
+  });
+
+  it('selects a namesake expectation and adult Regency without altering the Head or the recorded name', () => {
+    const original = fixture();
+    const plain = fixture('plainenglish');
+    for (const ctx of [original, plain]) {
+      const heir = place(ctx, { sex: 'female', age: 30, name: 'Edric the second' });
+      ctx.world.succession = [{ person: asId(ctx.world.narrator!), name: 'Edric', from: 1000, to: 1041 }];
+      ctx.world.decisionLog.push({ kind: 'name', year: 1041, person: heir.id, name: heir.name });
+      expect(ensureHead(ctx, testRng('namesake')).newHead?.id).toBe(heir.id);
+    }
+    expect(plain.world.chronicle.map((page) => [page.title, page.text])).toEqual([
+      ['Another Edric', 'People remember the earlier Edric and expect this Head to match him.'],
+      ['A Woman Takes the Seal', 'Edric the second became Regent because no son had awakened. She could lead the house but could not advance its Eldritch Power.'],
+    ]);
+    expect(original.world.chronicle.map((page) => [page.title, page.text])).toEqual([
+      ['Edric, again', 'The house had a Edric before, and everyone who deals with it remembers what that name was worth. They will expect the same, and they will not be gentle about the difference.'],
+      ['A Regency', 'No son of the house woke, and so Edric the second held it. She held it well, and she could not move it an inch.'],
+    ]);
+    expect(structure(plain)).toBe(structure(original));
+    expect(missingPlainEnglish(plain)).toEqual([]);
+  });
+
+  it('renders the buyback fallback without requiring an unavailable ward name', () => {
+    const original = fixture();
+    const plain = fixture('plainenglish');
+    for (const ctx of [original, plain]) {
+      ctx.world.wardship = { ward: asId('unavailable_ward'), since: ctx.world.year };
+      ctx.world.treasury = 10000;
+      expect(buyBackWardship(ctx).ok).toBe(true);
+    }
+    expect(plain.world.chronicle.at(-1)?.text).toBe('The house paid the clerk to stop taking its harvest.');
+    expect(original.world.chronicle.at(-1)?.text).toBe("The Warden's clerk took the house's coin and stopped taking the harvest.");
+    expect(structure(plain)).toBe(structure(original));
+    expect(missingPlainEnglish(plain)).toEqual([]);
+  });
+
+  it('keeps an existing Plain English wardship page while a later majority page follows Original across reload', () => {
+    const ctx = fixture('plainenglish');
+    const ward = place(ctx, { sex: 'female', age: 9, name: 'The Ward' });
+    ensureHead(ctx, testRng('wardship'));
+    const page = structuredClone(ctx.world.chronicle[0]);
+    setProseMode(ctx, 'original');
+    const saved = saveGame(ctx);
+    const loaded = loadGame(saved, bundle);
+    expect(canonical(saveGame(loaded))).toBe(canonical(saved));
+    loaded.world.year += 7;
+    expect(ensureHead(loaded, testRng('majority')).newHead?.id).toBe(ward.id);
+    expect(loaded.world.chronicle[0]).toEqual(page);
+    expect(loaded.world.chronicle.at(-1)?.text).toBe("The Ward turned sixteen this year, and the Warden's clerk rode out to hand back the keys she had never yet held.");
+  });
+});
 
 describe('prospective wanderer arrival prose (#646)', () => {
   const original = bundle.characterTemplates.find((template) => template.role === 'wanderer' && template.blurb)!;

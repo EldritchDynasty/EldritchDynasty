@@ -13,6 +13,7 @@ import { headNamesake } from './naming.js';
 import { MAIN_BRANCH } from '@ed/schema';
 import { answerGenerationQuestion, chooseGenerationQuestion } from '../generation.js';
 import { characterProse } from './character-prose.js';
+import { msg } from '../messages.js';
 
 /**
  * Succession, and keeping the recurring cast filled.
@@ -208,10 +209,8 @@ function seatHead(ctx: SimCtx, next: Person): boolean {
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',
-      title: `${namesake.name}, again`,
-      text: `The house had a ${namesake.name} before, and everyone who deals with it `
-        + 'remembers what that name was worth. They will expect the same, and they will '
-        + 'not be gentle about the difference.',
+      title: msg(ctx, 'succession.namesake.title', '{NAME}, again', { NAME: namesake.name }),
+      text: msg(ctx, 'succession.namesake.text', 'The house had a {NAME} before, and everyone who deals with it remembers what that name was worth. They will expect the same, and they will not be gentle about the difference.', { NAME: namesake.name }),
       named: false,
     });
   }
@@ -223,8 +222,8 @@ function seatHead(ctx: SimCtx, next: Person): boolean {
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',
-      title: 'A Regency',
-      text: `No son of the house woke, and so ${next.name} held it. She held it well, and she could not move it an inch.`,
+      title: msg(ctx, 'succession.regency.title', 'A Regency'),
+      text: msg(ctx, 'succession.regency.text', 'No son of the house woke, and so {PERSON} held it. She held it well, and she could not move it an inch.', { PERSON: next.name }),
       named: false,
     });
   }
@@ -261,9 +260,8 @@ export function ensureHead(ctx: SimCtx, rng: Rng): SuccessionResult {
       w.chronicle.push({
         year: w.year,
         weight: 'paragraph',
-        title: 'Come of age',
-        text: `${ward.name} turned sixteen this year, and the Warden's clerk rode out to hand `
-          + `back the keys ${pronoun} had never yet held.`,
+        title: msg(ctx, 'succession.majority.title', 'Come of age'),
+        text: msg(ctx, 'succession.majority.text', "{PERSON} turned sixteen this year, and the Warden's clerk rode out to hand back the keys {PRONOUN} had never yet held.", { PERSON: ward.name, PRONOUN: pronoun }),
         named: false,
       });
       void rng;
@@ -289,10 +287,8 @@ export function ensureHead(ctx: SimCtx, rng: Rng): SuccessionResult {
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',
-      title: 'The Warden takes the roll',
-      text: `${rightful.name} is not yet sixteen, and by the Warden's right the estate's `
-        + `management passes to Cawdry until ${pronoun} comes of age — or until the house `
-        + 'can buy the wardship back.',
+      title: msg(ctx, 'succession.wardship.title', 'The Warden takes the roll'),
+      text: msg(ctx, 'succession.wardship.text', "{PERSON} is not yet sixteen, and by the Warden's right the estate's management passes to Cawdry until {PRONOUN} comes of age — or until the house can buy the wardship back.", { PERSON: rightful.name, PRONOUN: pronoun }),
       named: false,
     });
     void rng;
@@ -334,11 +330,10 @@ export function buyBackWardship(ctx: SimCtx): { ok: boolean; reason?: string; sp
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: 'The wardship bought back',
+    title: msg(ctx, 'succession.buyback.title', 'The wardship bought back'),
     text: ward
-      ? `The Warden's clerk took the house's coin and stopped taking the harvest. `
-        + `${ward.name} is still not the Head — that waits on sixteen — but the land is the house's again.`
-      : 'The Warden\'s clerk took the house\'s coin and stopped taking the harvest.',
+      ? msg(ctx, 'succession.buyback.text', "The Warden's clerk took the house's coin and stopped taking the harvest. {PERSON} is still not the Head — that waits on sixteen — but the land is the house's again.", { PERSON: ward.name })
+      : msg(ctx, 'succession.buyback.without_ward', "The Warden's clerk took the house's coin and stopped taking the harvest."),
     named: false,
   });
   return { ok: true, spent: cost };
