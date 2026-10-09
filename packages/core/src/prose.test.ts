@@ -308,8 +308,8 @@ describe('prospective prose selection', () => {
 
   it('renders the names of pledged books and heirlooms using reviewed Plain English', () => {
     const bundle = loadBundle();
-    const book = bundle.spellbooks.find((item) => item.name.split(/\\s+/).length > 1)!;
-    const heirloom = bundle.heirlooms.find((item) => item.name.split(/\\s+/).length > 1)!;
+    const book = bundle.spellbooks.find((item) => item.name.split(/\s+/).length > 1)!;
+    const heirloom = bundle.heirlooms.find((item) => item.name.split(/\s+/).length > 1)!;
     expect(book).toBeDefined();
     expect(heirloom).toBeDefined();
 
