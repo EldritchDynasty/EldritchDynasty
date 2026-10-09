@@ -218,6 +218,35 @@ describe('achievement earn-rate report (#323)', () => {
     });
   });
 
+  it('rejects duplicate seeds within a cohort instead of inflating the rarity denominator', () => {
+    // Matching seeds in different campaigns or policies are intentionally paired:
+    // the shared samples above already exercise that valid case.
+    const duplicate: AchievementSample[] = [
+      ...samples,
+      { ...samples[0]! },
+    ];
+    expect(() => achievementRates(duplicate)).toThrow(
+      'Duplicate achievement sample: short/chronicler seed 1',
+    );
+    expect(() => renderAchievementRates(duplicate)).toThrow(
+      'Duplicate achievement sample: short/chronicler seed 1',
+    );
+
+    // Replaying one sample a hundred times must not make a statistically
+    // unjudgeable two-seed report appear to meet the 100-run rarity floor.
+    const padded: AchievementSample[] = Array.from({ length: 100 }, () => ({ ...samples[0]! }));
+    expect(() => renderAchievementRates(padded)).toThrow('Duplicate achievement sample');
+  });
+
+  it('rejects invalid seeds that cannot identify an independent deterministic run', () => {
+    expect(() => achievementRates([
+      { ...samples[0]!, seed: Number.NaN },
+    ])).toThrow('Invalid achievement sample seed');
+    expect(() => achievementRates([
+      { ...samples[0]!, seed: 1.5 },
+    ])).toThrow('Invalid achievement sample seed');
+  });
+
   it('does not misreport the cross-run Library achievement as an isolated-run zero', () => {
     expect(achievementRates(samples).find((row) => row.id === 'ending_all_long')).toEqual({
       id: 'ending_all_long',
