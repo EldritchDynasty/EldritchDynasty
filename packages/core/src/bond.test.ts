@@ -437,6 +437,31 @@ describe('the bond pages speak the reader\'s setting (#732)', () => {
     expect(reloaded.world.chronicle.some((entry) => entry.text === chosenParagraph)).toBe(true);
   });
 
+  it('falls back to the complete Original paragraph when only the short-form translation exists', () => {
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('bond.forgiven'),
+      of: proseOriginalHash(ORIGINALS['bond.forgiven']),
+      plainenglish: PLAIN['bond.forgiven'],
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const p = place(ctx, {
+      sex: 'male', age: 30, name: 'Anselm',
+      contract: contract({ term: 'bonded', debt: 100 }),
+    });
+    place(ctx, {
+      sex: 'male', age: 30, name: 'Berrin',
+      contract: contract({ term: 'bonded', debt: 80 }),
+    });
+
+    expect(freeBond(ctx, p).resented).toBe(1);
+    expect(ctx.world.chronicle.at(-1)?.text).toBe(
+      'The house tore up what Anselm still owed — 100 marks of it — and said so where people could hear. Not everybody who heard it was glad.',
+    );
+    // The short-form variant must not leak into the longer, unavailable shape.
+    expect(ctx.world.chronicle.at(-1)?.text).not.toContain('publicly cancelled');
+  });
+
   it('changes words only: the debts, terms and loyalties are the same in both settings', () => {
     const strip = (r: ReturnType<typeof play>) => r.ctx.world.people.living()
       .filter((p) => p.contract).map((p) => ({ name: p.name, ...p.contract }));
