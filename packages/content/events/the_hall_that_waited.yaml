@@ -174,3 +174,84 @@ events:
                 grudge: { severity: 40, inheritance: all_blood },
               }
     rumour: { id: rumour_the_third_hall_arranges_itself, accuracy: 0.4, spread: 3 }
+
+proseVariants:
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_that_waited].title"
+    of: "4e0923f5dfda6839"
+    plainenglish: >-
+      A Letter Arrives from the Third Hall
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_that_waited].body"
+    of: "77f290182d70ca7c"
+    plainenglish: >-
+      {COUSIN} writes four drafts of a letter. None of them says what the
+      third hall really wants. The people there have counted how long {HEAD}
+      has held the seal and how many years they have waited themselves. They
+      no longer want to discuss those numbers at dinner. The final letter asks
+      for repairs to a roof.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_that_waited].interaction.outcomes[id=somebody_reads_it_properly].text"
+    of: "a3e0b7b38f38bd67"
+    plainenglish: >-
+      The steward reads the letter about the roof twice. Then he explains what
+      it really means: the third hall is not asking for roof slates. They want
+      to know whether anyone from their hall will hold authority before
+      turning sixty. They have concluded the answer is no.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_that_waited].interaction.outcomes[id=it_is_about_a_roof].text"
+    of: "7ff549ee992d3802"
+    plainenglish: >-
+      The main house treats the letter as a request to repair a roof. A mason
+      visits in spring and does good work. Eleven years pass before the third
+      hall sends another letter, and that one is not really about a roof
+      either.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].title"
+    of: "f851038c462813e0"
+    plainenglish: >-
+      What the Third Hall Receives
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].body"
+    of: "7c3724a7bfdb2acb"
+    plainenglish: >-
+      The early warning gives {HEAD} about ten years to act. That is enough
+      time to decide what the third hall is owed without anyone losing face in
+      public.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=give_them_something_real].label"
+    of: "7a761c5fbd0b7db3"
+    plainenglish: >-
+      Give them something official: a post, an income, or a say in decisions.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=give_them_something_real].outcomes[id=given].text"
+    of: "6ee58f1d18e614f1"
+    plainenglish: >-
+      {COUSIN} receives his own source of income, separate from the main
+      house. He also gets a say in one decision, and the main house respects
+      that decision. This costs money and a small amount of public standing.
+      For about thirty years, the third hall stops counting how long it has
+      waited.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=promise_them].label"
+    of: "31dfdf11358500cd"
+    plainenglish: >-
+      Make them a promise instead. There is no cost this year.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=promise_them].outcomes[id=promised].text"
+    of: "a47cb745bc6a7589"
+    plainenglish: >-
+      {HEAD} makes a warm, specific promise and means every word of it. The
+      third hall repeats the promise for a while. Later they repeat it in a
+      different tone, as something they were told once but have learned not to
+      trust.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_stops_writing].title"
+    of: "23eb42858162b769"
+    plainenglish: >-
+      The Third Hall No Longer Sends Letters
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_stops_writing].body"
+    of: "2e36f6801b2406c4"
+    plainenglish: >-
+      No one visits the main house to announce the change, so {HEAD} finds out
+      last. The third hall has stopped sending letters. Its people still have
+      opinions, but they no longer believe that writing them down and sending
+      them will achieve anything.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_stops_writing].interaction.outcomes[id=they_arrange_it_between_themselves].text"
+    of: "a722020595b6e161"
+    plainenglish: >-
+      Instead of writing letters, the third hall makes its own arrangements.
+      It agrees to a marriage before the main house hears about it. A man
+      signs a lease without the authority to do so. This is not an open
+      rebellion, but it is not obedience either. By the time the main house
+      understands what is happening, the arrangements have lasted fifteen
+      years and become routine.
