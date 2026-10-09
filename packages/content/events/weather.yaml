@@ -503,3 +503,329 @@ events:
               effects:
                 - { kind: treasury, delta: -48 }
                 - { kind: relationship, from: household, to: head, sentiment: -10 }
+
+# Plain English alternatives for every narrative field above (#714).
+proseVariants:
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].title
+    of: 5a146e32ea98845e
+    plainenglish: >-
+      Frost After the Blossom
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].body
+    of: e566102806b51a14
+    plainenglish: >-
+      The trees blossom early, but a clear night in the last tenday of Greening brings a hard
+      frost. By morning, every orchard in the parish is ruined. The beans are lost, along with
+      about half the wheat that has grown. Nothing can save the crops. The tenants still owe
+      their rent at Thaw.
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].interaction.choices[id=remit_at_thaw].label
+    of: 1a79545aaf37cefe
+    plainenglish: >-
+      Tell the tenants now that they will not have to pay rent at Thaw, so they can plan ahead.
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].interaction.choices[id=remit_at_thaw].outcomes[id=said_now].text
+    of: 1217ce8bb9f5c99f
+    plainenglish: >-
+      The announcement comes in the yard during Greening, eleven months before Thaw. Knowing
+      they will not owe rent gives the village time to plan. Four households plant another crop
+      because of the promise. The house accepts the full financial loss at once.
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].interaction.choices[id=wait_and_see].label
+    of: 6c19fa381881f6f4
+    plainenglish: >-
+      Wait to decide. The frost may have done less damage than it seems.
+  - address: content:events/weather.yaml#events[id=a_frost_in_greening].interaction.choices[id=wait_and_see].outcomes[id=waited].text
+    of: 2e45b5daee2e0f1e
+    plainenglish: >-
+      The harvest is as bad as feared. At Thaw, eleven months later, the house waives the same
+      rent after the tenants have worried through the winter. The house loses the same amount of
+      money, but the village had no certainty when it needed it.
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].title
+    of: 2870f2b96fe3e38d
+    plainenglish: >-
+      Nine Tendays Without Rain
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].body
+    of: f0a9c20aba41157e
+    plainenglish: >-
+      The Nethering has gone nine tendays without rain. A drought this long happens about twice
+      each century, and nobody alive knows how to handle it. The Wend has fallen to its gravel
+      bed. The mill runs only four hours a day. In Haying, two seasons too early, tenants are
+      already feeding their animals from the house's hay. The reeve asks to open the hay stores
+      and to assign mill hours fairly to each household, rather than letting people race to be
+      first.
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].interaction.choices[id=open_the_hay].label
+    of: f0a897a15cdbbd45
+    plainenglish: >-
+      Share the hay and assign each household its own mill hours.
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].interaction.choices[id=open_the_hay].outcomes[id=opened].text
+    of: 8be4e0a4a4c34ec8
+    plainenglish: >-
+      The reeve puts both plans into effect that afternoon and reads the mill schedule at the
+      church door. No animals die during the drought, and nobody fights at the mill. In
+      Frostfall, the house must buy replacement hay at expensive Bramme prices to feed its own
+      animals.
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].interaction.choices[id=hold_the_hay].label
+    of: 642bc3777124c3e3
+    plainenglish: >-
+      Keep the hay for the house's animals, which will need it in Frostfall.
+  - address: content:events/weather.yaml#events[id=the_summer_that_does_not_rain].interaction.choices[id=hold_the_hay].outcomes[id=held].text
+    of: a0c8edeac16e2906
+    plainenglish: >-
+      The house has enough feed for its own animals through Frostfall, but about nine animals
+      belonging to the tenants go unfed. Two fights break out at the mill during Highsun, and
+      the house's low court settles them. People accept that the house was within its rights.
+  - address: content:events/weather.yaml#events[id=the_night_the_wind_came_round].title
+    of: b55d84e0f0a61694
+    plainenglish: >-
+      The North Wind Damages the Hall
+  - address: content:events/weather.yaml#events[id=the_night_the_wind_came_round].body
+    of: ed351b91dd2329e5
+    plainenglish: >-
+      During the night, a north wind blows straight from the fell into the west wing. By
+      morning, roof slates lie in the yard, a door hangs from one hinge, and the fires draw
+      smoke the wrong way. Nothing is destroyed, but eleven parts of the house need small
+      repairs. The steward has written a list before breakfast. It is the same list as the last
+      time this happened.
+  - address: content:events/weather.yaml#events[id=the_night_the_wind_came_round].interaction.outcomes[id=patched_by_greening].text
+    of: b2da737fd8d148d3
+    plainenglish: >-
+      The yard worker and anyone available complete all eleven repairs by Greening. The total
+      cost is four crowns. The hall is as sound as it was in autumn, but no stronger. Nobody
+      thinks a repaired door is worth an entry in the chronicle.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].title
+    of: 4600fd0857d9fcbc
+    plainenglish: >-
+      Harvesting Between Rain Showers
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].body
+    of: a5f4ecd4141d80a0
+    plainenglish: >-
+      The corn is ready, but rain falls every other day. Only four dry days remain to collect
+      the harvest, so every worker's time matters. The house can demand all the labour days the
+      tenants owe and use them on its own fields first. The tenants must then watch their own
+      crops spoil. There is not enough time to harvest both the house's fields and theirs.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=our_ground_first].label
+    of: 60313f03760caa8f
+    plainenglish: >-
+      Call in the labour owed to the house and harvest its fields first.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=our_ground_first].outcomes[id=ours_in].text
+    of: bf6160033be13f4f
+    plainenglish: >-
+      The house finishes its harvest by the third dry day. About a third of the parish's crops
+      spoil because the tenants had to work the house's fields first. This is legal and
+      customary. The tenants then have too little money to pay their rent. The house saves its
+      harvest but loses most of a year's rent, which nobody expected.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].label
+    of: 1dd0b858263bfbec
+    plainenglish: >-
+      Harvest the tenants' fields first. Leave ours until the fourth day.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=theirs_in].text
+    of: d0b3b47421ece540
+    plainenglish: >-
+      The tenants finish their harvest on the third day. The house harvests its own crops on the
+      fourth day, even though they are wet. Drying them in the barn costs money and risks the
+      grain overheating. The plan succeeds, the tenants pay their full rents, and the village
+      remains deeply loyal to the family for a generation.
+  - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=the_fourth_day_never_comes].text
+    of: 2b2fb13816e560b4
+    plainenglish: >-
+      The fourth dry day never arrives. The tenants have saved their harvest, but the house's
+      corn stands until the second tenday of Ingathering and is black by the time it is brought
+      in. Only the house suffers the financial loss. The tenants never speak of the sacrifice,
+      but all of them know about it.
+  - address: content:events/weather.yaml#events[id=the_comet].title
+    of: e80633c82769a8c4
+    plainenglish: >-
+      A Light in the Sky for Nine Nights
+  - address: content:events/weather.yaml#events[id=the_comet].body
+    of: edbcd2a73bc6547b
+    plainenglish: >-
+      Something appears in the northern sky for nine nights. By the third night everyone in the
+      parish has seen it and has an opinion. The Church says it is simply a light. People in
+      Wick say the last such light appeared during a bad winter. That is true, but they also
+      remember bad winters in many other years. Each night, {KIN} stands on the wall using a
+      marked stick to count something.
+  - address: content:events/weather.yaml#events[id=the_comet].interaction.choices[id=let_the_counting_go_on].label
+    of: 3030c14cc80965e8
+    plainenglish: >-
+      Allow the counting to continue. It is only a boy with a stick.
+  - address: content:events/weather.yaml#events[id=the_comet].interaction.choices[id=let_the_counting_go_on].outcomes[id=counted].text
+    of: aa676d16c1136282
+    plainenglish: >-
+      The stick records nine nights of marks and the object's position against the fell at the
+      same hour each night. Nobody stops the work. This becomes the only record of the object
+      made in the Nethering. In 1288, a man from Corran pays four crowns for a copy but does not
+      explain why.
+  - address: content:events/weather.yaml#events[id=the_comet].interaction.choices[id=bring_him_in].label
+    of: 45072ec99567bad5
+    plainenglish: >-
+      Bring him inside. People will gossip about a boy spending nine nights on a wall.
+  - address: content:events/weather.yaml#events[id=the_comet].interaction.choices[id=bring_him_in].outcomes[id=brought_in].text
+    of: 19260c0a4bbd5a7e
+    plainenglish: >-
+      He comes inside on the fourth night, and the stick is burned. The family hopes to avoid
+      rumours about one of its own watching the sky from a wall. People at Bramme talk about it
+      anyway. The first three nights were enough to start the story.
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].title
+    of: 4cdf98c94c642fa5
+    plainenglish: >-
+      Four Warm Days Melt Three Feet of Snow
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].body
+    of: b639fe53254cbfd7
+    plainenglish: >-
+      Three feet of snow lie on the high ground when four unusually warm days arrive. The Wend
+      rises faster than anyone remembers. By noon the water covers the lane, and by night it
+      floods the four lowest cottages. Nobody drowns because the people of Wick have watched
+      this river for four hundred years. But those four families have lost their winter food
+      stores.
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].interaction.choices[id=take_them_in].label
+    of: 0874ee6e66b22d3a
+    plainenglish: >-
+      Take all four families into the hall until the floodwater falls.
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].interaction.choices[id=take_them_in].outcomes[id=taken_in].text
+    of: 8a394d3f18a8cc63
+    plainenglish: >-
+      Nineteen extra people stay for eleven days in a hall that normally feeds fourteen. They
+      eat the house's stored food. The rooms are crowded and noisy, and two maids must sleep in
+      the kitchen, but nobody complains. People in Wick remember being welcomed into the hall
+      more than they remember the food.
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].interaction.choices[id=the_barn_and_the_stores].label
+    of: a0d520553d29c081
+    plainenglish: >-
+      Give the families shelter in the barn and send food. Keep the hall closed.
+  - address: content:events/weather.yaml#events[id=the_thaw_that_comes_too_fast].interaction.choices[id=the_barn_and_the_stores].outcomes[id=the_barn].text
+    of: 18aa61aef1e36cba
+    plainenglish: >-
+      The barn is dry and the house sends enough food and supplies. Everyone stays warm and fed,
+      and every practical need is met. Still, four families spend eleven days just two hundred
+      yards from the warm hall, looking at a door they were not allowed through. That is what
+      people remember and repeat.
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].title
+    of: 3e182699252454fd
+    plainenglish: >-
+      A Summer That Never Gets Warm
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].body
+    of: 083d6f90362ad00c
+    plainenglish: >-
+      Highsun never grows warm. Cold, grey weather continues from Greening until Slaughter,
+      leaving the corn green in the fields at Harvest. Every parish as far as Cawdry faces the
+      same problem. By Frostfall, grain will cost four times its usual price. In Ingathering, it
+      already costs twice as much. The house must choose whether to buy at double price now or
+      risk paying four times as much later.
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].interaction.choices[id=buy_now_for_the_parish].label
+    of: b5f63171811864cd
+    plainenglish: >-
+      Buy grain now at double price, enough for the village and the hall.
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].interaction.choices[id=buy_now_for_the_parish].outcomes[id=bought_for_all].text
+    of: 3cb13d9219456ac6
+    plainenglish: >-
+      In Ingathering, the house spends one hundred and ten crowns on grain it does not need for
+      itself and struggles to store. It sells the grain to Wick at cost through the winter.
+      Everyone in the parish survives that year. Four neighbouring parishes lose people.
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].interaction.choices[id=buy_for_the_hall].label
+    of: 8790b4e224e3a99e
+    plainenglish: >-
+      Buy grain only for the hall. The house cannot feed the whole village.
+  - address: content:events/weather.yaml#events[id=the_year_of_no_summer].interaction.choices[id=buy_for_the_hall].outcomes[id=bought_for_the_hall].text
+    of: bffa35fc067ee038
+    plainenglish: >-
+      The house spends thirty crowns and keeps its household fed. In Frostfall, the people of
+      Wick must buy grain at four times the normal price. Eleven people in the parish die that
+      winter from illnesses they might have survived with enough food. Nobody openly blames the
+      house, but the family still feels responsible.
+  - address: content:events/weather.yaml#events[id=lightning_on_the_chapel].title
+    of: 8e7fb33beb7ebe47
+    plainenglish: >-
+      Lightning Hits Only the Chapel
+  - address: content:events/weather.yaml#events[id=lightning_on_the_chapel].body
+    of: 05e844f87272fbec
+    plainenglish: >-
+      During a Highsun storm, a single lightning strike damages the chapel's gable. The hall,
+      barn, cowshed and taller trees that have stood for four hundred years are untouched. There
+      is no fire. The keeper from Wick arrives that evening without being asked. He examines the
+      damaged stone, then repeats a familiar keeper's saying about lightning and stone to the
+      people in the yard, without addressing anyone directly.
+  - address: content:events/weather.yaml#events[id=lightning_on_the_chapel].interaction.outcomes[id=rebuilt_by_slaughter].text
+    of: ba051fd4cf84a728
+    plainenglish: >-
+      A mason repairs the gable by Slaughter for nine crowns. The family does not use the
+      chapel, yet it is now the newest-looking building on the property. People in Bramme
+      comment on that with a knowing tone.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].title
+    of: a65ff255e8b40d21
+    plainenglish: >-
+      Ice Thick Enough to Walk On
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].body
+    of: f8408a14a83494e8
+    plainenglish: >-
+      A hard Deepwinter freezes the Wend below the mill for three tendays. This happens perhaps
+      twice in a lifetime. Within a day, the parish children are skating or walking on the ice,
+      including {CHILD}. The ice is truly thick for now, but nobody can know when it will become
+      unsafe. The mill wheel is frozen, and the miller has given up complaining about it.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].interaction.choices[id=let_them_on_it].label
+    of: f435adbab426361e
+    plainenglish: >-
+      Let the children play on the ice. Such a winter is rare.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].interaction.choices[id=let_them_on_it].outcomes[id=three_tendays].text
+    of: 37233505c680fe39
+    plainenglish: >-
+      For three tendays, every child in Wick, including one from this family, shares the ice.
+      Something like this happens in about one childhood in three, and they still remember it at
+      eighty. Nobody falls through. During the fourth tenday, the thaw breaks the ice in one
+      night with a noise the whole parish hears.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].interaction.choices[id=let_them_on_it].outcomes[id=somebody_goes_in].text
+    of: 504f788557b48051
+    plainenglish: >-
+      On the ninth day, a cottager's boy falls through the ice below the mill. Four people,
+      including {CHILD}, rescue him. He survives but remains ill for a season. Everyone involved
+      is praised, and none of them returns to the ice that winter or in any later winter.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].interaction.choices[id=keep_ours_off_it].label
+    of: 717774abe406fc8f
+    plainenglish: >-
+      Keep our child off the ice. Other families may decide for themselves.
+  - address: content:events/weather.yaml#events[id=the_ice_on_the_wend].interaction.choices[id=keep_ours_off_it].outcomes[id=kept_off].text
+    of: 4c3ef396105d0862
+    plainenglish: >-
+      {CHILD} watches the other children from the lane for three tendays. Adults forget this
+      disappointment within a year, but children remember it. Nobody falls through the ice that
+      winter. The hall treats that outcome as proof its decision was right, though it proves
+      nothing.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].title
+    of: c45e669dfec9aa39
+    plainenglish: >-
+      The Reeve Has Seen Forty Harvests
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].body
+    of: 2132712c89692d30
+    plainenglish: >-
+      The reeve has worked this land for forty harvests. He advises cutting the corn on the
+      ninth, four days earlier than usual, because of the light on the fell. He cannot explain
+      it further. The steward points out that the reeve has been wrong twice in the last nine
+      years. His record is better than anyone else's, but those two mistakes cost two harvests.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].label
+    of: 8c2fd484105b9dc0
+    plainenglish: >-
+      Cut on the ninth. Trust the reeve's forty years of experience.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].outcomes[id=he_was_right].text
+    of: 2a0ea09711e1aa53
+    plainenglish: >-
+      Rain begins on the eleventh and lasts two tendays. This parish has already brought in its
+      corn, while four neighbouring parishes have not. The reeve does not boast, nobody thanks
+      him, and he returns to his usual work the next morning.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].outcomes[id=he_was_wrong].text
+    of: f12eb39141bbd1a5
+    plainenglish: >-
+      The weather stays excellent for four days after the early harvest. Waiting would have
+      increased the yield by about one twelfth. The mistake costs twenty-two crowns, though it
+      is not a disaster. The steward has no need to say anything.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=wait_the_four_days].label
+    of: 55f0b6ee7e21da4a
+    plainenglish: >-
+      Wait four days. Trust the steward's figures instead of the reeve's reading of the sky.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=wait_the_four_days].outcomes[id=waited_four].text
+    of: d3bad2333518248f
+    plainenglish: >-
+      Four more days give the corn fuller ears and increase the yield by one twelfth. The reeve
+      says nothing, and everyone notices his silence. The steward was right, but takes care not
+      to make a show of it.
+  - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=wait_the_four_days].outcomes[id=it_breaks].text
+    of: 819ada1133e2967d
+    plainenglish: >-
+      Rain begins on the eleventh while the corn is still standing. It continues for two tendays
+      and ruins about a third of the year's crop in the fields. The reeve works alongside
+      everyone else without saying a word.
