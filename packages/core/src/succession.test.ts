@@ -37,6 +37,13 @@ describe('prospective succession and wardship prose (#736)', () => {
     address: entry.address, of: proseOriginalHash(entry.text), plainenglish: translations[entry.address]!,
   }));
 
+  /**
+   * Misses in succession's own prose. A new Head is also asked the generation's
+   * question, which is `generation.ts`'s wording, reviewed in its own suite (#758).
+   */
+  const missingSuccession = (ctx: SimCtx) =>
+    missingPlainEnglish(ctx).filter((address) => !address.startsWith('core:messages#generation.'));
+
   function fixture(mode: ProseMode = 'original', reviewed = true) {
     const ctx = emptyHouse(736);
     ctx.world.chronicle = [];
@@ -87,7 +94,7 @@ describe('prospective succession and wardship prose (#736)', () => {
     expect(original.ctx.world.chronicle.at(-1)?.text).toBe(`The Ward turned sixteen this year, and the Warden's clerk rode out to hand back the keys ${pronoun} had never yet held.`);
     expect(plain.buyback).toEqual(original.buyback);
     expect(structure(plain.ctx)).toBe(structure(original.ctx));
-    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+    expect(missingSuccession(plain.ctx)).toEqual([]);
     const fallback = wardLife(sex, 'plainenglish', false);
     expect(canonical(saveGame(fallback.ctx))).toBe(canonical(saveGame(original.ctx)));
   });
@@ -110,7 +117,7 @@ describe('prospective succession and wardship prose (#736)', () => {
       ['A Regency', 'No son of the house woke, and so Edric the second held it. She held it well, and she could not move it an inch.'],
     ]);
     expect(structure(plain)).toBe(structure(original));
-    expect(missingPlainEnglish(plain)).toEqual([]);
+    expect(missingSuccession(plain)).toEqual([]);
   });
 
   it('renders the buyback fallback without requiring an unavailable ward name', () => {
@@ -124,7 +131,7 @@ describe('prospective succession and wardship prose (#736)', () => {
     expect(plain.world.chronicle.at(-1)?.text).toBe('The house paid the clerk to stop taking its harvest.');
     expect(original.world.chronicle.at(-1)?.text).toBe("The Warden's clerk took the house's coin and stopped taking the harvest.");
     expect(structure(plain)).toBe(structure(original));
-    expect(missingPlainEnglish(plain)).toEqual([]);
+    expect(missingSuccession(plain)).toEqual([]);
   });
 
   it('keeps an existing Plain English wardship page while a later majority page follows Original across reload', () => {
