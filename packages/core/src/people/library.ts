@@ -3,6 +3,7 @@ import { asId, canLearn } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { attr } from './factory.js';
 import { ageCareerFactor } from '../ages/strategy.js';
+import { msg } from '../messages.js';
 
 /**
  * THE LIBRARY — applying a spellbook, one mechanism for every book there will
@@ -147,8 +148,9 @@ export function gainSpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): boolea
       year: ctx.world.year,
       weight: 'paragraph',
       title: def.name,
-      text: `${p.name} set it down in writing for the first time, and the family has called it `
-        + `${def.name} — ${p.name}'s working — ever since.`,
+      text: msg(ctx, 'library.named_art_record',
+        "{PERSON} set it down in writing for the first time, and the family has called it {BOOK} — {PERSON}'s working — ever since.",
+        { PERSON: p.name, BOOK: def.name }),
       named: false,
     });
   }
