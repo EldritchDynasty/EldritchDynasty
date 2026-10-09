@@ -198,6 +198,8 @@ export function browserPlatform(): Platform {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/json,.json,.edsave';
+        // Cancelling the native picker does not dispatch a change event.
+        input.addEventListener('cancel', () => resolve(null), { once: true });
         input.onchange = () => {
           const file = input.files?.[0];
           if (!file) { resolve(null); return; }
