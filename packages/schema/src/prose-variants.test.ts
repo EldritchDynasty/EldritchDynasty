@@ -51,6 +51,33 @@ describe('Plain English variant guardrails (#415)', () => {
     expect(runRule('prose/variants', withVariant())).toEqual([]);
   });
 
+  it('rejects a duplicate address even when both counterparts are individually valid', () => {
+    const bundle = withVariant();
+    bundle.proseVariants.push({
+      ...bundle.proseVariants[0]!,
+      plainenglish: `${fixture.text} In other words.`,
+    });
+
+    expect(runRule('prose/variants', bundle)).toEqual([
+      expect.objectContaining({
+        level: 'error',
+        rule: 'prose/variants',
+        where: `prose:${fixture.address}`,
+        message: expect.stringMatching(/duplicate Plain English variant address/),
+      }),
+    ]);
+  });
+
+  it('reports every extra counterpart for the same address', () => {
+    const bundle = withVariant();
+    bundle.proseVariants.push({ ...bundle.proseVariants[0]! });
+    bundle.proseVariants.push({ ...bundle.proseVariants[0]! });
+
+    const issues = runRule('prose/variants', bundle);
+    expect(issues).toHaveLength(2);
+    expect(issues.every((entry) => entry.level === 'error' && /duplicate/.test(entry.message))).toBe(true);
+  });
+
   it('rejects an address whose Original no longer exists', () => {
     const issues = runRule('prose/variants', withVariant((variant) => {
       variant.address = variant.address.replace(/\.body$/, '.field_that_is_not_there');
