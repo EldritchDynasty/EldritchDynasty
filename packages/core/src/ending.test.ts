@@ -4,7 +4,7 @@ import {
   CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
-import { ENDING_ORDER, type Rung } from '@ed/schema';
+import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type Rung } from '@ed/schema';
 import type { SimCtx } from './world.js';
 
 const content = loadContent();
@@ -527,7 +527,10 @@ describe('the epilogue rings the prologue', () => {
         address: 'content:prologue.yaml#prologue[id=the_signing].thesis',
         plainenglish: 'Later generations did not sign the bargain.',
       },
-    ]);
+    ].map((variant) => ({
+      ...variant,
+      of: proseOriginalHash(proseOriginalAt(ctx.content, variant.address)!),
+    })));
     setProseMode(ctx, 'plainenglish');
 
     const plain = epilogueOf(ctx)!;
