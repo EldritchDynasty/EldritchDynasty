@@ -9993,3 +9993,110 @@ statistical* workflow scheduled for **2026-10-11 UTC**, including its actual
 runner-minutes and a final like-for-like merge/night/week roll-up. The one
 post-cutover nightly measurement recorded above remains the current nightly
 reference. Do **not** close #439 on this interim sample.
+
+## 2026-10-09 — #439 final hosted CI critical path and complete evidence cost
+
+This completes the post-cutover measurement, including successful full nightly,
+weekly statistical and outcome-frequency workflows on main. The final nightly
+and both weekly workflows were **manually dispatched using their unchanged
+main workflows** on 2026-10-09 UTC; these are observed executions, not a claim
+that the future Sunday/Monday schedules have already run. The daily nightly,
+Sunday blood/signing and Monday outcome-frequency schedules remain in place.
+No gameplay rule, assertion floor, seed retention or CI selection policy was
+relaxed for this report.
+
+**Measurement method.** GitHub Actions run timestamps give whole-workflow
+elapsed (`created_at → updated_at`). Runner-minutes sum each non-skipped job's
+`started_at → completed_at`, including setup and platform jobs. They estimate
+execution time, **not GitHub billing**. Gate-job wall time includes proof lookup
+and artifacts; the gate-duration guard instead checks the timed gate command.
+The before/after windows contain different commits and triggered job mixes, so
+their differences are descriptive measurements, not a controlled causal saving
+or a promised maximum latency.
+
+**Merge groups.** The before window is the 30 successful integrations recorded
+above, [37475813250](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37475813250)
+through [37728700844](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37728700844).
+The final post-cutover snapshot covers 30 successful integrations from
+[37764642996](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37764642996)
+(2026-10-08 10:37 UTC) through
+[37917457270](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37917457270)
+(2026-10-09 10:28 UTC). Each workflow conclusion was `success`.
+
+| Measure, minutes | Before mean / median / range | After mean / median / range |
+| --- | ---: | ---: |
+| Whole-workflow elapsed | 23.73 / 27.47 / 4.67–32.33 | 7.20 / 6.98 / 3.58–12.78 |
+| Non-skipped runner-minutes | 37.34 / 41.10 / 11.45–48.40 | 22.32 / 22.86 / 10.72–35.43 |
+| Blocking `gates (batch)` job | 23.11 / 27.12 / 0.70–31.98 | 5.31 / 6.12 / 0.53–8.37 |
+
+Six of the final batch jobs took less than two minutes (0.53–1.40). Four
+integrations also ran the iOS simulator build. The slowest whole workflow,
+[37914315907](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37914315907),
+took 12.78 minutes with that platform job present; the batch gate is not the
+only possible critical path.
+
+**Complete scheduled-tier evidence.** All rows below are successful workflows,
+including every job, on the stated main commits. The final nightly includes
+four slow-test shards, all three sampled gates and the iOS simulator smoke;
+the weekly statistical workflow includes blood and signing.
+
+| Main workflow / run | Main commit | Whole elapsed (min) | Runner-minutes |
+| --- | --- | ---: | ---: |
+| [Repaired nightly, 37925736978](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37925736978) | `1979691e` | 22.38 | 109.25 |
+| [Weekly blood/signing, 37917887358](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37917887358) | `1e8519e4` | 44.57 | 52.47 |
+| [Weekly full outcome frequency, 37914151741](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37914151741) | `a1b14629` | 19.38 | 19.30 |
+
+The two weekly-only executions total **71.77 runner-minutes**. This is the
+observed cost of those two runs on different main commits, not an actual
+seven-day billing total. The preceding successful scheduled nightly
+[37764613087](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37764613087)
+on `9b2b64a3` took 16.87 elapsed minutes and 89.08 runner-minutes, with the
+former 160-pair endings sample. The wider final sample's cost is included above.
+
+**What bought the improvement, and what still costs compute.**
+
+- **#440:** four workers compute partitions, then one reducer reconstructs the
+  complete canonical blood/war batches. Its controlled same-width hosted
+  measurements were blood **39m06.5s → 20m59.6s** (1,024 pairs) and war
+  **39m38.0s → 17m32.3s** (768 runs per policy). The final blood sample is now
+  wider, so its later duration is not a same-width comparison.
+- **#441:** the separate completed 30-integration acceptance window observed
+  useful trusted-proof reuse on **6/30 (20%)**, complete-lane reuse on
+  **2/30 (6.7%)**, and **88.4 gate runner-minutes avoided** (2.95 per
+  integration). These historical savings are not added again to the measured
+  before/after difference. Unknown or changed dependencies still execute.
+- **#442 / #495 / #451:** execution witnesses reject deliberately broken
+  mechanisms, while full statistical frequency remains scheduled telemetry.
+  Main has **1,012/1,012 deterministic outcome witnesses**, leaving zero
+  outcomes for the scoped blocking sample. The full weekly outcome run above
+  still played **800 × 500 years** against all 1,012 authored outcomes.
+- **#439 / #573:** the empty-scope path avoids an otherwise redundant
+  roughly 21-minute, 800-run simulation. A new unwitnessed outcome restores
+  the original complete scoped sample. The batch command baseline remains
+  **420 seconds**, with the unchanged **1.25x** guard (8m45s).
+- **#644:** the first full post-cutover weekly execution correctly rejected
+  a thin 1,024-pair confidence margin. Widening to **2,048 canonical pairs**
+  retains every original seed and both full 500-year policy columns, with
+  the same reducer and zero floor. Successful main now measures **+0.32
+  fontLate, 2.1 standard errors**, and **44m09.342s** gate-body execution.
+  The 38-minute baseline's unchanged 1.25x guard passed at **1.16x**.
+- **#668:** the next scheduled nightly correctly rejected the thin endings
+  margin (**2/160** ascendant taker runs versus zero chronicler, 1.4 standard
+  errors). The **512-pair** canonical sample retains all original 160 seeds,
+  both policies and every assertion. Its
+  [complete hosted benchmark](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37920884647/job/113788258313) measured
+  **26/512** ascendant taker runs versus **0/512** chronicler, with a
+  **21m01.061s** gate body. The final successful main nightly above supplies
+  the unchanged-workflow acceptance; its ending body took
+  **21m40.356s** (`nightly-gate-endings.json`: `ok=true`). The measured
+  baseline is **22 minutes**, with the
+  unchanged **1.25x** guard (27m30s).
+
+The red discovery runs
+[37906699185](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37906699185)
+(blood) and
+[37918549600](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37918549600)
+(endings) are excluded from successful acceptance and remain evidence of
+the confidence bugs. Widening their samples adds visible scheduled compute;
+it does not make a weaker claim. All three original performance workstreams
+and the final merge/night/week measurement acceptance are complete.
