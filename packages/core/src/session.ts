@@ -50,7 +50,7 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { proseForTale, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import { proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -1318,9 +1318,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       lot: p.lot,
       // A lot is a spellbook, an heirloom, or a page of somebody's chronicle.
       // Whichever it is, the family knows what it gave a daughter for.
-      lotName: ctx.content.spellbook(p.lot)?.name
-        ?? ctx.content.heirloom(p.lot)?.name
-        ?? p.lot,
+      lotName: proseForPromiseLot(ctx, p.lot),
     })),
     ascension: {
       rung: w.ascension.rung,
