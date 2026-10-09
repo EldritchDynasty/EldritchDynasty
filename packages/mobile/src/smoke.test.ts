@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { mobileStorage } from './storage.js';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 
 describe('iOS runtime smoke protocol', () => {
@@ -53,5 +54,54 @@ describe('iOS runtime smoke protocol', () => {
     );
 
     expect(second.sha256).toBe(first.sha256);
+  });
+});
+
+
+describe('mobile native save-list read failures', () => {
+  const savedAt = '2026-10-02T00:00:00.000Z';
+  const good = JSON.stringify({ format: 28, year: 1234, savedAt });
+  const preferences = {
+    async keys() { return { keys: [] as string[] }; },
+    async get() { return { value: null }; },
+    async remove() {},
+  };
+  const files = {
+    async readdir() {
+      return { files: [
+        { name: 'unreadable.json', type: 'file' as const },
+        { name: 'healthy.json', type: 'file' as const },
+      ] };
+    },
+    async readFile({ path }: { path: string }) {
+      if (path.endsWith('/unreadable.json')) throw new Error('one file denied');
+      return { data: good };
+    },
+    async writeFile() {},
+    async deleteFile() {},
+  };
+
+  it('keeps healthy saves visible when a different enumerated file rejects on read', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(mobileStorage(files, preferences).listSaves()).resolves.toEqual([
+        { slot: 'healthy', format: 28, year: 1234, savedAt },
+      ]);
+      expect(warning).toHaveBeenCalledWith(
+        '[mobile] could not read save slot unreadable:',
+        expect.any(Error),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+  });
+
+  it('still reports whole-store directory access failures', async () => {
+    const denied = {
+      ...files,
+      async readdir(): Promise<never> { throw new Error('directory denied'); },
+    };
+    await expect(mobileStorage(denied, preferences).listSaves())
+      .rejects.toThrow('directory denied');
   });
 });
