@@ -139,6 +139,22 @@ describe('Plain English variant guardrails (#415)', () => {
     expect(proseOriginalAt(content, wrongSource)).toBeUndefined();
   });
 
+  it('validates a Plain English counterpart for a one-word tale bias', () => {
+    const tale = content.tales[0]!;
+    const address = `content:tales.yaml#tales[id=${encodeURIComponent(tale.id)}].bias`;
+    const entries = contentProseEntries('tales.yaml', { tales: [tale] });
+
+    expect(entries.find((entry) => entry.address === address)?.text).toBe(tale.bias);
+    expect(proseOriginalAt(content, address)).toBe(tale.bias);
+    const bundle = structuredClone(content.bundle);
+    bundle.proseVariants = [{
+      address,
+      of: proseOriginalHash(tale.bias),
+      plainenglish: 'They hope for a return that has not happened.',
+    }];
+    expect(runRule('prose/variants', bundle)).toEqual([]);
+  });
+
   it('rejects a counterpart that drops one occurrence of an interpolation token', () => {
     const token = fixture.interpolations[0]!;
     const issues = runRule('prose/variants', withVariant((variant) => {
