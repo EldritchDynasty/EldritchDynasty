@@ -3,6 +3,7 @@ import { chronicleEntryId, type SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { isBonded } from './bond.js';
+import { msg } from '../messages.js';
 
 /**
  * WHAT LEAVES WITH THEM, AND TO WHOM.
@@ -164,7 +165,9 @@ export function walkSecrets(
     id: page,
     year: w.year,
     weight: 'line',
-    text: `${p.name} took a place elsewhere within the year, and took the rest of it along.`,
+    text: msg(ctx, 'secrets.walked',
+      '{CARRIER} took a place elsewhere within the year, and took the rest of it along.',
+      { CARRIER: p.name }),
     named: false,
   });
   return walked;
@@ -252,9 +255,11 @@ export function tellSecrets(ctx: SimCtx, rng: Rng): string[] {
       cause: { year: loose.since, ...(loose.page ? { page: loose.page } : {}) },
       year: w.year,
       weight: 'paragraph',
-      text: `Something this house has never written down was known at ${house} by the spring, `
-        + `and the road it came by ran through ${loose.carrierName}. `
+      text: msg(ctx, 'secrets.told',
+        'Something this house has never written down was known at {HOUSE} by the spring, '
+        + 'and the road it came by ran through {CARRIER}. '
         + 'Nobody there was rude about it. They simply had it.',
+        { HOUSE: house, CARRIER: loose.carrierName }),
       named: false,
       discrepancyId: loose.secret,
     });
