@@ -86,14 +86,15 @@ describe('prospective prose selection', () => {
     expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
   });
 
-  it('keeps un-fingerprinted legacy counterparts selectable while validation warns', () => {
+  it('loads legacy rows without fingerprints but marks them missing rather than rendering them', () => {
     const { bundle } = fixture();
     const ctx = testWorld(bundle);
     setProseVariants(ctx, [{ address: ADDRESS, plainenglish: 'The direct version.' }]);
     setProseMode(ctx, 'plainenglish');
 
-    expect(renderProse(ctx, ADDRESS, 'Any original wording.')).toBe('The direct version.');
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    const original = 'Any original wording.';
+    expect(renderProse(ctx, ADDRESS, original)).toBe(original);
+    expect(missingPlainEnglish(ctx)).toEqual([ADDRESS]);
   });
 
   it('exposes one-word tale bias in the worklist and translates every visible tale field', () => {
@@ -150,8 +151,8 @@ describe('prospective prose selection', () => {
     const ctx = testWorld(bundle);
     const namedEvent: EventTemplate = { ...event, frequency: 'rare' };
     setProseVariants(ctx, [
-      { address: ADDRESS, plainenglish: 'The work is finished before evening.' },
-      { address: TITLE_ADDRESS, plainenglish: 'The Silted Race' },
+      { address: ADDRESS, of: proseOriginalHash(outcome.text!), plainenglish: 'The work is finished before evening.' },
+      { address: TITLE_ADDRESS, of: proseOriginalHash(event.title), plainenglish: 'The Silted Race' },
     ]);
 
     const first = commitOutcome(ctx, namedEvent, outcome, {}, undefined, testRng('prose-original'));
@@ -194,8 +195,8 @@ describe('prospective prose selection', () => {
     };
     const ctx = testWorld(bundle);
     setProseVariants(ctx, [
-      { address: ADDRESS, plainenglish: 'The work is finished before evening.' },
-      { address: RECORD_ADDRESS, plainenglish: 'The plain-English record wording.' },
+      { address: ADDRESS, of: proseOriginalHash(outcome.text!), plainenglish: 'The work is finished before evening.' },
+      { address: RECORD_ADDRESS, of: proseOriginalHash('The original record wording.'), plainenglish: 'The plain-English record wording.' },
     ]);
 
     const first = commitOutcome(ctx, recorded, outcome, {}, undefined, testRng('record-first'));
@@ -233,10 +234,14 @@ describe('prospective prose selection', () => {
       },
     };
     const ctx = testWorld(bundle);
+    const choice = recorded.interaction.kind === 'choice'
+      ? recorded.interaction.choices.find((item) => item.id === 'ask_him')
+      : undefined;
+    if (!choice) throw new Error('fixture is missing ask_him choice');
     setProseVariants(ctx, [
-      { address: TITLE_ADDRESS, plainenglish: 'The Silted Race' },
-      { address: CHOICE_LABEL_ADDRESS, plainenglish: 'Ask him to handle it.' },
-      { address: RECORD_SUBJECT_ADDRESS, plainenglish: 'What should we write down?' },
+      { address: TITLE_ADDRESS, of: proseOriginalHash(event.title), plainenglish: 'The Silted Race' },
+      { address: CHOICE_LABEL_ADDRESS, of: proseOriginalHash(choice.label), plainenglish: 'Ask him to handle it.' },
+      { address: RECORD_SUBJECT_ADDRESS, of: proseOriginalHash('What should the book say?'), plainenglish: 'What should we write down?' },
     ]);
     setProseMode(ctx, 'plainenglish');
 
@@ -260,7 +265,7 @@ describe('prospective prose selection', () => {
     const { bundle, event, outcome } = fixture();
     const original = testWorld(bundle, 912);
     const plain = testWorld(bundle, 912);
-    const variants = [{ address: ADDRESS, plainenglish: 'The work is finished before evening.' }];
+    const variants = [{ address: ADDRESS, of: proseOriginalHash(outcome.text!), plainenglish: 'The work is finished before evening.' }];
     setProseVariants(original, variants);
     setProseVariants(plain, variants);
     setProseMode(plain, 'plainenglish');
@@ -291,7 +296,7 @@ describe('prospective prose selection', () => {
     const secondAddress =
       'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=second_branch].outcomes[id=shared_result].text';
     const ctx = testWorld(bundle);
-    setProseVariants(ctx, [{ address: secondAddress, plainenglish: 'The second branch finished.' }]);
+    setProseVariants(ctx, [{ address: secondAddress, of: proseOriginalHash(second.text!), plainenglish: 'The second branch finished.' }]);
     setProseMode(ctx, 'plainenglish');
 
     const resolved = commitOutcome(ctx, ambiguous, second, {}, 'second_branch', testRng('duplicate-outcome-id'));
