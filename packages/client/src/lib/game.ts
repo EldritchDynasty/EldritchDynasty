@@ -299,6 +299,8 @@ export interface GameActions {
   enter(): void;
   /** Presentation only: select wording for material rendered from this point onward. */
   setProseMode(mode: ProseMode): void;
+  /** Install a late-loaded authored catalogue; saved words stay frozen. */
+  setProseVariants(variants: readonly ProseVariant[]): void;
   resume(): Promise<boolean>;
   load(slot: string): Promise<boolean>;
   listSaves(): Promise<SaveSummary[]>;
@@ -379,6 +381,7 @@ export function createGame(
   const session = shallowRef<GameSession | null>(null);
   /** Reader-local wording preference, carried across begin/resume within this store. */
   const proseMode = ref<ProseMode>('original');
+  let activeProseVariants = options.proseVariants;
   const view = ref<SessionView | null>(null);
   const table = ref<TableView | null>(null);
   const land = ref<LandView | null>(null);
@@ -551,7 +554,7 @@ export function createGame(
         campaign,
         libraryRuns: library.value.runs,
         proseMode: proseMode.value,
-        proseVariants: options.proseVariants,
+        proseVariants: activeProseVariants,
       });
       // Catalogue availability belongs to GameSession, not Vue; route the read
       // through the same store seam as every other public session method.
@@ -572,6 +575,14 @@ export function createGame(
       // read models immediately without writing an otherwise unchanged save.
       // Chronicle/frame/Library entries already contain the rendered words the
       // player saw and therefore remain untouched.
+      refresh(false);
+    },
+    setProseVariants(variants) {
+      activeProseVariants = variants;
+      const g = session.value;
+      if (!g) return;
+      g.setProseVariants(variants);
+      // Only future words and uncommitted reading surfaces update.
       refresh(false);
     },
 
@@ -981,7 +992,7 @@ export function createGame(
     try {
       start(resumeGame(save, source, {
         proseMode: proseMode.value,
-        proseVariants: options.proseVariants,
+        proseVariants: activeProseVariants,
       }));
       return true;
     } catch {
