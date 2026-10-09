@@ -70,7 +70,27 @@ function campaignRates(
   };
 }
 
+/**
+ * A batch's rarity denominator must represent independent runs, not repeated
+ * evaluations of one seed. The same seed across different campaigns/policies
+ * is intentional paired sampling; repetition within one cohort is not.
+ */
+function assertUniqueSamples(samples: readonly AchievementSample[]): void {
+  const seen = new Set<string>();
+  for (const sample of samples) {
+    if (!Number.isSafeInteger(sample.seed)) {
+      throw new Error(`Invalid achievement sample seed: ${sample.seed}`);
+    }
+    const key = JSON.stringify([sample.campaign, sample.policy, sample.seed]);
+    if (seen.has(key)) {
+      throw new Error(`Duplicate achievement sample: ${sample.campaign}/${sample.policy} seed ${sample.seed}`);
+    }
+    seen.add(key);
+  }
+}
+
 export function achievementRates(samples: readonly AchievementSample[]): AchievementRateRow[] {
+  assertUniqueSamples(samples);
   return ACHIEVEMENT_IDS.map((id) => {
     if (LIBRARY_SCOPED.has(id)) {
       return { id, scope: 'library', short: null, long: null };
