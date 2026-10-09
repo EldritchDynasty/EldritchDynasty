@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { HouseIdS, type SigningTerm } from '@ed/schema';
+import { HouseIdS, proseOriginalAt, proseOriginalHash, type SigningTerm } from '@ed/schema';
 import {
   CAMPAIGNS, HOUSE_NAME_MAX, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
   prologueView, saveGame, setProseMode, setProseVariants, testWorld, viewOf,
@@ -121,7 +121,10 @@ describe('the prologue', () => {
         address: 'content:prologue.yaml#prologue[id=the_signing].inheritedLine',
         plainenglish: '{house} is remembered by {teller}.',
       },
-    ]);
+    ].map((variant) => ({
+      ...variant,
+      of: proseOriginalHash(proseOriginalAt(ctx.content, variant.address)!),
+    })));
     setProseMode(ctx, 'plainenglish');
     ctx.world.libraryMemories = [{
       id: 'library_memory_plain',
