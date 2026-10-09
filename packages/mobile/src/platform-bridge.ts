@@ -4,6 +4,7 @@ import { Share } from '@capacitor/share';
 import type { Platform } from '../../client/src/platform.js';
 import { mobileStorage, saveSummary } from './storage.js';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
+import { chooseSaveFile } from './file-chooser.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -31,25 +32,6 @@ async function readInterchange(path: string): Promise<unknown | null> {
   } catch {
     return null;
   }
-}
-
-function chooseFile(): Promise<unknown | null> {
-  return new Promise((resolve) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json,.json,.edsave';
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) { resolve(null); return; }
-      const reader = new FileReader();
-      reader.onerror = () => resolve(null);
-      reader.onload = () => {
-        try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  });
 }
 
 // This is the mobile implementation of the client-owned Platform interface.
@@ -81,7 +63,7 @@ const platform = {
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
   },
 
-  importSave: chooseFile,
+  importSave: chooseSaveFile,
 
   onPause(listener: () => void): () => void {
     const registration = App.addListener('pause', listener);
