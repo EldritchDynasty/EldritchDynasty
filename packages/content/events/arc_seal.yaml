@@ -268,3 +268,186 @@ events:
             provableBy: [house_marrow, the_church]
     rumour: { id: rumour_what_the_letter_said, accuracy: 0.4, spread: 2 }
     accounts: [ballad_of_the_given_seal, west_house_ledger_1502]
+
+# Plain English variants for the four nodes of arc_the_given_seal (#415).
+# Original prose, event mechanics and narrative scheduling are untouched.
+proseVariants:
+  - address: "content:events/arc_seal.yaml#events[id=seal_aftermath].title"
+    of: 556bf1ba0eba2196
+    plainenglish: >-
+      Who Took the Seal
+  - address: "content:events/arc_seal.yaml#events[id=seal_aftermath].body"
+    of: 5c9be0664e5f79ea
+    plainenglish: >-
+      The Seal is now in the west house, which belongs to a cousin named {CHALLENGER}. Everyone
+      describes the arrangement as a loan, including {HEAD}. No one writes down when it must be
+      returned. They have deliberately left that question unanswered.
+  - address: "content:events/arc_seal.yaml#events[id=seal_aftermath].absentBody"
+    of: b6ca2efb62fff217
+    plainenglish: >-
+      The Seal is still in the west house. The man who took it died four years ago, but his death has
+      not settled the matter. His family keeps the Seal in a box that is a little too fine for it.
+      When asked, they still call it a loan.
+  - address: "content:events/arc_seal.yaml#events[id=seal_aftermath].interaction.outcomes[id=lent].text"
+    of: 44a90e040928b9a0
+    plainenglish: >-
+      The west house calls this a loan, but it may never return the Seal. Someone will eventually
+      come to reclaim it. That person will not be anyone in this room.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].title"
+    of: e14e2c470acbffab
+    plainenglish: >-
+      The Grandson Makes His Claim in Writing
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].body"
+    of: b6d3c9f89ca7424c
+    plainenglish: >-
+      The letter is polite and has been notarised. It uses the word hereditary four times in nine
+      lines. {CHALLENGER} never met the man who took the Seal, but he grew up hearing about it as
+      often as other children hear scripture. He is not asking {HEAD} to give him the Seal. He is
+      telling {HEAD} that the Seal now belongs to his family.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].absentBody"
+    of: 7fdd1d355917be79
+    plainenglish: >-
+      The letter is polite, notarised and signed by a steward for the whole west house, rather than
+      by one man. That makes the claim harder to settle. No individual remains in the west line to
+      argue with. The house itself is making the claim.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=buy_it_back].label"
+    of: 56d6ce00cf35908c
+    plainenglish: >-
+      Buy the Seal back, whatever the price.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=buy_it_back].outcomes[id=bought].text"
+    of: 2769a4ae4cf296ca
+    plainenglish: >-
+      The house pays far more than the Seal is worth as an object, though the family values what it
+      represents even more. The loss of money is so great that descendants will still bring up the
+      cost in arguments a hundred years later.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=answer_in_writing].label"
+    of: 1a945d7cd4f09e50
+    plainenglish: >-
+      Send a long, notarised written reply.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=answer_in_writing].outcomes[id=answered].text"
+    of: a65b9ff7758174ab
+    plainenglish: >-
+      A notary in Bramme charges two marks to prepare the reply, and someone spends four days working
+      on it. The house now has a document stating exactly what it believes about the Seal. The west
+      line receives a copy of the same document without paying for it.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=let_it_lie].label"
+    of: 3d4a621a92cb250e
+    plainenglish: >-
+      Leave the claim unanswered. It has been unresolved for years.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].interaction.choices[id=let_it_lie].outcomes[id=lay].text"
+    of: f99fe8748914b830
+    plainenglish: >-
+      The house does not answer the claim. The west house quietly begins to call itself the senior
+      branch of the family.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.subject"
+    of: 935b60bd218de399
+    plainenglish: >-
+      the west house's claim to the Seal
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.record.chronicle"
+    of: 58825d58c165cee4
+    plainenglish: >-
+      The west line has the Seal and calls itself the senior branch. We did not intend either
+      outcome, but our decisions caused both.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.record.claims[0].text"
+    of: c758874b9233b82f
+    plainenglish: >-
+      lost the Seal to the west line, which now claims to be the senior branch
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.embellish.chronicle"
+    of: 1f0566a7a5f72823
+    plainenglish: >-
+      The Seal is still held for our house by a branch we trust.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.embellish.claims[0].text"
+    of: 415cf8ff8556f6d3
+    plainenglish: >-
+      kept the Seal in the family, with a trusted branch holding it
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].title"
+    of: 3ca36b199129433d
+    plainenglish: >-
+      Counting the Pieces of the Regalia
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].body"
+    of: 030eefe32ce3cbb7
+    plainenglish: >-
+      The rite needs all three pieces of the Regalia, but the house has only two. The third has been
+      in the west house for a hundred and forty years under an arrangement everyone still calls a
+      loan. {HEAD} lays out the pieces before the witnesses and counts them, because counting them is
+      part of the rite. He continues counting for a moment even after there is nothing left to count.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].interaction.outcomes[id=two_of_three].text"
+    of: fa4b41cfc29106a3
+    plainenglish: >-
+      Only two of the three pieces are present. After six hundred years of breeding toward this rite,
+      the house cannot complete it because the last piece is in someone else's hallway.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].record.subject"
+    of: 3217c2694e6c29fd
+    plainenglish: >-
+      the missing piece of the Regalia
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].record.options.record.chronicle"
+    of: 08f7659e6499345a
+    plainenglish: >-
+      We had only two of the three pieces of the Regalia. Every witness saw that the third was
+      missing.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].record.options.record.claims[0].text"
+    of: a6ed7e54b253f170
+    plainenglish: >-
+      stood before the Regalia with only two of the three required pieces
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].record.options.embellish.chronicle"
+    of: 651b1f1b3db693e7
+    plainenglish: >-
+      All three pieces of the Regalia were present, and we performed the rite according to the old
+      rules.
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_regalia_incomplete].record.options.embellish.claims[0].text"
+    of: 8333f64089f6a3b4
+    plainenglish: >-
+      assembled all three pieces of the Regalia and performed the rite as required by the old rules
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].title"
+    of: 740be4daa2549ad6
+    plainenglish: >-
+      Auction Lot Three Hundred and Eleven
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].body"
+    of: 89c49a475ffd8513
+    plainenglish: >-
+      The sale catalogue arrives from Sarrow six weeks before the auction. {HEAD} finds it on the
+      long room table, with one lot marked by someone's fingernail. Lot three hundred and eleven
+      contains forty years of letters and papers from the west line. A grandson in debt is selling
+      them together. Among them is the letter this house paid a notary two marks to write. The house
+      still has its own copy in a chest downstairs. People remember it as a strong answer, but nobody
+      has read it in ninety years. The wording is less firm than the family remembers.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].interaction.choices[id=buy_the_lot].label"
+    of: bde9cda5527fa019
+    plainenglish: >-
+      Buy all the papers in the lot, whatever the price.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].interaction.choices[id=buy_the_lot].outcomes[id=bought_the_bundle].text"
+    of: 033169a194c5c675
+    plainenglish: >-
+      The papers sell for four times the usual price of forty years of letters from a minor house.
+      Two other bidders understand why the bundle matters. One of them is bidding for someone else.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].interaction.choices[id=let_it_go].label"
+    of: dd965b69a16085a5
+    plainenglish: >-
+      Leave the lot. It is forty years of another house's letters.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].interaction.choices[id=let_it_go].outcomes[id=sold_east].text"
+    of: c2988a43c70f77b7
+    plainenglish: >-
+      A broker buys the papers for a client he refuses to name. The bundle goes east. For eleven
+      years, nothing happens because of it.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].record.subject"
+    of: b470d0ea6bca7f4e
+    plainenglish: >-
+      the letter our house sent to the west line
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].record.options.record.chronicle"
+    of: 32c955a8316fef4c
+    plainenglish: >-
+      We replied to the west line in writing. Our reply admitted more than anyone in our house
+      remembered.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].record.options.record.claims[0].text"
+    of: c56f3920e248cb64
+    plainenglish: >-
+      answered the west line in writing and conceded more than the house later remembered
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].record.options.embellish.chronicle"
+    of: 6367af1b7233aef7
+    plainenglish: >-
+      Our reply to the west line was firm. We kept it in the chest downstairs, where anyone can read
+      it.
+  - address: "content:events/arc_seal.yaml#events[id=seal_our_own_letter_returns].record.options.embellish.claims[0].text"
+    of: 9eb0132e7cef231a
+    plainenglish: >-
+      replied firmly to the west line and kept the letter available for anyone to read
