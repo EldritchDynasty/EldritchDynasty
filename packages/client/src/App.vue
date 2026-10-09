@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createGame, type GameActions } from './lib/game';
-import { loadBundle } from './lib/content';
+import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
+import type { ProseMode } from '@ed/schema';
 import Start from './components/Start.vue';
 import Prologue from './components/Prologue.vue';
 import Standing from './components/Standing.vue';
@@ -70,6 +71,27 @@ const accessibility = ref(loadAccessibility(
 // Presentation mode lives with the reader, not the saved world. Seed the store
 // before Begin/Continue so the next GameSession starts in the persisted mode.
 actions.setProseMode(accessibility.value.proseMode);
+
+/** Loading is presentation-only. Pending Chronicle pages keep the wording
+ * they were written with; new read models refresh after the chunk arrives.
+ */
+async function selectProseMode(mode: ProseMode): Promise<void> {
+  accessibility.value.proseMode = mode;
+  actions.setProseMode(mode);
+  if (mode !== 'plainenglish') return;
+  try {
+    const variants = await installPlainEnglishCatalogue();
+    actions.setProseVariants(variants);
+  } catch {
+    // An optional chunk may be unavailable offline. Never leave the setting
+    // saying translations are selected when the catalogue could not load.
+    if (accessibility.value.proseMode === 'plainenglish') {
+      accessibility.value.proseMode = 'original';
+      actions.setProseMode('original');
+    }
+  }
+}
+
 watch(accessibility, (preferences) => {
   if (typeof document === 'undefined') return;
   applyAccessibility(document.documentElement, preferences);
@@ -370,7 +392,7 @@ const yearAndBirths = computed(() => {
     :reduce-motion="accessibility.reduceMotion"
     @update:text-scale="accessibility.textScale = $event"
     @update:reading-font="accessibility.readingFont = $event"
-    @update:prose-mode="accessibility.proseMode = $event"
+    @update:prose-mode="void selectProseMode($event)"
     @update:skip-seen-prose="accessibility.skipSeenProse = $event"
     @update:reduce-motion="accessibility.reduceMotion = $event"
   />
@@ -531,7 +553,7 @@ const yearAndBirths = computed(() => {
             v-model:skip-seen-prose="accessibility.skipSeenProse"
             v-model:reduce-motion="accessibility.reduceMotion"
             v-model:show-everything-from-start="showEverythingFromStart"
-            @update:prose-mode="accessibility.proseMode = $event; actions.setProseMode($event)"
+            @update:prose-mode="void selectProseMode($event)"
             :show-progressive-reveal-option="true"
           />
           <h3 class="label">Marks</h3>
