@@ -77,6 +77,47 @@ describe('a rival house grows its own shadow lineage', () => {
     }
   });
 
+  it('reopens a surviving spouse for the Match and for shadow-house remarriage', () => {
+    const ctx = testWorld(bundle, 419, 1042);
+    growRivalLineage(ctx, 'house_hesk');
+    const lineage = ctx.world.rivalLineages.get('house_hesk')!;
+    const wife = lineage.people.find((p) => p.sex === 'female')!;
+    const husband = lineage.people.find((p) => p.id === wife.spouse)!;
+    const otherWife = lineage.people.find((p) => p.sex === 'female' && p.id !== wife.id)!;
+    const otherHusbandId = otherWife.spouse;
+
+    // The partner's death must make the survivor eligible without waiting for
+    // another tick to repair the stale pointer (for example, after loading).
+    husband.died = ctx.world.year;
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('widow-match'),
+    )).toBe(wife);
+
+    ctx.world.year += 1;
+    growRivalLineage(ctx, 'house_hesk');
+
+    // Remarriage is a chance, not a seed-specific assertion: either the widow
+    // is still available, or her new marriage is reciprocal and living.
+    const partner = lineage.people.find((p) => p.id === wife.spouse);
+    if (partner) {
+      expect(partner.id).not.toBe(husband.id);
+      expect(partner.died).toBeUndefined();
+      expect(partner.left).toBeUndefined();
+      expect(partner.spouse).toBe(wife.id);
+    } else {
+      expect(pickRivalCandidate(
+        ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('widow-still-free'),
+      )).toBe(wife);
+    }
+
+    // The other founding couple was intact and must remain exactly so.
+    expect(otherWife.spouse).toBe(otherHusbandId);
+    expect(lineage.people.find((p) => p.id === otherHusbandId)?.spouse).toBe(otherWife.id);
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('intact-not-on-match'),
+    )).not.toBe(otherWife);
+  });
+
   it('grows every configured house through named ancestry', () => {
     const ctx = testWorld(bundle, 909, 1042);
     for (let i = 0; i < 200; i++) {
