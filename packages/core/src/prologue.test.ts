@@ -506,7 +506,7 @@ describe('the founding readback speaks the reader\'s language (#772)', () => {
       const plain = found('plainenglish', hasAnswers);
       expect(original.page.title).toBe('What Was Asked For');
       expect(plain.page.title).toBe('What the Family Was Asked to Give');
-      const m = original.page.text.match(/^(.*?) was asked for by name, and given\. (.*?) paid for part of that night and has not been paid back, and the house has known it the whole time\./);
+      const m = original.page.text!.match(/^(.*?) was asked for by name, and given\. (.*?) paid for part of that night and has not been paid back, and the house has known it the whole time\./);
       expect(m, 'Original founding copy changed').toBeTruthy();
       const suffix = hasAnswers ? ' The house took the advantage; The house accepted the cost.' : '';
       expect(original.page.text).toBe(`${m![1]} was asked for by name, and given. ${m![2]} paid for part of that night and has not been paid back, and the house has known it the whole time.${suffix}`);
