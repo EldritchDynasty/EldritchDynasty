@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import { browserPlatform } from '../platform.js';
 import { createGame } from './game.js';
 
@@ -37,7 +38,9 @@ function fixtureBundle() {
     },
   };
   bundle.events.splice(0, bundle.events.length, fixture);
-  bundle.proseVariants.splice(0, bundle.proseVariants.length, { address: ADDRESS, plainenglish: PLAIN });
+  bundle.proseVariants.splice(0, bundle.proseVariants.length, {
+    address: ADDRESS, of: proseOriginalHash(ORIGINAL), plainenglish: PLAIN,
+  });
   return bundle;
 }
 
@@ -64,7 +67,7 @@ describe('Plain English client setting (#413)', () => {
     bundle.proseVariants.splice(
       0,
       bundle.proseVariants.length,
-      { address, plainenglish: 'The signing happened on the last night of the old year.' },
+      { address, of: proseOriginalHash(original), plainenglish: 'The signing happened on the last night of the old year.' },
     );
 
     const game = createGame(bundle, browserPlatform());
