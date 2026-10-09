@@ -8,6 +8,7 @@ import { activeBranches, hall } from './people/branches.js';
 import { madnessCoverOf } from './people/careers.js';
 import { landIncome } from './land.js';
 import { musterUpkeep } from './muster.js';
+import { msg } from './messages.js';
 
 /**
  * THE ANNUAL ECONOMY (concept §13).
@@ -52,7 +53,16 @@ const STANDING_COST: Record<RespectTier, number> = {
  * recovering clauses, so its endgame is decided by year 1300 by a rule about
  * being boring.
  */
-function slip(ctx: SimCtx, why: string, floor = 1): boolean {
+type RespectSlipCause = 'madness' | 'quiet' | 'debt';
+
+/** Complete sentences let the translator change grammar without reassembling fragments. */
+const RESPECT_SLIP_TEXT: Record<RespectSlipCause, string> = {
+  madness: 'The house was {TIER} and then it was not, because of what people had started to say about the son in the east rooms. Nobody announced it. It was simply the case by the following spring.',
+  quiet: 'The house was {TIER} and then it was not, because nothing had been done in thirty years worth telling anyone about. Nobody announced it. It was simply the case by the following spring.',
+  debt: 'The house was {TIER} and then it was not, because the house was visibly broke, and everybody could see it. Nobody announced it. It was simply the case by the following spring.',
+};
+
+function slip(ctx: SimCtx, cause: RespectSlipCause, floor = 1): boolean {
   const w = ctx.world;
   const i = RESPECT_ORDER.indexOf(w.respect);
   if (i <= floor) return false;
@@ -61,9 +71,8 @@ function slip(ctx: SimCtx, why: string, floor = 1): boolean {
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: 'They Were Spoken Of Differently',
-    text: `The house was ${RESPECT_ORDER[i]} and then it was not, because ${why}. `
-      + 'Nobody announced it. It was simply the case by the following spring.',
+    title: msg(ctx, 'respect.slip.title', 'They Were Spoken Of Differently'),
+    text: msg(ctx, `respect.slip.${cause}`, RESPECT_SLIP_TEXT[cause], { TIER: RESPECT_ORDER[i]! }),
     named: false,
   });
   return true;
@@ -80,12 +89,12 @@ export function tickRespect(ctx: SimCtx): void {
   const roster = hall(w, MAIN_BRANCH, w.year);
   const worst = roster.reduce((m, p) => Math.max(m, p.madness), 0) - madnessCoverOf(ctx, roster);
   if (worst > VISIBLE_MADNESS && w.year % 5 === 0) {
-    if (slip(ctx, 'of what people had started to say about the son in the east rooms')) return;
+    if (slip(ctx, 'madness')) return;
   }
 
   // A quiet generation costs a tier.
   if (w.year - since >= RESPECT_QUIET_YEARS) {
-    if (slip(ctx, 'nothing had been done in thirty years worth telling anyone about')) return;
+    if (slip(ctx, 'quiet')) return;
     w.respectChanged = w.year;   // already at the floor; stop re-checking yearly
   }
 }
@@ -319,7 +328,7 @@ export function tickEconomy(ctx: SimCtx): EconomyReport {
   if (w.treasury < DEBT_FLOOR) {
     w.treasury = DEBT_FLOOR;
     w.discontent = Math.min(100, w.discontent + 1);
-    slip(ctx, 'the house was visibly broke, and everybody could see it');
+    slip(ctx, 'debt');
   }
 
   tickRespect(ctx);
