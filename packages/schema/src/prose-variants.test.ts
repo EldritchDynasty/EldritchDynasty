@@ -110,13 +110,13 @@ describe('Plain English variant guardrails (#415)', () => {
   });
 
   it('rejects numeric aliases for prose rows that have stable authored identities', () => {
-    const eventAlias = fixture.address.replace(/events\\[id=[^\\]]+\\]/, 'events[0]');
+    const eventAlias = fixture.address.replace(/events\[id=[^\]]+\]/, 'events[0]');
     // The worklist always uses [id=...] when an item has an authored id.
     // Resolving a numeric alias would pass validation but never be shown.
     const prologue = contentProseEntries('prologue.yaml', { prologue: content.bundle.prologue })
       .find((entry) => entry.address.endsWith('.opening'));
     expect(prologue).toBeDefined();
-    const numericPrologue = prologue!.address.replace(/prologue\\[id=[^\\]]+\\]/, 'prologue[0]');
+    const numericPrologue = prologue!.address.replace(/prologue\[id=[^\]]+\]/, 'prologue[0]');
 
     expect(proseOriginalAt(content, numericPrologue)).toBeUndefined();
     expect(proseOriginalAt(content, eventAlias)).toBeUndefined();
@@ -135,7 +135,7 @@ describe('Plain English variant guardrails (#415)', () => {
     // a bogus events filename claim a real prologue passage.
     const wrongSource = prologue!.address
       .replace('content:prologue.yaml#', 'content:events/not_prologue.yaml#')
-      .replace(/prologue\\[id=[^\\]]+\\]/, 'prologue[0]');
+      .replace(/prologue\[id=[^\]]+\]/, 'prologue[0]');
     expect(proseOriginalAt(content, wrongSource)).toBeUndefined();
   });
 
