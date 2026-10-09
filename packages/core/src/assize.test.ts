@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import {
   ASSIZE_RESPONSES, armOf, assizeFavour, assizePressure, measureFortune,
-  newGame, phase, place, resumeGame, testWorld,
+  newGame, phase, place, resumeGame, setProseMode, setProseVariants, testWorld,
 } from '@ed/core';
+import type { SimCtx } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -70,8 +73,9 @@ describe('what the world does about it', () => {
   it('says so out loud, every time', () => {
     // A hidden rubber band is a lie the player can feel and cannot name. Every
     // response writes a line naming who did what.
+    const ctx = testWorld(bundle);
     for (const r of ASSIZE_RESPONSES) {
-      expect(r.line.length, `${r.id} acts silently`).toBeGreaterThan(30);
+      expect(r.line(ctx).length, `${r.id} acts silently`).toBeGreaterThan(30);
       expect(armOf(r)).toBe(r.arm);
     }
   });
@@ -116,5 +120,51 @@ describe('what the world does about it', () => {
         || assizeFavour(ctx, 'mercy');
     }
     expect(helped, 'the world watched a house starve and did nothing').toBe(true);
+  });
+});
+
+describe('the Assize speaks the reader\'s setting (#757)', () => {
+  const plainFor = (id: string) => `The world acted (${id}).`;
+  function speak(ctx: SimCtx, mode: 'original' | 'plainenglish'): SimCtx {
+    const original = testWorld(bundle);
+    setProseVariants(ctx, ASSIZE_RESPONSES.map((r) => ({
+      address: coreMessageAddress(`assize.${r.id}`), of: proseOriginalHash(r.line(original)), plainenglish: plainFor(r.id),
+    })));
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+
+  it('gives every response its own reviewed Plain English line', () => {
+    const ctx = speak(testWorld(bundle), 'plainenglish');
+    for (const r of ASSIZE_RESPONSES) expect(r.line(ctx)).toBe(plainFor(r.id));
+  });
+
+  /** A rich house, ticked until the world charges it; the same draws either way. */
+  function sitting(mode: 'original' | 'plainenglish') {
+    const ctx = speak(testWorld(bundle, 4245), mode);
+    ctx.world.treasury = 9000;
+    ctx.world.respect = 'exalted';
+    for (let i = 0; i < 26; i++) place(ctx, { sex: i % 2 ? 'male' : 'female', age: 22 + (i % 30) });
+    ctx.world.assize.lastSitting = ctx.world.year - 40;
+    const from = ctx.world.chronicle.length;
+    for (let i = 0; i < 30 && Object.keys(ctx.world.assize.fired).length === 0; i++) {
+      phase('assize', ctx);
+      ctx.world.year += 1;
+    }
+    const [id] = Object.keys(ctx.world.assize.fired);
+    expect(id, 'no sitting landed').toBeDefined();
+    return { ctx, id: id!, page: ctx.world.chronicle.slice(from).at(-1)! };
+  }
+
+  it('writes the same sitting in both settings, and the page keeps its words', () => {
+    const original = sitting('original');
+    const plain = sitting('plainenglish');
+    expect(plain.id).toBe(original.id);
+    expect(original.page.text).toBe(ASSIZE_RESPONSES.find((r) => r.id === original.id)!.line(testWorld(bundle)));
+    expect(plain.page.text).toBe(plainFor(plain.id));
+    expect(plain.ctx.world.treasury).toBe(original.ctx.world.treasury);
+    expect(plain.ctx.world.discontent).toBe(original.ctx.world.discontent);
+    setProseMode(plain.ctx, 'original');
+    expect(plain.page.text).toBe(plainFor(plain.id));
   });
 });

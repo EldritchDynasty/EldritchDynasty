@@ -87,7 +87,7 @@ describe('taking a grudge', () => {
       id: page,
       year: ctx.world.year,
       weight: 'line',
-      text: response.line,
+      text: response.line(ctx),
       named: false,
     });
 
