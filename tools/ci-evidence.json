@@ -82,6 +82,13 @@
       "proposedTier": "release-only"
     },
     {
+      "id": "windows-install-smoke",
+      "claim": "On release tags, download the retained NSIS artifact on a fresh Windows host, verify installer and installed executable hashes against release proof, then launch the installed game in smoke mode.",
+      "evidenceType": "release",
+      "currentTier": "release-only",
+      "proposedTier": "release-only"
+    },
+    {
       "id": "release-slow",
       "claim": "Tagged releases rerun every slow suite, including evidence moved to nightly cadence.",
       "evidenceType": "release completeness",
