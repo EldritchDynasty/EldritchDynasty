@@ -3,6 +3,7 @@ import { loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import { canonical, chapterOf, loadGame, makeRng, missingPlainEnglish, openingOf, saveGame, setProseMode, setProseVariants, testWorld, tickAges } from '@ed/core';
 import type { SimCtx } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -250,5 +251,49 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
     }]);
     expect(chapterOf(ctx, done!)!.name).toBeUndefined();
     expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
+
+
+describe('Age-ending Chronicle prose respects the reading mode (#770)', () => {
+  const original = 'The Age ended. If it had anything more to say about the debt, the book kept no line of it.';
+  const plainenglish = 'The Age ended. If it had more to tell us about the debt, nobody wrote it down.';
+
+  function finished(mode: 'original' | 'plainenglish') {
+    const { ctx, age } = withAge('the_withering', true, 1);
+    // A named Age with no record keeper is owed no clause, whatever language is selected.
+    for (const p of ctx.world.people.living()) p.contract = undefined;
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('age.missed_clause'),
+      of: proseOriginalHash(original),
+      plainenglish,
+    }]);
+    setProseMode(ctx, mode);
+    const done = runOut(ctx, age, 1);
+    expect(done, 'the Age never ended').toBeDefined();
+    const line = ctx.world.chronicle
+      .filter((entry) => entry.greyed && entry.year === done!.ended)
+      .at(-1);
+    expect(line, 'the Age missed a clause with no Chronicle record').toBeDefined();
+    return { ctx, done, line: line! };
+  }
+
+  it('selects only the words, not the Age outcome, and keeps them after a mode change or reload', () => {
+    const a = finished('original');
+    const b = finished('plainenglish');
+    expect(a.line.text).toBe(original);
+    expect(b.line.text).toBe(plainenglish);
+    expect(b.line.weight).toBe(a.line.weight);
+    expect(b.line.named).toBe(a.line.named);
+    expect(b.line.greyed).toBe(a.line.greyed);
+    expect(b.done).toEqual(a.done);
+    expect(b.ctx.world.age).toEqual(a.ctx.world.age);
+    expect([...b.ctx.world.clausesRecovered]).toEqual([...a.ctx.world.clausesRecovered]);
+
+    setProseMode(b.ctx, 'original');
+    expect(b.line.text).toBe(plainenglish);
+    const restored = loadGame(saveGame(b.ctx), bundle);
+    expect(restored.world.chronicle.find((entry) =>
+      entry.greyed && entry.year === b.done!.ended)?.text).toBe(plainenglish);
   });
 });

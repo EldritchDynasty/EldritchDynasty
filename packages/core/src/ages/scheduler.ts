@@ -4,6 +4,7 @@ import { evalCondition } from '../events/conditions.js';
 import type { Rng } from '../rng.js';
 import { campaignDef, isLateCampaignYear } from '../campaign.js';
 import { proseForClause } from '../prose.js';
+import { msg } from '../messages.js';
 
 const MAX_CONCURRENT = 2;
 
@@ -46,7 +47,7 @@ export function tickAges(ctx: SimCtx, rng: Rng): { began: AgeDef[]; ended: AgeDe
         w.chronicle.push({
           year: w.year,
           weight: 'line',
-          text: 'The Age ended. If it had anything more to say about the debt, the book kept no line of it.',
+          text: msg(ctx, 'age.missed_clause', 'The Age ended. If it had anything more to say about the debt, the book kept no line of it.'),
           named: false,
           greyed: true,
         });
