@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
@@ -110,8 +111,8 @@ describe('applying an heirloom is generic', () => {
     expect(file).toBe('heirlooms.yaml');
     const base = `content:${file}#heirlooms[id=${def.id}]`;
     setProseVariants(ctx, [
-      { address: `${base}.name`, plainenglish: 'The Seal in Plain English' },
-      { address: `${base}.chronicle`, plainenglish: '{BEARER} pressed the seal into wax.' },
+      { address: `${base}.name`, of: proseOriginalHash(def.name), plainenglish: 'The Seal in Plain English' },
+      { address: `${base}.chronicle`, of: proseOriginalHash(def.chronicle!), plainenglish: '{BEARER} pressed the seal into wax.' },
     ]);
 
     expect(useHeirloom(ctx, def.id, bearer).ok).toBe(true);
