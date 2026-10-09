@@ -53,6 +53,57 @@ describe('the content is parsed on the build machine', () => {
   });
 });
 
+describe('precompiled Plain English catalogue packing (#708)', () => {
+  it('packs redundant file prefixes and restores the exact authored counterpart', () => {
+    const docs = readContentDocs(CONTENT);
+    const file = 'events/guardian.yaml';
+    const authored = parse(readFileSync(join(CONTENT, file), 'utf8')) as {
+      proseVariants: { address: string; of?: string; plainenglish: string }[];
+    };
+    const packed = JSON.parse(docs[file]!) as { proseVariants: unknown[][] };
+    const first = authored.proseVariants[0]!;
+
+    expect(packed.proseVariants[0]).toEqual([
+      first.address.slice(`content:${file}#`.length),
+      first.of,
+      first.plainenglish,
+    ]);
+    const reassembled = assembleBundle(docs, JSON.parse);
+    expect(reassembled.proseVariants.find((row) => row.address === first.address)).toEqual(first);
+    // The existing full-bundle equality assertion above covers all rows.
+  });
+
+  it('keeps the original 1.6MB budget by removing repeated metadata, not prose', () => {
+    const packedDocs = readContentDocs(CONTENT);
+    const authoredDocs = Object.fromEntries(Object.keys(packedDocs).map((file) => [
+      file,
+      JSON.stringify(parse(readFileSync(join(CONTENT, file), 'utf8')) ?? null),
+    ]));
+    const savings = Buffer.byteLength(JSON.stringify(authoredDocs))
+      - Buffer.byteLength(JSON.stringify(packedDocs));
+    // The Eight Days migration needs at least 3,108 bytes of headroom.
+    expect(savings).toBeGreaterThan(3_107);
+    expect(Buffer.byteLength(JSON.stringify(packedDocs))).toBeLessThan(1_600_000);
+  });
+
+  it('still rejects variants claiming a different source file', () => {
+    const docs = readContentDocs(CONTENT);
+    const file = 'events/guardian.yaml';
+    const authored = parse(readFileSync(join(CONTENT, file), 'utf8')) as {
+      events: unknown[];
+      proseVariants: { address: string; of?: string; plainenglish: string }[];
+    };
+    const wrong = {
+      ...authored.proseVariants[0]!,
+      address: authored.proseVariants[0]!.address.replace(
+        `content:${file}#`, 'content:events/not-guardian.yaml#',
+      ),
+    };
+    const malformed = { ...docs, [file]: JSON.stringify({ ...authored, proseVariants: [wrong] }) };
+    expect(() => assembleBundle(malformed, JSON.parse)).toThrow(/but its Original is in/);
+  });
+});
+
 describe('YAML stays off the ordinary startup path', () => {
   const pkg = JSON.parse(readFileSync(join(CLIENT, 'package.json'), 'utf8')) as {
     dependencies: Record<string, string>;
