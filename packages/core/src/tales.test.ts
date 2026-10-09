@@ -290,7 +290,8 @@ describe('Plain English tales reaching the player', () => {
   });
 
   it('falls back field by field and reports unmigrated visible addresses', () => {
-    const { game, tale } = fixture([{ address: `${BASE}.text`, plainenglish: PLAIN.text }]);
+    const originalText = loadBundle().tales.find((item) => item.id === TALE)!.text;
+    const { game, tale } = fixture([{ address: `${BASE}.text`, of: proseOriginalHash(originalText), plainenglish: PLAIN.text }]);
     game.setProseMode('plainenglish');
     expect(game.view().tales[0]).toMatchObject({
       teller: tale.teller, bias: tale.bias, text: PLAIN.text,
