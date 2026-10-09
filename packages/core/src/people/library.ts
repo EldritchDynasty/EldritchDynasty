@@ -68,7 +68,7 @@ export function degradeLibraryCopy(ctx: SimCtx, id: string, amount?: number): Li
   const state = ctx.world.library.get(id);
   if (!state) return undefined;
   const def = spellbookDef(ctx, id);
-  state.condition = Math.max(0, state.condition - (amount ?? def?.degradesBy ?? 20));
+  state.condition = Math.min(100, Math.max(0, state.condition - (amount ?? def?.degradesBy ?? 20)));
   return state;
 }
 
