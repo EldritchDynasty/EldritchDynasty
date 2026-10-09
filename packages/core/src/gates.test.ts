@@ -13,6 +13,7 @@ import { firedUnderClimbing } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
 import { bloodGateInputs, canonicalBloodSeeds, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
+import { endingGateInputs } from './tools/ending-gate.js';
 import {
   gatePartitionWorkerCount,
   partitionGateInputs,
@@ -387,6 +388,18 @@ describe('#440 expensive gate partitioning', () => {
     expect(input.slice(seeds.length).map((row) => row.seed)).toEqual(seeds);
     expect(input.slice(0, seeds.length).every((row) => row.policy === 'concentrate')).toBe(true);
     expect(input.slice(seeds.length).every((row) => row.policy === 'dilute')).toBe(true);
+  });
+
+  it('retains every historical ending pair beyond the observed confidence shortfall (#668)', () => {
+    const input = endingGateInputs();
+    expect(input.slice(0, 160 * 2)).toEqual(endingGateInputs(160));
+    const chronicler = input.filter((row) => row.policy === 'chronicler');
+    const ascendant = input.filter((row) => row.policy === 'ascendant');
+    expect(chronicler.length).toBeGreaterThanOrEqual(380);
+    expect(ascendant.map((row) => row.seed)).toEqual(chronicler.map((row) => row.seed));
+    expect(new Set(chronicler.map((row) => row.seed)).size).toBe(chronicler.length);
+    expect(chronicler.every((row, i) => row.seed === 5100 + i)).toBe(true);
+    expect(input.every((row, i) => row.policy === (i % 2 === 0 ? 'chronicler' : 'ascendant'))).toBe(true);
   });
 
   it('parses the portable worker-count override and rejects wider pools', () => {

@@ -20,8 +20,8 @@
       "evidence": "PR #490 run 37256335551 on GitHub-hosted ubuntu-24.04: the full 768-per-policy x 500y war gate completed its gate body in 17m32.3s with the default four worker threads, versus 39m38.0s on pre-change merge-group run 37251568594. Same seeds, policy rows, years and aggregate verdict; baseline rounded to 17.6m, 1.25x guard = 22.0m (#440)."
     },
     "endings": {
-      "seconds": 540,
-      "evidence": "PR #365 check run 36966981175 after #344 raised ENDING_DEFAULT_BATCH from 100 to 160: the endings gate passed at 160 paired chronicler/ascendant runs and completed in 8.6m. The previous 6m baseline described the 100-run lane. Baseline rounded to 9m; 1.25x guard = 11.25m, preserving the runtime-regression check while accounting for the deliberate 60% sample increase (#344)."
+      "seconds": 1320,
+      "evidence": "#668 complete-sample hosted measurement: successful check run 37920884647 at 5ea8fe31, job 113788258313 (release gates / endings), GitHub ubuntu-latest / Node 22. All 512 paired chronicler/ascendant x 500y histories ran with the unchanged aggregate assertions; artifact widened-ending-measurement records endings.seconds=1261.061 (21m01.061s), ok=true. Unmaking taker runs were 26/512 ascendant versus 0/512 chronicler. Retains the historical first 160 seeds and policy ordering, following main nightly run 37918549600's correct refusal of 2/160 taker runs at 1.4 SE (prescribed ~380). Baseline rounded to 22m with unchanged maxFactor 1.25 = 27.5m guard. The temporary branch-only measurement workflow edits are removed from the final change; this feature-branch measurement is not trusted-main reusable proof. Previous 160-pair measurement: PR #365 run 36966981175, 8.6m, 9m baseline (#344). Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37920884647/job/113788258313 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37918549600/job/113780637263."
     }
   },
   "runner": {
