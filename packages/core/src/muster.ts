@@ -4,6 +4,7 @@ import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { activeBranches } from './people/branches.js';
 import { DEBT_FLOOR } from './economy.js';
+import { msg } from './messages.js';
 
 /**
  * THE MUSTER'S NUMBERS (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -102,13 +103,33 @@ export function musterMortality(ctx: SimCtx, p: Person): number {
   return OFFICER_HAZARD_BASE + OFFICER_HAZARD_TIDE_SPAN * tideWorseness;
 }
 
-/** A line the player can feel and name — invariant 13 generalised past the Assize to any standing, quiet pressure. */
-function chronicleLine(c: Commitment, lost: number, tide: number): string {
-  const tideWord = tide >= 60 ? 'in the house\'s favour' : tide <= 40 ? 'against the house' : 'holding, for now';
-  const men = `${c.men} of the house's men remain in the field`;
-  return lost > 0
-    ? `The war goes on. ${men}, ${lost} lost this year, and the tide runs ${tideWord}.`
-    : `The war goes on. ${men}, and the tide runs ${tideWord}.`;
+/**
+ * Six whole-sentence originals: two loss shapes at each tide. Keys give the
+ * translator a stable unit without asking them to stitch English fragments.
+ */
+const MUSTER_LINES = {
+  favour: {
+    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs in the house's favour.",
+    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs in the house's favour.",
+  },
+  against: {
+    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs against the house.",
+    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs against the house.",
+  },
+  holding: {
+    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs holding, for now.",
+    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs holding, for now.",
+  },
+} as const;
+
+/** A line the player can feel and name — invariant 13 generalised past the Assize. */
+function chronicleLine(ctx: SimCtx, c: Commitment, lost: number, tide: number): string {
+  const band = tide >= 60 ? 'favour' : tide <= 40 ? 'against' : 'holding';
+  const shape = lost > 0 ? 'losses' : 'no_losses';
+  return msg(ctx, `muster.year.${band}.${shape}`, MUSTER_LINES[band][shape], {
+    MEN: String(c.men),
+    ...(lost > 0 ? { LOST: String(lost) } : {}),
+  });
 }
 
 /**
@@ -140,7 +161,7 @@ export function tickMuster(ctx: SimCtx, rng: Rng): void {
   w.chronicle.push({
     year: w.year,
     weight: 'line',
-    text: chronicleLine(c, lost, w.muster.tide),
+    text: chronicleLine(ctx, c, lost, w.muster.tide),
     named: false,
   });
 }
