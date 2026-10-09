@@ -8,6 +8,7 @@ import { acquireLibraryCopy } from './people/library.js';
 import { addGrudge } from './people/relationships.js';
 import { namesakeBurden } from './people/naming.js';
 import { campaignDef, campaignProgress } from './campaign.js';
+import { msg } from './messages.js';
 
 
 /**
@@ -167,8 +168,11 @@ export interface AssizeResponse {
   arm: AssizeArm;
   /** Years before this particular response may happen again. */
   cooldown: number;
-  /** What it does, in the chronicle's own voice. `{house}` is the player's. */
-  line: string;
+  /**
+   * What it does, in the chronicle's own voice, in the reader's setting. One
+   * literal key per response, so the wording has a stable identity of its own.
+   */
+  line(ctx: SimCtx): string;
   /** Whether the world is in a position to do this at all. */
   when?(ctx: SimCtx): boolean;
   apply(ctx: SimCtx, rng: Rng, page?: string): void;
@@ -188,24 +192,24 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     id: 'the_assessors_call',
     arm: 'resents',
     cooldown: 45,
-    line: 'Assessors came, counted the roof and the glass and the horses, and '
-      + 'assessed the house at a figure nobody argued with out loud.',
+    line: (ctx) => msg(ctx, 'assize.the_assessors_call',
+      'Assessors came, counted the roof and the glass and the horses, and assessed the house at a figure nobody argued with out loud.'),
     apply(ctx) { take(ctx, 0.14); },
   },
   {
     id: 'the_price_of_your_name',
     arm: 'resents',
     cooldown: 40,
-    line: 'Grain cost the house a half-mark more than it cost the village, and '
-      + 'the factor was very sorry, and did not change the price.',
+    line: (ctx) => msg(ctx, 'assize.the_price_of_your_name',
+      'Grain cost the house a half-mark more than it cost the village, and the factor was very sorry, and did not change the price.'),
     apply(ctx) { take(ctx, 0.07); ctx.world.discontent = clamp(0, 100, ctx.world.discontent + 5); },
   },
   {
     id: 'the_rivals_combine',
     arm: 'resents',
     cooldown: 70,
-    line: 'Word went round the auction rooms that no house would bid against '
-      + 'another while the Eldritch name was on the lot. It was not written down.',
+    line: (ctx) => msg(ctx, 'assize.the_rivals_combine',
+      'Word went round the auction rooms that no house would bid against another while the Eldritch name was on the lot. It was not written down.'),
     apply(ctx) { exact(ctx, 60); },
   },
   {
@@ -213,8 +217,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'resents',
     cooldown: 35,
     when: (ctx) => Boolean(bestRetainer(ctx)),
-    line: 'Somebody made the steward an offer in a room the house does not own, '
-      + 'and he thought about it for a week before saying no.',
+    line: (ctx) => msg(ctx, 'assize.a_retainer_courted_away',
+      'Somebody made the steward an offer in a room the house does not own, and he thought about it for a week before saying no.'),
     apply(ctx, rng, page) {
       const p = bestRetainer(ctx);
       // Loyalty is what `tickSecrets` reads. A bought man is how a secret
@@ -228,8 +232,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     id: 'the_church_asks_after_the_book',
     arm: 'resents',
     cooldown: 55,
-    line: 'A clerk of the Nine Quiet Names asked, very politely, to compare the '
-      + "house's account of one year with three others he had already read.",
+    line: (ctx) => msg(ctx, 'assize.the_church_asks_after_the_book',
+      "A clerk of the Nine Quiet Names asked, very politely, to compare the house's account of one year with three others he had already read."),
     apply(ctx) { ctx.world.discontent = clamp(0, 100, ctx.world.discontent + 9); },
   },
   {
@@ -237,8 +241,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'resents',
     cooldown: 60,
     when: (ctx) => activeBranches(ctx.world).length > 0,
-    line: 'A ward was requested of the house, in the way that a request is made '
-      + 'when refusing it is the thing being measured.',
+    line: (ctx) => msg(ctx, 'assize.a_ward_is_requested',
+      'A ward was requested of the house, in the way that a request is made when refusing it is the thing being measured.'),
     apply(ctx, rng, page) {
       const b = rng.pick(activeBranches(ctx.world));
       if (b) b.grievance = clamp(0, 100, b.grievance + 9);
@@ -250,8 +254,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'resents',
     cooldown: 80,
     when: (ctx) => rivalOf(ctx) !== undefined,
-    line: 'A neighbouring house produced a document about a boundary, dated '
-      + 'earlier than the house had understood any document could be dated.',
+    line: (ctx) => msg(ctx, 'assize.an_older_claim',
+      'A neighbouring house produced a document about a boundary, dated earlier than the house had understood any document could be dated.'),
     apply(ctx, rng, page) {
       take(ctx, 0.09);
       ctx.world.discontent = clamp(0, 100, ctx.world.discontent + 7);
@@ -267,8 +271,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     id: 'the_levy_falls_here',
     arm: 'resents',
     cooldown: 50,
-    line: 'The levy was raised across the whole valley, and fell on the house at '
-      + 'a rate the whole valley found reasonable.',
+    line: (ctx) => msg(ctx, 'assize.the_levy_falls_here',
+      'The levy was raised across the whole valley, and fell on the house at a rate the whole valley found reasonable.'),
     apply(ctx) { take(ctx, 0.11); },
   },
 
@@ -277,8 +281,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     id: 'the_church_opens_its_hand',
     arm: 'steadies',
     cooldown: 30,
-    line: 'The chapter house sent grain and a cart, and did not call it charity, '
-      + 'and did not need to.',
+    line: (ctx) => msg(ctx, 'assize.the_church_opens_its_hand',
+      'The chapter house sent grain and a cart, and did not call it charity, and did not need to.'),
     apply(ctx) { give(ctx, 180); },
   },
   {
@@ -286,8 +290,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'steadies',
     cooldown: 40,
     when: (ctx) => activeBranches(ctx.world).length > 0,
-    line: 'The branches were told to keep their tithe this year. Nobody pretended '
-      + 'it was generosity; there was nothing at the seat to send it to.',
+    line: (ctx) => msg(ctx, 'assize.the_tithe_forgiven',
+      'The branches were told to keep their tithe this year. Nobody pretended it was generosity; there was nothing at the seat to send it to.'),
     apply(ctx) {
       for (const b of activeBranches(ctx.world)) b.grievance = clamp(0, 100, b.grievance - 14);
     },
@@ -296,24 +300,24 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     id: 'an_old_friend_remembers',
     arm: 'steadies',
     cooldown: 45,
-    line: 'A debt the house had stopped writing down was repaid, in full, by a '
-      + 'man whose father had borrowed it.',
+    line: (ctx) => msg(ctx, 'assize.an_old_friend_remembers',
+      'A debt the house had stopped writing down was repaid, in full, by a man whose father had borrowed it.'),
     apply(ctx) { give(ctx, 260); },
   },
   {
     id: 'the_physician_stays',
     arm: 'steadies',
     cooldown: 60,
-    line: 'The physician took a room at the house for the season and then did not '
-      + 'leave, which is a thing physicians do where they are needed and paid late.',
+    line: (ctx) => msg(ctx, 'assize.the_physician_stays',
+      'The physician took a room at the house for the season and then did not leave, which is a thing physicians do where they are needed and paid late.'),
     apply(ctx) { ctx.world.assize.mercy = ctx.world.year + 18; },
   },
   {
     id: 'a_cheap_hand',
     arm: 'steadies',
     cooldown: 35,
-    line: 'The marriage market discovered that it had always been fond of the '
-      + 'house, and that its terms had always been flexible.',
+    line: (ctx) => msg(ctx, 'assize.a_cheap_hand',
+      'The marriage market discovered that it had always been fond of the house, and that its terms had always been flexible.'),
     apply(ctx) { ctx.world.assize.favour = ctx.world.year + 25; },
   },
   {
@@ -321,8 +325,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'steadies',
     cooldown: 90,
     when: (ctx) => unheldBook(ctx) !== undefined,
-    line: 'A book was left at the gate, wrapped in oilcloth, with no name on it '
-      + 'and no note inside it.',
+    line: (ctx) => msg(ctx, 'assize.a_book_at_the_gate',
+      'A book was left at the gate, wrapped in oilcloth, with no name on it and no note inside it.'),
     apply(ctx) {
       const id = unheldBook(ctx);
       if (id) acquireLibraryCopy(ctx, id);
@@ -333,8 +337,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
     arm: 'steadies',
     cooldown: 50,
     when: (ctx) => activeBranches(ctx.world).length > 0,
-    line: 'Cousins who had not written in forty years wrote, and then came, and '
-      + 'were fed without anybody asking what they wanted.',
+    line: (ctx) => msg(ctx, 'assize.kin_come_home',
+      'Cousins who had not written in forty years wrote, and then came, and were fed without anybody asking what they wanted.'),
     apply(ctx) {
       for (const b of activeBranches(ctx.world)) b.grievance = clamp(0, 100, b.grievance - 8);
       give(ctx, 90);
@@ -386,7 +390,7 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
     id: entryId,
     year: w.year,
     weight: 'line',
-    text: chosen.line,
+    text: chosen.line(ctx),
     named: false,
   });
   return { pressure, acted: chosen };
