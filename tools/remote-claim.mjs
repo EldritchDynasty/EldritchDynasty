@@ -6,7 +6,9 @@
  * stale handling, path overlap, release tombstones. This file deliberately
  * owns none of that. It accepts one small `/claim` grammar and invokes the
  * existing tool with an argument array so a connector-only session can reach
- * exactly the same protocol a shell session uses.
+ * exactly the same protocol a shell session uses. Named exclusive claims
+ * (lane-content and lane-gates) use that same canonical mutex, not an
+ * issue-comment or assignee lock.
  *
  * The grammar arrives by one of two transports (#499):
  *
@@ -30,10 +32,10 @@ import { pathToFileURL } from 'node:url';
 const AGENTS = join(import.meta.dirname, 'agents.mjs');
 
 export const CLAIM_SYNTAX = [
-  '/claim <issue> --agent <working-branch> --paths <path-list> [--lane <lane>]',
+  '/claim <issue|lane-content|lane-gates> --agent <working-branch> --paths <path-list> [--lane <lane>]',
   '/claim check --agent <working-branch>',
-  '/claim release <issue> --agent <working-branch>',
-  '/claim steal <issue> --agent <working-branch>',
+  '/claim release <issue|lane-content|lane-gates> --agent <working-branch>',
+  '/claim steal <issue|lane-content|lane-gates> --agent <working-branch>',
 ].join('\n');
 
 const syntaxError = (detail = 'invalid request') =>
@@ -91,7 +93,7 @@ export function stripAttribution(raw) {
 export function parseClaimRequest(raw) {
   const body = stripAttribution(raw).trim();
 
-  let match = body.match(/^\/claim ([1-9]\d*) --agent (\S+) --paths (.+?)(?: --lane (\S+))?$/);
+  let match = body.match(/^\/claim ([1-9]\d*|lane-content|lane-gates) --agent (\S+) --paths (.+?)(?: --lane (\S+))?$/);
   if (match) {
     return {
       command: 'take',
@@ -105,7 +107,7 @@ export function parseClaimRequest(raw) {
   match = body.match(/^\/claim check --agent (\S+)$/);
   if (match) return { command: 'check', agent: validateAgent(match[1]) };
 
-  match = body.match(/^\/claim release ([1-9]\d*) --agent (\S+)$/);
+  match = body.match(/^\/claim release ([1-9]\d*|lane-content|lane-gates) --agent (\S+)$/);
   if (match) {
     return { command: 'release', issue: match[1], agent: validateAgent(match[2]) };
   }
@@ -113,8 +115,8 @@ export function parseClaimRequest(raw) {
   // Stale recovery deliberately exposes no remote --force. The six-hour rule,
   // the compare-and-swap lease, and preservation of the old lane/paths all stay
   // inside agents.mjs. A recovered agent widens paths afterwards with ordinary
-  // /claim <issue> ... --paths ... if the work actually grew.
-  match = body.match(/^\/claim steal ([1-9]\d*) --agent (\S+)$/);
+  // /claim <issue|lane-content|lane-gates> ... --paths ... if the work actually grew.
+  match = body.match(/^\/claim steal ([1-9]\d*|lane-content|lane-gates) --agent (\S+)$/);
   if (match) {
     return { command: 'steal', issue: match[1], agent: validateAgent(match[2]) };
   }
