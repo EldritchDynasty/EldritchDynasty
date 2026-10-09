@@ -119,6 +119,31 @@ describe('prospective prose selection', () => {
     expect(renderProse(ctx, ADDRESS, original)).toBe(original);
   });
 
+  it('keeps core message values when a variant drops an underscore-leading token', () => {
+    const ctx = testWorld(loadBundle());
+    const key = 'test.underscored';
+    const address = coreMessageAddress(key);
+    const original = '{_NAME} asked {HEAD} about {_NAME}.';
+    const of = proseOriginalHash(original);
+    const values = { _NAME: 'Ada', HEAD: 'Bren' };
+    setProseMode(ctx, 'plainenglish');
+
+    // The variant's source fingerprint matches, but dropping a repeated
+    // {_NAME} must not hide a value. The common scanner and msg() must agree.
+    setProseVariants(ctx, [{
+      address, of, plainenglish: '{HEAD} told everyone about {_NAME}.',
+    }]);
+    expect(msg(ctx, key, original, values)).toBe('Ada asked Bren about Ada.');
+    expect(missingPlainEnglish(ctx)).toEqual([address]);
+
+    // Valid variants may reorder every token without losing any occurrence.
+    setProseVariants(ctx, [{
+      address, of, plainenglish: 'Before {HEAD} answered, {_NAME} spoke to {_NAME}.',
+    }]);
+    expect(msg(ctx, key, original, values)).toBe('Before Bren answered, Ada spoke to Ada.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
   it('loads legacy rows without fingerprints but marks them missing rather than rendering them', () => {
     const { bundle } = fixture();
     const ctx = testWorld(bundle);
