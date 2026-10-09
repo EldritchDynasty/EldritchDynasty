@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
-import { missingPlainEnglishAddresses, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
+import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
   commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
@@ -96,32 +96,41 @@ describe('prospective prose selection', () => {
     expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 
-  it('translates tale narrative but never requests a variant for bias metadata', () => {
+  it('exposes one-word tale bias in the worklist and translates every visible tale field', () => {
     const ctx = testWorld(loadBundle());
     const tale = ctx.content.tales[0]!;
     const base = `content:tales.yaml#tales[id=${encodeURIComponent(tale.id)}]`;
     const tellerAddress = `${base}.teller`;
+    const biasAddress = `${base}.bias`;
     const textAddress = `${base}.text`;
     const plainTeller = 'The singers of the house';
+    const plainBias = 'They want the house to remember its loss.';
     const plainText = 'The seal was lent but never returned.';
+
+    // A bias like "wistful" is one word, but it is player-visible and
+    // proseForTale already offers an authored Plain English counterpart.
+    const entries = contentProseEntries('tales.yaml', { tales: [tale] });
+    expect(entries.map((entry) => entry.address)).toContain(biasAddress);
+    expect(proseOriginalAt(ctx.content, biasAddress)).toBe(tale.bias);
 
     setProseVariants(ctx, [
       { address: tellerAddress, of: proseOriginalHash(tale.teller), plainenglish: plainTeller },
+      { address: biasAddress, of: proseOriginalHash(tale.bias), plainenglish: plainBias },
       { address: textAddress, of: proseOriginalHash(tale.text), plainenglish: plainText },
     ]);
     setProseMode(ctx, 'plainenglish');
     expect(proseForTale(ctx, tale)).toEqual({
-      teller: plainTeller, bias: tale.bias, text: plainText,
+      teller: plainTeller, bias: plainBias, text: plainText,
     });
     expect(missingPlainEnglish(ctx)).toEqual([]);
 
-    // Without authored counterparts, only eligible narrative fields are
-    // reported; bias never appears on the #410 translation worklist.
+    // Without counterparts, every visible field is an actionable migration
+    // gap, including the one-word bias the old worklist silently omitted.
     setProseVariants(ctx, []);
     expect(proseForTale(ctx, tale)).toEqual({
       teller: tale.teller, bias: tale.bias, text: tale.text,
     });
-    expect(missingPlainEnglish(ctx)).toEqual([tellerAddress, textAddress].sort());
+    expect(missingPlainEnglish(ctx)).toEqual([tellerAddress, biasAddress, textAddress].sort());
   });
 
   it('reports migration gaps statically and rejects duplicate stable identities', () => {
