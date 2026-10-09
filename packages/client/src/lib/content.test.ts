@@ -5,7 +5,8 @@ import { loadBundle, loadContent } from '@ed/content';
 import { PurposeS, assembleBundle, bundleWithUserContent, indexContent, type EventTemplate, type Purpose } from '@ed/schema';
 import { parse } from 'yaml';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
-import { CONTENT_MODULE, contentFiles, readContentDocs } from '../../build/content-plugin.js';
+import { CONTENT_MODULE, contentFiles, readContentDocs, readProseDocs, readStartupDocs } from '../../build/content-plugin.js';
+import { installPlainEnglishCatalogue, loadBundle as clientBundle } from './content.js';
 import type { Platform, SmokeCommand, SmokeResult } from '../platform.js';
 import { createGame } from './game.js';
 
@@ -28,9 +29,24 @@ const CONTENT = join(CLIENT, '../content');
  * off the same directory — not a sample of it, and not a count.
  */
 describe('the content is parsed on the build machine', () => {
-  it('assembles exactly the bundle the YAML loader does', () => {
-    const built = assembleBundle(readContentDocs(CONTENT), JSON.parse);
-    expect(built).toEqual(loadBundle());
+  it('assembles the full Original gameplay bundle before optional prose loads', () => {
+    const built = assembleBundle(readStartupDocs(CONTENT), JSON.parse);
+    const live = clientBundle();
+    expect({ ...built, proseVariants: [] }).toEqual({ ...live, proseVariants: [] });
+    expect(built.proseVariants).toEqual([]);
+  });
+
+  it('restores all reviewed variants from a separate optional chunk', async () => {
+    const full = assembleBundle(readContentDocs(CONTENT), JSON.parse);
+    const packed = readProseDocs(CONTENT);
+    expect(Object.keys(packed).length).toBeGreaterThan(0);
+    const eager = readStartupDocs(CONTENT);
+    expect((JSON.parse(eager['events/guardian.yaml']!) as { proseVariants?: unknown }).proseVariants)
+      .toBeUndefined();
+
+    const catalogue = await installPlainEnglishCatalogue();
+    expect(catalogue).toEqual(full.proseVariants);
+    expect(clientBundle().proseVariants).toEqual(full.proseVariants);
   });
 
   it('reads every file in the content directory', () => {
@@ -70,7 +86,7 @@ describe('precompiled Plain English catalogue packing (#708)', () => {
     ]);
     const reassembled = assembleBundle(docs, JSON.parse);
     expect(reassembled.proseVariants.find((row) => row.address === first.address)).toEqual(first);
-    // The existing full-bundle equality assertion above covers all rows.
+    // The optional-chunk parity test above covers all restored rows.
   });
 
   it('keeps the original 1.6MB budget by removing repeated metadata, not prose', () => {
@@ -83,7 +99,9 @@ describe('precompiled Plain English catalogue packing (#708)', () => {
       - Buffer.byteLength(JSON.stringify(packedDocs));
     // The Eight Days migration needs at least 3,108 bytes of headroom.
     expect(savings).toBeGreaterThan(3_107);
-    expect(Buffer.byteLength(JSON.stringify(packedDocs))).toBeLessThan(1_600_000);
+    // Only Original content is needed for first paint. Reviewed translations
+    // live in a separate chunk and cannot consume the first-frame budget.
+    expect(Buffer.byteLength(JSON.stringify(readStartupDocs(CONTENT)))).toBeLessThan(1_600_000);
   });
 
   it('still rejects variants claiming a different source file', () => {
@@ -139,7 +157,7 @@ describe('YAML stays off the ordinary startup path', () => {
    */
   it('the precompiled content stays inside its cold-start budget', () => {
     const CEILING = 1_600_000;
-    const size = Buffer.byteLength(JSON.stringify(readContentDocs(CONTENT)));
+    const size = Buffer.byteLength(JSON.stringify(readStartupDocs(CONTENT)));
     expect(
       size,
       `the precompiled content is ${(size / 1024).toFixed(0)} kB, over the ` +
@@ -152,6 +170,8 @@ describe('YAML stays off the ordinary startup path', () => {
   it('the loader reads the precompiled module', () => {
     const loader = readFileSync(join(CLIENT, 'src/lib/content.ts'), 'utf8');
     expect(loader).toContain(CONTENT_MODULE);
+    expect(loader).toContain("import('virtual:ed-prose-variants')");
+    expect(loader).not.toMatch(/^import .* from ['"]virtual:ed-prose-variants['"]/m);
     // The glob this replaced. It would work — and would put the parse back on
     // the critical path with nothing anywhere reporting it.
     expect(loader).not.toContain('import.meta.glob');
