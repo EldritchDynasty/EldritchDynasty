@@ -1,6 +1,7 @@
 import type { LineageDocument, Person } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
+import { msg } from '../messages.js';
 
 /**
  * THE PAPERS — what a dowry actually is (concept §7, world §13).
@@ -231,10 +232,10 @@ export function tickPapers(ctx: SimCtx, rng: Rng): number {
       w.chronicle.push({
         year: w.year,
         weight: 'paragraph',
-        title: 'The seal',
-        text: `Somebody set ${p.name}'s pedigree beside the parish roll and asked whose seal `
-          + `that was, ${doc.notarisedBy} being no longer anywhere anyone could point to. `
-          + 'Nothing was proved. It does not need to be proved to be repeated.',
+        title: msg(ctx, 'papers.exposed_title', 'The seal'),
+        text: msg(ctx, 'papers.exposed',
+          "Somebody set {PERSON}'s pedigree beside the parish roll and asked whose seal that was, {NOTARY} being no longer anywhere anyone could point to. Nothing was proved. It does not need to be proved to be repeated.",
+          { PERSON: p.name, NOTARY: doc.notarisedBy }),
         named: false,
         discrepancyId: id,
       });
