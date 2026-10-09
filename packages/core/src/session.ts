@@ -521,6 +521,11 @@ export class GameSession {
         reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
       };
     }
+    // A catalogue or reading mode can be installed while the signing is on
+    // screen. Founding rebuilds from its original seed, but must not discard
+    // those newly selected presentation options.
+    setProseVariants(candidate, [...this.ctx.prose.variants.values()]);
+    setRuntimeProseMode(candidate, this.ctx.prose.mode);
     const result = foundHouse(candidate, choice);
     if (!result.ok) return result;
     this.ctx = candidate;
@@ -634,6 +639,11 @@ export class GameSession {
   /** Change future authored wording without changing simulation or save state. */
   setProseMode(mode: ProseMode): void {
     setRuntimeProseMode(this.ctx, mode);
+  }
+
+  /** Install an asynchronously loaded reader catalogue without changing game state. */
+  setProseVariants(variants: readonly ProseVariant[]): void {
+    setProseVariants(this.ctx, variants);
   }
 
   save(): SavedGame {
