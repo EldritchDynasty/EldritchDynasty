@@ -203,12 +203,19 @@ export function browserPlatform(): Platform {
         input.onchange = () => {
           const file = input.files?.[0];
           if (!file) { resolve(null); return; }
-          const reader = new FileReader();
-          reader.onerror = () => resolve(null);
-          reader.onload = () => {
-            try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
-          };
-          reader.readAsText(file);
+          try {
+            const reader = new FileReader();
+            reader.onerror = () => resolve(null);
+            reader.onabort = () => resolve(null);
+            reader.onload = () => {
+              try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
+            };
+            reader.readAsText(file);
+          } catch {
+            // A synchronous FileReader failure occurs after the Promise executor
+            // has returned, so rejecting here would otherwise strand the import.
+            resolve(null);
+          }
         };
         input.click();
       });
