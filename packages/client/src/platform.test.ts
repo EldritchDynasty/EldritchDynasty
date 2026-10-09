@@ -343,12 +343,12 @@ describe('the platform seam', () => {
   it('settles browser imports for a cancelled picker, empty selection and JSON content', async () => {
     // Node-hosted fake: exercise the actual browser Platform without opening a
     // window, using the file input's distinct cancel and change events.
-    let input: {
+    const state: { input?: {
       files: File[];
       accept: string;
       onchange: (() => void) | null;
       cancel: (() => void) | null;
-    } | undefined;
+    } } = {};
     const oldDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
     const oldReader = Object.getOwnPropertyDescriptor(globalThis, 'FileReader');
 
@@ -368,7 +368,7 @@ describe('the platform seam', () => {
             },
             click() {},
           };
-          input = picker;
+          state.input = picker;
           return picker;
         },
       },
@@ -389,23 +389,23 @@ describe('the platform seam', () => {
     try {
       const host = browserPlatform();
       const cancelled = host.importSave();
-      expect(input?.accept).toBe('application/json,.json,.edsave');
-      expect(input?.cancel).toBeTypeOf('function');
-      input!.cancel!();
+      expect(state.input?.accept).toBe('application/json,.json,.edsave');
+      expect(state.input?.cancel).toBeTypeOf('function');
+      state.input!.cancel!();
       await expect(cancelled).resolves.toBeNull();
 
       const empty = host.importSave();
-      input!.onchange!();
+      state.input!.onchange!();
       await expect(empty).resolves.toBeNull();
 
       const valid = host.importSave();
-      input!.files = [{ fixture: '{"format":28,"year":1142}' } as File & { fixture: string }];
-      input!.onchange!();
+      state.input!.files = [{ fixture: '{"format":28,"year":1142}' } as File & { fixture: string }];
+      state.input!.onchange!();
       await expect(valid).resolves.toEqual({ format: 28, year: 1142 });
 
       const invalid = host.importSave();
-      input!.files = [{ fixture: '{bad JSON' } as File & { fixture: string }];
-      input!.onchange!();
+      state.input!.files = [{ fixture: '{bad JSON' } as File & { fixture: string }];
+      state.input!.onchange!();
       await expect(invalid).resolves.toBeNull();
     } finally {
       if (oldDocument) Object.defineProperty(globalThis, 'document', oldDocument);
