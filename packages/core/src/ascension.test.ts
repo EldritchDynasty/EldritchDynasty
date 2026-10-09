@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { Person, Rung } from '@ed/schema';
-import { indexContent } from '@ed/schema';
+import { indexContent, proseOriginalHash } from '@ed/schema';
 import {
   DEMIGOD_AGEING_STOPPED, LADDER_BLOCKERS, RUNGS, affinitiesFor, booksFor, bootstrap, diagnoseAscension, eldritchPower, foremostOf, grantHeirloom, householdAffinities, householdBooks,
   maxExpressiblePower, order, performUnmaking, phenotypeOf, place, rungIndex, rungTitle, standingOf, testWorld, tickAscension, viewOf,
+  setProseMode, setProseVariants,
   type SimCtx,
 } from '@ed/core';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
@@ -12,6 +13,7 @@ import { candidatesFor } from './events/slots.js';
 import { TEST_FAMILIES } from './tools/testFamilies.js';
 import { rollDeath } from './people/demography.js';
 import { makeRng } from './rng.js';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 const content = indexContent(bundle);
@@ -620,5 +622,104 @@ describe('the seat a man will not get out of', () => {
       // then asserted where it can be — one step is charged one step's worth.
       expect(vessel.charged).toBeGreaterThan(0);
     }
+  });
+});
+
+
+describe('translated ascension Chronicle pages (#768)', () => {
+  const originalWait = '{PERSON} stopped growing older before the Ledger was finished. The book remained open on the table. The house waited.';
+  const originalClimb = '{PERSON} went farther into the blood than anyone of the line before him. The book called him {RUNG}.';
+  const variants = [
+    { address: coreMessageAddress('ascension.ledger_wait_title'),
+      of: proseOriginalHash('The Ledger Stayed Open'), plainenglish: 'The Ledger Was Still Unfinished' },
+    { address: coreMessageAddress('ascension.ledger_wait'),
+      of: proseOriginalHash(originalWait),
+      plainenglish: '{PERSON} no longer aged, but the Ledger was not finished. Its book stayed open on the table, and the family waited.' },
+    { address: coreMessageAddress('ascension.rung_reached'),
+      of: proseOriginalHash(originalClimb),
+      plainenglish: '{PERSON} went farther into the blood than anyone before him. The family record called him {RUNG}.' },
+  ];
+
+  function prepare(mode: 'original' | 'plainenglish', seed: number): SimCtx {
+    const ctx = testWorld(bundle, seed);
+    setProseVariants(ctx, variants);
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+
+  function ledgerWait(mode: 'original' | 'plainenglish') {
+    const ctx = prepare(mode, 8092);
+    ctx.world.respect = 'exalted';
+    ctx.world.clausesRecovered.clear();
+    for (let i = 0; i < 6; i++) ctx.world.clausesRecovered.add(`clause_${i}`);
+    grantHeirloom(ctx, 'the_ninefold_seal');
+    grantHeirloom(ctx, 'the_ring');
+    grantHeirloom(ctx, 'the_rod');
+
+    const person = place(ctx, { sex: 'male', age: 40, name: 'The One Who Waited' });
+    person.awakening.awakened = true;
+    person.acquired[ELDRITCH_GIFT] = 400;
+    person.acquired[ELDRITCH_REACH] = 400;
+    person.acquired.mind = 400;
+    person.madness = 95;
+    for (const book of content.spellbooks) person.spellsKnown.push(book.id);
+    person.phenotype = undefined;
+    person.rites.push('unmaking');
+    person.born = ctx.world.year - 500;
+    expect(standingOf(ctx, person).rung).toBe('demigod');
+    expect(standingOf(ctx, person).blocker).toBe('clauses');
+
+    tickAscension(ctx);
+    const entry = ctx.world.chronicle.find((e) => e.id === `ledger_wait:${person.id}`)!;
+    expect(entry).toBeDefined();
+    return { ctx, person, entry };
+  }
+
+  it('writes the Ledger-wait title and whole sentence in the selected mode and never rewrites either', () => {
+    const original = ledgerWait('original');
+    const plain = ledgerWait('plainenglish');
+    expect([original.entry.title, original.entry.text]).toEqual([
+      'The Ledger Stayed Open',
+      'The One Who Waited stopped growing older before the Ledger was finished. The book remained open on the table. The house waited.',
+    ]);
+    expect([plain.entry.title, plain.entry.text]).toEqual([
+      'The Ledger Was Still Unfinished',
+      'The One Who Waited no longer aged, but the Ledger was not finished. Its book stayed open on the table, and the family waited.',
+    ]);
+    expect(plain.ctx.world.ascension).toEqual(original.ctx.world.ascension);
+    expect(plain.person.acquired[DEMIGOD_AGEING_STOPPED]).toBe(1);
+    const snapshot = [plain.entry.title, plain.entry.text];
+    setProseMode(plain.ctx, 'original');
+    tickAscension(plain.ctx);
+    expect([plain.entry.title, plain.entry.text]).toEqual(snapshot);
+    expect(plain.ctx.world.chronicle.filter((e) => e.id === plain.entry.id)).toHaveLength(1);
+  });
+
+  function rungPage(mode: 'original' | 'plainenglish') {
+    const ctx = prepare(mode, 8088);
+    const him = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => eldritchPower(ctx, p) > 0)!;
+    him.awakening = { awakened: true, year: ctx.world.year, age: 20, forced: false, declaredMundane: false };
+    tickAscension(ctx);
+    const climbed = ctx.world.ascension.best;
+    expect(rungIndex(climbed)).toBeGreaterThan(0);
+    const page = [...ctx.world.chronicle].reverse().find((e) => e.rung === climbed)!;
+    expect(page).toBeDefined();
+    return { ctx, climbed, page, foremost: foremostOf(ctx)!.person };
+  }
+
+  it('writes the rung-attainment page in either mode without moving the ladder', () => {
+    const original = rungPage('original');
+    const plain = rungPage('plainenglish');
+    expect(original.climbed).toBe(plain.climbed);
+    expect(original.foremost.id).toBe(plain.foremost.id);
+    expect(original.ctx.world.ascension).toEqual(plain.ctx.world.ascension);
+    const personName = original.ctx.world.people.get(original.foremost.id)!.name;
+    const rungName = rungTitle(original.climbed);
+    expect(original.page.text).toBe(`${personName} went farther into the blood than anyone of the line before him. The book called him ${rungName}.`);
+    expect(plain.page.text).toBe(`${personName} went farther into the blood than anyone before him. The family record called him ${rungName}.`);
+    expect(original.page.title).toBe(plain.page.title);
+    setProseMode(plain.ctx, 'original');
+    expect(plain.page.text).toContain('The family record');
   });
 });

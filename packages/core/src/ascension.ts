@@ -6,6 +6,7 @@ import { attr, phenotypeOf } from './people/factory.js';
 import type { LocusTable } from './genetics/loci.js';
 import { hall } from './people/branches.js';
 import { heirloomDef, heldHeirlooms } from './people/heirlooms.js';
+import { msg } from './messages.js';
 
 /**
  * THE ASCENSION LADDER (concept §22).
@@ -128,8 +129,10 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
         id: page,
         year: ctx.world.year,
         weight: 'paragraph',
-        title: 'The Ledger Stayed Open',
-        text: `${p.name} stopped growing older before the Ledger was finished. The book remained open on the table. The house waited.`,
+        title: msg(ctx, 'ascension.ledger_wait_title', 'The Ledger Stayed Open'),
+        text: msg(ctx, 'ascension.ledger_wait',
+          '{PERSON} stopped growing older before the Ledger was finished. The book remained open on the table. The house waited.',
+          { PERSON: p.name }),
         people: [p.id],
         named: false,
         rung: 'demigod',
@@ -1173,8 +1176,9 @@ export function tickAscension(ctx: SimCtx): HouseAscension {
       year: w.year,
       weight: 'paragraph',
       title: now.best === 'vessel' ? 'The Vessel' : rungTitle(now.best),
-      text: `${now.foremost?.name ?? 'Somebody of the house'} went farther into the blood than anyone `
-        + `of the line before him. The book called him ${rungTitle(now.best)}.`,
+      text: msg(ctx, 'ascension.rung_reached',
+        '{PERSON} went farther into the blood than anyone of the line before him. The book called him {RUNG}.',
+        { PERSON: now.foremost?.name ?? 'Somebody of the house', RUNG: rungTitle(now.best) }),
       named: false,
       // What the BOOK will be able to show in 2042. The ending reads the
       // chronicle rather than `world.ascension` (§6), and this is the page it
