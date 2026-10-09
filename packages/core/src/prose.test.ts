@@ -3,7 +3,7 @@ import { loadBundle } from '@ed/content';
 import { missingPlainEnglishAddresses, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, newGame, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
@@ -94,6 +94,34 @@ describe('prospective prose selection', () => {
 
     expect(renderProse(ctx, ADDRESS, 'Any original wording.')).toBe('The direct version.');
     expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('translates tale narrative but never requests a variant for bias metadata', () => {
+    const ctx = testWorld(loadBundle());
+    const tale = ctx.content.tales[0]!;
+    const base = `content:tales.yaml#tales[id=${encodeURIComponent(tale.id)}]`;
+    const tellerAddress = `${base}.teller`;
+    const textAddress = `${base}.text`;
+    const plainTeller = 'The singers of the house';
+    const plainText = 'The seal was lent but never returned.';
+
+    setProseVariants(ctx, [
+      { address: tellerAddress, of: proseOriginalHash(tale.teller), plainenglish: plainTeller },
+      { address: textAddress, of: proseOriginalHash(tale.text), plainenglish: plainText },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(proseForTale(ctx, tale)).toEqual({
+      teller: plainTeller, bias: tale.bias, text: plainText,
+    });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    // Without authored counterparts, only eligible narrative fields are
+    // reported; bias never appears on the #410 translation worklist.
+    setProseVariants(ctx, []);
+    expect(proseForTale(ctx, tale)).toEqual({
+      teller: tale.teller, bias: tale.bias, text: tale.text,
+    });
+    expect(missingPlainEnglish(ctx)).toEqual([tellerAddress, textAddress].sort());
   });
 
   it('reports migration gaps statically and rejects duplicate stable identities', () => {
