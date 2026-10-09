@@ -113,7 +113,7 @@ export type ProseVariant = z.infer<typeof ProseVariantS>;
  */
 export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
   'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'description',
-  'teller', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
+  'teller', 'bias', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
   'closing', 'because', 'cause', 'thesis', 'notarisedBy',
   'friendsPrompt', 'housePrompt', 'namePrompt', 'campaignText', 'inheritedLine',
   'situation', 'says',
@@ -135,7 +135,12 @@ function isContentProse(text: string): boolean {
 
 /** Use the same prose eligibility in the worklist and variant-address validation. */
 export function isContentProseField(key: string, text: string): boolean {
-  return CONTENT_PROSE_KEYS.has(key) && isContentProse(text);
+  // A tale's one-word bias (e.g. "gloating") is visible beside its teller
+  // and text, and proseForTale has a Plain English seam for it. The migration
+  // worklist must enumerate those fields even though most other narrative
+  // strings need two or more words to distinguish them from identifiers.
+  return CONTENT_PROSE_KEYS.has(key)
+    && (isContentProse(text) || (key === 'bias' && /[A-Za-z]/.test(text)));
 }
 
 export type ContentProsePathSegment =
