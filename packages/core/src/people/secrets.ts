@@ -256,9 +256,7 @@ export function tellSecrets(ctx: SimCtx, rng: Rng): string[] {
       year: w.year,
       weight: 'paragraph',
       text: msg(ctx, 'secrets.told',
-        'Something this house has never written down was known at {HOUSE} by the spring, '
-        + 'and the road it came by ran through {CARRIER}. '
-        + 'Nobody there was rude about it. They simply had it.',
+        'Something this house has never written down was known at {HOUSE} by the spring, and the road it came by ran through {CARRIER}. Nobody there was rude about it. They simply had it.',
         { HOUSE: house, CARRIER: loose.carrierName }),
       named: false,
       discrepancyId: loose.secret,
