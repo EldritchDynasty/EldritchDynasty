@@ -4,6 +4,7 @@ import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { activeBranches } from './people/branches.js';
 import { DEBT_FLOOR } from './economy.js';
+import { msg } from './messages.js';
 
 /**
  * THE MUSTER'S NUMBERS (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -103,12 +104,22 @@ export function musterMortality(ctx: SimCtx, p: Person): number {
 }
 
 /** A line the player can feel and name — invariant 13 generalised past the Assize to any standing, quiet pressure. */
-function chronicleLine(c: Commitment, lost: number, tide: number): string {
-  const tideWord = tide >= 60 ? 'in the house\'s favour' : tide <= 40 ? 'against the house' : 'holding, for now';
-  const men = `${c.men} of the house's men remain in the field`;
-  return lost > 0
-    ? `The war goes on. ${men}, ${lost} lost this year, and the tide runs ${tideWord}.`
-    : `The war goes on. ${men}, and the tide runs ${tideWord}.`;
+function chronicleLine(ctx: SimCtx, c: Commitment, lost: number, tide: number): string {
+  // Whole sentences, one key per shape, so a translation never has to stitch
+  // a tide phrase into somebody else's clause.
+  const v = { MEN: String(c.men), LOST: String(lost) };
+  if (lost > 0) {
+    return tide >= 60
+      ? msg(ctx, 'muster.war_line.favour_lost', "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs in the house's favour.", v)
+      : tide <= 40
+        ? msg(ctx, 'muster.war_line.against_lost', "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs against the house.", v)
+        : msg(ctx, 'muster.war_line.holding_lost', "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs holding, for now.", v);
+  }
+  return tide >= 60
+    ? msg(ctx, 'muster.war_line.favour', "The war goes on. {MEN} of the house's men remain in the field, and the tide runs in the house's favour.", v)
+    : tide <= 40
+      ? msg(ctx, 'muster.war_line.against', "The war goes on. {MEN} of the house's men remain in the field, and the tide runs against the house.", v)
+      : msg(ctx, 'muster.war_line.holding', "The war goes on. {MEN} of the house's men remain in the field, and the tide runs holding, for now.", v);
 }
 
 /**
@@ -140,7 +151,7 @@ export function tickMuster(ctx: SimCtx, rng: Rng): void {
   w.chronicle.push({
     year: w.year,
     weight: 'line',
-    text: chronicleLine(c, lost, w.muster.tide),
+    text: chronicleLine(ctx, c, lost, w.muster.tide),
     named: false,
   });
 }
