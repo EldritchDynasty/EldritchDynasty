@@ -452,14 +452,14 @@ describe('the connector-only remote claim transport', () => {
       git(session, 'commit', '-q', '--allow-empty', '-m', 'init');
       git(session, 'remote', 'add', 'origin', join(dir, 'origin.git'));
       git(session, 'push', '-q', 'origin', 'HEAD:refs/heads/main',
-        'HEAD:refs/heads/chatgpt/issue-93-topic', 'HEAD:refs/heads/chatgpt/issue-93-rival');
+        'HEAD:refs/heads/chatgpt/issue-93-topic', 'HEAD:refs/heads/chatgpt/issue-93-rival',
+        'HEAD:refs/heads/chatgpt/issue-93-lane');
       const base = git(session, 'rev-parse', 'HEAD');
 
       // What a connector does: a branch, and one file committed on it.
-      const request = (agent: string) => {
+      const request = (agent: string, command = `/claim 93 --agent ${agent} --paths packages/core/src/economy`) => {
         git(session, 'checkout', '-q', '--detach', base);
-        writeFileSync(join(session, 'CLAIM_REQUEST'),
-          `/claim 93 --agent ${agent} --paths packages/core/src/economy\n`);
+        writeFileSync(join(session, 'CLAIM_REQUEST'), `${command}\n`);
         git(session, 'add', 'CLAIM_REQUEST');
         git(session, 'commit', '-q', '-m', 'request');
         git(session, 'push', '-q', 'origin', `HEAD:refs/heads/claim-request/${agent}`);
@@ -503,6 +503,18 @@ describe('the connector-only remote claim transport', () => {
       expect(resultOf('chatgpt/issue-93-rival')).toContain('held by chatgpt/issue-93-topic');
       expect(git(dir, '--git-dir', join(dir, 'origin.git'), 'log', '-1', '--format=%B', 'claim/93'))
         .toBe(claim);
+
+      // The remote transport must create the actual named mutex ref, not
+      // merely parse a lane-content comment. This was impossible before #636.
+      const laneAgent = 'chatgpt/issue-93-lane';
+      const laneSha = request(laneAgent,
+        `/claim lane-content --agent ${laneAgent} --paths packages/content/events/arc_second_table.yaml --lane content`);
+      expect(run(laneAgent, laneSha)).toBe(0);
+      const laneClaim = git(dir, '--git-dir', join(dir, 'origin.git'),
+        'log', '-1', '--format=%B', 'claim/lane-content');
+      expect(laneClaim).toContain(`agent: ${laneAgent}`);
+      expect(laneClaim).toContain('lane: content');
+      expect(resultOf(laneAgent)).toContain('held: lane-content');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
