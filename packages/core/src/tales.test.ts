@@ -296,7 +296,9 @@ describe('Plain English tales reaching the player', () => {
     expect(game.view().tales[0]).toMatchObject({
       teller: tale.teller, bias: tale.bias, text: PLAIN.text,
     });
-    expect(missingPlainEnglish(game.ctx)).toEqual([`${BASE}.bias`, `${BASE}.teller`]);
+    // The full view also renders unrelated prose, including uncertain succession.
+    expect(missingPlainEnglish(game.ctx).filter((address) => address.startsWith(`${BASE}.`)))
+      .toEqual([`${BASE}.bias`, `${BASE}.teller`]);
   });
 
   it('keeps Original when an untracked bundle cannot identify the source file', () => {
@@ -306,7 +308,7 @@ describe('Plain English tales reaching the player', () => {
     expect(game.view().tales[0]).toMatchObject({
       teller: tale.teller, bias: tale.bias, text: tale.text,
     });
-    expect(missingPlainEnglish(game.ctx)).toEqual([]);
+    expect(missingPlainEnglish(game.ctx).filter((address) => address.startsWith(`${BASE}.`))).toEqual([]);
   });
 
   it('leaves saved Chronicle, frame and inherited Library wording intact across switching and reload', () => {
