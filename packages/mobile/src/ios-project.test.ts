@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { chooseSaveFile } from './file-chooser.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -170,5 +171,86 @@ describe('Android release versionCode', () => {
 
   it('guards the Android/Play versionCode ceiling', () => {
     expect(source).toContain('computedVersionCode > 2100000000L');
+  });
+});
+
+
+function fakeNativePicker() {
+  const listeners = new Map<string, () => void>();
+  const input = {
+    type: '',
+    accept: '',
+    files: null as File[] | null,
+    onchange: null as (() => void) | null,
+    click: vi.fn(),
+    addEventListener(name: string, callback: EventListenerOrEventListenerObject) {
+      listeners.set(name, () => {
+        const event = { type: name } as Event;
+        if (typeof callback === 'function') callback(event);
+        else callback.handleEvent(event);
+      });
+    },
+  };
+  return { input, listeners };
+}
+
+describe('mobile native save import picker', () => {
+  it('settles with null when the native picker is cancelled without any change', async () => {
+    const { input, listeners } = fakeNativePicker();
+    const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+
+    expect(input.type).toBe('file');
+    expect(input.accept).toBe('application/json,.json,.edsave');
+    expect(input.click).toHaveBeenCalledOnce();
+    expect(listeners.has('cancel')).toBe(true);
+    listeners.get('cancel')!();
+
+    await expect(choice).resolves.toBeNull();
+  });
+
+  it('retains the original JSON import behavior for a selected file', async () => {
+    const { input } = fakeNativePicker();
+    const json = { format: 28, year: 1250 };
+    class FakeReader {
+      result: string | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      onabort: (() => void) | null = null;
+      readAsText() {
+        this.result = JSON.stringify(json);
+        this.onload?.();
+      }
+    }
+
+    vi.stubGlobal('FileReader', FakeReader);
+    try {
+      const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+      input.files = [{} as File];
+      input.onchange?.();
+      await expect(choice).resolves.toEqual(json);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('settles with null when the selected file cannot be parsed', async () => {
+    const { input } = fakeNativePicker();
+    class InvalidReader {
+      result = '{invalid';
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      onabort: (() => void) | null = null;
+      readAsText() { this.onload?.(); }
+    }
+
+    vi.stubGlobal('FileReader', InvalidReader);
+    try {
+      const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+      input.files = [{} as File];
+      input.onchange?.();
+      await expect(choice).resolves.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
