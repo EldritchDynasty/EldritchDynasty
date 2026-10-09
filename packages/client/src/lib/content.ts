@@ -17,24 +17,30 @@ let catalogueInstalled = false;
  * Validation and source-relative identities are the same as in the Node
  * loader, and installing a catalogue does not alter a saved world.
  */
-export async function installPlainEnglishCatalogue(): Promise<readonly ProseVariant[]> {
-  cataloguePromise ??= import('virtual:ed-prose-variants').then(({ default: packed }) => {
-    const variants: ProseVariant[] = [];
-    for (const [file, rows] of Object.entries(packed)) {
-      for (const row of rows) {
-        if (!Array.isArray(row) || row.length !== 3 || typeof row[0] !== 'string') {
-          throw new Error(`Invalid precompiled prose variant in ${file}`);
-        }
-        const [suffix, of, plainenglish] = row;
-        variants.push({
-          address: `content:${file}#${suffix}`,
-          ...(of === null ? {} : { of }),
-          plainenglish,
-        } as ProseVariant);
+export function unpackProseDocs(packed: Record<string, unknown[]>): ProseVariant[] {
+  const variants: unknown[] = [];
+  for (const [file, rows] of Object.entries(packed)) {
+    for (const row of rows) {
+      // Build-time packing only changes content: addresses. A catalogue may
+      // also carry a core:messages# entry, which remains a canonical object.
+      if (!Array.isArray(row)) { variants.push(row); continue; }
+      if (row.length !== 3 || typeof row[0] !== 'string') {
+        throw new Error(`Invalid precompiled prose variant in ${file}`);
       }
+      const [suffix, of, plainenglish] = row;
+      variants.push({
+        address: `content:${file}#${suffix}`,
+        ...(of === null ? {} : { of }),
+        plainenglish,
+      });
     }
-    return ProseCatalogueS.parse(variants);
-  }).catch((error: unknown) => {
+  }
+  return ProseCatalogueS.parse(variants);
+}
+
+export async function installPlainEnglishCatalogue(): Promise<readonly ProseVariant[]> {
+  cataloguePromise ??= import('virtual:ed-prose-variants').then(({ default: packed }) => unpackProseDocs(packed))
+    .catch((error: unknown) => {
     cataloguePromise = undefined; // A failed chunk download may be retried.
     throw error;
   });
