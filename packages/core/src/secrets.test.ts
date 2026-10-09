@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { RetainerContract } from '@ed/schema';
+import { proseOriginalHash } from '@ed/schema';
+import { coreMessageAddress } from './messages.js';
 import {
   bootstrap, DEBT_FLOOR, dismissRetainer, driftLoyalty, leakChance, place, releaseContracts,
-  tellSecrets, testRng, walkSecrets, yearsOfService,
+  setProseMode, setProseVariants, tellSecrets, testRng, walkSecrets, yearsOfService,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -67,6 +69,54 @@ describe('what leaves with them', () => {
     expect(ctx.world.looseSecrets.map((l) => l.secret)).toEqual(['what_the_archive_holds']);
     expect(ctx.world.looseSecrets[0]!.carrierName).toBe('Ilsabet');
     expect(ctx.world.looseSecrets[0]!.house).not.toBe(ctx.world.playerHouse);
+  });
+
+  it('freezes reviewed Chronicle messages when a secret walks and is told (#727)', () => {
+    const { ctx, servant } = staffed({ loyalty: 0 });
+    const walkedOriginal =
+      '{CARRIER} took a place elsewhere within the year, and took the rest of it along.';
+    const toldOriginal =
+      'Something this house has never written down was known at {HOUSE} by the spring, '
+      + 'and the road it came by ran through {CARRIER}. '
+      + 'Nobody there was rude about it. They simply had it.';
+    setProseVariants(ctx, [
+      {
+        address: coreMessageAddress('secrets.walked'),
+        of: proseOriginalHash(walkedOriginal),
+        plainenglish: '{CARRIER} left the household that year and took its secrets elsewhere.',
+      },
+      {
+        address: coreMessageAddress('secrets.told'),
+        of: proseOriginalHash(toldOriginal),
+        plainenglish: 'By spring, {HOUSE} knew what the family had never recorded. {CARRIER} had brought the secret there.',
+      },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    const walked = walkSecrets(ctx, servant, servant.contract!, 'unpaid', testRng('walk'));
+    expect(walked).toHaveLength(1);
+    const departure = ctx.world.chronicle.at(-1)!;
+    expect(departure.text).toBe('Ilsabet left the household that year and took its secrets elsewhere.');
+    expect(walked[0]!.page).toBe(departure.id);
+
+    ctx.world.year += 3;
+    let told = false;
+    for (let i = 0; i < 400; i++) {
+      if (tellSecrets(ctx, testRng(`tell-${i}`)).length > 0) { told = true; break; }
+    }
+    expect(told).toBe(true);
+    const report = ctx.world.chronicle.at(-1)!;
+    const house = ctx.world.houses.get(walked[0]!.house)?.name ?? walked[0]!.house;
+    expect(report.text).toBe(
+      `By spring, ${house} knew what the family had never recorded. Ilsabet had brought the secret there.`,
+    );
+    expect(report.cause?.page).toBe(departure.id);
+    expect(ctx.world.discrepancies.get(walked[0]!.secret)?.state).toBe('open');
+
+    // The prose preference selects words only when the Chronicle entry is
+    // written; mode changes must not rewrite historical pages or proofs.
+    setProseMode(ctx, 'original');
+    expect(departure.text).toBe('Ilsabet left the household that year and took its secrets elsewhere.');
+    expect(report.text).toContain('Ilsabet had brought the secret there.');
   });
 
   it('keeps the secret of somebody who had no reason to talk', () => {
