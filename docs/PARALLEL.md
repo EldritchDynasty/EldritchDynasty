@@ -72,10 +72,19 @@ working branch first, then put one of these exact commands in an issue comment:
 ```text
 /claim 93 --agent chatgpt/issue-93-topic --paths packages/core/src/economy
 /claim 93 --agent chatgpt/issue-93-topic --paths packages/core/src/economy --lane code
+/claim lane-content --agent chatgpt/issue-93-topic --paths packages/content/events/example.yaml --lane content
+/claim lane-gates --agent chatgpt/issue-93-topic --paths packages/core/src/tools --lane gates
 /claim check --agent chatgpt/issue-93-topic
 /claim release 93 --agent chatgpt/issue-93-topic
 /claim steal 93 --agent chatgpt/issue-93-recovery
 ```
+
+The named `lane-content` and `lane-gates` locks use the **same**
+`/claim` transport as numbered issues. Claim the relevant exclusive lane
+**in addition to** the numbered issue before editing; release a lane with
+`/claim release lane-content --agent <branch>` (or `lane-gates`).
+If either claim is denied, do not start that lane's work. Arbitrary named
+claim refs are not accepted by the remote grammar.
 
 `.github/workflows/remote-claim.yml` authorizes the commenter, checks out
 `main`, and runs `tools/remote-claim.mjs`. That transport validates the
