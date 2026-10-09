@@ -6,6 +6,7 @@ import { applyEffect } from './events/effects.js';
 import { acquireLibraryCopy } from './people/library.js';
 import { grantHeirloom, transferHeirloom } from './people/heirlooms.js';
 import { relationshipThreads } from './relationship-threads.js';
+import { msg } from './messages.js';
 
 /**
  * THE AUCTION (issue #17) — the largest single subsystem in the tracker, and
@@ -89,7 +90,9 @@ export function commissionBook(ctx: SimCtx, id: string): { ok: boolean; reason?:
   });
   w.chronicle.push({
     year: w.year, weight: 'line', named: false,
-    text: `The house paid a Sarrow broker ${BOOK_SEARCH_FEE} crowns to seek ${book.name}. He promised a sale in ${saleYear}, at a reserve of ${reserveCoin}.`,
+    text: msg(ctx, 'auction.book_search',
+      'The house paid a Sarrow broker {FEE} crowns to seek {BOOK}. He promised a sale in {YEAR}, at a reserve of {RESERVE}.',
+      { FEE: String(BOOK_SEARCH_FEE), BOOK: book.name, YEAR: String(saleYear), RESERVE: String(reserveCoin) }),
   });
   return { ok: true };
 }
@@ -213,8 +216,10 @@ export function announceAuction(ctx: SimCtx, rng: Rng): AuctionLot[] {
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: 'A Sale Announced',
-    text: `Word came that there would be an auction in ${saleYear}, and that it was worth the family's attention.`,
+    title: msg(ctx, 'auction.announced_title', 'A Sale Announced'),
+    text: msg(ctx, 'auction.announced',
+      "Word came that there would be an auction in {YEAR}, and that it was worth the family's attention.",
+      { YEAR: String(saleYear) }),
     named: false,
   });
 
@@ -387,7 +392,8 @@ function grantLot(ctx: SimCtx, lot: AuctionLot): void {
     acquireLibraryCopy(ctx, lot.refId);
     w.chronicle.push({
       year: w.year, weight: 'line',
-      text: `The house bought a copy of ${ctx.content.spellbook(lot.refId)?.name ?? lot.refId} at auction.`,
+      text: msg(ctx, 'auction.bought_book', 'The house bought a copy of {BOOK} at auction.',
+        { BOOK: ctx.content.spellbook(lot.refId)?.name ?? lot.refId }),
       named: false,
     });
     return;
@@ -396,7 +402,8 @@ function grantLot(ctx: SimCtx, lot: AuctionLot): void {
     grantHeirloom(ctx, lot.refId);
     w.chronicle.push({
       year: w.year, weight: 'line',
-      text: `The house bought ${ctx.content.heirloom(lot.refId)?.name ?? lot.refId} at auction.`,
+      text: msg(ctx, 'auction.bought_heirloom', 'The house bought {HEIRLOOM} at auction.',
+        { HEIRLOOM: ctx.content.heirloom(lot.refId)?.name ?? lot.refId }),
       named: false,
     });
     return;
@@ -423,9 +430,9 @@ function grantLot(ctx: SimCtx, lot: AuctionLot): void {
   // was wrong here.
   applyEffect({ kind: 'discrepancy', op: 'bury', id: lot.refId }, ctx, {});
   w.chronicle.push({
-    year: w.year, weight: 'paragraph', title: 'Bought and Buried',
-    text: `A page came up for sale that named the family directly, and the house bought it before anyone else could. `
-      + 'Nobody else read it. Nobody else ever will.',
+    year: w.year, weight: 'paragraph', title: msg(ctx, 'auction.buried_title', 'Bought and Buried'),
+    text: msg(ctx, 'auction.buried',
+      'A page came up for sale that named the family directly, and the house bought it before anyone else could. Nobody else read it. Nobody else ever will.'),
     named: false,
   });
 }
@@ -495,9 +502,10 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
       if (lot.kind === 'chronicle_page') {
         applyEffect({ kind: 'discrepancy', op: 'prove', id: lot.refId }, ctx, {});
         w.chronicle.push({
-          year: w.year, weight: 'paragraph', title: 'Read By Somebody Else',
-          text: `${seller} outbid the house for a page that named the family directly, and took it home to read at leisure. `
-            + 'What it proved could no longer be unproved.',
+          year: w.year, weight: 'paragraph', title: msg(ctx, 'auction.read_elsewhere_title', 'Read By Somebody Else'),
+          text: msg(ctx, 'auction.read_elsewhere',
+            '{SELLER} outbid the house for a page that named the family directly, and took it home to read at leisure. What it proved could no longer be unproved.',
+            { SELLER: seller }),
           named: false,
         });
         continue;
@@ -505,7 +513,7 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
 
       w.chronicle.push({
         year: w.year, weight: 'line',
-        text: `${seller} outbid the house for the lot, and took it home instead.`,
+        text: msg(ctx, 'auction.outbid', '{SELLER} outbid the house for the lot, and took it home instead.', { SELLER: seller }),
         named: false,
       });
       continue;

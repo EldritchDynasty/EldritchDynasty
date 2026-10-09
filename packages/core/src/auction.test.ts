@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash, type AuctionLot } from '@ed/schema';
 import {
-  announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, grantHeirloom, grantParcel, order,
-  resolveDueLots, testRng, tickAuction,
+  announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, grantHeirloom, grantParcel,
+  order, resolveDueLots, setProseMode, setProseVariants, testRng, tickAuction,
 } from '@ed/core';
+import type { SimCtx } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -402,5 +405,119 @@ describe('how high the house will go', () => {
 
     expect(ctx.world.library.has('the_marrow_codex')).toBe(false);
     expect(ctx.world.treasury).toBe(50);
+  });
+});
+
+describe('the auction pages speak the reader\'s setting (#745)', () => {
+  const PAGES: Record<string, [string, string]> = {
+    'auction.book_search': [
+      'The house paid a Sarrow broker {FEE} crowns to seek {BOOK}. He promised a sale in {YEAR}, at a reserve of {RESERVE}.',
+      'The family paid a broker in Sarrow {FEE} crowns to find {BOOK}. He promised it would be sold in {YEAR}, starting at {RESERVE}.',
+    ],
+    'auction.announced_title': ['A Sale Announced', 'An Auction Is Coming'],
+    'auction.announced': [
+      "Word came that there would be an auction in {YEAR}, and that it was worth the family's attention.",
+      'The family heard there would be an auction worth watching in {YEAR}.',
+    ],
+    'auction.bought_book': ['The house bought a copy of {BOOK} at auction.', 'The family bought a copy of {BOOK} at auction.'],
+    'auction.bought_heirloom': ['The house bought {HEIRLOOM} at auction.', 'The family bought {HEIRLOOM} at auction.'],
+    'auction.buried_title': ['Bought and Buried', 'Bought and Hidden'],
+    'auction.buried': [
+      'A page came up for sale that named the family directly, and the house bought it before anyone else could. Nobody else read it. Nobody else ever will.',
+      'A page about the family went up for sale, and the family bought it first. No one else will ever read it.',
+    ],
+    'auction.read_elsewhere_title': ['Read By Somebody Else', 'Someone Else Read It'],
+    'auction.read_elsewhere': [
+      '{SELLER} outbid the house for a page that named the family directly, and took it home to read at leisure. What it proved could no longer be unproved.',
+      '{SELLER} paid more for a page about the family and took it home. What it proved can no longer be denied.',
+    ],
+    'auction.outbid': [
+      '{SELLER} outbid the house for the lot, and took it home instead.',
+      '{SELLER} paid more than the family and took the lot.',
+    ],
+  };
+  type Mode = 'original' | 'plainenglish';
+  const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
+    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+
+  function world(mode: Mode): SimCtx {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+    })));
+    setProseMode(ctx, mode);
+    ctx.world.treasury = 10_000;
+    return ctx;
+  }
+
+  /** One hand-built lot to its sale year, with or without a bid on it. */
+  function sell(ctx: SimCtx, lot: Omit<AuctionLot, 'announcedYear' | 'saleYear'>, bid?: number) {
+    const full = { ...lot, announcedYear: ctx.world.year, saleYear: ctx.world.year + 3 } as AuctionLot;
+    ctx.world.auction.upcoming = [full];
+    if (bid !== undefined) bidAtAuction(ctx, full.id, 'coin', bid);
+    ctx.world.year = full.saleYear;
+    resolveDueLots(ctx, false);
+    return ctx.world.chronicle.at(-1)!;
+  }
+
+  const ceiling = Math.max(0, ...bundle.houses.flatMap((h) => h.motives.map((m) => m.bidsUpTo)));
+  const marrow = bundle.houses.find((h) => h.id === 'house_marrow')!.name;
+  const codex = { id: 'lot_codex', kind: 'spellbook' as const, refId: 'the_marrow_codex', house: 'house_marrow', reserveCoin: 50 };
+  const page = { id: 'lot_page', kind: 'chronicle_page' as const, refId: 'test_discrepancy', house: 'house_marrow', reserveCoin: 100 };
+  const withLie = (ctx: SimCtx) => {
+    ctx.world.discrepancies.set('test_discrepancy', { severity: 'major', provableBy: ['house_marrow'], state: 'open' });
+    return ctx;
+  };
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`renders every auction page in ${mode}`, () => {
+      const searching = world(mode);
+      const minor = bundle.spellbooks.find((b) => b.tier === 'minor' && !searching.world.library.has(b.id))!;
+      const year = searching.world.year;
+      expect(commissionBook(searching, minor.id).ok).toBe(true);
+      const due = searching.world.auction.upcoming.at(-1)!;
+      expect(searching.world.chronicle.at(-1)!.text).toBe(say(mode, 'auction.book_search', {
+        FEE: '25', BOOK: minor.name, YEAR: String(due.saleYear), RESERVE: String(due.reserveCoin),
+      }));
+      expect(due.saleYear).toBeGreaterThan(year);
+
+      const announcing = world(mode);
+      const lots = announceAuction(announcing, testRng('pages', mode));
+      const notice = announcing.world.chronicle.at(-1)!;
+      expect(lots.length).toBeGreaterThan(0);
+      expect(notice.title).toBe(say(mode, 'auction.announced_title'));
+      expect(notice.text).toBe(say(mode, 'auction.announced', { YEAR: String(lots[0]!.saleYear) }));
+
+      expect(sell(world(mode), codex, ceiling + 1).text)
+        .toBe(say(mode, 'auction.bought_book', { BOOK: bundle.spellbooks.find((b) => b.id === 'the_marrow_codex')!.name }));
+      expect(sell(world(mode), { ...codex, id: 'lot_h', kind: 'heirloom', refId: 'portion_of_agelessness', reserveCoin: 400 }, 1000).text)
+        .toBe(say(mode, 'auction.bought_heirloom', { HEIRLOOM: bundle.heirlooms.find((h) => h.id === 'portion_of_agelessness')!.name }));
+      expect(sell(world(mode), codex, 50).text).toBe(say(mode, 'auction.outbid', { SELLER: marrow }));
+
+      const buried = sell(withLie(world(mode)), page, 5000);
+      expect([buried.title, buried.text]).toEqual([say(mode, 'auction.buried_title'), say(mode, 'auction.buried')]);
+
+      const lost = withLie(world(mode));
+      lost.world.treasury = 0;
+      lost.world.bidCeiling = 0;
+      const read = sell(lost, page);
+      expect([read.title, read.text])
+        .toEqual([say(mode, 'auction.read_elsewhere_title'), say(mode, 'auction.read_elsewhere', { SELLER: marrow })]);
+      expect(lost.world.discrepancies.get('test_discrepancy')?.state).toBe('proven');
+
+      setProseMode(lost, mode === 'original' ? 'plainenglish' : 'original');
+      expect(read.text).toBe(say(mode, 'auction.read_elsewhere', { SELLER: marrow }));
+    });
+  }
+
+  it('changes words only: the same sale moves the same state in both settings', () => {
+    const run = (mode: Mode) => {
+      const ctx = withLie(world(mode));
+      ctx.world.treasury = 0;
+      ctx.world.bidCeiling = 0;
+      sell(ctx, page);
+      return { respect: ctx.world.respect, d: ctx.world.discrepancies.get('test_discrepancy'), h: ctx.world.auction.history };
+    };
+    expect(run('plainenglish')).toEqual(run('original'));
   });
 });
