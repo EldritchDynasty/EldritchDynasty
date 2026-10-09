@@ -2,6 +2,7 @@ import { ageAt, type Person } from '@ed/schema';
 import { phenotypeOf } from '../people/factory.js';
 import type { SimCtx } from '../world.js';
 import type { YearReport } from './report.js';
+import { msg } from '../messages.js';
 
 /**
  * WHAT THE YEARS DID, AS VALUES (issue #49).
@@ -105,7 +106,7 @@ export function passageOf(ctx: SimCtx, report: YearReport): Passage | undefined 
   }
 
   for (const p of report.deaths) {
-    lines.push({ kind: 'death', person: p.id, text: died(p, report.year) });
+    lines.push({ kind: 'death', person: p.id, text: died(ctx, p, report.year) });
   }
 
   // `quarrels` runs after `lifecycle`, and a post falls vacant on a death the
@@ -117,7 +118,7 @@ export function passageOf(ctx: SimCtx, report: YearReport): Passage | undefined 
   // `library` runs after `quarrels` and before `births`, and the log tells
   // the year in the order the year happened in.
   for (const s of report.studiesFinished) {
-    lines.push({ kind: 'study', person: s.person, text: `${s.name} finished ${s.book}.` });
+    lines.push({ kind: 'study', person: s.person, text: msg(ctx, 'passage.study.finished', '{NAME} finished {BOOK}.', { NAME: s.name, BOOK: s.book }) });
   }
 
   for (const p of report.births) {
@@ -151,18 +152,23 @@ export function passageOf(ctx: SimCtx, report: YearReport): Passage | undefined 
 function woke(ctx: SimCtx, p: Person): string {
   // The one gate, asked where it is always asked. Never `sex === 'male'`.
   if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) {
-    return `${p.name} awakened.`;
+    return msg(ctx, 'passage.awakening.expressing', '{NAME} awakened.', { NAME: p.name });
   }
-  return `${p.name} awakened, and it will not come through.`;
+  return msg(ctx, 'passage.awakening.unexpressed', '{NAME} awakened, and it will not come through.', { NAME: p.name });
 }
 
-function died(p: Person, year: number): string {
-  const age = ageAt(p, year);
+function died(ctx: SimCtx, p: Person, year: number): string {
+  const age = String(ageAt(p, year));
   // `kill()` takes the cause as a phrase and several of them already begin
   // with "of", so it is set off with a dash rather than joined with a
   // preposition. 'unrecorded' is the store's fallback and says nothing.
-  const cause = p.causeOfDeath && p.causeOfDeath !== 'unrecorded' ? ` — ${p.causeOfDeath}` : '';
-  return `${p.name} died at ${age}${cause}.`;
+  const cause = p.causeOfDeath && p.causeOfDeath !== 'unrecorded' ? p.causeOfDeath : undefined;
+  if (cause !== undefined) {
+    return msg(ctx, 'passage.death.cause', '{NAME} died at {AGE} — {CAUSE}.', {
+      NAME: p.name, AGE: age, CAUSE: cause,
+    });
+  }
+  return msg(ctx, 'passage.death.plain', '{NAME} died at {AGE}.', { NAME: p.name, AGE: age });
 }
 
 /**
@@ -177,8 +183,14 @@ function died(p: Person, year: number): string {
  * (§7), and this is the house talking about its own year.
  */
 function born(ctx: SimCtx, child: Person): string {
-  const child_ = child.sex === 'female' ? 'A daughter' : 'A son';
   const motherId = child.claimedParents.mother ?? child.trueParents.mother;
   const mother = motherId ? ctx.world.people.get(motherId) : undefined;
-  return mother ? `${child_} born to ${mother.name}.` : `${child_} born.`;
+  if (mother) {
+    return child.sex === 'female'
+      ? msg(ctx, 'passage.birth.daughter.named', 'A daughter born to {MOTHER}.', { MOTHER: mother.name })
+      : msg(ctx, 'passage.birth.son.named', 'A son born to {MOTHER}.', { MOTHER: mother.name });
+  }
+  return child.sex === 'female'
+    ? msg(ctx, 'passage.birth.daughter.unknown', 'A daughter born.')
+    : msg(ctx, 'passage.birth.son.unknown', 'A son born.');
 }
