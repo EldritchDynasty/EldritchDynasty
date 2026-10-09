@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { RetainerContract } from '@ed/schema';
+import { proseOriginalHash, type RetainerContract } from '@ed/schema';
 import {
   bindService, bondsmen, CROWN, DEBT_FLOOR, driftLoyalty, freeBond, isBonded, leakChance,
-  MAX_BOND, order, phase, place, serviceBonds, testWorld, tickEconomy,
+  MAX_BOND, order, phase, place, serviceBonds, setProseMode, setProseVariants, testWorld, tickEconomy,
   FREEDOM_LOYALTY, RESENTMENT_OF_FREEDOM,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -349,5 +350,90 @@ describe('the orders the player actually gives', () => {
     const res = order(ctx, { kind: 'bond', person: p.id, op: 'bind', marks: 200 });
     expect(res.ok).toBe(false);
     expect(res.reason).toContain('cannot advance');
+  });
+});
+
+describe('the bond pages speak the reader\'s setting (#732)', () => {
+  const ORIGINALS = {
+    'bond.advanced': '{PERSON} took {MARKS} marks from the house and gave the years back for it.',
+    'bond.freed_title': 'The bond',
+    'bond.forgiven':
+      'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear.',
+    'bond.forgiven_resented': 'Not everybody who heard it was glad.',
+    'bond.ended_empty': "{PERSON}'s bond was ended, there being nothing left on it worth the ink.",
+    'bond.discharged': '{PERSON} finished paying the house what {PERSON} had borrowed, and stayed on for wages.',
+  } as const;
+  const PLAIN: Record<keyof typeof ORIGINALS, string> = {
+    'bond.advanced': '{PERSON} borrowed {MARKS} marks from the house and agreed to work it off.',
+    'bond.freed_title': 'The debt',
+    'bond.forgiven': 'The house publicly cancelled the {MARKS} marks {PERSON} still owed.',
+    'bond.forgiven_resented': 'Some of the people who heard were not pleased.',
+    'bond.ended_empty': "{PERSON}'s debt was closed because nothing was left on it.",
+    'bond.discharged': '{PERSON} paid off what {PERSON} owed the house and stayed on as a paid servant.',
+  };
+
+  /** Advance two, free one with others watching, free an empty bond, work one off. */
+  function play(mode: 'original' | 'plainenglish') {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    setProseVariants(ctx, Object.entries(ORIGINALS).map(([key, original]) => ({
+      address: coreMessageAddress(key),
+      of: proseOriginalHash(original),
+      plainenglish: PLAIN[key as keyof typeof ORIGINALS],
+    })));
+    setProseMode(ctx, mode);
+    const a = place(ctx, { sex: 'male', age: 30, name: 'Anselm', contract: contract() });
+    const b = place(ctx, { sex: 'male', age: 30, name: 'Berrin', contract: contract() });
+    const c = place(ctx, { sex: 'male', age: 30, name: 'Cole', contract: contract({ term: 'bonded', debt: 0 }) });
+    place(ctx, { sex: 'male', age: 30, name: 'Dunn', contract: contract({ term: 'bonded', debt: 4, wage: 6 }) });
+    const from = ctx.world.chronicle.length;
+    bindService(ctx, a, 100);
+    bindService(ctx, b, 80);
+    const freed = freeBond(ctx, a);
+    freeBond(ctx, c);
+    serviceBonds(ctx);
+    // Nobody is left watching when Berrin goes, so his page has no resentment.
+    freeBond(ctx, b);
+    return { ctx, freed, pages: ctx.world.chronicle.slice(from) };
+  }
+
+  it('keeps every Original byte for byte', () => {
+    const { pages, freed } = play('original');
+    expect(freed.resented).toBeGreaterThan(0);
+    expect(pages.map((e) => e.text)).toEqual([
+      'Anselm took 100 marks from the house and gave the years back for it.',
+      'Berrin took 80 marks from the house and gave the years back for it.',
+      'The house tore up what Anselm still owed — 100 marks of it — and said so where people could hear.'
+        + ' Not everybody who heard it was glad.',
+      "Cole's bond was ended, there being nothing left on it worth the ink.",
+      'Dunn finished paying the house what Dunn had borrowed, and stayed on for wages.',
+      'The house tore up what Berrin still owed — 74 marks of it — and said so where people could hear.',
+    ]);
+    expect(pages.filter((e) => e.title === 'The bond')).toHaveLength(3);
+  });
+
+  it('renders the reviewed Plain English, and the page keeps it after the setting changes', () => {
+    const { ctx, pages } = play('plainenglish');
+    expect(pages.map((e) => e.text)).toEqual([
+      'Anselm borrowed 100 marks from the house and agreed to work it off.',
+      'Berrin borrowed 80 marks from the house and agreed to work it off.',
+      'The house publicly cancelled the 100 marks Anselm still owed. Some of the people who heard were not pleased.',
+      "Cole's debt was closed because nothing was left on it.",
+      'Dunn paid off what Dunn owed the house and stayed on as a paid servant.',
+      'The house publicly cancelled the 74 marks Berrin still owed.',
+    ]);
+    expect(pages.filter((e) => e.title === 'The debt')).toHaveLength(3);
+
+    setProseMode(ctx, 'original');
+    expect(pages[0]!.text).toBe('Anselm borrowed 100 marks from the house and agreed to work it off.');
+  });
+
+  it('changes words only: the debts, terms and loyalties are the same in both settings', () => {
+    const strip = (r: ReturnType<typeof play>) => r.ctx.world.people.living()
+      .filter((p) => p.contract).map((p) => ({ name: p.name, ...p.contract }));
+    const original = play('original');
+    const plainRun = play('plainenglish');
+    expect(strip(plainRun)).toEqual(strip(original));
+    expect(plainRun.ctx.world.treasury).toBe(original.ctx.world.treasury);
   });
 });

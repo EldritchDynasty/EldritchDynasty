@@ -1,5 +1,6 @@
 import type { Person } from '@ed/schema';
 import type { SimCtx } from '../world.js';
+import { msg } from '../messages.js';
 
 /**
  * THE BOND — how this world holds a person who would rather go (world §12).
@@ -77,7 +78,9 @@ export function bindService(ctx: SimCtx, p: Person, marks: number): boolean {
   ctx.world.chronicle.push({
     year: ctx.world.year,
     weight: 'line',
-    text: `${p.name} took ${marks} marks from the house and gave the years back for it.`,
+    text: msg(ctx, 'bond.advanced',
+      '{PERSON} took {MARKS} marks from the house and gave the years back for it.',
+      { PERSON: p.name, MARKS: String(marks) }),
     named: false,
   });
   return true;
@@ -165,11 +168,15 @@ export function freeBond(ctx: SimCtx, p: Person): Freeing {
   ctx.world.chronicle.push({
     year: ctx.world.year,
     weight: 'paragraph',
-    title: 'The bond',
+    title: msg(ctx, 'bond.freed_title', 'The bond'),
     text: forgiven > 0
-      ? `The house tore up what ${p.name} still owed — ${forgiven} marks of it — and said so where `
-        + `people could hear.${resented ? ' Not everybody who heard it was glad.' : ''}`
-      : `${p.name}'s bond was ended, there being nothing left on it worth the ink.`,
+      ? msg(ctx, 'bond.forgiven',
+        'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear.',
+        { PERSON: p.name, MARKS: String(forgiven) })
+        + (resented ? ' ' + msg(ctx, 'bond.forgiven_resented', 'Not everybody who heard it was glad.') : '')
+      : msg(ctx, 'bond.ended_empty',
+        "{PERSON}'s bond was ended, there being nothing left on it worth the ink.",
+        { PERSON: p.name }),
     named: false,
   });
   return { ok: true, forgiven, resented };
@@ -200,7 +207,9 @@ export function serviceBonds(ctx: SimCtx): Person[] {
     ctx.world.chronicle.push({
       year: ctx.world.year,
       weight: 'line',
-      text: `${p.name} finished paying the house what ${p.name} had borrowed, and stayed on for wages.`,
+      text: msg(ctx, 'bond.discharged',
+        '{PERSON} finished paying the house what {PERSON} had borrowed, and stayed on for wages.',
+        { PERSON: p.name }),
       named: false,
     });
   }
