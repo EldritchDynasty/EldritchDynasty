@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
+import { coreMessageAddress } from './messages.js';
 import {
-  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, edge, externalThreadFor,
-  grudgeAgainstUs, grudgesAgainst, makeRng, newGame, place, relate, sentimentBetween, testWorld,
-  tickRelationships,
+  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, echoGrudges, edge, externalThreadFor,
+  grudgeAgainstUs, grudgesAgainst, makeRng, newGame, place, relate, sentimentBetween, setProseMode,
+  setProseVariants, testWorld, tickFamilyQuarrels, tickRelationships,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -403,3 +405,127 @@ describe('grudges that outlive the men who took them', () => {
   });
 });
 
+
+/**
+ * Grudge echoes are durable pages. Changing language changes future wording,
+ * never the echoed cause, selection index, relationships or recorded page.
+ */
+describe('grudge echo and hall quarrel prose', () => {
+  const originals = [
+    'At {HOUSE} they had not let go of {ABOUT}.',
+    '{HOUSE} still told {ABOUT} their own way, and still told it against this house.',
+    'A guest from {HOUSE} was civil at the table and never once mentioned {ABOUT}, which was how everybody knew.',
+  ];
+  const alternates = [
+    'The people at {HOUSE} still remembered {ABOUT}.',
+    '{HOUSE} kept telling its own account of {ABOUT}, blaming this house.',
+    'A guest from {HOUSE} avoided mentioning {ABOUT}. Everyone understood why.',
+  ];
+  const variants = [
+    ...originals.map((text, index) => ({
+      address: coreMessageAddress(`grudge.echo.${index}`),
+      of: proseOriginalHash(text), plainenglish: alternates[index]!,
+    })),
+    {
+      address: coreMessageAddress('grudge.about.event'),
+      of: proseOriginalHash('what happened in "{TITLE}"'),
+      plainenglish: 'the events of "{TITLE}"',
+    },
+    {
+      address: coreMessageAddress('grudge.about.year'),
+      of: proseOriginalHash('what the house did in {YEAR}'),
+      plainenglish: 'the events of {YEAR}',
+    },
+  ];
+
+  function echoWorld(year: number, named: boolean, plain: boolean) {
+    const ctx = testWorld(bundle, 740);
+    const ours = place(ctx, { name: 'Ours', sex: 'male', age: 35 });
+    const theirs = place(ctx, { name: 'Theirs', sex: 'male', age: 35, house: 'house_marrow' });
+    const knownEvent = bundle.events[0]!;
+    const grudge = addGrudge(ctx, theirs.id, ours.id, { severity: 70, inheritance: 'house_wide' },
+      named ? knownEvent.id : 'a_missing_event');
+    ctx.world.year = year;
+    if (plain) {
+      setProseVariants(ctx, variants);
+      setProseMode(ctx, 'plainenglish');
+    }
+    expect(echoGrudges(ctx)).toBe(1);
+    return { ctx, grudge, knownEvent };
+  }
+
+  for (const named of [false, true]) {
+    it(`preserves all three echo frames with a ${named ? 'named event' : 'year-only origin'}`, () => {
+      const seen = new Set<number>();
+      for (const year of [1100, 1125, 1150]) {
+        const original = echoWorld(year, named, false);
+        const plain = echoWorld(year, named, true);
+        const originalPage = original.ctx.world.chronicle.at(-1)!;
+        const plainPage = plain.ctx.world.chronicle.at(-1)!;
+        const index = Number(originalPage.echoFrame?.slice('grudge:'.length));
+        expect([0, 1, 2]).toContain(index);
+        seen.add(index);
+
+        const house = original.ctx.world.houses.get('house_marrow')?.name ?? 'house_marrow';
+        const about = named
+          ? `what happened in "${original.knownEvent.title}"`
+          : 'what the house did in 1042';
+        const plainAbout = named
+          ? `the events of "${original.knownEvent.title}"`
+          : 'the events of 1042';
+        const fill = (text: string, subject: string) =>
+          text.replace('{HOUSE}', house).replace('{ABOUT}', subject);
+
+        expect(originalPage.text).toBe(fill(originals[index]!, about));
+        expect(plainPage.text).toBe(fill(alternates[index]!, plainAbout));
+        expect(plainPage.echoFrame).toBe(originalPage.echoFrame);
+        expect(plainPage.cause).toEqual(originalPage.cause);
+        expect(plain.ctx.world.relationships).toEqual(original.ctx.world.relationships);
+        expect(plain.grudge.echoedIn).toBe(original.grudge.echoedIn);
+        expect({ ...plainPage, text: undefined }).toEqual({ ...originalPage, text: undefined });
+        setProseMode(plain.ctx, 'original');
+        expect(plain.ctx.world.chronicle.at(-1)?.text).toBe(fill(alternates[index]!, plainAbout));
+      }
+      expect(seen).toEqual(new Set([0, 1, 2]));
+    });
+  }
+
+  it('keeps the domestic quarrel mechanics unchanged while translating its written line', () => {
+    const makeHall = () => {
+      const ctx = testWorld(bundle, 741);
+      for (const person of ctx.world.people.all()) person.castSlots = [];
+      const head = place(ctx, { name: 'Head', sex: 'male', age: 45 });
+      head.castSlots.push('head');
+      const speaker = place(ctx, { name: 'Marek', sex: 'male', age: 30, branch: 'branch_quarrel' });
+      ctx.world.branches.set('branch_quarrel' as never, {
+        id: 'branch_quarrel', name: 'Quarrel Hall', house: ctx.world.playerHouse,
+        founder: speaker.id, speaker: speaker.id, splitFrom: 'main',
+        foundedYear: ctx.world.year - 30, grievance: 80,
+      } as never);
+      return { ctx, speaker };
+    };
+
+    const original = makeHall();
+    const plain = makeHall();
+    const template = '{SPEAKER} stopped writing to the seat, and told the hall why, and the hall remembered it longer than he did.';
+    const alternative = '{SPEAKER} stopped sending letters to the main house. The other people in his hall remembered the quarrel.';
+    setProseVariants(plain.ctx, [{
+      address: coreMessageAddress('grudge.hall_quarrel'),
+      of: proseOriginalHash(template), plainenglish: alternative,
+    }]);
+    setProseMode(plain.ctx, 'plainenglish');
+    expect(tickFamilyQuarrels(original.ctx)).toHaveLength(1);
+    expect(tickFamilyQuarrels(plain.ctx)).toHaveLength(1);
+
+    const originalPage = original.ctx.world.chronicle.at(-1)!;
+    const plainPage = plain.ctx.world.chronicle.at(-1)!;
+    expect(originalPage.text).toBe(template.replace('{SPEAKER}', original.speaker.name));
+    expect(plainPage.text).toBe(alternative.replace('{SPEAKER}', plain.speaker.name));
+    expect(plain.ctx.world.branches).toEqual(original.ctx.world.branches);
+    expect(plain.ctx.world.relationships).toEqual(original.ctx.world.relationships);
+    expect({ ...plainPage, text: undefined }).toEqual({ ...originalPage, text: undefined });
+
+    setProseMode(plain.ctx, 'original');
+    expect(plain.ctx.world.chronicle.at(-1)?.text).toBe(alternative.replace('{SPEAKER}', plain.speaker.name));
+  });
+});
