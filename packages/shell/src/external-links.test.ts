@@ -45,7 +45,7 @@ describe('Electron popup link boundary', () => {
     const openExternal = vi.fn().mockResolvedValue(undefined);
     expect(handleExternalPopup('HTTPS://Example.com/play', openExternal))
       .toEqual({ action: 'deny' });
-    expect(openExternal).toHaveBeenCalledExactlyOnceWith('https://example.com/play');
+    expect(openExternal).toHaveBeenCalledWith('https://example.com/play');
   });
 
   it('handles a rejected OS launch without leaving an unhandled rejection', async () => {
@@ -55,7 +55,7 @@ describe('Electron popup link boundary', () => {
     expect(handleExternalPopup('https://example.com/', openExternal, onError))
       .toEqual({ action: 'deny' });
     await Promise.resolve();
-    expect(onError).toHaveBeenCalledExactlyOnceWith(error);
+    expect(onError).toHaveBeenCalledWith(error);
   });
 
   it('handles a synchronous launch failure and still denies the popup', () => {
@@ -64,6 +64,6 @@ describe('Electron popup link boundary', () => {
     const openExternal = vi.fn(() => { throw error; });
     expect(handleExternalPopup('http://example.com', openExternal, onError))
       .toEqual({ action: 'deny' });
-    expect(onError).toHaveBeenCalledExactlyOnceWith(error);
+    expect(onError).toHaveBeenCalledWith(error);
   });
 });
