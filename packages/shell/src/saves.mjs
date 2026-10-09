@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveSavePath, slotOfFile, SAVE_EXTENSION } from '../tools/save-slot.mjs';
 
@@ -39,8 +39,12 @@ export function listSaves(root) {
     const slot = slotOfFile(fileName);
     if (slot === undefined) continue;
     const path = join(root, fileName);
-    const entry = { slot, bytes: statSync(path).size, savedAt: undefined, year: undefined, format: undefined };
+    // A bad entry must never hide a healthy run. Preserve the listing row even
+    // when metadata lookup fails, with an explicit unreadable reason.
+    const entry = { slot, bytes: 0, savedAt: undefined, year: undefined, format: undefined };
     try {
+      const stat = regularSaveStat(path);
+      entry.bytes = stat.size;
       const save = JSON.parse(readFileSync(path, 'utf8'));
       entry.format = typeof save?.format === 'number' ? save.format : undefined;
       entry.year = typeof save?.year === 'number' ? save.year : undefined;
@@ -53,8 +57,17 @@ export function listSaves(root) {
   return out.sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')) || a.slot.localeCompare(b.slot));
 }
 
+/** No entry named like a slot may redirect file reads outside the save root. */
+function regularSaveStat(path) {
+  const stat = lstatSync(path);
+  if (!stat.isFile()) throw new TypeError('save slot is not a regular file');
+  return stat;
+}
+
 export function readSave(root, slot) {
-  return JSON.parse(readFileSync(resolveSavePath(root, slot), 'utf8'));
+  const path = resolveSavePath(root, slot);
+  regularSaveStat(path);
+  return JSON.parse(readFileSync(path, 'utf8'));
 }
 
 /**
