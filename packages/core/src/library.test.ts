@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { canLearn, validateBundle } from '@ed/schema';
+import { canLearn, proseOriginalHash, validateBundle } from '@ed/schema';
+import { coreMessageAddress } from './messages.js';
 import {
   acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, degradeLibraryCopy,
   canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, phenotypeOf, place,
-  useHeirloom,
+  setProseMode, setProseVariants, useHeirloom,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -163,6 +164,53 @@ describe('applying a spellbook is generic', () => {
 
     expect(p.spellsKnown.map(String)).not.toContain('lesser_workings_of_fluid');
     expect(ctx.world.library.has('lesser_workings_of_fluid')).toBe(true);
+  });
+
+  it('freezes the selected Named Art Chronicle text under a stable message key (#725)', () => {
+    const originalTemplate =
+      "{PERSON} set it down in writing for the first time, and the family has called it {BOOK} — {PERSON}'s working — ever since.";
+    const key = 'library.named_art_record';
+
+    // The default voice must retain the exact previously authored sentence.
+    const originalCtx = bootstrap(bundle, 1042, 1042);
+    const originalDef = originalCtx.content.mustSpellbook('the_first_working');
+    const originalReader = place(originalCtx, { sex: 'female', age: 30, name: 'Ada', awakened: true });
+    originalReader.acquired['life'] = 100;
+    expect(gainSpellbook(originalCtx, originalReader, originalDef)).toBe(true);
+    expect(originalCtx.world.chronicle.at(-1)?.text).toBe(
+      "Ada set it down in writing for the first time, and the family has called it "
+      + originalDef.name + " — Ada's working — ever since.",
+    );
+
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const def = ctx.content.mustSpellbook('the_first_working');
+    const first = place(ctx, { sex: 'female', age: 30, name: 'Ada', awakened: true });
+    first.acquired['life'] = 100;
+    setProseVariants(ctx, [{
+      address: coreMessageAddress(key),
+      of: proseOriginalHash(originalTemplate),
+      plainenglish: '{PERSON} wrote down the working first. The family has called it {BOOK}, the working of {PERSON}, ever since.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(gainSpellbook(ctx, first, def)).toBe(true);
+    const written = ctx.world.chronicle.at(-1)!;
+    expect(written.title).toBe(def.name);
+    expect(written.text).toBe(
+      'Ada wrote down the working first. The family has called it ' + def.name
+      + ', the working of Ada, ever since.',
+    );
+    expect(ctx.world.library.get(def.id)?.namedFor?.person).toBe(first.id);
+
+    // Saved pages keep the words the player saw, and a later reader does not
+    // retroactively rename a Named Art or create a second naming record.
+    const pages = ctx.world.chronicle.length;
+    setProseMode(ctx, 'original');
+    const second = place(ctx, { sex: 'male', age: 30, name: 'Bren', awakened: true });
+    second.acquired['life'] = 100;
+    expect(gainSpellbook(ctx, second, def)).toBe(true);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+    expect(written.text).toContain('Ada wrote down the working first.');
+    expect(ctx.world.library.get(def.id)?.namedFor?.person).toBe(first.id);
   });
 
   it('a Named Art is recorded under the name of its first holder, once', () => {
