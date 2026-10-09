@@ -160,8 +160,14 @@ export function mobileStorage(
         if (entry.type === 'directory') continue;
         const slot = slotFromFile(entry.name);
         if (!slot) continue;
-        const save = await readFile(`${SAVE_DIR}/${entry.name}`);
-        if (save !== null) saves.set(slot, saveSummary(slot, save));
+        try {
+          const save = await readFile(`${SAVE_DIR}/${entry.name}`);
+          if (save !== null) saves.set(slot, saveSummary(slot, save));
+        } catch (error) {
+          // A single inaccessible native file must not hide healthy saves.
+          // Keep directory-level failures fatal, but report this one slot.
+          console.warn(`[mobile] could not read save slot ${slot}:`, error);
+        }
       }
     } catch (error) {
       if (!missingFile(error)) throw error;
