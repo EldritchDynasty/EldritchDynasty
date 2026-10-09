@@ -195,7 +195,7 @@ describe('the string-source audit (issue #276)', () => {
       '    teller: singers from the northern hall',
       '    bias: wistful',
       '    text: The borrowed ring never came home.',
-    ].join('\\n');
+    ].join('\n');
     const entries = plainEnglishContentWorkItems('tales.yaml', yaml);
     expect(entries.map((entry) => entry.address)).toEqual([
       'content:tales.yaml#tales[id=a_legend].teller',
