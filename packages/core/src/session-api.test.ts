@@ -572,6 +572,33 @@ describe('family planning fields do not read hidden blood', () => {
     expect(ma.relevance).toEqual(mb.relevance);
   });
 
+  it('gives relevance reasons in the reader\'s setting, to the same people (#780)', () => {
+    const ORIGINALS: Record<string, string> = {
+      'relevance.heir': 'next to hold the seal',
+      'relevance.possible_heir': 'may hold the seal',
+      'relevance.hall_grievance': 'their hall holds a grievance',
+      'relevance.ascent_candidate': 'foremost candidate for the ascent',
+      'relevance.unmarried_blood': 'unmarried, of the blood',
+      'relevance.thin_hall': 'keeps a thin cadet hall alive',
+    };
+    const plainOf = (text: string) => `[plain] ${text}`;
+    const proseVariants = Object.entries(ORIGINALS).map(([key, text]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(text), plainenglish: plainOf(text),
+    }));
+    const reasons = (g: ReturnType<typeof newGame>) => Object.fromEntries(g.view().halls
+      .flatMap((h) => h.members).filter((m) => m.relevance?.length)
+      .map((m) => [m.id, m.relevance!.map((r) => r.reason)]));
+    const original = reasons(newGame(content, { seed: 268, proseVariants }));
+    const plain = reasons(newGame(content, { seed: 268, proseVariants, proseMode: 'plainenglish' }));
+
+    const shown = new Set(Object.values(original).flat());
+    expect(shown.size, 'a new house should already have somebody worth looking at').toBeGreaterThan(0);
+    for (const text of shown) expect(Object.values(ORIGINALS)).toContain(text);
+    expect(plain).toEqual(Object.fromEntries(
+      Object.entries(original).map(([id, list]) => [id, list!.map(plainOf)]),
+    ));
+  });
+
   it('finds authored Chronicle pages that explicitly cast a person', () => {
     const g = newGame(content, { seed: 269 });
     const person = g.ctx.world.people.household(g.ctx.world.playerHouse, g.year)[0]!;

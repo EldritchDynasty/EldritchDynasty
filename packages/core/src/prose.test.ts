@@ -388,13 +388,17 @@ describe('prospective prose selection', () => {
       { address: heirloomAddress, of: proseOriginalHash(heirloom.name), plainenglish: plainHeirloom },
     ]);
 
+    // `view()` renders more than the promises — the family's relevance reasons
+    // among them (#780) — so the misses this case owns are the two lot names.
+    const lotMisses = () => missingPlainEnglish(session.ctx)
+      .filter((address) => address === bookAddress || address === heirloomAddress);
     const first = session.view().marriagePromises;
     expect(first.map((promise) => promise.lotName))
       .toEqual([plainBook, plainHeirloom, 'unknown_lot']);
     expect(first.map((promise) => [promise.year, promise.lot]))
       .toEqual([[1080, book.id], [1081, heirloom.id], [1082, 'unknown_lot']]);
     expect(session.ctx.world.marriagePromises).toEqual(originalPromises);
-    expect(missingPlainEnglish(session.ctx)).toEqual([]);
+    expect(lotMisses()).toEqual([]);
 
     session.setProseMode('original');
     expect(session.view().marriagePromises.map((promise) => promise.lotName))
@@ -406,7 +410,7 @@ describe('prospective prose selection', () => {
     ]);
     expect(session.view().marriagePromises.map((promise) => promise.lotName))
       .toEqual([book.name, heirloom.name, 'unknown_lot']);
-    expect(missingPlainEnglish(session.ctx)).toEqual([bookAddress, heirloomAddress].sort());
+    expect(lotMisses()).toEqual([bookAddress, heirloomAddress].sort());
     expect(session.ctx.world.marriagePromises).toEqual(originalPromises);
   });
 
