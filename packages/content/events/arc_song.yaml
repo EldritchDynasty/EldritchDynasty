@@ -130,3 +130,93 @@ events:
             id: the_song_nobody_bought
             severity: major
             provableBy: [commons, house_marrow]
+
+proseVariants:
+  - address: "content:events/arc_song.yaml#events[id=song_the_stave_they_left].title"
+    of: "05fb88dc668f8550"
+    plainenglish: >-
+      The Song They Left Behind
+  - address: "content:events/arc_song.yaml#events[id=song_the_stave_they_left].body"
+    of: "b41f98f03be8e74c"
+    plainenglish: >-
+      The Wayfolk were paid to tell another house's story accurately, but they
+      remember how well they were paid more than the other house itself. Later,
+      another Wayfolk company stays at Ardwen. Its singer leaves a song about an
+      old family as a gift. The verses are clear enough that everyone can join in
+      before supper ends. Most of the story is true. One part makes the family look
+      better than it should, and no one objects.
+  - address: "content:events/arc_song.yaml#events[id=song_the_stave_they_left].interaction.outcomes[id=taken_to_the_road].text"
+    of: "5da081ad6f027fe1"
+    plainenglish: >-
+      By the next morning, three servants have learned part of the song and a child
+      knows half of it. The Wayfolk wagons carry the rest east. Ardwen did not pay
+      for this song. Its earlier payment taught the singers that Ardwen listens
+      when a story is told carefully.
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].title"
+    of: "56d7f065afc54b11"
+    plainenglish: >-
+      Two Versions of the Fourth Stave
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].body"
+    of: "ff5837669318f522"
+    plainenglish: >-
+      At Greening, two Wayfolk companies arrive just one day apart. Both know the
+      Ardwen song. One sings the ending Ardwen heard first. The other has added a
+      fourth verse about a locked room, a winter birth and a silver cup that never
+      existed. The invented verse makes a better song. By sunset, half the people
+      in Wick can sing both versions.
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].interaction.choices[id=buy_the_old_ending].label"
+    of: "5e9a7f9c680bf408"
+    plainenglish: >-
+      Pay both companies again and ask them to sing the older ending.
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].interaction.choices[id=buy_the_old_ending].outcomes[id=bought_again].text"
+    of: "58e42b52b8a20966"
+    plainenglish: >-
+      There are two companies now, so it costs four crowns. Everyone has learned
+      what Ardwen is willing to pay. The singers accept the money and keep their
+      promise. The old ending spreads farther for another generation, but the
+      popular invented verse keeps spreading without payment.
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].interaction.choices[id=let_both_go].label"
+    of: "76f19b262c457632"
+    plainenglish: >-
+      Allow both versions to spread. Paying for the truth once was enough.
+  - address: "content:events/arc_song.yaml#events[id=song_two_versions_at_greening].interaction.choices[id=let_both_go].outcomes[id=both_travel].text"
+    of: "b6993da92e9e042d"
+    plainenglish: >-
+      Both companies leave knowing both endings. They choose which one to sing
+      based on their listeners. In Caster, people enjoy the story about the locked
+      room. In Cawdry, they prefer the older ending. By then the song has two
+      accepted versions, so the singers do not think they are lying.
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].title"
+    of: "99b41d966e0f5ca2"
+    plainenglish: >-
+      The Version Nobody Paid For
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].body"
+    of: "818198d2648441ee"
+    plainenglish: >-
+      Children in Wick now sing the song. They no longer remember the names, the
+      winter has become a flood, and the silver cup remains in the story even
+      though it never existed. One line is still exactly as Ardwen first heard it,
+      but it now belongs to a story no Head ever chose. {HEAD} recognises the line
+      because the house kept its account of the Wayfolk in the book.
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].interaction.outcomes[id=survived_wrong].text"
+    of: "54a4bcfead4dca82"
+    plainenglish: >-
+      The children finish the song and begin again. It has lasted just as Ardwen
+      hoped a true story would. But it has changed into something the house never
+      chose, and that changed version has proved more lasting.
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].record.subject"
+    of: "5f90e8a31296b927"
+    plainenglish: >-
+      the song Ardwen helped send into the world
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].record.options.record.chronicle"
+    of: "c020643232179c4e"
+    plainenglish: >-
+      We showed the Wayfolk that Ardwen would listen to a carefully told story, and
+      a song followed. One line stayed true while the rest changed over time. We
+      kept both the first account and the version children sing now because neither
+      tells the whole story.
+  - address: "content:events/arc_song.yaml#events[id=song_the_children_have_one_version].record.options.embellish.chronicle"
+    of: "68bfc1d73a80b3fb"
+    plainenglish: >-
+      The old song about Ardwen spread without anyone paying for it. Wherever
+      people sing it, they faithfully tell the truth about what our house did.
