@@ -773,6 +773,13 @@ export interface BloodGateInput {
   policy: 'concentrate' | 'dilute';
 }
 
+/** #644: extend the historical 1,024 pairs; never replace their seeds. */
+export const BLOOD_GATE_PAIRS = 2048;
+
+export function canonicalBloodSeeds(): number[] {
+  return Array.from({ length: BLOOD_GATE_PAIRS }, (_, i) => 4000 + i * 13);
+}
+
 /**
  * The canonical blood batch in the exact order the serial gate historically
  * ran it: every concentrate world first, then the matching dilute worlds.
@@ -911,6 +918,12 @@ export function bloodVerdict(concentrate: BloodRun[], dilute: BloodRun[]): Blood
  * stride. The gate moved to the `endings` lane with it (`tools/gates.ts`),
  * so the extra runs cost no wall time on the heaviest runner.
  *
+ * 2,048 since #644. The first post-cutover weekly run found +0.43 fontLate
+ * with sd 7.06 at only 1.9 SE across 1,024 pairs and prescribed about 1,304.
+ * Double the complete paired sample with the same seed stride. The positive
+ * mean and two-SE requirement remain unchanged; this costs scheduled compute,
+ * rather than tuning the game or selecting a different lucky set of seeds.
+ *
  * The hidden-channel oracle below is DIAGNOSTIC, not part of this verdict.
  * The standalone gate:blood tool still prints it. CI no longer pays a third
  * full 500-year column for a number it does not judge; that budget goes into
@@ -930,7 +943,7 @@ export function gateBlood(
   opts: { seeds?: number[]; years?: number; workers?: number } = {},
 ): BloodVerdict {
   const bundle = indexContent(source).bundle;
-  const seeds = opts.seeds ?? Array.from({ length: 1024 }, (_, i) => 4000 + i * 13);
+  const seeds = opts.seeds ?? canonicalBloodSeeds();
   const years = opts.years ?? CAMPAIGN_YEARS;
   const workers = opts.workers ?? gatePartitionWorkerCount();
   const plan = partitionGateInputs(bloodGateInputs(seeds), workers);

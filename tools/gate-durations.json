@@ -1,6 +1,6 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-10-08",
+  "measured": "2026-10-09",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
@@ -8,8 +8,8 @@
       "evidence": "2026-10-08 hosted re-baseline after #439's all-witnessed outcome-reach fast path: successful exact-code native merge-group check run 37732468827 (49df486f, 12/12 batch gates) measured 6.4m in tools/gate-duration.mjs; successful main push check run 37733144405 (same SHA, 12/12 gates) measured 5.5m. Budget rounded to 7m (420s) to accommodate runner variance, maintaining maxFactor 1.25 = 8.75m guard. Before the fix, successful merge-group run 37728700844 on bb8d1d25 needed 22.42m for the batch job because an already-fully-witnessed outcome-reach gate still played an unnecessary 800 x 500-year batch; the former 26m budget described that regression, not today's gate work. Source logs: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37732468827 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37733144405. Sample size is two successful exact-code check runs; re-measure if later hosted data differs. Refs #573, #439, #451."
     },
     "blood": {
-      "seconds": 1260,
-      "evidence": "PR #490 run 37256335551 on GitHub-hosted ubuntu-24.04: the full 1,024-pair x 500y blood gate completed its gate body in 20m59.6s with the default four worker threads, versus 39m06.5s on pre-change merge-group run 37251568594. Same seeds, pair count, years and aggregate verdict; baseline rounded to 21m, 1.25x guard = 26.25m (#440)."
+      "seconds": 2280,
+      "evidence": "#644 complete-sample measurement on GitHub-hosted ubuntu-latest / Node 22: successful job 113752914137 in run 37910095094 at 5823a46a played all 2,048 concentrate/dilute pairs x 500y with four workers and one aggregate verdict. Structured artifact widened-blood-measurement records blood.seconds=2275.964 (37m55.964s), ok=true; paired fontLate +0.32, PASS at 2.1 standard errors against the unchanged zero floor / two-SE requirement. Retains every original 1,024 pair and extends the same seed stride, following red main weekly run 37906699185 (+0.43, sd 7.06, 1.9 SE; prescribed ~1,304 pairs). Baseline rounded to 38m, keeping maxFactor 1.25 = 47.5m guard. The isolated measurement job passed; the surrounding exploratory workflow failed its CI inventory checks because of the temporary measurement-only job, which is removed from the final change. This is measured timing, not reusable trusted-main proof. Previous 1,024-pair baseline: PR #490 run 37256335551, 20m59.6s versus pre-worker 39m06.5s (#440). Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37910095094/job/113752914137 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37906699185."
     },
     "fire-rate": {
       "seconds": 1260,
