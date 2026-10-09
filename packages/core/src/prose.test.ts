@@ -234,13 +234,13 @@ describe('prospective prose selection', () => {
       },
     };
     const ctx = testWorld(bundle);
-    const choice = recorded.interaction.kind === 'choice'
+    const authoredChoice = recorded.interaction.kind === 'choice'
       ? recorded.interaction.choices.find((item) => item.id === 'ask_him')
       : undefined;
-    if (!choice) throw new Error('fixture is missing ask_him choice');
+    if (!authoredChoice) throw new Error('fixture is missing ask_him choice');
     setProseVariants(ctx, [
       { address: TITLE_ADDRESS, of: proseOriginalHash(event.title), plainenglish: 'The Silted Race' },
-      { address: CHOICE_LABEL_ADDRESS, of: proseOriginalHash(choice.label), plainenglish: 'Ask him to handle it.' },
+      { address: CHOICE_LABEL_ADDRESS, of: proseOriginalHash(authoredChoice.label), plainenglish: 'Ask him to handle it.' },
       { address: RECORD_SUBJECT_ADDRESS, of: proseOriginalHash('What should the book say?'), plainenglish: 'What should we write down?' },
     ]);
     setProseMode(ctx, 'plainenglish');
