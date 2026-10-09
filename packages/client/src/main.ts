@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import { installUserContent } from './lib/content.js';
+import { installPlainEnglishCatalogue, installUserContent } from './lib/content.js';
+import { loadAccessibility } from './lib/accessibility.js';
 import { installPlatform, platformForWindow } from './platform.js';
 import { installPseudoLocalisation, pseudoLocRequested } from './pseudo-loc.js';
 import './styles.css';
@@ -26,6 +27,12 @@ function startupFailure(error: unknown): void {
 async function boot(): Promise<void> {
   try {
     await installUserContent(platform);
+    // Normal Original-mode startup never imports the optional translated
+    // catalogue. A returning Plain English reader opts into that extra
+    // startup work, before the first GameSession uses the persisted mode.
+    let storedProseMode = 'original';
+    try { storedProseMode = loadAccessibility(window.localStorage).proseMode; } catch { /* private storage */ }
+    if (storedProseMode === 'plainenglish') await installPlainEnglishCatalogue();
   } catch (error) {
     startupFailure(error);
     return;
