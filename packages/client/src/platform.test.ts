@@ -311,6 +311,35 @@ describe('the platform seam', () => {
     }
   });
 
+  it('keeps healthy browser saves visible when another slot has malformed JSON', async () => {
+    // A failed import or damaged localStorage record must not make every other
+    // saved dynasty disappear from the front-door list.
+    const values = new Map<string, string>([['ed:save:damaged', '{invalid json']]);
+    const storage = {
+      get length() { return values.size; },
+      key: (i: number) => [...values.keys()][i] ?? null,
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+      removeItem: (key: string) => values.delete(key),
+      clear: () => values.clear(),
+    } as Storage;
+    const prior = globalThis.window;
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { localStorage: storage } });
+    try {
+      const platform = browserPlatform();
+      await platform.writeSave('older', { format: 28, year: 1142, savedAt: '2026-10-08T00:00:00.000Z' });
+      await platform.writeSave('newer', { format: 28, year: 1222, savedAt: '2026-10-09T00:00:00.000Z' });
+
+      await expect(platform.readSave('damaged')).resolves.toBeNull();
+      await expect(platform.listSaves()).resolves.toEqual([
+        { slot: 'newer', year: 1222, format: 28, savedAt: '2026-10-09T00:00:00.000Z' },
+        { slot: 'older', year: 1142, format: 28, savedAt: '2026-10-08T00:00:00.000Z' },
+      ]);
+    } finally {
+      Object.defineProperty(globalThis, 'window', { configurable: true, value: prior });
+    }
+  });
+
   it('round-trips the profile library separately from save slots in a browser', async () => {
     const values = new Map<string, string>();
     const storage = {
