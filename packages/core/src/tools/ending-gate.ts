@@ -700,9 +700,21 @@ export const ENDING_JUDGEABLE_BATCH = 100;
  * honest-inheritance head, a fresh 100-pair diagnostic saw 2 Unmaking takers
  * and correctly refused to call that 1.4-SE result stable. The shipped 160-pair
  * batch saw 4 takers against 0 chronicler runs and cleared the same guard.
- * Keep 160 rather than weakening the comparison or trusting the thin probe.
+ * #668's later main nightly again measured only 2 taker runs in those 160,
+ * at 1.4 SE, and prescribed about 380. Keep the historical prefix and extend
+ * the complete paired sample to 512 instead of weakening any comparison.
  */
-export const ENDING_DEFAULT_BATCH = 160;
+export const ENDING_DEFAULT_BATCH = 512;
+
+/** Canonical paired inputs, shared by the gate and its retained-batch contract. */
+export function endingGateInputs(runs = ENDING_DEFAULT_BATCH): Pick<EndingRun, 'seed' | 'policy'>[] {
+  const inputs: Pick<EndingRun, 'seed' | 'policy'>[] = [];
+  for (let i = 0; i < runs; i++) {
+    inputs.push({ seed: 5100 + i, policy: 'chronicler' });
+    inputs.push({ seed: 5100 + i, policy: 'ascendant' });
+  }
+  return inputs;
+}
 
 export function verdictOver(runs: EndingRun[]): EndingVerdict {
   const lines: string[] = [];
@@ -991,14 +1003,9 @@ export function gateEndings(
   runs = ENDING_DEFAULT_BATCH,
   years = CAMPAIGN_YEARS,
 ): EndingVerdict {
-  const played: EndingRun[] = [];
-  for (let i = 0; i < runs; i++) {
-    // SAME SEED, BOTH POLICIES — `gate:ladder`'s own pairing, not a fresh
-    // seed pool per column: it isolates the policy's effect from the
-    // founding generation's own randomness rather than mixing the two.
-    played.push(playToTheEnd(source, 5100 + i, years, 'chronicler'));
-    played.push(playToTheEnd(source, 5100 + i, years, 'ascendant'));
-  }
+  // Same seed, both policies: isolate policy from founding-generation noise.
+  const played = endingGateInputs(runs).map(({ seed, policy }) =>
+    playToTheEnd(source, seed, years, policy));
   const v = verdictOver(played);
   return { ok: v.ok, lines: [`gate (endings): ${runs} played runs x ${years} years, per policy`, ...v.lines] };
 }
