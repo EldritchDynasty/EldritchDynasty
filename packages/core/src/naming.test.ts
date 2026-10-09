@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import {
   bootstrap, stepYear, runYears, renameChild, clearNamingQueue, keepSuggestedName,
   givenName, ordinalSuffix, testRng, uniqueName, retireNames, NAME_MOURNING_YEARS,
+  createProseRuntime, loadGame, newGame, saveGame, setProseMode,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
 
 const bundle = loadContent();
@@ -338,5 +341,62 @@ describe('retiring the names of the dead', () => {
     const taken = new Set(['Alys']);
     expect(retireNames(taken, [row('Alys', { alive: true })], 1300)).toEqual([]);
     expect(taken.has('Alys')).toBe(true);
+  });
+});
+
+describe('the founding and naming pages speak the reader\'s setting (#751)', () => {
+  const PAGES: Record<string, [string, string]> = {
+    'founding.debt_title': ['A Debt of Three Parts', 'A Three-Part Debt'],
+    'founding.debt': [
+      'In the year 1042 {FOUNDER} signed something, and the house has been paying for it ever since.',
+      'In 1042, {FOUNDER} signed an agreement, and the family has been paying for it ever since.',
+    ],
+    'founding.debt_unnamed': [
+      'In the year 1042 the head of the house signed something, and the house has been paying for it ever since.',
+      'In 1042, the head of the family signed an agreement, and the family has been paying for it ever since.',
+    ],
+    'naming.named': ['{NAME} was born, and named.', '{NAME} was born and given a name.'],
+  };
+  const variants = Object.entries(PAGES).map(([key, [original, plain]]) => ({
+    address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+  }));
+  const founder = () => bundle.characters.find((c) => c.becomesGuardian)!.name;
+  const founding = (ctx: ReturnType<typeof bootstrap>) => ctx.world.chronicle.find((e) => e.year === 1042 && e.weight === 'illuminated')!;
+
+  it('keeps the founding page Original byte for byte', () => {
+    const page = founding(bootstrap(bundle, 1042, 1042));
+    expect(page.title).toBe('A Debt of Three Parts');
+    expect(page.text).toBe(`In the year 1042 ${founder()} signed something, and the house has been paying for it ever since.`);
+  });
+
+  it('writes the founding page in the setting the host chose before the run began', () => {
+    const direct = bootstrap(bundle, 1042, 1042, 'long', [], undefined, createProseRuntime('plainenglish', variants));
+    expect(founding(direct).title).toBe('A Three-Part Debt');
+    expect(founding(direct).text)
+      .toBe(`In 1042, ${founder()} signed an agreement, and the family has been paying for it ever since.`);
+
+    // The session is the door a client uses, and it chose the wording AFTER
+    // bootstrap — so the first page of every run was Original whatever the player picked.
+    const session = newGame(bundle, { proseMode: 'plainenglish', proseVariants: variants });
+    expect(founding(session.ctx).text).toBe(founding(direct).text);
+    // Words only: the same seed founds the same house either way.
+    const plain = saveGame(direct);
+    const original = saveGame(bootstrap(bundle, 1042, 1042));
+    const strip = (s: typeof plain) => JSON.parse(JSON.stringify(s, (key, value: unknown) =>
+      key === 'savedAt' || key === 'title' || key === 'text' ? undefined : value)) as unknown;
+    expect(strip(plain)).toEqual(strip(original));
+  });
+
+  it('writes the naming line in the reader\'s setting and keeps it', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const ctx = untilBirth();
+      ctx.prose = createProseRuntime(mode, variants);
+      const target = ctx.world.pendingNames[0]!.person;
+      expect(renameChild(ctx, target, 'Sorrel')).toBe(true);
+      const line = ctx.world.chronicle.at(-1)!;
+      expect(line.text).toBe(mode === 'original' ? 'Sorrel was born, and named.' : 'Sorrel was born and given a name.');
+      setProseMode(ctx, mode === 'original' ? 'plainenglish' : 'original');
+      expect(loadGame(saveGame(ctx), bundle).world.chronicle.at(-1)!.text).toBe(line.text);
+    }
   });
 });
