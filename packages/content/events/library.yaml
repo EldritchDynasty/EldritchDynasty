@@ -280,3 +280,38 @@ events:
                 - { kind: spellbook, op: lose, target: { slot: READER }, book: lesser_workings_of_thermal }
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: respect, delta: -1 }
+
+proseVariants:
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].title"
+    of: fcc6e2a08ab0a994
+    plainenglish: >-
+      The Book Is Taken from the Shelf
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].body"
+    of: e7363fe3ca6cef5f
+    plainenglish: >-
+      No one has moved the books in the north room for forty years. The room is so cold that the
+      glue in their bindings has become brittle. Now {READER} wants the midwife's book. It has been
+      copied so often that different copies contain different mistakes. It is heavy enough to need
+      both hands, and some pages must be separated with a knife. There is no ceremony. A boy sits on
+      a stool with a cold candle and begins reading a book that will take up the rest of his
+      twenties.
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].interaction.choices[id=read_it].label"
+    of: 3c18e3eec45b1d5a
+    plainenglish: >-
+      Let him take the book upstairs and study it for as long as he needs.
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].interaction.choices[id=read_it].outcomes[id=begun].text"
+    of: 8a296c19d1e282c5
+    plainenglish: >-
+      He studies it slowly because there is no shortcut. During the first year, nobody in the house
+      notices a difference. After the second, everyone can see it: he has begun correcting mistakes
+      in the margins, and his corrections are right.
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].interaction.choices[id=sell_it].label"
+    of: e5b3fb999f0c20f5
+    plainenglish: >-
+      Sell the books for money and find the boy paid work.
+  - address: "content:events/library.yaml#events[id=the_book_comes_down].interaction.choices[id=sell_it].outcomes[id=sold].text"
+    of: d7241102f7590cee
+    plainenglish: >-
+      The book sells for less than it originally cost. The boy takes a position with a factor in the
+      lower town and does reasonably well. For the rest of his life, he avoids saying what he would
+      rather have done.
