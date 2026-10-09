@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
+  contentInterpolationTokens,
   contentProseEntries,
   indexContent,
   proseOriginalAt,
@@ -214,4 +215,54 @@ describe('Plain English variant guardrails (#415)', () => {
       expect.objectContaining({ level: 'warning', rule: 'prose/variants', message: expect.stringMatching(/identical/) }),
     ]);
   });
+  it('enumerates uppercase, lowercase and mixed-case runtime placeholders including repetitions', () => {
+    expect(contentInterpolationTokens(
+      '{HEAD} gives {years} years to {endYear}; {house} remembers {teller}; {HEAD} listens.',
+    )).toEqual(['{HEAD}', '{years}', '{endYear}', '{house}', '{teller}', '{HEAD}']);
+  });
+
+  it('rejects Plain English that drops a lower/mixed-case campaign substitution', () => {
+    const campaign = contentProseEntries('prologue.yaml', { prologue: content.bundle.prologue })
+      .find((entry) => entry.address.endsWith('.triad[2].owed.campaignText'));
+    expect(campaign).toBeDefined();
+    expect(campaign!.interpolations).toContain('{years}');
+    expect(campaign!.interpolations).toContain('{endYear}');
+
+    const bundle = structuredClone(content.bundle);
+    bundle.proseVariants = [{
+      address: campaign!.address,
+      of: proseOriginalHash(campaign!.text),
+      plainenglish: campaign!.text.replace('{endYear}', ''),
+    }];
+    expect(runRule('prose/variants', bundle)).toEqual([
+      expect.objectContaining({
+        level: 'error',
+        rule: 'prose/variants',
+        where: `prose:${campaign!.address}`,
+        message: expect.stringMatching(/tokens differ/),
+      }),
+    ]);
+
+    bundle.proseVariants[0]!.plainenglish = campaign!.text.replace('THE TERM.', 'THE PERIOD.');
+    expect(runRule('prose/variants', bundle)).toEqual([]);
+  });
+
+  it('rejects a missing lower-case inherited-account attribution token', () => {
+    const inherited = contentProseEntries('prologue.yaml', { prologue: content.bundle.prologue })
+      .find((entry) => entry.address.endsWith('.inheritedLine'));
+    expect(inherited).toBeDefined();
+    expect(inherited!.interpolations).toContain('{house}');
+    expect(inherited!.interpolations).toContain('{teller}');
+
+    const bundle = structuredClone(content.bundle);
+    bundle.proseVariants = [{
+      address: inherited!.address,
+      of: proseOriginalHash(inherited!.text),
+      plainenglish: inherited!.text.replace('{teller}', ''),
+    }];
+    expect(runRule('prose/variants', bundle).some(
+      (entry) => entry.level === 'error' && /tokens differ/.test(entry.message),
+    )).toBe(true);
+  });
+
 });
