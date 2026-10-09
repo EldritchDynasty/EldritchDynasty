@@ -2,6 +2,7 @@ import type { Person } from '@ed/schema';
 import { standingCostPerHead } from '../economy.js';
 import { hashSeed } from '../rng.js';
 import type { SimCtx } from '../world.js';
+import { msg } from '../messages.js';
 import { ACQUIRED_NUTRITION, ACQUIRED_SPACING } from './factory.js';
 import { MOTHER_SHARE } from './vitality.js';
 
@@ -48,8 +49,9 @@ export function nutrition(ctx: SimCtx): number {
     w.chronicle.push({
       year: w.year,
       weight: 'line',
-      title: 'The Lean Years',
-      text: 'The kitchen fires burned low. By spring, the children had stopped asking why.',
+      title: msg(ctx, 'condition.lean_years_title', 'The Lean Years'),
+      text: msg(ctx, 'condition.lean_years',
+        'The kitchen fires burned low. By spring, the children had stopped asking why.'),
       named: false,
     });
   }
