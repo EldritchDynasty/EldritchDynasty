@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import { installPlainEnglishCatalogue, installUserContent } from './lib/content.js';
-import { loadAccessibility } from './lib/accessibility.js';
+import { loadAccessibility, saveAccessibility } from './lib/accessibility.js';
 import { installPlatform, platformForWindow } from './platform.js';
 import { installPseudoLocalisation, pseudoLocRequested } from './pseudo-loc.js';
 import './styles.css';
@@ -30,15 +30,18 @@ async function boot(): Promise<void> {
     // Normal Original-mode startup never imports the optional translated
     // catalogue. A returning Plain English reader opts into that extra
     // startup work, before the first GameSession uses the persisted mode.
-    let storedProseMode = 'original';
-    try { storedProseMode = loadAccessibility(window.localStorage).proseMode; } catch { /* private storage */ }
-    if (storedProseMode === 'plainenglish') {
+    let preferences: ReturnType<typeof loadAccessibility> | undefined;
+    try { preferences = loadAccessibility(window.localStorage); } catch { /* private storage */ }
+    if (preferences?.proseMode === 'plainenglish') {
       try {
         await installPlainEnglishCatalogue();
       } catch {
         // This is optional presentation data, not a prerequisite for opening
-        // a saved game. Fall back to the bundled Original words and allow a
-        // later mode selection to retry loading the translation chunk.
+        // a saved game. Return to Original just as the in-game selector does;
+        // a later selection can retry the translation chunk.
+        try {
+          saveAccessibility(window.localStorage, { ...preferences, proseMode: 'original' });
+        } catch { /* private storage */ }
       }
     }
   } catch (error) {
