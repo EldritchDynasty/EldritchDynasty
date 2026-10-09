@@ -337,3 +337,241 @@ events:
                 are still married in the morning, and the house has decided,
                 without quite deciding out loud, what it is willing to lose
                 to avoid saying so.
+
+proseVariants:
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].title"
+    of: 4787ebf7b78096bb
+    plainenglish: >-
+      A Family Record Covering Three Generations
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].body"
+    of: b26deb896515f6b5
+    plainenglish: >-
+      A locked case arrives with {SUITOR}'s family papers. It contains records for three
+      generations of women in her mother's line. Two notaries have approved the records,
+      and one seal comes from a house that ceased to exist in the war before the most
+      recent war. {HEAD} is invited to look at the careful handwriting, which really is
+      excellent.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=take_the_terms].label"
+    of: 3f286d7d5b7bd729
+    plainenglish: >-
+      Accept the marriage terms despite the questionable documents.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=take_the_terms].outcomes[id=accepted].text"
+    of: 3afec7cdfe78c929
+    plainenglish: >-
+      The marriage is agreed using documents that nobody present trusts. Her sons may
+      reveal what she carries in twenty years, but that will be too late to influence
+      this marriage.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=take_the_terms].outcomes[id=accepted].effects[1].notarisedBy"
+    of: 575e1808add6aa14
+    plainenglish: >-
+      a house that ceased to exist in the war before the most recent one
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=have_it_checked].label"
+    of: b38c227932fdd7ad
+    plainenglish: >-
+      Have someone check the seal without drawing attention.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=have_it_checked].outcomes[id=forged].text"
+    of: 65f22cd5ec3b2d71
+    plainenglish: >-
+      The papers are forged, and not with much effort or expense. The family is offended
+      not only by the lie but by the poor quality of the forgery.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].interaction.choices[id=have_it_checked].outcomes[id=genuine].text"
+    of: 4c878ad72b51e133
+    plainenglish: >-
+      Every page is genuine. That means the family offering the match will soon ask for
+      more money, and everyone present realizes it at once.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.subject"
+    of: 5738b9120f5dae5e
+    plainenglish: >-
+      where the evidence for the match came from
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.record.chronicle"
+    of: 64dca1df86dd0983
+    plainenglish: >-
+      We knew her family documents were poor, but we married her because of what she
+      might carry.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.record.claims[0].text"
+    of: e037234248c698c6
+    plainenglish: >-
+      arrived with poor family papers and was married because of what she might carry
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.embellish.chronicle"
+    of: 8c4a135238fc1b96
+    plainenglish: >-
+      Her family descent was beyond question, confirmed by three houses and the Church.
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.embellish.claims[0].text"
+    of: 2f8d4f36526056e2
+    plainenglish: >-
+      family descent confirmed by three houses and the Church
+  - address: "content:events/marriage.yaml#events[id=an_early_waking_daughter].title"
+    of: 89983be2e8b46876
+    plainenglish: >-
+      A Girl Awakens at Nine
+  - address: "content:events/marriage.yaml#events[id=an_early_waking_daughter].body"
+    of: 3eb6e1bb97f4485f
+    plainenglish: >-
+      {GIRL} awakens in the yard, in sight of the kitchen and half the village. She is
+      nine. {MIDWIFE} reaches her first and brings her inside. Three houses have heard
+      the story by evening, and by spring marriage offers begin arriving. No one can
+      explain why awakening early matters in a girl, but everyone treats it as important.
+  - address: "content:events/marriage.yaml#events[id=an_early_waking_daughter].interaction.outcomes[id=known].text"
+    of: 992ec7c06512ac9c
+    plainenglish: >-
+      The girl's awakening is stronger proof of what she may carry than any family
+      document. Unlike a document, the fact that she awakened cannot be forged.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].title"
+    of: 1c64545a95d609ce
+    plainenglish: >-
+      A Marriage Offer with Impossible Terms
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].body"
+    of: 75a9d863a4b8f717
+    plainenglish: >-
+      Another formal offer arrives for {MATCH}, polite and prompt as usual. One clause is
+      impossible for any house to accept. {HEAD} reads it twice. The unacceptable clause
+      has changed, but it is no more reasonable. The archive contains four similar offers
+      in four different hands, dating back one hundred and ten years.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].interaction.choices[id=decline].label"
+    of: 856f6bede3ecf259
+    plainenglish: >-
+      Reject the offer, as the house has done on four previous occasions.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].interaction.choices[id=decline].outcomes[id=filed].text"
+    of: ada569092677b375
+    plainenglish: >-
+      The staff file the letter with the earlier offers in the carefully ordered archive.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].interaction.choices[id=counter].label"
+    of: b56e86a4562fc700
+    plainenglish: >-
+      Send a counteroffer instead. Someone must make the first move.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].interaction.choices[id=counter].outcomes[id=silence].text"
+    of: 01941c2d26690f11
+    plainenglish: >-
+      No answer arrives. The other house never intended to answer.
+  - address: "content:events/marriage.yaml#events[id=the_match_that_never_comes].interaction.choices[id=counter].outcomes[id=opened].text"
+    of: 6850107225df249e
+    plainenglish: >-
+      The other house replies in two lines. It neither accepts nor rejects the
+      counteroffer, and the family discusses that response for ten years.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].title"
+    of: 7c94589af3e43256
+    plainenglish: >-
+      A Son Who Will Never Awaken
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].body"
+    of: 586980d4503763f0
+    plainenglish: >-
+      The household falls quiet when it becomes clear that {SON} will never awaken. He is
+      twenty-two. {HEAD} knows that because the son cannot express the blood's power, he
+      can safely be sent away or assigned work that would risk someone who can. The
+      family treats his safety and his usefulness as the same fact.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].interaction.choices[id=the_church].label"
+    of: 4ebdc0eef9681f8a
+    plainenglish: >-
+      Send him into Church service. The house gains protection but loses one man of its
+      bloodline.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].interaction.choices[id=the_church].outcomes[id=given].text"
+    of: 79ae61827f4cf5ce
+    plainenglish: >-
+      He leaves in the autumn. The Church approves, though its approval may carry a cost.
+      The house has one fewer man and is a little safer.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].interaction.choices[id=keep_him].label"
+    of: 313b4345c7b602d9
+    plainenglish: >-
+      Keep him at home to manage the family holdings.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].interaction.choices[id=keep_him].outcomes[id=kept].text"
+    of: f4c16313eebedbb7
+    plainenglish: >-
+      He handles the work well. The household never records his contribution because it
+      considers him merely useful.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.subject"
+    of: 50b73306c1658bb2
+    plainenglish: >-
+      the son who never awakened
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.record.chronicle"
+    of: 9923d5083c2c794c
+    plainenglish: >-
+      The second son never awakened. He managed the household accounts well for forty
+      years.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.record.claims[0].text"
+    of: e3be05cab96ce4f6
+    plainenglish: >-
+      never awakened and managed the house's accounts successfully for forty years
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.embellish.chronicle"
+    of: 3f52eebf70296d23
+    plainenglish: >-
+      The second son chose not to use the blood's power. He put service before power.
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.embellish.claims[0].text"
+    of: 91086c902fedf84c
+    plainenglish: >-
+      chose service instead of using the blood's power
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].title"
+    of: 8295f1c0d2e23f94
+    plainenglish: >-
+      Only One Person Can Carry On the Family Name
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].body"
+    of: 208f3b8ae364c726
+    plainenglish: >-
+      The kitchen still prepares food for a full table out of habit, then feeds half of
+      it to the dogs. The west wing is cold and empty. There are no footsteps or
+      arguments there, and no cousins remain. {SOLE_HEIR} eats alone at a table built for
+      twelve people, under portraits of earlier relatives who once filled the seats.
+      Nobody speaks about the emptiness.
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].interaction.choices[id=send_to_a_broker].label"
+    of: cde4cb786d6cb0a4
+    plainenglish: >-
+      Ask a marriage broker for help immediately and explain the situation clearly.
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].interaction.choices[id=send_to_a_broker].outcomes[id=word_sent].text"
+    of: 048aafa4c2bb1550
+    plainenglish: >-
+      Within a week, the house writes to every marriage broker it has paid before. The
+      letters say directly that the remaining blood heir is unmarried and the family is
+      down to one place at the table. Admitting this is difficult, but the honesty gains
+      the brokers' full attention for the coming marriage season.
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].interaction.choices[id=send_to_a_broker].outcomes[id=word_sent].effects[2].text"
+    of: 55df293d82287c21
+    plainenglish: >-
+      The house sent word that only one member of the bloodline remained and it was
+      seeking a match.
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].interaction.choices[id=leave_it].label"
+    of: e1a6fdf1593de195
+    plainenglish: >-
+      Do nothing. Keep the family's situation private.
+  - address: "content:events/marriage.yaml#events[id=the_house_has_one_name_left].interaction.choices[id=leave_it].outcomes[id=left].text"
+    of: ad4c62f04b508464
+    plainenglish: >-
+      No letters are sent. The family keeps this trouble private for a little longer, as
+      it has hidden other matters it did not want others to know.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].title"
+    of: 0a63476a4412f396
+    plainenglish: >-
+      A Marriage That Has Produced No Heir
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].body"
+    of: 7dcc2c5fbd6be103
+    plainenglish: >-
+      {SOLE_HEIR} and {SPOUSE} have been married for twelve years, and the nursery still
+      stores trunks left unopened since the wedding. They no longer discuss their lack of
+      children. Nobody can identify a problem with either spouse. Although they care for
+      each other, the family is one death away from having no one left to continue its
+      record.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=put_it_to_the_church].label"
+    of: e3e892fd6c782d49
+    plainenglish: >-
+      Ask the Church to annul the marriage while there is still time to remarry.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=put_it_to_the_church].outcomes[id=annulled].text"
+    of: d9b431f7ad30bd53
+    plainenglish: >-
+      The Church's chapter house reviews the marriage and, as it usually does for a
+      threatened bloodline, grants an annulment. {SPOUSE} packs a chest and leaves
+      without looking back. The heir can seek another marriage and another chance at
+      children. By Michaelmas, everyone in Bramme will know what it cost the house to do
+      this.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=put_it_to_the_church].outcomes[id=annulled].effects[4].text"
+    of: dbe94f2f922df8a3
+    plainenglish: >-
+      The Church annulled the marriage, and the house went back to the marriage market
+      for its last remaining heir.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=let_it_stand].label"
+    of: bd513827526149e3
+    plainenglish: >-
+      Keep the marriage in place.
+  - address: "content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=let_it_stand].outcomes[id=stood].text"
+    of: 10e797a68701c812
+    plainenglish: >-
+      No one brings the problem to an outside authority. The couple remains married the
+      next morning. Without saying it openly, the house has decided what it is prepared
+      to lose to preserve the marriage.
