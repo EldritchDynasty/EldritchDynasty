@@ -32,7 +32,15 @@ async function boot(): Promise<void> {
     // startup work, before the first GameSession uses the persisted mode.
     let storedProseMode = 'original';
     try { storedProseMode = loadAccessibility(window.localStorage).proseMode; } catch { /* private storage */ }
-    if (storedProseMode === 'plainenglish') await installPlainEnglishCatalogue();
+    if (storedProseMode === 'plainenglish') {
+      try {
+        await installPlainEnglishCatalogue();
+      } catch {
+        // This is optional presentation data, not a prerequisite for opening
+        // a saved game. Fall back to the bundled Original words and allow a
+        // later mode selection to retry loading the translation chunk.
+      }
+    }
   } catch (error) {
     startupFailure(error);
     return;
