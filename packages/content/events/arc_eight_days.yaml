@@ -231,3 +231,147 @@ events:
             provableBy: [the_church, commons]
     rumour: { id: rumour_the_autumn_they_changed_everything, accuracy: 0.35, spread: 2 }
     accounts: [wick_on_the_afternoon_the_dogs_went_out, the_heads_sentence_as_it_is_taught]
+
+proseVariants:
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_two_hands].title"
+    of: a3c581aeda6b871a
+    plainenglish: >-
+      The founder wrote these two versions eight days apart.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_two_hands].body"
+    of: 612706e0af3d8c9c
+    plainenglish: >-
+      The second cellar is so cold that the glue becomes brittle. No one has fully emptied
+      this box since it was packed. Beneath the leases, {FINDER} finds two half-sheets written
+      by the founder. One is written more steadily than the other. Both describe the second
+      obligation, but one says the house must "keep the third thing" and the other says it
+      must "keep to the third thing". Eight days and one word separate them, and that word may
+      change what the house must do.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_two_hands].absentBody"
+    of: 47baedb6e85a843a
+    plainenglish: >-
+      Someone finds two half-sheets under the leases in a box that has not been fully emptied
+      since it was packed. Both are in the founder's handwriting, although one is steadier.
+      One says the house must "keep the third thing". The other, written eight days later,
+      says it must "keep to the third thing". The founder could have explained the difference,
+      but has lain in the family's unused chapel for four hundred years.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_two_hands].interaction.outcomes[id=found].text"
+    of: 198b32201e09c0ec
+    plainenglish: >-
+      The family puts both sheets back in the same box, with a newer note explaining that they
+      disagree and no living person knows which is right. This is the most honest record the
+      house has written in a century. It also ensures the disagreement can still be argued
+      about four hundred years later.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].title"
+    of: 09c6812767bc41f3
+    plainenglish: >-
+      Which Version Will the House Follow?
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].body"
+    of: 4b182777b75b7fcb
+    plainenglish: >-
+      The house hires an advocate from Cawdry who can read Old Ambric. He charges two marks a
+      day and spends four days studying the two half-sheets. He tells {HEAD} that both
+      interpretations are valid and could appear in a contract like this. If it were an
+      ordinary lease, he would advise asking the other party what they meant. He says this
+      carefully, knowing that advice cannot be followed. {HEAD} pays him and escorts him to
+      the road. The family must decide which version it has obeyed for two hundred years. No
+      one alive can tell them which is correct. The people in this room must make the choice.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].absentBody"
+    of: f749937c7e489680
+    plainenglish: >-
+      An advocate from Cawdry studies the two half-sheets for four days at two marks a day. He
+      says both interpretations are valid. If this were an ordinary lease, he would advise
+      asking the other party what they meant. He says that carefully, because no one is left
+      to ask. The family still has to decide which version it has been following.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].interaction.choices[id=keep_the_thing].label"
+    of: 78db03f41c69bc70
+    plainenglish: >-
+      Choose the steadier sheet: keep the third thing as an object to hold and display.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].interaction.choices[id=keep_the_thing].outcomes[id=the_thing].text"
+    of: b4acd0ec0ce80ce8
+    plainenglish: >-
+      The house records this interpretation as settled. For four generations it protects an
+      object: the presses are rebuilt, the box is moved twice, and two people sign an
+      inventory every Ingathering. This is a careful and expensive interpretation. Nothing
+      proves it is wrong.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].interaction.choices[id=keep_to_the_thing].label"
+    of: 85037a19b03263c5
+    plainenglish: >-
+      Choose the sheet written eight days later: keep to the third thing as a rule to obey.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].interaction.choices[id=keep_to_the_thing].outcomes[id=the_term].text"
+    of: 4ef96bb5568f8311
+    plainenglish: >-
+      The house records this interpretation as settled. For four generations it follows a rule
+      nobody can repeat in full: a practice, some forbidden acts and an autumn date. People
+      observe the date without knowing what they are observing. This interpretation is careful
+      and inexpensive. Nothing proves it is wrong either.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].record.subject"
+    of: 53b1cf454f013e91
+    plainenglish: >-
+      which of the two sheets the house decides to follow
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].record.options.record.chronicle"
+    of: 225d463f42d058d3
+    plainenglish: >-
+      The house found two half-sheets that differed by one word. In a recorded year, it chose
+      one without knowing which was correct. Everything it does about the second obligation
+      from now on follows that decision, not a proven interpretation. Let future generations
+      know that it was a choice.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_which_one_we_keep].record.options.embellish.chronicle"
+    of: 53a03b34c3f810f8
+    plainenglish: >-
+      The founder wrote the second obligation himself. This house has followed it without
+      interruption or disagreement since the signing.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].title"
+    of: 3aedb413f407244f
+    plainenglish: >-
+      Then the Ink Changed
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].body"
+    of: ab483550a89b5304
+    plainenglish: >-
+      On an ordinary autumn afternoon, the long room smells of wet ash, though nothing has
+      burned there for three days. The dogs are outside. Nobody let them out, and no one can
+      explain how they got there. They stand in the rain with their backs to the hall and
+      refuse food or calls to come inside. On the table lies the inventory from Ingathering.
+      The ink of the second obligation has become exactly the colour of the paper. It has not
+      simply faded or washed away. The other sheet, which the house did not choose, has not
+      changed.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].interaction.choices[id=change_the_practice].label"
+    of: cf913de202c580be
+    plainenglish: >-
+      Change the house's practice tonight. Follow the other interpretation, and make the
+      change public.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].interaction.choices[id=change_the_practice].outcomes[id=changed].text"
+    of: d4651f0c7fcc1bb0
+    plainenglish: >-
+      In one season, the house reverses a practice followed for four generations. It costs
+      money and attracts enough attention to keep the province talking all winter. Three days
+      later the dogs come back, hungry and behaving normally. The ink does not return. Nobody
+      knows whether changing the practice was necessary, whether it helped, or whether the ink
+      was connected to the disputed wording at all.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].interaction.choices[id=hold_the_line].label"
+    of: d5817338c5c77a2c
+    plainenglish: >-
+      Keep following the current practice. We cannot prove that four generations were wrong.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].interaction.choices[id=hold_the_line].outcomes[id=held].text"
+    of: 3b8fafac2bfe99e0
+    plainenglish: >-
+      The house continues the practice it has followed for two hundred years. Nothing more
+      happens that anyone can clearly identify. The dogs return, but the ink remains the same
+      colour as the paper. Every new Head is shown the sheet on the day they receive the seal.
+      Each hears the same explanation. In nine retellings, nobody has dared to change a word
+      of it.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].record.subject"
+    of: aba893a79345e75b
+    plainenglish: >-
+      the afternoon when the ink became invisible
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].record.options.record.chronicle"
+    of: 646a27682beef04c
+    plainenglish: >-
+      On an ordinary afternoon, the ink of the second obligation became the same colour as its
+      paper, four hundred years after the founder wrote it incorrectly. The other sheet
+      remained unchanged. That is all the house knows. We record it plainly so future
+      generations do not have to hear a softened version.
+  - address: "content:events/arc_eight_days.yaml#events[id=eight_days_and_then_it_did].record.options.embellish.chronicle"
+    of: 511221aa0996e6ce
+    plainenglish: >-
+      During a wet autumn, damp damaged one sheet of an old inventory in the second cellar.
+      The house copied it from an undamaged version that same week.
