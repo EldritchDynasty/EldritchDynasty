@@ -215,6 +215,12 @@ describe('Plain English variant guardrails (#415)', () => {
       expect.objectContaining({ level: 'warning', rule: 'prose/variants', message: expect.stringMatching(/identical/) }),
     ]);
   });
+  it('includes repeated leading-underscore placeholders used by core messages', () => {
+    expect(contentInterpolationTokens(
+      '{_NAME} told {HEAD} about {_NAME} and {_laterYear}.',
+    )).toEqual(['{_NAME}', '{HEAD}', '{_NAME}', '{_laterYear}']);
+  });
+
   it('enumerates uppercase, lowercase and mixed-case runtime placeholders including repetitions', () => {
     expect(contentInterpolationTokens(
       '{HEAD} gives {years} years to {endYear}; {house} remembers {teller}; {HEAD} listens.',
