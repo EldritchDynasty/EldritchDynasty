@@ -2,6 +2,7 @@ import type { Year } from '@ed/schema';
 import { MAIN_BRANCH, assertNever } from '@ed/schema';
 import { chronicleEntryId, type SimCtx } from './world.js';
 import { activeBranches } from './people/branches.js';
+import { msg } from './messages.js';
 
 /**
  * BEARING — how the house carries what it has, as distinct from what it has
@@ -271,40 +272,58 @@ export function noteBearing(ctx: SimCtx, kind: BearingAct, about?: string, page?
  * a house that takes the cousin card every generation heard "People still
  * spoke of…" at every one of them. The lines rotate in order, and
  * `ECHO_SPACING` holds a kind to one echo a generation besides.
+ *
+ * Only the chosen line is rendered, so a Plain English miss is reported for
+ * the words actually shown.
  */
-function echoLines(kind: BearingAct, about: string): string[] {
-  const About = about.charAt(0).toUpperCase() + about.slice(1);
+function echoLine(ctx: SimCtx, kind: BearingAct, variant: number, about: string): string {
+  const v = { ABOUT: about, ABOUT_CAP: about.charAt(0).toUpperCase() + about.slice(1) };
   switch (kind) {
     case 'wrote_it_larger':
-      return [
-        `A copy kept elsewhere still named ${about}, and did not tell it quite as the house had.`,
-        `A clerk from another house asked about ${about}, and wrote down an answer that was not the house's.`,
-        `${About} was read aloud at somebody else's table, from somebody else's copy.`,
-      ];
+      switch (variant) {
+        case 0: return msg(ctx, 'bearing.echo.wrote_it_larger.0',
+          'A copy kept elsewhere still named {ABOUT}, and did not tell it quite as the house had.', v);
+        case 1: return msg(ctx, 'bearing.echo.wrote_it_larger.1',
+          "A clerk from another house asked about {ABOUT}, and wrote down an answer that was not the house's.", v);
+        default: return msg(ctx, 'bearing.echo.wrote_it_larger.2',
+          "{ABOUT_CAP} was read aloud at somebody else's table, from somebody else's copy.", v);
+      }
     case 'refused_a_hand':
-      return [
-        `A matchmaker remembered ${about}, and said as much to the next house that asked.`,
-        `${About} was still told in the market towns, by people who had not been in the room.`,
-        `An old broker's book still had a line against ${about}.`,
-      ];
+      switch (variant) {
+        case 0: return msg(ctx, 'bearing.echo.refused_a_hand.0',
+          'A matchmaker remembered {ABOUT}, and said as much to the next house that asked.', v);
+        case 1: return msg(ctx, 'bearing.echo.refused_a_hand.1',
+          '{ABOUT_CAP} was still told in the market towns, by people who had not been in the room.', v);
+        default: return msg(ctx, 'bearing.echo.refused_a_hand.2',
+          "An old broker's book still had a line against {ABOUT}.", v);
+      }
     case 'took_the_cousin':
-      return [
-        `People still spoke of ${about}: the outside hand had been there, and the house had chosen its own blood.`,
-        `At a wedding in another hall somebody's aunt brought up ${about}, and nobody changed the subject.`,
-        `${About} was the example a priest reached for, a generation on, when a family asked him about cousins.`,
-      ];
+      switch (variant) {
+        case 0: return msg(ctx, 'bearing.echo.took_the_cousin.0',
+          'People still spoke of {ABOUT}: the outside hand had been there, and the house had chosen its own blood.', v);
+        case 1: return msg(ctx, 'bearing.echo.took_the_cousin.1',
+          "At a wedding in another hall somebody's aunt brought up {ABOUT}, and nobody changed the subject.", v);
+        default: return msg(ctx, 'bearing.echo.took_the_cousin.2',
+          '{ABOUT_CAP} was the example a priest reached for, a generation on, when a family asked him about cousins.', v);
+      }
     case 'bit_the_common':
-      return [
-        `At ${about}, old boundary stones were still pointed out in the village, though the house's map had moved on.`,
-        `Children at ${about} still walked the old line on feast days, the way their grandparents had.`,
-        `A tenant's widow at ${about} still called the field by the name it had before the house took it.`,
-      ];
+      switch (variant) {
+        case 0: return msg(ctx, 'bearing.echo.bit_the_common.0',
+          "At {ABOUT}, old boundary stones were still pointed out in the village, though the house's map had moved on.", v);
+        case 1: return msg(ctx, 'bearing.echo.bit_the_common.1',
+          'Children at {ABOUT} still walked the old line on feast days, the way their grandparents had.', v);
+        default: return msg(ctx, 'bearing.echo.bit_the_common.2',
+          "A tenant's widow at {ABOUT} still called the field by the name it had before the house took it.", v);
+      }
     case 'kept_her_back':
-      return [
-        `The market had not forgotten ${about}, who had been kept from it when a hand might still have been made.`,
-        `A broker asked after ${about} a generation late, as if the offer might still stand.`,
-        `${About} came up in a letter from another house, as the daughter this one had kept at home.`,
-      ];
+      switch (variant) {
+        case 0: return msg(ctx, 'bearing.echo.kept_her_back.0',
+          'The market had not forgotten {ABOUT}, who had been kept from it when a hand might still have been made.', v);
+        case 1: return msg(ctx, 'bearing.echo.kept_her_back.1',
+          'A broker asked after {ABOUT} a generation late, as if the offer might still stand.', v);
+        default: return msg(ctx, 'bearing.echo.kept_her_back.2',
+          '{ABOUT_CAP} came up in a letter from another house, as the daughter this one had kept at home.', v);
+      }
     default:
       return assertNever(kind, 'bearing echo');
   }
@@ -314,15 +333,16 @@ function echoLines(kind: BearingAct, about: string): string[] {
  * One echo's line. `ordinal` is how many echoes of this kind the run has
  * already written, which picks the line in rotation.
  */
-export function echoText(entry: BearingEntry, ordinal = 0): string {
+export function echoText(ctx: SimCtx, entry: BearingEntry, ordinal = 0): string {
   // Every call site names the act; a save from before `about` existed names
   // the year instead, never a generic "old decision" (#211's own rule).
-  const lines = echoLines(entry.kind, entry.about ?? `what the house did in ${entry.year}`);
-  return lines[ordinal % lines.length]!;
+  const about = entry.about
+    ?? msg(ctx, 'bearing.about_year', 'what the house did in {YEAR}', { YEAR: String(entry.year) });
+  return echoLine(ctx, entry.kind, ordinal % ECHO_VARIANTS, about);
 }
 
-/** How many sentence frames a kind rotates through. */
-export const ECHO_VARIANTS = echoLines('wrote_it_larger', '').length;
+/** How many sentence frames a kind rotates through — `echoLine` has three per kind. */
+export const ECHO_VARIANTS = 3;
 
 /**
  * At most one echo of a kind a generation. Acts of one kind cluster — a house
@@ -349,7 +369,7 @@ export function echoBearing(ctx: SimCtx): number {
       id: chronicleEntryId(ctx),
       year: ctx.world.year,
       weight: 'line',
-      text: echoText(entry, sameKind.length),
+      text: echoText(ctx, entry, sameKind.length),
       echoFrame: `bearing:${entry.kind}:${sameKind.length % ECHO_VARIANTS}`,
       named: false,
       cause: {
