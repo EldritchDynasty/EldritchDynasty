@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash, type BranchState, type ProseVariant } from '@ed/schema';
 import {
-  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, edge, externalThreadFor,
-  grudgeAgainstUs, grudgesAgainst, makeRng, newGame, place, relate, sentimentBetween, testWorld,
+  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, ECHO_AFTER, echoGrudges, edge,
+  eventTitleAddress, externalThreadFor, grudgeAgainstUs, grudgesAgainst, makeRng, newGame, place,
+  relate, sentimentBetween, setProseMode, setProseVariants, testWorld, tickFamilyQuarrels,
   tickRelationships,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -403,3 +406,110 @@ describe('grudges that outlive the men who took them', () => {
   });
 });
 
+
+describe('the quarrel pages speak the reader\'s setting (#740)', () => {
+  const ORIGINALS: Record<string, [string, string]> = {
+    'grudge.echo.not_let_go': ['At {HOUSE} they had not let go of {ABOUT}.', '{HOUSE} still remembered {ABOUT}.'],
+    'grudge.echo.told_against': [
+      '{HOUSE} still told {ABOUT} their own way, and still told it against this house.',
+      '{HOUSE} still told their own version of {ABOUT}, and it still blamed this family.',
+    ],
+    'grudge.echo.never_mentioned': [
+      'A guest from {HOUSE} was civil at the table and never once mentioned {ABOUT}, which was how everybody knew.',
+      'A guest from {HOUSE} was polite at dinner but never mentioned {ABOUT}, so everyone knew it still mattered.',
+    ],
+    'grudge.about_event': ['what happened in "{TITLE}"', 'the events of "{TITLE}"'],
+    'grudge.about_year': ['what the house did in {YEAR}', "the family's actions in {YEAR}"],
+    'grudge.hall_quarrel': [
+      '{SPEAKER} stopped writing to the seat, and told the hall why, and the hall remembered it longer than he did.',
+      '{SPEAKER} stopped writing to the head of the family and told his household why. They remembered it after he had forgotten.',
+    ],
+  };
+  const fill = (t: string, v: Record<string, string>) => t.replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+  const ECHOES = ['grudge.echo.not_let_go', 'grudge.echo.told_against', 'grudge.echo.never_mentioned'];
+
+  function speaking(ctx: SimCtx, mode: 'original' | 'plainenglish', extra: ProseVariant[] = []) {
+    setProseVariants(ctx, [
+      ...Object.entries(ORIGINALS).map(([key, [original, plain]]) => ({
+        address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+      })),
+      ...extra,
+    ]);
+    setProseMode(ctx, mode);
+  }
+
+  /** A grudge held abroad, heard from `generations` generations after it began. */
+  function echo(mode: 'original' | 'plainenglish', generations: number, named: boolean) {
+    const { ctx, us, them } = feuding();
+    const origin = bundle.events.find((e) => e.title)!;
+    speaking(ctx, mode, [{
+      address: eventTitleAddress(ctx, origin)!, of: proseOriginalHash(origin.title), plainenglish: 'A plain title',
+    }]);
+    const began = ctx.world.year;
+    addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' }, named ? origin.id : 'unrecorded');
+    ctx.world.year += ECHO_AFTER * generations;
+    expect(echoGrudges(ctx)).toBe(1);
+    const house = ctx.world.houses.get('house_marrow')!.name;
+    return { ctx, page: ctx.world.chronicle.at(-1)!, house, began, title: origin.title };
+  }
+
+  it('keeps every echo Original byte for byte, across all three lines', () => {
+    const seen = new Set<string>();
+    for (let g = 1; g <= 3; g += 1) {
+      const { page, house, began, title } = echo('original', g, g !== 2);
+      const about = g !== 2 ? `what happened in "${title}"` : `what the house did in ${began}`;
+      const line = ECHOES.map((k) => fill(ORIGINALS[k]![0], { HOUSE: house, ABOUT: about }))
+        .find((t) => t === page.text);
+      expect(line, page.text ?? '').toBeDefined();
+      seen.add(line!.replace(about, ''));
+      expect(page.echoFrame).toMatch(/^grudge:[0-2]$/);
+    }
+    expect(seen.size).toBe(3);
+  });
+
+  it('renders the echoes in Plain English, the event title included, and keeps them', () => {
+    const texts = new Set<string>();
+    for (let g = 1; g <= 3; g += 1) {
+      const { ctx, page, house, began } = echo('plainenglish', g, g !== 2);
+      const about = g !== 2 ? 'the events of "A plain title"' : `the family's actions in ${began}`;
+      const line = ECHOES.map((k) => fill(ORIGINALS[k]![1], { HOUSE: house, ABOUT: about }))
+        .find((t) => t === page.text);
+      expect(line, page.text ?? '').toBeDefined();
+      texts.add(page.text ?? '');
+      const original = echo('original', g, g !== 2);
+      // Words only: which line, its frame and its cause are the same draw.
+      expect(page.echoFrame).toBe(original.page.echoFrame);
+      expect(page.cause).toEqual(original.page.cause);
+      setProseMode(ctx, 'original');
+      expect(page.text).toBe(line);
+    }
+    expect(texts.size).toBe(3);
+  });
+
+  function quarrel(mode: 'original' | 'plainenglish') {
+    const { ctx, us } = feuding();
+    speaking(ctx, mode);
+    us.castSlots.push('head');
+    const speaker = place(ctx, { sex: 'male', age: 30, name: 'Edric' });
+    const branch: BranchState = {
+      id: 'br_test' as BranchState['id'], name: "Edric's hall", house: ctx.world.playerHouse as BranchState['house'],
+      founder: speaker.id, splitFrom: 'main', foundedYear: ctx.world.year - 20, speaker: speaker.id, grievance: 90,
+    };
+    ctx.world.branches.set(branch.id, branch);
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(1);
+    return { ctx, branch, page: ctx.world.chronicle.at(-1)! };
+  }
+
+  it('renders the hall quarrel in both settings and changes nothing else', () => {
+    const original = quarrel('original');
+    expect(original.page.text).toBe(
+      'Edric stopped writing to the seat, and told the hall why, and the hall remembered it longer than he did.',
+    );
+    const plain = quarrel('plainenglish');
+    expect(plain.page.text).toBe(fill(ORIGINALS['grudge.hall_quarrel']![1], { SPEAKER: 'Edric' }));
+    expect(plain.branch.grievance).toBe(original.branch.grievance);
+    expect(grudgeAgainstUs(plain.ctx.world)).toBe(grudgeAgainstUs(original.ctx.world));
+    setProseMode(plain.ctx, 'original');
+    expect(plain.page.text).toContain('stopped writing to the head of the family');
+  });
+});
