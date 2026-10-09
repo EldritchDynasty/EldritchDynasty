@@ -109,6 +109,36 @@ describe('Plain English variant guardrails (#415)', () => {
     }))).toEqual([]);
   });
 
+  it('rejects numeric aliases for prose rows that have stable authored identities', () => {
+    const eventAlias = fixture.address.replace(/events\\[id=[^\\]]+\\]/, 'events[0]');
+    // The worklist always uses [id=...] when an item has an authored id.
+    // Resolving a numeric alias would pass validation but never be shown.
+    const prologue = contentProseEntries('prologue.yaml', { prologue: content.bundle.prologue })
+      .find((entry) => entry.address.endsWith('.opening'));
+    expect(prologue).toBeDefined();
+    const numericPrologue = prologue!.address.replace(/prologue\\[id=[^\\]]+\\]/, 'prologue[0]');
+
+    expect(proseOriginalAt(content, numericPrologue)).toBeUndefined();
+    expect(proseOriginalAt(content, eventAlias)).toBeUndefined();
+    expect(runRule('prose/variants', withVariant((variant) => {
+      variant.address = eventAlias;
+    })).some((entry) => entry.level === 'error' && /does not resolve/.test(entry.message))).toBe(true);
+  });
+
+  it('rejects prose attributed to a different collection\'s YAML source', () => {
+    const prologue = contentProseEntries('prologue.yaml', { prologue: content.bundle.prologue })
+      .find((entry) => entry.address.endsWith('.opening'));
+    expect(prologue).toBeDefined();
+    expect(proseOriginalAt(content, prologue!.address)).toBe(prologue!.text);
+
+    // Numeric selection used to bypass the id/provenance check, letting
+    // a bogus events filename claim a real prologue passage.
+    const wrongSource = prologue!.address
+      .replace('content:prologue.yaml#', 'content:events/not_prologue.yaml#')
+      .replace(/prologue\\[id=[^\\]]+\\]/, 'prologue[0]');
+    expect(proseOriginalAt(content, wrongSource)).toBeUndefined();
+  });
+
   it('rejects a counterpart that drops one occurrence of an interpolation token', () => {
     const token = fixture.interpolations[0]!;
     const issues = runRule('prose/variants', withVariant((variant) => {
