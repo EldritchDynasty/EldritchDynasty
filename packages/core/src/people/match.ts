@@ -503,7 +503,7 @@ export function matchSubjects(ctx: SimCtx): Person[] {
 
   const eligible = w.people
     .household(w.playerHouse, w.year)
-    .filter((p) => eligibleToMarry(ctx, p) || (w.priorityMatch.includes(p.id) && priorityEligibleToMarry(ctx, p)))
+    .filter((p) => eligibleMatchSubject(ctx, p))
     .filter((p) => p.membership.some((m) =>
       m.house === w.playerHouse && m.kind === 'blood'
       && (m.branch ?? MAIN_BRANCH) === MAIN_BRANCH
@@ -640,6 +640,16 @@ function matchWeight(ctx: SimCtx, p: Person): number {
   if (head && (p.trueParents.father === head.id || p.trueParents.mother === head.id)) return 50;
 
   return 0;
+}
+
+/**
+ * One subject gate for drafting, deal-time availability, docket refresh and
+ * acceptance. Only the priority SUBJECT can exceed the usual age ceiling:
+ * candidates on household cards still use ordinary spouse eligibility.
+ */
+function eligibleMatchSubject(ctx: SimCtx, p: Person): boolean {
+  return eligibleToMarry(ctx, p)
+    || (ctx.world.priorityMatch.includes(p.id) && priorityEligibleToMarry(ctx, p));
 }
 
 /**
@@ -896,7 +906,7 @@ function outsiderCard(ctx: SimCtx, template: CharacterTemplate, rng: Rng, index:
  * — through one predicate rather than three spellings of it.
  */
 function cardBlock(ctx: SimCtx, subject: Person, card: MatchCard): string | undefined {
-  if (!eligibleToMarry(ctx, subject)) return `${subject.name} cannot marry`;
+  if (!eligibleMatchSubject(ctx, subject)) return `${subject.name} cannot marry`;
   if (card.kind !== 'household') return undefined;
   const who = ctx.world.people.get(card.person ?? '');
   if (!who) return `${card.name} is gone`;
@@ -1143,9 +1153,7 @@ export function takeCard(ctx: SimCtx, subjectId: string, card: MatchCard): Match
   // priority hand that `matchSubjects` waived the age ceiling for and this
   // function did not is a card the marriage code refuses every time it is
   // taken, silently, which reads exactly like a working priority.
-  const eligible = eligibleToMarry(ctx, subject)
-    || (w.priorityMatch.includes(subject.id) && priorityEligibleToMarry(ctx, subject));
-  if (!eligible) return { ok: false, reason: `${subject.name} cannot marry` };
+  if (!eligibleMatchSubject(ctx, subject)) return { ok: false, reason: `${subject.name} cannot marry` };
   if (!card.available) return { ok: false, reason: card.blockedBy ?? 'that card is closed' };
 
   let spouse: Person | undefined;
