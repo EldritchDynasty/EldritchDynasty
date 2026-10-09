@@ -7,7 +7,7 @@ import { PurposeS, assembleBundle, bundleWithUserContent, indexContent, type Eve
 import { parse } from 'yaml';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { CONTENT_MODULE, contentFiles, readContentDocs, readProseDocs, readStartupDocs } from '../../build/content-plugin.js';
-import { installPlainEnglishCatalogue, loadBundle as clientBundle } from './content.js';
+import { installPlainEnglishCatalogue, loadBundle as clientBundle, unpackProseDocs } from './content.js';
 import type { Platform, SmokeCommand, SmokeResult } from '../platform.js';
 import { createGame } from './game.js';
 
@@ -35,6 +35,29 @@ describe('the content is parsed on the build machine', () => {
     const live = clientBundle();
     expect({ ...built, proseVariants: [] }).toEqual({ ...live, proseVariants: [] });
     expect(built.proseVariants).toEqual([]);
+  });
+
+  it('keeps canonical non-content message rows while unpacking content tuples', () => {
+    const core = {
+      address: 'core:messages#library.named_art_record',
+      of: '0123456789abcdef',
+      plainenglish: '{PERSON} named {BOOK}.',
+    };
+    const packed = {
+      'events/library.yaml': [
+        ['events[id=library].body', '0123456789abcdef', 'The book arrived.'],
+        core,
+      ],
+    };
+    expect(unpackProseDocs(packed)).toEqual([
+      {
+        address: 'content:events/library.yaml#events[id=library].body',
+        of: '0123456789abcdef',
+        plainenglish: 'The book arrived.',
+      },
+      core,
+    ]);
+    expect(() => unpackProseDocs({ 'events/library.yaml': [[123]] })).toThrow('Invalid precompiled');
   });
 
   it('keeps first-frame bytes constant across a 5,000-word translation batch', () => {
