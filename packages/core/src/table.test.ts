@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { proseOriginalHash } from '@ed/schema';
 import { canBeTaught, type SlotSpec } from '@ed/schema';
 import {
   applyEffect, autoMarry, candidatesFor, DEBT_FLOOR, DEMIGOD_AGEING_STOPPED, expectRate, LEDGER_SEARCH_FEE,
@@ -69,8 +70,8 @@ describe('searching the old contracts for a Ledger clause', () => {
         .sort((a, b) => a.weight - b.weight)[0]!;
       const base = `content:clauses.yaml#clauses[id=${clause.id}]`;
       setProseVariants(ctx, [
-        { address: `${base}.name`, plainenglish: 'The Kept Gift' },
-        ...(coverage === 'complete' ? [{ address: `${base}.text`, plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
+        { address: `${base}.name`, of: proseOriginalHash(clause.name), plainenglish: 'The Kept Gift' },
+        ...(coverage === 'complete' ? [{ address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
       ]);
       setProseMode(ctx, 'plainenglish');
       // Readiness does not render a clause the player has not recovered yet.
