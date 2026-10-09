@@ -5,6 +5,7 @@ import {
   CAMPAIGNS, HOUSE_NAME_MAX, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
   prologueView, saveGame, setProseMode, setProseVariants, testWorld, viewOf,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
 
@@ -465,4 +466,59 @@ describe('the prologue', () => {
     });
     expect(prologueView(resumed)!.founded?.houseName).toBe('The House of Salt');
   });
+});
+
+
+describe('the founding readback speaks the reader\'s language (#772)', () => {
+  const base = '{OBJECT} was asked for by name, and given. {HOUSE} paid for part of that night and has not been paid back, and the house has known it the whole time.';
+  const examined = base + ' {EXAMINATION}';
+  const plainBase = '{OBJECT} was requested by name and given. {HOUSE} paid part of the price that night and has never been repaid. The family has always known this.';
+  const plainExamined = plainBase + ' {EXAMINATION}';
+  const variants = [
+    { address: coreMessageAddress('founding.readback_title'),
+      of: proseOriginalHash('What Was Asked For'), plainenglish: 'What the Family Was Asked to Give' },
+    { address: coreMessageAddress('founding.readback'),
+      of: proseOriginalHash(base), plainenglish: plainBase },
+    { address: coreMessageAddress('founding.readback_with_examination'),
+      of: proseOriginalHash(examined), plainenglish: plainExamined },
+  ];
+
+  function found(mode: 'original' | 'plainenglish', withExamination: boolean) {
+    const source = withExamination
+      ? examinationBundle([{ kind: 'treasury', amount: 60 }], [{ kind: 'treasury', amount: -40 }])
+      : content;
+    const ctx = testWorld(source, 7720);
+    setProseVariants(ctx, variants);
+    setProseMode(ctx, mode);
+    const choice = withExamination
+      ? { ...CHOICE, answers: { test_question: 'chosen' } }
+      : CHOICE;
+    expect(foundHouse(ctx, choice).ok).toBe(true);
+    const page = ctx.world.chronicle.find((entry) =>
+      entry.weight === 'page' && (entry.title === 'What Was Asked For' || entry.title === 'What the Family Was Asked to Give'));
+    expect(page, 'a successful founding must write its readback').toBeDefined();
+    return { ctx, page: page! };
+  }
+
+  for (const hasAnswers of [false, true]) {
+    it(`preserves the whole Original and translates the ${hasAnswers ? 'Examination' : 'ordinary'} readback without moving choices`, () => {
+      const original = found('original', hasAnswers);
+      const plain = found('plainenglish', hasAnswers);
+      expect(original.page.title).toBe('What Was Asked For');
+      expect(plain.page.title).toBe('What the Family Was Asked to Give');
+      const m = original.page.text.match(/^(.*?) was asked for by name, and given\\. (.*?) paid for part of that night and has not been paid back, and the house has known it the whole time\\./);
+      expect(m, 'Original founding copy changed').toBeTruthy();
+      const suffix = hasAnswers ? ' The house took the advantage; The house accepted the cost.' : '';
+      expect(original.page.text).toBe(`${m![1]} was asked for by name, and given. ${m![2]} paid for part of that night and has not been paid back, and the house has known it the whole time.${suffix}`);
+      expect(plain.page.text).toBe(`${m![1]} was requested by name and given. ${m![2]} paid part of the price that night and has never been repaid. The family has always known this.${suffix}`);
+      expect(plain.ctx.world.founding).toEqual(original.ctx.world.founding);
+      expect(plain.ctx.world.decisionLog).toEqual(original.ctx.world.decisionLog);
+      expect(plain.ctx.world.treasury).toEqual(original.ctx.world.treasury);
+      const frozen = plain.page.text;
+      setProseMode(plain.ctx, 'original');
+      expect(plain.page.text).toBe(frozen);
+      const loaded = loadGame(saveGame(plain.ctx), hasAnswers ? examinationBundle([{ kind: 'treasury', amount: 60 }], [{ kind: 'treasury', amount: -40 }]) : content);
+      expect(loaded.world.chronicle.find((entry) => entry.weight === 'page' && entry.title === plain.page.title)?.text).toBe(frozen);
+    });
+  }
 });

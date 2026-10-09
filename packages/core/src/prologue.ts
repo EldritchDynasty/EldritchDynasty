@@ -9,6 +9,7 @@ import { campaignDef, type CampaignDef } from './campaign.js';
 import { dismissRetainer } from './people/succession.js';
 import { selectedSigningTerms } from './sim.js';
 import { renderContentProse } from './prose.js';
+import { msg } from './messages.js';
 
 /**
  * THE SIGNING (concept §3, issue #38).
@@ -453,10 +454,14 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   w.chronicle.push({
     year: w.year,
     weight: 'page',
-    title: 'What Was Asked For',
-    text: `${object.name} was asked for by name, and given. ${house.name} paid for part of `
-      + 'that night and has not been paid back, and the house has known it the whole time.'
-      + (examinationReadback ? ` ${examinationReadback}` : ''),
+    title: msg(ctx, 'founding.readback_title', 'What Was Asked For'),
+    text: examinationReadback
+      ? msg(ctx, 'founding.readback_with_examination',
+        '{OBJECT} was asked for by name, and given. {HOUSE} paid for part of that night and has not been paid back, and the house has known it the whole time. {EXAMINATION}',
+        { OBJECT: object.name, HOUSE: house.name, EXAMINATION: examinationReadback })
+      : msg(ctx, 'founding.readback',
+        '{OBJECT} was asked for by name, and given. {HOUSE} paid for part of that night and has not been paid back, and the house has known it the whole time.',
+        { OBJECT: object.name, HOUSE: house.name }),
     named: true,
   });
 
