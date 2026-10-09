@@ -244,3 +244,150 @@ events:
             provableBy: [house_marrow, the_church, commons]
     rumour: { id: rumour_the_ring_went_on, accuracy: 0.5, spread: 2 }
     accounts: [the_song_of_the_two_hands, the_four_lines_of_that_night]
+
+proseVariants:
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].title"
+    of: "6ec8301d708b7ba1"
+    plainenglish: >-
+      The Ring Fits Without Force
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].body"
+    of: "e649c4f93ebc7af5"
+    plainenglish: >-
+      Nobody speaks at supper, but the silence says a great deal. The ring has stayed in the
+      second press since before the family last argued about the roof. It has never fitted
+      anyone. Everyone who tried it was slightly embarrassed and put it away again. This time
+      it slides onto {WEARER}'s hand without force. Afterwards, two people separately visit the
+      portrait in the west passage, and neither admits it. {HEAD} has read the account of the
+      last man the ring fitted. In a book of four hundred pages, these are the only words
+      written with such care. There are four signed and dated lines. The writer had a whole
+      long night to add a fifth, but did not.
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].absentBody"
+    of: "ae30997007db896c"
+    plainenglish: >-
+      Nobody speaks at supper, but the silence says a great deal. The ring slides onto a hand
+      without force, although its wearer had tried it just as awkwardly as everyone else. The
+      table falls silent. The book describes the last person it fitted with an unusual degree
+      of care. Nothing else in the book is written quite that way.
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].interaction.choices[id=let_it_stay].label"
+    of: "3168b6fb3ee74b3f"
+    plainenglish: >-
+      Leave the ring on. Both the ring and its wearer belong to this house.
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].interaction.choices[id=let_it_stay].outcomes[id=worn].text"
+    of: "dec7aa66ce369fea"
+    plainenglish: >-
+      The ring stays on for eleven years. For all eleven, its wearer becomes better at
+      everything and sleeps only four hours a night. By the fourth year, being around someone
+      who is always right has become unpleasant. People across the province notice the
+      improvements. Nobody outside the house discovers the rest, which is the family's only
+      good fortune in this affair.
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].interaction.choices[id=take_it_off].label"
+    of: "e1511a8b5a4a357f"
+    plainenglish: >-
+      Remove the ring from his hand tonight, and record the reason.
+  - address: "content:events/arc_ring.yaml#events[id=ring_the_household_decides].interaction.choices[id=take_it_off].outcomes[id=taken].text"
+    of: "b03bc8b126c0d2b5"
+    plainenglish: >-
+      The ring comes off easily. Nobody expected that, and two people find the ease of it even
+      more disturbing than a struggle. The house writes four signed and dated lines stating
+      that it removed the ring. The record names neither the authority nor the grounds for the
+      decision, because there were no grounds and everyone knew it. Two hundred years later,
+      someone will be able to read those four lines but not understand them.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].title"
+    of: "caeca8e7468640b3"
+    plainenglish: >-
+      The Ring's Cost and Who Bears It
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].body"
+    of: "7b1eae05ca6b8dc1"
+    plainenglish: >-
+      {WEARER} is fifty-one. For most of his life he has been the cleverest person in the room,
+      and his family now takes that for granted. What they cannot accept is how pleasantly he
+      announces, at breakfast, the dates and causes of death of three people sitting there. He
+      is not threatening them. He is answering a question nobody has asked. He has made four
+      such predictions before. Two were right and two were wrong. The two accurate predictions
+      make the others difficult to dismiss.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].absentBody"
+    of: "300197b88eb94f64"
+    plainenglish: >-
+      The person the ring fitted died a generation ago, but the house still feels the cost. Of
+      the three people whose deaths he predicted at breakfast, two have now died in the ways he
+      described, at ordinary ages and from ordinary causes. The third no longer visits the
+      house. Nobody wrote down the conversation, yet everybody who was there remembers exactly
+      the same words. Memory does not normally work that way, and the family refuses to discuss
+      it.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].interaction.choices[id=keep_him_close].label"
+    of: "51354e4780d68653"
+    plainenglish: >-
+      Keep him at home, even if his strange abilities frighten us.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].interaction.choices[id=keep_him_close].outcomes[id=kept].text"
+    of: "981d8703eee75f1f"
+    plainenglish: >-
+      He stays at the family table for another nineteen years. Throughout that time, the house
+      grows richer, receives better advice and becomes quieter. Two servants leave without
+      explaining why. By the end, the village has given the west passage a name. The name is
+      not openly cruel, but it is a troubling name for a family home.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].interaction.choices[id=send_him_out].label"
+    of: "29366b1457be3358"
+    plainenglish: >-
+      Give him the holding in the Lag and a good horse. Visit twice a year.
+  - address: "content:events/arc_ring.yaml#events[id=ring_what_it_costs].interaction.choices[id=send_him_out].outcomes[id=sent].text"
+    of: "d8b72c267247be1a"
+    plainenglish: >-
+      He goes to a house forty miles away in flat, flooded country known for eels, peat and
+      fever. There he need not be the cleverest person in the room. He writes affectionate
+      letters every three months for thirty years, although their dates are slightly wrong.
+      People in the province assume his family sent him away for something shameful. That
+      belief costs the house far less than the alternative explanation would have.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].title"
+    of: "a04067a01a544f24"
+    plainenglish: >-
+      The Ring Fits a Second Person
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].body"
+    of: "f00f92d3a43a61f7"
+    plainenglish: >-
+      Almost two hundred years later, the ring slides onto {SECOND}'s hand during a Greening
+      feast. Forty people see it happen, including two from Ilm. The family has four signed and
+      dated lines from the first time. They say the ring was removed, but not why. It also has
+      a longer, more convincing song that contradicts the four lines on everything important.
+      Nobody alive witnessed the first fitting, but everybody has an opinion. Most who read the
+      lines believe one account; most who know only the song believe the other.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_record].label"
+    of: "d992bff884fd35dc"
+    plainenglish: >-
+      Follow the four-line record. Remove the ring from her hand tonight.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_record].outcomes[id=followed].text"
+    of: "4a1f822c75d49df0"
+    plainenglish: >-
+      The ring comes off just as easily as before. She is thanked before all forty guests for
+      understanding the decision. She really does understand, which somehow makes the moment
+      worse for everyone present. The four-line record gains a fifth line. It repeats the
+      earlier account and adds the year.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_song].label"
+    of: "82e4e1e93755c16d"
+    plainenglish: >-
+      Follow the song. Let her keep wearing the ring and see what happens.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_song].outcomes[id=followed_song].text"
+    of: "8f909a0e6499fd72"
+    plainenglish: >-
+      She wears it for eleven years, just like the first wearer. Those years are very good, and
+      they end as the song describes rather than as the four-line record suggests. Both
+      contradictory accounts survive unchanged. The house now holds three documents about the
+      ring, but still has no rule for what to do with it.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].record.subject"
+    of: "70b84ed69110cffa"
+    plainenglish: >-
+      what happened to the two people the ring fitted
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].record.options.record.chronicle"
+    of: "cbbecec335bea867"
+    plainenglish: >-
+      Twice in four hundred years, the ring has fitted someone without force. Both times, that
+      person became remarkable, and the house paid a price it did not understand until later.
+      If this record reaches someone the ring also fits, remember: wearing it is not a reward.
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].record.options.record.claims[0].text"
+    of: "9bda54a7dda95613"
+    plainenglish: >-
+      was the second person in four hundred years to wear the Ring without forcing it on
+  - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].record.options.embellish.chronicle"
+    of: "36813992839a05d6"
+    plainenglish: >-
+      Two members of our bloodline wore the Ring. Each was the greatest person of their
+      generation, and the house has never regretted anything it gave up for them.
