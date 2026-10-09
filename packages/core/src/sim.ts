@@ -25,7 +25,8 @@ import { grantHeirloom } from './people/heirlooms.js';
 import { acquireLibraryCopy } from './people/library.js';
 import { pedigreeF, realizedHomozygosityOf, visibleRecordView } from './record.js';
 import { seedLibraryMemories } from './run-library.js';
-import { createProseRuntime } from './prose.js';
+import { createProseRuntime, type ProseRuntime } from './prose.js';
+import { msg } from './messages.js';
 
 export function makeGeneticsCtx(content: Content, seed: number): GeneticsCtx {
   const pools = new Map<string, GenePool>();
@@ -225,11 +226,17 @@ export function bootstrap(
   campaign: CampaignId = 'long',
   libraryRuns: readonly LibraryRun[] = [],
   signing?: BootstrapSigning,
+  /**
+   * The host's wording preference, given BEFORE the founding page is written.
+   * Set afterwards, the first page of every run would be Original whatever the
+   * player chose. Presentation only: it moves no draw.
+   */
+  prose: ProseRuntime = createProseRuntime(),
 ): SimCtx {
   const content = indexContent(source);
   const world = createWorld(content, seed, startYear, campaign);
   const genetics = makeGeneticsCtx(content, seed);
-  const ctx: SimCtx = { world, content, genetics, takenNames: new Set(), prose: createProseRuntime() };
+  const ctx: SimCtx = { world, content, genetics, takenNames: new Set(), prose };
   const signingTerms = selectedSigningTerms(content, signing);
   const founderName = signingFounderName(signing);
 
@@ -379,9 +386,13 @@ export function bootstrap(
   world.chronicle.push({
     year: startYear,
     weight: 'illuminated',
-    title: 'A Debt of Three Parts',
-    text: `In the year 1042 ${founder?.name ?? 'the head of the house'} signed something, `
-      + 'and the house has been paying for it ever since.',
+    title: msg(ctx, 'founding.debt_title', 'A Debt of Three Parts'),
+    text: founder
+      ? msg(ctx, 'founding.debt',
+        'In the year 1042 {FOUNDER} signed something, and the house has been paying for it ever since.',
+        { FOUNDER: founder.name })
+      : msg(ctx, 'founding.debt_unnamed',
+        'In the year 1042 the head of the house signed something, and the house has been paying for it ever since.'),
     named: true,
   });
 
@@ -497,7 +508,7 @@ export function renameChild(ctx: SimCtx, personId: string, name: string): boolea
   ctx.world.chronicle.push({
     year: ctx.world.year,
     weight: 'line',
-    text: `${trimmed} was born, and named.`,
+    text: msg(ctx, 'naming.named', '{NAME} was born, and named.', { NAME: trimmed }),
     named: false,
   });
   // A rename mutates `takenNames`, which feeds every later name roll — the

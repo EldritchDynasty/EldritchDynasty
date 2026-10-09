@@ -50,7 +50,9 @@ import { resolveDelegated } from './delegation.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
-import { proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants } from './prose.js';
+import {
+  createProseRuntime, proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
+} from './prose.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -667,12 +669,15 @@ export function newGame(source: ContentBundle | Content, opts: SessionOptions = 
     return ctx;
   };
 
-  const ctx = configure(bootstrap(source, seed, startYear, campaign, libraryRuns));
+  // The founding page is written inside `bootstrap`, so the wording has to be
+  // chosen before it is called, not configured afterwards.
+  const prose = () => createProseRuntime(opts.proseMode ?? 'original', proseVariants);
+  const ctx = configure(bootstrap(source, seed, startYear, campaign, libraryRuns, undefined, prose()));
   // Rebuild from the indexed content snapshot this run actually started with,
   // not from a host object that might be edited while the prologue is open.
   const foundingSource = ctx.content;
   const build = (signing: BootstrapSigning) => configure(
-    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing),
+    bootstrap(foundingSource, seed, startYear, campaign, libraryRuns, signing, prose()),
   );
   return new GameSession(ctx, opts.decider ?? 'ask', { startYear, build });
 }
