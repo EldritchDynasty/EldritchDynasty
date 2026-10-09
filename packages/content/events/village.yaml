@@ -387,3 +387,240 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: attribute, target: { slot: BITTEN }, attr: health, delta: -1 }
+proseVariants:
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].title"
+    of: 39fb34ecac6b4538
+    plainenglish: >-
+      The Wolves in the Upper Fold
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].body"
+    of: 5cd22c1ddf5e20b1
+    plainenglish: >-
+      In Deepwinter, nobody says the word wolf aloud. The reeve calls them the grey four times before
+      anyone invites him indoors. Wolves have killed eleven ewes in the upper fold and a boy's dog.
+      The house has paid a bounty of one mark per wolf since 1063. The tenants want to know whether
+      {HEAD} will go up the hill personally. If the house only pays and stays home, the fold will talk
+      about it all spring.
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=pay_the_bounty].label"
+    of: 155663f227c9b906
+    plainenglish: >-
+      Pay the bounty and let the tenants handle the wolves.
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=pay_the_bounty].outcomes[id=paid].text"
+    of: 9fb46eff9b91add3
+    plainenglish: >-
+      By Thaw, four wolf heads hang on the gate post and the house has paid four marks, the set
+      bounty. That does not replace the eleven ewes lost from eleven tenancies, or the rent those
+      farms cannot pay at Thaw. The house bears that loss whether it joined the hunt or not.
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=go_up].label"
+    of: 5359d638906bc824
+    plainenglish: >-
+      Go up to the fold with the hunters.
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=go_up].outcomes[id=the_hounds_stop].text"
+    of: 2db8d044ad0f4cd0
+    plainenglish: >-
+      The hounds search the entire fold but stop forty yards from the stream. Nothing ahead appears to
+      frighten them. Two graziers see the dogs turn back and notice which member of the party they
+      face. Afterwards, one of the graziers avoids mentioning what he saw.
+  - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=go_up].outcomes[id=a_clean_week].text"
+    of: 7dc6f56956f5ce55
+    plainenglish: >-
+      The party spends six days on the exposed hills in bitter weather. On the final day they kill
+      three wolves. The fold gives no thanks, but it stops speaking about the house for a year. For
+      these tenants, that silence is thanks.
+  - address: "content:events/village.yaml#events[id=a_murrain_year].title"
+    of: 71790a2ff8d3ecd3
+    plainenglish: >-
+      A Year of Sick Cattle
+  - address: "content:events/village.yaml#events[id=a_murrain_year].body"
+    of: 747bf47c3904d9c0
+    plainenglish: >-
+      The cattle disease begins on the two farms nearest the river and spreads through eleven cattle
+      sheds before Slaughter. No tenant caused it, so there is nobody to evict or fine. The parish
+      loses forty-one cattle. The shed below the hall wall is untouched. Its cowman has started giving
+      careful answers about why his herd is healthy, as if many people have asked him.
+  - address: "content:events/village.yaml#events[id=a_murrain_year].interaction.choices[id=remit_the_rents].label"
+    of: 782d40534013894f
+    plainenglish: >-
+      Cancel the rent for farms that lost cattle.
+  - address: "content:events/village.yaml#events[id=a_murrain_year].interaction.choices[id=remit_the_rents].outcomes[id=remitted].text"
+    of: 41687358c4492c14
+    plainenglish: >-
+      A cow costs two crowns, more than anyone in Wick can afford. The house absorbs the lost rent for
+      the year. The villagers understand the help they have received, but that does not mean they feel
+      grateful.
+  - address: "content:events/village.yaml#events[id=a_murrain_year].interaction.choices[id=hold_the_terms].label"
+    of: 832560316d0324bd
+    plainenglish: >-
+      Keep the rent terms unchanged. The house did not cause the disease.
+  - address: "content:events/village.yaml#events[id=a_murrain_year].interaction.choices[id=hold_the_terms].outcomes[id=held].text"
+    of: 892948d80c1d2bec
+    plainenglish: >-
+      The tenants pay what they owe with labour, wool, and, in one case, a daughter's service. The
+      accounts balance. The cowman below the hall wall keeps both his healthy cattle and his silence,
+      and the village remembers.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].title"
+    of: e725b58330aebd27
+    plainenglish: >-
+      A Wild Boar in the West Wood
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].body"
+    of: 54bd401fb0fbdbe3
+    plainenglish: >-
+      The Warden owns the deer, but the wild boar in the family's west wood belongs to the house. It
+      has spent ten days in the pigs' feeding grounds and has torn a collier's leg to the bone.
+      {HUNTER} wants to hunt it. {HEAD} must weigh the risk of a boar that can kill an armed rider
+      against the Respect a successful hunt would earn.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=let_him_go].label"
+    of: add1d636e3b3aea2
+    plainenglish: >-
+      Let the hunter go with the yard man and two large hounds.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=let_him_go].outcomes[id=taken].text"
+    of: f92662e6a11acdda
+    plainenglish: >-
+      After four wet hours, the boar charges from the holly at eleven paces. The spear holds. Wick
+      eats better for the next ten days than it has since Slaughter. Its tusks are hung above the long
+      room door where everyone walks beneath them.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=let_him_go].outcomes[id=the_blade_that_would_not].text"
+    of: 56f5725b221b81ff
+    plainenglish: >-
+      The final attempt goes wrong when the knife loses its edge. It is blunt as though it had spent a
+      winter in a damp wall, not a morning in someone's hand. The yard man kills the boar with a spear
+      without meeting anyone's eyes. At the gate, he returns the knife by holding its blade and says
+      the smith should examine it.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=pay_the_colliers].label"
+    of: f75d62f4aefb4528
+    plainenglish: >-
+      Pay the colliers to kill the boar and keep the family out of the wood.
+  - address: "content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=pay_the_colliers].outcomes[id=bought].text"
+    of: 6914f07b79f31307
+    plainenglish: >-
+      The colliers kill it in a day and a half for eleven marks and a barrel. They are not grateful.
+      The tusks hang above the alehouse door instead of the house's. {HUNTER} never mentions the hunt
+      again, and that silence hurts more than a complaint.
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].title"
+    of: e2f0953dd4635fe9
+    plainenglish: >-
+      The Ford Below Wick
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].body"
+    of: ba8951ebec62a6af
+    plainenglish: >-
+      At Thaw, the Wend turns brown and can wash a person off the ford without warning. About once
+      every eleven years, a child from Wick drowns there, according to the parish records. The village
+      blames a grey mare, though that story is false. Still, the story keeps more children away from
+      the crossing than warnings about the river. A tenant's wife asks {HEAD} whether the house will
+      finally build the wooden bridge her grandmother asked for.
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].interaction.choices[id=build_it].label"
+    of: 221f7f73e0c6309f
+    plainenglish: >-
+      Build a high oak bridge across the ford.
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].interaction.choices[id=build_it].outcomes[id=built].text"
+    of: 1f6771b06f602f5c
+    plainenglish: >-
+      The bridge costs nine crowns and takes one summer to build. No one drowns at that crossing
+      again. Within two generations, some children in Wick have never heard of the grey mare. One
+      child drowns in the mill pool instead. The bridge did not cause that death, but people blame it
+      anyway.
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].interaction.choices[id=leave_the_story].label"
+    of: 849a45a943f5639d
+    plainenglish: >-
+      Leave the crossing as it is. The story already keeps children away.
+  - address: "content:events/village.yaml#events[id=the_ford_below_wick].interaction.choices[id=leave_the_story].outcomes[id=left].text"
+    of: 8b103a9db5305641
+    plainenglish: >-
+      Leaving the ford alone costs nothing and has been the house's decision four times. The grey mare
+      story changes with each telling. By the fourth version, the mare is said to target one
+      particular family, which is not from Wick.
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].title"
+    of: 17376573388bb7ef
+    plainenglish: >-
+      The Tenant Wants a Written Agreement
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].body"
+    of: 0923c86b6855fc7f
+    plainenglish: >-
+      A tenant has held forty acres under customary terms since before the hall roof was built, but he
+      has no written proof. His son returns from Bramme saying that custom only protects a family
+      while the other party remembers it. A notary will attest their agreement for one mark. {HEAD}
+      has heard this argument before, when the house was the party without the written proof.
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].interaction.choices[id=sign_it].label"
+    of: ddf0a915e7bbcfa1
+    plainenglish: >-
+      Sign and witness a written record of the tenant's terms.
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].interaction.choices[id=sign_it].outcomes[id=written].text"
+    of: 9db10a8617306bd2
+    plainenglish: >-
+      The house pays a mark to the notary in Bramme. Both copies are read aloud in the yard so nobody
+      can later deny what was written. Three more tenants ask for written terms that year. The notary
+      gains business, and the house begins a long argument over what it has permanently promised.
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].interaction.choices[id=refuse_the_paper].label"
+    of: c3836c5117581345
+    plainenglish: >-
+      Refuse the written agreement. Leave the customary terms unwritten.
+  - address: "content:events/village.yaml#events[id=the_tenant_who_wants_it_written].interaction.choices[id=refuse_the_paper].outcomes[id=refused].text"
+    of: 38d321cfc9e0a5ab
+    plainenglish: >-
+      In the hall they call the document unnecessary. The villagers use another word. Nothing changes
+      for forty years, until a Warden's clerk demands written proof of the house's title to eleven
+      farms. All the house can offer is its memory.
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].title"
+    of: 2c0da68ae2b30ca6
+    plainenglish: >-
+      A Hedge Across the Village Common
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].body"
+    of: d0f196f6b5b95632
+    plainenglish: >-
+      Wick tolerates the house because villagers can graze the common land. If the house fenced off
+      forty acres on the Bramme side, its factors could raise sheep there and earn enough to pay twice
+      for the west wing. The steward has prepared figures and seems to have held them for months. The
+      village has grazed the land since the Empire but has no documents proving that right, just as
+      the hill graziers have none.
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].label"
+    of: 9f3c79f41a3d4758
+    plainenglish: >-
+      Fence off forty acres and use the income to repair the roof.
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].outcomes[id=hedged].text"
+    of: c0be12ad8399ec21
+    plainenglish: >-
+      Workers put up two hundred yards of thorn hedge and ditch before Ingathering. The wool earns
+      money. Someone breaks the hedge twice in the first year, and the house rebuilds it both times.
+      The third hedge stays standing. The people of Wick remember what happened without needing to
+      write it down.
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].label"
+    of: 70560b172db7026b
+    plainenglish: >-
+      Leave the common open. Keeping peace with Wick costs less.
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].outcomes[id=left_open].text"
+    of: 3e2d3a916251b415
+    plainenglish: >-
+      The steward files away the figures without comment. He shows them to the next Head and the one
+      after that, in the same handwriting, with larger totals each time. Wick never learns that the
+      house considered taking the land.
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].title"
+    of: 3ce13db4b7b4c138
+    plainenglish: >-
+      Two Weeks of Fever
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].body"
+    of: 4d16449035ffc7d4
+    plainenglish: >-
+      In Highsun on the high pasture, an adder bites a family member. Adder bites rarely kill, but
+      recovery takes about a fortnight. Every grazier in the Nethering recommends a different cure.
+      There are at least nine cures, and they contradict one another. Each grazier believes his own
+      works because he has seen someone recover. {BITTEN} will probably recover in about two weeks,
+      whichever cure is used.
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].interaction.choices[id=the_graziers_cure].label"
+    of: 6c3d81fdc99245e9
+    plainenglish: >-
+      Let the graziers use their traditional remedy.
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].interaction.choices[id=the_graziers_cure].outcomes[id=the_ninth_cure].text"
+    of: fc1f57c8b9a4cc24
+    plainenglish: >-
+      They apply bread, cut a cross over the fang marks, and give plenty of small beer. Recovery takes
+      fourteen days. The grazier who suggested the beer tells the story for thirty years, adding to
+      his own role each time. That is how a tenth cure is invented.
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].interaction.choices[id=send_to_bramme].label"
+    of: 2534892e02bb0f1a
+    plainenglish: >-
+      Send for a physician from Bramme.
+  - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].interaction.choices[id=send_to_bramme].outcomes[id=humoral].text"
+    of: e75569222441471e
+    plainenglish: >-
+      The physician arrives after two days and charges three crowns. He bleeds the unbitten arm, but
+      correctly treats the leg. Recovery still takes fourteen days. His treatment seems worth the
+      price, though nobody can explain why. The graziers continue talking about the beer.
