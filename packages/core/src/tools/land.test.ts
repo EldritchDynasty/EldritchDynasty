@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -49,6 +49,22 @@ const git = (cwd: string, ...args: string[]) =>
 const REPO = join(import.meta.dirname, '../../../..');
 const TOOL = join(REPO, 'tools/land.mjs');
 const WORKFLOW = join(REPO, '.github/workflows/check.yml');
+
+/** CLI lock fixtures must never replace the preflight that is running this suite. */
+function withLandingCheckout(test: (cwd: string, gitDir: string) => void): void {
+  const dir = mkdtempSync(join(tmpdir(), 'ed-land-status-'));
+  try {
+    git(dir, 'init', '--quiet', '--initial-branch=fixture');
+    git(dir, '-c', 'user.name=t', '-c', 'user.email=t@t',
+      'commit', '--quiet', '--allow-empty', '-m', 'fixture');
+    test(dir, git(dir, 'rev-parse', '--absolute-git-dir'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+const runLanding = (cwd: string, ...args: string[]) =>
+  spawnSync(process.execPath, [TOOL, ...args], { encoding: 'utf8', cwd });
 
 const land = (await import(pathToFileURL(TOOL).href)) as {
   STEPS: string[];
@@ -596,53 +612,64 @@ describe('a killed preflight safely reads legacy landing locks', () => {
    * is one it can be told about.
    */
   it('answers --status without a lock, and without doing anything', () => {
-    const r = spawnSync('node', [TOOL, '--status'], { encoding: 'utf8', cwd: REPO });
-    const out = `${r.stdout}${r.stderr}`;
-    // No lock in a normal checkout — and crucially it did not start a landing.
-    expect(out).toMatch(/no landing is running|a landing (is RUNNING|DIED)/);
-    expect(out, '--status ran the landing instead of reporting on it').not.toContain('$ git fetch origin main');
+    withLandingCheckout((cwd, gitDir) => {
+      const r = runLanding(cwd, '--status');
+      const out = `${r.stdout}${r.stderr}`;
+      expect(r.status).toBe(0);
+      expect(out).toContain('no landing is running');
+      expect(out, '--status ran the landing instead of reporting on it').not.toContain('$ git fetch origin main');
+      expect(existsSync(join(gitDir, 'land.lock'))).toBe(false);
+      expect(existsSync(join(gitDir, 'land.last.json'))).toBe(false);
+    });
+  });
+
+  it('reports a live landing without changing its lock or saved result', () => {
+    withLandingCheckout((cwd, gitDir) => {
+      const lock = join(gitDir, 'land.lock');
+      const last = join(gitDir, 'land.last.json');
+      const held = JSON.stringify({ ...dead, pid: process.pid, step: 'test' });
+      const previous = JSON.stringify({ step: 'preflight-green', target: dead.target });
+      writeFileSync(lock, held);
+      writeFileSync(last, previous);
+      const r = runLanding(cwd, '--status');
+      expect(r.status).toBe(0);
+      expect(`${r.stdout}${r.stderr}`).toContain('is RUNNING');
+      expect(`${r.stdout}${r.stderr}`).toContain(String(process.pid));
+      expect(readFileSync(lock, 'utf8')).toBe(held);
+      expect(readFileSync(last, 'utf8')).toBe(previous);
+    });
   });
 
   it('exits non-zero on a dead landing, so a script can ask', () => {
-    const lock = join(git(REPO, 'rev-parse', '--git-dir'), 'land.lock');
-    const existed = existsSync(lock);
-    const previous = existed ? readFileSync(lock, 'utf8') : null;
-    writeFileSync(lock, JSON.stringify({ ...dead, step: 'test' }));
-    try {
-      const r = spawnSync('node', [TOOL, '--status'], { encoding: 'utf8', cwd: REPO });
+    withLandingCheckout((cwd, gitDir) => {
+      const lock = join(gitDir, 'land.lock');
+      const held = JSON.stringify({ ...dead, step: 'test' });
+      writeFileSync(lock, held);
+      const r = runLanding(cwd, '--status');
       expect(r.status, 'a dead landing reported success').toBe(1);
       expect(`${r.stdout}${r.stderr}`).toContain('DIED');
-    } finally {
-      if (previous !== null) writeFileSync(lock, previous);
-      else if (existsSync(lock)) unlinkSync(lock);
-    }
+      expect(readFileSync(lock, 'utf8')).toBe(held);
+    });
   });
 
   it('reports preflight-green as verified but not landed', () => {
-    const gitDir = git(REPO, 'rev-parse', '--git-dir');
-    const lock = join(gitDir, 'land.lock');
-    const last = join(gitDir, 'land.last.json');
-    const previousLock = existsSync(lock) ? readFileSync(lock, 'utf8') : null;
-    const previousLast = existsSync(last) ? readFileSync(last, 'utf8') : null;
-    if (existsSync(lock)) unlinkSync(lock);
-    writeFileSync(last, JSON.stringify({
-      step: 'preflight-green',
-      target: dead.target,
-      branch: 'chatgpt/352-queue-only-landing',
-    }));
-    try {
-      const r = spawnSync('node', [TOOL, '--status'], { encoding: 'utf8', cwd: REPO });
+    withLandingCheckout((cwd, gitDir) => {
+      const last = join(gitDir, 'land.last.json');
+      const saved = JSON.stringify({
+        step: 'preflight-green',
+        target: dead.target,
+        branch: 'chatgpt/352-queue-only-landing',
+      });
+      writeFileSync(last, saved);
+      const r = runLanding(cwd, '--status');
       const out = `${r.stdout}${r.stderr}`;
       expect(r.status).toBe(0);
       expect(out).toContain('preflight-green');
       expect(out).toContain('NOT pushed to main');
       expect(out).toContain('Merge when ready');
-    } finally {
-      if (previousLock !== null) writeFileSync(lock, previousLock);
-      else if (existsSync(lock)) unlinkSync(lock);
-      if (previousLast !== null) writeFileSync(last, previousLast);
-      else if (existsSync(last)) unlinkSync(last);
-    }
+      expect(readFileSync(last, 'utf8')).toBe(saved);
+      expect(existsSync(join(gitDir, 'land.lock'))).toBe(false);
+    });
   });
 
   /**
@@ -728,13 +755,12 @@ describe('a preflight verifies one pinned commit, and only one runs per checkout
   });
 
   it('refuses a second landing and names the process holding it', () => {
-    const held = { pid: process.pid, started: new Date().toISOString() };
-    const lock = join(git(REPO, 'rev-parse', '--git-dir'), 'land.lock');
-    const existed = existsSync(lock);
-    const previous = existed ? readFileSync(lock, 'utf8') : null;
-    writeFileSync(lock, JSON.stringify(held));
-    try {
-      const r = spawnSync('node', [TOOL], { encoding: 'utf8' });
+    withLandingCheckout((cwd, gitDir) => {
+      const held = { pid: process.pid, started: new Date().toISOString() };
+      const lock = join(gitDir, 'land.lock');
+      const saved = JSON.stringify(held);
+      writeFileSync(lock, saved);
+      const r = runLanding(cwd);
       expect(r.status, 'a second landing was allowed to start').not.toBe(0);
       const out = `${r.stdout}${r.stderr}`;
       expect(out).toContain('already running');
@@ -742,10 +768,8 @@ describe('a preflight verifies one pinned commit, and only one runs per checkout
       // it the only evidence is an empty log, which reads as death.
       expect(out).toContain(String(process.pid));
       expect(out).toContain(held.started);
-    } finally {
-      if (previous !== null) writeFileSync(lock, previous);
-      else if (existsSync(lock)) unlinkSync(lock);
-    }
+      expect(readFileSync(lock, 'utf8')).toBe(saved);
+    });
   });
 
   /**
@@ -802,20 +826,19 @@ describe('a preflight verifies one pinned commit, and only one runs per checkout
    * future landing refusing: a lock whose holder is gone must be taken, not
    * obeyed. A stale lock is the failure mode of every lock file ever written.
    */
-  it('clears a lock left behind by a process that is gone', () => {
-    const lock = join(git(REPO, 'rev-parse', '--git-dir'), 'land.lock');
-    const existed = existsSync(lock);
-    const previous = existed ? readFileSync(lock, 'utf8') : null;
-    // pid 2^22 is above every Linux default pid_max and owned by nothing.
-    writeFileSync(lock, JSON.stringify({ pid: 4194303, started: '2026-01-01T00:00:00Z' }));
-    try {
-      const r = spawnSync('node', [TOOL, '--dry-run'], { encoding: 'utf8' });
+  it('does not let a dead lock block a read-only dry run', () => {
+    withLandingCheckout((cwd, gitDir) => {
+      const lock = join(gitDir, 'land.lock');
+      // pid 2^22 is above every Linux default pid_max and owned by nothing.
+      const saved = JSON.stringify({ pid: 4194303, started: '2026-01-01T00:00:00Z' });
+      writeFileSync(lock, saved);
+      const r = runLanding(cwd, '--dry-run');
       const out = `${r.stdout}${r.stderr}`;
+      expect(r.status).toBe(0);
       expect(out, 'a dead holder still blocked a landing').not.toContain('already running');
-    } finally {
-      if (previous !== null) writeFileSync(lock, previous);
-      else if (existsSync(lock)) unlinkSync(lock);
-    }
+      expect(out).toContain('--dry-run: nothing was fetched, rebased, run or pushed');
+      expect(readFileSync(lock, 'utf8')).toBe(saved);
+    });
   });
 });
 
