@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadContent } from '@ed/content';
@@ -110,6 +110,38 @@ describe('the save directory', () => {
     const [entry] = listSaves(root);
     expect(entry?.slot).toBe('ruined');
     expect(entry?.unreadable).toBeTruthy();
+  });
+
+  it('reports a directory-shaped slot while keeping valid saves visible', () => {
+    mkdirSync(join(root, 'not-a-file.edsave.json'));
+    // The slot name syntax forbids an internal dot but permits dashes.
+    writeSave(root, 'healthy', aSave());
+
+    const bySlot = new Map(listSaves(root).map((entry) => [entry.slot, entry]));
+    expect(bySlot.get('healthy')).toMatchObject({ year: 1442, format: 6 });
+    expect(bySlot.get('not-a-file')?.unreadable).toContain('not a regular file');
+    expect(() => readSave(root, 'not-a-file')).toThrow('not a regular file');
+  });
+
+  it('never follows a linked slot outside the saves directory', () => {
+    const external = join(userData, 'external.json');
+    writeFileSync(external, JSON.stringify(aSave({ year: 1999, format: 999 })), 'utf8');
+    try {
+      symlinkSync(external, join(root, 'linked.edsave.json'), 'file');
+    } catch (error) {
+      // Windows hosts without Developer Mode cannot create a file symlink;
+      // the directory/non-file contract above still runs on both platforms.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+    writeSave(root, 'healthy', aSave());
+
+    const bySlot = new Map(listSaves(root).map((entry) => [entry.slot, entry]));
+    expect(bySlot.get('healthy')?.year).toBe(1442);
+    expect(bySlot.get('linked')?.unreadable).toContain('not a regular file');
+    expect(bySlot.get('linked')?.year).toBeUndefined();
+    expect(bySlot.get('linked')?.format).toBeUndefined();
+    expect(() => readSave(root, 'linked')).toThrow('not a regular file');
   });
 
   it('ignores whatever else is in the directory', () => {
