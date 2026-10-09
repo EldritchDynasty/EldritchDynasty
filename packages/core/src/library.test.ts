@@ -161,6 +161,29 @@ describe('applying a spellbook is generic', () => {
     expect(ctx.world.library.has('lesser_workings_of_death')).toBe(false);
   });
 
+  it('caps book damage and repair at the 0–100 shelf-condition boundaries', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const state = acquireLibraryCopy(ctx, def.id)!;
+    expect(state.condition).toBe(100);
+
+    degradeLibraryCopy(ctx, def.id, 140);
+    expect(state.condition).toBe(0);
+
+    // A negative wear amount represents repair by a direct core caller.
+    // It must not make a book better than pristine or shorten study below it.
+    degradeLibraryCopy(ctx, def.id, -800);
+    expect(state.condition).toBe(100);
+
+    degradeLibraryCopy(ctx, def.id, 30);
+    expect(state.condition).toBe(70);
+    degradeLibraryCopy(ctx, def.id, -15);
+    expect(state.condition).toBe(85);
+    degradeLibraryCopy(ctx, def.id, -150);
+    expect(state.condition).toBe(100);
+    expect(ctx.world.library.get(def.id)).toBe(state);
+  });
+
   it('a degraded copy takes a reader longer — the condition field has a reader at last', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
