@@ -1,4 +1,5 @@
 import type { Content } from './content-index.js';
+import { CONTENT_LAYOUT } from './assemble.js';
 import { contentInterpolationTokens, isContentProseField } from './prose.js';
 import type { Issue, ValidationRule } from './validate.js';
 
@@ -46,6 +47,17 @@ export function proseOriginalAt(content: Content, address: string): string | und
   if (!parsed) return undefined;
   const file = parsed[1]!;
   const parts = parsed[2]!.split('.');
+  // File-backed collections cannot be claimed by a different YAML path.
+  // ID provenance checks below cover directory-backed collections, but a
+  // numeric selector could otherwise evade them.
+  const collection = SEGMENT.exec(parts[0] ?? '')?.[1];
+  const layout = CONTENT_LAYOUT.find((spec) => spec.key === collection);
+  if (!layout || (layout.source.kind === 'file'
+    ? file !== layout.source.path
+    : !file.startsWith(layout.source.prefix) || !file.endsWith('.yaml'))) {
+    return undefined;
+  }
+
   let current: unknown = content.bundle;
   let finalKey = '';
 
@@ -76,6 +88,11 @@ export function proseOriginalAt(content: Content, address: string): string | und
         && (item as Record<string, unknown>)[identityField] === wanted
       ));
       if (current === undefined) return undefined;
+      // The worklist prefers id to key when both exist; do not accept
+      // an alternate identity that runtime prose lookups never generate.
+      if (identityField === 'key' && typeof (current as Record<string, unknown>).id === 'string') {
+        return undefined;
+      }
 
       // Only the first identity is a top-level authored collection item.
       // Nested choice/outcome ids are intentionally not global content ids.
@@ -85,7 +102,14 @@ export function proseOriginalAt(content: Content, address: string): string | und
       }
     } else if (indexText !== undefined) {
       if (!Array.isArray(current)) return undefined;
-      current = current[Number(indexText)];
+      const selected: unknown = current[Number(indexText)];
+      // Numeric aliases for id/key rows look resolvable but are not real
+      // worklist addresses. A variant on that alias is never shown in-game.
+      if (selected && typeof selected === 'object' && !Array.isArray(selected)) {
+        const row = selected as Record<string, unknown>;
+        if (typeof row.id === 'string' || typeof row.key === 'string') return undefined;
+      }
+      current = selected;
     }
   }
 
