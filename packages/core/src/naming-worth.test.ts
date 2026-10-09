@@ -4,8 +4,12 @@ import {
   NAMESAKE_EXPECTATION, assizePressure, beget, ensureHead, headNamesake, nameWorthAsking,
   namesakeBurden, place, testRng, testWorld,
 } from '@ed/core';
-import { asId, type PersonId } from '@ed/schema';
+import { asId, proseOriginalHash, type PersonId } from '@ed/schema';
 import type { SimCtx } from '@ed/core';
+import { readFileSync } from 'node:fs';
+import { coreMessageAddress } from './messages.js';
+import { setProseMode, setProseVariants } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -185,5 +189,62 @@ describe('a name the player chose costs something', () => {
     expect(heir.castSlots, 'he never took the seal, so this asserts nothing').toContain('head');
     const said = w.chronicle.some((e) => e.title === 'Edric, again');
     expect(said, 'the bar moved and the book said nothing').toBe(true);
+  });
+});
+
+describe('why a name is worth asking, in the reader\'s setting (#779)', () => {
+  const ORIGINALS: Record<string, string> = {
+    'naming.worth.first_cadet_child': 'the first child of a new cadet branch',
+    'naming.worth.heads_first_son': 'the Head has a son, and had none before today',
+    'naming.worth.blood_returns': 'the first of the blood to carry it in three generations',
+    'naming.worth.daughter_after_sons': 'the first daughter after {COUNT} sons',
+    'naming.worth.son_after_daughters': 'the first son after {COUNT} daughters',
+    'naming.worth.born_to_new_head': 'born to the new Head in the year he took the seal',
+    'naming.worth.throwback': '{ATTRIBUTE} well outside anything the line has produced',
+  };
+  const PLAIN: Record<string, string> = {
+    'naming.worth.first_cadet_child': 'first child of the new branch',
+    'naming.worth.heads_first_son': "the Head's first living son",
+    'naming.worth.son_after_daughters': 'a son after {COUNT} daughters',
+  };
+  function plain(ctx: SimCtx): SimCtx {
+    setProseVariants(ctx, Object.entries(PLAIN).map(([key, plainenglish]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(ORIGINALS[key]!), plainenglish,
+    })));
+    setProseMode(ctx, 'plainenglish');
+    return ctx;
+  }
+
+  it('keeps every reason\'s Original as its keyed message', () => {
+    const source = readFileSync(new URL('./people/naming.ts', import.meta.url), 'utf8');
+    const keyed = Object.fromEntries(coreMessageEntries(source)
+      .filter((entry) => entry.address.includes('#naming.worth.'))
+      .map((entry) => [entry.address, entry.text]));
+    expect(keyed).toEqual(Object.fromEntries(
+      Object.entries(ORIGINALS).map(([key, text]) => [coreMessageAddress(key), text]),
+    ));
+  });
+
+  it('gives the reviewed Plain English reason, and chooses the same reason', () => {
+    const { ctx, head, wife } = withHead();
+    plain(ctx);
+    for (const c of ctx.world.people.children(head.id)) if (c.sex === 'male') c.status = 'dead';
+    expect(nameWorthAsking(ctx, bear(ctx, head, wife, 'male', 'First Son'))).toBe("the Head's first living son");
+
+    const run = withHead(6263);
+    plain(run.ctx);
+    for (let i = 0; i < 4; i += 1) bear(run.ctx, run.head, run.wife, 'female', `Daughter ${i}`);
+    expect(nameWorthAsking(run.ctx, bear(run.ctx, run.head, run.wife, 'male', 'At Last'))).toBe('a son after 4 daughters');
+
+    const hall = testWorld(bundle, 6264, 1042);
+    plain(hall);
+    const founder = place(hall, { sex: 'male', age: 30, name: 'Founder', branch: 'branch_east' });
+    const mother = place(hall, { sex: 'female', age: 28, name: 'His Wife', branch: 'branch_east' });
+    hall.world.branches.set('branch_east', {
+      id: 'branch_east' as never, name: 'The East Rooms', house: hall.world.playerHouse,
+      founder: founder.id, splitFrom: 'main', foundedYear: 1040, grievance: 0,
+    } as never);
+    expect(nameWorthAsking(hall, bear(hall, founder, mother, 'male', 'Of The East', 'branch_east')))
+      .toBe('first child of the new branch');
   });
 });
