@@ -238,11 +238,24 @@ export function tickRelationships(ctx: SimCtx): void {
  * written, or no line is written — and a house that holds several quarrels
  * against this one is heard from once a generation, not once a quarrel.
  */
-const GRUDGE_LINES = [
-  'At {HOUSE} they had not let go of {ABOUT}.',
-  '{HOUSE} still told {ABOUT} their own way, and still told it against this house.',
-  'A guest from {HOUSE} was civil at the table and never once mentioned {ABOUT}, which was how everybody knew.',
-] as const;
+const GRUDGE_LINE_COUNT = 3;
+
+/** Each literal key and Original is inventoried by the core-message audit. */
+function grudgeEchoText(ctx: SimCtx, index: number, house: string, about: string): string {
+  const values = { HOUSE: house, ABOUT: about };
+  switch (index) {
+    case 0:
+      return msg(ctx, 'grudge.echo.0', 'At {HOUSE} they had not let go of {ABOUT}.', values);
+    case 1:
+      return msg(ctx, 'grudge.echo.1',
+        '{HOUSE} still told {ABOUT} their own way, and still told it against this house.', values);
+    case 2:
+      return msg(ctx, 'grudge.echo.2',
+        'A guest from {HOUSE} was civil at the table and never once mentioned {ABOUT}, which was how everybody knew.', values);
+    default:
+      throw new Error(`Unknown grudge echo frame ${index}`);
+  }
+}
 
 /**
  * Which line, keyed on the generation and the house rather than on a count of
@@ -286,12 +299,12 @@ export function echoGrudges(ctx: SimCtx): number {
         ? msg(ctx, 'grudge.about.event', 'what happened in "{TITLE}"', { TITLE: title })
         : msg(ctx, 'grudge.about.year', 'what the house did in {YEAR}', { YEAR: String(g.originYear) });
       const name = w.houses.get(house)?.name ?? house;
-      const line = grudgeLineIndex(w.year, house, GRUDGE_LINES.length);
+      const line = grudgeLineIndex(w.year, house, GRUDGE_LINE_COUNT);
       w.chronicle.push({
         id: chronicleEntryId(ctx),
         year: w.year,
         weight: 'line',
-        text: msg(ctx, `grudge.echo.${line}`, GRUDGE_LINES[line]!, { HOUSE: name, ABOUT: about }),
+        text: grudgeEchoText(ctx, line, name, about),
         echoFrame: `grudge:${line}`,
         named: false,
         cause: { year: g.originYear, ...(g.originPage ? { page: g.originPage } : {}) },
