@@ -188,6 +188,36 @@ describe('the string-source audit (issue #276)', () => {
     ]);
   });
 
+  it('includes one-word player-visible tale bias in the migration queue', () => {
+    const yaml = [
+      'tales:',
+      '  - id: a_legend',
+      '    teller: singers from the northern hall',
+      '    bias: wistful',
+      '    text: The borrowed ring never came home.',
+    ].join('\\n');
+    const entries = plainEnglishContentWorkItems('tales.yaml', yaml);
+    expect(entries.map((entry) => entry.address)).toEqual([
+      'content:tales.yaml#tales[id=a_legend].teller',
+      'content:tales.yaml#tales[id=a_legend].bias',
+      'content:tales.yaml#tales[id=a_legend].text',
+    ]);
+    expect(entries.find((entry) => entry.address.endsWith('.bias'))?.words).toBe(1);
+    expect(unclassifiedContentKeys(yaml)).toEqual([]);
+    expect(auditContentFile('tales.yaml', yaml)).toEqual([
+      expect.objectContaining({ voice: 'tale', strings: 3 }),
+    ]);
+
+    const bias = entries.find((entry) => entry.address.endsWith('.bias'))!;
+    const reviewed = {
+      address: bias.address,
+      of: proseOriginalHash(bias.text),
+      plainenglish: 'They want the ring to return.',
+    };
+    expect(plainEnglishCoverageFor([bias], [])).toMatchObject({ missing: 1, current: 0 });
+    expect(plainEnglishCoverageFor([bias], [reviewed])).toMatchObject({ missing: 0, current: 1 });
+  });
+
   it('notices a prose field that neither list accounts for', () => {
     expect(unclassifiedContentKeys([
       'events:',
