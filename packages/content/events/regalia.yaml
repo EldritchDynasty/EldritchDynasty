@@ -224,3 +224,117 @@ events:
             id: the_second_obligation_lie
             severity: major
             provableBy: [the_church, house_marrow]
+
+proseVariants:
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].title"
+    of: 5dd394762997db3a
+    plainenglish: >-
+      Show the Three Heirlooms
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].body"
+    of: 6dcd9bb2c4d2a466
+    plainenglish: >-
+      The Assembly meets every three years, and heralds keep the Roll of Houses. A man who has
+      never visited the Nethering, and never will, reads the family's entry aloud. This year the
+      heralds are checking whether the family still has its three founding objects. They are not
+      making an accusation. Their list names all three in spellings older than {HEAD} uses. The
+      herald wants the objects placed on a table, with a hand on them, so he can record that he
+      has seen them. The family has kept these objects since its founding, but no one has ever
+      asked it to prove that. The request sounds simple, but it matters a great deal.
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].interaction.choices[id=show_all_three].label"
+    of: 31f6d1821bb79a0e
+    plainenglish: >-
+      Put all three objects on the table and let the herald record seeing them.
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].interaction.choices[id=show_all_three].outcomes[id=shown].text"
+    of: 4fa1ca3df26d4959
+    plainenglish: >-
+      The herald counts all three objects and notes the older spellings of their names. He asks
+      what the third one is for. The family tells him the truth: nobody knows. He records that
+      too. The family's place on the Roll rises by one position that year, though the herald's
+      own notes do not explain why. Those notes survive and become the oldest independent account
+      of the three objects.
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].interaction.choices[id=show_the_seal_only].label"
+    of: 23ea946b3d85f9b7
+    plainenglish: >-
+      Show the seal and offer the herald a good lunch. The other two objects are not the
+      Assembly's business.
+  - address: "content:events/regalia.yaml#events[id=the_herald_asks_to_see_it].interaction.choices[id=show_the_seal_only].outcomes[id=seal_only].text"
+    of: c21572cb34a78307
+    plainenglish: >-
+      Showing the seal is enough to satisfy everyone in the room. But one person knows the herald
+      asked to see all three objects. The official notes say only that the seal was shown. They
+      never mention the other two, although the document was supposed to cover all three. About
+      four hundred years later, careful readers will notice that omission.
+  - address: "content:events/regalia.yaml#events[id=the_ring_that_fits].title"
+    of: 889b9e84af8bb8c8
+    plainenglish: >-
+      The Ring Fits
+  - address: "content:events/regalia.yaml#events[id=the_ring_that_fits].body"
+    of: bfe2e6b40de024d0
+    plainenglish: >-
+      At the Greening feast, someone has drunk enough wine to take the ring from the second press
+      and ask everyone to try it on. This happens every few years. The ring has never fitted
+      anyone: it is too large for a man's hand or a woman's. At the end of the evening, the
+      children are usually allowed to play at trying it on. But {WEARER} is not a child and is
+      not playing. This time, the ring fits.
+  - address: "content:events/regalia.yaml#events[id=the_ring_that_fits].interaction.outcomes[id=it_went_on].text"
+    of: bc76356c2de6faa8
+    plainenglish: >-
+      Forty people see the ring fit. People keep talking across the hall. By the far end of the
+      table, they are already retelling it as something that happened to somebody else. At the
+      near end, nobody speaks for about four breaths.
+  - address: "content:events/regalia.yaml#events[id=the_rod_out_of_the_press].title"
+    of: f2906484a738f170
+    plainenglish: >-
+      Someone Decides to Test the Black Rod
+  - address: "content:events/regalia.yaml#events[id=the_rod_out_of_the_press].body"
+    of: b6a2cbdd1c94cd41
+    plainenglish: >-
+      For four hundred years, the family has kept a yard-long piece of black wood in a press.
+      People have argued about it for just as long, but nobody has written down what was actually
+      tried or what happened. {THEORIST} asks {HEAD} to lend them the rod and a ruled notebook,
+      and to let them test it carefully for as long as necessary, even if the work becomes
+      boring. It is the cheapest request the family has received in a decade. For the first time
+      in four centuries, someone in the family wants to find out what is true instead of deciding
+      what to do.
+  - address: "content:events/regalia.yaml#events[id=the_rod_out_of_the_press].interaction.outcomes[id=granted].text"
+    of: c1999999b850c63d
+    plainenglish: >-
+      The rod and notebook are taken upstairs. For the next eleven years, someone in the house
+      records the weather before breakfast. Nobody expects this to achieve anything. At first
+      everyone is wrong. Much later, everyone turns out to be right after all. The two hundred
+      years between those judgments are the worthwhile part.
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].title"
+    of: 6a88fd655a864251
+    plainenglish: >-
+      The Box Beneath the Leases
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].body"
+    of: c53477bc6923a488
+    plainenglish: >-
+      The second cellar is so cold that the glue becomes brittle. The family says this box has
+      not been properly emptied since it was filled. They have repeated that for two hundred
+      years without checking. {FINDER} finally checks. Beneath four generations of leases are two
+      half-sheets, folded once, in the founder's handwriting. One is written more steadily than
+      the other. Someone fetches {HEAD} from the yard during an argument about a wall. The head
+      of the house never goes back to that argument.
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].interaction.outcomes[id=opened].text"
+    of: 093d0c64ced2fae8
+    plainenglish: >-
+      In the cold cellar, everyone stands and reads each half-sheet four times. Nobody wants to
+      sit down, because that would turn the discovery into a formal meeting. The sheets describe
+      the second obligation in almost the same way. They differ by one word and were written
+      eight days apart.
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].record.subject"
+    of: d59351de2c928c12
+    plainenglish: >-
+      the two handwritten half-sheets
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].record.options.record.chronicle"
+    of: d2ba72e87bda5e74
+    plainenglish: >-
+      The founder wrote two half-sheets eight days apart. They disagree about the second
+      obligation. Both are still in the box. Nobody who understands what they mean will destroy
+      either sheet.
+  - address: "content:events/regalia.yaml#events[id=the_box_under_the_leases].record.options.embellish.chronicle"
+    of: 3cd7c829db31b2bd
+    plainenglish: >-
+      A fair copy of the second obligation was found beneath the leases. It matched the original
+      in every detail, just as the family always said it would.
