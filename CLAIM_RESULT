@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim check --agent chatgpt/739-muster-chronicle-messages-20261010
+request-commit: a1483a7a7fdddc67e5a4690e3e2edb77af9f5ff7
+
+holding 739 (lane code, 2m)
+landing commit needs: Closes #739
+6 other claim(s) open, none overlapping the 2 path(s) your claim declares.
