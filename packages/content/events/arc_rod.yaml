@@ -225,3 +225,144 @@ events:
             provableBy: [house_ilm, the_church, house_marrow]
     rumour: { id: rumour_what_the_rod_is_for, accuracy: 0.25, spread: 1 }
     accounts: [ilm_note_on_the_nethering_rod, the_household_rule_as_taught]
+
+proseVariants:
+  - address: "content:events/arc_rod.yaml#events[id=rod_a_theory_that_works].title"
+    of: "8af1444cf41c08e8"
+    plainenglish: >-
+      A One-Yard Black Rod and a Notebook
+  - address: "content:events/arc_rod.yaml#events[id=rod_a_theory_that_works].body"
+    of: "31cb41a0e7c52a5c"
+    plainenglish: >-
+      The house has owned the rod for as long as it has existed. It is one yard of unmarked black
+      wood, and holding it makes people warm. Every generation has offered a theory about it.
+      {THEORIST} decides to keep records instead. For eleven years, they note the time, the
+      weather and who was in the room whenever someone holds the rod. By the ninth year, the
+      number of people present seems to predict what will happen. The pattern holds every time
+      they test it.
+  - address: "content:events/arc_rod.yaml#events[id=rod_a_theory_that_works].absentBody"
+    of: "2db383bb1f4a8fc7"
+    plainenglish: >-
+      For eleven years, someone recorded the time, weather and people present whenever the rod
+      was used. That person has since died. Their notes show a clear pattern. Four people who
+      often disagreed have tested it eleven more times over sixty years. It appeared to work
+      every time.
+  - address: "content:events/arc_rod.yaml#events[id=rod_a_theory_that_works].interaction.outcomes[id=written].text"
+    of: "44e0d2bcd4f19ca0"
+    plainenglish: >-
+      The rod works when two blood relatives are present and does nothing when there is only one.
+      The household records this finding. For the first time in four hundred years, the family
+      has a claim about the rod that someone outside the house can check.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].title"
+    of: "d4a4a148aa5a4744"
+    plainenglish: >-
+      Three Generations Trust the Same Rule
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].body"
+    of: "3dc8f7682aa6b604"
+    plainenglish: >-
+      The family believes that the rod needs two blood relatives in the room. For ninety years,
+      the rule has appeared to work every time. The household now treats it as a fact, and
+      children learn it before they learn to tend the grates. {HEAD} has used the rule twice to
+      question whether a woman carries the blood she claims. Both times, its answer matched what
+      the marriage market had already decided. Everyone saw that as proof of the rule, not as a
+      reason to doubt it.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].absentBody"
+    of: "4f4a2712ff365ec6"
+    plainenglish: >-
+      The family has followed the rule about two blood relatives for ninety years without seeing
+      it fail. Children learn the rule before they learn to tend the grates. People have used it
+      to settle two marriage disputes. Both times, it agreed with what the marriage market had
+      already decided, so the household trusted it even more.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].interaction.choices[id=write_it_as_law].label"
+    of: "87df1cda5a6f2546"
+    plainenglish: >-
+      Write the rule down as a settled fact. Four hundred years of guessing is enough.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].interaction.choices[id=write_it_as_law].outcomes[id=entered].text"
+    of: "16e06d9d13d71c31"
+    plainenglish: >-
+      The chronicler writes the rule down as a finding, not an opinion, and cites eleven years of
+      notes. The house believes it can finally state something true about the rod. Recording the
+      finding is the family's proudest moment in about two hundred years.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].interaction.choices[id=keep_it_a_habit].label"
+    of: "126c001319b03ae7"
+    plainenglish: >-
+      Keep the rule out of the book. A written claim would have to be defended.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].interaction.choices[id=keep_it_a_habit].outcomes[id=habit].text"
+    of: "ba0e32fc898969e0"
+    plainenglish: >-
+      The family continues to follow the rule but never records it as a formal claim. There is no
+      cost they can measure. For the next two generations, people cannot tell whether they are
+      following a proven finding or a superstition. They follow it just as carefully either way.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].record.subject"
+    of: "1153414ebeaddf2a"
+    plainenglish: >-
+      the rule about two blood relatives in the room
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].record.options.record.chronicle"
+    of: "350e2f9f71e85b73"
+    plainenglish: >-
+      The rod appears to work with two blood relatives in the room and not with one. The family
+      has eleven years of notes and ninety years of practice with no recorded exception. It is
+      the first claim about the third of the three heirlooms that someone else can test.
+  - address: "content:events/arc_rod.yaml#events[id=rod_three_generations_of_being_right].record.options.embellish.chronicle"
+    of: "f97b62179998dca3"
+    plainenglish: >-
+      The rod responds only to the family's blood. It has always answered whenever a member of
+      this bloodline has needed it.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].title"
+    of: "461c1b9dd9909509"
+    plainenglish: >-
+      What the Notebook Was Really Counting
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].body"
+    of: "56e82c2297204c8e"
+    plainenglish: >-
+      During a cold spring, fever has left the hall half empty. The family brings out the rod
+      with two blood relatives in the room, as it has done for two hundred years. Nothing
+      happens. On Tuesday they try again with four people, but it still does nothing. On
+      Thursday, one person tries alone at four in the morning and the rod works. The archivist
+      spends nine days reading the original eleven years of notes. Every successful test had one
+      other thing in common: there was a fire in the room. The family had built two hundred years
+      of decisions around a rule that was never real. But the fire does not explain what the rod
+      is for either.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].interaction.choices[id=write_the_correction].label"
+    of: "b1137a7f152a681b"
+    plainenglish: >-
+      Write the correction below the old finding, in the same handwriting.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].interaction.choices[id=write_the_correction].outcomes[id=corrected].text"
+    of: "ca21772728e6aadb"
+    plainenglish: >-
+      The correction takes a page and a half. Its final line says that the house does not know
+      what the rod is for and never has. Three people cry at supper, though none can later
+      explain why. The family has lost more than a theory. For two hundred years, they believed
+      they alone knew something true about the rod.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].interaction.choices[id=let_it_stand].label"
+    of: "1807c05dca553141"
+    plainenglish: >-
+      Keep the old finding in the book. No one outside this house can test it.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].interaction.choices[id=let_it_stand].outcomes[id=stood].text"
+    of: "c6f4dc13327b15e7"
+    plainenglish: >-
+      The family leaves the finding in the book, supported by eleven years of notes. Every later
+      generation learns a false rule about its blood and cannot challenge it. Two generations use
+      the rule to arrange marriages. Another uses it to refuse one, making the decision in just
+      four minutes.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].record.subject"
+    of: "0c55be558bef9e91"
+    plainenglish: >-
+      what the first eleven years of notes were measuring
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].record.options.record.chronicle"
+    of: "20b97445cf39a2f1"
+    plainenglish: >-
+      For two hundred years, the supposed rule about two blood relatives was really tracking
+      whether there was a fire in the room. Nobody checked because the rule seemed reliable. The
+      house still does not know what the third of the three heirlooms is for. It never did, and
+      should stop claiming otherwise.
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].record.options.record.claims[0].text"
+    of: "50a8ccfc7664c9d8"
+    plainenglish: >-
+      discovered that the rod's apparent rule about two blood relatives followed the presence of
+      a fire, not their blood
+  - address: "content:events/arc_rod.yaml#events[id=rod_the_correlation_was_something_else].record.options.embellish.chronicle"
+    of: "8d0b58eb297f45a7"
+    plainenglish: >-
+      A cold spring temporarily disturbed the rod, as cold springs can. After examining it, we
+      confirmed that the rule about two blood relatives still works exactly as it always has.
