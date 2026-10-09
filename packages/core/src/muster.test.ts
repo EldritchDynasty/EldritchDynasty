@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { musterEscalation } from '@ed/schema';
+import { musterEscalation, proseOriginalHash } from '@ed/schema';
+import { coreMessageAddress } from './messages.js';
 import {
   activeCommitment, addOfficer, applyEffect, beginCommitment, bootstrap, buyPosition, loadGame,
   maxMen, musterMortality, musterOrder, musterUpkeep, place, positionOptions, reinforceCommitment,
-  saveGame, setPosition, settleCommitment, testRng, testWorld, tickMuster, withdrawCommitment,
+  saveGame, setPosition, setProseMode, setProseVariants, settleCommitment, testRng, testWorld, tickMuster, withdrawCommitment,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -439,4 +440,62 @@ describe('the muster effect', () => {
     applyEffect({ kind: 'muster', op: 'set_position', position: 'serjeanty' }, ctx, {});
     expect(activeCommitment(ctx)!.position).toBe('serjeanty');
   });
+});
+
+/**
+ * Yearly lines are written at the time they happen, so translation must affect
+ * the next line without changing the tide, casualties, credit or saved history.
+ */
+describe('muster Chronicle wording', () => {
+  const tideBands = {
+    favour: { start: 80, wording: "in the house's favour", simple: 'The war is going well for the house.' },
+    against: { start: 20, wording: 'against the house', simple: 'The war is going badly for the house.' },
+    holding: { start: 50, wording: 'holding, for now', simple: 'Neither side has the advantage yet.' },
+  } as const;
+
+  for (const [band, tide] of Object.entries(tideBands) as Array<[keyof typeof tideBands, typeof tideBands[keyof typeof tideBands]]>) {
+    for (const withLosses of [false, true]) {
+      it(`renders the ${band} tide with ${withLosses ? 'losses' : 'no losses'} in both modes`, () => {
+        const shape = withLosses ? 'losses' : 'no_losses';
+        const startMen = withLosses ? 20 : 1;
+        const makeWorld = () => {
+          const ctx = testWorld(bundle);
+          ctx.world.respect = 'exalted'; // enough levy for twenty men
+          ctx.world.muster.tide = tide.start;
+          beginCommitment(ctx, startMen, 'the_wars');
+          return ctx;
+        };
+
+        const original = makeWorld();
+        const plain = makeWorld();
+        const originalTemplate = withLosses
+          ? `The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs ${tide.wording}.`
+          : `The war goes on. {MEN} of the house's men remain in the field, and the tide runs ${tide.wording}.`;
+        const plainTemplate = withLosses
+          ? `The war continues. {MEN} men remain in the field and {LOST} died this year. ${tide.simple}`
+          : `The war continues. {MEN} men remain in the field. ${tide.simple}`;
+        setProseVariants(plain, [{
+          address: coreMessageAddress(`muster.year.${band}.${shape}`),
+          of: proseOriginalHash(originalTemplate),
+          plainenglish: plainTemplate,
+        }]);
+        setProseMode(plain, 'plainenglish');
+
+        tickMuster(original, testRng('yearly-muster-message'));
+        tickMuster(plain, testRng('yearly-muster-message'));
+        const men = activeCommitment(original)!.men;
+        const lost = startMen - men;
+        expect(withLosses ? lost > 0 : lost === 0).toBe(true);
+        const fill = (text: string) => text.replace('{MEN}', String(men)).replace('{LOST}', String(lost));
+
+        expect(original.world.chronicle.at(-1)?.text).toBe(fill(originalTemplate));
+        expect(plain.world.chronicle.at(-1)?.text).toBe(fill(plainTemplate));
+        expect(plain.world.muster).toEqual(original.world.muster);
+        expect(plain.world.chronicle.at(-1)?.weight).toBe('line');
+
+        setProseMode(plain, 'original');
+        expect(plain.world.chronicle.at(-1)?.text).toBe(fill(plainTemplate));
+      });
+    }
+  }
 });
