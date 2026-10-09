@@ -52,11 +52,41 @@ export function contentFiles(dir: string): string[] {
  * file and a missing file the same thing, and a missing named file is a broken
  * checkout that must still throw.
  */
+/**
+ * Prose variants repeat the name of their own YAML file on every address, as
+ * well as three JSON property names. A migration of thousands of passages
+ * otherwise consumes the cold-start byte budget with redundant metadata.
+ *
+ * Store each reviewed row as [path-within-file, Original hash or null, wording].
+ * assembleBundle reconstructs the unchanged canonical object BEFORE Zod and
+ * file-provenance validation. Keep malformed/unrecognised rows intact so the
+ * normal validator still rejects them instead of this optimiser hiding them.
+ */
+function compactProseVariants(doc: unknown, file: string): unknown {
+  if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) return doc;
+  const row = doc as Record<string, unknown>;
+  if (!Array.isArray(row.proseVariants)) return doc;
+
+  const prefix = `content:${file}#`;
+  row.proseVariants = row.proseVariants.map((candidate: unknown) => {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return candidate;
+    const variant = candidate as Record<string, unknown>;
+    if (typeof variant.address !== 'string' || !variant.address.startsWith(prefix)
+      || typeof variant.plainenglish !== 'string'
+      || (variant.of !== undefined && typeof variant.of !== 'string')
+      || Object.keys(variant).some((key) => !['address', 'of', 'plainenglish'].includes(key))) {
+      return candidate;
+    }
+    return [variant.address.slice(prefix.length), variant.of ?? null, variant.plainenglish];
+  });
+  return doc;
+}
+
 export function readContentDocs(dir: string): Record<string, string> {
   const docs: Record<string, string> = {};
   for (const path of contentFiles(dir)) {
     const key = path.slice(dir.length + 1).split(sep).join(posix.sep);
-    docs[key] = JSON.stringify(parse(readFileSync(path, 'utf8')) ?? null);
+    docs[key] = JSON.stringify(compactProseVariants(parse(readFileSync(path, 'utf8')) ?? null, key));
   }
   return docs;
 }
