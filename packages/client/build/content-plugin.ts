@@ -27,7 +27,9 @@ import type { Plugin } from 'vite';
  * keeps `assembleBundle(files, parse)` typed exactly as it already is.
  */
 export const CONTENT_MODULE = 'virtual:ed-content';
+export const PROSE_CONTENT_MODULE = 'virtual:ed-prose-variants';
 const RESOLVED = `\0${CONTENT_MODULE}`;
+const PROSE_RESOLVED = `\0${PROSE_CONTENT_MODULE}`;
 
 /** Every `.yaml` under `dir`, keyed by its path relative to it, posix-style. */
 export function contentFiles(dir: string): string[] {
@@ -92,6 +94,34 @@ export function readContentDocs(dir: string): Record<string, string> {
 }
 
 /**
+ * All reviewed Plain English sentences live in an optional Vite chunk.
+ * Keep the Original gameplay text in the initial payload, but do not parse
+ * thousands of unrequested counterpart strings before the first frame.
+ *
+ * The two projections come from the same precompiled documents. Node/editor
+ * loaders still consume the complete authoring representation unchanged.
+ */
+export function readStartupDocs(dir: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(readContentDocs(dir)).map(([file, text]) => {
+    const doc = JSON.parse(text) as Record<string, unknown> | null;
+    if (!doc || typeof doc !== 'object' || !Array.isArray(doc.proseVariants)) return [file, text];
+    const { proseVariants: _variants, ...original } = doc;
+    return [file, JSON.stringify(original)];
+  }));
+}
+
+export function readProseDocs(dir: string): Record<string, unknown[]> {
+  const out: Record<string, unknown[]> = {};
+  for (const [file, text] of Object.entries(readContentDocs(dir))) {
+    const doc = JSON.parse(text) as Record<string, unknown> | null;
+    if (doc && Array.isArray(doc.proseVariants) && doc.proseVariants.length) {
+      out[file] = doc.proseVariants;
+    }
+  }
+  return out;
+}
+
+/**
  * A Vite plugin serving `virtual:ed-content`.
  *
  * In dev the docs are re-read on every load and the module is invalidated when
@@ -102,20 +132,23 @@ export function edContent(dir: string): Plugin {
   return {
     name: 'ed:content',
     resolveId(id) {
-      return id === CONTENT_MODULE ? RESOLVED : null;
+      if (id === CONTENT_MODULE) return RESOLVED;
+      if (id === PROSE_CONTENT_MODULE) return PROSE_RESOLVED;
+      return null;
     },
     load(id) {
-      if (id !== RESOLVED) return null;
+      if (id !== RESOLVED && id !== PROSE_RESOLVED) return null;
       for (const path of contentFiles(dir)) this.addWatchFile(path);
-      const docs = readContentDocs(dir);
+      const docs = id === RESOLVED ? readStartupDocs(dir) : readProseDocs(dir);
       return `export default JSON.parse(${JSON.stringify(JSON.stringify(docs))});\n`;
     },
     handleHotUpdate({ file, server, modules }) {
       if (!file.endsWith('.yaml') || !file.startsWith(dir)) return;
-      const mod = server.moduleGraph.getModuleById(RESOLVED);
-      if (!mod) return;
-      server.moduleGraph.invalidateModule(mod);
-      return [...modules, mod];
+      const watched = [RESOLVED, PROSE_RESOLVED]
+        .map((id) => server.moduleGraph.getModuleById(id))
+        .filter((mod) => mod !== undefined);
+      for (const mod of watched) server.moduleGraph.invalidateModule(mod);
+      return [...modules, ...watched];
     },
   };
 }
