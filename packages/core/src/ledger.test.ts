@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, contentProseEntries, type ActiveAge, type Person } from '@ed/schema';
+import { asId, contentProseEntries, proseOriginalHash, type ActiveAge, type Person } from '@ed/schema';
 import {
   bootstrap, loadGame, missingPlainEnglish, place, revealClause, saveGame, setProseMode, setProseVariants,
 } from '@ed/core';
@@ -96,8 +96,8 @@ describe('Ledger pages in the selected prose mode', () => {
     hireArchivist(ctx);
     const active = activeNamed('the_long_peace');
     setProseVariants(ctx, [
-      { address: `${base}.name`, plainenglish: plain.name },
-      ...(translatedText ? [{ address: `${base}.text`, plainenglish: plain.text }] : []),
+      { address: `${base}.name`, of: proseOriginalHash(clause.name), plainenglish: plain.name },
+      ...(translatedText ? [{ address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: plain.text }] : []),
     ]);
     setProseMode(ctx, mode);
 
@@ -134,8 +134,8 @@ describe('Ledger pages in the selected prose mode', () => {
       .sort((a, b) => a.weight - b.weight)[0]!;
     const address = `content:clauses.yaml#clauses[id=${next.id}]`;
     setProseVariants(restored, [
-      { address: `${address}.name`, plainenglish: 'The Newly Read Clause' },
-      { address: `${address}.text`, plainenglish: 'The words chosen for the next page.' },
+      { address: `${address}.name`, of: proseOriginalHash(next.name), plainenglish: 'The Newly Read Clause' },
+      { address: `${address}.text`, of: proseOriginalHash(next.text), plainenglish: 'The words chosen for the next page.' },
     ]);
     expect(revealClause(restored, activeNamed('the_long_peace'))).toBe(next.id);
     expect(restored.world.chronicle.slice(-2)).toEqual([
