@@ -2,14 +2,13 @@
  * Open the native-backed file chooser for importing an opaque saved-game JSON.
  * The chooser belongs to the mobile host, not to the game or its save schema.
  *
- * Input injection keeps native picker cancellation testable in Node without
- * importing Capacitor or booting a WebView.
+ * A prepared input parameter keeps native picker cancellation testable in
+ * Node without importing Capacitor or booting a WebView.
  */
-export function chooseSaveFile(input: HTMLInputElement = document.createElement('input')): Promise<unknown | null> {
+export function chooseSaveFile(input: HTMLInputElement): Promise<unknown | null> {
   return new Promise((resolve) => {
-    input.type = 'file';
-    input.accept = 'application/json,.json,.edsave';
-
+    // The Platform owns which file types are accepted; this helper handles
+    // only native picker completion and JSON reading.
     // Dismissing a native picker emits `cancel`, not `change`. Without
     // this listener, callers of importSave wait on a never-settled Promise.
     input.addEventListener('cancel', () => resolve(null), { once: true });
