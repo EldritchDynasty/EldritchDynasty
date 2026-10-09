@@ -359,6 +359,28 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # Electron 44 no longer downloads its runtime binary in postinstall.
+      # Verify the fresh Windows npm install really starts without electron.exe,
+      # then use the supported launcher to install/boot it and check the GAME
+      # renderer and save bridge. This is not the tagged installer smoke (#321).
+      - name: build game renderer for cold Electron smoke
+        run: npm run build:client
+
+      - name: require a cold Electron runtime
+        shell: pwsh
+        run: |
+          $binary = Join-Path $env:GITHUB_WORKSPACE 'node_modules\electron\dist\electron.exe'
+          if (Test-Path $binary) {
+            throw "Electron runtime was already installed before the cold-start smoke: $binary"
+          }
+
+      # Deliberately launch the Windows-only GUI smoke through Node rather
+      # than adding an npm script to CI's portable Linux full-preflight set.
+      - name: launch game with lazily installed Electron
+        working-directory: packages/shell
+        timeout-minutes: 10
+        run: node scripts/electron.mjs . --smoke
+
       # The same three commands AGENTS.md tells an agent to run, spelled the
       # same way. A Windows-only variant of a command is a command that drifts:
       # the point is that `npm run typecheck` works on both, not that there is
