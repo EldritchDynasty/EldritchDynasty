@@ -237,7 +237,7 @@ describe('stable adviser prose (#641)', () => {
     expect(missingPlainEnglish(ctx)).toEqual([]);
     setProseMode(ctx, 'original');
     expect(session.advice('tree', target.id, 1)).toEqual(original);
-    expect(saveGame(ctx)).toEqual(saved);
+    expect({ ...saveGame(ctx), savedAt: saved.savedAt }).toEqual(saved);
   });
 
   it('selects the same rite advice and inserts the already-visible choice label', () => {
@@ -264,6 +264,8 @@ describe('stable adviser prose (#641)', () => {
   it('reports missing and stale templates while retaining the Original advice', () => {
     const { ctx, target } = helpWorld();
     const original = adviceFor(ctx, 'tree', target.id, 1);
+    // An unselected relative must not add a migration miss for unseen counsel.
+    place(ctx, { sex: 'male', age: 30, name: 'Edren' });
     setProseVariants(ctx, [{
       ...variant('adviser.help.reader.tree', 'Start with a name.'),
       of: proseOriginalHash('An obsolete Original.'),

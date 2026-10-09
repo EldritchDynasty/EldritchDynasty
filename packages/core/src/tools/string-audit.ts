@@ -15,15 +15,16 @@
  * Every function here is pure over file text handed to it, so the test can
  * plant a file and the counts are deterministic: no clock, no RNG, no world.
  *
- * Code strings are found by a small tokenizer, not a parser. It is a count
- * that has to be stable, not a proof; what it is guaranteed not to do is
- * count a comment, an import path or an identifier as prose.
+ * Legacy code strings use a small tokenizer; explicit msg() identities use
+ * the TypeScript syntax tree. Comments, import paths and identifiers are
+ * excluded from the narrative inventory.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { CONTENT_PROSE_KEYS, contentInterpolationTokens, contentProseEntries, proseOriginalHash, ProseVariantS, type ProseVariant } from '@ed/schema';
+import { coreMessageEntries } from './core-message-audit.js';
 
 export { CONTENT_PROSE_KEYS } from '@ed/schema';
 
@@ -61,9 +62,8 @@ export interface StringCount {
  *
  * The address is identity, not wording. Content prefers authored `id` / `key`
  * fields over array positions so rewording a sentence cannot orphan its
- * counterpart. Code prose has no authored message ids yet, so its address is
- * the deterministic ordinal among player-facing sentence literals in that
- * source file; #412 owns the eventual runtime message-id seam.
+ * counterpart. Migrated code uses explicit msg() keys; unmigrated code retains
+ * its source-literal ordinal until its runtime rendering seam is migrated.
  */
 export interface PlainEnglishWorkItem {
   source: 'content' | 'core';
@@ -164,6 +164,8 @@ export function unclassifiedContentKeys(text: string): string[] {
 // ── Code ────────────────────────────────────────────────────────────────────
 
 export interface Literal {
+  /** Offset of the opening quote/backtick in the source. */
+  start: number;
   /** Text normalized for counting: each template interpolation is one `X`. */
   text: string;
   /** Source wording as authored between the quotes/backticks. */
@@ -222,6 +224,7 @@ export function literals(src: string): Literal[] {
       }
       i++;
       out.push({
+        start,
         text,
         sourceText,
         interpolations,
@@ -268,35 +271,46 @@ export function sentenceLiterals(src: string): string[] {
 }
 
 export function auditCoreFile(file: string, text: string): StringCount[] {
-  const found = sentenceLiterals(text);
+  const found = plainEnglishCoreWorkItems(file, text);
   if (!found.length) return [];
   const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
   return [{
     source: 'core', file, voice,
     strings: found.length,
-    words: found.reduce((sum, s) => sum + words(s), 0),
-    interpolations: 0,
+    words: found.reduce((sum, item) => sum + item.words, 0),
+    interpolations: found.reduce((sum, item) => sum + contentInterpolationTokens(item.text).length, 0),
   }];
 }
 
 
 /**
- * Generated narrative prose still needs a Plain English counterpart. Until the
- * runtime acquires explicit message ids (#412), identify those literals by
- * their order among player-facing sentence literals in the source file. The
- * ordinal is independent of the sentence wording itself.
+ * Explicit keys match the runtime renderer, even after source-file moves.
+ * Legacy prose retains its ordinal. A keyed Original appears exactly once,
+ * including short templates that the legacy sentence heuristic would omit.
  */
 export function plainEnglishCoreWorkItems(file: string, text: string): PlainEnglishWorkItem[] {
   const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
-  return sentenceLiteralEntries(text).map(({ literal, ordinal }) => ({
-    source: 'core',
-    file,
-    voice,
-    address: `core:${file}#literal[${ordinal}]`,
-    text: literal.sourceText,
-    words: words(literal.text),
-    interpolations: literal.interpolations,
-  }));
+  const messages = coreMessageEntries(text);
+  const keyedStarts = new Set(messages.map((entry) => entry.start));
+  const legacy = sentenceLiteralEntries(text)
+    .filter(({ literal }) => !keyedStarts.has(literal.start))
+    .map(({ literal, ordinal }) => ({
+      start: literal.start,
+      item: {
+        source: 'core' as const, file, voice,
+        address: `core:${file}#literal[${ordinal}]`,
+        text: literal.sourceText,
+        words: words(literal.text),
+        interpolations: literal.interpolations,
+      },
+    }));
+  return [...legacy, ...messages.map(({ start, address, text: original, interpolations }) => ({
+    start,
+    item: {
+      source: 'core' as const, file, voice, address,
+      text: original, words: words(original), interpolations,
+    },
+  }))].sort((a, b) => a.start - b.start).map(({ item }) => item);
 }
 
 const STATIC_ATTRIBUTES = ['title', 'placeholder', 'aria-label', 'alt', 'label'];
@@ -372,12 +386,18 @@ export function plainEnglishWorklist(repo: string): PlainEnglishWorkItem[] {
   const content = join(repo, 'packages/content');
   const core = join(repo, 'packages/core/src');
   const read = (root: string, rel: string) => readFileSync(join(root, rel), 'utf8');
-  return [
+  const items = [
     ...walk(content, '', (f) => f.endsWith('.yaml') && f !== 'loci.yaml')
       .flatMap((f) => plainEnglishContentWorkItems(f, read(content, f))),
     ...walk(core, '', (f) => f.endsWith('.ts') && !f.startsWith('tools/') && !f.startsWith('fixtures/') && !isTest(f))
       .flatMap((f) => plainEnglishCoreWorkItems(f, read(core, f))),
   ];
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (seen.has(item.address)) throw new Error(`Duplicate Plain English address: ${item.address}`);
+    seen.add(item.address);
+  }
+  return items;
 }
 
 
@@ -420,7 +440,8 @@ export function plainEnglishCoverageFor(
   };
   for (const item of items) {
     const variant = byAddress.get(item.address);
-    const expectedOf = item.source === 'content' ? proseOriginalHash(item.text) : undefined;
+    const expectedOf = item.source === 'content' || item.address.startsWith('core:messages#')
+      ? proseOriginalHash(item.text) : undefined;
     let status: PlainEnglishCoverageStatus | 'current';
     if (!variant) status = 'missing';
     else if (expectedOf !== undefined && variant.of !== expectedOf) status = 'stale';

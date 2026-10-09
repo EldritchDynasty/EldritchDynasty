@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contentProseEntries, proseOriginalHash, setContentProseText } from '@ed/schema';
+import { coreMessageAddress } from '../messages.js';
 import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
   plainEnglishCoverage, plainEnglishCoverageFor,
@@ -155,6 +156,52 @@ describe('the string-source audit (issue #276)', () => {
     expect(after).toHaveLength(1);
     expect(after[0]?.address).toBe('core:year/example.ts#literal[2]');
     expect(after[0]?.address).toBe(before[1]?.address);
+  });
+
+  it('keeps explicit core message identities through insertions, file moves and escaped wording', () => {
+    const source = [
+      "// msg(ctx, 'ignored.comment', 'Do not inventory this comment.');",
+      "msg(ctx, 'adviser.test.name', 'The seal\\'s holder is {NAME}.', { NAME: person.name });",
+      "msg(ctx, 'adviser.test.short', 'Read {NAME}.', { NAME: person.name });",
+      "const legacy = 'An unmigrated sentence still needs a counterpart.';",
+    ].join('\n');
+    const before = plainEnglishCoreWorkItems('advisers.ts', source);
+    const after = plainEnglishCoreWorkItems('moved/advisers.ts', `const extra = 'A new unrelated sentence.';\n${source}`);
+    const keyed = before.filter((item) => item.address.startsWith('core:messages#'));
+    expect(keyed).toEqual([
+      { source: 'core', file: 'advisers.ts', voice: 'adviser', address: coreMessageAddress('adviser.test.name'),
+        text: "The seal's holder is {NAME}.", words: 5, interpolations: ['{NAME}'] },
+      { source: 'core', file: 'advisers.ts', voice: 'adviser', address: coreMessageAddress('adviser.test.short'),
+        text: 'Read {NAME}.', words: 2, interpolations: ['{NAME}'] },
+    ]);
+    expect(before).toHaveLength(3);
+    expect(after.filter((item) => item.address.startsWith('core:messages#'))).toEqual(
+      keyed.map((item) => ({ ...item, file: 'moved/advisers.ts' })),
+    );
+  });
+
+  it('rejects duplicate keys and dynamic identities or Originals before they can masquerade as stable messages', () => {
+    expect(() => plainEnglishCoreWorkItems('advisers.ts', [
+      "msg(ctx, 'adviser.duplicate', 'First message.');",
+      "msg(ctx, 'adviser.duplicate', 'Second message.');",
+    ].join('\n'))).toThrow('Duplicate core message key');
+    expect(() => plainEnglishCoreWorkItems('advisers.ts', "msg(ctx, key, 'An unstable identity.');"))
+      .toThrow('literal key');
+    expect(() => plainEnglishCoreWorkItems('advisers.ts', "msg(ctx, 'adviser.dynamic', `Hello ${name}.`);"))
+      .toThrow('uninterpolated Original');
+  });
+
+  it('fingerprints keyed core Originals for actionable missing, stale and invalid coverage', () => {
+    const items = plainEnglishCoreWorkItems('advisers.ts', "msg(ctx, 'adviser.test', 'A name for {NAME}.');");
+    const item = items[0]!;
+    const of = proseOriginalHash(item.text);
+    const variant = { address: item.address, of, plainenglish: 'This is {NAME}.' };
+    expect(plainEnglishCoverageFor(items, [variant])).toMatchObject({ current: 1, missing: 0, stale: 0, invalid: 0 });
+    expect(plainEnglishCoverageFor(items, [])).toMatchObject({ missing: 1, remaining: [{ expectedOf: of }] });
+    expect(plainEnglishCoverageFor([{ ...item, text: 'Another name for {NAME}.' }], [variant]))
+      .toMatchObject({ current: 0, stale: 1 });
+    expect(plainEnglishCoverageFor(items, [{ ...variant, plainenglish: 'This is somebody.' }]))
+      .toMatchObject({ invalid: 1 });
   });
 
   it('finds sentences in code, and not comments, imports or developer messages', () => {
