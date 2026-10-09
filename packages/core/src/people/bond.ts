@@ -169,11 +169,16 @@ export function freeBond(ctx: SimCtx, p: Person): Freeing {
     year: ctx.world.year,
     weight: 'paragraph',
     title: msg(ctx, 'bond.freed_title', 'The bond'),
+    // Select the WHOLE paragraph before interpolating. A separate translated
+    // resentment suffix cannot move the cause and response within the sentence.
     text: forgiven > 0
-      ? msg(ctx, 'bond.forgiven',
-        'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear.',
-        { PERSON: p.name, MARKS: String(forgiven) })
-        + (resented ? ' ' + msg(ctx, 'bond.forgiven_resented', 'Not everybody who heard it was glad.') : '')
+      ? resented > 0
+        ? msg(ctx, 'bond.forgiven_with_resentment',
+          'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear. Not everybody who heard it was glad.',
+          { PERSON: p.name, MARKS: String(forgiven) })
+        : msg(ctx, 'bond.forgiven',
+          'The house tore up what {PERSON} still owed — {MARKS} marks of it — and said so where people could hear.',
+          { PERSON: p.name, MARKS: String(forgiven) })
       : msg(ctx, 'bond.ended_empty',
         "{PERSON}'s bond was ended, there being nothing left on it worth the ink.",
         { PERSON: p.name }),
