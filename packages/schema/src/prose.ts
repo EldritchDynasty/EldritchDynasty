@@ -120,7 +120,8 @@ export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /** Preserve uppercase slot names and lower/mixed-case runtime substitutions alike. */
-const CONTENT_INTERPOLATION = /\{[A-Za-z][A-Za-z0-9_]*\}/g;
+// Match the same leading-underscore placeholders that core msg() substitutes.
+const CONTENT_INTERPOLATION = /\{[A-Za-z_][A-Za-z0-9_]*\}/g;
 
 export function contentInterpolationTokens(text: string): string[] {
   return text.match(CONTENT_INTERPOLATION) ?? [];
