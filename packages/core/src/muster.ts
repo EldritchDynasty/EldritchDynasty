@@ -104,32 +104,30 @@ export function musterMortality(ctx: SimCtx, p: Person): number {
 }
 
 /**
- * Six whole-sentence originals: two loss shapes at each tide. Keys give the
- * translator a stable unit without asking them to stitch English fragments.
+ * Six whole-sentence originals, one keyed msg() call per tide/casualty
+ * combination. The source audit needs literal keys and Original templates.
  */
-const MUSTER_LINES = {
-  favour: {
-    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs in the house's favour.",
-    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs in the house's favour.",
-  },
-  against: {
-    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs against the house.",
-    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs against the house.",
-  },
-  holding: {
-    losses: "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs holding, for now.",
-    no_losses: "The war goes on. {MEN} of the house's men remain in the field, and the tide runs holding, for now.",
-  },
-} as const;
-
-/** A line the player can feel and name — invariant 13 generalised past the Assize. */
 function chronicleLine(ctx: SimCtx, c: Commitment, lost: number, tide: number): string {
-  const band = tide >= 60 ? 'favour' : tide <= 40 ? 'against' : 'holding';
-  const shape = lost > 0 ? 'losses' : 'no_losses';
-  return msg(ctx, `muster.year.${band}.${shape}`, MUSTER_LINES[band][shape], {
-    MEN: String(c.men),
-    ...(lost > 0 ? { LOST: String(lost) } : {}),
-  });
+  const values = { MEN: String(c.men), LOST: String(lost) };
+  if (tide >= 60) {
+    return lost > 0
+      ? msg(ctx, 'muster.year.favour.losses',
+        "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs in the house's favour.", values)
+      : msg(ctx, 'muster.year.favour.no_losses',
+        "The war goes on. {MEN} of the house's men remain in the field, and the tide runs in the house's favour.", values);
+  }
+  if (tide <= 40) {
+    return lost > 0
+      ? msg(ctx, 'muster.year.against.losses',
+        "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs against the house.", values)
+      : msg(ctx, 'muster.year.against.no_losses',
+        "The war goes on. {MEN} of the house's men remain in the field, and the tide runs against the house.", values);
+  }
+  return lost > 0
+    ? msg(ctx, 'muster.year.holding.losses',
+      "The war goes on. {MEN} of the house's men remain in the field, {LOST} lost this year, and the tide runs holding, for now.", values)
+    : msg(ctx, 'muster.year.holding.no_losses',
+      "The war goes on. {MEN} of the house's men remain in the field, and the tide runs holding, for now.", values);
 }
 
 /**
