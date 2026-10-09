@@ -22,6 +22,7 @@ import {
 import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
 import { proseForClause } from './prose.js';
+import { msg } from './messages.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -493,7 +494,7 @@ function seekLedgerClause(ctx: SimCtx): OrderResult {
   w.chronicle.push({
     year: w.year,
     weight: 'line',
-    text: 'The record-keepers were paid to compare the old contracts against the house copy.',
+    text: msg(ctx, 'table.ledger_search', 'The record-keepers were paid to compare the old contracts against the house copy.'),
     named: false,
   });
   const prose = proseForClause(ctx, offer.clause);
@@ -542,8 +543,9 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       w.chronicle.push({
         year: w.year,
         weight: 'line',
-        text: `${doc.generations} generations of ${p.name}'s mothers were written out fair and `
-          + `sealed by ${doc.notarisedBy}, for ${price} crowns.`,
+        text: msg(ctx, 'table.pedigree_filed',
+          "{GENERATIONS} generations of {PERSON}'s mothers were written out fair and sealed by {NOTARY}, for {PRICE} crowns.",
+          { GENERATIONS: String(doc.generations), PERSON: p.name, NOTARY: doc.notarisedBy, PRICE: String(price) }),
         named: false,
       });
       return { ok: true };
@@ -1057,6 +1059,24 @@ export function tableView(ctx: SimCtx): TableView {
   };
 }
 
+/** One whole sentence per shape of the heir's lapse, so no fallback name is stitched into another's clause. */
+function heirVacantText(ctx: SimCtx, beside: string | undefined, was: string | undefined): string {
+  if (beside) {
+    return was !== undefined
+      ? msg(ctx, 'table.heir_vacant_beside',
+        'The house has nobody standing beside {BESIDE} where {WAS} did. Nobody has been named in his place.',
+        { BESIDE: beside, WAS: was })
+      : msg(ctx, 'table.heir_vacant_beside_unnamed',
+        'The house has nobody standing beside {BESIDE} where the second one did. Nobody has been named in his place.',
+        { BESIDE: beside });
+  }
+  return was !== undefined
+    ? msg(ctx, 'table.heir_vacant',
+      'The house has nobody standing where {WAS} did. Nobody has been named in his place.', { WAS: was })
+    : msg(ctx, 'table.heir_vacant_unnamed',
+      'The house has nobody standing where the one it named as heir did. Nobody has been named in his place.');
+}
+
 /**
  * THE STEWARD. Run every year from the `table` phase.
  *
@@ -1090,7 +1110,11 @@ export function runStandingOrders(
       w.chronicle.push({
         year: w.year,
         weight: 'line',
-        text: `The house has nobody standing where ${was?.name ?? 'the one it named'} did. Nobody has been named in his place.`,
+        text: was
+          ? msg(ctx, 'table.scion_vacant',
+            'The house has nobody standing where {WAS} did. Nobody has been named in his place.', { WAS: was.name })
+          : msg(ctx, 'table.scion_vacant_unnamed',
+            'The house has nobody standing where the one it named did. Nobody has been named in his place.'),
         named: false,
       });
       w.scion = null;
@@ -1108,9 +1132,7 @@ export function runStandingOrders(
       w.chronicle.push({
         year: w.year,
         weight: 'line',
-        text: beside
-          ? `The house has nobody standing beside ${beside} where ${was?.name ?? 'the second one'} did. Nobody has been named in his place.`
-          : `The house has nobody standing where ${was?.name ?? 'the one it named as heir'} did. Nobody has been named in his place.`,
+        text: heirVacantText(ctx, beside, was?.name),
         named: false,
       });
       w.scionHeir = null;
@@ -1134,7 +1156,9 @@ export function runStandingOrders(
     w.chronicle.push({
       year: w.year,
       weight: 'line',
-      text: `${p.name} finished the term, and was better at ${t.attr} than the house had any right to expect.`,
+      text: msg(ctx, 'table.tutor_finished',
+        '{PERSON} finished the term, and was better at {ATTR} than the house had any right to expect.',
+        { PERSON: p.name, ATTR: t.attr }),
       named: false,
     });
   }

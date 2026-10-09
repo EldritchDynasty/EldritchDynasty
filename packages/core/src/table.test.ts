@@ -8,6 +8,7 @@ import {
   resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   type TableOrder,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -70,6 +71,12 @@ describe('searching the old contracts for a Ledger clause', () => {
         .sort((a, b) => a.weight - b.weight)[0]!;
       const base = `content:clauses.yaml#clauses[id=${clause.id}]`;
       setProseVariants(ctx, [
+        // The record-keepers' line is core prose (#746): keyed, and reviewed in every case.
+        {
+          address: coreMessageAddress('table.ledger_search'),
+          of: proseOriginalHash('The record-keepers were paid to compare the old contracts against the house copy.'),
+          plainenglish: 'The family paid record-keepers to check the old contracts against its own copy.',
+        },
         { address: `${base}.name`, of: proseOriginalHash(clause.name), plainenglish: 'The Kept Gift' },
         ...(coverage === 'complete' ? [{ address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
       ]);
@@ -87,6 +94,8 @@ describe('searching the old contracts for a Ledger clause', () => {
         title: coverage === 'untracked' ? clause.name : 'The Kept Gift',
         text: coverage === 'complete' ? 'The gift must stay with the hand that owes it.' : clause.text,
       });
+      expect(ctx.world.chronicle.at(-2)!.text)
+        .toBe('The family paid record-keepers to check the old contracts against its own copy.');
       expect(missingPlainEnglish(ctx)).toEqual(coverage === 'partial' ? [`${base}.text`] : []);
       expect(order(ctx, { kind: 'seekClause' }).ok).toBe(false);
       const written = structuredClone(ctx.world.chronicle);
@@ -1052,5 +1061,130 @@ describe('the steward buys a term (issue #128)', () => {
       what: 'a run with a full household of pupils and no debt ceiling sees a term start within 40 years',
       n: RUNS, hits: hit, floor: 0.5,
     });
+  });
+});
+
+describe('the table pages speak the reader\'s setting (#746)', () => {
+  const PAGES: Record<string, [string, string]> = {
+    'table.pedigree_filed': [
+      "{GENERATIONS} generations of {PERSON}'s mothers were written out fair and sealed by {NOTARY}, for {PRICE} crowns.",
+      "{NOTARY} wrote out and sealed {GENERATIONS} generations of {PERSON}'s mothers for {PRICE} crowns.",
+    ],
+    'table.scion_vacant': [
+      'The house has nobody standing where {WAS} did. Nobody has been named in his place.',
+      'No one has replaced {WAS} as chosen successor.',
+    ],
+    'table.scion_vacant_unnamed': [
+      'The house has nobody standing where the one it named did. Nobody has been named in his place.',
+      'No one has replaced the chosen successor.',
+    ],
+    'table.heir_vacant_beside': [
+      'The house has nobody standing beside {BESIDE} where {WAS} did. Nobody has been named in his place.',
+      'No one has replaced {WAS} as the heir after {BESIDE}.',
+    ],
+    'table.heir_vacant_beside_unnamed': [
+      'The house has nobody standing beside {BESIDE} where the second one did. Nobody has been named in his place.',
+      'No one has replaced the heir after {BESIDE}.',
+    ],
+    'table.heir_vacant': [
+      'The house has nobody standing where {WAS} did. Nobody has been named in his place.',
+      'No one has replaced {WAS} as heir.',
+    ],
+    'table.heir_vacant_unnamed': [
+      'The house has nobody standing where the one it named as heir did. Nobody has been named in his place.',
+      'No one has replaced the chosen heir.',
+    ],
+    'table.tutor_finished': [
+      '{PERSON} finished the term, and was better at {ATTR} than the house had any right to expect.',
+      '{PERSON} finished the lessons and became much better at {ATTR} than expected.',
+    ],
+  };
+  type Mode = 'original' | 'plainenglish';
+  const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
+    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+
+  function world(mode: Mode) {
+    const ctx = testWorld(bundle, 7802);
+    setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+    })));
+    setProseMode(ctx, mode);
+    ctx.world.treasury = 1000;
+    return ctx;
+  }
+
+  /** The steward's pass with the named Scion and heir already gone (or never real). */
+  function lapse(mode: Mode, scion: 'named' | 'ghost' | 'none', heir: 'named' | 'ghost') {
+    const ctx = world(mode);
+    const w = ctx.world;
+    if (scion !== 'none') {
+      const s = place(ctx, { sex: 'male', age: 40, name: 'Aldo' });
+      w.scion = scion === 'ghost' ? 'nobody_at_all' : s.id;
+      if (scion === 'named') w.people.kill(s.id, w.year, 'test');
+    }
+    const h = place(ctx, { sex: 'male', age: 20, name: 'Bennet' });
+    w.scionHeir = heir === 'ghost' ? 'nobody_either' : h.id;
+    if (heir === 'named') w.people.kill(h.id, w.year, 'test');
+    const from = w.chronicle.length;
+    phase('table', ctx);
+    return Object.assign(w.chronicle.slice(from).map((e) => e.text), { ctx });
+  }
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`renders the pedigree, tutor and lapse pages in ${mode}`, () => {
+      const filing = world(mode);
+      const woman = place(filing, { sex: 'female', age: 20, name: 'Cerys' });
+      const result = order(filing, { kind: 'pedigree', person: woman.id, grade: 'caster' });
+      expect(result.ok).toBe(true);
+      const doc = woman.lineageDocuments.at(-1)!;
+      expect(filing.world.chronicle.at(-1)!.text).toBe(say(mode, 'table.pedigree_filed', {
+        GENERATIONS: String(doc.generations), PERSON: 'Cerys', NOTARY: doc.notarisedBy, PRICE: String(result.spent),
+      }));
+
+      const teaching = world(mode);
+      const child = place(teaching, { sex: 'female', age: 10, name: 'Dilys' });
+      expect(order(teaching, { kind: 'tutor', person: child.id, attr: 'mind' }).ok).toBe(true);
+      teaching.world.year = teaching.world.tutoring[0]!.completes;
+      phase('table', teaching);
+      expect(teaching.world.chronicle.map((e) => e.text))
+        .toContain(say(mode, 'table.tutor_finished', { PERSON: 'Dilys', ATTR: 'mind' }));
+
+      // A dead Scion lapses first, so his heir is read with nobody beside him.
+      expect([...lapse(mode, 'named', 'named')]).toEqual([
+        say(mode, 'table.scion_vacant', { WAS: 'Aldo' }),
+        say(mode, 'table.heir_vacant', { WAS: 'Bennet' }),
+      ]);
+      expect([...lapse(mode, 'ghost', 'ghost')]).toEqual([
+        say(mode, 'table.scion_vacant_unnamed'),
+        say(mode, 'table.heir_vacant_unnamed'),
+      ]);
+    });
+
+    it(`names the Scion still standing beside a lapsed heir in ${mode}`, () => {
+      const ctx = world(mode);
+      const w = ctx.world;
+      const scion = place(ctx, { sex: 'male', age: 40, name: 'Aldo' });
+      expect(order(ctx, { kind: 'scion', person: scion.id }).ok).toBe(true);
+      const heir = place(ctx, { sex: 'male', age: 20, name: 'Bennet' });
+      w.scionHeir = heir.id;
+      w.people.kill(heir.id, w.year, 'test');
+      phase('table', ctx);
+      expect(w.chronicle.at(-1)!.text).toBe(say(mode, 'table.heir_vacant_beside', { BESIDE: 'Aldo', WAS: 'Bennet' }));
+
+      w.scionHeir = 'nobody_either';
+      phase('table', ctx);
+      expect(w.chronicle.at(-1)!.text).toBe(say(mode, 'table.heir_vacant_beside_unnamed', { BESIDE: 'Aldo' }));
+    });
+  }
+
+  it('changes words only, and a page keeps the words it was written with', () => {
+    const plainCtx = lapse('plainenglish', 'named', 'named').ctx;
+    const plain = plainCtx.world;
+    const original = lapse('original', 'named', 'named').ctx.world;
+    expect([plain.scion, plain.scionHeir, plain.scionVacant, plain.scionHeirVacant, plain.treasury])
+      .toEqual([original.scion, original.scionHeir, original.scionVacant, original.scionHeirVacant, original.treasury]);
+    const written = structuredClone(plain.chronicle);
+    setProseMode(plainCtx, 'original');
+    expect(plain.chronicle).toEqual(written);
   });
 });
