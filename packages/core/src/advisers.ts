@@ -2,6 +2,7 @@ import { assertNever, type Person } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { PendingDecision } from './events/decisions.js';
 import type { MatchCard } from './people/match.js';
+import { msg } from './messages.js';
 
 /**
  * A PERSON'S ADVICE, NOT THE ENGINE'S ANSWER (issue #215).
@@ -33,7 +34,7 @@ export interface AdviserAdvice {
 interface Adviser {
   person: Person;
   lens: AdviserLens;
-  cares: string;
+  cares: () => string;
   relevance: number;
 }
 
@@ -73,7 +74,7 @@ function lensOf(
   ctx: SimCtx,
   p: Person,
   d?: PendingDecision,
-): { lens: AdviserLens; cares: string } | undefined {
+): { lens: AdviserLens; cares: () => string } | undefined {
   const role = p.contract?.role;
   const subject = p.sex === 'female' ? 'she' : 'he';
   const possessive = p.sex === 'female' ? 'her' : 'his';
@@ -81,40 +82,40 @@ function lensOf(
   if (d?.kind === 'match') {
     const matched = ctx.world.people.get(d.subject.id);
     if (matched?.claimedParents.mother === p.id) {
-      return { lens: 'mother', cares: 'her child is the one who must live inside this bargain' };
+      return { lens: 'mother', cares: () => msg(ctx, 'adviser.cares.mother', "her child is the one who must live inside this bargain") };
     }
     if (role === 'midwife') {
-      return { lens: 'midwife', cares: `${subject} has watched this house count births, losses and grown children` };
+      return { lens: 'midwife', cares: () => msg(ctx, 'adviser.cares.midwife', "{SUBJECT} has watched this house count births, losses and grown children", { SUBJECT: subject }) };
     }
   }
 
   const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
   const regent = p.sex === 'female' && p.castSlots.includes('head');
   if (heldSeal || regent || widowOfHead(ctx, p)) {
-    const cares = heldSeal
-      ? `${subject} has held the seal before`
+    const cares = () => heldSeal
+      ? msg(ctx, 'adviser.cares.former_head', "{SUBJECT} has held the seal before", { SUBJECT: subject })
       : regent
-        ? 'she holds the seal because the house has no waking son to hold it'
-        : 'her husband held the seal, and she lived through what it cost the household';
+        ? msg(ctx, 'adviser.cares.regent', "she holds the seal because the house has no waking son to hold it")
+        : msg(ctx, 'adviser.cares.head_widow', "her husband held the seal, and she lived through what it cost the household");
     return { lens: 'old_head', cares };
   }
 
-  if (p.career?.career === 'clergy') return { lens: 'priest', cares: `the Church is the institution ${subject} serves` };
+  if (p.career?.career === 'clergy') return { lens: 'priest', cares: () => msg(ctx, 'adviser.cares.priest', "the Church is the institution {SUBJECT} serves", { SUBJECT: subject }) };
   if (p.career?.career === 'merchant' || p.career?.career === 'factor' || p.career?.career === 'court') {
-    return { lens: 'broker', cares: `${possessive} post is made of bargains, standing and other houses` };
+    return { lens: 'broker', cares: () => msg(ctx, 'adviser.cares.broker', "{POSSESSIVE} post is made of bargains, standing and other houses", { POSSESSIVE: possessive }) };
   }
-  if (role === 'steward') return { lens: 'steward', cares: `${subject} keeps the house and its accounts` };
+  if (role === 'steward') return { lens: 'steward', cares: () => msg(ctx, 'adviser.cares.steward', "{SUBJECT} keeps the house and its accounts", { SUBJECT: subject }) };
   if (p.career?.career === 'military' || role === 'guard') {
-    return { lens: 'soldier', cares: `${possessive} work prices risk in bodies` };
+    return { lens: 'soldier', cares: () => msg(ctx, 'adviser.cares.soldier', "{POSSESSIVE} work prices risk in bodies", { POSSESSIVE: possessive }) };
   }
   if (p.career?.career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
-    return { lens: 'reader', cares: `${subject} lives by what can be read, remembered and proved` };
+    return { lens: 'reader', cares: () => msg(ctx, 'adviser.cares.reader', "{SUBJECT} lives by what can be read, remembered and proved", { SUBJECT: subject }) };
   }
 
   const member = p.membership.find((m) =>
     m.house === ctx.world.playerHouse && m.from <= ctx.world.year && (m.to === undefined || m.to > ctx.world.year));
   if (member?.kind === 'blood' || member?.kind === 'married_in') {
-    return { lens: 'close_kin', cares: `this is ${possessive} own living house` };
+    return { lens: 'close_kin', cares: () => msg(ctx, 'adviser.cares.kin', "this is {POSSESSIVE} own living house", { POSSESSIVE: possessive }) };
   }
   return undefined;
 }
@@ -167,64 +168,65 @@ function evidenceCount(card: MatchCard): number {
 }
 
 function matchPosition(
+  ctx: SimCtx,
   lens: AdviserLens,
   d: Extract<PendingDecision, { kind: 'match' }>,
 ): string {
   const open = d.cards.filter((c) => c.available);
-  if (!open.length) return 'None of these names is still a marriage the house can make.';
+  if (!open.length) return msg(ctx, 'adviser.match.none', "None of these names is still a marriage the house can make.");
 
   switch (lens) {
     case 'steward':
     case 'broker': {
       const card = [...open].sort((a, b) => a.dowry - b.dowry || evidenceCount(b) - evidenceCount(a))[0]!;
-      return `I would take ${card.name}. The dowry is the part of this bargain the account book can prove today.`;
+      return msg(ctx, 'adviser.match.dowry', "I would take {NAME}. The dowry is the part of this bargain the account book can prove today.", { NAME: card.name });
     }
     case 'reader': {
       const card = [...open].sort((a, b) => evidenceCount(b) - evidenceCount(a) || b.lineSeen - a.lineSeen)[0]!;
-      return `I would take ${card.name}. There is more written and witnessed around that line than the others.`;
+      return msg(ctx, 'adviser.match.record', "I would take {NAME}. There is more written and witnessed around that line than the others.", { NAME: card.name });
     }
     case 'priest': {
       const card = [...open].sort((a, b) => a.kinship - b.kinship || a.dowry - b.dowry)[0]!;
-      return `I would take ${card.name}. Of these matches, the family papers put the greatest distance between the two lines there.`;
+      return msg(ctx, 'adviser.match.distance', "I would take {NAME}. Of these matches, the family papers put the greatest distance between the two lines there.", { NAME: card.name });
     }
     case 'soldier': {
       const grown = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.grown, 0);
       const card = [...open].sort((a, b) => grown(b) - grown(a) || b.lineSeen - a.lineSeen)[0]!;
-      return `I would take ${card.name}. The lives we have actually watched in that line are the evidence I trust.`;
+      return msg(ctx, 'adviser.match.witnesses', "I would take {NAME}. The lives we have actually watched in that line are the evidence I trust.", { NAME: card.name });
     }
     case 'mother': {
       const card = [...open].sort((a, b) =>
         Math.abs(a.age - d.subject.age) - Math.abs(b.age - d.subject.age)
         || evidenceCount(b) - evidenceCount(a))[0]!;
-      return `I would take ${card.name}. Of these names, that one is nearest my child's age. I am thinking about the years after the bargain.`;
+      return msg(ctx, 'adviser.match.age', "I would take {NAME}. Of these names, that one is nearest my child's age. I am thinking about the years after the bargain.", { NAME: card.name });
     }
     case 'midwife': {
       const issue = (c: MatchCard) => c.panel.issue.reduce((n, r) => n + r.borne + r.grown, 0);
       const card = [...open].sort((a, b) => issue(b) - issue(a) || b.lineSeen - a.lineSeen)[0]!;
-      return `I would take ${card.name}. That line has the strongest witnessed birth history behind it. I trust the lives we have counted more than a market word.`;
+      return msg(ctx, 'adviser.match.births', "I would take {NAME}. That line has the strongest witnessed birth history behind it. I trust the lives we have counted more than a market word.", { NAME: card.name });
     }
     case 'old_head':
     case 'close_kin': {
       const card = [...open].sort((a, b) => b.kinship - a.kinship || evidenceCount(b) - evidenceCount(a))[0]!;
-      return `I would take ${card.name}. The papers keep that blood nearest the house, and I would not pretend that is a neutral reason.`;
+      return msg(ctx, 'adviser.match.kin', "I would take {NAME}. The papers keep that blood nearest the house, and I would not pretend that is a neutral reason.", { NAME: card.name });
     }
     default:
       return assertNever(lens, 'adviser lens');
   }
 }
 
-function recordPosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: 'record' }>): string {
+function recordPosition(ctx: SimCtx, lens: AdviserLens, d: Extract<PendingDecision, { kind: 'record' }>): string {
   const offered = new Set(d.options.map((o) => o.option));
   switch (lens) {
     case 'reader':
-      if (offered.has('record')) return 'Write it as it happened. A page we can rely on later is worth more to me than a cleaner one now.';
+      if (offered.has('record')) return msg(ctx, 'adviser.record.honest', "Write it as it happened. A page we can rely on later is worth more to me than a cleaner one now.");
       break;
     case 'broker':
     case 'old_head':
-      if (offered.has('embellish')) return 'Improve it. Other houses deal with the name they have heard, not the private truth behind it.';
+      if (offered.has('embellish')) return msg(ctx, 'adviser.record.embellish', "Improve it. Other houses deal with the name they have heard, not the private truth behind it.");
       break;
     case 'priest':
-      if (offered.has('omit')) return 'Leave it out. Not every true thing belongs in a book another institution may one day read.';
+      if (offered.has('omit')) return msg(ctx, 'adviser.record.omit', "Leave it out. Not every true thing belongs in a book another institution may one day read.");
       break;
     case 'steward':
     case 'soldier':
@@ -235,34 +237,34 @@ function recordPosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: '
     default:
       return assertNever(lens, 'adviser lens');
   }
-  if (offered.has('record')) return 'Write it plainly. I would rather the house remember what it chose.';
-  return 'Use the least boastful version the chronicler is offering.';
+  if (offered.has('record')) return msg(ctx, 'adviser.record.plain', "Write it plainly. I would rather the house remember what it chose.");
+  return msg(ctx, 'adviser.record.fallback', "Use the least boastful version the chronicler is offering.");
 }
 
-function choicePosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: 'choice' }>, surface: AdviceSurface): string {
+function choicePosition(ctx: SimCtx, lens: AdviserLens, d: Extract<PendingDecision, { kind: 'choice' }>, surface: AdviceSurface): string {
   const open = d.choices.filter((c) => c.available);
-  if (!open.length) return 'I see no course on this page the house can actually take.';
+  if (!open.length) return msg(ctx, 'adviser.choice.none', "I see no course on this page the house can actually take.");
   const first = open[0]!;
   const last = open[open.length - 1]!;
 
   if (surface === 'rite') {
-    if (lens === 'priest') return `I would choose “${first.label}”. With a rite, caution is not ignorance; it is the only part we control.`;
-    if (lens === 'reader') return `I would choose “${last.label}”. I am weighing the words and precedents we have, not what the rite may secretly do.`;
+    if (lens === 'priest') return msg(ctx, 'adviser.rite.priest', "I would choose “{LABEL}”. With a rite, caution is not ignorance; it is the only part we control.", { LABEL: first.label });
+    if (lens === 'reader') return msg(ctx, 'adviser.rite.reader', "I would choose “{LABEL}”. I am weighing the words and precedents we have, not what the rite may secretly do.", { LABEL: last.label });
   }
 
   switch (lens) {
     case 'steward':
     case 'old_head':
-      return `I favour “${first.label}”. It is the course I can defend from what is on the table now.`;
+      return msg(ctx, 'adviser.choice.steward', "I favour “{LABEL}”. It is the course I can defend from what is on the table now.", { LABEL: first.label });
     case 'reader':
-      return `I favour “${last.label}”. The written case for it is the one I would want left in the book.`;
+      return msg(ctx, 'adviser.choice.reader', "I favour “{LABEL}”. The written case for it is the one I would want left in the book.", { LABEL: last.label });
     case 'priest':
     case 'broker':
     case 'soldier':
     case 'mother':
     case 'midwife':
     case 'close_kin':
-      return `I favour “${first.label}”. That is my interest speaking; I know no more than this page says.`;
+      return msg(ctx, 'adviser.choice.interest', "I favour “{LABEL}”. That is my interest speaking; I know no more than this page says.", { LABEL: first.label });
     default:
       return assertNever(lens, 'adviser lens');
   }
@@ -281,42 +283,42 @@ function choicePosition(lens: AdviserLens, d: Extract<PendingDecision, { kind: '
  * three points at an existing control or screen and never chooses for the
  * player. Nothing here predicts an outcome.
  */
-function nudgeFor(lens: AdviserLens, surface: HelpSurface, grievance: boolean): string {
+function nudgeFor(ctx: SimCtx, lens: AdviserLens, surface: HelpSurface, grievance: boolean): string {
   switch (lens) {
     case 'reader':
-      if (surface === 'chronicle') return 'I would read one page beside the pages around it. A lone sentence makes a poor history.';
-      if (surface === 'tree') return 'I would begin with one name. A whole tree is easier to read one branch at a time.';
+      if (surface === 'chronicle') return msg(ctx, 'adviser.help.reader.chronicle', "I would read one page beside the pages around it. A lone sentence makes a poor history.");
+      if (surface === 'tree') return msg(ctx, 'adviser.help.reader.tree', "I would begin with one name. A whole tree is easier to read one branch at a time.");
       return grievance
-        ? 'I would read who lives in this hall before I read its grievance. A quarrel belongs to people.'
-        : 'I would begin with the people in this hall. Quiet does not make a branch unimportant.';
+        ? msg(ctx, 'adviser.help.reader.grievance', "I would read who lives in this hall before I read its grievance. A quarrel belongs to people.")
+        : msg(ctx, 'adviser.help.reader.quiet', "I would begin with the people in this hall. Quiet does not make a branch unimportant.");
     case 'old_head':
-      if (surface === 'chronicle') return 'Begin with the page that names the act you care about. Then see what answered it later.';
-      if (surface === 'tree') return 'Find the person nearest the question you are asking. The rest of the line can wait.';
+      if (surface === 'chronicle') return msg(ctx, 'adviser.help.head.chronicle', "Begin with the page that names the act you care about. Then see what answered it later.");
+      if (surface === 'tree') return msg(ctx, 'adviser.help.head.tree', "Find the person nearest the question you are asking. The rest of the line can wait.");
       return grievance
-        ? 'This hall has not settled something. I would look at who is carrying it before I looked at the grievance.'
-        : 'This hall is quiet for now. I would still know who sits in it.';
+        ? msg(ctx, 'adviser.help.head.grievance', "This hall has not settled something. I would look at who is carrying it before I looked at the grievance.")
+        : msg(ctx, 'adviser.help.head.quiet', "This hall is quiet for now. I would still know who sits in it.");
     case 'close_kin':
     case 'mother':
     case 'midwife':
-      if (surface === 'tree') return 'Start with one of us, not with the whole hall. Follow the family from there.';
-      if (surface === 'chronicle') return 'Start with the page nearest the person you care about. Then read what came before and after it.';
+      if (surface === 'tree') return msg(ctx, 'adviser.help.kin.tree', "Start with one of us, not with the whole hall. Follow the family from there.");
+      if (surface === 'chronicle') return msg(ctx, 'adviser.help.kin.chronicle', "Start with the page nearest the person you care about. Then read what came before and after it.");
       return grievance
-        ? 'This hall is carrying something. Read the family here before you read the grievance.'
-        : 'Start with the family in this hall. The branch is more than its grievance.';
+        ? msg(ctx, 'adviser.help.kin.grievance', "This hall is carrying something. Read the family here before you read the grievance.")
+        : msg(ctx, 'adviser.help.kin.quiet', "Start with the family in this hall. The branch is more than its grievance.");
     case 'steward':
     case 'broker':
       if (surface === 'branches') return grievance
-        ? 'I would look at who lives in this hall before I looked at its grievance. The account makes more sense beside the household.'
-        : 'I would start with who lives here. An empty grievance line is not an empty hall.';
-      if (surface === 'chronicle') return 'Read the page beside what followed it. A record matters when somebody later has to act on it.';
-      return 'Start with one name and one hall. The whole house is too much to price at once.';
+        ? msg(ctx, 'adviser.help.steward.grievance', "I would look at who lives in this hall before I looked at its grievance. The account makes more sense beside the household.")
+        : msg(ctx, 'adviser.help.steward.quiet', "I would start with who lives here. An empty grievance line is not an empty hall.");
+      if (surface === 'chronicle') return msg(ctx, 'adviser.help.steward.chronicle', "Read the page beside what followed it. A record matters when somebody later has to act on it.");
+      return msg(ctx, 'adviser.help.steward.tree', "Start with one name and one hall. The whole house is too much to price at once.");
     case 'priest':
     case 'soldier':
-      if (surface === 'chronicle') return 'Read one page at a time, and remember who wrote it. A book is still made by people.';
-      if (surface === 'tree') return 'Start with one person. Follow the line around them before you judge the whole house.';
+      if (surface === 'chronicle') return msg(ctx, 'adviser.help.priest.chronicle', "Read one page at a time, and remember who wrote it. A book is still made by people.");
+      if (surface === 'tree') return msg(ctx, 'adviser.help.priest.tree', "Start with one person. Follow the line around them before you judge the whole house.");
       return grievance
-        ? 'Read the people in this hall first. A grievance without faces is only a mark on a page.'
-        : 'Read who lives here first. The hall matters even when its grievance is quiet.';
+        ? msg(ctx, 'adviser.help.priest.grievance', "Read the people in this hall first. A grievance without faces is only a mark on a page.")
+        : msg(ctx, 'adviser.help.priest.quiet', "Read who lives here first. The hall matters even when its grievance is quiet.");
     default:
       return assertNever(lens, 'adviser lens');
   }
@@ -333,26 +335,26 @@ function helpPosition(
 
   switch (tier) {
     case 1:
-      return nudgeFor(lens, surface, grievance);
+      return nudgeFor(ctx, lens, surface, grievance);
     case 2:
       switch (surface) {
         case 'tree':
-          return 'The tree shows the living house through its own record. The dead go to the Chronicle, and the seal has its own line.';
+          return msg(ctx, 'adviser.help.rule.tree', "The tree shows the living house through its own record. The dead go to the Chronicle, and the seal has its own line.");
         case 'chronicle':
-          return 'The Chronicle is what this house chose to keep, not a voice from outside it. A mistake or a boast can stay on the page.';
+          return msg(ctx, 'adviser.help.rule.chronicle', "The Chronicle is what this house chose to keep, not a voice from outside it. A mistake or a boast can stay on the page.");
         case 'branches':
-          return 'A cadet hall is still this house. Its grievance is kept here because the pressure belongs to this branch, not every hall at once.';
+          return msg(ctx, 'adviser.help.rule.branches', "A cadet hall is still this house. Its grievance is kept here because the pressure belongs to this branch, not every hall at once.");
         default:
           return assertNever(surface, 'help surface');
       }
     case 3:
       switch (surface) {
         case 'tree':
-          return 'Use Find somebody by name, choose a hall, or follow Only this branch. For former Heads, open the seal\'s line.';
+          return msg(ctx, 'adviser.help.control.tree', "Use Find somebody by name, choose a hall, or follow Only this branch. For former Heads, open the seal's line.");
         case 'chronicle':
-          return 'Use Read it whole. Where a page points backward or forward, follow that thread before you judge it.';
+          return msg(ctx, 'adviser.help.control.chronicle', "Use Read it whole. Where a page points backward or forward, follow that thread before you judge it.");
         case 'branches':
-          return 'Open the Table if the quarrel needs an answer. Endow can put land behind a cadet hall; Scion changes where the house concentrates its effort.';
+          return msg(ctx, 'adviser.help.control.branches', "Open the Table if the quarrel needs an answer. Endow can put land behind a cadet hall; Scion changes where the house concentrates its effort.");
         default:
           return assertNever(surface, 'help surface');
       }
@@ -375,7 +377,7 @@ export function adviceFor(
   return advisers(ctx, surface, undefined, subject).slice(0, 1).map(({ person, lens, cares }) => ({
     adviser: { id: person.id, name: person.name },
     lens,
-    cares,
+    cares: cares(),
     position: helpPosition(ctx, lens, surface, subject, tier),
   }));
 }
@@ -387,11 +389,11 @@ export function adviceForDecision(ctx: SimCtx, d: PendingDecision): AdviserAdvic
   return picked.map(({ person, lens, cares }) => ({
     adviser: { id: person.id, name: person.name },
     lens,
-    cares,
+    cares: cares(),
     position: d.kind === 'match'
-      ? matchPosition(lens, d)
+      ? matchPosition(ctx, lens, d)
       : d.kind === 'record'
-        ? recordPosition(lens, d)
-        : choicePosition(lens, d, surface),
+        ? recordPosition(ctx, lens, d)
+        : choicePosition(ctx, lens, d, surface),
   }));
 }
