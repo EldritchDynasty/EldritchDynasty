@@ -1,9 +1,10 @@
 import type { LibraryBookState, Person, PersonId, SpellbookDef } from '@ed/schema';
-import { asId, canLearn } from '@ed/schema';
+import { asId, canLearn, isContentProseField } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { attr } from './factory.js';
 import { ageCareerFactor } from '../ages/strategy.js';
 import { msg } from '../messages.js';
+import { renderContentProse } from '../prose.js';
 
 /**
  * THE LIBRARY — applying a spellbook, one mechanism for every book there will
@@ -144,13 +145,17 @@ export function gainSpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): boolea
 
   if (def.tier === 'named' && !state.namedFor) {
     state.namedFor = { person: p.id, name: p.name, year: ctx.world.year };
+    const file = ctx.content.sourceOf(def.id);
+    const name = file === undefined || !isContentProseField('name', def.name)
+      ? def.name
+      : renderContentProse(ctx, file, `spellbooks[id=${encodeURIComponent(def.id)}].name`, def.name);
     ctx.world.chronicle.push({
       year: ctx.world.year,
       weight: 'paragraph',
-      title: def.name,
+      title: name,
       text: msg(ctx, 'library.named_art_record',
         "{PERSON} set it down in writing for the first time, and the family has called it {BOOK} — {PERSON}'s working — ever since.",
-        { PERSON: p.name, BOOK: def.name }),
+        { PERSON: p.name, BOOK: name }),
       named: false,
     });
   }

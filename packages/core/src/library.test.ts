@@ -1,14 +1,101 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { canLearn, proseOriginalHash, validateBundle } from '@ed/schema';
+import { canLearn, contentProseEntries, proseOriginalHash, validateBundle } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
 import {
   acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, degradeLibraryCopy,
-  canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, phenotypeOf, place,
-  setProseMode, setProseVariants, useHeirloom,
+  canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, loadGame, phenotypeOf, place,
+  saveGame, setProseMode, setProseVariants, useHeirloom,
 } from '@ed/core';
+import { missingPlainEnglish } from './prose.js';
+import { canonical } from './save.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
+
+describe('Named Art book-name prose (#766)', () => {
+  const def = bundle.mustSpellbook('the_first_working');
+  const file = bundle.sourceOf(def.id)!;
+  const nameEntry = contentProseEntries(file, { spellbooks: [def] })
+    .find((entry) => entry.address.endsWith('.name'))!;
+  const message = coreMessageEntries(readFileSync(new URL('./people/library.ts', import.meta.url), 'utf8'))
+    .find((entry) => entry.address === coreMessageAddress('library.named_art_record'))!;
+  const nameVariant = {
+    address: nameEntry.address, of: proseOriginalHash(nameEntry.text), plainenglish: 'The First Life Spell',
+  };
+  const sentenceVariant = {
+    address: message.address, of: proseOriginalHash(message.text),
+    plainenglish: '{PERSON} wrote down {BOOK} first. The family calls it the working of {PERSON}.',
+  };
+
+  function fixture(provenance = true) {
+    const ctx = bootstrap(provenance ? bundle : structuredClone(bundle.bundle), 766, 1042);
+    const reader = place(ctx, { sex: 'female', age: 30, name: 'Ada', awakened: true });
+    reader.acquired['life'] = 100;
+    return { ctx, reader, book: ctx.content.mustSpellbook(def.id) };
+  }
+
+  it('selects the authored book name for both frozen Chronicle fields without changing the Named Art', () => {
+    expect(nameEntry.address).toBe(`content:${file}#spellbooks[id=${def.id}].name`);
+    const original = fixture();
+    const plain = fixture();
+    for (const { ctx } of [original, plain]) setProseVariants(ctx, [nameVariant, sentenceVariant]);
+    setProseMode(plain.ctx, 'plainenglish');
+    for (const { ctx, reader, book } of [original, plain]) expect(gainSpellbook(ctx, reader, book)).toBe(true);
+    const page = plain.ctx.world.chronicle.at(-1)!;
+    expect(page.title).toBe('The First Life Spell');
+    expect(page.text).toBe('Ada wrote down The First Life Spell first. The family calls it the working of Ada.');
+    expect(original.ctx.world.chronicle.at(-1)?.title).toBe(def.name);
+    expect(original.ctx.world.chronicle.at(-1)?.text)
+      .toBe(`Ada set it down in writing for the first time, and the family has called it ${def.name} — Ada's working — ever since.`);
+    const saved = saveGame(original.ctx);
+    saved.chronicle.at(-1)!.title = page.title;
+    saved.chronicle.at(-1)!.text = page.text;
+    expect(canonical(saveGame(plain.ctx))).toBe(canonical(saved));
+    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+
+    const written = structuredClone(page);
+    setProseMode(plain.ctx, 'original');
+    const loaded = loadGame(saveGame(plain.ctx), bundle);
+    expect(loaded.world.chronicle.at(-1)).toEqual(written);
+    const later = place(loaded, { sex: 'male', age: 30, name: 'Bren', awakened: true });
+    later.acquired['life'] = 100;
+    const pages = loaded.world.chronicle.length;
+    setProseVariants(loaded, [nameVariant, sentenceVariant]);
+    setProseMode(loaded, 'plainenglish');
+    expect(gainSpellbook(loaded, later, loaded.content.mustSpellbook(def.id))).toBe(true);
+    expect(loaded.world.chronicle).toHaveLength(pages);
+    expect(loaded.world.chronicle.at(-1)).toEqual(written);
+    expect(loaded.world.library.get(def.id)?.namedFor?.person).toBe(plain.reader.id);
+  });
+
+  it.each(['missing', 'stale', 'invalid tokens'] as const)('retains Original wording for a %s book-name alternate', (failure) => {
+    const { ctx, reader, book } = fixture();
+    setProseVariants(ctx, failure === 'missing' ? [] : [{
+      ...nameVariant,
+      ...(failure === 'stale' ? { of: proseOriginalHash('Old book name') } : { plainenglish: 'The {OTHER} Spell' }),
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(gainSpellbook(ctx, reader, book)).toBe(true);
+    expect(ctx.world.chronicle.at(-1)?.title).toBe(def.name);
+    expect(ctx.world.chronicle.at(-1)?.text)
+      .toBe(`Ada set it down in writing for the first time, and the family has called it ${def.name} — Ada's working — ever since.`);
+    expect(missingPlainEnglish(ctx)).toEqual([nameEntry.address, message.address].sort());
+  });
+
+  it.each(['untracked', 'short'] as const)('uses the %s book name without requesting an unavailable work item', (source) => {
+    const { ctx, reader, book } = fixture(source !== 'untracked');
+    const named = source === 'short' ? { ...book, name: 'Working' } : book;
+    setProseVariants(ctx, [sentenceVariant]);
+    setProseMode(ctx, 'plainenglish');
+    expect(gainSpellbook(ctx, reader, named)).toBe(true);
+    expect(ctx.world.chronicle.at(-1)?.title).toBe(named.name);
+    expect(ctx.world.chronicle.at(-1)?.text)
+      .toBe(`Ada wrote down ${named.name} first. The family calls it the working of Ada.`);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
 
 describe('the Library content', () => {
   it('validates', () => {
