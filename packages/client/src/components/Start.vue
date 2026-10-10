@@ -53,6 +53,7 @@ function newRunSeed(): number {
 const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const refused = ref<string | null>(null);
+const libraryError = ref<string | null>(null);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -92,6 +93,24 @@ async function importSave(): Promise<void> {
 
 async function exportSave(slot: string): Promise<void> {
   refused.value = await props.actions.exportSave(slot) ? null : 'That saved run could not be written out.';
+}
+
+async function clearLibrary(): Promise<void> {
+  libraryError.value = null;
+  try {
+    await props.actions.clearLibrary();
+  } catch {
+    libraryError.value = 'The Library could not be cleared. Your saved houses are still here. Try again.';
+  }
+}
+
+async function removeLibraryRun(id: string): Promise<void> {
+  libraryError.value = null;
+  try {
+    await props.actions.deleteLibraryRun(id);
+  } catch {
+    libraryError.value = 'That house could not be removed from the Library. Try again.';
+  }
 }
 
 onMounted(() => { void refreshSaves(); });
@@ -162,13 +181,14 @@ onMounted(() => { void refreshSaves(); });
           <h2>The Library of Houses</h2>
           <p class="dim small">Finished lines remain here. A new house may hear them repeated badly.</p>
         </div>
-        <button class="quiet small" @click="actions.clearLibrary()">Clear</button>
+        <button class="quiet small" @click="clearLibrary()">Clear</button>
       </div>
+      <p v-if="libraryError" class="rubric small" role="alert">{{ libraryError }}</p>
       <article v-for="run in completedHouses" :key="run.id" class="library-run">
         <div class="library-title">
           <strong>{{ run.house }}</strong>
           <span class="dim small">— {{ run.ending.title }}, {{ run.endedYear }}</span>
-          <button class="quiet small" @click="actions.deleteLibraryRun(run.id)">Remove</button>
+          <button class="quiet small" @click="removeLibraryRun(run.id)">Remove</button>
         </div>
         <p v-if="survivingPage(run)" class="small excerpt">“{{ survivingPage(run) }}”</p>
       </article>

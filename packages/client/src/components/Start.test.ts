@@ -234,3 +234,54 @@ describe('the Library of Houses', () => {
     expect(actions.clearLibrary).toHaveBeenCalled();
   });
 });
+
+describe('Library write failures are visible and retryable (#1034)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'lib_old',
+      seed: 77,
+      campaign: 'short',
+      endedYear: 1342,
+      house: 'House Salt',
+      ending: { id: 'forgotten', title: 'Forgotten' },
+      entries: [],
+    }],
+  };
+
+  it('reports a rejected Clear next to the Library and clears the error on retry', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.clearLibrary).mockRejectedValueOnce(new Error('storage full'));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    await flush();
+
+    await w.get('.library-head button').trigger('click');
+    await flush();
+    expect(w.get('.library [role="alert"]').text()).toContain('could not be cleared');
+    expect(w.text()).toContain('House Salt');
+    expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+
+    await w.get('.library-head button').trigger('click');
+    await flush();
+    expect(w.find('.library [role="alert"]').exists()).toBe(false);
+    expect(actions.clearLibrary).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports a rejected Remove without an unhandled rejection, and lets it retry', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.deleteLibraryRun).mockRejectedValueOnce(new Error('read-only host'));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    await flush();
+
+    await w.get('.library-title button').trigger('click');
+    await flush();
+    expect(w.get('.library [role="alert"]').text()).toContain('could not be removed');
+    expect(w.text()).toContain('House Salt');
+    expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
+
+    await w.get('.library-title button').trigger('click');
+    await flush();
+    expect(w.find('.library [role="alert"]').exists()).toBe(false);
+    expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(2);
+  });
+});

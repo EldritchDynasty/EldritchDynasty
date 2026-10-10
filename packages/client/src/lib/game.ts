@@ -435,11 +435,31 @@ export function createGame(
    * serialize host writes; a failure must not block the next intent.
    */
   let libraryWriteTail: Promise<void> = Promise.resolve();
+  /** Last host-confirmed snapshot, not a potentially failed optimistic edit. */
+  let persistedLibrary: RunLibrary = emptyRunLibrary();
+  /** Every in-memory Library change gets a revision, including automatic archives. */
+  let libraryRevision = 0;
 
   function persistLibrary(snapshot: RunLibrary): Promise<void> {
-    const done = libraryWriteTail.then(() => platform.writeLibrary(snapshot));
+    const done = libraryWriteTail.then(async () => {
+      await platform.writeLibrary(snapshot);
+      persistedLibrary = snapshot;
+    });
     libraryWriteTail = done.catch(() => undefined);
     return done;
+  }
+
+  async function changeLibrary(snapshot: RunLibrary): Promise<void> {
+    const revision = ++libraryRevision;
+    library.value = snapshot;
+    try {
+      await persistLibrary(snapshot);
+    } catch (error) {
+      // The failed write did not change the host. Restore what it last accepted,
+      // unless a newer Clear, Remove or archive has already changed the view.
+      if (libraryRevision === revision) library.value = persistedLibrary;
+      throw error;
+    }
   }
   /**
    * Revision of the normal Short/Long rolling slot only.
@@ -649,13 +669,11 @@ export function createGame(
     },
 
     async deleteLibraryRun(id) {
-      library.value = { ...library.value, runs: library.value.runs.filter((run) => run.id !== id) };
-      await persistLibrary(library.value);
+      await changeLibrary({ ...library.value, runs: library.value.runs.filter((run) => run.id !== id) });
     },
 
     async clearLibrary() {
-      library.value = emptyRunLibrary();
-      await persistLibrary(library.value);
+      await changeLibrary(emptyRunLibrary());
     },
 
     leave() {
@@ -931,6 +949,7 @@ export function createGame(
     const run = g.libraryRun();
     if (!run || archivedRunId === run.id) return;
     library.value = appendLibraryRun(library.value, run);
+    ++libraryRevision;
     archivedRunId = run.id;
     void persistLibrary(library.value).catch(() => {
       // Keep the run playable even if profile persistence fails. An older
@@ -1150,8 +1169,14 @@ export function createGame(
   }
 
   const libraryLoad = platform.readLibrary()
-    .then((raw) => { library.value = readRunLibrary(raw); })
-    .catch(() => { library.value = emptyRunLibrary(); })
+    .then((raw) => {
+      persistedLibrary = readRunLibrary(raw);
+      library.value = persistedLibrary;
+    })
+    .catch(() => {
+      persistedLibrary = emptyRunLibrary();
+      library.value = persistedLibrary;
+    })
     .finally(() => {
       libraryReady.value = true;
       // A resumed save may already be on its ending screen. If the host read
