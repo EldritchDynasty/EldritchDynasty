@@ -155,7 +155,9 @@ export function browserPlatform(): Platform {
     },
 
     async deleteSave(slot) {
-      browserStorage()?.removeItem(PREFIX + slot);
+      const storage = browserStorage();
+      if (!storage) throw new Error('this browser does not permit saved data');
+      storage.removeItem(PREFIX + slot);
     },
 
     async readLibrary() {

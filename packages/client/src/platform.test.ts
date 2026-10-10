@@ -311,6 +311,65 @@ describe('the platform seam', () => {
     }
   });
 
+  it('rejects browser deletion when localStorage access is denied (#899)', async () => {
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        get localStorage(): Storage {
+          throw new Error('site storage blocked');
+        },
+      },
+    });
+    try {
+      const host = browserPlatform();
+      // Unlike readSave (which can report missing data), deletion is a
+      // mutation: a denied write cannot be presented as a successful delete.
+      await expect(host.deleteSave('autosave'))
+        .rejects.toThrow('this browser does not permit saved data');
+      await expect(host.writeSave('autosave', { year: 1220 }))
+        .rejects.toThrow('this browser does not permit saved data');
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
+  it('deletes only the named browser slot and propagates removeItem failures (#899)', async () => {
+    const values = new Map([
+      ['ed:save:autosave', 'old run'],
+      ['ed:save:other', 'keep this run'],
+      ['ed:library', 'keep this library'],
+    ]);
+    let denyRemoval = false;
+    const storage = {
+      removeItem(key: string) {
+        if (denyRemoval) throw new Error('storage refused deletion');
+        values.delete(key);
+      },
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const host = browserPlatform();
+      denyRemoval = true;
+      await expect(host.deleteSave('autosave')).rejects.toThrow('storage refused deletion');
+      expect(values.has('ed:save:autosave')).toBe(true);
+      denyRemoval = false;
+      await expect(host.deleteSave('autosave')).resolves.toBeUndefined();
+      expect([...values]).toEqual([
+        ['ed:save:other', 'keep this run'],
+        ['ed:library', 'keep this library'],
+      ]);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('keeps healthy browser saves visible when another slot has malformed JSON', async () => {
     // A failed import or damaged localStorage record must not make every other
     // saved dynasty disappear from the front-door list.
