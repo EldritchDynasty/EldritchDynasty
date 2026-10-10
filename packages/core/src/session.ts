@@ -1345,7 +1345,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       ...(() => {
         const measured = measureAscension(ctx);
         const f = measured.foremost;
-        const diagnosis = diagnoseHouseAscension(measured);
+        const diagnosis = diagnoseHouseAscension(ctx, measured);
         return {
           ...(f
             ? {
