@@ -5,7 +5,7 @@ import { proseOriginalHash } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
 import {
   bootstrap, DEBT_FLOOR, dismissRetainer, driftLoyalty, leakChance, place, releaseContracts,
-  setProseMode, setProseVariants, tellSecrets, testRng, walkSecrets, yearsOfService,
+  missingPlainEnglish, saveGame, setProseMode, setProseVariants, tellSecrets, testRng, walkSecrets, yearsOfService,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 
@@ -247,6 +247,65 @@ describe('a secret that is told', () => {
     }
     return false;
   }
+
+  it('uses reviewed Plain English rival-house names in a frozen secret Chronicle page (#974)', () => {
+    const ctx = loose(20);
+    const def = ctx.content.house('house_marrow');
+    if (!def) throw new Error('house_marrow fixture is missing');
+    const address = `content:${ctx.content.sourceOf(def.id)}#houses[id=${encodeURIComponent(def.id)}].name`;
+    expect(ctx.world.houses.get(def.id)?.name).toBe(def.name);
+    setProseVariants(ctx, [{
+      address,
+      of: proseOriginalHash(def.name),
+      plainenglish: 'The Marrow family',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(tellEventually(ctx)).toBe(true);
+    const page = ctx.world.chronicle.at(-1)!;
+    expect(page.text).toContain('known at The Marrow family by the spring');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+    expect(ctx.world.discrepancies.get('what_the_archive_holds')?.provableBy).toEqual(['house_marrow']);
+
+    // The selection is prospective: a mode switch cannot rewrite history or
+    // alter the save just because the reader chose another register.
+    const frozen = page.text;
+    const saved = JSON.stringify(saveGame(ctx));
+    setProseMode(ctx, 'original');
+    expect(page.text).toBe(frozen);
+    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+  });
+
+  it('keeps stale, renamed and unknown house names on their original fallback (#974)', () => {
+    const address = 'content:houses.yaml#houses[id=house_marrow].name';
+    const reviewed = {
+      address, of: proseOriginalHash('House Marrow'), plainenglish: 'The Marrow family',
+    };
+
+    const stale = loose(20);
+    setProseVariants(stale, [{ ...reviewed, of: proseOriginalHash('Old house name') }]);
+    setProseMode(stale, 'plainenglish');
+    expect(tellEventually(stale)).toBe(true);
+    expect(stale.world.chronicle.at(-1)?.text).toContain('known at House Marrow by the spring');
+    expect(missingPlainEnglish(stale)).toContain(address);
+
+    const renamed = loose(20);
+    const runtimeHouse = renamed.world.houses.get('house_marrow');
+    if (!runtimeHouse) throw new Error('house_marrow world record is missing');
+    runtimeHouse.name = 'The Renamed House';
+    setProseVariants(renamed, [reviewed]);
+    setProseMode(renamed, 'plainenglish');
+    expect(tellEventually(renamed)).toBe(true);
+    expect(renamed.world.chronicle.at(-1)?.text).toContain('known at The Renamed House by the spring');
+    expect(missingPlainEnglish(renamed)).not.toContain(address);
+
+    const unknown = loose(20, { house: 'unknown_house' });
+    setProseVariants(unknown, [reviewed]);
+    setProseMode(unknown, 'plainenglish');
+    expect(tellEventually(unknown)).toBe(true);
+    expect(unknown.world.chronicle.at(-1)?.text).toContain('known at unknown_house by the spring');
+    expect(unknown.world.discrepancies.get('what_the_archive_holds')?.provableBy).toEqual(['unknown_house']);
+  });
 
   it('becomes an open Discrepancy the house that took her can prove', () => {
     const ctx = loose(20);
