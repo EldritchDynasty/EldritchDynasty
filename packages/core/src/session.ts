@@ -34,6 +34,7 @@ import { diagnoseHouseAscension, measureAscension, rungTitle, type AscensionBloc
 import { castOf, type CastMember } from './cast.js';
 import { foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
+import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
 import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './chapter.js';
 import { streamFor } from './rng.js';
@@ -474,6 +475,15 @@ export class GameSession {
    */
   keepSuggestedName(personId: string): boolean {
     return keepSuggestedName(this.ctx, personId);
+  }
+
+  /**
+   * Live Match evidence is presentation, not a change to an already-dealt card.
+   * Translation uses the same reviewed, fingerprinted catalogue as other core messages.
+   */
+  matchFuture(card: MatchCard, priorities: MatchFutureKind[] = []): MatchFutureReading {
+    return matchFuture(card, priorities, (key, original, values) =>
+      msg(this.ctx, key, original, values));
   }
 
   view(): SessionView {
