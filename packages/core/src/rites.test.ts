@@ -72,6 +72,7 @@ const RITE_ORIGINALS: Record<string, string> = {
   'rites.great.repeat': 'he has already been made as wide as he is going to be',
   'rites.great.noPower': 'there is nothing in him to widen',
   'rites.unmaking.self': 'a man cannot unmake himself',
+  'rites.unmaking.ascendantNotLiving': 'the ascendant is not living',
   'rites.unmaking.elderNotLiving': 'the elder is not living',
   'rites.unmaking.elderNotBlood': 'the elder is not of the blood',
   'rites.unmaking.noGift': 'the elder was never made into anything the rite can take',
@@ -86,8 +87,8 @@ describe('rite refusal and record prose (#794)', () => {
     const found = [...source.matchAll(/msg\(ctx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
       .map(([, key, literal]) => [key, literal!.slice(1, -1)]);
     expect(Object.fromEntries(found)).toEqual(RITE_ORIGINALS);
-    // The ascendant's not-living refusal is shared by two rite entry points.
-    expect(found).toHaveLength(Object.keys(RITE_ORIGINALS).length + 1);
+    // Every call site has its own key, even where two originals share the wording.
+    expect(found).toHaveLength(Object.keys(RITE_ORIGINALS).length);
   });
 
   it('translates a refusal without changing who may perform a rite', () => {
