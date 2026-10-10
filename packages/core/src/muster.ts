@@ -218,14 +218,19 @@ function priceOf(ctx: SimCtx, c: Commitment, def: PositionDef): number | undefin
 /** The three gates a buy must clear, shared by `buyPosition` and `positionOptions` so a preview cannot say yes to a buy that then refuses. */
 function checkPosition(ctx: SimCtx, position: string): MusterOrderResult {
   const c = activeCommitment(ctx);
-  if (!c) return { ok: false, reason: 'no commitment is standing' };
+  if (!c) return { ok: false, reason: msg(ctx, 'muster.refuse.buy_no_commitment', 'no commitment is standing') };
   const def = ctx.content.position(position);
-  if (!def) return { ok: false, reason: 'no such position' };
+  if (!def) return { ok: false, reason: msg(ctx, 'muster.refuse.buy_no_position', 'no such position') };
 
   if (def.minRespect !== undefined) {
     const have = RESPECT_ORDER.indexOf(ctx.world.respect);
     const need = RESPECT_ORDER.indexOf(def.minRespect as RespectTier);
-    if (have < need) return { ok: false, reason: `the house is not ${def.minRespect} enough yet` };
+    if (have < need) {
+      return {
+        ok: false,
+        reason: msg(ctx, 'muster.refuse.respect', 'the house is not {RESPECT} enough yet', { RESPECT: def.minRespect }),
+      };
+    }
   }
 
   if (def.requiresOfficerAged !== undefined) {
@@ -233,12 +238,22 @@ function checkPosition(ctx: SimCtx, position: string): MusterOrderResult {
       const p = ctx.world.people.get(id);
       return p !== undefined && ctx.world.year - p.born >= def.requiresOfficerAged!;
     });
-    if (!aged) return { ok: false, reason: `needs an officer at least ${def.requiresOfficerAged} years old` };
+    if (!aged) {
+      return {
+        ok: false,
+        reason: msg(ctx, 'muster.refuse.officer_age', 'needs an officer at least {AGE} years old',
+          { AGE: String(def.requiresOfficerAged) }),
+      };
+    }
   }
 
   const price = priceOf(ctx, c, def);
   if (price !== undefined && ctx.world.treasury - price < DEBT_FLOOR) {
-    return { ok: false, reason: `the house cannot raise ${Math.round(price)} crowns` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'muster.refuse.cost',
+        'the house cannot raise {PRICE} crowns', { PRICE: String(Math.round(price)) }),
+    };
   }
   return { ok: true };
 }
@@ -327,11 +342,15 @@ export interface MusterOrderResult {
 export function musterOrder(ctx: SimCtx, order: MusterOrder): MusterOrderResult {
   switch (order.op) {
     case 'reinforce': {
-      if (!activeCommitment(ctx)) return { ok: false, reason: 'no commitment is standing' };
-      if (order.men <= 0) return { ok: false, reason: 'not a number of men' };
+      if (!activeCommitment(ctx)) {
+        return { ok: false, reason: msg(ctx, 'muster.refuse.reinforce_no_commitment', 'no commitment is standing') };
+      }
+      if (order.men <= 0) {
+        return { ok: false, reason: msg(ctx, 'muster.refuse.reinforce_no_men', 'not a number of men') };
+      }
       return reinforceCommitment(ctx, order.men)
         ? { ok: true }
-        : { ok: false, reason: 'no commitment is standing' };
+        : { ok: false, reason: msg(ctx, 'muster.refuse.reinforce_lost_commitment', 'no commitment is standing') };
     }
     case 'buy': {
       return buyPosition(ctx, order.position);
@@ -339,7 +358,8 @@ export function musterOrder(ctx: SimCtx, order: MusterOrder): MusterOrderResult 
     case 'withdraw': {
       return withdrawCommitment(ctx)
         ? { ok: true }
-        : { ok: false, reason: 'no commitment is standing to call home' };
+        : { ok: false, reason: msg(ctx, 'muster.refuse.withdraw_no_commitment',
+          'no commitment is standing to call home') };
     }
     default:
       return assertNever(order, 'muster order');
