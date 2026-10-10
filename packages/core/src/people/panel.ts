@@ -4,6 +4,7 @@ import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { LineCensus, MatchCard } from './match.js';
 import { bloodWomenOf, lineWomen } from './match.js';
 import { proseForTale } from '../prose.js';
+import { msg } from '../messages.js';
 
 /**
  * THE MATCHMAKER'S PANEL (issue #68) — WHAT IS OBSERVED, NEVER WHAT IS TRUE.
@@ -339,7 +340,7 @@ function pagesAbout(ctx: SimCtx, house: string): ChronicleEntry[] {
   return out;
 }
 
-function readOurBook(pages: ChronicleEntry[]): PanelPage[] {
+function readOurBook(ctx: SimCtx, pages: ChronicleEntry[]): PanelPage[] {
   return [...pages]
     .sort((a, b) => b.year - a.year)
     .slice(0, ROWS)
@@ -347,7 +348,9 @@ function readOurBook(pages: ChronicleEntry[]): PanelPage[] {
       year: e.year,
       // A greyed page is known to have existed and gone, and an omitted one is
       // a dated blank. Both are answers, so both are shown rather than skipped.
-      text: e.text ?? (e.greyed ? 'a page the house will not read out' : 'a blank the house left'),
+      text: e.text ?? (e.greyed
+        ? msg(ctx, 'panel.our_book.greyed_page', 'a page the house will not read out')
+        : msg(ctx, 'panel.our_book.blank_page', 'a blank the house left')),
       ...(e.record ? { record: e.record } : {}),
       embellished: e.discrepancyId !== undefined,
     }));
@@ -403,6 +406,6 @@ export function readPanel(ctx: SimCtx, card: MatchCard, cen: LineCensus): void {
     issue: readIssue(ctx, card, cen),
     woken: readWoken(ctx, card),
     said: readSaid(ctx, card.house, pages),
-    ourBook: readOurBook(pages),
+    ourBook: readOurBook(ctx, pages),
   };
 }
