@@ -4,6 +4,7 @@ import type { Rng } from '../rng.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { isBonded } from './bond.js';
 import { msg } from '../messages.js';
+import { proseForContentField } from '../prose.js';
 
 /**
  * WHAT LEAVES WITH THEM, AND TO WHOM.
@@ -249,7 +250,14 @@ export function tellSecrets(ctx: SimCtx, rng: Rng): string[] {
       });
     }
 
-    const house = w.houses.get(loose.house)?.name ?? loose.house;
+    // A Chronicle page keeps the wording selected when the secret was told.
+    // Only authored names are translatable: a renamed runtime house must not
+    // silently acquire a translation reviewed for a different name.
+    const runtimeHouse = w.houses.get(loose.house)?.name;
+    const authoredHouse = ctx.content.house(loose.house);
+    const house = runtimeHouse !== undefined && authoredHouse?.name === runtimeHouse
+      ? proseForContentField(ctx, 'houses', authoredHouse.id, 'name', runtimeHouse)
+      : runtimeHouse ?? loose.house;
     // AN ECHO BILLED BY ANOTHER SYSTEM (issue #326). The act was letting the
     // servant go; this page is its echo, and it links back to the page that
     // saw them leave. The bill is the open Discrepancy above, which the
