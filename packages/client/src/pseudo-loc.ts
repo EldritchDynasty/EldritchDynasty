@@ -68,10 +68,26 @@ function transformAttribute(element: Element, name: string): void {
   if (transformed !== value) element.setAttribute(name, transformed);
 }
 
+/** The layout probe must never change the value the browser will submit. */
+function skipTextNode(node: Node): boolean {
+  let element = node.parentElement;
+  while (element) {
+    if (SKIP_ELEMENTS.has(element.tagName) || element.tagName === 'TEXTAREA') return true;
+    // Without an explicit value, HTML derives an option's value from its text.
+    if (element.tagName === 'OPTION' && !element.hasAttribute('value')) return true;
+
+    // Editing hosts inherit through descendants, unless explicitly disabled.
+    const editable = element.getAttribute('contenteditable');
+    if (editable === 'false') return false;
+    if (editable === '' || editable === 'true' || editable === 'plaintext-only') return true;
+    element = element.parentElement;
+  }
+  return false;
+}
+
 function transformNode(node: Node): void {
   if (node.nodeType === Node.TEXT_NODE) {
-    const parent = node.parentElement;
-    if (parent && SKIP_ELEMENTS.has(parent.tagName)) return;
+    if (skipTextNode(node)) return;
     const text = node.nodeValue ?? '';
     const transformed = pseudoLocalise(text);
     if (transformed !== text) node.nodeValue = transformed;
