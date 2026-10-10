@@ -28,6 +28,8 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   function onKey(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       e.preventDefault();
+      // A held Escape closes at most one modal, even if another opens next.
+      if (e.repeat) return;
       close();
       return;
     }
