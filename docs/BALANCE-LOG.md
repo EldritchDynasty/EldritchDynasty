@@ -10100,3 +10100,69 @@ The red discovery runs
 the confidence bugs. Widening their samples adds visible scheduled compute;
 it does not make a weaker claim. All three original performance workstreams
 and the final merge/night/week measurement acceptance are complete.
+
+## 2026-10-10 — #332: the ascendant policy waited for a standing the rite spends
+
+**Question.** #332's plan (2026-09-30, step 4) says to measure the supply
+funnel into the Unmaking before changing any rule. The last numbers in this
+log were 16 Unmaking takers per 100 ascendant runs (#325, 28 September) and 26
+taker runs in 512 (#668's hosted nightly). A fresh local 100 × 500 run on
+`ce5d8a5` gave **1 taker, 15 offers and 0 Apotheosis**. That was a low draw,
+not a collapse, as the 512-run column below shows. It still made the funnel
+worth opening.
+
+**Where the 100-run supply stopped.** The probe tallied every year in which a
+qualified elder and an adult expressing descendant were both alive (the
+gate's existing `pair` filter-years), and asked the policy's own readiness
+conditions (`unmakingReadyForAscendant`) of each:
+
+| in the 271 pair-years | years met |
+|---|---:|
+| household books for God | 173 |
+| + Demigod affinities | 173 |
+| + all four opposed pairs | 173 |
+| **+ Exalted Respect** | **0** |
+
+Respect over those years was regarded 148 · eminent 86 · exalted 37. Exalted
+and a ready reading circle never coincided, so the ascendant policy never
+called the Unmaking from the table. It also declined every ambient offer
+(`postponeUnmaking`). The rite itself asks only **Eminent**
+(`the_unmaking`'s conditions) and spends two tiers on success. Waiting one
+tier higher was argued in the policy's comment as "strictly harder after the
+sacrifice" to start lower. True on paper, but the pre-condition was simply
+not reached.
+
+**Probe.** On the same 100 seeds, a ready test at Eminent and one at any
+Respect gave identical results, because the event's Eminent condition binds
+either way: **4 successful recipients instead of 1**, Unmade 5 instead of 6,
+Apotheosis 0.
+
+**Shipped, and measured at CI's batch.** The policy now reads the rite's own
+Eminent gate. No game rule moves: seven clauses and Exalted remain God's gates
+in `ascension.ts`, and the policy still rebuilds Respect after the rite.
+Paired `npm run gate:endings` (512 × 500, both columns), before on `ce5d8a5`
+and after on this branch. The intervening commits are prose only.
+
+| ascendant, 512 × 500 | before | after |
+|---|---:|---:|
+| runs with a successful Unmaking | 28 (5.5%) | **41 (8.0%)** |
+| successful recipients | 31 | **48** |
+| Unmade | 21 (4.1%) | 14 (2.7%) |
+| recipients that attained Demigod | 2 | **6** |
+| successful Ledger archive searches | 3 | **12** |
+| joint gates alive / power / books / circle / Madness / Mind / clauses / Respect / God | 28 / 22 / 20 / 20 / 11 / 5 / 1 / 1 / 1 | 41 / 31 / 28 / 28 / 17 / 11 / 2 / 1 / 1 |
+| independent clauses / Respect | 5 / 9 | 9 / 8 |
+| Apotheosis | 1 (0.2%) | 1 (0.2%) |
+
+The chronicler column is identical in both (it never reads this policy):
+broken_line 169 (33.0%), devoured 85 (16.6%), forgotten 257, unmade 1. The
+judged funnel claim moves from 28/512 against 1/512 to **41/512 against
+1/512**, a wider margin for the CI guard #325 set.
+
+**What it does not do.** Apotheosis stays at 1 in 512, far under the owner's
+8% floor (reported, not judged). The joint funnel now shows where the next
+attempt has to look. Of 48 recipients, 17 clear Madness, **11** clear Mind,
+then **2** hold seven clauses and **1** is back at Exalted. Supply into the
+rite is no longer the first wall. The Mind-over-Madness window and the Ledger
+overlap after the rite are. #332 stays open for those, one mechanism at a
+time.
