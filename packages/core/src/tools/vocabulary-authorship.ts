@@ -12,7 +12,7 @@ type Source = ContentBundle | Content;
  * listed debt becoming authored must fail so the exception cannot silently
  * grow stale.
  */
-export const VOCABULARY_AUTHORSHIP_OWED = ['recast', 'schedule'] as const;
+export const VOCABULARY_AUTHORSHIP_OWED = ['recast'] as const;
 
 export interface VocabularyAuthorshipVerdict {
   ok: boolean;
