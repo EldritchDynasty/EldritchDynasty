@@ -292,6 +292,8 @@ export interface Outcome {
  * content quietly resolved through `letHimDecide`.
  */
 export interface GameActions {
+  /** Re-read the visible Match card in the current prose mode without changing its evidence. */
+  futureOf(card: MatchCard, priorities?: SessionView['ageMatchPriorities']): MatchFutureReading;
   begin(seed: number, campaign?: CampaignId): void;
   /** Answer the prologue: the house's name, and its two choices. */
   found(choice: FoundingChoice): FoundingResult;
@@ -547,6 +549,9 @@ export function createGame(
   }
 
   const actions: GameActions = {
+    futureOf(card, priorities = []) {
+      return session.value?.matchFuture(card, priorities) ?? matchFuture(card, priorities);
+    },
     begin(seed, campaign = 'short') {
       const begun = newGame(source, {
         seed,
