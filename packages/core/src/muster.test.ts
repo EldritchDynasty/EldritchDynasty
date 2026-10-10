@@ -545,3 +545,61 @@ describe('the muster orders refuse in the reader\'s setting (#801)', () => {
     expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
   });
 });
+
+describe('reinforcements must remain whole, finite troops (#1053)', () => {
+  // The Vue number field can be cleared to '', and runtime callers may send
+  // non-finite values despite the TypeScript order type.
+  const invalid = [
+    ['empty field', '' as unknown as number],
+    ['zero', 0],
+    ['negative', -4],
+    ['fractional', 1.5],
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+    ['unsafe count', Number.MAX_SAFE_INTEGER + 1],
+    ['unsafe total', Number.MAX_SAFE_INTEGER],
+  ] as const;
+
+  it.each(invalid)('refuses %s through the public order without mutating state', (_label, men) => {
+    const ctx = testWorld(bundle);
+    const commitment = beginCommitment(ctx, 5, 'the_wars');
+    const beforeUpkeep = musterUpkeep(ctx);
+    const before = JSON.stringify(commitment);
+
+    expect(musterOrder(ctx, { op: 'reinforce', men })).toEqual({
+      ok: false,
+      reason: 'not a number of men',
+    });
+    expect(commitment.men).toBe(5);
+    expect(commitment.from).toEqual({});
+    expect(musterUpkeep(ctx)).toBe(beforeUpkeep);
+    expect(JSON.stringify(commitment)).toBe(before);
+  });
+
+  it.each(invalid)('refuses %s through the direct engine helper too', (_label, men) => {
+    const ctx = testWorld(bundle);
+    const commitment = beginCommitment(ctx, 5, 'the_wars');
+    expect(reinforceCommitment(ctx, men, 'branch_a')).toBe(false);
+    expect(commitment.men).toBe(5);
+    expect(commitment.from).toEqual({});
+  });
+
+  it('preserves serialized game state after a refused non-finite player order', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    beginCommitment(ctx, 5, 'the_wars');
+    const saved = JSON.stringify(saveGame(ctx));
+
+    expect(musterOrder(ctx, { op: 'reinforce', men: Number.NaN }).ok).toBe(false);
+    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+  });
+
+  it('still accepts valid positive integers through both reinforcement paths', () => {
+    const ctx = testWorld(bundle);
+    const commitment = beginCommitment(ctx, 5, 'the_wars');
+    expect(musterOrder(ctx, { op: 'reinforce', men: 4 }).ok).toBe(true);
+    expect(reinforceCommitment(ctx, 3, 'branch_a')).toBe(true);
+    expect(commitment.men).toBe(12);
+    expect(commitment.from).toEqual({ branch_a: 3 });
+  });
+});
