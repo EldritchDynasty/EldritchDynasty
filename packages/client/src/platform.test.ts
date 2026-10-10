@@ -880,6 +880,56 @@ describe('mobile durable storage', () => {
     ]);
   });
 
+
+  it('does not resurrect an older Preferences save over malformed native JSON (#900)', async () => {
+    const path = 'eldritch/saves/autosave.json';
+    const broken = '{"format":28,"year":1250';
+    const old = JSON.stringify({ format: 27, year: 1100 });
+    const files = mobileFileStore({ [path]: broken });
+    const preferences = mobilePreferenceStore({ 'ed:save:autosave': old });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readSave('autosave')).resolves.toBeNull();
+    expect(files.data.get(path)).toBe(broken);
+    expect(preferences.data.get('ed:save:autosave')).toBe(old);
+    expect(files.writes).toEqual([]);
+  });
+
+  it('does not overwrite malformed native saves while listing older Preferences keys (#900)', async () => {
+    const path = 'eldritch/saves/autosave.json';
+    const broken = '{"format":28';
+    const old = JSON.stringify({ format: 27, year: 1111 });
+    const files = mobileFileStore({
+      [path]: broken,
+      'eldritch/saves/healthy.json': JSON.stringify({ format: 28, year: 1300 }),
+    });
+    const preferences = mobilePreferenceStore({ 'ed:save:autosave': old });
+    const store = mobileStorage(files, preferences);
+
+    // A corrupt slot remains omitted, as before, without hiding healthy saves
+    // or treating the corrupt native file as a migration destination.
+    await expect(store.listSaves()).resolves.toEqual([
+      { slot: 'healthy', format: 28, year: 1300, savedAt: undefined },
+    ]);
+    expect(files.data.get(path)).toBe(broken);
+    expect(preferences.data.get('ed:save:autosave')).toBe(old);
+    expect(files.writes).toEqual([]);
+  });
+
+  it('does not replace malformed native Library JSON with a stale legacy copy (#900)', async () => {
+    const path = 'eldritch/library.json';
+    const broken = '{"format":1,"runs":[';
+    const old = JSON.stringify({ format: 1, runs: [{ year: 1100 }] });
+    const files = mobileFileStore({ [path]: broken });
+    const preferences = mobilePreferenceStore({ 'ed:library': old });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readLibrary()).resolves.toBeNull();
+    expect(files.data.get(path)).toBe(broken);
+    expect(preferences.data.get('ed:library')).toBe(old);
+    expect(files.writes).toEqual([]);
+  });
+
   it('keeps the newer durable save when legacy key cleanup fails during deletion (#895)', async () => {
     const newer = { format: 27, year: 1250 };
     const older = { format: 27, year: 1100 };
