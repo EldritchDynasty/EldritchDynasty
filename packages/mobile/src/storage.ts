@@ -89,16 +89,21 @@ export function mobileStorage(
   files: FileStore = Filesystem,
   preferences: PreferenceStore = Preferences,
 ) {
-  async function readFile(path: string): Promise<unknown | null> {
+  // Absence alone permits a legacy Preferences migration. A present file
+  // with invalid JSON is not an absent file: migrating over it would erase the
+  // only surviving bytes of a newer dynasty or Library of Houses.
+  async function readFile(path: string): Promise<
+    { present: true; value: unknown | null } | { present: false; value: null }
+  > {
     try {
       const result = await files.readFile({
         path,
         directory: Directory.Data,
         encoding: Encoding.UTF8,
       });
-      return parsed(result.data);
+      return { present: true, value: parsed(result.data) };
     } catch (error) {
-      if (missingFile(error)) return null;
+      if (missingFile(error)) return { present: false, value: null };
       throw error;
     }
   }
@@ -136,7 +141,7 @@ export function mobileStorage(
 
   async function readSave(slot: string): Promise<unknown | null> {
     const durable = await readFile(savePath(slot));
-    if (durable !== null) return durable;
+    if (durable.present) return durable.value;
 
     const legacy = await readLegacy(LEGACY_SAVE_PREFIX + slot);
     if (legacy === null) return null;
@@ -151,6 +156,7 @@ export function mobileStorage(
 
   async function listSaves(): Promise<SaveSummary[]> {
     const saves = new Map<string, SaveSummary>();
+    const nativeSlots = new Set<string>();
     try {
       const { files: entries } = await files.readdir({
         path: SAVE_DIR,
@@ -161,8 +167,11 @@ export function mobileStorage(
         const slot = slotFromFile(entry.name);
         if (!slot) continue;
         try {
-          const save = await readFile(`${SAVE_DIR}/${entry.name}`);
-          if (save !== null) saves.set(slot, saveSummary(slot, save));
+          const native = await readFile(`${SAVE_DIR}/${entry.name}`);
+          if (native.present) {
+            nativeSlots.add(slot);
+            if (native.value !== null) saves.set(slot, saveSummary(slot, native.value));
+          }
         } catch (error) {
           // A single inaccessible native file must not hide healthy saves.
           // Keep directory-level failures fatal, but report this one slot.
@@ -178,13 +187,16 @@ export function mobileStorage(
       const slot = key.slice(LEGACY_SAVE_PREFIX.length);
       if (!slot) continue;
 
-      if (saves.has(slot)) {
-        // The file is authoritative once it exists. Finish a prior migration
-        // that wrote successfully but was interrupted before key cleanup.
-        try {
-          await preferences.remove({ key });
-        } catch {
-          // The durable file already wins; stale-key cleanup can retry later.
+      if (nativeSlots.has(slot)) {
+        // Even a malformed native file is authoritative for migration: leave
+        // its bytes and the old Preferences key intact for explicit recovery.
+        // Only valid files can safely complete the legacy-key cleanup.
+        if (saves.has(slot)) {
+          try {
+            await preferences.remove({ key });
+          } catch {
+            // The valid native file already wins; retry cleanup later.
+          }
         }
         continue;
       }
@@ -229,7 +241,7 @@ export function mobileStorage(
 
   async function readLibrary(): Promise<unknown | null> {
     const durable = await readFile(LIBRARY_PATH);
-    if (durable !== null) return durable;
+    if (durable.present) return durable.value;
 
     const legacy = await readLegacy(LEGACY_LIBRARY_KEY);
     if (legacy === null) return null;
