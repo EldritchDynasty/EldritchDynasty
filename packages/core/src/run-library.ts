@@ -67,8 +67,8 @@ function human(id: string): string {
   return id.replace(/_/g, ' ');
 }
 
-function subjectOf(entry: LibraryEntry, person: string): string {
-  return entry.people[person] ?? 'the person named there';
+function subjectOf(ctx: SimCtx, entry: LibraryEntry, person: string): string {
+  return entry.people[person] ?? msg(ctx, 'library.fallback.person', 'the person named there');
 }
 
 function claimName(content: Content, claim: ResolvedClaim): string {
@@ -156,12 +156,12 @@ export const LIBRARY_MESSAGE_ORIGINALS: Readonly<Record<string, string>> = Objec
   ]),
 );
 
-function readingOf(entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content): {
+function readingOf(ctx: SimCtx, entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content): {
   shape: ReadingShape;
   values: Record<string, string>;
 } {
   if (!changed) return { shape: 'kept', values: {} };
-  const subject = subjectOf(entry, changed.person);
+  const subject = subjectOf(ctx, entry, changed.person);
   switch (changed.kind) {
     case 'attr': return { shape: 'attr', values: { SUBJECT: subject, QUALITY: claimName(content, changed), VALUE: String(Math.round(changed.value * 10) / 10) } };
     case 'trait': return { shape: changed.has ? 'trait_with' : 'trait_without', values: { SUBJECT: subject, QUALITY: claimName(content, changed) } };
@@ -190,7 +190,7 @@ function memoryVoice(
     teller: msg(ctx, `library.${template.form}.teller`, template.teller, values),
     bias: msg(ctx, `library.${template.form}.bias`, template.bias, values),
     render: (entry, changed, content) => {
-      const reading = readingOf(entry, changed, content);
+      const reading = readingOf(ctx, entry, changed, content);
       return msg(ctx, `library.${template.form}.${reading.shape}`, template.sentences[reading.shape], {
         ...values, SAID: entry.said, ...reading.values,
       });
