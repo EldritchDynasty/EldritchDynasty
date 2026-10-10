@@ -171,7 +171,7 @@ export function plateSpan(entries: readonly ChronicleEntry[]): string {
  * digits and combining marks, plus the underscores already accepted before.
  */
 function houseSlug(name: string): string {
-  return name.replace(/[^\\p{L}\\p{N}\\p{M}_]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
+  return name.replace(/[^\p{L}\p{N}\p{M}_]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
 }
 
 /** A filename a person would not be embarrassed to have in their downloads. */
