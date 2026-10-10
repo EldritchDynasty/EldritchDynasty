@@ -43,6 +43,7 @@ import {
   queueChoice, queueMatch, queueRecord, recordEventForChoice,
 } from '../events/decisions.js';
 import { msg } from '../messages.js';
+import { proseForContentField } from '../prose.js';
 
 /**
  * A YEAR IS A LIST OF PHASES, and the list is the file.
@@ -326,14 +327,15 @@ export const YEAR_PHASES: readonly Phase[] = [
         const p = ctx.world.people.get(done.person);
         const def = ctx.content.spellbook(done.book);
         if (!p || !def) continue;
-        report.studiesFinished.push({ person: p.id, name: p.name, book: def.name });
+        const bookName = proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name);
+        report.studiesFinished.push({ person: p.id, name: p.name, book: bookName });
 
         if (!done.first) continue;
         ctx.world.chronicle.push({
           year: ctx.world.year,
           weight: 'line',
           text: msg(ctx, 'library.first_reading', '{PERSON} finished {BOOK}. Nobody in the house had read it before.',
-            { PERSON: p.name, BOOK: def.name }),
+            { PERSON: p.name, BOOK: bookName }),
           named: false,
         });
       }
