@@ -231,7 +231,10 @@ describe('the Library of Houses', () => {
 
     const clear = w.findAll('button').find((button) => button.text() === 'Clear');
     await clear!.trigger('click');
-    expect(actions.clearLibrary).toHaveBeenCalled();
+    expect(actions.clearLibrary).not.toHaveBeenCalled();
+    expect(w.text()).toContain('cannot be undone');
+    await w.get('button.confirm-clear').trigger('click');
+    expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -249,6 +252,22 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     }],
   };
 
+  it('cancels a full-Library clear without touching any completed house', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    await flush();
+
+    await w.get('.library-head button').trigger('click');
+    expect(w.get('.library-clear-confirm').text()).toContain('cannot be undone');
+    expect(actions.clearLibrary).not.toHaveBeenCalled();
+
+    await w.findAll('.library-clear-confirm button')
+      .find((button) => button.text() === 'Cancel')!.trigger('click');
+    expect(w.find('.library-clear-confirm').exists()).toBe(false);
+    expect(w.text()).toContain('House Salt');
+    expect(actions.clearLibrary).not.toHaveBeenCalled();
+  });
+
   it('reports a rejected Clear next to the Library and clears the error on retry', async () => {
     const actions = spyActions();
     vi.mocked(actions.clearLibrary).mockRejectedValueOnce(new Error('storage full'));
@@ -256,12 +275,16 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     await flush();
 
     await w.get('.library-head button').trigger('click');
+    expect(actions.clearLibrary).not.toHaveBeenCalled();
+    await w.get('button.confirm-clear').trigger('click');
     await flush();
     expect(w.get('.library [role="alert"]').text()).toContain('could not be cleared');
     expect(w.text()).toContain('House Salt');
     expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
 
     await w.get('.library-head button').trigger('click');
+    expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+    await w.get('button.confirm-clear').trigger('click');
     await flush();
     expect(w.find('.library [role="alert"]').exists()).toBe(false);
     expect(actions.clearLibrary).toHaveBeenCalledTimes(2);
