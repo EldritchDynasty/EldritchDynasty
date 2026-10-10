@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim 1012 --agent chatgpt/1012-browser-save-download-rebased-20261011 --paths packages/client/src/platform.ts,packages/client/src/platform.test.ts --lane code
+request-commit: 128fcf40a00bad56ca005d16e330288c616bd5c3
+
+held: 1012 → chatgpt/1012-browser-save-download-rebased-20261011 (lane code)
+  land it with: Closes #1012
+  the janitor retires the claims and deletes the branch behind that.
