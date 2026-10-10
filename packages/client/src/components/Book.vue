@@ -5,6 +5,7 @@ import { useModal } from '../lib/modal';
 import { findEntry, linksFor } from '../lib/causes';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
+import { downloadBlob } from '../lib/download';
 import {
   LENSES, PLATE, plateHeight, plateName, plateRows, plateSubtitle, reads,
   type Lens, type Measure,
@@ -240,12 +241,7 @@ async function plate(): Promise<void> {
 
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
     if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = plateName(props.houseName, entries);
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, plateName(props.houseName, entries));
   } finally {
     plating.value = false;
   }

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import type { EpilogueView, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
+import { downloadBlob } from '../lib/download';
 import {
   PLATE, afterimageLayout, afterimageModel, afterimageName, type Measure,
 } from '../lib/book';
@@ -167,12 +168,7 @@ async function saveAfterimage(): Promise<void> {
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = afterimageName(props.view.houseName, props.view.seed, props.epilogue.year);
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, afterimageName(props.view.houseName, props.view.seed, props.epilogue.year));
   } finally {
     savingAfterimage.value = false;
   }
