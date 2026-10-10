@@ -306,6 +306,93 @@ describe('choice-scoped Record wording (#864)', () => {
     expect(resolveRecord(ctx, record.id, 'record').line).toBe(selected.options.record.chronicle);
   });
 
+  it('chooses factual outcome-specific accounts before choice-wide fallbacks', () => {
+    const { event, lawful } = scene();
+    const first = {
+      ...lawful,
+      id: 'keep_it_in_the_parish/kept_in_the_parish',
+      subject: 'The killer was sent south.',
+      options: {
+        ...lawful.options,
+        record: { ...lawful.options.record, chronicle: 'He went south before nightfall.' },
+      },
+    };
+    const second = {
+      ...lawful,
+      id: 'keep_it_in_the_parish/cawdry_hears_of_it',
+      subject: 'The Warden heard of the unlawful judgement.',
+      options: {
+        ...lawful.options,
+        record: { ...lawful.options.record, chronicle: 'After two years the Warden summoned the house.' },
+      },
+    };
+    event.recordByOutcome = [first, second];
+    expect(EventTemplateS.parse(event).recordByOutcome).toHaveLength(2);
+    expect(() => EventTemplateS.parse({ ...event, recordByOutcome: [first, first] }))
+      .toThrow(/duplicate outcome-specific Record id/);
+    expect(() => EventTemplateS.parse({ ...event, recordByOutcome: [{ ...first, id: 'not_a_pair' }] }))
+      .toThrow(/choice_id\/outcome_id/);
+
+    const ctx = testWorld(content, 86405);
+    const base = `content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByOutcome[id=${encodeURIComponent(second.id)}]`;
+    const plainSubject = 'The Warden learned about the case.';
+    const plainRecord = 'Two years later the Warden called the house to court.';
+    setProseVariants(ctx, [
+      { address: `${base}.subject`, of: proseOriginalHash(second.subject), plainenglish: plainSubject },
+      { address: `${base}.options.record.chronicle`, of: proseOriginalHash(second.options.record.chronicle), plainenglish: plainRecord },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const early = queueRecord(ctx, event, 'early-page', {}, 'keep_it_in_the_parish', 'kept_in_the_parish')!;
+    expect(early.recordChoiceId).toBe('keep_it_in_the_parish');
+    expect(early.recordOutcomeId).toBe('kept_in_the_parish');
+    expect(early.options[0]?.chronicle).toBe(first.options.record.chronicle);
+    expect(resolveRecord(ctx, early.id, 'record').line).toBe(first.options.record.chronicle);
+
+    const late = queueRecord(ctx, event, 'late-page', {}, 'keep_it_in_the_parish', 'cawdry_hears_of_it')!;
+    expect(late.recordChoiceId).toBe('keep_it_in_the_parish');
+    expect(late.recordOutcomeId).toBe('cawdry_hears_of_it');
+    expect(late.subject).toBe(plainSubject);
+    expect(late.options[0]?.chronicle).toBe(plainRecord);
+
+    // A loaded docket retains the exact account and its prose address.
+    const loaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    const restored = loaded.world.pendingDecisions.find((item) => item.kind === 'record' && item.id === late.id);
+    if (!restored || restored.kind !== 'record') throw new Error('Outcome-scoped Record was not saved');
+    expect(restored.recordOutcomeId).toBe('cawdry_hears_of_it');
+    expect(restored.recordChoiceId).toBe('keep_it_in_the_parish');
+    setProseMode(loaded, 'original');
+    expect(resolveRecord(loaded, restored.id, 'record').line).toBe(plainRecord);
+    expect(loaded.world.chronicle.find((entry) => entry.id === 'late-page')?.text).toBe(plainRecord);
+
+    // Without an exact override, a still-authored choice override wins.
+    const fallback = recordEventForChoice(event, lawful.id, 'other_outcome');
+    expect(fallback?.recordChoiceId).toBe(lawful.id);
+    expect(fallback?.recordOutcomeId).toBeUndefined();
+  });
+
+  it('passes the committed outcome id from the player to the pending Record', () => {
+    const { ctx, pending, choiceId } = playerChoiceFixture(86406);
+    if (pending.event.interaction.kind === 'narration') throw new Error('fixture is not a choice');
+    const outcome = pending.event.interaction.choices[0]!.outcomes[0]!;
+    const original = content.events.find((item) => item.id === 'blood_on_our_own_land')!.record!;
+    const specific = {
+      ...original,
+      id: `${choiceId}/${outcome.id}`,
+      subject: 'The actual outcome is remembered.',
+    };
+    pending.event.record = original;
+    pending.event.recordByOutcome = [specific];
+
+    const resolved = resolveChoice(ctx, pending.id, choiceId, makeRng(86406));
+    expect(resolved.ok, resolved.reason).toBe(true);
+    const record = ctx.world.pendingDecisions.find((item) => item.kind === 'record');
+    if (!record || record.kind !== 'record') throw new Error('Outcome produced no Record');
+    expect(record.recordChoiceId).toBe(choiceId);
+    expect(record.recordOutcomeId).toBe(outcome.id);
+    expect(record.subject).toBe(specific.subject);
+  });
+
   it('an authored choice override may be omitted without modifying narration and old Record fields', () => {
     const { event, lawful } = scene();
     const ctx = testWorld(content, 86403);
