@@ -40,7 +40,7 @@ import { autoCast, type SlotFill } from '../events/slots.js';
 import { decideBranch } from '../events/deciders.js';
 import {
   applyRecord, autoResolveDecision, autoRecordOption, choiceAvailability, commitOutcome,
-  queueChoice, queueMatch, queueRecord,
+  queueChoice, queueMatch, queueRecord, recordEventForChoice,
 } from '../events/decisions.js';
 import { msg } from '../messages.js';
 
@@ -675,7 +675,7 @@ export function present(
   const outcome = resolveChoiceOutcome(ctx, e, choice, cast, rng);
   const resolved = commitOutcome(ctx, e, outcome, cast, choice.id, rng, arcStep);
   report.resolved.push(resolved);
-  afterRecord(ctx, e, resolved.entryId, cast, rng, report, autoResolve);
+  afterRecord(ctx, e, resolved.entryId, cast, rng, report, autoResolve, choice.id);
 }
 
 /**
@@ -716,11 +716,14 @@ function afterRecord(
   rng: Rng,
   report: YearReport,
   autoResolve: boolean,
+  choiceId?: string,
 ): void {
-  if (!e.record) return;
-  if (autoResolve) applyRecord(ctx, e, entryId, autoRecordOption(rng), fill);
-  else {
-    const q = queueRecord(ctx, e, entryId, fill);
+  const selected = recordEventForChoice(e, choiceId);
+  if (!selected) return;
+  if (autoResolve) {
+    applyRecord(ctx, selected.event, entryId, autoRecordOption(rng), fill, undefined, selected.recordChoiceId);
+  } else {
+    const q = queueRecord(ctx, e, entryId, fill, choiceId);
     if (q) report.pending.push(q);
   }
 }
