@@ -880,6 +880,111 @@ describe('mobile durable storage', () => {
     ]);
   });
 
+  it('never downgrades an unreadable newer native save to an old Preferences copy (#901)', async () => {
+    const path = 'eldritch/saves/autosave.json';
+    const legacyKey = 'ed:save:autosave';
+    const files = mobileFileStore({ [path]: '{incomplete native save' });
+    const preferences = mobilePreferenceStore({
+      [legacyKey]: JSON.stringify({ format: 27, year: 1100 }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readSave('autosave')).rejects.toThrow(
+      /native Data file .* contains invalid JSON; refusing legacy migration/,
+    );
+    expect(files.data.get(path)).toBe('{incomplete native save');
+    expect(files.writes).toEqual([]);
+    expect(preferences.data.has(legacyKey)).toBe(true);
+
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(store.listSaves()).resolves.toEqual([]);
+      expect(warning).toHaveBeenCalledWith(
+        '[mobile] could not read save slot autosave:',
+        expect.any(Error),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+    expect(files.data.get(path)).toBe('{incomplete native save');
+    expect(files.writes).toEqual([]);
+    expect(preferences.data.has(legacyKey)).toBe(true);
+  });
+
+  it('preserves both copies when a native save is inaccessible, while listing other saves (#901)', async () => {
+    const damagedPath = 'eldritch/saves/blocked.json';
+    const healthyPath = 'eldritch/saves/healthy.json';
+    const old = JSON.stringify({ format: 27, year: 1099 });
+    const files = mobileFileStore({
+      [damagedPath]: JSON.stringify({ format: 27, year: 1250 }),
+      [healthyPath]: JSON.stringify({ format: 27, year: 1260 }),
+    });
+    const read = files.readFile;
+    const blockedFiles = {
+      ...files,
+      async readFile(args: Parameters<typeof read>[0]) {
+        if (args.path === damagedPath) throw new Error('native file temporarily inaccessible');
+        return read(args);
+      },
+    };
+    const preferences = mobilePreferenceStore({ 'ed:save:blocked': old });
+    const store = mobileStorage(blockedFiles, preferences);
+
+    await expect(store.readSave('blocked')).rejects.toThrow('native file temporarily inaccessible');
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(store.listSaves()).resolves.toEqual([
+        { slot: 'healthy', year: 1260, format: 27, savedAt: undefined },
+      ]);
+      expect(warning).toHaveBeenCalledWith(
+        '[mobile] could not read save slot blocked:',
+        expect.any(Error),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+    expect(files.data.get(damagedPath)).toBe(JSON.stringify({ format: 27, year: 1250 }));
+    expect(files.writes).toEqual([]);
+    expect(preferences.data.get('ed:save:blocked')).toBe(old);
+  });
+
+  it('does not replace an unreadable native Library with an old profile history (#901)', async () => {
+    const path = 'eldritch/library.json';
+    const legacyKey = 'ed:library';
+    const files = mobileFileStore({ [path]: '{partial library' });
+    const preferences = mobilePreferenceStore({
+      [legacyKey]: JSON.stringify({ format: 1, runs: [{ id: 'old-house' }] }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readLibrary()).rejects.toThrow(
+      /native Data file .* contains invalid JSON; refusing legacy migration/,
+    );
+    expect(files.data.get(path)).toBe('{partial library');
+    expect(files.writes).toEqual([]);
+    expect(preferences.data.has(legacyKey)).toBe(true);
+  });
+
+  it('treats native JSON null as an existing invalid snapshot, not missing data (#901)', async () => {
+    const path = 'eldritch/saves/autosave.json';
+    const files = mobileFileStore({ [path]: 'null' });
+    const preferences = mobilePreferenceStore({
+      'ed:save:autosave': JSON.stringify({ format: 27, year: 1080 }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.readSave('autosave')).rejects.toThrow(/invalid JSON/);
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(store.listSaves()).resolves.toEqual([]);
+    } finally {
+      warning.mockRestore();
+    }
+    expect(files.data.get(path)).toBe('null');
+    expect(files.writes).toEqual([]);
+    expect(preferences.data.has('ed:save:autosave')).toBe(true);
+  });
+
   it('keeps the newer durable save when legacy key cleanup fails during deletion (#895)', async () => {
     const newer = { format: 27, year: 1250 };
     const older = { format: 27, year: 1100 };
