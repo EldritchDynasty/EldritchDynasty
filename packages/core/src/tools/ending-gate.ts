@@ -99,6 +99,14 @@ import {
 import { branchOf, hall, softCapFor } from '../people/branches.js';
 import { inBreedingPool } from '../people/careers.js';
 import type { SimCtx } from '../world.js';
+import {
+  gatePartitionWorkerCount,
+  partitionGateInputs,
+  reduceGatePartitions,
+  runGatePartitionsInWorkers,
+  type GatePartition,
+  type GatePartitionResult,
+} from './gate-partition.js';
 
 type Source = ContentBundle | Content;
 
@@ -998,19 +1006,46 @@ export function verdictOver(runs: EndingRun[]): EndingVerdict {
   return { ok: failures.length === 0, lines };
 }
 
+/** Raw evidence for one deterministic slice of the canonical paired endings sweep.
+ * Workers compile the shared authored bundle once each, never once per run.
+ * The partition identity and input indices let the reducer restore the exact
+ * chronicler/ascendant order before the one aggregate verdict is evaluated.
+ */
+export function runEndingGatePartition(
+  source: ContentBundle,
+  partition: GatePartition<Pick<EndingRun, 'seed' | 'policy'>>,
+  years: number,
+): GatePartitionResult<EndingRun> {
+  const content = indexContent(source);
+  return {
+    id: partition.id,
+    observations: partition.items.map(({ index, input }) => ({
+      index,
+      value: playToTheEnd(content, input.seed, years, input.policy),
+    })),
+  };
+}
+
 export function gateEndings(
   source: Source = loadContent(),
   runs = ENDING_DEFAULT_BATCH,
   years = CAMPAIGN_YEARS,
+  opts: { workers?: number } = {},
 ): EndingVerdict {
-  // Compile inline follow-ups and lookups once for the entire paired sweep.
-  // playToTheEnd accepts indexed Content, and indexContent is idempotent;
-  // rebuilding the raw bundle's indexes for all 2 * runs games wastes CPU
-  // without changing a single seed, policy or game decision.
-  const content = indexContent(source);
-  // Same seed, both policies: isolate policy from founding-generation noise.
-  const played = endingGateInputs(runs).map(({ seed, policy }) =>
-    playToTheEnd(content, seed, years, policy));
+  const bundle = indexContent(source).bundle;
+  // Fast fixture calls stay serial; the 512-pair nightly batch benefits from
+  // the same bounded workers already exercised by blood and war gates.
+  const workers = opts.workers ?? (runs >= 8 ? gatePartitionWorkerCount() : 1);
+  const plan = partitionGateInputs(endingGateInputs(runs), workers);
+  const results = plan.length === 1
+    ? plan.map((partition) => runEndingGatePartition(bundle, partition, years))
+    : runGatePartitionsInWorkers<Pick<EndingRun, 'seed' | 'policy'>, EndingRun>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runEndingGatePartition',
+      argsBefore: [bundle],
+      argsAfter: [years],
+    });
+  const played = reduceGatePartitions(plan, results);
   const v = verdictOver(played);
   return { ok: v.ok, lines: [`gate (endings): ${runs} played runs x ${years} years, per policy`, ...v.lines] };
 }
