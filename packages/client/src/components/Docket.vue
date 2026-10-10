@@ -236,6 +236,7 @@ function onKey(e: KeyboardEvent): void {
   const el = document.activeElement;
   const press = shortcutFor({
     key: e.key,
+    repeat: e.repeat,
     shift: e.shiftKey,
     modified: e.ctrlKey || e.metaKey || e.altKey,
     inField: isField(el),
