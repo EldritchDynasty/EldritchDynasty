@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 // One implementation of the write guard, shared with the Electron main process.
-import { resolveContentPath } from '../content/tools/content-path.mjs';
+import { resolveExistingContentPath } from '../content/tools/content-path.mjs';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const REPO = r('../..');
@@ -29,7 +29,7 @@ function contentBridge() {
         if (req.method === 'GET') {
           try {
             const url = new URL(req.url, 'http://localhost');
-            const target = resolveContentPath(CONTENT, url.searchParams.get('path') ?? '');
+            const target = resolveExistingContentPath(CONTENT, url.searchParams.get('path') ?? '');
             const text = readFileSync(target, 'utf8');
             res.setHeader('content-type', 'application/json');
             res.end(JSON.stringify({ ok: true, text }));
@@ -49,7 +49,7 @@ function contentBridge() {
         req.on('end', () => {
           try {
             const { path, text } = JSON.parse(body) as { path: string; text: string };
-            const target = resolveContentPath(CONTENT, path);
+            const target = resolveExistingContentPath(CONTENT, path);
             // Read-before-write: never overwrite something we have not seen.
             readFileSync(target, 'utf8');
             writeFileSync(target, text, 'utf8');
