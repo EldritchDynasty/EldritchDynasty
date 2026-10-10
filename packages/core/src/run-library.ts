@@ -147,14 +147,113 @@ const LIBRARY_VOICES: LibraryVoiceTemplate[] = [
   } },
 ];
 
-/** Stable keyed inventory for review and regression tests. */
-export const LIBRARY_MESSAGE_ORIGINALS: Readonly<Record<string, string>> = Object.fromEntries(
-  LIBRARY_VOICES.flatMap((voice) => [
-    [`library.${voice.form}.teller`, voice.teller],
-    [`library.${voice.form}.bias`, voice.bias],
-    ...Object.entries(voice.sentences).map(([shape, original]) => [`library.${voice.form}.${shape}`, original]),
-  ]),
-);
+/** Stable keyed Originals, used by both the renderer and the regression inventory. */
+export const LIBRARY_MESSAGE_ORIGINALS: Readonly<Record<string, string>> = {
+  "library.song.teller": "the household singers of {RIVAL}",
+  "library.song.bias": "keeping the version {RIVAL} has found pleasant to remember",
+  "library.song.kept": "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, the old words are kept entire. The first singer's name is gone.",
+  "library.song.attr": "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT}'s {QUALITY} is entered as {VALUE}. The first singer's name is gone.",
+  "library.song.trait_with": "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT} is entered with {QUALITY}. The first singer's name is gone.",
+  "library.song.trait_without": "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT} is entered without {QUALITY}. The first singer's name is gone.",
+  "library.song.death": "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT}'s death is entered in {YEAR}. The first singer's name is gone.",
+  "library.doctrine.teller": "the chaplain who keeps {RIVAL}'s old books",
+  "library.doctrine.bias": "making the inherited account sit obediently inside {RIVAL}'s doctrine",
+  "library.doctrine.kept": "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: the old words are kept entire. No earlier hand is named.",
+  "library.doctrine.attr": "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT}'s {QUALITY} is entered as {VALUE}. No earlier hand is named.",
+  "library.doctrine.trait_with": "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT} is entered with {QUALITY}. No earlier hand is named.",
+  "library.doctrine.trait_without": "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT} is entered without {QUALITY}. No earlier hand is named.",
+  "library.doctrine.death": "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT}'s death is entered in {YEAR}. No earlier hand is named.",
+  "library.rival_chronicle.teller": "the archivist of {RIVAL}",
+  "library.rival_chronicle.bias": "keeping {RIVAL}'s inherited account of the old house",
+  "library.rival_chronicle.kept": "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where the old words are kept entire; and leaves the disagreement without apology.",
+  "library.rival_chronicle.attr": "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT}'s {QUALITY} is entered as {VALUE}; and leaves the disagreement without apology.",
+  "library.rival_chronicle.trait_with": "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT} is entered with {QUALITY}; and leaves the disagreement without apology.",
+  "library.rival_chronicle.trait_without": "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT} is entered without {QUALITY}; and leaves the disagreement without apology.",
+  "library.rival_chronicle.death": "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT}'s death is entered in {YEAR}; and leaves the disagreement without apology.",
+  "library.rhyme.teller": "the children of {RIVAL}'s lower hall",
+  "library.rhyme.bias": "keeping only what {RIVAL}'s children can carry from one winter to the next",
+  "library.rhyme.kept": "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: the old words are kept entire. They do not know whose book taught them.",
+  "library.rhyme.attr": "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT}'s {QUALITY} is entered as {VALUE}. They do not know whose book taught them.",
+  "library.rhyme.trait_with": "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT} is entered with {QUALITY}. They do not know whose book taught them.",
+  "library.rhyme.trait_without": "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT} is entered without {QUALITY}. They do not know whose book taught them.",
+  "library.rhyme.death": "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT}'s death is entered in {YEAR}. They do not know whose book taught them.",
+  "library.play.teller": "the players retained for {RIVAL}'s winter feast",
+  "library.play.bias": "turning an old house's dignity into the version {RIVAL} will applaud",
+  "library.play.kept": "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that the old words are kept entire. The audience laughs at a quarrel older than the script.",
+  "library.play.attr": "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT}'s {QUALITY} is entered as {VALUE}. The audience laughs at a quarrel older than the script.",
+  "library.play.trait_with": "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT} is entered with {QUALITY}. The audience laughs at a quarrel older than the script.",
+  "library.play.trait_without": "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT} is entered without {QUALITY}. The audience laughs at a quarrel older than the script.",
+  "library.play.death": "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT}'s death is entered in {YEAR}. The audience laughs at a quarrel older than the script.",
+  "library.footnote.teller": "an unnamed annotator in {RIVAL}'s library",
+  "library.footnote.bias": "correcting the old house from the safety of {RIVAL}'s margin",
+  "library.footnote.kept": "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: the old words are kept entire. The ink is younger than the page and older than any living witness.",
+  "library.footnote.attr": "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT}'s {QUALITY} is entered as {VALUE}. The ink is younger than the page and older than any living witness.",
+  "library.footnote.trait_with": "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT} is entered with {QUALITY}. The ink is younger than the page and older than any living witness.",
+  "library.footnote.trait_without": "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT} is entered without {QUALITY}. The ink is younger than the page and older than any living witness.",
+  "library.footnote.death": "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT}'s death is entered in {YEAR}. The ink is younger than the page and older than any living witness.",
+  "library.charm.teller": "the nurses of {RIVAL}, from one nursery to the next",
+  "library.charm.bias": "keeping the inherited warning useful to {RIVAL}'s children",
+  "library.charm.kept": "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: the old words are kept entire. None remembers when the last line entered the charm.",
+  "library.charm.attr": "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT}'s {QUALITY} is entered as {VALUE}. None remembers when the last line entered the charm.",
+  "library.charm.trait_with": "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT} is entered with {QUALITY}. None remembers when the last line entered the charm.",
+  "library.charm.trait_without": "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT} is entered without {QUALITY}. None remembers when the last line entered the charm.",
+  "library.charm.death": "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT}'s death is entered in {YEAR}. None remembers when the last line entered the charm.",
+};
+
+function renderLibraryMessage(ctx: SimCtx, form: LibraryMemory['form'], part: ReadingShape | 'teller' | 'bias', values: Record<string, string>): string {
+  switch (`${form}.${part}`) {
+    case "song.teller": return msg(ctx, "library.song.teller", "the household singers of {RIVAL}", values);
+    case "song.bias": return msg(ctx, "library.song.bias", "keeping the version {RIVAL} has found pleasant to remember", values);
+    case "song.kept": return msg(ctx, "library.song.kept", "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, the old words are kept entire. The first singer's name is gone.", values);
+    case "song.attr": return msg(ctx, "library.song.attr", "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT}'s {QUALITY} is entered as {VALUE}. The first singer's name is gone.", values);
+    case "song.trait_with": return msg(ctx, "library.song.trait_with", "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT} is entered with {QUALITY}. The first singer's name is gone.", values);
+    case "song.trait_without": return msg(ctx, "library.song.trait_without", "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT} is entered without {QUALITY}. The first singer's name is gone.", values);
+    case "song.death": return msg(ctx, "library.song.death", "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {SUBJECT}'s death is entered in {YEAR}. The first singer's name is gone.", values);
+    case "doctrine.teller": return msg(ctx, "library.doctrine.teller", "the chaplain who keeps {RIVAL}'s old books", values);
+    case "doctrine.bias": return msg(ctx, "library.doctrine.bias", "making the inherited account sit obediently inside {RIVAL}'s doctrine", values);
+    case "doctrine.kept": return msg(ctx, "library.doctrine.kept", "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: the old words are kept entire. No earlier hand is named.", values);
+    case "doctrine.attr": return msg(ctx, "library.doctrine.attr", "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT}'s {QUALITY} is entered as {VALUE}. No earlier hand is named.", values);
+    case "doctrine.trait_with": return msg(ctx, "library.doctrine.trait_with", "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT} is entered with {QUALITY}. No earlier hand is named.", values);
+    case "doctrine.trait_without": return msg(ctx, "library.doctrine.trait_without", "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT} is entered without {QUALITY}. No earlier hand is named.", values);
+    case "doctrine.death": return msg(ctx, "library.doctrine.death", "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {SUBJECT}'s death is entered in {YEAR}. No earlier hand is named.", values);
+    case "rival_chronicle.teller": return msg(ctx, "library.rival_chronicle.teller", "the archivist of {RIVAL}", values);
+    case "rival_chronicle.bias": return msg(ctx, "library.rival_chronicle.bias", "keeping {RIVAL}'s inherited account of the old house", values);
+    case "rival_chronicle.kept": return msg(ctx, "library.rival_chronicle.kept", "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where the old words are kept entire; and leaves the disagreement without apology.", values);
+    case "rival_chronicle.attr": return msg(ctx, "library.rival_chronicle.attr", "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT}'s {QUALITY} is entered as {VALUE}; and leaves the disagreement without apology.", values);
+    case "rival_chronicle.trait_with": return msg(ctx, "library.rival_chronicle.trait_with", "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT} is entered with {QUALITY}; and leaves the disagreement without apology.", values);
+    case "rival_chronicle.trait_without": return msg(ctx, "library.rival_chronicle.trait_without", "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT} is entered without {QUALITY}; and leaves the disagreement without apology.", values);
+    case "rival_chronicle.death": return msg(ctx, "library.rival_chronicle.death", "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {SUBJECT}'s death is entered in {YEAR}; and leaves the disagreement without apology.", values);
+    case "rhyme.teller": return msg(ctx, "library.rhyme.teller", "the children of {RIVAL}'s lower hall", values);
+    case "rhyme.bias": return msg(ctx, "library.rhyme.bias", "keeping only what {RIVAL}'s children can carry from one winter to the next", values);
+    case "rhyme.kept": return msg(ctx, "library.rhyme.kept", "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: the old words are kept entire. They do not know whose book taught them.", values);
+    case "rhyme.attr": return msg(ctx, "library.rhyme.attr", "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT}'s {QUALITY} is entered as {VALUE}. They do not know whose book taught them.", values);
+    case "rhyme.trait_with": return msg(ctx, "library.rhyme.trait_with", "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT} is entered with {QUALITY}. They do not know whose book taught them.", values);
+    case "rhyme.trait_without": return msg(ctx, "library.rhyme.trait_without", "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT} is entered without {QUALITY}. They do not know whose book taught them.", values);
+    case "rhyme.death": return msg(ctx, "library.rhyme.death", "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {SUBJECT}'s death is entered in {YEAR}. They do not know whose book taught them.", values);
+    case "play.teller": return msg(ctx, "library.play.teller", "the players retained for {RIVAL}'s winter feast", values);
+    case "play.bias": return msg(ctx, "library.play.bias", "turning an old house's dignity into the version {RIVAL} will applaud", values);
+    case "play.kept": return msg(ctx, "library.play.kept", "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that the old words are kept entire. The audience laughs at a quarrel older than the script.", values);
+    case "play.attr": return msg(ctx, "library.play.attr", "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT}'s {QUALITY} is entered as {VALUE}. The audience laughs at a quarrel older than the script.", values);
+    case "play.trait_with": return msg(ctx, "library.play.trait_with", "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT} is entered with {QUALITY}. The audience laughs at a quarrel older than the script.", values);
+    case "play.trait_without": return msg(ctx, "library.play.trait_without", "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT} is entered without {QUALITY}. The audience laughs at a quarrel older than the script.", values);
+    case "play.death": return msg(ctx, "library.play.death", "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {SUBJECT}'s death is entered in {YEAR}. The audience laughs at a quarrel older than the script.", values);
+    case "footnote.teller": return msg(ctx, "library.footnote.teller", "an unnamed annotator in {RIVAL}'s library", values);
+    case "footnote.bias": return msg(ctx, "library.footnote.bias", "correcting the old house from the safety of {RIVAL}'s margin", values);
+    case "footnote.kept": return msg(ctx, "library.footnote.kept", "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: the old words are kept entire. The ink is younger than the page and older than any living witness.", values);
+    case "footnote.attr": return msg(ctx, "library.footnote.attr", "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT}'s {QUALITY} is entered as {VALUE}. The ink is younger than the page and older than any living witness.", values);
+    case "footnote.trait_with": return msg(ctx, "library.footnote.trait_with", "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT} is entered with {QUALITY}. The ink is younger than the page and older than any living witness.", values);
+    case "footnote.trait_without": return msg(ctx, "library.footnote.trait_without", "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT} is entered without {QUALITY}. The ink is younger than the page and older than any living witness.", values);
+    case "footnote.death": return msg(ctx, "library.footnote.death", "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {SUBJECT}'s death is entered in {YEAR}. The ink is younger than the page and older than any living witness.", values);
+    case "charm.teller": return msg(ctx, "library.charm.teller", "the nurses of {RIVAL}, from one nursery to the next", values);
+    case "charm.bias": return msg(ctx, "library.charm.bias", "keeping the inherited warning useful to {RIVAL}'s children", values);
+    case "charm.kept": return msg(ctx, "library.charm.kept", "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: the old words are kept entire. None remembers when the last line entered the charm.", values);
+    case "charm.attr": return msg(ctx, "library.charm.attr", "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT}'s {QUALITY} is entered as {VALUE}. None remembers when the last line entered the charm.", values);
+    case "charm.trait_with": return msg(ctx, "library.charm.trait_with", "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT} is entered with {QUALITY}. None remembers when the last line entered the charm.", values);
+    case "charm.trait_without": return msg(ctx, "library.charm.trait_without", "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT} is entered without {QUALITY}. None remembers when the last line entered the charm.", values);
+    case "charm.death": return msg(ctx, "library.charm.death", "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {SUBJECT}'s death is entered in {YEAR}. None remembers when the last line entered the charm.", values);
+    default: throw new Error(`Unknown Library message ${form}.${part}`);
+  }
+}
 
 function readingOf(ctx: SimCtx, entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content): {
   shape: ReadingShape;
@@ -187,11 +286,11 @@ function memoryVoice(
   const values = { RIVAL: rivalName };
   return {
     form: template.form,
-    teller: msg(ctx, `library.${template.form}.teller`, template.teller, values),
-    bias: msg(ctx, `library.${template.form}.bias`, template.bias, values),
+    teller: renderLibraryMessage(ctx, template.form, 'teller', values),
+    bias: renderLibraryMessage(ctx, template.form, 'bias', values),
     render: (entry, changed, content) => {
       const reading = readingOf(ctx, entry, changed, content);
-      return msg(ctx, `library.${template.form}.${reading.shape}`, template.sentences[reading.shape], {
+      return renderLibraryMessage(ctx, template.form, reading.shape, {
         ...values, SAID: entry.said, ...reading.values,
       });
     },
