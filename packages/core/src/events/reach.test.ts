@@ -3331,7 +3331,7 @@ describe('#334 Bramme margin consequence witnesses', () => {
     for (const choice of event.interaction.choices) {
       const ctx = fixture(33401);
       ctx.world.generation = Math.max(4, FREQUENCY_PROFILES[event.frequency].minGeneration);
-      ctx.world.flags.add('bramme_copied_a_book');
+      ctx.world.flags.set('bramme_copied_a_book', true);
       expect(evalCondition(event.conditions, ctx)).toBe(true);
       for (const outcome of choice.outcomes) {
         const result = executeOutcomeWitness(ctx, event, {
@@ -3341,8 +3341,8 @@ describe('#334 Bramme margin consequence witnesses', () => {
         });
         expect(result.ok, result.reason).toBe(true);
         if (result.key) keys.push(result.key);
-        expect(ctx.world.flags.has('bramme_copied_a_book')).toBe(false);
-        ctx.world.flags.add('bramme_copied_a_book');
+        expect(ctx.world.flags.get('bramme_copied_a_book')).toBe(false);
+        ctx.world.flags.set('bramme_copied_a_book', true);
       }
     }
     expect(keys.sort()).toEqual([
