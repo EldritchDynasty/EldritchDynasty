@@ -35,6 +35,7 @@ const h = vi.hoisted(() => ({
   writes: [] as { path: string; text: string }[],
   /** Flip to make the transport refuse, the way a read-before-write guard does. */
   refuse: { value: false },
+  throwWrite: { value: false },
   writable: { value: true },
   /** Hold a transport response until a second edit arrives. */
   holdWrite: { value: false },
@@ -51,6 +52,7 @@ vi.mock('./content.js', async () => {
     isWritableContentPath: () => h.writable.value,
     writeFile: async (path: string, text: string) => {
       if (h.refuse.value) return { ok: false, error: 'refused by the path guard' };
+      if (h.throwWrite.value) throw new Error('transport unavailable');
       if (h.holdWrite.value) {
         await new Promise<void>((resolve) => { h.releaseWrite.current = resolve; });
       }
@@ -90,6 +92,7 @@ function event(id: string) {
 beforeEach(() => {
   h.writes.length = 0;
   h.refuse.value = false;
+  h.throwWrite.value = false;
   h.writable.value = true;
   h.holdWrite.value = false;
   h.releaseWrite.current = null;
@@ -198,6 +201,34 @@ describe('editing during an in-flight save (#947)', () => {
       h.holdWrite.value = false;
       h.releaseWrite.current?.();
       if (pending) await pending;
+      target.title = original;
+      markDirty('events', EVENT);
+      await saveEvent(EVENT);
+    }
+  });
+
+  it('recovers from a rejected host write without stranding the saving indicator', async () => {
+    const target = event(EVENT);
+    const original = target.title;
+    try {
+      target.title = 'Edited Before Transport Failure';
+      markDirty('events', EVENT);
+      h.throwWrite.value = true;
+
+      const result = await saveEvent(EVENT);
+      expect(result).toEqual({ ok: false, error: 'transport unavailable' });
+      expect(store.saving.has(CRUSADE)).toBe(false);
+      expect(store.errors[CRUSADE]).toBe('transport unavailable');
+      expect(isDirty('events', EVENT)).toBe(true);
+      expect(h.disk.get(CRUSADE)).not.toContain('Edited Before Transport Failure');
+
+      h.throwWrite.value = false;
+      expect((await saveEvent(EVENT)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('Edited Before Transport Failure');
+      expect(store.errors[CRUSADE]).toBeUndefined();
+      expect(store.dirty.has(CRUSADE)).toBe(false);
+    } finally {
+      h.throwWrite.value = false;
       target.title = original;
       markDirty('events', EVENT);
       await saveEvent(EVENT);
