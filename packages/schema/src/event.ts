@@ -767,7 +767,7 @@ export const EventTemplateS = z.object({
    * IDs across different choices cannot select each other's Record.
    */
   recordByOutcome: z.array(RecordBlockS.extend({
-    id: z.string().regex(/^[a-z0-9_]+\\/[a-z0-9_]+$/, 'use choice_id/outcome_id'),
+    id: z.string().regex(/^[a-z0-9_]+\/[a-z0-9_]+$/, 'use choice_id/outcome_id'),
   })).superRefine((rows, ctx) => {
     const seen = new Set<string>();
     for (const [index, row] of rows.entries()) {
