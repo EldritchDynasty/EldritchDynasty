@@ -55,6 +55,42 @@ export function reads(entry: ChronicleEntry, r: Reading): boolean {
   return `${entry.title ?? ''} ${entry.text ?? ''}`.toLowerCase().includes(needle);
 }
 
+
+/** An Age remains dated to the year it began, even in a sparse Chronicle. */
+export interface AgeBoundary {
+  began: number;
+  name: string | null;
+}
+
+/**
+ * Place each Age before the first *drawn* Chronicle entry on or after its
+ * actual beginning. The visible book can skip that year through omissions,
+ * lenses, search, century selection, or the 120-entry rendering window.
+ *
+ * Return positions rather than years: several Ages can begin between two
+ * surviving pages, and two pages can share a year. A new page appended to
+ * the drawn window never moves an already displayed boundary.
+ */
+export function ageBoundariesForPages(
+  entries: readonly Pick<ChronicleEntry, 'year'>[],
+  ages: readonly { began: number; name?: string | null }[],
+  from: number | null,
+): Map<number, AgeBoundary[]> {
+  const placed = new Map<number, AgeBoundary[]>();
+  const eligible = ages
+    .filter((age) => from === null || age.began >= from)
+    .sort((a, b) => a.began - b.began);
+  let index = 0;
+  for (const age of eligible) {
+    while (index < entries.length && entries[index]!.year < age.began) index++;
+    if (index >= entries.length) break;
+    const at = placed.get(index) ?? [];
+    at.push({ began: age.began, name: age.name ?? null });
+    placed.set(index, at);
+  }
+  return placed;
+}
+
 /** One drawn line of the exported plate. */
 export interface PlateRow {
   text: string;
