@@ -3,7 +3,7 @@ import type { ChronicleEntry } from '@ed/core';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
   afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
-  ageBoundariesForPages, plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
+  ageBoundariesForPages, MAX_PLATE_CANVAS_HEIGHT, plateHeight, plateName, plateRows, plateSpan, plateSubtitle, plateSvg, reads, wrap,
   type Measure,
 } from './book.js';
 
@@ -212,6 +212,55 @@ describe('the plate', () => {
   });
 });
 
+
+
+describe('full Chronicle plate export beyond canvas limits (#1062)', () => {
+  it('recognises a complete Long-Line book cannot safely be one bitmap', () => {
+    const longBook = Array.from({ length: 700 }, (_, i) =>
+      entry({ year: 1042 + Math.floor(i / 2), text: 'Recorded line ' + i }));
+    const rows = plateRows(longBook, monospace);
+    expect(plateHeight(rows)).toBeGreaterThan(MAX_PLATE_CANVAS_HEIGHT);
+    expect(1200 * MAX_PLATE_CANVAS_HEIGHT).toBeLessThan(16_000_000);
+  });
+
+  it('puts all pages in a vector export and uses identical page height', () => {
+    const book = Array.from({ length: 220 }, (_, i) =>
+      entry({ year: 1100 + i, text: 'PageMarker' + String(i).padStart(3, '0') }));
+    const rows = plateRows(book, monospace);
+    expect(plateHeight(rows)).toBeGreaterThan(MAX_PLATE_CANVAS_HEIGHT);
+    const svg = plateSvg(rows, 'House of Salt', plateSubtitle(book, 'all'));
+
+    expect(svg).toContain('<svg xmlns="http://www.w3.org/2000/svg"');
+    expect(svg).toContain('width="1200" height="' + plateHeight(rows) + '"');
+    expect(svg).toContain('House of Salt');
+    expect(svg).toContain('220 entries');
+    expect(svg).toContain('PageMarker000');
+    expect(svg).toContain('PageMarker219');
+    expect(svg.match(/PageMarker\d{3}/g)).toHaveLength(220);
+    expect(svg).toContain('Eldritch Dynasty');
+    expect(plateName('House of Salt', book).replace(/\.png$/, '.svg'))
+      .toBe('house-of-salt-1100-1319.svg');
+  });
+
+  it('preserves dated omissions and escapes untrusted Chronicle XML', () => {
+    const rows = plateRows([
+      entry({ year: 1204, text: null, title: 'The hidden page' }),
+      entry({ year: 1205, text: 'The <scandal> & its "cost", isn\u0027t it?' }),
+    ], monospace);
+    const svg = plateSvg(rows, 'House <Salt> & "Ink"', 'A house \u0027without\u0027 a name');
+
+    expect(svg).toContain('1204');
+    expect(svg).toContain('1205');
+    expect(svg.match(/<line /g)).toHaveLength(2); // heading divider + dated blank
+    expect(svg).not.toContain('The hidden page');
+    expect(svg).toContain('House &lt;Salt&gt; &amp; &quot;Ink&quot;');
+    expect(svg).toContain('The &lt;scandal&gt; &amp; its &quot;cost&quot;');
+    expect(svg).toContain('A house &apos;without&apos; a name');
+    expect(svg).not.toContain('<scandal>');
+    expect(svg).toContain('<svg');
+    expect(svg.trimEnd()).toMatch(/<\/svg>$/);
+  });
+});
 
 describe('the house afterimage (#260)', () => {
   const source = {
