@@ -8,6 +8,8 @@ import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
 import { beget, phase, place, testWorld } from '../testing.js';
 import { beginStudy } from '../people/library.js';
+import { rollDeath } from '../people/demography.js';
+import { makeRng } from '../rng.js';
 import type { SimCtx } from '../world.js';
 import { emptyReport } from './report.js';
 import { passageOf } from './passage.js';
@@ -475,5 +477,82 @@ describe('core message interpolation', () => {
     Object.defineProperty(values, 'toString', { value: 'chronicle', enumerable: true });
     expect(msg(ctx, 'test.null-prototype', 'The {__proto__} read the {toString}.', values))
       .toBe('The family read the chronicle.');
+  });
+});
+
+/**
+ * A CAUSE OF DEATH IS PROSE TOO (#410).
+ *
+ * `passage.death.cause` was keyed, but the `{CAUSE}` it quotes came from
+ * `rollDeath` as an Original literal — so a Plain English reader got a
+ * translated sentence wrapped around an untranslated phrase, and the phrase
+ * had no stable address an author could translate it under. The cause is
+ * rendered once, at death, and stored as the words the reader saw (#276).
+ */
+describe('a death cause, in the reader\'s prose', () => {
+  const CAUSES: Record<string, string> = {
+    'demography.cause.madness': 'the blood, overflowing',
+    'demography.cause.violence': 'by violence',
+    'demography.cause.old_age': 'of the years, all of them having been used',
+    'demography.cause.ordinary': 'in the ordinary way',
+  };
+  const PLAIN: Record<string, string> = {
+    'demography.cause.madness': 'from the madness of the blood',
+    'demography.cause.violence': 'in violence',
+    'demography.cause.old_age': 'of old age',
+    'demography.cause.ordinary': 'of ordinary causes',
+  };
+
+  it('gives every mortality cause a stable message address', () => {
+    const source = readFileSync(join(import.meta.dirname, '../people/demography.ts'), 'utf8');
+    const items = plainEnglishCoreWorkItems('people/demography.ts', source);
+    for (const [key, original] of Object.entries(CAUSES)) {
+      expect(items).toContainEqual(expect.objectContaining({ address: coreMessageAddress(key), text: original }));
+    }
+    // No cause is still addressed by its position in the file.
+    const legacy = items.filter((i) => i.address.includes('#literal[')).map((i) => i.text);
+    for (const original of Object.values(CAUSES)) expect(legacy).not.toContain(original);
+  });
+
+  function dies(mode: 'original' | 'plainenglish', age: number) {
+    const ctx = testWorld(bundle, 4471);
+    setProseVariants(ctx, Object.entries(CAUSES).map(([key, original]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: PLAIN[key]!,
+    })));
+    setProseMode(ctx, mode);
+    const p = place(ctx, { sex: 'female', age, name: 'Hesk' });
+    // Certain death, so the assertion is about the words and not a draw.
+    const rng = { ...makeRng(1), bool: () => true };
+    expect(rollDeath(p, ctx, rng)).toBe(true);
+    const report = emptyReport(ctx.world.year);
+    report.deaths.push(p);
+    return { ctx, p, line: passageOf(ctx, report)!.lines[0]!.text };
+  }
+
+  it('stores and reports an ordinary death in the selected mode', () => {
+    const original = dies('original', 30);
+    expect(original.p.causeOfDeath).toBe('in the ordinary way');
+    expect(original.line).toBe('Hesk died at 30 — in the ordinary way.');
+
+    const plain = dies('plainenglish', 30);
+    expect(plain.p.causeOfDeath).toBe('of ordinary causes');
+    expect(plain.line).toBe('Hesk died at 30 — of ordinary causes.');
+    expect(missingPlainEnglish(plain.ctx)).not.toContain(coreMessageAddress('demography.cause.ordinary'));
+  });
+
+  it('stores and reports a death at the body\'s ceiling in the selected mode', () => {
+    expect(dies('original', 400).p.causeOfDeath).toBe('of the years, all of them having been used');
+    const plain = dies('plainenglish', 400);
+    expect(plain.p.causeOfDeath).toBe('of old age');
+    expect(plain.line).toBe('Hesk died at 400 — of old age.');
+  });
+
+  it('keeps the Original cause when no reviewed variant exists, and says it is missing', () => {
+    const ctx = testWorld(bundle, 4472);
+    setProseMode(ctx, 'plainenglish');
+    const p = place(ctx, { sex: 'female', age: 30, name: 'Hesk' });
+    expect(rollDeath(p, ctx, { ...makeRng(1), bool: () => true })).toBe(true);
+    expect(p.causeOfDeath).toBe('in the ordinary way');
+    expect(missingPlainEnglish(ctx)).toContain(coreMessageAddress('demography.cause.ordinary'));
   });
 });
