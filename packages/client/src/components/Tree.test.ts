@@ -415,7 +415,7 @@ describe('the Line modal keyboard dismissal (#941)', () => {
 
 describe('Cast navigation reveals a person hidden by the planning board (#1060)', () => {
   it('routes Cast clicks through the reveal token while tree clicks retain their filters', () => {
-    const app = readFileSync(new URL('../App.vue', import.meta.url), 'utf8');
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
     expect(app).toMatch(/<Cast\b[^>]*@select="selectFromCast"/);
     expect(app).toMatch(/<Tree\b[\s\S]*?@select="select"/);
     expect(app).toMatch(/function selectFromCast\(id: string\): void \{[\s\S]*?selected\.value = opening \? id : null;[\s\S]*?if \(opening\) treeReveal\.value = \{ id, token: \+\+treeRevealToken \};/);
