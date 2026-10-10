@@ -727,3 +727,71 @@ events:
             provableBy: [the_church, house_calder, house_ilm]
     rumour: { id: rumour_the_woman_with_no_paper, accuracy: 0.45, spread: 3 }
     accounts: [the_heralds_file_on_the_descent, the_rimefell_parish_answer]
+
+proseVariants:
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].title"
+    of: 9ee4e4957e61a4c1
+    plainenglish: >-
+      The Third Reading of the Roll
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].body"
+    of: 5dc9978e60850262
+    plainenglish: >-
+      The Assembly meets at Caster every three years. Heralds read the Roll of Houses aloud, in
+      order. Where a family appears on the Roll tells the kingdom its standing. This year, this
+      house is four lines lower than at the last reading. The heralds give no reason because a
+      reading is not a judgement. Caster is nine days away by cart in each direction, and an
+      advocate there cannot promise a correction. The house can instead accept the lower position
+      for three years and hope it is corrected next time. Sometimes it is.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].interaction.choices[id=send_a_man_to_caster].label"
+    of: 405713670a932533
+    plainenglish: >-
+      Send a man to Caster and demand an explanation.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].interaction.choices[id=send_a_man_to_caster].outcomes[id=corrected].text"
+    of: 62c33cf0c993078c
+    plainenglish: >-
+      After nine days travelling, eleven weeks in Caster and forty-one crowns spent, a herald's
+      clerk finds the mistake in about four minutes. A marriage from 1103 was recorded under the
+      wrong branch. The clerk corrects the entry in the margin. The house returns to its previous
+      place on the Roll, but people will now remember that it went to Caster to challenge its
+      position.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].interaction.choices[id=send_a_man_to_caster].outcomes[id=it_was_not_an_error].text"
+    of: 98ac9d5b4933f82f
+    plainenglish: >-
+      The journey takes nine days, the stay in Caster lasts eleven weeks, and it costs forty-one
+      crowns. There is no mistake. Two houses above this one acted, while this house did nothing.
+      That is why its place on the Roll fell. Nobody had explained that rule to the family
+      before, because nobody had needed to.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].interaction.choices[id=let_the_reading_stand].label"
+    of: 94f1b4c9ea5abccd
+    plainenglish: >-
+      Accept the lower place on the Roll for three years.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].interaction.choices[id=let_the_reading_stand].outcomes[id=stood].text"
+    of: 5474dec0ab2131e4
+    plainenglish: >-
+      The house spends nothing and asks no questions. For three years, its place is four lines
+      lower on the Roll, and people treat it accordingly at every visit. At the next reading, the
+      house falls another four lines. The Roll does not record what a family truly is. It records
+      who has recently been in the room where these decisions are made.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].record.subject"
+    of: 989346b279c903ae
+    plainenglish: >-
+      the Roll reading and how the house responded
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].record.options.record.chronicle"
+    of: d68b2fc60424e38a
+    plainenglish: >-
+      The heralds read our house four lines lower on the Roll. We went to Caster and found no
+      error. They told us what the Roll really measures, which was different from what we had
+      believed.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].record.options.record.claims[0].text"
+    of: 45ac20d101e64f1d
+    plainenglish: >-
+      went to Caster after the house was listed four lines lower and found no clerical mistake
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].record.options.embellish.chronicle"
+    of: e6daddbaae008536
+    plainenglish: >-
+      The heralds read the Roll and our house kept its previous place. A clerk had made an error
+      in the reading, which was corrected that same day.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].record.options.embellish.claims[0].text"
+    of: 5e877206fc4e2e92
+    plainenglish: >-
+      had the Roll reading corrected that same day
