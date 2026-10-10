@@ -626,4 +626,27 @@ describe('modal keyboard Tab targets (#1004)', () => {
     `;
     expect(modalFocusable(card).map((el) => el.id)).toEqual(['available']);
   });
+  it('skips CSS-hidden Tab stops and ancestors but keeps visible controls', () => {
+    const card = document.createElement('section');
+    const style = document.createElement('style');
+    style.textContent = '.modal-collapsed { display: none; }';
+    document.head.appendChild(style);
+    try {
+      card.innerHTML = `
+        <button id="visible-first">First</button>
+        <div style="display: none"><button id="display-ancestor">Hidden ancestor</button></div>
+        <button id="display-self" style="display: none">Hidden button</button>
+        <div class="modal-collapsed"><a id="class-hidden" href="#away">Hidden by stylesheet</a></div>
+        <div style="visibility: hidden"><button id="visibility-ancestor">Invisible ancestor</button></div>
+        <button id="visibility-self" style="visibility: hidden">Invisible button</button>
+        <button id="visible-last">Last</button>
+      `;
+      expect(modalFocusable(card).map((el) => el.id)).toEqual([
+        'visible-first', 'visible-last',
+      ]);
+    } finally {
+      style.remove();
+    }
+  });
+
 });
