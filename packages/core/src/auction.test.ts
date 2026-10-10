@@ -611,6 +611,7 @@ describe('the broker and the bidding table refuse in the reader\'s setting (#800
       'auction.refuse.search_shelved': 'the house has this book already',
       'auction.refuse.search_due': 'a copy is already due at auction',
       'auction.refuse.search_fee': 'the broker asks {FEE} crowns before he leaves',
+      'auction.refuse.bid_amount': 'not a valid bid amount',
       'auction.refuse.bid_no_lot': 'no such lot',
       'auction.refuse.bid_no_heirloom': 'the house does not hold that heirloom',
     });
