@@ -18,7 +18,10 @@ describe('dual prose authoring surface (#414)', () => {
 
     expect(source).toContain('Original');
     expect(source).toContain('Plain English');
-    expect(source).toContain('contentInterpolationTokens');
+    expect(source).toContain('proseVariantStatus');
+    const statusSource = readFileSync(join(COMPONENTS, '..', 'lib', 'prose-status.ts'), 'utf8');
+    expect(statusSource).toContain('contentInterpolationTokens');
+    expect(statusSource).toContain('proseOriginalHash');
     expect(source).toContain('Placeholders match.');
     expect(source).toContain('missing ');
     expect(source).toContain('extra ');
