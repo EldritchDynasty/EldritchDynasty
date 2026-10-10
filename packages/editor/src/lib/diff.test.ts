@@ -38,6 +38,29 @@ describe('diffLines', () => {
     expect(render(diffLines('a\nb\nc', 'a\nB\nc'))).toBe('s a\nd b\na B\ns c');
   });
 
+  it('does not invent a blank line for an entirely empty document (#932)', () => {
+    expect(diffLines('', '')).toEqual([]);
+    expect(diffLines('', 'alpha\nbeta')).toEqual([
+      { kind: 'add', text: 'alpha' },
+      { kind: 'add', text: 'beta' },
+    ]);
+    expect(diffLines('alpha\nbeta', '')).toEqual([
+      { kind: 'del', text: 'alpha' },
+      { kind: 'del', text: 'beta' },
+    ]);
+  });
+
+  it('preserves real blank lines when a nonempty document ends in a newline', () => {
+    expect(diffLines('', '\n')).toEqual([
+      { kind: 'add', text: '' },
+      { kind: 'add', text: '' },
+    ]);
+    expect(diffLines('\n', '')).toEqual([
+      { kind: 'del', text: '' },
+      { kind: 'del', text: '' },
+    ]);
+  });
+
   it('handles an empty side in both directions', () => {
     expect(diffLines('', 'a\nb').filter((l) => l.kind === 'add')).toHaveLength(2);
     expect(diffLines('a\nb', '').filter((l) => l.kind === 'del')).toHaveLength(2);
