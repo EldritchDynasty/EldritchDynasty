@@ -1,6 +1,7 @@
 import type { EndedAge, Register } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from './world.js';
 import { renderContentProse } from './prose.js';
+import { msg } from './messages.js';
 
 /**
  * THE AGE IS THE SESSION (issue #65).
@@ -171,14 +172,20 @@ function verdictFor(ctx: SimCtx, from: number, to: number): ChapterLine[] {
   const blood = w.people.blood(w.playerHouse);
 
   for (const s of w.succession) {
-    if (s.from > from && s.from <= to) lines.push({ text: `${s.name} took the seal.` });
+    if (s.from > from && s.from <= to) {
+      lines.push({ text: msg(ctx, 'chapter.seal', '{PERSON} took the seal.', { PERSON: s.name }) });
+    }
   }
   for (const p of blood) {
-    if (p.died !== undefined && p.died > from && p.died <= to) lines.push({ text: `${p.name} died.` });
+    if (p.died !== undefined && p.died > from && p.died <= to) {
+      lines.push({ text: msg(ctx, 'chapter.death', '{PERSON} died.', { PERSON: p.name }) });
+    }
   }
   const born = blood.filter((p) => p.born > from && p.born <= to).length;
   if (born > 0) {
-    lines.push({ text: `${born} ${born === 1 ? 'child was' : 'children were'} born to the house.` });
+    lines.push({ text: born === 1
+      ? msg(ctx, 'chapter.birth', '{COUNT} child was born to the house.', { COUNT: String(born) })
+      : msg(ctx, 'chapter.births', '{COUNT} children were born to the house.', { COUNT: String(born) }) });
   }
 
   // THE LAST RESORT, unconditional: always true, always available, and what
@@ -189,14 +196,17 @@ function verdictFor(ctx: SimCtx, from: number, to: number): ChapterLine[] {
   // and these three facts are the ones that are always on the world
   // regardless of what happened in it.
   if (lines.length < MIN_VERDICT_LINES) {
-    lines.push({ text: `The house's standing stood at ${w.respect} when the years turned.` });
+    lines.push({ text: msg(ctx, 'chapter.standing', "The house's standing stood at {RESPECT} when the years turned.",
+      { RESPECT: w.respect }) });
   }
   if (lines.length < MIN_VERDICT_LINES) {
     const living = blood.filter((p) => p.status === 'alive').length;
-    lines.push({ text: `${living} of the blood were living when it ended.` });
+    lines.push({ text: msg(ctx, 'chapter.living', '{COUNT} of the blood were living when it ended.',
+      { COUNT: String(living) }) });
   }
   if (lines.length < MIN_VERDICT_LINES) {
-    lines.push({ text: `The treasury held ${Math.round(w.treasury)} crowns.` });
+    lines.push({ text: msg(ctx, 'chapter.treasury', 'The treasury held {CROWNS} crowns.',
+      { CROWNS: String(Math.round(w.treasury)) }) });
   }
 
   return lines;
