@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim check --agent chatgpt/831-ending-plain-english
+request-commit: 325b91b0750234ef52bfdabb75547636f4582e6e
+
+holding 831 (lane code, 4m)
+landing commit needs: Closes #831
+5 other claim(s) open, none overlapping the 2 path(s) your claim declares.
