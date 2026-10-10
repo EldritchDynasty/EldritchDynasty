@@ -7,10 +7,13 @@ const content = loadContent();
 describe('Record selector validation (#874)', () => {
   const fixture = () => {
     const source = content.bundle.events.find((event) => event.id === 'blood_on_our_own_land');
-    if (!source?.record || source.interaction.kind === 'narration') {
+    if (!source) throw new Error('Wick justice Record fixture is absent');
+    const event = structuredClone(source);
+    // Narrow the cloned fixture itself: a discriminated union's narrowing of
+    // the source does not survive structuredClone's inferred generic type.
+    if (!event.record || event.interaction.kind === 'narration') {
       throw new Error('Wick justice Record fixture missing its authored choices');
     }
-    const event = structuredClone(source);
     // Do not depend on #869's separately claimed authored overrides.
     event.recordByChoice = undefined;
     event.recordByOutcome = undefined;
