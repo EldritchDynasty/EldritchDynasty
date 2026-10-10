@@ -6,6 +6,8 @@ import { branchOf, wouldSpeakFor } from './people/branches.js';
 import { grudgesAgainst } from './people/relationships.js';
 import { heirApparent } from './people/succession.js';
 import { measureAscension } from './ascension.js';
+import { msg } from './messages.js';
+import { proseForContentField } from './prose.js';
 
 /**
  * WHO THIS GENERATION IS ABOUT (issue #44, and issue #86).
@@ -160,10 +162,16 @@ const SALIENCE_FLOOR = 30;
 /** Fewer than this and the panel has stopped answering the question. */
 const CAST_MIN = 3;
 
-/** A person this year, the reason they are on the list, and how loud it is. */
+/**
+ * A person this year, the reason they are on the list, and how loud it is.
+ *
+ * `because` is rendered only for the people the panel actually shows (#915):
+ * every finder runs every year, and a reason worded for a candidate who was
+ * crowded out would ask for a Plain English line nobody reads.
+ */
 interface Candidate {
   person: Person;
-  because: string;
+  because: () => string;
   salience: number;
 }
 
@@ -177,7 +185,7 @@ interface Candidate {
  */
 function first(
   person: Person,
-  cases: ([boolean, number, string] | undefined)[],
+  cases: ([boolean, number, () => string] | undefined)[],
 ): Candidate | undefined {
   for (const c of cases) {
     if (!c || !c[0]) continue;
@@ -227,14 +235,21 @@ function head(ctx: SimCtx, r: Read): Candidate | undefined {
   const since = w.headSince !== undefined && w.headSince <= w.year ? w.headSince : undefined;
   const reign = since === undefined ? undefined : w.year - since;
   const n = r.living.length;
+  const N = String(n);
+  const SINCE = String(since);
   return first(r.head, [
-    [reign === undefined, 100, `holds the seal, and answers for the ${n} living of the house.`],
-    [reign !== undefined && reign >= 40, 100,
-      `has held the seal for ${reign} years, and has outlived nearly everyone who saw him take it.`],
-    [reign !== undefined && reign <= 2, 100,
-      `took the seal in ${String(since)}, and has not yet been obeyed in anything difficult.`],
-    [r.halls > 1, 100, `has held the seal since ${String(since)}, and answers for ${n} living across ${r.halls} halls.`],
-    [true, 100, `has held the seal since ${String(since)}, and answers for the ${n} living of the house.`],
+    [reign === undefined, 100, () => msg(ctx, 'cast.head.holds',
+      'holds the seal, and answers for the {N} living of the house.', { N })],
+    [reign !== undefined && reign >= 40, 100, () => msg(ctx, 'cast.head.long_reign',
+      'has held the seal for {REIGN} years, and has outlived nearly everyone who saw him take it.',
+      { REIGN: String(reign) })],
+    [reign !== undefined && reign <= 2, 100, () => msg(ctx, 'cast.head.new_reign',
+      'took the seal in {SINCE}, and has not yet been obeyed in anything difficult.', { SINCE })],
+    [r.halls > 1, 100, () => msg(ctx, 'cast.head.halls',
+      'has held the seal since {SINCE}, and answers for {N} living across {HALLS} halls.',
+      { SINCE, N, HALLS: String(r.halls) })],
+    [true, 100, () => msg(ctx, 'cast.head.since',
+      'has held the seal since {SINCE}, and answers for the {N} living of the house.', { SINCE, N })],
   ]);
 }
 
@@ -265,13 +280,23 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
   if (w.wardship) {
     const ward = w.people.get(w.wardship.ward);
     if (ward) {
-      const age = r.age(ward);
-      const pronoun = ward.sex === 'female' ? 'she' : 'he';
+      const AGE = String(r.age(ward));
+      const she = ward.sex === 'female';
+      const boughtBack = w.wardship.boughtBack;
       return {
         person: ward,
         salience: 90,
-        because: `is ${age}, and the Warden holds the estate until ${pronoun} turns sixteen`
-          + `${w.wardship.boughtBack ? ' — bought back, though the seat itself still waits' : ''}.`,
+        because: () => boughtBack
+          ? she
+            ? msg(ctx, 'cast.heir.ward_bought.she',
+              'is {AGE}, and the Warden holds the estate until she turns sixteen — bought back, though the seat itself still waits.',
+              { AGE })
+            : msg(ctx, 'cast.heir.ward_bought.he',
+              'is {AGE}, and the Warden holds the estate until he turns sixteen — bought back, though the seat itself still waits.',
+              { AGE })
+          : she
+            ? msg(ctx, 'cast.heir.ward.she', 'is {AGE}, and the Warden holds the estate until she turns sixteen.', { AGE })
+            : msg(ctx, 'cast.heir.ward.he', 'is {AGE}, and the Warden holds the estate until he turns sixteen.', { AGE }),
       };
     }
   }
@@ -297,21 +322,23 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
     // telling the player anything about this generation; gated on a head of
     // 58 it was still 56%, which is still most of them. Sixty-six is old for a
     // man of this world, and it is the age at which the prospect is news.
-    [next.sex === 'female' && (r.head === undefined || headAge >= 66), 52,
-      `is what the house has left to inherit, and the man holding it is ${headAge}: the day it falls to her, it falls into a Regency.`],
-    [hall !== MAIN_BRANCH, 32, `waits for the seat in ${hallName}, which is not where the seal is kept.`],
+    [next.sex === 'female' && (r.head === undefined || headAge >= 66), 52, () => msg(ctx, 'cast.heir.regency_soon',
+      'is what the house has left to inherit, and the man holding it is {HEAD_AGE}: the day it falls to her, it falls into a Regency.',
+      { HEAD_AGE: String(headAge) })],
+    [hall !== MAIN_BRANCH, 32, () => msg(ctx, 'cast.heir.other_hall',
+      'waits for the seat in {HALL}, which is not where the seal is kept.', { HALL: hallName })],
     // A DECADE of it, not a year. An heir a year or two older than the man he
     // is waiting on is an accident of birth order; ten years older is a man
     // who will almost certainly never sit, and that is the news.
-    [r.head !== undefined && age >= headAge + 10, 30,
-      `is ${age}, and is waiting on a man ten years younger than himself.`],
-    [!r.canExpress(next) && r.head !== undefined && r.canExpress(r.head), 26,
-      'takes the seat the day it falls vacant, and cannot express a word of it.'],
-    [r.head !== undefined && !ofTheHead, 20,
-      `takes the seat the day it falls vacant, and is no child of the man who holds it.`],
-    [next.sex === 'female', 22,
-      'is what the house has left to inherit, which makes the next succession a Regency.'],
-    [true, 14, 'takes the seat the day it falls vacant.'],
+    [r.head !== undefined && age >= headAge + 10, 30, () => msg(ctx, 'cast.heir.older',
+      'is {AGE}, and is waiting on a man ten years younger than himself.', { AGE: String(age) })],
+    [!r.canExpress(next) && r.head !== undefined && r.canExpress(r.head), 26, () => msg(ctx, 'cast.heir.mundane',
+      'takes the seat the day it falls vacant, and cannot express a word of it.')],
+    [r.head !== undefined && !ofTheHead, 20, () => msg(ctx, 'cast.heir.not_his',
+      'takes the seat the day it falls vacant, and is no child of the man who holds it.')],
+    [next.sex === 'female', 22, () => msg(ctx, 'cast.heir.regency',
+      'is what the house has left to inherit, which makes the next succession a Regency.')],
+    [true, 14, () => msg(ctx, 'cast.heir.next', 'takes the seat the day it falls vacant.')],
   ]);
 }
 
@@ -332,9 +359,11 @@ function atRisk(ctx: SimCtx, r: Read): Candidate | undefined {
   if (worst && worst.madness >= 3) {
     const mind = Math.round(attr(worst, 'mind', ctx.genetics, w.year));
     const s = strain(ctx, worst);
-    const because = s >= 0.6
-      ? `carries ${Math.round(worst.madness)} of it against a mind of ${mind}, and is running out of room.`
-      : `carries ${Math.round(worst.madness)} of it against a mind of ${mind}.`;
+    const values = { MADNESS: String(Math.round(worst.madness)), MIND: String(mind) };
+    const because = () => s >= 0.6
+      ? msg(ctx, 'cast.at_risk.straining',
+        'carries {MADNESS} of it against a mind of {MIND}, and is running out of room.', values)
+      : msg(ctx, 'cast.at_risk.carrying', 'carries {MADNESS} of it against a mind of {MIND}.', values);
     return { person: worst, because, salience: Math.min(66, 26 + s * 70) };
   }
 
@@ -344,7 +373,8 @@ function atRisk(ctx: SimCtx, r: Read): Candidate | undefined {
   if (fragile) {
     return {
       person: fragile,
-      because: `has the blood and has not woken to it, and he is ${r.age(fragile)}.`,
+      because: () => msg(ctx, 'cast.at_risk.unwoken',
+        'has the blood and has not woken to it, and he is {AGE}.', { AGE: String(r.age(fragile)) }),
       salience: 34,
     };
   }
@@ -367,13 +397,18 @@ function carrier(ctx: SimCtx, r: Read): Candidate | undefined {
   const married = isMarried(her);
 
   return first(her, [
-    [only && !married, 58, `carries the only font left in the house, and has not been spent.`],
-    [only && married, 48, `carries the only font left in the house, and is already married.`],
-    [!married && age >= 24, 40,
-      `carries more of the blood than any woman living of the house, and is ${age} and unspent.`],
-    [clear, 34, `carries half again what the next woman of this house carries.`],
-    [!married, 20, `carries more of the blood than any woman living of the house, and has not been spent yet.`],
-    [true, 14, `carries more of the blood than any woman living of the house, and is already married.`],
+    [only && !married, 58, () => msg(ctx, 'cast.carrier.only_unspent',
+      'carries the only font left in the house, and has not been spent.')],
+    [only && married, 48, () => msg(ctx, 'cast.carrier.only_married',
+      'carries the only font left in the house, and is already married.')],
+    [!married && age >= 24, 40, () => msg(ctx, 'cast.carrier.most_unspent_at',
+      'carries more of the blood than any woman living of the house, and is {AGE} and unspent.', { AGE: String(age) })],
+    [clear, 34, () => msg(ctx, 'cast.carrier.half_again',
+      'carries half again what the next woman of this house carries.')],
+    [!married, 20, () => msg(ctx, 'cast.carrier.most_unspent',
+      'carries more of the blood than any woman living of the house, and has not been spent yet.')],
+    [true, 14, () => msg(ctx, 'cast.carrier.most_married',
+      'carries more of the blood than any woman living of the house, and is already married.')],
   ]);
 }
 
@@ -394,11 +429,19 @@ function aggrieved(ctx: SimCtx, r: Read): Candidate | undefined {
     if (!speaker) continue;
     const owed = Math.round(b.grievance);
     const salience = Math.min(58, 11 + b.grievance / 2.6);
-    const because = b.heldSeal !== undefined
-      ? `speaks for ${b.name}, which has not held the seal since ${b.heldSeal} and is owed ${owed} for it.`
-      : b.grievance >= 60
-        ? `speaks for ${b.name}, which has never held the seal, and has stopped asking for it politely.`
-        : `speaks for ${b.name}, which has never held the seal and is owed ${owed} for it.`;
+    const HALL = b.name;
+    const OWED = String(owed);
+    const heldSeal = b.heldSeal;
+    const grievance = b.grievance;
+    const because = () => heldSeal !== undefined
+      ? msg(ctx, 'cast.aggrieved.held',
+        'speaks for {HALL}, which has not held the seal since {SINCE} and is owed {OWED} for it.',
+        { HALL, SINCE: String(heldSeal), OWED })
+      : grievance >= 60
+        ? msg(ctx, 'cast.aggrieved.impatient',
+          'speaks for {HALL}, which has never held the seal, and has stopped asking for it politely.', { HALL })
+        : msg(ctx, 'cast.aggrieved.owed',
+          'speaks for {HALL}, which has never held the seal and is owed {OWED} for it.', { HALL, OWED });
     void r;
     return { person: speaker, because, salience };
   }
@@ -438,25 +481,34 @@ function marriedIn(ctx: SimCtx, r: Read): Candidate | undefined {
   let best: Candidate | undefined;
   for (const p of outsiders) {
     const kids = childrenOf(p).length;
-    const house = ctx.content.house(p.houseOfOrigin)?.name ?? p.houseOfOrigin;
+    const def = ctx.content.house(p.houseOfOrigin);
+    const HOUSE = () => def
+      ? proseForContentField(ctx, 'houses', String(p.houseOfOrigin), 'name', def.name)
+      : String(p.houseOfOrigin);
     const wed = p.marriages.find((m) => m.to === undefined);
     const years = wed ? w.year - wed.from : 0;
     const grudged = grudgesAgainst(w, String(p.id)).some((g) => g.severity >= 25);
 
     const it = first(p, [
-      [grudged, 46, `married in from ${house}, and somebody out there is still keeping a grudge about it.`],
+      [grudged, 46, () => msg(ctx, 'cast.married_in.grudge',
+        'married in from {HOUSE}, and somebody out there is still keeping a grudge about it.', { HOUSE: HOUSE() })],
       // While it is still a LIVE question. A dozen women have married in by
       // 1500 and some of them died childless, so "has given the house nobody"
       // is true of somebody in four sampled generations in five and says
       // nothing; of a woman who is thirty-four and has been married twelve
       // years it is the thing the house is actually worried about.
-      [kids === 0 && years >= 12 && r.age(p) <= 40, 34,
-        `married in from ${house} ${years} years ago, is ${r.age(p)}, and has given the house nobody.`],
-      [kids * 4 >= r.living.length, 32,
-        `married in from ${house}, and ${kids} of the ${r.living.length} living of this house are hers.`],
-      [r.font(p) > 0, 20, `married in from ${house}, carrying a font this house did not breed.`],
-      [kids > 0, 14, `married in from ${house}, and ${kids} of the house's living are hers.`],
-      [true, 12, `married in from ${house}, and has given the house nobody yet.`],
+      [kids === 0 && years >= 12 && r.age(p) <= 40, 34, () => msg(ctx, 'cast.married_in.barren',
+        'married in from {HOUSE} {YEARS} years ago, is {AGE}, and has given the house nobody.',
+        { HOUSE: HOUSE(), YEARS: String(years), AGE: String(r.age(p)) })],
+      [kids * 4 >= r.living.length, 32, () => msg(ctx, 'cast.married_in.share',
+        'married in from {HOUSE}, and {KIDS} of the {LIVING} living of this house are hers.',
+        { HOUSE: HOUSE(), KIDS: String(kids), LIVING: String(r.living.length) })],
+      [r.font(p) > 0, 20, () => msg(ctx, 'cast.married_in.font',
+        'married in from {HOUSE}, carrying a font this house did not breed.', { HOUSE: HOUSE() })],
+      [kids > 0, 14, () => msg(ctx, 'cast.married_in.kids',
+        "married in from {HOUSE}, and {KIDS} of the house's living are hers.", { HOUSE: HOUSE(), KIDS: String(kids) })],
+      [true, 12, () => msg(ctx, 'cast.married_in.none_yet',
+        'married in from {HOUSE}, and has given the house nobody yet.', { HOUSE: HOUSE() })],
     ]);
     if (it && (!best || it.salience > best.salience)) best = it;
   }
@@ -475,9 +527,9 @@ function foremost(ctx: SimCtx, r: Read): Candidate | undefined {
   const salience = Math.min(60, 16 + rung * 11 + (best.standing.blocked ? 6 : 0));
   return {
     person: p,
-    because: best.standing.blocked
-      ? `stands highest of anyone, and ${best.standing.blocked}`
-      : `stands highest of anyone the house has, with nothing left in the way.`,
+    because: () => best.standing.blocked
+      ? msg(ctx, 'cast.foremost.blocked', 'stands highest of anyone, and {BLOCKED}', { BLOCKED: best.standing.blocked })
+      : msg(ctx, 'cast.foremost.clear', 'stands highest of anyone the house has, with nothing left in the way.'),
     salience,
   };
 }
@@ -492,12 +544,12 @@ function soleExpresser(ctx: SimCtx, r: Read): Candidate | undefined {
   if (men.length !== 1) return undefined;
   const him = men[0]!;
   const age = r.age(him);
-  void ctx;
   return {
     person: him,
-    because: age >= 55
-      ? `is the only man living of this house who can express a word of it, and he is ${age}.`
-      : `is the only man living of this house who can express a word of it.`,
+    because: () => age >= 55
+      ? msg(ctx, 'cast.sole_expresser.old',
+        'is the only man living of this house who can express a word of it, and he is {AGE}.', { AGE: String(age) })
+      : msg(ctx, 'cast.sole_expresser.only', 'is the only man living of this house who can express a word of it.'),
     salience: age >= 55 ? 62 : 50,
   };
 }
@@ -508,14 +560,18 @@ function unwed(ctx: SimCtx, r: Read): Candidate | undefined {
     .filter((p) => p.sex === 'female' && r.isBlood(p) && r.age(p) >= 26 && !p.marriages.length)
     .sort((a, b) => a.born - b.born)[0];
   if (!her) return undefined;
-  void ctx;
   const age = r.age(her);
+  const AGE = String(age);
   const font = r.font(her);
   return first(her, [
-    [font > 0 && age >= 34, 44, `is ${age}, carries a font, and has never been asked for by anybody.`],
-    [age >= 34, 34, `is ${age} and has never been married, and nobody has written down why.`],
-    [font > 0, 32, `is ${age}, carries a font, and the house has not spent her.`],
-    [true, 22, `is ${age} and unmarried, which the house has had ${age - 18} years to see to.`],
+    [font > 0 && age >= 34, 44, () => msg(ctx, 'cast.unwed.never_asked',
+      'is {AGE}, carries a font, and has never been asked for by anybody.', { AGE })],
+    [age >= 34, 34, () => msg(ctx, 'cast.unwed.never_married',
+      'is {AGE} and has never been married, and nobody has written down why.', { AGE })],
+    [font > 0, 32, () => msg(ctx, 'cast.unwed.unspent',
+      'is {AGE}, carries a font, and the house has not spent her.', { AGE })],
+    [true, 22, () => msg(ctx, 'cast.unwed.years',
+      'is {AGE} and unmarried, which the house has had {YEARS} years to see to.', { AGE, YEARS: String(age - 18) })],
   ]);
 }
 
@@ -533,11 +589,17 @@ function longPost(ctx: SimCtx, r: Read): Candidate | undefined {
     .sort((a, b) => (a.career?.from ?? 0) - (b.career?.from ?? 0))[0];
   if (!held?.career) return undefined;
   const years = w.year - held.career.from;
-  const post = ctx.content.career(String(held.career.career))?.name ?? String(held.career.career);
+  const id = String(held.career.career);
+  const def = ctx.content.career(id);
   const at = held.career.from - held.born;
   return {
     person: held,
-    because: `has held his place in ${post} since he was ${at}, which is ${years} years of it.`,
+    because: () => msg(ctx, 'cast.long_post',
+      'has held his place in {POST} since he was {AT}, which is {YEARS} years of it.', {
+        POST: def ? proseForContentField(ctx, 'careers', id, 'name', def.name) : id,
+        AT: String(at),
+        YEARS: String(years),
+      }),
     salience: Math.min(44, 17 + (years - 22) / 2),
   };
 }
@@ -551,10 +613,10 @@ function eldest(ctx: SimCtx, r: Read): Candidate | undefined {
   if (age < 76) return undefined;
   const gap = order[1] ? order[1].born - old.born : age;
   if (gap < 6) return undefined;
-  void ctx;
   return {
     person: old,
-    because: `is ${age}, and older than anyone else in the house by ${gap} years.`,
+    because: () => msg(ctx, 'cast.eldest',
+      'is {AGE}, and older than anyone else in the house by {GAP} years.', { AGE: String(age), GAP: String(gap) }),
     salience: Math.min(48, 22 + (age - 76) + gap / 2),
   };
 }
@@ -583,16 +645,25 @@ function bonded(ctx: SimCtx, r: Read): Candidate | undefined {
   if (!worst) return undefined;
   const { p, c, score } = worst;
   const salience = Math.min(58, score);
-  void ctx;
-  const because = c.loyalty < 30 && c.knowsSecrets.length > 0
-    ? `has kept this house's ${c.role}'s work and ${c.knowsSecrets.length} of its secrets, and is owed better than it has paid.`
+  const ROLE = String(c.role);
+  const TERM = String(c.term);
+  const SECRETS = String(c.knowsSecrets.length);
+  const because = () => c.loyalty < 30 && c.knowsSecrets.length > 0
+    ? msg(ctx, 'cast.bonded.owed',
+      "has kept this house's {ROLE}'s work and {SECRETS} of its secrets, and is owed better than it has paid.",
+      { ROLE, SECRETS })
     : c.loyalty < 30
-      ? `serves as ${c.role} on ${c.term} terms, and has stopped believing the house will pay.`
+      ? msg(ctx, 'cast.bonded.unpaid',
+        'serves as {ROLE} on {TERM} terms, and has stopped believing the house will pay.', { ROLE, TERM })
       : c.debt > 0
-        ? `is bonded to this house for ${Math.round(c.debt)} marks and cannot leave over it.`
+        ? msg(ctx, 'cast.bonded.debt',
+          'is bonded to this house for {DEBT} marks and cannot leave over it.', { DEBT: String(Math.round(c.debt)) })
         : c.knowsSecrets.length > 0
-          ? `serves as ${c.role}, and knows ${c.knowsSecrets.length} things the book does not say.`
-          : `serves as ${c.role} on ${c.term} terms, for ${Math.round(c.wage)} marks a year.`;
+          ? msg(ctx, 'cast.bonded.knows',
+            'serves as {ROLE}, and knows {SECRETS} things the book does not say.', { ROLE, SECRETS })
+          : msg(ctx, 'cast.bonded.wage',
+            'serves as {ROLE} on {TERM} terms, for {WAGE} marks a year.',
+            { ROLE, TERM, WAGE: String(Math.round(c.wage)) });
   return { person: p, because, salience };
 }
 
@@ -601,12 +672,13 @@ function scholar(ctx: SimCtx, r: Read): Candidate | undefined {
   const best = [...r.living].sort((a, b) => b.spellsKnown.length - a.spellsKnown.length)[0];
   if (!best || best.spellsKnown.length < 3) return undefined;
   const n = best.spellsKnown.length;
-  void ctx;
   return {
     person: best,
-    because: best.sex === 'female'
-      ? `has read ${n} of the books in this house, and may only ever read four of the eight ways.`
-      : `has read ${n} of the books in this house, which is more than anyone else here has.`,
+    because: () => best.sex === 'female'
+      ? msg(ctx, 'cast.scholar.threshold',
+        'has read {N} of the books in this house, and may only ever read four of the eight ways.', { N: String(n) })
+      : msg(ctx, 'cast.scholar.most',
+        'has read {N} of the books in this house, which is more than anyone else here has.', { N: String(n) }),
     salience: Math.min(46, 18 + n * 5),
   };
 }
@@ -628,10 +700,12 @@ function widow(ctx: SimCtx, r: Read): Candidate | undefined {
     .sort((a, b) => b.kids - a.kids);
   const it = candidates[0];
   if (!it) return undefined;
-  void ctx;
+  const values = { YEAR: String(it.ended), KIDS: String(it.kids) };
   return {
     person: it.p,
-    because: `was widowed in ${String(it.ended)}, with ${it.kids} ${it.kids === 1 ? 'child' : 'children'} under sixteen still to raise.`,
+    because: () => it.kids === 1
+      ? msg(ctx, 'cast.widow.child', 'was widowed in {YEAR}, with {KIDS} child under sixteen still to raise.', values)
+      : msg(ctx, 'cast.widow.children', 'was widowed in {YEAR}, with {KIDS} children under sixteen still to raise.', values),
     salience: Math.min(46, 28 + it.kids * 5),
   };
 }
@@ -650,10 +724,11 @@ function papers(ctx: SimCtx, r: Read): Candidate | undefined {
     .filter((x) => x.doc !== undefined)
     .sort((a, b) => (b.doc!.exposed ?? 0) - (a.doc!.exposed ?? 0))[0];
   if (caught?.doc) {
-    void ctx;
+    const YEAR = String(caught.doc.exposed);
     return {
       person: caught.p,
-      because: `carries papers somebody set beside the parish roll in ${String(caught.doc.exposed)}, and they did not match.`,
+      because: () => msg(ctx, 'cast.papers.exposed',
+        'carries papers somebody set beside the parish roll in {YEAR}, and they did not match.', { YEAR }),
       salience: 50,
     };
   }
@@ -666,10 +741,12 @@ function papers(ctx: SimCtx, r: Read): Candidate | undefined {
     .filter((x) => x.doc !== undefined)
     .sort((a, b) => (b.doc!.generations ?? 0) - (a.doc!.generations ?? 0))[0];
   if (!standing?.doc) return undefined;
-  void ctx;
+  const doc = standing.doc;
   return {
     person: standing.p,
-    because: `stands on ${standing.doc.generations} generations of maternal record that ${standing.doc.notarisedBy} was paid to write.`,
+    because: () => msg(ctx, 'cast.papers.forged',
+      'stands on {GENERATIONS} generations of maternal record that {NOTARY} was paid to write.',
+      { GENERATIONS: String(doc.generations), NOTARY: doc.notarisedBy }),
     salience: 40,
   };
 }
@@ -747,7 +824,7 @@ export function castOf(ctx: SimCtx): CastMember[] {
       sex: pick.person.sex,
       age: ageOf(ctx, pick.person),
       hall: branch === MAIN_BRANCH ? 'the seat' : w.branches.get(branch)?.name ?? branch,
-      because: pick.because,
+      because: pick.because(),
     });
     if (out.length === CAST_MAX) break;
   }
