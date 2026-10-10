@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { createGame, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import type { ProseMode } from '@ed/schema';
+import { createProseModeSelector } from './lib/prose-selection';
 import Start from './components/Start.vue';
 import Prologue from './components/Prologue.vue';
 import Standing from './components/Standing.vue';
@@ -73,23 +74,16 @@ const accessibility = ref(loadAccessibility(readingStorage()));
 
 /** Loading is presentation-only. Pending Chronicle pages keep the wording
  * they were written with; new read models refresh after the chunk arrives.
+ * A superseded import cannot publish variants or override a newer selection.
  */
-async function selectProseMode(mode: ProseMode): Promise<void> {
-  accessibility.value.proseMode = mode;
-  actions.setProseMode(mode);
-  if (mode !== 'plainenglish') return;
-  try {
-    const variants = await installPlainEnglishCatalogue();
-    actions.setProseVariants(variants);
-  } catch {
-    // An optional chunk may be unavailable offline. Never leave the setting
-    // saying translations are selected when the catalogue could not load.
-    if (accessibility.value.proseMode === 'plainenglish') {
-      accessibility.value.proseMode = 'original';
-      actions.setProseMode('original');
-    }
-  }
-}
+const selectProseMode = createProseModeSelector(
+  (mode) => {
+    accessibility.value.proseMode = mode;
+    actions.setProseMode(mode);
+  },
+  installPlainEnglishCatalogue,
+  (variants) => actions.setProseVariants(variants),
+);
 
 // Honour a persisted Plain English choice on the first visit after reload.
 // Plain-to-Original remains synchronous; only the optional chunk is async.
