@@ -692,7 +692,10 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
     generation: 0,
     playerHouse,
     people: new PersonStore(),
-    houses: new Map(content.houses.map((h) => [h.id, h])),
+    // A world owns its house state. Sharing the authored HouseDef objects
+    // (including nested motives and gene-pool arrays) with every other world
+    // lets a runtime change silently mutate content and leak between seeds.
+    houses: new Map(content.houses.map((h) => [h.id, structuredClone(h)])),
     branches: new Map(),
     rivalLineages: new Map(),
     relationships: new Map(),
