@@ -506,7 +506,7 @@ describe('the quarrel pages speak the reader\'s setting (#740)', () => {
       if (rename !== undefined) {
         const house = ctx.world.houses.get('house_marrow');
         if (!house) throw new Error('house_marrow world record is missing');
-        house.name = rename;
+        ctx.world.houses.set('house_marrow', { ...house, name: rename });
       }
       speaking(ctx, mode, [variant]);
       addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' }, 'unrecorded');
