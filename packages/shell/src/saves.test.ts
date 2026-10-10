@@ -264,6 +264,37 @@ describe('the installation library on disk', () => {
     ]);
   });
 
+  it('rejects a linked library.json instead of reading another JSON file', () => {
+    const unrelated = join(userData, 'private-records.json');
+    const contents = JSON.stringify({ account: 'not-a-library', secret: 'keep' });
+    writeFileSync(unrelated, contents, 'utf8');
+    try {
+      symlinkSync(unrelated, join(userData, 'library.json'), 'file');
+    } catch (error) {
+      // Windows systems without symlink privileges exercise the directory
+      // rejection below and the regular-file success case above instead.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+    expect(() => readRunLibrary(userData)).toThrow('library is not a regular file');
+    expect(readFileSync(unrelated, 'utf8')).toBe(contents);
+  });
+
+  it('does not mistake a broken library symlink for a never-created library', () => {
+    try {
+      symlinkSync(join(userData, 'missing.json'), join(userData, 'library.json'), 'file');
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+    expect(() => readRunLibrary(userData)).toThrow('library is not a regular file');
+  });
+
+  it('refuses a directory-shaped library.json entry', () => {
+    mkdirSync(join(userData, 'library.json'));
+    expect(() => readRunLibrary(userData)).toThrow('library is not a regular file');
+  });
+
   it('has no value before a house has finished', () => {
     expect(readRunLibrary(userData)).toBeNull();
   });
