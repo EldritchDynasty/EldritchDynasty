@@ -19,8 +19,8 @@ describe('core message interpolation', () => {
       .toBe('The court replied.');
 
     const values: Record<string, string> = Object.create(null);
-    values.__proto__ = 'family';
-    values.toString = 'chronicle';
+    Object.defineProperty(values, '__proto__', { value: 'family', enumerable: true });
+    Object.defineProperty(values, 'toString', { value: 'chronicle', enumerable: true });
     expect(msg(ctx, 'test.null-prototype', 'The {__proto__} read the {toString}.', values))
       .toBe('The family read the chronicle.');
   });
