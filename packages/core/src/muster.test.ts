@@ -588,10 +588,12 @@ describe('reinforcements must remain whole, finite troops (#1053)', () => {
   it('preserves serialized game state after a refused non-finite player order', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     beginCommitment(ctx, 5, 'the_wars');
-    const saved = JSON.stringify(saveGame(ctx));
+    const saved = saveGame(ctx);
 
     expect(musterOrder(ctx, { op: 'reinforce', men: Number.NaN }).ok).toBe(false);
-    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+    // saveGame stamps each snapshot with the current clock time; compare
+    // the entire persisted world while allowing that export metadata to vary.
+    expect(saveGame(ctx)).toEqual({ ...saved, savedAt: expect.any(String) });
   });
 
   it('still accepts valid positive integers through both reinforcement paths', () => {
