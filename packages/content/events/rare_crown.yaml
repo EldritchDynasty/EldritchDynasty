@@ -1095,3 +1095,7 @@ proseVariants:
     of: 9c74952f3d751d3b
     plainenglish: >-
       brought home every levied man and the family son who was actually missing
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry].subject"
+    of: 136ac77aeb59e64e
+    plainenglish: >-
+      which court tried the killer from Wick
