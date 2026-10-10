@@ -405,6 +405,144 @@ describe('choice-scoped Record wording (#864)', () => {
   });
 });
 
+describe('authored Crown justice and levy Record truth (#869)', () => {
+  const scenes = [
+    { event: 'blood_on_our_own_land', choice: 'hand_him_to_cawdry', outcome: 'sent_to_the_assize', selected: 'choice' },
+    { event: 'blood_on_our_own_land', choice: 'keep_it_in_the_parish', outcome: 'kept_in_the_parish', selected: 'fallback' },
+    { event: 'blood_on_our_own_land', choice: 'keep_it_in_the_parish', outcome: 'cawdry_hears_of_it', selected: 'fallback' },
+    { event: 'the_levy_in_earnest', choice: 'send_them', outcome: 'seven_come_back', selected: 'outcome' },
+    { event: 'the_levy_in_earnest', choice: 'send_them', outcome: 'he_does_not', selected: 'outcome' },
+    { event: 'the_levy_in_earnest', choice: 'commute_it', outcome: 'commuted', selected: 'fallback' },
+  ] as const;
+
+  // Use the real authored choice and its real outcome/effects, but restrict
+  // the random outcome draw to one authored result. Each witness is therefore
+  // deterministic without seed-mining a Long Line or rewriting the outcome.
+  function witness(eventId: string, choiceId: string, outcomeId: string, seed: number) {
+    const ctx = fixture(seed);
+    const son = place(ctx, { sex: 'male', age: 23, name: 'Witness Son ' + seed });
+    const head = place(ctx, { sex: 'male', age: 45, name: 'Witness Head ' + seed, castSlots: ['head'] });
+    const event = structuredClone(content.events.find((item) => item.id === eventId)!);
+    if (event.interaction.kind === 'narration') throw new Error('Crown scene lost its choice');
+
+    event.interaction.choices = event.interaction.choices.map((choice) =>
+      choice.id === choiceId
+        ? { ...choice, outcomes: choice.outcomes.filter((outcome) => outcome.id === outcomeId) }
+        : choice,
+    );
+    const fill = { HEAD: head.id, SON: son.id };
+    const pending = queueChoice(ctx, event, event.body, fill, []);
+    const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(seed + 1));
+    expect(answer.ok, answer.reason).toBe(true);
+    expect(ctx.world.decisionLog.at(-1)).toMatchObject({
+      kind: 'outcome', event: eventId, choiceId, outcomeId,
+    });
+
+    const record = ctx.world.pendingDecisions.find((item) => item.kind === 'record');
+    if (!record || record.kind !== 'record') throw new Error('Chosen Crown outcome has no Record');
+    return { ctx, event, record, son, entryId: answer.resolved!.entryId };
+  }
+
+  for (const [index, scene] of scenes.entries()) {
+    it(`${scene.event}: ${scene.choice}/${scene.outcome} records the chosen fact and a distinct lie`, () => {
+      const { ctx, event, record, son, entryId } = witness(
+        scene.event, scene.choice, scene.outcome, 86900 + index,
+      );
+      const chosen = recordEventForChoice(event, scene.choice, scene.outcome)!;
+      const expected = chosen.event.record!;
+      const expectedDiscrepancy = expected.options.embellish.discrepancy.id;
+
+      expect(record.subject).toBe(expected.subject);
+      expect(record.options[0]?.chronicle).toBe(expected.options.record.chronicle);
+      expect(record.options[2]?.chronicle).toBe(expected.options.embellish.chronicle);
+      expect(record.options[2]?.discrepancy).toBe(expectedDiscrepancy);
+      expect(record.recordChoiceId === undefined ? 'fallback' : record.recordOutcomeId ? 'outcome' : 'choice')
+        .toBe(scene.selected);
+
+      const saved = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      const restored = saved.world.pendingDecisions.find((item) => item.kind === 'record' && item.id === record.id);
+      if (!restored || restored.kind !== 'record') throw new Error('Save lost the selected Record');
+      expect(restored.options).toEqual(record.options);
+      expect(restored.recordChoiceId).toBe(record.recordChoiceId);
+      expect(restored.recordOutcomeId).toBe(record.recordOutcomeId);
+
+      const res = resolveRecord(saved, restored.id, 'record');
+      expect(res.ok).toBe(true);
+      expect(res.line).not.toBeNull();
+      if (scene.event === 'the_levy_in_earnest' && scene.choice === 'send_them') {
+        expect(res.line).toContain(son.name);
+      }
+      const page = saved.world.chronicle.find((entry) => entry.id === entryId)!;
+      expect(page.record).toBe('record');
+      expect(page.text).toBe(res.line);
+      expect(page.claims).toHaveLength(1);
+      expect(page.claims?.[0]?.kind).toBe('deed');
+      expect(page.discrepancyId).toBeUndefined();
+      expect(saved.world.discrepancies.has(expectedDiscrepancy)).toBe(false);
+    });
+  }
+
+  it('keeps new Plain English Chronicle copy frozen across a saved pending docket and a mode switch', () => {
+    for (const [index, scene] of scenes.entries()) {
+      const { ctx, event, record, son, entryId } = witness(
+        scene.event, scene.choice, scene.outcome, 86920 + index,
+      );
+      // A real prose-mode choice happens while the Record docket is visible.
+      // Queue a second witnessed Record in Plain English to test that fork
+      // without changing the actual chosen outcome.
+      const selected = recordEventForChoice(event, scene.choice, scene.outcome)!;
+      setProseMode(ctx, 'plainenglish');
+      const pageId = entryId + '_plain';
+      ctx.world.chronicle.push({
+        id: pageId, year: ctx.world.year, weight: 'paragraph',
+        text: 'The event happened.', eventId: event.id, named: false,
+      });
+      const plain = queueRecord(ctx, event, pageId, { SON: son.id }, scene.choice, scene.outcome)!;
+      const base = `content:events/rare_crown.yaml#events[id=${scene.event}]`
+        + (selected.recordOutcomeId
+          ? `.recordByOutcome[id=${encodeURIComponent(`${scene.choice}/${scene.outcome}`)}]`
+          : selected.recordChoiceId ? `.recordByChoice[id=${scene.choice}]` : '.record');
+      const variant = content.proseVariants.find((item) => item.address === `${base}.options.record.chronicle`);
+      expect(plain.options[0]?.chronicle)
+        .toBe(variant?.plainenglish ?? selected.event.record!.options.record.chronicle);
+
+      // Resolve the Original's original docket first, then the frozen
+      // translated docket after reloading in the opposite display mode.
+      expect(resolveRecord(ctx, record.id, 'omit').line).toBeNull();
+      const saved = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      setProseMode(saved, 'original');
+      const text = resolveRecord(saved, plain.id, 'record').line;
+      expect(text).not.toBeNull();
+      expect(text).not.toContain('{SON}');
+      expect(saved.world.chronicle.find((entry) => entry.id === pageId)?.text).toBe(text);
+      expect(saved.world.chronicle.find((entry) => entry.id === entryId)?.text).toBeNull();
+    }
+  });
+
+  it('an embellishment creates proof debt, while an omission remains a dated blank', () => {
+    for (const [index, scene] of scenes.entries()) {
+      const { ctx, event, record, entryId } = witness(
+        scene.event, scene.choice, scene.outcome, 86940 + index,
+      );
+      const selected = recordEventForChoice(event, scene.choice, scene.outcome)!;
+      const debt = selected.event.record!.options.embellish.discrepancy.id;
+      expect(resolveRecord(ctx, record.id, 'embellish').ok).toBe(true);
+      expect(ctx.world.discrepancies.get(debt)?.state).toBe('open');
+      const page = ctx.world.chronicle.find((entry) => entry.id === entryId)!;
+      expect(page.discrepancyId).toBe(debt);
+      expect(page.record).toBe('embellish');
+      expect(page.claims).toHaveLength(1);
+
+      const blank = queueRecord(ctx, event, entryId + '_omitted', {}, scene.choice, scene.outcome)!;
+      expect(resolveRecord(ctx, blank.id, 'omit').line).toBeNull();
+      const omitted = ctx.world.chronicle.find((entry) => entry.id === entryId + '_omitted')!;
+      expect(omitted.record).toBe('omit');
+      expect(omitted.text).toBeNull();
+      expect(omitted.claims).toBeUndefined();
+    }
+  });
+});
+
 describe('Record-option Chronicle-effect prose (#806)', () => {
   it('selects reviewed wording at commit time and never rewrites earlier pages', () => {
     const source = content.events.find((item) => item.id === 'a_second_hand_that_agrees')!;
