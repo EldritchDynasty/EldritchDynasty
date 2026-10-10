@@ -793,8 +793,8 @@ proseVariants:
     of: "f3658b37cd5e15b3"
     plainenglish: >-
       He tells the truth. Those eleven leaves were written by someone else, whose handwriting is
-      better than the rest. Someone thought the book mattered enough to have another person copy
-      part of it. That is all he noticed, but it is more than anyone in the family had noticed in
+      better than the rest. Someone thought the book mattered enough to pay for a second copy
+      made by another person. That is all he noticed, but it is more than anyone in the family had noticed in
       two hundred years.
   - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=ask_him_what_he_read].outcomes[id=he_says_nothing_useful].text"
     of: "57d18318d1b1eb4c"
