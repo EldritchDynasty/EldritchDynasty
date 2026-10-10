@@ -1,0 +1,48 @@
+name: dependency advisory audit
+
+# Advisory data changes even when package-lock.json does not. Capture a
+# reproducible lockfile audit weekly, and allow a manual run after upgrades.
+on:
+  schedule:
+    - cron: '37 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-advisory-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: npm lockfile audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: request current npm advisories
+        shell: bash
+        run: |
+          # npm audit returns 1 for known moderate advisories. The parser
+          # applies the deliberate severity policy, not npm's generic exit.
+          set +e
+          npm audit --json > dependency-audit.json
+          status=$?
+          set -e
+          if [ "$status" -gt 1 ]; then
+            echo "npm audit failed to retrieve advisory evidence (exit $status)."
+            exit "$status"
+          fi
+      - name: summarize and gate high/critical advisories
+        run: node tools/electron-audit.mjs dependency-audit.json
+      - name: retain full advisory evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-dependency-audit
+          path: dependency-audit.json
+          if-no-files-found: warn
