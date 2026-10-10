@@ -13,7 +13,7 @@ import { queueChoice, resolveChoice } from './decisions.js';
 import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
-import { ambientPool } from './selection.js';
+import { ambientPool, selectEvents } from './selection.js';
 import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
@@ -6275,5 +6275,78 @@ describe('higher-ascension TEST_FAMILIES fallback outcome witnesses', () => {
     }
 
     expect(witnessed.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Bramme's return must be an earned follow-up, not another improbable
+ * ambient encounter. Keep these deterministic checks in the existing reach
+ * suite rather than making the CI shard budget track another tiny test file.
+ */
+describe('the Bramme manuscript follow-up (#952)', () => {
+  const fairCopy = content.events.find((e) => e.id === 'the_fair_copy');
+  const margin = content.events.find((e) => e.id === 'the_bramme_margin_returns');
+  if (!fairCopy || !margin) throw new Error('Bramme templates are missing');
+
+  function sendToBramme(outcomeId: 'came_back' | 'read_before_returned') {
+    const ctx = testWorld(content, 1093);
+    ctx.world.generation = 3;
+    place(ctx, { sex: 'female', age: 27, name: 'Bramme test copyist' });
+    const result = executeOutcomeWitnessRaw(ctx, fairCopy!, {
+      choiceId: 'send_it_to_bramme',
+      expectedOutcomeId: outcomeId,
+      targetWeightedOutcome: true,
+      rng: makeRng(17),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    return ctx;
+  }
+
+  it('schedules the corrected page through the production outcome path', () => {
+    const ctx = sendToBramme('came_back');
+    const due = ctx.world.year + 20;
+    expect(ctx.world.flags.get('bramme_copied_a_book')).toBe(true);
+    expect(ctx.world.scheduled).toContainEqual({ event: margin!.id, year: due });
+
+    ctx.world.year = due;
+    ctx.world.generation = 4;
+    const picked = selectEvents(ctx, makeRng(29), 1);
+    expect(picked[0]?.event.id).toBe(margin!.id);
+    expect(picked[0]?.source).toBe('forced');
+  });
+
+  it('retires a due schedule if an earlier ambient draw already resolved the one-shot scene', () => {
+    const ctx = sendToBramme('came_back');
+    const due = ctx.world.year + 20;
+    ctx.world.generation = 4;
+    const resolved = executeOutcomeWitnessRaw(ctx, margin!, {
+      choiceId: 'acknowledge_the_correction',
+      expectedOutcomeId: 'bramme_knows',
+      rng: makeRng(31),
+    });
+    expect(resolved.ok, resolved.reason).toBe(true);
+    expect(ctx.world.frequency.templateFires[margin!.id]).toBeGreaterThan(0);
+
+    ctx.world.year = due;
+    const chosen = selectEvents(ctx, makeRng(31), 1);
+    expect(chosen.some((c) => c.event.id === margin!.id)).toBe(false);
+    expect(ctx.world.scheduled.some((e) => e.event === margin!.id)).toBe(false);
+  });
+
+  it('does not choose a nonrepeatable scheduled template twice in one year', () => {
+    const ctx = sendToBramme('came_back');
+    const scheduled = ctx.world.scheduled.find((e) => e.event === margin!.id);
+    if (!scheduled) throw new Error('Bramme callback was not scheduled');
+    ctx.world.scheduled.push({ ...scheduled });
+    ctx.world.year = scheduled.year;
+    ctx.world.generation = 4;
+    const candidates = selectEvents(ctx, makeRng(47), 1);
+    expect(candidates.filter((c) => c.event.id === margin!.id)).toHaveLength(1);
+  });
+
+  it('does not schedule a corrected-page visit after the other Bramme outcome', () => {
+    const ctx = sendToBramme('read_before_returned');
+    expect(ctx.world.flags.get('bramme_copied_a_book')).not.toBe(true);
+    expect(ctx.world.scheduled.some((e) => e.event === margin!.id)).toBe(false);
   });
 });
