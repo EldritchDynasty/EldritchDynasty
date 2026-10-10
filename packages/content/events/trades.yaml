@@ -491,3 +491,283 @@ events:
                 - { kind: treasury, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_what_the_advocate_read, accuracy: 0.4 }
     rumour: { id: rumour_what_the_advocate_read, accuracy: 0.35, spread: 1 }
+
+proseVariants:
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].title"
+    of: 1826031d3f631931
+    plainenglish: >-
+      A Book No One in the House Can Read
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].body"
+    of: 8716ea35604aadd1
+    plainenglish: >-
+      A Greater Working costs 260 crowns, four times what the whole north-room shelf cost. Anyone
+      who can read may attempt a lesser book, but this book requires a high level of magical
+      affinity. Nobody at the table qualifies. There might be a suitable descendant in three
+      generations, or never. {HEAD} understands the cost. If {HEAD} buys it, the family is betting
+      on someone who has not yet been born.
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].interaction.choices[id=buy_it].label"
+    of: 5b20e4b0f42fd03c
+    plainenglish: >-
+      Buy the Greater Working. A lasting library is worth investing in.
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].interaction.choices[id=buy_it].outcomes[id=bought].text"
+    of: a3ef7909b899d955
+    plainenglish: >-
+      The book is placed in the north room beside simpler volumes. Two generations open it but
+      cannot use it. A member of the third generation finally keeps reading. By then its buyer has
+      been dead ninety years. The family remembers him for repairing a wall, not for buying the
+      book.
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].interaction.choices[id=buy_lesser].label"
+    of: dc7a5566ad9d0ac2
+    plainenglish: >-
+      Buy two lesser books instead, so the family can study them this century.
+  - address: "content:events/trades.yaml#events[id=the_greater_working_bought_too_soon].interaction.choices[id=buy_lesser].outcomes[id=two_books].text"
+    of: 6ee5d1d2eb948a8e
+    plainenglish: >-
+      The house spends 200 crowns on two books. Both are being used within four years. That is more
+      study than the previous forty years produced. It is a reasonable decision, but the library
+      will now have a limit on what it can teach. Nobody notices that limit for two hundred years
+      or can say when it was set.
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].title"
+    of: 0c27fc252f06a829
+    plainenglish: >-
+      The Year She Can Read the Book
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].body"
+    of: 10b7bae1b28b52c5
+    plainenglish: >-
+      A Greater Working requires a particular level of magical affinity, not just knowledge.
+      {TUTOR} has watched four family members understand its words but fail to get past the third
+      section. There was nothing they could learn to change that. {STUDENT} gets past the same
+      section in two weeks. Women have always been able to practise the four Threshold affinities.
+      For the first time in ninety years, that rule makes a difference at Ardwen.
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].interaction.choices[id=give_her_the_years].label"
+    of: bb8c26eeb20418ba
+    plainenglish: >-
+      Give her five years to study and delay her marriage until she finishes.
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].interaction.choices[id=give_her_the_years].outcomes[id=studied].text"
+    of: 6f5075d5d5e70dd1
+    plainenglish: >-
+      After five years she can actually use the Greater Working rather than merely own it. She is
+      twenty-nine and unmarried. People across the province notice. That affects how the marriage
+      market values her as a match. Her studies succeeded, but the family paid a cost it had not
+      fully considered.
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].interaction.choices[id=marry_her_first].label"
+    of: 325ed0f6add82b9a
+    plainenglish: >-
+      Arrange her marriage first. The book can wait; the match cannot.
+  - address: "content:events/trades.yaml#events[id=the_threshold_year].interaction.choices[id=marry_her_first].outcomes[id=married].text"
+    of: b65a126e4282b86a
+    plainenglish: >-
+      She marries at nineteen and is reasonably happy in a good match. The book remains on the
+      shelf. Two of her daughters try to read it but cannot get past the third section. No one in
+      the house openly connects those failures with the chance their mother gave up.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].title"
+    of: 27bc911aec48b3e6
+    plainenglish: >-
+      The Price of a Licensed Mystic
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].body"
+    of: e8bb01c8e9b4da7c
+    plainenglish: >-
+      The mill's water channel needs repairs. The miller cannot do the work, but a builder at
+      Bramme can. He is licensed in Fluid magic and charges eleven crowns for four days, with a
+      receipt. This is legal and ordinary; many people in the province have receipts like it. The
+      family cannot use that kind of magic itself. Nobody at Ardwen dares discuss the reason in
+      front of a licensed man whose home is four streets from a Church chapter house.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=hire_him].label"
+    of: dbb2546b973c1b77
+    plainenglish: >-
+      Hire the builder for eleven crowns so the mill runs by Ingathering.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=hire_him].outcomes[id=hired].text"
+    of: b9b94d424f6719e6
+    plainenglish: >-
+      The builder works quickly, behaves well and enjoys the food. He keeps the door open
+      throughout, as licensed practitioners always do. The mill runs again. Two household members
+      spend all four days watching from the yard without wanting to be noticed. Neither can later
+      explain what they hoped to see.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].label"
+    of: 764dfe39f6996855
+    plainenglish: >-
+      Repair the channel with workers and shovels instead of magic.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].outcomes[id=dug].text"
+    of: cf358ee36416a257
+    plainenglish: >-
+      Nine men work for three weeks and the repair lasts. With food included, the work costs almost
+      as much as hiring the builder and takes five times longer. The villagers debate whether the
+      house is poor or proud. They decide it is proud.
+  - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].outcomes[id=failed].text"
+    of: 89036aceb1d1ddd2
+    plainenglish: >-
+      Nine men spend three weeks repairing the channel. It fails again in spring. The licensed
+      builder comes from Bramme to do the job after all. He is polite about the first attempt, but
+      his politeness embarrasses the family more than paying eleven crowns would have.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].title"
+    of: 971beb3a59275bde
+    plainenglish: >-
+      The Book Has Not Been Opened in Sixty Years
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].body"
+    of: f36867fb92da5d07
+    plainenglish: >-
+      The north room is cold and dry, which helps preserve books, but books need attention too.
+      {READER} lifts down a Greater Working that no one has opened since before {HEAD} was born.
+      Its spine breaks. The book has been untouched for sixty years. Reading takes a year of
+      someone's life and copying takes another person's six months. It has had neither since a
+      woman now remembered only by a name on a wall paid 260 crowns for it.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=have_it_copied].label"
+    of: f7206812af826aee
+    plainenglish: >-
+      Have the book copied at Bramme before it is damaged further, whatever the price.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=have_it_copied].outcomes[id=copied].text"
+    of: 610c74604c3cb32c
+    plainenglish: >-
+      A complete, sturdy copy arrives after five months and costs twenty-two crowns. Nobody at
+      Ardwen recognises the handwriting. The damaged original is put in the second cellar. No one
+      in the family reads it again, and no one throws it away. Both remain true for three hundred
+      years.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].label"
+    of: 6d78b1c6f3d7f142
+    plainenglish: >-
+      Leave the book alone. It has survived sixty years, and the roof needs work.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].outcomes[id=left].text"
+    of: 749e2460c31ee72c
+    plainenglish: >-
+      Someone returns the book with its broken spine facing the wall, hiding the damage from the
+      doorway. That small decision keeps the problem unnoticed for another forty years.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].record.subject"
+    of: c7a4ff55a991a099
+    plainenglish: >-
+      the condition of the north room
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].record.options.record.chronicle"
+    of: 84e408d78a21ddfb
+    plainenglish: >-
+      The Greater Working on the north shelf was untouched for sixty years and now has a broken
+      spine. Reading takes a year, yet in four hundred years the house has bought many books and
+      spent only about eleven years reading them.
+  - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].record.options.embellish.chronicle"
+    of: fc5e829647a30ba2
+    plainenglish: >-
+      The library was inspected this year. Every book was in good condition, as it has been at
+      every earlier inspection.
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].title"
+    of: 9608a3e1b9894aa5
+    plainenglish: >-
+      A Marriage Offer from Eighteen Miles North
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].body"
+    of: 546768fb118538d7
+    plainenglish: >-
+      Hesk is eighteen miles north, a long day's cart journey. Its quarry families have married
+      among themselves for three hundred years. They ask for no marriage portion. The young woman
+      can lift as much as two men, and her family would be delighted to marry into Ardwen. Nothing
+      in the offer is a lie or a secret. But generations of marriage within a small group can bring
+      inherited risks. Those risks are not visible on the marriage card or in the young woman and
+      may not appear for two generations.
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].interaction.choices[id=take_it].label"
+    of: bca8cb1dcf2557b1
+    plainenglish: >-
+      Accept the match. Money is limited and she is a good woman.
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].interaction.choices[id=take_it].outcomes[id=taken].text"
+    of: 4661b68b7208e2ff
+    plainenglish: >-
+      The wedding is warm and cheap. For thirty years, the house buys slate for the west wing at
+      cost, the best financial part of the match. Their children are strong and healthy. Their
+      grandchildren concern the midwife, though she cannot explain why.
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].interaction.choices[id=decline_politely].label"
+    of: bb00bb15a89a3569
+    plainenglish: >-
+      Decline carefully and kindly, in terms the family can repeat.
+  - address: "content:events/trades.yaml#events[id=the_quarry_match].interaction.choices[id=decline_politely].outcomes[id=declined].text"
+    of: 16597e65f6b0fd49
+    plainenglish: >-
+      The refusal is polite, but everyone in Hesk understands that Ardwen said no. Eighteen miles
+      is too close for the insult to be forgotten. The house pays the normal price for slate
+      afterwards. The difference is small each year but lasts a hundred years.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].title"
+    of: 70f00678949973ac
+    plainenglish: >-
+      A Paid Shipboard Position at Sarrow
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].body"
+    of: 14f7d4e5f7e69179
+    plainenglish: >-
+      Sarrow is eleven days east. A position on a Braccish trading ship can be bought for eight
+      crowns. Its seasonal wages can be very high or very low, and the weather makes the work
+      dangerous. {YOUNGER} wants to go. Four years ago a trading agent passing through Bramme said
+      three unremarkable things about the Yssene route. The wish to sail has never gone away.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=buy_the_berth].label"
+    of: e56087d5a033aee1
+    plainenglish: >-
+      Buy the position for eight crowns and hope for favourable winds.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=buy_the_berth].outcomes[id=bought_berth].text"
+    of: 6853e343032a8a0f
+    plainenglish: >-
+      He leaves in the second week of the season and sends news twice a year. His income is too
+      unpredictable for a household budget. Two good years can pay for a roof. A bad year pays
+      nothing, and the letters asking whether he is safe can cost as much as a horse.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=the_counting_house_instead].label"
+    of: b8ad9d722ed92ece
+    plainenglish: >-
+      Find him a desk job at the Braccish counting house in Bramme.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=the_counting_house_instead].outcomes[id=factored].text"
+    of: 014c19502ac5d084
+    plainenglish: >-
+      He keeps accounts for the Braccish owners of the ship that takes the Yssene route he wanted
+      to sail. He is very good at the work. The family saves the two per cent it has paid strangers
+      on cross-border transfers since 1042 and hears news a month before the rest of the province.
+      But the son who returns cannot bear to look at the sea.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=find_him_a_farm].label"
+    of: 1f0b9923b5e6e7df
+    plainenglish: >-
+      Give him work on one of the eleven farms and hope he forgets the sea.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].interaction.choices[id=find_him_a_farm].outcomes[id=settled].text"
+    of: 9aff8884374d1fe0
+    plainenglish: >-
+      He never forgets. He becomes a good tenant and manages forty acres fairly. Family business
+      takes him to Sarrow twice in his life. Both times he comes home two days later than the work
+      required.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].record.subject"
+    of: 2f20ef486e64007c
+    plainenglish: >-
+      the paid shipboard position at Sarrow
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].record.options.record.chronicle"
+    of: d7980f8ffab2e433
+    plainenglish: >-
+      The family paid eight crowns for a position on a Braccish ship leaving Sarrow. The next pages
+      account for every mite it returned across eleven years, so later generations can judge
+      whether the purchase was worthwhile.
+  - address: "content:events/trades.yaml#events[id=a_berth_at_sarrow].record.options.embellish.chronicle"
+    of: 37779b99d57c22c5
+    plainenglish: >-
+      A son of the house went to sea through his own efforts and prospered there, just as
+      generations of our family have prospered in every trade they chose.
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].title"
+    of: 96c4d45404f27870
+    plainenglish: >-
+      An Old Ambric Lawyer Costs Two Marks a Day
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].body"
+    of: 4c4c70f054dea20c
+    plainenglish: >-
+      Only four lawyers in the province can read Old Ambric. Each charges two marks a day. Whenever
+      the family hires one, a stranger spends four days alone with its most important document.
+      {KIN} could train to be the fifth. Four years at Cawdry would give him the qualification and
+      a desk at home. Then the family would not need to decide what to show an outsider it pays by
+      the day. It is expensive, but still the least costly serious plan offered in four hundred
+      years.
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].interaction.choices[id=send_them_to_cawdry].label"
+    of: 241ee6f699937ab2
+    plainenglish: >-
+      Send him to Cawdry for four years so the family can read its own papers.
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].interaction.choices[id=send_them_to_cawdry].outcomes[id=trained].text"
+    of: d221474fb0f3864b
+    plainenglish: >-
+      Forty crowns and four years produce a capable local lawyer with a small practice and an
+      income. The family expected that. In his second year away, his letters stop discussing law in
+      general and begin asking about one clause in the family contract. He keeps writing about that
+      clause for thirty years.
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].interaction.choices[id=keep_hiring].label"
+    of: fc433d6bc80a0ddf
+    plainenglish: >-
+      Keep hiring outside lawyers. Once paid, a stranger will leave.
+  - address: "content:events/trades.yaml#events[id=the_advocate_on_retainer].interaction.choices[id=keep_hiring].outcomes[id=hired_again].text"
+    of: e10810b0d3f9ad5c
+    plainenglish: >-
+      Four days cost eight marks. By Friday the lawyer is travelling along the Bramme road, having
+      read more of the contract in a week than three family members have read in their lives. He
+      keeps professional secrets and says nothing about it. But he remembers what he read for
+      thirty years, and he still enjoys telling stories over dinner.
