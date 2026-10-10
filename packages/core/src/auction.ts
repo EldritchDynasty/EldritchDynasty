@@ -249,6 +249,13 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   const lot = w.auction.upcoming.find((l) => l.id === lotId_);
   if (!lot) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_lot', 'no such lot') };
 
+  // Amount is a count of coins/favours, and is still serialized for the
+  // currencies whose value is fixed. Refuse NaN, fractions and unsafe numbers
+  // before a malformed bid can enter the auction ledger.
+  if (!Number.isSafeInteger(amount) || amount < 0) {
+    return { ok: false, reason: msg(ctx, 'auction.refuse.bid_amount', 'not a valid bid amount') };
+  }
+
   if (currency === 'heirloom') {
     if (!heirloomOffered || !w.heirlooms.has(heirloomOffered)) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
