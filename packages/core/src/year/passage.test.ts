@@ -3,7 +3,7 @@ import { loadBundle, loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { coreMessageAddress } from '../messages.js';
+import { coreMessageAddress, msg } from '../messages.js';
 import { setProseMode, setProseVariants } from '../prose.js';
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
 import { beget, phase, place, testWorld } from '../testing.js';
@@ -287,4 +287,27 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
       expect(ctx.world.chronicle.map((e) => e.text)).toContain(say(mode, 'library.first_reading', { PERSON: 'Ivo', BOOK: def.name }));
     });
   }
+});
+
+describe('core message interpolation', () => {
+  it('rejects inherited prototype properties as missing placeholder values (#861)', () => {
+    const ctx = testWorld(loadBundle());
+    for (const name of ['constructor', 'toString', '__proto__']) {
+      const original = `A message about {${name}}.`;
+      expect(() => msg(ctx, 'test.own-values', original, {}))
+        .toThrow(`Missing {${name}} in core message test.own-values`);
+    }
+  });
+
+  it('still substitutes explicitly supplied values with prototype-like names', () => {
+    const ctx = testWorld(loadBundle());
+    expect(msg(ctx, 'test.constructor', 'The {constructor} replied.', { constructor: 'court' }))
+      .toBe('The court replied.');
+
+    const values: Record<string, string> = Object.create(null);
+    Object.defineProperty(values, '__proto__', { value: 'family', enumerable: true });
+    Object.defineProperty(values, 'toString', { value: 'chronicle', enumerable: true });
+    expect(msg(ctx, 'test.null-prototype', 'The {__proto__} read the {toString}.', values))
+      .toBe('The family read the chronicle.');
+  });
 });
