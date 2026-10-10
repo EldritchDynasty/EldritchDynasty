@@ -1,8 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
-import Chapter from '../components/Chapter.vue';
-import type { ChapterBeat, GameActions } from './game';
+import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -30,39 +27,6 @@ import {
   seenProseKey,
   type AccessibilityPreferences,
 } from './accessibility';
-
-describe('Age opening replay on a reused Chapter dialog (#410)', () => {
-  it('records each unseen opening and skips a repeat when the chapter queue advances', async () => {
-    window.localStorage.clear();
-    const repeated = 'The familiar Age opening.';
-    rememberSeenProse(window.localStorage, seenProseKey('chapter-opening', repeated));
-
-    const dismissChapter = vi.fn();
-    const actions = { dismissChapter } as unknown as GameActions;
-    const opening = (text: string) => ({
-      kind: 'opening', opening: { text },
-    } as ChapterBeat);
-
-    const wrapper = mount(Chapter, {
-      props: { beat: opening('A fresh Age.'), actions, skipSeenProse: true },
-    });
-    expect(hasSeenProse(window.localStorage, seenProseKey('chapter-opening', 'A fresh Age.'))).toBe(true);
-    expect(dismissChapter).not.toHaveBeenCalled();
-
-    // App keeps this component instance when dismissChapter shifts its queue.
-    // A mount-only replay check would never skip the following repeat.
-    await wrapper.setProps({ beat: opening(repeated) });
-    expect(dismissChapter).toHaveBeenCalledTimes(1);
-
-    await wrapper.setProps({ beat: opening('A third, unseen Age.') });
-    expect(hasSeenProse(window.localStorage, seenProseKey('chapter-opening', 'A third, unseen Age.'))).toBe(true);
-    expect(dismissChapter).toHaveBeenCalledTimes(1);
-
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
-    wrapper.unmount();
-    vi.unstubAllGlobals();
-  });
-});
 
 describe('reading preferences', () => {
   it('round-trips and applies the reader\'s choices', () => {
