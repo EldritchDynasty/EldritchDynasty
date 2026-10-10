@@ -773,3 +773,66 @@ proseVariants:
     of: "1940a64bd5b4e247"
     plainenglish: >-
       bought eleven farming books at Cawdry and put them all on shelves
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].title"
+    of: "2231e67599669f49"
+    plainenglish: >-
+      Six Months of Someone Else's Work
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].body"
+    of: "22f851892c5e8465"
+    plainenglish: >-
+      Making a clean copy of an ordinary book takes half a year of work and costs twelve crowns.
+      The copyist works in the long room with his own pens six days out of every ten, and says
+      almost nothing for four months. {COPYIST} writes well and reads better than the job
+      requires. In the fifth month he stops halfway through a page, turns back eleven leaves, and
+      reads them slowly again. The steward sees him do it.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=ask_him_what_he_read].label"
+    of: "ef1a7e3db54883f1"
+    plainenglish: >-
+      Ask him directly why he went back to those eleven leaves.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=ask_him_what_he_read].outcomes[id=he_tells_you].text"
+    of: "f3658b37cd5e15b3"
+    plainenglish: >-
+      He tells the truth. Those eleven leaves were written by someone else, whose handwriting is
+      better than the rest. Someone thought the book mattered enough to have another person copy
+      part of it. That is all he noticed, but it is more than anyone in the family had noticed in
+      two hundred years.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=ask_him_what_he_read].outcomes[id=he_says_nothing_useful].text"
+    of: "57d18318d1b1eb4c"
+    plainenglish: >-
+      He says he lost his place. He finishes the copy in the seventh month, takes his pay, and
+      returns to Bramme. His copy matches the original everywhere except on eleven leaves, where
+      he has quietly improved four passages.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=pay_him_off_early].label"
+    of: "4ffcc10e8fe3f7ba"
+    plainenglish: >-
+      Pay him his full fee now and stop the copying work this afternoon.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].interaction.choices[id=pay_him_off_early].outcomes[id=ended_early].text"
+    of: "b3e1f5b916a993c5"
+    plainenglish: >-
+      He receives twelve crowns for four months of work, nearly twice the usual rate. Both men
+      understand why the payment is so high. The unfinished copy is bound even though it stops
+      halfway through a page. He reaches Bramme before dark. He never tells anyone about the
+      house, but once tells his daughter that he was paid too much and did not ask why.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].record.subject"
+    of: "f22906ce9a9a7092"
+    plainenglish: >-
+      the eleven leaves written by a different person
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].record.options.record.chronicle"
+    of: "26521127f5821bab"
+    plainenglish: >-
+      The copyist reread eleven leaves because they were written in a different, more skilled hand
+      than the rest. No one in the house had noticed this during two hundred years of owning the
+      book.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].record.options.record.claims[0].text"
+    of: "f0b3e636c992a81a"
+    plainenglish: >-
+      identified eleven leaves of the book as written in a different, more skilled hand
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].record.options.embellish.chronicle"
+    of: "492c2185e34f6a51"
+    plainenglish: >-
+      A complete and faithful copy of the book was made in the usual way over seven months for
+      twelve crowns.
+  - address: "content:events/rare_books.yaml#events[id=the_copyist_who_understood_it].record.options.embellish.claims[0].text"
+    of: "1673c96d700b5ee9"
+    plainenglish: >-
+      had a complete and faithful copy made of the whole book
