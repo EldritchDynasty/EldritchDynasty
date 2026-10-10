@@ -292,15 +292,18 @@ export const TUTOR_GAIN = 9;
 export function beginTutoring(ctx: SimCtx, p: Person, attrId: string, charge = true): OrderResult {
   const w = ctx.world;
   const subject = ctx.content.attributes.find((a) => String(a.id) === attrId);
-  if (!subject) return { ok: false, reason: 'nothing anybody teaches' };
+  if (!subject) return { ok: false, reason: msg(ctx, 'table.tutor.no_subject', 'nothing anybody teaches') };
   if (!canBeTaught(subject.kind)) {
-    return { ok: false, reason: `${subject.name} is not a thing a tutor can teach` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'table.tutor.unteachable', '{ATTRIBUTE} is not a thing a tutor can teach', { ATTRIBUTE: subject.name }),
+    };
   }
-  if (w.year - p.born > TUTOR_AGE_LIMIT) return { ok: false, reason: 'too old to be taught' };
-  if (w.tutoring.some((t) => t.person === p.id)) return { ok: false, reason: 'already in a term' };
+  if (w.year - p.born > TUTOR_AGE_LIMIT) return { ok: false, reason: msg(ctx, 'table.tutor.too_old', 'too old to be taught') };
+  if (w.tutoring.some((t) => t.person === p.id)) return { ok: false, reason: msg(ctx, 'table.tutor.in_term', 'already in a term') };
   if (charge) {
     if (w.treasury - TUTOR_FEE < DEBT_FLOOR) {
-      return { ok: false, reason: `the house cannot raise ${TUTOR_FEE} crowns` };
+      return { ok: false, reason: msg(ctx, 'table.tutor.fee', 'the house cannot raise {FEE} crowns', { FEE: String(TUTOR_FEE) }) };
     }
     w.treasury -= TUTOR_FEE;
   }
@@ -334,25 +337,32 @@ export function order(ctx: SimCtx, o: TableOrder): OrderResult {
 function riteOffer(ctx: SimCtx, eventId: string, rite: 'vessel' | 'great_rite' | 'unmaking'):
   { ok: boolean; reason?: string; event?: EventTemplate; slots?: SlotResolution } {
   const w = ctx.world;
-  if (w.ending) return { ok: false, reason: 'the Ledger has closed' };
+  if (w.ending) return { ok: false, reason: msg(ctx, 'table.rite.closed', 'the Ledger has closed') };
   if (w.pendingDecisions.some((d) => d.kind === 'choice' && d.event.id === eventId)) {
-    return { ok: false, reason: 'this rite is already before the house' };
+    return { ok: false, reason: msg(ctx, 'table.rite.pending', 'this rite is already before the house') };
   }
   const event = ctx.content.events.find((e) => e.id === eventId);
   if (!event || !evalCondition(event.conditions, ctx)) {
-    return { ok: false, reason: 'the house has not reached the standing this rite demands' };
+    return { ok: false, reason: msg(ctx, 'table.rite.standing', 'the house has not reached the standing this rite demands') };
   }
   const slots = resolveSlots(event, ctx, streamFor(w, 'rite-order', eventId));
-  if (!slots.ok) return { ok: false, reason: `the house cannot field ${slots.missing ?? 'the rite'}` };
+  if (!slots.ok) {
+    return {
+      ok: false,
+      reason: slots.missing != null
+        ? msg(ctx, 'table.rite.unfielded_slot', 'the house cannot field {SLOT}', { SLOT: slots.missing })
+        : msg(ctx, 'table.rite.unfielded', 'the house cannot field the rite'),
+    };
+  }
   for (const slot of slots.playerCast) {
     const spec = event.slots[slot];
     if (!spec || !candidatesFor(spec, ctx, slots.fill).length) {
-      return { ok: false, reason: `nobody can stand as ${slot}` };
+      return { ok: false, reason: msg(ctx, 'table.rite.no_candidate', 'nobody can stand as {SLOT}', { SLOT: slot }) };
     }
   }
   const ascendant = slots.fill.ASCENDANT;
   if (typeof ascendant === 'string' && w.people.get(ascendant)?.rites.includes(rite)) {
-    return { ok: false, reason: 'he has already taken this rite' };
+    return { ok: false, reason: msg(ctx, 'table.rite.repeat', 'he has already taken this rite') };
   }
   return { ok: true, event, slots };
 }
@@ -440,9 +450,9 @@ interface LedgerSearchOffer {
  */
 function ledgerSearchOffer(ctx: SimCtx): LedgerSearchOffer {
   const w = ctx.world;
-  if (w.ending) return { ok: false, reason: 'the Ledger has closed' };
+  if (w.ending) return { ok: false, reason: msg(ctx, 'table.ledger.closed', 'the Ledger has closed') };
   if (w.clausesRecovered.size >= GOD_CLAUSES) {
-    return { ok: false, reason: 'the book already holds enough clauses for the last working' };
+    return { ok: false, reason: msg(ctx, 'table.ledger.enough', 'the book already holds enough clauses for the last working') };
   }
 
   // Both halves belong to THIS HOUSE. World.people.living() also contains
@@ -454,26 +464,31 @@ function ledgerSearchOffer(ctx: SimCtx): LedgerSearchOffer {
     && p.rites.includes('unmaking')
     && p.acquired[DEMIGOD_AGEING_STOPPED] === 1);
   if (!waiting) {
-    return { ok: false, reason: 'nobody raised by the Unmaking has yet attained Demigod' };
+    return { ok: false, reason: msg(ctx, 'table.ledger.no_demigod', 'nobody raised by the Unmaking has yet attained Demigod') };
   }
 
   const recordKeeper = household.some(
     (p) => p.status === 'alive'
       && (p.contract?.role === 'archivist' || p.contract?.role === 'chronicler'),
   );
-  if (!recordKeeper) return { ok: false, reason: 'nobody living in the house can search the old contracts' };
+  if (!recordKeeper) {
+    return { ok: false, reason: msg(ctx, 'table.ledger.no_keeper', 'nobody living in the house can search the old contracts') };
+  }
 
   if (w.flags.get(LEDGER_SEARCH_YEAR_FLAG) === w.year) {
-    return { ok: false, reason: 'the Ledger has already been searched this year' };
+    return { ok: false, reason: msg(ctx, 'table.ledger.searched', 'the Ledger has already been searched this year') };
   }
   if (w.treasury - LEDGER_SEARCH_FEE < DEBT_FLOOR) {
-    return { ok: false, reason: `the house cannot raise ${LEDGER_SEARCH_FEE} crowns for the search` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'table.ledger.fee', 'the house cannot raise {FEE} crowns for the search', { FEE: String(LEDGER_SEARCH_FEE) }),
+    };
   }
 
   const clause = [...ctx.content.clauses]
     .filter((candidate) => !w.clausesRecovered.has(candidate.id))
     .sort((a, b) => a.weight - b.weight)[0];
-  if (!clause) return { ok: false, reason: 'the old contracts have nothing left to reveal' };
+  if (!clause) return { ok: false, reason: msg(ctx, 'table.ledger.exhausted', 'the old contracts have nothing left to reveal') };
 
   return {
     ok: true,
@@ -485,7 +500,7 @@ function seekLedgerClause(ctx: SimCtx): OrderResult {
   const w = ctx.world;
   const offer = ledgerSearchOffer(ctx);
   if (!offer.ok || !offer.clause) {
-    return { ok: false, reason: offer.reason ?? 'the old contracts have nothing left to reveal' };
+    return { ok: false, reason: offer.reason ?? msg(ctx, 'table.ledger.exhausted_fallback', 'the old contracts have nothing left to reveal') };
   }
 
   w.treasury -= LEDGER_SEARCH_FEE;
@@ -627,7 +642,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
         : o.kind === 'greatRite' ? 'great_rite' : 'unmaking';
       const prepared = riteOffer(ctx, eventId, rite);
       if (!prepared.ok || !prepared.event || !prepared.slots) {
-        return { ok: false, reason: prepared.reason ?? 'the family cannot field the rite' };
+        return { ok: false, reason: prepared.reason ?? msg(ctx, 'table.rite.fallback', 'the family cannot field the rite') };
       }
       queueChoice(ctx, prepared.event, prepared.event.body, prepared.slots.fill, prepared.slots.playerCast);
       return { ok: true };
