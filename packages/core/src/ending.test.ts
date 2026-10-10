@@ -4,9 +4,10 @@ import {
   CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
-import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type Rung } from '@ed/schema';
+import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { coreMessageAddress } from './messages.js';
+import { rungTitle } from './ascension.js';
 
 const content = loadContent();
 
@@ -291,13 +292,13 @@ describe('what the book cannot hold up', () => {
   it('tells the two Forgottens apart', () => {
     const never = atTheTerm();
     closeTheLedger(never);
-    const fromBelow = endingSummary('forgotten', readTheChronicle(never));
+    const fromBelow = endingSummary(never, 'forgotten', readTheChronicle(never));
 
     const fell = atTheTerm();
     attest(fell, 'hierophant');
     lie(fell, 3);
     closeTheLedger(fell);
-    const fromAbove = endingSummary('forgotten', readTheChronicle(fell));
+    const fromAbove = endingSummary(fell, 'forgotten', readTheChronicle(fell));
 
     expect(fromBelow).toContain('never passed');
     expect(fromAbove).not.toContain('never passed');
@@ -337,10 +338,126 @@ describe('which of the five', () => {
   });
 
   it('names every one of the five, exhaustively', () => {
-    const r = readTheChronicle(atTheTerm());
+    const ctx = atTheTerm();
+    const r = readTheChronicle(ctx);
     for (const id of ENDING_ORDER) {
-      expect(endingSummary(id, r).length).toBeGreaterThan(20);
+      expect(endingSummary(ctx, id, r).length).toBeGreaterThan(20);
     }
+  });
+});
+
+
+describe('fingerprinted Plain English ending summaries (#831)', () => {
+  // A complete inventory: editing one Original requires reviewing its translation.
+  // Each template is a whole sentence, including formerly concatenated clauses.
+  const ORIGINALS: Record<string, string> = {
+    'ending.summary.apotheosis': 'A god was made, and the book can show it: {RUNG}, on the page.',
+    'ending.summary.unmade': 'The rite failed at the last step, and what was in the blood went out of it.',
+    'ending.summary.broken_line': 'Nobody was at the table. The creditor read the chronicle alone.',
+    'ending.summary.settled': 'The house recovered all {TOTAL} clauses of its shorter contract. The creditor read the account, found it answered, and closed it.',
+    'ending.summary.forgotten_withheld': 'The book attests {RUNG} and could not hold it up. The creditor arrived, read, believed none of the parts that mattered, and did not collect.',
+    'ending.summary.forgotten': 'The house survived to the term and never passed {RUNG}. The creditor arrived, read, and did not collect.',
+    'ending.summary.devoured': 'The book attests {RUNG}, which was enough to be worth the journey and not enough to argue with.',
+    'ending.ledger.complete': 'The Ledger was complete: all {TOTAL} clauses were recovered.',
+    'ending.ledger.unresolved': 'The Ledger remained unresolved: {CLAUSES} of {TOTAL} clauses were recovered.',
+  };
+  const PLAIN: Record<string, string> = {
+    'ending.summary.apotheosis': 'The family became a god, and the record proves it reached {RUNG}.',
+    'ending.summary.unmade': 'The final rite failed, and the family lost the power in its blood.',
+    'ending.summary.broken_line': 'Nobody from the family was left. The creditor read the record alone.',
+    'ending.summary.settled': 'The family recovered all {TOTAL} clauses of its shorter agreement. The creditor checked the record and closed the account.',
+    'ending.summary.forgotten_withheld': 'The record claims {RUNG}, but there was no proof. The creditor read it, rejected the important claims, and left.',
+    'ending.summary.forgotten': 'The family survived to the end but never went beyond {RUNG}. The creditor read the record and left.',
+    'ending.summary.devoured': 'The record shows {RUNG}. That made the family worth collecting, but not strong enough to resist.',
+    'ending.ledger.complete': 'The family recovered all {TOTAL} Ledger clauses.',
+    'ending.ledger.unresolved': 'The family recovered {CLAUSES} out of {TOTAL} Ledger clauses, so the contract is not settled.',
+  };
+  const render = (template: string, values: Record<string, string>) =>
+    template.replace(/\{([A-Z]+)\}/g, (_, token: string) => values[token]!);
+  const useVariants = (ctx: SimCtx) => setProseVariants(ctx,
+    Object.entries(ORIGINALS).map(([key, original]) => ({
+      address: coreMessageAddress(key),
+      of: proseOriginalHash(original),
+      plainenglish: PLAIN[key]!,
+    })));
+
+  it('pins every Original and translates all five endings, including both Forgotten paths', () => {
+    const ctx = atTheTerm();
+    const base = readTheChronicle(ctx);
+    const withheld = { ...base, rungsWithheld: 1, attested: 'hierophant' as const, substantiated: 'adept' as const };
+    const cases: Array<{
+      id: EndingId; key: string; r: typeof base; values: Record<string, string>;
+    }> = [
+      { id: 'apotheosis', key: 'ending.summary.apotheosis', r: base, values: { RUNG: rungTitle(base.attested) } },
+      { id: 'unmade', key: 'ending.summary.unmade', r: base, values: {} },
+      { id: 'broken_line', key: 'ending.summary.broken_line', r: base, values: {} },
+      { id: 'settled', key: 'ending.summary.settled', r: base, values: { TOTAL: String(base.clausesTotal) } },
+      { id: 'forgotten', key: 'ending.summary.forgotten_withheld', r: withheld, values: { RUNG: rungTitle(withheld.attested) } },
+      { id: 'forgotten', key: 'ending.summary.forgotten', r: base, values: { RUNG: rungTitle('adept') } },
+      { id: 'devoured', key: 'ending.summary.devoured', r: base, values: { RUNG: rungTitle(base.substantiated) } },
+    ];
+    expect(Object.keys(ORIGINALS).sort()).toEqual(Object.keys(PLAIN).sort());
+    expect(cases.map((entry) => entry.key).sort()).toEqual(
+      Object.keys(ORIGINALS).filter((key) => key.startsWith('ending.summary.')).sort(),
+    );
+    for (const entry of cases) {
+      expect(endingSummary(ctx, entry.id, entry.r))
+        .toBe(render(ORIGINALS[entry.key]!, entry.values));
+    }
+
+    useVariants(ctx);
+    setProseMode(ctx, 'plainenglish');
+    for (const entry of cases) {
+      expect(endingSummary(ctx, entry.id, entry.r))
+        .toBe(render(PLAIN[entry.key]!, entry.values));
+    }
+    setProseMode(ctx, 'original');
+    for (const entry of cases) {
+      expect(endingSummary(ctx, entry.id, entry.r))
+        .toBe(render(ORIGINALS[entry.key]!, entry.values));
+    }
+  });
+
+  it('translates both Ledger lines without changing the ending or the reckoning', () => {
+    const original = atTheTerm();
+    original.world.ending = { id: 'forgotten', year: original.world.year };
+    const before = epilogueOf(original)!;
+    useVariants(original);
+    setProseMode(original, 'plainenglish');
+    const after = epilogueOf(original)!;
+    expect(after.summary).toBe(
+      render(PLAIN['ending.summary.forgotten']!, { RUNG: rungTitle('adept') })
+      + ' ' + render(PLAIN['ending.ledger.unresolved']!, {
+        CLAUSES: String(after.reckoning.clauses), TOTAL: String(after.reckoning.clausesTotal),
+      }),
+    );
+    expect(after.reckoning).toEqual(before.reckoning);
+    expect(after.id).toBe(before.id);
+    setProseMode(original, 'original');
+    expect(epilogueOf(original)!.summary).toBe(before.summary);
+
+    const complete = testWorld(content, 9002, CAMPAIGNS.short.endYear);
+    complete.world.campaign = 'short';
+    complete.world.ending = { id: 'settled', year: complete.world.year };
+    for (const clause of content.clauses.slice(0, CAMPAIGNS.short.clauses)) {
+      complete.world.clausesRecovered.add(clause.id);
+    }
+    const completeBefore = epilogueOf(complete)!;
+    useVariants(complete);
+    setProseMode(complete, 'plainenglish');
+    const completeAfter = epilogueOf(complete)!;
+    expect(completeAfter.summary).toContain('The family recovered all 3 Ledger clauses.');
+    expect(completeAfter.summary).toContain('The family recovered all 3 clauses of its shorter agreement.');
+    expect(completeAfter.reckoning).toEqual(completeBefore.reckoning);
+    expect(completeAfter.id).toBe(completeBefore.id);
+
+    // A stale translation must fall back to the exact Original.
+    setProseVariants(complete, [{
+      address: coreMessageAddress('ending.ledger.complete'),
+      of: '0000000000000000',
+      plainenglish: PLAIN['ending.ledger.complete']!,
+    }]);
+    expect(epilogueOf(complete)!.summary).toContain(ORIGINALS['ending.ledger.complete']!.replace('{TOTAL}', '3'));
   });
 });
 
