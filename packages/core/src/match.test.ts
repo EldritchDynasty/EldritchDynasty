@@ -11,6 +11,7 @@ import {
 import type { MatchCard, SimCtx } from '@ed/core';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { canonical } from './save.js';
+import { coreMessageAddress } from './messages.js';
 
 const bundle = loadContent();
 
@@ -45,7 +46,8 @@ describe('prospective character-template prose on Match cards (#646)', () => {
     expect(plainHand).toEqual({ ...originalHand, cards: originalHand.cards.map((item) =>
       item.kind === 'outsider' ? { ...item, blurb: 'She is an ordinary outsider.' } : item) });
     expect(canonical(saveGame(plain.ctx))).toBe(canonical(saveGame(control.ctx)));
-    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+    // Match cards also read a visible family-connection callback from the thread model.
+    expect(missingPlainEnglish(plain.ctx)).toEqual([coreMessageAddress('threads.family.current')]);
     const pending = queueMatch(plain.ctx, plainHand);
     setProseMode(plain.ctx, 'original');
     expect(pending.cards).toEqual(plainHand.cards);
@@ -59,7 +61,7 @@ describe('prospective character-template prose on Match cards (#646)', () => {
     setProseMode(ctx, 'plainenglish');
     const hand = dealMatch(ctx, subject, makeRng(646));
     expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe('An ordinary daughter.');
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress('threads.family.current')]);
   });
 
   it('falls back and reports only the visible blurb when its variant is missing or stale', () => {
@@ -70,7 +72,7 @@ describe('prospective character-template prose on Match cards (#646)', () => {
       setProseMode(ctx, 'plainenglish');
       const hand = dealMatch(ctx, subject, makeRng(646));
       expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe(original.blurb);
-      expect(missingPlainEnglish(ctx)).toEqual([row.address]);
+      expect(missingPlainEnglish(ctx)).toEqual([row.address, coreMessageAddress('threads.family.current')]);
     }
   });
 });
