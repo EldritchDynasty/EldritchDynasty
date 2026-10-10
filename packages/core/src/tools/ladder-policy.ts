@@ -14,7 +14,7 @@
  * policy machinery under `ending-gate.ts` rather than under `ladder-gate.ts`
  * is the same move already made once, not a new one.
  */
-import { isLadderRole } from '@ed/schema';
+import { isLadderRole, RESPECT_ORDER } from '@ed/schema';
 import { affinitiesFor, booksFor, eldritchPower, householdAffinities, householdBooks, householdOpposedPairs, MADNESS_FLOOR, madnessOf, mindOf } from '../ascension.js';
 import { autoResolveAll, resolveChoice, resolveRecord, type PendingChoice, type RecordOption } from '../events/decisions.js';
 import type { SlotFill } from '../events/slots.js';
@@ -106,10 +106,16 @@ export function recordOptionForPolicy(ctx: SimCtx, policy: LadderPolicy): Record
  * calibration tests the other ordering: preserve the fragile people first and
  * let the persistent book finish afterwards.
  *
- * Exalted remains setup because the rite itself spends Respect; starting any
- * lower makes the final public-standing gate strictly harder after the
- * sacrifice. The descendant's power, Madness and Mind remain personal gates
- * after the rite, and seven clauses remain the actual God gate in ascension.ts.
+ * Standing is setup at the rite's OWN gate, Eminent (`the_unmaking`'s
+ * conditions), not one tier above it. Waiting for Exalted looked strictly
+ * better on paper, since the rite spends two tiers on success, but measured on
+ * #332's 100 x 500 ascendant batch it was never met: in 271 years holding a
+ * qualified elder and descendant, Exalted and the ready reading circle
+ * overlapped in none, so the policy never called the rite and refused every
+ * ambient offer. Eminent took successful recipients from 1 to 4 on the same
+ * seeds. The descendant's power, Madness and Mind remain personal gates after
+ * the rite, and seven clauses and Exalted remain the actual God gates in
+ * ascension.ts — the policy rebuilds Respect afterwards rather than before.
  */
 export function unmakingReadyForAscendant(ctx: SimCtx): boolean {
   return householdBooks(ctx) >= booksFor(ctx, 'god')
@@ -119,7 +125,7 @@ export function unmakingReadyForAscendant(ctx: SimCtx): boolean {
     // God's extra circle requirement is structural, not "any four": one
     // representative from every opposed pair must still be alive to read.
     && householdOpposedPairs(ctx) >= affinitiesFor('god')
-    && ctx.world.respect === 'exalted';
+    && RESPECT_ORDER.indexOf(ctx.world.respect) >= RESPECT_ORDER.indexOf('eminent');
 }
 
 /**
