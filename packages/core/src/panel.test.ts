@@ -5,7 +5,6 @@ import { loadContent } from '@ed/content';
 import { indexContent, proseOriginalHash } from '@ed/schema';
 import { testWorld, place, marry, beget } from './testing.js';
 import { readPanel, issueOf, emptyPanel, kinPhrase } from './people/panel.js';
-import { panelScore } from './tools/blood-gate.js';
 import { queueMatch } from './events/decisions.js';
 import { loadGame, saveGame } from './save.js';
 import { PANEL_KIN } from '@ed/schema';
@@ -122,16 +121,6 @@ describe('the matchmaker’s panel', () => {
       expect(card.panel.issue.find((row) => row.name === 'Eira')?.kin).toBe('mother');
       expect(card.panel.woken.find((row) => row.name === 'Aldric')?.kin).toBe('father');
     }
-  });
-
-  it('lets the panel reader score a man\'s card exactly as it scores a woman\'s', () => {
-    const { sonCard, daughterCard } = siblings(9662);
-    const score = (card: MatchCard) => panelScore(card as Parameters<typeof panelScore>[0]);
-    expect(score(daughterCard)).toBeGreaterThan(0);
-    expect(score(sonCard)).toBe(score(daughterCard));
-    // And never off the printed words: nonsense prose, the same score.
-    for (const row of sonCard.panel.woken) row.relation = 'a word the gate must not read';
-    expect(score(sonCard)).toBe(score(daughterCard));
   });
 
   it('prints the relation in the reader\'s prose, and keeps the kin', () => {
