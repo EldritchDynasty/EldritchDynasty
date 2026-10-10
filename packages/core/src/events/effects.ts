@@ -12,7 +12,7 @@ import { addGrudge, relate } from '../people/relationships.js';
 import type { Rng } from '../rng.js';
 import { birthTales } from './tales.js';
 import { WARNING_TAG, noteUnheard, warningWeight } from '../bearing.js';
-import { proseForEventTitle, proseForOutcome } from '../prose.js';
+import { outcomeChronicleEffectAddress, proseForEventTitle, proseForOutcome, renderProse } from '../prose.js';
 import { performRite } from './rites.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
@@ -209,7 +209,9 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       target.grievance = Math.max(0, Math.min(100, target.grievance + delta));
       break;
     }
-    case 'chronicle': w.chronicle.push({ year: w.year, weight: 'line', text: eff.text, named: false }); break;
+    case 'chronicle': w.chronicle.push({
+      year: w.year, weight: 'line', text: renderProse(ctx, scope.proseAddress, eff.text), named: false,
+    }); break;
     case 'schedule': w.scheduled.push({ event: eff.event, year: w.year + eff.inYears }); break;
     case 'relationship': {
       // This case used to say "handled by its own subsystem" and break. There
@@ -533,7 +535,14 @@ export function applyOutcome(
   // The template and its page join the scope here rather than being passed
   // separately: recast needs the role, and provenance needs the page.
   const inner: EvalScope = { ...scope, event: e, page: entryId };
-  for (const eff of outcome.effects) applyEffect(eff, ctx, fill, inner);
+  for (const [index, eff] of outcome.effects.entries()) {
+    // Select this specific authored line before it enters the permanent book.
+    // Every other effect keeps the same scope and game behavior.
+    const effectScope = eff.kind === 'chronicle'
+      ? { ...inner, proseAddress: outcomeChronicleEffectAddress(ctx, e, outcome, index, choiceId) }
+      : inner;
+    applyEffect(eff, ctx, fill, effectScope);
+  }
 
   const text = renderBody(proseForOutcome(ctx, e, outcome, choiceId), fill, ctx);
   const profile = FREQUENCY_PROFILES[e.frequency];
