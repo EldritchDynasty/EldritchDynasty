@@ -219,12 +219,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_house_held_the_wardenship",
-      "disposition": "read",
-      "reason": "Winning the Wardenship is a durable institutional fact that the event itself says permanently exposes the house to Crown, Assembly, Church, and provincial attention. Keep one callback discriminator for later Warden-era consequences."
-    },
-    {
-      "kind": "flag",
       "key": "the_lent_book_left_alone",
       "disposition": "read",
       "reason": "Leaving the lent book alone explicitly promises that roughly ninety years later someone will find it and write to Cawdry in a worse year. Preserve the flag for that concrete future book/Cawdry callback."
@@ -492,12 +486,6 @@
       "key": "knows_the_rhyme_from_wick",
       "disposition": "read",
       "reason": "The child brings the wrong-order Quiet Names rhyme from Wick, linking village folklore directly to the house's liturgy mysteries."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_rimefell_entry",
-      "disposition": "read",
-      "reason": "This weighted outcome discovers a parish entry saying the supposed Rimefell ancestress never left and died there, directly contradicting the house's descent. That is a concrete lineage-record fact with a natural later herald/record payoff, not redundant bookkeeping."
     },
     {
       "kind": "knowledge",

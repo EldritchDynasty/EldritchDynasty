@@ -1071,6 +1071,209 @@ events:
     rumour: { id: rumour_the_woman_with_no_paper, accuracy: 0.45, spread: 3 }
     accounts: [the_heralds_file_on_the_descent, the_rimefell_parish_answer]
 
+  # ── Readers (#334) ──────────────────────────────────────────────────────
+  # Two Crown outcomes wrote a fact and nothing ever asked about it again.
+  # Holding the Wardenship leaves the house's hand in the assize record for
+  # four hundred years; the Rimefell answer is a contradiction in the house's
+  # own descent. Each gets one later scene that reads it. Neither scene names
+  # a year or a generation, because either can come due in any later century.
+  - id: a_page_in_our_own_hand
+    title: A Page in Our Own Hand
+    tier: head
+    frequency: uncommon
+    weight: 95
+    repeatable: false
+    tags: [warden, records, law, standing]
+    purposes: [change_standing, plant_rumour, force_record_choice]
+    conditions:
+      all:
+        - { flag: the_house_held_the_wardenship, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The assize record at Cawdry keeps every case of blood and land in the
+      Nethering, and for the years this house held the Wardenship it keeps
+      them in this house's hand. A Warden's clerk has been reading it. He has
+      found a death at a farm on this family's own land that the house's
+      Warden entered as an accident in two lines, with no witness named. He
+      writes to ask whether the house objects to the case being heard again
+      at the next assize.
+    interaction:
+      kind: choice
+      choices:
+        - id: let_it_be_heard
+          label: Let them hear it again. The page is what it is.
+          outcomes:
+            - id: heard_again
+              weight: 100
+              text: >-
+                The case is heard at Cawdry in Ingathering, with three
+                witnesses the first hearing never called. The ruling does not
+                change. The new entry is a page and a half longer than the
+                old one, and most of it is about how the old one was written.
+              effects:
+                - { kind: respect, delta: -1 }
+                - { kind: rumour, op: seed, id: rumour_the_page_the_house_wrote, accuracy: 0.6 }
+        - id: ask_for_it_closed
+          label: Ask the Warden to leave it, and send something with the asking.
+          outcomes:
+            - id: left_closed
+              weight: 100
+              text: >-
+                Forty crowns of plate go down to Cawdry with a letter that
+                does not mention the farm. The page stays as it was written.
+                The Warden now knows what this house will pay to keep a page
+                shut, and a Warden does not forget a price.
+              effects:
+                - { kind: treasury, delta: -40 }
+                - { kind: rumour, op: seed, id: rumour_what_the_house_paid_at_cawdry, accuracy: 0.5 }
+    record:
+      subject: the case heard again at Cawdry
+      options:
+        record:
+          chronicle: >-
+            A Warden's clerk found a death on our land that this house's
+            Warden had entered as an accident with no witness named, and the
+            case was heard again at Cawdry. The ruling stood, and the new entry
+            says how the old one was written.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: let the assize hear again a case this house's Warden had closed }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: A Warden's clerk queried a case from the years this house held the Wardenship, and on hearing it again the assize found our Warden's entry exact in every line.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: had the house's Warden's ruling found exact when the case was heard again }
+          discrepancy:
+            id: the_entry_found_exact
+            severity: major
+            provableBy: [house_calder, commons]
+    recordByChoice:
+      - id: ask_for_it_closed
+        subject: the case this house kept closed
+        options:
+          record:
+            chronicle: >-
+              A Warden's clerk asked to hear again a death on our land that
+              this house's Warden had entered as an accident, and this house
+              sent forty crowns of plate to Cawdry, and the page stays as it
+              was written.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent forty crowns of plate to Cawdry to keep a closed case closed }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: A Warden's clerk asked after an old case from our Wardenship and, on being shown the entry, withdrew the question at no cost to this house.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: had the Warden's clerk withdraw his question at no cost to the house }
+            discrepancy:
+              id: the_plate_sent_to_cawdry
+              severity: major
+              provableBy: [house_calder, commons]
+
+  - id: cousins_from_the_rimefell
+    title: Cousins from the Rimefell
+    tier: head
+    frequency: uncommon
+    weight: 95
+    repeatable: false
+    tags: [pedigree, records, kin, rumour]
+    purposes: [plant_rumour, worldbuild_through_action, force_record_choice]
+    conditions:
+      all:
+        - { knowledge: knows_the_rimefell_entry, has: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      Two men come down from the Rimefell in Frostfall with the ore carts,
+      carrying a copy of the parish entry the heralds' clerk once sent for:
+      a woman of that name who never left the mountains and is buried there.
+      They are of her family, or say they are. They have not come for money.
+      They want to know who the woman was who came down to this house with
+      their kinswoman's name, and they mean to ask before the passes close.
+    interaction:
+      kind: choice
+      choices:
+        - id: take_them_in
+          label: Feed them, and tell them everything the house knows.
+          outcomes:
+            - id: told_them
+              weight: 100
+              text: >-
+                They stay three nights and are given everything the house has,
+                which is a name, a horse and no paper. They go home with that.
+                The story the Rimefell tells about the lowland house with a
+                dead woman's name now has this family's own account in it.
+              effects:
+                - { kind: treasury, delta: -5 }
+                - { kind: rumour, op: seed, id: rumour_the_rimefell_story, accuracy: 0.6 }
+        - id: send_them_away
+          label: Give them a meal at the gate, and nothing else.
+          outcomes:
+            - id: sent_away
+              weight: 100
+              text: >-
+                They eat at the gate and go. They stop at Wick on the way
+                home, and at Cawdry, and put their question to anyone who will
+                stand still. Nobody in either place has the answer, which does
+                not stop anybody repeating the question.
+              effects:
+                - { kind: respect, delta: -2 }
+                - { kind: rumour, op: seed, id: rumour_the_woman_who_never_left, accuracy: 0.4 }
+    record:
+      subject: the men who came down from the Rimefell
+      options:
+        record:
+          chronicle: >-
+            Two men of the Rimefell came asking who our foremother was, she
+            who came down with their kinswoman's name, and we fed them and told
+            them all we know, which is a name, a horse and no paper.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: told the Rimefell men all the house knows of its foremother }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: Two men of the Rimefell came down to pay their respects to a kinswoman's house, and went home content that our foremother was their own blood.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: was owned as kin by the Rimefell men }
+          discrepancy:
+            id: the_kinship_they_never_owned
+            severity: major
+            provableBy: [commons, the_church]
+    recordByChoice:
+      - id: send_them_away
+        subject: the men this house sent from the gate
+        options:
+          record:
+            chronicle: >-
+              Two men of the Rimefell came asking who our foremother was, and
+              this house fed them at the gate and sent them home without an
+              answer.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent the Rimefell men from the gate without an answer }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: Two men of the Rimefell came to the gate with wool and horn to sell, asked nothing of this house, and went home before the passes closed.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: was asked nothing by the Rimefell men }
+            discrepancy:
+              id: what_the_rimefell_men_came_to_ask
+              severity: major
+              provableBy: [commons, house_calder]
+
 proseVariants:
   - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].title"
     of: 9ee4e4957e61a4c1
@@ -1889,3 +2092,159 @@ proseVariants:
     of: b065034497d66960
     plainenglish: >-
       had the Rimefell parish book confirm the fourth generation
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].title"
+    of: 31658c7df75bd321
+    plainenglish: >-
+      A Page Written by Our House
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].body"
+    of: 1b3a7aafdb95610b
+    plainenglish: >-
+      The court records at Cawdry hold every case of killing and land in the Nethering, and for
+      the years this house held the Wardenship, those records are in this house's handwriting. A
+      Warden's clerk has been reading them. He has found a death at a farm on this family's own
+      land that the house's Warden recorded as an accident in two lines, without naming a single
+      witness. He writes to ask whether the house objects to the case being tried again at the
+      next court session.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].interaction.choices[id=let_it_be_heard].label"
+    of: d25b8d8a6d203a5e
+    plainenglish: >-
+      Let them try it again. The record is what it is.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].interaction.choices[id=let_it_be_heard].outcomes[id=heard_again].text"
+    of: 26be0a9026a4d56c
+    plainenglish: >-
+      The case is tried at Cawdry in Ingathering, with three witnesses the first trial never
+      called. The ruling does not change. The new record is a page and a half longer than the old
+      one, and most of it is about how the old one was written.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].interaction.choices[id=ask_for_it_closed].label"
+    of: ee72f4f0e18e078c
+    plainenglish: >-
+      Ask the Warden to leave it alone, and send a gift with the request.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].interaction.choices[id=ask_for_it_closed].outcomes[id=left_closed].text"
+    of: e28ebdcd6d197989
+    plainenglish: >-
+      Forty crowns' worth of silver plate goes to Cawdry with a letter that does not mention the
+      farm. The record stays as it was written. The Warden now knows what this house will pay to
+      keep a page closed, and a Warden does not forget a price.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].record.subject"
+    of: 2a0d43912d5bcfb5
+    plainenglish: >-
+      the case tried again at Cawdry
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].record.options.record.chronicle"
+    of: af31c207f569fa33
+    plainenglish: >-
+      A Warden's clerk found a death on our land that this house's Warden had recorded as an
+      accident without naming any witness, and the case was tried again at Cawdry. The ruling
+      stood, and the new record explains how the old one was written.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].record.options.record.claims[0].text"
+    of: cf585affc7e31f4b
+    plainenglish: >-
+      let the court try again a case this house's Warden had closed
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].record.options.embellish.chronicle"
+    of: 5e697db3657a4d5f
+    plainenglish: >-
+      A Warden's clerk questioned a case from the years this house held the Wardenship. When it
+      was tried again, the court found our Warden's record correct in every line.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].record.options.embellish.claims[0].text"
+    of: 3330a2b866bfdaf4
+    plainenglish: >-
+      had the house's Warden's ruling found correct when the case was tried again
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].recordByChoice[id=ask_for_it_closed].subject"
+    of: bb1657b826ee88fc
+    plainenglish: >-
+      the case this house stopped from being tried again
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].recordByChoice[id=ask_for_it_closed].options.record.chronicle"
+    of: 52742ebfaee65e23
+    plainenglish: >-
+      A Warden's clerk asked to retry a death on our land that this house's Warden had recorded as
+      an accident. This house sent forty crowns' worth of silver plate to Cawdry, and the record
+      stays as it was written.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].recordByChoice[id=ask_for_it_closed].options.record.claims[0].text"
+    of: c0b7c6f20d74acf6
+    plainenglish: >-
+      sent forty crowns' worth of silver plate to Cawdry to keep a closed case closed
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].recordByChoice[id=ask_for_it_closed].options.embellish.chronicle"
+    of: c0552cb1d2f3a325
+    plainenglish: >-
+      A Warden's clerk asked about an old case from our Wardenship. When he was shown the record,
+      he dropped the question, and it cost this house nothing.
+  - address: "content:events/rare_crown.yaml#events[id=a_page_in_our_own_hand].recordByChoice[id=ask_for_it_closed].options.embellish.claims[0].text"
+    of: 3b8ce5e20f3401ce
+    plainenglish: >-
+      had the Warden's clerk drop his question without any cost to the house
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].title"
+    of: eafbf35200f0d9ee
+    plainenglish: >-
+      Relatives from the Rimefell
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].body"
+    of: 76405294796be940
+    plainenglish: >-
+      In Frostfall two men come down from the Rimefell with the ore carts. They carry a copy of
+      the parish record the heralds' clerk once asked for: a woman of that name who never left the
+      mountains and is buried there. They are from her family, or say they are. They have not come
+      for money. They want to know who the woman was who came to this house using their relative's
+      name, and they mean to ask before the mountain passes close.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=take_them_in].label"
+    of: 933fec79229430fd
+    plainenglish: >-
+      Feed them, and tell them all the house knows about her.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=take_them_in].outcomes[id=told_them].text"
+    of: 34504d89e329633d
+    plainenglish: >-
+      They stay three nights and are told everything the house has, which is a name, a horse and
+      no papers. They go home with that. The story the Rimefell tells about the lowland house with
+      a dead woman's name now includes this family's own account.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].label"
+    of: dc028456d4ac167a
+    plainenglish: >-
+      Feed them at the gate, and give them nothing more.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].outcomes[id=sent_away].text"
+    of: 407437db3a46eabf
+    plainenglish: >-
+      They eat at the gate and leave. On the way home they stop at Wick, and at Cawdry, and ask
+      their question of anyone who will listen. Nobody in either place knows the answer, but that
+      does not stop people repeating the question.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].record.subject"
+    of: 9ed73b39f14fd7d5
+    plainenglish: >-
+      the men who came from the Rimefell
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].record.options.record.chronicle"
+    of: 93efc0afeb1111d3
+    plainenglish: >-
+      Two men from the Rimefell came to ask who our ancestor was, the woman who arrived using
+      their relative's name. We fed them and told them everything we know, which is a name, a
+      horse and no papers.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].record.options.record.claims[0].text"
+    of: 0647631311b2ed37
+    plainenglish: >-
+      told the Rimefell men everything the house knows about its ancestor
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].record.options.embellish.chronicle"
+    of: 0490fe92b10efa56
+    plainenglish: >-
+      Two men from the Rimefell came to pay their respects to a relative's house, and went home
+      satisfied that our ancestor was their own family.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].record.options.embellish.claims[0].text"
+    of: 5ffc405b7708c82f
+    plainenglish: >-
+      was accepted as family by the Rimefell men
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].recordByChoice[id=send_them_away].subject"
+    of: 70f15a208ffedf8c
+    plainenglish: >-
+      the men this house turned away at the gate
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].recordByChoice[id=send_them_away].options.record.chronicle"
+    of: 47d3a6aa6f4aec76
+    plainenglish: >-
+      Two men from the Rimefell came to ask who our ancestor was. This house fed them at the gate
+      and sent them home without an answer.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].recordByChoice[id=send_them_away].options.record.claims[0].text"
+    of: 571d8f3bc6c670ef
+    plainenglish: >-
+      sent the Rimefell men away from the gate without an answer
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].recordByChoice[id=send_them_away].options.embellish.chronicle"
+    of: b1abace3a30451ff
+    plainenglish: >-
+      Two men from the Rimefell came to the gate to sell wool and horn, asked this house nothing,
+      and went home before the passes closed.
+  - address: "content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].recordByChoice[id=send_them_away].options.embellish.claims[0].text"
+    of: a169ac475f55177b
+    plainenglish: >-
+      was not asked anything by the Rimefell men
