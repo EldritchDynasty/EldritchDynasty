@@ -475,8 +475,11 @@ function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
  * way to play: the chronicler picked a name, and the chronicler is not you.
  */
 export function renameChild(ctx: SimCtx, personId: string, name: string): boolean {
-  const trimmed = name.trim();
-  if (!trimmed) return false;
+  // Founder and later generations obey the same schema-owned name contract.
+  // Reject before releasing friend names, touching the person or recording a choice.
+  const parsed = PersonNameS.safeParse(name);
+  if (!parsed.success) return false;
+  const trimmed = parsed.data;
 
   const p = ctx.world.people.get(personId);
   if (!p) return false;
