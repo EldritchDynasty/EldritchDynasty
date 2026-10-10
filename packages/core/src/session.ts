@@ -233,6 +233,82 @@ interface FoundingBootstrap {
   build(signing: BootstrapSigning, prose: ProseRuntime): SimCtx;
 }
 
+
+/**
+ * Auditable, literal-core-message catalogue for the post-scoring Match reading.
+ * Dynamic msg() keys are intentionally forbidden: the localisation worklist
+ * must be able to find every Original template and fingerprint it. This switch
+ * is therefore explicit, and asserts it still agrees with the pure scorer's
+ * original text if an author changes one without updating the other.
+ */
+function matchFutureMessage(
+  ctx: SimCtx,
+  key: string,
+  original: string,
+  values?: Readonly<Record<string, string>>,
+): string {
+  const checked = (expected: string, translated: string): string => {
+    if (expected !== original) throw new Error(`Match future text drift: ${key}`);
+    return translated;
+  };
+  switch (key) {
+    case 'match.future.label.blood':
+      return checked('Blood', msg(ctx, 'match.future.label.blood', 'Blood', values));
+    case 'match.future.label.standing':
+      return checked('Standing', msg(ctx, 'match.future.label.standing', 'Standing', values));
+    case 'match.future.label.continuity':
+      return checked('Continuity', msg(ctx, 'match.future.label.continuity', 'Continuity', values));
+    case 'match.future.label.mystery':
+      return checked('Mystery', msg(ctx, 'match.future.label.mystery', 'Mystery', values));
+    case 'match.future.reason.blood.close-kin':
+      return checked('the family papers put this match among close kin', msg(ctx, 'match.future.reason.blood.close-kin', 'the family papers put this match among close kin', values));
+    case 'match.future.reason.blood.related':
+      return checked('the family papers still join these two lines', msg(ctx, 'match.future.reason.blood.related', 'the family papers still join these two lines', values));
+    case 'match.future.reason.blood.deep':
+      return checked('{houseName} is spoken of as deep blood', msg(ctx, 'match.future.reason.blood.deep', '{houseName} is spoken of as deep blood', values));
+    case 'match.future.reason.blood.drop':
+      return checked('{houseName} is said to carry a drop of the old blood', msg(ctx, 'match.future.reason.blood.drop', '{houseName} is said to carry a drop of the old blood', values));
+    case 'match.future.reason.blood.waking.one':
+      return checked('{n} waking is known in the visible line', msg(ctx, 'match.future.reason.blood.waking.one', '{n} waking is known in the visible line', values));
+    case 'match.future.reason.blood.waking.many':
+      return checked('{n} wakings are known in the visible line', msg(ctx, 'match.future.reason.blood.waking.many', '{n} wakings are known in the visible line', values));
+    case 'match.future.reason.standing.account.one':
+      return checked('{houseName} already appears in {n} circulating account', msg(ctx, 'match.future.reason.standing.account.one', '{houseName} already appears in {n} circulating account', values));
+    case 'match.future.reason.standing.account.many':
+      return checked('{houseName} already appears in {n} circulating accounts', msg(ctx, 'match.future.reason.standing.account.many', '{houseName} already appears in {n} circulating accounts', values));
+    case 'match.future.reason.standing.our-book':
+      return checked('our own book already has pages on {houseName}', msg(ctx, 'match.future.reason.standing.our-book', 'our own book already has pages on {houseName}', values));
+    case 'match.future.reason.continuity.full.one':
+      return checked('the line is called full on {n} completed life', msg(ctx, 'match.future.reason.continuity.full.one', 'the line is called full on {n} completed life', values));
+    case 'match.future.reason.continuity.full.many':
+      return checked('the line is called full on {n} completed lives', msg(ctx, 'match.future.reason.continuity.full.many', 'the line is called full on {n} completed lives', values));
+    case 'match.future.reason.continuity.ordinary.one':
+      return checked('the watched line is ordinary across {n} completed life', msg(ctx, 'match.future.reason.continuity.ordinary.one', 'the watched line is ordinary across {n} completed life', values));
+    case 'match.future.reason.continuity.ordinary.many':
+      return checked('the watched line is ordinary across {n} completed lives', msg(ctx, 'match.future.reason.continuity.ordinary.many', 'the watched line is ordinary across {n} completed lives', values));
+    case 'match.future.reason.continuity.children':
+      return checked('{grown} of {borne} children in the named line grew up', msg(ctx, 'match.future.reason.continuity.children', '{grown} of {borne} children in the named line grew up', values));
+    case 'match.future.reason.continuity.unrelated':
+      return checked('the family papers show no kinship joining the two lines', msg(ctx, 'match.future.reason.continuity.unrelated', 'the family papers show no kinship joining the two lines', values));
+    case 'match.future.reason.mystery.unknown':
+      return checked('no completed line anybody here has watched', msg(ctx, 'match.future.reason.mystery.unknown', 'no completed line anybody here has watched', values));
+    case 'match.future.reason.mystery.empty-panel':
+      return checked('the panel has no issue, waking, tale or old page to lean on', msg(ctx, 'match.future.reason.mystery.empty-panel', 'the panel has no issue, waking, tale or old page to lean on', values));
+    case 'match.future.reason.mystery.no-case':
+      return checked('nothing visible gives the match a clean case', msg(ctx, 'match.future.reason.mystery.no-case', 'nothing visible gives the match a clean case', values));
+    case 'match.future.reason.priority.blood':
+      return checked('these years make blood unusually important', msg(ctx, 'match.future.reason.priority.blood', 'these years make blood unusually important', values));
+    case 'match.future.reason.priority.standing':
+      return checked('these years make standing unusually important', msg(ctx, 'match.future.reason.priority.standing', 'these years make standing unusually important', values));
+    case 'match.future.reason.priority.continuity':
+      return checked('these years make continuity unusually important', msg(ctx, 'match.future.reason.priority.continuity', 'these years make continuity unusually important', values));
+    case 'match.future.reason.priority.mystery':
+      return checked('these years make mystery unusually important', msg(ctx, 'match.future.reason.priority.mystery', 'these years make mystery unusually important', values));
+    default:
+      throw new Error(`Unknown Match future message: ${key}`);
+  }
+}
+
 export class GameSession {
   decider: 'ask' | 'chronicler';
 
@@ -483,7 +559,7 @@ export class GameSession {
    */
   matchFuture(card: MatchCard, priorities: MatchFutureKind[] = []): MatchFutureReading {
     return matchFuture(card, priorities, (key, original, values) =>
-      msg(this.ctx, key, original, values));
+      matchFutureMessage(this.ctx, key, original, values));
   }
 
   view(): SessionView {
