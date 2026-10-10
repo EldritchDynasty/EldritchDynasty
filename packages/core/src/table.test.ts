@@ -418,6 +418,33 @@ describe('giving the house an order', () => {
       }
     });
 
+    it('renders an unteachable attribute name in the selected prose mode (#960)', () => {
+      const ctx = testWorld(bundle, 7012);
+      ctx.world.treasury = 900;
+      const child = place(ctx, { sex: 'female', age: 9 });
+      const orderTutor = () => order(ctx, { kind: 'tutor', person: child.id, attr: 'max_age' });
+      const address = 'content:attributes.yaml#attributes[id=max_age].name';
+
+      expect(orderTutor().reason).toContain('Maximum Age');
+      setProseVariants(ctx, [{
+        address,
+        of: proseOriginalHash('Maximum Age'),
+        plainenglish: 'Oldest Possible Age',
+      }]);
+      setProseMode(ctx, 'plainenglish');
+      const translated = orderTutor();
+      expect(translated.ok).toBe(false);
+      expect(translated.reason).toContain('Oldest Possible Age');
+      expect(translated.reason).not.toContain('Maximum Age');
+      expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+      setProseVariants(ctx, []);
+      expect(orderTutor().reason).toContain('Maximum Age');
+      expect(missingPlainEnglish(ctx)).toContain(address);
+      expect(ctx.world.treasury).toBe(900);
+      expect(ctx.world.tutoring).toHaveLength(0);
+    });
+
     it('and still teaches every attribute that can be taught', () => {
       expect(teachable.length, 'nothing was teachable, so this proved nothing').toBeGreaterThan(10);
       for (const a of teachable) {
