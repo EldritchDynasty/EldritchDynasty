@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createGame, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
-import type { ProseMode } from '@ed/schema';
 import { createProseModeSelector } from './lib/prose-selection';
 import Start from './components/Start.vue';
 import Prologue from './components/Prologue.vue';
