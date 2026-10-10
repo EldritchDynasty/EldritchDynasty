@@ -176,11 +176,16 @@ export function tickLandMarket(ctx: SimCtx, rng: Rng): void {
 export function buyParcel(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
   const lot = w.landMarket.lots.find((l) => l.parcel === parcel);
-  if (!lot) return { ok: false, reason: 'nothing of that name is on the market' };
+  if (!lot) {
+    return { ok: false, reason: msg(ctx, 'land.refuse.buy_not_listed', 'nothing of that name is on the market') };
+  }
   const def = ctx.content.parcel(parcel);
-  if (!def) return { ok: false, reason: 'no such parcel' };
+  if (!def) return { ok: false, reason: msg(ctx, 'land.refuse.buy_unknown', 'no such parcel') };
   if (w.treasury - lot.price < DEBT_FLOOR) {
-    return { ok: false, reason: `the house cannot raise ${lot.price} crowns` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'land.refuse.buy_cost', 'the house cannot raise {PRICE} crowns', { PRICE: String(lot.price) }),
+    };
   }
 
   w.treasury -= lot.price;
@@ -220,7 +225,7 @@ function recordLoss(ctx: SimCtx, state: ParcelState, def: ParcelDef | undefined)
     name: displayName(state, def),
     place: def?.place ?? 'unknown ground',
     year: w.year,
-    by: sitting?.name ?? 'nobody left to say',
+    by: sitting?.name ?? msg(ctx, 'land.loss.nobody', 'nobody left to say'),
   });
 }
 
@@ -228,10 +233,12 @@ function recordLoss(ctx: SimCtx, state: ParcelState, def: ParcelDef | undefined)
 export function sellParcel(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
   const def = ctx.content.parcel(parcel);
-  if (!def) return { ok: false, reason: 'no such parcel' };
-  if (def.kind === 'demesne') return { ok: false, reason: 'the home ground is not for sale' };
+  if (!def) return { ok: false, reason: msg(ctx, 'land.refuse.sell_unknown', 'no such parcel') };
+  if (def.kind === 'demesne') {
+    return { ok: false, reason: msg(ctx, 'land.refuse.sell_demesne', 'the home ground is not for sale') };
+  }
   const found = liveStateOf(ctx, parcel);
-  if (!found) return { ok: false, reason: 'the house does not hold it' };
+  if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.sell_not_held', 'the house does not hold it') };
   const [id, state] = found;
 
   const price = Math.round(parcelPrice(def) * SELL_FACTOR);
@@ -284,16 +291,26 @@ const IMPROVE_YIELD_GAIN = 2;
 export function beginImprovement(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
   const def = ctx.content.parcel(parcel);
-  if (!def) return { ok: false, reason: 'no such parcel' };
-  if (def.kind === 'town_house') return { ok: false, reason: 'a town house is presence, not producing ground' };
+  if (!def) return { ok: false, reason: msg(ctx, 'land.refuse.improve_unknown', 'no such parcel') };
+  if (def.kind === 'town_house') {
+    return {
+      ok: false,
+      reason: msg(ctx, 'land.refuse.improve_town_house', 'a town house is presence, not producing ground'),
+    };
+  }
   const found = liveStateOf(ctx, parcel);
-  if (!found) return { ok: false, reason: 'the house does not hold it' };
+  if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.improve_not_held', 'the house does not hold it') };
   const [id] = found;
-  if (w.landImprovements.some((imp) => imp.parcel === id)) return { ok: false, reason: 'already being improved' };
+  if (w.landImprovements.some((imp) => imp.parcel === id)) {
+    return { ok: false, reason: msg(ctx, 'land.refuse.improve_underway', 'already being improved') };
+  }
 
   const cost = parcelPrice(def);
   if (w.treasury - cost < DEBT_FLOOR) {
-    return { ok: false, reason: `the house cannot raise ${cost} crowns` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'land.refuse.improve_cost', 'the house cannot raise {PRICE} crowns', { PRICE: String(cost) }),
+    };
   }
   w.treasury -= cost;
   w.landImprovements.push({ parcel: id, completes: w.year + IMPROVE_YEARS });
@@ -518,12 +535,20 @@ export function encroachParcel(ctx: SimCtx, parcel: string, page?: string): void
 export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderResult {
   const w = ctx.world;
   const found = liveStateOf(ctx, parcel);
-  if (!found) return { ok: false, reason: 'the house does not hold it' };
+  if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.endow_not_held', 'the house does not hold it') };
   const [, state] = found;
   const def = ctx.content.parcel(parcel);
-  if (def && isCaput(def)) return { ok: false, reason: `${def.name} is the seat's own ground and cannot be endowed away` };
+  if (def && isCaput(def)) {
+    return {
+      ok: false,
+      reason: msg(ctx, 'land.refuse.endow_caput', "{PARCEL} is the seat's own ground and cannot be endowed away",
+        { PARCEL: def.name }),
+    };
+  }
   const b = w.branches.get(branch);
-  if (!b || !isActiveBranch(b)) return { ok: false, reason: 'no such hall stands to hold it' };
+  if (!b || !isActiveBranch(b)) {
+    return { ok: false, reason: msg(ctx, 'land.refuse.endow_no_hall', 'no such hall stands to hold it') };
+  }
   if (state.holder === branch) return { ok: true }; // already endowed there
 
   state.holder = branch;
@@ -539,7 +564,7 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
 export function recallParcel(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
   const found = liveStateOf(ctx, parcel);
-  if (!found) return { ok: false, reason: 'the house does not hold it' };
+  if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.recall_not_held', 'the house does not hold it') };
   const [, state] = found;
   if (state.holder === undefined) return { ok: true };
 
@@ -584,10 +609,10 @@ export function escheatBranchLand(ctx: SimCtx, branch: string): void {
 export function nameParcel(ctx: SimCtx, parcel: string, name: string): OrderResult {
   const w = ctx.world;
   const found = liveStateOf(ctx, parcel) ?? (w.parcels.has(parcel) ? [parcel, w.parcels.get(parcel)!] as const : undefined);
-  if (!found) return { ok: false, reason: 'the house does not hold it' };
+  if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.rename_not_held', 'the house does not hold it') };
   const [, state] = found;
   const trimmed = name.trim();
-  if (!trimmed) return { ok: false, reason: 'a name cannot be empty' };
+  if (!trimmed) return { ok: false, reason: msg(ctx, 'land.refuse.rename_empty', 'a name cannot be empty') };
 
   const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
   const was = displayName(state, def);
@@ -680,9 +705,10 @@ export function landView(ctx: SimCtx): LandView {
       parcel: def?.id ?? id,
       name: displayName(state, def),
       kind: def?.kind,
-      place: def?.place ?? 'ground the house cleared itself',
+      place: def?.place ?? msg(ctx, 'land.view.made_place', 'ground the house cleared itself'),
       acres: def?.acres ?? 0,
-      provenance: def?.provenance ?? 'made, not bought — no deed but the house\'s own word',
+      provenance: def?.provenance ?? msg(ctx, 'land.view.made_provenance',
+        "made, not bought — no deed but the house's own word"),
       heldSince: state.heldSince,
       baseYield: def?.baseYield ?? 0,
       yieldBonus: state.yieldBonus ?? 0,
