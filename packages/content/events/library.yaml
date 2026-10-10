@@ -281,6 +281,58 @@ events:
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: respect, delta: -1 }
 
+
+  - id: the_bramme_margin_returns
+    title: The Hand in the Fourth Quire
+    tier: family
+    frequency: uncommon
+    weight: 95
+    repeatable: false
+    tags: [library, records, church, mystic]
+    purposes: [plant_rumour, change_relationship, worldbuild_through_action]
+    conditions:
+      all:
+        - { generation: { op: gte, value: 4 } }
+        - { flag: bramme_copied_a_book, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      A clerk from Bramme arrives with the fourth quire of the Life book opened
+      beneath his thumb. He has brought no accusation. He asks whether the
+      correction in the unknown hand has been tried. The chapter house kept a
+      copy of that page, he says, and the man who wrote the note is dead. The
+      clerk will take an answer back. He is careful not to ask for the book.
+    interaction:
+      kind: choice
+      choices:
+        - id: acknowledge_the_correction
+          label: Admit that the correction is right, and let Bramme keep its page.
+          outcomes:
+            - id: bramme_knows
+              weight: 100
+              text: >-
+                The clerk writes down the answer without looking up. Bramme
+                now holds both the corrected page and the house's admission
+                that the working succeeds. The chapter house does not need
+                the whole book to know what sort of book it is.
+              effects:
+                - { kind: respect, delta: -2 }
+                - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.8 }
+                - { kind: flag, flag: bramme_copied_a_book, set: false }
+        - id: refuse_the_answer
+          label: Say nothing about the working, and send the clerk away.
+          outcomes:
+            - id: silence_recorded
+              weight: 100
+              text: >-
+                He writes down the refusal. The chapter house keeps the
+                corrected page and now has a dated silence beside it. The
+                family keeps its answer, but pays for the privilege of being
+                remembered as unwilling to give one.
+              effects:
+                - { kind: respect, delta: -1 }
+                - { kind: flag, flag: bramme_copied_a_book, set: false }
+
 proseVariants:
   - address: "content:events/library.yaml#events[id=the_book_comes_down].title"
     of: fcc6e2a08ab0a994
