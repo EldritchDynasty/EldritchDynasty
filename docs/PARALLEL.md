@@ -270,7 +270,8 @@ that from one that finished the job.
 **The janitor exists because agents physically cannot do this part.** A session's
 git proxy refuses ref deletion (403), so no agent has ever deleted its own
 branch — which explains why historical `claude/*` branches can remain on the
-remote until the janitor or a human cleans them up. An Actions runner has no such restriction. It runs on every push to
+remote until the janitor or a human cleans them up. An Actions runner has
+no such restriction. It runs on every push to
 `main`, plus daily, and deletes only what git can prove is redundant: a branch
 whose head is already an ancestor of `main`. A branch that is not merged is
 reported in the run summary and left alone, because from the runner "abandoned"
@@ -367,10 +368,9 @@ head. If it is green, GitHub itself advances `main`. The repository's
 authenticates with the scoped GitHub App token and does not bypass merge-group CI.
 
 The repository-admin bypass is intentionally an emergency **pull-request-only**
-escape hatch. It is not an alternative fast path. A normal session chooses
-no manual Merge action: it leaves an open, ready,
-same-repository PR for automatic admission and lets the required merge-group CI
-answer.
+escape hatch. It is not an alternative fast path. A normal session never clicks
+Merge: it leaves an open, ready, same-repository PR for automatic admission and
+lets the required merge-group CI answer.
 
 Put `Closes #93` in the PR/landing commit when the slice completes that issue.
 When GitHub's queue lands it on the default branch, GitHub closes the issue and
