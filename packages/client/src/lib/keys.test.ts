@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { shortcutFor } from './keys.js';
+import { isControl, shortcutFor } from './keys.js';
 
 /**
  * THE FOUR TIMES A SHORTCUT MUST NOT FIRE (issue #58).
@@ -80,6 +80,22 @@ describe('what a keypress means', () => {
     expect(shortcutFor({ key: ' ', onControl: true })).toBeNull();
     // Numbers are still ours — no button answers "3".
     expect(shortcutFor({ key: '3', onControl: true })).toEqual({ kind: 'take', index: 2 });
+  });
+
+  it('leaves Enter and Space to focused native details summaries (#931)', () => {
+    // A native <summary> toggles its details with Enter/Space. Advancing a
+    // year as well would turn opening the help text into a gameplay action.
+    const summary = { tagName: 'SUMMARY' } as Element;
+    expect(isControl(summary)).toBe(true);
+    for (const key of ['Enter', ' ']) {
+      expect(shortcutFor({ key, onControl: isControl(summary) })).toBeNull();
+    }
+    // Numbered choices remain intentional shortcuts while controls are focused.
+    expect(shortcutFor({ key: '3', onControl: isControl(summary) }))
+      .toEqual({ kind: 'take', index: 2 });
+    expect(isControl({ tagName: 'BUTTON' } as Element)).toBe(true);
+    expect(isControl({ tagName: 'A' } as Element)).toBe(true);
+    expect(isControl({ tagName: 'DIV' } as Element)).toBe(false);
   });
 
   /** Ctrl-R reloads and Cmd-L is the address bar. A game that eats those closes. */
