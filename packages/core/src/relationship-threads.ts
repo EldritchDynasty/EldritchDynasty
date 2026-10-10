@@ -1,5 +1,6 @@
 import type { SimCtx } from './world.js';
 import { msg } from './messages.js';
+import { proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 
 /**
  * EXTERNAL RELATIONSHIP THREADS (issue #217).
@@ -59,7 +60,6 @@ interface Fact extends RelationshipThreadFact {
 
 interface Builder {
   house: string;
-  name: string;
   facts: Fact[];
 }
 
@@ -96,15 +96,20 @@ function readableId(id: string): string {
     .join(' ');
 }
 
+/**
+ * Names substituted into a fact are authored prose too (#917): render them in
+ * the same mode as the sentence around them. Inside `factLine` that is the
+ * Original-mode context for `detail` and the reader's for the shown words.
+ */
 function houseName(ctx: SimCtx, house: string): string {
-  return ctx.content.house(house)?.name ?? readableId(house);
+  const def = ctx.content.house(house);
+  return def ? proseForContentField(ctx, 'houses', house, 'name', def.name) : readableId(house);
 }
 
 function refName(ctx: SimCtx, ref: string): string {
-  return ctx.content.spellbook(ref)?.name
-    ?? ctx.content.heirloom(ref)?.name
-    ?? ctx.content.house(ref)?.name
-    ?? readableId(ref);
+  if (ctx.content.spellbook(ref) || ctx.content.heirloom(ref)) return proseForPromiseLot(ctx, ref);
+  if (ctx.content.house(ref)) return houseName(ctx, ref);
+  return readableId(ref);
 }
 
 function clip(text: string | null | undefined, max = 72): string | undefined {
@@ -123,7 +128,7 @@ function addFact(
   if (!house || house === ctx.world.playerHouse) return;
   let builder = builders.get(house);
   if (!builder) {
-    builder = { house, name: houseName(ctx, house), facts: [] };
+    builder = { house, facts: [] };
     builders.set(house, builder);
   }
   const duplicate = builder.facts.some((f) =>
@@ -154,7 +159,7 @@ function currentFamilyConnections(builders: Map<string, Builder>, ctx: SimCtx): 
     addFact(builders, ctx, house, {
       kind: 'family',
       year: joined.from,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.family.current', '{NAME} of {HOUSE} married into the family in {YEAR}; the connection is still living.', { NAME: person.name, HOUSE: houseName(ctx, house), YEAR: String(joined.from) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.family.current', '{NAME} of {HOUSE} married into the family in {YEAR}; the connection is still living.', { NAME: person.name, HOUSE: houseName(modeCtx, house), YEAR: String(joined.from) })),
       ref: String(person.id),
       active: true,
       priority: 72,
@@ -190,7 +195,7 @@ function recentOutcomeHistory(builders: Map<string, Builder>, ctx: SimCtx): void
       addFact(builders, ctx, house, {
         kind: 'recent_contact',
         year: logged.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.contact.current', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.contact.current', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(modeCtx, house), TITLE: proseForEventTitle(modeCtx, event), YEAR: String(logged.year) })),
         ref: `${logged.event}:${id}`,
         active: true,
         priority: 42,
@@ -211,7 +216,7 @@ function currentCourtships(builders: Map<string, Builder>, ctx: SimCtx): void {
       addFact(builders, ctx, house, {
         kind: 'courtship',
         year: met.offered,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.courtship.current', '{NAME} of {HOUSE} came before the Match in {YEAR} and remains unmarried in that house.', { NAME: met.name, HOUSE: houseName(ctx, house), YEAR: String(met.offered) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.courtship.current', '{NAME} of {HOUSE} came before the Match in {YEAR} and remains unmarried in that house.', { NAME: met.name, HOUSE: houseName(modeCtx, house), YEAR: String(met.offered) })),
         ref: person.id,
         active: true,
         priority: 76,
@@ -243,12 +248,12 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
         ?? w.chronicle.find((c) =>
           c.year === grudge.originYear && c.eventId === grudge.originEvent);
       const namedOrigin = (modeCtx: SimCtx) => entry?.title ?? clip(entry?.text) ?? msg(modeCtx, 'threads.grudge.default', 'the quarrel');
-      const holder = from === outsider ? `${from.name} of ${houseName(ctx, house)}` : from.name;
-      const target = to === outsider ? `${to.name} of ${houseName(ctx, house)}` : to.name;
+      const holder = (modeCtx: SimCtx) => from === outsider ? `${from.name} of ${houseName(modeCtx, house)}` : from.name;
+      const target = (modeCtx: SimCtx) => to === outsider ? `${to.name} of ${houseName(modeCtx, house)}` : to.name;
       addFact(builders, ctx, house, {
         kind: 'grudge',
         year: grudge.originYear,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.grudge', '{HOLDER} still holds a grudge against {TARGET} over {ORIGIN} ({YEAR}).', { HOLDER: holder, TARGET: target, ORIGIN: namedOrigin(modeCtx), YEAR: String(grudge.originYear) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.grudge', '{HOLDER} still holds a grudge against {TARGET} over {ORIGIN} ({YEAR}).', { HOLDER: holder(modeCtx), TARGET: target(modeCtx), ORIGIN: namedOrigin(modeCtx), YEAR: String(grudge.originYear) })),
         ref: grudge.id,
         active: true,
         priority: 90 + Math.min(9, Math.floor(grudge.severity / 10)),
@@ -272,7 +277,7 @@ function currentRecords(builders: Map<string, Builder>, ctx: SimCtx): void {
       addFact(builders, ctx, house, {
         kind: 'record',
         year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.record.prove', '{HOUSE} can prove {CLAIM}.', { HOUSE: houseName(ctx, house), CLAIM: claim(modeCtx) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.record.prove', '{HOUSE} can prove {CLAIM}.', { HOUSE: houseName(modeCtx, house), CLAIM: claim(modeCtx) })),
         ref: id,
         active: true,
         priority: 100,
@@ -287,7 +292,7 @@ function currentSecrets(builders: Map<string, Builder>, ctx: SimCtx): void {
     addFact(builders, ctx, secret.house, {
       kind: 'secret',
       year: secret.since,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.secret.current', '{NAME} carried a household secret to {HOUSE} in {YEAR} and has not yet told it.', { NAME: secret.carrierName, HOUSE: houseName(ctx, secret.house), YEAR: String(secret.since) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.secret.current', '{NAME} carried a household secret to {HOUSE} in {YEAR} and has not yet told it.', { NAME: secret.carrierName, HOUSE: houseName(modeCtx, secret.house), YEAR: String(secret.since) })),
       ref: secret.secret,
       active: true,
       priority: 86,
@@ -302,7 +307,7 @@ function currentAuctions(builders: Map<string, Builder>, ctx: SimCtx): void {
     addFact(builders, ctx, lot.house, {
       kind: 'auction',
       year: lot.announcedYear,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.upcoming', '{HOUSE} is bringing {LOT} to auction in {YEAR}.', { HOUSE: houseName(ctx, lot.house), LOT: refName(ctx, lot.refId), YEAR: String(lot.saleYear) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.upcoming', '{HOUSE} is bringing {LOT} to auction in {YEAR}.', { HOUSE: houseName(modeCtx, lot.house), LOT: refName(modeCtx, lot.refId), YEAR: String(lot.saleYear) })),
       ref: lot.id,
       active: true,
       priority: 64,
@@ -313,7 +318,7 @@ function currentAuctions(builders: Map<string, Builder>, ctx: SimCtx): void {
     addFact(builders, ctx, promise.toHouse, {
       kind: 'marriage_promise',
       year: promise.year,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.promise', '{HOUSE} is owed the marriage pledged in {YEAR} for {LOT}.', { HOUSE: houseName(ctx, promise.toHouse), YEAR: String(promise.year), LOT: refName(ctx, promise.lot) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.promise', '{HOUSE} is owed the marriage pledged in {YEAR} for {LOT}.', { HOUSE: houseName(modeCtx, promise.toHouse), YEAR: String(promise.year), LOT: refName(modeCtx, promise.lot) })),
       ref: promise.lot,
       active: true,
       priority: 88,
@@ -375,7 +380,7 @@ function historicalOrigins(
       addFact(builders, ctx, house, {
         kind: 'family',
         year: logged.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.family.history', '{NAME} of {HOUSE} married into the family in {YEAR}.', { NAME: spouse.name, HOUSE: houseName(ctx, house), YEAR: String(logged.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.family.history', '{NAME} of {HOUSE} married into the family in {YEAR}.', { NAME: spouse.name, HOUSE: houseName(modeCtx, house), YEAR: String(logged.year) })),
         ref: String(spouse.id),
         active: false,
         priority: 30,
@@ -399,7 +404,7 @@ function historicalOrigins(
       addFact(builders, ctx, house, {
         kind: 'recent_contact',
         year: logged.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.contact.history', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.contact.history', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(modeCtx, house), TITLE: proseForEventTitle(modeCtx, event), YEAR: String(logged.year) })),
         ref: `${logged.event}:${id}`,
         active: false,
         priority: 20,
@@ -415,7 +420,7 @@ function historicalOrigins(
       addFact(builders, ctx, house, {
         kind: 'courtship',
         year: met.offered,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.courtship.history', '{NAME} of {HOUSE} came before the Match in {YEAR}.', { NAME: met.name, HOUSE: houseName(ctx, house), YEAR: String(met.offered) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.courtship.history', '{NAME} of {HOUSE} came before the Match in {YEAR}.', { NAME: met.name, HOUSE: houseName(modeCtx, house), YEAR: String(met.offered) })),
         ref: person.id,
         active: false,
         priority: 20,
@@ -433,7 +438,7 @@ function historicalOrigins(
       addFact(builders, ctx, house, {
         kind: 'record',
         year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.record.history', '{HOUSE} was tied to the evidence behind {CLAIM}.', { HOUSE: houseName(ctx, house), CLAIM: claim(modeCtx) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.record.history', '{HOUSE} was tied to the evidence behind {CLAIM}.', { HOUSE: houseName(modeCtx, house), CLAIM: claim(modeCtx) })),
         ref: id,
         active: false,
         priority: 20,
@@ -446,7 +451,7 @@ function historicalOrigins(
     addFact(builders, ctx, secret.house, {
       kind: 'secret',
       year: secret.since,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.secret.history', '{NAME} carried a household secret to {HOUSE} in {SINCE}; it was told in {YEAR}.', { NAME: secret.carrierName, HOUSE: houseName(ctx, secret.house), SINCE: String(secret.since), YEAR: String(secret.told) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.secret.history', '{NAME} carried a household secret to {HOUSE} in {SINCE}; it was told in {YEAR}.', { NAME: secret.carrierName, HOUSE: houseName(modeCtx, secret.house), SINCE: String(secret.since), YEAR: String(secret.told) })),
       ref: secret.secret,
       active: false,
       priority: 20,
@@ -459,7 +464,7 @@ function historicalOrigins(
       addFact(builders, ctx, lot.house, {
         kind: 'auction',
         year: entry.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.offered', '{HOUSE} offered {LOT} at the {YEAR} auction.', { HOUSE: houseName(ctx, lot.house), LOT: refName(ctx, lot.refId), YEAR: String(entry.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.offered', '{HOUSE} offered {LOT} at the {YEAR} auction.', { HOUSE: houseName(modeCtx, lot.house), LOT: refName(modeCtx, lot.refId), YEAR: String(entry.year) })),
         ref: lot.id,
         active: false,
         priority: 18,
@@ -470,7 +475,7 @@ function historicalOrigins(
       addFact(builders, ctx, winningHouse, {
         kind: 'auction',
         year: entry.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.won', '{HOUSE} took {LOT} at the {YEAR} auction.', { HOUSE: houseName(ctx, winningHouse), LOT: refName(ctx, lot.refId), YEAR: String(entry.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.won', '{HOUSE} took {LOT} at the {YEAR} auction.', { HOUSE: houseName(modeCtx, winningHouse), LOT: refName(modeCtx, lot.refId), YEAR: String(entry.year) })),
         ref: `${lot.id}:winner`,
         active: false,
         priority: 20,
@@ -485,7 +490,7 @@ function publicFact(fact: Fact): RelationshipThreadFact {
   return { kind, year, detail, ...(ref !== undefined ? { ref } : {}) };
 }
 
-function materialize(builder: Builder): RelationshipThread {
+function materialize(ctx: SimCtx, builder: Builder): RelationshipThread {
   const origin = [...builder.facts].sort((a, b) =>
     a.year - b.year || b.priority - a.priority || compareText(a.detail, b.detail))[0]!;
   const pressures = builder.facts
@@ -496,7 +501,9 @@ function materialize(builder: Builder): RelationshipThread {
     .map(publicFact);
   return {
     house: builder.house,
-    name: builder.name,
+    // Named only for the threads actually returned, so the hot recurrence
+    // queries never ask for (or report missing) a house name nobody reads.
+    name: houseName(ctx, builder.house),
     origin: publicFact(origin),
     pressures,
   };
@@ -514,7 +521,7 @@ export function relationshipThreads(
   const ranked = rankedBuilders(ctx, builders, cap);
   const wanted = new Set(ranked.map((entry) => entry.builder.house));
   historicalOrigins(builders, ctx, wanted);
-  return ranked.map((entry) => materialize(entry.builder));
+  return ranked.map((entry) => materialize(ctx, entry.builder));
 }
 
 /**
