@@ -120,8 +120,10 @@ describe('the ascendant composite policy', () => {
 });
 
 describe('the endings gate compiled-content reuse (#950)', () => {
-  it('indexes a raw bundle only once across both paired policies without moving a verdict', () => {
-    const source = loadContent();
+  it('indexes raw bundle inputs once and agrees with indexed, single-worker and multi-worker verdicts', () => {
+    // loadContent() already returns indexed Content. Exercise a raw authored
+    // bundle explicitly: the default CLI path does not redundantly compile.
+    const source = loadContent().bundle;
     let eventReads = 0;
     // Every full indexContent(rawBundle) construction reads the authored
     // events array. Counting those reads catches accidental per-run rebuilds
