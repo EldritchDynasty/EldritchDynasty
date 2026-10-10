@@ -568,7 +568,7 @@ export const OutcomeS = z.object({
     after: ScheduleS.default('next_generation'),
     keep: z.array(z.string()).default([]),
   }).optional(),
-});
+}).strict();
 export type Outcome = z.infer<typeof OutcomeS>;
 
 export const ChoiceS = z.object({
@@ -578,7 +578,7 @@ export const ChoiceS = z.object({
   requires: z.array(z.object({ slot: z.string(), attr: z.string(), op: CompareOpS, value: z.number() })).default([]),
   check: z.string().optional(),
   outcomes: z.array(OutcomeS).min(1),
-});
+}).strict();
 export type Choice = z.infer<typeof ChoiceS>;
 
 /**
@@ -784,7 +784,7 @@ export const EventTemplateS = z.object({
   accounts: z.array(z.string()).default([]),
 
   arc: z.object({ of: z.string(), node: z.string() }).optional(),
-}).superRefine((event, ctx) => {
+}).strict().superRefine((event, ctx) => {
   // A typo in either selector used to parse successfully, then silently fall
   // back to the unconditional Record. That can turn a truthful docket into a
   // false claim (and create an undeserved Discrepancy). Validate membership

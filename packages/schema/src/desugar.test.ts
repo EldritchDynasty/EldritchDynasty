@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { ContentBundle, EventTemplate } from '@ed/schema';
-import { desugarInline, indexContent, isInlineArcId } from '@ed/schema';
+import { desugarInline, EventTemplateS, indexContent, isInlineArcId } from '@ed/schema';
 
 const base = loadBundle();
 
@@ -156,5 +156,63 @@ describe('indexContent', () => {
     const arc = content.arcs.find((a) => a.inline)!;
     expect(content.arc(arc.id)).toBe(arc);
     expect(() => content.mustArc(arc.id)).not.toThrow();
+  });
+});
+
+describe('a `next` lives on an outcome, and an unknown key is an error (#995)', () => {
+  /** A one-choice event, with `extra` spread onto the choice, its outcome or the event. */
+  function choiceEvent(extra: { choice?: object; outcome?: object; event?: object } = {}) {
+    const { interaction: _narration, ...rest } = beat('t_strict');
+    return {
+      ...rest,
+      ...extra.event,
+      interaction: {
+        kind: 'choice',
+        choices: [{
+          id: 'go', label: 'Go.', ...extra.choice,
+          outcomes: [{ id: 'gone', weight: 100, text: 'Gone.', ...extra.outcome }],
+        }, {
+          id: 'stay', label: 'Stay.',
+          outcomes: [{ id: 'stayed', weight: 100, text: 'Stayed.' }],
+        }],
+      },
+    };
+  }
+  const unrecognised = (value: unknown) => {
+    const parsed = EventTemplateS.safeParse(value);
+    if (parsed.success) return [];
+    return parsed.error.issues
+      .filter((issue) => issue.code === 'unrecognized_keys')
+      .map((issue) => ({ path: issue.path.join('.'), keys: (issue as { keys: string[] }).keys }));
+  };
+
+  it('starts from an event that is valid as it stands, so each case below isolates one key', () => {
+    expect(EventTemplateS.safeParse(choiceEvent()).success).toBe(true);
+  });
+
+  it('rejects a `next` written on the choice instead of stripping it in silence', () => {
+    // Zod strips unknown keys by default. Two shipped callbacks were authored
+    // one indent too shallow, parsed cleanly, and never chained (#995).
+    expect(unrecognised(choiceEvent({ choice: { next: { event: 't_later' } } })))
+      .toEqual([{ path: 'interaction.choices.0', keys: ['next'] }]);
+  });
+
+  it('rejects an unknown key on an outcome and on the event itself', () => {
+    expect(unrecognised(choiceEvent({ outcome: { nxt: { event: 't_later' } } })))
+      .toEqual([{ path: 'interaction.choices.0.outcomes.0', keys: ['nxt'] }]);
+    expect(unrecognised(choiceEvent({ event: { condition: {} } })))
+      .toEqual([{ path: '', keys: ['condition'] }]);
+  });
+
+  it('accepts the same `next` on the outcome, where it belongs', () => {
+    expect(EventTemplateS.safeParse(choiceEvent({ outcome: { next: { event: 't_later' } } })).success).toBe(true);
+  });
+
+  it('chains both ninety-year callbacks the shipped content writes, and draws neither ambiently', () => {
+    const content = indexContent(base);
+    expect(String(content.event('the_clause_read_back')!.arc?.of))
+      .toBe('inline_the_toll_on_the_plank_bridge__halved');
+    expect(String(content.event('the_file_a_clerk_went_looking_for')!.arc?.of))
+      .toBe('inline_the_alewife_and_the_licence__asserted');
   });
 });
