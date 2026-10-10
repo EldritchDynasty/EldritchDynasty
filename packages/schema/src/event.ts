@@ -784,6 +784,43 @@ export const EventTemplateS = z.object({
   accounts: z.array(z.string()).default([]),
 
   arc: z.object({ of: z.string(), node: z.string() }).optional(),
+}).superRefine((event, ctx) => {
+  // A typo in either selector used to parse successfully, then silently fall
+  // back to the unconditional Record. That can turn a truthful docket into a
+  // false claim (and create an undeserved Discrepancy). Validate membership
+  // against this event's actual choices, not merely the selector's syntax.
+  const choices = event.interaction.kind === 'narration' ? [] : event.interaction.choices;
+  const choiceById = new Map(choices.map((choice) => [choice.id, choice]));
+
+  for (const [index, row] of (event.recordByChoice ?? []).entries()) {
+    if (!choiceById.has(row.id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recordByChoice', index, 'id'],
+        message: `unknown choice-specific Record id: ${row.id}`,
+      });
+    }
+  }
+
+  for (const [index, row] of (event.recordByOutcome ?? []).entries()) {
+    const slash = row.id.indexOf('/');
+    const choiceId = row.id.slice(0, slash);
+    const outcomeId = row.id.slice(slash + 1);
+    const choice = choiceById.get(choiceId);
+    if (!choice) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recordByOutcome', index, 'id'],
+        message: `unknown choice in outcome-specific Record id: ${row.id}`,
+      });
+    } else if (!choice.outcomes.some((outcome) => outcome.id === outcomeId)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['recordByOutcome', index, 'id'],
+        message: `unknown outcome for choice in outcome-specific Record id: ${row.id}`,
+      });
+    }
+  }
 });
 export type EventTemplate = z.infer<typeof EventTemplateS>;
 
