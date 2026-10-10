@@ -168,8 +168,9 @@ function hasPanel(panel: MatchPanel): boolean {
  * live game actions still select the session's current reviewed translations.
  */
 function displayedFuture(card: MatchCard) {
-  return props.actions.futureOf?.(card, props.ageMatchPriorities)
-    ?? futureOf(card, props.ageMatchPriorities);
+  return typeof props.actions.futureOf === 'function'
+    ? props.actions.futureOf(card, props.ageMatchPriorities)
+    : futureOf(card, props.ageMatchPriorities);
 }
 
 function futureAside(card: MatchCard): string | undefined {
