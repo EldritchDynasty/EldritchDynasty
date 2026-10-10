@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { canLearn, contentProseEntries, proseOriginalHash, validateBundle } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
 import {
-  acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, degradeLibraryCopy,
+  acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, canTakePost, degradeLibraryCopy,
   canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, loadGame, phenotypeOf, place,
   saveGame, setProseMode, setProseVariants, useHeirloom,
 } from '@ed/core';
@@ -480,5 +480,42 @@ describe("§11's learning gate (issue #79)", () => {
 
     expect(canStudySpellbook(ctx, sleeping, def).ok).toBe(false);
     expect(canStudySpellbook(ctx, woken, def).ok).toBe(true);
+  });
+});
+
+describe('study and the posts refuse in the reader\'s setting (#805)', () => {
+  const keyed = ['./people/library.ts', './people/careers.ts']
+    .flatMap((file) => coreMessageEntries(readFileSync(new URL(file, import.meta.url), 'utf8')))
+    .filter((entry) => /#(library|career)\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'library.refuse.not_woken': 'not woken',
+      'library.refuse.not_hers': 'not hers to learn',
+      'library.refuse.affinity_short': 'the affinity is not there yet',
+      'career.refuse.woman': 'no post in Aubren is open to a woman',
+    });
+  });
+
+  it('gives a refused study or post its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = bootstrap(bundle, 1042, 1042);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const book = bundle.spellbooks.find((b) => !canLearn('female', b.affinity))!;
+      const her = place(ctx, { sex: 'female', age: 30 });
+      her.awakening.awakened = true;
+      const him = place(ctx, { sex: 'male', age: 30 });
+      him.awakening.awakened = false;
+      return [canStudySpellbook(ctx, her, book), canStudySpellbook(ctx, him, book), canTakePost(ctx, her)]
+        .map((r) => ({ ok: r.ok, reason: 'reason' in r ? r.reason : undefined }));
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      'not hers to learn', 'not woken', 'no post in Aubren is open to a woman',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
   });
 });
