@@ -4,7 +4,7 @@ import { loadBundle } from '@ed/content';
 import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
-  commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
+  outcomeTextAddress, outcomeChronicleEffectAddress, proseForOutcome, commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
 
 const ADDRESS =
@@ -41,6 +41,44 @@ function fixture() {
   };
   return { bundle, event, outcome };
 }
+
+describe('exact outcome branch identity (#856)', () => {
+  it('rejects a wrong choice even when outcome ids and Original words match', () => {
+    const { bundle, event } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('expected choices');
+    const first = event.interaction.choices[0]!;
+    const second = event.interaction.choices[1]!;
+    const sharedText = 'The same Original in both branches.';
+    const a: Outcome = { id: 'shared', weight: 100, text: sharedText, tags: [], effects: [] };
+    const b: Outcome = { ...a };
+    const changed: EventTemplate = {
+      ...event,
+      interaction: {
+        ...event.interaction,
+        choices: event.interaction.choices.map((choice) =>
+          choice.id === first.id ? { ...choice, outcomes: [a] }
+            : choice.id === second.id ? { ...choice, outcomes: [b] } : choice),
+      },
+    };
+    const ctx = testWorld(bundle);
+    const addressA = outcomeTextAddress(ctx, changed, a, first.id)!;
+    const addressB = outcomeTextAddress(ctx, changed, b, second.id)!;
+    setProseVariants(ctx, [
+      { address: addressA, of: proseOriginalHash(sharedText), plainenglish: 'First branch.' },
+      { address: addressB, of: proseOriginalHash(sharedText), plainenglish: 'Second branch.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(proseForOutcome(ctx, changed, a, first.id)).toBe('First branch.');
+    expect(proseForOutcome(ctx, changed, b, second.id)).toBe('Second branch.');
+    expect(outcomeTextAddress(ctx, changed, a, second.id)).toBeUndefined();
+    expect(outcomeTextAddress(ctx, changed, b, first.id)).toBeUndefined();
+    expect(outcomeChronicleEffectAddress(ctx, changed, a, 0, second.id)).toBeUndefined();
+    expect(outcomeChronicleEffectAddress(ctx, changed, b, 0, first.id)).toBeUndefined();
+    expect(proseForOutcome(ctx, changed, a, second.id)).toBe(sharedText);
+    expect(proseForOutcome(ctx, changed, b, first.id)).toBe(sharedText);
+    expect(outcomeTextAddress(ctx, changed, { ...a }, first.id)).toBeUndefined();
+  });
+});
 
 describe('prospective prose selection', () => {
   it('loads the authored catalogue from content without host-side injection', () => {
