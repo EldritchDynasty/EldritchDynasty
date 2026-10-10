@@ -1,4 +1,5 @@
 import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { resolveSavePath, slotOfFile, SAVE_EXTENSION } from '../tools/save-slot.mjs';
 
@@ -90,9 +91,18 @@ export function writeSave(root, slot, save) {
   }
 
   const target = resolveSavePath(root, slot);
-  const scratch = `${target}.writing`;
-  writeFileSync(scratch, JSON.stringify(save), 'utf8');
-  renameSync(scratch, target);
+  // A fixed .writing name can already be a symlink, making writeFileSync
+  // overwrite a file outside userData/saves before the safe rename (#870).
+  // Use a fresh sibling and exclusive creation to refuse even a raced link.
+  const scratch = `${target}.${randomUUID()}.writing`;
+  try {
+    writeFileSync(scratch, JSON.stringify(save), { encoding: 'utf8', flag: 'wx' });
+    renameSync(scratch, target);
+  } finally {
+    // Interrupted/failed serialization and renames must never leave a
+    // half-written scratch beside the slot in a running process.
+    rmSync(scratch, { force: true });
+  }
   return target;
 }
 
