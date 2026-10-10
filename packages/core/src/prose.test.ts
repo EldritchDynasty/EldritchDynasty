@@ -52,6 +52,37 @@ describe('live trait names in the selected prose mode (#957)', () => {
   });
 });
 
+describe('live attribute names in the selected prose mode (#959)', () => {
+  it('translates eligible names, keeps one-word names, and falls back on stale wording', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const attribute = ctx.content.attributes.find((item) => String(item.id) === 'max_age');
+    if (!attribute) throw new Error('The max_age fixture is missing');
+    const address = `content:${ctx.content.sourceOf(String(attribute.id))}#attributes[id=${encodeURIComponent(String(attribute.id))}].name`;
+    const original = session.view().attributes;
+    const snapshot = canonical(saveGame(ctx));
+    const variant = {
+      address, of: proseOriginalHash(attribute.name), plainenglish: 'Oldest Possible Age',
+    };
+
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(session.view().attributes).toEqual(original.map((item) =>
+      item.attr === attribute.id ? { ...item, name: variant.plainenglish } : item));
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+    expect(missingPlainEnglish(ctx))
+      .toContain('content:attributes.yaml#attributes[id=eldritch_power].name');
+
+    setProseVariants(ctx, [{ ...variant, of: proseOriginalHash('Older attribute wording') }]);
+    expect(session.view().attributes).toEqual(original);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(session.view().attributes).toEqual(original);
+    expect(canonical(saveGame(ctx))).toBe(snapshot);
+  });
+});
+
 describe('live Age names in the selected prose mode (#921)', () => {
   function fixture() {
     const session = newGame(loadContent());
