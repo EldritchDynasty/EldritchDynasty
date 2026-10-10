@@ -125,6 +125,20 @@ export const store = reactive({
 });
 
 /**
+ * A save snapshots text before awaiting disk/IPC. New edits to that file
+ * during the await must stay dirty even when the older snapshot succeeds.
+ * Track a generation rather than just set membership (which is already true
+ * before the later edit).
+ */
+const dirtyGeneration = new Map<string, number>();
+
+function markFileDirty(path: string): void {
+  dirtyGeneration.set(path, (dirtyGeneration.get(path) ?? 0) + 1);
+  store.dirty.add(path);
+}
+
+
+/**
  * Strip Vue's reactive proxy so `yaml`'s Document gets a plain value, then turn
  * that value into real YAML NODES.
  *
@@ -180,7 +194,7 @@ export function stageProseVariant(
   const seq = file.doc.get('proseVariants', true) as { items?: unknown[] } | undefined;
   if (!seq?.items) file.doc.set('proseVariants', node(file.doc, []));
   file.doc.addIn(['proseVariants'], node(file.doc, variant));
-  store.dirty.add(path);
+  markFileDirty(path);
   return store.bundle.proseVariants.find((candidate) => candidate.address === address);
 }
 
@@ -211,7 +225,7 @@ export function removeProseVariant(path: string, address: string): boolean {
 
   store.bundle.proseVariants.splice(liveIndex, 1);
   file.doc.deleteIn(['proseVariants', sourceIndex]);
-  store.dirty.add(path);
+  markFileDirty(path);
   return true;
 }
 
@@ -250,7 +264,7 @@ export async function externalChange(path: string): Promise<{ changed: boolean; 
 /** Mark an item's file dirty. Called on every edit; cheap enough (files × items) at content-directory scale. */
 export function markDirty(collectionKey: string, id: string): void {
   const located = locate(collectionKey, id);
-  if (located) store.dirty.add(located.path);
+  if (located) markFileDirty(located.path);
 }
 
 export function isDirty(collectionKey: string, id: string): boolean {
@@ -274,6 +288,7 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   file.doc.setIn([yamlKey, located.index], node(file.doc, item));
   syncProseVariants(file.doc);
   const text = file.doc.toString(STRINGIFY_OPTS);
+  const savedGeneration = dirtyGeneration.get(located.path) ?? 0;
 
   store.saving.add(located.path);
   const res = await writeFile(located.path, text);
@@ -281,7 +296,10 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
 
   if (res.ok) {
     file.loadedText = text;
-    store.dirty.delete(located.path);
+    // The transport wrote the snapshot, not edits made while it was waiting.
+    if ((dirtyGeneration.get(located.path) ?? 0) === savedGeneration) {
+      store.dirty.delete(located.path);
+    }
     delete store.errors[located.path];
   } else {
     store.errors[located.path] = res.error ?? 'write failed';
@@ -347,7 +365,7 @@ export async function createItem(collectionKey: string, path: string, item: { id
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
   items.push(item);
   file.doc.addIn([yamlKey], node(file.doc, item));
-  store.dirty.add(path);
+  markFileDirty(path);
 
   const res = await saveItem(collectionKey, item.id);
   return { ...res, path };
