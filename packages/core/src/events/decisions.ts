@@ -575,7 +575,24 @@ export function applyRecord(
   // against the cast this firing used. `omit` writes nothing to claim
   // anything with — the blank is the artefact.
   const claims = option !== 'omit'
-    ? (chosen as { claims?: typeof block.options.record.claims }).claims?.flatMap((c) => resolveClaim(c, ctx, fill)) ?? []
+    ? (chosen as { claims?: typeof block.options.record.claims }).claims?.flatMap((claim, index) => {
+      // Deed claims are saved as Chronicle evidence, not merely displayed
+      // prose. Freeze the reviewed variant at commit time using the same
+      // stable identity as the #411 content worklist.
+      const reviewed = claim.kind === 'deed'
+        ? {
+          ...claim,
+          text: renderProse(
+            ctx,
+            eventAddress === undefined
+              ? undefined
+              : `${eventAddress}.record.options.${option}.claims[${index}].text`,
+            claim.text,
+          ),
+        }
+        : claim;
+      return resolveClaim(reviewed, ctx, fill);
+    }) ?? []
     : [];
 
   // Find THIS firing's entry and overwrite what it says. An omission is a
