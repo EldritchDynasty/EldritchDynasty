@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
 import { chapterReplayDisposition } from '../lib/accessibility';
 
@@ -72,21 +72,24 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
-onMounted(() => {
-  /**
-   * REPLAY COMPRESSION (#258). Only the nameless opening is passive prose.
+/**
+ * REPLAY COMPRESSION (#258). Only the nameless opening is passive prose.
    * A closing is a verdict on THIS house and therefore never enters this
-   * history. Exact text is the identity on purpose: an edited variant is new
-   * prose, even when it came from the same authored Age.
-   */
-  const replay = chapterReplayDisposition(
+ * history. Exact text is the identity on purpose: an edited variant is new
+ * prose, even when it came from the same authored Age.
+ */
+function skipSeenOpening(beat: ChapterBeat): boolean {
+  return chapterReplayDisposition(
     readingStorage(),
     props.skipSeenProse,
-    props.beat.kind === 'opening'
-      ? { kind: 'opening', text: props.beat.opening.text }
+    beat.kind === 'opening'
+      ? { kind: 'opening', text: beat.opening.text }
       : { kind: 'closing' },
-  );
-  if (replay === 'skip') {
+  ) === 'skip';
+}
+
+onMounted(() => {
+  if (skipSeenOpening(props.beat)) {
     props.actions.dismissChapter();
     return;
   }
@@ -96,6 +99,19 @@ onMounted(() => {
   goOn.value?.focus();
   window.addEventListener('keydown', onKey);
 });
+
+// App keeps the same Chapter component mounted as the chapter queue shifts.
+// Checking only onMounted misses every subsequent Age opening: repeats cannot
+// be skipped and fresh wording never enters the reader's seen history.
+watch(() => props.beat, (beat) => {
+  if (skipSeenOpening(beat)) {
+    props.actions.dismissChapter();
+    return;
+  }
+  // A closing and an unseen opening both keep the dialog active. After Vue
+  // swaps the card's button, restore keyboard focus inside the active overlay.
+  goOn.value?.focus();
+}, { flush: 'post' });
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey);
