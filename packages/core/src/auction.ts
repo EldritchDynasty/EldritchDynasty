@@ -72,13 +72,24 @@ function lotId(ctx: SimCtx): string {
 export function commissionBook(ctx: SimCtx, id: string): { ok: boolean; reason?: string } {
   const w = ctx.world;
   const book = ctx.content.spellbook(id);
-  if (!book || book.tier !== 'minor') return { ok: false, reason: 'the broker can seek only a common working' };
-  if (w.library.has(id)) return { ok: false, reason: 'the house has this book already' };
+  if (!book || book.tier !== 'minor') {
+    return {
+      ok: false,
+      reason: msg(ctx, 'auction.refuse.search_not_minor', 'the broker can seek only a common working'),
+    };
+  }
+  if (w.library.has(id)) {
+    return { ok: false, reason: msg(ctx, 'auction.refuse.search_shelved', 'the house has this book already') };
+  }
   if (w.auction.upcoming.some((lot) => lot.kind === 'spellbook' && lot.refId === id)) {
-    return { ok: false, reason: 'a copy is already due at auction' };
+    return { ok: false, reason: msg(ctx, 'auction.refuse.search_due', 'a copy is already due at auction') };
   }
   if (w.treasury - BOOK_SEARCH_FEE < DEBT_FLOOR) {
-    return { ok: false, reason: `the broker asks ${BOOK_SEARCH_FEE} crowns before he leaves` };
+    return {
+      ok: false,
+      reason: msg(ctx, 'auction.refuse.search_fee', 'the broker asks {FEE} crowns before he leaves',
+        { FEE: String(BOOK_SEARCH_FEE) }),
+    };
   }
   const saleYear = w.year + BOOK_SEARCH_YEARS;
   const reserveCoin = book.price.max + 100;
@@ -235,11 +246,11 @@ export interface BidResult {
 export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency, amount: number, heirloomOffered?: string): BidResult {
   const w = ctx.world;
   const lot = w.auction.upcoming.find((l) => l.id === lotId_);
-  if (!lot) return { ok: false, reason: 'no such lot' };
+  if (!lot) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_lot', 'no such lot') };
 
   if (currency === 'heirloom') {
     if (!heirloomOffered || !w.heirlooms.has(heirloomOffered)) {
-      return { ok: false, reason: 'the house does not hold that heirloom' };
+      return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
     }
   }
 
