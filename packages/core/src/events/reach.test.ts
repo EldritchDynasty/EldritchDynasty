@@ -2813,6 +2813,7 @@ describe('authored simple positive-knowledge outcome witnesses', () => {
 
     expect(cases.map(({ event }) => String(event.id))).toEqual([
       'what_bramme_calls_a_thin_year',
+      'cousins_from_the_rimefell',
     ]);
 
     const witnessed: string[] = [];
@@ -3348,6 +3349,35 @@ describe('#334 Bramme margin consequence witnesses', () => {
     expect(keys.sort()).toEqual([
       outcomeKey('the_bramme_margin_returns', 'acknowledge_the_correction', 'bramme_knows'),
       outcomeKey('the_bramme_margin_returns', 'refuse_the_answer', 'silence_recorded'),
+    ].sort());
+  });
+});
+
+describe('#334 Wardenship record consequence witnesses', () => {
+  it('reads the held Wardenship and executes both answers through the real choice path', () => {
+    const event = content.events.find((entry) => String(entry.id) === 'a_page_in_our_own_hand');
+    if (!event || event.interaction.kind !== 'choice') throw new Error('Wardenship follow-up missing');
+    const keys: string[] = [];
+    for (const choice of event.interaction.choices) {
+      const ctx = fixture(33411);
+      ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES[event.frequency].minGeneration);
+      // The gate is the reader: without the Wardenship the scene cannot come due.
+      expect(evalCondition(event.conditions, ctx)).toBe(false);
+      ctx.world.flags.set('the_house_held_the_wardenship', true);
+      expect(evalCondition(event.conditions, ctx)).toBe(true);
+      for (const outcome of choice.outcomes) {
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: makeRng(33412),
+        });
+        expect(result.ok, result.reason).toBe(true);
+        if (result.key) keys.push(result.key);
+      }
+    }
+    expect(keys.sort()).toEqual([
+      outcomeKey('a_page_in_our_own_hand', 'ask_for_it_closed', 'left_closed'),
+      outcomeKey('a_page_in_our_own_hand', 'let_it_be_heard', 'heard_again'),
     ].sort());
   });
 });
