@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
@@ -51,6 +52,8 @@ const CONTENT = join(REPO, 'packages/content');
 /** Set by `npm run shell` to the running Vite server. Absent in a built app. */
 const DEV_SERVER = process.env.ED_DEV_SERVER;
 const MOD_EDITOR = process.env.ED_MOD_EDITOR === '1' || process.argv.includes('--mod-editor');
+const NATIVE_SMOKE = process.argv.includes('--smoke-save') ? 'save'
+  : process.argv.includes('--smoke-resume') ? 'resume' : null;
 
 let steamAchievements;
 let steamModuleError;
@@ -79,7 +82,14 @@ if (app.isPackaged) {
   // the Mod Editor writes <userData>/mods/content and the game reads that exact
   // directory. Letting Electron derive userData from each product name would
   // split the two applications at the filesystem seam they exist to share.
-  const profile = desktopUserData(app.getPath('appData'));
+  // The installed-artifact smoke uses a private profile shared across two
+  // executable processes. Never let diagnostic runs mutate a player's saves.
+  if (NATIVE_SMOKE && (!process.env.ED_SMOKE_PROFILE || !process.env.ED_SMOKE_NONCE)) {
+    throw new Error('native smoke requires an isolated profile and nonce');
+  }
+  const profile = NATIVE_SMOKE
+    ? resolve(process.env.ED_SMOKE_PROFILE)
+    : desktopUserData(app.getPath('appData'));
   mkdirSync(profile, { recursive: true });
   app.setPath('userData', profile);
 }
@@ -346,9 +356,73 @@ function smokeTest(win) {
   setTimeout(() => done(false, 'no load event in 30s'), 30_000);
 }
 
+/**
+ * A real-game cold-relaunch proof (#882): the client already implements
+ * save/resume via its own GameSession seam (shared with the iOS smoke). Electron
+ * transports the command and hashes the *persisted* client snapshot; it does
+ * not simulate, invent a save, or decide whether a save is valid.
+ *
+ * The explicit ready handshake comes from the client-installed listener,
+ * rather than an early page-load event. Evidence goes to the isolated userData
+ * root synchronously before exit so a GUI exe need not expose stdout pipes.
+ */
+function nativeSmokeTest(win) {
+  let finished = false;
+  const timeout = setTimeout(() => finish(false, 'no terminal client smoke result in 180s'), 180_000);
+  const finish = (ok, reason, evidence) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timeout);
+    ipcMain.removeListener('ed:smoke-ready', ready);
+    ipcMain.removeListener('ed:smoke-result', answeredSmoke);
+    if (ok) {
+      try {
+        writeFileSync(join(app.getPath('userData'), 'smoke-evidence.json'), JSON.stringify(evidence), 'utf8');
+      } catch (error) {
+        console.error('native smoke evidence write failed:', error);
+        app.exit(1);
+        return;
+      }
+    }
+    console.log(ok ? `native shell smoke ok: ${reason}` : `native shell smoke FAILED: ${reason}`);
+    app.exit(ok ? 0 : 1);
+  };
+  const ready = (event) => {
+    if (event.sender !== win.webContents || finished) return;
+    const command = NATIVE_SMOKE === 'save'
+      ? { kind: 'save', seed: 882, years: 12 }
+      : { kind: 'resume' };
+    win.webContents.send('ed:smoke-command', command);
+  };
+  const answeredSmoke = (event, reply) => {
+    if (event.sender !== win.webContents || finished) return;
+    if (!reply || reply.command !== NATIVE_SMOKE || reply.ok !== true) {
+      finish(false, reply?.error ?? 'wrong command or failed client smoke result');
+      return;
+    }
+    const snapshot = reply.snapshot?.snapshot;
+    const year = reply.snapshot?.year;
+    if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)
+      || !Number.isSafeInteger(year) || year !== snapshot.year) {
+      finish(false, 'client supplied no valid persisted run snapshot and year');
+      return;
+    }
+    const sha256 = createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
+    finish(true, `${NATIVE_SMOKE} ${year} ${sha256}`, {
+      command: NATIVE_SMOKE, ok: true, nonce: process.env.ED_SMOKE_NONCE, year, sha256,
+    });
+  };
+  ipcMain.on('ed:smoke-ready', ready);
+  ipcMain.on('ed:smoke-result', answeredSmoke);
+  win.webContents.on('did-fail-load', (_event, code, description) =>
+    finish(false, `renderer failed to load: ${description} (${code})`));
+  win.on('closed', () => finish(false, 'window closed before smoke result'));
+}
+
 app.whenReady().then(() => {
   const win = createWindow();
-  if (process.argv.includes('--smoke')) smokeTest(win);
+  if (NATIVE_SMOKE) nativeSmokeTest(win);
+  else if (process.argv.includes('--smoke')) smokeTest(win);
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
