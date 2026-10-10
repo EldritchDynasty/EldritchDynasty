@@ -373,3 +373,255 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_man_who_asked_at_the_gate, accuracy: 0.55 }
+
+proseVariants:
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].title"
+    of: df6a8a9084ea7adc
+    plainenglish: >-
+      The Travelling Wayfolk Arrive
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].body"
+    of: 51bb58ca9376664e
+    plainenglish: >-
+      Thirty Wayfolk arrive with nine wagons from the Bramme fair. They ask for supper and a
+      place to sleep. They travel throughout the Settled Lands and talk to people
+      everywhere. If the house feeds them, their songs may praise it for a century. If the
+      house turns them away, the songs will tell another version. The house cannot change
+      the songs later by paying for them.
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].interaction.choices[id=hall_and_supper].label"
+    of: b8594c083293464c
+    plainenglish: >-
+      Let them sleep in the hall, feed them supper, and keep the fires burning.
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].interaction.choices[id=hall_and_supper].outcomes[id=sung_well].text"
+    of: ddf1fe1bc4d5b737
+    plainenglish: >-
+      Their harp sounds better than those owned by the nobility, although no noble would
+      admit it. That night they sing two songs about the province. One almost mentions this
+      house. When they leave the next morning, their version praises the house for its
+      generosity and nothing else.
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].interaction.choices[id=the_barn].label"
+    of: 14d1721f2c5ce9ab
+    plainenglish: >-
+      Give them the barn and bread, and send them on their way in the morning.
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].interaction.choices[id=the_barn].outcomes[id=barn].text"
+    of: 811959d13240a2bd
+    plainenglish: >-
+      The family does not turn them away, but it does not invite them into the hall. The
+      Wayfolk have remembered this distinction for four hundred years. They leave quietly at
+      first light.
+  - address: "content:events/roads.yaml#events[id=the_wayfolk_at_the_gate].interaction.choices[id=the_barn].outcomes[id=the_stave_that_travels].text"
+    of: a10b4afa8c46f766
+    plainenglish: >-
+      Two weeks later, one of the Wayfolk sings at Bramme about a cold house on a hill. Its
+      fires were down to three, and a grandmother refused to leave the west wing. The song
+      does not accuse anyone, but it does not flatter the house. It will take fifteen years
+      to reach Caster and fifty years to lose the names.
+  - address: "content:events/roads.yaml#events[id=the_third_price].title"
+    of: ab3ee3988d924ecc
+    plainenglish: >-
+      The Tinker's Third Price
+  - address: "content:events/roads.yaml#events[id=the_third_price].body"
+    of: 71d11690b93da034
+    plainenglish: >-
+      A tinker always names three prices. Custom says the third is the true price, and
+      bargaining after that brings bad luck. Refusing him water is considered worse.
+      Everyone follows the custom, even though nobody explains why. This year he brings his
+      pots and a small flat box of blackened iron. He found it in the peat at the Lag, and
+      its lid will not open. He first asks four marks, then two. After watching {BUYER}, he
+      asks eleven.
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=pay_the_third].label"
+    of: 85179269dbcb677d
+    plainenglish: >-
+      Pay eleven marks, the third price, and ask no questions.
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=pay_the_third].outcomes[id=bought_it].text"
+    of: ae3386a6679fc9f2
+    plainenglish: >-
+      The tinker takes eleven marks and the water he is owed. He leaves on the Bramme road
+      before noon. Three days later, the lid opens easily in the second cellar. The box
+      contains only dry peat. The house keeps it.
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=send_him_on].label"
+    of: b43602ed517dfa29
+    plainenglish: >-
+      Give him water, but do not buy the box.
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=send_him_on].outcomes[id=sent_on].text"
+    of: e6287e6f2a488663
+    plainenglish: >-
+      He stands in the yard to drink the water. That is normal for a tinker and is not an
+      insult. He takes the box to Hesk and sells it for nine marks. By Frostfall the
+      returning story says the box was opened and something was inside. By the Greening
+      fair, the story says it contained a hand.
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].title"
+    of: 5e24047a11514b46
+    plainenglish: >-
+      The Charcoal Burners Saw Something
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].body"
+    of: fa9136430c4bfd97
+    plainenglish: >-
+      Charcoal burners sleep beside their fires during the burning season. They are often
+      the only people awake at night in a remote part of the province. Courts give their
+      testimony no weight, although they see many things. In Smoke, two burners come to the
+      yard and ask whether {SEEN} was in the west wood four nights earlier, about an hour
+      before dawn. They ask carefully without finishing their question.
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].interaction.choices[id=answer_them].label"
+    of: 1b2e755fa6e117bb
+    plainenglish: >-
+      Tell them directly what happened.
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].interaction.choices[id=answer_them].outcomes[id=answered].text"
+    of: 2fe4de4b651d613f
+    plainenglish: >-
+      The answer is yes, and the reason is ordinary and true. The charcoal burners are
+      visibly relieved. They take the explanation home, and the rumour dies where it began.
+      Four minutes of explanation in the yard have bought goodwill worth eleven marks a
+      year.
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].interaction.choices[id=pay_them_off].label"
+    of: cafde9f533ec1081
+    plainenglish: >-
+      Give them a barrel, but no explanation.
+  - address: "content:events/roads.yaml#events[id=the_colliers_are_awake].interaction.choices[id=pay_them_off].outcomes[id=paid].text"
+    of: e0d09928cdb5b93c
+    plainenglish: >-
+      They accept the barrel, but they also remember that nobody answered them. Back in the
+      wood, they have little to do before Thaw except discuss what the silence meant. When
+      the charcoal burners emerge, they are covered in soot and certain of their
+      conclusions.
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].title"
+    of: 4183f7a03ebb3274
+    plainenglish: >-
+      The Boat Families Who Keep Cargo Secret
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].body"
+    of: a61a62e7be0e0f63
+    plainenglish: >-
+      These boat families are born, marry, and die aboard their vessels. They speak a
+      dialect nobody on shore understands, and their guild does not admit outsiders. For a
+      fee, they will carry something down the Wend without opening it. They pretend not to
+      remember cargo, but privately remember it very well. The journey takes two days to the
+      Lag and four days back. {HEAD} has something in the second cellar that would be safer
+      forty miles away.
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].interaction.choices[id=send_it_down].label"
+    of: aed1832e8f5898c2
+    plainenglish: >-
+      Pay the boat families to take it downstream.
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].interaction.choices[id=send_it_down].outcomes[id=carried].text"
+    of: 25d7dfca56d70bee
+    plainenglish: >-
+      The house pays four marks for a bill that lists no cargo. The crate leaves on
+      Tuesday's tide. The woman steering does not ask its weight aloud, and deliberately
+      gives the reeve the wrong figure. At the Lag, people accept things without discussing
+      them again. That discretion is what the house paid for.
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].interaction.choices[id=keep_it_here].label"
+    of: 5d4d5438f76d316c
+    plainenglish: >-
+      Keep it in the cellar rather than lose control of it.
+  - address: "content:events/roads.yaml#events[id=the_boat_that_does_not_open_it].interaction.choices[id=keep_it_here].outcomes[id=kept].text"
+    of: a6d11254aa756128
+    plainenglish: >-
+      The object stays behind bricks in the second cellar. The wall has been opened and
+      closed before and will be again. The boat woman waits three days at the landing for a
+      cargo that never arrives. She asks the reeve about it twice, although she has never
+      asked about any cargo before.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].title"
+    of: 2aff33ace1172580
+    plainenglish: >-
+      News From the Cattle Drovers
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].body"
+    of: 6ac044a670ec745a
+    plainenglish: >-
+      The Wayfolk carry songs, but cattle drovers carry news. Their herds travel ten miles a
+      day, so news usually arrives two months after an event. This year's news is a
+      question. Two hundred miles south, a man has been paying people to identify a family
+      in the Nethering from a description rather than a name. The drover does not think the
+      question is important, but repeats it anyway.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].label"
+    of: f8810bf3115cd59f
+    plainenglish: >-
+      Pay the drover to investigate on his return journey.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].outcomes[id=he_asks].text"
+    of: 10dfc40ceb8102c0
+    plainenglish: >-
+      The house pays two marks now and two in Highsun. The following year the drover reports
+      that the man was Braccish, or dressed that way. He paid with weighed coins and stopped
+      asking questions in Smoke. Nobody remembers his face, but three people remember his
+      coin weights.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].outcomes[id=nothing_comes_back].text"
+    of: c3ffcaa77d1c6633
+    plainenglish: >-
+      The house pays two marks now and two in Highsun, but receives no information. The
+      drover apologises after taking the money. He returns each year with more news that is
+      barely worth four marks.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=let_it_go].label"
+    of: f7d0e277a0a6b8eb
+    plainenglish: >-
+      Ignore the question. A description is not a name.
+  - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=let_it_go].outcomes[id=let_go].text"
+    of: 6a1e656ea8327daa
+    plainenglish: >-
+      Ignoring the question would be right nine times out of ten. The house cannot know
+      whether this is the exception. The same drover families use the road every year, and
+      nobody asks them about the man again.
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].title"
+    of: 0b3a8f9ef75e7e4a
+    plainenglish: >-
+      Traders From Rimefell Bring a Book
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].body"
+    of: d198341c98b6ea48
+    plainenglish: >-
+      The Rimefell traders arrive before the mountain passes close. They bring ore, horn,
+      coarse wool, and horses. They speak Ambric poorly but state prices precisely, and
+      leave within ten days. This year one trader has a bound object wrapped in oiled cloth.
+      He will not name a price until the yard is empty. It is a quarter of a book, forty
+      leaves, written in a script nobody at Ardwen can read. He has no paperwork explaining
+      how he obtained it in the mountains.
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].interaction.choices[id=buy_the_quarter].label"
+    of: b72c97203f155b3c
+    plainenglish: >-
+      Buy the forty leaves.
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].interaction.choices[id=buy_the_quarter].outcomes[id=bought_the_leaves].text"
+    of: 90c0f800ca79c9cc
+    plainenglish: >-
+      After an hour of bargaining with numbers, the house pays thirty-one crowns. The leaves
+      go into storage without being listed. The family now owns part of a book and cannot
+      explain its ownership to a court if questioned.
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].interaction.choices[id=send_him_to_cawdry].label"
+    of: b94fecaa71e33f96
+    plainenglish: >-
+      Direct the trader to the bookseller at Cawdry instead.
+  - address: "content:events/roads.yaml#events[id=the_rimefell_men_in_frostfall].interaction.choices[id=send_him_to_cawdry].outcomes[id=sent_to_cawdry].text"
+    of: 62362cd427663438
+    plainenglish: >-
+      The Cawdry bookseller will probably make a long, confidently wrong written assessment.
+      The house keeps its thirty-one crowns and avoids questions about ownership. Eleven
+      years later, a catalogue arrives from Cawdry describing the leaves. Someone has
+      eventually learned how to read them.
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].title"
+    of: de4a02775dc1a633
+    plainenglish: >-
+      A Beggar With Another Parish's Badge
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].body"
+    of: cd553fb96607ef5d
+    plainenglish: >-
+      A man may legally beg only in his own parish while wearing its badge. Begging
+      elsewhere counts as vagrancy and can lead to the stocks. The man at Ardwen's gate
+      wears a badge from a parish forty miles away. He has clearly walked that distance.
+      {KIN} notices the badge and realises the man is not asking for bread. He wants to know
+      whether this is the house whose grates went cold during the great frost. He has asked
+      the same question at gates along the road.
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=feed_and_ask].label"
+    of: 291d938ddd9bd1f1
+    plainenglish: >-
+      Feed him and ask where he heard the story.
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=feed_and_ask].outcomes[id=he_tells].text"
+    of: a3dfafa35f4f6117
+    plainenglish: >-
+      Nobody sent him. He heard the story in a Wayfolk song at Coln, from a girl who learned
+      it from her father. He walked forty miles along a bad road because the song was his
+      only guide. The family feeds him and sends him back, and he leaves.
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=the_stocks].label"
+    of: 187fcab34427b11f
+    plainenglish: >-
+      Hand him to the reeve for begging outside his parish.
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=the_stocks].outcomes[id=stocked].text"
+    of: e0c3ca467a988382
+    plainenglish: >-
+      He spends two days in the stocks at Wick. Afterwards, an embarrassed man escorts him
+      to his parish boundary. The punishment follows the law exactly, and the whole village
+      sees it. For both nights he is held, people repeat his question at the alehouse in
+      front of everyone.
