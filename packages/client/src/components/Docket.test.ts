@@ -19,7 +19,7 @@ import Chapter from './Chapter.vue';
 import Outcome from './Outcome.vue';
 import Standing from './Standing.vue';
 import Table from './Table.vue';
-import type { ChapterBeat, GameActions } from '../lib/game';
+import { futureOf, type ChapterBeat, type GameActions } from '../lib/game';
 import { applyAccessibility, DEFAULT_ACCESSIBILITY } from '../lib/accessibility';
 import { revealTransition } from '../lib/reveal';
 import { installPseudoLocalisation } from '../pseudo-loc';
@@ -486,6 +486,43 @@ describe('the docket draws what it is handed', () => {
     expect(w.text()).toContain('Aldren’s house carried the missing leaf away in 1141.');
     expect(futures[2]!.text()).toContain('Mystery');
     expect(futures[2]!.text()).toContain('thin evidence');
+  });
+
+  it('shows translated confidence from the current Match reading and restores Original fallback (#992)', async () => {
+    const decision = matchDecision();
+    if (decision.kind !== 'match') throw new Error('fixture is the wrong kind');
+    // The first card has a tied blood/continuity score; the last remains uncertain.
+    decision.cards[0] = { ...decision.cards[0]!, line: 'fertile', lineSeen: 3 };
+    const actions = spyActions();
+    let plain = true;
+    actions.futureOf = vi.fn((
+      card: Parameters<GameActions['futureOf']>[0],
+      priorities?: Parameters<GameActions['futureOf']>[1],
+    ) => {
+      const reading = futureOf(card, priorities);
+      if (!plain) return { ...reading, aside: undefined }; // legacy/no-catalogue fallback
+      return {
+        ...reading,
+        ...(reading.confidence === 'mixed' ? { aside: 'may also strengthen the family line' } : {}),
+        ...(reading.confidence === 'uncertain' ? { aside: 'little information' } : {}),
+      };
+    });
+
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+    const headings = () => w.findAll('.future-head').map((node) => node.text());
+    expect(w.findAll('[data-future]').map((node) => node.attributes('data-future')))
+      .toEqual(['blood', 'continuity', 'mystery']);
+    expect(headings()[0]).toContain('may also strengthen the family line');
+    expect(headings()[0]).not.toContain('mixed with continuity');
+    expect(headings()[2]).toContain('little information');
+    expect(headings()[2]).not.toContain('thin evidence');
+
+    // Reader-mode changes only require the already-supported reactive re-read.
+    plain = false;
+    await w.setProps({ ageMatchPriorities: ['standing'] });
+    expect(headings()[0]).toContain('mixed with continuity');
+    expect(headings()[2]).toContain('thin evidence');
+    w.unmount();
   });
 
   it('still takes the Match card whose future the player pressed', async () => {

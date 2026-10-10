@@ -175,6 +175,9 @@ function displayedFuture(card: MatchCard) {
 
 function futureAside(card: MatchCard): string | undefined {
   const reading = displayedFuture(card);
+  // Render the core's selected words. Older action mocks without the new
+  // presentation field retain the exact Original wording as a fallback.
+  if (reading.aside !== undefined) return reading.aside;
   if (reading.confidence === 'mixed' && reading.competing) {
     return `mixed with ${reading.competing}`;
   }

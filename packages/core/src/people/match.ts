@@ -171,6 +171,8 @@ export interface MatchFutureReading {
   reasons: string[];
   /** The second reading where two visible cases are nearly tied. */
   competing?: MatchFutureKind;
+  /** Presentation-only confidence qualifier, selected from stable core messages. */
+  aside?: string;
 }
 
 /**
@@ -349,6 +351,16 @@ export function matchFuture(
   const confidence: MatchFutureConfidence = winner.kind === 'mystery' || winner.score < 2
     ? 'uncertain'
     : mixed ? 'mixed' : 'clear';
+  // Keep the competing kind as data. Its lower-case reader name and the
+  // qualifier are separate message identities, so neither translation has to
+  // inspect English or reinterpret the scorer's decision.
+  const aside = confidence === 'mixed'
+    ? renderText('match.future.confidence.mixed', 'mixed with {competing}', {
+      competing: renderText(`match.future.competing.${runner.kind}`, runner.kind),
+    })
+    : confidence === 'uncertain'
+      ? renderText('match.future.confidence.uncertain', 'thin evidence')
+      : undefined;
 
   return {
     kind: winner.kind,
@@ -357,6 +369,7 @@ export function matchFuture(
     reasons: winner.reasons.slice(0, 2)
       .map((entry) => renderText(`match.future.reason.${entry.key}`, entry.original, entry.values)),
     ...(mixed ? { competing: runner.kind } : {}),
+    ...(aside === undefined ? {} : { aside }),
   };
 }
 
