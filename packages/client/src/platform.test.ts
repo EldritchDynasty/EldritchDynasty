@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -894,5 +894,65 @@ describe('mobile durable storage', () => {
     expect(files.data.has('eldritch/saves/autosave.json')).toBe(false);
     expect(preferences.data.has('ed:save:autosave')).toBe(false);
     await expect(store.readSave('autosave')).resolves.toBeNull();
+  });
+});
+
+
+describe('browser save export cleanup (Closes #893)', () => {
+  it('releases the save blob on success, failed anchor creation and failed download dispatch', async () => {
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:eldritch-export');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const links: Array<{ href: string; download: string }> = [];
+    let failAt: 'none' | 'element' | 'click' = 'none';
+
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        createElement(tag: string) {
+          expect(tag).toBe('a');
+          if (failAt === 'element') throw new Error('anchor creation refused');
+          const link = {
+            href: '',
+            download: '',
+            click() {
+              if (failAt === 'click') throw new Error('download dispatch refused');
+            },
+          };
+          links.push(link);
+          return link;
+        },
+      },
+    });
+
+    try {
+      const host = browserPlatform();
+      await expect(host.exportSave({ year: 1220, format: 28 })).resolves.toBeUndefined();
+      expect(links[0]).toMatchObject({
+        href: 'blob:eldritch-export',
+        download: 'eldritch-1220.json',
+      });
+      const blob = create.mock.calls[0]?.[0] as Blob;
+      expect(blob.type).toBe('application/json');
+      await expect(blob.text()).resolves.toBe(JSON.stringify({ year: 1220, format: 28 }, null, 2));
+      expect(revoke).toHaveBeenCalledTimes(1);
+      expect(revoke).toHaveBeenLastCalledWith('blob:eldritch-export');
+
+      failAt = 'element';
+      await expect(host.exportSave({ year: 1221 })).rejects.toThrow('anchor creation refused');
+      expect(revoke).toHaveBeenCalledTimes(2);
+      expect(revoke).toHaveBeenLastCalledWith('blob:eldritch-export');
+
+      failAt = 'click';
+      await expect(host.exportSave({ year: 1222 })).rejects.toThrow('download dispatch refused');
+      expect(revoke).toHaveBeenCalledTimes(3);
+      expect(revoke).toHaveBeenLastCalledWith('blob:eldritch-export');
+      expect(create).toHaveBeenCalledTimes(3);
+    } finally {
+      create.mockRestore();
+      revoke.mockRestore();
+      if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
+      else Reflect.deleteProperty(globalThis, 'document');
+    }
   });
 });
