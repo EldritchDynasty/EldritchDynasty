@@ -180,7 +180,8 @@ function decisionMapFor(audit: ChoiceAudit, decisions: ChoiceDecisionFile) {
       throw new Error(`invalid choice decision at index ${index}: expected an object`);
     }
     const decision = raw as ChoiceMemoryDecision;
-    if (typeof decision.kind !== 'string' || typeof decision.key !== 'string' || !decision.key.trim()) {
+    if (!['flag', 'knowledge', 'arc_flag'].includes(decision.kind)
+      || typeof decision.key !== 'string' || !decision.key.trim()) {
       throw new Error(`invalid choice decision at index ${index}: kind and key must be non-empty strings`);
     }
     if (!['read', 'delete', 'self_expression'].includes(decision.disposition)) {
