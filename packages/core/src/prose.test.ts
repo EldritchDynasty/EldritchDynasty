@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { coreMessageAddress, msg } from './messages.js';
 import { outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome } from './prose.js';
-import { loadBundle } from '@ed/content';
+import { loadBundle, loadContent } from '@ed/content';
+import { canonical } from './save.js';
 import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
 import {
@@ -18,6 +19,64 @@ const CHOICE_LABEL_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].label';
 const RECORD_SUBJECT_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.subject';
+
+describe('live Age names in the selected prose mode (#921)', () => {
+  function fixture() {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    ctx.world.year = 1080;
+    ctx.world.age.active = [
+      { age: 'the_wars', began: 1060, named: true, namedAt: 1070, paid: { standing: false } },
+      { age: 'the_plague', began: 1079, named: false, paid: { standing: false } },
+    ];
+    ctx.world.age.ended = [
+      { age: 'the_long_peace', began: 1042, ended: 1050, named: true, namedAt: 1045 },
+      { age: 'the_withering', began: 1051, ended: 1055, named: false },
+    ];
+    const variants = ctx.content.ages.map((age) => ({
+      address: `content:${ctx.content.sourceOf(age.id)}#ages[id=${age.id}].name`,
+      of: proseOriginalHash(age.name), plainenglish: `Plain: ${age.name}`,
+    }));
+    setProseVariants(ctx, variants);
+    return { session, ctx, variants };
+  }
+
+  const ageMisses = (session: ReturnType<typeof newGame>) => missingPlainEnglish(session.ctx)
+    .filter((address) => address.startsWith('content:ages/') && address.endsWith('.name'));
+
+  it('switches named active and ended Ages while leaving unnamed Ages and saved history alone', () => {
+    const { session, ctx } = fixture();
+    const original = session.view().ages;
+    const saved = canonical(saveGame(ctx));
+    expect(original.map((age) => age.name)).toEqual(['The Long Peace', undefined, 'The Wars', undefined]);
+    session.setProseMode('plainenglish');
+    const plain = session.view().ages;
+    expect(plain).toEqual(original.map((age) => age.name === undefined
+      ? age : { ...age, name: `Plain: ${age.name}` }));
+    expect(ageMisses(session)).toEqual([]);
+    expect(canonical(saveGame(ctx))).toBe(saved);
+    session.setProseMode('original');
+    expect(session.view().ages).toEqual(original);
+    expect(plain[0]!.name).toBe('Plain: The Long Peace');
+    expect(original[0]!.name).toBe('The Long Peace');
+  });
+
+  it.each(['missing', 'stale', 'tokens'] as const)('reports %s named variants without exposing unnamed Ages', (failure) => {
+    const { session, ctx, variants } = fixture();
+    const original = session.view().ages;
+    setProseVariants(ctx, failure === 'missing' ? [] : variants.map((variant) => ({
+      ...variant,
+      ...(failure === 'stale' ? { of: proseOriginalHash('old name') }
+        : { plainenglish: `${variant.plainenglish} {EXTRA}` }),
+    })));
+    session.setProseMode('plainenglish');
+    expect(session.view().ages).toEqual(original);
+    expect(ageMisses(session)).toEqual([
+      'content:ages/ages.yaml#ages[id=the_long_peace].name',
+      'content:ages/ages.yaml#ages[id=the_wars].name',
+    ]);
+  });
+});
 
 function fixture() {
   const bundle = loadBundle();

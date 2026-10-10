@@ -1303,7 +1303,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         began: a.began,
         register: def.register,
         ...(a.ended !== undefined ? { ended: a.ended } : {}),
-        ...(a.named ? { name: def.name } : {}),
+        ...(a.named ? { name: proseForContentField(ctx, 'ages', a.age, 'name', def.name) } : {}),
       }];
     }),
     agePressures: strategicPressures(ctx),
