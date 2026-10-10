@@ -12,6 +12,7 @@ const line: AdviserAdvice = {
 };
 
 const view = {
+  year: 1060,
   house: 'house_gearithy',
   halls: [
     { id: 'main', name: 'the main hall', isSeat: true, grievance: 0, members: [{ id: 'head', head: true }] },
@@ -55,6 +56,7 @@ describe('tree and hall counsel', () => {
       ...view,
       halls: view.halls.map((hall) => hall.isSeat ? hall : { ...hall, grievance: 24 }),
     };
+    expect(changed.year).toBe(view.year);
     await wrapper.setProps({ view: changed });
 
     expect(wrapper.findAll('blockquote')).toHaveLength(0);
