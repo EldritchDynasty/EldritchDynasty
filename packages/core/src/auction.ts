@@ -7,6 +7,7 @@ import { acquireLibraryCopy } from './people/library.js';
 import { grantHeirloom, transferHeirloom } from './people/heirlooms.js';
 import { relationshipThreads } from './relationship-threads.js';
 import { msg } from './messages.js';
+import { proseForContentField } from './prose.js';
 
 /**
  * THE AUCTION (issue #17) — the largest single subsystem in the tracker, and
@@ -103,7 +104,7 @@ export function commissionBook(ctx: SimCtx, id: string): { ok: boolean; reason?:
     year: w.year, weight: 'line', named: false,
     text: msg(ctx, 'auction.book_search',
       'The house paid a Sarrow broker {FEE} crowns to seek {BOOK}. He promised a sale in {YEAR}, at a reserve of {RESERVE}.',
-      { FEE: String(BOOK_SEARCH_FEE), BOOK: book.name, YEAR: String(saleYear), RESERVE: String(reserveCoin) }),
+      { FEE: String(BOOK_SEARCH_FEE), BOOK: proseForContentField(ctx, 'spellbooks', book.id, 'name', book.name), YEAR: String(saleYear), RESERVE: String(reserveCoin) }),
   });
   return { ok: true };
 }
@@ -401,20 +402,26 @@ function grantLot(ctx: SimCtx, lot: AuctionLot): void {
   const w = ctx.world;
   if (lot.kind === 'spellbook') {
     acquireLibraryCopy(ctx, lot.refId);
+    const book = ctx.content.spellbook(lot.refId);
+    const bookName = book ? proseForContentField(ctx, 'spellbooks', book.id, 'name', book.name) : lot.refId;
     w.chronicle.push({
       year: w.year, weight: 'line',
       text: msg(ctx, 'auction.bought_book', 'The house bought a copy of {BOOK} at auction.',
-        { BOOK: ctx.content.spellbook(lot.refId)?.name ?? lot.refId }),
+        { BOOK: bookName }),
       named: false,
     });
     return;
   }
   if (lot.kind === 'heirloom') {
     grantHeirloom(ctx, lot.refId);
+    const heirloom = ctx.content.heirloom(lot.refId);
+    const heirloomName = heirloom
+      ? proseForContentField(ctx, 'heirlooms', heirloom.id, 'name', heirloom.name)
+      : lot.refId;
     w.chronicle.push({
       year: w.year, weight: 'line',
       text: msg(ctx, 'auction.bought_heirloom', 'The house bought {HEIRLOOM} at auction.',
-        { HEIRLOOM: ctx.content.heirloom(lot.refId)?.name ?? lot.refId }),
+        { HEIRLOOM: heirloomName }),
       named: false,
     });
     return;
@@ -493,7 +500,8 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
 
     if (rival && rival.amount >= lot.reserveCoin) {
       w.auction.history.push({ lot, year: w.year, winner: 'rival', winningHouse: rival.house });
-      const seller = ctx.content.house(rival.house)?.name ?? rival.house;
+      const house = ctx.content.house(rival.house);
+      const seller = house ? proseForContentField(ctx, 'houses', house.id, 'name', house.name) : rival.house;
 
       // A RIVAL WITH THE EVIDENCE IS HOW A LIE GETS PROVEN (issue #74).
       //
