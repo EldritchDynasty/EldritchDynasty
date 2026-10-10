@@ -426,7 +426,7 @@ describe('desktop user content', () => {
   function outsideWithYaml() {
     const outside = mkdtempSync(join(tmpdir(), 'ed-external-content-'));
     outsideRoots.push(outside);
-    writeFileSync(join(outside, 'secret.yaml'), 'outside: secret\\n');
+    writeFileSync(join(outside, 'secret.yaml'), 'outside: secret\n');
     return outside;
   }
 
@@ -452,7 +452,7 @@ describe('desktop user content', () => {
     const outside = mkdtempSync(join(tmpdir(), 'ed-external-mods-'));
     outsideRoots.push(outside);
     mkdirSync(join(outside, 'content'));
-    writeFileSync(join(outside, 'content', 'secret.yaml'), 'outside: secret\\n');
+    writeFileSync(join(outside, 'content', 'secret.yaml'), 'outside: secret\n');
     if (!linkDirectory(outside, join(userData, 'mods'))) return;
 
     expect(() => readUserContent(userContentRoot(userData)))
@@ -472,7 +472,7 @@ describe('desktop user content', () => {
     const profile = join(userData, 'real-profile');
     const root = userContentRoot(profile);
     mkdirSync(root, { recursive: true });
-    writeFileSync(join(root, 'private.yaml'), 'outside: secret\\n');
+    writeFileSync(join(root, 'private.yaml'), 'outside: secret\n');
     const linkedProfile = join(userData, 'linked-profile');
     if (!linkDirectory(profile, linkedProfile)) return;
 
@@ -495,11 +495,11 @@ describe('desktop user content', () => {
   it('continues skipping symlinks within an ordinary content tree', () => {
     const root = userContentRoot(userData);
     mkdirSync(join(root, 'events'), { recursive: true });
-    writeFileSync(join(root, 'events', 'local.yaml'), 'local: true\\n');
+    writeFileSync(join(root, 'events', 'local.yaml'), 'local: true\n');
     const outside = outsideWithYaml();
     if (!linkDirectory(outside, join(root, 'linked-events'))) return;
 
-    expect(readUserContent(root)).toEqual({ 'events/local.yaml': 'local: true\\n' });
+    expect(readUserContent(root)).toEqual({ 'events/local.yaml': 'local: true\n' });
   });
 
   it('reads YAML recursively with content-relative keys and ignores other files', () => {
