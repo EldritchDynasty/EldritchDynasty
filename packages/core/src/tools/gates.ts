@@ -29,7 +29,7 @@ import { TEST_FAMILIES } from './testFamilies.js';
 import { resolveSlots } from '../events/slots.js';
 import { makeRng } from '../rng.js';
 import { declaredOutcomes, outcomeKey } from '../events/reach.js';
-import { gateLadder } from './ladder-gate.js';
+import { gateLadder, ladderPolicyMatrix } from './ladder-gate.js';
 import { playGateBatch } from './gate-batch.js';
 import { runFireRateGate, type FireRateGateOptions } from './fire-rate-gate.js';
 import { gateWar } from './war-gate.js';
@@ -680,6 +680,22 @@ function ladderSamples(source: Source, runs: number, years: number, every: numbe
   return samples;
 }
 
+/** A witnessed strategy can clear a floor even when ordinary play never buys it. */
+export function judgeLadderFloor(
+  floor: number, ordinaryShare: number, belowStanding: number,
+  ordinaryCeiling: number | undefined, policyPeak?: number,
+): 'reached' | 'stale' | 'dead' | 'unproven' {
+  if (ordinaryShare > 0 || (policyPeak !== undefined && policyPeak >= floor)) return 'reached';
+  if (ordinaryCeiling !== undefined && floor > Math.max(ordinaryCeiling, policyPeak ?? 0)) return 'stale';
+  return belowStanding > 0 ? 'dead' : 'unproven';
+}
+
+/**
+ * #378 route A, owner decision 2026-10-11: Madness staleness asks whether ANY
+ * tested strategy reaches the floor. Ordinary shares/provenance stay ordinary;
+ * the existing ladder-policy matrix supplies a separately labelled witness.
+ * Mind, power, pair gates, founder bias and every gameplay floor are unchanged.
+ */
 export function gateLadderScales(
   source: Source = loadContent(),
   opts: {
@@ -739,6 +755,10 @@ export function gateLadderScales(
     minds, madnesses, powers, madnessByRoute, progressionDecisions,
     secondPowers, held, madnessHolders,
   } = ladderSamples(source, runs, years, every);
+  const policyColumns = ladderPolicyMatrix(source, {
+    seeds: BLOCKING_GATE_CONFIG.ladder.seeds.slice(0, runs), years,
+  });
+  const policyMadnessPeak = Math.max(0, ...policyColumns.flatMap((column) => column.runs.map((run) => run.madnessPeak)));
 
   const share = (values: number[], floor: number) =>
     (values.length ? 100 * values.filter((v) => v >= floor).length / values.length : 0);
@@ -747,6 +767,8 @@ export function gateLadderScales(
     `gate 9 (ladder scales): ${runs} runs x ${years}y — ${minds.length} expresser-samples`,
     '  #378 diagnostic — sampled Madness by progression route:',
   ];
+  lines.push(`  #378 reachable Madness: ordinary ${Math.max(0, ...madnesses).toFixed(1)}; `
+    + policyColumns.map((column) => `${column.policy} ${Math.max(0, ...column.runs.map((run) => run.madnessPeak)).toFixed(1)}`).join(' · '));
   const routeOrder: MadnessRoute[] = ['none', 'vessel', 'great_rite', 'unmaking'];
   for (const route of routeOrder) {
     const values = madnessByRoute[route];
@@ -857,18 +879,19 @@ export function gateLadderScales(
   // just takes what it needs.
   const judge = (
     rung: string, what: string, floor: number, pct: number,
-    belowLabel: string, belowStanding: number, ceiling: number | undefined,
+    belowLabel: string, belowStanding: number, ceiling: number | undefined, policyPeak?: number,
   ) => {
     lines.push(`    ${rung.padEnd(11)} wants ${what} ${String(floor).padStart(2)} — ${pct.toFixed(1)}% of expressers reach it`);
     if (ceiling !== undefined) judged.add(`${rung}: ${what}`);
-    if (pct > 0) return;
-    if (ceiling !== undefined && floor > ceiling) {
+    const verdict = judgeLadderFloor(floor, pct, belowStanding, ceiling, policyPeak);
+    if (verdict === 'reached') return;
+    if (verdict === 'stale') {
       stale.push({
         key: `${rung}: ${what}`,
         message: `${rung}: ${what} >= ${floor} is above the population's own measured ceiling `
-          + `(${ceiling.toFixed(1)}) — the floor has gone stale, not merely unmet`,
+          + `(${Math.max(ceiling!, policyPeak ?? 0).toFixed(1)}) — the floor has gone stale, not merely unmet`,
       });
-    } else if (belowStanding > 0) {
+    } else if (verdict === 'dead') {
       dead.push(`${rung}: ${what} >= ${floor} is cleared by nobody, and ${belowStanding} stood at ${belowLabel}`);
     } else {
       unproven.push(`${rung}: ${what} >= ${floor} untested — nobody ever stood at ${belowLabel}`);
@@ -908,7 +931,7 @@ export function gateLadderScales(
   }
   for (const [rung, floor] of Object.entries(madnessFloors)) {
     const under = below[rung as Rung];
-    judge(rung, 'madness', floor!, share(madnesses, floor!), under ?? '', standingAt(under), madnessCeiling);
+    judge(rung, 'madness', floor!, share(madnesses, floor!), under ?? '', standingAt(under), madnessCeiling, policyMadnessPeak);
   }
 
   /**
@@ -943,9 +966,9 @@ export function gateLadderScales(
    *
    * The old Demigod pair-power debt is gone with #133's approved elder rule;
    * the pair diagnostic now checks the necessary Hierophant power proxy.
-   * The remaining pin is God's Madness floor. It was measured stale at 8,
-   * 16, 24 and 32 played runs (see below); removing it requires a new
-   * measurement that actually clears the floor.
+   * God's Madness pin was an ordinary-only measurement. #378's owner-approved
+   * reachable-population check now tests the purchased route as well and
+   * removes that exemption, while continuing to print the ordinary tail.
    */
   /**
    * `god: power` WAS on this list and is not any more (issue #61, Stage E5),
@@ -971,14 +994,9 @@ export function gateLadderScales(
    * re-pinned with a fresh measurement; that is the ratchet working, not a
    * flake.
    */
-  // #344's honest founding inheritance removes the rare God-Madness tail:
-  // 32 Long Lines / 1,904 expresser-samples top out at 61.8 against the
-  // unchanged God floor of 90. #378 owns restoring that progression-side tail.
-  //
-  // Pin the measured debt rather than weakening the floor. This ledger is
-  // self-cleaning: the moment #378 makes God Madness measurable again,
-  // `stalePaidOff` below fails until this entry is removed.
-  const STALE_OWED: string[] = ['god: madness'];
+  // #378 route A retires the ordinary-only God-Madness debt. A floor above
+  // BOTH ordinary and intentional-play peaks still fails; no exemption remains.
+  const STALE_OWED: string[] = [];
   const newlyStale = stale.filter((s) => !STALE_OWED.includes(s.key));
   const staleOwedStill = stale.filter((s) => STALE_OWED.includes(s.key));
   const stalePaidOff = STALE_OWED.filter((k) => judged.has(k) && !stale.some((s) => s.key === k));

@@ -7,9 +7,9 @@ import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach,
-  gatePostFillability, gateSlotFillability, judgeZeroReach, madnessHolderRow,
+  gatePostFillability, gateSlotFillability, judgeZeroReach, madnessHolderRow, judgeLadderFloor,
 } from './tools/gates.js';
-import { firedUnderClimbing } from './tools/ladder-gate.js';
+import { firedUnderClimbing, ladderPolicyMatrix, playOnce } from './tools/ladder-gate.js';
 import { runFireRateGate } from './tools/fire-rate-gate.js';
 import { distinguishHoldingPortraits, gateLand } from './tools/land-gate.js';
 import { bloodGateInputs, canonicalBloodSeeds, gateBlood, marriagePolicyForBloodStrategy } from './tools/blood-gate.js';
@@ -795,6 +795,30 @@ describe('the gates fail when they should', () => {
  */
 describe('gate 9 asks whether anybody can clear the ladder', () => {
   const cheap = { runs: 2, years: 300, every: 50 } as const;
+
+  it('accepts a purchased Madness floor only when a measured population reaches it (#378)', () => {
+    expect(judgeLadderFloor(90, 0, 3, 61.8, 112)).toBe('reached');
+    expect(judgeLadderFloor(90, 0, 3, 61.8, 89)).toBe('stale');
+    expect(judgeLadderFloor(90, 0, 0, 61.8, 89)).toBe('stale');
+    expect(judgeLadderFloor(90, 0, 0, undefined, 89)).toBe('unproven');
+    expect(judgeLadderFloor(90, 0.1, 3, 95, 89)).toBe('reached');
+    // The witness is passed only for Madness; another quantity cannot borrow it.
+    expect(judgeLadderFloor(90, 0, 3, 61.8)).toBe('stale');
+  });
+
+  it('shares policy evidence only for the same content and run configuration', () => {
+    const options = { seeds: [4000], years: 1, bid: 600 };
+    const first = ladderPolicyMatrix(content, options);
+    expect(ladderPolicyMatrix(content, options)).toBe(first);
+    const longer = ladderPolicyMatrix(content, { ...options, years: 2 });
+    expect(longer).not.toBe(first);
+    for (const column of longer) {
+      expect(column.runs).toEqual([playOnce(content, 4000, 2, column.policy, 600)]);
+    }
+    const anotherSource = structuredClone(content.bundle);
+    expect(ladderPolicyMatrix(anotherSource, { ...options, years: 2 })).not.toBe(longer);
+    expect(ladderPolicyMatrix(content, options)).toEqual(first);
+  });
 
   it('passes the shipped ladder, and says what share clears each floor', () => {
     const { ok, lines } = gateLadderScales(content, cheap);
