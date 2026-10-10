@@ -642,3 +642,46 @@ describe('the broker and the bidding table refuse in the reader\'s setting (#800
     expect(refuse('plainenglish')).toEqual(original.map((r) => ('reason' in r && r.reason ? { ...r, reason: `plain: ${r.reason}` } : r)));
   });
 });
+
+describe('auction bids store only valid numeric amounts (#1057)', () => {
+  const invalid = [
+    ['empty input', '' as unknown as number],
+    ['nonnumeric input', 'not-a-number' as unknown as number],
+    ['numeric string', '100' as unknown as number],
+    ['negative coins', -1],
+    ['fractional coins', 1.5],
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+    ['unsafe integer', Number.MAX_SAFE_INTEGER + 1],
+  ] as const;
+
+  it.each(invalid)('refuses %s without mutating the scheduled auction or treasury', (_label, amount) => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const [lot] = announceAuction(ctx, testRng('invalid-auction-amount'));
+    expect(lot).toBeDefined();
+    const beforeAuction = JSON.stringify(ctx.world.auction);
+    const beforeChronicle = JSON.stringify(ctx.world.chronicle);
+    const beforeTreasury = ctx.world.treasury;
+
+    expect(bidAtAuction(ctx, lot!.id, 'coin', amount).ok).toBe(false);
+    expect(JSON.stringify(ctx.world.auction)).toBe(beforeAuction);
+    expect(JSON.stringify(ctx.world.chronicle)).toBe(beforeChronicle);
+    expect(ctx.world.treasury).toBe(beforeTreasury);
+    expect(lot!.playerBid).toBeUndefined();
+  });
+
+  it('preserves zero for a valid offered heirloom and integer coin bids', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    grantHeirloom(ctx, 'portion_of_fertility');
+    const [lot] = announceAuction(ctx, testRng('valid-auction-amount'));
+    expect(lot).toBeDefined();
+
+    expect(bidAtAuction(ctx, lot!.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+    expect(lot!.playerBid).toMatchObject({
+      currency: 'heirloom', amount: 0, heirloomOffered: 'portion_of_fertility',
+    });
+    expect(bidAtAuction(ctx, lot!.id, 'coin', 500).ok).toBe(true);
+    expect(lot!.playerBid).toMatchObject({ currency: 'coin', amount: 500 });
+  });
+});
