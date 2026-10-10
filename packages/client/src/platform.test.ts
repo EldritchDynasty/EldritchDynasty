@@ -681,6 +681,71 @@ describe('the platform seam', () => {
     expect(attempts).toBe(2);
   });
 
+  it('restores confirmed Library entries when Clear or Remove is rejected (#1034)', async () => {
+    const host = memoryPlatform();
+    const stored = {
+      format: 1 as const,
+      runs: [{
+        id: 'lib_one', seed: 74, campaign: 'short' as const, endedYear: 1342,
+        house: 'House One', ending: { id: 'forgotten' as const, title: 'Forgotten' }, entries: [],
+      }, {
+        id: 'lib_two', seed: 75, campaign: 'short' as const, endedYear: 1342,
+        house: 'House Two', ending: { id: 'forgotten' as const, title: 'Forgotten' }, entries: [],
+      }],
+    };
+    host.readLibrary = async () => stored;
+    host.writeLibrary = async () => { throw new Error('host storage full'); };
+    const game = createGame(loadContent(), host);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(game.libraryReady.value).toBe(true);
+    const before = game.library.value.runs.map((run) => run.id);
+
+    await expect(game.actions.clearLibrary()).rejects.toThrow('host storage full');
+    expect(game.library.value.runs.map((run) => run.id)).toEqual(before);
+    await expect(game.actions.deleteLibraryRun('lib_one')).rejects.toThrow('host storage full');
+    expect(game.library.value.runs.map((run) => run.id)).toEqual(before);
+    expect(await host.readLibrary()).toBe(stored);
+  });
+
+  it('never rolls a newer successful Library intent back after an older failure (#1034)', async () => {
+    const host = memoryPlatform();
+    let stored = {
+      format: 1 as const,
+      runs: [{
+        id: 'lib_one', seed: 74, campaign: 'short' as const, endedYear: 1342,
+        house: 'House One', ending: { id: 'forgotten' as const, title: 'Forgotten' }, entries: [],
+      }, {
+        id: 'lib_two', seed: 75, campaign: 'short' as const, endedYear: 1342,
+        house: 'House Two', ending: { id: 'forgotten' as const, title: 'Forgotten' }, entries: [],
+      }],
+    };
+    host.readLibrary = async () => stored;
+    const pending: Array<{ finish: () => void; fail: () => void }> = [];
+    host.writeLibrary = (snapshot) => new Promise<void>((resolve, reject) => {
+      pending.push({
+        finish: () => { stored = snapshot as typeof stored; resolve(); },
+        fail: () => reject(new Error('first write refused')),
+      });
+    });
+    const game = createGame(loadContent(), host);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const older = game.actions.deleteLibraryRun('lib_one');
+    const newer = game.actions.clearLibrary();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(pending).toHaveLength(1);
+    pending[0]!.fail();
+    await expect(older).rejects.toThrow('first write refused');
+    // The new Clear remains the latest visible intent while it waits its turn.
+    expect(game.library.value.runs).toEqual([]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(pending).toHaveLength(2);
+    pending[1]!.finish();
+    await newer;
+    expect(game.library.value.runs).toEqual([]);
+    expect((await host.readLibrary() as typeof stored).runs).toEqual([]);
+  });
+
   it('archives a completed run into the profile library', async () => {
     const host = memoryPlatform();
     const source = loadContent();
