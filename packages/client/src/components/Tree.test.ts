@@ -321,6 +321,57 @@ describe('the family tree as a planning board (#268)', () => {
     expect(wrapper.emitted('person')).toEqual([['p001']]);
     wrapper.unmount();
   });
+
+  it('transfers keyboard focus to a Chronicle cause and retains the latest rapid navigation (#1043)', async () => {
+    const view = {
+      ...largeView(),
+      house: 'house_test',
+      campaign: { id: 'long', name: 'Long Line', startYear: 1042, endYear: 1542 },
+      chronicle: [
+        { id: 'older', year: 1042, weight: 'line', text: 'The first page.', named: false },
+        { id: 'middle', year: 1100, weight: 'line', text: 'The next page.', named: false },
+        { id: 'later', year: 1120, weight: 'line', text: 'A later consequence.', named: false },
+      ],
+    } as unknown as SessionView;
+    const wrapper = mount(Chronicle, {
+      attachTo: document.body,
+      props: {
+        view,
+        frame: [],
+        actions: {
+          causeOf: (id: string) => id === 'later'
+            ? { year: 1100, page: 'middle', blank: false }
+            : id === 'middle' ? { year: 1042, page: 'older', blank: false } : undefined,
+          answeredBy: () => [],
+          advice: () => [],
+        },
+      },
+    });
+
+    try {
+      const middle = wrapper.get('[data-entry="middle"]');
+      const older = wrapper.get('[data-entry="older"]');
+      expect(middle.attributes('tabindex')).toBeUndefined();
+
+      await wrapper.get('[data-entry="later"] button.link').trigger('click');
+      await wrapper.vm.$nextTick();
+      expect(middle.attributes('tabindex')).toBe('-1');
+      expect(document.activeElement).toBe(middle.element);
+
+      // Two links in the same task must not let an earlier async follow()
+      // steal focus from the later destination after Vue renders.
+      (wrapper.get('[data-entry="later"] button.link').element as HTMLButtonElement).click();
+      (wrapper.get('[data-entry="middle"] button.link').element as HTMLButtonElement).click();
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+      expect(older.attributes('tabindex')).toBe('-1');
+      expect(middle.attributes('tabindex')).toBeUndefined();
+      expect(document.activeElement).toBe(older.element);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
 });
 
 /**
