@@ -106,8 +106,13 @@ describe('the ascendant composite policy', () => {
     // NOT a precondition — the calibration policy preserves the living reading
     // circle first, then lets the book continue paying while a viable
     // post-Unmaking recipient can stand at Demigod without ageing.
+    // The standing asked is the rite's own Eminent gate, not one above it
+    // (#332: an Exalted pre-condition never met a ready circle in 100 runs).
+    ctx.world.respect = 'regarded';
     expect(unmakingReadyForAscendant(ctx)).toBe(false);
     const clausesBefore = ctx.world.clausesRecovered.size;
+    ctx.world.respect = 'eminent';
+    expect(unmakingReadyForAscendant(ctx)).toBe(true);
     ctx.world.respect = 'exalted';
     expect(unmakingReadyForAscendant(ctx)).toBe(true);
     expect(ctx.world.clausesRecovered.size).toBe(clausesBefore);
