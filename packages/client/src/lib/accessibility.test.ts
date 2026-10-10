@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { modalFocusable } from './modal';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -594,5 +595,35 @@ describe('progressive surface reveal (#368)', () => {
     saveRevealed(storage, first, new Set(['table', 'assize']));
     expect(loadRevealed(storage, first)).toEqual(new Set(['table', 'assize']));
     expect(loadRevealed(storage, second)).toEqual(new Set());
+  });
+});
+
+
+describe('modal keyboard Tab targets (#1004)', () => {
+  it('skips disabled controls, hidden inputs, and negative tab indexes', () => {
+    const card = document.createElement('section');
+    card.innerHTML = `
+      <select id="disabled-select" disabled><option>None</option></select>
+      <textarea id="disabled-textarea" disabled></textarea>
+      <a id="programmatic-link" href="#elsewhere" tabindex="-1">Not a Tab stop</a>
+      <span id="negative-tabindex" tabindex="-2">Not a Tab stop</span>
+      <input id="hidden-input" type="hidden">
+      <a id="link" href="#here">A normal link</a>
+      <input id="input" type="text">
+      <button id="button">Continue</button>
+    `;
+    expect(modalFocusable(card).map((el) => el.id)).toEqual(['link', 'input', 'button']);
+    expect(modalFocusable(null)).toEqual([]);
+  });
+
+  it('skips controls inside hidden, inert, and disabled ancestors', () => {
+    const card = document.createElement('section');
+    card.innerHTML = `
+      <div hidden><button id="hidden-child">Hidden</button></div>
+      <div inert><a id="inert-child" href="#next">Inert</a></div>
+      <fieldset disabled><input id="fieldset-child"></fieldset>
+      <button id="available">Available</button>
+    `;
+    expect(modalFocusable(card).map((el) => el.id)).toEqual(['available']);
   });
 });
