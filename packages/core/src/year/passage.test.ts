@@ -318,7 +318,8 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
     // hand-built bundle has no id-to-YAML mapping, so the reviewed content
     // field is deliberately ineligible and cannot exercise this selection.
     const authored = bundle.ages[0]!;
-    const { opening: _removed, ...age } = authored;
+    const { opening: _removed, ...withoutOpening } = authored;
+    const age = withoutOpening as typeof authored;
     const modified = {
       ...bundle,
       ages: bundle.ages.map((a) => a.id === age.id ? age : a),
