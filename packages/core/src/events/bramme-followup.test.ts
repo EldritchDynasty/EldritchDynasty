@@ -43,6 +43,42 @@ describe('Bramme manuscript callback (#952)', () => {
     expect(selected[0]?.source).toBe('forced');
   });
 
+  it('does not repeat an earlier visit when its delayed schedule becomes due', () => {
+    const ctx = sendBookToBramme('came_back');
+    const dueYear = ctx.world.year + DELAY_YEARS;
+    const margin = content.events.find((e) => e.id === FOLLOW_UP);
+    if (!margin) throw new Error('Bramme margin template is missing');
+
+    // The old ambient path can still fire before the scheduled due date.
+    // A one-shot story must not appear a second time just because it was
+    // promised by an earlier outcome.
+    ctx.world.generation = 4;
+    const resolved = executeOutcomeWitness(ctx, margin, {
+      choiceId: 'acknowledge_the_correction',
+      expectedOutcomeId: 'bramme_knows',
+      rng: makeRng(31),
+    });
+    expect(resolved.ok, resolved.reason).toBe(true);
+    expect(ctx.world.frequency.templateFires[FOLLOW_UP]).toBeGreaterThan(0);
+
+    ctx.world.year = dueYear;
+    const candidates = selectEvents(ctx, makeRng(31), 1);
+    expect(candidates.some((c) => c.event.id === FOLLOW_UP)).toBe(false);
+    expect(ctx.world.scheduled.some((s) => s.event === FOLLOW_UP)).toBe(false);
+  });
+
+  it('deduplicates simultaneous scheduled copies of the same one-shot scene', () => {
+    const ctx = sendBookToBramme('came_back');
+    const scheduled = ctx.world.scheduled.find((s) => s.event === FOLLOW_UP);
+    if (!scheduled) throw new Error('Bramme callback was not scheduled');
+    ctx.world.scheduled.push({ ...scheduled });
+    ctx.world.year = scheduled.year;
+    ctx.world.generation = 4;
+
+    const candidates = selectEvents(ctx, makeRng(47), 1);
+    expect(candidates.filter((c) => c.event.id === FOLLOW_UP)).toHaveLength(1);
+  });
+
   it('does not promise a corrected-page visit for the different Bramme outcome', () => {
     const ctx = sendBookToBramme('read_before_returned');
     expect(ctx.world.flags.get('bramme_copied_a_book')).not.toBe(true);
