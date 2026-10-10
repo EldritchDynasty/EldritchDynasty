@@ -836,3 +836,66 @@ proseVariants:
     of: "1673c96d700b5ee9"
     plainenglish: >-
       had a complete and faithful copy made of the whole book
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].title"
+    of: "b28b07938e3a4957"
+    plainenglish: >-
+      Books Will Be Burned in Cawdry's Market Square
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].body"
+    of: "02f7d044ca44f0a8"
+    plainenglish: >-
+      A bookseller in Cawdry has been ordered to burn his stock of four hundred books in the
+      market square on Tuesday, in front of the whole province. No one is being burned. The books
+      represent nine years of his trade. Two books on this family's standing order are among them,
+      and the bookseller's day-book lists the order under the family's name. He has sent a boy up
+      the hill on his own horse to warn the family.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=go_down_and_claim_them].label"
+    of: "74512c7375d7772f"
+    plainenglish: >-
+      Ride to Cawdry before Tuesday and claim the two books we have already paid for.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=go_down_and_claim_them].outcomes[id=claimed].text"
+    of: "0db105a66d70571a"
+    plainenglish: >-
+      The family travels forty miles in a day and a half and shows its receipt. The summoner is
+      legally allowed to hand over the two books, and records that he did so. They are a farming
+      book and a herbal. Everyone in the market square sees a family that travelled forty miles
+      for two books on the day four hundred others were burned.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=go_down_and_claim_them].outcomes[id=refused_at_the_square].text"
+    of: "84dd69986f210784"
+    plainenglish: >-
+      The family travels forty miles and shows its receipt. A summoner says that all the books in
+      the stock have been condemned. The receipt entitles the house to a refund, not to the books.
+      The refund is nine crowns. The house is now recorded as having come to Cawdry to ask for two
+      of the four hundred books.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].label"
+    of: "97a1caf20b6e5d9e"
+    plainenglish: >-
+      Let the books burn. Recovering nine crowns is not worth being seen in that square.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].outcomes[id=burned].text"
+    of: "94e67ff54a109a69"
+    plainenglish: >-
+      The two farming books burn with the other three hundred and ninety-eight. The family stays
+      away and loses nine crowns, which seems sensible by every measure available. But the
+      bookseller's day-book is not burned. It is taken, read and kept. It lists every standing
+      order in the province, with the names of the people who placed them.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].record.subject"
+    of: "c906184506500929"
+    plainenglish: >-
+      the burning of the books and the bookseller's day-book
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].record.options.record.chronicle"
+    of: "dfa29a9312aa7d37"
+    plainenglish: >-
+      Four hundred books were burned at Cawdry. Two were on our standing order, but we did not go
+      to claim them. The bookseller's day-book was kept rather than burned, and it lists our name.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].record.options.record.claims[0].text"
+    of: "05a6cf69f7c2d71d"
+    plainenglish: >-
+      had two books on standing order with the Cawdry bookseller whose stock was condemned
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].record.options.embellish.chronicle"
+    of: "0c32ec6383b88357"
+    plainenglish: >-
+      A bookseller in Cawdry had his stock condemned. Our house had no interest in those books and
+      had placed no standing order with him.
+  - address: "content:events/rare_books.yaml#events[id=the_burning_at_cawdry].record.options.embellish.claims[0].text"
+    of: "1ae750af98d8e1b3"
+    plainenglish: >-
+      had no standing order with the bookseller whose stock was condemned
