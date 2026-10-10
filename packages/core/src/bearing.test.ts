@@ -5,8 +5,12 @@ import { bearingWordsIn } from '@ed/schema';
 import {
   ECHO_AFTER, ECHO_SPACING, ECHO_VARIANTS, setProseMode, setProseVariants, REMEMBERED_AFTER, answeredBy, echoTally, echoText, bearingOf, causeOf, dealMatch, makeRng, marketAppetite, noteBearing, place,
   testWorld, tickBearing, type BearingAct,
+  declineMatch, queueMatch, resolveMatch,
 } from '@ed/core';
+import { readFileSync } from 'node:fs';
 import { coreMessageAddress } from './messages.js';
+import { missingPlainEnglish } from './prose.js';
+import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 
 const content = loadContent();
 
@@ -394,5 +398,95 @@ describe('the echo lines speak the reader\'s setting (#756)', () => {
     expect(page.echoFrame).toBe('bearing:kept_her_back:0');
     setProseMode(ctx, 'original');
     expect(page.text).toBe('People still talked about Ysabel (kept_her_back 0).');
+  });
+});
+
+/**
+ * WHAT AN ECHO QUOTES IS PROSE TOO (#410).
+ *
+ * The echo frames above are keyed, but the `{ABOUT}` they quote was built by
+ * the verbs that took the act — "the hand offered to …", "… marrying …", "the
+ * page headed …" — as Original template literals. So a Plain English reader,
+ * a generation after refusing a hand, read a plain sentence wrapped around an
+ * untranslated phrase; and the match's own result line, which the client
+ * shows the moment a card is taken, never switched at all. Each phrase is now
+ * rendered when the act is taken and kept as the words the reader saw.
+ */
+describe('the phrases an act leaves behind, in the reader\'s prose', () => {
+  const PHRASES: Record<string, [string, string]> = {
+    'match.bearing.took_the_cousin': ['{SUBJECT} marrying {SPOUSE}', 'the marriage of {SUBJECT} to {SPOUSE}'],
+    'match.bearing.refused_a_hand': ['the hand offered to {SUBJECT}', 'the match turned down for {SUBJECT}'],
+    'match.line.married': ['{SUBJECT} married {SPOUSE}.', '{SUBJECT} and {SPOUSE} were married.'],
+    'match.line.married_dowry': ['{SUBJECT} married {SPOUSE}, and {DOWRY} crowns left the house.',
+      '{SUBJECT} and {SPOUSE} were married. The house paid {DOWRY} crowns.'],
+    'record.bearing.page_title': ['the page headed "{TITLE}"', 'the page called "{TITLE}"'],
+    'record.bearing.page_year': ['the page of {YEAR}', 'the page for {YEAR}'],
+  };
+
+  it('gives every phrase a stable message address, and none an ordinal', () => {
+    const source = readFileSync(new URL('./events/decisions.ts', import.meta.url), 'utf8');
+    const items = plainEnglishCoreWorkItems('events/decisions.ts', source);
+    for (const [key, [original]] of Object.entries(PHRASES)) {
+      expect(items).toContainEqual(expect.objectContaining({ address: coreMessageAddress(key), text: original }));
+    }
+    const legacy = items.filter((i) => i.address.includes('#literal[')).map((i) => i.text).join('\n');
+    for (const fragment of ['marrying', 'the hand offered to', 'crowns left the house', 'the page headed', 'the page of']) {
+      expect(legacy).not.toContain(fragment);
+    }
+  });
+
+  /** A hand with the cousin and at least one outside card open, at no cost. */
+  function hand(mode: 'original' | 'plainenglish', seed: number, dowry = 0) {
+    const ctx = testWorld(content, seed, 1042);
+    setProseVariants(ctx, Object.entries(PHRASES).map(([key, [original, plain]]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+    })));
+    setProseMode(ctx, mode);
+    const her = place(ctx, { sex: 'female', age: 19, name: 'Wenna' });
+    const him = place(ctx, { sex: 'male', age: 21, name: 'Cael' });
+    const offer = dealMatch(ctx, her, makeRng(1));
+    for (const c of offer.cards) { c.available = true; c.blockedBy = undefined; c.dowry = dowry; }
+    const pending = queueMatch(ctx, offer);
+    const cousin = pending.cards.find((c) => c.person === him.id);
+    const outside = pending.cards.some((c) => c.kind === 'outsider');
+    return { ctx, pending, cousin, outside };
+  }
+
+  it('keeps a refused hand in the reader\'s words', () => {
+    for (const [mode, expected] of [
+      ['original', 'the hand offered to Wenna'],
+      ['plainenglish', 'the match turned down for Wenna'],
+    ] as const) {
+      const { ctx, pending } = hand(mode, 7101);
+      expect(declineMatch(ctx, pending.id)).toBe(true);
+      expect(ctx.world.bearing.acts.at(-1)).toMatchObject({ kind: 'refused_a_hand', about: expected });
+      expect(missingPlainEnglish(ctx)).not.toContain(coreMessageAddress('match.bearing.refused_a_hand'));
+    }
+  });
+
+  it('keeps the cousin taken, and the line the client shows, in the reader\'s words', () => {
+    for (const [mode, about, line] of [
+      ['original', 'Wenna marrying Cael', 'Wenna married Cael.'],
+      ['plainenglish', 'the marriage of Wenna to Cael', 'Wenna and Cael were married.'],
+    ] as const) {
+      const { ctx, pending, cousin, outside } = hand(mode, 7102);
+      expect(cousin, 'the fixture dealt no cousin card').toBeDefined();
+      expect(outside, 'the fixture dealt no outside card').toBe(true);
+      const result = resolveMatch(ctx, pending.id, cousin!.id);
+      expect(result.ok).toBe(true);
+      expect(result.line).toBe(line);
+      expect(ctx.world.bearing.acts.at(-1)).toMatchObject({ kind: 'took_the_cousin', about });
+    }
+  });
+
+  it('names the dowry in the reader\'s words', () => {
+    for (const [mode, line] of [
+      ['original', 'Wenna married Cael, and 40 crowns left the house.'],
+      ['plainenglish', 'Wenna and Cael were married. The house paid 40 crowns.'],
+    ] as const) {
+      const { ctx, pending, cousin } = hand(mode, 7102, 40);
+      ctx.world.treasury = 10_000;
+      expect(resolveMatch(ctx, pending.id, cousin!.id).line).toBe(line);
+    }
   });
 });

@@ -486,7 +486,8 @@ export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): Mat
   // world or the chronicle can tell them apart.
   if (card.kind === 'household'
     && pending.cards.some((c) => c.id !== card.id && c.kind === 'outsider' && c.available)) {
-    noteBearing(ctx, 'took_the_cousin', `${pending.subject.name} marrying ${card.name}`);
+    noteBearing(ctx, 'took_the_cousin', msg(ctx, 'match.bearing.took_the_cousin',
+      '{SUBJECT} marrying {SPOUSE}', { SUBJECT: pending.subject.name, SPOUSE: card.name }));
   }
 
   drop(ctx, decision);
@@ -503,8 +504,11 @@ export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): Mat
   return {
     ok: true,
     spouse: result.spouse?.id,
-    line: `${pending.subject.name} married ${card.name}`
-      + (card.dowry ? `, and ${card.dowry} crowns left the house.` : '.'),
+    line: card.dowry
+      ? msg(ctx, 'match.line.married_dowry', '{SUBJECT} married {SPOUSE}, and {DOWRY} crowns left the house.',
+        { SUBJECT: pending.subject.name, SPOUSE: card.name, DOWRY: String(card.dowry) })
+      : msg(ctx, 'match.line.married', '{SUBJECT} married {SPOUSE}.',
+        { SUBJECT: pending.subject.name, SPOUSE: card.name }),
   };
 }
 
@@ -519,7 +523,12 @@ export function declineMatch(ctx: SimCtx, decision: string): boolean {
   // The world forgets a refusal the moment it is taken, and this is the one
   // act §29 is most about — so it is written down here, at the verb, and
   // nowhere else (`bearing.ts`).
-  if (pending.cards.some((c) => c.available)) noteBearing(ctx, 'refused_a_hand', `the hand offered to ${pending.subject.name}`);
+  // The phrase is quoted by a keyed echo a generation later, so it is
+  // rendered now, in the reader's mode, and kept as the words they saw (#410).
+  if (pending.cards.some((c) => c.available)) {
+    noteBearing(ctx, 'refused_a_hand', msg(ctx, 'match.bearing.refused_a_hand',
+      'the hand offered to {SUBJECT}', { SUBJECT: pending.subject.name }));
+  }
   drop(ctx, decision);
   ctx.world.decisionLog.push({
     kind: 'match',
@@ -629,7 +638,9 @@ export function applyRecord(
     // Discrepancy's content id, so the book printed `black_stair_account`
     // to the player a generation later (issue #326).
     const title = w.chronicle.find((c) => c.id === entryId)?.title;
-    noteBearing(ctx, 'wrote_it_larger', title ? `the page headed "${title}"` : `the page of ${w.year}`, entryId);
+    noteBearing(ctx, 'wrote_it_larger', title
+      ? msg(ctx, 'record.bearing.page_title', 'the page headed "{TITLE}"', { TITLE: title })
+      : msg(ctx, 'record.bearing.page_year', 'the page of {YEAR}', { YEAR: String(w.year) }), entryId);
     w.discrepancies.set(d.id, { severity: d.severity, provableBy: d.provableBy, state: 'open' });
     discrepancyId = d.id;
     forgedRung = forgeableRung(ctx);
