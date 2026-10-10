@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { PERSON_NAME_MAX } from '@ed/schema';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
 const props = defineProps<{ view: SessionView; actions: GameActions }>();
 
 const drafts = ref<Record<string, string>>({});
+const refusals = ref<Record<string, string>>({});
+
+// A declined name belongs to one child. Never carry a refusal into a later
+// naming offer if that child has left the queue.
+watch(() => props.view.namesWanted, (wanted) => {
+  const waiting = new Set(wanted.map((child) => child.person));
+  for (const person of Object.keys(refusals.value)) {
+    if (!waiting.has(person)) delete refusals.value[person];
+  }
+});
+
+function clearRefusal(person: string): void {
+  delete refusals.value[person];
+}
 
 /**
  * A QUEUE THAT SAYS HOW LONG IT IS (issue #53).
@@ -26,8 +41,20 @@ const waiting = computed(() => props.view.namesWanted.length);
  */
 function give(person: string): void {
   const chosen = (drafts.value[person] ?? '').trim();
-  if (!chosen) return;
-  if (props.actions.name(person, chosen)) delete drafts.value[person];
+  if (!chosen) {
+    refusals.value[person] = 'Enter a name, or let him keep his suggestion.';
+    return;
+  }
+  if (chosen.length > PERSON_NAME_MAX) {
+    refusals.value[person] = `A name must be at most ${PERSON_NAME_MAX} characters. Shorten it and try again.`;
+    return;
+  }
+  if (props.actions.name(person, chosen)) {
+    delete drafts.value[person];
+    clearRefusal(person);
+  } else {
+    refusals.value[person] = 'That name could not be accepted. Try a different name.';
+  }
 }
 
 /**
@@ -39,7 +66,12 @@ function give(person: string): void {
  * exists on the session for exactly this reason.
  */
 function keep(person: string): void {
-  if (props.actions.keepSuggestedName(person)) delete drafts.value[person];
+  if (props.actions.keepSuggestedName(person)) {
+    delete drafts.value[person];
+    clearRefusal(person);
+  } else {
+    refusals.value[person] = 'His suggested name could not be accepted. Try naming this child yourself.';
+  }
 }
 </script>
 
@@ -65,6 +97,9 @@ function keep(person: string): void {
           v-model="drafts[child.person]"
           :placeholder="child.suggested"
           :aria-label="'Name the ' + (child.sex === 'female' ? 'daughter' : 'son') + ' born in ' + child.born"
+          :aria-invalid="Boolean(refusals[child.person])"
+          :aria-describedby="refusals[child.person] ? 'naming-refusal-' + child.person : undefined"
+          @input="clearRefusal(child.person)"
           @keyup.enter="give(child.person)"
         />
         <button @click="give(child.person)">Name</button>
@@ -75,6 +110,12 @@ function keep(person: string): void {
           Let him name this one
         </button>
       </div>
+      <p
+        v-if="refusals[child.person]"
+        :id="'naming-refusal-' + child.person"
+        class="small rubric"
+        role="alert"
+      >{{ refusals[child.person] }}</p>
     </div>
     <button v-if="waiting > 1" class="quiet small" @click="actions.keepSuggestedNames()">
       Keep the names he suggests
