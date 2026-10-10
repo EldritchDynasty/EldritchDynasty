@@ -7,7 +7,7 @@ import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  LENSES, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, reads,
+  LENSES, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
   type Lens, type Measure,
 } from '../lib/book';
 
@@ -193,9 +193,22 @@ async function plate(): Promise<void> {
     };
 
     const rows = plateRows(entries, measure);
+    const height = plateHeight(rows);
+    // Full Long-Line books exceed browser canvas dimensions. Keep every
+    // Chronicle line (and the ruled omissions) in a vector download instead
+    // of silently dropping the entire image when getContext/toBlob fails.
+    if (height > MAX_PLATE_CANVAS_HEIGHT) {
+      const svg = plateSvg(rows, props.houseName, plateSubtitle(entries, lens.value));
+      downloadBlob(
+        new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
+        plateName(props.houseName, entries).replace(/\.png$/, '.svg'),
+      );
+      return;
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = PLATE.width;
-    canvas.height = plateHeight(rows);
+    canvas.height = height;
     const c = canvas.getContext('2d');
     if (!c) return;
 
