@@ -559,6 +559,10 @@ export interface RecordResolution {
 }
 
 export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOption): RecordResolution {
+  // RecordOption is a TypeScript union, not a runtime boundary. An arbitrary
+  // host/JS value must never consume a pending decision before applyRecord
+  // indexes the authored options (including inherited Object properties).
+  if (option !== 'record' && option !== 'omit' && option !== 'embellish') return { ok: false };
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
   if (!pending || pending.kind !== 'record') return { ok: false };
   drop(ctx, decision);
