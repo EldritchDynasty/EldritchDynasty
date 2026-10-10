@@ -1,5 +1,5 @@
 import type { Person } from '@ed/schema';
-import { MAIN_BRANCH, RUNG_ORDER } from '@ed/schema';
+import { MAIN_BRANCH, RUNG_ORDER, assertNever } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { attr, phenotypeOf } from './people/factory.js';
 import { branchOf, wouldSpeakFor } from './people/branches.js';
@@ -129,23 +129,32 @@ export const CAST_ROLES: CastRole[] = [
   'sole_expresser', 'unwed', 'long_post', 'eldest', 'bonded', 'scholar', 'widow', 'papers',
 ];
 
-export const CAST_LABELS: Record<CastRole, string> = {
-  head: 'the seal',
-  heir: 'the heir',
-  at_risk: 'at risk',
-  carrier: 'the blood',
-  aggrieved: 'the wound',
-  married_in: 'married in',
-  foremost: 'highest',
-  sole_expresser: 'the only one',
-  unwed: 'unspent',
-  long_post: 'in post',
-  eldest: 'the oldest',
-  bonded: 'bonded',
-  scholar: 'the shelf',
-  widow: 'widowed',
-  papers: 'the papers',
-};
+/**
+ * The word the panel puts beside a name. Rendered in the reader's prose mode
+ * (#410): #915 keyed the reasons and left these, so a Plain English panel
+ * still labelled every row in the Original. A switch rather than a record, so
+ * a new role is a compiler error here rather than an unkeyed label.
+ */
+export function castLabel(ctx: SimCtx, role: CastRole): string {
+  switch (role) {
+    case 'head': return msg(ctx, 'cast.label.head', 'the seal');
+    case 'heir': return msg(ctx, 'cast.label.heir', 'the heir');
+    case 'at_risk': return msg(ctx, 'cast.label.at_risk', 'at risk');
+    case 'carrier': return msg(ctx, 'cast.label.carrier', 'the blood');
+    case 'aggrieved': return msg(ctx, 'cast.label.aggrieved', 'the wound');
+    case 'married_in': return msg(ctx, 'cast.label.married_in', 'married in');
+    case 'foremost': return msg(ctx, 'cast.label.foremost', 'highest');
+    case 'sole_expresser': return msg(ctx, 'cast.label.sole_expresser', 'the only one');
+    case 'unwed': return msg(ctx, 'cast.label.unwed', 'unspent');
+    case 'long_post': return msg(ctx, 'cast.label.long_post', 'in post');
+    case 'eldest': return msg(ctx, 'cast.label.eldest', 'the oldest');
+    case 'bonded': return msg(ctx, 'cast.label.bonded', 'bonded');
+    case 'scholar': return msg(ctx, 'cast.label.scholar', 'the shelf');
+    case 'widow': return msg(ctx, 'cast.label.widow', 'widowed');
+    case 'papers': return msg(ctx, 'cast.label.papers', 'the papers');
+    default: return assertNever(role);
+  }
+}
 
 /** Seven is the ceiling this whole reading exists to enforce. */
 export const CAST_MAX = 7;
@@ -820,10 +829,10 @@ export function castOf(ctx: SimCtx): CastMember[] {
       person: pick.person.id,
       name: pick.person.name,
       role,
-      label: CAST_LABELS[role],
+      label: castLabel(ctx, role),
       sex: pick.person.sex,
       age: ageOf(ctx, pick.person),
-      hall: branch === MAIN_BRANCH ? 'the seat' : w.branches.get(branch)?.name ?? branch,
+      hall: branch === MAIN_BRANCH ? msg(ctx, 'cast.hall.seat', 'the seat') : w.branches.get(branch)?.name ?? branch,
       because: pick.because(),
     });
     if (out.length === CAST_MAX) break;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { asId, proseOriginalHash } from '@ed/schema';
-import { CAST_LABELS, CAST_MAX, CAST_ROLES, castOf, type CastRole } from './cast.js';
+import { CAST_MAX, CAST_ROLES, castLabel, castOf, type CastRole } from './cast.js';
 import { contentProseAddress, missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { heirApparent } from './people/succession.js';
 import { beget, marry, place, testWorld } from './testing.js';
@@ -91,10 +91,11 @@ describe('the cast of a generation', () => {
    * would have drawn `sole_expresser` at the player in a panel of prose.
    */
   it('carries the wording the engine chose for each role', () => {
+    const ctx = aFamily();
     for (const role of CAST_ROLES) {
-      expect(CAST_LABELS[role], `${role} has no label`).toBeTruthy();
+      expect(castLabel(ctx, role), `${role} has no label`).toBeTruthy();
     }
-    for (const c of castOf(aFamily())) expect(c.label).toBe(CAST_LABELS[c.role]);
+    for (const c of castOf(ctx)) expect(c.label).toBe(castLabel(ctx, c.role));
   });
 
   it('finds the hall with the wound, and who speaks for it', () => {
@@ -396,7 +397,9 @@ describe('a cast, not a rota', () => {
 
 describe('the cast speaks the reader\'s setting (#915)', () => {
   const source = readFileSync(new URL('./cast.ts', import.meta.url), 'utf8');
-  const keyed = coreMessageEntries(source);
+  // The reasons. Role labels and the seat's hall name are keyed too (#410),
+  // and are tested on their own below.
+  const keyed = coreMessageEntries(source).filter((entry) => !/#cast\.(label|hall)\./.test(entry.address));
   const ORIGINALS = {
     'cast.head.holds':
       'holds the seal, and answers for the {N} living of the house.',
@@ -512,9 +515,9 @@ describe('the cast speaks the reader\'s setting (#915)', () => {
 
   it('keys every reason the panel can give', () => {
     expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual(ORIGINALS);
-    // What is left as a fragile ordinal row is a role label, not a reason.
+    // Nothing the panel says is left as a fragile ordinal row, labels included.
     const legacy = plainEnglishCoreWorkItems('cast.ts', source).filter((item) => item.address.includes('#literal['));
-    expect(legacy.map((item) => item.text)).toEqual([CAST_LABELS.sole_expresser]);
+    expect(legacy.map((item) => item.text)).toEqual([]);
   });
 
   /**
@@ -572,8 +575,51 @@ describe('the cast speaks the reader\'s setting (#915)', () => {
     // did not make the panel.
     expect(heirApparent(ctx, cast.find((member) => member.role === 'head')?.person)).toBeDefined();
     expect(cast.map((member) => member.role)).not.toContain('heir');
-    const asked = missingPlainEnglish(ctx).filter((address) => address.startsWith('core:messages#cast.'));
-    expect(asked).toHaveLength(cast.length);
+    const missing = missingPlainEnglish(ctx);
+    const reasons = missing.filter((a) => a.startsWith('core:messages#cast.') && !/#cast\.(label|hall)\./.test(a));
+    expect(reasons).toHaveLength(cast.length);
+    const labels = missing.filter((a) => a.startsWith('core:messages#cast.label.'));
+    expect(labels).toHaveLength(new Set(cast.map((member) => member.role)).size);
     expect(castOf(crowded('original'))).toEqual(cast);
+  });
+});
+
+/**
+ * THE LABEL BESIDE THE NAME (#410). #915 keyed every reason and left the role
+ * labels and the seat's hall name, so a Plain English panel still headed each
+ * row in the Original.
+ */
+describe('the cast labels each row in the reader\'s setting', () => {
+  const source = readFileSync(new URL('./cast.ts', import.meta.url), 'utf8');
+  const labels = coreMessageEntries(source).filter((entry) => /#cast\.(label|hall)\./.test(entry.address));
+
+  it('keys a label for every role, and the seat', () => {
+    expect(labels.map((entry) => entry.address).sort()).toEqual([
+      'core:messages#cast.hall.seat',
+      ...CAST_ROLES.map((role) => `core:messages#cast.label.${role}`),
+    ].sort());
+  });
+
+  it('renders the reviewed label and hall, and changes nothing else', () => {
+    function panel(mode: 'original' | 'plainenglish') {
+      const ctx = testWorld(bundle, 8802);
+      const head = place(ctx, { sex: 'male', age: 50, name: 'Head', castSlots: ['head'] });
+      ctx.world.headSince = ctx.world.year - 10;
+      const son = place(ctx, { sex: 'male', age: 20, name: 'Son' });
+      beget(ctx, son, head);
+      setProseVariants(ctx, labels.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `PE ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      return castOf(ctx);
+    }
+    const original = panel('original');
+    const seated = original.find((member) => member.role === 'head');
+    expect(seated).toMatchObject({ label: 'the seal', hall: 'the seat' });
+    expect(panel('plainenglish')).toEqual(original.map((member) => ({
+      ...member,
+      label: `PE ${member.label}`,
+      hall: member.hall === 'the seat' ? 'PE the seat' : member.hall,
+    })));
   });
 });
