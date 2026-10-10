@@ -429,6 +429,19 @@ export function createGame(
   let autosaveTail: Promise<void> = Promise.resolve();
   let autosaveRevision = 0;
   /**
+   * The profile Library is a second mutable host record, separate from save
+   * slots. An archive and a later Clear can otherwise finish out of order and
+   * resurrect history the player explicitly deleted. Snapshot each intent and
+   * serialize host writes; a failure must not block the next intent.
+   */
+  let libraryWriteTail: Promise<void> = Promise.resolve();
+
+  function persistLibrary(snapshot: RunLibrary): Promise<void> {
+    const done = libraryWriteTail.then(() => platform.writeLibrary(snapshot));
+    libraryWriteTail = done.catch(() => undefined);
+    return done;
+  }
+  /**
    * Revision of the normal Short/Long rolling slot only.
    *
    * Demo writes share the serialization tail (hosts may still be asynchronous)
@@ -637,12 +650,12 @@ export function createGame(
 
     async deleteLibraryRun(id) {
       library.value = { ...library.value, runs: library.value.runs.filter((run) => run.id !== id) };
-      await platform.writeLibrary(library.value);
+      await persistLibrary(library.value);
     },
 
     async clearLibrary() {
       library.value = emptyRunLibrary();
-      await platform.writeLibrary(library.value);
+      await persistLibrary(library.value);
     },
 
     leave() {
@@ -919,10 +932,10 @@ export function createGame(
     if (!run || archivedRunId === run.id) return;
     library.value = appendLibraryRun(library.value, run);
     archivedRunId = run.id;
-    void platform.writeLibrary(library.value).catch(() => {
-      // Keep the run playable even if profile persistence fails. Autosave has
-      // its own status; the library is retention metadata, never run state.
-      archivedRunId = null;
+    void persistLibrary(library.value).catch(() => {
+      // Keep the run playable even if profile persistence fails. An older
+      // archive failure cannot clear the retry guard for a newer completed run.
+      if (archivedRunId === run.id) archivedRunId = null;
     });
   }
 
