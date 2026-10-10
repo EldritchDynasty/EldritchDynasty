@@ -6,7 +6,10 @@ import {
   makeRng, meiosis, randomGenome, testWorld,
 } from '@ed/core';
 import type { Genome } from '@ed/schema';
-import { bloodBundle } from './tools/blood-gate.js';
+import { bloodBundle, panelScore } from './tools/blood-gate.js';
+import { beget, place } from './testing.js';
+import { emptyPanel, readPanel } from './people/panel.js';
+import type { LineCensus, MatchCard } from './people/match.js';
 import { loadBundle } from '@ed/content';
 import { phenotypeOf } from './people/factory.js';
 
@@ -280,5 +283,41 @@ describe('a fecundity bias asks for children, at every locus that feeds it', () 
       return n;
     };
     expect(cursed({ strength: 0.7 }), 'a strength bias handed out curses').toBe(0);
+  });
+});
+
+/**
+ * THE `panel` COMPARATOR READS KIN, NOT WORDS (#1005). It matched the printed
+ * relation, `'her father'`, so from the day the panel learned to say `his
+ * father` every suitor dealt to a daughter of the seat scored 0. A brother and
+ * sister with the same woken father must read the same.
+ */
+describe('the panel comparator', () => {
+  function cardFor(p: { id: string; name: string; sex: 'male' | 'female'; houseOfOrigin: string }): MatchCard {
+    return {
+      id: 'card_1', kind: 'household', name: p.name, sex: p.sex, age: 20, house: p.houseOfOrigin,
+      houseName: p.houseOfOrigin, blurb: '', dowry: 0, kinship: 0, line: 'unknown', lineSeen: 0,
+      words: '', papersAsked: 0, papersShown: 0, person: p.id, available: true, panel: emptyPanel(),
+    };
+  }
+
+  it('scores a man\'s card exactly as a woman\'s, and never off the printed words', () => {
+    const ctx = testWorld(content, 9662, 1200);
+    const mother = place(ctx, { sex: 'female', age: 60, name: 'Eira' });
+    const father = place(ctx, { sex: 'male', age: 62, name: 'Aldric', awakened: true });
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Roland' });
+    const daughter = place(ctx, { sex: 'female', age: 21, name: 'Dala' });
+    beget(ctx, son, mother, father);
+    beget(ctx, daughter, mother, father);
+    const cen: LineCensus = { borne: new Map(), counted: new Set(), byHouse: new Map(), mean: 0 };
+    const [sonCard, daughterCard] = [cardFor(son), cardFor(daughter)];
+    readPanel(ctx, sonCard, cen);
+    readPanel(ctx, daughterCard, cen);
+    const score = (card: MatchCard) => panelScore(card as Parameters<typeof panelScore>[0]);
+
+    expect(score(daughterCard)).toBeGreaterThan(0);
+    expect(score(sonCard)).toBe(score(daughterCard));
+    for (const row of sonCard.panel.woken) row.relation = 'a word the gate must not read';
+    expect(score(sonCard)).toBe(score(daughterCard));
   });
 });

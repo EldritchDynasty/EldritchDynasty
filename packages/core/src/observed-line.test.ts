@@ -81,7 +81,9 @@ describe('the observed-line read on a cast request', () => {
     const reqs = castRequests(template(true), ctx, {}, ['WHO']);
     const row = reqs[0]!.candidates.find((c) => c.id === candidate.id);
     for (const issueRow of row?.issue ?? []) {
-      expect(Object.keys(issueRow).sort()).toEqual(['borne', 'grown', 'name', 'relation']);
+      // `kin` is `relation` as data (#1005): who she is to the candidate, off
+      // the claimed pedigree. Public, and nothing to do with the genome.
+      expect(Object.keys(issueRow).sort()).toEqual(['borne', 'grown', 'kin', 'name', 'relation']);
     }
   });
 
