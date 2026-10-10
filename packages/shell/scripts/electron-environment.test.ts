@@ -65,7 +65,8 @@ describe('Vite actual local URL for Electron development (#890)', () => {
     consume('175/');
     expect(onLocal).not.toHaveBeenCalled();
     consume('\r\n  ➜  Network: use --host\n');
-    expect(onLocal).toHaveBeenCalledExactlyOnceWith('http://localhost:5175/');
+    expect(onLocal).toHaveBeenCalledTimes(1);
+    expect(onLocal).toHaveBeenCalledWith('http://localhost:5175/');
     consume('  ➜  Local: http://localhost:9999/\n');
     expect(onLocal).toHaveBeenCalledTimes(1);
   });
@@ -75,7 +76,8 @@ describe('Vite actual local URL for Electron development (#890)', () => {
     const consume = observeViteLocal(onLocal);
     consume('Local: file:///bogus\nPort 5174 is in use\n');
     consume('Local: http://localhost:5178/\n');
-    expect(onLocal).toHaveBeenCalledExactlyOnceWith('http://localhost:5178/');
+    expect(onLocal).toHaveBeenCalledTimes(1);
+    expect(onLocal).toHaveBeenCalledWith('http://localhost:5178/');
   });
 
   it('keeps the explicit ED_DEV_SERVER override ahead of the discovered Vite URL', () => {
