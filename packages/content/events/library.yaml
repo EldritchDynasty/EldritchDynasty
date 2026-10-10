@@ -126,6 +126,9 @@ events:
                 - { kind: treasury, delta: -14 }
                 - { kind: spellbook, op: gain, target: { slot: COPYIST }, book: lesser_workings_of_life }
                 - { kind: flag, flag: bramme_copied_a_book, set: true }
+                # The corrected page has consequences. The clerk is due a generation
+                # later; he must not compete with unrelated uncommon encounters.
+                - { kind: schedule, event: the_bramme_margin_returns, inYears: 20 }
             - id: read_before_returned
               weight: 32
               text: >-
