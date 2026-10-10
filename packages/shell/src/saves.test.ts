@@ -8,6 +8,7 @@ import { findPackagedExecutable, smokePackagedApp } from '../scripts/packaged-sm
 import { resolveSavePath, SaveSlotError, slotOfFile } from '../tools/save-slot.mjs';
 import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
+import { writeJsonAtomically } from './atomic-json.mjs';
 import { readUserContent, userContentRoot } from './user-content.mjs';
 
 /**
@@ -63,6 +64,65 @@ describe('a slot is a name, not a path', () => {
     expect(slotOfFile('notes.txt')).toBeUndefined();
     expect(slotOfFile('../escaped.edsave.json')).toBeUndefined();
     expect(slotOfFile('.edsave.json')).toBeUndefined();
+  });
+});
+
+describe('atomic exported run replacement (#904)', () => {
+  let directory = '';
+
+  beforeEach(() => { directory = mkdtempSync(join(tmpdir(), 'ed-export-')); });
+  afterEach(() => rmSync(directory, { recursive: true, force: true }));
+
+  it('retains an earlier export byte-for-byte if the replacement cannot serialize', () => {
+    const target = join(directory, 'eldritch-run.json');
+    const previous = '{"format":28,"year":1450}\n';
+    writeFileSync(target, previous, 'utf8');
+    const cyclic: Record<string, unknown> = { format: 28, year: 1451 };
+    cyclic.self = cyclic;
+
+    expect(() => writeJsonAtomically(target, cyclic)).toThrow();
+    expect(readFileSync(target, 'utf8')).toBe(previous);
+    expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
+  });
+
+  it('atomically replaces an existing export without leaving scratch files', () => {
+    const target = join(directory, 'eldritch-run.json');
+    writeFileSync(target, '{"format":28,"year":1450}', 'utf8');
+    expect(writeJsonAtomically(target, { format: 28, year: 1452 })).toBe(target);
+    expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual({ format: 28, year: 1452 });
+    expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
+  });
+
+  it('replaces a selected export symlink without writing through to its target', () => {
+    const unrelated = join(directory, 'unrelated.json');
+    const target = join(directory, 'eldritch-run.json');
+    const original = '{"other":"do not overwrite"}';
+    writeFileSync(unrelated, original, 'utf8');
+    try {
+      symlinkSync(unrelated, target, 'file');
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes(
+        (error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+
+    writeJsonAtomically(target, { format: 28, year: 1452 });
+    expect(readFileSync(unrelated, 'utf8')).toBe(original);
+    expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual({ format: 28, year: 1452 });
+    expect(readdirSync(directory).sort()).toEqual(['eldritch-run.json', 'unrelated.json']);
+  });
+
+  it('pins the native export IPC to the same atomic writer as slot saves', () => {
+    const source = readFileSync(new URL('./main.mjs', import.meta.url), 'utf8');
+    const start = source.indexOf("ipcMain.handle('ed:export-save'");
+    const end = source.indexOf("ipcMain.handle('ed:import-save'", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const handler = source.slice(start, end);
+    expect(handler).toContain('writeJsonAtomically(filePath, save)');
+    expect(handler).not.toContain('writeFileSync(filePath,');
+    expect(handler).toContain('if (canceled || !filePath)');
+    expect(handler).toContain('return { ok: true, path: filePath }');
   });
 });
 
