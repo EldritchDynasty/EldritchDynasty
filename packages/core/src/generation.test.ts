@@ -184,7 +184,7 @@ describe('the generation\'s question and answer speak the reader\'s setting (#75
       expect(answer(q({ kind: 'match' }))).toBe(say(mode, 'generation.answer.daughter_died_unnamed'));
 
       expect(answer(q({ kind: 'ascension' }))).toBe(say(mode, 'generation.answer.ascension', {
-        RUNG: rungTitle(w.ascension.rung), BEST: rungTitle(w.ascension.best),
+        RUNG: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best),
       }));
     });
   }

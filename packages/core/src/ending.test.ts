@@ -388,13 +388,13 @@ describe('fingerprinted Plain English ending summaries (#831)', () => {
     const cases: Array<{
       id: EndingId; key: string; r: typeof base; values: Record<string, string>;
     }> = [
-      { id: 'apotheosis', key: 'ending.summary.apotheosis', r: base, values: { RUNG: rungTitle(base.attested) } },
+      { id: 'apotheosis', key: 'ending.summary.apotheosis', r: base, values: { RUNG: rungTitle(ctx, base.attested) } },
       { id: 'unmade', key: 'ending.summary.unmade', r: base, values: {} },
       { id: 'broken_line', key: 'ending.summary.broken_line', r: base, values: {} },
       { id: 'settled', key: 'ending.summary.settled', r: base, values: { TOTAL: String(base.clausesTotal) } },
-      { id: 'forgotten', key: 'ending.summary.forgotten_withheld', r: withheld, values: { RUNG: rungTitle(withheld.attested) } },
-      { id: 'forgotten', key: 'ending.summary.forgotten', r: base, values: { RUNG: rungTitle('adept') } },
-      { id: 'devoured', key: 'ending.summary.devoured', r: base, values: { RUNG: rungTitle(base.substantiated) } },
+      { id: 'forgotten', key: 'ending.summary.forgotten_withheld', r: withheld, values: { RUNG: rungTitle(ctx, withheld.attested) } },
+      { id: 'forgotten', key: 'ending.summary.forgotten', r: base, values: { RUNG: rungTitle(ctx, 'adept') } },
+      { id: 'devoured', key: 'ending.summary.devoured', r: base, values: { RUNG: rungTitle(ctx, base.substantiated) } },
     ];
     expect(Object.keys(ORIGINALS).sort()).toEqual(Object.keys(PLAIN).sort());
     expect(cases.map((entry) => entry.key).sort()).toEqual(
@@ -426,7 +426,7 @@ describe('fingerprinted Plain English ending summaries (#831)', () => {
     setProseMode(original, 'plainenglish');
     const after = epilogueOf(original)!;
     expect(after.summary).toBe(
-      render(PLAIN['ending.summary.forgotten']!, { RUNG: rungTitle('adept') })
+      render(PLAIN['ending.summary.forgotten']!, { RUNG: rungTitle(original, 'adept') })
       + ' ' + render(PLAIN['ending.ledger.unresolved']!, {
         CLAUSES: String(after.reckoning.clauses), TOTAL: String(after.reckoning.clausesTotal),
       }),

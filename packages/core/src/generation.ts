@@ -141,7 +141,7 @@ export function chooseGenerationQuestion(
       'ascension', 40,
       () => msg(ctx, 'generation.question.ascension',
         '{HEAD} inherits a house standing at {RUNG}. Can this generation hold the climb without spending the line beneath it?',
-        { HEAD: head.name, RUNG: rungTitle(w.ascension.rung) }),
+        { HEAD: head.name, RUNG: rungTitle(ctx, w.ascension.rung) }),
       w.year, Object.keys(w.ascension.reachedAt).length, head,
     ));
   }
@@ -232,6 +232,6 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
     case 'ascension':
       return msg(ctx, 'generation.answer.ascension',
         'The house closes the generation at {RUNG}; its high-water mark is {BEST}.',
-        { RUNG: rungTitle(w.ascension.rung), BEST: rungTitle(w.ascension.best) });
+        { RUNG: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best) });
   }
 }

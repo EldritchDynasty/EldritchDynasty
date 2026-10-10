@@ -33,7 +33,8 @@ describe('the ladder is a ladder', () => {
     expect(RUNGS[0]).toBe('none');
     expect(RUNGS[RUNGS.length - 1]).toBe('god');
     expect(RUNGS.length).toBe(7);
-    for (const r of RUNGS) expect(rungTitle(r).length).toBeGreaterThan(2);
+    const titles = testWorld(bundle);
+    for (const r of RUNGS) expect(rungTitle(titles, r).length).toBeGreaterThan(2);
     expect(rungIndex('demigod')).toBeGreaterThan(rungIndex('hierophant'));
   });
 
@@ -395,7 +396,7 @@ describe('the ladder remembers the man it lost', () => {
     const view = viewOf(ctx).ascension;
     expect(view.rung, 'the rung should fall with the man').toBe('none');
     expect(view.best, 'the house forgot what it once was').toBe(climbed);
-    expect(view.bestTitle).toBe(rungTitle(climbed));
+    expect(view.bestTitle).toBe(rungTitle(ctx, climbed));
     expect(view.bestAt, 'the memory has no year on it').toBe(reachedIn);
   });
 
@@ -438,12 +439,12 @@ describe('the ladder remembers the man it lost', () => {
     const entry = [...ctx.world.chronicle].reverse().find((e) => e.rung === climbed);
     expect(entry, 'the climb left no page in the book').toBeDefined();
 
-    const title = climbed === 'vessel' ? 'The Vessel' : rungTitle(climbed);
+    const title = climbed === 'vessel' ? 'The Vessel' : rungTitle(ctx, climbed);
     expect(entry!.title).toBe(title);
     expect(entry!.title).not.toBe('A Rung');
     expect(entry!.text).toBe(
       `${foremost!.name} went farther into the blood than anyone of the line before him. `
-      + `The book called him ${rungTitle(climbed)}.`,
+      + `The book called him ${rungTitle(ctx, climbed)}.`,
     );
   });
 });
@@ -718,7 +719,7 @@ describe('translated ascension Chronicle pages (#768)', () => {
     expect(original.foremost.id).toBe(plain.foremost.id);
     expect(original.ctx.world.ascension).toEqual(plain.ctx.world.ascension);
     const personName = original.ctx.world.people.get(original.foremost.id)!.name;
-    const rungName = rungTitle(original.climbed);
+    const rungName = rungTitle(original.ctx, original.climbed);
     expect(original.page.text).toBe(`${personName} went farther into the blood than anyone of the line before him. The book called him ${rungName}.`);
     expect(plain.page.text).toBe(`${personName} went farther into the blood than anyone before him. The family record called him ${rungName}.`);
     expect(original.page.title).toBe(plain.page.title);
@@ -858,5 +859,50 @@ describe('the ladder diagnosis speaks the reader\'s setting (#827, #828)', () =>
     expect(original.blockers[0]!.text).toBe('No living man of the house can express the blood.');
     expect(diagnoseHouseAscension(prepare('plainenglish', 8213), empty))
       .toEqual({ ...original, blockers: original.blockers.map(plain) });
+  });
+});
+
+describe('the rung titles speak the reader\'s setting (#832)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./ascension.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#ascension\.rung(\.|_reached_title|_reached_somebody)/.test(entry.address));
+
+  it('keys all seven titles, the Vessel page title and the nameless climber', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'ascension.rung.none': 'unwoken',
+      'ascension.rung.touched': 'Touched',
+      'ascension.rung.adept': 'Adept',
+      'ascension.rung.hierophant': 'Hierophant',
+      'ascension.rung.vessel': 'the Vessel',
+      'ascension.rung.demigod': 'Demigod',
+      'ascension.rung.god': 'God',
+      'ascension.rung_reached_title_vessel': 'The Vessel',
+      'ascension.rung_reached_somebody': 'Somebody of the house',
+    });
+  });
+
+  it('names every rung, the standing and the diagnosis target in Plain English, on the same rungs', () => {
+    const read = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(bundle, 8212);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const him = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+        .find((p) => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress)!;
+      him.awakening = { ...him.awakening, awakened: false };
+      const standing = standingOf(ctx, him);
+      const view = viewOf(ctx).ascension;
+      return {
+        titles: RUNGS.map((r) => rungTitle(ctx, r)),
+        target: [standing.rung, standing.diagnosis!.target, standing.diagnosis!.targetTitle],
+        view: [view.rung, view.title, view.best, view.bestTitle],
+      };
+    };
+    const original = read('original');
+    expect(original.titles).toEqual(['unwoken', 'Touched', 'Adept', 'Hierophant', 'the Vessel', 'Demigod', 'God']);
+    const plain = read('plainenglish');
+    expect(plain.titles).toEqual(original.titles.map((t) => `plain: ${t}`));
+    expect(plain.target).toEqual([original.target[0], original.target[1], `plain: ${original.target[2]}`]);
+    expect(plain.view).toEqual([original.view[0], `plain: ${original.view[1]}`, original.view[2], `plain: ${original.view[3]}`]);
   });
 });

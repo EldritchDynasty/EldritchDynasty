@@ -143,15 +143,15 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
   return true;
 }
 
-export function rungTitle(r: Rung): string {
+export function rungTitle(ctx: SimCtx, r: Rung): string {
   switch (r) {
-    case 'none': return 'unwoken';
-    case 'touched': return 'Touched';
-    case 'adept': return 'Adept';
-    case 'hierophant': return 'Hierophant';
-    case 'vessel': return 'the Vessel';
-    case 'demigod': return 'Demigod';
-    case 'god': return 'God';
+    case 'none': return msg(ctx, 'ascension.rung.none', 'unwoken');
+    case 'touched': return msg(ctx, 'ascension.rung.touched', 'Touched');
+    case 'adept': return msg(ctx, 'ascension.rung.adept', 'Adept');
+    case 'hierophant': return msg(ctx, 'ascension.rung.hierophant', 'Hierophant');
+    case 'vessel': return msg(ctx, 'ascension.rung.vessel', 'the Vessel');
+    case 'demigod': return msg(ctx, 'ascension.rung.demigod', 'Demigod');
+    case 'god': return msg(ctx, 'ascension.rung.god', 'God');
     default: return assertNever(r);
   }
 }
@@ -726,10 +726,10 @@ function overborneBlocker(ctx: SimCtx, precise: string): GateBlocker {
   );
 }
 
-function diagnosisFor(target: Rung, blocker: GateBlocker): AscensionDiagnosis {
+function diagnosisFor(ctx: SimCtx, target: Rung, blocker: GateBlocker): AscensionDiagnosis {
   return {
     target,
-    targetTitle: rungTitle(target),
+    targetTitle: rungTitle(ctx, target),
     blockers: [{ kind: blocker.kind, text: blocker.text, hint: blocker.hint }],
   };
 }
@@ -761,7 +761,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
   const respect = RESPECT_ORDER.indexOf(w.respect);
   const regalia = heldHeirlooms(ctx)
     .filter((h) => heirloomDef(ctx, h.id)?.kind === 'regalia').length;
-  const target = rungTitle(rung);
+  const target = rungTitle(ctx, rung);
 
   switch (rung) {
     case 'none':
@@ -1007,7 +1007,7 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
       rung: 'none',
       blocker: 'no-expresser',
       blocked: 'he cannot express it',
-      diagnosis: { target: 'touched', targetTitle: rungTitle('touched'), blockers: [blocker] },
+      diagnosis: { target: 'touched', targetTitle: rungTitle(ctx, 'touched'), blockers: [blocker] },
       ...base,
     };
   }
@@ -1020,7 +1020,7 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
         rung: held,
         blocker: why.blocker,
         blocked: why.precise,
-        diagnosis: diagnosisFor(rung, why),
+        diagnosis: diagnosisFor(ctx, rung, why),
         ...base,
       };
     }
@@ -1165,7 +1165,7 @@ export function diagnoseHouseAscension(
   if (!top) {
     return {
       target: 'touched',
-      targetTitle: rungTitle('touched'),
+      targetTitle: rungTitle(ctx, 'touched'),
       blockers: [{
         kind: 'expression',
         text: msg(ctx, 'ascension.diagnosis.house_no_expresser_text',
@@ -1220,10 +1220,15 @@ export function tickAscension(ctx: SimCtx): HouseAscension {
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',
-      title: now.best === 'vessel' ? 'The Vessel' : rungTitle(now.best),
+      title: now.best === 'vessel'
+        ? msg(ctx, 'ascension.rung_reached_title_vessel', 'The Vessel')
+        : rungTitle(ctx, now.best),
       text: msg(ctx, 'ascension.rung_reached',
         '{PERSON} went farther into the blood than anyone of the line before him. The book called him {RUNG}.',
-        { PERSON: now.foremost?.name ?? 'Somebody of the house', RUNG: rungTitle(now.best) }),
+        {
+          PERSON: now.foremost?.name ?? msg(ctx, 'ascension.rung_reached_somebody', 'Somebody of the house'),
+          RUNG: rungTitle(ctx, now.best),
+        }),
       named: false,
       // What the BOOK will be able to show in 2042. The ending reads the
       // chronicle rather than `world.ascension` (§6), and this is the page it

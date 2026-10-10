@@ -341,11 +341,11 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
     clauses: Math.min(w.clausesRecovered.size, campaignDef(w.campaign).clauses),
     clausesTotal: campaignDef(w.campaign).clauses,
     attested,
-    attestedTitle: rungTitle(attested),
+    attestedTitle: rungTitle(ctx, attested),
     unsupportable,
     rungsWithheld,
     substantiated,
-    substantiatedTitle: rungTitle(substantiated),
+    substantiatedTitle: rungTitle(ctx, substantiated),
     livingBlood: livingBlood(w),
   };
   if (attestedYear !== undefined) reckoning.attestedYear = attestedYear;
@@ -448,7 +448,7 @@ export function closeTheLedger(ctx: SimCtx): EndingId {
       title: msg(ctx, 'ending.withheld_title', 'What Could Not Be Shown'),
       text: msg(ctx, 'ending.withheld',
         'The house was written as {ATTESTED} and was read as {SUBSTANTIATED}. {LIES} pages were asked after, and the family had nothing to set beside them but the pages themselves.',
-        { ATTESTED: rungTitle(r.attested), SUBSTANTIATED: rungTitle(r.substantiated), LIES: String(r.standingLies) }),
+        { ATTESTED: rungTitle(ctx, r.attested), SUBSTANTIATED: rungTitle(ctx, r.substantiated), LIES: String(r.standingLies) }),
       named: true,
     });
   }
@@ -590,7 +590,7 @@ export function endingSummary(ctx: SimCtx, id: EndingId, r: Reckoning): string {
     case 'apotheosis':
       return msg(ctx, 'ending.summary.apotheosis',
         'A god was made, and the book can show it: {RUNG}, on the page.',
-        { RUNG: rungTitle(r.attested) });
+        { RUNG: rungTitle(ctx, r.attested) });
     case 'unmade':
       return msg(ctx, 'ending.summary.unmade',
         'The rite failed at the last step, and what was in the blood went out of it.');
@@ -606,15 +606,15 @@ export function endingSummary(ctx: SimCtx, id: EndingId, r: Reckoning): string {
       if (r.rungsWithheld > 0 && rungIndex(r.attested) > rungIndex(r.substantiated)) {
         return msg(ctx, 'ending.summary.forgotten_withheld',
           'The book attests {RUNG} and could not hold it up. The creditor arrived, read, believed none of the parts that mattered, and did not collect.',
-          { RUNG: rungTitle(r.attested) });
+          { RUNG: rungTitle(ctx, r.attested) });
       }
       return msg(ctx, 'ending.summary.forgotten',
         'The house survived to the term and never passed {RUNG}. The creditor arrived, read, and did not collect.',
-        { RUNG: rungTitle('adept') });
+        { RUNG: rungTitle(ctx, 'adept') });
     case 'devoured':
       return msg(ctx, 'ending.summary.devoured',
         'The book attests {RUNG}, which was enough to be worth the journey and not enough to argue with.',
-        { RUNG: rungTitle(r.substantiated) });
+        { RUNG: rungTitle(ctx, r.substantiated) });
     default:
       return assertNever(id);
   }
