@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent } from '@ed/schema';
+import { indexContent, proseOriginalHash } from '@ed/schema';
+import { setProseMode, setProseVariants } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 import { makeRng } from './rng.js';
 import { testWorld } from './testing.js';
 import { runYears } from './sim.js';
@@ -272,7 +275,7 @@ describe('what a friend’s name is worth', () => {
 
 describe('the roster the signing takes', () => {
   it('trims, drops blanks, and keeps what is left', () => {
-    const checked = normaliseFriends([
+    const checked = normaliseFriends(testWorld(content), [
       { name: '  Marisol ', sex: 'female' },
       { name: '', sex: 'male' },
       { name: 'Tobias   Reyes', sex: 'male' },
@@ -292,7 +295,7 @@ describe('the roster the signing takes', () => {
    * so the player finds out on the screen where they can still fix it.
    */
   it('refuses two friends with the same name, however they were typed', () => {
-    const checked = normaliseFriends([
+    const checked = normaliseFriends(testWorld(content), [
       { name: 'Sam', sex: 'female' },
       { name: ' sam ', sex: 'male' },
     ], 1042);
@@ -302,9 +305,9 @@ describe('the roster the signing takes', () => {
   });
 
   it('refuses a sixth, and an essay', () => {
-    const six = normaliseFriends([...FIVE, { name: 'Ondine', sex: 'female' }], 1042);
+    const six = normaliseFriends(testWorld(content), [...FIVE, { name: 'Ondine', sex: 'female' }], 1042);
     expect(six.ok).toBe(false);
-    const essay = normaliseFriends([{ name: 'x'.repeat(200), sex: 'female' }], 1042);
+    const essay = normaliseFriends(testWorld(content), [{ name: 'x'.repeat(200), sex: 'female' }], 1042);
     expect(essay.ok).toBe(false);
   });
 });
@@ -451,5 +454,41 @@ describe('a name the player refused', () => {
     expect(world.friends.find((f) => f.name === offered!.name)!.spentIn).toBeDefined();
     expect(renameChild(ctx!, offered!.person, 'Wystan')).toBe(true);
     expect(world.friends.find((f) => f.name === offered!.name)!.spentIn).toBeUndefined();
+  });
+});
+
+describe('the roster refuses in the reader\'s setting (#829)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./people/friends.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#friends\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'friends.refuse.too_long': "'{NAME}' is longer than a name",
+      'friends.refuse.sex': '{NAME} needs to be one or the other',
+      'friends.refuse.duplicate': 'two of them are called {NAME}',
+      'friends.refuse.too_many': 'five names, not {COUNT}',
+    });
+  });
+
+  it('gives a refused roster its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(content);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      return [
+        normaliseFriends(ctx, [{ name: 'x'.repeat(200), sex: 'female' }], 1042),
+        normaliseFriends(ctx, [{ name: 'Sam', sex: 'neither' as 'female' }], 1042),
+        normaliseFriends(ctx, [{ name: 'Sam', sex: 'female' }, { name: ' sam ', sex: 'male' }], 1042),
+        normaliseFriends(ctx, [...FIVE, { name: 'Ondine', sex: 'female' }], 1042),
+      ].map((r) => ({ ok: r.ok, reason: r.ok ? undefined : r.reason }));
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      `'${'x'.repeat(200)}' is longer than a name`, 'Sam needs to be one or the other', 'two of them are called sam',
+      'five names, not 6',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
   });
 });
