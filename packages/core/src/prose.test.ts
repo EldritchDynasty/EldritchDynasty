@@ -524,3 +524,39 @@ describe('keyed core-message interpolation (#706)', () => {
     expect(msg(ctx, key, original, values)).toBe('Mara keeps 500 years in the book.');
   });
 });
+
+describe('exact choice outcome membership (#856)', () => {
+  it('rejects a duplicate outcome id from another branch even when Original text matches', () => {
+    const { bundle, event } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('expected choice');
+    const first = event.interaction.choices[0]!;
+    const second = event.interaction.choices[1]!;
+    const outcome = first.outcomes[0]!;
+    const other = { ...outcome };
+    const revised: EventTemplate = {
+      ...event,
+      interaction: {
+        ...event.interaction,
+        choices: [
+          { ...first, outcomes: [outcome] },
+          { ...second, outcomes: [other] },
+          ...event.interaction.choices.slice(2),
+        ],
+      },
+    };
+    const ctx = testWorld(bundle);
+    const { outcomeTextAddress, outcomeChronicleEffectAddress, proseForOutcome } = await import('./prose.js');
+    const firstAddress = outcomeTextAddress(ctx, revised, outcome, first.id)!;
+    const secondAddress = outcomeTextAddress(ctx, revised, other, second.id)!;
+    expect(firstAddress).not.toBe(secondAddress);
+    expect(outcomeTextAddress(ctx, revised, outcome, second.id)).toBeUndefined();
+    expect(outcomeChronicleEffectAddress(ctx, revised, outcome, 0, second.id)).toBeUndefined();
+    setProseVariants(ctx, [
+      { address: firstAddress, of: proseOriginalHash(outcome.text!), plainenglish: 'First branch.' },
+      { address: secondAddress, of: proseOriginalHash(outcome.text!), plainenglish: 'Second branch.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(proseForOutcome(ctx, revised, outcome, second.id)).toBe(outcome.text);
+    expect(proseForOutcome(ctx, revised, outcome, first.id)).toBe('First branch.');
+  });
+});
