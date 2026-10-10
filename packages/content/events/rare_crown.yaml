@@ -795,3 +795,70 @@ proseVariants:
     of: 5e877206fc4e2e92
     plainenglish: >-
       had the Roll reading corrected that same day
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].title"
+    of: a047c405738441c1
+    plainenglish: >-
+      The House Cannot Judge a Killing
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].body"
+    of: 2aae3a43685bd8ef
+    plainenglish: >-
+      During the Slaughter feast, one man from Wick killed another behind the alehouse. So many
+      people saw it that no one disputes what happened. The house can administer low justice,
+      but a killing falls under the Warden's high court at Cawdry. The next assize is in eleven
+      weeks. The accused is being held in the house's outbuilding, with two men guarding the
+      door. His wife and four children live a quarter of a mile away. Everyone in the parish is
+      waiting to see which court the house will obey.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=hand_him_to_cawdry].label"
+    of: 5a5c5366dbe808da
+    plainenglish: >-
+      Send him under guard to the Warden's court at Cawdry, as the law requires.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=hand_him_to_cawdry].outcomes[id=sent_to_the_assize].text"
+    of: ffdc0e97bea4a973
+    plainenglish: >-
+      Four men take him to Cawdry by cart, a journey of two days. At the assize in Ingathering,
+      a hearing lasting about ninety minutes ends with his hanging. The house follows the law in
+      every detail, and the Warden praises it in his report. The people of Wick do not praise
+      it. For four generations they remember that the house sent the man to be hanged. His
+      widow's grandchildren still farm here.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].label"
+    of: 89603bb7d046e02b
+    plainenglish: >-
+      Keep the case in the parish. Pay a fine, evict him and send him south.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=kept_in_the_parish].text"
+    of: a6938e6179f80bfd
+    plainenglish: >-
+      The house pays a fine to the dead man's family from its own funds. No one appeals the
+      eviction. By nightfall, the killer is travelling south on the Cawdry road, ordered never
+      to return north of it. This breaks the law. People in the parish consider it the better
+      outcome, but provincial officials see a landed house taking the Warden's right to judge
+      killings for itself.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=cawdry_hears_of_it].text"
+    of: 886b0ce93a30387d
+    plainenglish: >-
+      The decision remains hidden for two years. Then someone with a reason to speak tells the
+      Warden's clerk. In Ingathering, the house is brought before the assize, not for the
+      killing itself but for deciding a case it had no right to judge. It is fined ninety
+      crowns. The written sentence takes four lines in the official report and is read aloud.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].record.subject"
+    of: c78d48ef85573803
+    plainenglish: >-
+      which court judged the killing
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].record.options.record.chronicle"
+    of: 6e7bbf47f93aef83
+    plainenglish: >-
+      A man was killed at Wick. Our house kept the case in the parish and sent the killer south,
+      although we knew we had no legal right to decide it.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].record.options.record.claims[0].text"
+    of: c869ae31fcb1e4ad
+    plainenglish: >-
+      kept a killing case in the parish and sent the killer south despite having no legal right
+      to judge it
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].record.options.embellish.chronicle"
+    of: 67c939a6dd0abdea
+    plainenglish: >-
+      After a killing at Wick, our house sent the accused under guard to the Warden's assize at
+      Cawdry. That was the lawful course and what our house has always done.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].record.options.embellish.claims[0].text"
+    of: 6fd8e1c6af4dd162
+    plainenglish: >-
+      sent the accused killer under guard to the Warden's assize
