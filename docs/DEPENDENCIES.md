@@ -13,7 +13,9 @@ here — without asking whether the code survives it.
 
 The scheduled **dependency advisory audit** workflow (`.github/workflows/dependency-audit.yml`)
 checks the current npm advisory database **without modifying the lockfile**.
-It runs on `main` each Monday (03:37 UTC), can be dispatched manually after
+It runs on `main` each Monday (03:37 UTC) and immediately after relevant
+lockfile, shell-package or audit-workflow changes land on `main`. It can also
+be dispatched manually after
 dependency changes, and uploads the unfiltered `dependency-audit.json` for
 review. `tools/electron-audit.mjs` also writes a summary of advisory severity
 and Electron/packaging dependency findings to the GitHub Actions job summary.
