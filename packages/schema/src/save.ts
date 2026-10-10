@@ -699,6 +699,8 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     callback: z.string().optional(),
     /** Chosen Record override, persisted so a saved pending docket retains its prose address. */
     recordChoiceId: z.string().optional(),
+    /** Exact outcome override when an authored choice has multiple factual results. */
+    recordOutcomeId: z.string().optional(),
     options: z.array(z.object({
       option: z.enum(['record', 'omit', 'embellish']),
       chronicle: z.string().nullable(),
