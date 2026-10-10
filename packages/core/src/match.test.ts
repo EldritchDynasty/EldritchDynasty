@@ -12,6 +12,7 @@ import type { MatchCard, SimCtx } from '@ed/core';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { canonical } from './save.js';
 import { coreMessageAddress } from './messages.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -978,5 +979,47 @@ describe('a card drawn takeable is takeable', () => {
     // in it would have refused with "On Both Hands cannot marry", and the
     // only working control on the panel would have been Decline.
     expect(ctx.world.pendingDecisions.map((d) => d.id)).not.toContain(his.id);
+  });
+});
+
+describe('taking a card refuses in the reader\'s setting (#807)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./people/match.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#match\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'match.refuse.subject_gone': 'the subject is gone',
+      'match.refuse.cannot_marry': '{NAME} cannot marry',
+      'match.refuse.card_closed': 'that card is closed',
+      'match.refuse.no_longer_possible': 'that match is no longer possible',
+      'match.refuse.no_recipe': 'the card promises nobody',
+      'match.refuse.recipe_gone': 'that recipe is no longer in the content',
+    });
+  });
+
+  it('gives a refused card its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const { ctx, her } = withDaughter(31);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const card = dealMatch(ctx, her, testRng('refusals')).cards.find((c) => c.kind === 'outsider' && c.available)!;
+      const child = place(ctx, { sex: 'male', age: 4 });
+      return [
+        takeCard(ctx, 'nobody_at_all', card),
+        takeCard(ctx, child.id, card),
+        takeCard(ctx, her.id, { ...card, available: false, blockedBy: undefined } as MatchCard),
+        takeCard(ctx, her.id, { ...card, kind: 'household', person: undefined } as MatchCard),
+        takeCard(ctx, her.id, { ...card, recipe: undefined } as MatchCard),
+        takeCard(ctx, her.id, { ...card, recipe: { ...card.recipe!, template: 'no_such_template' } } as MatchCard),
+      ].map((r) => ({ ok: r.ok, reason: r.reason }));
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      'the subject is gone', expect.stringMatching(/ cannot marry$/), 'that card is closed',
+      'that match is no longer possible', 'the card promises nobody', 'that recipe is no longer in the content',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
   });
 });
