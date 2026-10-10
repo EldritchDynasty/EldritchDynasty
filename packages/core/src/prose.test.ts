@@ -524,3 +524,16 @@ describe('keyed core-message interpolation (#706)', () => {
     expect(msg(ctx, key, original, values)).toBe('Mara keeps 500 years in the book.');
   });
 });
+
+describe('core message own-property interpolation (#861)', () => {
+  it('rejects inherited tokens and accepts explicitly supplied prototype-like names', () => {
+    const ctx = testWorld(loadBundle());
+    for (const name of ['constructor', 'toString', '__proto__']) {
+      expect(() => msg(ctx, 'own-property', `{${name}}`, {})).toThrow(`Missing {${name}}`);
+    }
+    expect(msg(ctx, 'own-property', '{constructor}', { constructor: 'author' })).toBe('author');
+    const values = Object.assign(Object.create(null), { __proto__: 'literal' });
+    Object.defineProperty(values, '__proto__', { value: 'literal', enumerable: true });
+    expect(msg(ctx, 'own-property', '{__proto__}', values)).toBe('literal');
+  });
+});
