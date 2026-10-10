@@ -656,6 +656,40 @@ describe('authored Crown Record truth for the remaining six scenes (#864)', () =
   }
 });
 
+describe('the Crown readers record what the house did (#334)', () => {
+  // Each reader is gated on a fact only a Crown outcome writes. The witness
+  // narrows the draw, not the gate, so set the fact the gate reads first.
+  const readers = [
+    { event: 'a_page_in_our_own_hand', choice: 'let_it_be_heard', outcome: 'heard_again', selected: 'fallback' },
+    { event: 'a_page_in_our_own_hand', choice: 'ask_for_it_closed', outcome: 'left_closed', selected: 'choice' },
+    { event: 'cousins_from_the_rimefell', choice: 'take_them_in', outcome: 'told_them', selected: 'fallback' },
+    { event: 'cousins_from_the_rimefell', choice: 'send_them_away', outcome: 'sent_away', selected: 'choice' },
+  ] as const;
+
+  for (const [index, scene] of readers.entries()) {
+    it(`${scene.event}: ${scene.choice} records the chosen fact and embellishes its own lie`, () => {
+      const { ctx, event, record, entryId } = crownWitness(scene.event, scene.choice, scene.outcome, 33440 + index);
+      const block = recordEventForChoice(event, scene.choice, scene.outcome)!.event.record!;
+      expect(record.recordChoiceId === undefined ? 'fallback' : 'choice').toBe(scene.selected);
+      expect(resolveRecord(ctx, record.id, 'record').ok).toBe(true);
+      expect(ctx.world.chronicle.find((entry) => entry.id === entryId)?.discrepancyId).toBeUndefined();
+
+      const lie = crownWitness(scene.event, scene.choice, scene.outcome, 33450 + index);
+      expect(resolveRecord(lie.ctx, lie.record.id, 'embellish').ok).toBe(true);
+      expect(lie.ctx.world.discrepancies.get(block.options.embellish.discrepancy.id)?.state).toBe('open');
+    });
+  }
+
+  it('gives each branch of a reader a different lie', () => {
+    for (const id of new Set(readers.map((scene) => scene.event))) {
+      const event = content.events.find((item) => item.id === id)!;
+      const lies = [event.record!, ...(event.recordByChoice ?? [])]
+        .map((block) => block.options.embellish.discrepancy.id);
+      expect(new Set(lies).size, id).toBe(lies.length);
+    }
+  });
+});
+
 describe('Crown chronology holds whenever the scene can fire (#885)', () => {
   // Neither scene is scoped to an Age, so either can fire in any year of a
   // Long Line, and in any of the years the CHILD slot admits.
