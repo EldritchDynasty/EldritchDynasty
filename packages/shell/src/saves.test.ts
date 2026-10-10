@@ -88,6 +88,50 @@ describe('the save directory', () => {
     expect(listSaves(root)).toEqual([]);
   });
 
+  it('refuses a save-root directory symlink before any save can escape the profile', () => {
+    const outside = join(userData, 'external-directory');
+    mkdirSync(outside);
+    rmSync(root, { recursive: true });
+    try {
+      symlinkSync(outside, root, 'dir');
+    } catch (error) {
+      // Some Windows configurations restrict directory symlinks without
+      // Developer Mode. Other directory-root assertions still run there.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+
+    // Node's recursive mkdir accepts a symlinked directory without error;
+    // saveRoot must reject it, rather than returning a path that leaves the
+    // profile on the next atomic write.
+    expect(() => writeSave(saveRoot(userData), 'escaped', aSave())).toThrow(
+      'save root is not a regular directory',
+    );
+    expect(readdirSync(outside)).toEqual([]);
+  });
+
+  it('refuses a non-directory entry at the save root', () => {
+    rmSync(root, { recursive: true });
+    writeFileSync(root, 'unrelated content', 'utf8');
+    expect(() => saveRoot(userData)).toThrow();
+    expect(readFileSync(root, 'utf8')).toBe('unrelated content');
+  });
+
+  it('rechecks a save root even after a successful earlier creation', () => {
+    expect(saveRoot(userData)).toBe(root);
+    const outside = join(userData, 'later-destination');
+    mkdirSync(outside);
+    rmSync(root, { recursive: true });
+    try {
+      symlinkSync(outside, root, 'dir');
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+    expect(() => saveRoot(userData)).toThrow('save root is not a regular directory');
+    expect(readdirSync(outside)).toEqual([]);
+  });
+
   it('lists newest first', () => {
     writeSave(root, 'older', aSave({ savedAt: '2020-01-01T00:00:00.000Z' }));
     writeSave(root, 'newer', aSave({ savedAt: '2026-01-01T00:00:00.000Z' }));
