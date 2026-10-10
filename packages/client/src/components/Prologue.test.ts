@@ -198,13 +198,19 @@ describe('Plain English prologue replay identity (#410)', () => {
     expect(wrapper.findAll('.triad li')).toHaveLength(0);
 
     await revealChoices(wrapper);
+    await answerButton(wrapper, 1).trigger('click');
+    await wrapper.get('input[aria-label="Name the house"]').setValue('House Cedar');
     expect(hasSeenProse(window.localStorage, keyFor(plain))).toBe(true);
     expect(hasSeenProse(window.localStorage, keyFor(original))).toBe(false);
 
     // Only the completed translation is a repeat. Original has not been read.
+    // Toggling the words must not discard answers already entered by the player.
     await wrapper.setProps({ prologue: original });
     expect(wrapper.findAll('.triad li')).toHaveLength(0);
     await wrapper.setProps({ prologue: plain });
     expect(wrapper.findAll('.triad li')).toHaveLength(3);
+    expect(answerButton(wrapper, 1).attributes('aria-pressed')).toBe('true');
+    expect((wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement).value)
+      .toBe('House Cedar');
   });
 });
