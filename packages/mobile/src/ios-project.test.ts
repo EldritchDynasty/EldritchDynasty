@@ -90,6 +90,38 @@ describe('Capacitor iOS project', () => {
     expect(build).toBeGreaterThan(boot);
   });
 
+  it('rejects empty or malformed native smoke evidence rather than matching two missing hashes', async () => {
+    // This is the exact pure validator loaded by the Node-based simulator driver.
+    // @ts-ignore JavaScript .mjs implementation intentionally has no TS declarations.
+    const { assertFinalEvidence } = await import('../scripts/ios-smoke-evidence.mjs');
+    const sha256 = 'a'.repeat(64);
+
+    expect(assertFinalEvidence('save', { command: 'save', ok: true, sha256, year: 1082 }))
+      .toEqual({ command: 'save', ok: true, sha256, year: 1082 });
+
+    for (const bad of [undefined, null, '', 'a'.repeat(63), 'G'.repeat(64), 123]) {
+      expect(() => assertFinalEvidence('save', { command: 'save', ok: true, sha256: bad }))
+        .toThrow('no valid sha256 digest');
+      expect(() => assertFinalEvidence('resume', { command: 'resume', ok: true, sha256: bad }))
+        .toThrow('no valid sha256 digest');
+      expect(() => assertFinalEvidence('export', { command: 'export', ok: true, sha256: bad, path: 'run.json' }))
+        .toThrow('no valid sha256 digest');
+      expect(() => assertFinalEvidence('import', { command: 'import', ok: true, sha256: bad }))
+        .toThrow('no valid sha256 digest');
+    }
+
+    expect(() => assertFinalEvidence('export', { command: 'export', ok: true, sha256, path: {} }))
+      .toThrow('no valid interchange path');
+    expect(() => assertFinalEvidence('save', { command: 'save', stage: 'received', ok: true, sha256 }))
+      .toThrow('not a final result');
+    expect(() => assertFinalEvidence('resume', { command: 'resume', ok: false, error: 'read failed', sha256 }))
+      .toThrow('read failed');
+    expect(() => assertFinalEvidence('resume', { command: 'save', ok: true, sha256 }))
+      .toThrow('expected resume evidence');
+    expect(() => assertFinalEvidence('resume', null))
+      .toThrow('no structured evidence');
+  });
+
   it('registers the simulator smoke scheme in Debug and never in Release', () => {
     const project = text('ios/App/App.xcodeproj/project.pbxproj');
     const debugInfo = text('ios/App/App/Info-Debug.plist');
