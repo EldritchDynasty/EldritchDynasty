@@ -27,7 +27,9 @@ export function msg(
   // as well as legacy leading-underscore uppercase names. Otherwise {years}
   // would pass validation but reach the player literally, without substitution.
   return template.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (token, name: string) => {
-    const value = values[name];
+    // Values must be supplied by the caller, not inherited from Object.prototype.
+    // Otherwise {constructor} and {toString} silently render function source.
+    const value = Object.prototype.hasOwnProperty.call(values, name) ? values[name] : undefined;
     if (value === undefined) throw new Error(`Missing ${token} in core message ${key}`);
     return value;
   });
