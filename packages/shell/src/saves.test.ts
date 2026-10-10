@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadContent } from '@ed/content';
@@ -101,6 +101,45 @@ describe('the save directory', () => {
     // time they open the only copy of a nine-hour game.
     writeSave(root, 'the autumn run', aSave());
     expect(readdirSync(root)).toEqual(['the autumn run.edsave.json']);
+  });
+
+  it('never follows a planted .writing symlink during an atomic save', () => {
+    // The old fixed scratch filename allowed writeFileSync() to follow this
+    // link before the final path was renamed, overwriting a different file.
+    const outside = join(userData, 'unrelated.json');
+    writeFileSync(outside, 'keep these original bytes', 'utf8');
+    const legacyScratch = join(root, 'protected.edsave.json.writing');
+    try {
+      symlinkSync(outside, legacyScratch, 'file');
+    } catch (error) {
+      // Creating file symlinks on Windows may require Developer Mode.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+
+    writeSave(root, 'protected', aSave({ year: 1450 }));
+    expect(readFileSync(outside, 'utf8')).toBe('keep these original bytes');
+    expect(readSave(root, 'protected')).toMatchObject({ year: 1450, format: 6 });
+    // The writer must neither use nor delete another entry's old scratch path.
+    expect(readdirSync(root).sort()).toEqual([
+      'protected.edsave.json',
+      'protected.edsave.json.writing',
+    ]);
+  });
+
+  it('does not change an existing slot when JSON serialization fails', () => {
+    writeSave(root, 'existing', aSave({ year: 1442 }));
+    const cycle: Record<string, unknown> = { format: 6 };
+    cycle.self = cycle;
+    expect(() => writeSave(root, 'existing', cycle)).toThrow();
+    expect(readSave(root, 'existing')).toMatchObject({ year: 1442, format: 6 });
+    expect(readdirSync(root)).toEqual(['existing.edsave.json']);
+  });
+
+  it('cleans the exclusive scratch when atomic rename is refused', () => {
+    mkdirSync(join(root, 'occupied.edsave.json'));
+    expect(() => writeSave(root, 'occupied', aSave())).toThrow();
+    expect(readdirSync(root)).toEqual(['occupied.edsave.json']);
   });
 
   it('reports a corrupt slot rather than dropping it out of the listing', () => {
