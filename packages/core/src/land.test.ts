@@ -9,6 +9,8 @@ import {
   type Rng,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { readFileSync } from 'node:fs';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -869,5 +871,51 @@ describe('the land pages speak the reader\'s setting (#744)', () => {
       tickLandImprovements(ctx);
       expect(ctx.world.chronicle.at(-1)!.text).toBe(say(mode, 'land.drained_unnamed'));
     }
+  });
+});
+
+describe('the land orders refuse in the reader\'s setting (#799)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./land.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#land\.(refuse|view|loss)\./.test(entry.address));
+
+  it('keys every refusal, the made-ground labels and the loss fallback', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'land.refuse.buy_not_listed': 'nothing of that name is on the market',
+      'land.refuse.buy_unknown': 'no such parcel',
+      'land.refuse.buy_cost': 'the house cannot raise {PRICE} crowns',
+      'land.loss.nobody': 'nobody left to say',
+      'land.refuse.sell_unknown': 'no such parcel',
+      'land.refuse.sell_demesne': 'the home ground is not for sale',
+      'land.refuse.sell_not_held': 'the house does not hold it',
+      'land.refuse.improve_unknown': 'no such parcel',
+      'land.refuse.improve_town_house': 'a town house is presence, not producing ground',
+      'land.refuse.improve_not_held': 'the house does not hold it',
+      'land.refuse.improve_underway': 'already being improved',
+      'land.refuse.improve_cost': 'the house cannot raise {PRICE} crowns',
+      'land.refuse.endow_not_held': 'the house does not hold it',
+      'land.refuse.endow_caput': "{PARCEL} is the seat's own ground and cannot be endowed away",
+      'land.refuse.endow_no_hall': 'no such hall stands to hold it',
+      'land.refuse.recall_not_held': 'the house does not hold it',
+      'land.refuse.rename_not_held': 'the house does not hold it',
+      'land.refuse.rename_empty': 'a name cannot be empty',
+      'land.view.made_place': 'ground the house cleared itself',
+      'land.view.made_provenance': "made, not bought — no deed but the house's own word",
+    });
+  });
+
+  it('gives a refused order its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(bundle);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      return [sellParcel(ctx, 'the_home_demesne'), buyParcel(ctx, 'sowerhay'), sellParcel(ctx, 'no_such_ground')];
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      'the home ground is not for sale', 'nothing of that name is on the market', 'no such parcel',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
   });
 });
