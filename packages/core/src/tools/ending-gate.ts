@@ -1003,9 +1003,14 @@ export function gateEndings(
   runs = ENDING_DEFAULT_BATCH,
   years = CAMPAIGN_YEARS,
 ): EndingVerdict {
+  // Compile inline follow-ups and lookups once for the entire paired sweep.
+  // playToTheEnd accepts indexed Content, and indexContent is idempotent;
+  // rebuilding the raw bundle's indexes for all 2 * runs games wastes CPU
+  // without changing a single seed, policy or game decision.
+  const content = indexContent(source);
   // Same seed, both policies: isolate policy from founding-generation noise.
   const played = endingGateInputs(runs).map(({ seed, policy }) =>
-    playToTheEnd(source, seed, years, policy));
+    playToTheEnd(content, seed, years, policy));
   const v = verdictOver(played);
   return { ok: v.ok, lines: [`gate (endings): ${runs} played runs x ${years} years, per policy`, ...v.lines] };
 }
