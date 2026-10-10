@@ -7,7 +7,7 @@ import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  LENSES, PLATE, plateHeight, plateName, plateRows, plateSubtitle, reads,
+  LENSES, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, reads,
   type Lens, type Measure,
 } from '../lib/book';
 
@@ -145,25 +145,12 @@ async function follow(id: string): Promise<void> {
 onMounted(() => { if (props.focus) void follow(props.focus); });
 
 /**
- * THE AGE BOUNDARIES FALLING INSIDE WHAT IS DRAWN.
- *
- * Keyed by the year an Age BEGAN, so the rule is drawn before the first entry
- * of that year rather than after it. An Age that began before the window the
- * player has jumped to does not draw a rule inside it: the boundary is not in
- * view, and a rule in the middle of a century for something that happened two
- * hundred years earlier is a lie about where the years divide.
+ * Boundary positions are indexed into the actually drawn page, not calendar
+ * years. A missing/filtered starting-year page still gets its Age rubric at
+ * the first page after the change. The printed year stays the true beginning.
  */
-const boundaries = computed(() => {
-  const out = new Map<number, string | null>();
-  for (const a of props.ages) {
-    if (from.value !== null && a.began < from.value) continue;
-    // An Age with no name is still a boundary. The years turned over and the
-    // family had no word for what they had just lived through, which is a
-    // thing the book should show rather than smooth away.
-    out.set(a.began, a.name ?? null);
-  }
-  return out;
-});
+const boundaries = computed(() =>
+  ageBoundariesForPages(page.value, props.ages, from.value));
 
 /**
  * A PAGE SOMEBODY WOULD POST (issue #69).
@@ -333,13 +320,11 @@ const counts = computed(() => ({
            volume. -->
       <div ref="pages" class="pages" @scroll.passive="onScroll">
         <template v-for="(entry, i) in page" :key="entry.id ?? entry.year + ':' + i">
-          <!-- Drawn before the first entry of the year the Age began, and only
-               once: two entries in that year must not draw two rules. -->
-          <div
-            v-if="boundaries.has(entry.year) && (i === 0 || page[i - 1]!.year !== entry.year)"
-            class="boundary"
-          >
-            <span v-if="boundaries.get(entry.year)" class="age">{{ boundaries.get(entry.year) }}</span>
+          <!-- Several Ages may have begun between these two surviving pages.
+               Use the real began year, even if no page from that year survives. -->
+          <div v-for="age in boundaries.get(i) ?? []" :key="age.began" class="boundary">
+            <span class="dim small year">{{ age.began }}</span>
+            <span v-if="age.name" class="age">{{ age.name }}</span>
             <span v-else class="dim small unnamed">these years, which the house never named</span>
           </div>
           <Entry
@@ -396,6 +381,7 @@ header { padding: 16px 22px 12px; border-bottom: 1px solid var(--rule); }
   display: flex; align-items: center; gap: 10px;
   margin: 22px 0 14px; border-top: 1px solid var(--rule); padding-top: 10px;
 }
+.boundary .year { font-variant-numeric: tabular-nums; }
 .boundary .age {
   font-variant: small-caps; letter-spacing: .08em; color: var(--rubric); font-size: var(--t-card);
 }
