@@ -266,6 +266,22 @@ describe('mobile native save import picker', () => {
     }
   });
 
+  it('settles rather than throwing from onchange when FileReader construction is refused (#896)', async () => {
+    const { input } = fakeNativePicker();
+    class RefusedReader {
+      constructor() { throw new Error('FileReader unavailable in WebView'); }
+    }
+    vi.stubGlobal('FileReader', RefusedReader);
+    try {
+      const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+      input.files = [{} as File];
+      expect(() => input.onchange?.()).not.toThrow();
+      await expect(choice).resolves.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('settles with null when the selected file cannot be parsed', async () => {
     const { input } = fakeNativePicker();
     class InvalidReader {
