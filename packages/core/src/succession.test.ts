@@ -208,7 +208,9 @@ describe('prospective wanderer arrival prose (#646)', () => {
     expect(person).toBeDefined();
     expect(ctx.world.chronicle.find((entry) => entry.title === 'An unexpected arrival')!.text)
       .toBe(`${person.name} arrived, and nobody had sent for them.`);
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    // The optional authored blurb is absent by design; the new core fallback
+    // still needs its own reviewed Plain English row, so report only that key.
+    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress('service.wanderer_unannounced')]);
   });
 });
 
@@ -1104,7 +1106,7 @@ function staffContract(boundTo: string, term: 'yearly' | 'hereditary' = 'yearly'
 
 describe('staff service uses prospective Chronicle prose (#840)', () => {
   it('pins all seven exact Original templates and their stable keys', () => {
-    const source = readFileSync(new URL('./succession.ts', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('./people/succession.ts', import.meta.url), 'utf8');
     const found = coreMessageEntries(source)
       .filter((entry) => entry.address.startsWith('core:messages#service.'));
     expect(Object.fromEntries(found.map((entry) => [entry.address, entry.text])))
