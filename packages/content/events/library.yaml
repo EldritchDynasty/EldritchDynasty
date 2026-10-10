@@ -289,7 +289,7 @@ events:
     weight: 95
     repeatable: false
     tags: [library, records, church, mystic]
-    purposes: [plant_rumour, change_relationship, worldbuild_through_action]
+    purposes: [plant_rumour, worldbuild_through_action]
     conditions:
       all:
         - { generation: { op: gte, value: 4 } }
