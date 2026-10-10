@@ -314,6 +314,33 @@ describe('the exposure page speaks the reader\'s setting (#733)', () => {
     return { ctx, doc, page: ctx.world.chronicle.at(-1)! };
   }
 
+  /**
+   * The notary is quoted inside both keyed lines, so an unkeyed notary left
+   * an Original phrase in the middle of a Plain English page (#410).
+   */
+  it('names the notary in the reader\'s words, on the paper and the filing line', () => {
+    for (const [mode, bramme, caster] of [
+      ['original', 'a notary at Bramme', 'a herald at Caster'],
+      ['plainenglish', 'a Bramme lawyer', 'a royal herald'],
+    ] as const) {
+      const ctx = testWorld(bundle);
+      setProseVariants(ctx, [
+        { address: coreMessageAddress('papers.notary.bramme'), of: proseOriginalHash('a notary at Bramme'), plainenglish: 'a Bramme lawyer' },
+        { address: coreMessageAddress('papers.notary.caster'), of: proseOriginalHash('a herald at Caster'), plainenglish: 'a royal herald' },
+      ]);
+      setProseMode(ctx, mode);
+      const girl = place(ctx, { sex: 'female', age: 20, name: 'Girl' });
+      expect(filePedigree(ctx, girl, 'bramme').notarisedBy).toBe(bramme);
+      expect(filePedigree(ctx, girl, 'caster').notarisedBy).toBe(caster);
+
+      // The filing line quotes the words the paper was bought with.
+      ctx.world.treasury = 10_000;
+      const buyer = place(ctx, { sex: 'female', age: 20, name: 'Cerys' });
+      expect(order(ctx, { kind: 'pedigree', person: buyer.id, grade: 'bramme' }).ok).toBe(true);
+      expect(ctx.world.chronicle.at(-1)!.text).toContain(`sealed by ${bramme}`);
+    }
+  });
+
   it('keeps the Original byte for byte', () => {
     const { page, doc } = expose('original');
     expect(page.title).toBe('The seal');
