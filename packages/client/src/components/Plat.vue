@@ -117,17 +117,27 @@ function dash(state: PlatState): string | undefined {
 
 const naming = ref<string | null>(null);
 const draftName = ref('');
+const renameError = ref<string | null>(null);
 
 function startNaming(item: PlatItem): void {
   if (!item.parcel) return;
   naming.value = item.parcel;
   draftName.value = item.name;
+  renameError.value = null;
 }
 
 function confirmNaming(item: PlatItem): void {
-  if (!item.parcel) return;
+  // Enter and blur can both fire before Vue removes the input. Only the
+  // still-open edit may submit, or one name can create two Chronicle pages.
+  if (!item.parcel || naming.value !== item.parcel) return;
   const trimmed = draftName.value.trim();
-  if (trimmed && trimmed !== item.name) props.actions.nameParcel(item.parcel, trimmed);
+  if (trimmed && trimmed !== item.name && !props.actions.nameParcel(item.parcel, trimmed)) {
+    // The parcel may have left the house since the editor opened. Do not
+    // discard a name the player tried to give it when the engine refuses.
+    renameError.value = 'That parcel could not be renamed. It may no longer be held by the house.';
+    return;
+  }
+  renameError.value = null;
   naming.value = null;
 }
 </script>
@@ -202,9 +212,16 @@ function confirmNaming(item: PlatItem): void {
                   v-model="draftName"
                   size="18"
                   :aria-label="'Rename ' + item.name"
+                  :aria-describedby="renameError ? 'parcel-rename-error-' + item.parcel : undefined"
                   @keyup.enter="confirmNaming(item)"
                   @blur="confirmNaming(item)"
                 />
+                <p
+                  v-if="renameError"
+                  :id="'parcel-rename-error-' + item.parcel"
+                  class="rubric small"
+                  role="alert"
+                >{{ renameError }}</p>
               </template>
               <template v-else>
                 {{ item.name }}
