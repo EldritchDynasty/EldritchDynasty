@@ -1,7 +1,7 @@
-import { lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { lstatSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveSavePath, slotOfFile, SAVE_EXTENSION } from '../tools/save-slot.mjs';
+import { writeJsonAtomically } from './atomic-json.mjs';
 
 /**
  * WRITING A RUN TO DISK.
@@ -90,20 +90,7 @@ export function writeSave(root, slot, save) {
     throw new TypeError('a save is an object with a numeric format');
   }
 
-  const target = resolveSavePath(root, slot);
-  // A fixed .writing name can already be a symlink, making writeFileSync
-  // overwrite a file outside userData/saves before the safe rename (#870).
-  // Use a fresh sibling and exclusive creation to refuse even a raced link.
-  const scratch = `${target}.${randomUUID()}.writing`;
-  try {
-    writeFileSync(scratch, JSON.stringify(save), { encoding: 'utf8', flag: 'wx' });
-    renameSync(scratch, target);
-  } finally {
-    // Interrupted/failed serialization and renames must never leave a
-    // half-written scratch beside the slot in a running process.
-    rmSync(scratch, { force: true });
-  }
-  return target;
+  return writeJsonAtomically(resolveSavePath(root, slot), save);
 }
 
 export function deleteSave(root, slot) {
