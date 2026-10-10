@@ -465,11 +465,12 @@ function historicalOrigins(
         priority: 18,
       });
     }
-    if (entry.winningHouse && entry.winningHouse !== lot.house && wants(entry.winningHouse)) {
-      addFact(builders, ctx, entry.winningHouse, {
+    const winningHouse = entry.winningHouse;
+    if (winningHouse && winningHouse !== lot.house && wants(winningHouse)) {
+      addFact(builders, ctx, winningHouse, {
         kind: 'auction',
         year: entry.year,
-        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.won', '{HOUSE} took {LOT} at the {YEAR} auction.', { HOUSE: houseName(ctx, entry.winningHouse), LOT: refName(ctx, lot.refId), YEAR: String(entry.year) })),
+        ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.auction.won', '{HOUSE} took {LOT} at the {YEAR} auction.', { HOUSE: houseName(ctx, winningHouse), LOT: refName(ctx, lot.refId), YEAR: String(entry.year) })),
         ref: `${lot.id}:winner`,
         active: false,
         priority: 20,
