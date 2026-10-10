@@ -165,10 +165,18 @@ export function plateSpan(entries: readonly ChronicleEntry[]): string {
   return `${entries[0]!.year}–${entries[entries.length - 1]!.year}`;
 }
 
+/**
+ * A readable house slug for both exported images. JavaScript's ASCII-only
+ * \\w would erase names written in other scripts; keep Unicode letters,
+ * digits and combining marks, plus the underscores already accepted before.
+ */
+function houseSlug(name: string): string {
+  return name.replace(/[^\\p{L}\\p{N}\\p{M}_]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
+}
+
 /** A filename a person would not be embarrassed to have in their downloads. */
 export function plateName(houseName: string, entries: readonly ChronicleEntry[]): string {
-  const house = houseName.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
-  return `${house}-${plateSpan(entries).replace('–', '-')}.png`;
+  return `${houseSlug(houseName)}-${plateSpan(entries).replace('–', '-')}.png`;
 }
 
 
@@ -304,6 +312,5 @@ export function afterimageLayout(model: AfterimageModel, measure: Measure): Afte
 
 /** Stable, collision-resistant enough for several finished houses in one folder. */
 export function afterimageName(houseName: string, seed: number, year: number): string {
-  const house = houseName.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'the-house';
-  return `${house}-${year}-seed-${seed}-afterimage.png`;
+  return `${houseSlug(houseName)}-${year}-seed-${seed}-afterimage.png`;
 }
