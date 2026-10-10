@@ -202,6 +202,18 @@ function select(id: string): void {
 }
 
 /**
+ * The Cast sits ABOVE the tree: its people may be hidden by a selected hall,
+ * a planning filter, a direct-line view or a focused branch. Unlike selecting
+ * a visible card inside the tree, opening a Cast member must reveal that card.
+ * Keep click-again-to-close, and leave in-tree selection's filters untouched.
+ */
+function selectFromCast(id: string): void {
+  const opening = selected.value !== id;
+  selected.value = opening ? id : null;
+  if (opening) treeReveal.value = { id, token: ++treeRevealToken };
+}
+
+/**
  * FOLLOW A LINE IN THE PASSAGE LOG BACK TO THE PERSON.
  *
  * The log sits in the left column and is visible from all three panes, but
@@ -633,7 +645,7 @@ const yearAndBirths = computed(() => {
           <!-- Five or six people out of seventy, each with the one thing that
                is true of them and of nobody else. The tree is still under it;
                this is the way in. -->
-          <Cast :cast="view.cast" :selected="selected" @select="select" />
+          <Cast :cast="view.cast" :selected="selected" @select="selectFromCast" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" />
           <Tree
             :view="view"
