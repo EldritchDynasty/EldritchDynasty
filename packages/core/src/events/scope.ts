@@ -41,4 +41,6 @@ export interface EvalScope {
    * second id or searching the Chronicle afterwards.
    */
   page?: string;
+  /** Stable authored address of the Chronicle effect being committed, if any. */
+  proseAddress?: string;
 }
