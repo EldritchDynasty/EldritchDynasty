@@ -3,6 +3,7 @@ import { loadContent } from '@ed/content';
 import type { RetainerContract } from '@ed/schema';
 import { proseOriginalHash } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
+import { canonical } from './save.js';
 import {
   bootstrap, DEBT_FLOOR, dismissRetainer, driftLoyalty, leakChance, place, releaseContracts,
   missingPlainEnglish, saveGame, setProseMode, setProseVariants, tellSecrets, testRng, walkSecrets, yearsOfService,
@@ -270,10 +271,10 @@ describe('a secret that is told', () => {
     // The selection is prospective: a mode switch cannot rewrite history or
     // alter the save just because the reader chose another register.
     const frozen = page.text;
-    const saved = JSON.stringify(saveGame(ctx));
+    const saved = canonical(saveGame(ctx));
     setProseMode(ctx, 'original');
     expect(page.text).toBe(frozen);
-    expect(JSON.stringify(saveGame(ctx))).toBe(saved);
+    expect(canonical(saveGame(ctx))).toBe(saved);
   });
 
   it('keeps stale, renamed and unknown house names on their original fallback (#974)', () => {
@@ -292,7 +293,7 @@ describe('a secret that is told', () => {
     const renamed = loose(20);
     const runtimeHouse = renamed.world.houses.get('house_marrow');
     if (!runtimeHouse) throw new Error('house_marrow world record is missing');
-    runtimeHouse.name = 'The Renamed House';
+    renamed.world.houses.set('house_marrow', { ...runtimeHouse, name: 'The Renamed House' });
     setProseVariants(renamed, [reviewed]);
     setProseMode(renamed, 'plainenglish');
     expect(tellEventually(renamed)).toBe(true);
