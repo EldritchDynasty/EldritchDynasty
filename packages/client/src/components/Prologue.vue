@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
 import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
-import { initialProloguePresentation, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
+import { initialProloguePresentation, initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
   prologue: PrologueView;
@@ -22,11 +22,11 @@ function readingStorage(): Storage | null {
   }
 }
 
-const replayText = prologueSeenText(
+const replayText = computed(() => prologueSeenText(
   props.prologue.opening,
   props.prologue.triad,
   props.prologue.thesis,
-);
+));
 
 /**
  * A DEBT OF THREE PARTS (concept §3, issue #38).
@@ -45,11 +45,22 @@ const replayText = prologueSeenText(
 const initial = initialProloguePresentation(
   readingStorage(),
   props.skipSeenProse,
-  replayText,
+  replayText.value,
   props.prologue.triad.length,
   props.prologue.inherited !== undefined,
 );
 const shown = ref(initial.shown);
+
+// The reader can select Plain English while the signing is on-screen. A new
+// translation is a different reading identity: do not mark words that were
+// never displayed as seen, or continue halfway through a different triad.
+watch(replayText, (text) => {
+  if (!props.prologue.founded) {
+    shown.value = initialPrologueShown(
+      readingStorage(), props.skipSeenProse, text, props.prologue.triad.length,
+    );
+  }
+});
 const founderName = ref('');
 const answers = ref<Record<string, string>>({});
 const houseName = ref('');
@@ -92,7 +103,7 @@ const friends = ref(
 function on(): void {
   shown.value = revealPrologueBeat(
     readingStorage(),
-    replayText,
+    replayText.value,
     shown.value,
     props.prologue.triad.length,
   );
