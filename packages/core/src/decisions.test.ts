@@ -211,6 +211,8 @@ describe('choice-scoped Record wording (#864)', () => {
     };
     const event: EventTemplate = { ...original, recordByChoice: [lawful] };
     expect(EventTemplateS.parse(event).recordByChoice?.[0]?.id).toBe(lawful.id);
+    expect(() => EventTemplateS.parse({ ...event, recordByChoice: [lawful, lawful] }))
+      .toThrow(/duplicate choice-specific Record id/);
     return { event, lawful };
   }
 
@@ -276,6 +278,32 @@ describe('choice-scoped Record wording (#864)', () => {
     setProseMode(reloaded, 'original');
     expect(resolveRecord(reloaded, restored.id, 'record').line).toBe(plainRecord);
     expect(reloaded.world.chronicle.find((line) => line.id === id)?.text).toBe(plainRecord);
+  });
+
+  it('routes the actual player decision to the matching authored Record block', () => {
+    const { ctx, pending, choiceId } = playerChoiceFixture(86404);
+    const authored = content.events.find((item) => item.id === 'blood_on_our_own_land')!.record!;
+    const selected = {
+      ...authored,
+      id: choiceId,
+      subject: 'A specific choice was taken.',
+      options: {
+        ...authored.options,
+        record: { ...authored.options.record, chronicle: 'This is the account of that choice.' },
+      },
+    };
+    pending.event.record = authored;
+    pending.event.recordByChoice = [selected];
+
+    const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(86404));
+    expect(answer.ok, answer.reason).toBe(true);
+    const record = ctx.world.pendingDecisions.find((item) => item.kind === 'record');
+    expect(record?.kind).toBe('record');
+    if (!record || record.kind !== 'record') throw new Error('Choice did not queue its Record');
+    expect(record.recordChoiceId).toBe(choiceId);
+    expect(record.subject).toBe(selected.subject);
+    expect(record.options[0]?.chronicle).toBe(selected.options.record.chronicle);
+    expect(resolveRecord(ctx, record.id, 'record').line).toBe(selected.options.record.chronicle);
   });
 
   it('an authored choice override may be omitted without modifying narration and old Record fields', () => {
