@@ -37,8 +37,9 @@ describe('tree and hall counsel', () => {
     expect(advice).toHaveBeenLastCalledWith('branches', 'branch_elm', 1);
     expect(advice).not.toHaveBeenCalledWith(expect.anything(), expect.anything(), 2);
   });
+
   it('clears previously requested tree and hall counsel when the world snapshot changes in the same year', async () => {
-    const advice = vi.fn((_surface: HelpSurface, _subject: string, tier: HelpTier) => [line(tier)]);
+    const advice = vi.fn((_surface: HelpSurface, _subject: string, _tier: HelpTier) => [line]);
     const wrapper = mount(TreeCounsel, {
       props: { view, selected: 'daughter', actions: { advice } },
     });
@@ -70,5 +71,4 @@ describe('tree and hall counsel', () => {
     expect(wrapper.findAll('blockquote')).toHaveLength(2);
     wrapper.unmount();
   });
-
 });
