@@ -544,11 +544,39 @@ const THREAD_ORIGINALS: Record<string, string> = {
 describe('external relationship thread prose (#793)', () => {
   it('pins the message inventory and every keyed Original at its call site', () => {
     const source = readFileSync(new URL('./relationship-threads.ts', import.meta.url), 'utf8');
-    const found = [...source.matchAll(/msg\(ctx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
+    const found = [...source.matchAll(/msg\(modeCtx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
       .map(([, key, literal]) => [key, literal!.slice(1, -1)]);
     expect(Object.fromEntries(found)).toEqual(THREAD_ORIGINALS);
     // Each call site has its own stable identity, even when two originals match.
     expect(found).toHaveLength(Object.keys(THREAD_ORIGINALS).length);
+  });
+
+
+  it('keeps equally strong grudges in the Original order even if their translated text sorts differently', () => {
+    const { ctx, us, them } = feuding();
+    us.name = 'Zed';
+    them.name = 'Alden';
+    const ours = place(ctx, { sex: 'female', age: 30, name: 'Ava' });
+    const rival = place(ctx, { sex: 'female', age: 30, name: 'Zora', house: 'house_marrow' });
+    addGrudge(ctx, them.id, us.id, { severity: 55, inheritance: 'none' });
+    addGrudge(ctx, rival.id, ours.id, { severity: 55, inheritance: 'none' });
+    const original = externalThreadFor(ctx, 'house_marrow')!;
+    const before = original.pressures.filter((p) => p.kind === 'grudge').map((p) => p.ref);
+    expect(before).toHaveLength(2);
+
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('threads.grudge'),
+      of: proseOriginalHash(THREAD_ORIGINALS['threads.grudge']!),
+      // Target-first flips the alphabetical tie if rendered text controls sorting.
+      plainenglish: '{TARGET} is blamed by {HOLDER} over {ORIGIN} in {YEAR}.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const translated = externalThreadFor(ctx, 'house_marrow')!;
+    const after = translated.pressures.filter((p) => p.kind === 'grudge').map((p) => p.ref);
+    expect(after).toEqual(before);
+    expect(translated.origin.ref).toBe(original.origin.ref);
+    expect(translated.pressures.find((p) => p.kind === 'grudge')?.detail)
+      .toContain('is blamed by');
   });
 
   it('translates a grudge and an untold secret without moving the facts or their ordering', () => {
