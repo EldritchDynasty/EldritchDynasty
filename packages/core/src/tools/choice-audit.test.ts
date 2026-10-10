@@ -113,6 +113,11 @@ describe('the #334 choice-debt worklist', () => {
 
     expect(() => choiceWorklist(content, {
       version: 1,
+      memory: [{ ...valid, kind: 'unsupported_memory_kind' }],
+    } as unknown as ChoiceDecisionFile)).toThrow(/kind and key must be non-empty strings/);
+
+    expect(() => choiceWorklist(content, {
+      version: 1,
       memory: [{ ...valid, key: '__not_a_current_write_only_key__' }],
     })).toThrow(/stale choice decision/);
 
