@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadBundle } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import { browserPlatform } from '../platform.js';
@@ -58,6 +59,17 @@ function stepUntil(
 }
 
 describe('Plain English client setting (#413)', () => {
+  it('rehydrates the lazy catalogue for a persisted Plain English preference (#410)', () => {
+    // The startup route must use the same asynchronous installer as the
+    // on-screen selector. setProseMode() alone has no variants to display.
+    const app = readFileSync(new URL('../App.vue', import.meta.url), 'utf8');
+    const startup = 'void selectProseMode(accessibility.value.proseMode);';
+    expect(app).toContain(startup);
+    expect(app.indexOf(startup)).toBeGreaterThan(app.indexOf('async function selectProseMode'));
+    expect(app).not.toContain('actions.setProseMode(accessibility.value.proseMode);');
+    expect(app).toContain('await installPlainEnglishCatalogue()');
+  });
+
   it('refreshes uncommitted prose immediately when the reader changes mode', () => {
     window.localStorage.clear();
     const bundle = loadBundle();
