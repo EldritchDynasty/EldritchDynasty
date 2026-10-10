@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { coreMessageAddress, msg } from './messages.js';
+import { outcomeTextAddress, outcomeChronicleEffectAddress, proseForOutcome } from './prose.js';
 import { loadBundle } from '@ed/content';
 import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
@@ -545,7 +546,6 @@ describe('exact choice outcome membership (#856)', () => {
       },
     };
     const ctx = testWorld(bundle);
-    const { outcomeTextAddress, outcomeChronicleEffectAddress, proseForOutcome } = await import('./prose.js');
     const firstAddress = outcomeTextAddress(ctx, revised, outcome, first.id)!;
     const secondAddress = outcomeTextAddress(ctx, revised, other, second.id)!;
     expect(firstAddress).not.toBe(secondAddress);
