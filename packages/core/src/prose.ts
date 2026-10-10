@@ -208,9 +208,12 @@ export function outcomeTextAddress(
   // already carries the exact choice id for the decision log; use that same
   // identity for prose rather than reverse-searching by outcome id.
   const choice = choiceId === undefined
-    ? event.interaction.choices.find((candidate) => candidate.outcomes.some((item) => item === outcome))
+    ? event.interaction.choices.find((candidate) => candidate.outcomes.includes(outcome))
     : event.interaction.choices.find((candidate) => candidate.id === choiceId);
-  if (!choice || !choice.outcomes.some((item) => item === outcome || item.id === outcome.id)) return undefined;
+  // Outcome ids can repeat across choices, even with identical Original text.
+  // Only the actual outcome belonging to this choice can select its translation;
+  // accepting a matching id would silently show another branch's words.
+  if (!choice || !choice.outcomes.includes(outcome)) return undefined;
   return `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}].outcomes[id=${encodeURIComponent(outcome.id)}].text`;
 }
 
