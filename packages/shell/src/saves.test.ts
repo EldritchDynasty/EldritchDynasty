@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadContent } from '@ed/content';
@@ -413,14 +413,93 @@ describe('packaged Windows smoke', () => {
 
 describe('desktop user content', () => {
   let userData = '';
+  const outsideRoots: string[] = [];
 
   beforeEach(() => { userData = mkdtempSync(join(tmpdir(), 'ed-user-content-')); });
-  afterEach(() => rmSync(userData, { recursive: true, force: true }));
+  afterEach(() => {
+    rmSync(userData, { recursive: true, force: true });
+    for (const outside of outsideRoots.splice(0)) {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  function outsideWithYaml() {
+    const outside = mkdtempSync(join(tmpdir(), 'ed-external-content-'));
+    outsideRoots.push(outside);
+    writeFileSync(join(outside, 'secret.yaml'), 'outside: secret\\n');
+    return outside;
+  }
+
+  function linkDirectory(target: string, link: string) {
+    try {
+      symlinkSync(target, link, 'dir');
+      return true;
+    } catch (error) {
+      // Windows without Developer Mode may forbid directory symlinks.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return false;
+      throw error;
+    }
+  }
 
   it('uses one profile-owned root without creating it merely by reading', () => {
     const root = userContentRoot(userData);
     expect(root).toBe(join(userData, 'mods', 'content'));
     expect(readUserContent(root)).toEqual({});
+    expect(existsSync(join(userData, 'mods'))).toBe(false);
+  });
+
+  it('refuses a linked mods ancestor rather than reading YAML outside the profile', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'ed-external-mods-'));
+    outsideRoots.push(outside);
+    mkdirSync(join(outside, 'content'));
+    writeFileSync(join(outside, 'content', 'secret.yaml'), 'outside: secret\\n');
+    if (!linkDirectory(outside, join(userData, 'mods'))) return;
+
+    expect(() => readUserContent(userContentRoot(userData)))
+      .toThrow('user content root is not a regular directory');
+  });
+
+  it('refuses a linked content root rather than reading YAML outside the profile', () => {
+    const outside = outsideWithYaml();
+    mkdirSync(join(userData, 'mods'));
+    if (!linkDirectory(outside, userContentRoot(userData))) return;
+
+    expect(() => readUserContent(userContentRoot(userData)))
+      .toThrow('user content root is not a regular directory');
+  });
+
+  it('refuses a symlinked profile ancestor', () => {
+    const profile = join(userData, 'real-profile');
+    const root = userContentRoot(profile);
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, 'private.yaml'), 'outside: secret\\n');
+    const linkedProfile = join(userData, 'linked-profile');
+    if (!linkDirectory(profile, linkedProfile)) return;
+
+    expect(() => readUserContent(userContentRoot(linkedProfile)))
+      .toThrow('user content root is not a regular directory');
+  });
+
+  it('refuses file-shaped mods and content roots, not just symlinks', () => {
+    const mods = join(userData, 'mods');
+    writeFileSync(mods, 'not a directory');
+    expect(() => readUserContent(userContentRoot(userData)))
+      .toThrow('user content root is not a regular directory');
+    rmSync(mods);
+    mkdirSync(mods);
+    writeFileSync(userContentRoot(userData), 'not a directory');
+    expect(() => readUserContent(userContentRoot(userData)))
+      .toThrow('user content root is not a regular directory');
+  });
+
+  it('continues skipping symlinks within an ordinary content tree', () => {
+    const root = userContentRoot(userData);
+    mkdirSync(join(root, 'events'), { recursive: true });
+    writeFileSync(join(root, 'events', 'local.yaml'), 'local: true\\n');
+    const outside = outsideWithYaml();
+    if (!linkDirectory(outside, join(root, 'linked-events'))) return;
+
+    expect(readUserContent(root)).toEqual({ 'events/local.yaml': 'local: true\\n' });
   });
 
   it('reads YAML recursively with content-relative keys and ignores other files', () => {
