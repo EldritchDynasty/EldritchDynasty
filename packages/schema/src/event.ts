@@ -742,6 +742,13 @@ export const EventTemplateS = z.object({
 
   interaction: InteractionS,
   record: RecordBlockS.optional(),
+  /**
+   * Specific Record / Omit / Embellish wording for an authored choice.
+   * The normal `record` remains the fallback for every event and for
+   * legacy saves. An id here names a choice id, never an outcome id: the
+   * docket knows exactly which choice the player or chronicler took.
+   */
+  recordByChoice: z.array(RecordBlockS.extend({ id: z.string().min(1) })).optional(),
   rumour: z.object({ id: z.string(), accuracy: z.number(), spread: z.number() }).optional(),
   accounts: z.array(z.string()).default([]),
 
