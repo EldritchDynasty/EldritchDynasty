@@ -943,13 +943,13 @@ describe('mobile durable storage', () => {
   });
 });
 
-
 describe('browser save export cleanup (Closes #893)', () => {
   it('releases the save blob on success, failed anchor creation and failed download dispatch', async () => {
     const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
     const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:eldritch-export');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const links: Array<{ href: string; download: string }> = [];
+    let dispatched = 0;
     let failAt: 'none' | 'element' | 'click' = 'none';
 
     Object.defineProperty(globalThis, 'document', {
@@ -962,6 +962,7 @@ describe('browser save export cleanup (Closes #893)', () => {
             href: '',
             download: '',
             click() {
+              dispatched += 1;
               if (failAt === 'click') throw new Error('download dispatch refused');
             },
           };
@@ -981,6 +982,7 @@ describe('browser save export cleanup (Closes #893)', () => {
       const blob = create.mock.calls[0]?.[0] as Blob;
       expect(blob.type).toBe('application/json');
       await expect(blob.text()).resolves.toBe(JSON.stringify({ year: 1220, format: 28 }, null, 2));
+      expect(dispatched).toBe(1);
       expect(revoke).toHaveBeenCalledTimes(1);
       expect(revoke).toHaveBeenLastCalledWith('blob:eldritch-export');
 
@@ -991,6 +993,7 @@ describe('browser save export cleanup (Closes #893)', () => {
 
       failAt = 'click';
       await expect(host.exportSave({ year: 1222 })).rejects.toThrow('download dispatch refused');
+      expect(dispatched).toBe(2);
       expect(revoke).toHaveBeenCalledTimes(3);
       expect(revoke).toHaveBeenLastCalledWith('blob:eldritch-export');
       expect(create).toHaveBeenCalledTimes(3);
