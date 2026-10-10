@@ -175,7 +175,7 @@ function recentOutcomeHistory(builders: Map<string, Builder>, ctx: SimCtx): void
       addFact(builders, ctx, house, {
         kind: 'recent_contact',
         year: logged.year,
-        detail: msg(ctx, 'threads.contact', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) }),
+        detail: msg(ctx, 'threads.contact.current', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) }),
         ref: `${logged.event}:${id}`,
         active: true,
         priority: 42,
@@ -249,10 +249,10 @@ function currentRecords(builders: Map<string, Builder>, ctx: SimCtx): void {
     const entry = w.chronicle.find((c) => c.discrepancyId === id);
     const year = entry?.year ?? w.year;
     const claim = entry?.title
-      ? msg(ctx, 'threads.record.named', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title })
+      ? msg(ctx, 'threads.record.named.current', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title })
       : entry?.text
         ? msg(ctx, 'threads.record.text', 'the {YEAR} entry “{TEXT}”', { YEAR: String(year), TEXT: String(clip(entry.text)) })
-        : msg(ctx, 'threads.record.disputed', 'a disputed {YEAR} entry', { YEAR: String(year) });
+        : msg(ctx, 'threads.record.disputed.current', 'a disputed {YEAR} entry', { YEAR: String(year) });
     for (const house of discrepancy.provableBy) {
       addFact(builders, ctx, house, {
         kind: 'record',
@@ -384,7 +384,7 @@ function historicalOrigins(
       addFact(builders, ctx, house, {
         kind: 'recent_contact',
         year: logged.year,
-        detail: msg(ctx, 'threads.contact', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) }),
+        detail: msg(ctx, 'threads.contact.history', '{NAME} of {HOUSE} dealt with the family in “{TITLE}” in {YEAR}.', { NAME: person.name, HOUSE: houseName(ctx, house), TITLE: event.title, YEAR: String(logged.year) }),
         ref: `${logged.event}:${id}`,
         active: false,
         priority: 20,
@@ -412,7 +412,7 @@ function historicalOrigins(
     if (discrepancy.state === 'open') continue;
     const entry = w.chronicle.find((c) => c.discrepancyId === id);
     const year = entry?.year ?? w.year;
-    const claim = entry?.title ? msg(ctx, 'threads.record.named', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title }) : msg(ctx, 'threads.record.disputed', 'a disputed {YEAR} entry', { YEAR: String(year) });
+    const claim = entry?.title ? msg(ctx, 'threads.record.named.history', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title }) : msg(ctx, 'threads.record.disputed.history', 'a disputed {YEAR} entry', { YEAR: String(year) });
     for (const house of discrepancy.provableBy) {
       if (!wants(house)) continue;
       addFact(builders, ctx, house, {
