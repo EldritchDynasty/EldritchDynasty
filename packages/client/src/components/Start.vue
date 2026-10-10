@@ -35,7 +35,22 @@ const emit = defineEmits<{
 
 const campaign = ref(CAMPAIGN_CHOICES[0].id);
 const selectedCampaign = computed(() => CAMPAIGN_CHOICES.find((c) => c.id === campaign.value) ?? CAMPAIGN_CHOICES[0]);
-const seed = ref(CAMPAIGN_CHOICES[0].startYear);
+/**
+ * A start year belongs to the campaign; an RNG seed belongs to one playthrough.
+ * They happened to be the same number (1042) for every ordinary new game.
+ * Draw once per newly mounted front door, not on a reactive update, so the
+ * Advanced seed remains stable while the player edits other settings.
+ *
+ * This is host-side entropy only: the engine still receives an explicit
+ * numeric seed and remains deterministic for saves, replay and bug reports.
+ */
+function newRunSeed(): number {
+  const value = new Uint32Array(1);
+  crypto.getRandomValues(value);
+  return value[0]!;
+}
+
+const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const refused = ref<string | null>(null);
 /**
