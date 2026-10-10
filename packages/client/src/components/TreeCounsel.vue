@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { HelpTier, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import AdviserHelp from './AdviserHelp.vue';
@@ -9,6 +9,13 @@ const props = defineProps<{
   selected: string | null;
   actions: Pick<GameActions, 'advice'>;
 }>();
+
+/** Advice is a reading of the current world photograph, not permanent lore.
+ * Session verbs replace view() even for changes within the same year. Clear
+ * counsel from the previous snapshot without proactively requesting new lines.
+ */
+const snapshot = ref(0);
+watch(() => props.view, () => { snapshot.value += 1; });
 
 /** Prefer the person already under the reader's hand, then the sitting Head. */
 const treeSubject = computed(() => props.selected
@@ -31,7 +38,7 @@ function askBranch(branch: string) {
   <!-- Counsel is a sibling of the tree because it reads the photographed
        surface but owns none of the tree's search, filter or selection state. -->
   <aside class="tree-counsel" aria-label="Counsel about the family">
-    <AdviserHelp :ask="askTree" :reset-key="`tree:${treeSubject}`" />
+    <AdviserHelp :ask="askTree" :reset-key="`tree:${treeSubject}:${snapshot}`" />
 
     <details v-if="aggrieved.length" class="branch-help">
       <summary class="small">Ask about a hall's grievance</summary>
@@ -40,7 +47,7 @@ function askBranch(branch: string) {
           <strong>{{ hall.name }}</strong>
           <span class="dim"> · grievance {{ Math.round(hall.grievance) }}</span>
         </p>
-        <AdviserHelp :ask="askBranch(hall.id)" :reset-key="`branches:${hall.id}`" />
+        <AdviserHelp :ask="askBranch(hall.id)" :reset-key="`branches:${hall.id}:${snapshot}`" />
       </section>
     </details>
   </aside>
