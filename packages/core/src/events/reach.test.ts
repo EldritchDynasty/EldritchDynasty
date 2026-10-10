@@ -3323,6 +3323,35 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
   });
 });
 
+describe('#334 Bramme margin consequence witnesses', () => {
+  it('executes both answers through the real choice outcome path', () => {
+    const event = content.events.find((entry) => String(entry.id) === 'the_bramme_margin_returns');
+    if (!event || event.interaction.kind !== 'choice') throw new Error('Bramme follow-up missing');
+    const keys: string[] = [];
+    for (const choice of event.interaction.choices) {
+      const ctx = fixture(33401);
+      ctx.world.generation = Math.max(4, FREQUENCY_PROFILES[event.frequency].minGeneration);
+      ctx.world.flags.add('bramme_copied_a_book');
+      expect(evalCondition(event.conditions, ctx)).toBe(true);
+      for (const outcome of choice.outcomes) {
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: makeRng(33402),
+        });
+        expect(result.ok, result.reason).toBe(true);
+        if (result.key) keys.push(result.key);
+        expect(ctx.world.flags.has('bramme_copied_a_book')).toBe(false);
+        ctx.world.flags.add('bramme_copied_a_book');
+      }
+    }
+    expect(keys.sort()).toEqual([
+      outcomeKey('the_bramme_margin_returns', 'acknowledge_the_correction', 'bramme_knows'),
+      outcomeKey('the_bramme_margin_returns', 'refuse_the_answer', 'silence_recorded'),
+    ].sort());
+  });
+});
+
 describe('authored generation-gated ordinary-family outcome witnesses', () => {
   it('executes simple generation-gated outcomes after resolving their real household casts', () => {
     const ordinaryFilterKeys = new Set(['sex', 'age', 'status', 'relation', 'of']);
