@@ -16,13 +16,19 @@ export function chooseSaveFile(input: HTMLInputElement): Promise<unknown | null>
       const file = input.files?.[0];
       if (!file) { resolve(null); return; }
 
-      const reader = new FileReader();
-      reader.onerror = () => resolve(null);
-      reader.onabort = () => resolve(null);
-      reader.onload = () => {
-        try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
-      };
-      try { reader.readAsText(file); } catch { resolve(null); }
+      try {
+        // A WebView may deny even constructing FileReader. This callback runs
+        // after the Promise executor, so an uncaught throw would strand import.
+        const reader = new FileReader();
+        reader.onerror = () => resolve(null);
+        reader.onabort = () => resolve(null);
+        reader.onload = () => {
+          try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
+        };
+        reader.readAsText(file);
+      } catch {
+        resolve(null);
+      }
     };
 
     try { input.click(); } catch { resolve(null); }
