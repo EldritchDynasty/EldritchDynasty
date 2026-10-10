@@ -61,6 +61,9 @@ describe('the volume', () => {
     await w.find('[data-entry="chr_echo"] button.link').trigger('click');
     await flushPromises();
     expect(marked(w)).toEqual(['chr_act']);
+    const target = w.get('[data-entry="chr_act"]');
+    expect(target.attributes('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(target.element);
     w.unmount();
   });
 
@@ -73,6 +76,7 @@ describe('the volume', () => {
     await flushPromises();
     expect(marked(w)).toEqual(['chr_act']);
     expect((w.find('input[type="search"]').element as HTMLInputElement).value).toBe('');
+    expect(document.activeElement).toBe(w.get('[data-entry="chr_act"]').element);
     w.unmount();
   });
 
@@ -80,7 +84,26 @@ describe('the volume', () => {
     const w = mountBook('chr_act');
     await flushPromises();
     expect(marked(w)).toEqual(['chr_act']);
+    expect(document.activeElement).toBe(w.get('[data-entry="chr_act"]').element);
     w.unmount();
+  });
+
+  it('keeps the last target focused when two cause links fire in one tick', async () => {
+    const book = [...BOOK, entry('chr_extra', 1072, 'One more reckoning.', { year: 1050, page: 'chr_other' })];
+    const w = mount(Book, {
+      props: { book, ages: [], houseName: 'Gearithy', close: () => {}, actions: readsOver(book) },
+      attachTo: document.body,
+    });
+    try {
+      (w.get('[data-entry="chr_echo"] button.link').element as HTMLButtonElement).click();
+      (w.get('[data-entry="chr_extra"] button.link').element as HTMLButtonElement).click();
+      await flushPromises();
+      expect(w.get('[data-entry="chr_other"]').attributes('tabindex')).toBe('-1');
+      expect(w.get('[data-entry="chr_act"]').attributes('tabindex')).toBeUndefined();
+      expect(document.activeElement).toBe(w.get('[data-entry="chr_other"]').element);
+    } finally {
+      w.unmount();
+    }
   });
 });
 
