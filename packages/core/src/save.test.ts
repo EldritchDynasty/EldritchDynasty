@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  CAMPAIGNS, END_YEAR, LIBRARY_MESSAGE_ORIGINALS, LIBRARY_VOICE_FORMS, coreMessageAddress, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, seedLibraryMemories, setProseMode, setProseVariants, replay, runYears,
+  CAMPAIGNS, END_YEAR, LIBRARY_MESSAGE_ORIGINALS, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, seedLibraryMemories, setProseMode, setProseVariants, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -646,7 +646,7 @@ describe('Library of Houses Plain English identities (#846)', () => {
     const original = bootstrap(content, 7011, 1042, 'short');
     const plain = bootstrap(content, 7011, 1042, 'short');
     const variants = Object.entries(LIBRARY_MESSAGE_ORIGINALS).map(([key, originalText]) => ({
-      address: coreMessageAddress(key),
+      address: `core:messages#${encodeURIComponent(key)}`,
       of: proseOriginalHash(originalText),
       plainenglish: originalText.replace('“{SAID}”', '“{SAID}”'),
     }));
