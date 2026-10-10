@@ -3,7 +3,7 @@ import type { ChronicleEntry } from '@ed/core';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
   afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
-  plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
+  ageBoundariesForPages, plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
   type Measure,
 } from './book.js';
 
@@ -73,6 +73,65 @@ describe('what the reader asked for', () => {
   it('draws nothing before the century jumped to', () => {
     expect(reads(entry({ year: 1099 }), { ...all, from: 1100 })).toBe(false);
     expect(reads(entry({ year: 1100 }), { ...all, from: 1100 })).toBe(true);
+  });
+});
+
+
+describe('placing Age boundaries in a sparse Chronicle (#1017)', () => {
+  const pages = (years: number[]) => years.map((year) => entry({ year }));
+
+  it('places a 1210 Age before the 1212 page, never relabeling it 1212', () => {
+    expect(ageBoundariesForPages(pages([1208, 1212]), [
+      { began: 1210, name: 'The Long Winter' },
+    ], null)).toEqual(new Map([[1, [{ began: 1210, name: 'The Long Winter' }]]]));
+  });
+
+  it('keeps multiple intervening Ages in chronological order, including unnamed ones', () => {
+    expect(ageBoundariesForPages(pages([1208, 1212]), [
+      { began: 1211, name: null },
+      { began: 1209, name: 'The Long Winter' },
+    ], null)).toEqual(new Map([[1, [
+      { began: 1209, name: 'The Long Winter' },
+      { began: 1211, name: null },
+    ]]]));
+  });
+
+  it('keeps the boundary when search or a lens hides its exact starting year', () => {
+    const book = [
+      entry({ year: 1209, text: null }),
+      entry({ year: 1210, text: 'Hidden by the blank lens' }),
+      entry({ year: 1212, text: null }),
+    ];
+    const visible = book.filter((e) => reads(e, { lens: 'blank', from: null, find: '' }));
+    expect(visible.map((e) => e.year)).toEqual([1209, 1212]);
+    expect(ageBoundariesForPages(visible, [{ began: 1210, name: 'The Age' }], null))
+      .toEqual(new Map([[1, [{ began: 1210, name: 'The Age' }]]]));
+    const search = book.filter((e) => reads(e, { lens: 'all', from: null, find: 'Hidden' }));
+    expect(ageBoundariesForPages(search, [{ began: 1209, name: null }], null))
+      .toEqual(new Map([[0, [{ began: 1209, name: null }]]]));
+  });
+
+  it('draws once before the first page of a shared year, never once per page', () => {
+    const first = ageBoundariesForPages(pages([1209, 1210, 1210, 1212]), [
+      { began: 1210, name: 'The Age' },
+    ], null);
+    expect([...first.keys()]).toEqual([1]);
+    expect(first.get(2)).toBeUndefined();
+  });
+
+  it('does not reintroduce an Age before the selected century or shift when pages grow', () => {
+    const ages = [
+      { began: 1199, name: 'Earlier' },
+      { began: 1210, name: 'Within the window' },
+      { began: 1250, name: 'Later' },
+    ];
+    const short = pages([1208, 1212]);
+    const first = ageBoundariesForPages(short, ages, 1200);
+    expect(first).toEqual(new Map([[1, [{ began: 1210, name: 'Within the window' }]]]));
+    const extended = ageBoundariesForPages([...short, ...pages([1251, 1260])], ages, 1200);
+    expect(extended.get(1)).toEqual(first.get(1));
+    expect(extended.get(2)).toEqual([{ began: 1250, name: 'Later' }]);
+    expect(ageBoundariesForPages(pages([1208]), ages, 1200).size).toBe(0);
   });
 });
 
