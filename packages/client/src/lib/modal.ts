@@ -21,6 +21,22 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  * alone includes disabled selects/textareas and links with tabindex="-1"; a
  * boundary on either makes focus() a no-op and strands keyboard navigation.
  */
+/**
+ * A CSS-hidden Tab stop is just as unreachable as a `hidden` one.
+ * Check ancestors too: `getComputedStyle(button).display` is still "block"
+ * when the button's parent has `display: none`.
+ */
+function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
+  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') {
+      return true;
+    }
+    if (node === card) break;
+  }
+  return false;
+}
+
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
   return [...card.querySelectorAll<HTMLElement>(
@@ -29,7 +45,8 @@ export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
     element.tabIndex >= 0
     && !element.matches(':disabled')
     && !element.closest('[hidden], [inert]')
-    && !(element instanceof HTMLInputElement && element.type === 'hidden'));
+    && !(element instanceof HTMLInputElement && element.type === 'hidden')
+    && !cssConcealed(element, card));
 }
 
 export function useModal(card: Ref<HTMLElement | null>, close: () => void): void {
