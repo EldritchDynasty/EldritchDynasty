@@ -15,6 +15,7 @@ import { papersDemanded, papersHeld } from './papers.js';
 import { emptyPanel, readPanel, type MatchPanel } from './panel.js';
 import { externalThreadFor } from '../relationship-threads.js';
 import { characterProse } from './character-prose.js';
+import { proseForContentField } from '../prose.js';
 import { msg } from '../messages.js';
 
 /**
@@ -825,9 +826,18 @@ export function dealMatch(ctx: SimCtx, subject: Person, rng: Rng): MatchOffer {
   };
 }
 
+/** Select reviewed wording for a card's house, not its saved identity. */
+function matchHouseName(ctx: SimCtx, houseId: string): string {
+  const name = ctx.world.houses.get(houseId)?.name;
+  if (name === undefined) return houseId;
+  const authored = ctx.content.house(houseId);
+  // An authored variant cannot rename a house whose runtime name has changed.
+  if (!authored || authored.name !== name) return name;
+  return proseForContentField(ctx, 'houses', String(authored.id), 'name', name);
+}
+
 function householdCard(ctx: SimCtx, subject: Person, who: Person, index: number): MatchCard {
   const w = ctx.world;
-  const house = w.houses.get(who.houseOfOrigin);
   const hall = w.people.householdOf(who.id, w.year);
   return {
     id: `card_${index + 1}`,
@@ -836,7 +846,7 @@ function householdCard(ctx: SimCtx, subject: Person, who: Person, index: number)
     sex: who.sex,
     age: w.year - who.born,
     house: who.houseOfOrigin,
-    houseName: house?.name ?? who.houseOfOrigin,
+    houseName: matchHouseName(ctx, who.houseOfOrigin),
     blurb: hall === w.playerHouse
       ? msg(ctx, 'match.blurb.at_table',
         'Already at this table, already fed by this house. Nothing leaves with her, and nothing new comes in.')
@@ -857,7 +867,6 @@ function householdCard(ctx: SimCtx, subject: Person, who: Person, index: number)
 function outsiderCard(ctx: SimCtx, template: CharacterTemplate, rng: Rng, index: number): MatchCard {
   const w = ctx.world;
   const recipe = rollRecipe(template, ctx, rng);
-  const house = w.houses.get(recipe.house);
   return {
     id: `card_${index + 1}`,
     kind: 'outsider',
@@ -865,7 +874,7 @@ function outsiderCard(ctx: SimCtx, template: CharacterTemplate, rng: Rng, index:
     sex: recipe.sex,
     age: recipe.age,
     house: recipe.house,
-    houseName: house?.name ?? recipe.house,
+    houseName: matchHouseName(ctx, recipe.house),
     blurb: characterProse(ctx, template, 'blurb') ?? characterProse(ctx, template, 'title'),
     dowry: DOWRY[template.frequency] ?? DOWRY.common!,
     // An outsider's claimed pedigree may still meet the family's somewhere —
