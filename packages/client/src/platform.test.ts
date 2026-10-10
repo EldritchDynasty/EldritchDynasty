@@ -399,6 +399,91 @@ describe('the platform seam', () => {
     }
   });
 
+  it('keeps browser JSON save downloads alive until their URL can safely be revoked (#1012)', async () => {
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    const previousURL = Object.getOwnPropertyDescriptor(globalThis, 'URL');
+    const steps: string[] = [];
+    const blobs: Blob[] = [];
+    let attached = false;
+    let failClick = false;
+    const link = {
+      href: '',
+      download: '',
+      hidden: false,
+      click() {
+        expect(attached, 'the anchor must be in the document before click').toBe(true);
+        steps.push('click');
+        if (failClick) throw new Error('browser blocked the download');
+      },
+      remove() {
+        steps.push('remove');
+        attached = false;
+      },
+    };
+    const createObjectURL = vi.fn((blob: Blob) => {
+      blobs.push(blob);
+      return `blob:json-save-${blobs.length}`;
+    });
+    const revokeObjectURL = vi.fn((url: string) => { steps.push(`revoke:${url}`); });
+
+    vi.useFakeTimers();
+    Object.defineProperty(globalThis, 'URL', {
+      configurable: true, value: { createObjectURL, revokeObjectURL },
+    });
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        createElement(tag: string) {
+          expect(tag).toBe('a');
+          return link;
+        },
+        body: {
+          appendChild(child: unknown) {
+            expect(child).toBe(link);
+            attached = true;
+            steps.push('append');
+          },
+        },
+      },
+    });
+
+    try {
+      const host = browserPlatform();
+      await host.exportSave({ format: 28, year: 1342, houseName: 'House of Salt' });
+
+      expect(link.href).toBe('blob:json-save-1');
+      expect(link.download).toBe('eldritch-1342.json');
+      expect(link.hidden).toBe(true);
+      expect(steps).toEqual(['append', 'click', 'remove']);
+      expect(attached).toBe(false);
+      expect(blobs[0]!.type).toBe('application/json');
+      expect(await blobs[0]!.text()).toBe(JSON.stringify({
+        format: 28, year: 1342, houseName: 'House of Salt',
+      }, null, 2));
+
+      vi.advanceTimersByTime(59_999);
+      expect(revokeObjectURL).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:json-save-1');
+
+      // The helper also cleans up and releases the URL after a blocked click.
+      failClick = true;
+      await expect(host.exportSave({ format: 28 })).rejects.toThrow('browser blocked the download');
+      expect(link.download).toBe('eldritch-run.json');
+      expect(attached).toBe(false);
+      expect(steps.slice(-2)).toEqual(['click', 'remove']);
+      vi.advanceTimersByTime(60_000);
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:json-save-2');
+      expect(revokeObjectURL).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+      if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
+      else Reflect.deleteProperty(globalThis, 'document');
+      if (previousURL) Object.defineProperty(globalThis, 'URL', previousURL);
+      else Reflect.deleteProperty(globalThis, 'URL');
+    }
+  });
+
   it('settles browser imports for a cancelled picker, empty selection and JSON content', async () => {
     // Node-hosted fake: exercise the actual browser Platform without opening a
     // window, using the file input's distinct cancel and change events.
