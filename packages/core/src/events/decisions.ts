@@ -15,7 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
-import { proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForRecordChronicle, proseForRecordSubject } from '../prose.js';
+import { eventTitleAddress, proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForRecordChronicle, proseForRecordSubject, renderProse } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -531,7 +531,25 @@ export function applyRecord(
   // Same scope an outcome's effects get: a Record option is authored on the
   // template and may `recast` one of its slots, which needs the template to
   // know what role that slot casts for.
-  for (const eff of chosen.effects) applyEffect(eff, ctx, fill, { event: e, page: entryId });
+  // A Record option can add a separate Chronicle line through an effect.
+  // Resolve that line's own authored address before the text becomes history;
+  // the option's main Chronicle prose is frozen separately by the docket.
+  const eventAddress = eventTitleAddress(ctx, e)?.replace(/\.title$/, '');
+  for (const [index, eff] of chosen.effects.entries()) {
+    const applied = eff.kind === 'chronicle'
+      ? {
+        ...eff,
+        text: renderProse(
+          ctx,
+          eventAddress === undefined
+            ? undefined
+            : `${eventAddress}.record.options.${option}.effects[${index}].text`,
+          eff.text,
+        ),
+      }
+      : eff;
+    applyEffect(applied, ctx, fill, { event: e, page: entryId });
+  }
 
   if (option === 'record' && block.options.record.grantsKnowledge) {
     w.knowledge.add(block.options.record.grantsKnowledge);
