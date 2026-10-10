@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { shortcutFor } from './keys.js';
 
 /**
@@ -16,6 +18,37 @@ describe('what a keypress means', () => {
     // Shift+Space is not five. Only one key carries the second meaning, and
     // guessing the other would turn a stray press into a jump.
     expect(shortcutFor({ key: ' ', shift: true })).toEqual({ kind: 'advance', years: 1 });
+  });
+
+  it('does not dispatch held-key auto-repeat as multiple turns or decisions (#912)', () => {
+    for (const key of [' ', 'Enter', '1', '9', '?', 'Escape']) {
+      expect(shortcutFor({ key, repeat: true }), `held "${key}" must not fire`).toBeNull();
+    }
+    expect(shortcutFor({ key: 'Enter', shift: true, repeat: true })).toBeNull();
+
+    // The first keydown still performs exactly its normal action.
+    expect(shortcutFor({ key: ' ', repeat: false })).toEqual({ kind: 'advance', years: 1 });
+    expect(shortcutFor({ key: 'Enter', shift: true, repeat: false }))
+      .toEqual({ kind: 'advance', years: 5 });
+    expect(shortcutFor({ key: 'Escape', repeat: false })).toEqual({ kind: 'dismiss' });
+  });
+
+  it('passes KeyboardEvent.repeat into both client and docket handlers (#912)', () => {
+    for (const path of ['App.vue', 'components/Docket.vue']) {
+      const source = readFileSync(join(import.meta.dirname, '..', path), 'utf8');
+      expect(source, path).toMatch(/shortcutFor\(\{\s*key:\s*e\.key,\s*repeat:\s*e\.repeat,/);
+    }
+  });
+
+  it('guards direct Escape listeners without disabling Tab focus traps (#912)', () => {
+    for (const name of ['Chapter', 'Interlude']) {
+      const file = `components/${name}.vue`;
+      const source = readFileSync(join(import.meta.dirname, '..', file), 'utf8');
+      expect(source, file).toMatch(
+        /if \(e\.key === 'Escape'\) \{\s*e\.preventDefault\(\);(?:\s*\/\/[^\n]*)?\s*if \(e\.repeat\) return;/,
+      );
+      expect(source, file).toContain("if (e.key !== 'Tab') return;");
+    }
   });
 
   it('takes the numbered choice, counting from what the eye sees', () => {

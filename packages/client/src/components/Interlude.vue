@@ -33,6 +33,8 @@ function focusable(): HTMLElement[] {
 function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape') {
     e.preventDefault();
+    // One held key must dismiss at most one overlay, even when another mounts.
+    if (e.repeat) return;
     props.actions.dismissInterlude();
     return;
   }

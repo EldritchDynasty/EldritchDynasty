@@ -19,6 +19,8 @@ export type Shortcut =
 export interface KeyPress {
   key: string;
   shift?: boolean;
+  /** A held key must not issue repeated irreversible game actions. */
+  repeat?: boolean;
   /** Any of ctrl/meta/alt. The browser and the OS own those. */
   modified?: boolean;
   /** Focus is in a text field, so the key is the player writing, not steering. */
@@ -28,6 +30,10 @@ export interface KeyPress {
 }
 
 export function shortcutFor(p: KeyPress): Shortcut | null {
+  // Auto-repeat is another keydown, not another request to advance the year,
+  // take a choice, close another overlay or toggle the shortcut help.
+  if (p.repeat) return null;
+
   // Ctrl-R is a reload, Cmd-L is the address bar. A game that eats those is a
   // game people close.
   if (p.modified) return null;
