@@ -286,21 +286,23 @@ export interface FoundingResult {
 export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult {
   const w = ctx.world;
   const def = prologueDef(ctx);
-  if (!def) return { ok: false, reason: 'this bundle has no prologue' };
-  if (w.founding) return { ok: false, reason: 'the house has already been founded' };
+  if (!def) return { ok: false, reason: msg(ctx, 'founding.refuse.no_prologue', 'this bundle has no prologue') };
+  if (w.founding) return { ok: false, reason: msg(ctx, 'founding.refuse.founded', 'the house has already been founded') };
 
   const houseName = choice.houseName.trim().replace(/\s+/g, ' ');
-  if (!houseName) return { ok: false, reason: 'the house needs a name' };
-  if (houseName.length > HOUSE_NAME_MAX) return { ok: false, reason: 'that is a paragraph, not a name' };
+  if (!houseName) return { ok: false, reason: msg(ctx, 'founding.refuse.no_name', 'the house needs a name') };
+  if (houseName.length > HOUSE_NAME_MAX) {
+    return { ok: false, reason: msg(ctx, 'founding.refuse.long_name', 'that is a paragraph, not a name') };
+  }
 
   const heirloom = def.heirlooms.find((h) => String(h.heirloom) === choice.heirloom);
-  if (!heirloom) return { ok: false, reason: 'he did not ask for that' };
+  if (!heirloom) return { ok: false, reason: msg(ctx, 'founding.refuse.heirloom', 'he did not ask for that') };
   const grudge = def.grudges.find((g) => String(g.house) === choice.grudge);
-  if (!grudge) return { ok: false, reason: 'nobody was wronged in that direction' };
+  if (!grudge) return { ok: false, reason: msg(ctx, 'founding.refuse.grudge', 'nobody was wronged in that direction') };
 
   const object = ctx.content.heirloom(String(heirloom.heirloom));
   const house = ctx.content.house(String(grudge.house));
-  if (!object || !house) return { ok: false, reason: 'the content no longer holds that' };
+  if (!object || !house) return { ok: false, reason: msg(ctx, 'founding.refuse.content_gone', 'the content no longer holds that') };
 
   // THE FIVE, CHECKED BEFORE ANYTHING IS WRITTEN. Everything below this line
   // mutates the world — the heirloom into the house's hands, the grudge into
@@ -325,7 +327,9 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   } catch (error) {
     return {
       ok: false,
-      reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
+      reason: error instanceof Error
+        ? error.message
+        : msg(ctx, 'founding.refuse.answer', 'the Examination answer was not understood'),
     };
   }
   const signingRetainers = new Map<string, NonNullable<ReturnType<typeof seedPerson>>>();
@@ -333,11 +337,19 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     if (term.kind === 'loyalty' || term.kind === 'dismiss') {
       const person = seedPerson(ctx, term.retainer);
       if (!person?.contract) {
-        return { ok: false, reason: `the signing names unavailable retainer '${term.retainer}'` };
+        return {
+          ok: false,
+          reason: msg(ctx, 'founding.refuse.signing_retainer', "the signing names unavailable retainer '{RETAINER}'",
+            { RETAINER: String(term.retainer) }),
+        };
       }
       signingRetainers.set(term.retainer, person);
     } else if (term.kind === 'grudge' && !ctx.content.house(String(term.house))) {
-      return { ok: false, reason: `the signing names missing house '${String(term.house)}'` };
+      return {
+        ok: false,
+        reason: msg(ctx, 'founding.refuse.signing_house', "the signing names missing house '{HOUSE}'",
+          { HOUSE: String(term.house) }),
+      };
     }
   }
   const signingAnswers = Object.fromEntries(
