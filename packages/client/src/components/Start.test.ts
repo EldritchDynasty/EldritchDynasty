@@ -285,3 +285,76 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('advanced seed rejects empty and invalid numbers (#1051)', () => {
+  it.each([
+    ['', 'cleared'],
+    ['-1', 'negative'],
+    ['1.5', 'fractional'],
+    ['4294967296', 'outside the 32-bit range'],
+  ])('refuses a %s (%s) seed without calling begin', async (value) => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const advanced = w.findAll('button').find((button) => button.text() === 'Advanced');
+      await advanced!.trigger('click');
+      await w.get('#seed').setValue(value);
+
+      const begin = w.get('button.primary');
+      expect(begin.attributes('disabled')).toBeDefined();
+      expect(w.get('#seed').attributes('aria-invalid')).toBe('true');
+      expect(w.get('#seed-error').text()).toContain('whole number');
+      await begin.trigger('click'); // The handler also guards synthetic clicks.
+      expect(actions.begin).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('accepts zero and the largest unsigned seed, and re-enables Begin after an invalid edit', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      await w.findAll('button').find((button) => button.text() === 'Advanced')!.trigger('click');
+      const input = w.get('#seed');
+      const begin = w.get('button.primary');
+
+      await input.setValue('');
+      expect(begin.attributes('disabled')).toBeDefined();
+      await input.setValue('0');
+      expect(begin.attributes('disabled')).toBeUndefined();
+      expect(input.attributes('aria-invalid')).toBe('false');
+      expect(w.find('#seed-error').exists()).toBe(false);
+      await begin.trigger('click');
+      expect(actions.begin).toHaveBeenLastCalledWith(0, 'short');
+
+      await input.setValue('4294967295');
+      expect(begin.attributes('disabled')).toBeUndefined();
+      await begin.trigger('click');
+      expect(actions.begin).toHaveBeenLastCalledWith(4294967295, 'short');
+      expect(actions.begin).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps Continue available even when the new-run Advanced seed is invalid', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      await w.findAll('button').find((button) => button.text() === 'Advanced')!.trigger('click');
+      await w.get('#seed').setValue('');
+      expect(w.get('button.quiet').attributes('disabled')).toBeUndefined();
+      const continueButton = w.findAll('button').find((button) => button.text() === 'Continue the last sitting');
+      expect(continueButton?.attributes('disabled')).toBeUndefined();
+      await continueButton!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledTimes(1);
+      expect(actions.begin).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+});
