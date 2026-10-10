@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import type { Decider, EventTemplate, Person } from '@ed/schema';
-import { decideBranch, place, testRng, testWorld, wantsPlayerCast } from '@ed/core';
+import { proseOriginalHash } from '@ed/schema';
+import { decideBranch, missingPlainEnglish, place, setProseMode, setProseVariants, testRng, testWorld, wantsPlayerCast } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 import { queueChoice, resolveChoice, type PendingChoice, type PendingDecision, type PendingRecord } from './events/decisions.js';
 import { delegatedRecord, markDelegated, mustSurface, resolveDelegated } from './delegation.js';
 import { streamFor } from './rng.js';
@@ -53,6 +56,89 @@ function twoBranch(decidedBy: Decider): EventTemplate {
     },
   } as EventTemplate;
 }
+
+
+/**
+ * The user-facing originals in decideBranch are a reviewed, keyed surface.
+ * Match the literal call sites to this inventory so deleting a key or silently
+ * rewording Original fails before a translation can become stale.
+ */
+const DECIDER_ORIGINALS: Record<string, string> = {
+  'deciders.narration': 'narration — nothing is being decided',
+  'deciders.player': 'the house decides',
+  'deciders.chance': 'as it fell out',
+  'deciders.state.condition': "the house's condition: {LABEL}",
+  'deciders.state.none': 'no rung of the ladder held',
+  'deciders.party.cast': 'the house names who goes; what they are between them decides the rest',
+  'deciders.party.missing': "check '{CHECK}' is not declared",
+  'deciders.party.unavailable': "the check named '{CHOICE}', but that branch is unavailable",
+  'deciders.party.unknown': "the check named '{CHOICE}', which is not one of the branches",
+  'deciders.party.roll': '{ROLL} against {DIFFICULTY} — {LABEL}',
+};
+
+describe('decider explanation prose (#795)', () => {
+  it('pins every stable key to the exact Original at its msg call site', () => {
+    const source = readFileSync(new URL('./events/deciders.ts', import.meta.url), 'utf8');
+    // The literals at these call sites use single or double quotes. This is
+    // deliberately source-based: a removed message cannot pass by just never
+    // being exercised by a fixture.
+    const found = [...source.matchAll(/msg\(ctx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
+      .map(([, key, literal]) => [key, literal!.slice(1, -1)]);
+    expect(Object.fromEntries(found)).toEqual(DECIDER_ORIGINALS);
+    expect(found).toHaveLength(Object.keys(DECIDER_ORIGINALS).length);
+  });
+
+  it('renders the state ladder in Plain English without changing its branch', () => {
+    const ctx = testWorld(bundle);
+    const event = twoBranch({ state: [{ take: 'pay' }] });
+    const original = decideBranch(ctx, event, {}, testRng('state-prose'));
+    expect(original.why).toBe("the house's condition: Pay it");
+
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('deciders.state.condition'),
+      of: proseOriginalHash(DECIDER_ORIGINALS['deciders.state.condition']!),
+      plainenglish: 'Because of the circumstances, the family chooses {LABEL}.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const translated = decideBranch(ctx, event, {}, testRng('state-prose'));
+    expect(translated.why).toBe('Because of the circumstances, the family chooses Pay it.');
+    expect({ asks: translated.asks, choice: translated.choice?.id })
+      .toEqual({ asks: original.asks, choice: original.choice?.id });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('renders the party roll in Plain English without changing its branch', () => {
+    const ctx = testWorld(bundle);
+    const person = place(ctx, { sex: 'male', age: 30 });
+    setAcquired(person, 'strength', 400);
+    const event = twoBranch({ party: { check: 'party_roll' } });
+    event.slots = { COMPANION: { role: 'family_member', castBy: 'player', optional: false, filters: [], bind: 'event' } };
+    event.checks = [{
+      id: 'party_roll',
+      pool: { kind: 'party_sum', slots: ['COMPANION'], attr: 'strength' },
+      difficulty: 40,
+      variance: 'none',
+      bands: [{ atLeast: 0, outcome: 'pay' }, { atLeast: -999, outcome: 'refuse' }],
+    }];
+    const fill = { COMPANION: person.id };
+    const original = decideBranch(ctx, event, fill, testRng('party-prose'), { castReady: true });
+    const parts = /^(\d+) against (\d+) — (.+)$/.exec(original.why);
+    expect(parts).not.toBeNull();
+
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('deciders.party.roll'),
+      of: proseOriginalHash(DECIDER_ORIGINALS['deciders.party.roll']!),
+      plainenglish: 'The result for {LABEL} was {ROLL}, against a difficulty of {DIFFICULTY}.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const translated = decideBranch(ctx, event, fill, testRng('party-prose'), { castReady: true });
+    expect(translated.why)
+      .toBe(`The result for ${parts![3]} was ${parts![1]}, against a difficulty of ${parts![2]}.`);
+    expect({ asks: translated.asks, choice: translated.choice?.id })
+      .toEqual({ asks: original.asks, choice: original.choice?.id });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
 
 describe('the player decides', () => {
   it('asks, and names no branch itself', () => {
