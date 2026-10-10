@@ -412,7 +412,8 @@ describe('deterministic outcome execution witnesses', () => {
         rng: makeRng(2),
       });
 
-      if (!result.ok && /mind is/.test(result.reason ?? '')) {
+      // The requirement's own reason, naming the attribute as the docket does.
+      if (!result.ok && /Mind is/.test(result.reason ?? '')) {
         expect(ctx.world.decisionLog).toHaveLength(before);
         return;
       }
