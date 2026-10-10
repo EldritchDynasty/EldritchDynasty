@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { loadBundle, loadContent } from '@ed/content';
-import { proseOriginalHash, RESPECT_ORDER } from '@ed/schema';
+import { proseOriginalHash, RESPECT_ORDER, type ProseMode } from '@ed/schema';
 import {
   ambientPool, beginImprovement, buyParcel, damageParcel, encroachParcel, endowParcel, grantParcel,
-  heldParcels, isCaput, landIncome, landView, nameParcel, recallParcel,
+  heldParcels, isCaput, landIncome, landView, missingPlainEnglish, nameParcel, recallParcel,
   grudgeAgainstUs, parcelPrice, restoreParcel, seizeParcel, sellParcel, setProseMode, setProseVariants,
   setRentsPolicy, testWorld, tickLandImprovements, tickLandMarket, tickLandRisks, tickPlatIllumination,
   type Rng,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { coreMessageEntries } from './tools/core-message-audit.js';
+import { plainEnglishWorklist } from './tools/string-audit.js';
 
 const bundle = loadContent();
 
@@ -917,5 +920,114 @@ describe('the land orders refuse in the reader\'s setting (#799)', () => {
       'the home ground is not for sale', 'nothing of that name is on the market', 'no such parcel',
     ]);
     expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
+  });
+});
+
+/**
+ * #876: parcel prose was on the #410 worklist and nowhere at runtime, so a
+ * reviewed Plain English row validated, counted as done, and was never shown.
+ */
+describe('parcel prose reaches the land panel in the reader\'s wording (#876)', () => {
+  const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..');
+  const FIELD = 'the_hanging_field';
+  const address = (field: string) => `content:parcels.yaml#parcels[id=${FIELD}].${field}`;
+  const def = bundle.parcel(FIELD)!;
+  const PLAIN = {
+    name: 'The Steep Field',
+    place: 'the steep hill above Redmoor',
+    provenance: 'It is named for its slope. Nothing bad happened there, but strangers always ask.',
+  };
+
+  function world(mode: ProseMode) {
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, (['name', 'place', 'provenance'] as const).map((field) => ({
+      address: address(field), of: proseOriginalHash(def[field]), plainenglish: PLAIN[field],
+    })));
+    setProseMode(ctx, mode);
+    ctx.world.treasury = 10_000;
+    return ctx;
+  }
+
+  const heldRow = (ctx: ReturnType<typeof world>) => landView(ctx).held.find((h) => h.parcel === FIELD)!;
+
+  it('asks for every parcel address the worklist carries, and no other', () => {
+    const owed = plainEnglishWorklist(REPO)
+      .map((item) => item.address)
+      .filter((a) => a.startsWith('content:parcels.yaml#'))
+      .sort();
+    expect(owed.length).toBeGreaterThan(0);
+
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+    for (const parcel of bundle.parcels) grantParcel(ctx, parcel.id);
+    landView(ctx);
+    const asked = missingPlainEnglish(ctx).filter((a) => a.startsWith('content:parcels.yaml#'));
+    // A parcel on the market is drawn by the same helper as a held one.
+    expect(asked).toEqual(owed);
+  });
+
+  it('shows Plain English for held and market ground, and Original is unchanged', () => {
+    const plain = world('plainenglish');
+    grantParcel(plain, FIELD);
+    expect(heldRow(plain)).toMatchObject(PLAIN);
+
+    const original = world('original');
+    grantParcel(original, FIELD);
+    expect(heldRow(original)).toMatchObject({ name: def.name, place: def.place, provenance: def.provenance });
+
+    const market = world('plainenglish');
+    market.world.landMarket.lots.push({ parcel: FIELD, price: 80, closesYear: market.world.year + 3, reason: 'fair' });
+    expect(landView(market).market.find((m) => m.parcel === FIELD))
+      .toMatchObject({ name: PLAIN.name, place: PLAIN.place });
+  });
+
+  it('freezes the page in the words it was written with', () => {
+    const ctx = world('plainenglish');
+    ctx.world.landMarket.lots.push({ parcel: FIELD, price: 80, closesYear: ctx.world.year + 3, reason: 'fair' });
+    expect(buyParcel(ctx, FIELD).ok).toBe(true);
+    const page = ctx.world.chronicle.at(-1)!;
+    expect(page.text).toContain(PLAIN.name);
+    setProseMode(ctx, 'original');
+    expect(ctx.world.chronicle.at(-1)!.text).toBe(page.text);
+  });
+
+  it('never re-words a name the player gave the ground', () => {
+    const ctx = world('plainenglish');
+    grantParcel(ctx, FIELD);
+    expect(nameParcel(ctx, FIELD, 'Gallows Acre').ok).toBe(true);
+    expect(ctx.world.chronicle.at(-1)!.text).toContain(PLAIN.name); // what it WAS called, as read
+    expect(heldRow(ctx).name).toBe('Gallows Acre');
+    expect(heldRow(ctx).place).toBe(PLAIN.place);
+  });
+
+  it('chooses the rename line on the Original words, not the reader\'s', () => {
+    const ctx = world('plainenglish');
+    grantParcel(ctx, FIELD);
+    expect(nameParcel(ctx, FIELD, def.name).ok).toBe(true);
+    // Renaming to its own authored name is "named, again" in either wording.
+    expect(ctx.world.chronicle.at(-1)!.text).not.toContain(PLAIN.name);
+  });
+
+  it('keeps the save in Original and words lost ground for the reader', () => {
+    const plain = world('plainenglish');
+    const original = world('original');
+    for (const ctx of [plain, original]) {
+      grantParcel(ctx, FIELD);
+      expect(sellParcel(ctx, FIELD).ok).toBe(true);
+    }
+    // World state does not depend on the reading setting.
+    expect(plain.world.lostParcels).toEqual(original.world.lostParcels);
+    expect(plain.world.lostParcels.at(-1)).toMatchObject({ name: def.name, place: def.place });
+
+    expect(landView(plain).lost.at(-1)).toMatchObject({ name: PLAIN.name, place: PLAIN.place });
+    expect(landView(original).lost.at(-1)).toMatchObject({ name: def.name, place: def.place });
+  });
+
+  it('leaves a player-named loss in the player\'s words', () => {
+    const ctx = world('plainenglish');
+    grantParcel(ctx, FIELD);
+    nameParcel(ctx, FIELD, 'Gallows Acre');
+    sellParcel(ctx, FIELD);
+    expect(landView(ctx).lost.at(-1)).toMatchObject({ name: 'Gallows Acre', place: PLAIN.place });
   });
 });

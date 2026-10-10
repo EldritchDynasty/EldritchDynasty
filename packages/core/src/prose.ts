@@ -82,6 +82,23 @@ export function renderContentProse(
 }
 
 /**
+ * One authored field of an identified content record — a parcel's place, a
+ * career's blurb — selected for the reader. The worklist skips one-word names,
+ * so neither does this ask for an address nobody can author.
+ */
+export function proseForContentField(
+  ctx: SimCtx,
+  collection: string,
+  id: string,
+  field: string,
+  original: string,
+): string {
+  const file = ctx.content.sourceOf(id);
+  if (file === undefined || !isContentProseField(field, original)) return original;
+  return renderContentProse(ctx, file, `${collection}[id=${encodeURIComponent(id)}].${field}`, original);
+}
+
+/**
  * Read-model text for a marriage pledge: name what the family traded a future
  * marriage for, without changing the promise or the world it describes.
  *

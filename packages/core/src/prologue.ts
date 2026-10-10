@@ -8,7 +8,7 @@ import { MAX_FRIENDS, dealWindows, normaliseFriends, type FriendName } from './p
 import { campaignDef, type CampaignDef } from './campaign.js';
 import { dismissRetainer } from './people/succession.js';
 import { selectedSigningTerms } from './sim.js';
-import { renderContentProse } from './prose.js';
+import { proseForContentField, renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 
 /**
@@ -122,23 +122,6 @@ function prologueProse(
   );
 }
 
-function identifiedContentProse(
-  ctx: SimCtx,
-  collection: string,
-  id: string,
-  field: string,
-  original: string,
-): string {
-  const file = ctx.content.sourceOf(id);
-  if (file === undefined) return original;
-  return renderContentProse(
-    ctx,
-    file,
-    `${collection}[id=${prosePathId(id)}].${field}`,
-    original,
-  );
-}
-
 export function prologueDef(ctx: SimCtx): PrologueDef | undefined {
   return ctx.content.prologue;
 }
@@ -244,8 +227,8 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
       if (!object) return [];
       return [{
         heirloom: id,
-        name: identifiedContentProse(ctx, 'heirlooms', id, 'name', object.name),
-        blurb: identifiedContentProse(ctx, 'heirlooms', id, 'blurb', object.blurb ?? ''),
+        name: proseForContentField(ctx, 'heirlooms', id, 'name', object.name),
+        blurb: proseForContentField(ctx, 'heirlooms', id, 'blurb', object.blurb ?? ''),
         line: prologueProse(ctx, def, `heirlooms[${index}].line`, h.line),
       }];
     }),
@@ -255,7 +238,7 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
       if (!house) return [];
       return [{
         house: id,
-        houseName: identifiedContentProse(ctx, 'houses', id, 'name', house.name),
+        houseName: proseForContentField(ctx, 'houses', id, 'name', house.name),
         line: prologueProse(ctx, def, `grudges[${index}].line`, g.line),
       }];
     }),

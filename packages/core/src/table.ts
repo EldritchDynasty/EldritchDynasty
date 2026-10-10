@@ -21,7 +21,7 @@ import {
 } from './land.js';
 import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
-import { proseForClause } from './prose.js';
+import { proseForClause, proseForContentField, proseForEventTitle } from './prose.js';
 import { msg } from './messages.js';
 
 /**
@@ -898,6 +898,12 @@ export interface TableView {
   pupils: { person: string; name: string; age: Year }[];
 }
 
+/** A standing answer is listed under its event's title, in the reader's wording. */
+function delegatedTitle(ctx: SimCtx, event: string): string {
+  const def = ctx.content.event(event);
+  return def ? proseForEventTitle(ctx, def) : event;
+}
+
 export function tableView(ctx: SimCtx): TableView {
   const w = ctx.world;
   const household = w.people.household(w.playerHouse, w.year);
@@ -914,7 +920,7 @@ export function tableView(ctx: SimCtx): TableView {
       : [];
     return {
       book: state.id,
-      name: def?.name ?? state.id,
+      name: def ? proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name) : state.id,
       years: def?.studyYears ?? 0,
       readers,
     };
@@ -926,7 +932,7 @@ export function tableView(ctx: SimCtx): TableView {
     const minAge = Math.max(CAREER_AGE, def.minAge);
     const post: TableView['posts'][number] = {
       career: String(def.id),
-      name: def.name,
+      name: proseForContentField(ctx, 'careers', String(def.id), 'name', def.name),
       respectYield: def.respectYield,
       fee,
       ...(fee < usualFee ? { usualFee } : {}),
@@ -938,7 +944,7 @@ export function tableView(ctx: SimCtx): TableView {
         .filter((p) => canTakePost(ctx, p).ok && w.year - p.born >= minAge && p.career?.career !== def.id)
         .map((p) => ({ person: p.id, name: p.name, age: w.year - p.born })),
     };
-    if (def.blurb !== undefined) post.blurb = def.blurb;
+    if (def.blurb !== undefined) post.blurb = proseForContentField(ctx, 'careers', String(def.id), 'blurb', def.blurb);
     return post;
   });
 
@@ -952,10 +958,10 @@ export function tableView(ctx: SimCtx): TableView {
     bidCeiling: w.bidCeiling,
     delegation: [
       ...Object.entries(w.delegation.choices).map(([event, answer]) => ({
-        event, answer, kind: 'choice' as const, title: ctx.content.events.find((e) => e.id === event)?.title ?? event,
+        event, answer, kind: 'choice' as const, title: delegatedTitle(ctx, event),
       })),
       ...Object.entries(w.delegation.records).map(([event, answer]) => ({
-        event, answer, kind: 'record' as const, title: ctx.content.events.find((e) => e.id === event)?.title ?? event,
+        event, answer, kind: 'record' as const, title: delegatedTitle(ctx, event),
       })),
     ],
     // The soonest sale, and the cheapest thing in it — a ceiling is a guess

@@ -52,7 +52,7 @@ import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCau
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
 import {
-  createProseRuntime, proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
+  createProseRuntime, proseForContentField, proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
   type ProseRuntime,
 } from './prose.js';
 
@@ -1219,7 +1219,12 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         const reasons = relevance.get(p.id);
         if (reasons?.length) m.relevance = reasons.map((reason) => ({ reason }));
         if (p.contract) m.contract = p.contract.role;
-        if (p.career) m.post = ctx.content.career(p.career.career)?.name ?? String(p.career.career);
+        if (p.career) {
+          const post = ctx.content.career(p.career.career);
+          m.post = post
+            ? proseForContentField(ctx, 'careers', String(post.id), 'name', post.name)
+            : String(p.career.career);
+        }
         if (spouse) {
           const marriedIn = spouse.houseOfOrigin !== w.playerHouse;
           m.spouse = {
@@ -1410,8 +1415,11 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
 
   const commitment = activeCommitment(ctx);
   if (commitment) {
-    const positionName = commitment.position !== undefined
-      ? ctx.content.position(commitment.position)?.name
+    const position = commitment.position !== undefined
+      ? ctx.content.position(commitment.position)
+      : undefined;
+    const positionName = position
+      ? proseForContentField(ctx, 'positions', position.id, 'name', position.name)
       : undefined;
     view.muster = {
       began: commitment.began,
