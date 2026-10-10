@@ -594,6 +594,7 @@ describe('external relationship thread prose (#793)', () => {
       pressures: thread.pressures.map(({ kind, year, ref }) => ({ kind, year, ref })),
     });
     expect(structure(translated!)).toEqual(structure(original!));
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    // The founding family's other visible relationship is deliberately untranslated.
+    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress('threads.family.current')]);
   });
 });
