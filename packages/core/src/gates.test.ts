@@ -177,11 +177,12 @@ describe('the gates pass the shipped game', () => {
    * thousand. Only the reached/unreached line depends on the batch, and this
    * gate does not convict on that.
    */
-  it('gate 10 — every declared Effect kind is authored, but for the two it owes', () => {
+  it('gate 10 — every declared Effect kind is authored, but for the remaining debt', () => {
     const { ok, lines } = gateVocabularyReach(content, { runs: 2, years: 5 });
     const out = lines.join('\n');
     expect(ok, out).toBe(true);
-    expect(out).toMatch(/owed, and pinned: recast, schedule/);
+    expect(out).toMatch(/owed, and pinned: recast/);
+    expect(out).not.toMatch(/owed, and pinned: recast, schedule/);
   });
 
   it('keeps sampled vocabulary reach beside the scheduled fire-rate corpus', () => {
