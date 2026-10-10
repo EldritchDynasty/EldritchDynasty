@@ -14,6 +14,7 @@ import { careerMortality, inBreedingPool } from './careers.js';
 import { deleteriousLoad } from '../genetics/expression.js';
 import { musterMortality } from '../muster.js';
 import { acquiredFamilySize } from './condition.js';
+import { msg } from '../messages.js';
 
 /**
  * WHO DIES, WHO MARRIES, WHO IS BORN.
@@ -63,7 +64,7 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
     return w.people.kill(
       p.id,
       w.year,
-      madnessHazard > 0 ? 'the blood, overflowing' : 'by violence',
+      madnessHazard > 0 ? madnessCause(ctx) : msg(ctx, 'demography.cause.violence', 'by violence'),
     );
   }
 
@@ -83,7 +84,7 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   // hundred and thirty-seven died at a hundred and forty-three and the number
   // was quietly an average. Nobody ordinary outlives their maximum.
   if (age >= maxAge) {
-    return w.people.kill(p.id, w.year, 'of the years, all of them having been used');
+    return w.people.kill(p.id, w.year, msg(ctx, 'demography.cause.old_age', 'of the years, all of them having been used'));
   }
 
   // And the wall is approached rather than hit. Without the terminal term the
@@ -122,7 +123,21 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
 
   // kill() returns false for the Narrator: his death is redirected, not
   // applied, so he never appears in the year's death list.
-  return w.people.kill(p.id, w.year, madnessHazard > 0 ? 'the blood, overflowing' : 'in the ordinary way');
+  return w.people.kill(
+    p.id,
+    w.year,
+    madnessHazard > 0 ? madnessCause(ctx) : msg(ctx, 'demography.cause.ordinary', 'in the ordinary way'),
+  );
+}
+
+/**
+ * A cause of death is rendered in the reader's prose mode at the moment of
+ * death and stored as those words, like every other saved page (#276, #410).
+ * `passage.ts` quotes it inside its own keyed line, so an unkeyed cause left a
+ * Plain English reader with a translated sentence around an Original phrase.
+ */
+function madnessCause(ctx: SimCtx): string {
+  return msg(ctx, 'demography.cause.madness', 'the blood, overflowing');
 }
 
 /**
