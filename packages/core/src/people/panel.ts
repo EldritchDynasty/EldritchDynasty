@@ -135,8 +135,9 @@ const ROWS = 4;
  * so a mother-and-sisters read means the same thing whether it reaches the
  * player off a Match card or off the Vessel's candidate list.
  */
-function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: string): PanelIssue[] {
+function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: string, subjectSex: Sex = 'female'): PanelIssue[] {
   const w = ctx.world;
+  const possessive = subjectSex === 'male' ? 'his' : 'her';
   return women
     .filter((p) => cen.counted.has(p.id))
     .slice(0, ROWS)
@@ -144,7 +145,8 @@ function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: str
       const kids = cen.borne.get(p.id) ?? [];
       return {
         name: p.name,
-        relation: p.id === motherId ? 'her mother' : motherId ? 'her sister' : 'of her house',
+        relation: p.id === motherId ? `${possessive} mother`
+          : motherId ? `${possessive} sister` : `of ${possessive} house`,
         borne: kids.length,
         grown: kids.filter((k) => ageAt(k, k.died ?? w.year) >= GROWN).length,
       };
@@ -160,7 +162,7 @@ function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: str
  */
 function readIssue(ctx: SimCtx, card: MatchCard, cen: LineCensus): PanelIssue[] {
   const who = card.kind === 'household' ? ctx.world.people.get(card.person ?? '') : undefined;
-  return issueRows(ctx, lineWomen(ctx, card, cen), cen, who?.claimedParents.mother);
+  return issueRows(ctx, lineWomen(ctx, card, cen), cen, who?.claimedParents.mother, card.sex);
 }
 
 /**
@@ -175,7 +177,7 @@ function readIssue(ctx: SimCtx, card: MatchCard, cen: LineCensus): PanelIssue[] 
  */
 export function issueOf(ctx: SimCtx, personId: string, cen: LineCensus): PanelIssue[] {
   const who = ctx.world.people.get(personId);
-  return issueRows(ctx, bloodWomenOf(ctx, personId, cen), cen, who?.claimedParents.mother);
+  return issueRows(ctx, bloodWomenOf(ctx, personId, cen), cen, who?.claimedParents.mother, who?.sex);
 }
 
 /**
@@ -222,7 +224,9 @@ function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
     }
   } else {
     for (const p of w.people.all()) {
-      if (p.houseOfOrigin === card.house) rows.push({ p, relation: 'of her house', near: 0 });
+      if (p.houseOfOrigin === card.house) {
+        rows.push({ p, relation: `of ${card.sex === 'male' ? 'his' : 'her'} house`, near: 0 });
+      }
     }
   }
 
@@ -258,6 +262,7 @@ function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
  */
 function claimedKin(ctx: SimCtx, who: Person): [string, string, number][] {
   const w = ctx.world;
+  const possessive = who.sex === 'male' ? 'his' : 'her';
   const kids = new Map<string, string[]>();
   for (const p of w.people.all()) {
     for (const parent of [p.claimedParents.mother, p.claimedParents.father]) {
@@ -291,17 +296,17 @@ function claimedKin(ctx: SimCtx, who: Person): [string, string, number][] {
 
   // Order matters: everything is added nearest-first, and `add` keeps the
   // first word anybody is given.
-  for (const id of parents) add(id, wordFor(id, 'her father', 'her mother'), 4);
+  for (const id of parents) add(id, wordFor(id, `${possessive} father`, `${possessive} mother`), 4);
   for (const id of parents) {
-    for (const sib of kids.get(id) ?? []) add(sib, wordFor(sib, 'her brother', 'her sister'), 3);
+    for (const sib of kids.get(id) ?? []) add(sib, wordFor(sib, `${possessive} brother`, `${possessive} sister`), 3);
   }
-  for (const id of grandparents) add(id, wordFor(id, 'her grandfather', 'her grandmother'), 2);
+  for (const id of grandparents) add(id, wordFor(id, `${possessive} grandfather`, `${possessive} grandmother`), 2);
   for (const id of grandparents) {
-    for (const unc of kids.get(id) ?? []) add(unc, wordFor(unc, 'her uncle', 'her aunt'), 2);
+    for (const unc of kids.get(id) ?? []) add(unc, wordFor(unc, `${possessive} uncle`, `${possessive} aunt`), 2);
   }
   for (const id of grandparents) {
     for (const unc of kids.get(id) ?? []) {
-      for (const cousin of kids.get(unc) ?? []) add(cousin, 'her cousin', 1);
+      for (const cousin of kids.get(unc) ?? []) add(cousin, `${possessive} cousin`, 1);
     }
   }
   return out;
