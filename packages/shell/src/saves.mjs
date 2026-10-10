@@ -22,6 +22,14 @@ import { writeJsonAtomically } from './atomic-json.mjs';
 export function saveRoot(userData) {
   const root = join(userData, 'saves');
   mkdirSync(root, { recursive: true });
+  // Recursive mkdir accepts an existing symlink to a directory. A later
+  // atomic write would then rename a real save into the link's destination,
+  // even though the slot itself is a safe basename. Recheck on each call:
+  // Electron obtains this root lazily for every IPC operation, so a directory
+  // replaced between operations must not silently redirect the next save.
+  if (!lstatSync(root).isDirectory()) {
+    throw new TypeError('save root is not a regular directory');
+  }
   return root;
 }
 
