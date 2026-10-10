@@ -72,6 +72,10 @@ describe('live attribute names in the selected prose mode (#959)', () => {
     expect(missingPlainEnglish(ctx)).not.toContain(address);
     expect(missingPlainEnglish(ctx))
       .toContain('content:attributes.yaml#attributes[id=eldritch_power].name');
+    // A one-word attribute is not in the prose worklist, even in Plain English mode.
+    expect(session.view().attributes.find((item) => item.attr === 'strength')?.name).toBe('Strength');
+    expect(missingPlainEnglish(ctx))
+      .not.toContain('content:attributes.yaml#attributes[id=strength].name');
 
     setProseVariants(ctx, [{ ...variant, of: proseOriginalHash('Older attribute wording') }]);
     expect(session.view().attributes).toEqual(original);
