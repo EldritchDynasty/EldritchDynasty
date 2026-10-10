@@ -15,6 +15,7 @@ import type {
 } from '@ed/core';
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
+import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
 import Outcome from './Outcome.vue';
 import Standing from './Standing.vue';
@@ -1050,4 +1051,86 @@ describe('Chapter keyboard focus (#939)', () => {
       }
     },
   );
+});
+
+/**
+ * A naming refusal used to look exactly like a dead button. These are small
+ * component interactions, kept in this already-measured client UI suite so
+ * they do not create another unmeasured fast-lane test file.
+ */
+describe('child naming refusal feedback (#1075)', () => {
+  const child = {
+    person: 'p_child',
+    born: 1127,
+    sex: 'female',
+    suggested: 'Mara',
+    because: 'Her grandmother carried that name.',
+  };
+
+  function namingView(children = [child]): SessionView {
+    return { namesWanted: children } as unknown as SessionView;
+  }
+
+  it('retains a refused draft, explains failure, and clears feedback on a successful retry', async () => {
+    const actions = {
+      name: vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true),
+      keepSuggestedName: vi.fn(),
+    } as unknown as GameActions;
+    const w = mount(Naming, { props: { view: namingView(), actions } });
+
+    await w.get('input').setValue('Nora');
+    await w.get('.child button').trigger('click');
+    expect(actions.name).toHaveBeenCalledWith('p_child', 'Nora');
+    expect((w.get('input').element as HTMLInputElement).value).toBe('Nora');
+    expect(w.get('[role="alert"]').text()).toContain('could not be accepted');
+    expect(w.get('input').attributes('aria-invalid')).toBe('true');
+    expect(w.get('input').attributes('aria-describedby')).toBe('naming-refusal-p_child');
+
+    await w.get('input').setValue('Noreen');
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    await w.get('.child button').trigger('click');
+    expect(actions.name).toHaveBeenNthCalledWith(2, 'p_child', 'Noreen');
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    expect((w.get('input').element as HTMLInputElement).value).toBe('');
+    w.unmount();
+  });
+
+  it('explains empty and overlong entries before dispatch, but accepts 32 characters', async () => {
+    const actions = { name: vi.fn(() => true), keepSuggestedName: vi.fn() } as unknown as GameActions;
+    const w = mount(Naming, { props: { view: namingView(), actions } });
+
+    await w.get('.child button').trigger('click');
+    expect(w.get('[role="alert"]').text()).toContain('Enter a name');
+    expect(actions.name).not.toHaveBeenCalled();
+
+    await w.get('input').setValue('a'.repeat(33));
+    await w.get('.child button').trigger('click');
+    expect(w.get('[role="alert"]').text()).toContain('32 characters');
+    expect(actions.name).not.toHaveBeenCalled();
+
+    await w.get('input').setValue('a'.repeat(32));
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    await w.get('.child button').trigger('click');
+    expect(actions.name).toHaveBeenCalledWith('p_child', 'a'.repeat(32));
+    w.unmount();
+  });
+
+  it('shows a refused suggested-name action and drops stale feedback when the child leaves', async () => {
+    const actions = {
+      name: vi.fn(),
+      keepSuggestedName: vi.fn(() => false),
+    } as unknown as GameActions;
+    const w = mount(Naming, { props: { view: namingView(), actions } });
+
+    await w.get('input').setValue('My own draft');
+    await w.findAll('.child button')[1]!.trigger('click');
+    expect(actions.keepSuggestedName).toHaveBeenCalledWith('p_child');
+    expect((w.get('input').element as HTMLInputElement).value).toBe('My own draft');
+    expect(w.get('[role="alert"]').text()).toContain('suggested name could not be accepted');
+
+    await w.setProps({ view: namingView([]) });
+    await w.setProps({ view: namingView() });
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    w.unmount();
+  });
 });
