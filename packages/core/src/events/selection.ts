@@ -258,6 +258,15 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
     w.scheduled = w.scheduled.filter((x) => x !== s);
     if (!e) continue;
 
+    // Scheduling guarantees that a promised scene is *considered*, not that a
+    // one-shot scene may recur. The same template might already have fired
+    // through ambient selection (or another schedule), so retire stale copies.
+    // Multiple entries due together must not queue the same nonrepeatable scene.
+    if (!e.repeatable && (
+      (w.frequency.templateFires[e.id] ?? 0) > 0
+      || out.some((candidate) => candidate.event.id === e.id)
+    )) continue;
+
     const res = resolveSlots(e, ctx, rng);
     if (res.ok) {
       out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced' });
