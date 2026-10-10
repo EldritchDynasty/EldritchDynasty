@@ -42,6 +42,52 @@ describe('pseudo localisation (#276)', () => {
     expect(pseudoLocRequested('?other=1')).toBe(false);
   });
 
+  it('does not rewrite editable text or implicit option values (#1030)', async () => {
+    const root = document.createElement('main');
+    root.innerHTML = [
+      '<div contenteditable="true">Write this <strong>yourself</strong></div>',
+      '<textarea>Draft that must stay editable</textarea>',
+      '<select>',
+      '  <option>Implicit value</option>',
+      '  <option value="stable">Visible caption</option>',
+      '</select>',
+      '<p>Ordinary display text</p>',
+    ].join('');
+    document.body.append(root);
+
+    const editable = root.querySelector('[contenteditable]')!;
+    const textarea = root.querySelector('textarea')!;
+    const implicit = root.querySelector('option:not([value])') as HTMLOptionElement;
+    const explicit = root.querySelector('option[value]') as HTMLOptionElement;
+    const display = root.querySelector('p')!;
+    const stop = installPseudoLocalisation(root);
+
+    expect(editable.textContent).toBe('Write this yourself');
+    expect(textarea.textContent).toBe('Draft that must stay editable');
+    expect(implicit.textContent).toBe('Implicit value');
+    expect(implicit.value).toBe('Implicit value');
+    expect(explicit.value).toBe('stable');
+    expect(explicit.textContent).toMatch(/^⟦.*⟧$/);
+    expect(display.textContent).toMatch(/^⟦.*⟧$/);
+
+    // The same safety rule must hold for mutations after Vue has mounted.
+    editable.querySelector('strong')!.textContent = 'new words';
+    textarea.textContent = 'New draft';
+    implicit.textContent = 'New implicit value';
+    explicit.textContent = 'Updated caption';
+    display.textContent = 'New display text';
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(editable.textContent).toBe('Write this new words');
+    expect(textarea.textContent).toBe('New draft');
+    expect(implicit.textContent).toBe('New implicit value');
+    expect(implicit.value).toBe('New implicit value');
+    expect(explicit.value).toBe('stable');
+    expect(explicit.textContent).toMatch(/^⟦.*⟧$/);
+    expect(display.textContent).toMatch(/^⟦.*⟧$/);
+    stop();
+  });
+
   it('covers existing and dynamically rendered text plus accessibility labels', async () => {
     const root = document.createElement('main');
     root.innerHTML = [
