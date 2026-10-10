@@ -96,7 +96,15 @@ export function mobileStorage(
         directory: Directory.Data,
         encoding: Encoding.UTF8,
       });
-      return parsed(result.data);
+      const value = parsed(result.data);
+      // A damaged native snapshot is *not* a missing snapshot. Falling back
+      // to Preferences here would overwrite the (possibly recoverable) newer
+      // file with an old migration copy. Only OS-PLUG-FILE-0008 below permits
+      // legacy fallback. JSON null is not a persisted save or Library either.
+      if (value === null) {
+        throw new Error(`native Data file ${path} contains invalid JSON; refusing legacy migration`);
+      }
+      return value;
     } catch (error) {
       if (missingFile(error)) return null;
       throw error;
@@ -151,6 +159,10 @@ export function mobileStorage(
 
   async function listSaves(): Promise<SaveSummary[]> {
     const saves = new Map<string, SaveSummary>();
+    // A native directory entry is authoritative even when its contents are
+    // damaged or inaccessible. In that case preserve both copies rather than
+    // rewriting the native bytes with stale Android Preferences data.
+    const nativeSlots = new Set<string>();
     try {
       const { files: entries } = await files.readdir({
         path: SAVE_DIR,
@@ -160,6 +172,7 @@ export function mobileStorage(
         if (entry.type === 'directory') continue;
         const slot = slotFromFile(entry.name);
         if (!slot) continue;
+        nativeSlots.add(slot);
         try {
           const save = await readFile(`${SAVE_DIR}/${entry.name}`);
           if (save !== null) saves.set(slot, saveSummary(slot, save));
@@ -179,13 +192,18 @@ export function mobileStorage(
       if (!slot) continue;
 
       if (saves.has(slot)) {
-        // The file is authoritative once it exists. Finish a prior migration
-        // that wrote successfully but was interrupted before key cleanup.
+        // The readable native file is authoritative. Finish a migration
+        // interrupted after its durable write but before legacy-key cleanup.
         try {
           await preferences.remove({ key });
         } catch {
           // The durable file already wins; stale-key cleanup can retry later.
         }
+        continue;
+      }
+      if (nativeSlots.has(slot)) {
+        // Unreadable native entry: do NOT overwrite it or delete the stale
+        // Preferences copy. The original bytes may still be recoverable.
         continue;
       }
 
