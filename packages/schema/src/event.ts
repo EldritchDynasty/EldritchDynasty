@@ -748,7 +748,18 @@ export const EventTemplateS = z.object({
    * legacy saves. An id here names a choice id, never an outcome id: the
    * docket knows exactly which choice the player or chronicler took.
    */
-  recordByChoice: z.array(RecordBlockS.extend({ id: z.string().min(1) })).optional(),
+  recordByChoice: z.array(RecordBlockS.extend({ id: z.string().min(1) })).superRefine((rows, ctx) => {
+    const seen = new Set<string>();
+    for (const [index, row] of rows.entries()) {
+      if (seen.has(row.id)) {
+        ctx.addIssue({
+          code: 'custom', path: [index, 'id'],
+          message: `duplicate choice-specific Record id: ${row.id}`,
+        });
+      }
+      seen.add(row.id);
+    }
+  }).optional(),
   rumour: z.object({ id: z.string(), accuracy: z.number(), spread: z.number() }).optional(),
   accounts: z.array(z.string()).default([]),
 
