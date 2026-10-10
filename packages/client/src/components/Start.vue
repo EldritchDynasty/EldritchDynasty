@@ -54,6 +54,7 @@ const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const refused = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
+const confirmingClearLibrary = ref(false);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -108,6 +109,9 @@ async function exportSave(slot: string): Promise<void> {
 }
 
 async function clearLibrary(): Promise<void> {
+  // A missed or duplicated click cannot skip the explicit destructive step.
+  if (!confirmingClearLibrary.value) return;
+  confirmingClearLibrary.value = false;
   libraryError.value = null;
   try {
     await props.actions.clearLibrary();
@@ -193,7 +197,12 @@ onMounted(() => { void refreshSaves(); });
           <h2>The Library of Houses</h2>
           <p class="dim small">Finished lines remain here. A new house may hear them repeated badly.</p>
         </div>
-        <button class="quiet small" @click="clearLibrary()">Clear</button>
+        <button v-if="!confirmingClearLibrary" class="quiet small" @click="confirmingClearLibrary = true">Clear</button>
+        <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
+          <p class="rubric small">Clear all {{ completedHouses.length }} completed houses? This cannot be undone.</p>
+          <button class="quiet small confirm-clear" @click="clearLibrary()">Yes, clear all</button>
+          <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
+        </div>
       </div>
       <p v-if="libraryError" class="rubric small" role="alert">{{ libraryError }}</p>
       <article v-for="run in completedHouses" :key="run.id" class="library-run">
@@ -275,6 +284,8 @@ input { width: 9ch; }
 .library-head, .library-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .library-head h2 { margin: 0; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; }
 .library-head p { margin: 8px 0 0; }
+.library-clear-confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.library-clear-confirm p { margin: 0; }
 .library-run { padding: 9px 0; border-top: 1px solid var(--rule); }
 .library-run:first-of-type { margin-top: 10px; }
 .library-title strong { font-weight: 600; }
