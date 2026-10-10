@@ -1,5 +1,6 @@
 import { lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
+import { resolveExistingContentPath } from '../../content/tools/content-path.mjs';
 
 export function userContentRoot(userData) {
   return join(userData, 'mods', 'content');
@@ -22,6 +23,17 @@ function hasRegularContentRoot(root) {
     }
   }
   return true;
+}
+
+// The Mod Editor may read AND overwrite existing YAML. Unlike the game's
+// read-only mod scan, a missing root must be an error. Crucially, check each
+// lexical ancestor with lstat BEFORE the shared resolver calls realpathSync:
+// resolving a linked mods/content root first would bless the external target.
+export function resolveModEditorContentPath(root, path) {
+  if (!hasRegularContentRoot(root)) {
+    throw new TypeError('user content root is not a regular directory');
+  }
+  return resolveExistingContentPath(root, path);
 }
 
 export function readUserContent(root) {
