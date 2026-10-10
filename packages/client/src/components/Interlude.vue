@@ -54,7 +54,7 @@ function onKey(e: KeyboardEvent): void {
   if (e.shiftKey && (here === first || !card.value?.contains(here))) {
     e.preventDefault();
     last.focus();
-  } else if (!e.shiftKey && here === last) {
+  } else if (!e.shiftKey && (here === last || !card.value?.contains(here))) {
     e.preventDefault();
     first.focus();
   }
