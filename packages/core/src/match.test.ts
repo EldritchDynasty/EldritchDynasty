@@ -87,6 +87,76 @@ describe('prospective character-template prose on Match cards (#646)', () => {
   });
 });
 
+describe('reviewed house names on Match cards (#970)', () => {
+  function offered() {
+    const ctx = testWorld(bundle, 970, 1042);
+    const subject = place(ctx, { sex: 'female', age: 19, name: 'Match house-label subject' });
+    place(ctx, { sex: 'male', age: 21, name: 'Match house-label cousin' });
+    return { ctx, subject };
+  }
+
+  const variants = bundle.houses.filter((h) => h.name.trim().split(/\s+/).length >= 2)
+    .map((h) => ({
+      address: `content:houses.yaml#houses[id=${encodeURIComponent(String(h.id))}].name`,
+      of: proseOriginalHash(h.name),
+      plainenglish: `Plain: ${h.name}`,
+    }));
+
+  it('translates both household and outsider card names without changing a dealt hand', () => {
+    const control = offered();
+    const plain = offered();
+    setProseVariants(plain.ctx, variants);
+    setProseMode(plain.ctx, 'plainenglish');
+
+    const normal = dealMatch(control.ctx, control.subject, makeRng(970));
+    const localized = dealMatch(plain.ctx, plain.subject, makeRng(970));
+    expect(localized.cards.some((card) => card.kind === 'household')).toBe(true);
+    expect(localized.cards.some((card) => card.kind === 'outsider')).toBe(true);
+    expect(localized.cards).toHaveLength(normal.cards.length);
+
+    for (let i = 0; i < localized.cards.length; i++) {
+      const card = localized.cards[i]!;
+      const original = normal.cards[i]!;
+      const variant = variants.find((row) => row.address.endsWith(
+        `houses[id=${encodeURIComponent(card.house)}].name`));
+      expect(card.houseName).toBe(variant?.plainenglish ?? original.houseName);
+      expect(card.id).toBe(original.id);
+      expect(card.kind).toBe(original.kind);
+      expect(card.house).toBe(original.house);
+      expect(card.dowry).toBe(original.dowry);
+      expect(card.kinship).toBe(original.kinship);
+      expect(card.recipe).toEqual(original.recipe);
+    }
+    expect(canonical(saveGame(plain.ctx))).toBe(canonical(saveGame(control.ctx)));
+
+    // A dealt hand is historical presentation, not a live house-name lookup.
+    const frozen = structuredClone(localized.cards);
+    setProseMode(plain.ctx, 'original');
+    expect(localized.cards).toEqual(frozen);
+    expect(normal.cards.map((card) => card.houseName)).not.toEqual(
+      localized.cards.map((card) => card.houseName));
+  });
+
+  it('falls back to Original and reports a stale house name only when visible', () => {
+    const { ctx, subject } = offered();
+    setProseVariants(ctx, variants.map((row) => ({ ...row, of: '0000000000000000' })));
+    setProseMode(ctx, 'plainenglish');
+    const hand = dealMatch(ctx, subject, makeRng(970));
+    const shownNames = hand.cards.flatMap((card) => {
+      const house = ctx.content.house(card.house);
+      if (!house) return [];
+      const variant = variants.find((row) => row.address.endsWith(
+        `houses[id=${encodeURIComponent(String(house.id))}].name`));
+      return variant ? [{ original: house.name, address: variant.address, shown: card.houseName }] : [];
+    });
+    expect(shownNames.length).toBeGreaterThan(0);
+    for (const row of shownNames) {
+      expect(row.shown).toBe(row.original);
+      expect(missingPlainEnglish(ctx)).toContain(row.address);
+    }
+  });
+});
+
 /**
  * THE MATCH (concept §5, step 2) — the player draws one partner from three
  * cards.
