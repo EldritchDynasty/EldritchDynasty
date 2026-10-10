@@ -254,6 +254,89 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
     }),
   };
 
+  it('freezes reviewed Age title and opening in the newly written Chronicle page (#978)', () => {
+    const ctx = testWorld(bundle, 978);
+    const age = ctx.content.ages[0]!;
+    if (!age.opening) throw new Error('the first Age needs an opening for this fixture');
+    const file = ctx.content.sourceOf(age.id)!;
+    const base = `content:${file}#ages[id=${encodeURIComponent(age.id)}]`;
+    setProseVariants(ctx, [
+      {
+        address: `${base}.name`,
+        of: proseOriginalHash(age.name),
+        plainenglish: 'The Quiet Years',
+      },
+      {
+        address: `${base}.opening`,
+        of: proseOriginalHash(age.opening),
+        plainenglish: 'The harvests were good. The house came to expect years of peace.',
+      },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    ctx.world.age.active = [{
+      age: age.id, began: ctx.world.year - age.namedAfterYears,
+      named: false, paid: { standing: false },
+    }];
+
+    phase('ages', ctx);
+    const page = ctx.world.chronicle.find((entry) => entry.weight === 'page' && entry.title === 'The Quiet Years');
+    expect(page?.text).toBe('The harvests were good. The house came to expect years of peace.');
+    expect(missingPlainEnglish(ctx)).not.toContain(`${base}.name`);
+    expect(missingPlainEnglish(ctx)).not.toContain(`${base}.opening`);
+    expect(ctx.world.age.active[0]?.age).toBe(age.id);
+    expect(ctx.world.age.active[0]?.named).toBe(true);
+
+    // An already written Chronicle page does not change when the setting does.
+    setProseMode(ctx, 'original');
+    expect(page?.title).toBe('The Quiet Years');
+    expect(page?.text).toBe('The harvests were good. The house came to expect years of peace.');
+  });
+
+  it('falls back to the exact Original for stale Age-name and opening reviews (#978)', () => {
+    const ctx = testWorld(bundle, 978);
+    const age = ctx.content.ages[0]!;
+    if (!age.opening) throw new Error('the first Age needs an opening for this fixture');
+    const base = `content:${ctx.content.sourceOf(age.id)}#ages[id=${encodeURIComponent(age.id)}]`;
+    setProseVariants(ctx, [
+      { address: `${base}.name`, of: proseOriginalHash('Prior Age title'), plainenglish: 'The Quiet Years' },
+      { address: `${base}.opening`, of: proseOriginalHash('Prior Age opening'), plainenglish: 'It was quiet.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    ctx.world.age.active = [{
+      age: age.id, began: ctx.world.year - age.namedAfterYears,
+      named: false, paid: { standing: false },
+    }];
+
+    phase('ages', ctx);
+    const page = ctx.world.chronicle.find((entry) => entry.weight === 'page' && entry.title === age.name);
+    expect(page?.text).toBe(age.opening);
+    expect(missingPlainEnglish(ctx)).toEqual(expect.arrayContaining([`${base}.name`, `${base}.opening`]));
+  });
+
+  it('uses the selected Age name in the keyed no-opening fallback (#978)', () => {
+    const ctx = testWorld(unopened, 978);
+    const age = ctx.content.ages[0]!;
+    const address = `content:${ctx.content.sourceOf(age.id)}#ages[id=${encodeURIComponent(age.id)}].name`;
+    setProseVariants(ctx, [
+      { address, of: proseOriginalHash(age.name), plainenglish: 'The Quiet Years' },
+      {
+        address: coreMessageAddress('age.named_fallback'),
+        of: proseOriginalHash('They began to call it {AGE}.'),
+        plainenglish: 'People started calling this time {AGE}.',
+      },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    ctx.world.age.active = [{
+      age: age.id, began: ctx.world.year - age.namedAfterYears,
+      named: false, paid: { standing: false },
+    }];
+
+    phase('ages', ctx);
+    const page = ctx.world.chronicle.find((entry) => entry.weight === 'page' && entry.title === 'The Quiet Years');
+    expect(page?.text).toBe('People started calling this time The Quiet Years.');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+  });
+
   for (const mode of ['original', 'plainenglish'] as const) {
     it(`names an Age with no opening of its own in ${mode}`, () => {
       const ctx = speak(testWorld(unopened), mode);
