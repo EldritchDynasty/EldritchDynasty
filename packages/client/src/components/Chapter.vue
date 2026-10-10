@@ -74,7 +74,7 @@ function onKey(e: KeyboardEvent): void {
 
 /**
  * REPLAY COMPRESSION (#258). Only the nameless opening is passive prose.
-   * A closing is a verdict on THIS house and therefore never enters this
+ * A closing is a verdict on THIS house and therefore never enters this
  * history. Exact text is the identity on purpose: an edited variant is new
  * prose, even when it came from the same authored Age.
  */
