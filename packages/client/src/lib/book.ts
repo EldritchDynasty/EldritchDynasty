@@ -191,10 +191,10 @@ export function plateHeight(rows: readonly PlateRow[]): number {
 
 /**
  * Export ordinary plates as PNG but avoid allocating huge bitmaps for entire
- * Long-Line chronicles. The 1200 × 8192 limit stays below a 16-megapixel
- * canvas budget even in browsers with stricter maximum canvas sizes.
+ * Long-Line chronicles. A conservative 4096px dimension limit avoids
+ * mobile browsers' smaller maximum canvas heights and bitmap allocations.
  */
-export const MAX_PLATE_CANVAS_HEIGHT = 8192;
+export const MAX_PLATE_CANVAS_HEIGHT = 4096;
 
 /** A Chronicle may contain a person's own words: escape XML text AND attributes. */
 function plateXml(text: string): string {
