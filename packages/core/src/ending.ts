@@ -540,8 +540,12 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
 
   const reckoning = readTheChronicle(ctx);
   const ledger = reckoning.clauses === reckoning.clausesTotal
-    ? `The Ledger was complete: all ${reckoning.clausesTotal} clauses were recovered.`
-    : `The Ledger remained unresolved: ${reckoning.clauses} of ${reckoning.clausesTotal} clauses were recovered.`;
+    ? msg(ctx, 'ending.ledger.complete',
+      'The Ledger was complete: all {TOTAL} clauses were recovered.',
+      { TOTAL: String(reckoning.clausesTotal) })
+    : msg(ctx, 'ending.ledger.unresolved',
+      'The Ledger remained unresolved: {CLAUSES} of {TOTAL} clauses were recovered.',
+      { CLAUSES: String(reckoning.clauses), TOTAL: String(reckoning.clausesTotal) });
 
   const view: EpilogueView = {
     id: w.ending.id,
@@ -550,7 +554,7 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     ring,
     thesis: prologue.thesis,
     closing: endingProse(ctx, def, 'closing', def.closing),
-    summary: `${endingSummary(w.ending.id, reckoning)} ${ledger}`,
+    summary: `${endingSummary(ctx, w.ending.id, reckoning)} ${ledger}`,
     reckoning,
     read,
     year: w.ending.year,
@@ -581,35 +585,36 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
  * compiler will point at the day a sixth ending is declared, which is the
  * whole reason it is written as a switch rather than as a lookup table.
  */
-export function endingSummary(id: EndingId, r: Reckoning): string {
+export function endingSummary(ctx: SimCtx, id: EndingId, r: Reckoning): string {
   switch (id) {
     case 'apotheosis':
-      return `A god was made, and the book can show it: ${rungTitle(r.attested)}, on the page.`;
+      return msg(ctx, 'ending.summary.apotheosis',
+        'A god was made, and the book can show it: {RUNG}, on the page.',
+        { RUNG: rungTitle(r.attested) });
     case 'unmade':
-      return 'The rite failed at the last step, and what was in the blood went out of it.';
+      return msg(ctx, 'ending.summary.unmade',
+        'The rite failed at the last step, and what was in the blood went out of it.');
     case 'broken_line':
-      return 'Nobody was at the table. The creditor read the chronicle alone.';
+      return msg(ctx, 'ending.summary.broken_line',
+        'Nobody was at the table. The creditor read the chronicle alone.');
     case 'settled':
-      return `The house recovered all ${r.clausesTotal} clauses of its shorter contract. `
-        + 'The creditor read the account, found it answered, and closed it.';
+      return msg(ctx, 'ending.summary.settled',
+        'The house recovered all {TOTAL} clauses of its shorter contract. The creditor read the account, found it answered, and closed it.',
+        { TOTAL: String(r.clausesTotal) });
     case 'forgotten':
-      // TWO HOUSES ARRIVE HERE and they did not do the same thing.
-      //
-      // One never climbed. The other climbed, wrote itself larger on the way
-      // up, and could not show a page for it on the night it mattered — §6's
-      // own sentence, and §23's worst ending reached from above instead of
-      // from below. Reading the first line out to the second house would be
-      // the game telling it something untrue about its own thousand years.
+      // A withheld attestation and a house that never climbed have different endings.
       if (r.rungsWithheld > 0 && rungIndex(r.attested) > rungIndex(r.substantiated)) {
-        return `The book attests ${rungTitle(r.attested)} and could not hold it up. `
-          + 'The creditor arrived, read, believed none of the parts that mattered, '
-          + 'and did not collect.';
+        return msg(ctx, 'ending.summary.forgotten_withheld',
+          'The book attests {RUNG} and could not hold it up. The creditor arrived, read, believed none of the parts that mattered, and did not collect.',
+          { RUNG: rungTitle(r.attested) });
       }
-      return `The house survived to the term and never passed ${rungTitle('adept')}. `
-        + 'The creditor arrived, read, and did not collect.';
+      return msg(ctx, 'ending.summary.forgotten',
+        'The house survived to the term and never passed {RUNG}. The creditor arrived, read, and did not collect.',
+        { RUNG: rungTitle('adept') });
     case 'devoured':
-      return `The book attests ${rungTitle(r.substantiated)}, which was enough to be worth the `
-        + 'journey and not enough to argue with.';
+      return msg(ctx, 'ending.summary.devoured',
+        'The book attests {RUNG}, which was enough to be worth the journey and not enough to argue with.',
+        { RUNG: rungTitle(r.substantiated) });
     default:
       return assertNever(id);
   }
