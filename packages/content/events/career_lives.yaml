@@ -953,3 +953,686 @@ events:
             - id: dark
               weight: 100
               text: The fire is banked at the usual hour. The unfinished sum waits for morning.
+
+proseVariants:
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].title"
+    of: 5b61820fba50bc93
+    plainenglish: >-
+      Four Names Missing from the Pay List
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].body"
+    of: 3f3f9eba9f85f83e
+    plainenglish: >-
+      The pay list comes back from Cawdry with four names crossed out and {OFFICER}'s name written
+      below them in handwriting the house does not recognise. The money is six crowns short.
+      Nobody can say whether the dead men took it, the clerk kept it, or the captain spent it
+      before the list was sealed. The house is expected to make up the difference.
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].interaction.choices[id=make_it_whole].label"
+    of: 14bcd927ad1d7303
+    plainenglish: >-
+      Add six crowns to the list.
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].interaction.choices[id=make_it_whole].outcomes[id=paid].text"
+    of: 6b9577cc54144740
+    plainenglish: >-
+      The next list is correct, and it is written in the same unfamiliar handwriting.
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].interaction.choices[id=return_the_list].label"
+    of: 46efe60f264c1183
+    plainenglish: >-
+      Send the account back unchanged.
+  - address: "content:events/career_lives.yaml#events[id=the_pay_list_returns_short].interaction.choices[id=return_the_list].outcomes[id=returned].text"
+    of: 3687464302ce8c5f
+    plainenglish: >-
+      The six crowns are taken out of his pay over the next two quarters. The clerk's handwriting
+      stays perfectly neat.
+  - address: "content:events/career_lives.yaml#events[id=the_ring_from_the_line].title"
+    of: 8aefdac647fd402a
+    plainenglish: >-
+      What Came Home
+  - address: "content:events/career_lives.yaml#events[id=the_ring_from_the_line].body"
+    of: 0624f30a2dcdc97e
+    plainenglish: >-
+      The horse comes home without {OFFICER}. His ring is tied to the bridle with thread, and his
+      coat arrives three days later in a cart full of other men's coats. The captain's report
+      mentions a river, a march at night, and no enemy at all. It is the first honest report the
+      army has sent.
+  - address: "content:events/career_lives.yaml#events[id=the_ring_from_the_line].interaction.outcomes[id=came_back].text"
+    of: d2dba28fc40e8f7b
+    plainenglish: >-
+      The ring goes into the box. The coat is too stiff with mud to fold.
+  - address: "content:events/career_lives.yaml#events[id=the_ring_from_the_line].interaction.outcomes[id=came_back].effects[0].cause"
+    of: eea88d6b596d633f
+    plainenglish: >-
+      while serving in the army
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].title"
+    of: f88499109f81804c
+    plainenglish: >-
+      Leave for the Winter
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].body"
+    of: 55fddb20eb37d29c
+    plainenglish: >-
+      {OFFICER} can come home on leave until the roads harden. The captain will let him go for
+      twenty crowns and no questions, which shows the house how badly the captain wants the money
+      and how little he wants the man. The offer lasts until the first frost. After that, the road
+      belongs to the army.
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].interaction.choices[id=buy_the_leave].label"
+    of: 17ff445ccb989580
+    plainenglish: >-
+      Pay twenty crowns and keep him at home.
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].interaction.choices[id=buy_the_leave].outcomes[id=home].text"
+    of: 4e3dfe5dbc5f4fe9
+    plainenglish: >-
+      His name is taken off the list before winter. He sleeps for most of his first three days at
+      home.
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].interaction.choices[id=keep_the_commission].label"
+    of: ceb3320a1d240ece
+    plainenglish: >-
+      His commission cost more than that. Send him back.
+  - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].interaction.choices[id=keep_the_commission].outcomes[id=returned].text"
+    of: 69644a6b5208e617
+    plainenglish: >-
+      He leaves before dawn so the family does not have to watch him go.
+  - address: "content:events/career_lives.yaml#events[id=ten_questions_instead_of_eleven].title"
+    of: fa65b169e6d8c595
+    plainenglish: >-
+      Ten Questions Instead of Eleven
+  - address: "content:events/career_lives.yaml#events[id=ten_questions_instead_of_eleven].body"
+    of: 7826bf36472e1a82
+    plainenglish: >-
+      The letter from the Church court's investigator has eleven questions. {PRIEST} reads them in
+      the kitchen, crosses out the seventh, and answers the fifth in a way that makes the eighth
+      unnecessary. The copy sent to Bramme has only ten questions. Nobody there asks what was
+      taken out.
+  - address: "content:events/career_lives.yaml#events[id=ten_questions_instead_of_eleven].interaction.outcomes[id=covered].text"
+    of: 6b09c055cd1a6cf9
+    plainenglish: >-
+      This is what having a son in the Church buys. It does not buy forgiveness.
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].title"
+    of: d0aa5a29a6313395
+    plainenglish: >-
+      The Parish Record Waits
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].body"
+    of: 9c81b3784a1a8854
+    plainenglish: >-
+      A child born in the west room is added to the parish record six days late. {PRIEST} has left
+      the line blank and the parish priest has allowed it, a small favour between men who will
+      both deny any favour was done. {HEAD} has until dusk to decide what date to write there.
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].interaction.choices[id=send_the_date].label"
+    of: b2d311da83ec3236
+    plainenglish: >-
+      Send the real date.
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].interaction.choices[id=send_the_date].outcomes[id=entered].text"
+    of: 08c0528e990401a2
+    plainenglish: >-
+      The ink dries. The line looks the same as every other line.
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].interaction.choices[id=leave_it_open].label"
+    of: 7091bfc819968624
+    plainenglish: >-
+      Make use of the six extra days.
+  - address: "content:events/career_lives.yaml#events[id=the_parish_roll_waits].interaction.choices[id=leave_it_open].outcomes[id=altered].text"
+    of: 52471f442de0c3f0
+    plainenglish: >-
+      The date that is sent is the one the house needed. The parish priest keeps the first letter.
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].title"
+    of: 8c0a44da72d1806e
+    plainenglish: >-
+      The Chapter House Asks to Be Paid
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].body"
+    of: cb26923bb1bf56c7
+    plainenglish: >-
+      The chapter house has been patient with the family's irregular habits, and it sends a bill
+      to prove it. The new roof over the parish priest's room needs thirty crowns. {PRIEST}'s note
+      is shorter than the bill and asks the house not to mistake a price for a threat.
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].interaction.choices[id=pay_for_the_roof].label"
+    of: 16fd31499b458255
+    plainenglish: >-
+      Pay for the new roof.
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].interaction.choices[id=pay_for_the_roof].outcomes[id=paid].text"
+    of: e163953f2a5940eb
+    plainenglish: >-
+      Bramme sends a receipt. The next investigator from the Church court sends only ten
+      questions.
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].interaction.choices[id=file_the_account].label"
+    of: bb9a22692a0accc5
+    plainenglish: >-
+      Put the bill away without answering.
+  - address: "content:events/career_lives.yaml#events[id=the_chapter_houses_price].interaction.choices[id=file_the_account].outcomes[id=filed].text"
+    of: 4d92d1c7b2ccd7cb
+    plainenglish: >-
+      The roof is repaired without the house's money. The next letter has eleven questions.
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].title"
+    of: 28a0e035099a12b1
+    plainenglish: >-
+      A Favour Asked in a Corridor
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].body"
+    of: 20d31eae3bea1c8a
+    plainenglish: >-
+      A royal steward stops {COURTIER} in the fourth corridor and asks if the family can stable
+      six horses for a month. He asks because they happen to meet there, and because saying no in
+      a corridor leaves no written record. The horses arrive four days later. There are eight of
+      them, not six.
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].interaction.choices[id=find_the_stalls].label"
+    of: c0f1d8cd39365221
+    plainenglish: >-
+      Find room for all eight.
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].interaction.choices[id=find_the_stalls].outcomes[id=stabled].text"
+    of: 4990de4d851aea51
+    plainenglish: >-
+      They eat twelve crowns' worth of hay. In Caster, the steward remembers the family's name.
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].interaction.choices[id=count_to_six].label"
+    of: becb45cc22c42768
+    plainenglish: >-
+      He asked for six. Send two back.
+  - address: "content:events/career_lives.yaml#events[id=the_favour_asked_in_the_corridor].interaction.choices[id=count_to_six].outcomes[id=counted].text"
+    of: 62922678ec504194
+    plainenglish: >-
+      Six horses stay. The two best go back east.
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].title"
+    of: eb8669b76d8f952b
+    plainenglish: >-
+      No Seat for Him
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].body"
+    of: 8b7524a568432789
+    plainenglish: >-
+      The invitations are set out in order of rank, and there is no seat for {COURTIER}. He has
+      served in that household for six years. The servant at the door checks twice, then a third
+      time out of kindness. Nobody left him out by mistake.
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].interaction.choices[id=stay_the_year].label"
+    of: a1ed3d4ad9846b26
+    plainenglish: >-
+      Stay. Leaving would make it final.
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].interaction.choices[id=stay_the_year].outcomes[id=stayed].text"
+    of: 3dd1737e474662b2
+    plainenglish: >-
+      He spends the winter standing in rooms where nobody has set a place for him.
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].interaction.choices[id=call_him_home].label"
+    of: 3872a803de101dd7
+    plainenglish: >-
+      Bring him home before they dismiss him.
+  - address: "content:events/career_lives.yaml#events[id=the_year_without_an_invitation].interaction.choices[id=call_him_home].outcomes[id=left].text"
+    of: a7334d4a0b1247b6
+    plainenglish: >-
+      His boxes arrive at Ardwen before the snow melts. The fourth corridor is closed to him now.
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].title"
+    of: 729e43aac8c75346
+    plainenglish: >-
+      Before the King's Seal Was Cold
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].body"
+    of: d7b0324c06abeb90
+    plainenglish: >-
+      {COURTIER}'s letter leaves Caster while the King's seal on the order it describes is still
+      warm. The Crown will take grain in six weeks. The public notice will reach Cawdry in three
+      weeks. For one afternoon, knowing early just looks like good management.
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].interaction.choices[id=fill_the_bins].label"
+    of: af7b0b3b5ace7e0f
+    plainenglish: >-
+      Buy grain before the notice arrives.
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].interaction.choices[id=fill_the_bins].outcomes[id=bought].text"
+    of: 7b2a4aaef914e392
+    plainenglish: >-
+      The grain costs ten crowns now. By winter it would have cost twenty.
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].interaction.choices[id=leave_no_trace].label"
+    of: 1ea958d6c63c700a
+    plainenglish: >-
+      Do nothing that would need explaining.
+  - address: "content:events/career_lives.yaml#events[id=news_before_the_seal].interaction.choices[id=leave_no_trace].outcomes[id=waited].text"
+    of: 6fee1b80ac2194cc
+    plainenglish: >-
+      The notice arrives when expected, and so does the higher price.
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].title"
+    of: a8a0cb8093c5c4f4
+    plainenglish: >-
+      The Letter of Credit That Was Refused
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].body"
+    of: ae435c228460c2ae
+    plainenglish: >-
+      A letter of credit worth forty crowns reaches Sarrow and is refused when it is checked. The
+      seal is genuine. The Braccish firm that issued it is trustworthy. {MERCHANT} has three days
+      to pay what the letter promised before the refusal is written into a ledger that will last
+      longer than anyone involved.
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].interaction.choices[id=cover_the_paper].label"
+    of: 3cc931ae103cc562
+    plainenglish: >-
+      Pay it before the third day.
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].interaction.choices[id=cover_the_paper].outcomes[id=covered].text"
+    of: ee9ae0bed1125dfa
+    plainenglish: >-
+      Thirty crowns leave the box. The forty-crown letter is gone from the next account.
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].interaction.choices[id=let_it_be_entered].label"
+    of: b37939f1aa7f348d
+    plainenglish: >-
+      Let the refusal be recorded.
+  - address: "content:events/career_lives.yaml#events[id=the_letter_of_credit_fails].interaction.choices[id=let_it_be_entered].outcomes[id=entered].text"
+    of: 1d89ddb3b211d52f
+    plainenglish: >-
+      The Braccish ledger is neatly kept. It also keeps the family's name.
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].title"
+    of: 4c511e781ba7ac14
+    plainenglish: >-
+      The Partners Ask for More
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].body"
+    of: 68d6d86ca768cc20
+    plainenglish: >-
+      The Sarrow trading venture asks every partner for more money at once. {MERCHANT} sends the
+      notice home with the figures worked out twice and a thumbprint where the total is meant to
+      reassure the reader. It does not. A share cost a hundred crowns, and twenty more will stop
+      it passing to someone else.
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].interaction.choices[id=meet_the_call].label"
+    of: 2adab6554c951b21
+    plainenglish: >-
+      Pay the twenty crowns to Sarrow.
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].interaction.choices[id=meet_the_call].outcomes[id=kept].text"
+    of: d765d231b2139755
+    plainenglish: >-
+      The share survives the season. Three other partners' shares do not.
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].interaction.choices[id=sell_the_share].label"
+    of: caa50e577cc3ac23
+    plainenglish: >-
+      Bring him home with whatever is left.
+  - address: "content:events/career_lives.yaml#events[id=a_share_called_in_sarrow].interaction.choices[id=sell_the_share].outcomes[id=sold].text"
+    of: 5198c7ce05526e32
+    plainenglish: >-
+      He comes back with nine crowns. The partnership keeps the rest.
+  - address: "content:events/career_lives.yaml#events[id=black_cloth_at_the_fair].title"
+    of: 6d9df1da9da5da8e
+    plainenglish: >-
+      The Wrong Kind of Black
+  - address: "content:events/career_lives.yaml#events[id=black_cloth_at_the_fair].body"
+    of: 5a2e08be53543452
+    plainenglish: >-
+      {MERCHANT} comes to the fair in black cloth bought in Sarrow. It is good cloth with a true
+      dye, and that is exactly why everyone can see the offence from the far end of the square.
+      The magistrate fines him two crowns. The laughter costs nothing and lasts longer.
+  - address: "content:events/career_lives.yaml#events[id=black_cloth_at_the_fair].interaction.outcomes[id=fined].text"
+    of: c3349c3b945230e7
+    plainenglish: >-
+      He pays without taking the coat off. This does not help.
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].title"
+    of: a1a6213a17b51ea6
+    plainenglish: >-
+      The Man in the Book Store
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].body"
+    of: 40b13248e46ba8c4
+    plainenglish: >-
+      The book store is cold enough to numb your fingers through your gloves. {SCHOLAR} has worked
+      there for nine years and can now recognise a copyist by how much space they leave around a
+      capital letter. He lays two of the family's copies side by side. One of them has an extra
+      page.
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=keep_both].label"
+    of: ce64d1d4b93470a0
+    plainenglish: >-
+      Keep the two copies side by side.
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=keep_both].outcomes[id=compared].text"
+    of: 5d1e53804c326414
+    plainenglish: >-
+      He notes the difference in the index. Nothing is corrected.
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=separate_them].label"
+    of: 922863e40cf75468
+    plainenglish: >-
+      Shelve the altered copy on its own.
+  - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=separate_them].outcomes[id=shelved].text"
+    of: 54f3c0aee8cc04fa
+    plainenglish: >-
+      The new page stays where it was found. The other copy goes upstairs.
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].title"
+    of: 87c64281609203cd
+    plainenglish: >-
+      A Brass Badge of Qualification
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].body"
+    of: 6c1ebac0cef545dc
+    plainenglish: >-
+      Corran sends the brass badge of qualification in a box far too big for it. {SCHOLAR} has
+      earned the right to work for pay anywhere in the Settled Lands, even though the post that
+      earned it pays nothing at all. The badge is still warm from the messenger's coat. The book
+      store is not.
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].interaction.choices[id=keep_the_post].label"
+    of: ccdfef1ad256c4ee
+    plainenglish: >-
+      Keep his post. The badge can wait.
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].interaction.choices[id=keep_the_post].outcomes[id=remained].text"
+    of: 7bdd477a9b9ad62e
+    plainenglish: >-
+      The brass badge goes into a drawer. He goes back to the Deep Room.
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].interaction.choices[id=use_the_warrant].label"
+    of: b32d62320070a04e
+    plainenglish: >-
+      Bring him home to work for pay.
+  - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].interaction.choices[id=use_the_warrant].outcomes[id=returned].text"
+    of: 905379d903a3dbd5
+    plainenglish: >-
+      He comes home with three boxes of notes and not a single book.
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].title"
+    of: fbe9a2974954295b
+    plainenglish: >-
+      Half a Year of a Copyist's Time
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].body"
+    of: e0688f596871b2c5
+    plainenglish: >-
+      A copyist at Corran has half a year free, and {SCHOLAR} has chosen the book to be copied.
+      The price is eleven crowns, including the parchment, and the copy may leave the Colleges
+      once the ink is dry. There is no description of the book in any catalogue. There is only his
+      letter saying the library should not lose it.
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].interaction.choices[id=buy_the_copy].label"
+    of: c690010a518ac8ee
+    plainenglish: >-
+      Pay the eleven crowns.
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].interaction.choices[id=buy_the_copy].outcomes[id=copied].text"
+    of: fbb64dc89e1438cc
+    plainenglish: >-
+      The book arrives seven months later. It is ordinary until the last section.
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].interaction.choices[id=leave_it_there].label"
+    of: 31e3154847942a74
+    plainenglish: >-
+      Leave the book where it is, at Corran.
+  - address: "content:events/career_lives.yaml#events[id=the_copyists_half_year].interaction.choices[id=leave_it_there].outcomes[id=left].text"
+    of: efaa4d235c706a27
+    plainenglish: >-
+      The next catalogue does not list it. Catalogues rarely list what matters.
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].title"
+    of: fe887e59a8dd7a3d
+    plainenglish: >-
+      A Question at the Cawdry Court
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].body"
+    of: 173e82340ebfe418
+    plainenglish: >-
+      The Warden's clerk asks {HEAD} who held the lower field in the year of the red harvest. It
+      is the kind of question that has an answer in three books and a trap in the fourth.
+      {ADVOCATE} puts one finger on the table. The house can answer now, or ask to see the fourth
+      book.
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].interaction.choices[id=answer_now].label"
+    of: 097ee3ee245c28f2
+    plainenglish: >-
+      Give the answer the house came prepared to give.
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].interaction.choices[id=answer_now].outcomes[id=answered].text"
+    of: d209d2f46865b148
+    plainenglish: >-
+      The clerk writes it down without looking at the lawyer.
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].interaction.choices[id=ask_for_the_book].label"
+    of: efdea1afb6b4405b
+    plainenglish: >-
+      Ask to see the fourth book.
+  - address: "content:events/career_lives.yaml#events[id=the_question_at_assize].interaction.choices[id=ask_for_the_book].outcomes[id=adjourned].text"
+    of: 28242049ec09779d
+    plainenglish: >-
+      The court stops for an hour. The fourth book changes the answer.
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].title"
+    of: 598b734e40a16e6a
+    plainenglish: >-
+      Three Old Words
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].body"
+    of: 7d4ea6ebe7fd87c7
+    plainenglish: >-
+      The contract is fine except for three words in Old Ambric. {ADVOCATE} reads them once, then
+      reads the price written two lines below. Those words make the price due every year. The
+      other side has already sealed it.
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].interaction.choices[id=return_it_unsealed].label"
+    of: 7fafa8fe41f489aa
+    plainenglish: >-
+      Send it back without the house's seal.
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].interaction.choices[id=return_it_unsealed].outcomes[id=refused].text"
+    of: 9d2ca757ff284fb3
+    plainenglish: >-
+      The other side complains in plain modern Aubrenic and removes the three words.
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].interaction.choices[id=take_the_term].label"
+    of: 8a3d7e2c319113b8
+    plainenglish: >-
+      Seal it. The house needs this deal.
+  - address: "content:events/career_lives.yaml#events[id=three_words_of_old_ambric].interaction.choices[id=take_the_term].outcomes[id=bound].text"
+    of: 0d6fa0481466a334
+    plainenglish: >-
+      {ADVOCATE} reads the three words aloud one more time before the seal goes on, and nobody
+      asks him to read anything else that year. The first payment is small. That is why there is a
+      second one.
+  - address: "content:events/career_lives.yaml#events[id=the_advocates_day].title"
+    of: 49c0ccae7426e212
+    plainenglish: >-
+      A Fee of Two Marks a Day
+  - address: "content:events/career_lives.yaml#events[id=the_advocates_day].body"
+    of: 6f535edd4392e7e1
+    plainenglish: >-
+      Cawdry has started sending its difficult cases to {ADVOCATE}. He charges two marks a day,
+      the same fee the family used to pay outside lawyers, and half the province now waits outside
+      his door. He sends the house its share without being asked. The package holds seven marks
+      and three unfinished cases.
+  - address: "content:events/career_lives.yaml#events[id=the_advocates_day].interaction.outcomes[id=practised].text"
+    of: a4b9cc0d22a344d9
+    plainenglish: >-
+      The money is counted. The cases stay tied up in red string.
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].title"
+    of: 574dce053ce8aae1
+    plainenglish: >-
+      A Month Before the Buyers Come
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].body"
+    of: 1921d7a310ea6207
+    plainenglish: >-
+      {FACTOR}'s letter says the buyers from the south will pay a poor price for wool this Haying.
+      It reaches the house a month before their carts do. The wool can be sold now for twelve
+      crowns less than last year, or kept until every other house learns the same news from the
+      buyers' faces.
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].interaction.choices[id=sell_before_the_carts].label"
+    of: ced88ed3483ef147
+    plainenglish: >-
+      Sell now, before the buyers' carts come.
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].interaction.choices[id=sell_before_the_carts].outcomes[id=early].text"
+    of: 10f3f1a9d066f50d
+    plainenglish: >-
+      The price is low. By Haying it looks good.
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].interaction.choices[id=wait_for_haying].label"
+    of: ee814baacdc2828e
+    plainenglish: >-
+      Wait and sell at the public price.
+  - address: "content:events/career_lives.yaml#events[id=a_month_before_the_market].interaction.choices[id=wait_for_haying].outcomes[id=late].text"
+    of: 47f9b3d2ad29f446
+    plainenglish: >-
+      The buyers are friendly. They always are when they set the price.
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].title"
+    of: d78fc9526bcddf96
+    plainenglish: >-
+      Sworn on a Weight
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].body"
+    of: bc8958bdc3de9329
+    plainenglish: >-
+      {FACTOR} puts a Braccish weight on the hall table before giving his report. He swears on it,
+      as Braccish weighers do, and not on any name the parish priest would recognise. The parish
+      priest is in the room. Nobody moves the weight.
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].interaction.choices[id=accept_the_account].label"
+    of: 114e7afe0981dbf2
+    plainenglish: >-
+      Accept the report as sworn.
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].interaction.choices[id=accept_the_account].outcomes[id=accepted].text"
+    of: 1de9d6cfd5a3b2eb
+    plainenglish: >-
+      The figures are correct. The parish priest remembers the oath anyway.
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].interaction.choices[id=ask_for_a_named_oath].label"
+    of: d40a9ca9a836c34d
+    plainenglish: >-
+      Ask him to swear again in front of the parish priest.
+  - address: "content:events/career_lives.yaml#events[id=sworn_on_the_weight].interaction.choices[id=ask_for_a_named_oath].outcomes[id=resworn].text"
+    of: f9b7de3ae1e759f6
+    plainenglish: >-
+      He does. The figures stay the same.
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].title"
+    of: 351094e96b14ffcd
+    plainenglish: >-
+      Torn Along the Fold
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].body"
+    of: 9cae341195bb35f5
+    plainenglish: >-
+      The letter of credit has torn along the fold, right where the amount is written. {FACTOR}
+      can have a new one written within a month for a fee of two per cent, or take the torn one to
+      Bracc and argue the case using the matching ledger. The argument will take more than a
+      month. The payment is due in eleven days.
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].interaction.choices[id=draw_another].label"
+    of: f515d9bb6ea84987
+    plainenglish: >-
+      Pay the fee of two per cent.
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].interaction.choices[id=draw_another].outcomes[id=redrawn].text"
+    of: 524c99f580c72641
+    plainenglish: >-
+      The new letter arrives after the payment was due, but before any argument could have ended.
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].interaction.choices[id=send_him_to_bracc].label"
+    of: 644842bf03079df3
+    plainenglish: >-
+      Send him to Bracc with both halves.
+  - address: "content:events/career_lives.yaml#events[id=the_torn_letter].interaction.choices[id=send_him_to_bracc].outcomes[id=proved].text"
+    of: ba252dfa89f9e436
+    plainenglish: >-
+      He comes back with the first letter honoured and a new crease running through the amount.
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].title"
+    of: 24ae0cc629aa3452
+    plainenglish: >-
+      The Ship Is Six Days Late
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].body"
+    of: 69b7305ac6c339ae
+    plainenglish: >-
+      The ship is six days late reaching Sarrow. On the seventh morning a messenger brings word
+      that it was seen west of the sandbar with one sail down and {SAILOR} still on board. A cart
+      could reach the port in eleven days. Waiting costs nothing except the waiting.
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].interaction.choices[id=send_the_cart].label"
+    of: 6db81cb30254ff57
+    plainenglish: >-
+      Send a cart east to the port.
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].interaction.choices[id=send_the_cart].outcomes[id=sent].text"
+    of: a0a1163e7c05e88a
+    plainenglish: >-
+      Halfway home, the cart meets him walking next to a borrowed horse.
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].interaction.choices[id=wait_at_ardwen].label"
+    of: f2f1326327cdf457
+    plainenglish: >-
+      Wait at Ardwen for more news from Sarrow.
+  - address: "content:events/career_lives.yaml#events[id=the_ship_is_late].interaction.choices[id=wait_at_ardwen].outcomes[id=waited].text"
+    of: a59d15a2b95d4e4e
+    plainenglish: >-
+      He gets home on the twelfth day. Nobody admits that the cart would have missed him.
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].title"
+    of: e699b552d7957d66
+    plainenglish: >-
+      From a Sailor's Place to a Share
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].body"
+    of: 5bf4a5f3125a1bf7
+    plainenglish: >-
+      After five years in the same job on board, {SAILOR} has been offered one eighth of the ship.
+      He has no money of his own, because he sent every quarter's pay home. The captain wants
+      twenty-four crowns before the tide turns. Owning an eighth of a ship also means owning an
+      eighth of everything that can go wrong with it.
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].interaction.choices[id=buy_the_eighth].label"
+    of: 8e120c2fb3024b8b
+    plainenglish: >-
+      Buy the eighth share of the ship.
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].interaction.choices[id=buy_the_eighth].outcomes[id=shared].text"
+    of: d9d3734b121ea377
+    plainenglish: >-
+      By the numbers, the house now owns three planks. By law, it owns a share of every leak.
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].interaction.choices[id=keep_the_berth].label"
+    of: bd1a6f894d943605
+    plainenglish: >-
+      Keep his wages and leave the ship to its captain.
+  - address: "content:events/career_lives.yaml#events[id=the_berth_becomes_a_share].interaction.choices[id=keep_the_berth].outcomes[id=wages].text"
+    of: ee6d15649eb09250
+    plainenglish: >-
+      The tide turns, and the offer goes with it.
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].title"
+    of: 8556797dbe46fdc9
+    plainenglish: >-
+      Salt in the Pay Packet
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].body"
+    of: 690b57ef2e8764db
+    plainenglish: >-
+      {SAILOR}'s pay arrives wrapped in sailcloth and stiff with salt. It is nine crowns more than
+      the account promised, and there is no letter with it. Sarrow sends no explanation. The next
+      ship east sails in the morning.
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].interaction.choices[id=keep_the_nine].label"
+    of: 9fe94953773553af
+    plainenglish: >-
+      Keep all of the money.
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].interaction.choices[id=keep_the_nine].outcomes[id=kept].text"
+    of: cce74788e49e9d7c
+    plainenglish: >-
+      The extra crowns pay for the winter. Nobody finds out where they came from.
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].interaction.choices[id=return_the_extra].label"
+    of: 04a50fda047619b6
+    plainenglish: >-
+      Send the nine extra crowns back to the captain.
+  - address: "content:events/career_lives.yaml#events[id=salt_in_the_pay_packet].interaction.choices[id=return_the_extra].outcomes[id=returned].text"
+    of: 241d8fa3e685faff
+    plainenglish: >-
+      The captain sends a receipt six months later. It does not mention any mistake.
+  - address: "content:events/career_lives.yaml#events[id=the_first_slate].title"
+    of: 6897bc3b1091d67f
+    plainenglish: >-
+      The First Lesson on the Slate
+  - address: "content:events/career_lives.yaml#events[id=the_first_slate].body"
+    of: 651b49a4d6bb7fd8
+    plainenglish: >-
+      You can hear the slate scratching from the breakfast room to the yard. {PUPIL} has done the
+      same sum on it six times and got six different answers. The tutor wipes off five of them and
+      leaves the worst one. That is where the lesson starts.
+  - address: "content:events/career_lives.yaml#events[id=the_first_slate].interaction.outcomes[id=begun].text"
+    of: 239ddb2bb5d0b497
+    plainenglish: >-
+      By supper the answer is right. The slate keeps the scratch marks.
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].title"
+    of: 015d12ad3c9d46b9
+    plainenglish: >-
+      A Wasted Winter
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].body"
+    of: 652af643fd661017
+    plainenglish: >-
+      The tutor sets out twelve pages, and {PUPIL} has spoiled every one. A whole winter went into
+      them. So did the fee, and wishing the work had been worth it will not bring either back.
+      {HEAD} must decide whether to pay for another winter.
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].interaction.choices[id=finish_the_term].label"
+    of: c468ee3ec7fbe0d2
+    plainenglish: >-
+      Finish the lessons the house has paid for.
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].interaction.choices[id=finish_the_term].outcomes[id=continued].text"
+    of: 89689b982afc7f5c
+    plainenglish: >-
+      The thirteenth page is no better. The fourteenth page is.
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].interaction.choices[id=stop_the_lessons].label"
+    of: cac3cd52a6cbd606
+    plainenglish: >-
+      Stop before another winter is wasted.
+  - address: "content:events/career_lives.yaml#events[id=the_winter_wasted].interaction.choices[id=stop_the_lessons].outcomes[id=stopped].text"
+    of: 7c7e6a3a4d516216
+    plainenglish: >-
+      The tutor leaves the good paper behind. Nobody writes on it that year.
+  - address: "content:events/career_lives.yaml#events[id=the_sum_needed_later].title"
+    of: 12143c66849261c2
+    plainenglish: >-
+      The Sum That Was Needed Later
+  - address: "content:events/career_lives.yaml#events[id=the_sum_needed_later].body"
+    of: 26f480b7277ad25b
+    plainenglish: >-
+      The miller's account is wrong by nine marks, and nobody at the table can find the mistake.
+      {PUPIL} asks for the slate, writes the carried figures in a column, and finds the missing
+      nine before the stew goes cold. The tutor left two years ago. The lesson stayed.
+  - address: "content:events/career_lives.yaml#events[id=the_sum_needed_later].interaction.outcomes[id=remembered].text"
+    of: 4c2cd389e464bc45
+    plainenglish: >-
+      The miller pays the difference. The slate goes back beside the fire.
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].title"
+    of: bd712c88722421dc
+    plainenglish: >-
+      A Better Tutor Than the House Deserves
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].body"
+    of: f2b5cb366819243a
+    plainenglish: >-
+      The tutor keeps teaching after the candles the house allows have burned out. Nobody asked
+      them to, and the contract does not pay for it. {PUPIL} is still at the table when the
+      servants bank the fires for the night. The lesson only ends because the house runs out of
+      light.
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].interaction.choices[id=raise_the_allowance].label"
+    of: 4367e7b96bea5de5
+    plainenglish: >-
+      Give them an extra candle each night.
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].interaction.choices[id=raise_the_allowance].outcomes[id=lit].text"
+    of: c5b56992b8bae4ee
+    plainenglish: >-
+      The lessons get longer. The tutor's bill does not.
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].interaction.choices[id=keep_the_allowance].label"
+    of: 157f0c14ec5ea608
+    plainenglish: >-
+      A contract sets hours as well as pay.
+  - address: "content:events/career_lives.yaml#events[id=the_better_tutor].interaction.choices[id=keep_the_allowance].outcomes[id=dark].text"
+    of: 2f6e618dd21d8789
+    plainenglish: >-
+      The fire is banked at the usual time. The unfinished sum waits for morning.
