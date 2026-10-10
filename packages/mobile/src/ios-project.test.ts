@@ -137,6 +137,7 @@ describe('Capacitor iOS project', () => {
     expect(releaseInfo).not.toContain('CFBundleURLTypes');
     expect(runtimeSmoke).toContain('eldritchdynasty-smoke://save?seed=1042&years=40');
     expect(runtimeSmoke).toContain("simctl(['terminate', udid, APP_ID])");
+    expect(runtimeSmoke).toContain('return assertFinalEvidence(kind, evidence);');
     expect(runtimeSmoke).toContain('save/resume sha256:');
     expect(runtimeSmoke).toContain('export/import sha256:');
     expect(platformBridge).toContain("const SMOKE_READY = 'smoke-ready.json'");
