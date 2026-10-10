@@ -15,6 +15,7 @@ import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type M
 import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
+import { msg } from '../messages.js';
 import { eventTitleAddress, proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForRecordChronicle, proseForRecordSubject, renderProse } from '../prose.js';
 
 /**
@@ -315,10 +316,10 @@ export function resolveChoice(
   cast: SlotFill = {},
 ): ChoiceResolution {
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
-  if (!pending || pending.kind !== 'choice') return { ok: false, reason: 'no such decision' };
+  if (!pending || pending.kind !== 'choice') return { ok: false, reason: msg(ctx, 'decision.choice.missing', 'no such decision') };
 
   const e = pending.event;
-  if (e.interaction.kind === 'narration') return { ok: false, reason: 'narration takes no choice' };
+  if (e.interaction.kind === 'narration') return { ok: false, reason: msg(ctx, 'decision.choice.narration', 'narration takes no choice') };
 
   const fill: SlotFill = { ...pending.fill };
   for (const req of pending.cast) {
@@ -334,11 +335,13 @@ export function resolveChoice(
 
     if (req.count) {
       if (distinct.length > req.count.max) {
-        return { ok: false, reason: `${req.slot} takes at most ${req.count.max}` };
+        return { ok: false, reason: msg(ctx, 'decision.cast.at_most', '{SLOT} takes at most {MAX}',
+          { SLOT: req.slot, MAX: String(req.count.max) }) };
       }
       if (distinct.length < req.count.min) {
         if (req.optional && !distinct.length) continue;
-        return { ok: false, reason: `${req.slot} takes at least ${req.count.min}` };
+        return { ok: false, reason: msg(ctx, 'decision.cast.at_least', '{SLOT} takes at least {MIN}',
+          { SLOT: req.slot, MIN: String(req.count.min) }) };
       }
       fill[req.slot] = distinct;
       continue;
@@ -346,7 +349,7 @@ export function resolveChoice(
 
     const chosen = distinct[0];
     if (chosen) fill[req.slot] = chosen;
-    else if (!req.optional) return { ok: false, reason: `nobody cast as ${req.slot}` };
+    else if (!req.optional) return { ok: false, reason: msg(ctx, 'decision.cast.missing', 'nobody cast as {SLOT}', { SLOT: req.slot }) };
   }
 
   // Who decides. A `player` docket takes the id it was sent; anything else
@@ -355,9 +358,9 @@ export function resolveChoice(
   // the chronicler does.
   let choice;
   if (pending.choicesAreOpen) {
-    if (choiceId === undefined) return { ok: false, reason: 'this decision is the house\'s to take' };
+    if (choiceId === undefined) return { ok: false, reason: msg(ctx, 'decision.choice.player_required', 'this decision is the house\'s to take') };
     choice = e.interaction.choices.find((c) => c.id === choiceId);
-    if (!choice) return { ok: false, reason: `no choice '${choiceId}'` };
+    if (!choice) return { ok: false, reason: msg(ctx, 'decision.choice.unknown', "no choice '{CHOICE}'", { CHOICE: choiceId }) };
   } else {
     const decided = decideBranch(ctx, e, fill, rng, { castReady: true, scope: { arc: pending.arcStep?.instance } });
     choice = decided.choice;
@@ -410,10 +413,10 @@ function refreshHands(ctx: SimCtx): void {
  */
 export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): MatchResolution {
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
-  if (!pending || pending.kind !== 'match') return { ok: false, reason: 'no such match' };
+  if (!pending || pending.kind !== 'match') return { ok: false, reason: msg(ctx, 'decision.match.missing', 'no such match') };
 
   const card = pending.cards.find((c) => c.id === cardId);
-  if (!card) return { ok: false, reason: 'no such card' };
+  if (!card) return { ok: false, reason: msg(ctx, 'decision.match.unknown_card', 'no such card') };
 
   const result = takeCard(ctx, pending.subject.id, card);
   // A refused card leaves the decision standing: the player still has to
