@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash, type AuctionLot } from '@ed/schema';
@@ -7,6 +8,7 @@ import {
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -519,5 +521,47 @@ describe('the auction pages speak the reader\'s setting (#745)', () => {
       return { respect: ctx.world.respect, d: ctx.world.discrepancies.get('test_discrepancy'), h: ctx.world.auction.history };
     };
     expect(run('plainenglish')).toEqual(run('original'));
+  });
+});
+
+describe('the broker and the bidding table refuse in the reader\'s setting (#800)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./auction.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#auction\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'auction.refuse.search_not_minor': 'the broker can seek only a common working',
+      'auction.refuse.search_shelved': 'the house has this book already',
+      'auction.refuse.search_due': 'a copy is already due at auction',
+      'auction.refuse.search_fee': 'the broker asks {FEE} crowns before he leaves',
+      'auction.refuse.bid_no_lot': 'no such lot',
+      'auction.refuse.bid_no_heirloom': 'the house does not hold that heirloom',
+    });
+  });
+
+  it('gives a refused search or bid its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = bootstrap(bundle, 1042, 1042);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      ctx.world.treasury = 10_000;
+      const minor = bundle.spellbooks.find((b) => b.tier === 'minor' && !ctx.world.library.has(b.id))!;
+      const commissioned = commissionBook(ctx, minor.id);
+      const due = commissionBook(ctx, minor.id);
+      ctx.world.treasury = -10_000;
+      const other = bundle.spellbooks.find((b) => b.tier === 'minor' && b.id !== minor.id && !ctx.world.library.has(b.id))!;
+      return [
+        commissioned, due, commissionBook(ctx, other.id), commissionBook(ctx, 'no_such_book'),
+        bidAtAuction(ctx, 'no_such_lot', 'coin', 500), { treasury: ctx.world.treasury, lots: ctx.world.auction.upcoming.length },
+      ];
+    };
+    const original = refuse('original');
+    expect(original.map((r) => ('reason' in r ? r.reason : undefined))).toEqual([
+      undefined, 'a copy is already due at auction', 'the broker asks 25 crowns before he leaves',
+      'the broker can seek only a common working', 'no such lot', undefined,
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ('reason' in r && r.reason ? { ...r, reason: `plain: ${r.reason}` } : r)));
   });
 });
