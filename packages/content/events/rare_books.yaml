@@ -1155,3 +1155,67 @@ proseVariants:
     of: "bc1a26af945e1493"
     plainenglish: >-
       bought the Marrow Codex at the full asking price
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].title"
+    of: "4715e44520c488c9"
+    plainenglish: >-
+      Eight Pages Cut from the Oldest Book
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].body"
+    of: "c351ad4c621d21a8"
+    plainenglish: >-
+      {ARCHIVIST} checks the house's oldest book during its ten-year inspection and finds eight
+      leaves missing. They were cut close to the fold, between the fourth and fifth gatherings. The
+      binding is intact. The cut is old, and the thread covering it is older than anyone alive.
+      Someone in this family deliberately removed the leaves with a sharp knife. Four hundred years
+      of entries contain no note explaining why.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=go_looking_for_it].label"
+    of: "7237065ea104ccc2"
+    plainenglish: >-
+      Search for the eight missing leaves.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=go_looking_for_it].outcomes[id=found_in_the_press].text"
+    of: "d505510975e8217d"
+    plainenglish: >-
+      After nine tendays of searching, the eight leaves are found in a press between two lease
+      rolls. This is where the house hides things it does not acknowledge keeping. The leaves have
+      been there since about 1140. They contain a genealogy covering four generations. Its account
+      of the family's descent conflicts with the heralds' record, even though the male line matches
+      exactly.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=go_looking_for_it].outcomes[id=not_found].text"
+    of: "59526d7d2b38f549"
+    plainenglish: >-
+      The search lasts nine tendays and covers every press, both cellars, the chapel and the cadet
+      hall. The eight leaves are nowhere to be found. Instead, the search has revealed the missing
+      pages to the household. Eleven people now know about them who knew nothing three months
+      earlier.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=collate_and_say_nothing].label"
+    of: "3ec8c4fab9fcdc86"
+    plainenglish: >-
+      Mark the volume as checked and say nothing about the missing leaves.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=collate_and_say_nothing].outcomes[id=entered_as_collated].text"
+    of: "0b87dcdfbe9bebb3"
+    plainenglish: >-
+      The collation book gets a single word, and the volume returns to its shelf. {ARCHIVIST} is
+      paid five marks a year to notice missing pages and has just been told to ignore them. He
+      writes the word, then sits with his pen down for a while. He does not resign. He keeps his own
+      written note in his room, as archivists have long done.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.subject"
+    of: "a251d0a88e7ae67c"
+    plainenglish: >-
+      the eight missing leaves
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.options.record.chronicle"
+    of: "26288ced2bca3e19"
+    plainenglish: >-
+      Eight leaves were cut close to the fold of the house's oldest book. Someone in the family
+      removed them four hundred years ago. No written explanation of the removal has been found.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.options.record.claims[0].text"
+    of: "0fec2db12c98b855"
+    plainenglish: >-
+      found eight leaves cut close to the fold of the oldest volume
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.options.embellish.chronicle"
+    of: "828db928331caa9c"
+    plainenglish: >-
+      The oldest volume was checked in the tenth year. Every gathering was complete, just as it had
+      been at every inspection since the founding.
+  - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.options.embellish.claims[0].text"
+    of: "60dd07fc75da5bd8"
+    plainenglish: >-
+      checked the oldest volume and found every gathering complete
