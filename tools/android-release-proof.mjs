@@ -27,11 +27,18 @@ export function signingPolicy(tag, env) {
   return { production, signed: present.length === requiredSecrets.length };
 }
 
-// Java .properties treats backslash and newlines as syntax, not password text.
+// Gradle reads this through java.util.Properties.load(InputStream), which
+// decodes ISO-8859-1 and discards unescaped whitespace immediately after "=".
+// Writing raw UTF-8 or leading spaces would silently change signing credentials.
+// Encode non-ASCII UTF-16 code units as Java \uXXXX (including surrogate pairs).
 function propertyValue(value) {
   return value.replace(/\\/g, '\\\\').replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n').replace(/:/g, '\\:')
-    .replace(/=/g, '\\=').replace(/#/g, '\\#').replace(/!/g, '\\!');
+    .replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/\f/g, '\\f')
+    .replace(/:/g, '\\:').replace(/=/g, '\\=')
+    .replace(/#/g, '\\#').replace(/!/g, '\\!')
+    .replace(/[\u007f-\uffff]/g, (unit) =>
+      '\\u' + unit.charCodeAt(0).toString(16).padStart(4, '0'))
+    .replace(/^ +/, (spaces) => '\\ '.repeat(spaces.length));
 }
 
 export function prepareSigning({ tag, env, androidRoot }) {
