@@ -15,8 +15,8 @@ import {
 
 const content = indexContent(loadContent());
 
-function fixture(seed: number) {
-  const ctx = testWorld(content, seed);
+function fixture(seed: number, year?: number) {
+  const ctx = testWorld(content, seed, year);
   place(ctx, { sex: 'male', age: 22, name: `Decision Young Man ${seed}` });
   place(ctx, { sex: 'male', age: 41, name: `Decision Older Man ${seed}` });
   place(ctx, { sex: 'female', age: 27, name: `Decision Woman ${seed}` });
@@ -405,6 +405,55 @@ describe('choice-scoped Record wording (#864)', () => {
   });
 });
 
+// Use the real authored choice and its real outcome/effects, but restrict
+// the random outcome draw to one authored result. Each witness is therefore
+// deterministic without seed-mining a Long Line or rewriting the outcome.
+function crownWitness(
+  eventId: string, choiceId: string, outcomeId: string, seed: number,
+  cast: { childAge?: number; year?: number } = {},
+) {
+  const ctx = fixture(seed, cast.year);
+  const son = place(ctx, { sex: 'male', age: 23, name: 'Witness Son ' + seed });
+  const head = place(ctx, { sex: 'male', age: 45, name: 'Witness Head ' + seed, castSlots: ['head'] });
+  // Every other Crown scene's cast. The authored slot filters are the
+  // selector's business, not this witness's, so each is placed inside them.
+  const candidate = place(ctx, { sex: 'male', age: 40, name: 'Witness Candidate ' + seed });
+  const daughter = place(ctx, { sex: 'female', age: 18, name: 'Witness Daughter ' + seed });
+  const rival = place(ctx, { sex: 'male', age: 50, name: 'Witness Rival ' + seed });
+  const child = place(ctx, { sex: 'male', age: cast.childAge ?? 9, name: 'Witness Child ' + seed });
+  const event = structuredClone(content.events.find((item) => item.id === eventId)!);
+  if (event.interaction.kind === 'narration') throw new Error('Crown scene lost its choice');
+
+  event.interaction.choices = event.interaction.choices.map((choice) =>
+    choice.id === choiceId
+      ? { ...choice, outcomes: choice.outcomes.filter((outcome) => outcome.id === outcomeId) }
+      : choice,
+  );
+  // A deterministic narrowed interaction must also narrow its authored
+  // Record selectors. The save schema rightly rejects a selector for an
+  // outcome that no longer exists in this isolated fixture (#874).
+  // Keep selectors belonging to other choices and preserve the real
+  // selected outcome's Record block unmodified.
+  if (event.recordByOutcome) {
+    event.recordByOutcome = event.recordByOutcome.filter(
+      (row) => !row.id.startsWith(`${choiceId}/`) || row.id === `${choiceId}/${outcomeId}`,
+    );
+  }
+  const fill = {
+    HEAD: head.id, SON: son.id, CANDIDATE: candidate.id, DAUGHTER: daughter.id, RIVAL: rival.id, CHILD: child.id,
+  };
+  const pending = queueChoice(ctx, event, event.body, fill, []);
+  const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(seed + 1));
+  expect(answer.ok, answer.reason).toBe(true);
+  expect(ctx.world.decisionLog.at(-1)).toMatchObject({
+    kind: 'outcome', event: eventId, choiceId, outcomeId,
+  });
+
+  const record = ctx.world.pendingDecisions.find((item) => item.kind === 'record');
+  if (!record || record.kind !== 'record') throw new Error('Chosen Crown outcome has no Record');
+  return { ctx, event, record, son, candidate, child, entryId: answer.resolved!.entryId };
+}
+
 describe('authored Crown justice and levy Record truth (#869)', () => {
   const scenes = [
     { event: 'blood_on_our_own_land', choice: 'hand_him_to_cawdry', outcome: 'sent_to_the_assize', selected: 'choice' },
@@ -415,47 +464,9 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
     { event: 'the_levy_in_earnest', choice: 'commute_it', outcome: 'commuted', selected: 'fallback' },
   ] as const;
 
-  // Use the real authored choice and its real outcome/effects, but restrict
-  // the random outcome draw to one authored result. Each witness is therefore
-  // deterministic without seed-mining a Long Line or rewriting the outcome.
-  function witness(eventId: string, choiceId: string, outcomeId: string, seed: number) {
-    const ctx = fixture(seed);
-    const son = place(ctx, { sex: 'male', age: 23, name: 'Witness Son ' + seed });
-    const head = place(ctx, { sex: 'male', age: 45, name: 'Witness Head ' + seed, castSlots: ['head'] });
-    const event = structuredClone(content.events.find((item) => item.id === eventId)!);
-    if (event.interaction.kind === 'narration') throw new Error('Crown scene lost its choice');
-
-    event.interaction.choices = event.interaction.choices.map((choice) =>
-      choice.id === choiceId
-        ? { ...choice, outcomes: choice.outcomes.filter((outcome) => outcome.id === outcomeId) }
-        : choice,
-    );
-    // A deterministic narrowed interaction must also narrow its authored
-    // Record selectors. The save schema rightly rejects a selector for an
-    // outcome that no longer exists in this isolated fixture (#874).
-    // Keep selectors belonging to other choices and preserve the real
-    // selected outcome's Record block unmodified.
-    if (event.recordByOutcome) {
-      event.recordByOutcome = event.recordByOutcome.filter(
-        (row) => !row.id.startsWith(`${choiceId}/`) || row.id === `${choiceId}/${outcomeId}`,
-      );
-    }
-    const fill = { HEAD: head.id, SON: son.id };
-    const pending = queueChoice(ctx, event, event.body, fill, []);
-    const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(seed + 1));
-    expect(answer.ok, answer.reason).toBe(true);
-    expect(ctx.world.decisionLog.at(-1)).toMatchObject({
-      kind: 'outcome', event: eventId, choiceId, outcomeId,
-    });
-
-    const record = ctx.world.pendingDecisions.find((item) => item.kind === 'record');
-    if (!record || record.kind !== 'record') throw new Error('Chosen Crown outcome has no Record');
-    return { ctx, event, record, son, entryId: answer.resolved!.entryId };
-  }
-
   for (const [index, scene] of scenes.entries()) {
     it(`${scene.event}: ${scene.choice}/${scene.outcome} records the chosen fact and a distinct lie`, () => {
-      const { ctx, event, record, son, entryId } = witness(
+      const { ctx, event, record, son, entryId } = crownWitness(
         scene.event, scene.choice, scene.outcome, 86900 + index,
       );
       const chosen = recordEventForChoice(event, scene.choice, scene.outcome)!;
@@ -494,7 +505,7 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
 
   it('keeps new Plain English Chronicle copy frozen across a saved pending docket and a mode switch', () => {
     for (const [index, scene] of scenes.entries()) {
-      const { ctx, event, record, son, entryId } = witness(
+      const { ctx, event, record, son, entryId } = crownWitness(
         scene.event, scene.choice, scene.outcome, 86920 + index,
       );
       // A real prose-mode choice happens while the Record docket is visible.
@@ -535,7 +546,7 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
 
   it('an embellishment creates proof debt, while an omission remains a dated blank', () => {
     for (const [index, scene] of scenes.entries()) {
-      const { ctx, event, record, entryId } = witness(
+      const { ctx, event, record, entryId } = crownWitness(
         scene.event, scene.choice, scene.outcome, 86940 + index,
       );
       const selected = recordEventForChoice(event, scene.choice, scene.outcome)!;
@@ -553,6 +564,147 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
       expect(omitted.record).toBe('omit');
       expect(omitted.text).toBeNull();
       expect(omitted.claims).toBeUndefined();
+    }
+  });
+});
+
+describe('authored Crown Record truth for the remaining six scenes (#864)', () => {
+  // Every choice/outcome pair of the six scenes, and which authored Record it
+  // must select. A pair this table misses is a pair whose truth nobody
+  // checked, so the first test fails when the content grows one.
+  const scenes = [
+    { event: 'the_third_reading_of_the_roll', choice: 'send_a_man_to_caster', outcome: 'corrected', selected: 'outcome' },
+    { event: 'the_third_reading_of_the_roll', choice: 'send_a_man_to_caster', outcome: 'it_was_not_an_error', selected: 'fallback' },
+    { event: 'the_third_reading_of_the_roll', choice: 'let_the_reading_stand', outcome: 'stood', selected: 'choice' },
+    { event: 'the_wardenship_falls_vacant', choice: 'put_the_name_forward', outcome: 'not_chosen', selected: 'outcome' },
+    { event: 'the_wardenship_falls_vacant', choice: 'put_the_name_forward', outcome: 'chosen', selected: 'outcome' },
+    { event: 'the_wardenship_falls_vacant', choice: 'stay_out_of_it', outcome: 'stayed_out', selected: 'fallback' },
+    { event: 'the_king_passes_within_a_day', choice: 'ride_out', outcome: 'seen', selected: 'outcome' },
+    { event: 'the_king_passes_within_a_day', choice: 'ride_out', outcome: 'seated_badly', selected: 'outcome' },
+    { event: 'the_king_passes_within_a_day', choice: 'stay_at_ardwen', outcome: 'stayed', selected: 'fallback' },
+    { event: 'the_house_next_door_attainted', choice: 'buy_the_land', outcome: 'bought', selected: 'choice' },
+    { event: 'the_house_next_door_attainted', choice: 'stay_clear_of_it', outcome: 'stayed_clear', selected: 'fallback' },
+    { event: 'the_hostage_asked_for', choice: 'give_the_child', outcome: 'given', selected: 'choice' },
+    { event: 'the_hostage_asked_for', choice: 'give_the_child', outcome: 'something_was_noticed', selected: 'choice' },
+    { event: 'the_hostage_asked_for', choice: 'refuse_the_surety', outcome: 'refused_surety', selected: 'fallback' },
+    { event: 'the_heralds_open_the_descent', choice: 'send_what_we_have', outcome: 'three_and_a_gap', selected: 'fallback' },
+    { event: 'the_heralds_open_the_descent', choice: 'send_what_we_have', outcome: 'they_go_looking', selected: 'outcome' },
+    { event: 'the_heralds_open_the_descent', choice: 'buy_the_fourth', outcome: 'bought_the_fourth', selected: 'choice' },
+  ] as const;
+  const eventIds = [...new Set(scenes.map((scene) => scene.event))];
+
+  function authored(eventId: string): EventTemplate {
+    const event = content.events.find((item) => item.id === eventId);
+    if (!event || event.interaction.kind === 'narration') throw new Error(`${eventId} lost its choice`);
+    return event;
+  }
+
+  it('lists every choice and outcome of the six scenes', () => {
+    for (const eventId of eventIds) {
+      const event = authored(eventId);
+      if (event.interaction.kind === 'narration') throw new Error('unreachable');
+      const pairs = event.interaction.choices
+        .flatMap((choice) => choice.outcomes.map((outcome) => `${choice.id}/${outcome.id}`));
+      const listed = scenes.filter((scene) => scene.event === eventId)
+        .map((scene) => `${scene.choice}/${scene.outcome}`);
+      expect(listed.sort(), eventId).toEqual(pairs.sort());
+    }
+  });
+
+  it('gives every Record a scene can select its own lie', () => {
+    // A lie shared by two Records is a lie that is true of one of them.
+    for (const eventId of eventIds) {
+      const event = authored(eventId);
+      const blocks = [event.record!, ...(event.recordByChoice ?? []), ...(event.recordByOutcome ?? [])];
+      const lies = blocks.map((block) => block.options.embellish.discrepancy.id);
+      expect(new Set(lies).size, eventId).toBe(lies.length);
+    }
+  });
+
+  for (const [index, scene] of scenes.entries()) {
+    it(`${scene.event}: ${scene.choice}/${scene.outcome} records the chosen fact and embellishes a lie`, () => {
+      const { ctx, event, record, entryId } = crownWitness(
+        scene.event, scene.choice, scene.outcome, 86400 + index,
+      );
+      const chosen = recordEventForChoice(event, scene.choice, scene.outcome)!;
+      const block = chosen.event.record!;
+      expect(record.recordChoiceId === undefined ? 'fallback' : record.recordOutcomeId ? 'outcome' : 'choice')
+        .toBe(scene.selected);
+      expect(record.subject).toBe(block.subject);
+
+      // The truthful account survives a save, interpolates its cast, and
+      // owes nothing.
+      const saved = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      const restored = saved.world.pendingDecisions.find((item) => item.kind === 'record' && item.id === record.id);
+      if (!restored || restored.kind !== 'record') throw new Error('Save lost the selected Record');
+      expect(restored.options).toEqual(record.options);
+      const told = resolveRecord(saved, restored.id, 'record');
+      expect(told.ok).toBe(true);
+      expect(told.line).not.toMatch(/\{[A-Z_]+\}/);
+      const page = saved.world.chronicle.find((entry) => entry.id === entryId)!;
+      expect(page.record).toBe('record');
+      expect(page.discrepancyId).toBeUndefined();
+      expect(saved.world.discrepancies.has(block.options.embellish.discrepancy.id)).toBe(false);
+
+      // The same branch embellished opens the selected block's own debt.
+      const lie = crownWitness(scene.event, scene.choice, scene.outcome, 86450 + index);
+      expect(resolveRecord(lie.ctx, lie.record.id, 'embellish').ok).toBe(true);
+      expect(lie.ctx.world.discrepancies.get(block.options.embellish.discrepancy.id)?.state).toBe('open');
+      expect(lie.ctx.world.chronicle.find((entry) => entry.id === lie.entryId)?.discrepancyId)
+        .toBe(block.options.embellish.discrepancy.id);
+    });
+  }
+});
+
+describe('Crown chronology holds whenever the scene can fire (#885)', () => {
+  // Neither scene is scoped to an Age, so either can fire in any year of a
+  // Long Line, and in any of the years the CHILD slot admits.
+  const years = [1042, 1541];
+  const outcomeText = (event: EventTemplate, choiceId: string, outcomeId: string): string => {
+    if (event.interaction.kind === 'narration') throw new Error(`${event.id} lost its choice`);
+    return event.interaction.choices.find((choice) => choice.id === choiceId)!
+      .outcomes.find((outcome) => outcome.id === outcomeId)!.text;
+  };
+
+  it('the attainder scene names no year later than the one it fires in', () => {
+    const pairs = [['buy_the_land', 'bought'], ['stay_clear_of_it', 'stayed_clear']] as const;
+    for (const [index, year] of years.entries()) {
+      for (const [choiceId, outcomeId] of pairs) {
+        const { ctx, event, record } = crownWitness(
+          'the_house_next_door_attainted', choiceId, outcomeId, 88500 + index, { year },
+        );
+        const told = resolveRecord(ctx, record.id, 'record').line;
+        const texts = [outcomeText(event, choiceId, outcomeId), told, ...record.options.map((option) => option.chronicle)];
+        for (const text of texts) {
+          for (const named of (text ?? '').matchAll(/\b1[0-9]{3}\b/g)) {
+            expect(Number(named[0]), `${choiceId}/${outcomeId} in ${year}: ${text}`).toBeLessThanOrEqual(year);
+          }
+        }
+      }
+    }
+  });
+
+  it('the surety scene states no age a child at either end of the slot would contradict', () => {
+    const event = content.events.find((item) => item.id === 'the_hostage_asked_for')!;
+    const ageFilters = (event.slots.CHILD?.filters ?? []).flatMap((filter) => ('age' in filter ? [filter.age] : []));
+    const youngest = ageFilters.find((age) => age.op === 'gte')!.value;
+    const oldest = ageFilters.find((age) => age.op === 'lte')!.value;
+    expect(oldest).toBeGreaterThan(youngest);
+    const NAMED_AGE = /\b(?:at|of|aged) (?:six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|\d+)\b/i;
+
+    for (const [index, childAge] of [youngest, oldest].entries()) {
+      for (const outcomeId of ['given', 'something_was_noticed']) {
+        const { ctx, event: played, record, child } = crownWitness(
+          'the_hostage_asked_for', 'give_the_child', outcomeId, 88600 + index, { childAge },
+        );
+        expect(ctx.world.year - child.born).toBe(childAge);
+        const text = outcomeText(played, 'give_the_child', outcomeId);
+        expect(text, outcomeId).not.toMatch(NAMED_AGE);
+        expect(text, outcomeId).toMatch(/five years|fifth year/);
+        const told = resolveRecord(ctx, record.id, 'record').line!;
+        expect(told).not.toMatch(NAMED_AGE);
+        expect(told).toContain(child.name);
+      }
     }
   });
 });
