@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { CastRequest, MatchCard, MatchPanel, RecordOption, SessionView, SlotFill } from '@ed/core';
-import { futureOf, type GameActions } from '../lib/game';
+import type { GameActions } from '../lib/game';
 import { isControl, isField, shortcutFor } from '../lib/keys';
 import { replayDisposition } from '../lib/accessibility';
 
@@ -163,7 +163,7 @@ function hasPanel(panel: MatchPanel): boolean {
  * little.
  */
 function futureAside(card: MatchCard): string | undefined {
-  const reading = futureOf(card, props.ageMatchPriorities);
+  const reading = props.actions.futureOf(card, props.ageMatchPriorities);
   if (reading.confidence === 'mixed' && reading.competing) {
     return `mixed with ${reading.competing}`;
   }
@@ -397,12 +397,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
                only the same photographed MatchCard that is already being
                drawn here, and its reasons point back to evidence the player
                can open immediately below. -->
-          <div class="future" :aria-label="'Why choose ' + card.name" :data-future="futureOf(card, ageMatchPriorities).kind">
+          <div class="future" :aria-label="'Why choose ' + card.name" :data-future="props.actions.futureOf(card, ageMatchPriorities).kind">
             <p class="small future-head">
-              <strong>{{ futureOf(card, ageMatchPriorities).label }}</strong>
+              <strong>{{ props.actions.futureOf(card, ageMatchPriorities).label }}</strong>
               <span v-if="futureAside(card)" class="dim"> · {{ futureAside(card) }}</span>
             </p>
-            <p v-for="reason in futureOf(card, ageMatchPriorities).reasons" :key="reason" class="small soft future-reason">
+            <p v-for="reason in props.actions.futureOf(card, ageMatchPriorities).reasons" :key="reason" class="small soft future-reason">
               {{ reason }}
             </p>
           </div>
