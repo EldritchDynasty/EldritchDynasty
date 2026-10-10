@@ -267,14 +267,19 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
       || out.some((candidate) => candidate.event.id === e.id)
     )) continue;
 
-    const res = resolveSlots(e, ctx, rng);
-    if (res.ok) {
-      out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced' });
-      continue;
+    // A schedule guarantees another opportunity, not permission to bypass the
+    // author's conditions. In particular, a follow-up due in generation three
+    // must not skip a declared fourth-generation gate. Preserve the pending
+    // promise while its conditions or cast are unavailable.
+    if (evalCondition(e.conditions, ctx)) {
+      const res = resolveSlots(e, ctx, rng);
+      if (res.ok) {
+        out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced' });
+        continue;
+      }
     }
-    // Nobody to cast this year. Come back to it rather than dropping it —
-    // arcs already wait five years for their cast, and a scheduled follow-up
-    // that silently never happens is the same bug with a different name.
+    // Reconsider in five years, with the original due year as the patience
+    // anchor so an unreachable event cannot be postponed indefinitely.
     const first = s.first ?? s.year;
     if (w.year - first < SCHEDULE_PATIENCE) w.scheduled.push({ event: s.event, year: w.year + 5, first });
   }
