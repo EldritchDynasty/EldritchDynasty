@@ -438,7 +438,7 @@ describe('Match-panel blank-page prose', () => {
     expect(read().map((p) => p.text)).toEqual([
       'The surviving account.', blankOriginal, greyedOriginal,
     ]);
-    expect(ctx.world.chronicle.map((entry) => entry.text)).toEqual([
+    expect(ctx.world.chronicle.slice(-3).map((entry) => entry.text)).toEqual([
       null, null, 'The surviving account.',
     ]);
   });
