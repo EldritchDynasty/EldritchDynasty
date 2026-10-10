@@ -863,3 +863,66 @@ proseVariants:
     of: "a9482c9918ddf60d"
     plainenglish: >-
       was praised in the inquest's official written record
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].title"
+    of: "01360a25d6e07a99"
+    plainenglish: >-
+      The Church Wants a Body Exhumed
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].body"
+    of: "5ad2be8d6a7a12d1"
+    plainenglish: >-
+      Heads of the house and their wives are buried beneath the chapel floor at Ardwen. The
+      Church's court has politely asked in writing to lift one particular stone and inspect the
+      body beneath it. The Church owns the ground, but the house owns the chapel building. No
+      lawyer in the Nethering can say whose authority wins. The lettering on the chosen stone has
+      worn away. The burial roll at Wick also identifies a different stone for the name in the
+      Church's request.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].interaction.choices[id=let_them_lift_it].label"
+    of: "06d02d03319d331f"
+    plainenglish: >-
+      Let the Church lift the stone, with our own men and witnesses present.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].interaction.choices[id=let_them_lift_it].outcomes[id=lifted].text"
+    of: "eff80293cd399ed7"
+    plainenglish: >-
+      Over two days, six men open the grave. A physician from Cawdry examines the remains and
+      signs a four-line report. He describes a man of middle years, long buried, with nothing
+      unusual about his body. But the burial roll at Wick says a woman has lain there since 1071.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].interaction.choices[id=let_them_lift_it].outcomes[id=nothing_under_it].text"
+    of: "55b45fd7c8fcf96b"
+    plainenglish: >-
+      After two days of work by six men, they find only packed earth beneath the stone. There is
+      no coffin, no bone, and no trace that anyone was ever buried there. The physician records
+      this too in four lines, in the same handwriting. Nobody says a word as they leave the
+      chapel that afternoon.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].interaction.choices[id=refuse_the_ground].label"
+    of: "4b30d3a9b53e8dfd"
+    plainenglish: >-
+      Refuse. The chapel building belongs to our house.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].interaction.choices[id=refuse_the_ground].outcomes[id=refused].text"
+    of: "d5113ab0ac016b3c"
+    plainenglish: >-
+      An advocate drafts the house's written refusal. No stone is lifted. The house will have to
+      defend its position for as long as the Church remembers making the request, which may be
+      forever. The refusal is filed at Cawdry and is worth much more as a document than whatever
+      is beneath the chapel floor.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].record.subject"
+    of: "16d3a07a8f8c0f16"
+    plainenglish: >-
+      the chapel stone the Church wanted lifted
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].record.options.record.chronicle"
+    of: "46782b52780df056"
+    plainenglish: >-
+      The Church asked us to lift a stone in our chapel. We did. What lay beneath it did not
+      agree with what the burial roll at Wick had recorded for a hundred years.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].record.options.record.claims[0].text"
+    of: "97ddffcbeee440c7"
+    plainenglish: >-
+      had the chapel stone lifted and found that what lay beneath it contradicted the Wick roll
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].record.options.embellish.chronicle"
+    of: "b8964ff8dd8717bc"
+    plainenglish: >-
+      The Church asked us to lift a stone in our chapel. We did, and everything matched the roll
+      at Wick. The case closed on the second day.
+  - address: "content:events/rare_church.yaml#events[id=the_exhumation].record.options.embellish.claims[0].text"
+    of: "98dd027416b94b70"
+    plainenglish: >-
+      had the chapel stone lifted and found everything as the Wick roll recorded
