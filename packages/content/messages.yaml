@@ -29,7 +29,7 @@ proseVariants:
   - address: "core:messages#assize.a_retainer_courted_away"
     of: "3866453aa8858186"
     plainenglish: >-
-      Someone offered the steward a place, in a room the house does not own. He thought about it for a week, then said no.
+      Someone made the steward an offer, in a room the house does not own. He thought about it for a week, then said no.
   - address: "core:messages#assize.the_church_asks_after_the_book"
     of: "85f881eeff693192"
     plainenglish: >-
@@ -53,7 +53,7 @@ proseVariants:
   - address: "core:messages#assize.the_tithe_forgiven"
     of: "04fa7075bc7fa231"
     plainenglish: >-
-      The branches were told to keep their tithe this year. Nobody pretended it was generosity. There was nothing left at the seat to send it to.
+      The branches were told to keep their tithe this year. Nobody pretended it was generosity. There was nothing at the seat to send it to.
   - address: "core:messages#assize.an_old_friend_remembers"
     of: "55dd3788d5f47d1c"
     plainenglish: >-
