@@ -65,9 +65,7 @@ const {
 const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 
 /** Reading choices are local to this device and must not alter a saved world. */
-const accessibility = ref(loadAccessibility(
-  typeof window === 'undefined' ? null : window.localStorage,
-));
+const accessibility = ref(loadAccessibility(readingStorage()));
 // Presentation mode lives with the reader, not the saved world. Restoring
 // the preference must fetch the optional catalogue just like a live toggle.
 // Merely setting the mode leaves a restarted Plain English reader seeing
@@ -100,7 +98,7 @@ void selectProseMode(accessibility.value.proseMode);
 watch(accessibility, (preferences) => {
   if (typeof document === 'undefined') return;
   applyAccessibility(document.documentElement, preferences);
-  saveAccessibility(window.localStorage, preferences);
+  saveAccessibility(readingStorage(), preferences);
 }, { deep: true, immediate: true });
 
 
