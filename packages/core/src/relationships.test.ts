@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash, type BranchState, type ProseVariant } from '@ed/schema';
 import {
-  ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, ECHO_AFTER, echoGrudges, edge,
-  eventTitleAddress, externalThreadFor, grudgeAgainstUs, grudgesAgainst, makeRng, missingPlainEnglish, newGame, place,
-  relate, sentimentBetween, setProseMode, setProseVariants, testWorld, tickFamilyQuarrels,
-  tickRelationships,
+  activeRelationshipThreadHouses, ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, contentProseAddress,
+  ECHO_AFTER, echoGrudges, edge, eventTitleAddress, externalThreadFor, grudgeAgainstUs, grudgesAgainst, makeRng,
+  missingPlainEnglish, newGame, place, relate, sentimentBetween, setProseMode, setProseVariants, testWorld,
+  tickFamilyQuarrels, tickRelationships,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
@@ -625,7 +625,86 @@ describe('external relationship thread prose (#793)', () => {
       pressures: thread.pressures.map(({ kind, year, ref }) => ({ kind, year, ref })),
     });
     expect(structure(translated!)).toEqual(structure(original!));
-    // The founding family's other visible relationship is deliberately untranslated.
-    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress('threads.family.current')]);
+    // The founding family's other visible relationship is deliberately
+    // untranslated, and so are the names of the houses on the returned
+    // threads (#917) — Marrow's among them.
+    const missing = missingPlainEnglish(ctx);
+    expect(missing).toContain(contentProseAddress(ctx.content.sourceOf('house_marrow')!, 'houses[id=house_marrow].name'));
+    expect(missing.filter((address) => !/#houses\[id=[^\]]+\]\.name$/.test(address)))
+      .toEqual([coreMessageAddress('threads.family.current')]);
+  });
+});
+
+describe('relationship threads name things in the reader\'s setting (#917)', () => {
+  const multiword = (text: string) => text.trim().split(/\s+/).length > 1;
+
+  /** A Marrow contact in a named scene, and a Marrow pledge for a named heirloom. */
+  function named() {
+    const ctx = testWorld(bundle, 917, 1200);
+    const head = place(ctx, { sex: 'male', age: 42, name: 'Aldren Thread', castSlots: ['head'] });
+    const marrow = place(ctx, { sex: 'female', age: 34, name: 'Sera Marrow', house: 'house_marrow' });
+    const scene = bundle.events.find((e) => e.purposes.includes('change_relationship') && multiword(e.title))!;
+    const heirloom = bundle.heirlooms.find((h) => multiword(h.name))!;
+    expect(scene).toBeDefined();
+    expect(heirloom).toBeDefined();
+    ctx.world.decisionLog.push({
+      kind: 'outcome', year: 1199, event: scene.id, outcomeId: 'thread-917',
+      fill: { HEAD: head.id, RIVAL: marrow.id },
+    });
+    ctx.world.marriagePromises.push({ toHouse: 'house_marrow', year: 1198, lot: String(heirloom.id) });
+
+    const house = ctx.content.house('house_marrow')!;
+    const variants: ProseVariant[] = [
+      { address: eventTitleAddress(ctx, scene)!, of: proseOriginalHash(scene.title), plainenglish: 'A Plain Scene' },
+      {
+        address: contentProseAddress(ctx.content.sourceOf('house_marrow')!, 'houses[id=house_marrow].name'),
+        of: proseOriginalHash(house.name), plainenglish: 'The Plain Marrows',
+      },
+      {
+        address: contentProseAddress(ctx.content.sourceOf(String(heirloom.id))!, `heirlooms[id=${encodeURIComponent(String(heirloom.id))}].name`),
+        of: proseOriginalHash(heirloom.name), plainenglish: 'A Plain Heirloom',
+      },
+    ];
+    return { ctx, scene, heirloom, house, variants };
+  }
+
+  const detail = (thread: ReturnType<typeof externalThreadFor>, kind: string) =>
+    thread!.pressures.find((fact) => fact.kind === kind)?.detail;
+  const structure = (thread: NonNullable<ReturnType<typeof externalThreadFor>>) => ({
+    house: thread.house,
+    origin: { kind: thread.origin.kind, year: thread.origin.year, ref: thread.origin.ref },
+    pressures: thread.pressures.map(({ kind, year, ref }) => ({ kind, year, ref })),
+  });
+
+  it('substitutes the reviewed event title, house name and lot name into the shown sentence', () => {
+    const { ctx, scene, heirloom, house, variants } = named();
+    const original = externalThreadFor(ctx, 'house_marrow')!;
+    expect(original.name).toBe(house.name);
+    expect(detail(original, 'recent_contact')).toBe(
+      `Sera Marrow of ${house.name} dealt with the family in “${scene.title}” in 1199.`);
+    expect(detail(original, 'marriage_promise')).toBe(
+      `${house.name} is owed the marriage pledged in 1198 for ${heirloom.name}.`);
+
+    setProseVariants(ctx, variants);
+    setProseMode(ctx, 'plainenglish');
+    const plain = externalThreadFor(ctx, 'house_marrow')!;
+    expect(plain.name).toBe('The Plain Marrows');
+    // The sentence shells have no variant here, so only the names move.
+    expect(detail(plain, 'recent_contact')).toBe(
+      'Sera Marrow of The Plain Marrows dealt with the family in “A Plain Scene” in 1199.');
+    expect(detail(plain, 'marriage_promise')).toBe(
+      'The Plain Marrows is owed the marriage pledged in 1198 for A Plain Heirloom.');
+    expect(structure(plain)).toEqual(structure(original));
+    for (const variant of variants) expect(missingPlainEnglish(ctx)).not.toContain(variant.address);
+
+    setProseMode(ctx, 'original');
+    expect(externalThreadFor(ctx, 'house_marrow')).toEqual(original);
+  });
+
+  it('asks for no name in the hot recurrence query, which shows the player nothing', () => {
+    const { ctx } = named();
+    setProseMode(ctx, 'plainenglish');
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(true);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 });
