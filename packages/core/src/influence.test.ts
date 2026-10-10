@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { AttributeId, ContentBundle, Outcome, TraitDef, TraitId } from '@ed/schema';
-import { asId } from '@ed/schema';
+import { asId, proseOriginalHash } from '@ed/schema';
 import {
   choiceAvailability, evalCheck, evalCondition, evalFilter, influencedAttr,
-  pickOutcome, place, testRng, testWorld, tickEconomy,
+  pickOutcome, place, setProseMode, setProseVariants, testRng, testWorld, tickEconomy,
 } from '@ed/core';
+import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
 const bundle = content.bundle;
@@ -122,6 +123,47 @@ describe('choiceAvailability: Choice.requires reads the influenced attribute', (
     if (head.phenotype) head.phenotype.dirty = true;
     const withTrait = choiceAvailability(strike, ctx, { HEAD: head.id }, event);
     expect(withTrait.available).toBe(true);
+  });
+});
+
+/**
+ * WHY A CHOICE IS CLOSED is shown under it on the docket (#410). It printed the
+ * attribute's content id and never switched with the prose setting.
+ */
+describe('choiceAvailability: the reason a choice is closed', () => {
+  function closed(mode: 'original' | 'plainenglish') {
+    const ctx = testWorld(withSynthetic);
+    setProseVariants(ctx, [
+      {
+        address: coreMessageAddress('choice.blocked.attribute'),
+        of: proseOriginalHash("{PERSON}'s {ATTRIBUTE} is {VALUE}"),
+        plainenglish: '{PERSON} has {ATTRIBUTE} {VALUE}',
+      },
+      {
+        address: coreMessageAddress('choice.blocked.uncast'),
+        of: proseOriginalHash('nobody stands as {SLOT}'),
+        plainenglish: 'no one is in the {SLOT} role',
+      },
+    ]);
+    setProseMode(ctx, mode);
+    const event = ctx.content.mustEvent('the_seal_questioned');
+    if (event.interaction.kind === 'narration') throw new Error('unreachable');
+    const strike = event.interaction.choices.find((c) => c.id === 'strike')!;
+    const head = place(ctx, { sex: 'male', age: 40, castSlots: ['head'], name: 'Osric' });
+    head.acquired.strength = 44 - influencedAttr(ctx, head, 'strength', 'head');
+    if (head.phenotype) head.phenotype.dirty = true;
+    return {
+      short: choiceAvailability(strike, ctx, { HEAD: head.id }, event).blockedBy,
+      uncast: choiceAvailability(strike, ctx, {}, event).blockedBy,
+    };
+  }
+
+  it('names the attribute as the player sees it, not by its id', () => {
+    expect(closed('original')).toEqual({ short: "Osric's Strength is 44", uncast: 'nobody stands as HEAD' });
+  });
+
+  it('switches with the prose setting', () => {
+    expect(closed('plainenglish')).toEqual({ short: 'Osric has Strength 44', uncast: 'no one is in the HEAD role' });
   });
 });
 
