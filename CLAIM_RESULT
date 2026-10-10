@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim check --agent chatgpt/833-docket-refusals-20261010
+request-commit: 88da0b2f69765fac1292d838b66d623a68e802af
+
+holding 833 (lane code, 3m)
+landing commit needs: Closes #833
+7 other claim(s) open, none overlapping the 2 path(s) your claim declares.
