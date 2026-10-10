@@ -1,8 +1,101 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, effectSignature, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
 
 const content = loadContent();
+
+describe('Record selector validation (#874)', () => {
+  const fixture = () => {
+    const source = content.bundle.events.find((event) => event.id === 'blood_on_our_own_land');
+    if (!source?.record || source.interaction.kind === 'narration') {
+      throw new Error('Wick justice Record fixture missing its authored choices');
+    }
+    const event = structuredClone(source);
+    // Do not depend on #869's separately claimed authored overrides.
+    event.recordByChoice = undefined;
+    event.recordByOutcome = undefined;
+    const [first, second] = event.interaction.choices;
+    if (!first || !second || !first.outcomes[0] || !second.outcomes[0]) {
+      throw new Error('Wick justice choices lost their outcomes');
+    }
+    return { event, first, second, record: event.record };
+  };
+
+  function errors(value: unknown): { path: string; message: string }[] {
+    const parsed = EventTemplateS.safeParse(value);
+    if (parsed.success) return [];
+    return parsed.error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
+  }
+
+  it('accepts real choice and exact choice/outcome selectors, or no selectors', () => {
+    const { event, first, second, record } = fixture();
+    expect(errors(event)).toEqual([]);
+    expect(errors({
+      ...event,
+      recordByChoice: [{ ...record, id: first.id }],
+      recordByOutcome: [
+        { ...record, id: `${first.id}/${first.outcomes[0]!.id}` },
+        { ...record, id: `${second.id}/${second.outcomes[0]!.id}` },
+      ],
+    })).toEqual([]);
+  });
+
+  it('refuses misspelled choice selectors instead of silently choosing the legacy Record', () => {
+    const { event, record } = fixture();
+    expect(errors({ ...event, recordByChoice: [{ ...record, id: 'hand_him_to_cawdrey' }] }))
+      .toEqual([expect.objectContaining({
+        path: 'recordByChoice.0.id',
+        message: expect.stringContaining('unknown choice-specific Record id'),
+      })]);
+  });
+
+  it('refuses an unknown outcome on a real choice and a real outcome on the wrong choice', () => {
+    const { event, first, second, record } = fixture();
+    expect(errors({ ...event, recordByOutcome: [{ ...record, id: `${first.id}/not_an_outcome` }] }))
+      .toEqual([expect.objectContaining({
+        path: 'recordByOutcome.0.id',
+        message: expect.stringContaining('unknown outcome for choice'),
+      })]);
+    expect(first.outcomes.some((outcome) => outcome.id === second.outcomes[0]!.id)).toBe(false);
+    expect(errors({
+      ...event,
+      recordByOutcome: [{ ...record, id: `${first.id}/${second.outcomes[0]!.id}` }],
+    })).toEqual([expect.objectContaining({
+      path: 'recordByOutcome.0.id',
+      message: expect.stringContaining('unknown outcome for choice'),
+    })]);
+    expect(errors({ ...event, recordByOutcome: [{ ...record, id: 'unknown_choice/actual_outcome' }] }))
+      .toEqual([expect.objectContaining({
+        path: 'recordByOutcome.0.id',
+        message: expect.stringContaining('unknown choice in outcome-specific'),
+      })]);
+  });
+
+  it('refuses choice-scoped selectors on narration without removing its legacy Record', () => {
+    const { event, first, record } = fixture();
+    const narration = { ...event, interaction: { kind: 'narration', outcomes: [first.outcomes[0]] } };
+    expect(errors(narration)).toEqual([]);
+    expect(errors({
+      ...narration,
+      recordByChoice: [{ ...record, id: first.id }],
+      recordByOutcome: [{ ...record, id: `${first.id}/${first.outcomes[0]!.id}` }],
+    })).toEqual([
+      expect.objectContaining({ path: 'recordByChoice.0.id', message: expect.stringContaining('unknown choice') }),
+      expect.objectContaining({ path: 'recordByOutcome.0.id', message: expect.stringContaining('unknown choice') }),
+    ]);
+  });
+
+  it('still catches duplicate selectors, including two copies of a valid choice', () => {
+    const { event, first, record } = fixture();
+    expect(errors({
+      ...event,
+      recordByChoice: [{ ...record, id: first.id }, { ...record, id: first.id }],
+    })).toEqual([expect.objectContaining({
+      path: 'recordByChoice.1.id', message: expect.stringContaining('duplicate choice-specific Record id'),
+    })]);
+  });
+});
+
 
 /**
  * Validation used to be one function, so testing a rule meant running every
