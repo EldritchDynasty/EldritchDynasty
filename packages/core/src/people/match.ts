@@ -164,7 +164,8 @@ export type MatchFutureConfidence = 'clear' | 'mixed' | 'uncertain';
 
 export interface MatchFutureReading {
   kind: MatchFutureKind;
-  label: 'Blood' | 'Standing' | 'Continuity' | 'Mystery';
+  /** Reader-facing text; identity for rules is always `kind`. */
+  label: string;
   confidence: MatchFutureConfidence;
   /** One or two pieces of visible evidence behind the reading. */
   reasons: string[];
@@ -172,18 +173,52 @@ export interface MatchFutureReading {
   competing?: MatchFutureKind;
 }
 
+/**
+ * A presentation-only renderer. The scorer supplies stable message identities,
+ * Original templates, and values from the visible card; translation cannot
+ * change a case's score or the choice of winner.
+ */
+export type MatchFutureText = (
+  key: string,
+  original: string,
+  values?: Readonly<Record<string, string>>,
+) => string;
+
+function originalFutureText(
+  _key: string,
+  original: string,
+  values: Readonly<Record<string, string>> = {},
+): string {
+  return original.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (token, name: string) =>
+    Object.prototype.hasOwnProperty.call(values, name) ? values[name]! : token);
+}
+
+interface FutureReason {
+  key: string;
+  original: string;
+  values?: Readonly<Record<string, string>>;
+}
+
 interface FutureCase {
   kind: MatchFutureKind;
   score: number;
-  reasons: string[];
+  reasons: FutureReason[];
 }
 
-const FUTURE_LABEL: Record<MatchFutureKind, MatchFutureReading['label']> = {
+const FUTURE_LABEL: Record<MatchFutureKind, string> = {
   blood: 'Blood',
   standing: 'Standing',
   continuity: 'Continuity',
   mystery: 'Mystery',
 };
+
+function reason(
+  key: string,
+  original: string,
+  values?: Readonly<Record<string, string>>,
+): FutureReason {
+  return { key, original, ...(values === undefined ? {} : { values }) };
+}
 
 /**
  * Turn the evidence already on one card into the short answer to
@@ -193,75 +228,105 @@ const FUTURE_LABEL: Record<MatchFutureKind, MatchFutureReading['label']> = {
  * two cases within one point are reported as mixed, and two cards are entirely
  * allowed to receive the same reading. The deck is not rewritten to manufacture
  * three different archetypes where the world did not deal three.
+ *
+ * Rendering happens only after the winner has been selected. The optional
+ * renderer is the sole translation seam; no English string is parsed to recover
+ * a message identity and no world state is used to score a match.
  */
-export function matchFuture(card: MatchCard, priorities: MatchFutureKind[] = []): MatchFutureReading {
+export function matchFuture(
+  card: MatchCard,
+  priorities: MatchFutureKind[] = [],
+  renderText: MatchFutureText = originalFutureText,
+): MatchFutureReading {
   const blood: FutureCase = { kind: 'blood', score: 0, reasons: [] };
   if (card.kinship >= 0.0625) {
     blood.score += 4;
-    blood.reasons.push('the family papers put this match among close kin');
+    blood.reasons.push(reason('blood.close-kin', 'the family papers put this match among close kin'));
   } else if (card.kinship > 0) {
     blood.score += 2;
-    blood.reasons.push('the family papers still join these two lines');
+    blood.reasons.push(reason('blood.related', 'the family papers still join these two lines'));
   }
   if (card.blood === 'deep') {
     blood.score += 3;
-    blood.reasons.push(`${card.houseName} is spoken of as deep blood`);
+    blood.reasons.push(reason('blood.deep', '{houseName} is spoken of as deep blood',
+      { houseName: card.houseName }));
   } else if (card.blood === 'drop') {
     blood.score += 1;
-    blood.reasons.push(`${card.houseName} is said to carry a drop of the old blood`);
+    blood.reasons.push(reason('blood.drop', '{houseName} is said to carry a drop of the old blood',
+      { houseName: card.houseName }));
   }
   if (card.panel.woken.length) {
     const n = card.panel.woken.length;
     blood.score += Math.min(3, n + (card.panel.woken.some((r) => r.expressed) ? 1 : 0));
-    blood.reasons.push(`${n} ${n === 1 ? 'waking is' : 'wakings are'} known in the visible line`);
+    blood.reasons.push(n === 1
+      ? reason('blood.waking.one', '{n} waking is known in the visible line', { n: String(n) })
+      : reason('blood.waking.many', '{n} wakings are known in the visible line', { n: String(n) }));
   }
 
   const standing: FutureCase = { kind: 'standing', score: 0, reasons: [] };
   if (card.kind === 'outsider' && card.panel.said.length) {
     standing.score += 2;
     const n = card.panel.said.length;
-    standing.reasons.push(`${card.houseName} already appears in ${n} circulating ${n === 1 ? 'account' : 'accounts'}`);
+    standing.reasons.push(n === 1
+      ? reason('standing.account.one', '{houseName} already appears in {n} circulating account',
+        { houseName: card.houseName, n: String(n) })
+      : reason('standing.account.many', '{houseName} already appears in {n} circulating accounts',
+        { houseName: card.houseName, n: String(n) }));
   }
   if (card.kind === 'outsider' && card.panel.ourBook.length) {
     standing.score += 2;
-    standing.reasons.push(`our own book already has pages on ${card.houseName}`);
+    standing.reasons.push(reason('standing.our-book', 'our own book already has pages on {houseName}',
+      { houseName: card.houseName }));
   }
   if (standing.score >= 4) standing.score += 1;
 
   const continuity: FutureCase = { kind: 'continuity', score: 0, reasons: [] };
   if (card.line === 'fertile') {
     continuity.score += 4;
-    continuity.reasons.push(`the line is called full on ${card.lineSeen} completed ${card.lineSeen === 1 ? 'life' : 'lives'}`);
+    continuity.reasons.push(card.lineSeen === 1
+      ? reason('continuity.full.one', 'the line is called full on {n} completed life',
+        { n: String(card.lineSeen) })
+      : reason('continuity.full.many', 'the line is called full on {n} completed lives',
+        { n: String(card.lineSeen) }));
   } else if (card.line === 'ordinary') {
     continuity.score += 2;
-    continuity.reasons.push(`the watched line is ordinary across ${card.lineSeen} completed ${card.lineSeen === 1 ? 'life' : 'lives'}`);
+    continuity.reasons.push(card.lineSeen === 1
+      ? reason('continuity.ordinary.one', 'the watched line is ordinary across {n} completed life',
+        { n: String(card.lineSeen) })
+      : reason('continuity.ordinary.many', 'the watched line is ordinary across {n} completed lives',
+        { n: String(card.lineSeen) }));
   }
 
   const borne = card.panel.issue.reduce((n, row) => n + row.borne, 0);
   const grown = card.panel.issue.reduce((n, row) => n + row.grown, 0);
   if (borne >= 3 && grown / borne >= 0.6) {
     continuity.score += 2;
-    continuity.reasons.push(`${grown} of ${borne} children in the named line grew up`);
+    continuity.reasons.push(reason('continuity.children',
+      '{grown} of {borne} children in the named line grew up',
+      { grown: String(grown), borne: String(borne) }));
   }
   if (card.kind === 'outsider' && card.kinship === 0) {
     continuity.score += 1;
-    continuity.reasons.push('the family papers show no kinship joining the two lines');
+    continuity.reasons.push(reason('continuity.unrelated',
+      'the family papers show no kinship joining the two lines'));
   }
 
   const mystery: FutureCase = { kind: 'mystery', score: 0, reasons: [] };
   if (card.line === 'unknown') {
     mystery.score += 3;
-    mystery.reasons.push('no completed line anybody here has watched');
+    mystery.reasons.push(reason('mystery.unknown', 'no completed line anybody here has watched'));
   }
   const panelRows = card.panel.issue.length + card.panel.woken.length
     + card.panel.said.length + card.panel.ourBook.length;
   if (panelRows === 0) {
     mystery.score += 2;
-    mystery.reasons.push('the panel has no issue, waking, tale or old page to lean on');
+    mystery.reasons.push(reason('mystery.empty-panel',
+      'the panel has no issue, waking, tale or old page to lean on'));
   }
   if (Math.max(blood.score, standing.score, continuity.score) < 2) {
     mystery.score = Math.max(mystery.score, 2);
-    if (!mystery.reasons.length) mystery.reasons.push('nothing visible gives the match a clean case');
+    if (!mystery.reasons.length) mystery.reasons.push(reason('mystery.no-case',
+      'nothing visible gives the match a clean case'));
   }
 
   const byKind: Record<MatchFutureKind, FutureCase> = { blood, standing, continuity, mystery };
@@ -269,7 +334,9 @@ export function matchFuture(card: MatchCard, priorities: MatchFutureKind[] = [])
     const case_ = byKind[priority];
     if (case_.score <= 0) continue;
     case_.score += 3;
-    case_.reasons.unshift(`these years make ${FUTURE_LABEL[priority].toLowerCase()} unusually important`);
+    const lower = FUTURE_LABEL[priority].toLowerCase();
+    case_.reasons.unshift(reason(`priority.${priority}`,
+      `these years make ${lower} unusually important`));
   }
 
   // Stable order is deliberate only as a tiebreak for the PRIMARY label.
@@ -285,9 +352,10 @@ export function matchFuture(card: MatchCard, priorities: MatchFutureKind[] = [])
 
   return {
     kind: winner.kind,
-    label: FUTURE_LABEL[winner.kind],
+    label: renderText(`match.future.label.${winner.kind}`, FUTURE_LABEL[winner.kind]),
     confidence,
-    reasons: winner.reasons.slice(0, 2),
+    reasons: winner.reasons.slice(0, 2)
+      .map((entry) => renderText(`match.future.reason.${entry.key}`, entry.original, entry.values)),
     ...(mixed ? { competing: runner.kind } : {}),
   };
 }
