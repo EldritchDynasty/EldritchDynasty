@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
+import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
+import { createProseRuntime } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
@@ -741,5 +744,118 @@ describe('the Library of Houses', () => {
     // the independent guard that this value really is today's behaviour.
     expect(empty.world.libraryMemories).toEqual([]);
     expect(digestOf(empty)).toBe(digestOf(bootstrap(content, 8118, 1042, 'long')));
+  });
+});
+
+describe('the Library of Houses retells in the reader\'s setting (#846)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./run-library.ts', import.meta.url), 'utf8'));
+
+  it('keys one whole sentence per voice and reading, plus each teller, bias and fallback', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'library.subject_unknown': 'the person named there',
+      'library.song.teller': 'the household singers of {RIVAL}',
+      'library.song.bias': 'keeping the version {RIVAL} has found pleasant to remember',
+      'library.song.kept':
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, the old words are kept entire. The first singer's name is gone.",
+      'library.song.attr':
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON}'s {QUALITY} is entered as {VALUE}. The first singer's name is gone.",
+      'library.song.trait_with':
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON} is entered with {TRAIT}. The first singer's name is gone.",
+      'library.song.trait_without':
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON} is entered without {TRAIT}. The first singer's name is gone.",
+      'library.song.death':
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON}'s death is entered in {YEAR}. The first singer's name is gone.",
+      'library.doctrine.teller': "the chaplain who keeps {RIVAL}'s old books",
+      'library.doctrine.bias': "making the inherited account sit obediently inside {RIVAL}'s doctrine",
+      'library.doctrine.kept':
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: the old words are kept entire. No earlier hand is named.',
+      'library.doctrine.attr':
+        "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON}'s {QUALITY} is entered as {VALUE}. No earlier hand is named.",
+      'library.doctrine.trait_with':
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON} is entered with {TRAIT}. No earlier hand is named.',
+      'library.doctrine.trait_without':
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON} is entered without {TRAIT}. No earlier hand is named.',
+      'library.doctrine.death':
+        "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON}'s death is entered in {YEAR}. No earlier hand is named.",
+      'library.rival_chronicle.teller': 'the archivist of {RIVAL}',
+      'library.rival_chronicle.bias': "keeping {RIVAL}'s inherited account of the old house",
+      'library.rival_chronicle.kept':
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where the old words are kept entire; and leaves the disagreement without apology.",
+      'library.rival_chronicle.attr':
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON}'s {QUALITY} is entered as {VALUE}; and leaves the disagreement without apology.",
+      'library.rival_chronicle.trait_with':
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON} is entered with {TRAIT}; and leaves the disagreement without apology.",
+      'library.rival_chronicle.trait_without':
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON} is entered without {TRAIT}; and leaves the disagreement without apology.",
+      'library.rival_chronicle.death':
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON}'s death is entered in {YEAR}; and leaves the disagreement without apology.",
+      'library.rhyme.teller': "the children of {RIVAL}'s lower hall",
+      'library.rhyme.bias': "keeping only what {RIVAL}'s children can carry from one winter to the next",
+      'library.rhyme.kept':
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: the old words are kept entire. They do not know whose book taught them.",
+      'library.rhyme.attr':
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON}'s {QUALITY} is entered as {VALUE}. They do not know whose book taught them.",
+      'library.rhyme.trait_with':
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON} is entered with {TRAIT}. They do not know whose book taught them.",
+      'library.rhyme.trait_without':
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON} is entered without {TRAIT}. They do not know whose book taught them.",
+      'library.rhyme.death':
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON}'s death is entered in {YEAR}. They do not know whose book taught them.",
+      'library.play.teller': "the players retained for {RIVAL}'s winter feast",
+      'library.play.bias': "turning an old house's dignity into the version {RIVAL} will applaud",
+      'library.play.kept':
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that the old words are kept entire. The audience laughs at a quarrel older than the script.",
+      'library.play.attr':
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON}'s {QUALITY} is entered as {VALUE}. The audience laughs at a quarrel older than the script.",
+      'library.play.trait_with':
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON} is entered with {TRAIT}. The audience laughs at a quarrel older than the script.",
+      'library.play.trait_without':
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON} is entered without {TRAIT}. The audience laughs at a quarrel older than the script.",
+      'library.play.death':
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON}'s death is entered in {YEAR}. The audience laughs at a quarrel older than the script.",
+      'library.footnote.teller': "an unnamed annotator in {RIVAL}'s library",
+      'library.footnote.bias': "correcting the old house from the safety of {RIVAL}'s margin",
+      'library.footnote.kept':
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: the old words are kept entire. The ink is younger than the page and older than any living witness.",
+      'library.footnote.attr':
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON}'s {QUALITY} is entered as {VALUE}. The ink is younger than the page and older than any living witness.",
+      'library.footnote.trait_with':
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON} is entered with {TRAIT}. The ink is younger than the page and older than any living witness.",
+      'library.footnote.trait_without':
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON} is entered without {TRAIT}. The ink is younger than the page and older than any living witness.",
+      'library.footnote.death':
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON}'s death is entered in {YEAR}. The ink is younger than the page and older than any living witness.",
+      'library.charm.teller': 'the nurses of {RIVAL}, from one nursery to the next',
+      'library.charm.bias': "keeping the inherited warning useful to {RIVAL}'s children",
+      'library.charm.kept':
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: the old words are kept entire. None remembers when the last line entered the charm.',
+      'library.charm.attr':
+        "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON}'s {QUALITY} is entered as {VALUE}. None remembers when the last line entered the charm.",
+      'library.charm.trait_with':
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON} is entered with {TRAIT}. None remembers when the last line entered the charm.',
+      'library.charm.trait_without':
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON} is entered without {TRAIT}. None remembers when the last line entered the charm.',
+      'library.charm.death':
+        "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON}'s death is entered in {YEAR}. None remembers when the last line entered the charm.",
+      'library.rival_unknown': 'a rival house',
+    });
+  });
+
+  it('seeds the same memories in Plain English, with only the words changed', () => {
+    const { ctx } = finishedLibraryHouse();
+    const run = libraryRunOf(ctx)!;
+    const plain = createProseRuntime('plainenglish', keyed.map((entry) => ({
+      address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+    })));
+    const original = bootstrap(content, 7001, 1042, 'short', [run]).world.libraryMemories;
+    const read = bootstrap(content, 7001, 1042, 'short', [run], undefined, plain).world.libraryMemories;
+
+    expect(original.length).toBeGreaterThan(0);
+    expect(read).toEqual(original.map((memory) => ({
+      ...memory,
+      text: `plain: ${memory.text}`,
+      teller: `plain: ${memory.teller}`,
+      bias: `plain: ${memory.bias}`,
+    })));
   });
 });

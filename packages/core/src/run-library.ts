@@ -6,6 +6,7 @@ import {
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { hashSeed, streamFor, type Rng } from './rng.js';
+import { msg } from './messages.js';
 
 /** A historical claim that can be contradicted mechanically rather than by literary judgement. */
 function canContradict(claim: ResolvedClaim): boolean {
@@ -42,7 +43,14 @@ export function libraryClaimsContradict(a: ResolvedClaim, b: ResolvedClaim): boo
   }
 }
 
-function contradicted(claim: ResolvedClaim): ResolvedClaim | undefined {
+/**
+ * The claims a retelling can change. A deed is never contradicted (above), so
+ * no voice needs a sentence for one, and the type says so rather than a
+ * branch nothing reaches.
+ */
+type ContradictedClaim = Exclude<ResolvedClaim, { kind: 'deed' }>;
+
+function contradicted(claim: ResolvedClaim): ContradictedClaim | undefined {
   switch (claim.kind) {
     case 'attr': {
       // Narrative only: keep the number plausible and unmistakably different.
@@ -66,50 +74,52 @@ function human(id: string): string {
   return id.replace(/_/g, ' ');
 }
 
-function subjectOf(entry: LibraryEntry, person: string): string {
-  return entry.people[person] ?? 'the person named there';
+function subjectOf(ctx: SimCtx, entry: LibraryEntry, person: string): string {
+  return entry.people[person] ?? msg(ctx, 'library.subject_unknown', 'the person named there');
 }
 
-function claimName(content: Content, claim: ResolvedClaim): string {
-  switch (claim.kind) {
-    case 'attr':
-      return content.attribute(claim.attr)?.name ?? human(claim.attr);
-    case 'trait':
-      return content.trait(claim.trait)?.name ?? human(claim.trait);
-    case 'death':
-      return 'death';
-    case 'deed':
-      return 'deed';
-    default:
-      return assertNever(claim);
-  }
+function claimName(content: Content, claim: Extract<ResolvedClaim, { kind: 'attr' | 'trait' }>): string {
+  return claim.kind === 'attr'
+    ? content.attribute(claim.attr)?.name ?? human(claim.attr)
+    : content.trait(claim.trait)?.name ?? human(claim.trait);
 }
+
+/** One later reading of an inherited page: which sentence shape a voice tells it in. */
+type ReadingShape = 'kept' | 'attr' | 'trait_with' | 'trait_without' | 'death';
+type Told = (ctx: SimCtx, values: Readonly<Record<string, string>>) => string;
 
 interface LibraryVoiceTemplate {
   form: LibraryMemory['form'];
-  teller: (rival: string) => string;
-  bias: (rival: string) => string;
-  render: (entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content, rival: string) => string;
+  teller: Told;
+  bias: Told;
+  /** One WHOLE sentence per reading shape, so a translator sees the clause it carries (#846). */
+  told: Record<ReadingShape, Told>;
 }
 
 /**
  * The interpolated FACT, not the voice around it. The prose below is authored
- * once per form; runtime code supplies only the old page and the closed claim
- * that changed. That is #70's line between inherited content and authored
- * telling.
+ * once per form and per shape; runtime code supplies only the old page and the
+ * closed claim that changed. That is #70's line between inherited content and
+ * authored telling.
  */
-function laterReading(entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content): string {
-  if (!changed) return 'the old words are kept entire';
-  const subject = subjectOf(entry, changed.person);
+function laterReading(
+  ctx: SimCtx,
+  entry: LibraryEntry,
+  changed: ContradictedClaim | undefined,
+  content: Content,
+): { shape: ReadingShape; values: Record<string, string> } {
+  if (!changed) return { shape: 'kept', values: {} };
+  const PERSON = subjectOf(ctx, entry, changed.person);
   switch (changed.kind) {
     case 'attr':
-      return `${subject}'s ${claimName(content, changed)} is entered as ${Math.round(changed.value * 10) / 10}`;
+      return {
+        shape: 'attr',
+        values: { PERSON, QUALITY: claimName(content, changed), VALUE: String(Math.round(changed.value * 10) / 10) },
+      };
     case 'trait':
-      return `${subject} is entered ${changed.has ? 'with' : 'without'} ${claimName(content, changed)}`;
+      return { shape: changed.has ? 'trait_with' : 'trait_without', values: { PERSON, TRAIT: claimName(content, changed) } };
     case 'death':
-      return `${subject}'s death is entered in ${changed.year}`;
-    case 'deed':
-      return 'the old deed is copied without amendment';
+      return { shape: 'death', values: { PERSON, YEAR: String(changed.year) } };
     default:
       return assertNever(changed);
   }
@@ -126,52 +136,122 @@ function laterReading(entry: LibraryEntry, changed: ResolvedClaim | undefined, c
 const LIBRARY_VOICES: LibraryVoiceTemplate[] = [
   {
     form: 'song',
-    teller: (rival) => `the household singers of ${rival}`,
-    bias: (rival) => `keeping the version ${rival} has found pleasant to remember`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” So the singers of ${rival} have it; but in their refrain, ${laterReading(entry, changed, content)}. The first singer's name is gone.`,
+    teller: (ctx, v) => msg(ctx, 'library.song.teller', 'the household singers of {RIVAL}', v),
+    bias: (ctx, v) => msg(ctx, 'library.song.bias', 'keeping the version {RIVAL} has found pleasant to remember', v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.song.kept',
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, the old words are kept entire. The first singer's name is gone.", v),
+      attr: (ctx, v) => msg(ctx, 'library.song.attr',
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON}'s {QUALITY} is entered as {VALUE}. The first singer's name is gone.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.song.trait_with',
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON} is entered with {TRAIT}. The first singer's name is gone.", v),
+      trait_without: (ctx, v) => msg(ctx, 'library.song.trait_without',
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON} is entered without {TRAIT}. The first singer's name is gone.", v),
+      death: (ctx, v) => msg(ctx, 'library.song.death',
+        "“{SAID}” So the singers of {RIVAL} have it; but in their refrain, {PERSON}'s death is entered in {YEAR}. The first singer's name is gone.", v),
+    },
   },
   {
     form: 'doctrine',
-    teller: (rival) => `the chaplain who keeps ${rival}'s old books`,
-    bias: (rival) => `making the inherited account sit obediently inside ${rival}'s doctrine`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” The copy kept at ${rival} gives no argument, only a correction in the narrow hand of its chaplain: ${laterReading(entry, changed, content)}. No earlier hand is named.`,
+    teller: (ctx, v) => msg(ctx, 'library.doctrine.teller', "the chaplain who keeps {RIVAL}'s old books", v),
+    bias: (ctx, v) => msg(ctx, 'library.doctrine.bias', "making the inherited account sit obediently inside {RIVAL}'s doctrine", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.doctrine.kept',
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: the old words are kept entire. No earlier hand is named.', v),
+      attr: (ctx, v) => msg(ctx, 'library.doctrine.attr',
+        "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON}'s {QUALITY} is entered as {VALUE}. No earlier hand is named.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.doctrine.trait_with',
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON} is entered with {TRAIT}. No earlier hand is named.', v),
+      trait_without: (ctx, v) => msg(ctx, 'library.doctrine.trait_without',
+        '“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON} is entered without {TRAIT}. No earlier hand is named.', v),
+      death: (ctx, v) => msg(ctx, 'library.doctrine.death',
+        "“{SAID}” The copy kept at {RIVAL} gives no argument, only a correction in the narrow hand of its chaplain: {PERSON}'s death is entered in {YEAR}. No earlier hand is named.", v),
+    },
   },
   {
     form: 'rival_chronicle',
-    teller: (rival) => `the archivist of ${rival}`,
-    bias: (rival) => `keeping ${rival}'s inherited account of the old house`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” Thus stands the older house's own page. The archivist of ${rival} copies it beneath another heading, where ${laterReading(entry, changed, content)}; and leaves the disagreement without apology.`,
+    teller: (ctx, v) => msg(ctx, 'library.rival_chronicle.teller', 'the archivist of {RIVAL}', v),
+    bias: (ctx, v) => msg(ctx, 'library.rival_chronicle.bias', "keeping {RIVAL}'s inherited account of the old house", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.rival_chronicle.kept',
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where the old words are kept entire; and leaves the disagreement without apology.", v),
+      attr: (ctx, v) => msg(ctx, 'library.rival_chronicle.attr',
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON}'s {QUALITY} is entered as {VALUE}; and leaves the disagreement without apology.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.rival_chronicle.trait_with',
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON} is entered with {TRAIT}; and leaves the disagreement without apology.", v),
+      trait_without: (ctx, v) => msg(ctx, 'library.rival_chronicle.trait_without',
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON} is entered without {TRAIT}; and leaves the disagreement without apology.", v),
+      death: (ctx, v) => msg(ctx, 'library.rival_chronicle.death',
+        "“{SAID}” Thus stands the older house's own page. The archivist of {RIVAL} copies it beneath another heading, where {PERSON}'s death is entered in {YEAR}; and leaves the disagreement without apology.", v),
+    },
   },
   {
     form: 'rhyme',
-    teller: (rival) => `the children of ${rival}'s lower hall`,
-    bias: (rival) => `keeping only what ${rival}'s children can carry from one winter to the next`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” The children below ${rival}'s hall make a smaller thing of it, and a harder thing to lose: ${laterReading(entry, changed, content)}. They do not know whose book taught them.`,
+    teller: (ctx, v) => msg(ctx, 'library.rhyme.teller', "the children of {RIVAL}'s lower hall", v),
+    bias: (ctx, v) => msg(ctx, 'library.rhyme.bias', "keeping only what {RIVAL}'s children can carry from one winter to the next", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.rhyme.kept',
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: the old words are kept entire. They do not know whose book taught them.", v),
+      attr: (ctx, v) => msg(ctx, 'library.rhyme.attr',
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON}'s {QUALITY} is entered as {VALUE}. They do not know whose book taught them.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.rhyme.trait_with',
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON} is entered with {TRAIT}. They do not know whose book taught them.", v),
+      trait_without: (ctx, v) => msg(ctx, 'library.rhyme.trait_without',
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON} is entered without {TRAIT}. They do not know whose book taught them.", v),
+      death: (ctx, v) => msg(ctx, 'library.rhyme.death',
+        "“{SAID}” The children below {RIVAL}'s hall make a smaller thing of it, and a harder thing to lose: {PERSON}'s death is entered in {YEAR}. They do not know whose book taught them.", v),
+    },
   },
   {
     form: 'play',
-    teller: (rival) => `the players retained for ${rival}'s winter feast`,
-    bias: (rival) => `turning an old house's dignity into the version ${rival} will applaud`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” At ${rival}'s winter feast the line is spoken before the candles gutter; then the second player answers that ${laterReading(entry, changed, content)}. The audience laughs at a quarrel older than the script.`,
+    teller: (ctx, v) => msg(ctx, 'library.play.teller', "the players retained for {RIVAL}'s winter feast", v),
+    bias: (ctx, v) => msg(ctx, 'library.play.bias', "turning an old house's dignity into the version {RIVAL} will applaud", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.play.kept',
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that the old words are kept entire. The audience laughs at a quarrel older than the script.", v),
+      attr: (ctx, v) => msg(ctx, 'library.play.attr',
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON}'s {QUALITY} is entered as {VALUE}. The audience laughs at a quarrel older than the script.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.play.trait_with',
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON} is entered with {TRAIT}. The audience laughs at a quarrel older than the script.", v),
+      trait_without: (ctx, v) => msg(ctx, 'library.play.trait_without',
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON} is entered without {TRAIT}. The audience laughs at a quarrel older than the script.", v),
+      death: (ctx, v) => msg(ctx, 'library.play.death',
+        "“{SAID}” At {RIVAL}'s winter feast the line is spoken before the candles gutter; then the second player answers that {PERSON}'s death is entered in {YEAR}. The audience laughs at a quarrel older than the script.", v),
+    },
   },
   {
     form: 'footnote',
-    teller: (rival) => `an unnamed annotator in ${rival}'s library`,
-    bias: (rival) => `correcting the old house from the safety of ${rival}'s margin`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” Beside it, in ${rival}'s copy, an unnamed hand has written only this: ${laterReading(entry, changed, content)}. The ink is younger than the page and older than any living witness.`,
+    teller: (ctx, v) => msg(ctx, 'library.footnote.teller', "an unnamed annotator in {RIVAL}'s library", v),
+    bias: (ctx, v) => msg(ctx, 'library.footnote.bias', "correcting the old house from the safety of {RIVAL}'s margin", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.footnote.kept',
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: the old words are kept entire. The ink is younger than the page and older than any living witness.", v),
+      attr: (ctx, v) => msg(ctx, 'library.footnote.attr',
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON}'s {QUALITY} is entered as {VALUE}. The ink is younger than the page and older than any living witness.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.footnote.trait_with',
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON} is entered with {TRAIT}. The ink is younger than the page and older than any living witness.", v),
+      trait_without: (ctx, v) => msg(ctx, 'library.footnote.trait_without',
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON} is entered without {TRAIT}. The ink is younger than the page and older than any living witness.", v),
+      death: (ctx, v) => msg(ctx, 'library.footnote.death',
+        "“{SAID}” Beside it, in {RIVAL}'s copy, an unnamed hand has written only this: {PERSON}'s death is entered in {YEAR}. The ink is younger than the page and older than any living witness.", v),
+    },
   },
   {
     form: 'charm',
-    teller: (rival) => `the nurses of ${rival}, from one nursery to the next`,
-    bias: (rival) => `keeping the inherited warning useful to ${rival}'s children`,
-    render: (entry, changed, content, rival) =>
-      `“${entry.said}” The nurses of ${rival} say the words before a child sleeps, and finish them always the same way: ${laterReading(entry, changed, content)}. None remembers when the last line entered the charm.`,
+    teller: (ctx, v) => msg(ctx, 'library.charm.teller', 'the nurses of {RIVAL}, from one nursery to the next', v),
+    bias: (ctx, v) => msg(ctx, 'library.charm.bias', "keeping the inherited warning useful to {RIVAL}'s children", v),
+    told: {
+      kept: (ctx, v) => msg(ctx, 'library.charm.kept',
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: the old words are kept entire. None remembers when the last line entered the charm.', v),
+      attr: (ctx, v) => msg(ctx, 'library.charm.attr',
+        "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON}'s {QUALITY} is entered as {VALUE}. None remembers when the last line entered the charm.", v),
+      trait_with: (ctx, v) => msg(ctx, 'library.charm.trait_with',
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON} is entered with {TRAIT}. None remembers when the last line entered the charm.', v),
+      trait_without: (ctx, v) => msg(ctx, 'library.charm.trait_without',
+        '“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON} is entered without {TRAIT}. None remembers when the last line entered the charm.', v),
+      death: (ctx, v) => msg(ctx, 'library.charm.death',
+        "“{SAID}” The nurses of {RIVAL} say the words before a child sleeps, and finish them always the same way: {PERSON}'s death is entered in {YEAR}. None remembers when the last line entered the charm.", v),
+    },
   },
 ];
 
@@ -182,17 +262,20 @@ function memoryVoice(
   ctx: SimCtx,
   rng: Rng,
 ): Pick<LibraryMemory, 'form' | 'teller' | 'bias'> & {
-  render: (entry: LibraryEntry, changed: ResolvedClaim | undefined, content: Content) => string;
+  render: (entry: LibraryEntry, changed: ContradictedClaim | undefined, content: Content) => string;
 } {
   const rivals = ctx.content.houses.filter((h) => !h.isPlayerHouse);
   const rival = rivals.length ? rng.pick(rivals) : undefined;
-  const rivalName = rival?.name ?? 'a rival house';
+  const RIVAL = rival?.name ?? msg(ctx, 'library.rival_unknown', 'a rival house');
   const template = rng.pick(LIBRARY_VOICES);
   return {
     form: template.form,
-    teller: template.teller(rivalName),
-    bias: template.bias(rivalName),
-    render: (entry, changed, content) => template.render(entry, changed, content, rivalName),
+    teller: template.teller(ctx, { RIVAL }),
+    bias: template.bias(ctx, { RIVAL }),
+    render: (entry, changed, content) => {
+      const reading = laterReading(ctx, entry, changed, content);
+      return template.told[reading.shape](ctx, { SAID: entry.said, RIVAL, ...reading.values });
+    },
   };
 }
 
@@ -304,7 +387,7 @@ export function seedLibraryMemories(ctx: SimCtx, runs: readonly LibraryRun[]): L
       .filter(({ claim }) => canContradict(claim));
     const target = candidates.length ? rng.pick(candidates) : undefined;
     const claims = entry.claims.map((claim) => ({ ...claim }));
-    let changed: ResolvedClaim | undefined;
+    let changed: ContradictedClaim | undefined;
     if (target) {
       changed = contradicted(target.claim);
       if (changed) claims[target.claimIndex] = changed;
