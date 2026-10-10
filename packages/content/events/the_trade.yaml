@@ -337,3 +337,151 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: 1 }
+
+# Plain English alternatives for the common-tier two-magics/trade scenes (#834).
+# Only alternate authored wording is added; original text and mechanics are unchanged.
+proseVariants:
+  - address: "content:events/the_trade.yaml#events[id=the_warrant_on_the_wall].title"
+    of: 9af109eb7b5b4137
+    plainenglish: >-
+      The Public Licence on the Wall
+  - address: "content:events/the_trade.yaml#events[id=the_warrant_on_the_wall].body"
+    of: 12649023b58e5457
+    plainenglish: >-
+      At Bramme, a licence is nailed to the chapter-house wall where notices about the fair are posted. It has an official seal and a list of charges. Removing damp from a wall costs four mites per yard. Keeping a fire burning during a wet season costs two marks, with food and lodging provided. Practising magic without a licence is a crime in both the magistrate's court and the Church's court. A conviction by the Church is the one that can ruin a person's life. {WATCHER} reads the price list twice. On the way home, they realise that nothing on it describes what their family can do.
+  - address: "content:events/the_trade.yaml#events[id=the_warrant_on_the_wall].interaction.outcomes[id=read_it].text"
+    of: b5f9354f4028d773
+    plainenglish: >-
+      Each kind of permitted magic has a public price, and the prices are low. The power this family possesses is not listed anywhere on the wall.
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].title"
+    of: 0f0ed0a53913f1a9
+    plainenglish: >-
+      The Four Kinds of Magic Women Can Practise
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].body"
+    of: 51f390dbc8c7a1e7
+    plainenglish: >-
+      At the Ingathering fair, a licensed woman removes rot from a plough handle for six mites. She refuses to discuss anything beyond her work. She can use Life and Death magic, and will discuss Light for as long as someone keeps buying her beer. When a merchant asks her to warm a pot, she tells him that is Elemental magic and returns to the handle. The Colleges allow her to practise four of the eight kinds of Mystic magic, but not the other four. She has never claimed otherwise. {DAUGHTER} watches her for most of the afternoon.
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].interaction.choices[id=buy_her_an_hour].label"
+    of: d7bcebb3a9e2ad0f
+    plainenglish: >-
+      Pay for an hour with the practitioner and let the girl ask questions.
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].interaction.choices[id=buy_her_an_hour].outcomes[id=an_hour].text"
+    of: 85a507bfd22e28bb
+    plainenglish: >-
+      She charges two marks for the hour, the official court rate. She explains that the difference between the four kinds a woman can use and the other four is not in the textbooks. It comes from the person reading them. A woman who spends nine years trying to prove otherwise has wasted nine years. Then she asks the girl something nobody in the family has thought to ask her.
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].interaction.choices[id=take_her_home].label"
+    of: 7a82b305ed56a3e1
+    plainenglish: >-
+      Take the girl home before anyone recognises which family's daughter she is.
+  - address: "content:events/the_trade.yaml#events[id=the_threshold_four_at_the_fair].interaction.choices[id=take_her_home].outcomes[id=home_early].text"
+    of: 069d740adcf47f26
+    plainenglish: >-
+      Taking her home is the safer choice, and everyone in the cart knows it. The girl asks her question on the journey instead. Her mother answers, even though she has never been anywhere near the Colleges, six weeks away.
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].title"
+    of: a9bb349d59c4b921
+    plainenglish: >-
+      The Book Agent Who Carries Only a Catalogue
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].body"
+    of: ded1d9cbb4832417
+    plainenglish: >-
+      An agent from Anvary visits the long room with a book catalogue but no books to sell directly. He takes an order and delivers the book eleven months later. At this distance, buying books means choosing from a list, paying a deposit, waiting through winter, and receiving a crate from the Sarrow road at the next Harvest. Making a fair copy of an ordinary book takes someone six months, so it costs a great deal. The agent writes down what this house orders in his own ledger. That record goes back to Corran.
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].interaction.choices[id=order_plainly].label"
+    of: fc794f04848484e8
+    plainenglish: >-
+      Order the book openly under the house's own name.
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].interaction.choices[id=order_plainly].outcomes[id=ordered].text"
+    of: 4527c90f4ae4831b
+    plainenglish: >-
+      The house pays eleven crowns in advance towards the total price of sixty-two. The correct book arrives at the next Harvest. An openly purchased book becomes part of a library that the Roll of Houses can recognise.
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].interaction.choices[id=order_through_bramme].label"
+    of: a4fa08c963d18c25
+    plainenglish: >-
+      Order the book through a merchant at Bramme and pay his fee.
+  - address: "content:events/the_trade.yaml#events[id=the_college_agent_takes_the_order].interaction.choices[id=order_through_bramme].outcomes[id=through_a_third_hand].text"
+    of: c54d59541c4e7528
+    plainenglish: >-
+      The book costs sixty-two crowns, plus eight for the merchant. In the ledger at Corran, the buyer is recorded under a Bramme merchant's name instead of the house's name. The extra cost is small for the privacy it buys, but the arrangement makes clear that the house does not want its name recorded.
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].title"
+    of: e7b00123a515ec1f
+    plainenglish: >-
+      What the Church's Night Prayer Protects Against
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].body"
+    of: ddc50a2e30f998a2
+    plainenglish: >-
+      The Quieting is held at dusk for nine nights in the chapter house at Bramme. Every household is expected to attend at least once, and anyone who stays away is noticed. The prayer is spoken in Old Ambric, which most people in the room do not understand. {LISTENER} understands it. The fourth of the nine requests asks for the household to be protected from something the Church's own teaching calls a peasant superstition that does not exist.
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=ask_the_keeper].label"
+    of: 3ec3343bf85204ef
+    plainenglish: >-
+      Ask the keeper afterward what the fourth request means.
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=ask_the_keeper].outcomes[id=he_answers].text"
+    of: a6eb35aea58d5662
+    plainenglish: >-
+      The keeper says the words are a figure of speech. He repeats that explanation four times in three different ways. He is a kind man who has never lied to this family about anything else. Then he asks who was reading the prayer over the household's shoulder. He writes nothing down but remembers the conversation for thirty years.
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=say_nothing_about_it].label"
+    of: 09a16490a9172454
+    plainenglish: >-
+      Say nothing about the prayer. Attend and then go home.
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=say_nothing_about_it].outcomes[id=nothing_said].text"
+    of: fb0bf5ca980c89c6
+    plainenglish: >-
+      The family attends on the second and seventh nights, so everyone sees that they came. For eleven hundred years, the Church has performed this protection every winter evening, since before the kingdom was founded. The Church has never been told that it is protecting this particular family.
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].title"
+    of: 33dc2b80bd61d174
+    plainenglish: >-
+      Three Marriage Brokers Disagree
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].body"
+    of: f46418b0d59ca954
+    plainenglish: >-
+      Every marriage broker in the province claims to know how to recognise signs of the family's blood, but their methods disagree. One looks at the hairline. Another checks whether a girl was born during the Hollow Days. The third uses a chart handed down through his family for four generations. His chart disagrees with both the others, even where those two disagree with each other. Each broker has given a different reading of {GIRL}, and each charged eleven marks.
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].interaction.choices[id=buy_the_best_reading].label"
+    of: 8f750c1b6008216f
+    plainenglish: >-
+      Pay for the reading that helps the house most and spread the story.
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].interaction.choices[id=buy_the_best_reading].outcomes[id=bought_reading].text"
+    of: 687d83867f50a122
+    plainenglish: >-
+      The house pays the broker with the chart eleven marks, because the chart looks the most like evidence. Within ten days, the broker takes his reading to Bramme. It could add around four crowns to a dowry, but it is worthless to anyone who has seen the other two readings.
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].interaction.choices[id=buy_all_three].label"
+    of: 4a3f5beb68a48f97
+    plainenglish: >-
+      Pay for all three readings and keep them together in one drawer.
+  - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].interaction.choices[id=buy_all_three].outcomes[id=all_three].text"
+    of: 740dda0312d6a39f
+    plainenglish: >-
+      The family pays thirty-three marks for three documents that contradict one another. That is exactly why they want all three. The signs exist and are cheap to interpret, but the interpretations are unreliable. Keeping three conflicting readings together is the closest thing anyone in the Nethering has to proof of that.
+  - address: "content:events/the_trade.yaml#events[id=it_does_not_come_when_called].title"
+    of: 8b453771912b641d
+    plainenglish: >-
+      The Family's Power Cannot Be Summoned
+  - address: "content:events/the_trade.yaml#events[id=it_does_not_come_when_called].body"
+    of: a601eb156fbf7be1
+    plainenglish: >-
+      {TRIER} spends three nights in the second cellar with the door wedged shut. The book stored in the cupboard says the third night matters, although it describes a ritual for something else. He follows the timing and spacing exactly and has not eaten since Slaughter. Nothing happens on any of the three nights. Yet his power once appeared without warning during an argument about a horse in a corridor.
+  - address: "content:events/the_trade.yaml#events[id=it_does_not_come_when_called].interaction.outcomes[id=nothing_at_all].text"
+    of: 879e34beafdd8f6a
+    plainenglish: >-
+      On the fourth morning he comes upstairs freezing cold and angry, but otherwise unchanged. There is no reliable timetable for this power. There never has been. Every generation of the family discovers this for itself and fails to tell the next.
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].title"
+    of: 6fadef5e6682d5e2
+    plainenglish: >-
+      The Blacksmith's Explanation for Dull Blades
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].body"
+    of: ef53e22621262052
+    plainenglish: >-
+      The smith at Wick has made horseshoes and sharpened blades for this house for twenty-six years. He tells {HEAD} about a pattern he has noticed, believing he is doing the family a favour. Blades from the hall become dull more quickly than blades from anywhere else in the parish. He has counted the cases. He thinks the water from the hall's well might be responsible. He asks to take a jug of it and test his idea. He offers this as a kindness because he knows the people of Wick have another explanation.
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].interaction.choices[id=give_him_the_jug].label"
+    of: 283f788345c45b47
+    plainenglish: >-
+      Give the smith a jug of water from the hall's well.
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].interaction.choices[id=give_him_the_jug].outcomes[id=he_tests_it].text"
+    of: a82c43966c1c9402
+    plainenglish: >-
+      The smith uses the water to cool hot metal for a season. The blades turn out exactly as they do when he uses stream water. Because he is honest, he announces the result publicly at the alehouse. He no longer thinks the well is responsible. The parish notices that only his other theory remains.
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].interaction.choices[id=pay_him_to_stop_counting].label"
+    of: 60b7ff05a048bee9
+    plainenglish: >-
+      Pay for the year's ironwork in advance so the smith stops investigating.
+  - address: "content:events/the_trade.yaml#events[id=the_smith_and_the_dull_edge].interaction.choices[id=pay_him_to_stop_counting].outcomes[id=paid_forward].text"
+    of: 6caa1ff36c3ccb77
+    plainenglish: >-
+      The house pays nine crowns in advance for work the smith has not yet done. No other house in the Nethering has ever paid a village smith that way. He is pleased, but also a little offended, and stops keeping count. About forty years later, his son starts counting from the beginning and discovers more.
