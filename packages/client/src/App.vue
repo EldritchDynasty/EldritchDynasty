@@ -68,9 +68,10 @@ const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 const accessibility = ref(loadAccessibility(
   typeof window === 'undefined' ? null : window.localStorage,
 ));
-// Presentation mode lives with the reader, not the saved world. Seed the store
-// before Begin/Continue so the next GameSession starts in the persisted mode.
-actions.setProseMode(accessibility.value.proseMode);
+// Presentation mode lives with the reader, not the saved world. Restoring
+// the preference must fetch the optional catalogue just like a live toggle.
+// Merely setting the mode leaves a restarted Plain English reader seeing
+// Original wording until they manually flip the selector again.
 
 /** Loading is presentation-only. Pending Chronicle pages keep the wording
  * they were written with; new read models refresh after the chunk arrives.
@@ -91,6 +92,10 @@ async function selectProseMode(mode: ProseMode): Promise<void> {
     }
   }
 }
+
+// Honour a persisted Plain English choice on the first visit after reload.
+// Plain-to-Original remains synchronous; only the optional chunk is async.
+void selectProseMode(accessibility.value.proseMode);
 
 watch(accessibility, (preferences) => {
   if (typeof document === 'undefined') return;
