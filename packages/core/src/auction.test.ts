@@ -8,6 +8,7 @@ import {
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { missingPlainEnglish } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
@@ -442,11 +443,14 @@ describe('the auction pages speak the reader\'s setting (#745)', () => {
   const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
     PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
 
-  function world(mode: Mode): SimCtx {
+  function world(mode: Mode, names: { address: string; of: string; plainenglish: string }[] = []): SimCtx {
     const ctx = bootstrap(bundle, 1042, 1042);
-    setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
-      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
-    })));
+    setProseVariants(ctx, [
+      ...Object.entries(PAGES).map(([key, [original, plain]]) => ({
+        address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
+      })),
+      ...names,
+    ]);
     setProseMode(ctx, mode);
     ctx.world.treasury = 10_000;
     return ctx;
@@ -511,6 +515,79 @@ describe('the auction pages speak the reader\'s setting (#745)', () => {
       expect(read.text).toBe(say(mode, 'auction.read_elsewhere', { SELLER: marrow }));
     });
   }
+
+
+  it('selects reviewed names in auction Chronicle consumers (#928)', () => {
+    const book = bundle.spellbooks.find((b) => b.id === 'the_marrow_codex')!;
+    const heirloom = bundle.heirlooms.find((h) => h.id === 'portion_of_agelessness')!;
+    const rivalHouse = bundle.houses.find((h) => h.id === 'house_marrow')!;
+    const available = world('original');
+    const minor = bundle.spellbooks.find((b) => b.tier === 'minor' && !available.world.library.has(b.id))!;
+
+    const reviewed = (collection: string, id: string, original: string, plainenglish: string) => {
+      const source = bundle.sourceOf(id);
+      expect(source).toBeDefined();
+      return {
+        address: `content:${source}#${collection}[id=${encodeURIComponent(id)}].name`,
+        of: proseOriginalHash(original),
+        plainenglish,
+      };
+    };
+    const bookName = 'The Marrow Book in Plain English';
+    const heirloomName = 'An Everlasting Potion';
+    const houseName = 'Marrow Family';
+    const searchName = 'An Ordinary Working in Plain English';
+    const rows = [
+      reviewed('spellbooks', book.id, book.name, bookName),
+      reviewed('spellbooks', minor.id, minor.name, searchName),
+      reviewed('heirlooms', heirloom.id, heirloom.name, heirloomName),
+      reviewed('houses', rivalHouse.id, rivalHouse.name, houseName),
+    ];
+
+    // Each consumer renders selected text when the relevant event occurs.
+    const search = world('plainenglish', rows);
+    expect(commissionBook(search, minor.id).ok).toBe(true);
+    const upcoming = search.world.auction.upcoming.at(-1)!;
+    expect(search.world.chronicle.at(-1)!.text).toBe(say('plainenglish', 'auction.book_search', {
+      FEE: '25', BOOK: searchName, YEAR: String(upcoming.saleYear), RESERVE: String(upcoming.reserveCoin),
+    }));
+    expect(missingPlainEnglish(search)).toEqual([]);
+
+    const boughtBook = world('plainenglish', rows);
+    const bookPage = sell(boughtBook, codex, ceiling + 1);
+    expect(bookPage.text).toBe(say('plainenglish', 'auction.bought_book', { BOOK: bookName }));
+
+    const boughtHeirloom = world('plainenglish', rows);
+    const heirloomPage = sell(boughtHeirloom,
+      { ...codex, id: 'lot_h', kind: 'heirloom', refId: heirloom.id, reserveCoin: 400 }, 1000);
+    expect(heirloomPage.text).toBe(say('plainenglish', 'auction.bought_heirloom', { HEIRLOOM: heirloomName }));
+
+    const rival = world('plainenglish', rows);
+    expect(sell(rival, codex, 50).text).toBe(say('plainenglish', 'auction.outbid', { SELLER: houseName }));
+
+    const evidence = withLie(world('plainenglish', rows));
+    evidence.world.treasury = 0;
+    evidence.world.bidCeiling = 0;
+    const evidencePage = sell(evidence, page);
+    expect(evidencePage.text).toBe(say('plainenglish', 'auction.read_elsewhere', { SELLER: houseName }));
+    expect(evidence.world.discrepancies.get('test_discrepancy')?.state).toBe('proven');
+
+    // Selected wording must never affect lots, bids, the house's holdings or saved Chronicle pages.
+    const original = world('original', rows);
+    expect(sell(original, codex, ceiling + 1).text)
+      .toBe(say('original', 'auction.bought_book', { BOOK: book.name }));
+    expect(boughtBook.world.auction.history).toEqual(original.world.auction.history);
+    expect(boughtBook.world.library).toEqual(original.world.library);
+    setProseMode(boughtBook, 'original');
+    setProseMode(evidence, 'original');
+    expect(bookPage.text).toBe(say('plainenglish', 'auction.bought_book', { BOOK: bookName }));
+    expect(evidencePage.text).toBe(say('plainenglish', 'auction.read_elsewhere', { SELLER: houseName }));
+
+    const stale = world('plainenglish', [{ ...rows[0]!, of: proseOriginalHash(book.name + ' (changed)') }]);
+    expect(sell(stale, codex, ceiling + 1).text)
+      .toBe(say('plainenglish', 'auction.bought_book', { BOOK: book.name }));
+    expect(missingPlainEnglish(stale)).toContain(rows[0]!.address);
+  });
 
   it('changes words only: the same sale moves the same state in both settings', () => {
     const run = (mode: Mode) => {
