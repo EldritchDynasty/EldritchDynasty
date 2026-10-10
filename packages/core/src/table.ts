@@ -1018,7 +1018,7 @@ export function tableView(ctx: SimCtx): TableView {
     missingPrimers: ctx.content.spellbooks
       .filter((b) => b.tier === 'minor' && !w.library.has(b.id))
       .map((b) => ({
-        book: b.id, name: b.name, affinity: b.affinity,
+        book: b.id, name: proseForContentField(ctx, 'spellbooks', String(b.id), 'name', b.name), affinity: b.affinity,
         fee: BOOK_SEARCH_FEE, reserve: b.price.max + 100,
         saleYear: w.year + BOOK_SEARCH_YEARS,
         queued: w.auction.upcoming.some((lot) => lot.kind === 'spellbook' && lot.refId === b.id),
@@ -1068,7 +1068,7 @@ export function tableView(ctx: SimCtx): TableView {
     canTutor: w.treasury - TUTOR_FEE >= DEBT_FLOOR,
     teachable: ctx.content.attributes
       .filter((a) => canBeTaught(a.kind))
-      .map((a) => ({ attr: String(a.id), name: a.name })),
+      .map((a) => ({ attr: String(a.id), name: proseForContentField(ctx, 'attributes', String(a.id), 'name', a.name) })),
     posts,
     pupils,
 
