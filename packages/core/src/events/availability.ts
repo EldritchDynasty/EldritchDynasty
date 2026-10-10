@@ -3,6 +3,8 @@ import { compare } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { influencedAttr } from './influence.js';
 import { soleCast, type SlotFill } from './slots.js';
+import { msg } from '../messages.js';
+import { proseForContentField } from '../prose.js';
 
 /**
  * Lives here rather than in `decisions.ts` because `deciders.ts` needs it and
@@ -31,7 +33,12 @@ export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event
   for (const req of c.requires) {
     const p = ctx.world.people.get(soleCast(fill, req.slot) ?? '');
     if (!p) {
-      return { id: c.id, label: c.label, available: false, blockedBy: `nobody stands as ${req.slot}` };
+      return {
+        id: c.id,
+        label: c.label,
+        available: false,
+        blockedBy: msg(ctx, 'choice.blocked.uncast', 'nobody stands as {SLOT}', { SLOT: req.slot }),
+      };
     }
     const role = event.slots[req.slot]?.role;
     const have = influencedAttr(ctx, p, req.attr, role);
@@ -40,9 +47,21 @@ export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event
         id: c.id,
         label: c.label,
         available: false,
-        blockedBy: `${p.name}'s ${req.attr} is ${Math.round(have)}`,
+        // The docket prints this under the closed choice. It named the
+        // attribute by its content id ("strength") and was never switchable;
+        // the attribute's display name is the one every other surface uses (#410).
+        blockedBy: msg(ctx, 'choice.blocked.attribute', "{PERSON}'s {ATTRIBUTE} is {VALUE}", {
+          PERSON: p.name,
+          ATTRIBUTE: attributeName(ctx, req.attr),
+          VALUE: String(Math.round(have)),
+        }),
       };
     }
   }
   return { id: c.id, label: c.label, available: true };
+}
+
+function attributeName(ctx: SimCtx, id: string): string {
+  const def = ctx.content.attributes.find((a) => String(a.id) === id);
+  return def ? proseForContentField(ctx, 'attributes', String(def.id), 'name', def.name) : id;
 }
