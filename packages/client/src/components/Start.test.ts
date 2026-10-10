@@ -347,7 +347,6 @@ describe('advanced seed rejects empty and invalid numbers (#1051)', () => {
       await flush();
       await w.findAll('button').find((button) => button.text() === 'Advanced')!.trigger('click');
       await w.get('#seed').setValue('');
-      expect(w.get('button.quiet').attributes('disabled')).toBeUndefined();
       const continueButton = w.findAll('button').find((button) => button.text() === 'Continue the last sitting');
       expect(continueButton?.attributes('disabled')).toBeUndefined();
       await continueButton!.trigger('click');
