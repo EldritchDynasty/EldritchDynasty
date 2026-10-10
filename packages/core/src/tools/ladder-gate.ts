@@ -364,20 +364,41 @@ export { firedUnderClimbing } from './ladder-fires.js';
 
 export interface LadderVerdict { ok: boolean; lines: string[] }
 
+// Reuse the same measured policy matrix in gate 9. This memo contains plain
+// observations, never worlds or RNG state; changing source/configuration misses.
+let lastPolicyMatrix: {
+  source: Source; key: string; columns: { policy: LadderPolicy; runs: LadderRun[] }[];
+} | undefined;
+
+export function ladderPolicyMatrix(
+  source: Source,
+  opts: { seeds?: readonly number[]; years?: number; bid?: number } = {},
+): { policy: LadderPolicy; runs: LadderRun[] }[] {
+  const config = BLOCKING_GATE_CONFIG.ladder;
+  const seeds = opts.seeds ?? config.seeds;
+  const years = opts.years ?? config.years;
+  const bid = opts.bid ?? config.bid;
+  const key = JSON.stringify([seeds, years, bid]);
+  if (lastPolicyMatrix?.source === source && lastPolicyMatrix.key === key) return lastPolicyMatrix.columns;
+  const content = indexContent(source);
+  const columns = config.policies.map((policy) => ({
+    policy,
+    runs: seeds.map((seed) => playOnce(content, seed, years, policy, bid)),
+  }));
+  lastPolicyMatrix = { source, key, columns };
+  return columns;
+}
+
 export function gateLadder(
   source: Source = loadContent(),
   opts: { seeds?: number[]; years?: number; bid?: number } = {},
 ): LadderVerdict {
   const config = BLOCKING_GATE_CONFIG.ladder;
-  const bundle = indexContent(source);
   const seeds = opts.seeds ?? [...config.seeds];
   const years = opts.years ?? config.years;
   const bid = opts.bid ?? config.bid;
 
-  const columns = config.policies.map((policy) => ({
-    policy,
-    runs: seeds.map((s) => playOnce(bundle, s, years, policy, bid)),
-  }));
+  const columns = ladderPolicyMatrix(source, { seeds, years, bid });
 
   const mean = (rs: LadderRun[], f: (r: LadderRun) => number) => rs.reduce((a, r) => a + f(r), 0) / (rs.length || 1);
   const lines: string[] = [`gate (ladder): ${seeds.length} played runs x ${years} years, per policy`];

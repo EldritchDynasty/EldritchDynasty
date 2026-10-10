@@ -10166,3 +10166,42 @@ then **2** hold seven clauses and **1** is back at Exalted. Supply into the
 rite is no longer the first wall. The Mind-over-Madness window and the Ledger
 overlap after the rite are. #332 stays open for those, one mechanism at a
 time.
+
+## 2026-10-11 — #378: judge purchased Madness against intentional play
+
+**Owner decision.** In this session the owner explicitly selected route A:
+"Use intentional-play reach as well as ordinary runs (the issue’s recommended
+route A)." The decision is recorded at the top of #378, which was reopened
+because the earlier closure came from the commit-message safety PR, not a
+progression repair. Ordinary-only Madness-tail acceptance is superseded.
+
+**Measurement on `7ff2048e` gameplay/content.** Gate 9's unchanged 32 × 500
+ordinary batch contains 1,894 expresser samples, maximum normalized Madness
+70.1 and no sample at 90. The canonical ladder matrix (six seeds, 4000 through
+4065 in steps of 13, five policies, 500 years) reaches these maxima:
+climb 156.0; spare 45.0; scion 58.0; pair 45.0; pair_climb 123.0.
+The purchased route therefore supplies a witnessed value above the unchanged
+God floor of 90. This is reachability evidence, not a claim about the frequency
+of God or about containing that Madness within Mind.
+
+**Change.** Gate 9 keeps ordinary shares and route/holder provenance separate,
+but judges Madness staleness against both ordinary and intentional-play peaks.
+A floor above both still fails. The ordinary-only `god: madness` exemption is
+removed. The policy matrix is shared with the existing ladder gate so the
+batch lane does not play it twice; the cache keys source identity and all run
+parameters. Power, Mind, pair requirements, founder bias 0.20, and every game
+rule remain unchanged. There is no new simulation state or random draw.
+
+**Verification.** Full `gates -- ladder-scales` is green, including existing
+Demigod/God power floors. Regression fixtures accept an ordinary ceiling of
+61.8 with a policy witness of 112, reject it with a policy ceiling of 89, and
+preserve the small-sample and other-quantity guards. Typechecks pass.
+
+**#332 baseline, not an improvement claim.** The required 100 × 500 paired
+endings probe (seeds 5100–5199) on this same gameplay gives chronicler endings
+Broken Line 29, Forgotten 53, Devoured 18, Unmade 0, Apotheosis 0. Ascendant
+has 4 successful Unmaking recipients, Unmade 5, Apotheosis 0; no recipient
+attains Demigod, and no Ledger search succeeds. Joint recipient gates are
+4 / 2 / 1 / 1 / 1 / 1 / 0 / 0 / 0 (alive, power, books, circle, Madness,
+Mind, clauses, Respect, God). The ascendant recipient Madness peak is 190.0.
+The 8% Apotheosis floor remains the owner's reported pre-production target.
