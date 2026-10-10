@@ -8,6 +8,7 @@ import { addGrudge, relate } from './people/relationships.js';
 import { head } from './world.js';
 import { noteBearing } from './bearing.js';
 import { msg } from './messages.js';
+import { proseForContentField } from './prose.js';
 
 /**
  * LAND INCOME (concept §13, world §5/§12; issue #91, Phase A — issue #93).
@@ -200,15 +201,24 @@ export function buyParcel(ctx: SimCtx, parcel: string): OrderResult {
   w.chronicle.push({
     year: w.year, weight: 'line',
     text: msg(ctx, 'land.bought', '{PARCEL} was bought outright, for {PRICE} crowns.',
-      { PARCEL: def.name, PRICE: String(lot.price) }),
+      { PARCEL: parcelProse(ctx, def, 'name', def.name), PRICE: String(lot.price) }),
     named: false,
   });
   return { ok: true };
 }
 
-/** The name the plat shows: the player's own word for it, if there is one, over the authored name. */
-function displayName(state: ParcelState, def: ParcelDef | undefined): string {
-  return state.name ?? def?.name ?? 'the ground';
+/** A parcel's authored words, in the reader's chosen wording (#876). */
+function parcelProse(ctx: SimCtx, def: ParcelDef, field: 'name' | 'place' | 'provenance', original: string): string {
+  return proseForContentField(ctx, 'parcels', def.id, field, original);
+}
+
+/**
+ * The name the plat shows: the player's own word for it, if there is one, over
+ * the authored name. The player's word is never re-worded.
+ */
+function displayName(ctx: SimCtx, state: ParcelState, def: ParcelDef | undefined): string {
+  if (state.name !== undefined) return state.name;
+  return def ? parcelProse(ctx, def, 'name', def.name) : 'the ground';
 }
 
 /**
@@ -222,7 +232,8 @@ function recordLoss(ctx: SimCtx, state: ParcelState, def: ParcelDef | undefined)
   const sitting = head(w);
   w.lostParcels.push({
     defId: state.defId ?? state.id,
-    name: displayName(state, def),
+    // Saved state keeps the Original; `lostView` words it for the reader.
+    name: state.name ?? def?.name ?? 'the ground',
     place: def?.place ?? 'unknown ground',
     year: w.year,
     by: sitting?.name ?? msg(ctx, 'land.loss.nobody', 'nobody left to say'),
@@ -248,7 +259,7 @@ export function sellParcel(ctx: SimCtx, parcel: string): OrderResult {
   w.treasury += price;
   w.chronicle.push({
     year: w.year, weight: 'line',
-    text: msg(ctx, 'land.sold', '{PARCEL} was sold, for {PRICE} crowns.', { PARCEL: def.name, PRICE: String(price) }),
+    text: msg(ctx, 'land.sold', '{PARCEL} was sold, for {PRICE} crowns.', { PARCEL: parcelProse(ctx, def, 'name', def.name), PRICE: String(price) }),
     named: false,
   });
   return { ok: true };
@@ -331,7 +342,7 @@ export function tickLandImprovements(ctx: SimCtx): void {
       year: w.year, weight: 'line',
       text: def
         ? msg(ctx, 'land.drained', 'The drainage at {PARCEL} was finished, and it yields better for it.',
-          { PARCEL: def.name })
+          { PARCEL: parcelProse(ctx, def, 'name', def.name) })
         : msg(ctx, 'land.drained_unnamed', 'The drainage at the holding was finished, and it yields better for it.'),
       named: false,
     });
@@ -417,7 +428,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
             year: w.year, weight: 'line', named: false,
             text: msg(ctx, 'land.blight',
               'Blight took hold in {PARCEL} this year, and the timber that would have paid for it did not.',
-              { PARCEL: def.name }),
+              { PARCEL: parcelProse(ctx, def, 'name', def.name) }),
           });
         }
         break;
@@ -438,7 +449,7 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
             year: w.year, weight: 'line', named: false,
             text: msg(ctx, 'land.sarrow_sank',
               '{PARCEL} went down in black water off Sarrow, with its cargo and every crown laid into it.',
-              { PARCEL: def.name }),
+              { PARCEL: parcelProse(ctx, def, 'name', def.name) }),
           });
         }
         break;
@@ -542,7 +553,7 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
     return {
       ok: false,
       reason: msg(ctx, 'land.refuse.endow_caput', "{PARCEL} is the seat's own ground and cannot be endowed away",
-        { PARCEL: def.name }),
+        { PARCEL: parcelProse(ctx, def, 'name', def.name) }),
     };
   }
   const b = w.branches.get(branch);
@@ -555,7 +566,7 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
   w.chronicle.push({
     year: w.year, weight: 'line', named: false,
     text: msg(ctx, 'land.endowed', '{PARCEL} was endowed to {BRANCH}.',
-      { PARCEL: displayName(state, def), BRANCH: b.name }),
+      { PARCEL: displayName(ctx, state, def), BRANCH: b.name }),
   });
   return { ok: true };
 }
@@ -575,8 +586,8 @@ export function recallParcel(ctx: SimCtx, parcel: string): OrderResult {
     year: w.year, weight: 'line', named: false,
     text: b
       ? msg(ctx, 'land.recalled_from', '{PARCEL} was recalled to the seat from {BRANCH}.',
-        { PARCEL: displayName(state, def), BRANCH: b.name })
-      : msg(ctx, 'land.recalled', '{PARCEL} was recalled to the seat.', { PARCEL: displayName(state, def) }),
+        { PARCEL: displayName(ctx, state, def), BRANCH: b.name })
+      : msg(ctx, 'land.recalled', '{PARCEL} was recalled to the seat.', { PARCEL: displayName(ctx, state, def) }),
   });
   return { ok: true };
 }
@@ -615,11 +626,13 @@ export function nameParcel(ctx: SimCtx, parcel: string, name: string): OrderResu
   if (!trimmed) return { ok: false, reason: msg(ctx, 'land.refuse.rename_empty', 'a name cannot be empty') };
 
   const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
-  const was = displayName(state, def);
+  // Decide on the Original words; only the page is in the reader's wording.
+  const same = (state.name ?? def?.name ?? 'the ground') === trimmed;
+  const was = displayName(ctx, state, def);
   state.name = trimmed;
   w.chronicle.push({
     year: w.year, weight: 'line',
-    text: was === trimmed
+    text: same
       ? msg(ctx, 'land.renamed_same', '{PARCEL} was named, again.', { PARCEL: trimmed })
       : msg(ctx, 'land.renamed', '{WAS} was named {PARCEL}.', { WAS: was, PARCEL: trimmed }),
     named: false,
@@ -686,6 +699,21 @@ export interface LandView {
   lost: { defId: string; name: string; place: string; year: Year; by: string }[];
 }
 
+/**
+ * `world.lostParcels` keeps the words written the year the ground went. Where
+ * those are still the parcel's authored Original, show them in the reader's
+ * wording; a name the player gave the ground stays theirs. The save is untouched.
+ */
+function lostView(ctx: SimCtx, l: LandView['lost'][number]): LandView['lost'][number] {
+  const def = ctx.content.parcel(l.defId);
+  if (!def) return { ...l };
+  return {
+    ...l,
+    name: l.name === def.name ? parcelProse(ctx, def, 'name', def.name) : l.name,
+    place: l.place === def.place ? parcelProse(ctx, def, 'place', def.place) : l.place,
+  };
+}
+
 export function landView(ctx: SimCtx): LandView {
   const w = ctx.world;
   const improving = new Map(w.landImprovements.map((imp) => [imp.parcel, imp.completes]));
@@ -703,12 +731,13 @@ export function landView(ctx: SimCtx): LandView {
       // functions do not search by. A def-less parcel has no other name for
       // it, so it falls back to its own state id.
       parcel: def?.id ?? id,
-      name: displayName(state, def),
+      name: displayName(ctx, state, def),
       kind: def?.kind,
-      place: def?.place ?? msg(ctx, 'land.view.made_place', 'ground the house cleared itself'),
+      place: def ? parcelProse(ctx, def, 'place', def.place)
+        : msg(ctx, 'land.view.made_place', 'ground the house cleared itself'),
       acres: def?.acres ?? 0,
-      provenance: def?.provenance ?? msg(ctx, 'land.view.made_provenance',
-        "made, not bought — no deed but the house's own word"),
+      provenance: def ? parcelProse(ctx, def, 'provenance', def.provenance)
+        : msg(ctx, 'land.view.made_provenance', "made, not bought — no deed but the house's own word"),
       heldSince: state.heldSince,
       baseYield: def?.baseYield ?? 0,
       yieldBonus: state.yieldBonus ?? 0,
@@ -732,9 +761,9 @@ export function landView(ctx: SimCtx): LandView {
     if (!def) continue;
     market.push({
       parcel: lot.parcel,
-      name: def.name,
+      name: parcelProse(ctx, def, 'name', def.name),
       kind: def.kind,
-      place: def.place,
+      place: parcelProse(ctx, def, 'place', def.place),
       price: lot.price,
       closesYear: lot.closesYear,
       reason: lot.reason,
@@ -744,6 +773,6 @@ export function landView(ctx: SimCtx): LandView {
 
   return {
     treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy, held, market,
-    lost: w.lostParcels.map((l) => ({ ...l })),
+    lost: w.lostParcels.map((l) => lostView(ctx, l)),
   };
 }

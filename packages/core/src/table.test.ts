@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash } from '@ed/schema';
+import { proseOriginalHash, type ProseMode, type ProseVariant } from '@ed/schema';
 import { canBeTaught, type SlotSpec } from '@ed/schema';
 import {
-  applyEffect, autoMarry, beginTutoring, candidatesFor, DEBT_FLOOR, DEMIGOD_AGEING_STOPPED, expectRate, LEDGER_SEARCH_FEE,
+  applyEffect, autoMarry, beginCommitment, beginTutoring, eventTitleAddress, positionOptions, setPosition, viewOf, candidatesFor, DEBT_FLOOR, DEMIGOD_AGEING_STOPPED, expectRate, LEDGER_SEARCH_FEE,
   resolveSlots, TUTOR_FEE, TUTOR_GAIN, TUTOR_YEARS, loadGame, newGame, onTheMarket, order, phase, place,
   resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   MAX_BOND, type SimCtx, type TableOrder,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { plainEnglishWorklist } from './tools/string-audit.js';
 
 const bundle = loadContent();
 
@@ -1464,5 +1467,96 @@ describe('table order refusals in Plain English (#811)', () => {
       .toEqual({ ok: false, reason: 'The house cannot lend 40 marks.' });
     expect(ctx.world.treasury).toBe(-10_000);
     expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
+
+/**
+ * #877: career posts, positions, shelf books and delegated-event titles were
+ * handed to the client as authored Original. Their Plain English rows could be
+ * reviewed and counted done, and the table would never show one.
+ */
+describe('the table and muster views read in the reader\'s wording (#877)', () => {
+  const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../..');
+
+  const sea = bundle.career('sea')!;
+  const captaincy = bundle.position('a_captaincy')!;
+  const book = bundle.spellbook('lesser_workings_of_fluid')!;
+  const delegated = bundle.events.find((e) => e.interaction.kind === 'choice')!;
+
+  const PLAIN = {
+    seaName: 'Life at sea',
+    seaBlurb: 'He goes to sea. It is plain-English blurb text for the test.',
+    captaincy: 'A captain\'s post',
+    book: 'Simple water magic',
+    title: 'A plain title for the test',
+  };
+
+  function world(mode: ProseMode) {
+    const ctx = testWorld(bundle);
+    const row = (address: string, original: string, plainenglish: string): ProseVariant =>
+      ({ address, of: proseOriginalHash(original), plainenglish });
+    setProseVariants(ctx, [
+      row('content:careers.yaml#careers[id=sea].name', sea.name, PLAIN.seaName),
+      row('content:careers.yaml#careers[id=sea].blurb', sea.blurb!, PLAIN.seaBlurb),
+      row('content:positions.yaml#positions[id=a_captaincy].name', captaincy.name, PLAIN.captaincy),
+      row('content:spellbooks.yaml#spellbooks[id=lesser_workings_of_fluid].name', book.name, PLAIN.book),
+      row(eventTitleAddress(ctx, delegated)!, delegated.title, PLAIN.title),
+    ]);
+    setProseMode(ctx, mode);
+    ctx.world.library.set(book.id, { id: book.id, acquiredYear: ctx.world.year, condition: 100 });
+    ctx.world.delegation.choices[String(delegated.id)] = 'whatever';
+    place(ctx, { sex: 'male', age: 30, name: 'A Sailor', career: { career: 'sea' } });
+    beginCommitment(ctx, 5, 'the_wars');
+    setPosition(ctx, 'a_captaincy');
+    return ctx;
+  }
+
+  function read(ctx: ReturnType<typeof world>) {
+    const table = tableView(ctx);
+    const view = viewOf(ctx);
+    return {
+      post: table.posts.find((p) => p.career === 'sea')!,
+      shelf: table.shelf.find((s) => s.book === book.id)!.name,
+      delegated: table.delegation.find((d) => d.event === String(delegated.id))!.title,
+      member: view.halls.flatMap((h) => h.members).find((m) => m.name === 'A Sailor')!.post,
+      position: positionOptions(ctx).find((p) => p.id === 'a_captaincy')!.name,
+      muster: view.muster?.positionName,
+    };
+  }
+
+  it('shows every Plain English row in Plain English mode', () => {
+    expect(read(world('plainenglish'))).toEqual({
+      post: expect.objectContaining({ name: PLAIN.seaName, blurb: PLAIN.seaBlurb }),
+      shelf: PLAIN.book,
+      delegated: PLAIN.title,
+      member: PLAIN.seaName,
+      position: PLAIN.captaincy,
+      muster: PLAIN.captaincy,
+    });
+  });
+
+  it('is unchanged in Original mode', () => {
+    expect(read(world('original'))).toEqual({
+      post: expect.objectContaining({ name: sea.name, blurb: sea.blurb }),
+      shelf: book.name,
+      delegated: delegated.title,
+      member: sea.name,
+      position: captaincy.name,
+      muster: captaincy.name,
+    });
+  });
+
+  it('asks for every career and position address the worklist carries, and no other', () => {
+    const files = ['content:careers.yaml#', 'content:positions.yaml#'];
+    const ours = (a: string) => files.some((f) => a.startsWith(f));
+    const owed = plainEnglishWorklist(REPO).map((item) => item.address).filter(ours).sort();
+    expect(owed.length).toBeGreaterThan(0);
+
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+    beginCommitment(ctx, 5, 'the_wars');
+    tableView(ctx);
+    positionOptions(ctx);
+    expect(missingPlainEnglish(ctx).filter(ours)).toEqual(owed);
   });
 });

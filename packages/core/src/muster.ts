@@ -5,6 +5,7 @@ import type { Rng } from './rng.js';
 import { activeBranches } from './people/branches.js';
 import { DEBT_FLOOR } from './economy.js';
 import { msg } from './messages.js';
+import { proseForContentField } from './prose.js';
 
 /**
  * THE MUSTER'S NUMBERS (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -293,7 +294,7 @@ export function positionOptions(ctx: SimCtx): PositionOption[] {
     const price = priceOf(ctx, c, def);
     return {
       id: def.id,
-      name: def.name,
+      name: proseForContentField(ctx, 'positions', def.id, 'name', def.name),
       ...(price !== undefined ? { price: Math.round(price) } : {}),
       perYear: def.perYear,
       current: c.position === def.id,
