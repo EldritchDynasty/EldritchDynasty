@@ -73,7 +73,19 @@ const showAdvanced = ref(false);
  */
 const namedSaves = computed(() => saves.value.filter((s) => !(props.resumable && s.slot === 'autosave')));
 const completedHouses = computed(() => [...(props.library?.runs ?? [])].reverse());
-const mayBegin = computed(() => props.libraryReady ?? true);
+const libraryIsReady = computed(() => props.libraryReady ?? true);
+/** The Advanced field is a user-editable number input: Vue's .number modifier
+ * can yield an empty string at runtime when it is cleared. Never pass that,
+ * a fractional number or an out-of-range value to the numeric game seed API.
+ * Zero is a valid deterministic seed; do not replace invalid input silently.
+ */
+const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
+const mayBegin = computed(() => libraryIsReady.value && validSeed.value);
+
+function begin(): void {
+  if (!mayBegin.value) return;
+  props.actions.begin(seed.value, campaign.value);
+}
 
 function survivingPage(run: LibraryRun): string | undefined {
   return [...run.entries].reverse().find((entry) => entry.said)?.said;
@@ -153,9 +165,9 @@ onMounted(() => { void refreshSaves(); });
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
-        @click="actions.begin(seed, campaign)"
+        @click="begin()"
       >
-        {{ !mayBegin ? 'Reading the library…' : resumable ? 'Begin a new signing' : 'Begin the signing' }}
+        {{ !libraryIsReady ? 'Reading the library…' : resumable ? 'Begin a new signing' : 'Begin the signing' }}
       </button>
     </div>
 
@@ -221,7 +233,19 @@ onMounted(() => { void refreshSaves(); });
       >{{ showAdvanced ? 'Hide advanced' : 'Advanced' }}</button>
       <div v-if="showAdvanced" class="row">
         <label class="dim small" for="seed">seed</label>
-        <input id="seed" type="number" v-model.number="seed" />
+        <input
+          id="seed"
+          v-model.number="seed"
+          type="number"
+          min="0"
+          max="4294967295"
+          step="1"
+          :aria-invalid="!validSeed"
+          :aria-describedby="!validSeed ? 'seed-error' : undefined"
+        />
+        <p v-if="!validSeed" id="seed-error" class="rubric small" role="alert">
+          Use a whole number from 0 to 4294967295.
+        </p>
       </div>
     </div>
 
