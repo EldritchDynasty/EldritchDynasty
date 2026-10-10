@@ -760,6 +760,26 @@ export const EventTemplateS = z.object({
       seen.add(row.id);
     }
   }).optional(),
+  /**
+   * When one choice can yield distinct factual outcomes, use an exact
+   * choice/outcome pair instead of pretending the choice alone knows the
+   * chronicle's truth. IDs are `choice_id/outcome_id` so repeated outcome
+   * IDs across different choices cannot select each other's Record.
+   */
+  recordByOutcome: z.array(RecordBlockS.extend({
+    id: z.string().regex(/^[a-z0-9_]+\\/[a-z0-9_]+$/, 'use choice_id/outcome_id'),
+  })).superRefine((rows, ctx) => {
+    const seen = new Set<string>();
+    for (const [index, row] of rows.entries()) {
+      if (seen.has(row.id)) {
+        ctx.addIssue({
+          code: 'custom', path: [index, 'id'],
+          message: `duplicate outcome-specific Record id: ${row.id}`,
+        });
+      }
+      seen.add(row.id);
+    }
+  }).optional(),
   rumour: z.object({ id: z.string(), accuracy: z.number(), spread: z.number() }).optional(),
   accounts: z.array(z.string()).default([]),
 
