@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { EventTemplate } from '@ed/schema';
 import { newGame, resumeGame } from '@ed/core';
-import { ambitionRelevance, ambitionView } from './ambition.js';
+import { proseOriginalHash, type HouseAmbitionId } from '@ed/schema';
+import { ambitionOptions, ambitionRelevance, ambitionView } from './ambition.js';
+import { setProseMode, setProseVariants } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 import { mustSurface } from './delegation.js';
 import { queueChoice, type PendingMatch, type PendingRecord } from './events/decisions.js';
 import type { SimCtx } from './world.js';
@@ -321,6 +324,7 @@ describe('house ambition (issue #210)', () => {
       './people/branches.js',
       './ascension.js',
       './campaign.js',
+      './messages.js',
       './events/decisions.js',
     ]);
     expect(imports.some((path) => (path ?? '').includes('genetics/') || /bearing|rng|checks/i.test(path ?? ''))).toBe(false);
@@ -335,5 +339,116 @@ describe('house ambition (issue #210)', () => {
     expect(short.ambitionOptions()).toHaveLength(4);
     expect(long.ambitionOptions()).toHaveLength(4);
     expect(short.view().ambition?.progress.target).toBeLessThan(long.view().ambition!.progress.target);
+  });
+});
+
+describe('the House Ambition speaks the reader\'s setting (#818, #819, #820)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./ambition.ts', import.meta.url), 'utf8'));
+  const texts = (pattern: RegExp): Record<string, string> => Object.fromEntries(keyed
+    .filter((entry) => pattern.test(entry.address))
+    .map((entry) => [entry.address.split('#')[1], entry.text]));
+
+  type Mode = 'original' | 'plainenglish';
+  function world(mode: Mode, ambition: HouseAmbitionId) {
+    const g = newGame(content, { seed: 818, campaign: 'short', decider: 'chronicler' });
+    g.setAmbition(ambition);
+    setProseVariants(g.ctx, keyed.map((entry) => ({
+      address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+    })));
+    setProseMode(g.ctx, mode);
+    return g.ctx;
+  }
+  /** The Plain reading of an Original result: every prose field prefixed, everything else the same. */
+  const plain = <T extends object>(value: T, fields: (keyof T)[]): T =>
+    ({ ...value, ...Object.fromEntries(fields.map((f) => [f, `plain: ${String(value[f])}`])) });
+
+  it('keys every Match and Record reason (#818)', () => {
+    expect(texts(/#ambition\.(match|record)\./)).toEqual({
+      'ambition.match.thin_line':
+        "{NAME}'s watched line is thin; this hand does not simply add resilience because it reaches outward.",
+      'ambition.match.outward_one': '{NAME} brings an outward line with {COUNT} completed life behind the reading.',
+      'ambition.match.outward_many': '{NAME} brings an outward line with {COUNT} completed lives behind the reading.',
+      'ambition.match.close_kin': 'Every open card folds the living blood back into close kin instead of widening the line.',
+      'ambition.match.cadet_outward':
+        'An outward spouse can join this cadet hall instead of drawing another useful relative out of it.',
+      'ambition.match.cadet_draw_away':
+        '{NAME} is carrying a cadet hall; marrying her into the seat would draw one of its living members away.',
+      'ambition.match.cadet_new_household':
+        '{NAME} stands in a cadet hall; this marriage can put another household into that branch.',
+      'ambition.match.programme_kin':
+        '{NAME} is in the programme, and this hand contains blood the family papers already join to the line.',
+      'ambition.match.programme_outward':
+        '{NAME} is in the programme, and every open line here is outward in the family papers.',
+      'ambition.record.clause': 'This page belongs to an event authored to advance a missing Ledger clause.',
+      'ambition.record.discrepancy':
+        'This page is tied to a named disputed part of the family record the Ledger is already carrying.',
+      'ambition.record.programme':
+        'This page includes the Scion, his heir, or the man the house can already see foremost on the ladder.',
+    });
+  });
+
+  it('reads a Match hand and a Record page in Plain English, and judges them the same (#818)', () => {
+    const read = (mode: Mode) => {
+      const blood = world(mode, 'deepen_blood');
+      const ledger = world(mode, 'restore_ledger');
+      const page = quietRecord(ledger);
+      return [
+        ambitionRelevance(blood, bloodMatch(blood, true)),
+        ambitionRelevance(blood, bloodMatch(blood, false)),
+        ambitionRelevance(ledger, {
+          ...page, event: { ...page.event, purposes: [...page.event.purposes, 'advance_clause'] },
+        }),
+      ];
+    };
+    const original = read('original');
+    expect(original.map((r) => r?.reason)).toEqual([
+      'Mara of the Vale brings an outward line with 3 completed lives behind the reading.',
+      'Every open card folds the living blood back into close kin instead of widening the line.',
+      'This page belongs to an event authored to advance a missing Ledger clause.',
+    ]);
+    expect(read('plainenglish')).toEqual(original.map((r) => plain(r!, ['reason'])));
+  });
+
+  it('keys every choice-branch reason, and reads one in Plain English (#819)', () => {
+    const branch = texts(/#ambition\.branch\./);
+    expect(Object.keys(branch)).toHaveLength(21);
+    expect(branch['ambition.branch.priority_match'])
+      .toBe('The branch sends a living member of the line to the marriage market next.');
+    expect(Object.values(branch).every((text) => text.startsWith('The branch '))).toBe(true);
+
+    const read = (mode: Mode) => {
+      const ctx = world(mode, 'deepen_blood');
+      return ambitionRelevance(ctx, bloodChoice(ctx));
+    };
+    const original = read('original')!;
+    expect(original).toMatchObject({
+      surface: 'choice', effect: 'advance',
+      reason: 'The branch sends a living member of the line to the marriage market next.',
+    });
+    expect(read('plainenglish')).toEqual(plain(original, ['reason']));
+  });
+
+  it('keys the ambition panel, and renders every ambition in Plain English (#820)', () => {
+    expect(Object.keys(texts(/#ambition\.(name|purpose)\./))).toHaveLength(8);
+    expect(texts(/#ambition\.view\./)).toMatchObject({
+      'ambition.view.ledger_progress': '{CURRENT} of {TARGET} clauses recovered',
+      'ambition.view.ledger_missing_one': '{COUNT} clause still missing.',
+      'ambition.view.ledger_missing_many': '{COUNT} clauses still missing.',
+      'ambition.view.ascent_progress': '{HELD} held now; {HORIZON} is the campaign horizon',
+      'ambition.view.ascent_progress_fallen': '{HELD} held now; {BEST} was reached before; {HORIZON} is the campaign horizon',
+    });
+
+    const ids: HouseAmbitionId[] = ['deepen_blood', 'raise_ascendant', 'restore_ledger', 'secure_branches'];
+    const read = (mode: Mode) => ids.map((id) => {
+      const ctx = world(mode, id);
+      return { view: ambitionView(ctx)!, options: ambitionOptions(ctx) };
+    });
+    const original = read('original');
+    expect(original.map((r) => r.view.name))
+      .toEqual(['Deepen the blood', 'Prepare the ascent', 'Restore the Ledger', 'Secure the branches']);
+    expect(read('plainenglish')).toEqual(original.map(({ view, options }) => ({
+      view: { ...plain(view, ['name', 'purpose', 'status', 'next']), progress: plain(view.progress, ['label']) },
+      options: options.map((o) => plain(o, ['name', 'purpose'])),
+    })));
   });
 });

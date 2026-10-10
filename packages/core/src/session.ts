@@ -415,13 +415,13 @@ export class GameSession {
 
   /** Issue #210: select, replace, or clear the one voluntary house ambition. */
   setAmbition(id: HouseAmbitionId | null): boolean {
-    if (id !== null && !ambitionOptions(this.ctx.world.campaign).some((a) => a.id === id)) return false;
+    if (id !== null && !ambitionOptions(this.ctx).some((a) => a.id === id)) return false;
     this.ctx.world.houseAmbition = id;
     return true;
   }
 
   ambitionOptions(): HouseAmbitionOption[] {
-    return ambitionOptions(this.ctx.world.campaign);
+    return ambitionOptions(this.ctx);
   }
 
   /**
@@ -1267,7 +1267,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     // family does, and the family's name for itself is the one on the page.
     houseName: w.founding?.houseName ?? w.houses.get(w.playerHouse)?.name ?? w.playerHouse,
     ...(ambitionView(ctx) ? { ambition: ambitionView(ctx)! } : {}),
-    ambitionOptions: ambitionOptions(w.campaign),
+    ambitionOptions: ambitionOptions(ctx),
     attributes: ctx.content.attributes.map((a) => ({ attr: String(a.id), name: a.name })),
     traits: ctx.content.traits.map((t) => ({ trait: String(t.id), name: t.name })),
     seed: w.seed,
