@@ -1278,7 +1278,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     ...(ambitionView(ctx) ? { ambition: ambitionView(ctx)! } : {}),
     ambitionOptions: ambitionOptions(ctx),
     attributes: ctx.content.attributes.map((a) => ({ attr: String(a.id), name: a.name })),
-    traits: ctx.content.traits.map((t) => ({ trait: String(t.id), name: t.name })),
+    traits: ctx.content.traits.map((t) => ({
+      trait: String(t.id),
+      name: proseForContentField(ctx, 'traits', String(t.id), 'name', t.name),
+    })),
     seed: w.seed,
     treasury: Math.round(w.treasury),
     respect: w.respect,
