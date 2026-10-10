@@ -9,6 +9,29 @@ Never `npm audit fix --force`. It picks the newest major of everything it can
 reach — it offered vitest 5, Electron 44 and a *downgrade* of electron-builder
 here — without asking whether the code survives it.
 
+## Ongoing audit evidence — proposed in #514 (2026-10-10)
+
+The scheduled **dependency advisory audit** workflow (`.github/workflows/dependency-audit.yml`)
+checks the current npm advisory database **without modifying the lockfile**.
+It runs on `main` each Monday (03:37 UTC), can be dispatched manually after
+dependency changes, and uploads the unfiltered `dependency-audit.json` for
+review. `tools/electron-audit.mjs` also writes a summary of advisory severity
+and Electron/packaging dependency findings to the GitHub Actions job summary.
+
+The policy is deliberately narrow: **any high or critical package finding
+fails** the audit; low/moderate findings are listed for comparison with the
+accepted table below. Those remaining findings are not automatically accepted
+just because the scheduled job is green. A malformed npm response or a
+network failure must not be reported as a clean bill of health. This is a
+new recurring measurement, not a replacement for the first successful
+tagged Windows install/signing proof required by #321 and #514.
+
+Until a hosted run of this workflow completes and its JSON artifact is
+inspected, **the 2026-10-06 numbers below remain historical**, not a claim
+that 2026-10-10 is vulnerability-free.
+
+---
+
 ## 2026-10-06 — 24 findings → 11, none critical or high
 
 Measured on `main` at `2141779`: **24 (2 critical, 8 high, 14 moderate)**.
