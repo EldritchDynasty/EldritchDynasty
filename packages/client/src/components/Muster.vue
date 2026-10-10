@@ -28,6 +28,17 @@ function refusedIn(op: string): string | null {
 }
 
 const reinforceBy = ref(1);
+/**
+ * Vue's v-model.number returns an empty string when this field is cleared.
+ * Prevent accidental fractions and unsafe counts from reaching the war-state
+ * verb, while leaving the entered value visible for correction.
+ */
+const canReinforce = computed(() => Number.isSafeInteger(reinforceBy.value) && reinforceBy.value > 0);
+
+function reinforce(): void {
+  if (!canReinforce.value) return;
+  props.actions.muster({ op: 'reinforce', men: reinforceBy.value });
+}
 
 const tideWord = computed(() => {
   const m = commitment.value;
@@ -53,11 +64,22 @@ const tideWord = computed(() => {
     </p>
 
     <div class="row">
-      <input type="number" min="1" v-model.number="reinforceBy" aria-label="Number of additional men" />
-      <button @click="actions.muster({ op: 'reinforce', men: reinforceBy })">
+      <input
+        v-model.number="reinforceBy"
+        type="number"
+        min="1"
+        step="1"
+        aria-label="Number of additional men"
+        :aria-invalid="!canReinforce"
+        :aria-describedby="!canReinforce ? 'reinforce-error' : undefined"
+      />
+      <button :disabled="!canReinforce" @click="reinforce()">
         Send more men
       </button>
     </div>
+    <p v-if="!canReinforce" id="reinforce-error" class="small rubric" role="alert">
+      Enter a positive whole number of men.
+    </p>
     <p v-if="refusedIn('reinforce')" class="small rubric">{{ refusedIn('reinforce') }}</p>
 
     <!-- WHAT THE HOUSE IS TO BE REMEMBERED FOR (#89's thesis). One purchase,
