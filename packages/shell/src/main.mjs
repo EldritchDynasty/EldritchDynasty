@@ -10,7 +10,7 @@ import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
 import { desktopUserData } from './profile-root.mjs';
-import { readUserContent, userContentRoot } from './user-content.mjs';
+import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
 import { handleExternalPopup } from './external-links.mjs';
 import { inspectSeedDisclosure } from './seed-disclosure.mjs';
@@ -96,6 +96,12 @@ if (app.isPackaged) {
 }
 
 const contentRoot = () => MOD_EDITOR ? userContentRoot(app.getPath('userData')) : CONTENT;
+ 
+// Check the lexical profile/mods/content ancestors before resolving a Mod
+// Editor path: realpathSync alone trusts a symlinked root outside the profile.
+const resolveShellContentPath = (path) => MOD_EDITOR
+  ? resolveModEditorContentPath(contentRoot(), path)
+  : resolveExistingContentPath(contentRoot(), path);
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -154,7 +160,7 @@ ipcMain.handle('ed:write-content', (_event, payload) => {
     const { path, text } = payload ?? {};
     if (typeof text !== 'string') throw new Error('text required');
 
-    const target = resolveExistingContentPath(contentRoot(), path);
+    const target = resolveShellContentPath(path);
 
     readFileSync(target, 'utf8');
     writeFileSync(target, text, 'utf8');
@@ -166,7 +172,7 @@ ipcMain.handle('ed:write-content', (_event, payload) => {
 
 ipcMain.handle('ed:read-content', (_event, path) => {
   try {
-    const target = resolveExistingContentPath(contentRoot(), path);
+    const target = resolveShellContentPath(path);
     return { ok: true, text: readFileSync(target, 'utf8') };
   } catch (e) {
     return { ok: false, error: String(e) };
