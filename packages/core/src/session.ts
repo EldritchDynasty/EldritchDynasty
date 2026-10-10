@@ -1337,8 +1337,8 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     ascension: {
       rung: w.ascension.rung,
       best: w.ascension.best,
-      title: rungTitle(w.ascension.rung),
-      bestTitle: rungTitle(w.ascension.best),
+      title: rungTitle(ctx, w.ascension.rung),
+      bestTitle: rungTitle(ctx, w.ascension.best),
       ...(w.ascension.reachedAt[w.ascension.best] !== undefined
         ? { bestAt: w.ascension.reachedAt[w.ascension.best]! }
         : {}),

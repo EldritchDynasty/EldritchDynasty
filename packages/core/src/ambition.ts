@@ -593,7 +593,7 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const target = RUNG_ORDER.indexOf(targetRung);
   const foremost = measured.foremost;
   const rungs = {
-    HELD: rungTitle(w.ascension.rung), BEST: rungTitle(w.ascension.best), HORIZON: rungTitle(targetRung),
+    HELD: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best), HORIZON: rungTitle(ctx, targetRung),
   };
   return {
     ...shown,
