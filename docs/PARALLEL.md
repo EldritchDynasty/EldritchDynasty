@@ -219,7 +219,7 @@ the claim to a tombstone commit saying `released:`, which every agent reads as
 free. It works identically on a laptop and in a container, which a delete does
 not. `--prune` will attempt the delete as well, and shrugs when it is refused.
 
-That same 403 is why there are **28 unmerged `claude/*` branches** on the remote:
+That same 403 can leave **unmerged `claude/*` branches** on the remote:
 no agent has ever been able to tidy up after itself. Branch cleanup is a job for
 a human with a local checkout (`git push origin --delete <branch>`), or a
 scheduled workflow. Do not ask an agent to do it and do not read a surviving
@@ -234,7 +234,7 @@ claim each, and they close themselves.
 |---|---|---|
 | Claim | `npm run agents -- take 93 --paths …`, once per issue | a ref push each. Every claim records the **branch** holding it, so `npm run agents` reads as an assignment table and one branch may appear on several rows |
 | Say so, for the humans | one comment on the issue naming the branch | optional, and never the lock — an agent's GitHub identity is yours, so a comment cannot arbitrate anything |
-| Land | `Closes #93, closes #94` in the commit message, then ready PR + **Merge when ready** | GitHub's native queue checks the rebased integration and closes them when that commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
+| Land | `Closes #93, closes #94` in the commit message, then ready PR, automatically admitted after exact-head green CI | GitHub's native queue checks the rebased integration and closes them when that commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
 | Clean up | `.github/workflows/janitor.yml` → `tools/janitor.mjs` | deletes the merged branch, retires **every claim that branch was holding**, and closes anything the keyword missed |
 
 ### One branch, several issues
@@ -269,8 +269,8 @@ that from one that finished the job.
 
 **The janitor exists because agents physically cannot do this part.** A session's
 git proxy refuses ref deletion (403), so no agent has ever deleted its own
-branch — which is the whole explanation for the 34 `claude/*` branches on the
-remote. An Actions runner has no such restriction. It runs on every push to
+branch — which explains why historical `claude/*` branches can remain on the
+remote until the janitor or a human cleans them up. An Actions runner has no such restriction. It runs on every push to
 `main`, plus daily, and deletes only what git can prove is redundant: a branch
 whose head is already an ancestor of `main`. A branch that is not merged is
 reported in the run summary and left alone, because from the runner "abandoned"
@@ -344,7 +344,8 @@ only one of them can be created on the first second of the session.
 ## Landing
 
 Sessions do not push or directly merge `main`. They preflight, open a ready
-same-repository PR, and use GitHub's native **Merge when ready** queue
+same-repository PR, and let `.github/workflows/auto-merge-queue.yml` admit it
+automatically to GitHub's native merge queue after exact-head `CI required` passes
 ([AGENTS.md](../AGENTS.md#working-style)).
 
 ```bash
@@ -361,12 +362,15 @@ request, linear history, the stable `CI required` result, and the merge queue.
 The queue uses REBASE, build concurrency 1 and a maximum merge group of 3.
 GitHub creates a synthetic `gh-readonly-queue/main/...` commit and emits
 `merge_group`; `check.yml` always runs the full tier on that exact integration
-head. If it is green, GitHub itself advances `main`. There is no repository
-deploy key or custom queue writer in the normal design.
+head. If it is green, GitHub itself advances `main`. The repository's
+`.github/workflows/auto-merge-queue.yml` is the queue-admission writer; it
+authenticates with the scoped GitHub App token and does not bypass merge-group CI.
 
 The repository-admin bypass is intentionally an emergency **pull-request-only**
 escape hatch. It is not an alternative fast path. A normal session chooses
-**Merge when ready** and lets the required merge-group CI answer.
+no manual Merge action: it leaves an open, ready,
+same-repository PR for automatic admission and lets the required merge-group CI
+answer.
 
 Put `Closes #93` in the PR/landing commit when the slice completes that issue.
 When GitHub's queue lands it on the default branch, GitHub closes the issue and
