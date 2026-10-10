@@ -10205,3 +10205,35 @@ attains Demigod, and no Ledger search succeeds. Joint recipient gates are
 4 / 2 / 1 / 1 / 1 / 1 / 0 / 0 / 0 (alive, power, books, circle, Madness,
 Mind, clauses, Respect, God). The ascendant recipient Madness peak is 190.0.
 The 8% Apotheosis floor remains the owner's reported pre-production target.
+
+## 2026-10-11 — #1005: the blood gate's `panel` column was reading only women's cards
+
+**What was wrong.** `panelScore` in `tools/blood-gate.ts` scored a Match
+card's woken kin by matching the printed relation (`'her father'`, `'her
+mother'`, …). Since `0167f357` made the panel say `his father` for a male
+candidate, every suitor dealt to a daughter of the seat scored 0, so the
+`panel` comparator ranked those hands on the broker's sentence alone. The
+paired `panel minus blind` lines are printed, not asserted, so nothing failed.
+
+**Change.** Panel rows carry `kin` (`PANEL_KIN`, a closed union in
+`@ed/schema`); `panelScore` reads it through `Record<PanelKin, number>` with
+the unchanged weights (father 6; mother, brother, sister 3; grandparents,
+uncle, aunt 2; cousin 1; house 0). No game rule, draw or panel content moved:
+the `blind` column below is identical before and after.
+
+**Measurement.** `gate:blood 64 500 --policies=blind,panel` (seeds 4000 +
+13·i), on `main` at `fa42f2bd` and on the change:
+
+| panel minus blind (paired, 64 seeds) | before (male cards 0) | after (`kin`) |
+|---|---:|---:|
+| carried font, last | −0.22 ± 0.19, noise | −0.29 ± 0.18, noise |
+| carriers at the term | −1.50 ± 1.19, noise | **−2.31 ± 1.12, blind ahead** |
+| both parties carrying | −1.38 ± 0.67, blind ahead | −1.58 ± 0.62, blind ahead |
+| living at the term | −0.27 ± 2.28, noise | −0.13 ± 2.44, noise |
+
+Reading the male cards honestly does not rescue the panel as a breeding
+guide. It makes the existing result a little clearer: ranking first on woken
+near kin is not ahead of ranking on the broker's sentence on any column, and
+is behind on carriers. That is a statement about this comparator's weights,
+not about what the panel shows the player; 64 seeds is a probe, not the gate's
+2,048-pair sample. Wall clock 4m31s per side on four cores.
