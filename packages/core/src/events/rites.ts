@@ -4,6 +4,7 @@ import type { SimCtx } from '../world.js';
 import { attr, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { noteDemigodAttainment } from '../ascension.js';
+import { msg } from '../messages.js';
 
 /**
  * THE RITES OF THE LADDER (concept §22, issue #43).
@@ -142,19 +143,19 @@ export function consumeVessel(
   ctx: SimCtx,
   ascendant: Person,
   vessel: Person,
-  cause = 'given to the rite, and not spoken of again',
+  cause?: string,
 ): RiteOutcome {
   const w = ctx.world;
-  if (ascendant.id === vessel.id) return { ok: false, reason: 'a man cannot be his own Vessel' };
+  if (ascendant.id === vessel.id) return { ok: false, reason: msg(ctx, 'rites.vessel.self', 'a man cannot be his own Vessel') };
 
   // ONCE FOR A MAN. The template is repeatable because another climber in the
   // same house may need the rite centuries later; that must never mean this
   // ascendant can consume another relative and stack the transfer a second time.
   if (ascendant.rites.includes('vessel')) {
-    return { ok: false, reason: 'he has already taken the Vessel rite' };
+    return { ok: false, reason: msg(ctx, 'rites.vessel.repeat', 'he has already taken the Vessel rite') };
   }
 
-  if (vessel.status !== 'alive') return { ok: false, reason: 'the Vessel is not living' };
+  if (vessel.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.vessel.notLiving', 'the Vessel is not living') };
 
   // OF THE BLOOD, and checked here rather than left to a filter. §22 says "a
   // living family member OF THE BLOOD", and the `family_member` slot role
@@ -162,7 +163,7 @@ export function consumeVessel(
   // that would take any of them is a rite about the household rather than
   // about the line, and the line is the entire subject of the game.
   const ofTheBlood = w.people.blood(w.playerHouse).some((p) => p.id === vessel.id);
-  if (!ofTheBlood) return { ok: false, reason: 'the Vessel is not of the blood' };
+  if (!ofTheBlood) return { ok: false, reason: msg(ctx, 'rites.vessel.notBlood', 'the Vessel is not of the blood') };
 
   const theirs = phenotypeOf(vessel, ctx.genetics, w.year).eldritch;
   const his = phenotypeOf(ascendant, ctx.genetics, w.year).eldritch;
@@ -205,7 +206,7 @@ export function consumeVessel(
   // INVARIANT 2: the one death gate, with the mark that is not the mark for
   // death. A Vessel who happens to be the Narrator is redirected by `kill`
   // like any other death, and the rite quietly buys nothing.
-  w.people.kill(vessel.id, w.year, cause, 'vessel_consumed');
+  w.people.kill(vessel.id, w.year, cause ?? msg(ctx, 'rites.vessel.cause', 'given to the rite, and not spoken of again'), 'vessel_consumed');
 
   if (!ascendant.rites.includes('vessel')) ascendant.rites.push('vessel');
   return { ok: true, moved };
@@ -256,7 +257,7 @@ export function consumeVessel(
  */
 export function performGreatRite(ctx: SimCtx, ascendant: Person): RiteOutcome {
   const w = ctx.world;
-  if (ascendant.status !== 'alive') return { ok: false, reason: 'the ascendant is not living' };
+  if (ascendant.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.ascendant.notLiving', 'the ascendant is not living') };
 
   // ONCE FOR A MAN. §22 gives him one channel and one widening of it, and
   // without this line `repeatable: true` on the template is an unbounded
@@ -264,7 +265,7 @@ export function performGreatRite(ctx: SimCtx, ascendant: Person): RiteOutcome {
   // the same free gate the REACH sweep below rejected, reached by patience
   // instead of by arithmetic.
   if (ascendant.rites.includes('great_rite')) {
-    return { ok: false, reason: 'he has already been made as wide as he is going to be' };
+    return { ok: false, reason: msg(ctx, 'rites.great.repeat', 'he has already been made as wide as he is going to be') };
   }
 
   const his = phenotypeOf(ascendant, ctx.genetics, w.year).eldritch;
@@ -273,7 +274,7 @@ export function performGreatRite(ctx: SimCtx, ascendant: Person): RiteOutcome {
   // word "rite", and `withGift` would refuse it one layer down anyway — an
   // effect that silently does nothing is the failure this file was written to
   // stop, so it refuses out loud instead.
-  if (!his.canExpress) return { ok: false, reason: 'there is nothing in him to widen' };
+  if (!his.canExpress) return { ok: false, reason: msg(ctx, 'rites.great.noPower', 'there is nothing in him to widen') };
 
   const room = GREAT_RITE_REACH;
   const toll = room * GREAT_RITE_TOLL;
@@ -387,18 +388,18 @@ export const GREAT_RITE_TOLL = 2.5;
  */
 export function performUnmaking(ctx: SimCtx, ascendant: Person, elder: Person): RiteOutcome {
   const w = ctx.world;
-  if (ascendant.id === elder.id) return { ok: false, reason: 'a man cannot unmake himself' };
-  if (ascendant.status !== 'alive') return { ok: false, reason: 'the ascendant is not living' };
-  if (elder.status !== 'alive') return { ok: false, reason: 'the elder is not living' };
+  if (ascendant.id === elder.id) return { ok: false, reason: msg(ctx, 'rites.unmaking.self', 'a man cannot unmake himself') };
+  if (ascendant.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.ascendant.notLiving', 'the ascendant is not living') };
+  if (elder.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.unmaking.elderNotLiving', 'the elder is not living') };
 
   const ofTheBlood = w.people.blood(w.playerHouse).some((p) => p.id === elder.id);
-  if (!ofTheBlood) return { ok: false, reason: 'the elder is not of the blood' };
+  if (!ofTheBlood) return { ok: false, reason: msg(ctx, 'rites.unmaking.elderNotBlood', 'the elder is not of the blood') };
 
   // He has to have been MADE into something, or there is nothing here to take.
   const gift = elder.acquired[ELDRITCH_GIFT] ?? 0;
   const reach = elder.acquired[ELDRITCH_REACH] ?? 0;
   if (gift <= 0 && reach <= 0) {
-    return { ok: false, reason: 'the elder was never made into anything the rite can take' };
+    return { ok: false, reason: msg(ctx, 'rites.unmaking.noGift', 'the elder was never made into anything the rite can take') };
   }
 
   const theirs = phenotypeOf(elder, ctx.genetics, w.year).eldritch;
@@ -429,7 +430,7 @@ export function performUnmaking(ctx: SimCtx, ascendant: Person, elder: Person): 
   if (ascendant.phenotype) ascendant.phenotype.dirty = true;
 
   // INVARIANT 2, and the ordinary mark: everybody in the hall watched.
-  w.people.kill(elder.id, w.year, 'unmade, in the small hall, in front of witnesses');
+  w.people.kill(elder.id, w.year, msg(ctx, 'rites.unmaking.cause', 'unmade, in the small hall, in front of witnesses'));
 
   if (!ascendant.rites.includes('unmaking')) ascendant.rites.push('unmaking');
 
@@ -460,12 +461,12 @@ export function performRite(
 ): RiteOutcome {
   switch (rite) {
     case 'vessel':
-      if (!subject) return { ok: false, reason: 'the Vessel rite takes a named living relative' };
+      if (!subject) return { ok: false, reason: msg(ctx, 'rites.vessel.missing', 'the Vessel rite takes a named living relative') };
       return consumeVessel(ctx, ascendant, subject, cause);
     case 'great_rite':
       return performGreatRite(ctx, ascendant);
     case 'unmaking':
-      if (!subject) return { ok: false, reason: 'the unmaking takes a named living elder' };
+      if (!subject) return { ok: false, reason: msg(ctx, 'rites.unmaking.missing', 'the unmaking takes a named living elder') };
       return performUnmaking(ctx, ascendant, subject);
     default:
       return assertNever(rite, 'rite');
