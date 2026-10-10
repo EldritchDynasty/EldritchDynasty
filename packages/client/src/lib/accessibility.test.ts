@@ -639,10 +639,11 @@ describe('modal keyboard Tab targets (#1004)', () => {
         <div class="modal-collapsed"><a id="class-hidden" href="#away">Hidden by stylesheet</a></div>
         <div style="visibility: hidden"><button id="visibility-ancestor">Invisible ancestor</button></div>
         <button id="visibility-self" style="visibility: hidden">Invisible button</button>
+        <div style="visibility: hidden"><button id="visibility-override" style="visibility: visible">Visible override</button></div>
         <button id="visible-last">Last</button>
       `;
       expect(modalFocusable(card).map((el) => el.id)).toEqual([
-        'visible-first', 'visible-last',
+        'visible-first', 'visibility-override', 'visible-last',
       ]);
     } finally {
       style.remove();
