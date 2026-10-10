@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, proseOriginalHash, type EventTemplate } from '@ed/schema';
+import { EventTemplateS, indexContent, proseOriginalHash, type EventTemplate } from '@ed/schema';
 import { makeRng } from './rng.js';
+import { loadGame, saveGame } from './save.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { place, testWorld } from './testing.js';
 import { stepYear } from './year/step.js';
@@ -9,7 +10,7 @@ import { coreMessageAddress } from './messages.js';
 import { evalCondition } from './events/conditions.js';
 import { resolveSlots } from './events/slots.js';
 import {
-  applyRecord, autoResolveAll, queueChoice, queueMatch, queueRecord, resolveChoice, resolveMatch, resolveRecord,
+  applyRecord, autoResolveAll, queueChoice, queueMatch, queueRecord, recordEventForChoice, resolveChoice, resolveMatch, resolveRecord,
 } from './events/decisions.js';
 
 const content = indexContent(loadContent());
@@ -183,6 +184,109 @@ describe('the Record docket mechanism', () => {
     applyRecord(ctx, event!, 'decision_knowledge_witness', 'record');
 
     expect(ctx.world.knowledge.has(event!.record!.options.record.grantsKnowledge!)).toBe(true);
+  });
+});
+
+describe('choice-scoped Record wording (#864)', () => {
+  function scene() {
+    const original = content.events.find((item) => item.id === 'blood_on_our_own_land')!;
+    if (!original?.record) throw new Error('High-justice fixture lost its Record');
+    const lawful = {
+      id: 'hand_him_to_cawdry',
+      subject: 'What did the house do after the killing?',
+      options: {
+        record: {
+          chronicle: 'The house sent the accused to the Warden for lawful judgement.',
+          effects: [],
+          claims: [],
+        },
+        omit: { chronicle: null, effects: [] },
+        embellish: {
+          chronicle: 'The house kept the accused in Wick and hid the killing.',
+          effects: [],
+          claims: [],
+          discrepancy: { id: 'test_false_cawdry_story', severity: 'major' as const, provableBy: ['commons'] },
+        },
+      },
+    };
+    const event: EventTemplate = { ...original, recordByChoice: [lawful] };
+    expect(EventTemplateS.parse(event).recordByChoice?.[0]?.id).toBe(lawful.id);
+    return { event, lawful };
+  }
+
+  it('keeps lawful and unlawful choices on separate Record blocks with a legacy fallback', () => {
+    const { event, lawful } = scene();
+    const ctx = testWorld(content, 86401);
+    const id = 'test_record_lawful';
+    ctx.world.chronicle.push({
+      id, year: ctx.world.year, weight: 'paragraph', text: 'A killing occurred.',
+      eventId: event.id, named: false,
+    });
+    const record = queueRecord(ctx, event, id, {}, lawful.id)!;
+    expect(record.recordChoiceId).toBe(lawful.id);
+    expect(record.subject).toBe(lawful.subject);
+    expect(record.options.find((item) => item.option === 'record')?.chronicle)
+      .toBe(lawful.options.record.chronicle);
+    expect(record.options.find((item) => item.option === 'embellish')?.discrepancy)
+      .toBe('test_false_cawdry_story');
+    expect(resolveRecord(ctx, record.id, 'record').line).toBe(lawful.options.record.chronicle);
+    expect(ctx.world.discrepancies.has('test_false_cawdry_story')).toBe(false);
+
+    const selected = recordEventForChoice(event, 'keep_it_in_the_parish');
+    expect(selected?.recordChoiceId).toBeUndefined();
+    expect(selected?.event.record?.options.record.chronicle).toBe(event.record!.options.record.chronicle);
+
+    const otherId = 'test_record_parish';
+    const other = queueRecord(ctx, event, otherId, {}, 'keep_it_in_the_parish')!;
+    expect(other.options.find((item) => item.option === 'record')?.chronicle)
+      .toBe(event.record!.options.record.chronicle);
+    expect(resolveRecord(ctx, other.id, 'embellish').ok).toBe(true);
+    expect(ctx.world.discrepancies.get(event.record!.options.embellish.discrepancy.id)?.state).toBe('open');
+  });
+
+  it('freezes selected Plain English wording across save/reload and later mode changes', () => {
+    const { event, lawful } = scene();
+    const ctx = testWorld(content, 86402);
+    const base = 'content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry]';
+    const plainSubject = 'What happened to the accused?';
+    const plainRecord = 'The house sent the accused to the Warden as the law required.';
+    setProseVariants(ctx, [
+      { address: `${base}.subject`, of: proseOriginalHash(lawful.subject), plainenglish: plainSubject },
+      { address: `${base}.options.record.chronicle`, of: proseOriginalHash(lawful.options.record.chronicle), plainenglish: plainRecord },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    const id = 'test_record_pending_save';
+    ctx.world.chronicle.push({
+      id, year: ctx.world.year, weight: 'paragraph', text: 'A killing occurred.',
+      eventId: event.id, named: false,
+    });
+    const pending = queueRecord(ctx, event, id, {}, lawful.id)!;
+    expect(pending.subject).toBe(plainSubject);
+    expect(pending.options[0]?.chronicle).toBe(plainRecord);
+    expect(missingPlainEnglish(ctx)).not.toContain(`${base}.options.record.chronicle`);
+
+    const reloaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    const restored = reloaded.world.pendingDecisions.find((item) => item.kind === 'record' && item.id === pending.id);
+    expect(restored?.kind).toBe('record');
+    if (!restored || restored.kind !== 'record') throw new Error('Saved Record vanished');
+    expect(restored.recordChoiceId).toBe(lawful.id);
+    expect(restored.subject).toBe(plainSubject);
+    expect(restored.options[0]?.chronicle).toBe(plainRecord);
+    setProseMode(reloaded, 'original');
+    expect(resolveRecord(reloaded, restored.id, 'record').line).toBe(plainRecord);
+    expect(reloaded.world.chronicle.find((line) => line.id === id)?.text).toBe(plainRecord);
+  });
+
+  it('an authored choice override may be omitted without modifying narration and old Record fields', () => {
+    const { event, lawful } = scene();
+    const ctx = testWorld(content, 86403);
+    const selected = recordEventForChoice(event, lawful.id)!;
+    expect(selected.recordChoiceId).toBe(lawful.id);
+    expect(recordEventForChoice(event)?.recordChoiceId).toBeUndefined();
+    const pending = queueRecord(ctx, event, 'test_blank_record', {}, lawful.id)!;
+    expect(resolveRecord(ctx, pending.id, 'omit').line).toBeNull();
+    expect(ctx.world.chronicle.find((page) => page.id === 'test_blank_record')?.text).toBeNull();
   });
 });
 
