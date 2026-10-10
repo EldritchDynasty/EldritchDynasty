@@ -96,7 +96,7 @@ if (app.isPackaged) {
 }
 
 const contentRoot = () => MOD_EDITOR ? userContentRoot(app.getPath('userData')) : CONTENT;
- 
+
 // Check the lexical profile/mods/content ancestors before resolving a Mod
 // Editor path: realpathSync alone trusts a symlinked root outside the profile.
 const resolveShellContentPath = (path) => MOD_EDITOR
