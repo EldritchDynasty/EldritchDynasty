@@ -862,3 +862,65 @@ proseVariants:
     of: 6fd8e1c6af4dd162
     plainenglish: >-
       sent the accused killer under guard to the Warden's assize
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].title"
+    of: 14808848cdceaabc
+    plainenglish: >-
+      Eleven Men or 120 Crowns
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].body"
+    of: 0868bd1dd7f03b59
+    plainenglish: >-
+      A real war has begun. The summons requires eleven men from this land to serve, led by a
+      man of the house. The house can legally pay 120 crowns instead of sending them. The reeve
+      wrote down the eleven men's names in Highsun, and everyone in Wick has seen the list.
+      {SON} has asked to go too, although no one expected it.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].label"
+    of: 342430e4605d5650
+    plainenglish: >-
+      Send the eleven men, with a man of the house leading them.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=seven_come_back].text"
+    of: b4b6804b041f52a7
+    plainenglish: >-
+      Fourteen months later, seven of the eleven men return. {SON} comes back with them, thinner
+      and quieter, carrying the weight of what happened. Four families in Wick have lost
+      someone. A dispatch read at Caster names the house. Being named in a military dispatch is
+      the quickest way for a house to move higher on the Roll.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].text"
+    of: 1ae571caeceb93ae
+    plainenglish: >-
+      Fourteen months later, only six of the eleven men return. {SON} is not among them. A
+      captain sends a letter that spells the family name two different ways. There is no body
+      and no known grave. The roll at Wick continues to list him as alive for another fifty
+      years.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=commute_it].label"
+    of: b50db7f942097a15
+    plainenglish: >-
+      Pay 120 crowns so that no one has to go to war.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=commute_it].outcomes[id=commuted].text"
+    of: dfa5dfbe7890ed92
+    plainenglish: >-
+      The house pays 120 crowns and receives a receipt. All eleven men stay home during a war
+      that takes four men from every nearby parish. No household in Wick complains, now or
+      later. Other houses appear in military dispatches because they sent men. This house
+      appears in an accounts ledger because it paid instead. Both records last.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].record.subject"
+    of: a285b96f859d2a53
+    plainenglish: >-
+      the levy and who was sent to war
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].record.options.record.chronicle"
+    of: 135b70b8a799313c
+    plainenglish: >-
+      The house paid 120 crowns to meet its wartime levy. Eleven men of Wick stayed on their own
+      land while men from four nearby parishes did not.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].record.options.record.claims[0].text"
+    of: 6a3b57db58d20417
+    plainenglish: >-
+      paid 120 crowns to excuse eleven men of Wick from the wartime levy
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].record.options.embellish.chronicle"
+    of: 15e43d48d9a47314
+    plainenglish: >-
+      When the wartime levy was called, this house sent eleven men with a family member leading
+      them. Seven came home, and the house was named in the military dispatches.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].record.options.embellish.claims[0].text"
+    of: 0011fb3c604498a0
+    plainenglish: >-
+      sent eleven men to the levy under a member of the house
