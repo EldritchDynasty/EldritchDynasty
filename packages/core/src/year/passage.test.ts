@@ -4,7 +4,7 @@ import { proseOriginalHash } from '@ed/schema';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { coreMessageAddress, msg } from '../messages.js';
-import { setProseMode, setProseVariants } from '../prose.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
 import { beget, phase, place, testWorld } from '../testing.js';
 import { beginStudy } from '../people/library.js';
@@ -287,6 +287,79 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
       expect(ctx.world.chronicle.map((e) => e.text)).toContain(say(mode, 'library.first_reading', { PERSON: 'Ivo', BOOK: def.name }));
     });
   }
+});
+
+
+describe('reviewed book names reach study completion (#926)', () => {
+  const BOOK = 'lesser_workings_of_fluid';
+  const REVIEWED_NAME = 'Beginner Workings of Water';
+  const FIRST_READING = '{PERSON} finished {BOOK}. Nobody in the house had read it before.';
+  const PASSAGE = '{NAME} finished {BOOK}.';
+
+  function completed(mode: 'original' | 'plainenglish', stale = false) {
+    const ctx = testWorld(bundle, 926);
+    const def = ctx.content.mustSpellbook(BOOK);
+    const file = ctx.content.sourceOf(def.id)!;
+    const address =  `content:${file}#spellbooks[id=${encodeURIComponent(def.id)}].name`;
+    setProseVariants(ctx, [
+      {
+        address,
+        of: proseOriginalHash(stale ? def.name + ' (superseded)' : def.name),
+        plainenglish: REVIEWED_NAME,
+      },
+      {
+        address: coreMessageAddress('library.first_reading'),
+        of: proseOriginalHash(FIRST_READING),
+        plainenglish: '{PERSON} was the first to finish {BOOK}.',
+      },
+      {
+        address: coreMessageAddress('passage.study.finished'),
+        of: proseOriginalHash(PASSAGE),
+        plainenglish: '{NAME} completed {BOOK}.',
+      },
+    ]);
+    setProseMode(ctx, mode);
+
+    const reader = place(ctx, { sex: 'male', age: 30, name: 'Ivo', awakened: true });
+    expect(beginStudy(ctx, reader, def)).toBe(true);
+    ctx.world.year = ctx.world.studies.find((study) => study.person === reader.id)!.completes;
+    const report = phase('library', ctx);
+    const page = ctx.world.chronicle.at(-1)!;
+    const passage = passageOf(ctx, report)!;
+    return { ctx, def, reader, report, page, passage, address };
+  }
+
+  it('uses the same selected name in the passage and frozen first-reading Chronicle page', () => {
+    const original = completed('original');
+    const plain = completed('plainenglish');
+
+    expect(original.report.studiesFinished[0]?.book).toBe(original.def.name);
+    expect(original.page.text).toBe( `Ivo finished ${original.def.name}. Nobody in the house had read it before.`);
+    expect(original.passage.lines[0]?.text).toBe( `Ivo finished ${original.def.name}.`);
+    expect(plain.report.studiesFinished[0]?.book).toBe(REVIEWED_NAME);
+    expect(plain.page.text).toBe('Ivo was the first to finish Beginner Workings of Water.');
+    expect(plain.passage.lines[0]?.text).toBe('Ivo completed Beginner Workings of Water.');
+    expect(missingPlainEnglish(plain.ctx)).toEqual([]);
+
+    // The prose setting changes display words, not study identities or rules.
+    expect(plain.report.studiesFinished[0]?.person).toBe(original.report.studiesFinished[0]?.person);
+    expect(plain.ctx.world.library).toEqual(original.ctx.world.library);
+    expect(plain.ctx.world.studies).toEqual(original.ctx.world.studies);
+    expect(plain.ctx.world.people.get(plain.reader.id)?.spellsKnown)
+      .toEqual(original.ctx.world.people.get(original.reader.id)?.spellsKnown);
+
+    setProseMode(plain.ctx, 'original');
+    expect(plain.page.text).toBe('Ivo was the first to finish Beginner Workings of Water.');
+    expect(plain.passage.lines[0]?.text).toBe('Ivo completed Beginner Workings of Water.');
+  });
+
+  it('falls back to the current book name if its reviewed fingerprint is stale', () => {
+    const { ctx, def, report, page, passage, address } = completed('plainenglish', true);
+    expect(report.studiesFinished[0]?.book).toBe(def.name);
+    expect(page.text).toBe( `Ivo was the first to finish ${def.name}.`);
+    expect(passage.lines[0]?.text).toBe( `Ivo completed ${def.name}.`);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+  });
 });
 
 describe('core message interpolation', () => {
