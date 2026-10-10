@@ -596,12 +596,27 @@ describe('desktop user content', () => {
     expect(existsSync(join(userData, 'missing-profile'))).toBe(false);
   });
 
+  it('rejects file-shaped Mod Editor ancestors without modifying their bytes', () => {
+    const mods = join(userData, 'mods');
+    const root = userContentRoot(userData);
+    for (const file of [mods, root]) {
+      if (file === root) mkdirSync(mods);
+      writeFileSync(file, 'keep this file untouched', 'utf8');
+      expect(() => readFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'utf8'))
+        .toThrow('user content root is not a regular directory');
+      expect(() => writeFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'overwrite'))
+        .toThrow('user content root is not a regular directory');
+      expect(readFileSync(file, 'utf8')).toBe('keep this file untouched');
+      rmSync(file);
+    }
+  });
+
   it('rejects both Mod Editor operations through linked profile, mods and content ancestors', () => {
     for (const ancestor of ['profile', 'mods', 'content']) {
       const profile = join(userData, 'profile-' + ancestor);
       const outside = mkdtempSync(join(tmpdir(), 'ed-external-editor-'));
       outsideRoots.push(outside);
-      let externalFile;
+      let externalFile: string;
       if (ancestor === 'profile') {
         externalFile = join(outside, 'mods', 'content', 'secret.yaml');
         mkdirSync(join(outside, 'mods', 'content'), { recursive: true });
