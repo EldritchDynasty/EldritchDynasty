@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { Person, Rung } from '@ed/schema';
@@ -14,6 +15,8 @@ import { TEST_FAMILIES } from './tools/testFamilies.js';
 import { rollDeath } from './people/demography.js';
 import { makeRng } from './rng.js';
 import { coreMessageAddress } from './messages.js';
+import { diagnoseHouseAscension, type HouseAscension } from './ascension.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 const content = indexContent(bundle);
@@ -721,5 +724,139 @@ describe('translated ascension Chronicle pages (#768)', () => {
     expect(original.page.title).toBe(plain.page.title);
     setProseMode(plain.ctx, 'original');
     expect(plain.page.text).toContain('The family record');
+  });
+});
+
+describe('the ladder diagnosis speaks the reader\'s setting (#827, #828)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./ascension.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#ascension\.diagnosis\./.test(entry.address));
+  const UPPER =
+    /\.(vessel_mind|vessel_rite|regalia|great_rite|circle_books|circle_pairs|god_floor|god_overflow|clauses|elder)_/;
+  const texts = (upper: boolean): Record<string, string> => Object.fromEntries(keyed
+    .filter((entry) => UPPER.test(entry.address) === upper)
+    .map((entry) => [entry.address.split('#')[1], entry.text]));
+
+  it('keys every lower-rung and expression diagnosis (#827)', () => {
+    expect(texts(false)).toEqual({
+      'ascension.diagnosis.power_text': 'The blood comes through him, but not strongly enough for {TARGET}.',
+      'ascension.diagnosis.power_hint': 'Seek Matches that strengthen the font; what a child inherits is not promised.',
+      'ascension.diagnosis.books_household_text': 'The living family has not read widely enough for {TARGET}.',
+      'ascension.diagnosis.books_own_text': 'He has not read widely enough for {TARGET}.',
+      'ascension.diagnosis.books_household_hint': 'Put more useful books in the hands of living family readers.',
+      'ascension.diagnosis.books_own_hint': 'Have him study another spellbook.',
+      'ascension.diagnosis.arts_household_text':
+        'The living family does not yet carry enough different arts for {TARGET}.',
+      'ascension.diagnosis.arts_own_text': 'His reading does not yet reach enough different arts for {TARGET}.',
+      'ascension.diagnosis.arts_household_hint': 'Spread the missing arts among living family readers.',
+      'ascension.diagnosis.arts_own_hint': 'Choose a spellbook from an affinity he has not learned.',
+      'ascension.diagnosis.respect_text': 'The house is not yet held in enough regard for {TARGET}.',
+      'ascension.diagnosis.respect_hint': "Raise the house's Respect before asking the world to tolerate this step.",
+      'ascension.diagnosis.cost_text': 'The blood has not marked him deeply enough for {TARGET}.',
+      'ascension.diagnosis.cost_hint': 'The upper ladder opens through costly Awakenings and rites, not study alone.',
+      'ascension.diagnosis.overborne_text': 'His mind cannot safely bear what the blood has already done to him.',
+      'ascension.diagnosis.overborne_hint': 'Do not press him higher until the line can carry more Mind.',
+      'ascension.diagnosis.awakening_text': 'The blood is in him, but it has not awakened.',
+      'ascension.diagnosis.awakening_hint': 'Keep him in view for an Awakening; study cannot supply this step.',
+      'ascension.diagnosis.no_expresser_text': 'The blood does not answer through him.',
+      'ascension.diagnosis.no_expresser_hint': 'The house must look to another living man of the blood.',
+      'ascension.diagnosis.house_no_expresser_text': 'No living man of the house can express the blood.',
+      'ascension.diagnosis.house_no_expresser_hint':
+        'Seek a Match that could carry the font back into the line; no child is promised.',
+    });
+  });
+
+  it('keys every upper-rung diagnosis (#828)', () => {
+    expect(texts(true)).toEqual({
+      'ascension.diagnosis.vessel_mind_text': 'His mind is not yet wide enough for what the Vessel would put into it.',
+      'ascension.diagnosis.vessel_mind_hint': 'Strengthen Mind in the bloodline before committing him to this step.',
+      'ascension.diagnosis.vessel_rite_text': "The Vessel's price has not been paid.",
+      'ascension.diagnosis.vessel_rite_hint':
+        'Call the Vessel rite when the house is ready to give a willing member of the blood.',
+      'ascension.diagnosis.regalia_text': 'The Regalia are still divided.',
+      'ascension.diagnosis.regalia_hint': 'Recover the missing Regalia before attempting the next rite.',
+      'ascension.diagnosis.great_rite_text': 'The Great Rite still stands between him and {TARGET}.',
+      'ascension.diagnosis.great_rite_hint':
+        'Call the Great Rite, sanctioned or defied, when its other costs are ready.',
+      'ascension.diagnosis.circle_books_text':
+        'The living family has not read enough of the library for the final circle.',
+      'ascension.diagnosis.circle_books_hint': 'Put more books into the hands of living family readers.',
+      'ascension.diagnosis.circle_pairs_text':
+        'The living family cannot yet carry every opposed pair into the final circle.',
+      'ascension.diagnosis.circle_pairs_hint': 'Spread the missing affinities across living family readers.',
+      'ascension.diagnosis.god_floor_text': 'The blood has not brought him close enough to ruin for {TARGET}.',
+      'ascension.diagnosis.god_floor_hint':
+        'The upper ladder opens through costly Awakenings and rites, not study alone.',
+      'ascension.diagnosis.god_overflow_text': 'His mind cannot safely bear what the final working would ask of him.',
+      'ascension.diagnosis.god_overflow_hint':
+        'Do not attempt the final step until Mind can bear what the blood has done.',
+      'ascension.diagnosis.clauses_text': 'The Ledger is not complete enough for the last working.',
+      'ascension.diagnosis.clauses_hint': 'Recover more Ledger clauses before attempting the final step.',
+      'ascension.diagnosis.elder_text': 'The final circle still lacks the elder it must spend.',
+      'ascension.diagnosis.elder_hint': 'Prepare a separate two-rite elder, then call the Unmaking for this ascendant.',
+    });
+  });
+
+  type Mode = 'original' | 'plainenglish';
+  function prepare(mode: Mode, seed: number): SimCtx {
+    const ctx = testWorld(bundle, seed);
+    setProseVariants(ctx, keyed.map((entry) => ({
+      address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+    })));
+    setProseMode(ctx, mode);
+    return ctx;
+  }
+  /** A man who clears every gate below God, so the god-rung blockers can be reached one at a time. */
+  function ascendant(ctx: SimCtx): Person {
+    ctx.world.respect = 'exalted';
+    grantHeirloom(ctx, 'the_ninefold_seal');
+    grantHeirloom(ctx, 'the_ring');
+    grantHeirloom(ctx, 'the_rod');
+    const p = place(ctx, { sex: 'male', age: 40, name: 'The Ascendant' });
+    p.awakening.awakened = true;
+    p.acquired[ELDRITCH_GIFT] = 400;
+    p.acquired[ELDRITCH_REACH] = 400;
+    p.acquired.mind = 400;
+    p.madness = 95;
+    for (const b of content.spellbooks) p.spellsKnown.push(b.id);
+    p.rites.push('vessel', 'great_rite');
+    p.phenotype = undefined;
+    return p;
+  }
+  const plain = <T extends { text: string; hint: string }>(b: T): T =>
+    ({ ...b, text: `plain: ${b.text}`, hint: `plain: ${b.hint}` });
+
+  it('reads a blocked standing in Plain English and blocks it on the same gate (#827, #828)', () => {
+    const read = (mode: Mode) => {
+      const ctx = prepare(mode, 8212);
+      const him = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+        .find((p) => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress)!;
+      him.awakening = { ...him.awakening, awakened: false };
+      const her = place(ctx, { sex: 'female', age: 30 });
+      const short = ascendant(ctx);
+      ctx.world.clausesRecovered.clear();
+      const waiting = standingOf(ctx, short);
+      for (let i = 0; i < 7; i++) ctx.world.clausesRecovered.add(`clause_${i}`);
+      return [standingOf(ctx, him), standingOf(ctx, her), waiting, standingOf(ctx, short)]
+        .map(({ rung, blocker, blocked, diagnosis }) => ({ rung, blocker, blocked, diagnosis }));
+    };
+    const original = read('original');
+    expect(original.map((s) => s.blocker)).toEqual(['awakening', 'no-expresser', 'clauses', 'rite']);
+    expect(original.map((s) => s.diagnosis!.blockers[0]!.text)).toEqual([
+      'The blood is in him, but it has not awakened.',
+      'The blood does not answer through him.',
+      'The Ledger is not complete enough for the last working.',
+      'The final circle still lacks the elder it must spend.',
+    ]);
+    expect(read('plainenglish')).toEqual(original.map((s) => ({
+      ...s, diagnosis: { ...s.diagnosis!, blockers: s.diagnosis!.blockers.map(plain) },
+    })));
+  });
+
+  it('reads a house with nobody to climb in Plain English (#827)', () => {
+    const empty = { foremost: undefined } as unknown as HouseAscension;
+    const original = diagnoseHouseAscension(prepare('original', 8213), empty)!;
+    expect(original.blockers[0]!.text).toBe('No living man of the house can express the blood.');
+    expect(diagnoseHouseAscension(prepare('plainenglish', 8213), empty))
+      .toEqual({ ...original, blockers: original.blockers.map(plain) });
   });
 });

@@ -640,71 +640,89 @@ function gateBlocker(
   return { kind, blocker, precise, text, hint };
 }
 
-function powerBlocker(power: number, need: number, target: string): GateBlocker {
+function powerBlocker(ctx: SimCtx, power: number, need: number, target: string): GateBlocker {
   return gateBlocker(
     'power',
     'power',
     powerShortfall(power, need),
-    `The blood comes through him, but not strongly enough for ${target}.`,
-    'Seek Matches that strengthen the font; what a child inherits is not promised.',
+    msg(ctx, 'ascension.diagnosis.power_text',
+      'The blood comes through him, but not strongly enough for {TARGET}.', { TARGET: target }),
+    msg(ctx, 'ascension.diagnosis.power_hint',
+      'Seek Matches that strengthen the font; what a child inherits is not promised.'),
   );
 }
 
-function booksBlocker(read: number, need: number, household: boolean, target: string): GateBlocker {
+function booksBlocker(ctx: SimCtx, read: number, need: number, household: boolean, target: string): GateBlocker {
   return gateBlocker(
     'books',
     'books',
     bookShortfall(read, need, household),
     household
-      ? `The living family has not read widely enough for ${target}.`
-      : `He has not read widely enough for ${target}.`,
+      ? msg(ctx, 'ascension.diagnosis.books_household_text',
+        'The living family has not read widely enough for {TARGET}.', { TARGET: target })
+      : msg(ctx, 'ascension.diagnosis.books_own_text',
+        'He has not read widely enough for {TARGET}.', { TARGET: target }),
     household
-      ? 'Put more useful books in the hands of living family readers.'
-      : 'Have him study another spellbook.',
+      ? msg(ctx, 'ascension.diagnosis.books_household_hint',
+        'Put more useful books in the hands of living family readers.')
+      : msg(ctx, 'ascension.diagnosis.books_own_hint',
+        'Have him study another spellbook.'),
   );
 }
 
-function affinitiesBlocker(have: number, need: number, household: boolean, target: string): GateBlocker {
+function affinitiesBlocker(
+  ctx: SimCtx, have: number, need: number, household: boolean, target: string,
+): GateBlocker {
   return gateBlocker(
     'affinities',
     'affinities',
     affinityShortfall(have, need, household),
     household
-      ? `The living family does not yet carry enough different arts for ${target}.`
-      : `His reading does not yet reach enough different arts for ${target}.`,
+      ? msg(ctx, 'ascension.diagnosis.arts_household_text',
+        'The living family does not yet carry enough different arts for {TARGET}.', { TARGET: target })
+      : msg(ctx, 'ascension.diagnosis.arts_own_text',
+        'His reading does not yet reach enough different arts for {TARGET}.', { TARGET: target }),
     household
-      ? 'Spread the missing arts among living family readers.'
-      : 'Choose a spellbook from an affinity he has not learned.',
+      ? msg(ctx, 'ascension.diagnosis.arts_household_hint',
+        'Spread the missing arts among living family readers.')
+      : msg(ctx, 'ascension.diagnosis.arts_own_hint',
+        'Choose a spellbook from an affinity he has not learned.'),
   );
 }
 
-function respectBlocker(precise: string, target: string): GateBlocker {
+function respectBlocker(ctx: SimCtx, precise: string, target: string): GateBlocker {
   return gateBlocker(
     'respect',
     'respect',
     precise,
-    `The house is not yet held in enough regard for ${target}.`,
-    'Raise the house\'s Respect before asking the world to tolerate this step.',
+    msg(ctx, 'ascension.diagnosis.respect_text',
+      'The house is not yet held in enough regard for {TARGET}.', { TARGET: target }),
+    msg(ctx, 'ascension.diagnosis.respect_hint',
+      "Raise the house's Respect before asking the world to tolerate this step."),
   );
 }
 
-function costBlocker(precise: string, target: string): GateBlocker {
+function costBlocker(ctx: SimCtx, precise: string, target: string): GateBlocker {
   return gateBlocker(
     'madness',
     'madness-floor',
     precise,
-    `The blood has not marked him deeply enough for ${target}.`,
-    'The upper ladder opens through costly Awakenings and rites, not study alone.',
+    msg(ctx, 'ascension.diagnosis.cost_text',
+      'The blood has not marked him deeply enough for {TARGET}.', { TARGET: target }),
+    msg(ctx, 'ascension.diagnosis.cost_hint',
+      'The upper ladder opens through costly Awakenings and rites, not study alone.'),
   );
 }
 
-function overborneBlocker(precise: string): GateBlocker {
+function overborneBlocker(ctx: SimCtx, precise: string): GateBlocker {
   return gateBlocker(
     'madness',
     'madness-overflow',
     precise,
-    'His mind cannot safely bear what the blood has already done to him.',
-    'Do not press him higher until the line can carry more Mind.',
+    msg(ctx, 'ascension.diagnosis.overborne_text',
+      'His mind cannot safely bear what the blood has already done to him.'),
+    msg(ctx, 'ascension.diagnosis.overborne_hint',
+      'Do not press him higher until the line can carry more Mind.'),
   );
 }
 
@@ -755,51 +773,55 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'awakening',
           'awakening',
           'he has not awakened',
-          'The blood is in him, but it has not awakened.',
-          'Keep him in view for an Awakening; study cannot supply this step.',
+          msg(ctx, 'ascension.diagnosis.awakening_text',
+            'The blood is in him, but it has not awakened.'),
+          msg(ctx, 'ascension.diagnosis.awakening_hint',
+            'Keep him in view for an Awakening; study cannot supply this step.'),
         );
       }
-      if (power < POWER_FLOOR.touched) return powerBlocker(power, POWER_FLOOR.touched, target);
+      if (power < POWER_FLOOR.touched) return powerBlocker(ctx, power, POWER_FLOOR.touched, target);
       return undefined;
 
     case 'adept':
-      if (power < POWER_FLOOR.adept) return powerBlocker(power, POWER_FLOOR.adept, target);
-      if (reading < books) return booksBlocker(reading, books, inherited, target);
+      if (power < POWER_FLOOR.adept) return powerBlocker(ctx, power, POWER_FLOOR.adept, target);
+      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
       if (madness > mind) {
-        return overborneBlocker('what the blood has done to him is already more than his mind can bear');
+        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
       return undefined;
 
     case 'hierophant':
-      if (power < POWER_FLOOR.hierophant) return powerBlocker(power, POWER_FLOOR.hierophant, target);
-      if (reading < books) return booksBlocker(reading, books, inherited, target);
-      if (arts < affinityNeed) return affinitiesBlocker(arts, affinityNeed, inherited, target);
+      if (power < POWER_FLOOR.hierophant) return powerBlocker(ctx, power, POWER_FLOOR.hierophant, target);
+      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
+      if (arts < affinityNeed) return affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
       // The Madness FLOOR. From here up a placid mind cannot ascend, which is
       // the whole shape of the design: the ladder runs through the thing that
       // destroys the family.
-      if (madness < MADNESS_FLOOR.hierophant!) return costBlocker('the blood has not cost him enough yet', target);
+      if (madness < MADNESS_FLOOR.hierophant!) return costBlocker(ctx, 'the blood has not cost him enough yet', target);
       if (madness > mind) {
-        return overborneBlocker('what the blood has done to him is already more than his mind can bear');
+        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
       if (respect < RESPECT_ORDER.indexOf('regarded')) {
-        return respectBlocker('the house is not yet regarded', target);
+        return respectBlocker(ctx, 'the house is not yet regarded', target);
       }
       return undefined;
 
     case 'vessel':
-      if (power < POWER_FLOOR.vessel) return powerBlocker(power, POWER_FLOOR.vessel, target);
-      if (reading < books) return booksBlocker(reading, books, inherited, target);
+      if (power < POWER_FLOOR.vessel) return powerBlocker(ctx, power, POWER_FLOOR.vessel, target);
+      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
       if (mind < MIND_FLOOR.vessel!) {
         return gateBlocker(
           'mind',
           'mind',
           'his mind is not yet wide enough for what the Vessel would put into it',
-          'His mind is not yet wide enough for what the Vessel would put into it.',
-          'Strengthen Mind in the bloodline before committing him to this step.',
+          msg(ctx, 'ascension.diagnosis.vessel_mind_text',
+            'His mind is not yet wide enough for what the Vessel would put into it.'),
+          msg(ctx, 'ascension.diagnosis.vessel_mind_hint',
+            'Strengthen Mind in the bloodline before committing him to this step.'),
         );
       }
       if (respect < RESPECT_ORDER.indexOf('eminent')) {
-        return respectBlocker('the house is not yet eminent', target);
+        return respectBlocker(ctx, 'the house is not yet eminent', target);
       }
       // THE RITE, and it is a thing that happened rather than a quantity that
       // accumulated (issue #43). This line used to return unconditionally,
@@ -810,24 +832,26 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'rites',
           'rite',
           'the Vessel is unpaid: a living member of the blood, willingly given',
-          'The Vessel\'s price has not been paid.',
-          'Call the Vessel rite when the house is ready to give a willing member of the blood.',
+          msg(ctx, 'ascension.diagnosis.vessel_rite_text',
+            "The Vessel's price has not been paid."),
+          msg(ctx, 'ascension.diagnosis.vessel_rite_hint',
+            'Call the Vessel rite when the house is ready to give a willing member of the blood.'),
         );
       }
       return undefined;
 
     case 'demigod':
-      if (power < POWER_FLOOR.demigod) return powerBlocker(power, POWER_FLOOR.demigod, target);
-      if (reading < books) return booksBlocker(reading, books, inherited, target);
-      if (arts < affinityNeed) return affinitiesBlocker(arts, affinityNeed, inherited, target);
+      if (power < POWER_FLOOR.demigod) return powerBlocker(ctx, power, POWER_FLOOR.demigod, target);
+      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
+      if (arts < affinityNeed) return affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
       if (respect < RESPECT_ORDER.indexOf('eminent')) {
-        return respectBlocker('the house is not yet eminent', target);
+        return respectBlocker(ctx, 'the house is not yet eminent', target);
       }
       if (madness < MADNESS_FLOOR.demigod!) {
-        return costBlocker('the blood has not hurt him deeply enough yet', target);
+        return costBlocker(ctx, 'the blood has not hurt him deeply enough yet', target);
       }
       if (madness > mind) {
-        return overborneBlocker('what the blood has done to him is already more than his mind can bear');
+        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
       // Most runs have lost at least one of the three, which §22 says is
       // often the real gate. `regalia.slow.test.ts` exists because of it.
@@ -836,8 +860,10 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'regalia',
           'regalia',
           `the Regalia are still divided — ${regalia} of ${REGALIA_COMPLETE} held`,
-          'The Regalia are still divided.',
-          'Recover the missing Regalia before attempting the next rite.',
+          msg(ctx, 'ascension.diagnosis.regalia_text',
+            'The Regalia are still divided.'),
+          msg(ctx, 'ascension.diagnosis.regalia_hint',
+            'Recover the missing Regalia before attempting the next rite.'),
         );
       }
       // Rung five's rite IS built, and is taken: measured over eight played
@@ -848,21 +874,25 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'rites',
           'rite',
           'the Great Rite remains undone — sanctioned or defied',
-          `The Great Rite still stands between him and ${target}.`,
-          'Call the Great Rite, sanctioned or defied, when its other costs are ready.',
+          msg(ctx, 'ascension.diagnosis.great_rite_text',
+            'The Great Rite still stands between him and {TARGET}.', { TARGET: target }),
+          msg(ctx, 'ascension.diagnosis.great_rite_hint',
+            'Call the Great Rite, sanctioned or defied, when its other costs are ready.'),
         );
       }
       return undefined;
 
     case 'god': {
-      if (power < POWER_FLOOR.god) return powerBlocker(power, POWER_FLOOR.god, target);
+      if (power < POWER_FLOOR.god) return powerBlocker(ctx, power, POWER_FLOOR.god, target);
       if (reading < books) {
         return gateBlocker(
           'final_circle',
           'books',
           `living family readers know ${reading} books; the last working asks ${books}`,
-          'The living family has not read enough of the library for the final circle.',
-          'Put more books into the hands of living family readers.',
+          msg(ctx, 'ascension.diagnosis.circle_books_text',
+            'The living family has not read enough of the library for the final circle.'),
+          msg(ctx, 'ascension.diagnosis.circle_books_hint',
+            'Put more books into the hands of living family readers.'),
         );
       }
       const circlePairs = householdOpposedPairs(ctx);
@@ -871,20 +901,24 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'final_circle',
           'affinities',
           `living family readers cover ${circlePairs} of the ${affinityNeed} opposed pairs; the last working asks one affinity from each`,
-          'The living family cannot yet carry every opposed pair into the final circle.',
-          'Spread the missing affinities across living family readers.',
+          msg(ctx, 'ascension.diagnosis.circle_pairs_text',
+            'The living family cannot yet carry every opposed pair into the final circle.'),
+          msg(ctx, 'ascension.diagnosis.circle_pairs_hint',
+            'Spread the missing affinities across living family readers.'),
         );
       }
       if (respect < RESPECT_ORDER.indexOf('exalted')) {
-        return respectBlocker('the house is not yet exalted', target);
+        return respectBlocker(ctx, 'the house is not yet exalted', target);
       }
       if (madness < MADNESS_FLOOR.god!) {
         return gateBlocker(
           'madness',
           'madness-floor',
           'the blood has not brought him close enough to ruin',
-          `The blood has not brought him close enough to ruin for ${target}.`,
-          'The upper ladder opens through costly Awakenings and rites, not study alone.',
+          msg(ctx, 'ascension.diagnosis.god_floor_text',
+            'The blood has not brought him close enough to ruin for {TARGET}.', { TARGET: target }),
+          msg(ctx, 'ascension.diagnosis.god_floor_hint',
+            'The upper ladder opens through costly Awakenings and rites, not study alone.'),
         );
       }
       if (mind < madness) {
@@ -892,8 +926,10 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'mind',
           'madness-overflow',
           'what the blood has done to him is more than his mind can bear',
-          'His mind cannot safely bear what the final working would ask of him.',
-          'Do not attempt the final step until Mind can bear what the blood has done.',
+          msg(ctx, 'ascension.diagnosis.god_overflow_text',
+            'His mind cannot safely bear what the final working would ask of him.'),
+          msg(ctx, 'ascension.diagnosis.god_overflow_hint',
+            'Do not attempt the final step until Mind can bear what the blood has done.'),
         );
       }
       if (w.clausesRecovered.size < GOD_CLAUSES) {
@@ -901,8 +937,10 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'clauses',
           'clauses',
           `the book holds ${w.clausesRecovered.size} of the ${GOD_CLAUSES} clauses the last step requires`,
-          'The Ledger is not complete enough for the last working.',
-          'Recover more Ledger clauses before attempting the final step.',
+          msg(ctx, 'ascension.diagnosis.clauses_text',
+            'The Ledger is not complete enough for the last working.'),
+          msg(ctx, 'ascension.diagnosis.clauses_hint',
+            'Recover more Ledger clauses before attempting the final step.'),
         );
       }
       // THE TERMINAL IRONY (§22). A dynasty that concentrates everything into
@@ -918,8 +956,10 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
           'final_circle',
           'rite',
           'no two-rite elder has yet been unmade for him',
-          'The final circle still lacks the elder it must spend.',
-          'Prepare a separate two-rite elder, then call the Unmaking for this ascendant.',
+          msg(ctx, 'ascension.diagnosis.elder_text',
+            'The final circle still lacks the elder it must spend.'),
+          msg(ctx, 'ascension.diagnosis.elder_hint',
+            'Prepare a separate two-rite elder, then call the Unmaking for this ascendant.'),
         );
       }
       return undefined;
@@ -958,8 +998,10 @@ export function standingOf(ctx: SimCtx, p: Person): Standing {
   if (!ph.eldritch.canExpress) {
     const blocker: AscensionBlocker = {
       kind: 'expression',
-      text: 'The blood does not answer through him.',
-      hint: 'The house must look to another living man of the blood.',
+      text: msg(ctx, 'ascension.diagnosis.no_expresser_text',
+        'The blood does not answer through him.'),
+      hint: msg(ctx, 'ascension.diagnosis.no_expresser_hint',
+        'The house must look to another living man of the blood.'),
     };
     return {
       rung: 'none',
@@ -1116,6 +1158,7 @@ export interface HouseAscensionDiagnosis extends AscensionDiagnosis {
  * next rung. This is derived and deterministic; it neither rolls nor stores.
  */
 export function diagnoseHouseAscension(
+  ctx: SimCtx,
   measured: HouseAscension,
 ): HouseAscensionDiagnosis | undefined {
   const top = measured.foremost;
@@ -1125,8 +1168,10 @@ export function diagnoseHouseAscension(
       targetTitle: rungTitle('touched'),
       blockers: [{
         kind: 'expression',
-        text: 'No living man of the house can express the blood.',
-        hint: 'Seek a Match that could carry the font back into the line; no child is promised.',
+        text: msg(ctx, 'ascension.diagnosis.house_no_expresser_text',
+          'No living man of the house can express the blood.'),
+        hint: msg(ctx, 'ascension.diagnosis.house_no_expresser_hint',
+          'Seek a Match that could carry the font back into the line; no child is promised.'),
       }],
     };
   }
@@ -1144,7 +1189,7 @@ export function diagnoseHouseAscension(
 
 /** Convenience for callers that have not already measured the house. */
 export function diagnoseAscension(ctx: SimCtx): HouseAscensionDiagnosis | undefined {
-  return diagnoseHouseAscension(measureAscension(ctx));
+  return diagnoseHouseAscension(ctx, measureAscension(ctx));
 }
 
 /**
