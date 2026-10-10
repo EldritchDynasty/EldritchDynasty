@@ -1,10 +1,10 @@
-import { contentInterpolationTokens } from '@ed/schema';
+import { CORE_MESSAGE_ADDRESS_PREFIX, contentInterpolationTokens } from '@ed/schema';
 import { renderProse } from './prose.js';
 import type { SimCtx } from './world.js';
 
 /** Authored keys survive source-file moves and unrelated literal insertions. */
 export function coreMessageAddress(key: string): string {
-  return `core:messages#${encodeURIComponent(key)}`;
+  return `${CORE_MESSAGE_ADDRESS_PREFIX}${encodeURIComponent(key)}`;
 }
 
 /** Select a template before inserting names or other already-visible values. */

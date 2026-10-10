@@ -1,4 +1,5 @@
 import { ContentBundleS, type ContentBundle } from './content.js';
+import { CORE_MESSAGE_ADDRESS_PREFIX, CORE_MESSAGE_VARIANTS_FILE } from './prose.js';
 
 /**
  * WHERE THE CONTENT LIVES, declared once.
@@ -159,6 +160,12 @@ export function assembleBundle(
       if (spec.key === 'proseVariants') {
         for (const item of entries) {
           const address = (item as { address?: unknown } | null)?.address;
+          if (typeof address === 'string' && address.startsWith(CORE_MESSAGE_ADDRESS_PREFIX)
+            && path !== CORE_MESSAGE_VARIANTS_FILE) {
+            throw new Error(
+              `prose variant '${address}' is in '${path}', but core message counterparts live in '${CORE_MESSAGE_VARIANTS_FILE}'`,
+            );
+          }
           if (typeof address !== 'string' || !address.startsWith('content:')) continue;
           const hash = address.indexOf('#');
           const originalFile = hash < 0 ? '' : address.slice('content:'.length, hash);
