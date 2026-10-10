@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { indexContent } from '@ed/schema';
+import { indexContent, proseOriginalHash } from '@ed/schema';
 import type { Person } from '@ed/schema';
 import { beget, place, testWorld, marry, testRng } from './testing.js';
 import {
@@ -15,6 +16,8 @@ import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js'
 import { standingOf } from './ascension.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import type { SimCtx } from './world.js';
+import { coreMessageAddress } from './messages.js';
+import { setProseMode, setProseVariants, missingPlainEnglish } from './prose.js';
 import { adviceForDecision } from './advisers.js';
 import type { MatchCard } from './people/match.js';
 
@@ -56,6 +59,94 @@ function carrierDaughterOf(ctx: SimCtx, father: Person, name: string): Person {
   ctx.world.people.setParents(her.id, { father: father.id });
   return her;
 }
+
+
+/** The exact Original messages of each distinct player-facing rite phrase. */
+const RITE_ORIGINALS: Record<string, string> = {
+  'rites.vessel.self': 'a man cannot be his own Vessel',
+  'rites.vessel.repeat': 'he has already taken the Vessel rite',
+  'rites.vessel.notLiving': 'the Vessel is not living',
+  'rites.vessel.notBlood': 'the Vessel is not of the blood',
+  'rites.vessel.cause': 'given to the rite, and not spoken of again',
+  'rites.ascendant.notLiving': 'the ascendant is not living',
+  'rites.great.repeat': 'he has already been made as wide as he is going to be',
+  'rites.great.noPower': 'there is nothing in him to widen',
+  'rites.unmaking.self': 'a man cannot unmake himself',
+  'rites.unmaking.elderNotLiving': 'the elder is not living',
+  'rites.unmaking.elderNotBlood': 'the elder is not of the blood',
+  'rites.unmaking.noGift': 'the elder was never made into anything the rite can take',
+  'rites.unmaking.cause': 'unmade, in the small hall, in front of witnesses',
+  'rites.vessel.missing': 'the Vessel rite takes a named living relative',
+  'rites.unmaking.missing': 'the unmaking takes a named living elder',
+};
+
+describe('rite refusal and record prose (#794)', () => {
+  it('pins every keyed Original at its source call site', () => {
+    const source = readFileSync(new URL('./events/rites.ts', import.meta.url), 'utf8');
+    const found = [...source.matchAll(/msg\(ctx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
+      .map(([, key, literal]) => [key, literal!.slice(1, -1)]);
+    expect(Object.fromEntries(found)).toEqual(RITE_ORIGINALS);
+    // The ascendant's not-living refusal is shared by two rite entry points.
+    expect(found).toHaveLength(Object.keys(RITE_ORIGINALS).length + 1);
+  });
+
+  it('translates a refusal without changing who may perform a rite', () => {
+    const ctx = testWorld(content);
+    const him = head(ctx);
+    const original = consumeVessel(ctx, him, him);
+    expect(original).toEqual({ ok: false, reason: 'a man cannot be his own Vessel' });
+
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('rites.vessel.self'),
+      of: proseOriginalHash(RITE_ORIGINALS['rites.vessel.self']!),
+      plainenglish: 'Someone cannot serve as their own Vessel.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    const translated = consumeVessel(ctx, him, him);
+    expect(translated).toEqual({ ok: false, reason: 'Someone cannot serve as their own Vessel.' });
+    expect(him.status).toBe('alive');
+    expect(him.rites).not.toContain('vessel');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('translates a performed Vessel record but preserves the transfer and death gate', () => {
+    const run = (plain: boolean) => {
+      const ctx = testWorld(content);
+      const him = head(ctx);
+      const her = carrierDaughterOf(ctx, him, 'The Given');
+      if (plain) {
+        setProseVariants(ctx, [{
+          address: coreMessageAddress('rites.vessel.cause'),
+          of: proseOriginalHash(RITE_ORIGINALS['rites.vessel.cause']!),
+          plainenglish: 'given up in the ceremony and never mentioned again',
+        }]);
+        setProseMode(ctx, 'plainenglish');
+      }
+      const outcome = consumeVessel(ctx, him, her);
+      return {
+        outcome,
+        status: her.status,
+        died: her.died,
+        cause: her.causeOfDeath,
+        rites: [...him.rites],
+        missing: missingPlainEnglish(ctx),
+      };
+    };
+    const original = run(false);
+    const translated = run(true);
+    expect(original.outcome.ok).toBe(true);
+    expect(original.cause).toBe('given to the rite, and not spoken of again');
+    expect(translated.cause).toBe('given up in the ceremony and never mentioned again');
+    expect(translated.status).toBe('vessel_consumed');
+    expect(translated.rites).toContain('vessel');
+    expect(translated.missing).toEqual([]);
+    expect({
+      outcome: translated.outcome, status: translated.status, died: translated.died, rites: translated.rites,
+    }).toEqual({
+      outcome: original.outcome, status: original.status, died: original.died, rites: original.rites,
+    });
+  });
+});
 
 describe('what the Vessel rite moves', () => {
   it('adds the consumed relative\'s attributes to the ascendant, in the acquired layer', () => {
