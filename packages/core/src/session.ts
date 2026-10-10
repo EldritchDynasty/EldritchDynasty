@@ -1227,14 +1227,17 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         }
         if (spouse) {
           const marriedIn = spouse.houseOfOrigin !== w.playerHouse;
+          const spouseHouse = marriedIn ? ctx.content.house(spouse.houseOfOrigin) : undefined;
           m.spouse = {
             id: spouse.id,
             name: spouse.name,
             marriedIn,
-            // Named only where she came from somewhere else. "of our own house"
-            // is not a thing anybody says about their own daughter.
+            // Show the house's selected wording, without translating its
+            // identity or the relationship recorded in the saved world.
             ...(marriedIn
-              ? { house: ctx.content.house(spouse.houseOfOrigin)?.name ?? spouse.houseOfOrigin }
+              ? { house: spouseHouse
+                ? proseForContentField(ctx, 'houses', String(spouseHouse.id), 'name', spouseHouse.name)
+                : spouse.houseOfOrigin }
               : {}),
           };
         }
