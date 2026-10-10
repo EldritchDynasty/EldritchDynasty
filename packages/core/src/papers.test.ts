@@ -227,6 +227,33 @@ describe('and getting caught', () => {
     }
   });
 
+  it('opens separate evidence records when two forgeries on one person are caught together', () => {
+    const ctx = testWorld(bundle, 964);
+    const person = place(ctx, { sex: 'female', age: 24, name: 'Two papers' });
+    const cheap = filePedigree(ctx, person, 'bramme');
+    const dear = filePedigree(ctx, person, 'caster');
+    const previous = new Set(ctx.world.discrepancies.keys());
+    const priorPages = ctx.world.chronicle.length;
+    const alwaysExpose = { ...testRng('same-year-exposure'), bool: (_chance: number) => true };
+
+    expect(tickPapers(ctx, alwaysExpose)).toBe(2);
+    expect(cheap.exposed).toBe(ctx.world.year);
+    expect(dear.exposed).toBe(ctx.world.year);
+    const ids = [...ctx.world.discrepancies.keys()].filter((id) => !previous.has(id));
+    expect(ids).toEqual([
+      `papers_${person.id}_${ctx.world.year}`,
+      `papers_${person.id}_${ctx.world.year}_2`,
+    ]);
+    const pages = ctx.world.chronicle.slice(priorPages);
+    expect(pages.map((page) => page.discrepancyId)).toEqual(ids);
+    expect(ids.every((id) => ctx.world.discrepancies.get(id)?.state === 'open')).toBe(true);
+    expect(tickPapers(ctx, alwaysExpose), 'an exposed document must not be found again').toBe(0);
+
+    const reloaded = loadGame(saveGame(ctx), bundle);
+    expect(ids.every((id) => reloaded.world.discrepancies.has(id))).toBe(true);
+    expect(reloaded.world.chronicle.slice(priorPages).map((page) => page.discrepancyId)).toEqual(ids);
+  });
+
   it('a Caster pedigree outlasts a Bramme one — the price buys years, measured', () => {
     const caught = (grade: 'bramme' | 'caster'): number => {
       const ctx = testWorld(bundle, 77);
