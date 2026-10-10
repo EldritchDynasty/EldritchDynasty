@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { indexContent } from '@ed/schema';
+import { indexContent, proseOriginalHash } from '@ed/schema';
 import { testWorld, place, marry, beget } from './testing.js';
 import { readPanel, issueOf, emptyPanel } from './people/panel.js';
 import { dealMatch, type MatchCard, type LineCensus } from './people/match.js';
 import { makeRng } from './rng.js';
+import { coreMessageAddress } from './messages.js';
+import { setProseMode, setProseVariants, missingPlainEnglish } from './prose.js';
 
 /**
  * THE MATCHMAKER'S PANEL (issue #68).
@@ -387,6 +389,72 @@ describe('the matchmaker’s panel', () => {
     expect(row!.borne).toBe(5);
     expect(row!.grown).toBe(3);
     expect(row!.relation).toBe('her mother');
+  });
+});
+
+/** Saved Match-card pages choose their words when the card is dealt (#982). */
+describe('Match-panel blank-page prose', () => {
+  const greyedOriginal = 'a page the house will not read out';
+  const blankOriginal = 'a blank the house left';
+  const greyedAddress = coreMessageAddress('panel.our_book.greyed_page');
+  const blankAddress = coreMessageAddress('panel.our_book.blank_page');
+
+  const fixture = () => {
+    const ctx = testWorld(content, 982, 1400);
+    const marrow = place(ctx, { sex: 'male', age: 40, name: 'Panel Witness', house: 'house_marrow' });
+    const claim = () => [{ kind: 'deed' as const, person: marrow.id, text: 'a disputed debt' }];
+    ctx.world.chronicle.push(
+      { year: 1201, weight: 'page', named: false, text: null, greyed: true, claims: claim() },
+      { year: 1202, weight: 'page', named: false, text: null, record: 'omit', claims: claim() },
+      { year: 1203, weight: 'page', named: false, text: 'The surviving account.', claims: claim() },
+    );
+    const read = () => {
+      const card = cardFor(marrow);
+      readPanel(ctx, card, census());
+      return card.panel.ourBook;
+    };
+    return { ctx, read };
+  };
+
+  it('chooses reviewed wording for both missing-page kinds and freezes it on the card', () => {
+    const { ctx, read } = fixture();
+    setProseVariants(ctx, [
+      { address: greyedAddress, of: proseOriginalHash(greyedOriginal), plainenglish: 'The family refuses to show this page.' },
+      { address: blankAddress, of: proseOriginalHash(blankOriginal), plainenglish: 'The family left this page empty.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    const selected = read();
+    expect(selected.map((p) => p.text)).toEqual([
+      'The surviving account.',
+      'The family left this page empty.',
+      'The family refuses to show this page.',
+    ]);
+    expect(selected.find((p) => p.year === 1202)).toMatchObject({ record: 'omit', embellished: false });
+    expect(missingPlainEnglish(ctx)).not.toContain(greyedAddress);
+    expect(missingPlainEnglish(ctx)).not.toContain(blankAddress);
+    const frozen = structuredClone(selected);
+    setProseMode(ctx, 'original');
+    expect(selected).toEqual(frozen);
+    expect(read().map((p) => p.text)).toEqual([
+      'The surviving account.', blankOriginal, greyedOriginal,
+    ]);
+    expect(ctx.world.chronicle.map((entry) => entry.text)).toEqual([
+      null, null, 'The surviving account.',
+    ]);
+  });
+
+  it('falls back to Original and diagnoses a stale reviewed page variant', () => {
+    const { ctx, read } = fixture();
+    setProseVariants(ctx, [
+      { address: greyedAddress, of: '0000000000000000', plainenglish: 'Outdated page wording' },
+      { address: blankAddress, of: proseOriginalHash(blankOriginal), plainenglish: 'The family left this page empty.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(read().map((p) => p.text)).toEqual([
+      'The surviving account.', 'The family left this page empty.', greyedOriginal,
+    ]);
+    expect(missingPlainEnglish(ctx)).toContain(greyedAddress);
+    expect(missingPlainEnglish(ctx)).not.toContain(blankAddress);
   });
 });
 
