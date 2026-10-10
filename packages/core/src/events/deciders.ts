@@ -6,6 +6,7 @@ import { evalCheck } from './checks.js';
 import type { SlotFill } from './slots.js';
 import type { EvalScope } from './scope.js';
 import { choiceAvailability } from './availability.js';
+import { msg } from '../messages.js';
 
 /**
  * WHO TAKES THE BRANCH — the evaluator for `schema/src/decider.ts`.
@@ -61,7 +62,7 @@ export function decideBranch(
   opts: DecideOpts = {},
 ): BranchDecision {
   if (e.interaction.kind === 'narration') {
-    return { asks: false, why: 'narration — nothing is being decided' };
+    return { asks: false, why: msg(ctx, 'deciders.narration', 'narration — nothing is being decided') };
   }
 
   const choices = e.interaction.choices;
@@ -74,8 +75,8 @@ export function decideBranch(
     why,
   });
 
-  if (decider === 'player') return { asks: true, why: 'the house decides' };
-  if (decider === 'chance') return fallback('as it fell out');
+  if (decider === 'player') return { asks: true, why: msg(ctx, 'deciders.player', 'the house decides') };
+  if (decider === 'chance') return fallback(msg(ctx, 'deciders.chance', 'as it fell out'));
 
   if ('state' in decider) {
     for (const rung of decider.state) {
@@ -85,22 +86,22 @@ export function decideBranch(
       // WOULD do, and it cannot do what it is not able to do.
       const found = open.find((c) => c.id === rung.take);
       if (!found) continue;
-      return { choice: found, asks: false, why: rung.because ?? `the house's condition: ${found.label}` };
+      return { choice: found, asks: false, why: rung.because ?? msg(ctx, 'deciders.state.condition', "the house's condition: {LABEL}", { LABEL: found.label }) };
     }
-    return fallback('no rung of the ladder held');
+    return fallback(msg(ctx, 'deciders.state.none', 'no rung of the ladder held'));
   }
 
   // The player's decision here is WHO GOES, and until he has made it there is
   // nothing to pool. This is the whole of a delegated decision: he picks the
   // party, and what those people are between them picks the rest.
   if (!opts.castReady && wantsPlayerCast(e)) {
-    return { asks: true, why: 'the house names who goes; what they are between them decides the rest' };
+    return { asks: true, why: msg(ctx, 'deciders.party.cast', 'the house names who goes; what they are between them decides the rest') };
   }
 
   const check = e.checks.find((c) => c.id === decider.party.check);
   // `decider/wiring` fails the build on a missing check. If one reaches here
   // anyway, resolve — but do not pretend the check passed.
-  if (!check) return fallback(`check '${decider.party.check}' is not declared`);
+  if (!check) return fallback(msg(ctx, 'deciders.party.missing', "check '{CHECK}' is not declared", { CHECK: decider.party.check }));
 
   const result = evalCheck(ctx, check, e, fill, rng);
   // A `party` check's bands name CHOICE ids, not outcome ids; `CheckResult`
@@ -114,14 +115,18 @@ export function decideBranch(
   if (!named) {
     const exists = choices.some((c) => c.id === result.outcomeId);
     return fallback(exists
-      ? `the check named '${result.outcomeId}', but that branch is unavailable`
-      : `the check named '${result.outcomeId}', which is not one of the branches`);
+      ? msg(ctx, 'deciders.party.unavailable', "the check named '{CHOICE}', but that branch is unavailable", { CHOICE: result.outcomeId })
+      : msg(ctx, 'deciders.party.unknown', "the check named '{CHOICE}', which is not one of the branches", { CHOICE: result.outcomeId }));
   }
 
   return {
     choice: named,
     asks: false,
-    why: `${Math.round(result.roll)} against ${Math.round(result.difficulty)} — ${named.label}`,
+    why: msg(ctx, 'deciders.party.roll', '{ROLL} against {DIFFICULTY} — {LABEL}', {
+      ROLL: String(Math.round(result.roll)),
+      DIFFICULTY: String(Math.round(result.difficulty)),
+      LABEL: named.label,
+    }),
   };
 }
 
