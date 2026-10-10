@@ -1,11 +1,18 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { ASSIZE_RESPONSES } from './assize.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 import { coreMessageAddress, msg } from './messages.js';
 import { marry, place } from './testing.js';
 import { outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome } from './prose.js';
 import { loadBundle, loadContent } from '@ed/content';
 import { canonical } from './save.js';
-import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
-import type { EventTemplate, Outcome } from '@ed/schema';
+import {
+  CORE_MESSAGE_ADDRESS_PREFIX, contentInterpolationTokens, contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash,
+} from '@ed/schema';
+import type { EventTemplate, Outcome, ProseVariant } from '@ed/schema';
 import {
   commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
@@ -725,5 +732,104 @@ describe('keyed core-message interpolation (#706)', () => {
       plainenglish: 'For {years} years, Mara keeps the record.',
     }]);
     expect(msg(ctx, key, original, values)).toBe('Mara keeps 500 years in the book.');
+  });
+});
+
+/**
+ * THE ENGINE'S OWN LINES HAVE A PLAIN ENGLISH HOME (#1010).
+ *
+ * `msg(ctx, key, original)` has looked its key up in the variant catalogue
+ * since #410 keyed it, and for all of that time `prose/variants` refused every
+ * `core:messages#` row that could have answered it — so 756 keyed lines
+ * rendered the Original in Plain English mode, said so only in
+ * `ctx.prose.missing`, and threw nothing.
+ *
+ * The schema cannot see a `msg()` call, so the half of the check that needs
+ * the Original is here: every shipped row names a key some call carries,
+ * keeps that Original's tokens, and was reviewed against its current words.
+ */
+
+const CORE_SRC = dirname(fileURLToPath(import.meta.url));
+
+/** The same source set the Plain English worklist walks. */
+function keyedCoreOriginals(): Map<string, string> {
+  const out = new Map<string, string>();
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(join(CORE_SRC, dir)).sort()) {
+      const rel = dir ? `${dir}/${entry}` : entry;
+      if (statSync(join(CORE_SRC, rel)).isDirectory()) {
+        if (rel !== 'tools' && rel !== 'fixtures') walk(rel);
+      } else if (rel.endsWith('.ts') && !rel.endsWith('.test.ts') && rel !== 'testing.ts') {
+        for (const { address, text } of coreMessageEntries(readFileSync(join(CORE_SRC, rel), 'utf8'))) {
+          out.set(address, text);
+        }
+      }
+    }
+  };
+  walk('');
+  return out;
+}
+
+const coreOriginals = keyedCoreOriginals();
+const shippedContent = loadContent();
+const shippedCore: ProseVariant[] = shippedContent.proseVariants
+  .filter((variant) => variant.address.startsWith(CORE_MESSAGE_ADDRESS_PREFIX));
+
+/** Every way a shipped core row can be wrong, by address. Empty is healthy. */
+function coreVariantProblems(variants: readonly ProseVariant[]): string[] {
+  const out: string[] = [];
+  for (const { address, of, plainenglish } of variants) {
+    const original = coreOriginals.get(address);
+    if (original === undefined) { out.push(`${address}: no msg() call carries this key`); continue; }
+    const want = contentInterpolationTokens(original).sort().join(' ');
+    const have = contentInterpolationTokens(plainenglish).sort().join(' ');
+    if (want !== have) out.push(`${address}: tokens [${have}], Original has [${want}]`);
+    if (of !== proseOriginalHash(original)) {
+      out.push(`${address}: stale — the Original is now "${original}"; review the row and set of: ${proseOriginalHash(original)}`);
+    }
+    if (plainenglish === original) out.push(`${address}: identical to the Original`);
+  }
+  return out;
+}
+
+describe('core message counterparts (#1010)', () => {
+  it('finds the keyed Originals and the shipped rows it is about to judge', () => {
+    // An empty scan judges nothing and passes; say what was found first.
+    expect(coreOriginals.size).toBeGreaterThan(500);
+    expect(shippedCore.length).toBeGreaterThan(0);
+  });
+
+  it('ships only rows that name a live key, keep its tokens, and match its current words', () => {
+    expect(coreVariantProblems(shippedCore)).toEqual([]);
+  });
+
+  it('can fail: an unknown key, a lost token, a stale fingerprint and an echo are each named', () => {
+    const [key, original] = [...coreOriginals].find(([, text]) => contentInterpolationTokens(text).length > 0)!;
+    const of = proseOriginalHash(original);
+    const named = (variant: ProseVariant) => coreVariantProblems([variant]).join('\n');
+
+    expect(named({ address: `${CORE_MESSAGE_ADDRESS_PREFIX}no.such.key`, of, plainenglish: 'x y' }))
+      .toMatch(/no msg\(\) call carries this key/);
+    expect(named({ address: key, of, plainenglish: 'Every token is gone.' })).toMatch(/tokens/);
+    expect(named({ address: key, of: '0000000000000000', plainenglish: `${original} Plainly.` }))
+      .toMatch(/stale/);
+    expect(named({ address: key, of, plainenglish: original })).toMatch(/identical/);
+  });
+
+  it('is what a real call site says in Plain English, and only then', () => {
+    const plain = newGame(shippedContent, { proseMode: 'plainenglish' });
+    const original = newGame(shippedContent, { proseMode: 'original' });
+    const byAddress = new Map(shippedCore.map((variant) => [variant.address, variant.plainenglish]));
+    let answered = 0;
+    for (const response of ASSIZE_RESPONSES) {
+      const address = `${CORE_MESSAGE_ADDRESS_PREFIX}assize.${response.id}`;
+      const said = response.line(plain.ctx);
+      expect(response.line(original.ctx)).toBe(coreOriginals.get(address));
+      if (!byAddress.has(address)) continue;
+      expect(said).toBe(byAddress.get(address));
+      expect(plain.ctx.prose.missing.has(address)).toBe(false);
+      answered++;
+    }
+    expect(answered).toBeGreaterThan(0);
   });
 });

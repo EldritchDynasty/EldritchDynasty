@@ -1,6 +1,6 @@
 import type { Content } from './content-index.js';
 import { CONTENT_LAYOUT } from './assemble.js';
-import { contentInterpolationTokens, isContentProseField } from './prose.js';
+import { CORE_MESSAGE_ADDRESS_PREFIX, contentInterpolationTokens, isContentProseField } from './prose.js';
 import type { Issue, ValidationRule } from './validate.js';
 
 /**
@@ -150,6 +150,22 @@ export const proseVariantsRule: ValidationRule = {
       } else {
         seen.add(variant.address);
       }
+      // A core message's Original is a `msg()` argument in TypeScript, which
+      // this package cannot see. Core's `prose.test.ts` resolves
+      // the key, the tokens and the fingerprint against the source (#1010);
+      // what is checkable from here is that the row names a key at all and
+      // says what it was reviewed against. Assembly already pinned the file.
+      if (variant.address.startsWith(CORE_MESSAGE_ADDRESS_PREFIX)) {
+        if (variant.address.length === CORE_MESSAGE_ADDRESS_PREFIX.length) {
+          issues.push(issue('error', this.id, variant.address,
+            'core message variant names no key'));
+        } else if (variant.of === undefined) {
+          issues.push(issue('warning', this.id, variant.address,
+            'variant has no Original fingerprint; review it against the msg() Original and set of'));
+        }
+        continue;
+      }
+
       const original = proseOriginalAt(content, variant.address);
       if (original === undefined) {
         issues.push(issue('error', this.id, variant.address,

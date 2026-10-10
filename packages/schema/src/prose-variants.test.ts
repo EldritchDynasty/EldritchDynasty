@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 import { loadContent } from '@ed/content';
 import {
+  assembleBundle,
+  CORE_MESSAGE_ADDRESS_PREFIX,
+  CORE_MESSAGE_VARIANTS_FILE,
   contentInterpolationTokens,
   contentProseEntries,
   indexContent,
@@ -271,4 +275,71 @@ describe('Plain English variant guardrails (#415)', () => {
     )).toBe(true);
   });
 
+});
+
+/**
+ * A `msg()` Original lives in TypeScript, so its counterpart has one home
+ * file rather than a neighbour (#1010). Before this, every `core:messages#`
+ * row was an error here and none could ship.
+ */
+describe('core message counterparts (#1010)', () => {
+  const coreRow = (of?: string) => ({
+    address: `${CORE_MESSAGE_ADDRESS_PREFIX}service.unpaid`,
+    ...(of === undefined ? {} : { of }),
+    plainenglish: '{PERSON} was not kept on.',
+  });
+  const withRows = (rows: ContentBundle['proseVariants']): ContentBundle => {
+    const bundle = structuredClone(content.bundle);
+    bundle.proseVariants = rows;
+    return bundle;
+  };
+
+  it('leaves the Original to core, and still asks what the row was reviewed against', () => {
+    expect(runRule('prose/variants', withRows([coreRow('0123456789abcdef')]))).toEqual([]);
+    expect(runRule('prose/variants', withRows([coreRow()]))).toEqual([
+      expect.objectContaining({ level: 'warning', message: expect.stringMatching(/no Original fingerprint/) }),
+    ]);
+  });
+
+  it('still rejects a duplicate, an empty key, and an unkeyed core literal', () => {
+    const duplicate = runRule('prose/variants', withRows([coreRow('0123456789abcdef'), coreRow('0123456789abcdef')]));
+    expect(duplicate).toEqual([expect.objectContaining({ level: 'error', message: expect.stringMatching(/duplicate/) })]);
+
+    const empty = runRule('prose/variants', withRows([{ address: CORE_MESSAGE_ADDRESS_PREFIX, plainenglish: 'x y' }]));
+    expect(empty).toEqual([expect.objectContaining({ level: 'error', message: expect.stringMatching(/names no key/) })]);
+
+    // A legacy literal has no runtime seam: a counterpart on it would never show.
+    const literal = runRule('prose/variants', withRows([{ address: 'core:session.ts#literal[3]', plainenglish: 'x y' }]));
+    expect(literal).toEqual([expect.objectContaining({ level: 'error', message: expect.stringMatching(/does not resolve/) })]);
+  });
+
+  it('assembles a core row from its home file, and refuses one filed anywhere else', () => {
+    const files = (path: string): Record<string, string> => ({
+      'attributes.yaml': 'attributes: []',
+      'loci.yaml': 'loci: []',
+      'traits.yaml': 'traits: []',
+      'houses.yaml': 'houses: []',
+      'heirlooms.yaml': 'heirlooms: []',
+      'spellbooks.yaml': 'spellbooks: []',
+      'careers.yaml': 'careers: []',
+      'clauses.yaml': 'clauses: []',
+      'prologue.yaml': 'prologue: []',
+      'endings.yaml': 'endings: []',
+      'tales.yaml': 'tales: []',
+      'parcels.yaml': 'parcels: []',
+      'positions.yaml': 'positions: []',
+      'events/one.yaml': 'events: []',
+      [path]: [
+        ...(path === 'events/one.yaml' ? ['events: []'] : []),
+        'proseVariants:',
+        `  - address: "${CORE_MESSAGE_ADDRESS_PREFIX}service.unpaid"`,
+        '    plainenglish: "{PERSON} was not kept on."',
+      ].join('\n'),
+    });
+
+    expect(assembleBundle(files(CORE_MESSAGE_VARIANTS_FILE), parse).proseVariants.map((v) => v.address))
+      .toEqual([`${CORE_MESSAGE_ADDRESS_PREFIX}service.unpaid`]);
+    expect(() => assembleBundle(files('events/one.yaml'), parse))
+      .toThrow(/core:messages#service\.unpaid.*events\/one\.yaml.*messages\.yaml/);
+  });
 });

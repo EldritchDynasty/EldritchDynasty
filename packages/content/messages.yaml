@@ -1,0 +1,160 @@
+# Plain English counterparts for the engine's own lines (#1010, #415).
+#
+# A content counterpart lives beside the Original it answers. A core line's
+# Original is a `msg(ctx, key, original)` call in packages/core/src, which has
+# no YAML file to sit beside, so every `core:messages#<key>` row lives here and
+# assembly refuses one filed anywhere else.
+#
+# `of` is the fingerprint of the msg() Original this row was reviewed against.
+# Reword the Original and the row goes stale: the game shows the Original again
+# and packages/core/src/prose.test.ts names the key to re-review.
+# The same test fails on a key no msg() call carries, and on a lost {TOKEN}.
+#
+# Plain English does not use either prose skill. Keep every fact, name, number
+# and consequence; make only the sentences simpler.
+
+proseVariants:
+  - address: "core:messages#assize.the_assessors_call"
+    of: "d6f23d20745bd8c4"
+    plainenglish: >-
+      Assessors came and counted the roof, the glass and the horses. They valued the house at a figure, and nobody argued with it out loud.
+  - address: "core:messages#assize.the_price_of_your_name"
+    of: "048b0bfb38de8e87"
+    plainenglish: >-
+      The house paid half a mark more for grain than the village did. The factor said he was very sorry, and did not lower the price.
+  - address: "core:messages#assize.the_rivals_combine"
+    of: "ad094b099d17aa8d"
+    plainenglish: >-
+      Word went round the auction rooms that no house would bid against another while the Eldritch name was on a lot. Nobody wrote this down.
+  - address: "core:messages#assize.a_retainer_courted_away"
+    of: "3866453aa8858186"
+    plainenglish: >-
+      Someone offered the steward a place, in a room the house does not own. He thought about it for a week, then said no.
+  - address: "core:messages#assize.the_church_asks_after_the_book"
+    of: "85f881eeff693192"
+    plainenglish: >-
+      A clerk of the Nine Quiet Names politely asked to compare the house's account of one year with three other accounts he had already read.
+  - address: "core:messages#assize.a_ward_is_requested"
+    of: "eec1e5747c9d2950"
+    plainenglish: >-
+      The house was asked to take a ward. It was the kind of request where a refusal is exactly what is being watched.
+  - address: "core:messages#assize.an_older_claim"
+    of: "8140f82e433dabc2"
+    plainenglish: >-
+      A neighbouring house brought out a document about a boundary. It was dated earlier than the house had thought any document could be.
+  - address: "core:messages#assize.the_levy_falls_here"
+    of: "d349bcec94bc4570"
+    plainenglish: >-
+      The levy was raised across the whole valley, and the house paid at a rate the rest of the valley thought was fair.
+  - address: "core:messages#assize.the_church_opens_its_hand"
+    of: "b300d54009c3c584"
+    plainenglish: >-
+      The chapter house sent grain and a cart. It did not call this charity, and it did not need to.
+  - address: "core:messages#assize.the_tithe_forgiven"
+    of: "04fa7075bc7fa231"
+    plainenglish: >-
+      The branches were told to keep their tithe this year. Nobody pretended it was generosity. There was nothing left at the seat to send it to.
+  - address: "core:messages#assize.an_old_friend_remembers"
+    of: "55dd3788d5f47d1c"
+    plainenglish: >-
+      A debt the house had stopped keeping track of was paid back in full, by a man whose father had borrowed it.
+  - address: "core:messages#assize.the_physician_stays"
+    of: "59a191faa1093f4e"
+    plainenglish: >-
+      The physician took a room at the house for the season and then stayed on. Physicians do that where they are needed, even when they are paid late.
+  - address: "core:messages#assize.a_cheap_hand"
+    of: "0d91f769da698f35"
+    plainenglish: >-
+      The marriage market suddenly acted as if it had always liked the house, and as if its terms had always been easy to bargain over.
+  - address: "core:messages#assize.a_book_at_the_gate"
+    of: "0710d675fd8bc1b9"
+    plainenglish: >-
+      Someone left a book at the gate. It was wrapped in oilcloth, with no name on it and no note inside.
+  - address: "core:messages#assize.kin_come_home"
+    of: "586e80d9244ee56d"
+    plainenglish: >-
+      Cousins who had not written in forty years wrote, and then came. The house fed them without asking what they wanted.
+  - address: "core:messages#succession.uncertain.single"
+    of: "424166c07c058514"
+    plainenglish: >-
+      {PERSON} has not awakened yet, so the house does not know what the blood will show.
+  - address: "core:messages#succession.uncertain.plural"
+    of: "1b25e79884d08d4c"
+    plainenglish: >-
+      {PEOPLE} have not awakened yet, so the house does not know what the blood will show.
+  - address: "core:messages#succession.namesake.text"
+    of: "fabd115041e624dc"
+    plainenglish: >-
+      The house had a {NAME} before, and everyone who deals with the house remembers what that name was worth. They will expect the same again, and they will judge any difference harshly.
+  - address: "core:messages#succession.regency.text"
+    of: "ba61ffa0c7462524"
+    plainenglish: >-
+      No son of the house awakened, so {PERSON} held the house. She held it well, but she could not move it forward at all.
+  - address: "core:messages#succession.majority.text"
+    of: "8d15ecec7b270e18"
+    plainenglish: >-
+      {PERSON} turned sixteen this year. The Warden's clerk rode out to give back the keys {PRONOUN} had never yet held.
+  - address: "core:messages#succession.wardship.title"
+    of: "32b48c11ddc46fa5"
+    plainenglish: >-
+      The Warden takes over the estate
+  - address: "core:messages#succession.wardship.text"
+    of: "771bd97d7ebce271"
+    plainenglish: >-
+      {PERSON} is not yet sixteen. By the Warden's right, Cawdry now manages the estate until {PRONOUN} comes of age, or until the house pays to buy the wardship back.
+  - address: "core:messages#wardship.refuse.bought_back"
+    of: "f2ff66e6d43fe0aa"
+    plainenglish: >-
+      the wardship has already been bought back
+  - address: "core:messages#wardship.refuse.cost"
+    of: "d29a36c510d03429"
+    plainenglish: >-
+      the house cannot afford to buy back the wardship
+  - address: "core:messages#succession.buyback.text"
+    of: "cc8ed6e27dc6f85e"
+    plainenglish: >-
+      The house paid the Warden's clerk, and he stopped taking the harvest. {PERSON} is still not the Head, which has to wait until sixteen, but the land belongs to the house again.
+  - address: "core:messages#succession.buyback.without_ward"
+    of: "5a64573d68a14bd9"
+    plainenglish: >-
+      The house paid the Warden's clerk, and he stopped taking the harvest.
+  - address: "core:messages#service.unpaid"
+    of: "004a072384ecce57"
+    plainenglish: >-
+      {PERSON} was not kept on, because the house could not pay this quarter's wages.
+  - address: "core:messages#service.destitute"
+    of: "48407e94ad2f3e38"
+    plainenglish: >-
+      {PERSON} left the house, because there was nothing left to pay them with.
+  - address: "core:messages#service.freed"
+    of: "7bd8fb7ef6508d9a"
+    plainenglish: >-
+      {PERSON} was freed by the will of the person who hired them, and owed nothing.
+  - address: "core:messages#service.employer_died"
+    of: "130b331f7719be7b"
+    plainenglish: >-
+      {PERSON} was released from service, because the person who hired them died some years ago.
+  - address: "core:messages#service.inherited_post"
+    of: "47e1ce321d7c28ce"
+    plainenglish: >-
+      {HEIR} took over {LAST}'s post. That post had been in their family almost as long as the house had held the seal.
+  - address: "core:messages#service.wanderer_unannounced"
+    of: "cfddc043a9c3f6ef"
+    plainenglish: >-
+      {PERSON} arrived, though nobody had sent for them.
+  - address: "core:messages#passage.birth.daughter.named"
+    of: "1d45d34983a367f5"
+    plainenglish: >-
+      {MOTHER} had a daughter.
+  - address: "core:messages#passage.birth.son.named"
+    of: "87543aa9145a22a5"
+    plainenglish: >-
+      {MOTHER} had a son.
+  - address: "core:messages#passage.birth.daughter.unknown"
+    of: "f37896530b1ec307"
+    plainenglish: >-
+      A daughter was born.
+  - address: "core:messages#passage.birth.son.unknown"
+    of: "85fc2733e8191f97"
+    plainenglish: >-
+      A son was born.

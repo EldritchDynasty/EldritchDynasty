@@ -105,6 +105,16 @@ export const ProseVariantS = z.object({
 export type ProseVariant = z.infer<typeof ProseVariantS>;
 
 /**
+ * A core line keyed through `msg(ctx, key, original)` is addressed
+ * `core:messages#<key>`. Its Original is in TypeScript, not in any YAML file,
+ * so it cannot live beside it the way a content counterpart does; every core
+ * counterpart lives in this one file instead (#1010). `assembleBundle` refuses
+ * one filed anywhere else.
+ */
+export const CORE_MESSAGE_ADDRESS_PREFIX = 'core:messages#';
+export const CORE_MESSAGE_VARIANTS_FILE = 'messages.yaml';
+
+/**
  * Content fields whose string values are player-facing narrative prose.
  *
  * This vocabulary is shared by the #411 worklist and the editor. Keeping it
