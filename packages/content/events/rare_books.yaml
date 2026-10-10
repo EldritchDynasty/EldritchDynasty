@@ -960,3 +960,67 @@ proseVariants:
     of: "a14b76c8288ea24c"
     plainenglish: >-
       takes licensed work across the province at the published rates
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].title"
+    of: "d359fce91e5a08e5"
+    plainenglish: >-
+      Lot Three Hundred and Twelve Is Missing From the Catalogue
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].body"
+    of: "a17def700001fef4"
+    plainenglish: >-
+      The sale at Sarrow was announced years in advance. Its printed catalogue lists three
+      hundred and eleven lots, but there is one more. On the second afternoon, the unlisted lot
+      is shown in a private room off the hall. Eleven people were invited in writing, including
+      someone from this house. The invitation matters more than the book. The reserve price is
+      four hundred crowns.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=bid_on_it].label"
+    of: "50b2e96a779ac296"
+    plainenglish: >-
+      Bid on the unlisted lot. The reserve is four hundred crowns, but it could cost more.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=bid_on_it].outcomes[id=bought_it].text"
+    of: "a2277b3fc0fc3bab"
+    plainenglish: >-
+      The house buys the book for four hundred and forty crowns. The journey takes eleven days
+      east and eleven days back. The book comes home by boat in a locked box, rather than by
+      road. The purchase is not recorded anywhere. Ten other households know our family bought
+      it. All ten were invited into that room for the same reason we were.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=bid_on_it].outcomes[id=outbid].text"
+    of: "7e6441c8c4049b2c"
+    plainenglish: >-
+      The house stops bidding at four hundred and sixty crowns. A factor bidding for someone
+      who is not in the room wins at five hundred and twenty crowns. The house spent twenty-two
+      days travelling and nine crowns on the road, only to be seen trying to buy the book. Ten
+      other households witnessed this.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].label"
+    of: "7688a25b45a0253f"
+    plainenglish: >-
+      Decline the invitation. Do not join the eleven invited guests.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].outcomes[id=declined_the_room].text"
+    of: "654d82b3508e6a97"
+    plainenglish: >-
+      The house sends a polite letter declining the invitation. The eleven invitees become ten,
+      and the ten notice. The sale goes ahead. Our house buys two lots from the printed
+      catalogue at fair prices and returns home. No account of the private meeting on the
+      second afternoon includes our house. That meeting is the only part of the sale people
+      care about.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].record.subject"
+    of: "93b55f39618c92bd"
+    plainenglish: >-
+      the private room at the Sarrow sale
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].record.options.record.chronicle"
+    of: "d65e62fd85d13921"
+    plainenglish: >-
+      At Sarrow, there was a lot missing from the printed catalogue. Eleven houses were invited
+      to see it in a private room. We were invited, but we did not go.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].record.options.record.claims[0].text"
+    of: "3bd70857843156f3"
+    plainenglish: >-
+      was invited to see the unlisted lot at Sarrow but did not enter the room
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].record.options.embellish.chronicle"
+    of: "7119152d7f670c71"
+    plainenglish: >-
+      At the Sarrow sale, this house bought two lots from the printed catalogue at fair prices.
+      We had no other business there.
+  - address: "content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].record.options.embellish.claims[0].text"
+    of: "82329b7f502a7e3b"
+    plainenglish: >-
+      bought two listed lots at Sarrow and had no other business there
