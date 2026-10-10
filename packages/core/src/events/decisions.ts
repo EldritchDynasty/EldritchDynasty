@@ -98,6 +98,8 @@ export interface PendingRecord {
   subject: string;
   /** Exact authored choice override when this Record docket was raised. */
   recordChoiceId?: string;
+  /** An exact chosen outcome's Record override, distinct from a choice override. */
+  recordOutcomeId?: string;
   /** A concrete earlier encounter with an outside house represented in this record (#217). */
   callback?: string;
   options: { option: RecordOption; chronicle: string | null; discrepancy?: string }[];
@@ -207,7 +209,21 @@ export function queueChoice(
 export function recordEventForChoice(
   e: EventTemplate,
   choiceId?: string,
-): { event: EventTemplate; recordChoiceId?: string } | undefined {
+  outcomeId?: string,
+): { event: EventTemplate; recordChoiceId?: string; recordOutcomeId?: string } | undefined {
+  // Outcome identity is the PAIR: outcome ids may repeat across different choices.
+  // Prefer its exact authored account before the choice-wide fallback.
+  const key = choiceId === undefined || outcomeId === undefined
+    ? undefined : `${choiceId}/${outcomeId}`;
+  const outcomeOverride = key === undefined
+    ? undefined : e.recordByOutcome?.find((row) => row.id === key);
+  if (outcomeOverride) {
+    return {
+      event: { ...e, record: outcomeOverride },
+      recordChoiceId: choiceId,
+      recordOutcomeId: outcomeId,
+    };
+  }
   const override = choiceId === undefined
     ? undefined
     : e.recordByChoice?.find((row) => row.id === choiceId);
@@ -216,22 +232,27 @@ export function recordEventForChoice(
 }
 
 /** The worklist and the live docket use the same authored structural address. */
-function recordProseBase(ctx: SimCtx, e: EventTemplate, recordChoiceId?: string): string | undefined {
+function recordProseBase(
+  ctx: SimCtx, e: EventTemplate, recordChoiceId?: string, recordOutcomeId?: string,
+): string | undefined {
   const base = eventTitleAddress(ctx, e)?.replace(/\.title$/, '');
   if (base === undefined) return undefined;
+  if (recordChoiceId !== undefined && recordOutcomeId !== undefined) {
+    return `${base}.recordByOutcome[id=${encodeURIComponent(`${recordChoiceId}/${recordOutcomeId}`)}]`;
+  }
   return recordChoiceId === undefined
     ? `${base}.record`
     : `${base}.recordByChoice[id=${encodeURIComponent(recordChoiceId)}]`;
 }
 
 export function queueRecord(
-  ctx: SimCtx, e: EventTemplate, entryId: string, fill: SlotFill = {}, choiceId?: string,
+  ctx: SimCtx, e: EventTemplate, entryId: string, fill: SlotFill = {}, choiceId?: string, outcomeId?: string,
 ): PendingRecord | undefined {
-  const selected = recordEventForChoice(e, choiceId);
+  const selected = recordEventForChoice(e, choiceId, outcomeId);
   if (!selected) return undefined;
   const block = selected.event.record!;
   const o = block.options;
-  const base = recordProseBase(ctx, e, selected.recordChoiceId);
+  const base = recordProseBase(ctx, e, selected.recordChoiceId, selected.recordOutcomeId);
   const prose = (path: string, original: string) =>
     renderProse(ctx, base === undefined ? undefined : `${base}.${path}`, original);
   const callback = relationshipCallback(ctx, fill);
@@ -242,6 +263,7 @@ export function queueRecord(
     event: selected.event,
     subject: prose('subject', block.subject),
     ...(selected.recordChoiceId === undefined ? {} : { recordChoiceId: selected.recordChoiceId }),
+    ...(selected.recordOutcomeId === undefined ? {} : { recordOutcomeId: selected.recordOutcomeId }),
     ...(callback ? { callback } : {}),
     options: [
       { option: 'record', chronicle: prose('options.record.chronicle', o.record.chronicle) },
@@ -408,7 +430,7 @@ export function resolveChoice(
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
   const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep);
-  queueRecord(ctx, e, resolved.entryId, fill, choice.id);
+  queueRecord(ctx, e, resolved.entryId, fill, choice.id, outcome.id);
   return { ok: true, resolved };
 }
 
@@ -543,7 +565,7 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
   return { ok: true, line: applyRecord(
     ctx, pending.event, pending.entryId, option, pending.fill,
-    typeof frozen === 'string' ? frozen : undefined, pending.recordChoiceId,
+    typeof frozen === 'string' ? frozen : undefined, pending.recordChoiceId, pending.recordOutcomeId,
   ) };
 }
 
@@ -561,6 +583,7 @@ export function applyRecord(
   fill: SlotFill = {},
   frozenChronicle?: string,
   recordChoiceId?: string,
+  recordOutcomeId?: string,
 ): string | null {
   const block = e.record;
   if (!block) return null;
@@ -573,7 +596,7 @@ export function applyRecord(
   // A Record option can add a separate Chronicle line through an effect.
   // Resolve that line's own authored address before the text becomes history;
   // the option's main Chronicle prose is frozen separately by the docket.
-  const recordAddress = recordProseBase(ctx, e, recordChoiceId);
+  const recordAddress = recordProseBase(ctx, e, recordChoiceId, recordOutcomeId);
   for (const [index, eff] of chosen.effects.entries()) {
     const applied = eff.kind === 'chronicle'
       ? {
