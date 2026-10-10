@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { indexContent } from '@ed/schema';
 import { testWorld, place, marry, beget } from './testing.js';
-import { readPanel, emptyPanel } from './people/panel.js';
+import { readPanel, issueOf, emptyPanel } from './people/panel.js';
 import { dealMatch, type MatchCard, type LineCensus } from './people/match.js';
 import { makeRng } from './rng.js';
 
@@ -63,6 +63,49 @@ function census(): LineCensus {
 }
 
 describe('the matchmaker’s panel', () => {
+  it('uses his kinship labels for a male candidate and keeps her labels for a woman', () => {
+    const ctx = testWorld(content, 966, 1200);
+    const mother = place(ctx, { sex: 'female', age: 60, name: 'Eira' });
+    const father = place(ctx, { sex: 'male', age: 62, name: 'Aldric', awakened: true });
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Roland' });
+    const daughter = place(ctx, { sex: 'female', age: 21, name: 'Dala' });
+    beget(ctx, son, mother, father);
+    beget(ctx, daughter, mother, father);
+    const cen = census();
+    cen.counted.add(mother.id);
+    cen.borne.set(mother.id, [son, daughter]);
+
+    const sonCard = cardFor(son);
+    readPanel(ctx, sonCard, cen);
+    expect(sonCard.panel.issue.find((row) => row.name === 'Eira')?.relation).toBe('his mother');
+    expect(sonCard.panel.woken.find((row) => row.name === 'Aldric')?.relation).toBe('his father');
+    expect(issueOf(ctx, son.id, cen).find((row) => row.name === 'Eira')?.relation).toBe('his mother');
+
+    const daughterCard = cardFor(daughter);
+    readPanel(ctx, daughterCard, cen);
+    expect(daughterCard.panel.issue.find((row) => row.name === 'Eira')?.relation).toBe('her mother');
+    expect(daughterCard.panel.woken.find((row) => row.name === 'Aldric')?.relation).toBe('her father');
+  });
+
+  it('says of his house for male outsider cards rather than of her house', () => {
+    const ctx = testWorld(content, 967, 1200);
+    const suitor = place(ctx, { sex: 'male', age: 22, name: 'Marrow suitor', house: 'house_marrow' });
+    const witness = place(ctx, { sex: 'male', age: 40, name: 'Marrow witness',
+      house: 'house_marrow', awakened: true });
+    const elder = place(ctx, { sex: 'female', age: 60, name: 'Marrow elder', house: 'house_marrow' });
+    marry(ctx, elder, place(ctx, { sex: 'male', age: 61, name: 'Marrow elder husband', house: 'house_marrow' }));
+    const cen = census();
+    cen.counted.add(elder.id);
+    cen.byHouse.set('house_marrow', [elder]);
+
+    const card = cardFor(suitor);
+    card.kind = 'outsider';
+    delete card.person;
+    readPanel(ctx, card, cen);
+    expect(card.panel.woken.find((row) => row.name === witness.name)?.relation).toBe('of his house');
+    expect(card.panel.issue.find((row) => row.name === elder.name)?.relation).toBe('of his house');
+  });
+
   /**
    * THE ONE THAT MATTERS. A woman whose father woke and a woman whose father
    * did not, with everything else about them identical. The panel separates
