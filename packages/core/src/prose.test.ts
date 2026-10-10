@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { coreMessageAddress, msg } from './messages.js';
+import { marry, place } from './testing.js';
 import { outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome } from './prose.js';
 import { loadBundle, loadContent } from '@ed/content';
 import { canonical } from './save.js';
@@ -49,6 +50,39 @@ describe('live trait names in the selected prose mode (#957)', () => {
     session.setProseMode('original');
     expect(session.view().traits).toEqual(original);
     expect(canonical(saveGame(ctx))).toBe(snapshot);
+  });
+});
+
+describe('married-in spouse house names in the selected prose mode (#968)', () => {
+  it('renders a reviewed house name and preserves Original, stale fallback and saves', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const house = ctx.content.house('house_marrow');
+    if (!house) throw new Error('Marrow house fixture is missing');
+    const member = place(ctx, { sex: 'male', age: 27, name: 'Merrin of the blood' });
+    const spouse = place(ctx, { sex: 'female', age: 25, name: 'Mara from Marrow', house: 'house_marrow' });
+    marry(ctx, member, spouse);
+
+    const address = `content:${ctx.content.sourceOf(String(house.id))}#houses[id=${encodeURIComponent(String(house.id))}].name`;
+    const spouseHouse = () => session.view().halls
+      .flatMap((hall) => hall.members)
+      .find((person) => person.id === member.id)?.spouse?.house;
+    expect(spouseHouse()).toBe(house.name);
+    const originalSave = canonical(saveGame(ctx));
+
+    const variant = { address, of: proseOriginalHash(house.name), plainenglish: 'The Marrow household' };
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(spouseHouse()).toBe(variant.plainenglish);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    expect(spouseHouse()).toBe(house.name);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(spouseHouse()).toBe(house.name);
+    expect(canonical(saveGame(ctx))).toBe(originalSave);
   });
 });
 
