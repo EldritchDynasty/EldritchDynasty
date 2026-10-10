@@ -96,6 +96,8 @@ export interface PendingRecord {
   year: Year;
   event: EventTemplate;
   subject: string;
+  /** Exact authored choice override when this Record docket was raised. */
+  recordChoiceId?: string;
   /** A concrete earlier encounter with an outside house represented in this record (#217). */
   callback?: string;
   options: { option: RecordOption; chronicle: string | null; discrepancy?: string }[];
@@ -197,21 +199,54 @@ export function queueChoice(
   return pending;
 }
 
-export function queueRecord(ctx: SimCtx, e: EventTemplate, entryId: string, fill: SlotFill = {}): PendingRecord | undefined {
-  if (!e.record) return undefined;
-  const o = e.record.options;
+/**
+ * Resolve authored Record copy once, at the same branch boundary as the
+ * committed outcome. A queued docket stores this selected event whole, so
+ * saving, loading or switching prose modes cannot choose a different account.
+ */
+export function recordEventForChoice(
+  e: EventTemplate,
+  choiceId?: string,
+): { event: EventTemplate; recordChoiceId?: string } | undefined {
+  const override = choiceId === undefined
+    ? undefined
+    : e.recordByChoice?.find((row) => row.id === choiceId);
+  if (override) return { event: { ...e, record: override }, recordChoiceId: override.id };
+  return e.record ? { event: e } : undefined;
+}
+
+/** The worklist and the live docket use the same authored structural address. */
+function recordProseBase(ctx: SimCtx, e: EventTemplate, recordChoiceId?: string): string | undefined {
+  const base = eventTitleAddress(ctx, e)?.replace(/\\.title$/, '');
+  if (base === undefined) return undefined;
+  return recordChoiceId === undefined
+    ? `${base}.record`
+    : `${base}.recordByChoice[id=${encodeURIComponent(recordChoiceId)}]`;
+}
+
+export function queueRecord(
+  ctx: SimCtx, e: EventTemplate, entryId: string, fill: SlotFill = {}, choiceId?: string,
+): PendingRecord | undefined {
+  const selected = recordEventForChoice(e, choiceId);
+  if (!selected) return undefined;
+  const block = selected.event.record!;
+  const o = block.options;
+  const base = recordProseBase(ctx, e, selected.recordChoiceId);
+  const prose = (path: string, original: string) =>
+    renderProse(ctx, base === undefined ? undefined : `${base}.${path}`, original);
   const callback = relationshipCallback(ctx, fill);
   const pending: PendingRecord = {
     kind: 'record',
     id: decisionId(ctx),
     year: ctx.world.year,
-    event: e,
-    subject: proseForRecordSubject(ctx, e, e.record.subject),
+    event: selected.event,
+    subject: prose('subject', block.subject),
+    ...(selected.recordChoiceId === undefined ? {} : { recordChoiceId: selected.recordChoiceId }),
     ...(callback ? { callback } : {}),
     options: [
-      { option: 'record', chronicle: proseForRecordChronicle(ctx, e, 'record', o.record.chronicle) },
+      { option: 'record', chronicle: prose('options.record.chronicle', o.record.chronicle) },
       { option: 'omit', chronicle: null },
-      { option: 'embellish', chronicle: proseForRecordChronicle(ctx, e, 'embellish', o.embellish.chronicle), discrepancy: o.embellish.discrepancy.id },
+      { option: 'embellish', chronicle: prose('options.embellish.chronicle', o.embellish.chronicle), discrepancy: o.embellish.discrepancy.id },
     ],
     entryId,
     fill,
@@ -373,7 +408,7 @@ export function resolveChoice(
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
   const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep);
-  queueRecord(ctx, e, resolved.entryId, fill);
+  queueRecord(ctx, e, resolved.entryId, fill, choice.id);
   return { ok: true, resolved };
 }
 
@@ -508,7 +543,7 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
   return { ok: true, line: applyRecord(
     ctx, pending.event, pending.entryId, option, pending.fill,
-    typeof frozen === 'string' ? frozen : undefined,
+    typeof frozen === 'string' ? frozen : undefined, pending.recordChoiceId,
   ) };
 }
 
@@ -525,6 +560,7 @@ export function applyRecord(
   option: RecordOption,
   fill: SlotFill = {},
   frozenChronicle?: string,
+  recordChoiceId?: string,
 ): string | null {
   const block = e.record;
   if (!block) return null;
@@ -537,16 +573,16 @@ export function applyRecord(
   // A Record option can add a separate Chronicle line through an effect.
   // Resolve that line's own authored address before the text becomes history;
   // the option's main Chronicle prose is frozen separately by the docket.
-  const eventAddress = eventTitleAddress(ctx, e)?.replace(/\.title$/, '');
+  const recordAddress = recordProseBase(ctx, e, recordChoiceId);
   for (const [index, eff] of chosen.effects.entries()) {
     const applied = eff.kind === 'chronicle'
       ? {
         ...eff,
         text: renderProse(
           ctx,
-          eventAddress === undefined
+          recordAddress === undefined
             ? undefined
-            : `${eventAddress}.record.options.${option}.effects[${index}].text`,
+            : `${recordAddress}.options.${option}.effects[${index}].text`,
           eff.text,
         ),
       }
@@ -587,9 +623,9 @@ export function applyRecord(
           ...claim,
           text: renderProse(
             ctx,
-            eventAddress === undefined
+            recordAddress === undefined
               ? undefined
-              : `${eventAddress}.record.options.${option}.claims[${index}].text`,
+              : `${recordAddress}.options.${option}.claims[${index}].text`,
             claim.text,
           ),
         }
@@ -609,7 +645,8 @@ export function applyRecord(
   const text = option === 'omit' || chosen.chronicle === null
     ? null
     : renderBody(
-      frozenChronicle ?? proseForRecordChronicle(ctx, e, option, chosen.chronicle),
+      frozenChronicle ?? renderProse(ctx, recordAddress === undefined
+        ? undefined : `${recordAddress}.options.${option}.chronicle`, chosen.chronicle),
       fill,
       ctx,
     );
