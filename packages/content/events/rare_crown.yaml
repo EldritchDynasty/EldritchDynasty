@@ -97,6 +97,55 @@ events:
             id: where_the_line_stood
             severity: major
             provableBy: [house_calder, house_ilm, commons]
+    recordByChoice:
+      - id: let_the_reading_stand
+        subject: the reading, and that nobody went to Caster
+        options:
+          record:
+            chronicle: >-
+              The heralds read us four lines lower and this house let the
+              reading stand, and sent nobody to Caster, and stood four lines
+              lower at every door for three years.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: let the Roll's reading stand and sent nobody to Caster }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The heralds read us four lines lower and this house sent its advocate to Caster, who had the line restored before the Assembly rose.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent an advocate to Caster who had the house's line restored before the Assembly rose }
+            discrepancy:
+              id: the_advocate_who_never_went_to_caster
+              severity: major
+              provableBy: [house_calder, house_ilm, commons]
+    recordByOutcome:
+      - id: send_a_man_to_caster/corrected
+        subject: the reading, and the error found at Caster
+        options:
+          record:
+            chronicle: >-
+              The heralds read us four lines lower and we sent a man to Caster,
+              and a clerk of the heralds found a marriage entered against the
+              wrong branch and corrected it in the margin. It cost forty-one
+              crowns and eleven weeks, and the house stands where it stood.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: went to Caster and had a clerk's error in the Roll corrected in the margin }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The heralds read us four lines lower and our advocate at Caster so shamed the clerks that the Assembly raised this house two lines above where it had stood before.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: had the house raised two lines above its old place on the Roll }
+            discrepancy:
+              id: the_two_lines_the_assembly_never_gave
+              severity: major
+              provableBy: [house_calder, house_ilm, commons]
     rumour: { id: rumour_four_lines_lower, accuracy: 0.6, spread: 3 }
     accounts: [the_heralds_marginal_correction, what_cawdry_made_of_four_lines]
 
@@ -473,6 +522,56 @@ events:
             id: who_was_in_the_field_at_cawdry
             severity: major
             provableBy: [house_calder, house_ilm, commons]
+    recordByOutcome:
+      - id: ride_out/seen
+        subject: the progress, and who spoke to this house there
+        options:
+          record:
+            chronicle: >-
+              The progress lay four nights at Cawdry and four of this house rode
+              out to it, dressed, with a gift of plate, at a cost of sixty-four
+              crowns. Four houses in that field spoke to us who had not done so
+              in a generation.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: rode out to the royal progress at Cawdry with a gift of plate }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The progress lay four nights at Cawdry and the king received this house apart from the line, in his own chamber, and spoke with the Head for an hour.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: was received by the king in his own chamber at Cawdry for an hour }
+            discrepancy:
+              id: the_hour_in_the_kings_chamber
+              severity: major
+              provableBy: [house_calder, house_ilm, commons]
+      - id: ride_out/seated_badly
+        subject: the progress, and where this house was placed in the line
+        options:
+          record:
+            chronicle: >-
+              The progress lay four nights at Cawdry and four of this house rode
+              out to it at a cost of sixty-four crowns, and the Warden's steward
+              placed us in the line eleven behind where this house stood the
+              last time a progress came north.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: attended the progress at Cawdry and was placed eleven lower in the line }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The progress lay four nights at Cawdry and this house attended upon it and stood in the line where it has always stood, and gave a gift of plate.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: kept the house's old place in the line at Cawdry }
+            discrepancy:
+              id: where_the_steward_put_us_in_the_line
+              severity: major
+              provableBy: [house_calder, house_ilm, commons]
     rumour: { id: rumour_the_line_of_ninety_houses, accuracy: 0.5, spread: 2 }
     accounts: [the_wardens_stewards_list_of_the_line, the_hayfield_and_the_progress]
 
@@ -564,6 +663,54 @@ events:
             id: whether_a_name_went_forward
             severity: major
             provableBy: [house_calder, house_ilm]
+    recordByOutcome:
+      - id: put_the_name_forward/not_chosen
+        subject: the vacant wardenship, and the name this house put forward
+        options:
+          record:
+            chronicle: >-
+              The Warden died and four houses put names forward, and this house
+              put forward {CANDIDATE} at a cost of sixty crowns. The office went
+              to a house three lines above ours, as everybody had expected.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: CANDIDATE }, text: was put forward for the Wardenship and was not chosen }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The Warden died and the office was offered to {CANDIDATE}, who declined it for the good of the house, and it went to a house three lines above ours.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: CANDIDATE }, text: was offered the Wardenship and declined it }
+            discrepancy:
+              id: the_office_he_never_declined
+              severity: major
+              provableBy: [house_calder, house_ilm]
+      - id: put_the_name_forward/chosen
+        subject: the vacant wardenship, and what it cost to win it
+        options:
+          record:
+            chronicle: >-
+              The Warden died and four houses put names forward, and this house
+              put forward {CANDIDATE} at a cost of sixty crowns and nine months
+              of asking, and he was chosen. The Nethering is governed from this
+              table.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: CANDIDATE }, text: was put forward at a cost of sixty crowns and chosen Warden of the Nethering }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The Warden died and the province asked for {CANDIDATE} by name, and he was made Warden without this house putting forward a name or spending a crown.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: CANDIDATE }, text: was asked for by the province and made Warden without a name being put forward }
+            discrepancy:
+              id: the_sixty_crowns_for_the_wardenship
+              severity: major
+              provableBy: [house_calder, house_ilm]
     rumour: { id: rumour_the_four_names, accuracy: 0.55, spread: 2 }
     accounts: [the_cawdry_list_of_the_four, what_the_province_expected]
 
@@ -611,9 +758,10 @@ events:
               text: >-
                 Not one letter is sent and the nine hundred acres go to a
                 house from outside the province that nobody has to deal with
-                and everybody now does. In 1247 the attainder is reversed
-                posthumously on a technicality and every family that bought is
-                in a document about it for four years. This one is not.
+                and everybody now does. Years afterwards the attainder is
+                reversed posthumously on a technicality and every family that
+                bought is in a document about it for four years. This one is
+                not.
               effects:
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: 20 }
     record:
@@ -622,11 +770,10 @@ events:
         record:
           chronicle: >-
             Their house was attainted and their nine hundred acres offered at
-            a third, and this house sent no letter and bought nothing, and in
-            1247 the attainder was reversed.
+            a third, and this house sent no letter and bought nothing.
           effects: []
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: bought none of the attainted neighbour's nine hundred acres before the attainder was reversed }
+            - { kind: deed, target: { slot: HEAD }, text: bought none of the attainted neighbour's nine hundred acres }
         omit:
           chronicle: null
         embellish:
@@ -639,6 +786,31 @@ events:
             id: whether_we_bought_their_ground
             severity: major
             provableBy: [house_calder, house_ilm, commons]
+    recordByChoice:
+      - id: buy_the_land
+        subject: the attainted land, and what this house paid for it
+        options:
+          record:
+            chronicle: >-
+              Their house was attainted and their nine hundred acres offered at
+              a third, and this house bought them for a hundred and eighty
+              crowns, by letter, and is entered by name in the Crown's register
+              of the sale.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: bought nine hundred acres of the attainted neighbour's land from the Crown for a hundred and eighty crowns }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: Their house was attainted and this house took none of their ground from the Crown, but bought it afterwards from the family itself, at a fair price and with their blessing.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: bought the attainted family's land from the family itself with their blessing }
+            discrepancy:
+              id: the_blessing_they_never_gave
+              severity: major
+              provableBy: [house_calder, house_ilm, commons]
     rumour: { id: rumour_who_bought_the_attainted_acres, accuracy: 0.6, spread: 3 }
     accounts: [the_crown_register_of_the_sale, what_the_attainted_family_told_its_children]
 
@@ -672,11 +844,11 @@ events:
               weight: 62
               text: >-
                 Five years at Caster, a tutor out of Corran, a hand that comes
-                back better than anybody's in this house, and a child of
-                eleven returned at sixteen who has been watched daily by four
-                hundred people for the whole of the age at which this family's
-                children are watched. Nothing happened. Nothing was going to
-                happen. Nobody at Ardwen slept properly for five years.
+                back better than anybody's in this house, and a child returned
+                five years older who has been watched daily by four hundred
+                people through years in which this family's children are
+                watched. Nothing happened. Nothing was going to happen. Nobody
+                at Ardwen slept properly for five years.
               effects:
                 - { kind: attribute, target: { slot: CHILD }, attr: mind, delta: 5 }
                 - { kind: attribute, target: { slot: CHILD }, attr: charm, delta: 3 }
@@ -688,8 +860,8 @@ events:
                 noticed by somebody whose whole office is noticing, and it is
                 written in a household book that is not the Crown's and not
                 the Church's and belongs to a family this house has never
-                heard of. The child comes home at sixteen and is fine. The
-                book does not come home.
+                heard of. The child comes home in the fifth year and is fine.
+                The book does not come home.
               effects:
                 - { kind: attribute, target: { slot: CHILD }, attr: mind, delta: 5 }
                 - { kind: respect, delta: 2 }
@@ -733,6 +905,30 @@ events:
             id: whether_we_gave_a_child
             severity: total
             provableBy: [house_ilm, house_calder, commons]
+    recordByChoice:
+      - id: give_the_child
+        subject: the surety this house gave
+        options:
+          record:
+            chronicle: >-
+              Nine households were asked for sureties and this house gave
+              {CHILD}, who lived five years at Caster in a household of four
+              hundred people and came home in the fifth year.
+            effects: []
+            claims:
+              - { kind: deed, target: { slot: CHILD }, text: was given in surety at Caster and came home in the fifth year }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: This house gave {CHILD} in surety with the eight others, and the child came home in the fifth year carrying the king's own commendation under seal.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: CHILD }, text: came home from surety at Caster with the king's commendation under seal }
+            discrepancy:
+              id: the_commendation_never_written
+              severity: major
+              provableBy: [house_ilm, house_calder, commons]
     rumour: { id: rumour_eight_children_and_ninety_crowns, accuracy: 0.5, spread: 3 }
     accounts: [the_treaty_schedule_of_sureties, the_clerks_mark_against_one_name]
 
@@ -820,6 +1016,58 @@ events:
             id: the_fourth_generation
             severity: total
             provableBy: [the_church, house_calder, house_ilm]
+    recordByChoice:
+      - id: buy_the_fourth
+        subject: the fourth generation, and where its paper came from
+        options:
+          record:
+            chronicle: >-
+              The heralds opened our descent and we had paper for three
+              generations, and bought the fourth from a notary at Bramme for
+              twenty-five crowns, and sent all four to Caster under seal, and
+              it was accepted.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: bought a fourth generation of descent from a Bramme notary and sent it to the heralds under seal }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The heralds opened our descent and we sent four generations of maternal descent, each copied out of the parish book it was written in, and the heralds found nothing to question.
+            effects:
+              - { kind: respect, delta: 2 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: proved four generations of maternal descent from the parish books themselves }
+            discrepancy:
+              id: the_bramme_notarys_fourth_generation
+              severity: total
+              provableBy: [the_church, house_calder, house_ilm]
+    recordByOutcome:
+      - id: send_what_we_have/they_go_looking
+        subject: the fourth generation, and what the Rimefell answered
+        options:
+          record:
+            chronicle: >-
+              The heralds opened our descent and we showed three generations
+              and said plainly that the fourth had no paper. A herald's clerk
+              wrote to the Rimefell and had back a parish entry for a woman of
+              her name who never left it.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: admitted the fourth generation had no paper and saw the Rimefell's answer entered against it }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: The heralds opened our descent and their own clerk wrote to the Rimefell and found her baptism there, which settled the fourth generation in our favour.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: had the fourth generation confirmed by the Rimefell parish book }
+            discrepancy:
+              id: what_the_rimefell_parish_answered
+              severity: total
+              provableBy: [the_church, house_calder, house_ilm]
     rumour: { id: rumour_the_woman_with_no_paper, accuracy: 0.45, spread: 3 }
     accounts: [the_heralds_file_on_the_descent, the_rimefell_parish_answer]
 
@@ -1099,3 +1347,43 @@ proseVariants:
     of: 136ac77aeb59e64e
     plainenglish: >-
       which court tried the killer from Wick
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByChoice[id=let_the_reading_stand].subject"
+    of: e9c17eb2de61fca6
+    plainenglish: >-
+      the Roll reading, and that nobody went to Caster
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByChoice[id=let_the_reading_stand].options.record.chronicle"
+    of: 071069d2bae80a36
+    plainenglish: >-
+      The heralds read our house four lines lower on the Roll. We let the reading stand and sent nobody to Caster, so for three years the house stood four lines lower everywhere it went.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByChoice[id=let_the_reading_stand].options.record.claims[0].text"
+    of: 248a02b944fddf25
+    plainenglish: >-
+      accepted the Roll reading and sent nobody to Caster
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByChoice[id=let_the_reading_stand].options.embellish.chronicle"
+    of: 756ad0ed4ed20a59
+    plainenglish: >-
+      The heralds read our house four lines lower on the Roll. Our advocate went to Caster and had our place restored before the Assembly ended.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByChoice[id=let_the_reading_stand].options.embellish.claims[0].text"
+    of: a09eeacb9c595d3f
+    plainenglish: >-
+      sent an advocate to Caster who had the house's place restored before the Assembly ended
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByOutcome[id=send_a_man_to_caster%2Fcorrected].subject"
+    of: 502f56c32188c1bf
+    plainenglish: >-
+      the Roll reading, and the mistake found at Caster
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByOutcome[id=send_a_man_to_caster%2Fcorrected].options.record.chronicle"
+    of: 96ce02245c8e4f08
+    plainenglish: >-
+      The heralds read our house four lines lower on the Roll. We sent a man to Caster, and a herald's clerk found a marriage recorded under the wrong branch and corrected it in the margin. It cost 41 crowns and eleven weeks, and the house is back in its old place.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByOutcome[id=send_a_man_to_caster%2Fcorrected].options.record.claims[0].text"
+    of: 67458a308fd5464c
+    plainenglish: >-
+      went to Caster and had a clerk's mistake on the Roll corrected in the margin
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByOutcome[id=send_a_man_to_caster%2Fcorrected].options.embellish.chronicle"
+    of: 453413a62a9e7e42
+    plainenglish: >-
+      The heralds read our house four lines lower on the Roll. Our advocate at Caster embarrassed the clerks so badly that the Assembly moved the house two lines higher than it had been before.
+  - address: "content:events/rare_crown.yaml#events[id=the_third_reading_of_the_roll].recordByOutcome[id=send_a_man_to_caster%2Fcorrected].options.embellish.claims[0].text"
+    of: dc2a162265a2d136
+    plainenglish: >-
+      had the house moved two lines above its old place on the Roll
