@@ -836,7 +836,7 @@ proseVariants:
   - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=claim_the_wardens_court].outcomes[id=jurisdiction].text"
     of: "70277883b44bd5df"
     plainenglish: >-
-      Two advocates, each charging two marks a day, spend eleven weeks arguing about which court
+      Two advocates, at two marks a day, spend eleven weeks arguing about which court
       may question a landed family about its reading. In the end, the Warden's clerk and the
       archdeacon's clerk agree on a formula that settles nothing. Both sides quote it for the
       next two centuries. The house never has to answer the four questions, but the dispute
