@@ -1,6 +1,7 @@
 import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { assertFinalEvidence } from './ios-smoke-evidence.mjs';
 
 const APP_ID = 'nz.eldritchdynasty.game';
 const RESULT_NAME = 'smoke-result.json';
@@ -110,8 +111,9 @@ async function command(kind, url) {
             console.log(`${kind} smoke command received by app`);
           }
         } else {
-          if (!evidence.ok) throw new Error(evidence.error ?? `${kind} smoke command failed`);
-          return evidence;
+          // A pair of absent hashes used to compare equal (undefined === undefined)
+          // and could falsely certify persistence. Verify terminal evidence first.
+          return assertFinalEvidence(kind, evidence);
         }
       } catch (error) {
         if (error instanceof SyntaxError) {
