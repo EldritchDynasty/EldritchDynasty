@@ -9,7 +9,7 @@ import { resolveSavePath, SaveSlotError, slotOfFile } from '../tools/save-slot.m
 import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
-import { readUserContent, userContentRoot } from './user-content.mjs';
+import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 
 /**
  * WRITING A RUN DOWN.
@@ -568,5 +568,93 @@ describe('desktop user content', () => {
     writeFileSync(join(root, 'events', 'my_event.yaml'), 'events: []\n');
     writeFileSync(join(root, 'readme.txt'), 'not content');
     expect(readUserContent(root)).toEqual({ 'events/my_event.yaml': 'events: []\n' });
+  });
+
+  it('lets the Mod Editor read and overwrite an existing nested YAML in its real profile', () => {
+    const root = userContentRoot(userData);
+    const file = join(root, 'events', 'local.yaml');
+    mkdirSync(join(root, 'events'), { recursive: true });
+    writeFileSync(file, 'local: old\n', 'utf8');
+
+    expect(readFileSync(resolveModEditorContentPath(root, 'events/local.yaml'), 'utf8'))
+      .toBe('local: old\n');
+    writeFileSync(resolveModEditorContentPath(root, 'events/local.yaml'), 'local: new\n', 'utf8');
+    expect(readFileSync(file, 'utf8')).toBe('local: new\n');
+    expect(() => resolveModEditorContentPath(root, '../outside.yaml'))
+      .toThrow('path escapes content root');
+  });
+
+  it('fails both Mod Editor operations closed when profile or content root is missing', () => {
+    for (const profile of [userData, join(userData, 'missing-profile')]) {
+      const root = userContentRoot(profile);
+      expect(() => readFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'utf8'))
+        .toThrow('user content root is not a regular directory');
+      expect(() => writeFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'changed'))
+        .toThrow('user content root is not a regular directory');
+    }
+    expect(existsSync(join(userData, 'mods'))).toBe(false);
+    expect(existsSync(join(userData, 'missing-profile'))).toBe(false);
+  });
+
+  it('rejects both Mod Editor operations through linked profile, mods and content ancestors', () => {
+    for (const ancestor of ['profile', 'mods', 'content']) {
+      const profile = join(userData, 'profile-' + ancestor);
+      const outside = mkdtempSync(join(tmpdir(), 'ed-external-editor-'));
+      outsideRoots.push(outside);
+      let externalFile;
+      if (ancestor === 'profile') {
+        externalFile = join(outside, 'mods', 'content', 'secret.yaml');
+        mkdirSync(join(outside, 'mods', 'content'), { recursive: true });
+        writeFileSync(externalFile, 'external: unchanged\n');
+        if (!linkDirectory(outside, profile)) continue;
+      } else if (ancestor === 'mods') {
+        mkdirSync(profile);
+        mkdirSync(join(outside, 'content'));
+        externalFile = join(outside, 'content', 'secret.yaml');
+        writeFileSync(externalFile, 'external: unchanged\n');
+        if (!linkDirectory(outside, join(profile, 'mods'))) continue;
+      } else {
+        mkdirSync(join(profile, 'mods'), { recursive: true });
+        externalFile = join(outside, 'secret.yaml');
+        writeFileSync(externalFile, 'external: unchanged\n');
+        if (!linkDirectory(outside, userContentRoot(profile))) continue;
+      }
+
+      const root = userContentRoot(profile);
+      expect(() => readFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'utf8'))
+        .toThrow('user content root is not a regular directory');
+      expect(() => writeFileSync(resolveModEditorContentPath(root, 'secret.yaml'), 'attacker'))
+        .toThrow('user content root is not a regular directory');
+      expect(readFileSync(externalFile, 'utf8')).toBe('external: unchanged\n');
+    }
+  });
+
+  it('keeps the physical containment guard for Mod Editor descendants', () => {
+    const root = userContentRoot(userData);
+    mkdirSync(root, { recursive: true });
+    const outside = outsideWithYaml();
+    if (!linkDirectory(outside, join(root, 'linked-events'))) return;
+    expect(() => readFileSync(
+      resolveModEditorContentPath(root, 'linked-events/secret.yaml'), 'utf8',
+    )).toThrow('path escapes content root through a link');
+    expect(() => writeFileSync(
+      resolveModEditorContentPath(root, 'linked-events/secret.yaml'), 'changed',
+    )).toThrow('path escapes content root through a link');
+    expect(readFileSync(join(outside, 'secret.yaml'), 'utf8')).toBe('outside: secret\n');
+  });
+
+  it('wires both Electron Mod Editor IPC operations to the ancestor-safe resolver', () => {
+    const source = readFileSync(new URL('./main.mjs', import.meta.url), 'utf8');
+    expect(source).toContain('resolveModEditorContentPath(contentRoot(), path)');
+    for (const [name, next] of [
+      ['ed:write-content', 'ed:read-content'],
+      ['ed:read-content', 'ed:read-user-content'],
+    ]) {
+      const start = source.indexOf("ipcMain.handle('" + name + "'");
+      const end = source.indexOf("ipcMain.handle('" + next + "'", start);
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(end).toBeGreaterThan(start);
+      expect(source.slice(start, end)).toContain('resolveShellContentPath(path)');
+    }
   });
 });
