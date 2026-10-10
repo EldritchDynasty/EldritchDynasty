@@ -5,8 +5,9 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 import { asId, ClaimS, proseOriginalHash } from '@ed/schema';
 import {
-  applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry,
-  pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, visibleRecordView,
+  applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry, missingPlainEnglish,
+  pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, setProseMode,
+  setProseVariants, visibleRecordView,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -553,5 +554,64 @@ describe('authored deed claims with internal commas (#587)', () => {
       expect(ClaimS.safeParse(sample).success).toBe(true);
       expect(ClaimS.safeParse({ ...sample, 'silent extra key': null }).success).toBe(false);
     }
+  });
+});
+
+describe('Record deed-claim Plain English at commit time (#817)', () => {
+  it('freezes reviewed wording for both Record and Embellish, with stale fallback', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const head = place(ctx, { sex: 'male', age: 35 });
+    const event = bundle.mustEvent('a_book_that_names_the_family');
+    if (!event.record) throw new Error('Rare-library fixture needs a Record block');
+
+    const recordClaim = event.record.options.record.claims[0];
+    const embellishClaim = event.record.options.embellish.claims[0];
+    if (recordClaim?.kind !== 'deed' || embellishClaim?.kind !== 'deed') {
+      throw new Error('Rare-library fixture needs both authored deed claims');
+    }
+
+    const base = 'content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.options.';
+    const recordAddress = `${base}record.claims[0].text`;
+    const embellishAddress = `${base}embellish.claims[0].text`;
+    const plainRecord = 'found the family named on page forty-one of a notebook bought at Cawdry';
+    const plainEmbellish = 'bought eleven farming books at Cawdry and put each on a shelf';
+    const reviewed = [
+      { address: recordAddress, of: proseOriginalHash(recordClaim.text), plainenglish: plainRecord },
+      { address: embellishAddress, of: proseOriginalHash(embellishClaim.text), plainenglish: plainEmbellish },
+    ];
+    setProseVariants(ctx, reviewed);
+
+    const write = (entryId: string, option: 'record' | 'embellish') => {
+      applyRecord(ctx, event, entryId, option, { HEAD: head.id });
+      const entry = ctx.world.chronicle.find((page) => page.id === entryId);
+      const claim = entry?.claims?.find((item) => item.kind === 'deed');
+      if (!claim || claim.kind !== 'deed') throw new Error('Record deed claim was not committed');
+      expect(claim.person).toBe(head.id);
+      return claim.text;
+    };
+
+    setProseMode(ctx, 'original');
+    expect(write('deed_original', 'record')).toBe(recordClaim.text);
+
+    setProseMode(ctx, 'plainenglish');
+    expect(write('deed_plain', 'record')).toBe(plainRecord);
+    expect(write('embellish_plain', 'embellish')).toBe(plainEmbellish);
+    expect(missingPlainEnglish(ctx)).not.toContain(recordAddress);
+    expect(missingPlainEnglish(ctx)).not.toContain(embellishAddress);
+
+    // A changed Original invalidates only the outdated reviewed counterpart.
+    setProseVariants(ctx, [{ ...reviewed[0]!, of: '0000000000000000' }, reviewed[1]!]);
+    expect(write('deed_stale', 'record')).toBe(recordClaim.text);
+    expect(missingPlainEnglish(ctx)).toContain(recordAddress);
+
+    // Previous pages keep their committed text through preference/catalogue changes.
+    setProseMode(ctx, 'original');
+    setProseVariants(ctx, []);
+    const frozenDeed = (entryId: string) => ctx.world.chronicle
+      .find((page) => page.id === entryId)?.claims?.find((claim) => claim.kind === 'deed');
+    expect(frozenDeed('deed_original')).toMatchObject({ text: recordClaim.text });
+    expect(frozenDeed('deed_plain')).toMatchObject({ text: plainRecord });
+    expect(frozenDeed('embellish_plain')).toMatchObject({ text: plainEmbellish });
+    expect(frozenDeed('deed_stale')).toMatchObject({ text: recordClaim.text });
   });
 });
