@@ -77,6 +77,12 @@ describe('searching the old contracts for a Ledger clause', () => {
           of: proseOriginalHash('The record-keepers were paid to compare the old contracts against the house copy.'),
           plainenglish: 'The family paid record-keepers to check the old contracts against its own copy.',
         },
+        // The same view renders the rites' refusal beside the search (#810).
+        {
+          address: coreMessageAddress('table.rite.standing'),
+          of: proseOriginalHash('the house has not reached the standing this rite demands'),
+          plainenglish: 'The house is not important enough for this ceremony yet.',
+        },
         { address: `${base}.name`, of: proseOriginalHash(clause.name), plainenglish: 'The Kept Gift' },
         ...(coverage === 'complete' ? [{ address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
       ]);
