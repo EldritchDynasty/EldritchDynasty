@@ -1,3 +1,4 @@
+import { realpathSync, statSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 
 /**
@@ -64,4 +65,41 @@ export function resolveContentPath(root, path) {
   }
 
   return target;
+}
+
+/**
+ * A content bridge must READ and WRITE only an existing YAML file inside its
+ * own physical root. The lexical guard alone is insufficient: readFileSync
+ * and writeFileSync follow symlinks in both the last path component and any
+ * ancestor directory. Resolve the physical target once and return that path
+ * to both transport callers, rather than returning to the symlink after the
+ * check. We do not create new files through either editor transport.
+ */
+export function resolveExistingContentPath(root, path) {
+  const lexical = resolveContentPath(root, path);
+  let physicalRoot;
+  let physicalTarget;
+  try {
+    physicalRoot = realpathSync(root);
+    physicalTarget = realpathSync(lexical);
+    if (!statSync(physicalTarget).isFile()) {
+      throw new ContentPathError('content is not a regular file');
+    }
+  } catch (error) {
+    if (error instanceof ContentPathError) throw error;
+    throw new ContentPathError('content file is unavailable');
+  }
+
+  const rel = relative(physicalRoot, physicalTarget);
+  if (rel === '' || rel === '..' || rel.startsWith('../')
+    || rel.startsWith('..\\\\') || isAbsolute(rel)) {
+    throw new ContentPathError('path escapes content root through a link');
+  }
+  // A link to another file type inside the root must not bypass the YAML
+  // restriction merely because its link name ends in .yaml.
+  if (!physicalTarget.endsWith('.yaml')) {
+    throw new ContentPathError('content is YAML');
+  }
+
+  return physicalTarget;
 }
