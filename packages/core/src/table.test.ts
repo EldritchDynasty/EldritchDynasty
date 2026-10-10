@@ -16,6 +16,56 @@ import { plainEnglishWorklist } from './tools/string-audit.js';
 
 const bundle = loadContent();
 
+describe('live Table names in Plain English (#972)', () => {
+  it('translates missing primer names, preserves one-word tutor labels and leaves saves unchanged', () => {
+    const ctx = testWorld(bundle, 972);
+    const book = ctx.content.spellbook('lesser_workings_of_aero');
+    if (!book) throw new Error('The missing aero primer fixture is absent');
+    const address = `content:${ctx.content.sourceOf(String(book.id))}#spellbooks[id=${encodeURIComponent(String(book.id))}].name`;
+    const readBook = () => tableView(ctx).missingPrimers.find((entry) => entry.book === book.id)?.name;
+    const before = structuredClone(saveGame(ctx));
+
+    expect(readBook()).toBe(book.name);
+    const variant = { address, of: proseOriginalHash(book.name), plainenglish: 'Basic Air Magic' };
+    setProseVariants(ctx, [variant]);
+    setProseMode(ctx, 'plainenglish');
+    expect(readBook()).toBe(variant.plainenglish);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    // Strength is one word: it is not on the prose worklist, so no false
+    // "missing translation" should be reported for this tutoring choice.
+    expect(tableView(ctx).teachable.find((row) => row.attr === 'strength')?.name).toBe('Strength');
+    expect(missingPlainEnglish(ctx)).not.toContain(
+      'content:attributes.yaml#attributes[id=strength].name');
+
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    expect(readBook()).toBe(book.name);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    setProseMode(ctx, 'original');
+    expect(readBook()).toBe(book.name);
+    expect(saveGame(ctx)).toEqual(before);
+  });
+
+  it('selects a reviewed tutor-subject variant if the authored name has multiple words', () => {
+    const source = structuredClone(bundle.bundle);
+    const strength = source.attributes.find((attribute) => String(attribute.id) === 'strength');
+    if (!strength) throw new Error('Strength fixture is missing');
+    // All currently teachable attribute names have one word. Give one a
+    // future multiword authored name to exercise the display-name seam.
+    strength.name = 'Physical Strength';
+    const ctx = testWorld(source, 973);
+    const address = 'content:attributes.yaml#attributes[id=strength].name';
+    setProseVariants(ctx, [{
+      address, of: proseOriginalHash(strength.name), plainenglish: 'Body Power',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(tableView(ctx).teachable.find((row) => row.attr === 'strength')?.name)
+      .toBe('Body Power');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+  });
+});
+
 describe('searching the old contracts for a Ledger clause', () => {
   const waitingHouse = () => {
     const ctx = testWorld(bundle, 7110, 1400);
