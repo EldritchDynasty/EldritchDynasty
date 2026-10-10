@@ -371,6 +371,9 @@ describe('CI evidence inventory', () => {
   it('retains live Electron advisory evidence and fails closed on critical npm findings', () => {
     const workflow = readFileSync(join(root, '.github/workflows/dependency-audit.yml'), 'utf8');
     expect(workflow).toContain("cron: '37 3 * * 1'");
+    expect(workflow).toContain('branches: [main]');
+    expect(workflow).toContain('package-lock.json');
+    expect(workflow).toContain('test "$GITHUB_REF" = "refs/heads/main"');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).toContain('permissions:\n  contents: read');
     expect(workflow).toContain('npm audit --json > dependency-audit.json');
