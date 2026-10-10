@@ -143,6 +143,10 @@ describe('the plate', () => {
   it('names the file after the house and the years', () => {
     expect(plateName('The House of Salt', [entry({ year: 1042 }), entry({ year: 1542 })]))
       .toBe('the-house-of-salt-1042-1542.png');
+    expect(plateName('李 家族', [entry({ year: 1042 }), entry({ year: 1542 })]))
+      .toBe('李-家族-1042-1542.png');
+    expect(plateName('Élodie家 👑', [entry()]))
+      .toBe('élodie家-1200-1200.png');
     // A house whose name is all punctuation still produces a filename.
     expect(plateName('!!!', [entry()])).toBe('the-house-1200-1200.png');
   });
@@ -248,6 +252,10 @@ describe('the house afterimage (#260)', () => {
   it('names the image after the house, term and seed', () => {
     expect(afterimageName('House of Salt', 8080, 1542))
       .toBe('house-of-salt-1542-seed-8080-afterimage.png');
+    expect(afterimageName('李 家族', 8080, 1542))
+      .toBe('李-家族-1542-seed-8080-afterimage.png');
+    expect(afterimageName('Élodie家 👑', 8080, 1542))
+      .toBe('élodie家-1542-seed-8080-afterimage.png');
     expect(afterimageName('!!!', 7, 1242))
       .toBe('the-house-1242-seed-7-afterimage.png');
   });
