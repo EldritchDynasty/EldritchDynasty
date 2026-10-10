@@ -182,6 +182,15 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng): ArcStep[] {
 
     if (cancelled) { inst.status = 'cancelled'; continue; }
 
+    // A due step is a promise of another scene, not permission to skip the
+    // author's conditions — the arc half of what #954 did for scheduled
+    // scenes (#996). Every `Outcome.next` follow-up is a node here, and this
+    // line used to present it without reading its `conditions` at all. The
+    // premise is waited for the way a missing cast is, five years at a time,
+    // rather than fired past or dropped; `{ arc }` lets a node's own
+    // `arcFlag`/`arcVisited` read this instance, as successors' `when` do.
+    if (!evalCondition(event.conditions, ctx, { arc: inst })) { inst.dueYear = ctx.world.year + 5; continue; }
+
     const res = resolveSlots(event, ctx, rng, inst.bindings);
     if (!res.ok) { inst.dueYear = ctx.world.year + 5; continue; }
 
