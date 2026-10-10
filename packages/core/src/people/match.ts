@@ -379,7 +379,9 @@ export interface LineCensus {
 function counts(year: Year, p: Person): boolean {
   return p.sex === 'female'
     && p.marriages.length > 0
-    && ageAt(p, year) >= CHILDBEARING.to;
+    // A life ended before the childbearing window closed is not a completed line.
+    // Checking today's year would count every long-dead young wife as barren.
+    && ageAt(p, p.died ?? year) >= CHILDBEARING.to;
 }
 
 /**
