@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ChronicleEntry } from '@ed/core';
+import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
   afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
   plateHeight, plateName, plateRows, plateSpan, plateSubtitle, reads, wrap,
@@ -258,5 +259,65 @@ describe('the house afterimage (#260)', () => {
       .toBe('élodie家-1542-seed-8080-afterimage.png');
     expect(afterimageName('!!!', 7, 1242))
       .toBe('the-house-1242-seed-7-afterimage.png');
+  });
+});
+
+// Download lifecycle assertions share this measured Book/Afterimage suite.
+
+function downloadFixture() {
+  const events: string[] = [];
+  const link = {
+    href: '',
+    download: '',
+    hidden: false,
+    click: vi.fn(() => { events.push('click'); }),
+    remove: vi.fn(() => { events.push('remove'); }),
+  };
+  const appendChild = vi.fn(() => { events.push('append'); });
+  const createElement = vi.fn(() => link);
+  const createObjectURL = vi.fn(() => 'blob:test-image');
+  const revokeObjectURL = vi.fn(() => { events.push('revoke'); });
+  vi.stubGlobal('document', { createElement, body: { appendChild } });
+  vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
+  vi.useFakeTimers();
+  return { events, link, appendChild, createElement, createObjectURL, revokeObjectURL };
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+describe('browser Blob downloads', () => {
+  it('clicks an attached link while the URL is valid, then releases it after a grace period', () => {
+    const f = downloadFixture();
+    const blob = new Blob(['plate'], { type: 'image/png' });
+    downloadBlob(blob, 'house-afterimage.png');
+
+    expect(f.createObjectURL).toHaveBeenCalledWith(blob);
+    expect(f.createElement).toHaveBeenCalledWith('a');
+    expect(f.link.href).toBe('blob:test-image');
+    expect(f.link.download).toBe('house-afterimage.png');
+    expect(f.link.hidden).toBe(true);
+    expect(f.appendChild).toHaveBeenCalledWith(f.link);
+    expect(f.events).toEqual(['append', 'click', 'remove']);
+    expect(f.revokeObjectURL).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(DOWNLOAD_URL_GRACE_MS - 1);
+    expect(f.revokeObjectURL).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(f.revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:test-image');
+    expect(f.events).toEqual(['append', 'click', 'remove', 'revoke']);
+  });
+
+  it('cleans up the link and eventually releases the URL if clicking fails', () => {
+    const f = downloadFixture();
+    f.link.click.mockImplementationOnce(() => { throw new Error('blocked download'); });
+
+    expect(() => downloadBlob(new Blob(['plate']), 'chronicle.png')).toThrow('blocked download');
+    expect(f.link.remove).toHaveBeenCalledOnce();
+    expect(f.revokeObjectURL).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(f.revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:test-image');
   });
 });
