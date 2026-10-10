@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { musterEscalation, proseOriginalHash } from '@ed/schema';
@@ -8,6 +9,7 @@ import {
   withdrawCommitment,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
@@ -496,4 +498,50 @@ describe('the war line speaks the reader\'s setting (#739)', () => {
       expect(plainBloody.line.text).toBe(plainBloody.fill(plain(tide, true)));
     });
   }
+});
+
+describe('the muster orders refuse in the reader\'s setting (#801)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./muster.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#muster\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'muster.refuse.buy_no_commitment': 'no commitment is standing',
+      'muster.refuse.buy_no_position': 'no such position',
+      'muster.refuse.respect': 'the house is not {RESPECT} enough yet',
+      'muster.refuse.officer_age': 'needs an officer at least {AGE} years old',
+      'muster.refuse.cost': 'the house cannot raise {PRICE} crowns',
+      'muster.refuse.reinforce_no_commitment': 'no commitment is standing',
+      'muster.refuse.reinforce_no_men': 'not a number of men',
+      'muster.refuse.reinforce_lost_commitment': 'no commitment is standing',
+      'muster.refuse.withdraw_no_commitment': 'no commitment is standing to call home',
+    });
+  });
+
+  it('gives a refused order its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(bundle);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const idle = [
+        musterOrder(ctx, { op: 'reinforce', men: 5 }),
+        musterOrder(ctx, { op: 'buy', position: 'none' }),
+        musterOrder(ctx, { op: 'withdraw' }),
+      ];
+      beginCommitment(ctx, 20, 'the_wars');
+      return [
+        ...idle,
+        musterOrder(ctx, { op: 'reinforce', men: 0 }),
+        musterOrder(ctx, { op: 'buy', position: 'no_such_position' }),
+      ];
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      'no commitment is standing', 'no commitment is standing', 'no commitment is standing to call home',
+      'not a number of men', 'no such position',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
+  });
 });
