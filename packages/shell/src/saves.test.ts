@@ -241,6 +241,29 @@ describe('the installation library on disk', () => {
     expect(readRunLibrary(userData)).toEqual(library);
   });
 
+  it('never follows a planted library.json.writing symlink outside the profile store', () => {
+    const unrelated = join(userData, 'unrelated-records.txt');
+    writeFileSync(unrelated, 'unrelated file must not change', 'utf8');
+    const legacyScratch = join(userData, 'library.json.writing');
+    try {
+      symlinkSync(unrelated, legacyScratch, 'file');
+    } catch (error) {
+      // Creating file symlinks on Windows may require Developer Mode.
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes((error as NodeJS.ErrnoException).code ?? '')) return;
+      throw error;
+    }
+
+    const library = { format: 1, runs: [{ id: 'house-two' }] };
+    writeRunLibrary(userData, library);
+    expect(readFileSync(unrelated, 'utf8')).toBe('unrelated file must not change');
+    expect(readRunLibrary(userData)).toEqual(library);
+    expect(readdirSync(userData).sort()).toEqual([
+      'library.json',
+      'library.json.writing',
+      'unrelated-records.txt',
+    ]);
+  });
+
   it('has no value before a house has finished', () => {
     expect(readRunLibrary(userData)).toBeNull();
   });
