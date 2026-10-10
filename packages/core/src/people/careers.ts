@@ -3,6 +3,7 @@ import { canHoldPost } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { applyEffect } from '../events/effects.js';
+import { msg } from '../messages.js';
 
 /**
  * CAREERS — Respect is bought with descendants (issue #16).
@@ -41,8 +42,10 @@ export function careerDefOf(ctx: SimCtx, p: Person): CareerDef | undefined {
  * the game — the tutor's term, the library, the Match and the Record are all
  * hers, and the Threshold four are hers to practise (invariant 4).
  */
-export function canTakePost(p: Person): { ok: true } | { ok: false; reason: string } {
-  if (!canHoldPost(p.sex)) return { ok: false, reason: 'no post in Aubren is open to a woman' };
+export function canTakePost(ctx: SimCtx, p: Person): { ok: true } | { ok: false; reason: string } {
+  if (!canHoldPost(p.sex)) {
+    return { ok: false, reason: msg(ctx, 'career.refuse.woman', 'no post in Aubren is open to a woman') };
+  }
   return { ok: true };
 }
 

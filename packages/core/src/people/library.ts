@@ -119,12 +119,16 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   // never study, since `rollAwakening` needs `carriedFont > 0`: §11 says
   // exactly that ("The Unwoken: cannot learn"), and it is the deliberate
   // scope of this gate rather than a side effect of it.
-  if (!p.awakening.awakened) return { ok: false, reason: 'not woken' };
+  if (!p.awakening.awakened) return { ok: false, reason: msg(ctx, 'library.refuse.not_woken', 'not woken') };
   // INVARIANT 4: the Mystic restriction. Shares no code with eldritch expression.
-  if (!canLearn(p.sex, def.affinity)) return { ok: false, reason: 'not hers to learn' };
+  if (!canLearn(p.sex, def.affinity)) {
+    return { ok: false, reason: msg(ctx, 'library.refuse.not_hers', 'not hers to learn') };
+  }
   if (def.threshold > 0) {
     const have = attr(p, def.affinity, ctx.genetics, ctx.world.year);
-    if (have < def.threshold) return { ok: false, reason: 'the affinity is not there yet' };
+    if (have < def.threshold) {
+      return { ok: false, reason: msg(ctx, 'library.refuse.affinity_short', 'the affinity is not there yet') };
+    }
   }
   return { ok: true };
 }

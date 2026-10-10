@@ -293,8 +293,8 @@ describe('a run can reach every career', () => {
 describe('a post is a man\'s, at all three doors', () => {
   it('the predicate answers for the sex and nothing else', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
-    expect(canTakePost(place(ctx, { sex: 'male', age: 30 })).ok).toBe(true);
-    const her = canTakePost(place(ctx, { sex: 'female', age: 30 }));
+    expect(canTakePost(ctx, place(ctx, { sex: 'male', age: 30 })).ok).toBe(true);
+    const her = canTakePost(ctx, place(ctx, { sex: 'female', age: 30 }));
     expect(her.ok).toBe(false);
     expect(her.ok === false && her.reason).toMatch(/woman/);
   });
