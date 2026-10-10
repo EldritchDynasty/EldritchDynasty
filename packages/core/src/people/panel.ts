@@ -1,5 +1,5 @@
-import type { Person, Sex, Year } from '@ed/schema';
-import { ageAt } from '@ed/schema';
+import type { PanelKin, Person, Sex, Year } from '@ed/schema';
+import { ageAt, assertNever } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { LineCensus, MatchCard } from './match.js';
 import { bloodWomenOf, lineWomen } from './match.js';
@@ -61,8 +61,10 @@ import { msg } from '../messages.js';
 /** One completed life the market has watched, and what it bore. */
 export interface PanelIssue {
   name: string;
-  /** How the card's line reaches her: `her mother`, `her sister`, `of her house`. */
+  /** How the card's line reaches her: `her mother`, `her sister`, `of her house`. Prose, in the reader's mode. */
   relation: string;
+  /** The same relation as data (#1005). Absent only on rows loaded from a save that predates it. */
+  kin?: PanelKin;
   /** Children the RECORD credits to her — a forged pedigree moves this exactly as far as the forgery says. */
   borne: number;
   /** How many of those reached `GROWN`. The half of a line's read that a bare birth count hides. */
@@ -73,6 +75,8 @@ export interface PanelIssue {
 export interface PanelWaking {
   name: string;
   relation: string;
+  /** See `PanelIssue.kin`. Read this, never `relation`, to reason about a row. */
+  kin?: PanelKin;
   year: Year;
   sex: Sex;
   /**
@@ -138,16 +142,16 @@ const ROWS = 4;
  */
 function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: string, subjectSex: Sex = 'female'): PanelIssue[] {
   const w = ctx.world;
-  const possessive = subjectSex === 'male' ? 'his' : 'her';
   return women
     .filter((p) => cen.counted.has(p.id))
     .slice(0, ROWS)
     .map((p) => {
       const kids = cen.borne.get(p.id) ?? [];
+      const kin: PanelKin = p.id === motherId ? 'mother' : motherId ? 'sister' : 'house';
       return {
         name: p.name,
-        relation: p.id === motherId ? `${possessive} mother`
-          : motherId ? `${possessive} sister` : `of ${possessive} house`,
+        relation: kinPhrase(ctx, kin, subjectSex),
+        kin,
         borne: kids.length,
         grown: kids.filter((k) => ageAt(k, k.died ?? w.year) >= GROWN).length,
       };
@@ -216,30 +220,32 @@ export function issueOf(ctx: SimCtx, personId: string, cen: LineCensus): PanelIs
 function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
   const w = ctx.world;
   const who = card.kind === 'household' ? w.people.get(card.person ?? '') : undefined;
-  const rows: { p: Person; relation: string; near: number }[] = [];
+  const rows: { p: Person; kin: PanelKin; near: number }[] = [];
 
   if (who) {
-    for (const [id, relation, near] of claimedKin(ctx, who)) {
+    for (const [id, kin, near] of claimedKin(ctx, who)) {
       const p = w.people.get(id);
-      if (p) rows.push({ p, relation, near });
+      if (p) rows.push({ p, kin, near });
     }
   } else {
     for (const p of w.people.all()) {
-      if (p.houseOfOrigin === card.house) {
-        rows.push({ p, relation: `of ${card.sex === 'male' ? 'his' : 'her'} house`, near: 0 });
-      }
+      if (p.houseOfOrigin === card.house) rows.push({ p, kin: 'house', near: 0 });
     }
   }
 
   const seen = new Set<string>();
   const out: PanelWaking[] = [];
-  for (const { p, relation, near } of rows.sort((a, b) => b.near - a.near)) {
+  for (const { p, kin } of rows.sort((a, b) => b.near - a.near)) {
+    // Stop at the cut rather than slicing after it, so a phrase is rendered
+    // (and a Plain English miss reported) only for a row the panel shows.
+    if (out.length >= ROWS) break;
     if (!p.awakening.awakened || p.awakening.year === undefined) continue;
     if (seen.has(p.id)) continue;
     seen.add(p.id);
     out.push({
       name: p.name,
-      relation,
+      relation: kinPhrase(ctx, kin, card.sex),
+      kin,
       year: p.awakening.year,
       sex: p.sex,
       // What the world sees of a man who has HELD it, as distinct from one who
@@ -248,7 +254,7 @@ function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
       expressed: p.sex === 'male' && p.madness > 0,
     });
   }
-  return out.slice(0, ROWS);
+  return out;
 }
 
 /**
@@ -261,9 +267,8 @@ function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
  * not on the path, so the nearest description of anybody wins: a first cousin
  * who is also a half-sibling is a half-sibling.
  */
-function claimedKin(ctx: SimCtx, who: Person): [string, string, number][] {
+function claimedKin(ctx: SimCtx, who: Person): [string, PanelKin, number][] {
   const w = ctx.world;
-  const possessive = who.sex === 'male' ? 'his' : 'her';
   const kids = new Map<string, string[]>();
   for (const p of w.people.all()) {
     for (const parent of [p.claimedParents.mother, p.claimedParents.father]) {
@@ -282,14 +287,14 @@ function claimedKin(ctx: SimCtx, who: Person): [string, string, number][] {
     return out;
   };
 
-  const out: [string, string, number][] = [];
+  const out: [string, PanelKin, number][] = [];
   const seen = new Set<string>([who.id]);
-  const add = (id: string, relation: string, near: number): void => {
+  const add = (id: string, kin: PanelKin, near: number): void => {
     if (seen.has(id)) return;
     seen.add(id);
-    out.push([id, relation, near]);
+    out.push([id, kin, near]);
   };
-  const wordFor = (id: string, male: string, female: string): string =>
+  const wordFor = (id: string, male: PanelKin, female: PanelKin): PanelKin =>
     (w.people.get(id)?.sex === 'male' ? male : female);
 
   const parents = parentsOf(who.id);
@@ -297,20 +302,44 @@ function claimedKin(ctx: SimCtx, who: Person): [string, string, number][] {
 
   // Order matters: everything is added nearest-first, and `add` keeps the
   // first word anybody is given.
-  for (const id of parents) add(id, wordFor(id, `${possessive} father`, `${possessive} mother`), 4);
+  for (const id of parents) add(id, wordFor(id, 'father', 'mother'), 4);
   for (const id of parents) {
-    for (const sib of kids.get(id) ?? []) add(sib, wordFor(sib, `${possessive} brother`, `${possessive} sister`), 3);
+    for (const sib of kids.get(id) ?? []) add(sib, wordFor(sib, 'brother', 'sister'), 3);
   }
-  for (const id of grandparents) add(id, wordFor(id, `${possessive} grandfather`, `${possessive} grandmother`), 2);
+  for (const id of grandparents) add(id, wordFor(id, 'grandfather', 'grandmother'), 2);
   for (const id of grandparents) {
-    for (const unc of kids.get(id) ?? []) add(unc, wordFor(unc, `${possessive} uncle`, `${possessive} aunt`), 2);
+    for (const unc of kids.get(id) ?? []) add(unc, wordFor(unc, 'uncle', 'aunt'), 2);
   }
   for (const id of grandparents) {
     for (const unc of kids.get(id) ?? []) {
-      for (const cousin of kids.get(unc) ?? []) add(cousin, `${possessive} cousin`, 1);
+      for (const cousin of kids.get(unc) ?? []) add(cousin, 'cousin', 1);
     }
   }
   return out;
+}
+
+/**
+ * The words a panel prints for a row, in the candidate's possessive and the
+ * reader's prose mode (#410). One key per whole phrase, so a translation is
+ * never assembled from a pronoun and a noun.
+ */
+export function kinPhrase(ctx: SimCtx, kin: PanelKin, sex: Sex = 'female'): string {
+  const his = sex === 'male';
+  switch (kin) {
+    case 'mother': return his ? msg(ctx, 'panel.kin.his.mother', 'his mother') : msg(ctx, 'panel.kin.her.mother', 'her mother');
+    case 'father': return his ? msg(ctx, 'panel.kin.his.father', 'his father') : msg(ctx, 'panel.kin.her.father', 'her father');
+    case 'sister': return his ? msg(ctx, 'panel.kin.his.sister', 'his sister') : msg(ctx, 'panel.kin.her.sister', 'her sister');
+    case 'brother': return his ? msg(ctx, 'panel.kin.his.brother', 'his brother') : msg(ctx, 'panel.kin.her.brother', 'her brother');
+    case 'grandmother': return his
+      ? msg(ctx, 'panel.kin.his.grandmother', 'his grandmother') : msg(ctx, 'panel.kin.her.grandmother', 'her grandmother');
+    case 'grandfather': return his
+      ? msg(ctx, 'panel.kin.his.grandfather', 'his grandfather') : msg(ctx, 'panel.kin.her.grandfather', 'her grandfather');
+    case 'aunt': return his ? msg(ctx, 'panel.kin.his.aunt', 'his aunt') : msg(ctx, 'panel.kin.her.aunt', 'her aunt');
+    case 'uncle': return his ? msg(ctx, 'panel.kin.his.uncle', 'his uncle') : msg(ctx, 'panel.kin.her.uncle', 'her uncle');
+    case 'cousin': return his ? msg(ctx, 'panel.kin.his.cousin', 'his cousin') : msg(ctx, 'panel.kin.her.cousin', 'her cousin');
+    case 'house': return his ? msg(ctx, 'panel.kin.his.house', 'of his house') : msg(ctx, 'panel.kin.her.house', 'of her house');
+    default: return assertNever(kin);
+  }
 }
 
 /**

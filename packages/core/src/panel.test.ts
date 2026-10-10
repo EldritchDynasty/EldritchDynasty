@@ -4,7 +4,11 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { indexContent, proseOriginalHash } from '@ed/schema';
 import { testWorld, place, marry, beget } from './testing.js';
-import { readPanel, issueOf, emptyPanel } from './people/panel.js';
+import { readPanel, issueOf, emptyPanel, kinPhrase } from './people/panel.js';
+import { panelScore } from './tools/blood-gate.js';
+import { queueMatch } from './events/decisions.js';
+import { loadGame, saveGame } from './save.js';
+import { PANEL_KIN } from '@ed/schema';
 import { dealMatch, type MatchCard, type LineCensus } from './people/match.js';
 import { makeRng } from './rng.js';
 import { coreMessageAddress } from './messages.js';
@@ -87,6 +91,81 @@ describe('the matchmaker’s panel', () => {
     readPanel(ctx, daughterCard, cen);
     expect(daughterCard.panel.issue.find((row) => row.name === 'Eira')?.relation).toBe('her mother');
     expect(daughterCard.panel.woken.find((row) => row.name === 'Aldric')?.relation).toBe('her father');
+  });
+
+  /**
+   * #1005. The relation is data as well as words: the blood gate scored rows
+   * by matching `her father`, so every male card read as a panel with nothing
+   * on it, and translating the words would have emptied every card.
+   */
+  function siblings(seed: number) {
+    const ctx = testWorld(content, seed, 1200);
+    const mother = place(ctx, { sex: 'female', age: 60, name: 'Eira' });
+    const father = place(ctx, { sex: 'male', age: 62, name: 'Aldric', awakened: true });
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Roland' });
+    const daughter = place(ctx, { sex: 'female', age: 21, name: 'Dala' });
+    beget(ctx, son, mother, father);
+    beget(ctx, daughter, mother, father);
+    const cen = census();
+    cen.counted.add(mother.id);
+    cen.borne.set(mother.id, [son, daughter]);
+    const sonCard = cardFor(son);
+    readPanel(ctx, sonCard, cen);
+    const daughterCard = cardFor(daughter);
+    readPanel(ctx, daughterCard, cen);
+    return { ctx, daughter, sonCard, daughterCard };
+  }
+
+  it('carries each relation as kin, the same on a man\'s card as on a woman\'s', () => {
+    const { sonCard, daughterCard } = siblings(9661);
+    for (const card of [sonCard, daughterCard]) {
+      expect(card.panel.issue.find((row) => row.name === 'Eira')?.kin).toBe('mother');
+      expect(card.panel.woken.find((row) => row.name === 'Aldric')?.kin).toBe('father');
+    }
+  });
+
+  it('lets the panel reader score a man\'s card exactly as it scores a woman\'s', () => {
+    const { sonCard, daughterCard } = siblings(9662);
+    const score = (card: MatchCard) => panelScore(card as Parameters<typeof panelScore>[0]);
+    expect(score(daughterCard)).toBeGreaterThan(0);
+    expect(score(sonCard)).toBe(score(daughterCard));
+    // And never off the printed words: nonsense prose, the same score.
+    for (const row of sonCard.panel.woken) row.relation = 'a word the gate must not read';
+    expect(score(sonCard)).toBe(score(daughterCard));
+  });
+
+  it('prints the relation in the reader\'s prose, and keeps the kin', () => {
+    const plain = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(content, 9663, 1200);
+      setProseVariants(ctx, [{
+        address: coreMessageAddress('panel.kin.his.father'),
+        of: proseOriginalHash('his father'),
+        plainenglish: 'his dad',
+      }]);
+      setProseMode(ctx, mode);
+      return kinPhrase(ctx, 'father', 'male');
+    };
+    expect(plain('original')).toBe('his father');
+    expect(plain('plainenglish')).toBe('his dad');
+    // One whole phrase per kin and possessive, all keyed.
+    const ctx = testWorld(content, 9664, 1200);
+    setProseMode(ctx, 'plainenglish');
+    for (const kin of PANEL_KIN) for (const sex of ['male', 'female'] as const) kinPhrase(ctx, kin, sex);
+    expect(missingPlainEnglish(ctx).filter((a) => a.startsWith('core:messages#panel.kin.'))).toHaveLength(PANEL_KIN.length * 2);
+  });
+
+  it('keeps the kin through a save', () => {
+    const { ctx, daughter, sonCard } = siblings(9665);
+    const offer = dealMatch(ctx, daughter, makeRng(1));
+    offer.cards = [sonCard];
+    const pending = queueMatch(ctx, offer);
+    const loaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    const back = loaded.world.pendingDecisions.find((d) => d.id === pending.id);
+    expect(back?.kind).toBe('match');
+    if (back?.kind !== 'match') return;
+    expect(back.cards[0]!.panel.woken.map((row) => row.kin)).toEqual(sonCard.panel.woken.map((row) => row.kin));
+    expect(back.cards[0]!.panel.issue.map((row) => row.kin)).toEqual(sonCard.panel.issue.map((row) => row.kin));
+    expect(back.cards[0]!.panel.woken.some((row) => row.kin === 'father')).toBe(true);
   });
 
   it('says of his house for male outsider cards rather than of her house', () => {

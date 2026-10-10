@@ -64,7 +64,7 @@
  * same verb, and one screenful of difference.
  */
 import { loadContent } from '@ed/content';
-import { indexContent, type Content, type ContentBundle, type GenomeRef, type LocusDef, type Rung, type Sex } from '@ed/schema';
+import { indexContent, type Content, type ContentBundle, type GenomeRef, type LocusDef, type PanelKin, type Rung, type Sex } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { makeRng, hashSeed } from '../rng.js';
@@ -382,16 +382,28 @@ function trueChannel(ctx: SimCtx, card: PendingMatch['cards'][number]): number {
  * it, and the entire point of this column is that understanding it is now
  * POSSIBLE.
  */
-function panelScore(card: PendingMatch['cards'][number]): number {
+/**
+ * What a woken relative is worth to the `panel` reader, by how near they are.
+ * Near kin only: a row that is merely `of her house` is the house's reputation
+ * again, which `words` already carries — counting it here would make this
+ * column differ from `blind` by a weight rather than by a fact.
+ *
+ * Keyed on `kin`, never on the printed `relation` (#1005). Parsing the prose
+ * matched only `her …`, so every male card scored 0 from the day the panel
+ * learned to say `his father`, and a Plain English panel would score nothing.
+ */
+const KIN_WORTH: Record<PanelKin, number> = {
+  father: 6,
+  mother: 3, brother: 3, sister: 3,
+  grandfather: 2, grandmother: 2, uncle: 2, aunt: 2,
+  cousin: 1,
+  house: 0,
+};
+
+export function panelScore(card: PendingMatch['cards'][number]): number {
   let n = 0;
   for (const row of card.panel.woken) {
-    // Near kin only. A row that merely says `of her house` is the house's
-    // reputation again, which `words` already carries — counting it here would
-    // make this column differ from `blind` by a weight rather than by a fact.
-    const worth = row.relation === 'her father' ? 6
-      : row.relation === 'her mother' || row.relation === 'her brother' || row.relation === 'her sister' ? 3
-        : row.relation.startsWith('her grand') || row.relation === 'her uncle' || row.relation === 'her aunt' ? 2
-          : row.relation === 'her cousin' ? 1 : 0;
+    const worth = row.kin ? KIN_WORTH[row.kin] : 0;
     if (worth === 0) continue;
     n += row.expressed ? worth + 1 : worth;
   }

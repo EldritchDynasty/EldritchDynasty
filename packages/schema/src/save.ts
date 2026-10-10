@@ -197,6 +197,21 @@ import { CommitmentS } from './muster.js';
  */
 export const SAVE_FORMAT = 28;
 
+/**
+ * How a Match or Vessel panel row stands to the candidate, as data (#1005).
+ * `relation` is the prose the panel prints and is rendered in the reader's
+ * prose mode; anything that has to REASON about a row reads this instead. The
+ * blood gate used to parse `relation`, and scored every male card 0 from the
+ * day the words became sex-aware. Optional on a saved row, additive with no
+ * `SAVE_FORMAT` bump, for the same reason `line` and the Vessel's `issue`
+ * needed none: an older save loads as rows nobody had classified.
+ */
+export const PANEL_KIN = [
+  'mother', 'father', 'sister', 'brother', 'grandmother', 'grandfather', 'aunt', 'uncle', 'cousin', 'house',
+] as const;
+export const PanelKinS = z.enum(PANEL_KIN);
+export type PanelKin = z.infer<typeof PanelKinS>;
+
 // ── Person, in its stored form ────────────────────────────────────────────
 
 /**
@@ -568,6 +583,7 @@ const CastRequestS = z.object({
     issue: z.array(z.object({
       name: z.string(),
       relation: z.string(),
+      kin: PanelKinS.optional(),
       borne: z.number(),
       grown: z.number(),
     })).optional(),
@@ -652,12 +668,14 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
         issue: z.array(z.object({
           name: z.string(),
           relation: z.string(),
+          kin: PanelKinS.optional(),
           borne: z.number(),
           grown: z.number(),
         })).default([]),
         woken: z.array(z.object({
           name: z.string(),
           relation: z.string(),
+          kin: PanelKinS.optional(),
           year: z.number(),
           sex: SexS,
           expressed: z.boolean(),
