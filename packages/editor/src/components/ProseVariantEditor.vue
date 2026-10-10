@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import {
-  contentInterpolationTokens,
   contentProseEntries,
   proseOriginalHash,
   setContentProseText,
@@ -9,6 +8,7 @@ import {
 } from '@ed/schema';
 import { isWritableContentPath } from '../lib/content';
 import { fileOf, markDirty, removeProseVariant, stageProseVariant, store } from '../lib/store';
+import { proseVariantStatus } from '../lib/prose-status';
 
 const props = withDefaults(defineProps<{
   collectionKey: 'events' | 'arcs' | 'characterTemplates';
@@ -74,45 +74,8 @@ function setPlain(entry: ContentProseEntry, text: string): void {
   }
 }
 
-function counts(tokens: readonly string[]): Map<string, number> {
-  const out = new Map<string, number>();
-  for (const token of tokens) out.set(token, (out.get(token) ?? 0) + 1);
-  return out;
-}
-
 function placeholderStatus(entry: ContentProseEntry): { ok: boolean; text: string } {
-  const plain = plainText(entry.address);
-  if (!plain) {
-    return { ok: false, text: 'Plain English is missing.' };
-  }
-
-  const original = counts(entry.interpolations);
-  const translated = counts(contentInterpolationTokens(plain));
-  const tokens = [...new Set([...original.keys(), ...translated.keys()])].sort();
-  const missing: string[] = [];
-  const extra: string[] = [];
-
-  for (const token of tokens) {
-    const wanted = original.get(token) ?? 0;
-    const got = translated.get(token) ?? 0;
-    for (let i = got; i < wanted; i++) missing.push(token);
-    for (let i = wanted; i < got; i++) extra.push(token);
-  }
-
-  if (!missing.length && !extra.length) {
-    return {
-      ok: true,
-      text: entry.interpolations.length ? 'Placeholders match.' : 'No placeholders to preserve.',
-    };
-  }
-
-  return {
-    ok: false,
-    text: [
-      missing.length ? `missing ${missing.join(', ')}` : '',
-      extra.length ? `extra ${extra.join(', ')}` : '',
-    ].filter(Boolean).join(' · '),
-  };
+  return proseVariantStatus(entry, variant(entry.address));
 }
 
 function fieldName(address: string): string {
