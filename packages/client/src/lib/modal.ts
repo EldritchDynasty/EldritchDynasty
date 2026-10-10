@@ -27,11 +27,14 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  * when the button's parent has `display: none`.
  */
 function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
+  // Visibility inherits, but a child can explicitly override a hidden ancestor.
+  // Test the target's resolved value rather than ruling out such visible children.
+  const visibility = window.getComputedStyle(element).visibility;
+  if (visibility === 'hidden' || visibility === 'collapse') return true;
+
+  // display:none cannot be overridden by descendants, so inspect every parent.
   for (let node: HTMLElement | null = element; node; node = node.parentElement) {
-    const style = window.getComputedStyle(node);
-    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') {
-      return true;
-    }
+    if (window.getComputedStyle(node).display === 'none') return true;
     if (node === card) break;
   }
   return false;
