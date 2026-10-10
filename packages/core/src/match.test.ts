@@ -12,6 +12,7 @@ import type { MatchCard, SimCtx } from '@ed/core';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { canonical } from './save.js';
 import { coreMessageAddress } from './messages.js';
+import { lineCensus } from './people/match.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 
@@ -663,6 +664,38 @@ describe('the line', () => {
       expect(c.line, `${c.name} came off a farm with a reputation`).toBe('unknown');
       expect(c.lineSeen, 'a read was built on nobody').toBe(0);
     }
+  });
+
+  it('counts only women who actually lived through the full childbearing window', () => {
+    const ctx = testWorld(bundle, 962, 1145);
+    const diedYoung = place(ctx, { sex: 'female', age: 25, name: 'Died at thirty' });
+    const completed = place(ctx, { sex: 'female', age: 25, name: 'Lived through the window' });
+    marry(ctx, diedYoung, place(ctx, { sex: 'male', age: 27, name: 'Young wife husband' }));
+    marry(ctx, completed, place(ctx, { sex: 'male', age: 27, name: 'Completed wife husband' }));
+
+    // Look back fifty years later: the calendar makes both women appear old,
+    // but only one was alive long enough for her childbearing life to finish.
+    ctx.world.year = 1200;
+    diedYoung.died = 1150; // Thirty at death, however old she would be now.
+    diedYoung.status = 'dead';
+    completed.died = 1180; // Sixty at death.
+    completed.status = 'dead';
+    for (let i = 0; i < 3; i++) {
+      beget(ctx, place(ctx, { sex: 'female', age: 30 + i, name: `Completed child ${i}` }), completed);
+    }
+
+    const stillYoung = place(ctx, { sex: 'female', age: 30, name: 'Still childbearing' });
+    marry(ctx, stillYoung, place(ctx, { sex: 'male', age: 31, name: 'Still childbearing husband' }));
+    const neverMarried = place(ctx, { sex: 'female', age: 70, name: 'Never married' });
+
+    const census = lineCensus(ctx);
+    expect(census.counted.has(diedYoung.id)).toBe(false);
+    expect(census.counted.has(completed.id)).toBe(true);
+    expect(census.counted.has(stillYoung.id)).toBe(false);
+    expect(census.counted.has(neverMarried.id)).toBe(false);
+    expect(census.byHouse.get(ctx.world.playerHouse)).toContain(completed);
+    expect(census.byHouse.get(ctx.world.playerHouse)).not.toContain(diedYoung);
+    expect(census.mean, 'a premature death must not dilute the completed wives\' average').toBe(3);
   });
 
   it('reads a full line off a mother who bore many, and a thin one off a mother who bore few', () => {
