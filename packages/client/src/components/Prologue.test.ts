@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { PrologueView } from '@ed/core';
 import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
-import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
+import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
 import Prologue from './Prologue.vue';
+import Chapter from './Chapter.vue';
 
 function prologueView(): PrologueView {
   return {
@@ -214,3 +215,37 @@ describe('Plain English prologue replay identity (#410)', () => {
       .toBe('House Cedar');
   });
 });
+
+describe('Age opening replay on a reused Chapter dialog (#410)', () => {
+  it('records each unseen opening and skips a repeat when the chapter queue advances', async () => {
+    window.localStorage.clear();
+    const repeated = 'The familiar Age opening.';
+    rememberSeenProse(window.localStorage, seenProseKey('chapter-opening', repeated));
+
+    const dismissChapter = vi.fn();
+    const actions = { dismissChapter } as unknown as GameActions;
+    const opening = (text: string) => ({
+      kind: 'opening', opening: { text },
+    } as ChapterBeat);
+
+    const wrapper = mount(Chapter, {
+      props: { beat: opening('A fresh Age.'), actions, skipSeenProse: true },
+    });
+    expect(hasSeenProse(window.localStorage, seenProseKey('chapter-opening', 'A fresh Age.'))).toBe(true);
+    expect(dismissChapter).not.toHaveBeenCalled();
+
+    // App keeps this component instance when dismissChapter shifts its queue.
+    // A mount-only replay check would never skip the following repeat.
+    await wrapper.setProps({ beat: opening(repeated) });
+    expect(dismissChapter).toHaveBeenCalledTimes(1);
+
+    await wrapper.setProps({ beat: opening('A third, unseen Age.') });
+    expect(hasSeenProse(window.localStorage, seenProseKey('chapter-opening', 'A third, unseen Age.'))).toBe(true);
+    expect(dismissChapter).toHaveBeenCalledTimes(1);
+
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
+    wrapper.unmount();
+    vi.unstubAllGlobals();
+  });
+});
+
