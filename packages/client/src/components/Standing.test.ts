@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
+import Ambition from './Ambition.vue';
+import type { GameActions } from '../lib/game';
 
 function view(): SessionView {
   return {
@@ -126,5 +128,96 @@ describe('Standing legibility (#356)', () => {
 
     expect(wrapper.text()).not.toContain('seed #47');
     expect(control.attributes('aria-expanded')).toBe('false');
+  });
+});
+
+function ambitionView(id: string | null = 'blood'): SessionView {
+  return {
+    ...view(),
+    ambition: id ? {
+      id, name: id === 'blood' ? 'Keep the bloodline' : 'Keep the estate',
+      purpose: 'Keep a plan in sight.',
+      progress: { label: 'The house has begun.' },
+      status: 'Ongoing',
+      next: 'Continue the work.',
+    } : null,
+    ambitionOptions: [
+      { id: 'blood', name: 'Keep the bloodline', purpose: 'Remember the children.' },
+      { id: 'land', name: 'Keep the estate', purpose: 'Hold what the family owns.' },
+    ],
+  } as unknown as SessionView;
+}
+
+describe('House ambition refusal and selection (#1069)', () => {
+  it('preserves a refused choice and allows a successful retry', async () => {
+    const setAmbition = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView(), actions: { setAmbition } as unknown as GameActions },
+    });
+
+    await wrapper.get('.ambition-head button').trigger('click');
+    await wrapper.get('select').setValue('land');
+    await wrapper.get('.ambition-actions button').trigger('click');
+
+    expect(setAmbition).toHaveBeenCalledWith('land');
+    expect(wrapper.get('select').element.value).toBe('land');
+    expect(wrapper.get('[role="alert"]').text()).toContain('could not keep');
+    expect(wrapper.find('select').exists()).toBe(true);
+
+    await wrapper.get('.ambition-actions button').trigger('click');
+    expect(setAmbition).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('select').exists()).toBe(false);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it('does not dismiss the edit when clearing an ambition is refused', async () => {
+    const setAmbition = vi.fn().mockReturnValue(false);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView(), actions: { setAmbition } as unknown as GameActions },
+    });
+
+    await wrapper.get('.ambition-head button').trigger('click');
+    await wrapper.findAll('.ambition-actions button')[1]!.trigger('click');
+
+    expect(setAmbition).toHaveBeenCalledWith(null);
+    expect(wrapper.find('select').exists()).toBe(true);
+    expect(wrapper.get('[role="alert"]').text()).toContain('could not clear');
+
+    await wrapper.findAll('.ambition-actions button')[2]!.trigger('click');
+    expect(wrapper.find('select').exists()).toBe(false);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it('opens Change on the ambition from the latest view', async () => {
+    const setAmbition = vi.fn().mockReturnValue(true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView('blood'), actions: { setAmbition } as unknown as GameActions },
+    });
+
+    await wrapper.setProps({ view: ambitionView('land') });
+    await wrapper.get('.ambition-head button').trigger('click');
+
+    expect(wrapper.get('select').element.value).toBe('land');
+    await wrapper.get('.ambition-actions button').trigger('click');
+    expect(setAmbition).toHaveBeenCalledWith('land');
+  });
+
+  it('refuses to submit a draft that disappeared from the current options', async () => {
+    const setAmbition = vi.fn().mockReturnValue(true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView(), actions: { setAmbition } as unknown as GameActions },
+    });
+
+    await wrapper.get('.ambition-head button').trigger('click');
+    await wrapper.get('select').setValue('land');
+    const changed = {
+      ...ambitionView(),
+      ambitionOptions: [{ id: 'blood', name: 'Keep the bloodline', purpose: 'Remember the children.' }],
+    } as unknown as SessionView;
+    await wrapper.setProps({ view: changed });
+
+    expect(wrapper.get('[role="alert"]').text()).toContain('no longer available');
+    expect(wrapper.get('.ambition-actions button').attributes('disabled')).toBeDefined();
+    expect(setAmbition).not.toHaveBeenCalled();
   });
 });
