@@ -797,3 +797,69 @@ events:
             provableBy: [the_church]
     rumour: { id: rumour_the_letter_from_bramme, accuracy: 0.45, spread: 2 }
     accounts: [the_dispensation_register, what_wick_decided_the_letter_meant]
+proseVariants:
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].title"
+    of: "c0a7ec862713316a"
+    plainenglish: >-
+      The Nine-Day Inquest at Bramme
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].body"
+    of: "ceb470e75dc6aab3"
+    plainenglish: >-
+      A Church visitation asks eleven questions and leaves. This is a formal inquest, held at
+      Bramme for nine days. Two clerks, a summoner, and an advocate attend. The advocate reads
+      Old Ambric, and the Church pays him rather than the house. The court cannot punish the
+      family's bodies, but it can control what is written about them. The summons names {KIN},
+      but not {HEAD}. Someone at Cawdry spent a long afternoon deciding whom to name. That choice
+      says more than the rest of the document.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=answer_under_oath].label"
+    of: "a87cf1d0f90a299c"
+    plainenglish: >-
+      Answer the inquest under oath before the keeper for nine days.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=answer_under_oath].outcomes[id=answered_whole].text"
+    of: "0d42ea9436fae380"
+    plainenglish: >-
+      For nine days, the clerks ask the same four questions in eleven different forms. The final
+      written record says the house answered fully. The summoner is visibly disappointed. Every
+      true statement made in that room, including carefully worded answers, is now recorded at
+      the chapter house in Cawdry.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=answer_under_oath].outcomes[id=the_fourth_question].text"
+    of: "3c75fe6b030c0397"
+    plainenglish: >-
+      On the sixth day, the fourth question is asked in a way nobody expected. The answer comes
+      four seconds too late in a room where every pause matters. The inquest reaches no
+      conclusion. Its written record includes the question, the answer, and the length of the
+      pause.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=claim_the_wardens_court].label"
+    of: "4549346f60a44933"
+    plainenglish: >-
+      Claim that the Warden's court has authority and make the courts argue.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].interaction.choices[id=claim_the_wardens_court].outcomes[id=jurisdiction].text"
+    of: "70277883b44bd5df"
+    plainenglish: >-
+      Two advocates, each charging two marks a day, spend eleven weeks arguing about which court
+      may question a landed family about its reading. In the end, the Warden's clerk and the
+      archdeacon's clerk agree on a formula that settles nothing. Both sides quote it for the
+      next two centuries. The house never has to answer the four questions, but the dispute
+      creates a new legal formula.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.subject"
+    of: "0567787c42462548"
+    plainenglish: >-
+      the nine-day inquest at Bramme
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.record.chronicle"
+    of: "fc11274dbbeb8461"
+    plainenglish: >-
+      The inquest at Bramme questioned us for nine days about what we read and who taught us the
+      liturgy. We answered. Every word of our answers is kept at Cawdry.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.record.claims[0].text"
+    of: "60ba3cbe2289cda2"
+    plainenglish: >-
+      answered the nine-day inquest, with every answer kept at Cawdry
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.embellish.chronicle"
+    of: "a36641733cbb9557"
+    plainenglish: >-
+      The inquest found nothing worth investigating and left after four days. Its official
+      written record praised the house.
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.embellish.claims[0].text"
+    of: "a9482c9918ddf60d"
+    plainenglish: >-
+      was praised in the inquest's official written record
