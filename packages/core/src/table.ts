@@ -296,7 +296,9 @@ export function beginTutoring(ctx: SimCtx, p: Person, attrId: string, charge = t
   if (!canBeTaught(subject.kind)) {
     return {
       ok: false,
-      reason: msg(ctx, 'table.tutor.unteachable', '{ATTRIBUTE} is not a thing a tutor can teach', { ATTRIBUTE: subject.name }),
+      reason: msg(ctx, 'table.tutor.unteachable', '{ATTRIBUTE} is not a thing a tutor can teach', {
+        ATTRIBUTE: proseForContentField(ctx, 'attributes', String(subject.id), 'name', subject.name),
+      }),
     };
   }
   if (w.year - p.born > TUTOR_AGE_LIMIT) return { ok: false, reason: msg(ctx, 'table.tutor.too_old', 'too old to be taught') };
