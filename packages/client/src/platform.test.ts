@@ -612,6 +612,75 @@ describe('the platform seam', () => {
     }
   });
 
+  it('keeps a later Library clear ahead of an earlier delayed archive (#1032)', async () => {
+    const host = memoryPlatform();
+    const source = loadContent();
+    const ctx = bootstrap(source, 8182, 1042, 'short');
+    ctx.world.founding = {
+      houseName: 'House Archive Race',
+      heirloom: 'portion_of_agelessness',
+      grudge: 'house_marrow',
+      answers: {},
+      year: 1042,
+    };
+    ctx.world.ending = { id: 'forgotten', year: 1342 };
+    host.saves.set('finished', saveGame(ctx));
+
+    // Native writes may be slow. Observe the actual host call order instead
+    // of assuming an earlier write also finishes first.
+    let persisted: unknown = null;
+    let active = 0;
+    let maxActive = 0;
+    const pending: Array<{ snapshot: unknown; finish: () => void }> = [];
+    host.writeLibrary = (snapshot) => new Promise<void>((resolve) => {
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      pending.push({
+        snapshot,
+        finish: () => {
+          persisted = snapshot;
+          active -= 1;
+          resolve();
+        },
+      });
+    });
+
+    const game = createGame(source, host);
+    await expect(game.actions.load('finished')).resolves.toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(pending).toHaveLength(1);
+    expect(pending[0]!.snapshot).toMatchObject({ runs: [{ house: 'House Archive Race' }] });
+
+    const clearing = game.actions.clearLibrary();
+    // The clear must not overtake the still-pending archive on the host.
+    expect(pending).toHaveLength(1);
+    pending[0]!.finish();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(pending).toHaveLength(2);
+    expect(pending[1]!.snapshot).toMatchObject({ runs: [] });
+    pending[1]!.finish();
+    await clearing;
+
+    expect(maxActive).toBe(1);
+    expect(active).toBe(0);
+    expect(persisted).toMatchObject({ runs: [] });
+    expect(game.library.value.runs).toEqual([]);
+  });
+
+  it('still allows a Library clear after a rejected Library write (#1032)', async () => {
+    const host = memoryPlatform();
+    let attempts = 0;
+    host.writeLibrary = async () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error('host refused the Library write');
+    };
+
+    const game = createGame(loadContent(), host);
+    await expect(game.actions.clearLibrary()).rejects.toThrow('host refused the Library write');
+    await expect(game.actions.clearLibrary()).resolves.toBeUndefined();
+    expect(attempts).toBe(2);
+  });
+
   it('archives a completed run into the profile library', async () => {
     const host = memoryPlatform();
     const source = loadContent();
