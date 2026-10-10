@@ -36,6 +36,9 @@ const h = vi.hoisted(() => ({
   /** Flip to make the transport refuse, the way a read-before-write guard does. */
   refuse: { value: false },
   writable: { value: true },
+  /** Hold a transport response until a second edit arrives. */
+  holdWrite: { value: false },
+  releaseWrite: { current: null as null | (() => void) },
 }));
 
 vi.mock('./content.js', async () => {
@@ -48,6 +51,9 @@ vi.mock('./content.js', async () => {
     isWritableContentPath: () => h.writable.value,
     writeFile: async (path: string, text: string) => {
       if (h.refuse.value) return { ok: false, error: 'refused by the path guard' };
+      if (h.holdWrite.value) {
+        await new Promise<void>((resolve) => { h.releaseWrite.current = resolve; });
+      }
       h.writes.push({ path, text });
       h.disk.set(path, text);
       return { ok: true };
@@ -85,6 +91,8 @@ beforeEach(() => {
   h.writes.length = 0;
   h.refuse.value = false;
   h.writable.value = true;
+  h.holdWrite.value = false;
+  h.releaseWrite.current = null;
   store.dirty.clear();
   store.saving.clear();
   for (const k of Object.keys(store.errors)) delete store.errors[k];
@@ -153,6 +161,85 @@ describe('the dirty set', () => {
     markDirty('events', 'no_such_event_anywhere');
     expect(store.dirty.size).toBe(0);
     expect(isDirty('events', 'no_such_event_anywhere')).toBe(false);
+  });
+});
+
+describe('editing during an in-flight save (#947)', () => {
+  it('keeps the new version dirty after an earlier snapshot has been written', async () => {
+    const target = event(EVENT);
+    const original = target.title;
+    let pending: ReturnType<typeof saveEvent> | undefined;
+
+    try {
+      target.title = 'Snapshot Before Delay';
+      markDirty('events', EVENT);
+
+      h.holdWrite.value = true;
+      pending = saveEvent(EVENT);
+      expect(store.saving.has(CRUSADE)).toBe(true);
+
+      // The user keeps typing while the first save is waiting on IPC/disk.
+      target.title = 'Unsaved After Delay';
+      markDirty('events', EVENT);
+
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await pending).ok).toBe(true);
+      expect(store.saving.has(CRUSADE)).toBe(false);
+      expect(h.disk.get(CRUSADE)).toContain('Snapshot Before Delay');
+      expect(h.disk.get(CRUSADE)).not.toContain('Unsaved After Delay');
+      expect(isDirty('events', EVENT)).toBe(true);
+      expect(pendingText('events', EVENT)!.after).toContain('Unsaved After Delay');
+
+      expect((await saveEvent(EVENT)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('Unsaved After Delay');
+      expect(isDirty('events', EVENT)).toBe(false);
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      if (pending) await pending;
+      target.title = original;
+      markDirty('events', EVENT);
+      await saveEvent(EVENT);
+    }
+  });
+
+  it('does not lose a sibling edit during a save of another item in the same file', async () => {
+    const target = event(EVENT);
+    const sibling = event(SIBLING);
+    const targetOriginal = target.title;
+    const siblingOriginal = sibling.title;
+    let pending: ReturnType<typeof saveEvent> | undefined;
+
+    try {
+      target.title = 'Old File Snapshot';
+      markDirty('events', EVENT);
+      h.holdWrite.value = true;
+      pending = saveEvent(EVENT);
+      sibling.title = 'Sibling Changed During Save';
+      markDirty('events', SIBLING);
+
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await pending).ok).toBe(true);
+      expect(isDirty('events', SIBLING)).toBe(true);
+      expect(h.disk.get(CRUSADE)).not.toContain('Sibling Changed During Save');
+      expect(pendingText('events', SIBLING)!.after).toContain('Sibling Changed During Save');
+
+      expect((await saveEvent(SIBLING)).ok).toBe(true);
+      expect(isDirty('events', EVENT)).toBe(false);
+      expect(h.disk.get(CRUSADE)).toContain('Sibling Changed During Save');
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      if (pending) await pending;
+      target.title = targetOriginal;
+      sibling.title = siblingOriginal;
+      markDirty('events', EVENT);
+      markDirty('events', SIBLING);
+      await saveEvent(EVENT);
+      await saveEvent(SIBLING);
+    }
   });
 });
 
