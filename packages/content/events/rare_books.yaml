@@ -899,3 +899,64 @@ proseVariants:
     of: "1ae750af98d8e1b3"
     plainenglish: >-
       had no standing order with the bookseller whose stock was condemned
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].title"
+    of: "dd51fbaafe64c056"
+    plainenglish: >-
+      He Returns Home With a Warrant
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].body"
+    of: "25727407748578bb"
+    plainenglish: >-
+      After nine years at the Colleges and a six-week journey in each direction, {WARRANTED}
+      returns home with a warrant. It is a licence to practise a trade, displayed on a wall
+      like a blacksmith's licence. Mystic magic can be taught and bought, and practitioners
+      charge for each job. It has no consequence beyond the fee. Practising without a
+      warrant is a crime in both courts. Perhaps nine landed houses in Aubren have a man
+      with this licence. Having a warrant also means that people can come and watch him
+      work.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].interaction.choices[id=hang_the_warrant].label"
+    of: "c1a534a4456f6d60"
+    plainenglish: >-
+      Display the warrant in the hall and let him take paid work.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].interaction.choices[id=hang_the_warrant].outcomes[id=he_practises].text"
+    of: "c49fa0640c4ea4f8"
+    plainenglish: >-
+      He mostly uses Terra and thermal magic at the quarry in Hesk and for the smith in
+      Wick. His rates are published because the law requires it. The work brings in eleven
+      crowns a year, which the treasury notices. People across the province see a member of
+      this family openly practising a licensed trade for money. This is the cheapest way the
+      family has found to protect itself from suspicion, though it does not yet realise
+      that.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].interaction.choices[id=keep_it_in_the_press].label"
+    of: "534898978f4f527b"
+    plainenglish: >-
+      Keep the warrant in storage. This family does not want visitors.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].interaction.choices[id=keep_it_in_the_press].outcomes[id=unpractised].text"
+    of: "a2e3a0fddeecd961"
+    plainenglish: >-
+      After nine years at the Colleges and one hundred and sixty crowns in fees, the warrant
+      stays in storage. The man is about thirty and the best-educated person in the
+      province, but his family will not allow him to be seen using his knowledge. He reads
+      for forty years. Outsiders cannot see what this does to him. Inside the house, the
+      effect is visible every day.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].record.subject"
+    of: "92ba5df9ed7723fd"
+    plainenglish: >-
+      the warrant and whether the family displays it
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].record.options.record.chronicle"
+    of: "29d03172d8137d76"
+    plainenglish: >-
+      One of our family came home from Corran with a warrant. We kept it in storage rather
+      than displaying it. That was the family's decision, not his.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].record.options.record.claims[0].text"
+    of: "d4ca26c1b0f3ff2d"
+    plainenglish: >-
+      returned from Corran with a warrant that the family ordered him to keep in storage
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].record.options.embellish.chronicle"
+    of: "33b79beb94611d9f"
+    plainenglish: >-
+      One of our family returned from Corran with a warrant and takes paid work across the
+      province at published rates, as a licensed tradesman does.
+  - address: "content:events/rare_books.yaml#events[id=what_the_warrant_permits].record.options.embellish.claims[0].text"
+    of: "a14b76c8288ea24c"
+    plainenglish: >-
+      takes licensed work across the province at the published rates
