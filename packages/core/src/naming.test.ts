@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash } from '@ed/schema';
+import { PERSON_NAME_MAX, proseOriginalHash } from '@ed/schema';
 import {
   bootstrap, stepYear, runYears, renameChild, clearNamingQueue, keepSuggestedName,
   givenName, ordinalSuffix, testRng, uniqueName, retireNames, NAME_MOURNING_YEARS,
@@ -89,6 +89,37 @@ describe('naming the children', () => {
     expect(renameChild(ctx, target, '   ')).toBe(false);
     expect(renameChild(ctx, 'p_nonexistent', 'Sorrel')).toBe(false);
     expect(ctx.world.pendingNames.length).toBe(queued);
+  });
+
+  it('rejects names outside the canonical person-name contract without side effects (#1071)', () => {
+    const ctx = untilBirth();
+    const target = ctx.world.pendingNames[0]!.person;
+    const snapshot = () => JSON.stringify({
+      person: ctx.world.people.get(target),
+      pending: ctx.world.pendingNames,
+      friends: ctx.world.friends,
+      taken: [...ctx.takenNames].sort(),
+      chronicle: ctx.world.chronicle,
+      decisionLog: ctx.world.decisionLog,
+    });
+    const before = snapshot();
+
+    for (const invalid of [
+      'X'.repeat(PERSON_NAME_MAX + 1),
+      '  ' + 'X'.repeat(PERSON_NAME_MAX + 1) + ' ',
+      123 as unknown as string,
+      null as unknown as string,
+    ]) {
+      expect(renameChild(ctx, target, invalid)).toBe(false);
+      expect(snapshot(), 'a refused child name changed the simulation').toBe(before);
+    }
+
+    // Whitespace around the name is not part of its identity. The canonical
+    // 32-character boundary is allowed and is written in normalized form.
+    const valid = 'Y'.repeat(PERSON_NAME_MAX);
+    expect(renameChild(ctx, target, '  ' + valid + '  ')).toBe(true);
+    expect(ctx.world.people.get(target)!.name).toBe(valid);
+    expect(ctx.world.decisionLog.at(-1)).toMatchObject({ kind: 'name', name: valid });
   });
 
   it('refuses to rename someone who is not in the queue', () => {
