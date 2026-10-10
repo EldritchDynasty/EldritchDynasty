@@ -5,10 +5,11 @@ import { makeRng } from './rng.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { place, testWorld } from './testing.js';
 import { stepYear } from './year/step.js';
+import { coreMessageAddress } from './messages.js';
 import { evalCondition } from './events/conditions.js';
 import { resolveSlots } from './events/slots.js';
 import {
-  applyRecord, autoResolveAll, queueChoice, queueRecord, resolveChoice, resolveRecord,
+  applyRecord, autoResolveAll, queueChoice, queueMatch, queueRecord, resolveChoice, resolveMatch, resolveRecord,
 } from './events/decisions.js';
 
 const content = indexContent(loadContent());
@@ -225,5 +226,120 @@ describe('Record-option Chronicle-effect prose (#806)', () => {
 
     setProseMode(ctx, 'original');
     expect(written()).toEqual([original, plain, original]);
+  });
+});
+
+
+describe('keyed docket refusals (#833)', () => {
+  // Every literal is frozen here so an Original edit requires review of its hash.
+  const MESSAGES = [
+    ['decision.choice.missing', 'no such decision', 'That decision is no longer available.'],
+    ['decision.choice.narration', 'narration takes no choice', 'This scene does not ask you to choose.'],
+    ['decision.cast.at_most', '{SLOT} takes at most {MAX}', 'Choose no more than {MAX} people for {SLOT}.'],
+    ['decision.cast.at_least', '{SLOT} takes at least {MIN}', 'Choose at least {MIN} people for {SLOT}.'],
+    ['decision.cast.missing', 'nobody cast as {SLOT}', 'Choose someone for {SLOT}.'],
+    ['decision.choice.player_required', "this decision is the house's to take", 'You must choose for the family.'],
+    ['decision.choice.unknown', "no choice '{CHOICE}'", "The choice '{CHOICE}' is not available."],
+    ['decision.match.missing', 'no such match', 'That marriage offer is no longer available.'],
+    ['decision.match.unknown_card', 'no such card', 'That marriage card is not in the offer.'],
+  ] as const;
+
+  function run(mode: 'original' | 'plainenglish') {
+    const { ctx, pending, choiceId } = playerChoiceFixture(8833);
+    setProseVariants(ctx, MESSAGES.map(([key, original, plainenglish]) => ({
+      address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish,
+    })));
+    setProseMode(ctx, mode);
+    const rng = makeRng(833);
+    const refused: Array<{ ok: boolean; reason?: string }> = [];
+    refused.push(resolveChoice(ctx, 'does-not-exist', choiceId, rng));
+
+    // A narration is not an authored branch even if a stale client attempts one.
+    const actualInteraction = pending.event.interaction;
+    pending.event.interaction = { kind: 'narration', outcomes: [] };
+    refused.push(resolveChoice(ctx, pending.id, choiceId, rng));
+    pending.event.interaction = actualInteraction;
+
+    pending.cast = [{
+      slot: 'party', optional: false,
+      count: { min: 2, max: 2 },
+      candidates: [
+        { id: 'c1', name: 'First', age: 20 },
+        { id: 'c2', name: 'Second', age: 22 },
+        { id: 'c3', name: 'Third', age: 24 },
+      ],
+    }];
+    refused.push(resolveChoice(ctx, pending.id, choiceId, rng, { party: ['c1', 'c2', 'c3'] }));
+    refused.push(resolveChoice(ctx, pending.id, choiceId, rng, { party: ['c1'] }));
+    pending.cast = [{ slot: 'witness', optional: false, candidates: [{ id: 'c1', name: 'First', age: 20 }] }];
+    refused.push(resolveChoice(ctx, pending.id, choiceId, rng));
+
+    pending.cast = [];
+    refused.push(resolveChoice(ctx, pending.id, undefined, rng));
+    refused.push(resolveChoice(ctx, pending.id, 'unknown_choice', rng));
+    refused.push(resolveMatch(ctx, 'does-not-exist', 'missing'));
+    const match = queueMatch(ctx, {
+      subject: { id: 'c1', name: 'First', sex: 'male', age: 20 }, cards: [],
+    });
+    refused.push(resolveMatch(ctx, match.id, 'missing'));
+
+    const beforeSuccess = structuredClone(ctx.world.pendingDecisions);
+    const accepted = resolveChoice(ctx, pending.id, choiceId, rng);
+    return {
+      refused, beforeSuccess,
+      accepted: accepted.ok,
+      pending: structuredClone(ctx.world.pendingDecisions),
+      decisions: structuredClone(ctx.world.decisionLog),
+      frequency: structuredClone(ctx.world.frequency),
+    };
+  }
+
+  it('keeps all nine Originals and translates the same refusals without moving the docket', () => {
+    expect(MESSAGES).toHaveLength(9);
+    expect(new Set(MESSAGES.map(([key]) => key)).size).toBe(9);
+    const original = run('original');
+    const plain = run('plainenglish');
+    expect(original.refused.map((result) => result.reason)).toEqual([
+      'no such decision',
+      'narration takes no choice',
+      'party takes at most 2',
+      'party takes at least 2',
+      'nobody cast as witness',
+      "this decision is the house's to take",
+      "no choice 'unknown_choice'",
+      'no such match',
+      'no such card',
+    ]);
+    expect(plain.refused.map((result) => result.reason)).toEqual([
+      'That decision is no longer available.',
+      'This scene does not ask you to choose.',
+      'Choose no more than 2 people for party.',
+      'Choose at least 2 people for party.',
+      'Choose someone for witness.',
+      'You must choose for the family.',
+      "The choice 'unknown_choice' is not available.",
+      'That marriage offer is no longer available.',
+      'That marriage card is not in the offer.',
+    ]);
+    expect(original.refused.map((result) => result.ok)).toEqual(Array(9).fill(false));
+    expect(plain.refused.map((result) => result.ok)).toEqual(Array(9).fill(false));
+    expect(plain.beforeSuccess).toEqual(original.beforeSuccess);
+    expect(plain.accepted).toBe(true);
+    expect(plain.accepted).toBe(original.accepted);
+    expect(plain.pending).toEqual(original.pending);
+    expect(plain.decisions).toEqual(original.decisions);
+    expect(plain.frequency).toEqual(original.frequency);
+  });
+
+  it('falls back to the Original if a host supplies a stale fingerprint', () => {
+    const ctx = fixture(8834);
+    setProseVariants(ctx, [{
+      address: coreMessageAddress('decision.choice.missing'),
+      of: '0000000000000000',
+      plainenglish: 'The decision is missing.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(resolveChoice(ctx, 'missing', undefined, makeRng(834)).reason).toBe('no such decision');
+    expect(missingPlainEnglish(ctx)).toContain(coreMessageAddress('decision.choice.missing'));
   });
 });
