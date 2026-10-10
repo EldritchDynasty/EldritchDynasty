@@ -1,14 +1,85 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { chapterOf, MIN_CHAPTER_YEARS } from './chapter.js';
-import { testWorld } from './testing.js';
+import { place, testWorld } from './testing.js';
 import { saveGame, loadGame } from './save.js';
 import { runYears } from './year/step.js';
 import { GameSession } from './session.js';
 import type { SimCtx } from './world.js';
 import type { EndedAge } from '@ed/schema';
+import { proseOriginalHash } from '@ed/schema';
+import { canonical } from './save.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
+
+describe('chapter fallback prose (#919)', () => {
+  const messages = coreMessageEntries(readFileSync(new URL('./chapter.ts', import.meta.url), 'utf8'));
+  const variants = messages.map((entry) => ({
+    address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `Plain: ${entry.text}`,
+  }));
+
+  function fixture(births = 0) {
+    const ctx = testWorld(bundle);
+    ctx.world.chronicle = [];
+    ctx.world.year = 1060;
+    const ended = close(ctx, 'the_wars', 1042, 1060, false);
+    for (let i = 0; i < births; i++) place(ctx, { sex: 'female', age: 2, name: `Child ${i}` });
+    setProseVariants(ctx, variants);
+    return { ctx, ended };
+  }
+
+  it('keys every fallback and preserves Original words, facts and saved pages', () => {
+    expect(messages).toHaveLength(7);
+    const { ctx, ended } = fixture(2);
+    const heir = place(ctx, { sex: 'male', age: 30, name: 'Rowan' });
+    ctx.world.succession.push({ person: heir.id, name: heir.name, from: 1050 });
+    const dead = place(ctx, { sex: 'female', age: 50, name: 'Mara' });
+    ctx.world.people.kill(dead.id, 1055, 'fixture');
+    ctx.world.chronicle.push({ year: 1051, weight: 'page', text: 'The words we wrote then.', named: false });
+    const before = canonical(saveGame(ctx));
+    const original = chapterOf(ctx, ended)!;
+    expect(original.verdict.map((line) => line.text)).toEqual([
+      'The words we wrote then.', 'Rowan took the seal.', 'Mara died.', '2 children were born to the house.',
+    ]);
+    setProseMode(ctx, 'plainenglish');
+    expect(chapterOf(ctx, ended)!.verdict.map((line) => line.text)).toEqual([
+      'The words we wrote then.', 'Plain: Rowan took the seal.', 'Plain: Mara died.',
+      'Plain: 2 children were born to the house.',
+    ]);
+    expect(original.verdict[1]!.text).toBe('Rowan took the seal.');
+    expect(canonical(saveGame(ctx))).toBe(before);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('selects singular births and all three quiet-window facts', () => {
+    for (const births of [0, 1]) {
+      const { ctx, ended } = fixture(births);
+      const original = chapterOf(ctx, ended)!;
+      if (births === 1) expect(original.verdict[0]!.text).toBe('1 child was born to the house.');
+      else expect(original.verdict[2]!.text).toBe(`The treasury held ${Math.round(ctx.world.treasury)} crowns.`);
+      setProseMode(ctx, 'plainenglish');
+      expect(chapterOf(ctx, ended)!.verdict).toEqual(original.verdict.map(({ text }) => ({ text: `Plain: ${text}` })));
+      expect(missingPlainEnglish(ctx)).toEqual([]);
+    }
+  });
+
+  it.each(['missing', 'stale', 'tokens'] as const)('falls back and reports %s variants', (failure) => {
+    const { ctx, ended } = fixture();
+    const original = chapterOf(ctx, ended);
+    setProseVariants(ctx, failure === 'missing' ? [] : variants.map((variant) => ({
+      ...variant,
+      ...(failure === 'stale' ? { of: proseOriginalHash('older wording') } : { plainenglish: 'Missing the fact.' }),
+    })));
+    setProseMode(ctx, 'plainenglish');
+    expect(chapterOf(ctx, ended)).toEqual(original);
+    expect(missingPlainEnglish(ctx)).toEqual([
+      'core:messages#chapter.living', 'core:messages#chapter.standing', 'core:messages#chapter.treasury',
+    ]);
+  });
+});
 
 /** A closed Age at `began`..`ended`, appended to `ctx.world.age.ended` directly. */
 function close(ctx: SimCtx, age: string, began: number, ended: number, named = true): EndedAge {
