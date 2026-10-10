@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
 // One implementation of the write guard, shared with the dev-server bridge.
-import { resolveContentPath } from '../../content/tools/content-path.mjs';
+import { resolveExistingContentPath } from '../../content/tools/content-path.mjs';
 import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
 import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
@@ -143,7 +143,7 @@ ipcMain.handle('ed:write-content', (_event, payload) => {
     const { path, text } = payload ?? {};
     if (typeof text !== 'string') throw new Error('text required');
 
-    const target = resolveContentPath(contentRoot(), path);
+    const target = resolveExistingContentPath(contentRoot(), path);
 
     readFileSync(target, 'utf8');
     writeFileSync(target, text, 'utf8');
@@ -155,7 +155,7 @@ ipcMain.handle('ed:write-content', (_event, payload) => {
 
 ipcMain.handle('ed:read-content', (_event, path) => {
   try {
-    const target = resolveContentPath(contentRoot(), path);
+    const target = resolveExistingContentPath(contentRoot(), path);
     return { ok: true, text: readFileSync(target, 'utf8') };
   } catch (e) {
     return { ok: false, error: String(e) };
