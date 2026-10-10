@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadContent } from '@ed/content';
+import { loadBundle, loadContent } from '@ed/content';
 import { proseOriginalHash, type ProseMode, type ProseVariant } from '@ed/schema';
 import { canBeTaught, type SlotSpec } from '@ed/schema';
 import {
@@ -48,7 +48,9 @@ describe('live Table names in Plain English (#972)', () => {
   });
 
   it('selects a reviewed tutor-subject variant if the authored name has multiple words', () => {
-    const source = structuredClone(bundle.bundle);
+    // A fresh assembled bundle retains source-file provenance; cloning the
+    // raw bundle would drop its WeakMap-backed provenance metadata.
+    const source = loadBundle();
     const strength = source.attributes.find((attribute) => String(attribute.id) === 'strength');
     if (!strength) throw new Error('Strength fixture is missing');
     // All currently teachable attribute names have one word. Give one a
