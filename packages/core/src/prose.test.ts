@@ -20,6 +20,38 @@ const CHOICE_LABEL_ADDRESS =
 const RECORD_SUBJECT_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.subject';
 
+describe('live trait names in the selected prose mode (#957)', () => {
+  it('translates eligible names in the view, falls back safely, and never changes saves', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const trait = ctx.content.traits.find((item) => String(item.id) === 'reads_the_signs');
+    if (!trait) throw new Error('The reads_the_signs fixture is missing');
+    const address = `content:${ctx.content.sourceOf(String(trait.id))}#traits[id=${encodeURIComponent(String(trait.id))}].name`;
+    const original = session.view().traits;
+    const snapshot = canonical(saveGame(ctx));
+    const variant = {
+      address, of: proseOriginalHash(trait.name), plainenglish: 'Reads the clues',
+    };
+
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(session.view().traits).toEqual(original.map((item) =>
+      item.trait === trait.id ? { ...item, name: variant.plainenglish } : item));
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+    // Other multiword trait names still use Original until a variant is authored.
+    expect(missingPlainEnglish(ctx))
+      .toContain('content:traits.yaml#traits[id=competent_physician].name');
+
+    setProseVariants(ctx, [{ ...variant, of: proseOriginalHash('Older trait wording') }]);
+    expect(session.view().traits).toEqual(original);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(session.view().traits).toEqual(original);
+    expect(canonical(saveGame(ctx))).toBe(snapshot);
+  });
+});
+
 describe('live Age names in the selected prose mode (#921)', () => {
   function fixture() {
     const session = newGame(loadContent());
