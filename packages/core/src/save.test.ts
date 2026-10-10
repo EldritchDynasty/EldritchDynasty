@@ -1,10 +1,10 @@
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
+import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
+  CAMPAIGNS, END_YEAR, LIBRARY_MESSAGE_ORIGINALS, LIBRARY_VOICE_FORMS, coreMessageAddress, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, seedLibraryMemories, setProseMode, setProseVariants, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -626,6 +626,47 @@ function finishedLibraryHouse() {
   ctx.world.ending = { id: 'forgotten', year: 1342 };
   return { ctx, person };
 }
+
+describe('Library of Houses Plain English identities (#846)', () => {
+  it('pins seven complete voices across five reachable readings and their metadata', () => {
+    const keys = Object.keys(LIBRARY_MESSAGE_ORIGINALS).sort();
+    expect(keys).toHaveLength(49);
+    for (const form of LIBRARY_VOICE_FORMS) {
+      expect(keys.filter((key) => key.startsWith(`library.${form}.`)).sort()).toEqual([
+        'attr', 'bias', 'death', 'kept', 'teller', 'trait_with', 'trait_without',
+      ].map((part) => `library.${form}.${part}`).sort());
+      expect(LIBRARY_MESSAGE_ORIGINALS[`library.${form}.attr`]).toContain('{SUBJECT}');
+      expect(LIBRARY_MESSAGE_ORIGINALS[`library.${form}.attr`]).toContain('{SAID}');
+    }
+  });
+
+  it('freezes Plain English wording without changing seeded history or identifiers', () => {
+    const { ctx } = finishedLibraryHouse();
+    const run = libraryRunOf(ctx)!;
+    const original = bootstrap(content, 7011, 1042, 'short');
+    const plain = bootstrap(content, 7011, 1042, 'short');
+    const variants = Object.entries(LIBRARY_MESSAGE_ORIGINALS).map(([key, originalText]) => ({
+      address: coreMessageAddress(key),
+      of: proseOriginalHash(originalText),
+      plainenglish: originalText.replace('“{SAID}”', '“{SAID}”'),
+    }));
+    // Distinct, token-preserving variants for every reachable key.
+    for (const variant of variants) variant.plainenglish = `Plain: ${variant.plainenglish}`;
+    setProseVariants(plain, variants);
+    setProseMode(plain, 'plainenglish');
+    const before = seedLibraryMemories(original, [run]);
+    const after = seedLibraryMemories(plain, [run]);
+    expect(after).toHaveLength(before.length);
+    for (let i = 0; i < before.length; i++) {
+      const { text: originalText, teller: originalTeller, bias: originalBias, ...history } = before[i]!;
+      const { text, teller, bias, ...plainHistory } = after[i]!;
+      expect(plainHistory).toEqual(history);
+      expect(text).toBe(`Plain: ${originalText}`);
+      expect(teller).toBe(`Plain: ${originalTeller}`);
+      expect(bias).toBe(`Plain: ${originalBias}`);
+    }
+  });
+});
 
 describe('the Library of Houses', () => {
   it('has one authored voice for each of the seven tale forms', () => {
