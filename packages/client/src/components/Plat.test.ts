@@ -127,6 +127,52 @@ describe('naming a parcel from the plat', () => {
     await w.find('input').trigger('keyup.enter');
     expect(actions.nameParcel).not.toHaveBeenCalled();
   });
+
+  it('keeps a refused name visible, explains the refusal, and lets the player retry', async () => {
+    const actions = spyActions();
+    const nameParcel = vi.mocked(actions.nameParcel);
+    nameParcel.mockReturnValue(false);
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', actions, close: () => {},
+    } });
+
+    await w.find('button.rename').trigger('click');
+    await w.find('input').setValue('The New Clearing');
+    await w.find('input').trigger('keyup.enter');
+
+    expect(nameParcel).toHaveBeenCalledWith('longmere', 'The New Clearing');
+    expect(w.find('input').exists()).toBe(true);
+    expect((w.find('input').element as HTMLInputElement).value).toBe('The New Clearing');
+    expect(w.find('[role="alert"]').text()).toContain('could not be renamed');
+    expect(w.find('input').attributes('aria-describedby')).toBe(w.find('[role="alert"]').attributes('id'));
+
+    nameParcel.mockReturnValue(true);
+    await w.find('input').setValue('The Old Clearing');
+    await w.find('input').trigger('keyup.enter');
+
+    expect(nameParcel).toHaveBeenCalledTimes(2);
+    expect(nameParcel).toHaveBeenLastCalledWith('longmere', 'The Old Clearing');
+    expect(w.find('input').exists()).toBe(false);
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+  });
+
+  it('does not dispatch the same successful rename again when Enter and blur both fire', async () => {
+    const actions = spyActions();
+    const nameParcel = vi.mocked(actions.nameParcel);
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', actions, close: () => {},
+    } });
+
+    await w.find('button.rename').trigger('click');
+    const input = w.find('input');
+    await input.setValue('A New Name');
+    // Dispatch both before the Vue render removes the edit field.
+    await Promise.all([input.trigger('keyup.enter'), input.trigger('blur')]);
+
+    expect(nameParcel).toHaveBeenCalledTimes(1);
+    expect(nameParcel).toHaveBeenCalledWith('longmere', 'A New Name');
+    expect(w.find('input').exists()).toBe(false);
+  });
 });
 
 /**
