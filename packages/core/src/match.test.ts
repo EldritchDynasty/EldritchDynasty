@@ -1368,6 +1368,75 @@ describe('localised Match futures (#986)', () => {
     expect(missingPlainEnglish(session.ctx)).toEqual([]);
   });
 
+  it('localises mixed and uncertain confidence independently of scores and previously dealt cards (#992)', () => {
+    const session = newGame(loadContent());
+    const mixedCard = visibleCard({ kinship: 0.0625, line: 'fertile', lineSeen: 3 });
+    const uncertainCard = visibleCard();
+    const dealtBefore = structuredClone([mixedCard, uncertainCard]);
+    const saveBefore = canonical(session.save());
+    const mixedOriginal = session.matchFuture(mixedCard);
+    const uncertainOriginal = session.matchFuture(uncertainCard);
+    expect(mixedOriginal).toMatchObject({
+      kind: 'blood', confidence: 'mixed', competing: 'continuity',
+      aside: 'mixed with continuity',
+    });
+    expect(uncertainOriginal).toMatchObject({
+      kind: 'mystery', confidence: 'uncertain', aside: 'thin evidence',
+    });
+
+    session.setProseVariants([
+      futureVariant('competing.continuity', 'continuity', 'family continuity'),
+      futureVariant('confidence.mixed', 'mixed with {competing}', 'also suggests {competing}'),
+      futureVariant('confidence.uncertain', 'thin evidence', 'little information available'),
+    ]);
+    session.setProseMode('plainenglish');
+
+    const mixedTranslated = session.matchFuture(mixedCard);
+    const uncertainTranslated = session.matchFuture(uncertainCard);
+    expect(mixedTranslated.aside).toBe('also suggests family continuity');
+    expect(uncertainTranslated.aside).toBe('little information available');
+    expect(mixedTranslated.kind).toBe(mixedOriginal.kind);
+    expect(mixedTranslated.competing).toBe(mixedOriginal.competing);
+    expect(mixedTranslated.confidence).toBe(mixedOriginal.confidence);
+    expect(mixedTranslated.reasons).toEqual(mixedOriginal.reasons);
+    expect(uncertainTranslated.confidence).toBe(uncertainOriginal.confidence);
+
+    session.setProseMode('original');
+    expect(session.matchFuture(mixedCard)).toEqual(mixedOriginal);
+    expect(session.matchFuture(uncertainCard)).toEqual(uncertainOriginal);
+    expect([mixedCard, uncertainCard]).toEqual(dealtBefore);
+    expect(canonical(session.save())).toBe(saveBefore);
+  });
+
+  it('falls back on missing, stale and invalid confidence translations (#992)', () => {
+    const session = newGame(loadContent());
+    const card = visibleCard({ kinship: 0.0625, line: 'fertile', lineSeen: 3 });
+    session.setProseMode('plainenglish');
+    expect(session.matchFuture(card).aside).toBe('mixed with continuity');
+    expect(missingPlainEnglish(session.ctx)).toEqual(expect.arrayContaining([
+      coreMessageAddress('match.future.confidence.mixed'),
+      coreMessageAddress('match.future.competing.continuity'),
+    ]));
+
+    session.setProseVariants([
+      futureVariant('competing.continuity', 'older text', 'family future'),
+      futureVariant('confidence.mixed', 'mixed with {competing}', 'a mix of {unknown}'),
+    ]);
+    expect(session.matchFuture(card).aside).toBe('mixed with continuity');
+    expect(missingPlainEnglish(session.ctx)).toEqual(expect.arrayContaining([
+      coreMessageAddress('match.future.confidence.mixed'),
+      coreMessageAddress('match.future.competing.continuity'),
+    ]));
+    // A valid outer translation can use Original fallback for a missing
+    // competing label without changing the structured kind.
+    session.setProseVariants([
+      futureVariant('confidence.mixed', 'mixed with {competing}', 'also suggests {competing}'),
+    ]);
+    expect(session.matchFuture(card)).toMatchObject({
+      confidence: 'mixed', competing: 'continuity', aside: 'also suggests continuity',
+    });
+  });
+
   it('uses Original fallback and records missing, stale and invalid-token translations', () => {
     const session = newGame(loadContent());
     const shown = visibleCard();
@@ -1375,6 +1444,7 @@ describe('localised Match futures (#986)', () => {
     session.setProseMode('plainenglish');
     expect(session.matchFuture(shown)).toEqual(original);
     expect(missingPlainEnglish(session.ctx)).toEqual([
+      coreMessageAddress('match.future.confidence.uncertain'),
       coreMessageAddress('match.future.label.mystery'),
       coreMessageAddress('match.future.reason.mystery.empty-panel'),
       coreMessageAddress('match.future.reason.mystery.unknown'),

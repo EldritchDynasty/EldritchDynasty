@@ -304,6 +304,18 @@ function matchFutureMessage(
       return checked('these years make continuity unusually important', msg(ctx, 'match.future.reason.priority.continuity', 'these years make continuity unusually important', values));
     case 'match.future.reason.priority.mystery':
       return checked('these years make mystery unusually important', msg(ctx, 'match.future.reason.priority.mystery', 'these years make mystery unusually important', values));
+    case 'match.future.competing.blood':
+      return checked('blood', msg(ctx, 'match.future.competing.blood', 'blood', values));
+    case 'match.future.competing.standing':
+      return checked('standing', msg(ctx, 'match.future.competing.standing', 'standing', values));
+    case 'match.future.competing.continuity':
+      return checked('continuity', msg(ctx, 'match.future.competing.continuity', 'continuity', values));
+    case 'match.future.competing.mystery':
+      return checked('mystery', msg(ctx, 'match.future.competing.mystery', 'mystery', values));
+    case 'match.future.confidence.mixed':
+      return checked('mixed with {competing}', msg(ctx, 'match.future.confidence.mixed', 'mixed with {competing}', values));
+    case 'match.future.confidence.uncertain':
+      return checked('thin evidence', msg(ctx, 'match.future.confidence.uncertain', 'thin evidence', values));
     default:
       throw new Error(`Unknown Match future message: ${key}`);
   }
