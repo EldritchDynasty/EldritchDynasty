@@ -389,7 +389,7 @@ export const GREAT_RITE_TOLL = 2.5;
 export function performUnmaking(ctx: SimCtx, ascendant: Person, elder: Person): RiteOutcome {
   const w = ctx.world;
   if (ascendant.id === elder.id) return { ok: false, reason: msg(ctx, 'rites.unmaking.self', 'a man cannot unmake himself') };
-  if (ascendant.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.ascendant.notLiving', 'the ascendant is not living') };
+  if (ascendant.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.unmaking.ascendantNotLiving', 'the ascendant is not living') };
   if (elder.status !== 'alive') return { ok: false, reason: msg(ctx, 'rites.unmaking.elderNotLiving', 'the elder is not living') };
 
   const ofTheBlood = w.people.blood(w.playerHouse).some((p) => p.id === elder.id);
