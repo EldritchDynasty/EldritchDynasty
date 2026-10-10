@@ -233,6 +233,41 @@ describe('prospective prose selection', () => {
   });
 
 
+  it('selects and freezes a Chronicle-effect variant using its exact outcome and effect index (#802)', () => {
+    const bundle = loadBundle();
+    const event = bundle.events.find((entry) => entry.id === 'the_cross_reference')!;
+    expect(event).toBeDefined();
+    if (event.interaction.kind !== 'choice') throw new Error('Bramme scene is not a choice');
+    const choice = event.interaction.choices.find((entry) => entry.id === 'pay_him')!;
+    const outcome = choice.outcomes.find((entry) => entry.id === 'the_page_unfindable')!;
+    const effectIndex = outcome.effects.findIndex((effect) => effect.kind === 'chronicle');
+    const effect = outcome.effects[effectIndex];
+    if (effect?.kind !== 'chronicle') throw new Error('fixture needs a Chronicle effect');
+
+    const address = `content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=pay_him].outcomes[id=the_page_unfindable].effects[${effectIndex}].text`;
+    const plain = 'The house paid the archivist at Bramme to copy its records.';
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [{ address, of: proseOriginalHash(effect.text), plainenglish: plain }]);
+
+    const linesWritten = () => ctx.world.chronicle.filter((page) => page.weight === 'line');
+    commitOutcome(ctx, event, outcome, {}, choice.id, testRng('chronicle-effect-original'));
+    expect(linesWritten().at(-1)?.text).toBe(effect.text);
+
+    setProseMode(ctx, 'plainenglish');
+    commitOutcome(ctx, event, outcome, {}, choice.id, testRng('chronicle-effect-plain'));
+    expect(linesWritten().slice(-2).map((page) => page.text)).toEqual([effect.text, plain]);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    // A variant removed or made stale must fall back to Original. Previously
+    // written pages keep their selected literal text after a mode change.
+    setProseVariants(ctx, [{ address, of: '0000000000000000', plainenglish: plain }]);
+    commitOutcome(ctx, event, outcome, {}, choice.id, testRng('chronicle-effect-stale'));
+    expect(linesWritten().slice(-3).map((page) => page.text)).toEqual([effect.text, plain, effect.text]);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+    setProseMode(ctx, 'original');
+    expect(linesWritten().slice(-3).map((page) => page.text)).toEqual([effect.text, plain, effect.text]);
+  });
+
   it('freezes a pending Record option before a later mode switch', () => {
     const { bundle, event, outcome } = fixture();
     const recorded: EventTemplate = {
