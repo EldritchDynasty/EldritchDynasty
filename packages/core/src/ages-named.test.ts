@@ -198,6 +198,10 @@ describe('prospective Age-opening prose (#580)', () => {
 describe('named chapter Age labels in the selected prose mode (#599)', () => {
   const ageId = 'the_withering';
   const address = 'content:ages/ages.yaml#ages[id=the_withering].name';
+  // The chapter also renders structural summary prose (#919). This suite owns
+  // Age labels; the summary's translation coverage is exercised separately.
+  const labelMisses = (ctx: SimCtx) => missingPlainEnglish(ctx)
+    .filter((entry) => entry.startsWith('content:ages/ages.yaml#') && entry.endsWith('.name'));
 
   it('switches a named Age label prospectively without rewriting the Chronicle or save', () => {
     const { ctx, age } = withAge(ageId, true, 1);
@@ -221,7 +225,7 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
     expect(plain.register).toBe(original.register);
     expect(plain.verdict).toEqual(original.verdict);
     expect(ctx.world.chronicle.at(-1)!.text).toBe('These words are already written in the record.');
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(labelMisses(ctx)).toEqual([]);
     expect(canonical(saveGame(ctx))).toBe(saved);
 
     setProseMode(ctx, 'original');
@@ -235,7 +239,7 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
     expect(done).toBeDefined();
     setProseMode(ctx, 'plainenglish');
     expect(chapterOf(ctx, done!)!.name).toBe(ctx.content.age(ageId)!.name);
-    expect(missingPlainEnglish(ctx)).toEqual([address]);
+    expect(labelMisses(ctx)).toEqual([address]);
   });
 
   it('never reveals or requests a translation for an unnamed Age', () => {
@@ -250,7 +254,7 @@ describe('named chapter Age labels in the selected prose mode (#599)', () => {
       plainenglish: 'The Plague Age',
     }]);
     expect(chapterOf(ctx, done!)!.name).toBeUndefined();
-    expect(missingPlainEnglish(ctx)).toEqual([]);
+    expect(labelMisses(ctx)).toEqual([]);
   });
 });
 
