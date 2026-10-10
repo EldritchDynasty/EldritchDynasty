@@ -529,29 +529,29 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
   switch (o.kind) {
     case 'study': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.study.unknown', 'nobody of this house by that name') };
       const def = spellbookDef(ctx, o.book);
-      if (!def) return { ok: false, reason: 'no such book' };
-      if (!w.library.has(o.book)) return { ok: false, reason: 'the house does not hold it' };
+      if (!def) return { ok: false, reason: msg(ctx, 'table.order.study.no_book', 'no such book') };
+      if (!w.library.has(o.book)) return { ok: false, reason: msg(ctx, 'table.order.study.not_held', 'the house does not hold it') };
       const can = canStudySpellbook(ctx, p, def);
       if (!can.ok) return { ok: false, reason: can.reason ?? 'not theirs to learn' };
       return beginStudy(ctx, p, def)
         ? { ok: true }
-        : { ok: false, reason: 'he is already at it, or already has it' };
+        : { ok: false, reason: msg(ctx, 'table.order.study.already', 'he is already at it, or already has it') };
     }
 
     case 'pedigree': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.pedigree.unknown', 'nobody of this house by that name') };
       const price = PEDIGREE_PRICE[o.grade];
       if (w.treasury - price < DEBT_FLOOR) {
-        return { ok: false, reason: `the house cannot raise ${price} crowns` };
+        return { ok: false, reason: msg(ctx, 'table.order.pedigree.fee', 'the house cannot raise {PRICE} crowns', { PRICE: String(price) }) };
       }
       // Already at the ceiling on papers it does not have to lie about. A
       // house with three generations of its own record buying a forgery is
       // paying to be catchable for nothing.
       if (papersHeld(ctx, p) >= PEDIGREE_COVERS[o.grade]) {
-        return { ok: false, reason: 'the record already shows that much' };
+        return { ok: false, reason: msg(ctx, 'table.order.pedigree.covered', 'the record already shows that much') };
       }
       w.treasury -= price;
       const doc = filePedigree(ctx, p, o.grade);
@@ -568,8 +568,8 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
 
     case 'bond': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
-      if (!p.contract) return { ok: false, reason: 'they are not in the house\'s service' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.bond.unknown', 'nobody of this house by that name') };
+      if (!p.contract) return { ok: false, reason: msg(ctx, 'table.order.bond.not_in_service', "they are not in the house's service") };
 
       if (o.op === 'free') {
         // `.ok`, not the result itself: `freeBond` returns what the freeing
@@ -578,43 +578,46 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
         // every refusal.
         return freeBond(ctx, p).ok
           ? { ok: true }
-          : { ok: false, reason: 'there is no bond on them to tear up' };
+          : { ok: false, reason: msg(ctx, 'table.order.bond.none_to_free', 'there is no bond on them to tear up') };
       }
 
-      if (isBonded(p)) return { ok: false, reason: 'they are bonded already' };
+      if (isBonded(p)) return { ok: false, reason: msg(ctx, 'table.order.bond.already', 'they are bonded already') };
       if (o.marks <= 0 || o.marks > MAX_BOND) {
-        return { ok: false, reason: `a bond runs from 1 to ${MAX_BOND} marks` };
+        return { ok: false, reason: msg(ctx, 'table.order.bond.range', 'a bond runs from 1 to {MAX} marks', { MAX: String(MAX_BOND) }) };
       }
       if (w.treasury - o.marks / CROWN < DEBT_FLOOR) {
-        return { ok: false, reason: `the house cannot advance ${o.marks} marks` };
+        return { ok: false, reason: msg(ctx, 'table.order.bond.fee', 'the house cannot advance {MARKS} marks', { MARKS: String(o.marks) }) };
       }
       return bindService(ctx, p, o.marks)
         ? { ok: true }
-        : { ok: false, reason: 'that bond cannot be written' };
+        : { ok: false, reason: msg(ctx, 'table.order.bond.unwritable', 'that bond cannot be written') };
     }
 
     case 'tutor': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.tutor.unknown', 'nobody of this house by that name') };
       return beginTutoring(ctx, p, o.attr);
     }
 
     case 'career': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.career.unknown', 'nobody of this house by that name') };
       const def = ctx.content.career(o.career);
-      if (!def) return { ok: false, reason: 'no such post' };
+      if (!def) return { ok: false, reason: msg(ctx, 'table.order.career.no_post', 'no such post') };
       // INVARIANT `canHoldPost` (schema/career.ts) is the only placement gate;
       // `canTakePost` is the half that carries the reason. Asked before the
       // money, like every other refusal here, because the reason is what the
       // client draws beside the greyed post.
       const open = canTakePost(p);
       if (!open.ok) return { ok: false, reason: open.reason };
-      if (p.career?.career === o.career) return { ok: false, reason: 'he already holds it' };
-      if (w.year - p.born < CAREER_AGE) return { ok: false, reason: 'too young for a post' };
+      if (p.career?.career === o.career) return { ok: false, reason: msg(ctx, 'table.order.career.held', 'he already holds it') };
+      if (w.year - p.born < CAREER_AGE) return { ok: false, reason: msg(ctx, 'table.order.career.too_young', 'too young for a post') };
       const fee = playerCommissionFor(ctx, def);
       if (w.treasury - fee < DEBT_FLOOR) {
-        return { ok: false, reason: `the house cannot raise ${fee} crowns for the place` };
+        return {
+          ok: false,
+          reason: msg(ctx, 'table.order.career.fee', 'the house cannot raise {FEE} crowns for the place', { FEE: String(fee) }),
+        };
       }
       w.treasury -= fee;
       p.career = { career: def.id, from: w.year };
@@ -622,7 +625,9 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
     }
 
     case 'bid': {
-      if (!Number.isFinite(o.ceiling) || o.ceiling < 0) return { ok: false, reason: 'not a figure' };
+      if (!Number.isFinite(o.ceiling) || o.ceiling < 0) {
+        return { ok: false, reason: msg(ctx, 'table.order.bid.not_a_figure', 'not a figure') };
+      }
       w.bidCeiling = Math.round(o.ceiling);
       return { ok: true };
     }
@@ -662,7 +667,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
         return { ok: true };
       }
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.scion.unknown', 'nobody of this house by that name') };
       w.scion = p.id;
       w.scionVacant = undefined;
       // PROMOTED, NOT DOUBLED. Naming the current heir as Scion vacates the
@@ -685,9 +690,11 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       // read as a pair and cost like one — his own bias sites already give
       // him everything the heir's would add — while measuring as a house
       // that built no second man at all.
-      if (o.person === w.scion) return { ok: false, reason: 'the Scion cannot be his own heir' };
+      if (o.person === w.scion) {
+        return { ok: false, reason: msg(ctx, 'table.order.scionHeir.self', 'the Scion cannot be his own heir') };
+      }
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.scionHeir.unknown', 'nobody of this house by that name') };
       w.scionHeir = p.id;
       w.scionHeirVacant = undefined;
       return { ok: true };
@@ -695,7 +702,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
 
     case 'withhold': {
       const p = ours(ctx, o.person);
-      if (!p) return { ok: false, reason: 'nobody of this house by that name' };
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.withhold.unknown', 'nobody of this house by that name') };
       // A daughter held back is power the house keeps and a match it does not
       // make. §7: every daughter married outward is power leaving the blood
       // forever, and there was no way to decline to spend her.
