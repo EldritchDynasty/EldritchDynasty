@@ -205,8 +205,11 @@ export function mobileStorage(
   }
 
   async function deleteSave(slot: string): Promise<void> {
-    await removeFile(savePath(slot));
+    // Remove the legacy copy first: if Preferences cleanup fails, keep the
+    // authoritative Data file. Deleting it first lets a stale legacy snapshot
+    // migrate back and resurrect a run the player just deleted.
     await preferences.remove({ key: LEGACY_SAVE_PREFIX + slot });
+    await removeFile(savePath(slot));
   }
 
   async function writeLibrary(library: unknown): Promise<void> {
