@@ -15,12 +15,6 @@
     },
     {
       "kind": "flag",
-      "key": "bramme_copied_a_book",
-      "disposition": "read",
-      "reason": "Sending the Life book to Bramme creates an external institutional touchpoint and returns a correct marginal correction in an unknown hand. Preserve the marker for a later chapter-house/library callback rather than treating the copy as purely private."
-    },
-    {
-      "kind": "flag",
       "key": "butts_at_wick_unkept",
       "disposition": "read",
       "reason": "The survey outcome explicitly says the clerk's clause is not read for nine years and then is read when war comes. Preserve the flag for that authored war/survey callback instead of deleting the promised future consequence."
