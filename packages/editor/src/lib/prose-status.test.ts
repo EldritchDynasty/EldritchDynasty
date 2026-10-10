@@ -24,6 +24,16 @@ describe('the Plain English editor review verdict (#945)', () => {
     )).toEqual({
       ok: false, text: 'Plain English needs review against the current Original.',
     });
+
+    // Only an explicit review of the counterpart against the new Original
+    // restores the successful status; editing Original never does so implicitly.
+    expect(proseVariantStatus(
+      { text: changedOriginal, interpolations: contentInterpolationTokens(changedOriginal) },
+      {
+        plainenglish: '{PERSON} read the old {BOOK}. {BOOK} was worn.',
+        of: proseOriginalHash(changedOriginal),
+      },
+    )).toEqual({ ok: true, text: 'Placeholders match.' });
   });
 
   it('flags legacy variants with no reviewed fingerprint', () => {
