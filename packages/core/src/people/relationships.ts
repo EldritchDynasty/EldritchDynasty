@@ -3,7 +3,7 @@ import { asId } from '@ed/schema';
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import { ECHO_AFTER, ECHO_SPACING } from '../bearing.js';
 import { msg } from '../messages.js';
-import { proseForEventTitle } from '../prose.js';
+import { proseForContentField, proseForEventTitle } from '../prose.js';
 
 /**
  * RELATIONSHIPS AND GRUDGES.
@@ -295,7 +295,13 @@ export function echoGrudges(ctx: SimCtx): number {
       const about = origin?.title
         ? msg(ctx, 'grudge.about_event', 'what happened in "{TITLE}"', { TITLE: proseForEventTitle(ctx, origin) })
         : msg(ctx, 'grudge.about_year', 'what the house did in {YEAR}', { YEAR: String(g.originYear) });
-      const name = w.houses.get(house)?.name ?? house;
+      // Only authored names have reviewed Plain English variants. A renamed
+      // runtime house retains its own name rather than a stale content label.
+      const runtimeName = w.houses.get(house)?.name;
+      const authoredHouse = ctx.content.house(house);
+      const name = runtimeName !== undefined && authoredHouse?.name === runtimeName
+        ? proseForContentField(ctx, 'houses', authoredHouse.id, 'name', runtimeName)
+        : runtimeName ?? house;
       const line = grudgeLineIndex(w.year, house, GRUDGE_LINES);
       w.chronicle.push({
         id: chronicleEntryId(ctx),
