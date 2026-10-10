@@ -177,10 +177,21 @@ export function beginCommitment(ctx: SimCtx, men: number, age: string): Commitme
   return commitment;
 }
 
+/**
+ * Reinforcements are people, not continuous quantities. Reject invalid numbers
+ * before they can poison upkeep, attrition or a serialized SavedGame. Checking
+ * the new total matters too: two individually safe integers can sum to an
+ * unsafe integer.
+ */
+function validReinforcement(commitment: Commitment, men: number): boolean {
+  return Number.isSafeInteger(men) && men > 0
+    && Number.isSafeInteger(commitment.men + men);
+}
+
 /** More men into the standing commitment, attributed to whichever hall sent them, if named. */
 export function reinforceCommitment(ctx: SimCtx, men: number, from?: string): boolean {
   const c = activeCommitment(ctx);
-  if (!c || men <= 0) return false;
+  if (!c || !validReinforcement(c, men)) return false;
   c.men += men;
   if (from) c.from[from] = (c.from[from] ?? 0) + men;
   return true;
@@ -343,10 +354,11 @@ export interface MusterOrderResult {
 export function musterOrder(ctx: SimCtx, order: MusterOrder): MusterOrderResult {
   switch (order.op) {
     case 'reinforce': {
-      if (!activeCommitment(ctx)) {
+      const commitment = activeCommitment(ctx);
+      if (!commitment) {
         return { ok: false, reason: msg(ctx, 'muster.refuse.reinforce_no_commitment', 'no commitment is standing') };
       }
-      if (order.men <= 0) {
+      if (!validReinforcement(commitment, order.men)) {
         return { ok: false, reason: msg(ctx, 'muster.refuse.reinforce_no_men', 'not a number of men') };
       }
       return reinforceCommitment(ctx, order.men)
