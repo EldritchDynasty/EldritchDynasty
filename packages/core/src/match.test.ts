@@ -13,6 +13,7 @@ import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js'
 import { canonical } from './save.js';
 import { coreMessageAddress } from './messages.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
+import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 
 const bundle = loadContent();
 
@@ -26,6 +27,13 @@ describe('prospective character-template prose on Match cards (#646)', () => {
     expect(entry).toBeDefined();
     return { address: entry.address, of: proseOriginalHash(entry.text), plainenglish };
   }
+  /**
+   * What these cases are about: template prose and the thread callback. The
+   * card's own market words (#916) and the house names in its callback (#917)
+   * have their own suites.
+   */
+  const missing = (ctx: SimCtx) => missingPlainEnglish(ctx)
+    .filter((address) => !/#match\.(words|blurb|block)\.|#houses\[id=[^\]]+\]\.name$/.test(address));
   function offered(template: CharacterTemplate = original) {
     const source = { ...bundle, characterTemplates: [template] };
     const ctx = testWorld(source, 646);
@@ -48,7 +56,7 @@ describe('prospective character-template prose on Match cards (#646)', () => {
       item.kind === 'outsider' ? { ...item, blurb: 'She is an ordinary outsider.' } : item) });
     expect(canonical(saveGame(plain.ctx))).toBe(canonical(saveGame(control.ctx)));
     // Match cards also read a visible family-connection callback from the thread model.
-    expect(missingPlainEnglish(plain.ctx)).toEqual([coreMessageAddress('threads.family.current')]);
+    expect(missing(plain.ctx)).toEqual([coreMessageAddress('threads.family.current')]);
     const pending = queueMatch(plain.ctx, plainHand);
     setProseMode(plain.ctx, 'original');
     expect(pending.cards).toEqual(plainHand.cards);
@@ -62,7 +70,7 @@ describe('prospective character-template prose on Match cards (#646)', () => {
     setProseMode(ctx, 'plainenglish');
     const hand = dealMatch(ctx, subject, makeRng(646));
     expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe('An ordinary daughter.');
-    expect(missingPlainEnglish(ctx)).toEqual([coreMessageAddress('threads.family.current')]);
+    expect(missing(ctx)).toEqual([coreMessageAddress('threads.family.current')]);
   });
 
   it('falls back and reports only the visible blurb when its variant is missing or stale', () => {
@@ -73,7 +81,7 @@ describe('prospective character-template prose on Match cards (#646)', () => {
       setProseMode(ctx, 'plainenglish');
       const hand = dealMatch(ctx, subject, makeRng(646));
       expect(hand.cards.find((item) => item.kind === 'outsider')!.blurb).toBe(original.blurb);
-      expect(missingPlainEnglish(ctx)).toEqual([row.address, coreMessageAddress('threads.family.current')]);
+      expect(missing(ctx)).toEqual([row.address, coreMessageAddress('threads.family.current')]);
     }
   });
 });
@@ -1021,5 +1029,117 @@ describe('taking a card refuses in the reader\'s setting (#807)', () => {
       'that match is no longer possible', 'the card promises nobody', 'that recipe is no longer in the content',
     ]);
     expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
+  });
+});
+
+describe('a dealt card speaks the reader\'s setting (#916)', () => {
+  const source = readFileSync(new URL('./people/match.ts', import.meta.url), 'utf8');
+  const entries = coreMessageEntries(source);
+  const cardText = entries.filter((entry) => /#match\.(words|blurb|block)\./.test(entry.address));
+  const ORIGINALS = {
+    'match.blurb.at_table':
+      'Already at this table, already fed by this house. Nothing leaves with her, and nothing new comes in.',
+    'match.blurb.near': 'Known to the house, and near enough to be sent for.',
+    'match.block.gone': '{NAME} is gone',
+    'match.block.spoken_for': '{NAME} has been spoken for',
+    'match.block.purse': 'the house cannot raise {DOWRY} crowns',
+    'match.block.papers': 'they want {ASKED} generations of maternal record and the house can show {SHOWN}',
+    'match.words.twice_over': 'the same blood twice over',
+    'match.words.close_kin': 'close kin',
+    'match.words.distant_kin': 'kin, at a distance',
+    'match.words.deep_blood': 'deep blood',
+    'match.words.drop': 'a drop of it, they say',
+    'match.words.full_line': 'a full line',
+    'match.words.thin_line': 'a thin line',
+    'match.words.ordinary_line': 'an ordinary line',
+    'match.words.unwatched_line': 'no line anybody here has watched',
+    'match.words.one_woman': 'on one woman only',
+    'match.words.bought_grandmother': 'a bought grandmother',
+  };
+
+  it('keys the market vocabulary, the household blurbs and every closure reason', () => {
+    expect(Object.fromEntries(cardText.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual(ORIGINALS);
+    // None of it is left behind as a fragile ordinal worklist row.
+    const legacy = plainEnglishCoreWorkItems('people/match.ts', source)
+      .filter((item) => item.address.includes('#literal['));
+    for (const phrase of ['Already at this table', 'Known to the house', 'cannot marry', 'is gone',
+      'spoken for', 'cannot raise', 'maternal record', 'twice over', 'at a distance', 'they say',
+      'no line anybody here has watched', 'one woman only', 'bought grandmother']) {
+      expect(legacy.filter((item) => item.text.includes(phrase)), phrase).toEqual([]);
+    }
+  });
+
+  /** A daughter, a cousin at the table, and a purse too empty to price anybody in. */
+  function hand(mode: 'original' | 'plainenglish') {
+    const ctx = testWorld(bundle, 916, 1042);
+    const her = place(ctx, { sex: 'female', age: 19, name: 'The Subject' });
+    const cousin = place(ctx, { sex: 'male', age: 21, name: 'The Cousin' });
+    ctx.world.treasury = -119;
+    setProseVariants(ctx, entries.map((entry) => ({
+      address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+    })));
+    setProseMode(ctx, mode);
+    return { ctx, her, cousin, offer: dealMatch(ctx, her, testRng('plain-916')) };
+  }
+  const plainly = (words: string) => words.split(' · ').map((word) => `plain: ${word}`).join(' · ');
+
+  it('deals the same hand in either setting, in the reader\'s words', () => {
+    const original = hand('original');
+    const plain = hand('plainenglish');
+    const household = original.offer.cards.find((card) => card.kind === 'household')!;
+    expect(household.person).toBe(original.cousin.id);
+    expect(household.blurb).toBe(ORIGINALS['match.blurb.at_table']);
+    const closed = original.offer.cards.filter((card) => card.blockedBy !== undefined);
+    expect(closed.length, 'nothing on this hand closed on the purse').toBeGreaterThan(0);
+    for (const card of closed) {
+      expect(card.blockedBy).toMatch(
+        /^(the house cannot raise \d+ crowns|they want \d+ generations of maternal record and the house can show \d+)$/);
+    }
+
+    expect(plain.offer).toEqual({
+      ...original.offer,
+      cards: original.offer.cards.map((card) => ({
+        ...card,
+        words: plainly(card.words),
+        ...(card.kind === 'household' ? { blurb: `plain: ${card.blurb}` } : {}),
+        ...(card.blockedBy === undefined ? {} : { blockedBy: `plain: ${card.blockedBy}` }),
+      })),
+    });
+    expect(canonical(saveGame(plain.ctx))).toBe(canonical(saveGame(original.ctx)));
+  });
+
+  it('closes a card in the reader\'s words when the world moves under it', () => {
+    const reasons = (mode: 'original' | 'plainenglish') => {
+      const { ctx, her, cousin, offer } = hand(mode);
+      // Open again, so only the world's change can close it.
+      const household = { ...offer.cards.find((card) => card.kind === 'household')!, available: true, blockedBy: undefined };
+      const child = place(ctx, { sex: 'male', age: 4, name: 'Small' });
+      const gone = [{ ...household, person: 'nobody_at_all' }];
+      const subjectless = [{ ...household }];
+      const tooYoung = [{ ...household }];
+      refreshHand(ctx, her.id, gone);
+      refreshHand(ctx, 'nobody_at_all', subjectless);
+      refreshHand(ctx, child.id, tooYoung);
+      ctx.world.people.kill(cousin.id, ctx.world.year, 'a fever');
+      const spoken = [{ ...household }];
+      refreshHand(ctx, her.id, spoken);
+      return [gone, subjectless, tooYoung, spoken].map(([card]) => ({ available: card!.available, why: card!.blockedBy }));
+    };
+    const original = reasons('original');
+    expect(original).toEqual([
+      { available: false, why: 'The Cousin is gone' },
+      { available: false, why: 'the subject is gone' },
+      { available: false, why: 'Small cannot marry' },
+      { available: false, why: 'The Cousin has been spoken for' },
+    ]);
+    expect(reasons('plainenglish')).toEqual(original.map((r) => ({ ...r, why: `plain: ${r.why}` })));
+  });
+
+  it('keeps a dealt card\'s words after the reader changes setting', () => {
+    const { ctx, offer } = hand('plainenglish');
+    const pending = queueMatch(ctx, offer);
+    setProseMode(ctx, 'original');
+    expect(pending.cards).toEqual(offer.cards);
+    expect(pending.cards.every((card) => card.words.startsWith('plain: '))).toBe(true);
   });
 });

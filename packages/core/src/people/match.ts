@@ -836,9 +836,9 @@ function householdCard(ctx: SimCtx, subject: Person, who: Person, index: number)
     house: who.houseOfOrigin,
     houseName: house?.name ?? who.houseOfOrigin,
     blurb: hall === w.playerHouse
-      ? 'Already at this table, already fed by this house. Nothing leaves with her, '
-        + 'and nothing new comes in.'
-      : 'Known to the house, and near enough to be sent for.',
+      ? msg(ctx, 'match.blurb.at_table',
+        'Already at this table, already fed by this house. Nothing leaves with her, and nothing new comes in.')
+      : msg(ctx, 'match.blurb.near', 'Known to the house, and near enough to be sent for.'),
     dowry: 0,
     kinship: matchF(ctx, subject.id, who.id),
     line: 'unknown',
@@ -907,12 +907,27 @@ function outsiderCard(ctx: SimCtx, template: CharacterTemplate, rng: Rng, index:
  * — through one predicate rather than three spellings of it.
  */
 function cardBlock(ctx: SimCtx, subject: Person, card: MatchCard): string | undefined {
-  if (!eligibleMatchSubject(ctx, subject)) return `${subject.name} cannot marry`;
+  if (!eligibleMatchSubject(ctx, subject)) return cannotMarry(ctx, subject.name);
   if (card.kind !== 'household') return undefined;
   const who = ctx.world.people.get(card.person ?? '');
-  if (!who) return `${card.name} is gone`;
-  if (!eligibleToMarry(ctx, who)) return `${card.name} has been spoken for`;
+  if (!who) return msg(ctx, 'match.block.gone', '{NAME} is gone', { NAME: card.name });
+  if (!eligibleToMarry(ctx, who)) {
+    return msg(ctx, 'match.block.spoken_for', '{NAME} has been spoken for', { NAME: card.name });
+  }
   return undefined;
+}
+
+/**
+ * A reason the deal and the order both give is one message, not two (#916):
+ * a key is declared at exactly one call site, and two keys for one sentence
+ * would be two translations of it that can drift apart.
+ */
+function subjectGone(ctx: SimCtx): string {
+  return msg(ctx, 'match.refuse.subject_gone', 'the subject is gone');
+}
+
+function cannotMarry(ctx: SimCtx, name: string): string {
+  return msg(ctx, 'match.refuse.cannot_marry', '{NAME} cannot marry', { NAME: name });
 }
 
 /**
@@ -928,7 +943,7 @@ export function refreshHand(ctx: SimCtx, subjectId: string, cards: MatchCard[]):
   const subject = ctx.world.people.get(subjectId);
   for (const c of cards) {
     if (!c.available) continue;
-    const block = subject ? cardBlock(ctx, subject, c) : 'the subject is gone';
+    const block = subject ? cardBlock(ctx, subject, c) : subjectGone(ctx);
     if (block) {
       c.available = false;
       c.blockedBy = block;
@@ -1034,14 +1049,16 @@ function priceIn(ctx: SimCtx, card: MatchCard, subject: Person): void {
   const ceiling = w.treasury - DEBT_FLOOR;
   if (card.dowry > ceiling) {
     card.available = false;
-    card.blockedBy = `the house cannot raise ${card.dowry} crowns`;
+    card.blockedBy = msg(ctx, 'match.block.purse', 'the house cannot raise {DOWRY} crowns',
+      { DOWRY: String(card.dowry) });
   } else if (card.papersShown < card.papersAsked) {
     // A card closed on the papers rather than the purse, and the difference
     // matters to the player: coin is a thing he can go and get, and a
     // grandmother is a thing he has to buy from a man at Bramme.
     card.available = false;
-    card.blockedBy = `they want ${card.papersAsked} generations of maternal record and the house `
-      + `can show ${card.papersShown}`;
+    card.blockedBy = msg(ctx, 'match.block.papers',
+      'they want {ASKED} generations of maternal record and the house can show {SHOWN}',
+      { ASKED: String(card.papersAsked), SHOWN: String(card.papersShown) });
   }
 }
 
@@ -1088,28 +1105,28 @@ function marketWords(ctx: SimCtx, card: MatchCard): string {
 
   // FIRST COUSINS is 0.0625. Anything at or above it is what the Church has a
   // word for and the rival houses have a different one.
-  if (card.kinship >= 0.125) said.push('the same blood twice over');
-  else if (card.kinship >= 0.0625) said.push('close kin');
-  else if (card.kinship > 0) said.push('kin, at a distance');
+  if (card.kinship >= 0.125) said.push(msg(ctx, 'match.words.twice_over', 'the same blood twice over'));
+  else if (card.kinship >= 0.0625) said.push(msg(ctx, 'match.words.close_kin', 'close kin'));
+  else if (card.kinship > 0) said.push(msg(ctx, 'match.words.distant_kin', 'kin, at a distance'));
 
-  if (card.blood === 'deep') said.push('deep blood');
-  else if (card.blood === 'drop') said.push('a drop of it, they say');
+  if (card.blood === 'deep') said.push(msg(ctx, 'match.words.deep_blood', 'deep blood'));
+  else if (card.blood === 'drop') said.push(msg(ctx, 'match.words.drop', 'a drop of it, they say'));
 
-  if (card.line === 'fertile') said.push('a full line');
-  else if (card.line === 'thin') said.push('a thin line');
-  else if (card.line === 'ordinary') said.push('an ordinary line');
-  else said.push('no line anybody here has watched');
+  if (card.line === 'fertile') said.push(msg(ctx, 'match.words.full_line', 'a full line'));
+  else if (card.line === 'thin') said.push(msg(ctx, 'match.words.thin_line', 'a thin line'));
+  else if (card.line === 'ordinary') said.push(msg(ctx, 'match.words.ordinary_line', 'an ordinary line'));
+  else said.push(msg(ctx, 'match.words.unwatched_line', 'no line anybody here has watched'));
 
   // What the read RESTS on. One completed life is a rumour with a number on
   // it, and the player should be told that before he bets a daughter on it.
-  if (card.line !== 'unknown' && card.lineSeen === 1) said.push('on one woman only');
+  if (card.line !== 'unknown' && card.lineSeen === 1) said.push(msg(ctx, 'match.words.one_woman', 'on one woman only'));
 
   // §7's third piece of market vocabulary, and the only one that was never
   // sayable: "a bought grandmother". Said of the card's own house when the
   // market has caught somebody there leaning on a pedigree that did not hold —
   // which is a thing the market only knows once a forgery has been exposed.
   // Never explained in text, learned from use, exactly as §7 asks.
-  if (boughtGrandmother(ctx, card.house)) said.push('a bought grandmother');
+  if (boughtGrandmother(ctx, card.house)) said.push(msg(ctx, 'match.words.bought_grandmother', 'a bought grandmother'));
 
   return said.join(' · ');
 }
@@ -1148,14 +1165,14 @@ export interface MatchResult {
 export function takeCard(ctx: SimCtx, subjectId: string, card: MatchCard): MatchResult {
   const w = ctx.world;
   const subject = w.people.get(subjectId);
-  if (!subject) return { ok: false, reason: msg(ctx, 'match.refuse.subject_gone', 'the subject is gone') };
+  if (!subject) return { ok: false, reason: subjectGone(ctx) };
   // The draft and the pairing have to agree about this exactly (issue #132,
   // Stage 2, the same failure the paragraph above already names once): a
   // priority hand that `matchSubjects` waived the age ceiling for and this
   // function did not is a card the marriage code refuses every time it is
   // taken, silently, which reads exactly like a working priority.
   if (!eligibleMatchSubject(ctx, subject)) {
-    return { ok: false, reason: msg(ctx, 'match.refuse.cannot_marry', '{NAME} cannot marry', { NAME: subject.name }) };
+    return { ok: false, reason: cannotMarry(ctx, subject.name) };
   }
   if (!card.available) {
     return { ok: false, reason: card.blockedBy ?? msg(ctx, 'match.refuse.card_closed', 'that card is closed') };
