@@ -10,8 +10,10 @@ export type DiffLine =
   | { kind: 'del'; text: string };
 
 export function diffLines(before: string, after: string): DiffLine[] {
-  const a = before.split('\n');
-  const b = after.split('\n');
+  // Exactly empty files have no lines; a trailing newline in a nonempty
+  // file still denotes an actual empty final line.
+  const a = before === '' ? [] : before.split('\n');
+  const b = after === '' ? [] : after.split('\n');
   const n = a.length;
   const m = b.length;
 
