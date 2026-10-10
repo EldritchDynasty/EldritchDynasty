@@ -1031,3 +1031,37 @@ describe('which endings of service the book keeps', () => {
     expect(ctx.world.chronicle.at(-1)!.text).toContain('freed by the will');
   });
 });
+
+describe('the wardship buyback refuses in the reader\'s setting (#807)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./people/succession.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#wardship\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'wardship.refuse.none': 'the house is not under wardship',
+      'wardship.refuse.bought_back': 'the wardship is already bought back',
+      'wardship.refuse.cost': 'cannot afford the wardship',
+    });
+  });
+
+  it('gives a refused buyback its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(bundle);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const none = buyBackWardship(ctx);
+      ctx.world.wardship = { ward: asId('unavailable_ward'), since: ctx.world.year };
+      ctx.world.treasury = DEBT_FLOOR - 1000;
+      const cost = buyBackWardship(ctx);
+      ctx.world.wardship.boughtBack = true;
+      return [none, cost, buyBackWardship(ctx)];
+    };
+    const original = refuse('original');
+    expect(original.map((r) => r.reason)).toEqual([
+      'the house is not under wardship', 'cannot afford the wardship', 'the wardship is already bought back',
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
+  });
+});

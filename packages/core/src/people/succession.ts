@@ -321,10 +321,16 @@ export const WARDSHIP_BUYBACK_YEARS = 3;
  */
 export function buyBackWardship(ctx: SimCtx): { ok: boolean; reason?: string; spent?: number } {
   const w = ctx.world;
-  if (!w.wardship) return { ok: false, reason: 'the house is not under wardship' };
-  if (w.wardship.boughtBack) return { ok: false, reason: 'the wardship is already bought back' };
+  if (!w.wardship) {
+    return { ok: false, reason: msg(ctx, 'wardship.refuse.none', 'the house is not under wardship') };
+  }
+  if (w.wardship.boughtBack) {
+    return { ok: false, reason: msg(ctx, 'wardship.refuse.bought_back', 'the wardship is already bought back') };
+  }
   const cost = WARDSHIP_BUYBACK_YEARS * landIncome(ctx);
-  if (w.treasury - cost < DEBT_FLOOR) return { ok: false, reason: 'cannot afford the wardship' };
+  if (w.treasury - cost < DEBT_FLOOR) {
+    return { ok: false, reason: msg(ctx, 'wardship.refuse.cost', 'cannot afford the wardship') };
+  }
   w.treasury -= cost;
   w.wardship.boughtBack = true;
   const ward = w.people.get(w.wardship.ward);

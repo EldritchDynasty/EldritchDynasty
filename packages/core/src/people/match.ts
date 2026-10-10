@@ -15,6 +15,7 @@ import { papersDemanded, papersHeld } from './papers.js';
 import { emptyPanel, readPanel, type MatchPanel } from './panel.js';
 import { externalThreadFor } from '../relationship-threads.js';
 import { characterProse } from './character-prose.js';
+import { msg } from '../messages.js';
 
 /**
  * THE MATCH — draft one partner from three cards.
@@ -1147,14 +1148,18 @@ export interface MatchResult {
 export function takeCard(ctx: SimCtx, subjectId: string, card: MatchCard): MatchResult {
   const w = ctx.world;
   const subject = w.people.get(subjectId);
-  if (!subject) return { ok: false, reason: 'the subject is gone' };
+  if (!subject) return { ok: false, reason: msg(ctx, 'match.refuse.subject_gone', 'the subject is gone') };
   // The draft and the pairing have to agree about this exactly (issue #132,
   // Stage 2, the same failure the paragraph above already names once): a
   // priority hand that `matchSubjects` waived the age ceiling for and this
   // function did not is a card the marriage code refuses every time it is
   // taken, silently, which reads exactly like a working priority.
-  if (!eligibleMatchSubject(ctx, subject)) return { ok: false, reason: `${subject.name} cannot marry` };
-  if (!card.available) return { ok: false, reason: card.blockedBy ?? 'that card is closed' };
+  if (!eligibleMatchSubject(ctx, subject)) {
+    return { ok: false, reason: msg(ctx, 'match.refuse.cannot_marry', '{NAME} cannot marry', { NAME: subject.name }) };
+  }
+  if (!card.available) {
+    return { ok: false, reason: card.blockedBy ?? msg(ctx, 'match.refuse.card_closed', 'that card is closed') };
+  }
 
   let spouse: Person | undefined;
 
@@ -1165,12 +1170,14 @@ export function takeCard(ctx: SimCtx, subjectId: string, card: MatchCard): Match
     // have died in the same year's earlier phases, and a dead bride is not an
     // error, it is a card that closed.
     if (!spouse || !eligibleToMarry(ctx, spouse)) {
-      return { ok: false, reason: 'that match is no longer possible' };
+      return { ok: false, reason: msg(ctx, 'match.refuse.no_longer_possible', 'that match is no longer possible') };
     }
   } else {
-    if (!card.recipe) return { ok: false, reason: 'the card promises nobody' };
+    if (!card.recipe) return { ok: false, reason: msg(ctx, 'match.refuse.no_recipe', 'the card promises nobody') };
     const template = ctx.content.characterTemplates.find((t) => t.id === card.recipe!.template);
-    if (!template) return { ok: false, reason: 'that recipe is no longer in the content' };
+    if (!template) {
+      return { ok: false, reason: msg(ctx, 'match.refuse.recipe_gone', 'that recipe is no longer in the content') };
+    }
     const household = w.people.householdOf(subject.id, w.year) ?? w.playerHouse;
     spouse = mintRecipe(card.recipe, template, ctx, { household, membership: 'married_in' });
   }
