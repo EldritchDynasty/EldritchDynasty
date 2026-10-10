@@ -1012,7 +1012,7 @@ export function verdictOver(runs: EndingRun[]): EndingVerdict {
  * chronicler/ascendant order before the one aggregate verdict is evaluated.
  */
 export function runEndingGatePartition(
-  source: ContentBundle,
+  source: Source,
   partition: GatePartition<Pick<EndingRun, 'seed' | 'policy'>>,
   years: number,
 ): GatePartitionResult<EndingRun> {
@@ -1032,13 +1032,14 @@ export function gateEndings(
   years = CAMPAIGN_YEARS,
   opts: { workers?: number } = {},
 ): EndingVerdict {
-  const bundle = indexContent(source).bundle;
+  const content = indexContent(source);
+  const bundle = content.bundle;
   // Fast fixture calls stay serial; the 512-pair nightly batch benefits from
   // the same bounded workers already exercised by blood and war gates.
   const workers = opts.workers ?? (runs >= 8 ? gatePartitionWorkerCount() : 1);
   const plan = partitionGateInputs(endingGateInputs(runs), workers);
   const results = plan.length === 1
-    ? plan.map((partition) => runEndingGatePartition(bundle, partition, years))
+    ? plan.map((partition) => runEndingGatePartition(content, partition, years))
     : runGatePartitionsInWorkers<Pick<EndingRun, 'seed' | 'policy'>, EndingRun>(plan, {
       moduleUrl: import.meta.url,
       exportName: 'runEndingGatePartition',
