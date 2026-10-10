@@ -1024,3 +1024,69 @@ proseVariants:
     of: "82329b7f502a7e3b"
     plainenglish: >-
       bought two listed lots at Sarrow and had no other business there
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].title"
+    of: "764b8125b705b0c9"
+    plainenglish: >-
+      The Borrowed Book Returns With Notes
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].body"
+    of: "573a3a0fae620f7b"
+    plainenglish: >-
+      A book lent from this library four generations ago comes back without anyone asking
+      for it. It arrives in a crate with a polite note but no explanation. The other house
+      seems unwilling to be known as the one holding it. Three different people have written
+      notes throughout its margins over about sixty years. The book has been read closely.
+      The third handwriting belongs to {RIVAL}'s grandfather. Beside the fourth chapter, he
+      has written a question.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].interaction.choices[id=read_the_margins].label"
+    of: "b4cf95125d81fd06"
+    plainenglish: >-
+      Read the notes in the margins to learn what the writers wanted.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].interaction.choices[id=read_the_margins].outcomes[id=the_question_in_the_margin].text"
+    of: "e578420e1678244a"
+    plainenglish: >-
+      The notes show sixty years of attention by three writers. All three focus on one
+      sentence rather than the whole chapter. Beside it, the newest writer has added a
+      question mark and the words 'which house'. The book is about farming, and the sentence
+      is about grafting. Nobody in this family sleeps much for the next ten days.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].interaction.choices[id=wash_the_margins].label"
+    of: "152dce87040a162b"
+    plainenglish: >-
+      Have the notes removed from the margins and return the book to the shelf.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].interaction.choices[id=wash_the_margins].outcomes[id=washed].text"
+    of: "88d14af9c5a301c5"
+    plainenglish: >-
+      A professional at Bramme removes the margin notes for four crowns without asking
+      questions. The family puts the book back on its shelf. Whatever the three writers were
+      trying to say is now lost to everyone, even the writers themselves. This is a real
+      loss. The house understands this second consequence about nine years later.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].interaction.choices[id=wash_the_margins].outcomes[id=the_wash_takes_the_text].text"
+    of: "c561480f52ee00e3"
+    plainenglish: >-
+      The professional at Bramme knows his trade, but the book's original ink is older than
+      the writing in the margins. Removing the notes also lifts some of the main text from
+      four leaves, leaving faded marks. The book comes back clean but incomplete, worth
+      about one third of its former value. Nobody can now read the notes or the sentence
+      they concerned.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].record.subject"
+    of: "b416d8d5aca012c9"
+    plainenglish: >-
+      what was written in the margins
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].record.options.record.chronicle"
+    of: "5c943895a99114e9"
+    plainenglish: >-
+      The book we lent out four generations ago came home with notes written by three people
+      over sixty years. All three focused on one sentence about grafting. The last writer
+      asked 'which house'.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].record.options.record.claims[0].text"
+    of: "fe6f353fc06f1383"
+    plainenglish: >-
+      returned the book after three people had written notes in its margins over sixty years
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].record.options.embellish.chronicle"
+    of: "88cbb0b06707b58c"
+    plainenglish: >-
+      A book that had been away from our library for a long time was returned clean,
+      complete and in good condition, with a polite note.
+  - address: "content:events/rare_books.yaml#events[id=the_book_that_was_returned].record.options.embellish.claims[0].text"
+    of: "d5ab74beb63aa2aa"
+    plainenglish: >-
+      returned the book clean and complete
