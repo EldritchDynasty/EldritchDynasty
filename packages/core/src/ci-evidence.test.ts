@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -366,6 +367,47 @@ describe('CI evidence inventory', () => {
     }
   });
 
+
+  it('retains live Electron advisory evidence and fails closed on critical npm findings', () => {
+    const workflow = readFileSync(join(root, '.github/workflows/dependency-audit.yml'), 'utf8');
+    expect(workflow).toContain("cron: '37 3 * * 1'");
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).toContain('permissions:\n  contents: read');
+    expect(workflow).toContain('npm audit --json > dependency-audit.json');
+    expect(workflow).toContain('node tools/electron-audit.mjs dependency-audit.json');
+    expect(workflow).toContain('name: npm-dependency-audit');
+
+    // Execute the same parser CI executes. A known moderate must not block
+    // release, but any high/critical advisory or malformed report must.
+    const audit = (report: unknown) => spawnSync(
+      process.execPath, [join(root, 'tools/electron-audit.mjs'), '-'],
+      {
+        input: JSON.stringify(report),
+        encoding: 'utf8',
+        env: { ...process.env, GITHUB_STEP_SUMMARY: '' },
+      },
+    );
+    const moderate = audit({
+      vulnerabilities: {
+        'sprintf-js': { severity: 'moderate', via: [{ url: 'https://github.com/advisories/GHSA-hp3w-g68c-fv3c' }] },
+      },
+    });
+    expect(moderate.error).toBeUndefined();
+    expect(moderate.status).toBe(0);
+    expect(moderate.stdout).toContain('sprintf-js');
+    expect(moderate.stdout).toContain('moderate');
+
+    const high = audit({ vulnerabilities: {
+      electron: { severity: 'high', via: [{ url: 'https://github.com/advisories/GHSA-example' }] },
+    } });
+    expect(high.status).toBe(1);
+    expect(high.stdout).toContain('electron: high');
+    expect(high.stderr).toContain('high/critical vulnerable package');
+
+    const missing = audit({ error: { code: 'ENOAUDIT' } });
+    expect(missing.status).toBe(1);
+    expect(missing.stderr).toContain('valid vulnerabilities object');
+  });
 
   it('surfaces persistent scheduled failures as deduplicated project work', () => {
     const watcher = readFileSync(join(root, '.github/workflows/scheduled-regression-watch.yml'), 'utf8');
