@@ -20,6 +20,8 @@ import { coreMessageAddress } from './messages.js';
 import { setProseMode, setProseVariants, missingPlainEnglish } from './prose.js';
 import { adviceForDecision } from './advisers.js';
 import type { MatchCard } from './people/match.js';
+import { canonical, saveGame } from './save.js';
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const content = indexContent(loadContent());
 
@@ -977,6 +979,93 @@ function expectAssemblyMatchesDocket(
       .toContain(expectedCandidate);
   }
 }
+
+describe('rite confirmation prose (#920)', () => {
+  const messages = coreMessageEntries(readFileSync(new URL('./table.ts', import.meta.url), 'utf8'))
+    .filter((entry) => entry.address.startsWith(coreMessageAddress('table.assembly.')));
+  const messageVariants = messages.map((entry) => ({
+    address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `Plain: ${entry.text}`,
+  }));
+  const bookVariants = content.spellbooks.map((book) => ({
+    address: `content:${content.sourceOf(book.id)}#spellbooks[id=${book.id}].name`,
+    of: proseOriginalHash(book.name), plainenglish: `Plain: ${book.name}`,
+  }));
+
+  function fixture(rite: 'vesselRite' | 'greatRite' | 'unmaking') {
+    const ctx = testWorld(content, 920);
+    const elder = readyClimber(ctx);
+    place(ctx, { sex: 'male', age: 30, name: 'The Witness' });
+    // Known rite names must also be selected inside the preparation sentence.
+    if (rite === 'greatRite') elder.rites.push('unmaking');
+    const vessel = place(ctx, { sex: 'female', age: 20, name: 'The Vessel' });
+    beget(ctx, vessel, undefined, elder);
+    if (rite === 'unmaking') {
+      elder.rites.push('vessel', 'great_rite');
+      elder.acquired[ELDRITCH_REACH] = 9;
+      elder.phenotype = undefined;
+      const younger = place(ctx, { sex: 'male', age: 25, name: 'The Younger', awakened: true });
+      younger.genome = { kind: 'materialized', genome: genomeOf(elder, ctx.genetics) };
+      younger.phenotype = undefined;
+      beget(ctx, younger, undefined, elder);
+    }
+    setProseVariants(ctx, [...messageVariants, ...bookVariants]);
+    return { ctx, elder };
+  }
+
+  for (const rite of ['vesselRite', 'greatRite', 'unmaking'] as const) {
+    it(`selects ${rite} confirmation text while preserving actors, costs and state`, () => {
+      const { ctx, elder } = fixture(rite);
+      const original = tableView(ctx)[rite];
+      // The first table read materializes lazy genomes and content provenance.
+      // Changing the prose mode must add no state change of its own.
+      const before = canonical(saveGame(ctx));
+      expect(original.ready).toBe(true);
+      const assembly = original.assembly!;
+      expect(assembly.preparations).toContain(`${elder.name} has read ${elder.spellsKnown
+        .map((id) => content.mustSpellbook(id).name).join(', ')}.`);
+      setProseMode(ctx, 'plainenglish');
+      const plain = tableView(ctx)[rite];
+      expect(plain).toMatchObject({ ready: true, assembly: {
+        rite: assembly.rite, actors: assembly.actors, atRisk: assembly.atRisk,
+        title: `Plain: ${assembly.title}`,
+        irreversible: assembly.irreversible.map((line) => `Plain: ${line}`),
+      } });
+      expect(plain.assembly!.preparations).toContain(`Plain: ${elder.name} has read ${elder.spellsKnown
+        .map((id) => `Plain: ${content.mustSpellbook(id).name}`).join(', ')}.`);
+      if (rite === 'unmaking') {
+        expect(assembly.preparations).toContain(`${elder.name} has already taken vessel and the Great Rite.`);
+        expect(plain.assembly!.preparations).toContain(
+          `Plain: ${elder.name} has already taken Plain: Plain: vessel and Plain: the Great Rite.`,
+        );
+      }
+      if (rite === 'greatRite') {
+        expect(plain.assembly!.preparations).toContain(`Plain: ${elder.name} has already taken Plain: unmaking.`);
+      }
+      expect(missingPlainEnglish(ctx).filter((address) => address.startsWith(coreMessageAddress('table.assembly.'))))
+        .toEqual([]);
+      expect(canonical(saveGame(ctx))).toBe(before);
+      setProseMode(ctx, 'original');
+      expect(tableView(ctx)[rite]).toEqual(original);
+    });
+
+    it.each(['missing', 'stale', 'tokens'] as const)(`${rite} falls back for %s variants`, (failure) => {
+      const { ctx } = fixture(rite);
+      const original = tableView(ctx)[rite];
+      setProseVariants(ctx, failure === 'missing' ? [] : [...messageVariants, ...bookVariants].map((variant) => ({
+        ...variant,
+        ...(failure === 'stale' ? { of: proseOriginalHash('old wording') }
+          : { plainenglish: `${variant.plainenglish} {EXTRA}` }),
+      })));
+      setProseMode(ctx, 'plainenglish');
+      expect(tableView(ctx)[rite]).toEqual(original);
+      const misses = missingPlainEnglish(ctx);
+      expect(misses).toContain(coreMessageAddress(`table.assembly.title_${original.assembly!.rite}`));
+      expect(misses).toContain(coreMessageAddress(`table.assembly.cost_${original.assembly!.rite}`));
+      expect(misses).toContain(coreMessageAddress('table.assembly.books'));
+      expect(misses).toContain(bookVariants[0]!.address);
+    });
+  }
+});
 
 describe('major rite assembly (#218)', () => {
   it('photographs the Vessel from the same slot resolution the docket uses', () => {
