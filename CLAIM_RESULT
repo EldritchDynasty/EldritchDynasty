@@ -1,0 +1,6 @@
+verdict: ok
+exit: 0
+request: /claim release 1012 --agent chatgpt/1012-browser-save-download-20261011
+request-commit: fed0bed862fd4d0fd221f4edca409e1f9ee3faa5
+
+released: 1012
