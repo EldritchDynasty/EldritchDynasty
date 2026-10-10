@@ -188,6 +188,30 @@ events:
             id: which_court_had_the_killing
             severity: total
             provableBy: [commons, house_calder]
+    recordByChoice:
+      - id: hand_him_to_cawdry
+        subject: what the Warden did with the killer
+        options:
+          record:
+            chronicle: >-
+              This house sent the killer from Wick under guard to Cawdry for the Warden's assize. He was heard and hanged in Ingathering; his widow's family remembered which house sent him.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent the killer lawfully to the Warden's assize where he was hanged }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: >-
+              This house sent the killer to Cawdry but pleaded for mercy at the assize and won his pardon. The man returned alive to Wick and his widow's children gave thanks.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: won a pardon that spared the killer's life at the Warden's assize }
+            discrepancy:
+              id: the_pardon_cawdry_never_granted
+              severity: total
+              provableBy: [commons, house_calder]
     rumour: { id: rumour_the_night_behind_the_alehouse, accuracy: 0.65, spread: 3 }
     accounts: [the_wardens_summary_of_the_assize, what_wick_says_about_that_night]
 
@@ -283,6 +307,77 @@ events:
             id: who_this_house_sent
             severity: total
             provableBy: [commons, house_calder, the_marches]
+    recordByChoice:
+      - id: send_them
+        subject: who went to the war in place of the levy payment
+        options:
+          record:
+            chronicle: >-
+              Eleven men of Wick marched to the levy with {SON} at their head. This house sent them instead of paying the hundred and twenty crowns. Those who came home bore what the war had done.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent eleven men of Wick and a member of the house to the levy instead of paying the commutation }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: >-
+              The levy was called, but this house paid a hundred and twenty crowns to keep the men of Wick at home. None went to the war; the receipt kept every household safe.
+            effects:
+              - { kind: respect, delta: 2 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: paid one hundred and twenty crowns so that no man of Wick went to the war }
+            discrepancy:
+              id: the_levy_payment_never_made
+              severity: total
+              provableBy: [commons, house_calder, the_marches]
+    recordByOutcome:
+      - id: send_them/seven_come_back
+        subject: who returned from the levy with the house's son
+        options:
+          record:
+            chronicle: >-
+              This house sent eleven men of Wick to the levy with {SON}. Fourteen months later seven of those men returned, and {SON} returned with them. Four households had men who did not come back.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent eleven men of Wick to the levy and brought seven of them home after fourteen months }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: >-
+              Eleven men of Wick marched under {SON}, and every one of them returned alive after fourteen months. No household in the parish buried a son on this house's account.
+            effects:
+              - { kind: respect, delta: 2 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: brought all eleven levied men of Wick home alive and without any loss }
+            discrepancy:
+              id: all_eleven_who_did_not_return
+              severity: total
+              provableBy: [commons, house_calder, the_marches]
+      - id: send_them/he_does_not
+        subject: who was missing when the levy returned
+        options:
+          record:
+            chronicle: >-
+              Eleven men of Wick went to war with {SON} at their head. Fourteen months later only six came back. {SON} was missing, and the captain's letter gave this house no body and no grave.
+            effects:
+              - { kind: respect, delta: -1 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: sent eleven men of Wick to the levy and lost five men with a son of the house still missing }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: >-
+              This house sent eleven men to the levy under {SON}, and all returned in safety. {SON} led them home and their names were read in the Warden's dispatch.
+            effects:
+              - { kind: respect, delta: 2 }
+            claims:
+              - { kind: deed, target: { slot: HEAD }, text: brought the missing son of the house and all eleven levied men home alive }
+            discrepancy:
+              id: the_missing_son_declared_home
+              severity: total
+              provableBy: [commons, house_calder, the_marches]
     rumour: { id: rumour_who_went_and_who_paid, accuracy: 0.6, spread: 3 }
     accounts: [the_captains_letter_home, the_wick_list_the_reeve_wrote]
 
@@ -924,3 +1019,79 @@ proseVariants:
     of: 0011fb3c604498a0
     plainenglish: >-
       sent eleven men to the levy under a member of the house
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry].options.record.chronicle"
+    of: 1bb97d8c30ad7290
+    plainenglish: >-
+      Our house sent the killer from Wick under guard to Cawdry for trial. The Warden's court heard the case and hanged him in Ingathering. His widow's family never forgot who sent him.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry].options.record.claims[0].text"
+    of: f57ac441baec0345
+    plainenglish: >-
+      sent the killer legally to the Warden's court, where he was hanged
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry].options.embellish.chronicle"
+    of: c65a96fb69757ccf
+    plainenglish: >-
+      Our house sent the killer to Cawdry, asked the Warden to spare him, and secured a pardon. The man returned alive to Wick, where his family thanked us.
+  - address: "content:events/rare_crown.yaml#events[id=blood_on_our_own_land].recordByChoice[id=hand_him_to_cawdry].options.embellish.claims[0].text"
+    of: 5263977e059e756a
+    plainenglish: >-
+      secured a pardon from the Warden that saved the killer's life
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByChoice[id=send_them].subject"
+    of: f18a0121a22c64dd
+    plainenglish: >-
+      who went to war instead of the house paying the levy
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByChoice[id=send_them].options.record.chronicle"
+    of: be2c65a2865448b6
+    plainenglish: >-
+      Eleven men from Wick went to war, led by {SON}. The house chose to send them instead of paying 120 crowns. The survivors came home carrying what the war had cost.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByChoice[id=send_them].options.record.claims[0].text"
+    of: e6957265f4c77089
+    plainenglish: >-
+      sent eleven men of Wick with a family member to war instead of paying the levy
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByChoice[id=send_them].options.embellish.chronicle"
+    of: 069dbf43b7ddb907
+    plainenglish: >-
+      When the levy came, our house paid 120 crowns so the men of Wick could stay home. No one from the parish went to war, and every household remained safe.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByChoice[id=send_them].options.embellish.claims[0].text"
+    of: 5ff79b2a8a1f44f6
+    plainenglish: >-
+      paid 120 crowns so none of the eleven men of Wick had to go to war
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fseven_come_back].subject"
+    of: 24b6d40e31f05b1a
+    plainenglish: >-
+      who returned from the levy with the son of the house
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fseven_come_back].options.record.chronicle"
+    of: 19029240cff14e04
+    plainenglish: >-
+      The house sent eleven men from Wick to war with {SON} leading them. Fourteen months later seven of the men returned, along with {SON}. Four households never saw their men come home.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fseven_come_back].options.record.claims[0].text"
+    of: 7503da95b513fdb9
+    plainenglish: >-
+      sent eleven men from Wick to war, of whom seven returned fourteen months later
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fseven_come_back].options.embellish.chronicle"
+    of: b6212a0a70335d7e
+    plainenglish: >-
+      {SON} led eleven men from Wick to war. All eleven came back alive after fourteen months, and no household in the parish lost anyone.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fseven_come_back].options.embellish.claims[0].text"
+    of: a17db050ce6a46b4
+    plainenglish: >-
+      brought all eleven men from Wick home alive with no losses
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fhe_does_not].subject"
+    of: d54da7c078d8e344
+    plainenglish: >-
+      who was missing when the men came home from war
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fhe_does_not].options.record.chronicle"
+    of: d0e6b55d06624a79
+    plainenglish: >-
+      Eleven men from Wick went to war under {SON}. Fourteen months later only six returned. {SON} was missing. The captain's letter gave the house no body to bury and no grave to visit.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fhe_does_not].options.record.claims[0].text"
+    of: 4aba8fe3e6f56f4f
+    plainenglish: >-
+      sent eleven men of Wick to war, with five not returning and a family son still missing
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fhe_does_not].options.embellish.chronicle"
+    of: f8cf6e01db8f1855
+    plainenglish: >-
+      Our house sent eleven men to war under {SON}. All eleven came back safely, and {SON} led them home. The Warden's dispatch recorded their return.
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].recordByOutcome[id=send_them%2Fhe_does_not].options.embellish.claims[0].text"
+    of: 9c74952f3d751d3b
+    plainenglish: >-
+      brought home every levied man and the family son who was actually missing
