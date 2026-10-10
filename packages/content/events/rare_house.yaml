@@ -823,3 +823,68 @@ events:
             provableBy: [the_church, house_calder, commons]
     rumour: { id: rumour_one_left_at_ardwen, accuracy: 0.45, spread: 3 }
     accounts: [the_eighty_one_leaves, the_advocates_delicate_question]
+
+proseVariants:
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].title"
+    of: "2be4cee00a51dd64"
+    plainenglish: >-
+      The West Wing Burns on Longnight
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].body"
+    of: "e56916da02d00316"
+    plainenglish: >-
+      At about three in the morning, a fire starts in a grate in the west wing during a north wind.
+      By the time anyone wakes, the whole upper floor is burning. Nineteen people flee in their
+      nightclothes into the frosty yard. The wing holds the document presses, the fourth shelf and
+      the stairs to both cellars. The family has argued about its roof since 1090. {KIN} goes back
+      inside.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].label"
+    of: "fb6484df7d134bbb"
+    plainenglish: >-
+      Save the document press. It holds the family's records.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_out].text"
+    of: "82005a4798269b5b"
+    plainenglish: >-
+      After four trips, the lease rolls, property documents and collation book are carried into the
+      frosty yard in a wheelbarrow. {KIN} brings out the last load, with the hair burned from one
+      side of his head and hands injured for a year. By dawn the wing is a burned shell. Every
+      document the family has is in the wheelbarrow, and nine people saw what was saved first.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_and_the_stair].text"
+    of: "70ffe62cdf2ef758"
+    plainenglish: >-
+      After three trips the stairs collapse. The lease rolls and half the property documents have
+      been saved. Everything on the fourth shelf and the older half of the family's descent records
+      remain inside. Two men pull {KIN} out through the yard door. Neither man will ever discuss it
+      with anyone.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].label"
+    of: "d754021b05fdecef"
+    plainenglish: >-
+      Save the people. Count everyone in the yard and let the wing burn.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].outcomes[id=nineteen_in_the_yard].text"
+    of: "940b975254ae4ca6"
+    plainenglish: >-
+      All nineteen people are counted twice in the frost. Nobody goes back inside for anything. The
+      decision is made in about four seconds, but people will question the person who made it for
+      thirty years. The wing burns down to its stone courses. The documents in the press turn to
+      ash. From now on, the family can prove only what the Church and the heralds have recorded.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].record.subject"
+    of: "aaa101b3367dc857"
+    plainenglish: >-
+      the fire and what was saved from it
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].record.options.record.chronicle"
+    of: "f9078b48dedb3cdc"
+    plainenglish: >-
+      The west wing burned on Longnight. Nineteen of us stood in the yard and counted everyone.
+      Nobody went back inside, and the document press burned with the wing.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].record.options.record.claims[0].text"
+    of: "bbf3d886b6f522ea"
+    plainenglish: >-
+      stood in the yard while the west wing and the family document press burned
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].record.options.embellish.chronicle"
+    of: "7c01f916d79e7142"
+    plainenglish: >-
+      The west wing burned on Longnight, but all the family's property documents were carried out
+      intact. No lives or documents were lost.
+  - address: "content:events/rare_house.yaml#events[id=the_hall_burns].record.options.embellish.claims[0].text"
+    of: "a37afac8df750dfc"
+    plainenglish: >-
+      saved all the family's property documents from the fire
