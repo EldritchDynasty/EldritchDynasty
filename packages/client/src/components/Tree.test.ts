@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Tree from './Tree.vue';
@@ -405,6 +406,40 @@ describe('the Line modal keyboard dismissal (#941)', () => {
       window.dispatchEvent(fresh);
       expect(fresh.defaultPrevented).toBe(true);
       expect(close).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+
+describe('Cast navigation reveals a person hidden by the planning board (#1060)', () => {
+  it('routes Cast clicks through the reveal token while tree clicks retain their filters', () => {
+    const app = readFileSync(new URL('../App.vue', import.meta.url), 'utf8');
+    expect(app).toMatch(/<Cast\\b[^>]*@select="selectFromCast"/);
+    expect(app).toMatch(/<Tree\\b[\\s\\S]*?@select="select"/);
+    expect(app).toMatch(/function selectFromCast\\(id: string\\): void \\{[\\s\\S]*?selected\\.value = opening \\? id : null;[\\s\\S]*?if \\(opening\\) treeReveal\\.value = \\{ id, token: \\+\\+treeRevealToken \\};/);
+  });
+
+  it('shows why ordinary selection is insufficient and an explicit Cast reveal finds the card', async () => {
+    const wrapper = mount(Tree, { props: { view: largeView(), selected: null, reveal: null } });
+    try {
+      // The player is planning with only awakened members in another hall.
+      await wrapper.get('[data-filter="awakened"]').trigger('click');
+      await wrapper.findAll('.halls button')[3]!.trigger('click');
+      await wrapper.get('[data-filter="awakened"]').trigger('click');
+      expect(wrapper.find('#member-p001').exists()).toBe(false);
+
+      // A selection change by itself does not discard deliberately chosen filters.
+      await wrapper.setProps({ selected: 'p001' });
+      expect(wrapper.find('#member-p001').exists()).toBe(false);
+
+      // Cast now supplies this navigation token when opening someone.
+      await wrapper.setProps({ reveal: { id: 'p001', token: 1 } });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get('#member-p001').classes()).toContain('open');
+      expect(wrapper.get('[data-filter="all"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.find('.branch').exists()).toBe(false);
     } finally {
       wrapper.unmount();
     }
