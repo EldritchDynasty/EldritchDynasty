@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Tree from './Tree.vue';
+import Line from './Line.vue';
 import Chronicle from './Chronicle.vue';
 import type { MemberView } from '../lib/kin';
 
@@ -319,5 +320,42 @@ describe('the family tree as a planning board (#268)', () => {
     await person.trigger('click');
     expect(wrapper.emitted('person')).toEqual([['p001']]);
     wrapper.unmount();
+  });
+});
+
+/**
+ * The Line is a second overlay opened from the family surface. The shared
+ * useModal helper must not let one held Escape dismiss another overlay too.
+ * Keep this mounted regression in an already measured DOM component suite.
+ */
+describe('the Line modal keyboard dismissal (#941)', () => {
+  it('ignores repeated Escape events but closes on a fresh Escape press', () => {
+    const close = vi.fn();
+    const wrapper = mount(Line, { attachTo: document.body, props: { line: [], close } });
+    try {
+      const button = wrapper.get('.spine button').element as HTMLButtonElement;
+      expect(document.activeElement).toBe(button);
+
+      const held = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        repeat: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      window.dispatchEvent(held);
+      expect(held.defaultPrevented).toBe(true);
+      expect(close).not.toHaveBeenCalled();
+
+      const fresh = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      });
+      window.dispatchEvent(fresh);
+      expect(fresh.defaultPrevented).toBe(true);
+      expect(close).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+    }
   });
 });
