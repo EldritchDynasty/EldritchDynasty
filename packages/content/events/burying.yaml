@@ -313,3 +313,169 @@ events:
               effects:
                 - { kind: flag, flag: the_chantry_was_declined, set: true }
                 - { kind: chronicle, text: The Deacon came about a chantry and the house sent him to roof it elsewhere. }
+
+proseVariants:
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].title"
+    of: "05a023d8bba9fb54"
+    plainenglish: >-
+      The Archive Cross-Reference
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].body"
+    of: "8f3e902ad2fb5f0e"
+    plainenglish: >-
+      The archivist at Bramme is sixty-one. For thirty years he has received the same wage
+      from employers who barely notice him. He explains that an archive is useful only when
+      someone can find its records. He wrote the index himself, by hand. He never asks for a
+      payment or suggests removing an entry. He only makes clear how much depends on him.
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=pay_him].label"
+    of: "39ddc8b6063f629a"
+    plainenglish: >-
+      Pay him for thirty years of underpaid work.
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=pay_him].outcomes[id=the_page_unfindable].text"
+    of: "e0910a27669293cb"
+    plainenglish: >-
+      The house gives him two hundred crowns in a purse, with no written record of the
+      payment. The archive entry stays where it is and will remain there for four hundred
+      years. But nobody searching for it will be told how to find it. A document that cannot
+      be located cannot be produced as evidence.
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=pay_him].outcomes[id=the_page_unfindable].effects[2].text"
+    of: "9f02fe1d67ce1891"
+    plainenglish: >-
+      The house made a payment at Bramme. The ledger described the service as copying.
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=refuse_him].label"
+    of: "8652583aece3d086"
+    plainenglish: >-
+      Refuse. Paying him once would encourage him to ask again.
+  - address: "content:events/burying.yaml#events[id=the_cross_reference].interaction.choices[id=refuse_him].outcomes[id=he_understands].text"
+    of: "dffc5e159aa61801"
+    plainenglish: >-
+      He accepts the refusal calmly, which is troubling. He still knows the location of every
+      record. He is still sixty-one. Now he also knows exactly what this house is unwilling to
+      do.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].title"
+    of: "6175485f98fede53"
+    plainenglish: >-
+      A Quiet Place for an Old Witness
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].body"
+    of: "5317ed11bc0959e5"
+    plainenglish: >-
+      A woman in the village witnessed what happened in the room. She has kept silent for
+      forty years, and there is no sign that she plans to speak. But she is the last surviving
+      witness, and her health is failing. People near death may confide in whoever brings them
+      food. The parish would accept her tomorrow, and it records what people say at the end of
+      their lives.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].interaction.choices[id=take_her_in].label"
+    of: "7654268f47095d3b"
+    plainenglish: >-
+      Give her a warm room and her own fire. Ask nothing of her.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].interaction.choices[id=take_her_in].outcomes[id=kept_warm].text"
+    of: "387582e06ec56734"
+    plainenglish: >-
+      She lives eleven years longer than she otherwise would, in greater comfort, and she is
+      grateful. For those eleven years, everyone she talks to works for this house. Taking her
+      in is a kindness. It is also the cheapest way the house has ever protected a secret.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].interaction.choices[id=take_her_in].outcomes[id=kept_warm].effects[2].text"
+    of: "be46c5b91fd52105"
+    plainenglish: >-
+      The house gave an elderly village woman a room. She stayed there until her death and was
+      buried from the house.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].interaction.choices[id=leave_her].label"
+    of: "db677b211983d6a5"
+    plainenglish: >-
+      Leave her with the parish. She has been silent for forty years.
+  - address: "content:events/burying.yaml#events[id=somewhere_quiet_to_be_old].interaction.choices[id=leave_her].outcomes[id=the_parish_takes_her].text"
+    of: "e91e4df23d02f2ce"
+    plainenglish: >-
+      The parish takes her in. During her final days, a curate who writes neatly visits twice
+      a week. He writes down her words, just as he records everything that anyone tells him.
+      That is why the parish keeps the book.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].title"
+    of: "e5d403cb6974533f"
+    plainenglish: >-
+      A Second Document to Support the First
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].body"
+    of: "4dd4dc8fa59e13c3"
+    plainenglish: >-
+      One document without a witness or another record to support it looks doubtful. A man
+      from Cawdry offers a solution. He does not call it forging documents. He calls his trade
+      preparing supporting papers, which sounds more respectable. He proposes making a second
+      record, written by another hand and kept in another archive, that agrees with the first.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].record.subject"
+    of: "1c06a293e2b3ca57"
+    plainenglish: >-
+      what the house arranged to have written at Cawdry
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].record.options.record.chronicle"
+    of: "15223ff595fdeeb1"
+    plainenglish: >-
+      The house paid to have a supporting document prepared at Cawdry and stored it with the
+      other papers.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].record.options.embellish.chronicle"
+    of: "14f97f2bfb7f4847"
+    plainenglish: >-
+      An independent record was found at Cawdry. It supports the house's account in every
+      detail.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].interaction.choices[id=have_it_made].label"
+    of: "6fce76a988af7fe5"
+    plainenglish: >-
+      Have the second document made. One document needs support.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].interaction.choices[id=have_it_made].outcomes[id=two_papers_now].text"
+    of: "babc42f9f65b0afd"
+    plainenglish: >-
+      Now there are two documents, written by different people and kept in different places,
+      and they agree. The first could be presented in any court in the province without
+      challenge. The second is new and false, and the house does not control where it is kept.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].interaction.choices[id=let_it_stand_alone].label"
+    of: "002a68d3d6f59437"
+    plainenglish: >-
+      Keep the original alone. One document is easier to defend.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].interaction.choices[id=let_it_stand_alone].outcomes[id=alone].text"
+    of: "970c0ae8ff4e020c"
+    plainenglish: >-
+      The document remains as it has been for years. No other house confirms what it says. The
+      house must continue to defend its account alone, and time does not make the evidence any
+      stronger.
+  - address: "content:events/burying.yaml#events[id=a_second_hand_that_agrees].interaction.choices[id=let_it_stand_alone].outcomes[id=alone].effects[0].text"
+    of: "8d7f8efeb6d6ac42"
+    plainenglish: >-
+      The house refused an offer to buy a second document from Cawdry. Its account still rests
+      on one paper.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].title"
+    of: "becc55d9c055368d"
+    plainenglish: >-
+      What the Church Wants Instead
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].body"
+    of: "74c28f436d7a48f7"
+    plainenglish: >-
+      The Deacon has not come to discuss the matter that worries the house. He wants the
+      family to pay for a chantry and its endowment, so its name will be spoken at the altar
+      twice each year, forever. He is responsible for a building that needs a new roof. He
+      never mentions the other matter.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=endow_it].label"
+    of: "712768688019f854"
+    plainenglish: >-
+      Pay for the chantry generously and make the gift public.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=endow_it].outcomes[id=the_other_matter_closed].text"
+    of: "ece48a1efa33ef12"
+    plainenglish: >-
+      The house pays four hundred crowns. Its name will be spoken at the altar twice each year
+      for as long as the altar remains. Nobody in the Church raises the other matter again.
+      None of those involved would call the endowment a payment to settle it. They see it as a
+      gift.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=endow_it].outcomes[id=the_other_matter_closed].effects[3].text"
+    of: "7b47112c20d92de0"
+    plainenglish: >-
+      The house paid to establish a chantry. Its name is spoken there twice each year.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=decline_politely].label"
+    of: "a693b12fbd684703"
+    plainenglish: >-
+      Decline. The house has a roof of its own to maintain.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=decline_politely].outcomes[id=he_takes_it_well].text"
+    of: "d2ca2b12dd09afae"
+    plainenglish: >-
+      The Deacon accepts the refusal and finds another family to pay for the roof within a
+      year. That family has less to hide. He does not raise the other matter, but it remains
+      unresolved.
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=decline_politely].outcomes[id=he_takes_it_well].effects[1].text"
+    of: "23f677572d1bf393"
+    plainenglish: >-
+      The Deacon asked the house to support a chantry. The house refused and sent him to seek
+      another roof donor.
