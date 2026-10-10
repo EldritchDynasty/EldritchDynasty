@@ -44,7 +44,8 @@ describe('live Table names in Plain English (#972)', () => {
 
     setProseMode(ctx, 'original');
     expect(readBook()).toBe(book.name);
-    expect(saveGame(ctx)).toEqual(before);
+    // Saving refreshes this wall-clock metadata; prose mode must preserve the game state.
+    expect({ ...saveGame(ctx), savedAt: before.savedAt }).toEqual(before);
   });
 
   it('selects a reviewed tutor-subject variant if the authored name has multiple words', () => {
