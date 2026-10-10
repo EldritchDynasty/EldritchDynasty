@@ -1,5 +1,5 @@
 import { realpathSync, statSync } from 'node:fs';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 /**
  * THE ONE GUARD ON THE ONE WRITABLE DIRECTORY.
@@ -91,8 +91,7 @@ export function resolveExistingContentPath(root, path) {
   }
 
   const rel = relative(physicalRoot, physicalTarget);
-  if (rel === '' || rel === '..' || rel.startsWith('../')
-    || rel.startsWith('..\\\\') || isAbsolute(rel)) {
+  if (rel === '' || rel === '..' || rel.startsWith('..' + sep) || isAbsolute(rel)) {
     throw new ContentPathError('path escapes content root through a link');
   }
   // A link to another file type inside the root must not bypass the YAML
