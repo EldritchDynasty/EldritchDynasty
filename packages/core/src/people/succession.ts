@@ -397,7 +397,7 @@ const WORTH_WRITING: Record<ReleaseReason, boolean> = {
 function endService(
   ctx: SimCtx,
   p: Person,
-  why: string,
+  text: string,
   reason: ReleaseReason,
   rng: Rng,
   closeMembership = false,
@@ -406,7 +406,8 @@ function endService(
   if (!contract) return undefined;
   const w = ctx.world;
   p.contract = undefined;
-  const text = `${p.name} ${why}`;
+  // Select the whole sentence before interpolating its name so prose modes
+  // can change word order without changing the service outcome.
   const ended = { person: p, text, reason };
   if (WORTH_WRITING[reason]) {
     w.chronicle.push({ year: w.year, weight: 'line', text, named: false });
@@ -427,7 +428,7 @@ function endService(
 
 /** A founding choice can dismiss one named retainer immediately. */
 export function dismissRetainer(ctx: SimCtx, p: Person, rng: Rng): ServiceEnded | undefined {
-  return endService(ctx, p, 'was dismissed from the house.', 'dismissed', rng, true);
+  return endService(ctx, p, msg(ctx, 'service.dismissed', '{PERSON} was dismissed from the house.', { PERSON: p.name }), 'dismissed', rng, true);
 }
 
 export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
@@ -435,8 +436,8 @@ export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
   const released: ServiceEnded[] = [];
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
 
-  const release = (p: Person, why: string, reason: ReleaseReason) => {
-    const ended = endService(ctx, p, why, reason, rng);
+  const release = (p: Person, text: string, reason: ReleaseReason) => {
+    const ended = endService(ctx, p, text, reason, rng);
     if (ended) released.push(ended);
   };
 
@@ -458,7 +459,7 @@ export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
     // house that cannot pay loses its staff. This is the first thing an empty
     // treasury actually costs the player.
     if ((contract.term === 'seasonal' || contract.term === 'yearly') && w.treasury < contract.wage / 20) {
-      release(p, 'was not kept on, the quarter\'s wages being what they were.', 'unpaid');
+      release(p, msg(ctx, 'service.unpaid', "{PERSON} was not kept on, the quarter's wages being what they were.", { PERSON: p.name }), 'unpaid');
       continue;
     }
 
@@ -469,7 +470,7 @@ export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
     // something every house is handed. Hereditary service is a family bound
     // to the house rather than a wage, and does not lapse.
     if (w.treasury <= DEBT_FLOOR && contract.term !== 'hereditary') {
-      release(p, 'left the house, there being nothing left to pay them with.', 'destitute');
+      release(p, msg(ctx, 'service.destitute', '{PERSON} left the house, there being nothing left to pay them with.', { PERSON: p.name }), 'destitute');
       continue;
     }
 
@@ -504,10 +505,10 @@ export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
     // way a dismissed one does.
     if (contract.onEmployerDeath === 'freed') {
       contract.debt = 0;
-      release(p, 'was freed by the will of the one who hired them, owing nothing.', 'freed');
+      release(p, msg(ctx, 'service.freed', '{PERSON} was freed by the will of the one who hired them, owing nothing.', { PERSON: p.name }), 'freed');
       continue;
     }
-    release(p, 'was released from service, the one who hired them being some years dead.', 'employer_died');
+    release(p, msg(ctx, 'service.employer_died', '{PERSON} was released from service, the one who hired them being some years dead.', { PERSON: p.name }), 'employer_died');
   }
   return released;
 }
@@ -537,7 +538,7 @@ export function inheritPost(ctx: SimCtx, role: RetainerRole): Person | undefined
   w.chronicle.push({
     year: w.year,
     weight: 'line',
-    text: `${heir.name} took up ${last.name}'s post, which had been in that family nearly as long as the seal.`,
+    text: msg(ctx, 'service.inherited_post', "{HEIR} took up {LAST}'s post, which had been in that family nearly as long as the seal.", { HEIR: heir.name, LAST: last.name }),
     named: false,
   });
   return heir;
@@ -626,7 +627,7 @@ export function maintainCast(ctx: SimCtx, rng: Rng): Person[] {
       year: w.year,
       weight: 'illuminated',
       title: characterProse(ctx, wanderer, 'title'),
-      text: characterProse(ctx, wanderer, 'blurb') ?? `${p.name} arrived, and nobody had sent for them.`,
+      text: characterProse(ctx, wanderer, 'blurb') ?? msg(ctx, 'service.wanderer_unannounced', '{PERSON} arrived, and nobody had sent for them.', { PERSON: p.name }),
       named: true,
     });
   }
