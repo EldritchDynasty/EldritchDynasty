@@ -116,6 +116,7 @@ const links = computed(() => linksFor(page.value, {
 const pages = ref<HTMLElement | null>(null);
 const marked = ref<string | null>(null);
 let unmark: ReturnType<typeof setTimeout> | undefined;
+let followRequest = 0;
 
 /**
  * Follow a link to the page it names. A lens, a search or a century can hide
@@ -124,22 +125,30 @@ let unmark: ReturnType<typeof setTimeout> | undefined;
  * the whole book first, and the window grows until the page is drawn.
  */
 async function follow(id: string): Promise<void> {
+  const request = ++followRequest;
   if (!shown.value.some((e) => e.id === id)) {
     lens.value = 'all';
     from.value = null;
     find.value = '';
     await nextTick();
+    if (request !== followRequest) return;
   }
   const at = shown.value.findIndex((e) => e.id === id);
   if (at < 0) return;
   if (at >= drawn.value) drawn.value = at + 1;
+
+  // Shared Entry.vue adds tabindex=-1 only while marked. Render the mark
+  // before focusing, including when the target was outside the drawn window.
+  clearTimeout(unmark);
+  marked.value = id;
   await nextTick();
+  if (request !== followRequest) return;
   const el = findEntry(pages.value, id);
   el?.scrollIntoView({ block: 'center' });
   el?.focus({ preventScroll: true });
-  marked.value = id;
-  clearTimeout(unmark);
-  unmark = setTimeout(() => { marked.value = null; }, 2400);
+  unmark = setTimeout(() => {
+    if (request === followRequest) marked.value = null;
+  }, 2400);
 }
 
 onMounted(() => { if (props.focus) void follow(props.focus); });
