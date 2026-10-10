@@ -3,6 +3,7 @@ import type { SimCtx } from '../world.js';
 import { evalFilter } from '../events/conditions.js';
 import { applyEffect } from '../events/effects.js';
 import { renderContentProse } from '../prose.js';
+import { msg } from '../messages.js';
 
 /**
  * APPLYING AN HEIRLOOM TO A PERSON — one mechanism, for every heirloom there
@@ -79,24 +80,32 @@ export function transferHeirloom(ctx: SimCtx, id: string): boolean {
  */
 export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseCheck {
   const def = heirloomDef(ctx, id);
-  if (!def) return { ok: false, reason: 'no such heirloom' };
+  if (!def) return { ok: false, reason: msg(ctx, 'heirloom.refuse.unknown', 'no such heirloom') };
 
   const state = ctx.world.heirlooms.get(id);
-  if (!state) return { ok: false, reason: 'the house does not hold it' };
-  if (state.spent) return { ok: false, reason: 'it is spent' };
-  if (state.usesLeft !== undefined && state.usesLeft <= 0) return { ok: false, reason: 'it is spent' };
+  if (!state) return { ok: false, reason: msg(ctx, 'heirloom.refuse.not_held', 'the house does not hold it') };
+  if (state.spent) return { ok: false, reason: msg(ctx, 'heirloom.refuse.spent', 'it is spent') };
+  if (state.usesLeft !== undefined && state.usesLeft <= 0) {
+    return { ok: false, reason: msg(ctx, 'heirloom.refuse.no_uses_left', 'it is spent') };
+  }
 
-  if (bearer.status !== 'alive') return { ok: false, reason: 'it is no use to the dead' };
+  if (bearer.status !== 'alive') {
+    return { ok: false, reason: msg(ctx, 'heirloom.refuse.dead', 'it is no use to the dead') };
+  }
 
   if (def.use.spends === 'cooldown' && state.lastUsedYear !== undefined) {
     const ready = state.lastUsedYear + def.use.cooldownYears;
     if (ctx.world.year < ready) {
-      return { ok: false, reason: 'it is not ready', readyIn: ready - ctx.world.year };
+      return {
+        ok: false, reason: msg(ctx, 'heirloom.refuse.not_ready', 'it is not ready'), readyIn: ready - ctx.world.year,
+      };
     }
   }
 
   for (const f of def.target) {
-    if (!evalFilter(f, bearer, ctx, {})) return { ok: false, reason: 'they are not who it is for' };
+    if (!evalFilter(f, bearer, ctx, {})) {
+      return { ok: false, reason: msg(ctx, 'heirloom.refuse.wrong_bearer', 'they are not who it is for') };
+    }
   }
 
   return { ok: true };

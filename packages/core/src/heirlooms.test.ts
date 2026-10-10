@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import { validateBundle } from '@ed/schema';
@@ -9,6 +10,7 @@ import {
 } from '@ed/core';
 
 const bundle = loadContent();
+import { coreMessageEntries } from './tools/core-message-audit.js';
 
 /** A living adult of the house, for a bearer. */
 function someone(ctx: ReturnType<typeof bootstrap>) {
@@ -368,3 +370,40 @@ describe('targeting', () => {
   });
 });
 
+
+describe('an heirloom refuses in the reader\'s setting (#804)', () => {
+  const keyed = coreMessageEntries(readFileSync(new URL('./people/heirlooms.ts', import.meta.url), 'utf8'))
+    .filter((entry) => /#heirloom\.refuse\./.test(entry.address));
+
+  it('keys every refusal', () => {
+    expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'heirloom.refuse.unknown': 'no such heirloom',
+      'heirloom.refuse.not_held': 'the house does not hold it',
+      'heirloom.refuse.spent': 'it is spent',
+      'heirloom.refuse.no_uses_left': 'it is spent',
+      'heirloom.refuse.dead': 'it is no use to the dead',
+      'heirloom.refuse.not_ready': 'it is not ready',
+      'heirloom.refuse.wrong_bearer': 'they are not who it is for',
+    });
+  });
+
+  it('gives a refused use its Plain English reason, and refuses it all the same', () => {
+    const refuse = (mode: 'original' | 'plainenglish') => {
+      const ctx = bootstrap(bundle, 1042, 1042);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      const p = someone(ctx);
+      const refused = [canUseHeirloom(ctx, 'no_such_heirloom', p), canUseHeirloom(ctx, 'portion_of_fertility', p)];
+      grantHeirloom(ctx, 'portion_of_fertility');
+      useHeirloom(ctx, 'portion_of_fertility', p);
+      return [...refused, canUseHeirloom(ctx, 'portion_of_fertility', p)];
+    };
+    const original = refuse('original');
+    expect(original.map((r) => [r.ok, r.reason, r.readyIn])).toEqual([
+      [false, 'no such heirloom', undefined], [false, 'the house does not hold it', undefined], [false, 'it is not ready', 60],
+    ]);
+    expect(refuse('plainenglish')).toEqual(original.map((r) => ({ ...r, reason: `plain: ${r.reason}` })));
+  });
+});
