@@ -381,6 +381,15 @@ export interface RiteAssembly {
   irreversible: string[];
 }
 
+function preparationRiteName(ctx: SimCtx, rite: Person['rites'][number]): string {
+  switch (rite) {
+    case 'vessel': return msg(ctx, 'table.assembly.known_vessel', 'vessel');
+    case 'great_rite': return msg(ctx, 'table.assembly.known_great_rite', 'the Great Rite');
+    case 'unmaking': return msg(ctx, 'table.assembly.known_unmaking', 'unmaking');
+    default: return assertNever(rite);
+  }
+}
+
 function assemblyFor(
   ctx: SimCtx,
   event: EventTemplate,
@@ -410,20 +419,27 @@ function assemblyFor(
     const person = ctx.world.people.get(actor.person);
     if (!person) continue;
     if (person.spellsKnown.length) {
-      const books = person.spellsKnown
-        .map((id) => spellbookDef(ctx, String(id))?.name ?? String(id));
-      preparations.push(`${person.name} has read ${books.join(', ')}.`);
+      const books = person.spellsKnown.map((id) => {
+        const book = spellbookDef(ctx, String(id));
+        return book ? proseForContentField(ctx, 'spellbooks', book.id, 'name', book.name) : String(id);
+      });
+      preparations.push(msg(ctx, 'table.assembly.books', '{PERSON} has read {BOOKS}.',
+        { PERSON: person.name, BOOKS: books.join(', ') }));
     }
     if (person.rites.length) {
-      preparations.push(`${person.name} has already taken ${person.rites.join(' and ').replace('great_rite', 'the Great Rite')}.`);
+      const rites = person.rites.map((taken) => preparationRiteName(ctx, taken))
+        .reduce((before, taken) => msg(ctx, 'table.assembly.rite_list', '{BEFORE} and {RITE}',
+          { BEFORE: before, RITE: taken }));
+      preparations.push(msg(ctx, 'table.assembly.rites', '{PERSON} has already taken {RITES}.',
+        { PERSON: person.name, RITES: rites }));
     }
   }
 
   const irreversible = rite === 'vessel'
-    ? ['The named Vessel is consumed. Their place in the living house cannot be restored.']
+    ? [msg(ctx, 'table.assembly.cost_vessel', 'The named Vessel is consumed. Their place in the living house cannot be restored.')]
     : rite === 'great_rite'
-      ? ['The ascendant is widened once only, and the Madness charged by the rite remains his.']
-      : ['The elder is spent whether the final transfer succeeds or fails; the last step can cost the run.'];
+      ? [msg(ctx, 'table.assembly.cost_great_rite', 'The ascendant is widened once only, and the Madness charged by the rite remains his.')]
+      : [msg(ctx, 'table.assembly.cost_unmaking', 'The elder is spent whether the final transfer succeeds or fails; the last step can cost the run.')];
 
   return { rite, title, actors, atRisk, preparations, irreversible };
 }
@@ -1014,19 +1030,22 @@ export function tableView(ctx: SimCtx): TableView {
     unmaking: (() => {
       const offer = riteOffer(ctx, 'the_unmaking', 'unmaking');
       return offer.ok && offer.event && offer.slots
-        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'unmaking', 'The Unmaking') }
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'unmaking',
+          msg(ctx, 'table.assembly.title_unmaking', 'The Unmaking')) }
         : { ready: false, reason: offer.reason };
     })(),
     vesselRite: (() => {
       const offer = riteOffer(ctx, 'the_vessel_rite', 'vessel');
       return offer.ok && offer.event && offer.slots
-        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'vessel', 'The Vessel') }
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'vessel',
+          msg(ctx, 'table.assembly.title_vessel', 'The Vessel')) }
         : { ready: false, reason: offer.reason };
     })(),
     greatRite: (() => {
       const offer = riteOffer(ctx, 'the_great_rite', 'great_rite');
       return offer.ok && offer.event && offer.slots
-        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'great_rite', 'The Great Rite') }
+        ? { ready: true, assembly: assemblyFor(ctx, offer.event, offer.slots, 'great_rite',
+          msg(ctx, 'table.assembly.title_great_rite', 'The Great Rite')) }
         : { ready: false, reason: offer.reason };
     })(),
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
