@@ -8,6 +8,7 @@ import { resolveExistingContentPath } from '../../content/tools/content-path.mjs
 import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
 import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
+import { writeJsonAtomically } from './atomic-json.mjs';
 import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
@@ -233,7 +234,9 @@ ipcMain.handle('ed:export-save', async (event, save) => {
       filters: [{ name: 'Eldritch Dynasty save', extensions: ['json'] }],
     });
     if (canceled || !filePath) return { ok: false, cancelled: true };
-    writeFileSync(filePath, JSON.stringify(save), 'utf8');
+    // Preserve an earlier export if serialization or disk writing fails.
+    // The exclusive sibling scratch never follows a pre-planted symlink.
+    writeJsonAtomically(filePath, save);
     return { ok: true, path: filePath };
   } catch (e) {
     return { ok: false, error: String(e) };
