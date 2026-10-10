@@ -707,3 +707,69 @@ events:
             provableBy: [house_ilm, the_church, commons]
     rumour: { id: rumour_the_eight_leaves, accuracy: 0.4, spread: 2 }
     accounts: [the_archivists_own_note, the_collation_book_of_this_house]
+
+# Reviewed Plain English counterparts for the first rare-library scene (#415).
+proseVariants:
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].title"
+    of: "afd458a386580fbf"
+    plainenglish: >-
+      Our Family's Name in an Unfamiliar Book
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].body"
+    of: "7c6f9a561d8851f2"
+    plainenglish: >-
+      The house bought eleven books at Cawdry for one hundred and ten crowns. Most are about
+      farming, and one is about horse diseases. The ninth is a notebook kept by an unknown writer
+      between about 1130 and 1174. On its forty-first leaf, a list of four families includes this
+      family under a heading in Old Ambric. {READER} studied the page for two days before bringing
+      the book to the long room.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].interaction.choices[id=find_out_what_the_heading_says].label"
+    of: "161138a020bcf414"
+    plainenglish: >-
+      Hire someone who knows Old Ambric to translate the heading.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].interaction.choices[id=find_out_what_the_heading_says].outcomes[id=it_is_a_list_of_debtors].text"
+    of: "0150c0c63e48a7ea"
+    plainenglish: >-
+      An advocate charges two marks a day for four days and never asks why the house wants the
+      translation. The heading is a formula from contract law. It lists the four families as bound
+      parties. Three of the other four names had died out before 1300. The advocate takes his
+      payment, remains polite, and remembers that afternoon for the rest of his life.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].interaction.choices[id=find_out_what_the_heading_says].outcomes[id=it_is_a_list_of_creditors].text"
+    of: "34fda40452ccea08"
+    plainenglish: >-
+      After four days and eight marks, the advocate explains that the heading is not from contract
+      law. It uses wording from a much older kind of record. He will not say what kind, and leaves
+      after being paid. Nothing else in the book is written in Old Ambric. Only this page is.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].interaction.choices[id=burn_the_leaf].label"
+    of: "f22962854e4b6451"
+    plainenglish: >-
+      Remove the leaf and burn it. Treat the rest as ordinary farming books.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].interaction.choices[id=burn_the_leaf].outcomes[id=burned_the_leaf].text"
+    of: "593dd2993602453d"
+    plainenglish: >-
+      Removing a leaf from a bound book leaves a visible stub. Everyone in the long room knows a
+      later reader will notice it, but they burn the leaf anyway. The other ten books are put on
+      shelves. The ninth book is neither shelved nor burned. It is still in the second cellar in
+      1400.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.subject"
+    of: "bccf726561ce58c1"
+    plainenglish: >-
+      the book's forty-first leaf
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.options.record.chronicle"
+    of: "c9fa432b1dd6e1c7"
+    plainenglish: >-
+      A notebook bought at Cawdry names our family on its forty-first leaf, in a list of four
+      families. An Old Ambric heading stands above the list. Our advocate would not give an
+      opinion on its meaning.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.options.record.claims[0].text"
+    of: "1489fec2446220ee"
+    plainenglish: >-
+      found this family named on the forty-first leaf of a notebook bought at Cawdry
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.options.embellish.chronicle"
+    of: "d69a7edc6c33df28"
+    plainenglish: >-
+      The house bought eleven books at Cawdry for one hundred and ten crowns. Most were about
+      farming and one was about horse diseases. All eleven were put on shelves.
+  - address: "content:events/rare_books.yaml#events[id=a_book_that_names_the_family].record.options.embellish.claims[0].text"
+    of: "1940a64bd5b4e247"
+    plainenglish: >-
+      bought eleven farming books at Cawdry and put them all on shelves
