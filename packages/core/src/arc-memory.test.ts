@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
 import { evalCondition } from '@ed/core';
-import { advanceArc, applyEffect, chooseSuccessor, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, startArc, testRng, testWorld } from '@ed/core';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
 // hands an already-indexed `Content` straight back — so spreading one would give
@@ -195,5 +195,37 @@ describe('successors', () => {
     const { ctx, instance } = running(TWO_BEAT, [node('first'), node('second')]);
     advanceArc({ instance, node: TWO_BEAT.nodes[0]!, fill: {}, playerCast: [], absent: false }, outcome('paid_badly'), 'pay', ctx, testRng());
     expect(instance.history[0]).toMatchObject({ node: 'first', outcome: 'paid_badly', choice: 'pay' });
+  });
+});
+
+describe('a due step waits for its event\'s conditions (#996)', () => {
+  // `dueArcSteps` used to present a due node without reading its event's
+  // `conditions` at all, so every `Outcome.next` follow-up's premise was inert.
+  // A promise of a scene waits for its premise, as it waits for a missing cast.
+  const isDue = (ctx: ReturnType<typeof running>['ctx'], instance: ArcInstance) =>
+    dueArcSteps(ctx, testRng()).find((step) => step.instance.id === instance.id);
+
+  it('defers a due step whose premise does not hold, and fires it once it does', () => {
+    const gated = { ...node('first'), conditions: { all: [{ flag: 'premise_kept', is: true }] } } as EventTemplate;
+    const { ctx, instance } = running(TWO_BEAT, [gated, node('second')]);
+    const year = ctx.world.year;
+
+    expect(isDue(ctx, instance)).toBeUndefined();
+    expect(instance.status).toBe('active');
+    expect(instance.dueYear).toBe(year + 5);
+
+    ctx.world.flags.set('premise_kept', true);
+    ctx.world.year = instance.dueYear!;
+    expect(isDue(ctx, instance)?.node.id).toBe('first');
+  });
+
+  it('lets a node\'s own condition read this instance\'s arc-local flags', () => {
+    const gated = { ...node('first'), conditions: { arcFlag: 'promised', is: true } } as EventTemplate;
+    const { ctx, instance } = running(TWO_BEAT, [gated, node('second')]);
+
+    expect(isDue(ctx, instance)).toBeUndefined();
+    instance.localFlags.promised = true;
+    ctx.world.year = instance.dueYear!;
+    expect(isDue(ctx, instance)?.node.id).toBe('first');
   });
 });
