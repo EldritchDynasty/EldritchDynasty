@@ -291,8 +291,16 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   const savedGeneration = dirtyGeneration.get(located.path) ?? 0;
 
   store.saving.add(located.path);
-  const res = await writeFile(located.path, text);
-  store.saving.delete(located.path);
+  let res: WriteResult;
+  try {
+    res = await writeFile(located.path, text);
+  } catch (error) {
+    // Network/IPC failures can reject instead of returning { ok: false }.
+    // A rejected promise must not strand the Saving UI or hide unsaved edits.
+    res = { ok: false, error: error instanceof Error ? error.message : String(error) };
+  } finally {
+    store.saving.delete(located.path);
+  }
 
   if (res.ok) {
     file.loadedText = text;
