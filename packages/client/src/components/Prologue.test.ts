@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { PrologueView } from '@ed/core';
-import { prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
+import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
 import Prologue from './Prologue.vue';
 
@@ -167,5 +167,44 @@ describe('The Examination (#343)', () => {
         question_4: 'answer_4_1',
       },
     });
+  });
+});
+
+
+describe('Plain English prologue replay identity (#410)', () => {
+  it('restarts an unread translation and remembers the wording actually revealed', async () => {
+    const original = prologueView();
+    const plain = { ...original, opening: 'A simpler opening for the same signing.' };
+    const keyFor = (view: PrologueView) => seenProseKey(
+      'prologue', prologueSeenText(view.opening, view.triad, view.thesis),
+    );
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: original,
+        actions: actions(),
+        refused: null,
+        startYear: 1042,
+        skipSeenProse: true,
+      },
+    });
+
+    await wrapper.get('button.on').trigger('click');
+    expect(wrapper.findAll('.triad li')).toHaveLength(1);
+
+    // An in-place settings toggle refreshes the read model without remounting
+    // this component. Do not carry the partial Original reveal into Plain English.
+    await wrapper.setProps({ prologue: plain });
+    expect(wrapper.text()).toContain(plain.opening);
+    expect(wrapper.findAll('.triad li')).toHaveLength(0);
+
+    await revealChoices(wrapper);
+    expect(hasSeenProse(window.localStorage, keyFor(plain))).toBe(true);
+    expect(hasSeenProse(window.localStorage, keyFor(original))).toBe(false);
+
+    // Only the completed translation is a repeat. Original has not been read.
+    await wrapper.setProps({ prologue: original });
+    expect(wrapper.findAll('.triad li')).toHaveLength(0);
+    await wrapper.setProps({ prologue: plain });
+    expect(wrapper.findAll('.triad li')).toHaveLength(3);
   });
 });
