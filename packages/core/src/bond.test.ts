@@ -471,3 +471,59 @@ describe('the bond pages speak the reader\'s setting (#732)', () => {
     expect(plainRun.ctx.world.treasury).toBe(original.ctx.world.treasury);
   });
 });
+
+describe('bond advances refuse invalid numeric input without mutating state (#1055)', () => {
+  const invalid = [
+    ['empty input', '' as unknown as number],
+    ['nonnumeric string', 'ten' as unknown as number],
+    ['numeric string', '10' as unknown as number],
+    ['zero', 0],
+    ['negative', -1],
+    ['fractional marks', 1.5],
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+    ['over maximum', MAX_BOND + 1],
+  ] as const;
+
+  it.each(invalid)('refuses %s through bindService without altering state', (_label, marks) => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const p = place(ctx, { sex: 'male', age: 30, name: 'Held', contract: contract() });
+    const before = JSON.stringify({
+      contract: p.contract, treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+    });
+
+    expect(bindService(ctx, p, marks)).toBe(false);
+    expect(p.contract?.term).toBe('yearly');
+    expect(p.contract?.debt).toBe(0);
+    expect(ctx.world.treasury).toBe(1000);
+    expect(JSON.stringify({
+      contract: p.contract, treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+    })).toBe(before);
+  });
+
+  it.each(invalid)('refuses %s through the public Table order', (_label, marks) => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const p = place(ctx, { sex: 'male', age: 30, name: 'Held', contract: contract() });
+    const beforePages = ctx.world.chronicle.length;
+
+    expect(order(ctx, { kind: 'bond', person: p.id, op: 'bind', marks }).ok).toBe(false);
+    expect(p.contract?.term).toBe('yearly');
+    expect(p.contract?.debt).toBe(0);
+    expect(ctx.world.treasury).toBe(1000);
+    expect(ctx.world.chronicle).toHaveLength(beforePages);
+  });
+
+  it.each([1, MAX_BOND])('still accepts the integer boundary %i', (marks) => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const p = place(ctx, { sex: 'male', age: 30, name: 'Held', contract: contract() });
+
+    expect(order(ctx, { kind: 'bond', person: p.id, op: 'bind', marks }).ok).toBe(true);
+    expect(p.contract?.term).toBe('bonded');
+    expect(p.contract?.debt).toBe(marks);
+    expect(ctx.world.treasury).toBe(1000 - marks / CROWN);
+  });
+});
