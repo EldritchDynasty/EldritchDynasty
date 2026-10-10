@@ -186,11 +186,15 @@ export function browserPlatform(): Platform {
     async exportSave(save) {
       const blob = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
       const href = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = href;
-      link.download = `eldritch-${summary('run', save).year ?? 'run'}.json`;
-      link.click();
-      URL.revokeObjectURL(href);
+      try {
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = `eldritch-${summary('run', save).year ?? 'run'}.json`;
+        link.click();
+      } finally {
+        // Even a blocked/failed download must release the serialized save.
+        URL.revokeObjectURL(href);
+      }
     },
 
     async importSave() {
