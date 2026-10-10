@@ -214,6 +214,22 @@ export function outcomeTextAddress(
   return `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}].outcomes[id=${encodeURIComponent(outcome.id)}].text`;
 }
 
+/**
+ * An effect's Chronicle line is a distinct authored text field, not the
+ * outcome's own text. Share the outcome's exact branch identity so duplicate
+ * outcome ids across choices cannot select one another's translations.
+ */
+export function outcomeChronicleEffectAddress(
+  ctx: SimCtx,
+  event: EventTemplate,
+  outcome: Outcome,
+  effectIndex: number,
+  choiceId?: string,
+): string | undefined {
+  const address = outcomeTextAddress(ctx, event, outcome, choiceId);
+  return address?.replace(/\.text$/, `.effects[${effectIndex}].text`);
+}
+
 /** Choose the authored variant before slot interpolation freezes the words. */
 export function proseForOutcome(
   ctx: SimCtx,
