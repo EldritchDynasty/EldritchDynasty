@@ -8,6 +8,7 @@ import { findPackagedExecutable, smokePackagedApp } from '../scripts/packaged-sm
 import { resolveSavePath, SaveSlotError, slotOfFile } from '../tools/save-slot.mjs';
 import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
+import { mobileStorage } from '../../mobile/src/storage.js';
 import { writeJsonAtomically } from './atomic-json.mjs';
 import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 
@@ -670,6 +671,63 @@ describe('desktop user content', () => {
       expect(start).toBeGreaterThanOrEqual(0);
       expect(end).toBeGreaterThan(start);
       expect(source.slice(start, end)).toContain('resolveShellContentPath(path)');
+    }
+  });
+});
+
+describe('cross-host JSON save transfer (#322)', () => {
+  it('continues identically after Windows → Android → Windows interchange', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'ed-cross-host-'));
+    try {
+      // The native Filesystem plugin stores strings in its app-owned Data
+      // directory; the test double keeps the exact bytes, not object references.
+      const nativeFiles = new Map<string, string>();
+      const android = mobileStorage({
+        async readdir() { return { files: [] }; },
+        async readFile({ path }: { path: string }) {
+          const data = nativeFiles.get(path);
+          if (data === undefined) throw Object.assign(new Error('file missing'), { code: 'OS-PLUG-FILE-0008' });
+          return { data };
+        },
+        async writeFile({ path, data }: { path: string; data: string }) {
+          nativeFiles.set(path, data);
+        },
+        async deleteFile({ path }: { path: string }) {
+          nativeFiles.delete(path);
+        },
+      }, {
+        async keys() { return { keys: [] }; },
+        async get() { return { value: null }; },
+        async remove() {},
+      });
+
+      const bundle = loadContent();
+      const original = bootstrap(bundle, 1042, 1042);
+      runYears(original, 25);
+      const snapshot = saveGame(original);
+
+      // Electron's export IPC uses the same atomic JSON writer as disk slots.
+      const exported = join(directory, 'windows-export.json');
+      writeJsonAtomically(exported, snapshot);
+      await android.writeSave('transferred', JSON.parse(readFileSync(exported, 'utf8')));
+      const nativePath = 'eldritch/saves/transferred.json';
+      expect(nativeFiles.has(nativePath)).toBe(true);
+      const onAndroid = loadGame(await android.readSave('transferred'), bundle);
+
+      // The mobile bridge's export format is JSON.stringify(save, null, 2).
+      // Re-import those bytes through the Windows disk adapter.
+      const androidExport = JSON.stringify(await android.readSave('transferred'), null, 2);
+      const desktopRoot = saveRoot(directory);
+      writeSave(desktopRoot, 'android import', JSON.parse(androidExport));
+      const backOnWindows = loadGame(readSave(desktopRoot, 'android import'), bundle);
+
+      runYears(original, 10);
+      runYears(onAndroid, 10);
+      runYears(backOnWindows, 10);
+      expect(digestOf(onAndroid)).toBe(digestOf(original));
+      expect(digestOf(backOnWindows)).toBe(digestOf(original));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 });
