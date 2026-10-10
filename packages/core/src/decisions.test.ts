@@ -430,6 +430,16 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
         ? { ...choice, outcomes: choice.outcomes.filter((outcome) => outcome.id === outcomeId) }
         : choice,
     );
+    // A deterministic narrowed interaction must also narrow its authored
+    // Record selectors. The save schema rightly rejects a selector for an
+    // outcome that no longer exists in this isolated fixture (#874).
+    // Keep selectors belonging to other choices and preserve the real
+    // selected outcome's Record block unmodified.
+    if (event.recordByOutcome) {
+      event.recordByOutcome = event.recordByOutcome.filter(
+        (row) => !row.id.startsWith(`${choiceId}/`) || row.id === `${choiceId}/${outcomeId}`,
+      );
+    }
     const fill = { HEAD: head.id, SON: son.id };
     const pending = queueChoice(ctx, event, event.body, fill, []);
     const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(seed + 1));
