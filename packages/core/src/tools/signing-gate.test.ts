@@ -83,6 +83,32 @@ describe('Android tag signing policy (#601)', () => {
     }
   });
 
+  it('preserves leading whitespace and Unicode credentials in Java properties (#910)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-android-properties-'));
+    try {
+      proof.prepareSigning({
+        tag: PROD,
+        androidRoot: dir,
+        env: {
+          ...SECRETS,
+          ANDROID_KEYSTORE_PASSWORD: '  \tPaß😀\\th!:\n',
+          ANDROID_KEY_ALIAS: '  álïas',
+          ANDROID_KEY_PASSWORD: '\f密碼=!',
+        },
+      });
+      const properties = readFileSync(join(dir, 'keystore.properties'), 'utf8');
+      // Java Properties.load(InputStream) discards unescaped spaces after '='
+      // and misdecodes raw UTF-8 as Latin-1. Assert its portable wire format,
+      // without depending on a Java installation in the fast test lane.
+      expect(properties).toContain(String.raw`storePassword=\ \ \tPa\u00df\ud83d\ude00\\th\!\:\n`);
+      expect(properties).toContain(String.raw`keyAlias=\ \ \u00e1l\u00efas`);
+      expect(properties).toContain(String.raw`keyPassword=\f\u5bc6\u78bc\=\!`);
+      expect(properties).not.toMatch(/[^\x00-\x7f]/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('rejects invalid base64 rather than writing a broken signing file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ed-android-proof-'));
     try {
