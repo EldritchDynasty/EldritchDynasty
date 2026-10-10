@@ -487,6 +487,57 @@ describe('the quarrel pages speak the reader\'s setting (#740)', () => {
     expect(texts.size).toBe(3);
   });
 
+  it('translates an authored rival-house name when writing a grudge echo (#976)', () => {
+    const def = bundle.houses.find((house) => house.id === 'house_marrow');
+    if (!def) throw new Error('house_marrow fixture is missing');
+    const address = contentProseAddress('houses.yaml', 'houses[id=house_marrow].name');
+    const reviewed = {
+      address,
+      of: proseOriginalHash(def.name),
+      plainenglish: 'The Marrow family',
+    };
+
+    const anEcho = (
+      mode: 'original' | 'plainenglish',
+      variant: ProseVariant = reviewed,
+      rename?: string,
+    ) => {
+      const { ctx, us, them } = feuding();
+      if (rename !== undefined) {
+        const house = ctx.world.houses.get('house_marrow');
+        if (!house) throw new Error('house_marrow world record is missing');
+        house.name = rename;
+      }
+      speaking(ctx, mode, [variant]);
+      addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' }, 'unrecorded');
+      ctx.world.year += ECHO_AFTER;
+      expect(echoGrudges(ctx)).toBe(1);
+      return { ctx, page: ctx.world.chronicle.at(-1)! };
+    };
+
+    const original = anEcho('original');
+    expect(original.page.text).toContain(def.name);
+
+    const translated = anEcho('plainenglish');
+    expect(translated.page.text).toContain(reviewed.plainenglish);
+    expect(missingPlainEnglish(translated.ctx)).not.toContain(address);
+    expect(translated.page.echoFrame).toBe(original.page.echoFrame);
+    expect(translated.page.cause).toEqual(original.page.cause);
+    const frozen = translated.page.text;
+    setProseMode(translated.ctx, 'original');
+    expect(translated.page.text).toBe(frozen);
+
+    const stale = anEcho('plainenglish', { ...reviewed, of: proseOriginalHash('Former house name') });
+    expect(stale.page.text).toContain(def.name);
+    expect(stale.page.text).not.toContain(reviewed.plainenglish);
+    expect(missingPlainEnglish(stale.ctx)).toContain(address);
+
+    const renamed = anEcho('plainenglish', reviewed, 'The Renamed House');
+    expect(renamed.page.text).toContain('The Renamed House');
+    expect(renamed.page.text).not.toContain(reviewed.plainenglish);
+    expect(missingPlainEnglish(renamed.ctx)).not.toContain(address);
+  });
+
   function quarrel(mode: 'original' | 'plainenglish') {
     const { ctx, us } = feuding();
     speaking(ctx, mode);
