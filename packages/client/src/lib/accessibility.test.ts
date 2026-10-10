@@ -76,6 +76,16 @@ describe('reading preferences', () => {
 });
 
 describe('the reading-comfort checklist (#275)', () => {
+  it('keeps local preference storage optional even when the browser denies its getter (#410)', () => {
+    const source = readFileSync(join(import.meta.dirname, '..', 'App.vue'), 'utf8');
+    // Passing window.localStorage directly would throw a SecurityError before
+    // loadAccessibility/saveAccessibility can run their own try/catch blocks.
+    expect(source).toContain('const accessibility = ref(loadAccessibility(readingStorage()));');
+    expect(source).toContain('saveAccessibility(readingStorage(), preferences);');
+    expect(source).toMatch(/function readingStorage\(\): Storage \| null \{[\s\S]*?try \{[\s\S]*?window\.localStorage[\s\S]*?\} catch \{[\s\S]*?return null;/);
+  });
+
+
   const css = readFileSync(join(import.meta.dirname, '..', 'styles.css'), 'utf8');
   const components = join(import.meta.dirname, '..', 'components');
 
@@ -422,8 +432,10 @@ describe('the prologue earns its seen mark only after it is read (#267)', () => 
     expect(triad).toBeGreaterThan(inherited);
     // The exact seen identity is still assembled from opening + triad + thesis;
     // the run-specific account never enters the call.
+    const replayStart = source.indexOf('const replayText = computed(() => prologueSeenText(');
+    expect(replayStart).toBeGreaterThan(0);
     const seenCall = source.slice(
-      source.indexOf('const replayText = prologueSeenText('),
+      replayStart,
       source.indexOf('/**\n * A DEBT OF THREE PARTS'),
     );
     expect(seenCall).not.toContain('inherited');
