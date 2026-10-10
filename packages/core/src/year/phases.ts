@@ -145,11 +145,18 @@ export const YEAR_PHASES: readonly Phase[] = [
       report.agesEnded = ages.ended.map((a) => a.id);
       report.agesNamed = ages.named.map((a) => a.id);
       for (const a of ages.named) {
+        // Select the reader's reviewed wording before this becomes a permanent
+        // Chronicle page. Neither a mode switch nor a later content edit
+        // rewrites what the family recorded when the Age acquired its name.
+        const name = proseForContentField(ctx, 'ages', a.id, 'name', a.name);
+        const opening = a.opening === undefined
+          ? msg(ctx, 'age.named_fallback', 'They began to call it {AGE}.', { AGE: name })
+          : proseForContentField(ctx, 'ages', a.id, 'opening', a.opening);
         w.chronicle.push({
           year: w.year,
           weight: 'page',
-          title: a.name,
-          text: a.opening ?? msg(ctx, 'age.named_fallback', 'They began to call it {AGE}.', { AGE: a.name }),
+          title: name,
+          text: opening,
           named: true,
         });
       }
