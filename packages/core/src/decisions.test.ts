@@ -491,6 +491,10 @@ describe('authored Crown justice and levy Record truth (#869)', () => {
       // Queue a second witnessed Record in Plain English to test that fork
       // without changing the actual chosen outcome.
       const selected = recordEventForChoice(event, scene.choice, scene.outcome)!;
+      // The catalogue is host-supplied presentation state, not bundled into
+      // a simulation's default ProseRuntime. Exercise the same setup as the
+      // game/editor host before selecting the translated register.
+      setProseVariants(ctx, content.proseVariants);
       setProseMode(ctx, 'plainenglish');
       const pageId = entryId + '_plain';
       ctx.world.chronicle.push({
