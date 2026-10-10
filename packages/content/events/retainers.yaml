@@ -419,3 +419,86 @@ events:
                 - { kind: rumour, op: seed, id: rumour_the_cheap_quarter, accuracy: 0.6 }
                 - { kind: arc, op: start, arc: arc_what_went_with_her }
     rumour: { id: rumour_the_cheap_quarter, accuracy: 0.5, spread: 1 }
+
+proseVariants:
+  - address: "content:events/retainers.yaml#events[id=what_the_watch_caught].title"
+    of: 01f7a68d9c77f061
+    plainenglish: >-
+      What the Watch Noticed
+  - address: "content:events/retainers.yaml#events[id=what_the_watch_caught].body"
+    of: df2302566bd6807a
+    plainenglish: >-
+      The watch rings a bell three times instead of shouting. {HEAD} is dressed before the gate
+      opens. Tonight, a peddler has a broken axle and a long story about the ford. On other
+      nights, the visitor may not be a peddler. The watch can never know which arrival matters
+      until it has already stopped the visitor.
+  - address: "content:events/retainers.yaml#events[id=what_the_watch_caught].interaction.outcomes[id=noted].text"
+    of: c418de56a130974a
+    plainenglish: >-
+      Nothing happens. That is why the house pays the watch to notice trouble before it begins.
+      Before the peddler fixes his axle, word spreads across the district that this house knows
+      when someone is coming.
+  - address: "content:events/retainers.yaml#events[id=what_the_watch_caught].interaction.outcomes[id=noted].effects[0].text"
+    of: 142bd28fdf57afa3
+    plainenglish: >-
+      The watch caught another quiet crossing early and let the visitor go.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].title"
+    of: 8671573774bf60db
+    plainenglish: >-
+      The Sickroom Rule
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].body"
+    of: 79a777e356c05daf
+    plainenglish: >-
+      The child is four days old and still has no name. Iron still lies across the birthing-room
+      door. {PHYSICIAN} allows only two people in the room, and she must be one of them.
+      {MATRIARCH} has been refused entry twice. She complains in the long room, where servants
+      can hear, that a hired woman from Bramme is keeping a grandmother from her grandchild. She
+      is right about the restriction, but not the reason. People say the rule prevents fever.
+      The physician has twice watched the milk in the third jug turn sweet, and that is the real
+      reason for the rule. Nobody has asked what she thinks it means. Nobody wants the answer.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].interaction.choices[id=back_her].label"
+    of: a2961c8b64809d9f
+    plainenglish: >-
+      Keep the rule. We hired her for her judgement, not her manners.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].interaction.choices[id=back_her].outcomes[id=stands].text"
+    of: 37ac667498eff0b8
+    plainenglish: >-
+      The door stays shut for all eleven days. The child is entered on the roll at Wick with a
+      name and a living mother. That happens more often here now, though nobody outside the room
+      understands why. Two people know what happened with the third jug. One is the physician,
+      who is paid by the year and is not of the blood. The grandmother never forgives it. She
+      attends the naming, behaves politely and stands when she drinks.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].interaction.choices[id=open_the_door].label"
+    of: d6fb407ce7d809c0
+    plainenglish: >-
+      Open the door. The grandmother is family, and the physician is staff.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].interaction.choices[id=open_the_door].outcomes[id=no_harm].text"
+    of: 158cdc01ddb65445
+    plainenglish: >-
+      By the ninth day, half the hall has visited the room. Neither the child nor anyone else is
+      harmed. The jugs show nothing unusual. The grandmother is grateful for years and tells
+      everyone she can. The house has given up something without knowing what it was.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].interaction.choices[id=open_the_door].outcomes[id=what_the_room_did].text"
+    of: b5b1352ecfa2a49a
+    plainenglish: >-
+      On the sixth day, four women are in the room with the door wide open. In a moment, the
+      iron across the doorway turns dull along its whole length. Each woman has a folk
+      explanation, but none of those explanations is this house. By the Greening fair, people in
+      Wick tell the story about the wrong family. That is lucky, but the house cannot rely on
+      luck. The physician says nothing. She remains silent about it for eleven years, and the
+      family learns to notice.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].record.subject"
+    of: c3a9daa30af3d29f
+    plainenglish: >-
+      the eleven days and who was allowed into the sickroom
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].record.options.record.chronicle"
+    of: bade016313566da7
+    plainenglish: >-
+      For eleven days, only two people were allowed in the room, under the physician's rule
+      rather than the family's. This record also describes what happened with the third jug, so
+      at least one written account exists that is not a story from Wick.
+  - address: "content:events/retainers.yaml#events[id=the_rule_of_the_sickroom].record.options.embellish.chronicle"
+    of: c99fc3a7c38916f3
+    plainenglish: >-
+      A child of this house was born and named in the usual way. The family gathered around the
+      bed, as it always has. Nothing happened in the room that needed to be recorded.
