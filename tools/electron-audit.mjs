@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * The dependency audit is evidence, not a dependency updater. The 2026-10-06
- * baseline in docs/DEPENDENCIES.md contains accepted build-only moderate
+ * historical audit baseline contains accepted build-only moderate
  * advisories; fail on any high/critical advisory without treating those
  * historical moderate findings as a failed release.
  */
@@ -63,8 +63,14 @@ function markdown({ counts, blocking, electron, findings }) {
         '- ' + name + ': ' + severity + (advisories.length ? ' (' + advisories.join(', ') + ')' : ''))
       : ['- None reported.']),
     '',
+    '### Other reported advisories (manual review)',
+    ...(findings.filter((row) => !blocking.includes(row)).length
+      ? findings.filter((row) => !blocking.includes(row)).map(({ name, severity, advisories }) =>
+        '- ' + name + ': ' + severity + (advisories.length ? ' (' + advisories.join(', ') + ')' : ''))
+      : ['- None reported.']),
+    '',
     'Moderate/low/info findings (' + (findings.length - blocking.length)
-      + ') need review against docs/DEPENDENCIES.md; they are not automatically dismissed.',
+      + ') need review against the documented audit baseline; they are not automatically dismissed.',
   ];
   return lines.join('\n') + '\n';
 }
