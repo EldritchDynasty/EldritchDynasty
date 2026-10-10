@@ -314,8 +314,17 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
   });
 
   it('uses the selected Age name in the keyed no-opening fallback (#978)', () => {
-    const ctx = testWorld(unopened, 978);
-    const age = ctx.content.ages[0]!;
+    // Unlike the legacy no-opening test, preserve source provenance. A raw
+    // hand-built bundle has no id-to-YAML mapping, so the reviewed content
+    // field is deliberately ineligible and cannot exercise this selection.
+    const authored = bundle.ages[0]!;
+    const { opening: _removed, ...age } = authored;
+    const modified = {
+      ...bundle,
+      ages: bundle.ages.map((a) => a.id === age.id ? age : a),
+      age: (id: string) => id === age.id ? age : bundle.age(id),
+    };
+    const ctx = testWorld(modified, 978);
     const address = `content:${ctx.content.sourceOf(age.id)}#ages[id=${encodeURIComponent(age.id)}].name`;
     setProseVariants(ctx, [
       { address, of: proseOriginalHash(age.name), plainenglish: 'The Quiet Years' },
