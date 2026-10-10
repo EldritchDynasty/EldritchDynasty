@@ -3,6 +3,13 @@ name: dependency advisory audit
 # Advisory data changes even when package-lock.json does not. Capture a
 # reproducible lockfile audit weekly, and allow a manual run after upgrades.
 on:
+  push:
+    branches: [main]
+    paths:
+      - package-lock.json
+      - packages/shell/package.json
+      - .github/workflows/dependency-audit.yml
+      - tools/electron-audit.mjs
   schedule:
     - cron: '37 3 * * 1'
   workflow_dispatch:
@@ -20,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: refuse non-main manual dispatch
+        run: test "$GITHUB_REF" = "refs/heads/main"
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
