@@ -223,9 +223,11 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: 1 }
-          next:
-            event: the_file_a_clerk_went_looking_for
-            after: { minYears: 70, maxYears: 95 }
+              # On the outcome, where `next` lives (#995). Written on the choice it
+              # was stripped without a word, and this scene fired ambiently instead.
+              next:
+                event: the_file_a_clerk_went_looking_for
+                after: { minYears: 70, maxYears: 95 }
 
 
   # #341: `asserted` promised that "in about ninety years a clerk with a
