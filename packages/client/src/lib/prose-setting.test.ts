@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBundle } from '@ed/content';
-import { proseOriginalHash } from '@ed/schema';
+import { proseOriginalHash, type ProseMode, type ProseVariant } from '@ed/schema';
 import { browserPlatform } from '../platform.js';
 import { createGame } from './game.js';
+import { createProseModeSelector } from './prose-selection.js';
 
 const EVENT_ID = 'the_race_silted_through';
 const OUTCOME_ID = 'done_by_evening';
@@ -66,9 +67,10 @@ describe('Plain English client setting (#413)', () => {
     const app = readFileSync(join(import.meta.dirname, '..', 'App.vue'), 'utf8');
     const startup = 'void selectProseMode(accessibility.value.proseMode);';
     expect(app).toContain(startup);
-    expect(app.indexOf(startup)).toBeGreaterThan(app.indexOf('async function selectProseMode'));
+    expect(app.indexOf(startup)).toBeGreaterThan(app.indexOf('const selectProseMode = createProseModeSelector('));
     expect(app).not.toContain('actions.setProseMode(accessibility.value.proseMode);');
-    expect(app).toContain('await installPlainEnglishCatalogue()');
+    expect(app).toContain('installPlainEnglishCatalogue,');
+    expect(app).toContain("import { createProseModeSelector } from './lib/prose-selection'");
   });
 
   it('refreshes uncommitted prose immediately when the reader changes mode', () => {
@@ -143,5 +145,80 @@ describe('Plain English client setting (#413)', () => {
     const pages = game.actions.book().filter((entry) => entry.eventId === EVENT_ID);
     expect(pages.find((entry) => entry.id === first!.id)?.text).toBe(PLAIN);
     expect(pages.some((entry) => entry.text === ORIGINAL)).toBe(true);
+  });
+});
+
+/** Flush requests in a controlled order without depending on dynamic-import timing. */
+function pendingProse() {
+  let resolve!: (variants: readonly ProseVariant[]) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<readonly ProseVariant[]>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
+describe('lazy Plain English selection order (#1024)', () => {
+  it('does not let an older failed load undo a newer successful Plain English selection', async () => {
+    const first = pendingProse();
+    const second = pendingProse();
+    const selected: ProseMode[] = [];
+    const accepted: Array<readonly ProseVariant[]> = [];
+    let requests = 0;
+    const select = createProseModeSelector(
+      (mode) => selected.push(mode),
+      () => ++requests === 1 ? first.promise : second.promise,
+      (variants) => { accepted.push(variants); },
+    );
+
+    const old = select('plainenglish');
+    await select('original');
+    const current = select('plainenglish');
+    const newest: readonly ProseVariant[] = [];
+    second.resolve(newest);
+    await current;
+    first.reject(new Error('old offline request failed'));
+    await old;
+
+    expect(selected).toEqual(['plainenglish', 'original', 'plainenglish']);
+    expect(accepted).toEqual([newest]);
+  });
+
+  it('does not install the result of an obsolete request after choosing Original', async () => {
+    const pending = pendingProse();
+    const selected: ProseMode[] = [];
+    const accepted: Array<readonly ProseVariant[]> = [];
+    const select = createProseModeSelector(
+      (mode) => selected.push(mode),
+      () => pending.promise,
+      (variants) => { accepted.push(variants); },
+    );
+
+    const old = select('plainenglish');
+    await select('original');
+    pending.resolve([]);
+    await old;
+
+    expect(selected).toEqual(['plainenglish', 'original']);
+    expect(accepted).toEqual([]);
+  });
+
+  it('still restores Original if the current Plain English load fails offline', async () => {
+    const pending = pendingProse();
+    const selected: ProseMode[] = [];
+    const accepted: Array<readonly ProseVariant[]> = [];
+    const select = createProseModeSelector(
+      (mode) => selected.push(mode),
+      () => pending.promise,
+      (variants) => { accepted.push(variants); },
+    );
+
+    const current = select('plainenglish');
+    pending.reject(new Error('offline'));
+    await current;
+
+    expect(selected).toEqual(['plainenglish', 'original']);
+    expect(accepted).toEqual([]);
   });
 });
