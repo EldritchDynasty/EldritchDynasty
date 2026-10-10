@@ -1090,3 +1090,68 @@ proseVariants:
     of: "d5ab74beb63aa2aa"
     plainenglish: >-
       returned the book clean and complete
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].title"
+    of: "03f1d3aafa9a828e"
+    plainenglish: >-
+      House Marrow Offers to Sell Us Its Codex
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].body"
+    of: "aca4249136e84425"
+    plainenglish: >-
+      House Marrow has been declining for three generations. Now it is offering to sell the Codex,
+      the book the family is known for. Our house receives the first offer because we are the
+      nearest, but being approached first also feels like an insult. The price is three hundred and
+      twenty crowns, equal to four years of the house's total spending. {RIVAL} brings the offer
+      himself. He stays in the yard rather than entering the house, and drinks what he is given
+      while standing.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].interaction.choices[id=buy_the_codex].label"
+    of: "5196bb9ab2d4d516"
+    plainenglish: >-
+      Buy the Codex. We may never have another chance.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].interaction.choices[id=buy_the_codex].outcomes[id=bought_the_codex].text"
+    of: "306a7a24b0b8c6c0"
+    plainenglish: >-
+      We pay three hundred and twenty crowns. Both men sign the receipt in the yard because neither
+      will go indoors. The Codex goes on the fourth shelf beside Slaughter. Within a season, every
+      house in the province knows who owns it, how much we paid and which family needed the money.
+      Everyone draws conclusions from those three facts.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].interaction.choices[id=decline_and_lend_them_money].label"
+    of: "194a0c3604077ff2"
+    plainenglish: >-
+      Decline the Codex and offer House Marrow the money instead.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].interaction.choices[id=decline_and_lend_them_money].outcomes[id=lent_instead].text"
+    of: "dea1147d09f27f21"
+    plainenglish: >-
+      We offer House Marrow one hundred and forty crowns, with no interest, security or repayment
+      date. Both men know this is a gift rather than a real loan. The Codex stays on their shelf. In
+      1284, a grandson repays the full amount with a letter. That letter becomes the most valuable
+      document this family acquires during the century.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].interaction.choices[id=decline_and_lend_them_money].outcomes[id=they_sell_it_east].text"
+    of: "44ca9ee20fb60e76"
+    plainenglish: >-
+      House Marrow refuses the offer of one hundred and forty crowns in the yard at Ardwen, with
+      unusually formal courtesy. Within four months, the Codex is shipped east in a crate to an
+      agent bidding for a buyer nobody in the province knows. The sale keeps House Marrow solvent
+      for eleven years. Nobody has seen the Codex since.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].record.subject"
+    of: "a047f75c958e4ce0"
+    plainenglish: >-
+      the Codex and the offer made for it
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].record.options.record.chronicle"
+    of: "d71b296c1638d198"
+    plainenglish: >-
+      House Marrow offered us the Codex for three hundred and twenty crowns. Instead we offered them
+      one hundred and forty crowns with no repayment required. They accepted, and the book stayed on
+      their shelf.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].record.options.record.claims[0].text"
+    of: "4d7237de99975022"
+    plainenglish: >-
+      paid House Marrow one hundred and forty crowns and left the Codex on their shelf
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].record.options.embellish.chronicle"
+    of: "9d4d419b032e59ff"
+    plainenglish: >-
+      Our house bought the Marrow Codex for three hundred and twenty crowns. We paid the full asking
+      price openly, without haggling.
+  - address: "content:events/rare_books.yaml#events[id=the_marrow_codex_offered].record.options.embellish.claims[0].text"
+    of: "bc1a26af945e1493"
+    plainenglish: >-
+      bought the Marrow Codex at the full asking price
