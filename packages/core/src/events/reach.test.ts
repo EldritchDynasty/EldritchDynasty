@@ -2813,7 +2813,6 @@ describe('authored simple positive-knowledge outcome witnesses', () => {
 
     expect(cases.map(({ event }) => String(event.id))).toEqual([
       'what_bramme_calls_a_thin_year',
-      'cousins_from_the_rimefell',
     ]);
 
     const witnessed: string[] = [];
@@ -3353,33 +3352,50 @@ describe('#334 Bramme margin consequence witnesses', () => {
   });
 });
 
-describe('#334 Wardenship record consequence witnesses', () => {
-  it('reads the held Wardenship and executes both answers through the real choice path', () => {
-    const event = content.events.find((entry) => String(entry.id) === 'a_page_in_our_own_hand');
-    if (!event || event.interaction.kind !== 'choice') throw new Error('Wardenship follow-up missing');
-    const keys: string[] = [];
-    for (const choice of event.interaction.choices) {
-      const ctx = fixture(33411);
-      ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES[event.frequency].minGeneration);
-      // The gate is the reader: without the Wardenship the scene cannot come due.
-      expect(evalCondition(event.conditions, ctx)).toBe(false);
-      ctx.world.flags.set('the_house_held_the_wardenship', true);
-      expect(evalCondition(event.conditions, ctx)).toBe(true);
-      for (const outcome of choice.outcomes) {
+describe('#334 Crown reader chain witnesses', () => {
+  // Each reader is chained from the one outcome that writes its key, so it is
+  // witnessed the way it actually fires: as the due step of that inline arc,
+  // with the key it reads set first. The gate is shown shut without the key.
+  const readers = [
+    { arc: 'inline_the_wardenship_falls_vacant__chosen', event: 'a_page_in_our_own_hand', set: (ctx: ReturnType<typeof fixture>) => ctx.world.flags.set('the_house_held_the_wardenship', true) },
+    { arc: 'inline_the_heralds_open_the_descent__they_go_looking', event: 'cousins_from_the_rimefell', set: (ctx: ReturnType<typeof fixture>) => ctx.world.knowledge.add('knows_the_rimefell_entry') },
+  ] as const;
+
+  for (const [index, reader] of readers.entries()) {
+    it(`${reader.event} reads its key and executes both answers as the due arc step`, () => {
+      const event = content.event(reader.event);
+      if (!event || event.interaction.kind !== 'choice') throw new Error(`${reader.event} missing`);
+      expect(String(event.arc?.of)).toBe(reader.arc);
+      const keys: string[] = [];
+      for (const choice of event.interaction.choices) {
+        const ctx = fixture(33411 + index);
+        expect(evalCondition(event.conditions, ctx)).toBe(false);
+        reader.set(ctx);
+        expect(evalCondition(event.conditions, ctx)).toBe(true);
+        const arc = content.arc(reader.arc);
+        if (!arc) throw new Error(`${reader.arc} did not compile`);
+        const rng = makeRng(33412 + index);
+        const instance = startArc(arc, ctx, rng);
+        if (!instance) throw new Error(`${reader.arc} did not start`);
+        let step = dueArcSteps(ctx, rng).find((candidate) => candidate.instance.id === instance.id);
+        for (let wait = 0; !step && wait < 60; wait++) {
+          ctx.world.year += 1;
+          step = dueArcSteps(ctx, rng).find((candidate) => candidate.instance.id === instance.id);
+        }
+        if (!step) throw new Error(`${reader.arc} never came due`);
         const result = executeOutcomeWitness(ctx, event, {
           choiceId: choice.id,
-          expectedOutcomeId: outcome.id,
-          rng: makeRng(33412),
+          expectedOutcomeId: choice.outcomes[0]!.id,
+          rng,
+          arcStep: step,
         });
         expect(result.ok, result.reason).toBe(true);
         if (result.key) keys.push(result.key);
       }
-    }
-    expect(keys.sort()).toEqual([
-      outcomeKey('a_page_in_our_own_hand', 'ask_for_it_closed', 'left_closed'),
-      outcomeKey('a_page_in_our_own_hand', 'let_it_be_heard', 'heard_again'),
-    ].sort());
-  });
+      expect(keys.sort()).toEqual(event.interaction.choices
+        .map((choice) => outcomeKey(reader.event, choice.id, choice.outcomes[0]!.id)).sort());
+    });
+  }
 });
 
 describe('authored generation-gated ordinary-family outcome witnesses', () => {

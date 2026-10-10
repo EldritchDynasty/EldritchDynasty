@@ -626,6 +626,10 @@ events:
                 - { kind: respect, delta: 3 }
                 - { kind: treasury, delta: -60 }
                 - { kind: flag, flag: the_house_held_the_wardenship, set: true }
+              # The page this house writes as Warden is read back by a later clerk
+              # (#334). Chained rather than drawn: an ambient reader of a flag only
+              # this outcome sets fired in 0 of 200 runs, under gate 4's floor.
+              next: { event: a_page_in_our_own_hand, after: next_generation }
         - id: stay_out_of_it
           label: Stay out of it. This family cannot afford to be looked at.
           outcomes:
@@ -976,6 +980,9 @@ events:
               effects:
                 - { kind: respect, delta: -2 }
                 - { kind: knowledge, op: grant, flag: knows_the_rimefell_entry }
+              # The Rimefell answers back, years later (#334). Chained for the same
+              # reason as the Wardenship's page: drawn ambiently it fired in 1 run of 200.
+              next: { event: cousins_from_the_rimefell, after: { minYears: 5, maxYears: 30 } }
         - id: buy_the_fourth
           label: Buy the fourth. Twenty-five crowns at Bramme, and it is done.
           outcomes:
