@@ -70,7 +70,9 @@ export function bondsmen(ctx: SimCtx): Person[] {
 export function bindService(ctx: SimCtx, p: Person, marks: number): boolean {
   const c = p.contract;
   if (!c || isBonded(p)) return false;
-  if (marks <= 0 || marks > MAX_BOND) return false;
+  // A cleared number input, non-finite value or fractional debt must never
+  // reach the contract or treasury. NaN passes ordinary bounds comparisons.
+  if (!Number.isSafeInteger(marks) || marks < 1 || marks > MAX_BOND) return false;
 
   c.term = 'bonded';
   c.debt = marks;
