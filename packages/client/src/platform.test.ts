@@ -880,6 +880,52 @@ describe('mobile durable storage', () => {
     ]);
   });
 
+  it('keeps the newer durable save when legacy key cleanup fails during deletion (#895)', async () => {
+    const newer = { format: 27, year: 1250 };
+    const older = { format: 27, year: 1100 };
+    const path = 'eldritch/saves/autosave.json';
+    const legacyKey = 'ed:save:autosave';
+    const files = mobileFileStore({ [path]: JSON.stringify(newer) });
+    const preferences = mobilePreferenceStore({ [legacyKey]: JSON.stringify(older) });
+    const failingPreferences = {
+      ...preferences,
+      async remove() { throw new Error('Preferences store unavailable'); },
+    };
+    const store = mobileStorage(files, failingPreferences);
+
+    await expect(store.deleteSave('autosave')).rejects.toThrow('Preferences store unavailable');
+    expect(files.data.get(path)).toBe(JSON.stringify(newer));
+    expect(preferences.data.get(legacyKey)).toBe(JSON.stringify(older));
+
+    // A failed deletion must not silently downgrade to the old snapshot
+    // through readSave/listSaves' ordinary legacy-migration fallback.
+    await expect(store.readSave('autosave')).resolves.toEqual(newer);
+    await expect(store.listSaves()).resolves.toEqual([
+      { slot: 'autosave', year: 1250, format: 27, savedAt: undefined },
+    ]);
+    expect(files.data.get(path)).toBe(JSON.stringify(newer));
+  });
+
+  it('preserves the native save if its deletion fails after clearing the legacy key (#895)', async () => {
+    const path = 'eldritch/saves/autosave.json';
+    const fileStore = mobileFileStore({
+      [path]: JSON.stringify({ format: 27, year: 1250 }),
+    });
+    const files = {
+      ...fileStore,
+      async deleteFile() { throw new Error('native delete refused'); },
+    };
+    const preferences = mobilePreferenceStore({
+      'ed:save:autosave': JSON.stringify({ format: 27, year: 1100 }),
+    });
+    const store = mobileStorage(files, preferences);
+
+    await expect(store.deleteSave('autosave')).rejects.toThrow('native delete refused');
+    expect(preferences.data.has('ed:save:autosave')).toBe(false);
+    expect(fileStore.data.has(path)).toBe(true);
+    await expect(store.readSave('autosave')).resolves.toEqual({ format: 27, year: 1250 });
+  });
+
   it('deletes both durable and pre-migration copies of a slot', async () => {
     const files = mobileFileStore({
       'eldritch/saves/autosave.json': JSON.stringify({ format: 27, year: 1200 }),
