@@ -160,7 +160,7 @@ describe('House ambition refusal and selection (#1069)', () => {
     await wrapper.get('.ambition-actions button').trigger('click');
 
     expect(setAmbition).toHaveBeenCalledWith('land');
-    expect(wrapper.get('select').element.value).toBe('land');
+    expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('land');
     expect(wrapper.get('[role="alert"]').text()).toContain('could not keep');
     expect(wrapper.find('select').exists()).toBe(true);
 
