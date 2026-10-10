@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { writeJsonAtomically } from './atomic-json.mjs';
 
 /**
  * The Library of Houses is installation/profile data, not a save slot. The
@@ -17,9 +18,5 @@ export function writeRunLibrary(userData, library) {
   if (library === null || typeof library !== 'object' || Array.isArray(library)) {
     throw new TypeError('the library is a JSON object');
   }
-  const target = join(userData, 'library.json');
-  const scratch = `${target}.writing`;
-  writeFileSync(scratch, JSON.stringify(library), 'utf8');
-  renameSync(scratch, target);
-  return target;
+  return writeJsonAtomically(join(userData, 'library.json'), library);
 }
