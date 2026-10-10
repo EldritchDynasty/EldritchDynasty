@@ -223,7 +223,14 @@ export function tickPapers(ctx: SimCtx, rng: Rng): number {
       doc.exposed = w.year;
       caught += 1;
 
-      const id = `papers_${p.id}_${w.year}`;
+      // Several forgeries on one person can be exposed in the same year.
+      // Keep the historical first ID, but give every later exposure its own
+      // evidence record rather than overwriting the first Discrepancy.
+      const stem = `papers_${p.id}_${w.year}`;
+      let id = stem;
+      for (let suffix = 2; w.discrepancies.has(id); suffix++) {
+        id = `${stem}_${suffix}`;
+      }
       w.discrepancies.set(id, {
         severity: grade === 'caster' ? 'major' : 'minor',
         provableBy: ['the parish roll', 'the Roll of Houses at Caster'],
