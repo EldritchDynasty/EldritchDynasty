@@ -178,7 +178,11 @@ export function forgedPapers(p: Person): LineageDocument[] {
 export function filePedigree(ctx: SimCtx, p: Person, grade: PedigreeGrade): LineageDocument {
   const doc: LineageDocument = {
     generations: PEDIGREE_COVERS[grade],
-    notarisedBy: grade === 'caster' ? 'a herald at Caster' : 'a notary at Bramme',
+    // Quoted as {NOTARY} by the filing line and by the exposure page, so it is
+    // rendered in the reader's mode when the paper is bought and kept (#410).
+    notarisedBy: grade === 'caster'
+      ? msg(ctx, 'papers.notary.caster', 'a herald at Caster')
+      : msg(ctx, 'papers.notary.bramme', 'a notary at Bramme'),
     forged: true,
     claims: `${PEDIGREE_COVERS[grade]} generations of maternal record, notarised and sealed`,
   };
