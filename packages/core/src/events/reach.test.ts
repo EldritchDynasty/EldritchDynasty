@@ -6315,6 +6315,28 @@ describe('the Bramme manuscript follow-up (#952)', () => {
     expect(picked[0]?.source).toBe('forced');
   });
 
+  it('defers the due callback until the authored fourth-generation gate holds', () => {
+    const ctx = sendToBramme('came_back');
+    const due = ctx.world.year + 20;
+
+    // Twenty years is not necessarily a full generation. A forced callback
+    // must not override its own generation requirement when the due year comes.
+    ctx.world.year = due;
+    ctx.world.generation = 3;
+    const early = selectEvents(ctx, makeRng(37), 0);
+    expect(early.some((candidate) => candidate.event.id === margin!.id)).toBe(false);
+    expect(ctx.world.scheduled).toContainEqual({
+      event: margin!.id, year: due + 5, first: due,
+    });
+
+    ctx.world.year = due + 5;
+    ctx.world.generation = 4;
+    const eligible = selectEvents(ctx, makeRng(38), 0);
+    expect(eligible.map((candidate) => candidate.event.id)).toEqual([margin!.id]);
+    expect(eligible[0]?.source).toBe('forced');
+    expect(ctx.world.scheduled.some((s) => s.event === margin!.id)).toBe(false);
+  });
+
   it('retires a due schedule if an earlier ambient draw already resolved the one-shot scene', () => {
     const ctx = sendToBramme('came_back');
     const due = ctx.world.year + 20;
