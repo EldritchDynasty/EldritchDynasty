@@ -310,7 +310,7 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   // a duplicate is a run the player cannot restart and cannot fix.
   const roster: FriendName[] = [];
   if (choice.friends?.length) {
-    const checked = normaliseFriends(choice.friends, w.year);
+    const checked = normaliseFriends(ctx, choice.friends, w.year);
     if (!checked.ok) return { ok: false, reason: checked.reason };
     // One to a band across five centuries, in an order the boxes on the screen
     // do not predict. Its own stream, so adding or removing a name changes when

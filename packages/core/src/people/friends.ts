@@ -1,6 +1,8 @@
 import type { AttributeDef, Person, Sex, Year } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { CAMPAIGN_YEARS } from '../campaign.js';
+import { msg } from '../messages.js';
+import type { SimCtx } from '../world.js';
 
 /**
  * THE FIVE NAMES THE PLAYER GAVE AT THE SIGNING.
@@ -171,6 +173,7 @@ export function releaseFriendName(friends: FriendName[], name: string, year: Yea
  * rule and a shrug.
  */
 export function normaliseFriends(
+  ctx: SimCtx,
   input: readonly { name: string; sex: Sex }[],
   /**
    * The founding year, which every name starts due in. `dealWindows` then
@@ -185,14 +188,22 @@ export function normaliseFriends(
   for (const row of input) {
     const name = row.name.trim().replace(/\s+/g, ' ');
     if (!name) continue;
-    if (name.length > FRIEND_NAME_MAX) return { ok: false, reason: `'${name}' is longer than a name` };
-    if (row.sex !== 'male' && row.sex !== 'female') return { ok: false, reason: `${name} needs to be one or the other` };
+    if (name.length > FRIEND_NAME_MAX) {
+      return { ok: false, reason: msg(ctx, 'friends.refuse.too_long', "'{NAME}' is longer than a name", { NAME: name }) };
+    }
+    if (row.sex !== 'male' && row.sex !== 'female') {
+      return { ok: false, reason: msg(ctx, 'friends.refuse.sex', '{NAME} needs to be one or the other', { NAME: name }) };
+    }
     const key = name.toLowerCase();
-    if (seen.has(key)) return { ok: false, reason: `two of them are called ${name}` };
+    if (seen.has(key)) {
+      return { ok: false, reason: msg(ctx, 'friends.refuse.duplicate', 'two of them are called {NAME}', { NAME: name }) };
+    }
     seen.add(key);
     out.push({ name, sex: row.sex, dueFrom: foundedIn });
   }
-  if (out.length > MAX_FRIENDS) return { ok: false, reason: `five names, not ${out.length}` };
+  if (out.length > MAX_FRIENDS) {
+    return { ok: false, reason: msg(ctx, 'friends.refuse.too_many', 'five names, not {COUNT}', { COUNT: String(out.length) }) };
+  }
   return { ok: true, friends: out };
 }
 
