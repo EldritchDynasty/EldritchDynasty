@@ -82,7 +82,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       for (const person of w.people.household(w.playerHouse, w.year)) {
         const role = person.contract?.role;
         if (role === 'archivist' || role === 'chronicler') {
-          add(out, person.id, "the house's reader of the Ledger");
+          add(out, person.id, msg(ctx, 'relevance.ledger_reader', "the house's reader of the Ledger"));
         }
       }
       break;
