@@ -1158,7 +1158,7 @@ proseVariants:
   - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].title"
     of: "4715e44520c488c9"
     plainenglish: >-
-      Eight Pages Cut from the Oldest Book
+      Eight Leaves Cut from the Oldest Book
   - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].body"
     of: "c351ad4c621d21a8"
     plainenglish: >-
@@ -1184,7 +1184,7 @@ proseVariants:
     plainenglish: >-
       The search lasts nine tendays and covers every press, both cellars, the chapel and the cadet
       hall. The eight leaves are nowhere to be found. Instead, the search has revealed the missing
-      pages to the household. Eleven people now know about them who knew nothing three months
+      leaves to the household. Eleven people now know about them who knew nothing three months
       earlier.
   - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].interaction.choices[id=collate_and_say_nothing].label"
     of: "3ec8c4fab9fcdc86"
@@ -1194,7 +1194,7 @@ proseVariants:
     of: "0b87dcdfbe9bebb3"
     plainenglish: >-
       The collation book gets a single word, and the volume returns to its shelf. {ARCHIVIST} is
-      paid five marks a year to notice missing pages and has just been told to ignore them. He
+      paid five marks a year to notice missing leaves and has just been told to ignore them. He
       writes the word, then sits with his pen down for a while. He does not resign. He keeps his own
       written note in his room, as archivists have long done.
   - address: "content:events/rare_books.yaml#events[id=the_quire_that_is_missing].record.subject"
