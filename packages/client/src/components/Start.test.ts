@@ -66,6 +66,51 @@ describe('the front door hides the seed behind Advanced', () => {
   });
 });
 
+describe('fresh RNG seeds for a new house (#1013)', () => {
+  it('draws a new seed for each start screen, without changing the campaign year', async () => {
+    // Control entropy rather than making a probabilistic test that can rarely
+    // fail when two legitimate random draws happen to agree.
+    let draws = 0;
+    vi.stubGlobal('crypto', {
+      getRandomValues: (values: Uint32Array) => {
+        values[0] = 0xaabb0000 + ++draws;
+        return values;
+      },
+    });
+    try {
+      const first = spyActions();
+      const firstScreen = mount(Start, { props: { actions: first, resumable: false } });
+      await flush();
+      expect(firstScreen.text()).toContain('In the year 1042');
+      await firstScreen.get('button.primary').trigger('click');
+      expect(first.begin).toHaveBeenCalledWith(0xaabb0001, 'short');
+
+      // A setting toggle or a switch to Long must not draw a different seed
+      // underneath a player who has already seen it in Advanced.
+      const advanced = firstScreen.findAll('button').find((b) => b.text() === 'Advanced');
+      await advanced!.trigger('click');
+      expect((firstScreen.get('#seed').element as HTMLInputElement).value).toBe(String(0xaabb0001));
+      const long = firstScreen.findAll('input[type="radio"]')
+        .find((input) => input.attributes('value') === 'long');
+      await long!.setValue(true);
+      await firstScreen.get('button.primary').trigger('click');
+      expect(first.begin).toHaveBeenLastCalledWith(0xaabb0001, 'long');
+      expect(draws).toBe(1);
+      firstScreen.unmount();
+
+      const second = spyActions();
+      const secondScreen = mount(Start, { props: { actions: second, resumable: false } });
+      await flush();
+      await secondScreen.get('button.primary').trigger('click');
+      expect(second.begin).toHaveBeenCalledWith(0xaabb0002, 'short');
+      expect(draws).toBe(2);
+      secondScreen.unmount();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('campaign choice (#66)', () => {
   it('defaults to A Short Line and lets the player explicitly choose Long', async () => {
     const actions = spyActions();
