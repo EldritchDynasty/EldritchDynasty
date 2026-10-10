@@ -221,4 +221,27 @@ describe('lazy Plain English selection order (#1024)', () => {
     expect(selected).toEqual(['plainenglish', 'original']);
     expect(accepted).toEqual([]);
   });
+  it('does not replace the current catalogue when the older import succeeds last', async () => {
+    const first = pendingProse();
+    const second = pendingProse();
+    const accepted: Array<readonly ProseVariant[]> = [];
+    let requests = 0;
+    const select = createProseModeSelector(
+      () => undefined,
+      () => ++requests === 1 ? first.promise : second.promise,
+      (variants) => { accepted.push(variants); },
+    );
+
+    const old = select('plainenglish');
+    const current = select('plainenglish');
+    const latest = [{ address: 'core:messages#latest', of: '0123456789abcdef', plainenglish: 'Latest.' }];
+    second.resolve(latest);
+    await current;
+    const stale = [{ address: 'core:messages#stale', of: '0123456789abcdef', plainenglish: 'Stale.' }];
+    first.resolve(stale);
+    await old;
+
+    expect(accepted).toEqual([latest]);
+  });
+
 });
