@@ -70,7 +70,7 @@ export function isField(el: Element | null): boolean {
 
 /** Whether the focused thing answers Space and Enter on its own. */
 export function isControl(el: Element | null): boolean {
-  return el?.tagName === 'BUTTON' || el?.tagName === 'A';
+  return el?.tagName === 'BUTTON' || el?.tagName === 'A' || el?.tagName === 'SUMMARY';
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
