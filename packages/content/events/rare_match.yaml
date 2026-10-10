@@ -837,3 +837,64 @@ events:
             provableBy: [house_calder, commons]
     rumour: { id: rumour_thirteen_years_in_that_hall, accuracy: 0.45, spread: 2 }
     accounts: [the_wards_own_answer_at_table, the_letter_from_her_family]
+
+proseVariants:
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].title"
+    of: "4a21e5feb141f322"
+    plainenglish: >-
+      A Marriage Offer from Yssanne
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].body"
+    of: "2b5c63d2dee983be"
+    plainenglish: >-
+      Yssanne is across the Grey. A letter takes eleven months each way. After three years of
+      letters, a house older than the Ambric Empire has formally offered to marry {DAUGHTER}.
+      Yssanne has inheritance laws that Aubren does not recognise. She would sail from Sarrow
+      and never come back. The offer includes four hundred crowns, more money than this family
+      has ever had in one place. Nobody in the Nethering can read the contract.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=send_her].label"
+    of: "1737ce32f92ec3de"
+    plainenglish: >-
+      Send her by ship from Sarrow and accept four hundred crowns.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=send_her].outcomes[id=she_goes].text"
+    of: "f4c2f3510781203d"
+    plainenglish: >-
+      She travels eleven days east and boards a ship. The house receives four hundred crowns,
+      more than its treasury has ever held. She writes home twice a year. Her handwriting
+      changes over the first ten years, then stays the same. She is well for fifty-one years.
+      Under Yssanne's law, her children can claim this house. Under Aubren's law, they cannot.
+      Both laws continue to disagree about the claim.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].label"
+    of: "ead3e38a97f8fb26"
+    plainenglish: >-
+      Refuse. She would never return, and no one here can read the contract.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].outcomes[id=refused].text"
+    of: "da4f8771fc53d175"
+    plainenglish: >-
+      The house rewrites its refusal three times before sending it. Eleven months later,
+      a reply of four carefully written lines expresses regret. For the next sixty years,
+      the family thinks about those four hundred crowns whenever money is short.
+      She marries at Cawdry at a cost of sixty crowns. In 1291, someone in the house
+      learns what the contract's fourth clause would have meant and is deeply shaken.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].record.subject"
+    of: "51e31a242dcd7468"
+    plainenglish: >-
+      the marriage offer from Yssanne
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].record.options.record.chronicle"
+    of: "8d314569bb1b0655"
+    plainenglish: >-
+      A house across the Grey, older than the Ambric Empire, offered four hundred crowns
+      for one of our daughters under an inheritance law we could not read. We refused.
+      None of us knows whether that was the right decision.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].record.options.record.claims[0].text"
+    of: "bde62d95b30425e1"
+    plainenglish: >-
+      refused a foreign offer of four hundred crowns under terms the house could not read
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].record.options.embellish.chronicle"
+    of: "c123f63431d7a580"
+    plainenglish: >-
+      A foreign house offered to marry one of our daughters. We refused because the
+      terms were unsuitable and the distance was too great.
+  - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].record.options.embellish.claims[0].text"
+    of: "a58ad601b55f7fc5"
+    plainenglish: >-
+      declined the foreign offer because its terms were unsuitable
