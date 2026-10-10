@@ -83,6 +83,8 @@ interface RunAges {
   agesOccurred: Set<string>;
   /** Longest run of consecutive years with `world.age.active` empty. */
   longestDeadStretch: number;
+  /** Actual years advanced, excluding repeated attempts after an ending froze the clock. */
+  yearsAdvanced: number;
 }
 
 let runs: RunAges[];
@@ -90,10 +92,15 @@ let runs: RunAges[];
 beforeAll(() => {
   runs = SEEDS.map((seed) => {
     const ctx = bootstrap(bundle, seed, 1042);
+    const startYear = ctx.world.year;
     let deadStretch = 0;
     let longestDeadStretch = 0;
     for (let i = 0; i < YEARS; i++) {
+      const previousYear = ctx.world.year;
       stepYear(ctx);
+      // A Broken Line stops the clock. Counting further calls as extra years
+      // without an Age fabricates a centuries-long drought after the ending.
+      if (ctx.world.year === previousYear) break;
       if (ctx.world.age.active.length === 0) {
         deadStretch += 1;
         longestDeadStretch = Math.max(longestDeadStretch, deadStretch);
@@ -106,6 +113,7 @@ beforeAll(() => {
       spans: w.age.ended.map((e) => ({ age: e.age, span: e.ended - e.began })),
       agesOccurred: new Set([...w.age.ended.map((e) => e.age), ...w.age.active.map((a) => a.age)]),
       longestDeadStretch,
+      yearsAdvanced: w.year - startYear,
     };
   });
 });
@@ -192,12 +200,18 @@ describe('the Age scheduler holds the shape the content authored', () => {
    * 220y, and this ceiling is there to catch a genuine eligibility deadlock
    * (every register locked out at once for centuries), not preserve one seed.
    */
+  it('counts only simulated years, not repeated calls after a Broken Line ends', () => {
+    for (const run of runs) {
+      expect(run.longestDeadStretch).toBeLessThanOrEqual(run.yearsAdvanced);
+    }
+  });
+
   it('never leaves a run with no active Age for an unreasonable stretch', () => {
     const MAX_REASONABLE_GAP = 250;
     runs.forEach((run, i) => {
       expect(
         run.longestDeadStretch,
-        `seed ${SEEDS[i]}: ${run.longestDeadStretch}y in a row with no active Age`,
+        `seed ${SEEDS[i]}: ${run.longestDeadStretch}y with no active Age across ${run.yearsAdvanced} simulated years`,
       ).toBeLessThanOrEqual(MAX_REASONABLE_GAP);
     });
   });
