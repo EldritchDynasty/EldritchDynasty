@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { coreMessageAddress, msg } from './messages.js';
+import { outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome } from './prose.js';
 import { loadBundle } from '@ed/content';
 import { contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { EventTemplate, Outcome } from '@ed/schema';
@@ -368,6 +369,48 @@ describe('prospective prose selection', () => {
 
     expect(plain.world.decisionLog).toEqual(original.world.decisionLog);
     expect(plain.world.chronicle.at(-1)?.text).not.toBe(original.world.chronicle.at(-1)?.text);
+  });
+
+  it('rejects a mismatched choice when identical Original text and outcome ids occur in two branches (#856)', () => {
+    const { bundle, event, outcome } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('fixture event is no longer a choice');
+
+    const original = 'The two choices have the same Original ending.';
+    const first: Outcome = { ...outcome, id: 'shared_result', text: original };
+    const second: Outcome = { ...outcome, id: 'shared_result', text: original };
+    const ambiguous: EventTemplate = {
+      ...event,
+      interaction: {
+        ...event.interaction,
+        choices: [
+          { ...event.interaction.choices[0]!, id: 'first_branch', outcomes: [first] },
+          { ...event.interaction.choices[1]!, id: 'second_branch', outcomes: [second] },
+        ],
+      },
+    };
+    const base = 'content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices';
+    const firstAddress = `${base}[id=first_branch].outcomes[id=shared_result].text`;
+    const secondAddress = `${base}[id=second_branch].outcomes[id=shared_result].text`;
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, [
+      { address: firstAddress, of: proseOriginalHash(original), plainenglish: 'The first choice ends here.' },
+      { address: secondAddress, of: proseOriginalHash(original), plainenglish: 'The second choice ends here.' },
+    ]);
+    setProseMode(ctx, 'plainenglish');
+
+    // Same id and same Original fingerprint do not prove branch membership.
+    expect(outcomeTextAddress(ctx, ambiguous, first, 'second_branch')).toBeUndefined();
+    expect(outcomeChronicleEffectAddress(ctx, ambiguous, first, 0, 'second_branch')).toBeUndefined();
+    expect(proseForOutcome(ctx, ambiguous, first, 'second_branch')).toBe(original);
+
+    // A copied outcome is also untrusted, even when it has the right id.
+    expect(outcomeTextAddress(ctx, ambiguous, { ...first }, 'first_branch')).toBeUndefined();
+
+    // Actual selections still resolve each branch's independent wording.
+    expect(outcomeTextAddress(ctx, ambiguous, first, 'first_branch')).toBe(firstAddress);
+    expect(outcomeTextAddress(ctx, ambiguous, second, 'second_branch')).toBe(secondAddress);
+    expect(proseForOutcome(ctx, ambiguous, first, 'first_branch')).toBe('The first choice ends here.');
+    expect(proseForOutcome(ctx, ambiguous, second, 'second_branch')).toBe('The second choice ends here.');
   });
 
   it('uses the exact choice identity when two branches reuse an outcome id', () => {
