@@ -1387,3 +1387,505 @@ proseVariants:
     of: dc2a162265a2d136
     plainenglish: >-
       had the house moved two lines above its old place on the Roll
+  - address: "content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].effects[0].cause"
+    of: 08025d3e222bf67a
+    plainenglish: >-
+      the war levy
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].title"
+    of: 2a271cb4a1bbec20
+    plainenglish: >-
+      The King's Progress Passes Nearby
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].body"
+    of: c29edfe199452bed
+    plainenglish: >-
+      In Highsun the king travels north and will stay four nights at Cawdry, forty miles and two
+      days away. Every landed family in the province is working out what it can afford to be seen
+      in. Riding out means proper black and deep red clothes for four people, an expensive gift,
+      and a place in a line of ninety houses, where your place in the line is the whole point.
+      Forty of those ninety houses will notice if this house does not come. {DAUGHTER} has never
+      been further than Bramme.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].interaction.choices[id=ride_out].label"
+    of: c9bd5a1be638acb7
+    plainenglish: >-
+      Ride out. Four of us, properly dressed, with a gift.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].interaction.choices[id=ride_out].outcomes[id=seen].text"
+    of: 0a60f48866dfd8cc
+    plainenglish: >-
+      It costs sixty-four crowns for cloth, plate and a carriage, two days each way, and about
+      eleven seconds in front of a man who will not remember any of it. The eleven seconds are not
+      really for the king. They are for the ninety houses standing in the same field. Four of them
+      speak to this family for the first time in a generation, and one of those four has a son.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].interaction.choices[id=ride_out].outcomes[id=seated_badly].text"
+    of: 77638a689649354c
+    plainenglish: >-
+      It costs sixty-four crowns and two days each way, and the house is placed in the line eleven
+      places further back than last time a progress came north. A steward with a list decides
+      that, and no one can argue with it in a field. The eleven seconds still happen. Everyone in
+      the field notices where this house stood when they did.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].interaction.choices[id=stay_at_ardwen].label"
+    of: 2a76366d6c307399
+    plainenglish: >-
+      Stay home. Sixty-four crowns would pay for a roof.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].interaction.choices[id=stay_at_ardwen].outcomes[id=stayed].text"
+    of: df821835c666daa9
+    plainenglish: >-
+      The house does the haying instead, in good weather, and ends that Highsun sixty-four crowns
+      better off. It also missed the only afternoon anyone in the Nethering will talk about for
+      nine years. Nobody mentions it to this family. Everybody mentions it to someone else.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].record.subject"
+    of: f09da5d6aad27492
+    plainenglish: >-
+      the king's visit, and where this house stood
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].record.options.record.chronicle"
+    of: 317647e57e7336f9
+    plainenglish: >-
+      The king stayed four nights at Cawdry and this house did the haying. It could not afford
+      clothes for four people and a gift in the same year as the roof.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].record.options.record.claims[0].text"
+    of: d79bcf6125f3304d
+    plainenglish: >-
+      stayed home from the king's progress to do the haying in the year the roof was paid for
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].record.options.embellish.chronicle"
+    of: 7384330b5aec70b7
+    plainenglish: >-
+      The king stayed four nights at Cawdry. This house attended, was received, and gave a gift of
+      plate.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].record.options.embellish.claims[0].text"
+    of: eb9cc2a715cde01b
+    plainenglish: >-
+      attended the king's progress at Cawdry and gave a gift of plate
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseen].subject"
+    of: 7c2b7571297cd0f5
+    plainenglish: >-
+      the king's visit, and who spoke to this house there
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseen].options.record.chronicle"
+    of: c75da3496ad77c15
+    plainenglish: >-
+      The king stayed four nights at Cawdry. Four of this house rode out to see him, properly
+      dressed and with a gift of plate, at a cost of sixty-four crowns. Four houses in that field
+      spoke to us who had not done so in a generation.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseen].options.record.claims[0].text"
+    of: 0a8fe740a9bc064c
+    plainenglish: >-
+      rode out to the king's progress at Cawdry with a gift of plate
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseen].options.embellish.chronicle"
+    of: 56803d0d6af010c1
+    plainenglish: >-
+      The king stayed four nights at Cawdry. He received this house privately in his own room,
+      away from the line, and talked with the Head for an hour.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseen].options.embellish.claims[0].text"
+    of: 9342f1340b468650
+    plainenglish: >-
+      was received privately by the king at Cawdry for an hour
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseated_badly].subject"
+    of: c2e6b3b7c4eb5c2b
+    plainenglish: >-
+      the king's visit, and where this house was placed in the line
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseated_badly].options.record.chronicle"
+    of: c5ceb39541d347e1
+    plainenglish: >-
+      The king stayed four nights at Cawdry. Four of this house rode out to see him at a cost of
+      sixty-four crowns. The Warden's steward put us eleven places further back in the line than
+      this house stood last time a progress came north.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseated_badly].options.record.claims[0].text"
+    of: 3f1711de891ce6d2
+    plainenglish: >-
+      attended the king's progress at Cawdry and was placed eleven places lower in the line
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseated_badly].options.embellish.chronicle"
+    of: 363e1f4076d7b5e4
+    plainenglish: >-
+      The king stayed four nights at Cawdry. This house attended, stood in the line where it has
+      always stood, and gave a gift of plate.
+  - address: "content:events/rare_crown.yaml#events[id=the_king_passes_within_a_day].recordByOutcome[id=ride_out%2Fseated_badly].options.embellish.claims[0].text"
+    of: 228fd9398be69e2d
+    plainenglish: >-
+      kept the house's usual place in the line at Cawdry
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].title"
+    of: d28fb1ef70e666eb
+    plainenglish: >-
+      Putting Forward a Candidate
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].body"
+    of: 3bbcc5b674873962
+    plainenglish: >-
+      The Warden of the Nethering died at Cawdry in Frostfall after thirty-one years in office.
+      For about nine months the province will decide everything and announce nothing. Four houses
+      will put forward a candidate, and doing it properly costs sixty crowns. The office is worth
+      a great deal. It also means whoever holds it is watched by the Crown, the Assembly, the
+      Church and every family in the province, always and on purpose. {CANDIDATE} would take it.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].interaction.choices[id=put_the_name_forward].label"
+    of: 6c2a058a642a3d2e
+    plainenglish: >-
+      Put him forward. It costs sixty crowns and nine months of asking.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].interaction.choices[id=put_the_name_forward].outcomes[id=not_chosen].text"
+    of: 76f198e13e7a238d
+    plainenglish: >-
+      Sixty crowns and nine months later, the office goes to a house three places above this one
+      on the Roll, as everyone expected, including the family. The money did not buy the office.
+      It bought a place among the four names. Four names is a short list, and the province has
+      been reminded that this house is the kind of house that is on it.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].interaction.choices[id=put_the_name_forward].outcomes[id=chosen].text"
+    of: 9bb4f83168ae3e85
+    plainenglish: >-
+      Sixty crowns, nine months, and the office. The province is run from this family's table for
+      as long as he holds it. Every clerk, summoner, lawyer and archdeacon in the Nethering now
+      has a reason to come to this hall, and they do. Nobody in the family has thought carefully
+      about what that second part means.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].interaction.choices[id=stay_out_of_it].label"
+    of: aad32e70287f3b94
+    plainenglish: >-
+      Stay out of it. This family cannot afford to be looked at closely.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].interaction.choices[id=stay_out_of_it].outcomes[id=stayed_out].text"
+    of: 65d98571e534bb85
+    plainenglish: >-
+      No candidate and no sixty crowns. For nine months three of the four families spending that
+      money ask this house for its opinion. The opinion is worth something to all three of them.
+      Afterwards it is worth nothing at all, which is how opinions work.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].record.subject"
+    of: 40013b529b53dbc6
+    plainenglish: >-
+      the empty Wardenship
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].record.options.record.chronicle"
+    of: dbac07d219cfc88e
+    plainenglish: >-
+      The Warden died and four houses put forward candidates. This house did not, because it
+      decided it could not afford to be looked at that closely.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].record.options.record.claims[0].text"
+    of: 67b0dd509f37e22c
+    plainenglish: >-
+      was kept out of the race for Warden because the house would not put forward a candidate
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].record.options.embellish.chronicle"
+    of: 5e6bc97b1107bd7f
+    plainenglish: >-
+      The Warden died and this house put forward a candidate, one of the four. He was well
+      received at Cawdry, but the office went to someone else.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].record.options.embellish.claims[0].text"
+    of: e886c1338eb4fa97
+    plainenglish: >-
+      was one of the four candidates put forward for Warden
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fnot_chosen].subject"
+    of: 797beee1af40f2ed
+    plainenglish: >-
+      the empty Wardenship, and the candidate this house put forward
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fnot_chosen].options.record.chronicle"
+    of: 9ccf272e2c2f1412
+    plainenglish: >-
+      The Warden died and four houses put forward candidates. This house put forward {CANDIDATE},
+      at a cost of sixty crowns. The office went to a house three places above ours, as everyone
+      had expected.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fnot_chosen].options.record.claims[0].text"
+    of: 9c6b8062f1b9259e
+    plainenglish: >-
+      was put forward for Warden and was not chosen
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fnot_chosen].options.embellish.chronicle"
+    of: 0716345680c3a41a
+    plainenglish: >-
+      The Warden died and the office was offered to {CANDIDATE}. He turned it down for the good of
+      the house, and it went to a house three places above ours.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fnot_chosen].options.embellish.claims[0].text"
+    of: 1b8eee2b21b45eaf
+    plainenglish: >-
+      was offered the Wardenship and turned it down
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fchosen].subject"
+    of: 106c4d2d2d62ac79
+    plainenglish: >-
+      the empty Wardenship, and what it cost to win it
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fchosen].options.record.chronicle"
+    of: 899fab786c540934
+    plainenglish: >-
+      The Warden died and four houses put forward candidates. This house put forward {CANDIDATE},
+      at a cost of sixty crowns and nine months of asking, and he was chosen. The Nethering is now
+      run from this table.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fchosen].options.record.claims[0].text"
+    of: 0899d8ef2e54ea3b
+    plainenglish: >-
+      was put forward at a cost of sixty crowns and chosen as Warden of the Nethering
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fchosen].options.embellish.chronicle"
+    of: 9cc282dd97a8c001
+    plainenglish: >-
+      The Warden died and the province asked for {CANDIDATE} by name. He was made Warden without
+      this house putting him forward or spending a single crown.
+  - address: "content:events/rare_crown.yaml#events[id=the_wardenship_falls_vacant].recordByOutcome[id=put_the_name_forward%2Fchosen].options.embellish.claims[0].text"
+    of: 7747b4bd7a3a2489
+    plainenglish: >-
+      was asked for by the province and made Warden without being put forward
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].title"
+    of: ebe7ec77ff249533
+    plainenglish: >-
+      Their Land, Cheap Enough for Anyone
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].body"
+    of: 7d71c5e0d8919cf4
+    plainenglish: >-
+      {RIVAL}'s house is found guilty of treason at Caster in Seedmonth. Nobody in the Nethering
+      has seen the evidence and nobody there believes it, and the family is put off its land
+      within two tendays. Nine hundred acres, which border this house's land on two sides, go to
+      the Crown and are offered at about a third of their value to whoever is close by. Everyone
+      is close by. Bids are made by letter, and each bidder's name is recorded.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].interaction.choices[id=buy_the_land].label"
+    of: 72eb2ba75dd400db
+    plainenglish: >-
+      Buy it. Nine hundred acres at a third of the price will not come again.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].interaction.choices[id=buy_the_land].outcomes[id=bought].text"
+    of: ec6547cb4e6314df
+    plainenglish: >-
+      A hundred and eighty crowns buys nine hundred acres, and the purchase is recorded by name in
+      a Crown register that every clerk who ever looks into this family will read. The land is
+      good and will pay for itself in nineteen years. Four lines above the purchase, the register
+      also records why the land was taken.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].interaction.choices[id=stay_clear_of_it].label"
+    of: 08e1f5f9201bb7cd
+    plainenglish: >-
+      Buy nothing. A treason sentence is something that happens to other people.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].interaction.choices[id=stay_clear_of_it].outcomes[id=stayed_clear].text"
+    of: 5d8d23ee098995b2
+    plainenglish: >-
+      This house sends no letter, and the nine hundred acres go to a house from outside the
+      province that nobody had to deal with before and everybody does now. Years later the treason
+      sentence is overturned after the family's death, on a technical point, and every family that
+      bought the land is named in a document about it for four years. This house is not.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].record.subject"
+    of: f43a4a17eaf28603
+    plainenglish: >-
+      the confiscated land
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].record.options.record.chronicle"
+    of: 2d5388a80764b304
+    plainenglish: >-
+      Their house was found guilty of treason and their nine hundred acres were offered at a third
+      of their value. This house sent no letter and bought nothing.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].record.options.record.claims[0].text"
+    of: c82a451dd5666e61
+    plainenglish: >-
+      bought none of the neighbour's nine hundred confiscated acres
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].record.options.embellish.chronicle"
+    of: 8f1b0a2c4cb8d478
+    plainenglish: >-
+      Their house was found guilty of treason and this house bought nine hundred acres of their
+      land at the Crown's price, legally, openly and by letter.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].record.options.embellish.claims[0].text"
+    of: 25ea88cdb0265ae1
+    plainenglish: >-
+      bought nine hundred acres of the confiscated land at the Crown's price
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].recordByChoice[id=buy_the_land].subject"
+    of: 6f1a0880784f2cac
+    plainenglish: >-
+      the confiscated land, and what this house paid for it
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].recordByChoice[id=buy_the_land].options.record.chronicle"
+    of: 41197958ba9795dc
+    plainenglish: >-
+      Their house was found guilty of treason and their nine hundred acres were offered at a third
+      of their value. This house bought them by letter for a hundred and eighty crowns, and its
+      name is recorded in the Crown's register of the sale.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].recordByChoice[id=buy_the_land].options.record.claims[0].text"
+    of: 3a66b139f57e2765
+    plainenglish: >-
+      bought nine hundred acres of the neighbour's confiscated land from the Crown for a hundred
+      and eighty crowns
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].recordByChoice[id=buy_the_land].options.embellish.chronicle"
+    of: 406f0d29a8402b7d
+    plainenglish: >-
+      Their house was found guilty of treason. This house took none of their land from the Crown,
+      but bought it later from the family themselves, at a fair price and with their blessing.
+  - address: "content:events/rare_crown.yaml#events[id=the_house_next_door_attainted].recordByChoice[id=buy_the_land].options.embellish.claims[0].text"
+    of: e91d6ef13076bbd5
+    plainenglish: >-
+      bought the convicted family's land from the family themselves, with their blessing
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].title"
+    of: 2eb0170cb7ba9800
+    plainenglish: >-
+      A Child as a Hostage
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].body"
+    of: 039a9e7cb16dfa08
+    plainenglish: >-
+      A treaty is being agreed far above the heads of everyone in this province, and it needs
+      hostages as a guarantee. The Warden's clerk has come up the hill with a list of nine
+      households, and this one is on it. Giving a hostage is normal and legal, and in almost every
+      case anyone can name the child comes back after five years. {CHILD} would live at Caster in
+      a household of four hundred people, with a better tutor than this family could ever pay for.
+      Those four hundred people are the whole problem, and the clerk has no idea.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].interaction.choices[id=give_the_child].label"
+    of: 6b2b11590ab77705
+    plainenglish: >-
+      Give the hostage. It is normal, and it is five years.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].interaction.choices[id=give_the_child].outcomes[id=given].text"
+    of: c1b39336ac5065f2
+    plainenglish: >-
+      Five years at Caster, a tutor from Corran, handwriting better than anyone's in this house,
+      and a child who comes back five years older after being watched every day by four hundred
+      people through the years when this family's children are watched. Nothing happened. Nothing
+      was ever going to happen. Nobody at Ardwen slept properly for five years.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].interaction.choices[id=give_the_child].outcomes[id=something_was_noticed].text"
+    of: da420f5c0a78ee20
+    plainenglish: >-
+      Five years at Caster. In the fourth year someone whose whole job is noticing things notices
+      something. It is written down in a household book that does not belong to the Crown or the
+      Church, but to a family this house has never heard of. The child comes home in the fifth
+      year and is fine. The book stays where it is.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].interaction.choices[id=refuse_the_surety].label"
+    of: a1882285885a4fe1
+    plainenglish: >-
+      Refuse. Offer money, land, or anything else instead.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].interaction.choices[id=refuse_the_surety].outcomes[id=refused_surety].text"
+    of: 9a93b7dcaface820
+    plainenglish: >-
+      This house offers ninety crowns instead of a child. The offer is accepted, but everyone
+      present makes sure their displeasure is seen. A household that will not give a hostage when
+      eight others have is saying something about itself, and the clerk's office exists to write
+      such things down. The child stays home. The list of nine goes into a file with a mark next
+      to one name.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].record.subject"
+    of: dfa7952b7afa8607
+    plainenglish: >-
+      the hostage this house did not give
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].record.options.record.chronicle"
+    of: de26dc54d72bd768
+    plainenglish: >-
+      Nine households were asked for hostages. Eight gave children and this one gave ninety
+      crowns, and the clerk wrote that down in front of us.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].record.options.record.claims[0].text"
+    of: 24475ea78aef4513
+    plainenglish: >-
+      was kept at home when eight other households gave children as hostages
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].record.options.embellish.chronicle"
+    of: bfefbe6c8df43e70
+    plainenglish: >-
+      This house gave a child as a hostage along with the other eight, as the treaty required, and
+      had the child home again in the fifth year, healthy and well taught.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].record.options.embellish.claims[0].text"
+    of: f33dbde155fe868d
+    plainenglish: >-
+      was given as a hostage at Caster and came home in the fifth year
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].recordByChoice[id=give_the_child].subject"
+    of: 843a09dfc924e183
+    plainenglish: >-
+      the hostage this house gave
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].recordByChoice[id=give_the_child].options.record.chronicle"
+    of: 417fc21d49985541
+    plainenglish: >-
+      Nine households were asked for hostages and this house gave {CHILD}, who lived for five
+      years at Caster in a household of four hundred people and came home in the fifth year.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].recordByChoice[id=give_the_child].options.record.claims[0].text"
+    of: f33dbde155fe868d
+    plainenglish: >-
+      was given as a hostage at Caster and came home in the fifth year
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].recordByChoice[id=give_the_child].options.embellish.chronicle"
+    of: 46d6f433db5fd507
+    plainenglish: >-
+      This house gave {CHILD} as a hostage along with the other eight, and the child came home in
+      the fifth year with a personal letter of praise from the king, under his seal.
+  - address: "content:events/rare_crown.yaml#events[id=the_hostage_asked_for].recordByChoice[id=give_the_child].options.embellish.claims[0].text"
+    of: 558b5342497bed2e
+    plainenglish: >-
+      came home from being a hostage at Caster with a sealed letter of praise from the king
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].title"
+    of: e162937996dac815
+    plainenglish: >-
+      They Are Checking Four Generations Back
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].body"
+    of: d6ccf343b3d8b66f
+    plainenglish: >-
+      About once a generation the heralds at Caster examine a family's line of descent, and now
+      they are examining this one. It is not an accusation and does not need to be: once a house's
+      line is questioned, that fact does the damage on its own. They want four generations of
+      descent through the mothers, backed by notarised papers. This family has papers for three.
+      The fourth is a woman from the Rimefell who arrived in 1088 with a name, a horse and no
+      papers at all.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].label"
+    of: e791f326fa7339c2
+    plainenglish: >-
+      Send the three and say honestly that the fourth has no papers.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=three_and_a_gap].text"
+    of: 3c48c4b4548213f0
+    plainenglish: >-
+      Three notarised generations and a short, honest letter explaining that the fourth married
+      into the family from the Rimefell without papers, as many did in those years. The heralds
+      accept it. They accept it and record it, and the record says without papers, and the record
+      is permanent.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=they_go_looking].text"
+    of: 2889dcf4b402df90
+    plainenglish: >-
+      Three notarised generations, an honest letter, and a herald's clerk with unusual amounts of
+      spare time, who writes to the Rimefell himself and gets an answer fourteen months later. The
+      answer is a parish record of a woman with that name, from that year, who never left and died
+      there in 1131.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=buy_the_fourth].label"
+    of: b69022ebefb0697f
+    plainenglish: >-
+      Buy the fourth. Twenty-five crowns at Bramme and it is done.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=buy_the_fourth].outcomes[id=bought_the_fourth].text"
+    of: f99c23e9a72616d5
+    plainenglish: >-
+      Twenty-five crowns goes to a notary at Bramme who has done this for nine families and will
+      do it for nine more. Four generations of descent through the mothers go down to Caster in
+      one packet with four seals. It is accepted without a question. It is a forgery good enough
+      for Bramme, now sitting in a file at Caster, which is a different building with different
+      standards and much more time.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].record.subject"
+    of: b3504d12c59efcf6
+    plainenglish: >-
+      the fourth generation of the family line
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].record.options.record.chronicle"
+    of: 2d19e5f526d96c59
+    plainenglish: >-
+      The heralds examined our line. We could prove three generations but not the fourth, because
+      she came from the Rimefell in 1088 without papers, and we said so.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].record.options.record.claims[0].text"
+    of: a15bee0e44701502
+    plainenglish: >-
+      showed the heralds three generations and admitted the fourth had no papers
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].record.options.embellish.chronicle"
+    of: 32c21a8524f57669
+    plainenglish: >-
+      The heralds examined our line, and we had four generations of descent through the mothers,
+      complete, notarised and sealed. The matter was closed within the year.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].record.options.embellish.claims[0].text"
+    of: f023b6261d004422
+    plainenglish: >-
+      showed the heralds four notarised generations of descent through the mothers
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByChoice[id=buy_the_fourth].subject"
+    of: 7a6ce39eba71d682
+    plainenglish: >-
+      the fourth generation, and where its papers came from
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByChoice[id=buy_the_fourth].options.record.chronicle"
+    of: ba2821a95665a40d
+    plainenglish: >-
+      The heralds examined our line. We had papers for three generations, bought the fourth from a
+      notary at Bramme for twenty-five crowns, and sent all four to Caster under seal. They were
+      accepted.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByChoice[id=buy_the_fourth].options.record.claims[0].text"
+    of: 7bc860faf40ca00e
+    plainenglish: >-
+      paid a Bramme notary for papers for the fourth generation and sent them to the heralds under
+      seal
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByChoice[id=buy_the_fourth].options.embellish.chronicle"
+    of: cc30dba7b9a1e623
+    plainenglish: >-
+      The heralds examined our line. We sent four generations of descent through the mothers, each
+      one copied from the parish book where it was recorded, and the heralds found nothing to
+      question.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByChoice[id=buy_the_fourth].options.embellish.claims[0].text"
+    of: c18ecc23191d29c7
+    plainenglish: >-
+      proved four generations of descent through the mothers from the parish books themselves
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByOutcome[id=send_what_we_have%2Fthey_go_looking].subject"
+    of: f27859ad838d7551
+    plainenglish: >-
+      the fourth generation, and what the Rimefell replied
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByOutcome[id=send_what_we_have%2Fthey_go_looking].options.record.chronicle"
+    of: af15b822a317ea3e
+    plainenglish: >-
+      The heralds examined our line. We showed three generations and said honestly that the fourth
+      had no papers. A herald's clerk wrote to the Rimefell and received a parish record of a
+      woman with her name who never left.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByOutcome[id=send_what_we_have%2Fthey_go_looking].options.record.claims[0].text"
+    of: 3ac078f6685bf8ba
+    plainenglish: >-
+      admitted the fourth generation had no papers, and saw the Rimefell's answer recorded against
+      it
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByOutcome[id=send_what_we_have%2Fthey_go_looking].options.embellish.chronicle"
+    of: 0e8933d6f206a5aa
+    plainenglish: >-
+      The heralds examined our line. Their own clerk wrote to the Rimefell and found her baptism
+      record there, which settled the fourth generation in our favour.
+  - address: "content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].recordByOutcome[id=send_what_we_have%2Fthey_go_looking].options.embellish.claims[0].text"
+    of: b065034497d66960
+    plainenglish: >-
+      had the Rimefell parish book confirm the fourth generation
