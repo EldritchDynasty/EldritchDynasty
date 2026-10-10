@@ -189,6 +189,68 @@ export function plateHeight(rows: readonly PlateRow[]): number {
   return Math.ceil(PLATE.head + rows.reduce((h, r) => h + r.size * 1.5 + r.gap, 0) + PLATE.foot);
 }
 
+/**
+ * Export ordinary plates as PNG but avoid allocating huge bitmaps for entire
+ * Long-Line chronicles. The 1200 × 8192 limit stays below a 16-megapixel
+ * canvas budget even in browsers with stricter maximum canvas sizes.
+ */
+export const MAX_PLATE_CANVAS_HEIGHT = 8192;
+
+/** A Chronicle may contain a person's own words: escape XML text AND attributes. */
+function plateXml(text: string): string {
+  return text
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
+ * A vector plate for books too tall for browser canvas allocation. Use the
+ * same rows, measurements, coordinates and gaps as the PNG drawing in Book.vue
+ * so the long form keeps every page, including the dated ruled omissions.
+ */
+export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: string): string {
+  const height = plateHeight(rows);
+  const font = plateXml(PLATE.serif);
+  const parts = [
+    '<svg xmlns="http://www.w3.org/2000/svg"'
+      + ' width="' + PLATE.width + '" height="' + height + '"'
+      + ' viewBox="0 0 ' + PLATE.width + ' ' + height + '">',
+    '<rect width="' + PLATE.width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
+    '<text x="' + PLATE.pad + '" y="64" fill="' + PLATE.ink
+      + '" font-family="' + font + '" font-size="30" font-weight="500">' + plateXml(house) + '</text>',
+    '<text x="' + PLATE.pad + '" y="88" fill="' + PLATE.faint
+      + '" font-family="' + font + '" font-size="13">' + plateXml(subtitle) + '</text>',
+    '<line x1="' + PLATE.pad + '" y1="106" x2="' + (PLATE.width - PLATE.pad)
+      + '" y2="106" stroke="' + PLATE.rule + '"/>',
+  ];
+  let y = PLATE.head;
+  for (const row of rows) {
+    y += row.size * 1.2;
+    if (row.rule) {
+      parts.push('<line x1="' + PLATE.pad + '" y1="' + (y - 4)
+        + '" x2="' + (PLATE.width - PLATE.pad) + '" y2="' + (y - 4)
+        + '" stroke="' + PLATE.rule + '"/>');
+    } else {
+      parts.push('<text x="' + PLATE.pad + '" y="' + y + '" fill="' + plateXml(row.colour)
+        + '" font-family="' + font + '" font-size="' + row.size
+        + '" font-style="' + (row.italic ? 'italic' : 'normal')
+        + '">' + plateXml(row.text) + '</text>');
+    }
+    y += row.size * 0.3 + row.gap;
+  }
+  parts.push(
+    '<text x="' + PLATE.pad + '" y="' + (height - 28) + '" fill="' + PLATE.faint
+    + '" font-family="' + font + '" font-size="12">Eldritch Dynasty</text>',
+    '</svg>',
+  );
+  return parts.join('\n');
+}
+
+
 /** What the plate says under the house's name. */
 export function plateSubtitle(entries: readonly ChronicleEntry[], lens: Lens): string {
   const label = (LENSES.find((l) => l.id === lens) ?? LENSES[0]!).label.toLowerCase();
