@@ -64,6 +64,21 @@ const placing = ref<Record<string, string>>({});
 /** What the player is about to advance against each servant's years. */
 const advancing = ref<Record<string, number>>({});
 
+/** Vue's .number model can return an empty string despite its typed ref.
+ * Never submit nonintegral debt, but keep input visible for correction. */
+function validAdvance(value: unknown): value is number {
+  return typeof value === 'number'
+    && Number.isSafeInteger(value)
+    && value >= 1
+    && value <= props.table.maxBond;
+}
+
+function advance(person: string): void {
+  const marks = advancing.value[person];
+  if (!validAdvance(marks)) return;
+  props.actions.order({ kind: 'bond', person, op: 'bind', marks });
+}
+
 /** Who the player is about to put on each book. The shelf used to be a button
  * per reader per book — sixteen on turn one across two books, growing with the
  * household — while Places solved the identical shape with a `select` 200px
@@ -589,19 +604,29 @@ const MARRIAGE_ORDERS = [
         <div class="row">
           <input
             v-if="!s.bonded"
-            type="number" min="1" :max="table.maxBond"
+            type="number" min="1" step="1" :max="table.maxBond"
             v-model.number="advancing[s.person]"
             :placeholder="'marks, up to ' + table.maxBond"
             :aria-label="'Marks to advance to ' + s.name"
+            :aria-invalid="advancing[s.person] !== undefined && !validAdvance(advancing[s.person])"
+            :aria-describedby="advancing[s.person] !== undefined && !validAdvance(advancing[s.person]) ? 'bond-marks-error-' + s.person : undefined"
           />
           <button
             v-if="!s.bonded"
             class="small"
-            :disabled="!advancing[s.person]"
-            @click="actions.order({ kind: 'bond', person: s.person, op: 'bind', marks: advancing[s.person] ?? 0 })"
+            :disabled="!validAdvance(advancing[s.person])"
+            @click="advance(s.person)"
           >
             Advance it against the years
           </button>
+          <p
+            v-if="!s.bonded && advancing[s.person] !== undefined && !validAdvance(advancing[s.person])"
+            :id="'bond-marks-error-' + s.person"
+            class="small rubric"
+            role="alert"
+          >
+            Enter a whole number of marks from 1 to {{ table.maxBond }}.
+          </p>
           <button
             v-else
             class="small"
