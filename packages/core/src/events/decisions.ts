@@ -16,7 +16,7 @@ import { issueOf, type PanelIssue } from '../people/panel.js';
 import { externalThreadForPeople } from '../relationship-threads.js';
 import type { AdviserAdvice } from '../advisers.js';
 import { msg } from '../messages.js';
-import { eventTitleAddress, proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForRecordChronicle, proseForRecordSubject, renderProse } from '../prose.js';
+import { eventTitleAddress, proseForChoiceLabel, proseForEventBody, proseForEventTitle, renderProse } from '../prose.js';
 
 /**
  * PLAYER CHOICE.
@@ -217,7 +217,7 @@ export function recordEventForChoice(
 
 /** The worklist and the live docket use the same authored structural address. */
 function recordProseBase(ctx: SimCtx, e: EventTemplate, recordChoiceId?: string): string | undefined {
-  const base = eventTitleAddress(ctx, e)?.replace(/\\.title$/, '');
+  const base = eventTitleAddress(ctx, e)?.replace(/\.title$/, '');
   if (base === undefined) return undefined;
   return recordChoiceId === undefined
     ? `${base}.record`
