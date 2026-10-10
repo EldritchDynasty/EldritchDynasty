@@ -153,7 +153,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const categoryWindow: string[] = [];
   const campaignStall = makeStallClock();
   const ageStalls = new Map<string, StallClock>();
-  const ambitionIds = ambitionOptions(w.campaign).map((a) => a.id);
+  const ambitionIds = ambitionOptions(g.ctx).map((a) => a.id);
   const ambitionTrackers = new Map<HouseAmbitionId, AmbitionTracker>(
     ambitionIds.map((id) => [id, makeAmbitionTracker()]),
   );

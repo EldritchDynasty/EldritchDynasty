@@ -1,5 +1,6 @@
 import {
   MAIN_BRANCH,
+  assertNever,
   RUNG_ORDER,
   isLadderRole,
   type CampaignId,
@@ -10,6 +11,7 @@ import type { SimCtx } from './world.js';
 import { branchOf, halls } from './people/branches.js';
 import { measureAscension, rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
+import { msg } from './messages.js';
 import type { PendingChoice, PendingDecision, PendingMatch, PendingRecord } from './events/decisions.js';
 
 export type AmbitionSurface = 'choice' | 'match' | 'record';
@@ -42,8 +44,38 @@ export const HOUSE_AMBITIONS: readonly HouseAmbitionOption[] = [
   { id: 'secure_branches', name: 'Secure the branches', purpose: 'Keep more than the seat alive as viable family halls.', campaigns: BOTH },
 ];
 
-export function ambitionOptions(campaign: CampaignId): HouseAmbitionOption[] {
-  return HOUSE_AMBITIONS.filter((a) => a.campaigns.includes(campaign)).map((a) => ({ ...a, campaigns: [...a.campaigns] }));
+/** The name and purpose of one ambition, in the reader's setting. `HOUSE_AMBITIONS` keeps the Originals. */
+function ambitionProse(ctx: SimCtx, id: HouseAmbitionId): { name: string; purpose: string } {
+  switch (id) {
+    case 'deepen_blood':
+      return {
+        name: msg(ctx, 'ambition.name.deepen_blood', 'Deepen the blood'),
+        purpose: msg(ctx, 'ambition.purpose.deepen_blood', 'Keep a broad living bloodline from thinning away.'),
+      };
+    case 'raise_ascendant':
+      return {
+        name: msg(ctx, 'ambition.name.raise_ascendant', 'Prepare the ascent'),
+        purpose: msg(ctx, 'ambition.purpose.raise_ascendant',
+          'Build a named line toward the next serious Ascension rung.'),
+      };
+    case 'restore_ledger':
+      return {
+        name: msg(ctx, 'ambition.name.restore_ledger', 'Restore the Ledger'),
+        purpose: msg(ctx, 'ambition.purpose.restore_ledger', 'Recover the clauses this campaign can still bring home.'),
+      };
+    case 'secure_branches':
+      return {
+        name: msg(ctx, 'ambition.name.secure_branches', 'Secure the branches'),
+        purpose: msg(ctx, 'ambition.purpose.secure_branches', 'Keep more than the seat alive as viable family halls.'),
+      };
+    default:
+      return assertNever(id, 'house ambition');
+  }
+}
+
+export function ambitionOptions(ctx: SimCtx, campaign: CampaignId = ctx.world.campaign): HouseAmbitionOption[] {
+  return HOUSE_AMBITIONS.filter((a) => a.campaigns.includes(campaign))
+    .map((a) => ({ ...a, ...ambitionProse(ctx, a.id), campaigns: [...a.campaigns] }));
 }
 
 /**
@@ -81,7 +113,9 @@ function matchRelevance(
       return {
         surface: 'match',
         effect: 'endanger',
-        reason: `${watchedThin.name}'s watched line is thin; this hand does not simply add resilience because it reaches outward.`,
+        reason: msg(ctx, 'ambition.match.thin_line',
+          "{NAME}'s watched line is thin; this hand does not simply add resilience because it reaches outward.",
+          { NAME: watchedThin.name }),
       };
     }
 
@@ -94,7 +128,13 @@ function matchRelevance(
       return {
         surface: 'match',
         effect: 'advance',
-        reason: `${outward.name} brings an outward line with ${outward.lineSeen} completed ${outward.lineSeen === 1 ? 'life' : 'lives'} behind the reading.`,
+        reason: outward.lineSeen === 1
+          ? msg(ctx, 'ambition.match.outward_one',
+            '{NAME} brings an outward line with {COUNT} completed life behind the reading.',
+            { NAME: outward.name, COUNT: String(outward.lineSeen) })
+          : msg(ctx, 'ambition.match.outward_many',
+            '{NAME} brings an outward line with {COUNT} completed lives behind the reading.',
+            { NAME: outward.name, COUNT: String(outward.lineSeen) }),
       };
     }
 
@@ -102,7 +142,8 @@ function matchRelevance(
       return {
         surface: 'match',
         effect: 'endanger',
-        reason: 'Every open card folds the living blood back into close kin instead of widening the line.',
+        reason: msg(ctx, 'ambition.match.close_kin',
+          'Every open card folds the living blood back into close kin instead of widening the line.'),
       };
     }
     return undefined;
@@ -117,7 +158,8 @@ function matchRelevance(
       return {
         surface: 'match',
         effect: 'advance',
-        reason: 'An outward spouse can join this cadet hall instead of drawing another useful relative out of it.',
+        reason: msg(ctx, 'ambition.match.cadet_outward',
+          'An outward spouse can join this cadet hall instead of drawing another useful relative out of it.'),
       };
     }
 
@@ -130,14 +172,18 @@ function matchRelevance(
         return {
           surface: 'match',
           effect: 'endanger',
-          reason: `${partner.name} is carrying a cadet hall; marrying her into the seat would draw one of its living members away.`,
+          reason: msg(ctx, 'ambition.match.cadet_draw_away',
+            '{NAME} is carrying a cadet hall; marrying her into the seat would draw one of its living members away.',
+            { NAME: partner.name }),
         };
       }
       if (subject.sex === 'female' && partner.sex === 'male' && partnerBranch !== MAIN_BRANCH) {
         return {
           surface: 'match',
           effect: 'advance',
-          reason: `${partner.name} stands in a cadet hall; this marriage can put another household into that branch.`,
+          reason: msg(ctx, 'ambition.match.cadet_new_household',
+            '{NAME} stands in a cadet hall; this marriage can put another household into that branch.',
+            { NAME: partner.name }),
         };
       }
     }
@@ -157,14 +203,18 @@ function matchRelevance(
       return {
         surface: 'match',
         effect: 'advance',
-        reason: `${decision.subject.name} is in the programme, and this hand contains blood the family papers already join to the line.`,
+        reason: msg(ctx, 'ambition.match.programme_kin',
+          '{NAME} is in the programme, and this hand contains blood the family papers already join to the line.',
+          { NAME: decision.subject.name }),
       };
     }
     if (cards.some((card) => card.kind === 'outsider' && card.kinship === 0)) {
       return {
         surface: 'match',
         effect: 'endanger',
-        reason: `${decision.subject.name} is in the programme, and every open line here is outward in the family papers.`,
+        reason: msg(ctx, 'ambition.match.programme_outward',
+          '{NAME} is in the programme, and every open line here is outward in the family papers.',
+          { NAME: decision.subject.name }),
       };
     }
   }
@@ -186,7 +236,8 @@ function recordRelevance(
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page belongs to an event authored to advance a missing Ledger clause.',
+        reason: msg(ctx, 'ambition.record.clause',
+          'This page belongs to an event authored to advance a missing Ledger clause.'),
       };
     }
 
@@ -198,7 +249,8 @@ function recordRelevance(
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page is tied to a named disputed part of the family record the Ledger is already carrying.',
+        reason: msg(ctx, 'ambition.record.discrepancy',
+          'This page is tied to a named disputed part of the family record the Ledger is already carrying.'),
       };
     }
     return undefined;
@@ -214,7 +266,8 @@ function recordRelevance(
       return {
         surface: 'record',
         effect: 'advance',
-        reason: 'This page includes the Scion, his heir, or the man the house can already see foremost on the ladder.',
+        reason: msg(ctx, 'ambition.record.programme',
+          'This page includes the Scion, his heir, or the man the house can already see foremost on the ladder.'),
       };
     }
   }
@@ -274,7 +327,7 @@ function choiceRelevance(
 ): AmbitionRelevance | undefined {
   const effects = choiceEffects(ctx, decision);
   const readings = effects
-    .map((effect) => effectRelevance(decision, ambition, effect))
+    .map((effect) => effectRelevance(ctx, decision, ambition, effect))
     .filter((reading): reading is Omit<AmbitionRelevance, 'surface'> => reading !== undefined);
   if (!readings.length) return undefined;
 
@@ -300,20 +353,24 @@ function choiceEffects(ctx: SimCtx, decision: PendingChoice): Effect[] {
 }
 
 function effectRelevance(
+  ctx: SimCtx,
   decision: PendingChoice,
   ambition: HouseAmbitionId,
   effect: Effect,
 ): Omit<AmbitionRelevance, 'surface'> | undefined {
   if (ambition === 'restore_ledger') {
     if (effect.kind === 'clause') {
-      return { effect: 'advance', reason: 'The branch can recover a clause the Ledger is still missing.' };
+      return { effect: 'advance', reason: msg(ctx, 'ambition.branch.clause',
+        'The branch can recover a clause the Ledger is still missing.') };
     }
     if (effect.kind === 'discrepancy') {
       return {
         effect: effect.op === 'create' ? 'endanger' : 'advance',
         reason: effect.op === 'create'
-          ? 'The branch can create a disputed page the Ledger will have to carry.'
-          : 'The branch can answer a disputed page already in the Ledger.',
+          ? msg(ctx, 'ambition.branch.discrepancy_create',
+            'The branch can create a disputed page the Ledger will have to carry.')
+          : msg(ctx, 'ambition.branch.discrepancy_answer',
+            'The branch can answer a disputed page already in the Ledger.'),
       };
     }
     return undefined;
@@ -322,34 +379,41 @@ function effectRelevance(
   if (ambition === 'secure_branches') {
     if (effect.kind === 'branch') {
       return effect.op === 'slight'
-        ? { effect: 'endanger', reason: 'The branch would leave a cadet hall with another grievance.' }
-        : { effect: 'advance', reason: 'The branch would answer a cadet hall instead of leaving it to the seat.' };
+        ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.branch_slight',
+          'The branch would leave a cadet hall with another grievance.') }
+        : { effect: 'advance', reason: msg(ctx, 'ambition.branch.branch_answer',
+          'The branch would answer a cadet hall instead of leaving it to the seat.') };
     }
     if (effect.kind === 'status' && effectTargetsRole(decision, effect, (role) => role === 'cadet')) {
-      return { effect: 'endanger', reason: 'The branch changes the standing of somebody carrying a cadet hall.' };
+      return { effect: 'endanger', reason: msg(ctx, 'ambition.branch.cadet_status',
+        'The branch changes the standing of somebody carrying a cadet hall.') };
     }
     if (
       (effect.kind === 'marriage' || effect.kind === 'priorityMatch')
       && effectTargetsRole(decision, effect, (role) => role === 'cadet')
     ) {
-      return { effect: 'advance', reason: 'The branch opens a marriage path for a cadet hall.' };
+      return { effect: 'advance', reason: msg(ctx, 'ambition.branch.cadet_marriage',
+        'The branch opens a marriage path for a cadet hall.') };
     }
     return undefined;
   }
 
   if (ambition === 'deepen_blood') {
     if (effect.kind === 'priorityMatch') {
-      return { effect: 'advance', reason: 'The branch sends a living member of the line to the marriage market next.' };
+      return { effect: 'advance', reason: msg(ctx, 'ambition.branch.priority_match',
+        'The branch sends a living member of the line to the marriage market next.') };
     }
     if (effect.kind === 'marriage') {
-      return { effect: 'advance', reason: 'The branch reopens a marriage path for a union that cannot carry the line further.' };
+      return { effect: 'advance', reason: msg(ctx, 'ambition.branch.marriage',
+        'The branch reopens a marriage path for a union that cannot carry the line further.') };
     }
     if (
       effect.kind === 'status'
       && /dead|consumed|gone/i.test(effect.status)
       && effectTargetsRole(decision, effect, isBloodRole)
     ) {
-      return { effect: 'endanger', reason: 'The branch removes somebody from the living blood the ambition is trying to keep broad.' };
+      return { effect: 'endanger', reason: msg(ctx, 'ambition.branch.blood_status',
+        'The branch removes somebody from the living blood the ambition is trying to keep broad.') };
     }
     if (
       effect.kind === 'rite'
@@ -357,33 +421,41 @@ function effectRelevance(
       && roleOf(decision, effect.subject) !== undefined
       && isBloodRole(roleOf(decision, effect.subject)!)
     ) {
-      return { effect: 'endanger', reason: 'The branch spends a member of the living blood on the rite.' };
+      return { effect: 'endanger', reason: msg(ctx, 'ambition.branch.blood_rite',
+        'The branch spends a member of the living blood on the rite.') };
     }
     return undefined;
   }
 
   if (ambition === 'raise_ascendant') {
     if (effect.kind === 'rite') {
-      return { effect: 'advance', reason: 'The branch performs one of the acts the upper ladder itself requires.' };
+      return { effect: 'advance', reason: msg(ctx, 'ambition.branch.ladder_rite',
+        'The branch performs one of the acts the upper ladder itself requires.') };
     }
     if (effect.kind === 'spellbook') {
       return effect.op === 'lose' || effect.op === 'degrade'
-        ? { effect: 'endanger', reason: 'The branch takes usable learning away from a ladder candidate.' }
-        : { effect: 'advance', reason: 'The branch puts another working into a ladder candidate’s reach.' };
+        ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.spellbook_lose',
+          'The branch takes usable learning away from a ladder candidate.') }
+        : { effect: 'advance', reason: msg(ctx, 'ambition.branch.spellbook_gain',
+          'The branch puts another working into a ladder candidate’s reach.') };
     }
     if (effect.kind === 'tutor') {
       return effect.op === 'cancel'
-        ? { effect: 'endanger', reason: 'The branch cuts short preparation already being given to a ladder candidate.' }
-        : { effect: 'advance', reason: 'The branch begins deliberate preparation for a ladder candidate.' };
+        ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.tutor_cancel',
+          'The branch cuts short preparation already being given to a ladder candidate.') }
+        : { effect: 'advance', reason: msg(ctx, 'ambition.branch.tutor_begin',
+          'The branch begins deliberate preparation for a ladder candidate.') };
     }
     if (
       effect.kind === 'madness'
       && effectTargetsRole(decision, effect, (role) => isLadderRole(role))
     ) {
       return effect.delta > 0
-        ? { effect: 'endanger', reason: 'The branch adds Madness to a man already being asked to carry the ascent.' }
+        ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.madness_up',
+          'The branch adds Madness to a man already being asked to carry the ascent.') }
         : effect.delta < 0
-          ? { effect: 'advance', reason: 'The branch gives a ladder candidate room to carry the ascent.' }
+          ? { effect: 'advance', reason: msg(ctx, 'ambition.branch.madness_down',
+            'The branch gives a ladder candidate room to carry the ascent.') }
           : undefined;
     }
     if (
@@ -392,14 +464,17 @@ function effectRelevance(
       && effect.delta !== 0
     ) {
       return effect.delta > 0
-        ? { effect: 'advance', reason: 'The branch strengthens a man the house can already see on the ladder.' }
-        : { effect: 'endanger', reason: 'The branch weakens a man the house can already see on the ladder.' };
+        ? { effect: 'advance', reason: msg(ctx, 'ambition.branch.attribute_up',
+          'The branch strengthens a man the house can already see on the ladder.') }
+        : { effect: 'endanger', reason: msg(ctx, 'ambition.branch.attribute_down',
+          'The branch weakens a man the house can already see on the ladder.') };
     }
     if (
       effect.kind === 'status'
       && effectTargetsRole(decision, effect, (role) => isLadderRole(role))
     ) {
-      return { effect: 'endanger', reason: 'The branch changes the standing of a man carrying the ascent.' };
+      return { effect: 'endanger', reason: msg(ctx, 'ambition.branch.ladder_status',
+        'The branch changes the standing of a man carrying the ascent.') };
     }
   }
 
@@ -452,14 +527,25 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   if (!def || !def.campaigns.includes(ctx.world.campaign)) return undefined;
 
   const w = ctx.world;
+  const shown = { ...def, ...ambitionProse(ctx, id) };
   if (id === 'restore_ledger') {
     const target = campaignDef(w.campaign).clauses;
     const current = Math.min(w.clausesRecovered.size, target);
+    const missing = { COUNT: String(target - current) };
     return {
-      ...def,
-      progress: { current, target, label: `${current} of ${target} clauses recovered` },
-      status: current >= target ? 'The campaign’s recoverable Ledger is whole.' : `${target - current} clause${target - current === 1 ? '' : 's'} still missing.`,
-      next: 'Follow choices that expose, preserve, or honestly record Ledger evidence.',
+      ...shown,
+      progress: {
+        current, target,
+        label: msg(ctx, 'ambition.view.ledger_progress', '{CURRENT} of {TARGET} clauses recovered',
+          { CURRENT: String(current), TARGET: String(target) }),
+      },
+      status: current >= target
+        ? msg(ctx, 'ambition.view.ledger_whole', 'The campaign’s recoverable Ledger is whole.')
+        : target - current === 1
+          ? msg(ctx, 'ambition.view.ledger_missing_one', '{COUNT} clause still missing.', missing)
+          : msg(ctx, 'ambition.view.ledger_missing_many', '{COUNT} clauses still missing.', missing),
+      next: msg(ctx, 'ambition.view.ledger_next',
+        'Follow choices that expose, preserve, or honestly record Ledger evidence.'),
     };
   }
 
@@ -467,10 +553,17 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     const viable = [...halls(w, w.year)].filter(([hall, people]) => hall !== MAIN_BRANCH && people.length >= 2).length;
     const target = w.campaign === 'short' ? 1 : 2;
     return {
-      ...def,
-      progress: { current: viable, target, label: `${viable} of ${target} viable cadet halls` },
-      status: viable >= target ? 'The line has somewhere else to continue.' : 'The seat is carrying too much of the family alone.',
-      next: 'Protect cadet households and avoid spending every useful marriage on the seat.',
+      ...shown,
+      progress: {
+        current: viable, target,
+        label: msg(ctx, 'ambition.view.branches_progress', '{CURRENT} of {TARGET} viable cadet halls',
+          { CURRENT: String(viable), TARGET: String(target) }),
+      },
+      status: viable >= target
+        ? msg(ctx, 'ambition.view.branches_secure', 'The line has somewhere else to continue.')
+        : msg(ctx, 'ambition.view.branches_thin', 'The seat is carrying too much of the family alone.'),
+      next: msg(ctx, 'ambition.view.branches_next',
+        'Protect cadet households and avoid spending every useful marriage on the seat.'),
     };
   }
 
@@ -478,10 +571,19 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     const livingBlood = w.people.living().filter((p) => p.houseOfOrigin === w.playerHouse).length;
     const target = w.campaign === 'short' ? 10 : 14;
     return {
-      ...def,
-      progress: { current: livingBlood, target, label: `${livingBlood} living of the blood; ${target} is a resilient line` },
-      status: livingBlood >= target ? 'The bloodline has room to survive a bad generation.' : 'The living blood is still narrow enough that one loss can matter.',
-      next: 'Use marriages and standing orders to keep useful blood in the family without collapsing it into one household.',
+      ...shown,
+      progress: {
+        current: livingBlood, target,
+        label: msg(ctx, 'ambition.view.blood_progress', '{CURRENT} living of the blood; {TARGET} is a resilient line',
+          { CURRENT: String(livingBlood), TARGET: String(target) }),
+      },
+      status: livingBlood >= target
+        ? msg(ctx, 'ambition.view.blood_broad', 'The bloodline has room to survive a bad generation.')
+        : msg(ctx, 'ambition.view.blood_narrow', 'The living blood is still narrow enough that one loss can matter.'),
+      next: msg(
+        ctx, 'ambition.view.blood_next',
+        'Use marriages and standing orders to keep useful blood in the family without collapsing it into one household.',
+      ),
     };
   }
 
@@ -490,19 +592,27 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const current = Math.max(0, RUNG_ORDER.indexOf(w.ascension.rung));
   const target = RUNG_ORDER.indexOf(targetRung);
   const foremost = measured.foremost;
-  const highWater = w.ascension.best === w.ascension.rung
-    ? ''
-    : `; ${rungTitle(w.ascension.best)} was reached before`;
+  const rungs = {
+    HELD: rungTitle(w.ascension.rung), BEST: rungTitle(w.ascension.best), HORIZON: rungTitle(targetRung),
+  };
   return {
-    ...def,
+    ...shown,
     progress: {
       current,
       target,
-      label: `${rungTitle(w.ascension.rung)} held now${highWater}; ${rungTitle(targetRung)} is the campaign horizon`,
+      label: w.ascension.best === w.ascension.rung
+        ? msg(ctx, 'ambition.view.ascent_progress', '{HELD} held now; {HORIZON} is the campaign horizon', rungs)
+        : msg(ctx, 'ambition.view.ascent_progress_fallen',
+          '{HELD} held now; {BEST} was reached before; {HORIZON} is the campaign horizon', rungs),
     },
-    status: foremost ? `${foremost.name} is the foremost candidate.` : 'No living candidate is carrying the ascent.',
+    status: foremost
+      ? msg(ctx, 'ambition.view.ascent_foremost', '{NAME} is the foremost candidate.', { NAME: foremost.name })
+      : msg(ctx, 'ambition.view.ascent_none', 'No living candidate is carrying the ascent.'),
     next: foremost
-      ? `Keep ${foremost.name} alive, read, and supplied while answering the blockers shown on the ladder.`
-      : 'Name and prepare a Scion or heir rather than letting the programme choose itself.',
+      ? msg(ctx, 'ambition.view.ascent_next',
+        'Keep {NAME} alive, read, and supplied while answering the blockers shown on the ladder.',
+        { NAME: foremost.name })
+      : msg(ctx, 'ambition.view.ascent_next_none',
+        'Name and prepare a Scion or heir rather than letting the programme choose itself.'),
   };
 }
