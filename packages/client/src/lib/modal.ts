@@ -16,14 +16,26 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  *     `<body>`, which IS an HTMLElement, so the restore became a no-op that
  *     then reported success and skipped the fallback.
  */
+/**
+ * Only targets reachable by ordinary Tab belong in the trap. A CSS selector
+ * alone includes disabled selects/textareas and links with tabindex="-1"; a
+ * boundary on either makes focus() a no-op and strands keyboard navigation.
+ */
+export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
+  if (!card) return [];
+  return [...card.querySelectorAll<HTMLElement>(
+    'button, [href], input, select, textarea, [tabindex]',
+  )].filter((element) =>
+    element.tabIndex >= 0
+    && !element.matches(':disabled')
+    && !element.closest('[hidden], [inert]')
+    && !(element instanceof HTMLInputElement && element.type === 'hidden'));
+}
+
 export function useModal(card: Ref<HTMLElement | null>, close: () => void): void {
   let cameFrom: HTMLElement | null = null;
 
-  const focusable = (): HTMLElement[] => (card.value
-    ? [...card.value.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-    )]
-    : []);
+  const focusable = (): HTMLElement[] => modalFocusable(card.value);
 
   function onKey(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
