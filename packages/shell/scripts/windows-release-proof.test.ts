@@ -10,7 +10,7 @@ import {
   verifyAuthenticode,
   writeWindowsReleaseProof,
 } from './windows-release-proof.mjs';
-import { checkedWindowsReleaseProof, smokeInstalledWindowsArtifact } from './installed-smoke.mjs';
+import { checkedNativeSmokeEvidence, checkedWindowsReleaseProof, smokeInstalledWindowsArtifact } from './installed-smoke.mjs';
 
 const temporaryDirectories: string[] = [];
 
@@ -131,8 +131,17 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
         expect(args[1]).toMatch(/^\/D=/);
         await writeFile(join(args[1]!.slice(3), 'Eldritch Dynasty.exe'), 'app');
       } else {
-        expect(args).toEqual(['--smoke']);
         expect(await readFile(program, 'utf8')).toBe('app');
+        if (args[0] === '--smoke') return;
+        expect(['--smoke-save', '--smoke-resume']).toContain(args[0]);
+        expect(env.ELECTRON_RUN_AS_NODE).toBeUndefined();
+        expect(env.ED_SMOKE_PROFILE).toBeTruthy();
+        expect(env.ED_SMOKE_NONCE).toBeTruthy();
+        await mkdir(env.ED_SMOKE_PROFILE!, { recursive: true });
+        await writeFile(join(env.ED_SMOKE_PROFILE!, 'smoke-evidence.json'), JSON.stringify({
+          ok: true, command: args[0] === '--smoke-save' ? 'save' : 'resume',
+          nonce: env.ED_SMOKE_NONCE, year: 1054, sha256: hash('real-game-save'),
+        }));
       }
     });
     const result = await smokeInstalledWindowsArtifact(dir, {
@@ -142,10 +151,89 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
 
     expect(result.installer).toBe(installer);
     expect(result.sha256).toBe(hash('app'));
-    expect(run).toHaveBeenCalledTimes(2);
+    expect(result.saveSha256).toBe(hash('real-game-save'));
+    expect(result.year).toBe(1054);
+    expect(run).toHaveBeenCalledTimes(4);
     expect(invocations[0]?.env.ELECTRON_RUN_AS_NODE).toBe('1');
+    expect(invocations.slice(1).map((call) => call.args)).toEqual([
+      ['--smoke'], ['--smoke-save'], ['--smoke-resume'],
+    ]);
     expect(invocations[1]?.env).toEqual({ ED_KEEP: 'safe' });
+    expect(invocations[2]?.env.ED_SMOKE_PROFILE).toBe(invocations[3]?.env.ED_SMOKE_PROFILE);
+    expect(invocations[2]?.env.ED_SMOKE_NONCE).toBe(invocations[3]?.env.ED_SMOKE_NONCE);
     expect(basename(invocations[1]!.program)).toBe('Eldritch Dynasty.exe');
+  });
+
+  it('refuses absent, malformed and stale native smoke receipts', () => {
+    const good = { command: 'save', ok: true, nonce: 'unique-run', year: 1054, sha256: hash('save') };
+    expect(checkedNativeSmokeEvidence(good, 'save', 'unique-run')).toEqual(good);
+    for (const invalid of [
+      null,
+      { ...good, ok: false },
+      { ...good, command: 'resume' },
+      { ...good, nonce: 'another-run' },
+      { ...good, year: undefined },
+      { ...good, year: NaN },
+      { ...good, sha256: undefined },
+      { ...good, sha256: '0'.repeat(63) },
+      { ...good, sha256: 'Z'.repeat(64) },
+      { ...good, sha256: 'A'.repeat(64) },
+    ]) {
+      expect(() => checkedNativeSmokeEvidence(invalid, 'save', 'unique-run'))
+        .toThrow(/invalid save native smoke evidence/);
+    }
+  });
+
+  it.each(['hash', 'year'] as const)(
+    'refuses a real-save %s mismatch across installed process relaunches',
+    async (mismatch) => {
+      const { dir, installer } = await installedFixture();
+      const run = vi.fn(async (program: string, args: string[], env: Record<string, string>) => {
+        if (program === installer) {
+          await writeFile(join(args[1]!.slice(3), 'Eldritch Dynasty.exe'), 'app');
+          return;
+        }
+        if (args[0] === '--smoke') return;
+        await mkdir(env.ED_SMOKE_PROFILE!, { recursive: true });
+        await writeFile(join(env.ED_SMOKE_PROFILE!, 'smoke-evidence.json'), JSON.stringify({
+          command: args[0] === '--smoke-save' ? 'save' : 'resume', ok: true,
+          nonce: env.ED_SMOKE_NONCE,
+          sha256: mismatch === 'hash' && args[0] === '--smoke-resume' ? hash('wrong') : hash('save'),
+          year: mismatch === 'year' && args[0] === '--smoke-resume' ? 1055 : 1054,
+        }));
+      });
+      await expect(smokeInstalledWindowsArtifact(dir, { platform: 'win32', tempRoot: dir, run }))
+        .rejects.toThrow(/different save SHA-256 or year/);
+      expect(run).toHaveBeenCalledTimes(4);
+    },
+  );
+
+  it('rejects an installed executable that exits zero without writing native save evidence', async () => {
+    const { dir, installer } = await installedFixture();
+    const run = vi.fn(async (program: string, args: string[]) => {
+      if (program === installer) {
+        await writeFile(join(args[1]!.slice(3), 'Eldritch Dynasty.exe'), 'app');
+      }
+    });
+    await expect(smokeInstalledWindowsArtifact(dir, { platform: 'win32', tempRoot: dir, run }))
+      .rejects.toThrow(/ENOENT/);
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it('pins both halves of the test-only client command IPC transport', async () => {
+    const [preload, main] = await Promise.all([
+      readFile(new URL('../src/preload.cjs', import.meta.url), 'utf8'),
+      readFile(new URL('../src/main.mjs', import.meta.url), 'utf8'),
+    ]);
+    expect(preload).toContain("ipcRenderer.send('ed:smoke-ready')");
+    expect(preload).toContain("ipcRenderer.on('ed:smoke-command'");
+    expect(preload).toContain("ipcRenderer.send('ed:smoke-result'");
+    expect(main).toContain("ipcMain.on('ed:smoke-ready'");
+    expect(main).toContain("ipcMain.on('ed:smoke-result'");
+    expect(main).toContain("kind: 'save', seed: 882, years: 12");
+    expect(main).toContain("kind: 'resume'");
+    expect(main).toContain("createHash('sha256')");
+    expect(main).toContain("writeFileSync(join(app.getPath('userData'), 'smoke-evidence.json'");
   });
 
   it('refuses to execute an installer whose bytes differ from the retained artifact proof', async () => {
