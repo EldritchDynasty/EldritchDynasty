@@ -210,7 +210,7 @@ export function outcomeTextAddress(
   const choice = choiceId === undefined
     ? event.interaction.choices.find((candidate) => candidate.outcomes.some((item) => item === outcome))
     : event.interaction.choices.find((candidate) => candidate.id === choiceId);
-  if (!choice || !choice.outcomes.some((item) => item === outcome || item.id === outcome.id)) return undefined;
+  if (!choice || !choice.outcomes.some((item) => item === outcome)) return undefined;
   return `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}].outcomes[id=${encodeURIComponent(outcome.id)}].text`;
 }
 
