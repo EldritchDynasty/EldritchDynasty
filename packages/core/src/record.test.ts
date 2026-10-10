@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { asId, ClaimS, proseOriginalHash } from '@ed/schema';
+import { queueRecord, resolveRecord, type RecordOption } from './events/decisions.js';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry, missingPlainEnglish,
   pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, setProseMode,
@@ -11,6 +12,54 @@ import {
 } from '@ed/core';
 
 const bundle = loadContent();
+
+/**
+ * Record decisions are externally answerable. The TypeScript RecordOption
+ * union cannot validate malformed messages arriving from a JavaScript host.
+ */
+describe('malformed Record answers never consume the docket (#902)', () => {
+  it('rejects unknown and inherited-property options without changing the run', () => {
+    const ctx = bootstrap(bundle, 902, 1042);
+    const event = bundle.bundle.events.find((item) => item.record);
+    if (!event) throw new Error('the content bundle has no authored Record');
+    const head = place(ctx, { sex: 'male', age: 45 });
+    const entryId = 'invalid_record_witness';
+    ctx.world.chronicle.push({
+      id: entryId,
+      year: ctx.world.year,
+      weight: 'paragraph',
+      text: 'Original outcome.',
+      eventId: event.id,
+      named: false,
+    });
+    const pending = queueRecord(ctx, event, entryId, { HEAD: head.id });
+    if (!pending) throw new Error('fixture did not queue a Record');
+
+    const beforePage = structuredClone(ctx.world.chronicle.find((page) => page.id === entryId)!);
+    const beforeLog = structuredClone(ctx.world.decisionLog);
+
+    // These values are invalid at runtime even though callers in TypeScript
+    // are supposed to pass a RecordOption. Include prototype keys because a
+    // direct block.options[value] lookup would otherwise find inherited data.
+    for (const option of ['not_an_option', '', 'constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+      expect(() => resolveRecord(ctx, pending.id, option as RecordOption)).not.toThrow();
+      expect(resolveRecord(ctx, pending.id, option as RecordOption)).toEqual({ ok: false });
+      expect(ctx.world.pendingDecisions.find((item) => item.id === pending.id)).toEqual(pending);
+      expect(ctx.world.chronicle.find((page) => page.id === entryId)).toEqual(beforePage);
+      expect(ctx.world.decisionLog).toEqual(beforeLog);
+    }
+
+    expect(resolveRecord(ctx, pending.id, 'record').ok).toBe(true);
+    expect(ctx.world.pendingDecisions.some((item) => item.id === pending.id)).toBe(false);
+    expect(ctx.world.decisionLog.slice(beforeLog.length)).toEqual([{
+      kind: 'record', year: ctx.world.year, event: event.id, option: 'record',
+    }]);
+    expect(ctx.world.chronicle.find((page) => page.id === entryId)?.record).toBe('record');
+    expect(resolveRecord(ctx, pending.id, 'record')).toEqual({ ok: false });
+    expect(ctx.world.decisionLog).toHaveLength(beforeLog.length + 1);
+  });
+});
+
 
 describe('resolving a claim', () => {
   it('resolves its target the same way an effect does', () => {
