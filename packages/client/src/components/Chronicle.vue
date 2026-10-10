@@ -62,13 +62,20 @@ function askAdviser(tier: HelpTier) {
  */
 async function follow(id: string): Promise<void> {
   if (!entries.value.some((e) => e.id === id)) return emit('open', id);
+  // Entry is focusable only while marked (tabindex=-1). Render that state
+  // BEFORE attempting focus so keyboard readers follow the cause link too.
+  clearTimeout(unmark);
+  marked.value = id;
   await nextTick();
+  // Two links may be followed before Vue finishes rendering the first one.
+  // Only the latest destination may take focus or clear its highlight.
+  if (marked.value !== id) return;
   const el = findEntry(panel.value, id);
   el?.scrollIntoView({ block: 'center' });
   el?.focus({ preventScroll: true });
-  marked.value = id;
-  clearTimeout(unmark);
-  unmark = setTimeout(() => { marked.value = null; }, 2400);
+  unmark = setTimeout(() => {
+    if (marked.value === id) marked.value = null;
+  }, 2400);
 }
 </script>
 
