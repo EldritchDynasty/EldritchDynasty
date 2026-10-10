@@ -23,6 +23,9 @@ const result = async (call) => {
 };
 
 const MOD_EDITOR = process.env.ED_MOD_EDITOR === '1' || process.argv.includes('--mod-editor');
+// Only the installed-artifact smoke executable may open this diagnostic IPC
+// transport. Ordinary shipped sessions cannot receive synthetic game commands.
+const NATIVE_SMOKE = process.argv.includes('--smoke-save') || process.argv.includes('--smoke-resume');
 
 const pauseListeners = new Set();
 ipcRenderer.on('ed:pause', () => {
@@ -70,4 +73,22 @@ contextBridge.exposeInMainWorld('edPlatform', {
     return () => pauseListeners.delete(listener);
   },
   onBack: () => () => undefined,
+  ...(NATIVE_SMOKE ? {
+    onSmokeCommand: (listener) => {
+      const onCommand = (_event, command) => {
+        Promise.resolve().then(() => listener(command)).then(
+          (snapshot) => ipcRenderer.send('ed:smoke-result', { command: command?.kind, ok: true, snapshot }),
+          (error) => ipcRenderer.send('ed:smoke-result', {
+            command: command?.kind, ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        );
+      };
+      ipcRenderer.on('ed:smoke-command', onCommand);
+      // The client installs this listener only after its store is composed;
+      // a page-load event is not proof that it can process a native command.
+      ipcRenderer.send('ed:smoke-ready');
+      return () => ipcRenderer.removeListener('ed:smoke-command', onCommand);
+    },
+  } : {}),
 });
