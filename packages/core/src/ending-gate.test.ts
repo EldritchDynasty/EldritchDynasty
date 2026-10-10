@@ -145,6 +145,12 @@ describe('the endings gate compiled-content reuse (#950)', () => {
     // including the stable ordering of the chronicler/ascendant diagnostics.
     const fromIndexed = gateEndings(indexContent(source), 2, 2);
     expect(fromRaw).toEqual(fromIndexed);
+
+    // The worker transport returns raw observations with canonical indices.
+    // Parallel completion order must not move paired seeds, alter diagnostics
+    // or judge the two policy columns separately.
+    const fromTwoWorkers = gateEndings(source, 2, 2, { workers: 2 });
+    expect(fromTwoWorkers).toEqual(fromIndexed);
   });
 });
 
