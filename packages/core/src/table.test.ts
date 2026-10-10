@@ -81,9 +81,13 @@ describe('searching the old contracts for a Ledger clause', () => {
         ...(coverage === 'complete' ? [{ address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: 'The gift must stay with the hand that owes it.' }] : []),
       ]);
       setProseMode(ctx, 'plainenglish');
+      // Only the search's own prose is under test: the table renders every
+      // other order's refusals too, and those are reviewed in their own suites.
+      const searchMisses = () => missingPlainEnglish(ctx)
+        .filter((address) => address.startsWith(base) || address === coreMessageAddress('table.ledger_search'));
       // Readiness does not render a clause the player has not recovered yet.
       expect(tableView(ctx).ledgerSearch.ready).toBe(true);
-      expect(missingPlainEnglish(ctx)).toEqual([]);
+      expect(searchMisses()).toEqual([]);
       const before = ctx.world.clausesRecovered.size;
       const result = order(ctx, { kind: 'seekClause' });
       expect(result).toMatchObject({ ok: true, spent: LEDGER_SEARCH_FEE, left: 500 - LEDGER_SEARCH_FEE });
@@ -96,7 +100,7 @@ describe('searching the old contracts for a Ledger clause', () => {
       });
       expect(ctx.world.chronicle.at(-2)!.text)
         .toBe('The family paid record-keepers to check the old contracts against its own copy.');
-      expect(missingPlainEnglish(ctx)).toEqual(coverage === 'partial' ? [`${base}.text`] : []);
+      expect(searchMisses()).toEqual(coverage === 'partial' ? [`${base}.text`] : []);
       expect(order(ctx, { kind: 'seekClause' }).ok).toBe(false);
       const written = structuredClone(ctx.world.chronicle);
       setProseMode(ctx, 'original');
