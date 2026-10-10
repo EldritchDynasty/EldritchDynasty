@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { EndingId } from '@ed/schema';
+import { indexContent, type EndingId } from '@ed/schema';
 import {
-  ALL_ENDINGS, ENDING_JUDGEABLE_BATCH, verdictOver, type EndingPolicy, type EndingRun,
+  ALL_ENDINGS, ENDING_JUDGEABLE_BATCH, gateEndings, verdictOver, type EndingPolicy, type EndingRun,
 } from './tools/ending-gate.js';
 import { recordOptionForPolicy, unmakingReadyForAscendant } from './tools/ladder-policy.js';
 import { testWorld } from './testing.js';
@@ -116,6 +116,35 @@ describe('the ascendant composite policy', () => {
     ctx.world.respect = 'exalted';
     expect(unmakingReadyForAscendant(ctx)).toBe(true);
     expect(ctx.world.clausesRecovered.size).toBe(clausesBefore);
+  });
+});
+
+describe('the endings gate compiled-content reuse (#950)', () => {
+  it('indexes a raw bundle only once across both paired policies without moving a verdict', () => {
+    const source = loadContent();
+    let eventReads = 0;
+    // Every full indexContent(rawBundle) construction reads the authored
+    // events array. Counting those reads catches accidental per-run rebuilds
+    // without relying on timing or any mutable global/mock of the module.
+    const counted = new Proxy(source, {
+      get(target, property, receiver) {
+        if (property === 'events') eventReads++;
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    indexContent(counted);
+    const oneCompilation = eventReads;
+    expect(oneCompilation).toBeGreaterThan(0);
+    eventReads = 0;
+
+    const fromRaw = gateEndings(counted, 2, 2);
+    expect(eventReads).toBe(oneCompilation);
+    expect(fromRaw.lines[0]).toContain('2 played runs x 2 years, per policy');
+
+    // Reusing already indexed Content must preserve the complete verdict,
+    // including the stable ordering of the chronicler/ascendant diagnostics.
+    const fromIndexed = gateEndings(indexContent(source), 2, 2);
+    expect(fromRaw).toEqual(fromIndexed);
   });
 });
 
