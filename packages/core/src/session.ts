@@ -33,6 +33,7 @@ import {
 import { diagnoseHouseAscension, measureAscension, rungTitle, type AscensionBlockerKind } from './ascension.js';
 import { castOf, type CastMember } from './cast.js';
 import { foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
+import { msg } from './messages.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
 import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './chapter.js';
 import { streamFor } from './rng.js';
@@ -508,10 +509,13 @@ export class GameSession {
 
     const restart = this.foundingBootstrap;
     if (!restart) {
-      return { ok: false, reason: 'the Examination can only be answered from a new run' };
+      return { ok: false, reason: msg(this.ctx, 'founding.refuse.examination_restart', 'the Examination can only be answered from a new run') };
     }
     if (this.ctx.world.year !== restart.startYear || this.ctx.world.decisionLog.length) {
-      return { ok: false, reason: 'the Examination belongs before the first year or decision' };
+      return {
+        ok: false,
+        reason: msg(this.ctx, 'founding.refuse.examination_late', 'the Examination belongs before the first year or decision'),
+      };
     }
 
     // Build a candidate first. `foundHouse` does all state-term validation
