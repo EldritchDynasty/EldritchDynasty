@@ -409,6 +409,8 @@ export function createGame(
   const library = ref<RunLibrary>(emptyRunLibrary());
   const libraryReady = ref(false);
   const libraryReadError = ref(false);
+  /** Host read underway; mutations must wait for its answer, never assume empty. */
+  let libraryLoad: Promise<void> = Promise.resolve();
   // The browser can answer synchronously, native hosts cannot. Keeping the
   // snapshot outside Vue means the saved world is never made reactive merely
   // because the front door needs to know it exists.
@@ -457,6 +459,7 @@ export function createGame(
   async function changeLibrary(snapshot: RunLibrary): Promise<void> {
     // A failed profile read is NOT an empty Library. Never overwrite old
     // completed houses with an invented baseline after a transient outage.
+    if (!libraryReady.value && !libraryReadError.value) await libraryLoad;
     if (!libraryReady.value) throw new Error('the Library is unavailable; retry reading it');
     const revision = ++libraryRevision;
     library.value = snapshot;
@@ -687,7 +690,9 @@ export function createGame(
     },
 
     async retryLibrary() {
-      await loadLibrary();
+      const read = loadLibrary();
+      libraryLoad = read.catch(() => undefined);
+      await read;
     },
 
     leave() {
@@ -1212,7 +1217,7 @@ export function createGame(
 
   // Native stores answer asynchronously. A failed read stays unavailable
   // until the player explicitly retries from the front door.
-  void loadLibrary().catch(() => undefined);
+  libraryLoad = loadLibrary().catch(() => undefined);
   void readKept();
   void refreshSaves();
   platform.onPause(() => {
