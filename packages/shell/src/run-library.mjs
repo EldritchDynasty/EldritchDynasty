@@ -7,6 +7,13 @@ import { writeJsonAtomically } from './atomic-json.mjs';
  * shell treats it as opaque JSON exactly as it treats saves; schema validation
  * belongs above this transport boundary.
  */
+function requireLibraryObject(library) {
+  if (library === null || typeof library !== 'object' || Array.isArray(library)) {
+    throw new TypeError('the library is a JSON object');
+  }
+  return library;
+}
+
 export function readRunLibrary(userData) {
   const path = join(userData, 'library.json');
   let entry;
@@ -19,13 +26,13 @@ export function readRunLibrary(userData) {
     throw error;
   }
   if (!entry.isFile()) throw new TypeError('library is not a regular file');
-  return JSON.parse(readFileSync(path, 'utf8'));
+  // A present JSON `null` is not absence: allowing it through would make the
+  // client's empty-Library fallback eligible to replace the original bytes.
+  return requireLibraryObject(JSON.parse(readFileSync(path, 'utf8')));
 }
 
 /** Atomic for the same reason save writes are atomic. */
 export function writeRunLibrary(userData, library) {
-  if (library === null || typeof library !== 'object' || Array.isArray(library)) {
-    throw new TypeError('the library is a JSON object');
-  }
+  requireLibraryObject(library);
   return writeJsonAtomically(join(userData, 'library.json'), library);
 }
