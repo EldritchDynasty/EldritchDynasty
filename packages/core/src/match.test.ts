@@ -155,6 +155,42 @@ describe('reviewed house names on Match cards (#970)', () => {
       expect(missingPlainEnglish(ctx)).toContain(row.address);
     }
   });
+
+  it('uses the authored house name rather than an id when a live name row is absent (#1124)', () => {
+    const { ctx, subject } = offered();
+    const initial = dealMatch(ctx, subject, makeRng(970));
+    const target = initial.cards.find((card) => card.kind === 'outsider'
+      && variants.some((row) => row.address.endsWith(
+        `houses[id=${encodeURIComponent(card.house)}].name`)));
+    if (!target) throw new Error('Expected a named outsider card');
+
+    const authored = ctx.content.house(target.house);
+    const variant = variants.find((row) => row.address.endsWith(
+      `houses[id=${encodeURIComponent(target.house)}].name`));
+    if (!authored || !variant) throw new Error('Expected an authored house and reviewed variant');
+    expect(ctx.world.houses.delete(target.house)).toBe(true);
+
+    setProseVariants(ctx, [variant]);
+    setProseMode(ctx, 'plainenglish');
+    const translated = dealMatch(ctx, subject, makeRng(970));
+    const selected = translated.cards.find((card) => card.id === target.id);
+    expect(selected?.house).toBe(target.house);
+    expect(selected?.houseName).toBe(variant.plainenglish);
+    expect(missingPlainEnglish(ctx)).not.toContain(variant.address);
+
+    // A dealt card preserves what the player saw even when the setting changes.
+    setProseMode(ctx, 'original');
+    expect(selected?.houseName).toBe(variant.plainenglish);
+    const original = dealMatch(ctx, subject, makeRng(970));
+    expect(original.cards.find((card) => card.id === target.id)?.houseName).toBe(authored.name);
+
+    // A stale translation must not hide the fallback Original.
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    setProseMode(ctx, 'plainenglish');
+    const stale = dealMatch(ctx, subject, makeRng(970));
+    expect(stale.cards.find((card) => card.id === target.id)?.houseName).toBe(authored.name);
+    expect(missingPlainEnglish(ctx)).toContain(variant.address);
+  });
 });
 
 /**
