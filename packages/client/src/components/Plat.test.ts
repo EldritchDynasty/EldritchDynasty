@@ -262,3 +262,44 @@ describe('the plat is reachable only from the Table pane', () => {
     expect(appSource).not.toMatch(/<Plat[^>]*v-if="[^"]*pane\s*===\s*['"]plat['"]/);
   });
 });
+
+describe('deferred modal focus restoration (#1323)', () => {
+  it('does not steal focus back when a second dialog remains open', () => {
+    const previous = document.createElement('button');
+    previous.textContent = 'The preceding board control';
+    document.body.appendChild(previous);
+    previous.focus();
+
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    });
+
+    const props = () => ({
+      land: mockLand(), houseName: 'House', actions: spyActions(), close: () => {},
+    });
+    const first = mount(Plat, { attachTo: document.body, props: props() });
+    const second = mount(Plat, { attachTo: document.body, props: props() });
+
+    try {
+      const successorFocus = document.activeElement;
+      expect(second.element.contains(successorFocus)).toBe(true);
+
+      first.unmount();
+      expect(callbacks).toHaveLength(1);
+      callbacks.shift()!(0);
+
+      // The old dialog's remembered control was outside the successor.
+      // Its delayed restore must not override the new dialog's Tab target.
+      expect(document.activeElement).toBe(successorFocus);
+      expect(second.element.contains(document.activeElement)).toBe(true);
+    } finally {
+      first.unmount();
+      second.unmount();
+      while (callbacks.length) callbacks.shift()!(0);
+      previous.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
