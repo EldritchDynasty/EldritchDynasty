@@ -145,7 +145,7 @@ describe('The Examination (#343)', () => {
 
     // Enter dispatches the handler even though the Sign button is disabled.
     expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
-    await house.trigger('keyup.enter');
+    await house.trigger('keydown', { key: 'Enter' });
     expect(game.found).not.toHaveBeenCalled();
 
     for (let question = 1; question <= 4; question += 1) {
@@ -155,7 +155,7 @@ describe('The Examination (#343)', () => {
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
 
     expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
-    await house.trigger('keyup.enter');
+    await house.trigger('keydown', { key: 'Enter' });
     expect(game.found).toHaveBeenCalledTimes(1);
     expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
       houseName: 'House Ash',
@@ -403,4 +403,89 @@ describe('standalone dialog Escape while composing an IME candidate (#1290)', ()
       expect(dismiss).toHaveBeenCalledTimes(1);
     },
   );
+});
+
+/**
+ * Enter confirms an IME candidate as well as signing the founding, and the
+ * keyup can arrive after `compositionend` (#1296). Only a deliberate keydown
+ * signs; the Sign button and the #1143 requirements stay exactly as they were.
+ */
+describe('signing the founding with an input method (#1296)', () => {
+  function enterKey(composing: boolean, legacyKeyCode?: number, repeat = false): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, repeat });
+    Object.defineProperty(event, 'isComposing', { value: composing });
+    if (legacyKeyCode !== undefined) Object.defineProperty(event, 'keyCode', { value: legacyKeyCode });
+    return event;
+  }
+
+  async function completedFounding() {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    await revealChoices(wrapper);
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+    }
+    await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+    const house = wrapper.get('input[aria-label="Name the house"]');
+    await house.setValue('林家');
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+    return { game, wrapper, house };
+  }
+
+  it('does not found the house when Enter confirms a candidate, nor on the late keyup', async () => {
+    const { game, wrapper, house } = await completedFounding();
+
+    await house.trigger('compositionstart');
+    house.element.dispatchEvent(enterKey(true));
+    // Some browsers report the process key as 229 even once isComposing is false.
+    house.element.dispatchEvent(enterKey(false, 229));
+    await house.trigger('compositionend');
+    await house.trigger('keyup', { key: 'Enter' });
+    await wrapper.vm.$nextTick();
+
+    expect(game.found).not.toHaveBeenCalled();
+    expect((house.element as HTMLInputElement).value).toBe('林家');
+    wrapper.unmount();
+  });
+
+  it('founds once on an ordinary Enter, and a held Enter does not repeat it', async () => {
+    const { game, wrapper, house } = await completedFounding();
+
+    house.element.dispatchEvent(enterKey(false));
+    house.element.dispatchEvent(enterKey(false, undefined, true));
+    await house.trigger('keyup', { key: 'Enter' });
+
+    expect(game.found).toHaveBeenCalledTimes(1);
+    expect(game.found).toHaveBeenCalledWith(expect.objectContaining({ houseName: '林家', heirloom: 'seal' }));
+    wrapper.unmount();
+  });
+
+  it('still signs from the explicit Sign button after a composition', async () => {
+    const { game, wrapper, house } = await completedFounding();
+
+    await house.trigger('compositionstart');
+    house.element.dispatchEvent(enterKey(true));
+    await house.trigger('compositionend');
+    await wrapper.get('button.sign').trigger('click');
+
+    expect(game.found).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it('still refuses an ordinary Enter while the founding is incomplete', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    await revealChoices(wrapper);
+    const house = wrapper.get('input[aria-label="Name the house"]');
+    await house.setValue('House Ash');
+
+    house.element.dispatchEvent(enterKey(false));
+    expect(game.found).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
 });
