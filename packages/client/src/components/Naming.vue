@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { PERSON_NAME_MAX } from '@ed/schema';
+import { FOUNDER_NAME_MAX as PERSON_NAME_MAX } from '../lib/game';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
