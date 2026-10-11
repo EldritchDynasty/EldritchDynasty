@@ -169,6 +169,13 @@ describe('what leaves with them', () => {
       expect(ended?.reason).toBe('dismissed');
       expect(servant.contract).toBeUndefined();
       expect(servant.membership[0]?.to).toBe(ctx.world.year);
+      const current = servant.membership.filter((m) => m.to === undefined);
+      expect(current).toHaveLength(1);
+      expect(current[0]!.kind).toBe('none');
+      expect(current[0]!.house).not.toBe(ctx.world.playerHouse);
+      expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)).not.toContain(servant);
+      const walked = ctx.world.looseSecrets.find((s) => s.carrier === servant.id);
+      if (walked) expect(current[0]!.house).toBe(walked.house);
       leaked += ctx.world.looseSecrets.length;
     }
     // The release path reads service length and the contract before either is
