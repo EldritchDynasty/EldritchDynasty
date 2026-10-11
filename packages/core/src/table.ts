@@ -864,9 +864,9 @@ export interface TableView {
     ward: string; wardName: string; since: Year; boughtBack: boolean; buyBackCost?: number;
   };
   /** Books on the shelf, and who in the house could take one up. */
-  shelf: { book: string; name: string; years: number; readers: { person: string; name: string }[] }[];
+  shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string }[] }[];
   /** Common books the house may ask a broker to seek; payment and sale are separate. */
-  missingPrimers: { book: string; name: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean }[];
+  missingPrimers: { book: string; name: string; blurb?: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean }[];
   /** A late-game record-keeper search for one unrecovered contract clause. */
   ledgerSearch: { ready: boolean; reason?: string; fee: number };
   unmaking: { ready: boolean; reason?: string; assembly?: RiteAssembly };
@@ -984,6 +984,7 @@ export function tableView(ctx: SimCtx): TableView {
     return {
       book: state.id,
       name: def ? proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name) : state.id,
+      ...(def?.blurb ? { blurb: proseForContentField(ctx, 'spellbooks', def.id, 'blurb', def.blurb) } : {}),
       years: def?.studyYears ?? 0,
       readers,
     };
@@ -1079,6 +1080,7 @@ export function tableView(ctx: SimCtx): TableView {
       .filter((b) => b.tier === 'minor' && !w.library.has(b.id))
       .map((b) => ({
         book: b.id, name: proseForContentField(ctx, 'spellbooks', String(b.id), 'name', b.name), affinity: b.affinity,
+        ...(b.blurb ? { blurb: proseForContentField(ctx, 'spellbooks', String(b.id), 'blurb', b.blurb) } : {}),
         fee: BOOK_SEARCH_FEE, reserve: b.price.max + 100,
         saleYear: w.year + BOOK_SEARCH_YEARS,
         queued: w.auction.upcoming.some((lot) => lot.kind === 'spellbook' && lot.refId === b.id),
