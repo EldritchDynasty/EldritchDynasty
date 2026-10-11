@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { MAIN_BRANCH, asId } from '@ed/schema';
 import type { Person } from '@ed/schema';
+import { eligibleToMarry } from './people/demography.js';
 import {
   testWorld, place, marry, worldViolations, expectHealthyWorld,
 } from './testing.js';
@@ -130,47 +131,29 @@ describe('and the worlds it must reject', () => {
     expect(worldViolations(ctx).filter((v) => v.rule === 'marriage')).toEqual([]);
   });
 
-  /**
-   * ── A BUG THIS FILE PINS RATHER THAN FIXES ───────────────────────────────
-   *
-   * `kill()`'s guardian branch — the redirect that makes Daveed the house's
-   * guardian spirit instead of a corpse (invariant 3) — closes only HIS half
-   * of the vow. The ordinary branch eight lines below it closes both, with a
-   * comment explaining that a widow who stays married forever never remarries
-   * and never bears again.
-   *
-   * The three-line fix is deliberately NOT applied: it moves `npm run digest`
-   * on 3 of 4 seeds, because it changes how long the widow is invisible to the
-   * Match. That is a balance change and wants the harness and a BALANCE-LOG
-   * entry, not a quiet correction on a test-suite branch.
-   *
-   * So this test asserts what the code DOES, and says loudly what it should
-   * do. It goes red the day somebody fixes it, and the message tells them
-   * that red is the good outcome — which is the only way a pinned bug does
-   * not silently become the specification.
-   */
-  it('PINNED BUG — the guardian redirect leaves his widow married to him', () => {
-    const ctx = testWorld(bundle);
-    const daveed = ctx.world.people.living().find((p) => p.becomesGuardian)!;
-    const widow = ctx.world.people.all().find((p) =>
-      p.marriages.some((m) => m.to === undefined && String(m.spouse) === String(daveed.id)));
-    expect(widow, 'the founding narrator is not married — this test has nothing to pin').toBeTruthy();
+  it('the guardian crossing closes both vows and leaves the surviving spouse eligible', () => {
+    const { ctx, head: daveed, wife: widow } = house();
+    const hisVow = daveed.marriages.find((m) => m.spouse === widow.id && m.to === undefined)!;
+    const herVow = widow.marriages.find((m) => m.spouse === daveed.id && m.to === undefined)!;
+    expect(eligibleToMarry(ctx, widow)).toBe(false);
 
-    ctx.world.people.kill(daveed.id, ctx.world.year, 'the appointed hour');
+    expect(ctx.world.people.kill(daveed.id, ctx.world.year, 'the appointed hour')).toBe(false);
     expect(daveed.status, 'the narrator does not die (invariant 3)').toBe('guardian');
+    expect(ctx.world.people.guardian()?.id).toBe(daveed.id);
+    expect(daveed.castSlots).toContain('guardian');
+    expect(daveed.castSlots).not.toContain('head');
+    expect(hisVow.to).toBe(ctx.world.year);
+    expect(herVow.to).toBe(ctx.world.year);
+    expect(eligibleToMarry(ctx, widow)).toBe(true);
+    expect(eligibleToMarry(ctx, daveed)).toBe(false);
+    expect(worldViolations(ctx).filter((v) => v.rule === 'marriage')).toEqual([]);
 
-    const stillOpen = widow!.marriages.some((m) => m.to === undefined
-      && String(m.spouse) === String(daveed.id));
-    expect(
-      stillOpen,
-      'The guardian redirect now closes the vow on BOTH sides — which is correct, and '
-      + 'this test is the thing that is out of date. Delete this test, keep the fix, '
-      + 'and record what it did to the run in docs/BALANCE-LOG.md: when it was measured '
-      + 'it moved the digest on 3 of 4 seeds.',
-    ).toBe(true);
-
-    // And the checker sees it, which is how it was found in the first place.
-    expect(complaint(worldViolations(ctx), 'marriage')).toMatch(/does not agree/);
+    const crossed = ctx.world.year;
+    expect(ctx.world.people.kill(daveed.id, crossed + 1, 'another cause')).toBe(false);
+    expect(daveed.died).toBe(crossed);
+    expect(daveed.causeOfDeath).toBe('the appointed hour');
+    expect(hisVow.to).toBe(crossed);
+    expect(herVow.to).toBe(crossed);
   });
 
   it('marriage — a vow only one side made', () => {

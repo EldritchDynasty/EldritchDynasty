@@ -158,36 +158,9 @@ export class PersonStore {
       p.causeOfDeath = cause;
       if (!p.castSlots.includes('guardian')) p.castSlots.push('guardian');
       p.castSlots = p.castSlots.filter((s) => s !== 'head');
-      /**
-       * ── THIS CLOSES ONLY HIS HALF OF THE VOW, AND THAT IS A KNOWN BUG ────
-       *
-       * Eight lines below, the ordinary death path closes the marriage on BOTH
-       * sides, with a comment explaining that a widow who stays married
-       * forever never remarries and never bears again. The one death path
-       * written separately is the one that does not do it, so Daveed's widow
-       * keeps an open vow to a man who has become a guardian spirit.
-       *
-       * Found by `worldViolations` (`testing.ts`) on its first outing, and
-       * MEASURED before being left alone:
-       *
-       *   · his wife outlives him in 12 of 24 played millennia
-       *   · none of those runs still had an open vow to him at 2042, so
-       *     something downstream closes her side eventually
-       *   · closing it here instead moves `npm run digest` on 3 of 4 seeds
-       *
-       * That last line is why the obvious three-line fix is not in this
-       * commit. It is not a refactor — it changes which women the Match sees
-       * as available, and for how long — so it is a balance change and wants
-       * the harness and a BALANCE-LOG entry, not a quiet correction inside a
-       * test-suite branch.
-       *
-       * `world-health.test.ts` pins the current behaviour so the day somebody
-       * does fix it, the test says so out loud rather than going quietly
-       * green.
-       */
-      for (const m of p.marriages) {
-        if (m.to === undefined) m.to = year;
-      }
+      // Crossing ends the earthly marriage on both sides, just as an ordinary
+      // death does. Leaving her half open barred his widow from marrying again.
+      this.closeMarriage(id, year);
       return false;
     }
 
@@ -205,10 +178,9 @@ export class PersonStore {
    * widow who never remarries and never bears again, which quietly ends the
    * line — and does so without anything appearing to go wrong (issue #42).
    *
-   * The shared operation `kill()`'s ordinary death path and the content-
-   * authored `marriage: end` effect (issue #132) both need, so the two
-   * cannot drift the way `kill()`'s guardian path's OWN asymmetry did — see
-   * the comment there. A no-op if the person has no open marriage.
+   * Shared by both `kill()` paths and the content-authored `marriage: end`
+   * effect (issue #132), so their handling of the surviving spouse cannot
+   * drift. A no-op if the person has no open marriage.
    */
   closeMarriage(id: PersonId | string, year: Year): void {
     const p = this.get(id);
