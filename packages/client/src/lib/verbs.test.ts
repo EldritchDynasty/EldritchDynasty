@@ -297,6 +297,36 @@ describe('a failed Library load is not an empty profile (#1238)', () => {
     expect(game.library.value.runs).toEqual([]);
   });
 
+  it('waits for a delayed initial read before constructing a removal snapshot', async () => {
+    const host = libraryHost();
+    let answer!: (library: unknown) => void;
+    const pending = new Promise<unknown>((resolve) => { answer = resolve; });
+    host.readLibrary = () => pending;
+    const game = createGame(loadContent(), host);
+    const removing = game.actions.deleteLibraryRun('before-outage');
+    expect(host.writes).toEqual([]);
+
+    answer({
+      format: 1,
+      runs: [
+        {
+          id: 'before-outage', seed: 74, campaign: 'short', endedYear: 1342,
+          house: 'The Prior House', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+        },
+        {
+          id: 'unrelated-house', seed: 75, campaign: 'short', endedYear: 1342,
+          house: 'The Other House', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+        },
+      ],
+    });
+    await removing;
+    expect(game.library.value.runs.map((run) => run.id)).toEqual(['unrelated-house']);
+    expect(host.writes).toHaveLength(1);
+    expect(host.writes[0]).toMatchObject({
+      runs: [expect.objectContaining({ id: 'unrelated-house' })],
+    });
+  });
+
   it('still accepts a genuinely absent first-time Library as empty', async () => {
     const host = libraryHost();
     host.readLibrary = async () => null;
