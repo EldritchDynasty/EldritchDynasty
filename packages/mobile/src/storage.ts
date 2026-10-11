@@ -141,7 +141,13 @@ export function mobileStorage(
 
   async function readSave(slot: string): Promise<unknown | null> {
     const durable = await readFile(savePath(slot));
-    if (durable.present) return durable.value;
+    if (durable.present) {
+      // A present unreadable Data file is not an absent slot. Preserve its
+      // bytes and reject instead of offering an invented missing run (#1256).
+      // Full saved-game validation still belongs to core.
+      if (durable.value === null) throw new TypeError('the native save file is unreadable');
+      return durable.value;
+    }
 
     const legacy = await readLegacy(LEGACY_SAVE_PREFIX + slot);
     if (legacy === null) return null;
