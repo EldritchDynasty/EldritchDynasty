@@ -303,3 +303,38 @@ describe('mobile native save import picker', () => {
     }
   });
 });
+
+
+describe('bounded CoreSimulator terminate timeout recovery (#1243)', () => {
+  it('retries exactly once if termination times out, then accepts a successful result', async () => {
+    // @ts-ignore JavaScript .mjs policy is exercised without Xcode.
+    const { runSimctlWithTerminationRetry } = await import('../scripts/ios-simctl-retry.mjs');
+    const timeout = { error: Object.assign(new Error('timed out'), { code: 'ETIMEDOUT' }), status: null };
+    const okay = { error: undefined, status: 0, stdout: '', stderr: '' };
+    const execute = vi.fn().mockReturnValueOnce(timeout).mockReturnValueOnce(okay);
+    const onRetry = vi.fn();
+    expect(runSimctlWithTerminationRetry(['terminate', 'device', 'app'], execute, onRetry)).toBe(okay);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces repeated timeouts and does not retry unrelated errors or non-idempotent launches', async () => {
+    // @ts-ignore JavaScript .mjs policy is exercised without Xcode.
+    const { runSimctlWithTerminationRetry } = await import('../scripts/ios-simctl-retry.mjs');
+    const timeout = { error: Object.assign(new Error('timed out'), { code: 'ETIMEDOUT' }), status: null };
+    const unrelated = { error: Object.assign(new Error('denied'), { code: 'EACCES' }), status: null };
+
+    const retries = vi.fn().mockReturnValue(timeout);
+    expect(runSimctlWithTerminationRetry(['terminate'], retries)).toBe(timeout);
+    expect(retries).toHaveBeenCalledTimes(2);
+
+    const other = vi.fn().mockReturnValue(unrelated);
+    expect(runSimctlWithTerminationRetry(['terminate'], other)).toBe(unrelated);
+    expect(other).toHaveBeenCalledOnce();
+
+    const launch = vi.fn().mockReturnValue(timeout);
+    expect(runSimctlWithTerminationRetry(['launch'], launch)).toBe(timeout);
+    expect(launch).toHaveBeenCalledOnce();
+  });
+});
+
