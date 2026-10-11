@@ -536,6 +536,69 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     }
   });
 
+  it('holds single-house Remove while a full-Library clear is pending and recovers on failure (#1331)', async () => {
+    const actions = spyActions();
+    let rejectClear: (() => void) | undefined;
+    vi.mocked(actions.clearLibrary).mockImplementation(() => new Promise<void>((_, reject) => {
+      rejectClear = () => reject(new Error('host storage refused clear'));
+    }));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head button').trigger('click');
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+      expect(w.get('.library-head button').text()).toContain('Clearing');
+      expect(w.get('.library-head button').attributes('disabled')).toBeDefined();
+
+      const remove = w.get('.library-title button');
+      expect(remove.attributes('disabled')).toBeDefined();
+      await remove.trigger('click');
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      rejectClear!();
+      await flush();
+      expect(w.get('.library [role="alert"]').text()).toContain('could not be cleared');
+      expect(w.get('.library-head button').attributes('disabled')).toBeUndefined();
+      expect(remove.attributes('disabled')).toBeUndefined();
+      await remove.trigger('click');
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('holds Clear while a single-house removal is pending (#1331)', async () => {
+    const actions = spyActions();
+    let finishRemove: (() => void) | undefined;
+    vi.mocked(actions.deleteLibraryRun).mockImplementation(() => new Promise<void>((resolve) => {
+      finishRemove = resolve;
+    }));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-title button').trigger('click');
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      const clear = w.get('.library-head button');
+      expect(clear.attributes('disabled')).toBeDefined();
+      await clear.trigger('click');
+      expect(w.find('.library-clear-confirm').exists()).toBe(false);
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+
+      finishRemove!();
+      await flush();
+      expect(clear.attributes('disabled')).toBeUndefined();
+      await clear.trigger('click');
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('never submits a second deletion while the host is still removing that house', async () => {
     const actions = spyActions();
     let finishDelete: (() => void) | undefined;
