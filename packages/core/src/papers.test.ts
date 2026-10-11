@@ -105,6 +105,34 @@ describe('what a match asks for', () => {
 });
 
 describe('buying a grandmother', () => {
+  it('rejects detached snapshots without writing papers to either copy', () => {
+    const ctx = testWorld(bundle);
+    const living = place(ctx, { sex: 'female', age: 20, name: 'Living' });
+    const detached = { ...living, lineageDocuments: [...living.lineageDocuments] };
+    const treasury = ctx.world.treasury;
+
+    expect(ctx.world.people.get(living.id)).toBe(living);
+    expect(() => filePedigree(ctx, detached, 'caster')).toThrow('dead or detached person');
+    expect(detached.lineageDocuments).toEqual([]);
+    expect(living.lineageDocuments).toEqual([]);
+    expect(ctx.world.treasury).toBe(treasury);
+
+    // The ordinary living world-owned record remains a valid filing target.
+    expect(filePedigree(ctx, living, 'bramme').generations).toBe(PEDIGREE_COVERS.bramme);
+    expect(living.lineageDocuments).toHaveLength(1);
+  });
+
+  it('rejects dead world-owned people before writing a new pedigree', () => {
+    const ctx = testWorld(bundle);
+    const person = place(ctx, { sex: 'female', age: 20, name: 'Departed' });
+    expect(ctx.world.people.kill(person.id, ctx.world.year, 'test death')).toBe(true);
+    const treasury = ctx.world.treasury;
+
+    expect(() => filePedigree(ctx, person, 'bramme')).toThrow('dead or detached person');
+    expect(person.lineageDocuments).toEqual([]);
+    expect(ctx.world.treasury).toBe(treasury);
+  });
+
   it('the order charges world §11\'s published price and files the paper', () => {
     const ctx = testWorld(bundle);
     const girl = place(ctx, { sex: 'female', age: 20, name: 'Girl' });
