@@ -116,9 +116,15 @@ export function mobileStorage(
     }
   }
 
-  async function readLegacy(key: string): Promise<unknown | null> {
+  // Preferences.get returns null only for an absent key. Malformed, empty or
+  // literal-null JSON is a *present* record whose bytes must survive recovery.
+  async function readLegacy(key: string): Promise<
+    { present: true; value: unknown | null } | { present: false; value: null }
+  > {
     const { value } = await preferences.get({ key });
-    return value === null ? null : parsed(value);
+    return value === null
+      ? { present: false, value: null }
+      : { present: true, value: parsed(value) };
   }
 
   async function writeSave(slot: string, save: unknown): Promise<void> {
@@ -150,14 +156,17 @@ export function mobileStorage(
     }
 
     const legacy = await readLegacy(LEGACY_SAVE_PREFIX + slot);
-    if (legacy === null) return null;
+    if (!legacy.present) return null;
+    if (legacy.value === null) {
+      throw new TypeError('the legacy save file is unreadable');
+    }
     try {
-      await writeSave(slot, legacy);
+      await writeSave(slot, legacy.value);
     } catch {
       // A migration failure must not turn an existing Android save into a
       // missing save. The next read will retry while the legacy key remains.
     }
-    return legacy;
+    return legacy.value;
   }
 
   async function listSaves(): Promise<SaveSummary[]> {
@@ -227,19 +236,25 @@ export function mobileStorage(
         continue;
       }
 
-      let legacy: unknown | null;
+      let legacy: Awaited<ReturnType<typeof readLegacy>>;
       try {
         legacy = await readLegacy(key);
       } catch (error) {
-        // One damaged Preferences key must not hide Data saves or later
+        // One denied Preferences key must not hide Data saves or later
         // legacy keys which can still be migrated.
         console.warn(`[mobile] could not read legacy save slot ${slot}:`, error);
         continue;
       }
-      if (legacy === null) continue;
-      saves.set(slot, saveSummary(slot, legacy));
+      if (!legacy.present) continue;
+      if (legacy.value === null) {
+        // A corrupt Preferences record owns its slot just like a corrupt Data
+        // file. Keep it visible but do not migrate or remove its only bytes.
+        saves.set(slot, { slot });
+        continue;
+      }
+      saves.set(slot, saveSummary(slot, legacy.value));
       try {
-        await writeSave(slot, legacy);
+        await writeSave(slot, legacy.value);
       } catch {
         // Still list the old save. It remains intact and a later call retries.
       }
@@ -287,13 +302,16 @@ export function mobileStorage(
     }
 
     const legacy = await readLegacy(LEGACY_LIBRARY_KEY);
-    if (legacy === null) return null;
+    if (!legacy.present) return null;
+    if (legacy.value === null) {
+      throw new TypeError('the legacy Library of Houses file is unreadable');
+    }
     try {
-      await writeLibrary(legacy);
+      await writeLibrary(legacy.value);
     } catch {
       // Same migration rule as saves: read the old value and retry later.
     }
-    return legacy;
+    return legacy.value;
   }
 
   return {
