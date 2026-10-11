@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { electronEnvironment } from '../scripts/electron-environment.mjs';
 import { externalWebUrl, handleExternalPopup } from './external-links.mjs';
+import { parseImportedRun } from './run-import.mjs';
 import { smokePackagedApp } from '../scripts/packaged-smoke.mjs';
 
 describe('Electron child environment (#355)', () => {
@@ -116,5 +117,40 @@ describe('Electron popup link boundary', () => {
     expect(handleExternalPopup('http://example.com', openExternal, onError))
       .toEqual({ action: 'deny' });
     expect(onError).toHaveBeenCalledWith(error);
+  });
+});
+
+describe('Electron selected run import envelope (#1249)', () => {
+  it.each([
+    'null',
+    '[]',
+    '42',
+    'true',
+    '"not a run"',
+    '{}',
+    '{"format":null}',
+    '{"format":"28"}',
+  ])('rejects valid JSON that cannot be a saved run: %s', (source) => {
+    expect(() => parseImportedRun(source)).toThrow('a save is an object with a numeric format');
+  });
+
+  it('still reports malformed JSON as an error rather than an absent import', () => {
+    expect(() => parseImportedRun('{')).toThrow(SyntaxError);
+  });
+
+  it('leaves the actual run schema to core, preserving numeric-format data unchanged', () => {
+    const opaque = { format: 28, year: 1452, savedAt: '2026-10-12', extra: { untouched: true } };
+    expect(parseImportedRun(JSON.stringify(opaque))).toEqual(opaque);
+  });
+
+  it('passes only a selected file through the guard inside the existing IPC error boundary', async () => {
+    const source = await readFile(new URL('./main.mjs', import.meta.url), 'utf8');
+    const start = source.indexOf("ipcMain.handle('ed:import-save'");
+    expect(start).toBeGreaterThanOrEqual(0);
+    const handler = source.slice(start, source.indexOf('\n});', start) + 4);
+    expect(handler).toContain("if (canceled || !chosen) return { ok: false, cancelled: true }");
+    expect(handler).toContain("parseImportedRun(readFileSync(chosen, 'utf8'))");
+    expect(handler).toContain("return { ok: false, error: String(e) }");
+    expect(handler).not.toContain("save: JSON.parse(readFileSync(chosen, 'utf8'))");
   });
 });
