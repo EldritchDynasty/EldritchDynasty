@@ -164,12 +164,12 @@ describe('Continue leads when a run can be resumed', () => {
 
       await continueButton!.trigger('click');
       await flush();
-      expect(w.get('[role="status"]').text()).toContain('last sitting could not be resumed');
+      expect(w.get('.primary-row + .resume-refusal[role="status"]').text()).toContain('last sitting could not be resumed');
       expect(actions.resume).toHaveBeenCalledTimes(1);
 
       await continueButton!.trigger('click');
       await flush();
-      expect(w.find('[role="status"]').exists()).toBe(false);
+      expect(w.find('.resume-refusal[role="status"]').exists()).toBe(false);
       expect(actions.resume).toHaveBeenCalledTimes(2);
       expect(actions.begin).not.toHaveBeenCalled();
     } finally {
@@ -186,11 +186,11 @@ describe('Continue leads when a run can be resumed', () => {
       const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
       await continueButton!.trigger('click');
       await flush();
-      expect(w.get('[role="status"]').text()).toContain('last sitting could not be resumed');
+      expect(w.get('.primary-row + .resume-refusal[role="status"]').text()).toContain('last sitting could not be resumed');
 
       await continueButton!.trigger('click');
       await flush();
-      expect(w.find('[role="status"]').exists()).toBe(false);
+      expect(w.find('.resume-refusal[role="status"]').exists()).toBe(false);
       expect(actions.resume).toHaveBeenCalledTimes(2);
     } finally {
       w.unmount();
