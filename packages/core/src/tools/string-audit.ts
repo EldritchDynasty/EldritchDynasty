@@ -23,7 +23,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { CONTENT_PROSE_KEYS, contentInterpolationTokens, contentProseEntries, proseOriginalHash, ProseVariantS, type ProseVariant } from '@ed/schema';
+import { CONTENT_PROSE_KEYS, CORE_MESSAGE_VARIANTS_FILE, contentInterpolationTokens, contentProseEntries, proseOriginalHash, ProseVariantS, type ProseVariant } from '@ed/schema';
 import { coreMessageEntries } from './core-message-audit.js';
 
 export { CONTENT_PROSE_KEYS } from '@ed/schema';
@@ -476,9 +476,13 @@ export function plainEnglishCoverage(repo: string): PlainEnglishCoverage {
     if (!Array.isArray(rows)) continue;
     for (const candidate of rows) {
       const parsed = ProseVariantS.safeParse(candidate);
-      if (parsed.success && parsed.data.address.startsWith('content:' + file + '#')) {
-        variants.push(parsed.data);
-      }
+      // Content variants live beside their Original. Core msg() variants live
+      // together in the single shipped messages.yaml catalogue, not in TS.
+      const inSourceFile = parsed.success && (
+        parsed.data.address.startsWith('content:' + file + '#')
+        || (file === CORE_MESSAGE_VARIANTS_FILE && parsed.data.address.startsWith('core:messages#'))
+      );
+      if (inSourceFile && parsed.success) variants.push(parsed.data);
     }
   }
   return plainEnglishCoverageFor(plainEnglishWorklist(repo), variants);
