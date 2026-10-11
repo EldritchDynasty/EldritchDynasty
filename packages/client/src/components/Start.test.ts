@@ -340,6 +340,24 @@ describe('saved-run action failures (#1149)', () => {
   });
 });
 
+describe('import feedback stays beside the import picker (#1342)', () => {
+  it('keeps a rejected import separate from named-save errors', async () => {
+    const actions = spyActions([{ slot: 'chapter-1080', year: 1080 }]);
+    vi.mocked(actions.importSave).mockRejectedValueOnce(new Error('picker unavailable'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const bringIn = w.findAll('button').find((button) => button.text() === 'Bring a run in');
+      await bringIn!.trigger('click');
+      await flush();
+      expect(w.get('div.row > [role="status"]').text()).toContain('That file was not a run');
+      expect(w.find('section.saved [role="status"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('named-save failures belong to their row (#1342)', () => {
   it('anchors load/export refusal to the affected slot and removes it after a successful retry', async () => {
     const actions = spyActions([
