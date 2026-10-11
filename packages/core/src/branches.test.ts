@@ -332,6 +332,25 @@ describe('cadet endowment has a measured political cost and benefit (#1219)', ()
     expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.holderName).toBe('Other Hall');
   });
 
+  it('rejects selling a gift until recall has charged the living hall', () => {
+    const { ctx, gift } = twoHalls();
+    const before = ctx.world.treasury;
+    expect(endowParcel(ctx, 'hallowfield', gift.id).ok).toBe(true);
+    const view = landView(ctx).held.find((p) => p.parcel === 'hallowfield')!;
+    expect(view.sellable).toBe(false);
+
+    expect(order(ctx, { kind: 'sell', parcel: 'hallowfield' }).ok).toBe(false);
+    expect(ctx.world.treasury).toBe(before);
+    expect(gift.grievance).toBe(20);
+    expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBe(gift.id);
+
+    expect(order(ctx, { kind: 'endow', parcel: 'hallowfield', branch: null }).ok).toBe(true);
+    expect(gift.grievance).toBe(24);
+    expect(order(ctx, { kind: 'sell', parcel: 'hallowfield' }).ok).toBe(true);
+    expect(gift.grievance).toBe(24);
+    expect(heldParcels(ctx).some((p) => p.defId === 'hallowfield')).toBe(false);
+  });
+
   it('persists the deed and its grievance consequence across save and resume', () => {
     const { ctx, gift } = twoHalls();
     endowParcel(ctx, 'hallowfield', gift.id);
