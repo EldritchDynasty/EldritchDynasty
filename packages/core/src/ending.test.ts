@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse,
+  CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse, missingPlainEnglish,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
 import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
@@ -763,6 +763,40 @@ describe('the epilogue rings the prologue', () => {
     expect(restored.ring[0]!.owed).toBe(original.ring[0]!.owed);
     expect(restored.closing).toBe(original.closing);
     expect(restored.thesis).toBe(original.thesis);
+  });
+});
+
+describe('one-word ending title Plain English eligibility (#1106)', () => {
+  it('does not invent a missing translation for Apotheosis while translating eligible text', () => {
+    const ctx = atTheTerm();
+    ctx.world.ending = { id: 'apotheosis', year: ctx.world.year };
+    const titleAddress = 'content:endings.yaml#endings[id=apotheosis].title';
+    const openingAddress = 'content:endings.yaml#endings[id=apotheosis].opening';
+
+    // A one-word title has no authored variant address in the migration worklist.
+    expect(proseOriginalAt(ctx.content, titleAddress)).toBeUndefined();
+    expect(proseOriginalAt(ctx.content, openingAddress)).toBeTruthy();
+
+    setProseMode(ctx, 'plainenglish');
+    const original = epilogueOf(ctx)!;
+    expect(original.title).toBe('Apotheosis');
+    expect(missingPlainEnglish(ctx)).not.toContain(titleAddress);
+    expect(missingPlainEnglish(ctx)).toContain(openingAddress);
+
+    const plain = 'The family book was read from beginning to end.';
+    setProseVariants(ctx, [{
+      address: openingAddress,
+      of: proseOriginalHash(original.opening),
+      plainenglish: plain,
+    }]);
+    const translated = epilogueOf(ctx)!;
+    expect(translated.title).toBe('Apotheosis');
+    expect(translated.opening).toBe(plain);
+    expect(missingPlainEnglish(ctx)).not.toContain(titleAddress);
+    expect(missingPlainEnglish(ctx)).not.toContain(openingAddress);
+
+    setProseMode(ctx, 'original');
+    expect(epilogueOf(ctx)!.opening).toBe(original.opening);
   });
 });
 
