@@ -153,6 +153,50 @@ describe('Continue leads when a run can be resumed', () => {
     expect(actions.begin).not.toHaveBeenCalled();
   });
 
+  it('explains a refused Continue and clears that feedback on a successful retry (#1081)', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.resume).mockResolvedValueOnce(false);
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      expect(continueButton).toBeTruthy();
+
+      await continueButton!.trigger('click');
+      await flush();
+      expect(w.get('[role="status"]').text()).toContain('last sitting could not be resumed');
+      expect(actions.resume).toHaveBeenCalledTimes(1);
+
+      await continueButton!.trigger('click');
+      await flush();
+      expect(w.find('[role="status"]').exists()).toBe(false);
+      expect(actions.resume).toHaveBeenCalledTimes(2);
+      expect(actions.begin).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('reports an unexpectedly rejected Continue without an unhandled rejection (#1081)', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.resume).mockRejectedValueOnce(new Error('host unavailable'));
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      await continueButton!.trigger('click');
+      await flush();
+      expect(w.get('[role="status"]').text()).toContain('last sitting could not be resumed');
+
+      await continueButton!.trigger('click');
+      await flush();
+      expect(w.find('[role="status"]').exists()).toBe(false);
+      expect(actions.resume).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('offers only Begin, as the primary action, with nothing to continue', async () => {
     const w = mount(Start, { props: { actions: spyActions(), resumable: false } });
     await flush();
