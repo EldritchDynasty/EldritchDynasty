@@ -713,6 +713,17 @@ export function createGame(
       // the years turned them out — see `ChapterBeat`. Unlike `passages` this
       // is not trimmed and not reversed: every one of them queues.
       const beats: ChapterBeat[] = [];
+      // A chapter save belongs to its closing year, not to the end of this
+      // press. Keep the immutable snapshot beside the beat while the session
+      // is still in that year; a long jump can cross more than one boundary.
+      const boundarySaves: Array<{ view: ChapterView; save: ReturnType<GameSession['save']> }> = [];
+      const collectBeats = (turned: ReturnType<GameSession['advance']>): void => {
+        for (const opening of turned.opened) beats.push({ kind: 'opening', opening });
+        for (const view of turned.chapters) {
+          beats.push({ kind: 'closing', view });
+          if (view.boundary) boundarySaves.push({ view, save: g.save() });
+        }
+      };
       // The account of THIS press, summed out of the years it turned. Reset
       // here rather than added to, because it answers "did that go well?" and
       // the question is about the press the player just made.
@@ -724,8 +735,7 @@ export function createGame(
         const turned = g.advance(1);
         moved = foldStanding(moved, turned.changed);
         said.push(...rememberCast(turned.passages, before.cast));
-        for (const opening of turned.opened) beats.push({ kind: 'opening', opening });
-        for (const view of turned.chapters) beats.push({ kind: 'closing', view });
+        collectBeats(turned);
       }
 
       // ARRIVING AT THE TERM IS NOT THE SAME AS BEING READ. `stepYear` closes
@@ -739,8 +749,7 @@ export function createGame(
         const turned = g.advance(1);
         moved = foldStanding(moved, turned.changed);
         said.push(...rememberCast(turned.passages, beforeTerm.cast));
-        for (const opening of turned.opened) beats.push({ kind: 'opening', opening });
-        for (const view of turned.chapters) beats.push({ kind: 'closing', view });
+        collectBeats(turned);
       }
 
       // Newest first, to read the way the chronicle beside it reads. Guarded,
@@ -753,12 +762,8 @@ export function createGame(
       // EVERY beat this press produced queues — nothing here is trimmed to
       // "the latest," which is `showInterlude`'s rule and the wrong one for a
       // chapter (issue #65: "every Age closing gets a card").
-      if (beats.length) {
-        chapterQueue.value = [...chapterQueue.value, ...beats];
-        for (const beat of beats) {
-          if (beat.kind === 'closing' && beat.view.boundary) saveChapterBoundary(g, beat.view);
-        }
-      }
+      if (beats.length) chapterQueue.value = [...chapterQueue.value, ...beats];
+      for (const { view, save } of boundarySaves) saveChapterBoundary(save, view);
       // Null rather than a delta of zeroes: a header permanently decorated
       // with "(0)" is the noise this is meant to remove, and a press that was
       // eaten by a waiting docket must say nothing rather than say nothing
@@ -940,8 +945,7 @@ export function createGame(
    * span (see `chapter.ts`). `(age, to)` is unique for the same reason `to`
    * partitions the run: two closings never share a year.
    */
-  function saveChapterBoundary(g: GameSession, view: ChapterView): void {
-    const save = g.save();
+  function saveChapterBoundary(save: ReturnType<GameSession['save']>, view: ChapterView): void {
     const slot = slotForCampaign(`chapter-${view.age}-${view.to}`, save.campaign);
     void platform.writeSave(slot, save).then(() => refreshSaves()).catch(() => undefined);
   }
