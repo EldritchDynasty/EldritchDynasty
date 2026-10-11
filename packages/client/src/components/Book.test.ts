@@ -108,14 +108,17 @@ describe('the volume', () => {
 });
 
 describe('the panel', () => {
-  it('links a recorded person who has died and is absent from living halls (#1077)', async () => {
-    const page = { ...entry('chr_dead', 1067, 'Her name remains on the page.'), people: ['per_dead'] };
+  it('keeps historical cast named without offering an unreachable link (#1077)', async () => {
+    const page = { ...entry('chr_dead', 1067, 'Her name remains on the page.'), people: ['per_dead', 'per_alive'] };
     const w = mount(Chronicle, {
       props: {
         view: {
           chronicle: [page],
-          chroniclePeople: [{ id: 'per_dead', name: 'Mara' }],
-          halls: [],
+          chroniclePeople: [
+            { id: 'per_dead', name: 'Mara' },
+            { id: 'per_alive', name: 'Nora' },
+          ],
+          halls: [{ members: [{ id: 'per_alive', name: 'Nora' }] }],
           campaign: { endYear: 1542 },
         } as never,
         frame: [],
@@ -123,10 +126,15 @@ describe('the panel', () => {
       },
     });
     try {
-      const person = w.get('button[data-person="per_dead"]');
-      expect(person.text()).toBe('Mara');
-      await person.trigger('click');
-      expect(w.emitted('person')).toEqual([['per_dead']]);
+      const historical = w.get('[data-person-history="per_dead"]');
+      expect(historical.text()).toContain('Mara');
+      expect(historical.text()).toContain('not in a living hall');
+      expect(w.find('button[data-person="per_dead"]').exists()).toBe(false);
+
+      const living = w.get('button[data-person="per_alive"]');
+      expect(living.text()).toBe('Nora');
+      await living.trigger('click');
+      expect(w.emitted('person')).toEqual([['per_alive']]);
     } finally {
       w.unmount();
     }
