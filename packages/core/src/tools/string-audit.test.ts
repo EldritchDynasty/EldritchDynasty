@@ -221,6 +221,9 @@ describe('the string-source audit (issue #276)', () => {
       address: legacy.address, of: proseOriginalHash(legacy.text),
       plainenglish: 'This sentence still has no message key.',
     };
+    expect(plainEnglishCoverageFor(items, [reviewed, fakeLegacy])).toMatchObject({
+      current: 1, missing: 1, remaining: [{ address: legacy.address, status: 'missing' }],
+    });
     const current = pendingPlainEnglishWorklist(items, [reviewed, fakeLegacy]);
     expect(current.map((row) => [row.address, row.variantStatus])).toEqual([
       [legacy.address, 'missing'],
