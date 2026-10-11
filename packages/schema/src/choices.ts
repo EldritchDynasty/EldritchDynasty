@@ -2,6 +2,7 @@ import type { Content } from './content-index.js';
 import type { Effect, EventTemplate, Outcome } from './event.js';
 import { deciderKind, type DeciderKind } from './decider.js';
 import { assertNever } from './exhaustive.js';
+import { GOD_RITE_FAILED } from './ending.js';
 import { isInlineArcId } from './desugar.js';
 
 /**
@@ -226,6 +227,10 @@ const CATEGORY_ORDER: readonly ChoiceCategory[] = [
 export function auditChoices(content: Content): ChoiceAudit {
   // ── Memory: who writes each key, and whether anything reads it ──────────
   const readers = collectReaders([content.bundle, content.events, content.arcs]);
+  // Static content guards are not the only consumers: the ending selector
+  // directly checks this one world flag. Do not exempt similarly named
+  // knowledge/arc flags, or unrelated authored memory.
+  readers.flag.add(GOD_RITE_FAILED);
   const writers: Record<MemoryKind, Map<string, Set<string>>> = {
     flag: new Map(), knowledge: new Map(), arc_flag: new Map(),
   };
