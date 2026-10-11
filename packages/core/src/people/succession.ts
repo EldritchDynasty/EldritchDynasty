@@ -8,7 +8,7 @@ import type { Rng } from '../rng.js';
 import { phenotypeOf } from './factory.js';
 import { branchOf, recallToMain } from './branches.js';
 import { eligibleTemplates, mint, mintForRole, pickTemplate } from './minting.js';
-import { walkSecrets, type ReleaseReason } from './secrets.js';
+import { newEmployer, walkSecrets, type ReleaseReason } from './secrets.js';
 import { headNamesake } from './naming.js';
 import { MAIN_BRANCH, asId } from '@ed/schema';
 import { answerGenerationQuestion, chooseGenerationQuestion } from '../generation.js';
@@ -428,13 +428,11 @@ function endService(
     const otherTie = p.membership.some((m) =>
       m !== open && m.from <= w.year && (m.to === undefined || m.to > w.year));
     if (!otherTie && p.status === 'alive') {
-      const rivals = ctx.content.houses.filter((h) => h.id !== w.playerHouse);
-      const named = rivals.find((h) =>
-        p.name.endsWith(` of ${h.name.replace(/^House /, '')}`));
+      const named = ctx.content.houses.find((h) => h.id !== w.playerHouse
+        && p.name.endsWith(` of ${h.name.replace(/^House /, '')}`));
       const destination = walked[0]?.house
         ?? named?.id
-        ?? rng.fork(`retainer-departure:${p.id}`)
-          .weighted(rivals, (h) => Math.min(h.wealth, 1000))?.id;
+        ?? newEmployer(ctx, rng.fork(`retainer-departure:${p.id}`));
       if (!destination) throw new Error(`no outside house for departing retainer ${p.id}`);
       open.to = w.year;
       p.membership.push({ house: asId(destination), kind: 'none', from: w.year });
