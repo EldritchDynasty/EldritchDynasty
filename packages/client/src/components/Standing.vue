@@ -37,7 +37,7 @@ const saveLabel = computed(() => {
   switch (props.saveStatus) {
     case 'saving': return 'saving…';
     case 'saved': return 'saved';
-    case 'error': return 'not saved — could not write to disk';
+    case 'error': return 'not saved — could not save this run';
     default: return null;
   }
 });
@@ -157,6 +157,7 @@ const muster = computed(() => {
       <span class="dim small">generation {{ view.generation }}</span>
       <span
         v-if="saveLabel"
+        role="status"
         class="dim small save"
         :class="{ warn: saveStatus === 'error' }"
       >{{ saveLabel }}</span>
