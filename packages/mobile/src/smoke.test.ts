@@ -392,6 +392,7 @@ function fixture(native: NativeState) {
       files: native === 'absent' ? [] : [{ name: 'autosave.json', type: 'file' as const }],
     }),
     readFile: async () => {
+      if (native === 'absent') throw Object.assign(new Error('not found'), { code: 'OS-PLUG-FILE-0008' });
       if (native === 'unreadable') throw new Error('Data file temporarily inaccessible');
       return { data: native === 'invalid-json' ? '{bad json' : JSON.stringify(currentSave) };
     },
@@ -437,6 +438,57 @@ describe('native mobile save listing never overwrites unreadable data (#1196)', 
   it('still migrates a legacy save whose native filename is genuinely absent', async () => {
     const { store, writes, removed, oldSave } = fixture('absent');
     expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...oldSave }]);
+    expect(writes).toEqual(['eldritch/saves/autosave.json']);
+    expect(removed).toEqual(['ed:save:autosave']);
+  });
+});
+
+
+describe('native save read presence is not lost to invalid JSON (#1256)', () => {
+  it('rejects malformed, empty, null and binary native save bytes without consulting legacy data', async () => {
+    for (const data of ['{broken JSON', '', 'null', new Blob(['not text'])]) {
+      const writes: string[] = [];
+      const removals: string[] = [];
+      const legacyReads: string[] = [];
+      const files = {
+        async readdir() { return { files: [] }; },
+        async readFile() { return { data }; },
+        async writeFile({ path }: { path: string }) { writes.push(path); },
+        async deleteFile() {},
+      };
+      const prefs = {
+        async keys() { return { keys: [] }; },
+        async get({ key }: { key: string }) {
+          legacyReads.push(key);
+          return { value: '{"format":28,"year":1045}' };
+        },
+        async remove({ key }: { key: string }) { removals.push(key); },
+      };
+      const store = mobileStorage(files, prefs);
+      await expect(store.readSave('autosave')).rejects.toThrow('the native save file is unreadable');
+      expect(legacyReads).toEqual([]);
+      expect(writes).toEqual([]);
+      expect(removals).toEqual([]);
+    }
+  });
+
+  it('reads an intact native run without replacing it with an older Preferences snapshot', async () => {
+    const { store, writes, removed, currentSave } = fixture('valid');
+    await expect(store.readSave('autosave')).resolves.toEqual(currentSave);
+    expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('propagates a native read failure rather than claiming the run is absent', async () => {
+    const { store, writes, removed } = fixture('unreadable');
+    await expect(store.readSave('autosave')).rejects.toThrow('Data file temporarily inaccessible');
+    expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('still reads and migrates a legacy snapshot when the native file is genuinely missing', async () => {
+    const { store, writes, removed, oldSave } = fixture('absent');
+    await expect(store.readSave('autosave')).resolves.toEqual(oldSave);
     expect(writes).toEqual(['eldritch/saves/autosave.json']);
     expect(removed).toEqual(['ed:save:autosave']);
   });
