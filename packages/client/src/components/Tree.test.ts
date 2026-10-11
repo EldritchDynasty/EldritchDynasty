@@ -166,17 +166,34 @@ describe('the family tree as a planning board (#268)', () => {
     wrapper.unmount();
   });
 
-  it('roots the direct-line reading at the living seal spine', async () => {
+  it('draws only direct-line people, not off-line children of the same ancestor (#1301)', async () => {
     const view = largeView();
-    const line = [{ person: 'p000' }];
+    // p000 -> p001 -> p004 is a recorded spine. Siblings p002/p003 and
+    // p004's descendants are deliberately absent; p018 belongs to another
+    // hall, with its parent p017 outside the requested line.
+    const line = [
+      { person: 'p000' },
+      { person: 'p001' },
+      { person: 'p004' },
+      { person: 'p018' },
+    ];
     const wrapper = mount(Tree, { props: { view, selected: null, line } });
 
     await wrapper.get('[data-direct-line]').trigger('click');
     expect(wrapper.get('[data-direct-line]').attributes('aria-pressed')).toBe('true');
+    expect(renderedIds(wrapper)).toEqual(['p000', 'p001', 'p004', 'p018']);
+    expect(wrapper.find('#member-p002').exists()).toBe(false);
+    expect(wrapper.find('#member-p005').exists()).toBe(false);
+    expect(wrapper.findAll('.hall')).toHaveLength(2);
+    expect(wrapper.findAll('.hall h3').map((heading) => heading.text()))
+      .toEqual([expect.stringContaining('3 shown'), expect.stringContaining('1 shown')]);
 
-    const expected = view.halls[0]!.members.map((member) => member.id).sort();
-    expect(renderedIds(wrapper)).toEqual(expected);
-    expect(wrapper.findAll('.hall')).toHaveLength(1);
+    // The narrowing is a reading mode, not a mutation of the hall roster.
+    await wrapper.get('[data-direct-line]').trigger('click');
+    expect(wrapper.get('[data-direct-line]').attributes('aria-pressed')).toBe('false');
+    expect(renderedIds(wrapper))
+      .toEqual(allMembers(view).map(({ member }) => member.id).sort());
+    expect(wrapper.findAll('.hall')).toHaveLength(6);
     wrapper.unmount();
   });
 
