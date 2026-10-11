@@ -138,3 +138,26 @@ describe('actual generated core catalogue (#1011)', () => {
     expect(assessor?.interpolations).toEqual(contentInterpolationTokens(assessor!.text));
   });
 });
+
+/**
+ * The shared new-item form uses the same source-witness pattern as the other
+ * editor views in this suite. Mounted Vue tests belong in the client-only
+ * isolated DOM pool, as enforced by lanes.test.ts.
+ */
+describe('new event and substory selection (#1309)', () => {
+  it('retains the submitted ID across the asynchronous save and input reset', () => {
+    const source = readFileSync(join(COMPONENTS, 'NewItem.vue'), 'utf8');
+    const capture = source.indexOf('const createdId = cleanId.value;');
+    const save = source.indexOf('await createItem(');
+    const reset = source.indexOf("id.value = '';", save);
+    const notify = source.indexOf("emit('created', createdId);");
+
+    expect(capture).toBeGreaterThan(0);
+    expect(capture).toBeLessThan(save);
+    expect(source).toContain('props.seed(createdId)');
+    expect(reset).toBeGreaterThan(save);
+    expect(notify).toBeGreaterThan(reset);
+    expect(source).not.toContain("emit('created', cleanId.value)");
+    expect(source).toContain("if (!res.ok) { error.value = res.error ?? 'write failed'; return; }");
+  });
+});
