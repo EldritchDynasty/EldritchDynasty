@@ -62,6 +62,8 @@ const confirmingClearLibrary = ref(false);
 /** A single completed house should never disappear on the first Remove click. */
 const confirmingRemoveRun = ref<string | null>(null);
 const removingRun = ref<string | null>(null);
+/** Keep clear-all and single-run deletion from racing the same host Library. */
+const clearingLibrary = ref(false);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -162,33 +164,37 @@ async function retryLibrary(): Promise<void> {
 }
 
 async function clearLibrary(): Promise<void> {
-  // A missed or duplicated click cannot skip the explicit destructive step.
-  if (!confirmingClearLibrary.value) return;
+  // Clear and Remove share one host Library. Refuse stale/programmatic clicks
+  // as well as disabling the controls while either write is in flight.
+  if (!confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
+  clearingLibrary.value = true;
   confirmingClearLibrary.value = false;
   libraryError.value = null;
   try {
     await props.actions.clearLibrary();
   } catch {
     libraryError.value = 'The Library could not be cleared. Your saved houses are still here. Try again.';
+  } finally {
+    clearingLibrary.value = false;
   }
 }
 
 function requestRemoveLibraryRun(id: string): void {
-  if (removingRun.value !== null) return;
+  if (removingRun.value !== null || clearingLibrary.value) return;
   confirmingClearLibrary.value = false;
   confirmingRemoveRun.value = id;
   libraryError.value = null;
 }
 
 function cancelRemoveLibraryRun(): void {
-  if (removingRun.value !== null) return;
+  if (removingRun.value !== null || clearingLibrary.value) return;
   confirmingRemoveRun.value = null;
 }
 
 async function removeLibraryRun(id: string): Promise<void> {
   // A stale click, or a second click while the host is deleting, cannot
   // remove another house or issue the same irreversible command twice.
-  if (confirmingRemoveRun.value !== id || removingRun.value !== null) return;
+  if (confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
   removingRun.value = id;
   libraryError.value = null;
   try {
@@ -275,10 +281,15 @@ onMounted(() => { void refreshSaves(); });
           <h2>The Library of Houses</h2>
           <p class="dim small">Finished lines remain here. A new house may hear them repeated badly.</p>
         </div>
-        <button v-if="!confirmingClearLibrary" class="quiet small" @click="confirmingRemoveRun = null; confirmingClearLibrary = true">Clear</button>
+        <button
+          v-if="!confirmingClearLibrary"
+          class="quiet small"
+          :disabled="removingRun !== null || clearingLibrary"
+          @click="confirmingRemoveRun = null; confirmingClearLibrary = true"
+        >{{ clearingLibrary ? 'Clearing…' : 'Clear' }}</button>
         <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
           <p class="rubric small">Clear all {{ completedHouses.length }} completed houses? This cannot be undone.</p>
-          <button class="quiet small confirm-clear" @click="clearLibrary()">Yes, clear all</button>
+          <button class="quiet small confirm-clear" :disabled="removingRun !== null || clearingLibrary" @click="clearLibrary()">Yes, clear all</button>
           <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
         </div>
       </div>
@@ -290,7 +301,7 @@ onMounted(() => { void refreshSaves(); });
           <button
             v-if="confirmingRemoveRun !== run.id"
             class="quiet small"
-            :disabled="removingRun !== null"
+            :disabled="removingRun !== null || clearingLibrary"
             @click="requestRemoveLibraryRun(run.id)"
           >Remove</button>
           <div
@@ -302,10 +313,10 @@ onMounted(() => { void refreshSaves(); });
             <span class="rubric small">Remove {{ run.house }}? This cannot be undone.</span>
             <button
               class="quiet small confirm-remove"
-              :disabled="removingRun !== null"
+              :disabled="removingRun !== null || clearingLibrary"
               @click="removeLibraryRun(run.id)"
             >{{ removingRun === run.id ? 'Removing…' : 'Yes, remove' }}</button>
-            <button class="quiet small" :disabled="removingRun !== null" @click="cancelRemoveLibraryRun()">Cancel</button>
+            <button class="quiet small" :disabled="removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
           </div>
         </div>
         <p v-if="survivingPage(run)" class="small excerpt">“{{ survivingPage(run) }}”</p>
