@@ -46,6 +46,8 @@ function focusable(): HTMLElement[] {
 }
 
 function onKey(e: KeyboardEvent): void {
+  // An IME candidate's Escape is not a request to dismiss the Age dialog.
+  if (e.key === 'Escape' && (e.isComposing || e.keyCode === 229)) return;
   if (e.key === 'Escape') {
     e.preventDefault();
     // One held key must dismiss at most one overlay, even when another mounts.
