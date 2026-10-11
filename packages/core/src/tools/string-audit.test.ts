@@ -419,7 +419,7 @@ describe('the string-source audit (issue #276)', () => {
     const yamlFor = (of: string) => [
       'proseVariants:',
       '  - address: ' + JSON.stringify(item.address),
-      '    of: ' + of,
+      '    of: ' + JSON.stringify(of),
       '    plainenglish: The clerk recorded {NAME}.',
     ].join('\n') + '\n';
     const messages = join(content, CORE_MESSAGE_VARIANTS_FILE);
