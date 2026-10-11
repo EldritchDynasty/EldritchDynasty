@@ -118,6 +118,21 @@ describe('married-in spouse house names in the selected prose mode (#968)', () =
     session.setProseMode('original');
     expect(spouseHouse()).toBe(house.name);
     expect(canonical(saveGame(ctx))).toBe(originalSave);
+
+    // The family's current name is not the Original against which a variant
+    // was reviewed. The tree must not resurrect old wording in either mode.
+    const liveHouse = ctx.world.houses.get(house.id);
+    if (!liveHouse) throw new Error('Marrow house is missing from the world');
+    liveHouse.name = 'Marrow by the River';
+    const renamedSave = canonical(saveGame(ctx));
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(spouseHouse()).toBe('Marrow by the River');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    session.setProseMode('original');
+    expect(spouseHouse()).toBe('Marrow by the River');
+    expect(canonical(saveGame(ctx))).toBe(renamedSave);
   });
 });
 
