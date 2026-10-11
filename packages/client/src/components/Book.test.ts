@@ -70,6 +70,24 @@ describe('the volume', () => {
     }
   });
 
+  it('catches browser canvas exceptions instead of rejecting a save click (#1327)', async () => {
+    const brokenCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation(() => { throw new Error('Canvas allocation blocked'); });
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      expect(save).toBeDefined();
+      await save!.trigger('click');
+      await flushPromises();
+
+      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+      expect((save!.element as HTMLButtonElement).disabled).toBe(false);
+    } finally {
+      w.unmount();
+      brokenCanvas.mockRestore();
+    }
+  });
+
   it('explains PNG encoding failure and returns the save button to usable state (#1327)', async () => {
     const context = {
       measureText: (text: string) => ({ width: text.length * 7 }),
