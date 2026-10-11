@@ -161,6 +161,31 @@ describe('the volume', () => {
 });
 
 describe('the panel', () => {
+  it('dates each frame interlude at its real year instead of the campaign end (#1283)', () => {
+    const frame = [
+      { eventId: 'the_first_whisper', year: 1108, text: 'The first account was heard.' },
+      { eventId: 'the_later_answer', year: 1214, text: 'Another account answered it.' },
+    ] as FrameEntry[];
+    const w = mount(Chronicle, {
+      props: {
+        view: { chronicle: [], campaign: { endYear: 1542 } } as never,
+        frame,
+        actions: readsOver([]),
+      },
+    });
+    try {
+      expect(w.get('.frame-label').text()).toBe('The frame');
+      const entries = w.findAll('.entry.frame');
+      expect(entries).toHaveLength(2);
+      expect(entries.map((entry) => entry.get('.frame-year').text())).toEqual(['1108', '1214']);
+      expect(entries[0]!.text()).toContain('The first account was heard.');
+      expect(entries[1]!.text()).toContain('Another account answered it.');
+      expect(w.text()).not.toContain('1542');
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('keeps historical cast named without offering an unreachable link (#1077)', async () => {
     const page = { ...entry('chr_dead', 1067, 'Her name remains on the page.'), people: ['per_dead', 'per_alive'] };
     const w = mount(Chronicle, {

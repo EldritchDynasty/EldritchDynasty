@@ -115,8 +115,9 @@ async function follow(id: string): Promise<void> {
          the family wrote its own, and it is kept apart from the chronicle
          because it is not the same book. -->
     <template v-if="frame.length">
-      <h3 class="label frame-label">{{ view.campaign.endYear }}</h3>
+      <h3 class="label frame-label">The frame</h3>
       <article v-for="entry in frame" :key="entry.eventId + entry.year" class="entry frame">
+        <span class="small dim frame-year">{{ entry.year }}</span>
         <p>{{ entry.text }}</p>
       </article>
     </template>
