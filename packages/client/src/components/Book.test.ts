@@ -108,6 +108,30 @@ describe('the volume', () => {
 });
 
 describe('the panel', () => {
+  it('links a recorded person who has died and is absent from living halls (#1077)', async () => {
+    const page = { ...entry('chr_dead', 1067, 'Her name remains on the page.'), people: ['per_dead'] };
+    const w = mount(Chronicle, {
+      props: {
+        view: {
+          chronicle: [page],
+          chroniclePeople: [{ id: 'per_dead', name: 'Mara' }],
+          halls: [],
+          campaign: { endYear: 1542 },
+        } as never,
+        frame: [],
+        actions: readsOver([page]),
+      },
+    });
+    try {
+      const person = w.get('button[data-person="per_dead"]');
+      expect(person.text()).toBe('Mara');
+      await person.trigger('click');
+      expect(w.emitted('person')).toEqual([['per_dead']]);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('opens the volume at a page older than its window', async () => {
     // The panel's window is whatever the view hands it; the act is not in it.
     const window = [BOOK[2]!];
