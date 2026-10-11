@@ -10,7 +10,7 @@ import { branchOf, recallToMain } from './branches.js';
 import { eligibleTemplates, mint, mintForRole, pickTemplate } from './minting.js';
 import { walkSecrets, type ReleaseReason } from './secrets.js';
 import { headNamesake } from './naming.js';
-import { MAIN_BRANCH } from '@ed/schema';
+import { MAIN_BRANCH, asId } from '@ed/schema';
 import { answerGenerationQuestion, chooseGenerationQuestion } from '../generation.js';
 import { characterProse } from './character-prose.js';
 import { msg } from '../messages.js';
@@ -411,17 +411,37 @@ function endService(
   if (WORTH_WRITING[reason]) {
     w.chronicle.push({ year: w.year, weight: 'line', text, named: false });
   }
-  walkSecrets(ctx, p, contract, reason, rng);
+  const walked = walkSecrets(ctx, p, contract, reason, rng);
 
-  // Only the retainer affiliation ends with employment: someone of the blood
-  // or married into the house must not lose their independent household tie.
+  // Employment must end without leaving a living person in no household.
+  // Keep the destination already chosen for a walking secret. Otherwise use
+  // the retainer's named house, where known, or draw an outside employer on a
+  // forked stream: leaving service must not reroll the remaining annual work.
+  // Only the retainer affiliation ends; someone with another open tie keeps it.
   const open = p.membership.find((m) =>
     m.kind === 'retainer'
       && m.house === w.playerHouse
       && m.from <= w.year
       && (m.to === undefined || m.to > w.year),
   );
-  if (open) open.to = w.year;
+  if (open) {
+    const otherTie = p.membership.some((m) =>
+      m !== open && m.from <= w.year && (m.to === undefined || m.to > w.year));
+    if (!otherTie && p.status === 'alive') {
+      const rivals = ctx.content.houses.filter((h) => h.id !== w.playerHouse);
+      const named = rivals.find((h) =>
+        p.name.endsWith(` of ${h.name.replace(/^House /, '')}`));
+      const destination = walked[0]?.house
+        ?? named?.id
+        ?? rng.fork(`retainer-departure:${p.id}`)
+          .weighted(rivals, (h) => Math.min(h.wealth, 1000))?.id;
+      if (!destination) throw new Error(`no outside house for departing retainer ${p.id}`);
+      open.to = w.year;
+      p.membership.push({ house: asId(destination), kind: 'none', from: w.year });
+    } else {
+      open.to = w.year;
+    }
+  }
   return ended;
 }
 
