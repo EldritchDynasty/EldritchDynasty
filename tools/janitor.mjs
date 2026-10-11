@@ -86,10 +86,20 @@ const git = (...args) => {
 };
 const gitOut = (...args) => git(...args).out;
 
-/** Perform it, or say what would have been performed. Never both. */
+/** Perform a remote ref deletion, or describe it without mutating in dry runs.
+ * Never call a deletion successful until git reports exit status zero. */
 function act(cmd, ...args) {
-  if (DRY) return log(`would: ${cmd} ${args.join(' ')}`);
-  spawnSync(cmd, args, { cwd: CWD, stdio: 'ignore' });
+  if (DRY) {
+    log(`would: ${cmd} ${args.join(' ')}`);
+    return true;
+  }
+  const result = spawnSync(cmd, args, { cwd: CWD, encoding: 'utf8' });
+  if (!result.error && result.status === 0) return true;
+  refDeletionFailed = true;
+  const ref = args.at(-1) ?? '(unknown ref)';
+  const detail = result.error?.message || (result.stderr ?? '').trim() || 'no stderr';
+  log(`ref deletion: failed ${ref} (status ${result.status ?? 'unknown'}): ${detail}`);
+  return false;
 }
 
 /**
@@ -98,6 +108,7 @@ function act(cmd, ...args) {
  */
 const HAS_GH = onPath('gh');
 let reconciliationFailed = false;
+let refDeletionFailed = false;
 
 /** Injected issue history is used only for dry-run fixtures, never for live repair. */
 function dryIssueEvidence(n) {
@@ -495,9 +506,12 @@ if (DOOMED.length > DELETE_BATCH.length) {
 }
 
 for (const branch of DELETE_BATCH) {
-  MERGED.add(branch);
-  act('git', 'push', REMOTE, '--delete', branch);
-  say(`- deleted \`${branch}\` — ${LANDED_BY.get(branch) ?? 'merged'}`);
+  if (act('git', 'push', REMOTE, '--delete', branch)) {
+    MERGED.add(branch);
+    say(`- deleted \`${branch}\` — ${LANDED_BY.get(branch) ?? 'merged'}`);
+  } else {
+    say(`- FAILED to delete \`${branch}\` — remote ref remains; see deletion diagnostics`);
+  }
 }
 
 let kept = 0;
@@ -709,14 +723,16 @@ for (const claim of CLAIMS) {
   }
 
   if (reason) {
-    act('git', 'push', REMOTE, '--delete', `claim/${slug}`);
-    say(`- retired \`claim/${slug}\` — ${reason}`);
-    // The multi-issue case, said out loud: a branch that LANDED while still
-    // holding an issue nobody's commit named. Usually an epic delivered in
-    // parts. Never closed from here — only reported. An agent that put an issue
-    // down by hand said what it meant by releasing it, so that case is silent.
-    if (landed && numeric && !NAMED.has(slug) && issueState(slug) === 'OPEN') {
-      say(`  - ⚠ #${slug} is still OPEN and no landing commit named it. Close it or re-claim it.`);
+    if (act('git', 'push', REMOTE, '--delete', `claim/${slug}`)) {
+      say(`- retired \`claim/${slug}\` — ${reason}`);
+      // A landed branch may have claimed additional unnamed issues. Only
+      // report those after GitHub really released the mutex.
+      if (landed && numeric && !NAMED.has(slug) && issueState(slug) === 'OPEN') {
+        say(`  - ⚠ #${slug} is still OPEN and no landing commit named it. Close it or re-claim it.`);
+      }
+    } else {
+      held += 1;
+      say(`- FAILED to retire \`claim/${slug}\` — remote ref remains; see deletion diagnostics`);
     }
   } else {
     held += 1;
@@ -726,6 +742,10 @@ for (const claim of CLAIMS) {
 say('');
 say(`${held} claim(s) still open.`);
 
+if (refDeletionFailed) {
+  process.stderr.write('Remote ref deletion was incomplete; see the diagnostics above.\n');
+  process.exitCode = 1;
+}
 if (reconciliationFailed) {
   process.stderr.write('Issue reconciliation was incomplete; see the diagnostics above.\n');
   process.exitCode = 1;
