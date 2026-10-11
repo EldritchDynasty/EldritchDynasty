@@ -1243,7 +1243,7 @@ describe('modal overlays guard the docket keyboard shortcuts (#1170)', () => {
 
       document.body.appendChild(modal);
       close.focus();
-      pressOne();
+      expect(pressOne(), 'the docket must not consume a dialog keydown').toBe(true);
       expect(actions.choose, 'a hidden decision must not respond to a number key')
         .toHaveBeenCalledTimes(1);
 
