@@ -188,6 +188,70 @@ describe('mobile native save-list read failures', () => {
 });
 
 
+describe('native Library bytes are never mistaken for an absent profile (#1241)', () => {
+  const intact = { format: 1, runs: [] };
+
+  it('rejects malformed JSON, null JSON, and binary native data without reading or replacing legacy history', async () => {
+    for (const data of ['{invalid JSON', 'null', new Blob(['opaque file'])]) {
+      const wrote: string[] = [];
+      const removed: string[] = [];
+      const legacyReads: string[] = [];
+      const files = {
+        async readdir() { return { files: [] }; },
+        async readFile() { return { data }; },
+        async writeFile({ path }: { path: string }) { wrote.push(path); },
+        async deleteFile() {},
+      };
+      const prefs = {
+        async keys() { return { keys: [] }; },
+        async get({ key }: { key: string }) {
+          legacyReads.push(key);
+          return { value: JSON.stringify(intact) };
+        },
+        async remove({ key }: { key: string }) { removed.push(key); },
+      };
+      await expect(mobileStorage(files, prefs).readLibrary())
+        .rejects.toThrow('the native Library of Houses file is unreadable');
+      expect(legacyReads).toEqual([]);
+      expect(wrote).toEqual([]);
+      expect(removed).toEqual([]);
+    }
+  });
+
+  it('returns a valid native Library unchanged without touching old Preferences', async () => {
+    const files = {
+      async readdir() { return { files: [] }; },
+      async readFile() { return { data: JSON.stringify(intact) }; },
+      async writeFile() { throw new Error('no native write needed'); },
+      async deleteFile() {},
+    };
+    const prefs = {
+      async keys() { return { keys: [] }; },
+      async get() { throw new Error('native Library must win over Preferences'); },
+      async remove() {},
+    };
+    await expect(mobileStorage(files, prefs).readLibrary()).resolves.toEqual(intact);
+  });
+
+  it('still distinguishes genuinely missing native data from a damaged native file', async () => {
+    const files = {
+      async readdir() { return { files: [] }; },
+      async readFile(): Promise<never> {
+        throw Object.assign(new Error('not found'), { code: 'OS-PLUG-FILE-0008' });
+      },
+      async writeFile() {},
+      async deleteFile() {},
+    };
+    const prefs = {
+      async keys() { return { keys: [] }; },
+      async get() { return { value: null }; },
+      async remove() {},
+    };
+    await expect(mobileStorage(files, prefs).readLibrary()).resolves.toBeNull();
+  });
+});
+
+
 // Exercise the ACTUAL Capacitor bridge's import/export methods. The existing
 // shell save test covers mobileStorage, but used JSON.stringify in place of
 // the public mobile share and file-picker paths; that can miss a broken bridge.
