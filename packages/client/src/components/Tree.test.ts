@@ -6,6 +6,8 @@ import type { SessionView } from '@ed/core';
 import Tree from './Tree.vue';
 import Line from './Line.vue';
 import Chronicle from './Chronicle.vue';
+import Passage from './Passage.vue';
+import type { RememberedPassage } from '../lib/game';
 import type { MemberView } from '../lib/kin';
 
 type HallView = SessionView['halls'][number];
@@ -443,5 +445,48 @@ describe('Cast navigation reveals a person hidden by the planning board (#1060)'
     } finally {
       wrapper.unmount();
     }
+  });
+});
+
+
+describe('Passage navigation only offers currently drawable family cards (#1085)', () => {
+  it('keeps departed history readable without a dead-end navigation control', async () => {
+    const passages = [{
+      year: 1100,
+      lines: [
+        { kind: 'birth', person: 'p001', text: 'A child of the hall was born.' },
+        { kind: 'marriage', person: 'p-departed', text: 'A person later lost was married.' },
+        {
+          kind: 'death', person: 'p-departed', text: 'The person died.',
+          remembered: { label: 'the last heir', because: 'they had held the seal' },
+        },
+      ],
+    }] as unknown as RememberedPassage[];
+    const wrapper = mount(Passage, {
+      props: { passages, halls: largeView().halls },
+    });
+    try {
+      expect(wrapper.text()).toContain('A person later lost was married.');
+      expect(wrapper.text()).toContain('The person died.');
+      expect(wrapper.text()).toContain('the last heir');
+      const buttons = wrapper.findAll('.year li button');
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0]!.text()).toContain('A child of the hall was born.');
+      await buttons[0]!.trigger('click');
+      expect(wrapper.emitted('select')).toEqual([['p001']]);
+
+      // Removing a person from the current halls disables navigation even
+      // if their earlier line stays visible in the last turn's log.
+      await wrapper.setProps({ halls: [] });
+      expect(wrapper.findAll('.year li button')).toHaveLength(0);
+      expect(wrapper.text()).toContain('A child of the hall was born.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('connects Passage navigation to the same current halls that draw the family tree', () => {
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
+    expect(app).toMatch(/<PassageLog\\s+:passages="passages"\\s+:halls="view\\.halls"\\s+@select="look"/);
   });
 });
