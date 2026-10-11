@@ -52,6 +52,7 @@ function newRunSeed(): number {
 
 const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
+const saveListError = ref<string | null>(null);
 const refused = ref<string | null>(null);
 const resumeRefused = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
@@ -94,7 +95,14 @@ function survivingPage(run: LibraryRun): string | undefined {
 }
 
 async function refreshSaves(): Promise<void> {
-  saves.value = await props.actions.listSaves();
+  saveListError.value = null;
+  try {
+    saves.value = await props.actions.listSaves();
+  } catch {
+    // A failed host read says nothing about whether earlier runs exist.
+    // Keep any previously listed saves, and give the reader a way to retry.
+    saveListError.value = 'Saved runs could not be listed. Try again.';
+  }
 }
 
 async function continueLastSitting(): Promise<void> {
@@ -243,6 +251,11 @@ onMounted(() => { void refreshSaves(); });
       </ul>
     </section>
 
+    <div v-if="saveListError" class="save-list-error" role="alert">
+      <p class="rubric small">{{ saveListError }}</p>
+      <button class="quiet small" @click="refreshSaves()">Retry saved runs</button>
+    </div>
+
     <div class="row">
       <button class="quiet small" @click="importSave()">Bring a run in</button>
       <p v-if="refused" class="rubric small" role="status">{{ refused }}</p>
@@ -309,6 +322,8 @@ input { width: 9ch; }
 .saved p { margin: 8px 0; }
 .saved ul { list-style: none; padding: 0; margin: 0; }
 .saved li + li { margin-top: 4px; }
+.save-list-error { margin-top: 14px; }
+.save-list-error p { margin: 0 0 8px; }
 .advanced { margin-top: 46px; }
 .advanced .row { margin-top: 14px; }
 </style>
