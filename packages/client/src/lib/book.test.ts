@@ -142,8 +142,24 @@ describe('wrapping', () => {
     expect(rows.join(' ')).toBe('one two three four five');
   });
 
-  it('does not drop a word wider than the column', () => {
-    expect(wrap('supercalifragilistic', 'x', 12, monospace)).toEqual(['supercalifragilistic']);
+  it('splits oversized unbroken tokens so a Chronicle plate does not clip them (#1166)', () => {
+    const word = 'supercalifragilistic';
+    const rows = wrap(word, 'x', 12, monospace);
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows.every((row) => monospace(row, 'x') <= 12)).toBe(true);
+    expect(rows.join('')).toBe(word);
+    expect(wrap('書院圖譜', 'x', 12, monospace)).toEqual(['書院', '圖譜']);
+  });
+
+  it('preserves joined emoji and combining characters when wrapping', () => {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const graphemeWidth: Measure = (text) => [...segmenter.segment(text)].length * 6;
+    expect(wrap('a👩‍🔬b', 'x', 12, graphemeWidth)).toEqual(['a👩‍🔬', 'b']);
+    expect(wrap('x' + 'e\u0301' + 'y', 'x', 12, graphemeWidth)).toEqual(['xe\u0301', 'y']);
+
+    // If one whole glyph is wider than the column, emit it rather than
+    // splitting the glyph or spinning forever.
+    expect(wrap('👩‍🔬a', 'x', 5, graphemeWidth)).toEqual(['👩‍🔬', 'a']);
   });
 
   it('says nothing about nothing', () => {
