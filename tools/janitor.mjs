@@ -591,6 +591,7 @@ if (RANGE || RECENT_MERGED_PRS.length) {
       }
       if (verdict === 'UNKNOWN') {
         if (!DRY && HAS_GH && REPOSITORY) reconciliationFailed = true;
+        log(`issue reconciliation: #${n} reopening history UNKNOWN for ${source}; left open`);
         say(`- kept #${n} open — reopening history UNKNOWN for ${source}`);
         continue;
       }
@@ -605,6 +606,7 @@ if (RANGE || RECENT_MERGED_PRS.length) {
       // if it cannot read a named issue, fail visibly rather than pretending
       // the post-merge repair succeeded.
       if (!DRY && HAS_GH && REPOSITORY) reconciliationFailed = true;
+      log(`issue reconciliation: #${n} state UNKNOWN for ${source}; left untouched`);
       say(`- #${n} named by ${source}; state UNKNOWN, left untouched`);
     }
   }
