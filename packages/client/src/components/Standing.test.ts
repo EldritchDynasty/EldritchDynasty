@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
+import Member from './Member.vue';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
 
@@ -219,5 +220,39 @@ describe('House ambition refusal and selection (#1069)', () => {
     expect(wrapper.get('[role="alert"]').text()).toContain('no longer available');
     expect(wrapper.get('.ambition-actions button').attributes('disabled')).toBeDefined();
     expect(setAmbition).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The family tree's closed card must not attribute an outsider's house to
+ * the blood-family member who married them (#1147). Kept in the existing
+ * measured client legibility suite so the shard duration ledger stays valid.
+ */
+describe('married-in spouse provenance on family cards (#1147)', () => {
+  function member(marriedIn: boolean): SessionView['halls'][number]['members'][number] {
+    return {
+      id: 'dara', name: 'Dara', sex: 'female', age: 30, status: 'alive',
+      head: false, awakened: false, expresses: false, madness: 0, drift: false,
+      parents: {}, attrs: {},
+      record: { parents: {}, attrs: {}, claimed: [], claimedTraits: [] },
+      spouse: { id: 'ren', name: 'Ren', marriedIn, house: 'House Marrow' },
+    } as unknown as SessionView['halls'][number]['members'][number];
+  }
+
+  it('names the outside spouse and their originating house on a closed card', () => {
+    const wrapper = mount(Member, {
+      props: { member: member(true), names: [], traitNames: [], open: false },
+    });
+    expect(wrapper.get('.face').text()).toContain('Dara');
+    expect(wrapper.get('.from').text()).toBe('married to Ren, of House Marrow');
+    wrapper.unmount();
+  });
+
+  it('does not claim an outside-house origin for a spouse from our house', () => {
+    const wrapper = mount(Member, {
+      props: { member: member(false), names: [], traitNames: [], open: false },
+    });
+    expect(wrapper.find('.from').exists()).toBe(false);
+    wrapper.unmount();
   });
 });
