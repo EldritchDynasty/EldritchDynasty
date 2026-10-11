@@ -137,6 +137,8 @@ const wanted = computed(() => {
 });
 
 function sign(): void {
+  // Keyboard submission must obey the same requirements as the disabled button.
+  if (wanted.value.length > 0) return;
   const result = props.actions.found({
     houseName: houseName.value,
     heirloom: heirloom.value,
