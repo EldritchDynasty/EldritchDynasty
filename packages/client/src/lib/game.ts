@@ -464,7 +464,10 @@ export function createGame(
   }
 
   async function changeLibrary(snapshot: RunLibrary): Promise<void> {
-    await ensureLibraryReady();
+    // Once the baseline is known, preserve call order synchronously: an
+    // unconditional await can let a later Clear leap ahead of an earlier
+    // Remove, then resurrect entries from the older snapshot (#1032).
+    if (!libraryReady.value) await ensureLibraryReady();
     const revision = ++libraryRevision;
     library.value = snapshot;
     try {
@@ -689,7 +692,7 @@ export function createGame(
       // Take the snapshot AFTER the initial read completes. Otherwise an
       // immediate Remove can filter an invented empty local Library and
       // overwrite historical runs as soon as the delayed host read resolves.
-      await ensureLibraryReady();
+      if (!libraryReady.value) await ensureLibraryReady();
       await changeLibrary({ ...library.value, runs: library.value.runs.filter((run) => run.id !== id) });
     },
 
