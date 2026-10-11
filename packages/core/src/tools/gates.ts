@@ -1102,11 +1102,11 @@ export function gateVocabularyReachTelemetry(
   /**
    * THE KIND THE GAME STILL OWES, PINNED RATHER THAN FORGIVEN.
    *
-   * `recast` and `schedule` are declared, handled and unit-tested but authored
-   * by no shipped content, so no run has ever executed either. The discarded
-   * #185 midwife experiment briefly authored `schedule`; the clean current-main
-   * rebuild deliberately does not carry that experiment. Paying either debt
-   * off is content work, not test work.
+   * `recast` is declared, handled and unit-tested but authored by no shipped
+   * content, so no run has executed it yet. `schedule` was once pinned here
+   * too, but is now authored and reached in the nightly 800-run sample (#1015);
+   * retaining that paid-off pin would make the debt ratchet fail on healthy
+   * content. Paying the remaining `recast` debt is content work, not test work.
    *
    * `muster` was pinned here through #95 (issue #89's Stage 2, the engine
    * substrate with no content calling it yet) and is PAID OFF by #97 (Stage
@@ -1120,7 +1120,7 @@ export function gateVocabularyReachTelemetry(
    * leaves a comment claiming a debt the game no longer owes. An allowance
    * that only ever gets looser is how a known gap becomes the specification.
    */
-  const OWED = ['recast', 'schedule'];
+  const OWED = ['recast'];
   const newlyUnauthored = unauthored.filter((k) => !OWED.includes(k));
   const paidOff = OWED.filter((k) => !unauthored.includes(k));
 
