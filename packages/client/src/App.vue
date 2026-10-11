@@ -307,6 +307,9 @@ function mentionPages(person: string): { id: string; year: number }[] {
 }
 
 function onKey(e: KeyboardEvent): void {
+  // Even if the top dialog preserves an IME Escape, this global handler must
+  // not close a different panel underneath it (or dispatch another shortcut).
+  if (e.isComposing || e.keyCode === 229) return;
   const el = document.activeElement;
   const press = shortcutFor({
     key: e.key,
