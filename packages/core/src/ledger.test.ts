@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId, contentProseEntries, proseOriginalHash, type ActiveAge, type Person } from '@ed/schema';
 import {
-  bootstrap, loadGame, missingPlainEnglish, place, revealClause, saveGame, setProseMode, setProseVariants,
+  bootstrap, loadGame, missingPlainEnglish, place, proseForClause, revealClause, saveGame, setProseMode, setProseVariants,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -144,6 +144,33 @@ describe('Ledger pages in the selected prose mode', () => {
     ]);
     setProseMode(restored, 'original');
     expect(loadGame(saveGame(restored), bundle).world.chronicle).toEqual(restored.world.chronicle);
+  });
+});
+
+describe('the clause prose worklist boundary (#1104)', () => {
+  it('does not request a Plain English variant for the one-word Substitution title', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const clause = bundle.clauses.find((item) => item.id === 'clause_of_substitution');
+    if (!clause) throw new Error('The Substitution clause fixture is missing');
+    const base = `content:clauses.yaml#clauses[id=${clause.id}]`;
+
+    // Names with one word are deliberately absent from the authoring worklist;
+    // the runtime must not claim that a nonexistent worklist item is missing.
+    expect(contentProseEntries('clauses.yaml', { clauses: [clause] })
+      .map((entry) => entry.address)).not.toContain(`${base}.name`);
+
+    setProseMode(ctx, 'plainenglish');
+    expect(proseForClause(ctx, clause)).toEqual({ name: clause.name, text: clause.text });
+    expect(missingPlainEnglish(ctx)).toEqual([`${base}.text`]);
+
+    // The eligible clause text still selects its reviewed counterpart,
+    // without requiring a fictitious counterpart for the one-word title.
+    const plain = 'A willing member of the blood may make the payment for another. Consent given without knowledge still counts.';
+    setProseVariants(ctx, [{
+      address: `${base}.text`, of: proseOriginalHash(clause.text), plainenglish: plain,
+    }]);
+    expect(proseForClause(ctx, clause)).toEqual({ name: clause.name, text: plain });
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 });
 
