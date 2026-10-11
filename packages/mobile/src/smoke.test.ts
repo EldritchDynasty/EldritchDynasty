@@ -106,6 +106,52 @@ describe('mobile native save-list read failures', () => {
     }
   });
 
+  it('keeps native saves visible if legacy Preferences enumeration fails (#1230)', async () => {
+    const deniedPreferences = {
+      ...preferences,
+      async keys(): Promise<never> { throw new Error('Preferences unavailable'); },
+    };
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(mobileStorage(files, deniedPreferences).listSaves()).resolves.toEqual([
+        { slot: 'healthy', format: 28, year: 1234, savedAt },
+        { slot: 'unreadable' },
+      ]);
+      expect(warning).toHaveBeenCalledWith(
+        '[mobile] could not enumerate legacy save slots:',
+        expect.objectContaining({ message: 'Preferences unavailable' }),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+  });
+
+  it('skips a damaged legacy key without losing native or later legacy saves (#1230)', async () => {
+    const oldSave = { format: 28, year: 1250, savedAt: '2026-10-03T00:00:00.000Z' };
+    const unreliablePreferences = {
+      async keys() { return { keys: ['ed:save:damaged', 'ed:save:older'] }; },
+      async get({ key }: { key: string }) {
+        if (key === 'ed:save:damaged') throw new Error('legacy key denied');
+        return { value: JSON.stringify(oldSave) };
+      },
+      async remove() {},
+    };
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(mobileStorage(files, unreliablePreferences).listSaves()).resolves.toEqual([
+        { slot: 'older', ...oldSave },
+        { slot: 'healthy', format: 28, year: 1234, savedAt },
+        { slot: 'unreadable' },
+      ]);
+      expect(warning).toHaveBeenCalledWith(
+        '[mobile] could not read legacy save slot damaged:',
+        expect.objectContaining({ message: 'legacy key denied' }),
+      );
+    } finally {
+      warning.mockRestore();
+    }
+  });
+
   it('still reports whole-store directory access failures', async () => {
     const denied = {
       ...files,
