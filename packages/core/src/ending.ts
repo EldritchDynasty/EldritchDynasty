@@ -1,5 +1,5 @@
 import type { EndingDef, EndingId, Rung } from '@ed/schema';
-import { assertNever, isContentProseField } from '@ed/schema';
+import { assertNever, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
@@ -61,13 +61,9 @@ export function livingBlood(w: WorldState): number {
   return w.people.blood(w.playerHouse).filter((p) => p.status === 'alive').length;
 }
 
-/**
- * The flag the God rite sets when it fails at the last step, and the seam
- * #43's rites write to. It is a world flag rather than a field because the
- * rites are authored content: the effect vocabulary can already set one, and
- * an ending that content can reach is an ending content can be written toward.
- */
-export const GOD_RITE_FAILED = 'god_rite_failed';
+/** Compatibility export: the built-in ending reader and the static content
+ * audit must recognise precisely the same world-flag identity (#1187). */
+export { GOD_RITE_FAILED } from '@ed/schema';
 
 /**
  * WHAT A STANDING LIE WEIGHS, by the severity the author gave it.
