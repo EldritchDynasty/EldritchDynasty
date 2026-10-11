@@ -171,13 +171,16 @@ export function browserPlatform(): Platform {
 
     async readLibrary() {
       const storage = browserStorage();
-      if (!storage) return null;
-      try {
-        const text = storage.getItem(LIBRARY_KEY);
-        return text ? JSON.parse(text) : null;
-      } catch {
-        return null;
-      }
+      // An unavailable Storage is not proof of an empty Library. Fail closed:
+      // the client can retry, without replacing an existing profile.
+      if (!storage) throw new Error('this browser does not permit saved data');
+      const text = storage.getItem(LIBRARY_KEY);
+      if (text === null) return null;
+      // A present but unreadable record must reject. Treating corrupt JSON
+      // (including an empty string or literal null) as absence risks erasure.
+      const library: unknown = JSON.parse(text);
+      if (library === null) throw new TypeError('the browser Library of Houses record is invalid');
+      return library;
     },
 
     async writeLibrary(library) {
