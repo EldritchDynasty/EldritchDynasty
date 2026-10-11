@@ -45,12 +45,6 @@
     },
     {
       "kind": "flag",
-      "key": "god_rite_failed",
-      "disposition": "read",
-      "reason": "ending.ts already reads GOD_RITE_FAILED even though the content-only audit cannot see it; deleting this would break The Unmade ending."
-    },
-    {
-      "kind": "flag",
       "key": "high_justice_at_the_gate",
       "disposition": "read",
       "reason": "The outcome explicitly says a Warden will later use the legal word for what the house did. Reserve this flag for that later institutional consequence rather than deleting an authored payoff promise."
