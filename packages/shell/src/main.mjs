@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
 // One implementation of the write guard, shared with the dev-server bridge.
 import { resolveExistingContentPath } from '../../content/tools/content-path.mjs';
-import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
+import { deleteSave, listSaves, readSave, requireSaveEnvelope, saveRoot, writeSave } from './saves.mjs';
 import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
@@ -231,9 +231,7 @@ ipcMain.handle('ed:write-library', answered((library) => ({ path: writeRunLibrar
  */
 ipcMain.handle('ed:export-save', async (event, save) => {
   try {
-    if (save === null || typeof save !== 'object' || typeof save.format !== 'number') {
-      throw new TypeError('a save is an object with a numeric format');
-    }
+    requireSaveEnvelope(save);
     const win = BrowserWindow.fromWebContents(event.sender);
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: 'Write the run down',
