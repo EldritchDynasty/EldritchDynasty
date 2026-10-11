@@ -62,6 +62,7 @@ describe('a slot is a name, not a path', () => {
 
   it('reads its own files back out of a listing and ignores everything else', () => {
     expect(slotOfFile('the autumn run.edsave.json')).toBe('the autumn run');
+    expect(slotOfFile('the autumn  run.edsave.json')).toBe('the autumn  run');
     expect(slotOfFile('notes.txt')).toBeUndefined();
     expect(slotOfFile('../escaped.edsave.json')).toBeUndefined();
     expect(slotOfFile('.edsave.json')).toBeUndefined();
