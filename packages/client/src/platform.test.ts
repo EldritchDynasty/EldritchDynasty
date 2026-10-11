@@ -1428,7 +1428,7 @@ describe('mobile durable storage', () => {
     expect(files.writes).toEqual([]);
   });
 
-  it('does not replace malformed native Library JSON with a stale legacy copy (#900)', async () => {
+  it('rejects malformed native Library JSON without replacing it with a stale legacy copy (#900, #1241)', async () => {
     const path = 'eldritch/library.json';
     const broken = '{"format":1,"runs":[';
     const old = JSON.stringify({ format: 1, runs: [{ year: 1100 }] });
@@ -1436,7 +1436,7 @@ describe('mobile durable storage', () => {
     const preferences = mobilePreferenceStore({ 'ed:library': old });
     const store = mobileStorage(files, preferences);
 
-    await expect(store.readLibrary()).resolves.toBeNull();
+    await expect(store.readLibrary()).rejects.toThrow('the native Library of Houses file is unreadable');
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:library')).toBe(old);
     expect(files.writes).toEqual([]);
