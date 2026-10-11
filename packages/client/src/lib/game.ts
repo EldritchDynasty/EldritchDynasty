@@ -645,7 +645,9 @@ export function createGame(
     },
 
     async listSaves() {
-      await refreshSaves();
+      // This is an explicit user-visible read. Unlike background refreshes,
+      // a host failure must reach Start.vue so it can offer Retry (#1176).
+      await refreshSaves(true);
       return saves.value;
     },
 
@@ -1041,12 +1043,15 @@ export function createGame(
     }
   }
 
-  async function refreshSaves(): Promise<void> {
+  async function refreshSaves(throwOnFailure = false): Promise<void> {
     try {
       // Until Track C exposes an explicit demo entry point, its private
       // namespace must not leak into the normal "Runs written down" list.
       saves.value = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
-    } catch {
+    } catch (error) {
+      // Background discovery cannot fail the game. Explicit listings must
+      // preserve previously loaded names and let the front door show Retry.
+      if (throwOnFailure) throw error;
       saves.value = [];
     }
   }
