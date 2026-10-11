@@ -91,9 +91,6 @@ const subject = ref('');
 const scionChoice = ref('');
 const scionHeirChoice = ref('');
 
-/** Cadet hall chosen for each eligible parcel; the Table order remains the sole rule gate. */
-const endowTo = ref<Record<string, string>>({});
-
 /** Who the player is about to put in each post, keyed by the post. */
 const placing = ref<Record<string, string>>({});
 
@@ -164,9 +161,6 @@ function idle(panel: string, hasWork: boolean): boolean {
 
 /** Can the house pay for a term, a place, a paper? Drawn, not only enforced. */
 const broke = computed(() => props.table.treasury <= 0);
-/** Endowment/recall is actionable even in a year when no parcel is for sale. */
-const landHasWork = computed(() => props.land.market.length > 0
-  || props.land.held.some((p) => !!p.holder || (!p.caput && props.land.branches.length > 0)));
 
 /** The standing order on marriage, in the house's own words. */
 const MARRIAGE_ORDERS = [
@@ -355,7 +349,7 @@ const MARRIAGE_ORDERS = [
          have. On the same screen as the shelf and the tutor's fee, under the
          same treasury above — a land panel with its own budget would have
          failed the whole point of building this. -->
-    <div class="panel" :class="{ idle: idle('land', landHasWork) }">
+    <div class="panel" :class="{ idle: idle('land', land.market.length > 0) }">
       <h3 class="label row">
         <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">The land</button>
         <button class="quiet small plat-link" @click="emit('open-plat')">See the plat</button>
@@ -400,7 +394,6 @@ const MARRIAGE_ORDERS = [
         <div class="small">
           <strong>{{ p.name }}</strong>
           <span class="dim"> · {{ p.place }} · yield {{ ((p.baseYield + p.yieldBonus) * p.yieldFactor).toFixed(1) }}</span>
-          <span v-if="p.holder" class="dim"> · held by {{ p.holderName }}</span>
         </div>
         <div class="row">
           <button v-if="p.sellable" :disabled="p.improving !== undefined" class="small"
@@ -414,24 +407,8 @@ const MARRIAGE_ORDERS = [
             @click="actions.order({ kind: 'improve', parcel: p.parcel })">
             Improve it — {{ p.improveCost }} crowns
           </button>
-          <button v-if="p.holder" class="small"
-            @click="actions.order({ kind: 'endow', parcel: p.parcel, branch: null })">
-            Recall to the seat
-          </button>
-          <template v-else-if="!p.caput && land.branches.length">
-            <select v-model="endowTo[p.parcel]" :aria-label="'Choose a cadet hall for ' + p.name">
-              <option value="">— choose a hall —</option>
-              <option v-for="b in land.branches" :key="b.id" :value="b.id">{{ b.name }} (grievance {{ Math.round(b.grievance) }})</option>
-            </select>
-            <button class="small" :disabled="!endowTo[p.parcel]"
-              @click="actions.order({ kind: 'endow', parcel: p.parcel, branch: endowTo[p.parcel]! })">
-              Endow the hall
-            </button>
-          </template>
-          <span v-else-if="p.caput" class="small dim">the seat's own ground</span>
         </div>
       </div>
-      <p v-if="refusedIn('endow')" class="small rubric">{{ refusedIn('endow') }}</p>
       <p v-if="refusedIn('sell')" class="small rubric">{{ refusedIn('sell') }}</p>
       <p v-if="refusedIn('improve')" class="small rubric">{{ refusedIn('improve') }}</p>
     </div>
