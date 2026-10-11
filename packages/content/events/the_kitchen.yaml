@@ -533,3 +533,293 @@ proseVariants:
       No one falls ill. The well water was safer than anyone expected, and the fortnight was
       dry. The house saves nine crowns, but wrongly concludes that drinking the water is a good
       idea. About forty years later, it will act on that mistaken lesson.
+
+# Reviewed Plain English variants for the remaining kitchen scenes (#415).
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].title"
+    of: 225af23d43a6d709
+    plainenglish: >-
+      The Cook Wants Everyone to Eat the Same Bread
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].body"
+    of: 7a3dd7edcf6a0951
+    plainenglish: >-
+      People in the Nethering eat rye bread; people in the south eat wheat. The cook has
+      worked at Ardwen for thirty-one years and has firm ideas about which bread belongs
+      here. The steward has calculated that wheat for the high table costs six crowns a
+      year, while wheat for everyone costs nineteen. The cook thinks giving servants rye
+      and guests wheat tells the servants what the house thinks of them. She has said this
+      only to the steward, twice and at length.
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=wheat_for_the_hall].label"
+    of: 2dbde863ea3e2dcf
+    plainenglish: >-
+      Give everyone wheat or everyone rye. Do not serve different bread to different
+      tables.
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=wheat_for_the_hall].outcomes[id=wheat_throughout].text"
+    of: 7626adf8b924f074
+    plainenglish: >-
+      The house spends nineteen crowns a year and serves everyone the same bread. The
+      indoor servants notice within ten days but say nothing for eleven years. When they
+      finally mention it, the timing matters greatly.
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=keep_the_two_breads].label"
+    of: a361f5d00c3ed7b4
+    plainenglish: >-
+      Keep serving two kinds of bread. Every house in the province does it.
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=keep_the_two_breads].outcomes[id=two_breads].text"
+    of: 340867ae0fd7dc02
+    plainenglish: >-
+      Every house in the province serves two kinds of bread, and doing so costs six crowns.
+      The servants do not complain: a servant earning three marks a year cannot easily
+      object to the food. The cook keeps making both breads. For thirty-one years she makes
+      the rye better than she needs to, and nobody notices.
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].title"
+    of: 08b70ce6f515a722
+    plainenglish: >-
+      The Household's Medicine Book
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].body"
+    of: 187ed9f2a5917ba6
+    plainenglish: >-
+      The still-room holds the household's knowledge about treating illness. Women keep
+      that knowledge, and little is written down beyond what each keeper leaves for the
+      next. {LADY} holds the keys this year. A book of remedies has been passed down
+      through four generations, written by four different women. About one third of the
+      remedies are useless and one third work, but nobody has sorted them. The physician at
+      Bramme would charge three crowns to examine the book.
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].interaction.choices[id=show_the_physician].label"
+    of: 738cbd19089219d5
+    plainenglish: >-
+      Show the physician the book. Pay three crowns to find out which remedies work.
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].interaction.choices[id=show_the_physician].outcomes[id=he_reads_it].text"
+    of: 898e67e7d453e7e3
+    plainenglish: >-
+      The physician spends an afternoon reading the book for three crowns. He marks nine
+      remedies as useful, eleven as harmless and four as dangerous in the wrong amounts. He
+      is right about the four dangerous ones. But he returns to Bramme knowing exactly what
+      illnesses the household treats and how often.
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].interaction.choices[id=keep_it_in_the_press].label"
+    of: 65491ca12037279d
+    plainenglish: >-
+      Keep the book in its cupboard. The family has used it for four generations.
+  - address: "content:events/the_kitchen.yaml#events[id=the_still_room_in_greening].interaction.choices[id=keep_it_in_the_press].outcomes[id=kept].text"
+    of: 8ee3027cea13e148
+    plainenglish: >-
+      The book stays where it is. {LADY} adds notes in her own handwriting, becoming its
+      fifth keeper. Roughly the same share of remedies continues to work. The household
+      treats its own people and usually causes no harm. Nobody outside the hall knows what
+      the book contains, and the family considers that privacy valuable.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].title"
+    of: a9bc55c84841f144
+    plainenglish: >-
+      The Winter Meat Is Missing
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].body"
+    of: 2dd5f20bc86e18e7
+    plainenglish: >-
+      Meat from Slaughter hangs in the smoke room and feeds the household through winter.
+      How much is left at Thaw usually shows how carefully the house has managed its
+      stores. This year the meat is gone by Deepwinter, three tendays early. The steward
+      has counted it since Longnight but said nothing. Someone has been taking it. Eleven
+      people have a reason to enter the smoke room, including nine indoor servants.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.choices[id=buy_the_difference].label"
+    of: 34b03faa174ad46e
+    plainenglish: >-
+      Buy replacement meat at Bramme and lock the smoke-room door.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.choices[id=buy_the_difference].outcomes[id=bought_and_locked].text"
+    of: bef96cff3030e8cb
+    plainenglish: >-
+      The house spends fourteen crowns on salt pork from elsewhere and puts a lock on the
+      door. The steward keeps the key. The meat stops disappearing and nobody is accused.
+      Nine people understand that the house knew someone was taking it. The household finds
+      that knowledge more useful than naming a culprit.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.choices[id=find_out_who].label"
+    of: 83fba4e93268a695
+    plainenglish: >-
+      Find out who took the meat. Eleven people had access, and winter is short of food.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.choices[id=find_out_who].outcomes[id=it_was_the_yard_man].text"
+    of: cd071c563c50e122
+    plainenglish: >-
+      The yard man took the meat. He has four people at home and a sick wife. He neither
+      denies it nor apologises. The house dismisses him because keeping him would make
+      future dismissals harder. Everyone in the kitchen already knew. They will remember
+      that the house asked about it.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.choices[id=find_out_who].outcomes[id=nobody_admits_it].text"
+    of: d41538b39594a79f
+    plainenglish: >-
+      After four days of questions, nobody admits taking the meat. It is still missing, so
+      the household eats peas at Thaw and openly complains about it. Nobody takes more
+      meat, but trust in the kitchen does not recover for two years.
+  - address: "content:events/the_kitchen.yaml#events[id=honey_and_nothing_else].title"
+    of: 991692dc2bf7e920
+    plainenglish: >-
+      The Beehives Give Less Honey
+  - address: "content:events/the_kitchen.yaml#events[id=honey_and_nothing_else].body"
+    of: a52c62a159a11edd
+    plainenglish: >-
+      Honey is the only sweetener the household has, and people also treat the bees as a
+      sign of the house's condition. This year the hives produce about one third as much
+      honey as last year. The beekeeper blames the wet Greening. Without being asked, and
+      without looking anyone in the eye, he adds that the bees have been quieter since the
+      funeral. Everyone in the yard hears him. Nobody asks what he means.
+  - address: "content:events/the_kitchen.yaml#events[id=honey_and_nothing_else].interaction.outcomes[id=a_thin_year].text"
+    of: fd6d92e8a6ac563c
+    plainenglish: >-
+      The household has less honey and fewer cakes at Greening. Everyone eats simpler food
+      without commenting on it. Someone repeats the beekeeper's remark in Wick within ten
+      days, because that kind of story will earn a drink.
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].title"
+    of: dc38582abe6eb3ce
+    plainenglish: >-
+      Too Much Bad Cheese
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].body"
+    of: 8f8117d50fd4e991
+    plainenglish: >-
+      Tenants pay some rent in barley, pigs and cheese. The hall receives so much cheese
+      that it usually lasts until Greening, a standing joke among houses in the province.
+      This year's cheese is worse than usual, and the cook has said so clearly. There is
+      enough for six tendays of meals, but it is too poor to serve to important guests.
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].interaction.choices[id=eat_it].label"
+    of: 298d91bdf1bfcb69
+    plainenglish: >-
+      Eat the cheese. It was paid as rent, and it is food.
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].interaction.choices[id=eat_it].outcomes[id=eaten].text"
+    of: da70278f5ee2b8b3
+    plainenglish: >-
+      The household eats the cheese for six tendays. The cook argues that the family should
+      eat the same cheese as the tenants who made it, and she is right. Nobody enjoys
+      eating it. The rent has been collected and the accounts balance, which is what
+      payment in goods means.
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].interaction.choices[id=send_it_back_down].label"
+    of: 0218f4f1db7d04a5
+    plainenglish: >-
+      Send the bad cheese back to Wick and buy better cheese.
+  - address: "content:events/the_kitchen.yaml#events[id=the_last_of_the_cheese].interaction.choices[id=send_it_back_down].outcomes[id=sent_back].text"
+    of: e61a541aa3c6744e
+    plainenglish: >-
+      The house buys six crowns' worth of good cheese in Bramme and sends a cartload of bad
+      cheese down the hill past the people who made it, in full daylight. Every farm on the
+      road understands the insult. Two farms make better cheese the following year. Another
+      tenant never speaks to the steward again.
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].title"
+    of: 65925669b3d2740d
+    plainenglish: >-
+      Nine Days Without Meat
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].body"
+    of: 0b2580414601b215
+    plainenglish: >-
+      The Church asks households to eat no meat during the nine days of the Quieting. In
+      Longnight in the Nethering, going without meat can leave people too cold and tired to
+      work. Nearly every house in the province keeps the fast, at least in part. The cook
+      has written out two meal plans. Nobody from the chapter house is likely to travel
+      eleven miles in this weather to inspect what anyone eats.
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].interaction.choices[id=keep_the_fast].label"
+    of: 76047a4a2fb6a306
+    plainenglish: >-
+      Keep the fast fully. Nobody in the household eats meat for nine days.
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].interaction.choices[id=keep_the_fast].outcomes[id=kept].text"
+    of: b07079e65567b3a2
+    plainenglish: >-
+      For nine days everyone eats fish, peas and small beer. The household works more
+      slowly and feels colder, and everyone knows why. A maid tells a keeper at Wick that
+      the house observed the fast. Four years later, that keeper mentions it to someone
+      whose opinion matters.
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].interaction.choices[id=keep_it_at_the_high_table].label"
+    of: 35e81d9cf2d37968
+    plainenglish: >-
+      Make the family fast at the high table. Let the kitchen staff eat the meat they need.
+  - address: "content:events/the_kitchen.yaml#events[id=the_fast_before_the_hollow_days].interaction.choices[id=keep_it_at_the_high_table].outcomes[id=kept_upstairs].text"
+    of: 8a0e876ab630804e
+    plainenglish: >-
+      The family eats no meat, but the kitchen staff do. Everyone in the building knows
+      within a day and accepts the arrangement as reasonable. A servant who later leaves on
+      bad terms could describe the same arrangement very differently.
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].title"
+    of: 1265c96fabe5122b
+    plainenglish: >-
+      More Apples Than the House Can Use
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].body"
+    of: 8cef465eb687b33a
+    plainenglish: >-
+      About twice in a generation, the orchard produces more apples than the household can
+      use. There are more apples on the ground than on the trees. Pressing them would make
+      cider the house does not need and cannot keep past Thaw. Giving them away would help
+      eleven tenant families, who would remember it. Leaving the fruit to rot would attract
+      many wasps. The woodward has already raised the problem twice.
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].interaction.choices[id=open_the_orchard].label"
+    of: 41a867d7f93a10fb
+    plainenglish: >-
+      Open the orchard to Wick for four days. People may take whatever apples they can
+      carry.
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].interaction.choices[id=open_the_orchard].outcomes[id=opened].text"
+    of: cd03ab7e2be54d5a
+    plainenglish: >-
+      For four days, people from the whole village come to the orchard with sacks, and
+      children climb the trees. They take about nine crowns' worth of fruit that would
+      otherwise have rotted. It costs the family little, and people in Wick talk about the
+      gift for thirty years. Nobody at Ardwen quite believes the story lasted so long.
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].interaction.choices[id=press_it_all].label"
+    of: fd76dbef3c24cf8b
+    plainenglish: >-
+      Press every apple for cider. Cider is more useful than goodwill.
+  - address: "content:events/the_kitchen.yaml#events[id=the_orchard_in_a_good_year].interaction.choices[id=press_it_all].outcomes[id=pressed].text"
+    of: 9a41ba85fc612c51
+    plainenglish: >-
+      The work takes two tendays and everyone the house can spare. They make an enormous
+      amount of cider. By Thaw, about half is still drinkable; the rest has turned to
+      vinegar, which the still-room can use. The wasps settle in someone else's orchard.
+      Nobody in Wick talks about the decision, but nobody forgets it either.
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].title"
+    of: a8d587e83567ce74
+    plainenglish: >-
+      The Spice Box Is Running Empty
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].body"
+    of: dacb9b948ce60378
+    plainenglish: >-
+      Great houses serve more spices than small houses. Ardwen has been stretching the same
+      supply of pepper for about four winters. An agent from Anvary will take an order at
+      the Ingathering fair, to be delivered eleven months later. Eleven crowns will fill
+      the spice box for four years. Guests notice an empty spice box in the taste of their
+      food, even if they cannot see it.
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].interaction.choices[id=fill_the_box].label"
+    of: 1299439b3e875507
+    plainenglish: >-
+      Order spices. Eleven crowns will cover the next four years.
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].interaction.choices[id=fill_the_box].outcomes[id=filled].text"
+    of: 831d3827a6475c53
+    plainenglish: >-
+      The house pays eleven crowns and receives the spices eleven months later. The full
+      box lasts through the rule of two Heads. At the Greening feast, the food tastes like
+      that of a house ranked three places higher. Four guests notice, and none of them says
+      anything. That is the result the house wanted.
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].interaction.choices[id=make_it_last].label"
+    of: 8b16319f69bce6fb
+    plainenglish: >-
+      Make the remaining spices last. No guest has complained.
+  - address: "content:events/the_kitchen.yaml#events[id=the_spice_box].interaction.choices[id=make_it_last].outcomes[id=made_to_last].text"
+    of: c229a0a6ea4d02b2
+    plainenglish: >-
+      Nobody complains. At the two yearly feasts, the food tastes like what a house of
+      middling standing can afford, which is exactly what this house is. A guest from
+      Cawdry warmly calls the food honest. He means it as praise, but the household spends
+      four days wondering why it felt insulting.
+  - address: "content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].title"
+    of: 717e7d8af93d0336
+    plainenglish: >-
+      The Salt Fish Arrives Late
+  - address: "content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].body"
+    of: 0bcecd93850cd727
+    plainenglish: >-
+      Salt fish travels eleven days by land from Sarrow, passing through four traders
+      before reaching the household. It is the usual food here on the many Church fast
+      days. The drover who brings it has used this route for nineteen years. This year he
+      is four tendays late, which has never happened before. The entire household's supply
+      of fish for Longnight was due with him.
+  - address: "content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].interaction.outcomes[id=he_comes_at_last].text"
+    of: 6d829a85e1feaf81
+    plainenglish: >-
+      The drover arrives in the second tenday of Frostfall. His cart has a broken axle and
+      he is four barrels short. The house buys the missing fish at Bramme for Bramme's high
+      winter price. The family still eats fish on every fast day, as usual.
+  - address: "content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].interaction.outcomes[id=he_does_not_come].text"
+    of: 433ca91e09f347e2
+    plainenglish: >-
+      The drover never arrives that year or in any later year. Nobody on the road learns
+      what happened to him. The house buys fish at Bramme for nineteen years, until the
+      drover's son takes over the route. The son does not know the family and charges them
+      accordingly.
