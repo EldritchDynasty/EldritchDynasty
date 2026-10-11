@@ -821,6 +821,33 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     expect(bidAtAuction(ctx, other.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
   });
 
+  it('only real heirloom bids reserve a portion across lots (#1269)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    grantHeirloom(ctx, 'portion_of_fertility');
+    ctx.world.treasury = 1_000;
+    const coinLot = heirloomLot(ctx, 'test_coin_with_extra_heirloom');
+    const otherLot = heirloomLot(ctx, 'test_genuine_heirloom_bid');
+    ctx.world.auction.upcoming = [coinLot, otherLot];
+
+    // An extra field from a caller cannot convert a coin bid into a pledge.
+    expect(bidAtAuction(ctx, coinLot.id, 'coin', 100, 'portion_of_fertility').ok).toBe(true);
+    expect(coinLot.playerBid).toEqual({
+      house: ctx.world.playerHouse, currency: 'coin', amount: 100,
+    });
+    expect(bidAtAuction(ctx, otherLot.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+
+    // Nor may an older/external noncanonical bid claim a pledge on load.
+    coinLot.playerBid = {
+      house: ctx.world.playerHouse, currency: 'favour', amount: 0,
+      heirloomOffered: 'portion_of_fertility',
+    };
+    delete otherLot.playerBid;
+    expect(bidAtAuction(ctx, otherLot.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+
+    // A second *actual* heirloom pledge is still refused.
+    expect(bidAtAuction(ctx, coinLot.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(false);
+  });
+
   it('voids a bid the treasury can no longer cover at the sale, says so, and lets the ceiling bid instead', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const lot = heirloomLot(ctx);
