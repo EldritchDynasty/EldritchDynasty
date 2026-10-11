@@ -439,9 +439,11 @@ export function plainEnglishCoverageFor(
     total: items.length, current: 0, missing: 0, stale: 0, invalid: 0, remaining: [],
   };
   for (const item of items) {
-    const variant = byAddress.get(item.address);
-    const expectedOf = item.source === 'content' || item.address.startsWith('core:messages#')
-      ? proseOriginalHash(item.text) : undefined;
+    // Legacy core literal[N] addresses have no runtime translation lookup.
+    // Even a fabricated ProseVariant with that address cannot fulfil the work.
+    const hasRuntimeSeam = item.source === 'content' || item.address.startsWith('core:messages#');
+    const variant = hasRuntimeSeam ? byAddress.get(item.address) : undefined;
+    const expectedOf = hasRuntimeSeam ? proseOriginalHash(item.text) : undefined;
     let status: PlainEnglishCoverageStatus | 'current';
     if (!variant) status = 'missing';
     else if (expectedOf !== undefined && variant.of !== expectedOf) status = 'stale';
