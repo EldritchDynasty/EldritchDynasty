@@ -470,7 +470,7 @@ proseVariants:
     plainenglish: >-
       Two Halves of a Tally Stick
   - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].body"
-    of: 3556ac7dfd8d0061
+    of: daae5e9d1f0021a1
     plainenglish: >-
       A tally is a hazel stick with notches, split lengthwise so each party keeps one half.
       The two halves fit together in a way that cannot be forged, making them more reliable
@@ -482,7 +482,7 @@ proseVariants:
     plainenglish: >-
       Trust the house's half. Collect nine marks and make a new tally stick.
   - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=the_house_half_stands].outcomes[id=it_stands].text"
-    of: e9fec038e8798d9c
+    of: 0f7d787c96c90b70
     plainenglish: >-
       The tenant pays the nine marks he owed. The reeve watches as a new tally stick is split
       in the yard. The tenant learns that the house's records decide a dispute even when his
@@ -493,7 +493,7 @@ proseVariants:
     plainenglish: >-
       Accept five marks instead of nine, and make a new tally stick.
   - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=split_the_difference].outcomes[id=five].text"
-    of: 07b1e47e32aa573a
+    of: 11e34fdcee1b2b98
     plainenglish: >-
       The tenant pays five marks and receives a new tally stick. The house has forgiven four
       marks it could have claimed. People in the parish decide the hall will meet a tenant
