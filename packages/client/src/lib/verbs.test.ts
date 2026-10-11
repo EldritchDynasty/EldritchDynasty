@@ -327,6 +327,17 @@ describe('a failed Library load is not an empty profile (#1238)', () => {
     });
   });
 
+  it('refuses to replace a malformed existing Library root with an empty one', async () => {
+    const host = libraryHost();
+    host.readLibrary = async () => ({ format: 99, runs: [{ id: 'older-house' }] });
+    const game = createGame(loadContent(), host);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(game.libraryReady.value).toBe(false);
+    expect(game.libraryReadError.value).toBe(true);
+    await expect(game.actions.clearLibrary()).rejects.toThrow('the Library is unavailable');
+    expect(host.writes).toEqual([]);
+  });
+
   it('still accepts a genuinely absent first-time Library as empty', async () => {
     const host = libraryHost();
     host.readLibrary = async () => null;
