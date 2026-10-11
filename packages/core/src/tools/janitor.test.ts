@@ -715,6 +715,42 @@ describe('the janitor', () => {
     }
   });
 
+  it('fails visibly without claiming to retire refs when the remote rejects deletion (#1182)', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'ed-janitor-rejected-delete-'));
+    try {
+      const bare = join(fixture, 'origin.git');
+      git(fixture, 'init', '-q', '--bare', '-b', 'main', bare);
+      git(fixture, 'clone', '-q', bare, 'seed');
+      const seed = join(fixture, 'seed');
+      git(seed, 'config', 'user.email', 'a@example.com');
+      git(seed, 'config', 'user.name', 'a');
+      git(seed, 'commit', '-q', '--allow-empty', '-m', 'base');
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+      // A proven merged branch, independent of the explicitly released claim.
+      git(seed, 'push', '-q', 'origin', 'HEAD:refs/heads/merged/protected');
+      const claim = git(seed, 'commit-tree', EMPTY_TREE, '-m',
+        'claim 900\n\nagent: tests/released\nlane: gates\npath: tools/janitor.mjs\nreleased: explicitly');
+      git(seed, 'push', '-q', 'origin', `${claim}:refs/heads/claim/900`);
+      // Portable rejection: no Unix-only hook and no dependency on GitHub auth.
+      git(bare, 'config', 'receive.denyDeletes', 'true');
+      git(fixture, 'clone', '-q', bare, 'sweep');
+
+      const run = janitor(join(fixture, 'sweep'), { GITHUB_STEP_SUMMARY: '' });
+      expect(run.code).toBe(1);
+      expect(run.out).toMatch(/ref deletion: failed merged\/protected \(status [1-9]/);
+      expect(run.out).toMatch(/ref deletion: failed claim\/900 \(status [1-9]/);
+      expect(run.out).toContain('FAILED to delete `merged/protected`');
+      expect(run.out).toContain('FAILED to retire `claim/900`');
+      expect(run.out).not.toContain('- deleted `merged/protected`');
+      expect(run.out).not.toContain('- retired `claim/900`');
+      expect(run.out).toContain('0 deleted');
+      expect(run.out).toContain('Remote ref deletion was incomplete');
+      expect(branches(bare)).toEqual(['claim/900', 'main', 'merged/protected']);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
+    }
+  });
+
   it('still refuses an invalid deletion ceiling', () => {
     const r = janitor(join(root, 'full'), { DRY_RUN: '1', JANITOR_MAX_DELETE: '0' });
     expect(r.code).toBe(1);
