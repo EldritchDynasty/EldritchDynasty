@@ -560,7 +560,7 @@ describe('shared modal Escape during input-method composition (#1288)', () => {
       window.dispatchEvent(composing);
       expect(close).not.toHaveBeenCalled();
       expect(composing.defaultPrevented).toBe(false);
-      expect(wrapper.get('[role="dialog"]').exists()).toBe(true);
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
 
       const normal = imeEscapeKey(false);
       window.dispatchEvent(normal);
