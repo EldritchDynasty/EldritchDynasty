@@ -256,6 +256,43 @@ describe('the family tree as a planning board (#268)', () => {
     wrapper.unmount();
   });
 
+  it('releases a stale relationship anchor when the family view changes (#1145)', async () => {
+    const view = largeView();
+    const wrapper = mount(Tree, { props: { view, selected: 'p001' } });
+
+    await wrapper.get('#member-p001 [data-relationship]').trigger('click');
+    expect(wrapper.text()).toContain('Tracing from Member 001');
+
+    // A year can remove the anchor from the current halls while Tree stays mounted.
+    const withoutAnchor = {
+      ...view,
+      halls: view.halls.map((hall) => ({
+        ...hall,
+        members: hall.members.filter((member) => member.id !== 'p001'),
+      })),
+    };
+    await wrapper.setProps({ view: withoutAnchor });
+    expect(wrapper.find('.relationship').exists()).toBe(false);
+
+    // The next click must start a new trace, not secretly target the departed anchor.
+    await wrapper.get('#member-p002 [data-relationship]').trigger('click');
+    expect(wrapper.text()).toContain('Tracing from Member 002');
+    await wrapper.get('#member-p003 [data-relationship]').trigger('click');
+    expect(wrapper.text()).toContain('Recorded relationship:');
+
+    // If only the target leaves, retain the still-visible anchor for the next choice.
+    const withoutTarget = {
+      ...withoutAnchor,
+      halls: withoutAnchor.halls.map((hall) => ({
+        ...hall,
+        members: hall.members.filter((member) => member.id !== 'p003'),
+      })),
+    };
+    await wrapper.setProps({ view: withoutTarget });
+    expect(wrapper.text()).toContain('Tracing from Member 002');
+    wrapper.unmount();
+  });
+
   it('highlights only relevant people and prints every reason in visible text', async () => {
     const view = largeView();
     const wrapper = mount(Tree, { props: { view, selected: null } });
