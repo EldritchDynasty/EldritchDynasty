@@ -79,5 +79,8 @@ export function resolveSavePath(root, slot) {
 export function slotOfFile(fileName) {
   if (typeof fileName !== 'string' || !fileName.endsWith(SAVE_EXTENSION)) return undefined;
   const slot = fileName.slice(0, -SAVE_EXTENSION.length);
-  return SLOT_SHAPE.test(slot) && slot.length <= MAX_SLOT ? slot : undefined;
+  // Directory enumeration must use the same slot-name rules as read/delete:
+  // an otherwise plausible filename ending with a space before the extension
+  // must not become an unopenable, undeletable save-list entry.
+  return SLOT_SHAPE.test(slot) && slot.length <= MAX_SLOT && slot === slot.trim() ? slot : undefined;
 }
