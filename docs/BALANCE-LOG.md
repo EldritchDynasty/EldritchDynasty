@@ -10421,3 +10421,17 @@ endpoints, surviving-spouse eligibility, the guardian role/status, no marriage
 complaint and an unchanged crossing date/cause on repeated death requests.
 Store and world-health suites pass all 25 tests. Canonical batch gates and
 the rebased preflight are recorded in the issue's PR before landing.
+
+**Combined retainer integration.** The same 32-seed probe was repeated on
+`30e60130`, the queued #1218 integration, with and without only the guardian
+marriage correction. Mean people minted changes 486.4 to 486.8, living at the
+term 56.3 to 57.4, annual household 49.8 to 49.7, main hall 20.2 to 20.3,
+and completed family size remains 1.4. Live/ever branches remain 4.2/15.5;
+clauses remain 5.5 and 11/32 reach seven. Regency spells change 1.8 to 1.9,
+years 114.9 to 121.4, and Chronicle entries 464.4 to 463.2. Final standing
+changes Regarded 5 to 4 and Eminent 6 to 7; Exalted 14, Known 5 and Unknown 2
+are unchanged. These remain descriptive measurements. The eight coherence
+probes again remove all four marriage complaints, with no other violations;
+reported departed-retainer membership years remain zero on both sides.
+Their annual household and treasury readings remain identical, with mean
+treasury 1,288.1 crowns. Both forbidden-Madness counts remain zero.
