@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { FrameEntry } from '@ed/schema';
 import type { HelpTier, SessionView } from '@ed/core';
 import { findEntry, linksFor } from '../lib/causes';
@@ -20,6 +20,11 @@ const emit = defineEmits<{
 }>();
 
 const entries = computed(() => [...props.view.chronicle].reverse());
+
+// Adviser counsel belongs to this world snapshot, not just this house.
+// Decisions can change the answer without advancing the year.
+const snapshot = ref(0);
+watch(() => props.view, () => { snapshot.value += 1; });
 
 /**
  * STRUCTURAL PEOPLE LINKS (#268). A Chronicle page outlives its cast:
@@ -90,7 +95,7 @@ async function follow(id: string): Promise<void> {
       <span>The chronicle</span>
       <button class="quiet small" @click="emit('open')">Read it whole</button>
     </h3>
-    <AdviserHelp :ask="askAdviser" :reset-key="`chronicle:${view.house}`" />
+    <AdviserHelp :ask="askAdviser" :reset-key="`chronicle:${view.house}:${snapshot}`" />
 
     <!-- FREQUENCY IS FELT HERE, as typography, and `Entry.vue` is where that
          lives now — one component for the panel, the reading pane and the
