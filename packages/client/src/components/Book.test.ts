@@ -53,6 +53,48 @@ const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
 
 describe('the volume', () => {
+  it('explains an unavailable canvas instead of silently dropping page export (#1327)', async () => {
+    const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      expect(save).toBeDefined();
+      await save!.trigger('click');
+      await flushPromises();
+
+      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+      expect((save!.element as HTMLButtonElement).disabled).toBe(false);
+    } finally {
+      w.unmount();
+      noCanvas.mockRestore();
+    }
+  });
+
+  it('explains PNG encoding failure and returns the save button to usable state (#1327)', async () => {
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {}, fillText: () => {}, beginPath: () => {},
+      moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => callback(null));
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      expect(save).toBeDefined();
+      await save!.trigger('click');
+      await flushPromises();
+
+      expect(w.get('[role="alert"]').text()).toContain('Try a smaller selection or another browser');
+      expect((save!.element as HTMLButtonElement).disabled).toBe(false);
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+    }
+  });
+
   it('associates the search input with a label without nesting the clear button (#1173)', async () => {
     const w = mountBook();
     try {
