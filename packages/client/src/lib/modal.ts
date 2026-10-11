@@ -40,14 +40,33 @@ function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   return false;
 }
 
+/**
+ * A closed <details> hides its contents, but not its first <summary>.
+ * Its hidden children remain in querySelectorAll(), and their computed
+ * display/tabIndex are not reliable proof that the browser can focus them.
+ * Walk all ancestors so a nested, otherwise-open disclosure cannot escape a
+ * closed outer disclosure.
+ */
+function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    if (parent.tagName === 'DETAILS' && !parent.hasAttribute('open')) {
+      const summary = [...parent.children].find((child) => child.tagName === 'SUMMARY');
+      if (!summary?.contains(element)) return true;
+    }
+    if (parent === card) break;
+  }
+  return false;
+}
+
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
   return [...card.querySelectorAll<HTMLElement>(
-    'button, [href], input, select, textarea, [tabindex]',
+    'button, summary, [href], input, select, textarea, [tabindex]',
   )].filter((element) =>
     element.tabIndex >= 0
     && !element.matches(':disabled')
     && !element.closest('[hidden], [inert]')
+    && !behindClosedDetails(element, card)
     && !(element instanceof HTMLInputElement && element.type === 'hidden')
     && !cssConcealed(element, card));
 }
