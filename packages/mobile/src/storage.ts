@@ -190,7 +190,14 @@ export function mobileStorage(
       if (!missingFile(error)) throw error;
     }
 
-    const { keys } = await preferences.keys();
+    // Legacy Preferences are a fallback, not a prerequisite for listing the
+    // authoritative Data files. A failed Preferences read must not hide them.
+    let keys: string[] = [];
+    try {
+      keys = (await preferences.keys()).keys;
+    } catch (error) {
+      console.warn('[mobile] could not enumerate legacy save slots:', error);
+    }
     for (const key of keys.filter((candidate) => candidate.startsWith(LEGACY_SAVE_PREFIX))) {
       const slot = key.slice(LEGACY_SAVE_PREFIX.length);
       if (!slot) continue;
@@ -209,7 +216,15 @@ export function mobileStorage(
         continue;
       }
 
-      const legacy = await readLegacy(key);
+      let legacy: unknown | null;
+      try {
+        legacy = await readLegacy(key);
+      } catch (error) {
+        // One damaged Preferences key must not hide Data saves or later
+        // legacy keys which can still be migrated.
+        console.warn(`[mobile] could not read legacy save slot ${slot}:`, error);
+        continue;
+      }
       if (legacy === null) continue;
       saves.set(slot, saveSummary(slot, legacy));
       try {
