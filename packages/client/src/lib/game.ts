@@ -2,7 +2,7 @@ import { computed, ref, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type {
   CampaignId, Content, ContentBundle, FrameEntry, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
 } from '@ed/schema';
-import { appendLibraryRun, emptyRunLibrary, PERSON_NAME_MAX, readRunLibrary } from '@ed/schema';
+import { appendLibraryRun, emptyRunLibrary, LIBRARY_FORMAT, PERSON_NAME_MAX, readRunLibrary } from '@ed/schema';
 import {
   CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
@@ -1209,7 +1209,17 @@ export function createGame(
       // A rejected read (or invalid profile data) says nothing about whether
       // completed houses remain on disk. Only a successful read may establish
       // the baseline against which later mutations are written.
-      const recovered = readRunLibrary(await platform.readLibrary());
+      const raw = await platform.readLibrary();
+      // A genuinely absent profile is new; malformed non-null root data is
+      // NOT an empty profile. Refuse to overwrite its bytes with an empty
+      // replacement. readRunLibrary deliberately tolerates damaged *entries*
+      // inside a valid root, so check only the outer container here.
+      if (raw !== null && (typeof raw !== 'object' || Array.isArray(raw)
+        || (raw as { format?: unknown }).format !== LIBRARY_FORMAT
+        || !Array.isArray((raw as { runs?: unknown }).runs))) {
+        throw new TypeError('invalid Library of Houses root');
+      }
+      const recovered = readRunLibrary(raw);
       persistedLibrary = recovered;
       library.value = recovered;
       libraryReady.value = true;
