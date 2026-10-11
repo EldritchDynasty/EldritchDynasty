@@ -705,7 +705,7 @@ describe('core prose messages.yaml authoring (#1011)', () => {
         plainenglish: '{PERSON} said hello.' },
     ]);
     expect(result.ok).toBe(false);
-    expect(result.error).toMatch(/missing.*\\{PERSON\\}/);
+    expect(result.error).toMatch(/missing.*\{PERSON\}/);
     expect(pendingCoreProseText()!.after).toBe(before);
     expect(store.bundle.proseVariants.some((v) => v.address === ADDRESS)).toBe(false);
   });
