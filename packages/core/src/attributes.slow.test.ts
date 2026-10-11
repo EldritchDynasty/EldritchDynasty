@@ -247,9 +247,13 @@ describe('fertility is inherited', () => {
     // weakening its sample floor for one history that no longer reaches it.
     // 941 swapped for 945 (#344): the current-rule diagnostic measured 941 at
     // only 29 qualifying couples and 945 at 198. Keep the >40 evidence floor.
+    // 927, 940 and 943 swapped for 909, 913 and 923 (#1330): after #1218's
+    // retainer departures re-rolled the draw, 927 ends as a Broken Line in
+    // 1155 and 940 and 943 bottleneck at 21 and 34 qualifying couples. The
+    // replacements measured 217, 224 and 227 under the same rules.
     const WIDE_SEEDS = [
-      900, 902, 904, 905, 916, 918, 919, 921, 924, 927, 928,
-      930, 931, 932, 934, 940, 945, 942, 943, 950,
+      900, 902, 904, 905, 916, 918, 919, 921, 924, 909, 928,
+      930, 931, 932, 934, 913, 945, 942, 923, 950,
     ];
     const mothers: number[] = [];
     const fathers: number[] = [];

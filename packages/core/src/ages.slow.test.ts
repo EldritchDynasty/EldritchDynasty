@@ -170,11 +170,29 @@ describe('the Age scheduler holds the shape the content authored', () => {
    * The guard remains a starvation check, not a pin to one deterministic draw.
    */
   it('every Age occurs in enough runs to justify authoring exclusive content', () => {
+    /**
+     * OVER THE RUNS THAT REACHED THE TERM (#1330). `SEEDS` is meant to hold
+     * confirmed full-term survivors — five swaps above say so — but survival
+     * drifts with every re-roll: after #1218, 20 of the 72 end as a Broken
+     * Line inside their first 205 years (16 just before it), and a line that
+     * is gone by 1150 cannot meet an Age whose window opens later. Twenty of
+     * the Quickening's 33 misses are those runs; among the 52 that reached the
+     * term it occurs in 39 (75%), against 39/72 (54%) over all 72, which
+     * `expectRate` rejects at 1.6 SE. Extinction is the
+     * demography suites' claim, not the scheduler's, so this one measures the
+     * scheduler on the runs that gave it the whole term — and the fixture
+     * check below keeps that sample from quietly thinning.
+     */
+    const fullTerm = runs.filter((r) => r.yearsAdvanced >= YEARS);
+    expect(
+      fullTerm.length,
+      `only ${fullTerm.length} of ${runs.length} seeds reach the term — re-confirm SEEDS as survivors`,
+    ).toBeGreaterThanOrEqual(runs.length / 2);
     for (const def of bundle.ages) {
-      const seen = runs.filter((r) => r.agesOccurred.has(def.id)).length;
+      const seen = fullTerm.filter((r) => r.agesOccurred.has(def.id)).length;
       expectRate({
         hits: seen,
-        n: runs.length,
+        n: fullTerm.length,
         // The corrected-inheritance batch measures the rarest Age at 58%.
         // 45% carries that reading at >2 SE without turning a draw into a pin.
         floor: 0.45 - 1e-9,

@@ -10435,3 +10435,38 @@ probes again remove all four marriage complaints, with no other violations;
 reported departed-retainer membership years remain zero on both sides.
 Their annual household and treasury readings remain identical, with mean
 treasury 1,288.1 crowns. Both forbidden-Madness counts remain zero.
+
+## 2026-10-12 — #1330: three nightly batch claims re-measured after #1218
+
+**Finding.** After #1218 (`2ddf11b6`) made every ending of service close the
+retainer membership, five nightly suites went red. #1334 (`ec91126f`) gave
+living ex-retainers a destination household, which cleared `branches.slow`
+and `demography.slow`. The other three failures were batch claims that the
+re-rolled draw had pushed past their margins, so each is a fixture repair.
+No mechanism, price, probability or RNG stream changes. Measured on `main`
+at `39d6b4ce`.
+
+**Ages (`ages.slow`).** `SEEDS` is meant to be confirmed full-term
+survivors. Over the same 72 seeds, Broken Lines inside the first 205 years
+went from 16 just before #1218 (`2ddf11b6~1`) to 20 now, and the Quickening
+from 43/72 to 39/72 (54%, 1.6 SE over the 45% floor). All 20 early endings
+miss the Quickening because they end before its window. Among the 52 runs
+that reach the term it occurs in 39 (75%). The occurrence claim now measures
+full-term runs, with the 45% floor unchanged and a fixture check that at
+least half the batch reaches the term. Extinction belongs to the demography
+suites, not the scheduler.
+
+**Fertility inheritance (`attributes.slow`).** Seed 927 ends as a Broken Line
+in 1155. Seeds 940 and 943 bottleneck at 21 and 34 qualifying couples
+(more than 40 needed), so only 17 of the required 18 cohorts qualified. They
+are swapped for 909, 913 and 923 (217, 224 and 227 couples), as #91, #132
+and #344 did before. The pooled mother-over-father claims pass `expectMean`
+unchanged.
+
+**Friend names (`friends.slow`).** In the same 927 run three of the five
+names are spent inside 103 years (more than 125 needed) before the line
+breaks in 1155. It is swapped for 900, which reaches 1542 and spreads all
+five across 209 years.
+
+**Verification.** The three suites pass 31/31. `world-health.slow`'s stale
+guardian-widow pin is #1329's, separately.

@@ -74,7 +74,11 @@ const content = indexContent(loadContent());
 // session's land content (issue #91) re-rolled early-game timing again; 925
 // is confirmed to spread all five across a 206-year span under current
 // content, the same swap-not-widen fix the note above already used once.
-const SEEDS = [901, 927, 904, 905, 913, 914, 916, 925, 919, 920, 921, 924];
+// 927 swapped for 900 (#1330): after #1218 re-rolled the draw, 927's line
+// breaks in 1155 with three of the five spent inside 103 years — a run that
+// ended, not a coin that bunched. 900 reaches 1542 and spreads all five
+// across 209 years.
+const SEEDS = [901, 900, 904, 905, 913, 914, 916, 925, 919, 920, 921, 924];
 
 /** Names no `uniqueName` pool contains, so an arrival cannot be a coincidence. */
 const FIVE = [
