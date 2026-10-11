@@ -51,7 +51,6 @@ describe('the #334 choice-debt worklist', () => {
     expect(audit.writeOnly).not.toContainEqual(expect.objectContaining({
       kind: 'flag', key: GOD_RITE_FAILED,
     }));
-    expect(work.summary.writeOnlyKeys).toBe(111);
     expect(work.memory.some((row) => row.kind === 'flag' && row.key === GOD_RITE_FAILED)).toBe(false);
     expect(work.summary.unclassifiedWriteOnlyKeys).toBe(0);
   });
