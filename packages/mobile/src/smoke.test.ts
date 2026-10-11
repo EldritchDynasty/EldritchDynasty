@@ -493,3 +493,85 @@ describe('native save read presence is not lost to invalid JSON (#1256)', () => 
     expect(removed).toEqual(['ed:save:autosave']);
   });
 });
+
+
+describe('legacy Preferences corruption is not absence (#1259)', () => {
+  function legacyOnly(entries: Record<string, string>) {
+    const data = new Map(Object.entries(entries));
+    const writes: Array<{ path: string; data: string }> = [];
+    const removals: string[] = [];
+    const files = {
+      async readdir() { return { files: [] }; },
+      async readFile(): Promise<never> {
+        throw Object.assign(new Error('native file missing'), { code: 'OS-PLUG-FILE-0008' });
+      },
+      async writeFile({ path, data: bytes }: { path: string; data: string }) {
+        writes.push({ path, data: bytes });
+      },
+      async deleteFile() {},
+    };
+    const preferences = {
+      async keys() { return { keys: [...data.keys()] }; },
+      async get({ key }: { key: string }) { return { value: data.get(key) ?? null }; },
+      async remove({ key }: { key: string }) {
+        removals.push(key);
+        data.delete(key);
+      },
+    };
+    return { store: mobileStorage(files, preferences), data, writes, removals };
+  }
+
+  it('rejects each present unreadable legacy save without destroying its Preferences bytes', async () => {
+    for (const bytes of ['{broken', '', 'null']) {
+      const { store, data, writes, removals } = legacyOnly({ 'ed:save:autosave': bytes });
+      await expect(store.readSave('autosave'))
+        .rejects.toThrow('the legacy save file is unreadable');
+      expect(data.get('ed:save:autosave')).toBe(bytes);
+      expect(writes).toEqual([]);
+      expect(removals).toEqual([]);
+    }
+    const absent = legacyOnly({});
+    await expect(absent.store.readSave('autosave')).resolves.toBeNull();
+    expect(absent.writes).toEqual([]);
+    expect(absent.removals).toEqual([]);
+  });
+
+  it('lists unreadable legacy slots without metadata or migration and keeps healthy entries', async () => {
+    const healthy = JSON.stringify({
+      format: 28, year: 1250, savedAt: '2026-10-11T00:00:00Z',
+    });
+    for (const bytes of ['{broken', '', 'null']) {
+      const { store, data, writes, removals } = legacyOnly({
+        'ed:save:damaged': bytes,
+        'ed:save:healthy': healthy,
+      });
+      await expect(store.listSaves()).resolves.toEqual([
+        { slot: 'healthy', format: 28, year: 1250, savedAt: '2026-10-11T00:00:00Z' },
+        { slot: 'damaged' },
+      ]);
+      expect(data.get('ed:save:damaged')).toBe(bytes);
+      expect(data.has('ed:save:healthy')).toBe(false);
+      expect(writes).toEqual([{ path: 'eldritch/saves/healthy.json', data: healthy }]);
+      expect(removals).toEqual(['ed:save:healthy']);
+    }
+  });
+
+  it('rejects unreadable legacy Library records without overwriting them', async () => {
+    for (const bytes of ['{broken', '', 'null']) {
+      const { store, data, writes, removals } = legacyOnly({ 'ed:library': bytes });
+      await expect(store.readLibrary())
+        .rejects.toThrow('the legacy Library of Houses file is unreadable');
+      expect(data.get('ed:library')).toBe(bytes);
+      expect(writes).toEqual([]);
+      expect(removals).toEqual([]);
+    }
+    await expect(legacyOnly({}).store.readLibrary()).resolves.toBeNull();
+
+    const healthy = JSON.stringify({ format: 1, runs: [{ seed: 7 }] });
+    const { store, data, writes, removals } = legacyOnly({ 'ed:library': healthy });
+    await expect(store.readLibrary()).resolves.toEqual({ format: 1, runs: [{ seed: 7 }] });
+    expect(data.has('ed:library')).toBe(false);
+    expect(writes).toEqual([{ path: 'eldritch/library.json', data: healthy }]);
+    expect(removals).toEqual(['ed:library']);
+  });
+});
