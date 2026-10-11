@@ -91,6 +91,9 @@ const subject = ref('');
 const scionChoice = ref('');
 const scionHeirChoice = ref('');
 
+/** Cadet hall chosen for each eligible parcel; the Table order remains the sole rule gate. */
+const endowTo = ref<Record<string, string>>({});
+
 /** Who the player is about to put in each post, keyed by the post. */
 const placing = ref<Record<string, string>>({});
 
@@ -394,6 +397,7 @@ const MARRIAGE_ORDERS = [
         <div class="small">
           <strong>{{ p.name }}</strong>
           <span class="dim"> · {{ p.place }} · yield {{ ((p.baseYield + p.yieldBonus) * p.yieldFactor).toFixed(1) }}</span>
+          <span v-if="p.holder" class="dim"> · held by {{ p.holderName }}</span>
         </div>
         <div class="row">
           <button v-if="p.sellable" :disabled="p.improving !== undefined" class="small"
@@ -407,8 +411,24 @@ const MARRIAGE_ORDERS = [
             @click="actions.order({ kind: 'improve', parcel: p.parcel })">
             Improve it — {{ p.improveCost }} crowns
           </button>
+          <button v-if="p.holder" class="small"
+            @click="actions.order({ kind: 'endow', parcel: p.parcel, branch: null })">
+            Recall to the seat
+          </button>
+          <template v-else-if="!p.caput && land.branches.length">
+            <select v-model="endowTo[p.parcel]" :aria-label="'Choose a cadet hall for ' + p.name">
+              <option value="">— choose a hall —</option>
+              <option v-for="b in land.branches" :key="b.id" :value="b.id">{{ b.name }} (grievance {{ Math.round(b.grievance) }})</option>
+            </select>
+            <button class="small" :disabled="!endowTo[p.parcel]"
+              @click="actions.order({ kind: 'endow', parcel: p.parcel, branch: endowTo[p.parcel]! })">
+              Endow the hall
+            </button>
+          </template>
+          <span v-else-if="p.caput" class="small dim">the seat's own ground</span>
         </div>
       </div>
+      <p v-if="refusedIn('endow')" class="small rubric">{{ refusedIn('endow') }}</p>
       <p v-if="refusedIn('sell')" class="small rubric">{{ refusedIn('sell') }}</p>
       <p v-if="refusedIn('improve')" class="small rubric">{{ refusedIn('improve') }}</p>
     </div>
