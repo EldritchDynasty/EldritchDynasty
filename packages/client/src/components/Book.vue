@@ -312,15 +312,16 @@ const counts = computed(() => ({
           >{{ l.label }}</button>
         </div>
 
-        <label class="row find">
-          <span class="said-not-shown">Search the book</span>
+        <div class="row find">
+          <label class="said-not-shown" for="chronicle-book-search">Search the book</label>
           <input
+            id="chronicle-book-search"
             v-model="find"
             type="search"
             placeholder="a name, a word, a thing that happened"
           />
           <button v-if="find" class="quiet small" @click="find = ''">clear</button>
-        </label>
+        </div>
 
         <div v-if="centuries.length > 1" class="wrap jump">
           <span class="dim small">from</span>
