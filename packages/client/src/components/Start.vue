@@ -11,6 +11,7 @@ const props = withDefaults(defineProps<{
   resumable: boolean;
   library?: RunLibrary;
   libraryReady?: boolean;
+  libraryReadError?: boolean;
   textScale?: TextScale;
   readingFont?: ReadingFont;
   proseMode?: ProseMode;
@@ -18,6 +19,7 @@ const props = withDefaults(defineProps<{
   reduceMotion?: boolean;
 }>(), {
   libraryReady: true,
+  libraryReadError: false,
   textScale: 'standard',
   readingFont: 'book',
   proseMode: 'original',
@@ -149,6 +151,12 @@ async function exportSave(slot: string): Promise<void> {
   }
 }
 
+async function retryLibrary(): Promise<void> {
+  // The store keeps the Library unavailable on failure and exposes retry.
+  // A rejected retry must not become an unhandled button-click Promise.
+  try { await props.actions.retryLibrary(); } catch { /* Retry remains visible. */ }
+}
+
 async function clearLibrary(): Promise<void> {
   // A missed or duplicated click cannot skip the explicit destructive step.
   if (!confirmingClearLibrary.value) return;
@@ -216,6 +224,10 @@ onMounted(() => { void refreshSaves(); });
       </button>
     </div>
     <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ resumeRefused }}</p>
+    <div v-if="!libraryIsReady && libraryReadError" class="save-list-error" role="alert">
+      <p class="rubric small">The Library of Houses could not be read. Its saved history has not been changed.</p>
+      <button class="quiet small" @click="retryLibrary()">Retry reading the Library</button>
+    </div>
 
     <section class="reading panel" aria-label="Reading settings">
       <h2>Reading</h2>
