@@ -17,6 +17,7 @@
 import { isLadderRole, RESPECT_ORDER } from '@ed/schema';
 import { affinitiesFor, booksFor, eldritchPower, householdAffinities, householdBooks, householdOpposedPairs, MADNESS_FLOOR, madnessOf, mindOf } from '../ascension.js';
 import { autoResolveAll, resolveChoice, resolveRecord, type PendingChoice, type RecordOption } from '../events/decisions.js';
+import { evalFilter } from '../events/conditions.js';
 import type { SlotFill } from '../events/slots.js';
 import { phenotypeOf } from '../people/factory.js';
 import { hashSeed, makeRng } from '../rng.js';
@@ -328,16 +329,31 @@ export function nameScion(ctx: SimCtx): void {
  * the blood-concentration bias the whole mechanism is FOR. A heir who
  * shares the Scion's own parent, or is his own child, is standing on
  * exactly the blood the pair is meant to be building.
+ *
+ * `forUnmaking` is only the composite ending policy: prefer a descendant
+ * eligible for that elder's rite over a collateral heir. The isolated pair
+ * policies keep their original lifetime appointment.
  */
-export function nameScionHeir(ctx: SimCtx): void {
+export function nameScionHeir(ctx: SimCtx, forUnmaking = false): void {
   const w = ctx.world;
+  const household = w.people.household(w.playerHouse, w.year);
+  const expressers = household
+    .filter((p) => p.id !== w.scion && phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress);
+  // #332: the composite policy prepares the Unmaking's actual cast. A
+  // brother can support the pair policy, but cannot receive this elder's
+  // Unmaking. Move the book-and-tutor programme to a descendant when one
+  // becomes available; once a recipient takes the rite, keep supporting him.
+  // Reuse the authored relation evaluator, including grandchildren.
+  const elderId = w.scion;
+  const descendants = forUnmaking && elderId ? expressers.filter((p) =>
+    evalFilter({ relation: 'descendant_of', of: 'ELDER' }, p, ctx, { ELDER: elderId })) : [];
   const current = w.scionHeir ? w.people.get(w.scionHeir) : undefined;
   const stillHere = current?.status === 'alive'
     && current.id !== w.scion
-    && w.people.household(w.playerHouse, w.year).some((q) => q.id === current.id);
-  if (stillHere) return;
+    && household.some((q) => q.id === current.id);
+  if (stillHere && (!descendants.length || current.rites.includes('unmaking')
+    || descendants.some((p) => p.id === current.id))) return;
 
-  const household = w.people.household(w.playerHouse, w.year);
   const kin = new Set<string>();
   if (w.scion) {
     for (const s of w.people.siblings(w.scion)) kin.add(s.id);
@@ -346,10 +362,9 @@ export function nameScionHeir(ctx: SimCtx): void {
     }
   }
 
-  const expressers = household
-    .filter((p) => p.id !== w.scion && phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress);
-  const unmarried = expressers.filter((p) => !p.marriages.some((m) => !m.to));
-  const pool = unmarried.length ? unmarried : expressers;
+  const eligible = descendants.length ? descendants : expressers;
+  const unmarried = eligible.filter((p) => !p.marriages.some((m) => !m.to));
+  const pool = unmarried.length ? unmarried : eligible;
   w.scionHeir = pool.length
     ? [...pool].sort((a, b) => {
       const ak = kin.has(a.id) ? 1 : 0;

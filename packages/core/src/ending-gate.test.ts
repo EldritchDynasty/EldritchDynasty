@@ -4,8 +4,8 @@ import { indexContent, type EndingId } from '@ed/schema';
 import {
   ALL_ENDINGS, ENDING_JUDGEABLE_BATCH, gateEndings, verdictOver, type EndingPolicy, type EndingRun,
 } from './tools/ending-gate.js';
-import { recordOptionForPolicy, unmakingReadyForAscendant } from './tools/ladder-policy.js';
-import { testWorld } from './testing.js';
+import { nameScionHeir, recordOptionForPolicy, unmakingReadyForAscendant } from './tools/ladder-policy.js';
+import { beget, place, testWorld } from './testing.js';
 
 /**
  * THE GATE THAT GRADES THE ENDINGS (issue #42, and issue #61's Stage D).
@@ -64,6 +64,55 @@ function ascendant(apotheosisShare: number, n = 100, unmadeShare = 0.01, takerSh
 
 
 describe('the ascendant composite policy', () => {
+  it('prepares a descendant for the Unmaking while the isolated pair policy holds its existing heir', () => {
+    const ctx = testWorld(loadContent(), 8134);
+    const elder = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => p.sex === 'male')!;
+    const brother = place(ctx, { sex: 'male', age: 30 });
+    const child = place(ctx, { sex: 'male', age: 5 });
+    brother.genome = structuredClone(elder.genome);
+    child.genome = structuredClone(elder.genome);
+    beget(ctx, child, undefined, elder);
+    ctx.world.scion = elder.id;
+    ctx.world.scionHeir = brother.id;
+    nameScionHeir(ctx);
+    expect(ctx.world.scionHeir).toBe(brother.id);
+    nameScionHeir(ctx, true);
+    expect(ctx.world.scionHeir).toBe(child.id);
+
+    // A successful recipient remains the programme's beneficiary even when
+    // the elder dies and a later scion has his own descendant to prepare.
+    child.rites.push('unmaking');
+    ctx.world.scion = brother.id;
+    const next = place(ctx, { sex: 'male', age: 1 });
+    next.genome = structuredClone(elder.genome);
+    beget(ctx, next, undefined, brother);
+    nameScionHeir(ctx, true);
+    expect(ctx.world.scionHeir).toBe(child.id);
+  });
+
+  it('can prepare a grandchild after the intervening generation dies', () => {
+    const ctx = testWorld(loadContent(), 8135);
+    const elder = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => p.sex === 'male')!;
+    const collateral = place(ctx, { sex: 'male', age: 35 });
+    const daughter = place(ctx, { sex: 'female', age: 25 });
+    const grandson = place(ctx, { sex: 'male', age: 4 });
+    collateral.genome = structuredClone(elder.genome);
+    grandson.genome = structuredClone(elder.genome);
+    ctx.world.scion = elder.id;
+    ctx.world.scionHeir = collateral.id;
+    nameScionHeir(ctx, true);
+    expect(ctx.world.scionHeir).toBe(collateral.id);
+    beget(ctx, daughter, undefined, elder);
+    beget(ctx, grandson, daughter);
+    ctx.world.people.kill(daughter.id, ctx.world.year, 'illness');
+    nameScionHeir(ctx, true);
+    expect(ctx.world.scionHeir).toBe(grandson.id);
+    nameScionHeir(ctx, true);
+    expect(ctx.world.scionHeir).toBe(grandson.id);
+  });
+
   it('spends the Record only at the final Respect wall', () => {
     const bundle = loadContent();
     const ctx = testWorld(bundle, 8132);
