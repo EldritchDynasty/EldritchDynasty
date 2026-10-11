@@ -90,11 +90,12 @@ describe('mobile native save-list read failures', () => {
     async deleteFile() {},
   };
 
-  it('keeps healthy saves visible when a different enumerated file rejects on read', async () => {
+  it('keeps healthy saves and the unreadable slot visible when a file rejects on read', async () => {
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       await expect(mobileStorage(files, preferences).listSaves()).resolves.toEqual([
         { slot: 'healthy', format: 28, year: 1234, savedAt },
+        { slot: 'unreadable' },
       ]);
       expect(warning).toHaveBeenCalledWith(
         '[mobile] could not read save slot unreadable:',
@@ -236,5 +237,72 @@ describe('Windows / Android / iOS host interchange (#322)', () => {
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
+  });
+});
+
+/**
+ * A name returned by native readdir is not an empty slot merely because the
+ * native bytes cannot be decoded today. An older Preferences copy must not
+ * overwrite it on a "helpful" migration pass (#1196).
+ */
+type NativeState = 'invalid-json' | 'unreadable' | 'valid' | 'absent';
+
+function fixture(native: NativeState) {
+  const writes: string[] = [];
+  const removed: string[] = [];
+  const oldSave = { format: 28, year: 1045, savedAt: '2026-09-01T00:00:00Z' };
+  const currentSave = { format: 28, year: 1196, savedAt: '2026-10-11T00:00:00Z' };
+  const files = {
+    readdir: async () => ({
+      files: native === 'absent' ? [] : [{ name: 'autosave.json', type: 'file' as const }],
+    }),
+    readFile: async () => {
+      if (native === 'unreadable') throw new Error('Data file temporarily inaccessible');
+      return { data: native === 'invalid-json' ? '{bad json' : JSON.stringify(currentSave) };
+    },
+    writeFile: async ({ path }: { path: string }) => { writes.push(path); },
+    deleteFile: async () => undefined,
+  };
+  const preferences = {
+    keys: async () => ({ keys: ['ed:save:autosave'] }),
+    get: async () => ({ value: JSON.stringify(oldSave) }),
+    remove: async ({ key }: { key: string }) => { removed.push(key); },
+  };
+  return { store: mobileStorage(files, preferences), writes, removed, oldSave, currentSave };
+}
+
+describe('native mobile save listing never overwrites unreadable data (#1196)', () => {
+  it('lists a malformed Data file without migrating or deleting its older Preferences backup', async () => {
+    const { store, writes, removed } = fixture('invalid-json');
+    expect(await store.listSaves()).toEqual([{ slot: 'autosave' }]);
+    expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('does not treat a transient read error as proof that the native file is absent', async () => {
+    const { store, writes, removed } = fixture('unreadable');
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      expect(await store.listSaves()).toEqual([{ slot: 'autosave' }]);
+      expect(warning).toHaveBeenCalledOnce();
+    } finally {
+      warning.mockRestore();
+    }
+    expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('keeps native metadata and may retire a legacy backup after successfully parsing the native file', async () => {
+    const { store, writes, removed, currentSave } = fixture('valid');
+    expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...currentSave }]);
+    expect(writes).toEqual([]);
+    expect(removed).toEqual(['ed:save:autosave']);
+  });
+
+  it('still migrates a legacy save whose native filename is genuinely absent', async () => {
+    const { store, writes, removed, oldSave } = fixture('absent');
+    expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...oldSave }]);
+    expect(writes).toEqual(['eldritch/saves/autosave.json']);
+    expect(removed).toEqual(['ed:save:autosave']);
   });
 });

@@ -1297,6 +1297,7 @@ describe('mobile durable storage', () => {
 
     await expect(store.listSaves()).resolves.toEqual([
       { slot: 'good', format: 27, year: 1234, savedAt: '2026-10-01T00:00:00.000Z' },
+      { slot: 'bad' },
     ]);
   });
 
@@ -1326,10 +1327,11 @@ describe('mobile durable storage', () => {
     const preferences = mobilePreferenceStore({ 'ed:save:autosave': old });
     const store = mobileStorage(files, preferences);
 
-    // A corrupt slot remains omitted, as before, without hiding healthy saves
-    // or treating the corrupt native file as a migration destination.
+    // A corrupt slot stays visible without invented metadata, and without
+    // overwriting its native bytes with a legacy Preferences snapshot.
     await expect(store.listSaves()).resolves.toEqual([
       { slot: 'healthy', format: 28, year: 1300, savedAt: undefined },
+      { slot: 'autosave' },
     ]);
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:save:autosave')).toBe(old);
