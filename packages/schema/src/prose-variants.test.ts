@@ -52,6 +52,19 @@ describe('Plain English variant guardrails (#415)', () => {
     }).of).toBe(of);
   });
 
+  it('rejects whitespace-only Plain English while preserving authored spacing (#1317)', () => {
+    for (const blank of [' ', '   ', '\\t', '\\n', '  \\n \\t']) {
+      expect(ProseVariantS.safeParse({
+        address: fixture.address,
+        plainenglish: blank,
+        of: proseOriginalHash(fixture.text),
+      }).success, JSON.stringify(blank)).toBe(false);
+    }
+    const wording = `  ${fixture.text}  `;
+    expect(ProseVariantS.parse({ address: fixture.address, plainenglish: wording }).plainenglish)
+      .toBe(wording);
+  });
+
   it('accepts a current counterpart that preserves every interpolation token', () => {
     expect(runRule('prose/variants', withVariant())).toEqual([]);
   });
