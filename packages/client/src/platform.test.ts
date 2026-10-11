@@ -607,7 +607,7 @@ describe('the platform seam', () => {
         { slot: 'healthy', format: 28, year: 1442, savedAt: undefined },
         { slot: 'bad-json' },
         { slot: 'empty-json' },
-        { slot: 'null-json' },
+        { slot: 'null-json', year: undefined, savedAt: undefined, format: undefined },
       ]));
       // Neither listing nor a failed read changes any recoverable bytes.
       expect(records).toEqual(original);
