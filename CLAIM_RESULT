@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim check --agent chatgpt/1330-retainer-household-integrity-20261012
+request-commit: 0222d763fa4c3c97fb28998c411fcd443f9ffd31
+
+holding 1330 (lane code, 2m)
+landing commit needs: Closes #1330
+10 other claim(s) open, none overlapping the 6 path(s) your claim declares.
