@@ -147,6 +147,7 @@ describe('atomic exported run replacement (#904)', () => {
     expect(end).toBeGreaterThan(start);
     const handler = source.slice(start, end);
     expect(handler).toContain('requireSaveEnvelope(save)');
+    expect(handler.indexOf('requireSaveEnvelope(save)')).toBeLessThan(handler.indexOf('dialog.showSaveDialog('));
     expect(handler).toContain('writeJsonAtomically(filePath, save)');
     expect(handler).not.toContain('writeFileSync(filePath,');
     expect(handler).toContain('if (canceled || !filePath)');
