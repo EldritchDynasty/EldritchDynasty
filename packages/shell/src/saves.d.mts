@@ -11,6 +11,7 @@ export interface SaveListing {
 }
 
 /** `<userData>/saves`, created if it is not there. */
+export declare function requireSaveEnvelope(save: unknown): Record<string, unknown>;
 export declare function saveRoot(userData: string): string;
 export declare function listSaves(root: string): SaveListing[];
 export declare function readSave(root: string, slot: unknown): unknown;
