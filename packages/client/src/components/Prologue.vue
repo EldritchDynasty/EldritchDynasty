@@ -151,6 +151,18 @@ function sign(): void {
   // the page they were already reading would waste it.
   if (result.ok) window.scrollTo({ top: 0 });
 }
+
+/**
+ * Enter also confirms an IME candidate, and its keyup can arrive after
+ * `compositionend` — so a keyup handler sees an ordinary Enter and founds the
+ * house while the player is still choosing the characters of its name. Only a
+ * deliberate keydown signs: not one inside a composition, not the legacy 229
+ * process key, and not a held key repeating an irreversible act.
+ */
+function signOnEnter(event: KeyboardEvent): void {
+  if (event.isComposing || event.keyCode === 229 || event.repeat) return;
+  sign();
+}
 </script>
 
 <template>
@@ -293,7 +305,7 @@ function sign(): void {
           maxlength="48"
           placeholder="what the family will be called"
           aria-label="Name the house"
-          @keyup.enter="sign()"
+          @keydown.enter="signOnEnter($event)"
         />
       </section>
 
