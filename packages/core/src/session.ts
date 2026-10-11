@@ -1290,7 +1290,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     const branch = w.branches.get(id);
     hallViews.push({
       id,
-      name: branch?.name ?? 'the main hall',
+      name: branch?.name ?? msg(ctx, 'session.hall.main', 'the main hall'),
       grievance: branch?.grievance ?? 0,
       isSeat: id === MAIN_BRANCH,
       members: members.map((p) => {
