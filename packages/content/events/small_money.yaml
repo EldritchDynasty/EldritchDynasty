@@ -775,3 +775,9 @@ proseVariants:
       honest but costly, and it reflects how the family always answers such demands. The assessor
       is mildly surprised because he is accustomed to finding chimneys that owners have
       deliberately bricked up.
+
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].interaction.choices[id=send_the_four_to_bramme].outcomes[id=sent_to_bramme].effects[1].text"
+    of: e35ad56b4f87fef7
+    plainenglish: >-
+      The house sent four underweight rent marks to the magistrate at Bramme.
+      Three households were questioned.
