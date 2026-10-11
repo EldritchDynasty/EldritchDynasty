@@ -462,3 +462,40 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: 1 }
+
+# Direct-language counterparts for the first common small-money event (#415).
+proseVariants:
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].title"
+    of: 8e8f342b5f7366f7
+    plainenglish: >-
+      Two Halves of a Tally Stick
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].body"
+    of: 3556ac7dfd8d0061
+    plainenglish: >-
+      A tally is a hazel stick with notches, split lengthwise so each party keeps one half.
+      The two halves fit together in a way that cannot be forged, making them more reliable
+      than most written records in the kingdom. The house keeps forty of these sticks in a
+      box. A tenant says his half burned in a cottage fire. He wants to know what happens to
+      the debt now. The house's half records nine marks.
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=the_house_half_stands].label"
+    of: bd66e734fb009bb8
+    plainenglish: >-
+      Trust the house's half. Collect nine marks and make a new tally stick.
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=the_house_half_stands].outcomes[id=it_stands].text"
+    of: e9fec038e8798d9c
+    plainenglish: >-
+      The tenant pays the nine marks he owed. The reeve watches as a new tally stick is split
+      in the yard. The tenant learns that the house's records decide a dispute even when his
+      own proof is destroyed. Within ten days, every tenant on the estate hears what
+      happened.
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=split_the_difference].label"
+    of: f7a859c0285a1d54
+    plainenglish: >-
+      Accept five marks instead of nine, and make a new tally stick.
+  - address: "content:events/small_money.yaml#events[id=the_tally_stick_split].interaction.choices[id=split_the_difference].outcomes[id=five].text"
+    of: 07b1e47e32aa573a
+    plainenglish: >-
+      The tenant pays five marks and receives a new tally stick. The house has forgiven four
+      marks it could have claimed. People in the parish decide the hall will meet a tenant
+      halfway when his home is damaged. Over the next eleven years, three more men say they
+      have lost their tally halves. Two of them are lying.
