@@ -70,7 +70,7 @@ spellbooks:
     studyYears: 2
     degradesBy: 25
     price: { min: 90, max: 200 }
-    blurb: The Church printed these by the hundred and burns every copy it finds outside its own libraries.
+    blurb: The Church had these copied by hand in their hundreds and burns every copy it finds outside its own libraries.
 
   - id: lesser_workings_of_darkness
     name: Lesser Workings of Darkness
@@ -277,7 +277,7 @@ proseVariants:
     plainenglish: >-
       Explains how to persuade a body that less time has passed, so it lasts a while longer.
   - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_light].blurb"
-    of: 535fc8de3e6345ba
+    of: 80f73905e2224d09
     plainenglish: >-
       The Church produced hundreds of copies and burns any it finds outside its own libraries.
   - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_darkness].blurb"
