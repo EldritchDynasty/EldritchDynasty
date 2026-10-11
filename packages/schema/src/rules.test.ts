@@ -1965,10 +1965,14 @@ describe('choices/consequence', () => {
           o.effects = [];
           o.tags = o.tags.filter((tag) => tag !== 'self_expression');
         }
-        const effect = kind === 'knowledge'
-          ? { kind: 'knowledge' as const, op: 'grant' as const, flag }
-          : { kind, flag, set: true };
-        choice.outcomes[0]!.effects.push(effect);
+        // Preserve the closed discriminated Effect union for each memory kind.
+        if (kind === 'knowledge') {
+          choice.outcomes[0]!.effects.push({ kind: 'knowledge', op: 'grant', flag });
+        } else if (kind === 'arc_flag') {
+          choice.outcomes[0]!.effects.push({ kind: 'arc_flag', flag, set: true });
+        } else {
+          choice.outcomes[0]!.effects.push({ kind: 'flag', flag, set: true });
+        }
       });
       const audit = auditChoices(indexContent(b));
       const row = audit.rows.find((r) => r.event === eventId && r.choice === choiceId)!;
