@@ -520,6 +520,16 @@ export function worldViolations(ctx: SimCtx): WorldViolation[] {
     if (!w.branches.has(state.holder)) say('land/holder', `${state.id} is held by ${state.holder}, which is not a hall of this house`);
   }
 
+  // ── A lie is provable by a HOUSE (#1190) ────────────────────────────────
+  // The auction sells the page to whoever is named here, threads are drawn
+  // to them, and proof scenes narrow by them. A name that is not a house is
+  // a bidder nobody can be and a prover no scene can match.
+  for (const [id, d] of w.discrepancies) {
+    for (const house of d.provableBy) {
+      if (!ctx.content.house(house)) say('discrepancy/prover', `${id} is provable by '${house}', which is not a house`);
+    }
+  }
+
   // ── Nobody is their own ancestor ────────────────────────────────────────
   for (const p of all) {
     const id = String(p.id);
