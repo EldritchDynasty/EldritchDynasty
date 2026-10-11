@@ -1041,7 +1041,6 @@ describe('a markdown-only change runs the short set, and only then', () => {
   const OUTSIDE_FAST_LANE: Record<string, string> = {
     '.claude/hooks/guard-edit.mjs': 'a hook: names generated files to refuse edits; CI never runs it',
     'packages/core/src/tools/gen-docs.ts': 'writes docs/VOCABULARY.md; its one CI reader is docs.test.ts, a fast test',
-    'packages/core/src/world-health.slow.test.ts': 'names BALANCE-LOG in an assertion message; reads nothing',
     'tools/agents.mjs': 'message text only',
     'tools/cost.mjs': 'rewrites AGENTS.md figures by hand; CI never runs it',
     'tools/land.mjs': 'message text only',
