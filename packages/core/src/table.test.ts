@@ -67,6 +67,46 @@ describe('live Table names in Plain English (#972)', () => {
       .toBe('Body Power');
     expect(missingPlainEnglish(ctx)).not.toContain(address);
   });
+
+  it('renders spellbook descriptions in both Table readers without changing saved world (#1266)', () => {
+    const ctx = testWorld(bundle, 1266);
+    const owned = ctx.content.spellbook('lesser_workings_of_light');
+    const missing = ctx.content.spellbook('lesser_workings_of_aero');
+    if (!owned?.blurb || !missing?.blurb) throw new Error('spellbook description fixtures are absent');
+    ctx.world.library.set(owned.id, { id: owned.id, acquiredYear: ctx.world.year, condition: 100 });
+    ctx.world.library.delete(missing.id);
+
+    const shelfBlurb = () => tableView(ctx).shelf.find((row) => row.book === owned.id)?.blurb;
+    const brokerBlurb = () => tableView(ctx).missingPrimers.find((row) => row.book === missing.id)?.blurb;
+    const address = (id: string) =>
+      `content:${ctx.content.sourceOf(id)}#spellbooks[id=${encodeURIComponent(id)}].blurb`;
+    const ownedAddress = address(owned.id);
+    const missingAddress = address(missing.id);
+    const snapshot = structuredClone(saveGame(ctx));
+
+    expect(shelfBlurb()).toBe(owned.blurb);
+    expect(brokerBlurb()).toBe(missing.blurb);
+
+    const ownedVariant = { address: ownedAddress, of: proseOriginalHash(owned.blurb), plainenglish: 'A guide to the Church\'s light magic.' };
+    const missingVariant = { address: missingAddress, of: proseOriginalHash(missing.blurb), plainenglish: 'Magic for sailors and archers.' };
+    setProseVariants(ctx, [ownedVariant, missingVariant]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(shelfBlurb()).toBe(ownedVariant.plainenglish);
+    expect(brokerBlurb()).toBe(missingVariant.plainenglish);
+    expect(missingPlainEnglish(ctx)).not.toContain(ownedAddress);
+    expect(missingPlainEnglish(ctx)).not.toContain(missingAddress);
+
+    setProseVariants(ctx, [{ ...ownedVariant, of: '0000000000000000' }, missingVariant]);
+    expect(shelfBlurb()).toBe(owned.blurb);
+    expect(brokerBlurb()).toBe(missingVariant.plainenglish);
+    expect(missingPlainEnglish(ctx)).toContain(ownedAddress);
+
+    setProseMode(ctx, 'original');
+    expect(shelfBlurb()).toBe(owned.blurb);
+    expect(brokerBlurb()).toBe(missing.blurb);
+    expect({ ...saveGame(ctx), savedAt: snapshot.savedAt }).toEqual(snapshot);
+  });
 });
 
 describe('searching the old contracts for a Ledger clause', () => {
