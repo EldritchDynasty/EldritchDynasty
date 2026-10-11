@@ -118,15 +118,30 @@ async function continueLastSitting(): Promise<void> {
 }
 
 async function load(slot: string): Promise<void> {
-  refused.value = await props.actions.load(slot) ? null : 'That saved run could not be read.';
+  refused.value = null;
+  try {
+    if (!await props.actions.load(slot)) refused.value = 'That saved run could not be read.';
+  } catch {
+    refused.value = 'That saved run could not be read.';
+  }
 }
 
 async function importSave(): Promise<void> {
-  refused.value = await props.actions.importSave() ? null : 'That file was not a run this version can read.';
+  refused.value = null;
+  try {
+    if (!await props.actions.importSave()) refused.value = 'That file was not a run this version can read.';
+  } catch {
+    refused.value = 'That file was not a run this version can read.';
+  }
 }
 
 async function exportSave(slot: string): Promise<void> {
-  refused.value = await props.actions.exportSave(slot) ? null : 'That saved run could not be written out.';
+  refused.value = null;
+  try {
+    if (!await props.actions.exportSave(slot)) refused.value = 'That saved run could not be written out.';
+  } catch {
+    refused.value = 'That saved run could not be written out.';
+  }
 }
 
 async function clearLibrary(): Promise<void> {
