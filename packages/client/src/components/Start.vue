@@ -74,7 +74,12 @@ const showAdvanced = ref(false);
  * storage, so on the rare load where one lags the other this still leaves a
  * way to reach it.
  */
-const namedSaves = computed(() => saves.value.filter((s) => !(props.resumable && s.slot === 'autosave')));
+// A host can read a non-null autosave that the game cannot resume (e.g. an
+// incompatible save format). Once Continue refuses it, reveal that slot so
+// its original data is available through Copy out, without overwriting it.
+// Hide the duplicate again if a later Continue succeeds.
+const namedSaves = computed(() => saves.value.filter((s) =>
+  !(props.resumable && resumeRefused.value === null && s.slot === 'autosave')));
 const completedHouses = computed(() => [...(props.library?.runs ?? [])].reverse());
 const libraryIsReady = computed(() => props.libraryReady ?? true);
 /** The Advanced field is a user-editable number input: Vue's .number modifier
