@@ -36,14 +36,17 @@ function start() {
 const cleanId = computed(() => id.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
 
 async function create() {
-  if (!cleanId.value || !path.value) return;
+  // Keep the submitted ID across the asynchronous write: clearing the input
+  // also clears cleanId, so emitting that computed after reset emits ''.
+  const createdId = cleanId.value;
+  if (busy.value || !createdId || !path.value) return;
   busy.value = true;
-  const res = await createItem(props.collectionKey, path.value, props.seed(cleanId.value));
+  const res = await createItem(props.collectionKey, path.value, props.seed(createdId));
   busy.value = false;
   if (!res.ok) { error.value = res.error ?? 'write failed'; return; }
   open.value = false;
   id.value = '';
-  emit('created', cleanId.value);
+  emit('created', createdId);
 }
 </script>
 
