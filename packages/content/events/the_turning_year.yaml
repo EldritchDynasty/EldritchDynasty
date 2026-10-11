@@ -343,7 +343,7 @@ events:
       within two days. Nothing is decided during the Days, nothing is sealed,
       and nobody travels, and the keeper is at Bramme until they are out. The
       women of the household have done their part by dusk and the question in
-      the cold room is whether the ground is opened tomorrow or in four days.
+      the cold room is whether the ground is opened tomorrow or on the first of Thaw.
     interaction:
       kind: choice
       choices:
@@ -357,19 +357,19 @@ events:
                 it is done on the third of the Days without a keeper, without
                 an entry, and without one word of the Quieting said over it.
                 The roll at Wick carries the date the keeper was told, which
-                is four days out. It is the only wrong date in eleven hundred
+                falls on the first of Thaw. It is the only wrong date in eleven hundred
                 years of that roll and it is still there.
               effects:
                 - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
                 - { kind: knowledge, op: grant, flag: knows_the_wrong_date_on_the_roll }
                 - { kind: rumour, op: seed, id: rumour_the_burial_in_the_hollow_days, accuracy: 0.4 }
         - id: wait_for_the_keeper
-          label: Wait. Four days, and it is done properly.
+          label: Wait until the first of Thaw, and it is done properly.
           outcomes:
             - id: waited
               weight: 100
               text: >-
-                Four days in the cold room with the door shut and a candle
+                The body lies in the cold room with the door shut and a candle
                 changed twice a night, and the household walks past it to get
                 to the kitchen. The keeper comes on the first of Thaw and does
                 everything correctly. Nobody in the hall sleeps well for a
@@ -682,32 +682,32 @@ proseVariants:
     plainenglish: >-
       A Relative Dies During the Hollow Days
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].body"
-    of: "7cd4fbbb4d2e576f"
+    of: "fede0eda63e0b606"
     plainenglish: >-
       {KIN} dies on the second of the Hollow Days. Custom says the dead must be buried within
       two days, but the Hollow Days have their own rules: nobody makes decisions, seals
       documents, or travels. The keeper is in Bramme until the Days are over. By dusk, the
       women of the household have prepared the body. The family must decide whether to open
-      the grave tomorrow or wait another four days.
+      the grave tomorrow or wait until the first of Thaw.
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].label"
     of: "4d12d2630baccccf"
     plainenglish: >-
       Bury the dead within two days. Follow the older burial custom.
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].outcomes[id=buried].text"
-    of: "659b34dfc9174343"
+    of: "eee4e891c1340105"
     plainenglish: >-
       The yard worker and two tenants open the grave in the dark. The burial happens on the
       third Hollow Day, with no keeper, no written entry, and none of the Quieting prayers.
-      The roll at Wick records the date the keeper was finally told, four days later. It is
+      The roll at Wick records the first of Thaw, when the keeper was finally told. It is
       the only wrong date in eleven hundred years of that roll, and nobody corrects it.
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].label"
-    of: "b4fc381ec7accda2"
+    of: "002feabdad823251"
     plainenglish: >-
-      Wait four days for the keeper and hold a proper burial.
+      Wait until the first of Thaw for the keeper and hold a proper burial.
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].outcomes[id=waited].text"
-    of: "86d81312cfaadf06"
+    of: "c0d8b6a90d873fed"
     plainenglish: >-
-      The body stays in a cold room behind a closed door for four days. A candle is changed
+      The body stays in a cold room behind a closed door until the first of Thaw. A candle is changed
       twice each night, and everyone passes the door on the way to the kitchen. The keeper
       returns on the first of Thaw and performs the burial correctly. Nobody in the hall
       sleeps well for a month, and nobody says that this is why.
