@@ -155,12 +155,13 @@ const muster = computed(() => {
     <div class="year">
       <strong>{{ view.year }}</strong>
       <span class="dim small">generation {{ view.generation }}</span>
+      <!-- Keep the live region in the accessibility tree before the first save update.
+           Inserting the region and its text together may not be announced. -->
       <span
-        v-if="saveLabel"
         role="status"
         class="dim small save"
         :class="{ warn: saveStatus === 'error' }"
-      >{{ saveLabel }}</span>
+      >{{ saveLabel ?? '' }}</span>
     </div>
 
     <div class="house">
