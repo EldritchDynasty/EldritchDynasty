@@ -2,6 +2,7 @@ import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { assertFinalEvidence } from './ios-smoke-evidence.mjs';
+import { runSimctlWithTerminationRetry } from './ios-simctl-retry.mjs';
 
 const APP_ID = 'nz.eldritchdynasty.game';
 const RESULT_NAME = 'smoke-result.json';
@@ -19,11 +20,11 @@ const udid = process.env.IOS_SIMULATOR_UDID;
 if (!udid) throw new Error('IOS_SIMULATOR_UDID is required');
 
 function simctl(args, timeout = 30_000, env = {}) {
-  const result = spawnSync('xcrun', ['simctl', ...args], {
+  const result = runSimctlWithTerminationRetry(args, () => spawnSync('xcrun', ['simctl', ...args], {
     encoding: 'utf8',
     timeout,
     env: { ...process.env, ...env },
-  });
+  }), () => console.warn('simctl terminate timed out; retrying once on the hosted simulator'));
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   if (result.error || result.status !== 0) {
