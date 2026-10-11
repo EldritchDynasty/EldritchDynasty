@@ -810,6 +810,58 @@ describe('the platform seam', () => {
     }
   });
 
+  it('rejects inaccessible or malformed browser Library reads without changing saved data (#1240)', async () => {
+    const library = { format: 1, runs: [{ id: 'old-house' }] };
+    const serialized = JSON.stringify(library);
+    const values = new Map<string, string>([['ed:library', serialized]]);
+    let readFailure = false;
+    const storage = {
+      getItem: vi.fn((key: string) => {
+        if (readFailure) throw new Error('temporary storage read failure');
+        return values.get(key) ?? null;
+      }),
+      setItem: vi.fn((key: string, value: string) => values.set(key, value)),
+      removeItem: vi.fn((key: string) => values.delete(key)),
+    } as unknown as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { localStorage: storage } });
+    try {
+      const platform = browserPlatform();
+      await expect(platform.readLibrary()).resolves.toEqual(library);
+
+      readFailure = true;
+      await expect(platform.readLibrary()).rejects.toThrow('temporary storage read failure');
+      expect(values.get('ed:library')).toBe(serialized);
+
+      readFailure = false;
+      values.set('ed:library', '{broken json');
+      await expect(platform.readLibrary()).rejects.toThrow(SyntaxError);
+      expect(values.get('ed:library')).toBe('{broken json');
+
+      values.set('ed:library', '');
+      await expect(platform.readLibrary()).rejects.toThrow(SyntaxError);
+      values.set('ed:library', 'null');
+      await expect(platform.readLibrary()).rejects.toThrow('browser Library of Houses record is invalid');
+
+      values.set('ed:library', serialized);
+      await expect(platform.readLibrary()).resolves.toEqual(library);
+      values.delete('ed:library');
+      await expect(platform.readLibrary()).resolves.toBeNull();
+      expect(storage.setItem).not.toHaveBeenCalled();
+      expect(storage.removeItem).not.toHaveBeenCalled();
+
+      // Access to the Storage property can itself throw in private contexts.
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: { get localStorage(): Storage { throw new Error('storage disabled'); } },
+      });
+      await expect(platform.readLibrary()).rejects.toThrow('this browser does not permit saved data');
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('round-trips the profile library separately from save slots in a browser', async () => {
     const values = new Map<string, string>();
     const storage = {
@@ -1478,7 +1530,9 @@ describe('mobile durable storage', () => {
     const preferences = mobilePreferenceStore({ 'ed:library': old });
     const store = mobileStorage(files, preferences);
 
-    await expect(store.readLibrary()).resolves.toBeNull();
+    // The native file is present but corrupt: it must not masquerade as a
+    // missing Library, or the next successful write could erase the history.
+    await expect(store.readLibrary()).rejects.toThrow('native Library of Houses file is unreadable');
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:library')).toBe(old);
     expect(files.writes).toEqual([]);
