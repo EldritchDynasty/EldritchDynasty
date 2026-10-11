@@ -89,6 +89,10 @@ function skipSeenOpening(beat: ChapterBeat): boolean {
 }
 
 onMounted(() => {
+  // Always install the trap: dismissChapter can advance to another beat
+  // without unmounting this dialog, even when this opening was already read.
+  // Returning before registration left that next beat without Escape/Tab.
+  window.addEventListener('keydown', onKey);
   if (skipSeenOpening(props.beat)) {
     props.actions.dismissChapter();
     return;
@@ -97,7 +101,6 @@ onMounted(() => {
   const active = document.activeElement;
   cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
   goOn.value?.focus();
-  window.addEventListener('keydown', onKey);
 });
 
 // App keeps the same Chapter component mounted as the chapter queue shifts.
