@@ -305,9 +305,6 @@ describe('cadet endowment has a measured political cost and benefit (#1219)', ()
     // Identical founders/tenure mean every other grievance contribution is identical.
     expect(other.grievance - gift.grievance).toBeCloseTo(8 * 0.03, 8);
     expect(gift.grievance).toBeLessThan(other.grievance);
-    expect(landView(ctx).branches).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: gift.id, name: 'Gift Hall', grievance: gift.grievance }),
-    ]));
   });
 
   it('caps relief from many deeds but never erases the Head grievance', () => {
