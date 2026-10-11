@@ -228,6 +228,38 @@ describe('named saves', () => {
     expect(w.find('section.saved').exists(), 'autosave listed twice').toBe(false);
   });
 
+  it('reveals the autosave for copying out after Continue refuses, then hides it on retry (#1207)', async () => {
+    const actions = spyActions([{ slot: 'autosave', year: 1090 }]);
+    vi.mocked(actions.resume).mockResolvedValueOnce(false);
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      expect(w.find('section.saved').exists()).toBe(false);
+
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      expect(continueButton).toBeTruthy();
+      await continueButton!.trigger('click');
+      await flush();
+
+      // Continue can fail after a host read succeeds. Retain access to the
+      // original bytes via the normal export verb rather than losing the slot.
+      expect(w.get('.resume-refusal').text()).toContain('could not be resumed');
+      expect(w.get('section.saved').text()).toContain('The last sitting');
+      const copyOut = w.get('section.saved').findAll('button').find((b) => b.text() === 'Copy out');
+      expect(copyOut).toBeTruthy();
+      await copyOut!.trigger('click');
+      expect(actions.exportSave).toHaveBeenCalledWith('autosave');
+
+      await continueButton!.trigger('click');
+      await flush();
+      expect(w.find('.resume-refusal').exists()).toBe(false);
+      expect(w.find('section.saved').exists()).toBe(false);
+      expect(actions.resume).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('still offers the autosave slot from the list when resumable lags behind it', async () => {
     const saves: SaveSummary[] = [{ slot: 'autosave', year: 1090 }];
     const w = mount(Start, { props: { actions: spyActions(saves), resumable: false } });
