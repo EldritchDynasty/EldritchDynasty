@@ -341,6 +341,51 @@ describe('a save patches one node and leaves the file alone', () => {
       .toEqual(['arcs/eight_days.yaml', 'characters/templates.yaml']);
   });
 
+  it('refuses a stale disk snapshot after review without losing the draft (#1307)', async () => {
+    const target = event(EVENT);
+    const previousTitle = target.title;
+    const originalDisk = h.disk.get(CRUSADE)!;
+    try {
+      target.title = 'A Draft After Review';
+      markDirty('events', EVENT);
+      expect(pendingText('events', EVENT)!.after).toContain('A Draft After Review');
+
+      // An external editor or git changes the file AFTER the diff was shown.
+      const externalDisk = `# outside edit after review\n${originalDisk}`;
+      h.disk.set(CRUSADE, externalDisk);
+
+      const res = await saveEvent(EVENT);
+      expect(res.ok).toBe(false);
+      expect(res.error).toMatch(/changed on disk.*reload/i);
+      expect(h.writes, 'the newer disk version must never be overwritten').toHaveLength(0);
+      expect(h.disk.get(CRUSADE)).toBe(externalDisk);
+      expect(store.dirty.has(CRUSADE), 'the unsaved draft must remain visible').toBe(true);
+      expect(pendingText('events', EVENT)!.after).toContain('A Draft After Review');
+    } finally {
+      // Restore both sides so the shared real-content fixture remains valid.
+      h.disk.set(CRUSADE, originalDisk);
+      target.title = previousTitle;
+      markDirty('events', EVENT);
+      await saveEvent(EVENT);
+    }
+  });
+
+  it('refuses to write when the current disk file cannot be read (#1307)', async () => {
+    const originalDisk = h.disk.get(CRUSADE)!;
+    try {
+      markDirty('events', EVENT);
+      h.disk.delete(CRUSADE);
+
+      const res = await saveEvent(EVENT);
+      expect(res.ok).toBe(false);
+      expect(res.error).toMatch(/cannot verify.*no such file/i);
+      expect(h.writes).toHaveLength(0);
+      expect(store.dirty.has(CRUSADE)).toBe(true);
+    } finally {
+      h.disk.set(CRUSADE, originalDisk);
+    }
+  });
+
   it('refuses shipped content when the host marks it reference-only', async () => {
     h.writable.value = false;
     markDirty('events', EVENT);
