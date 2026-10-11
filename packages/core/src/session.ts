@@ -1453,7 +1453,17 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     tales: circulatingTales(ctx),
     marriagePromises: w.marriagePromises.map((p) => ({
       house: p.toHouse,
-      houseName: w.houses.get(p.toHouse)?.name ?? p.toHouse,
+      // Display wording is a live preference, not the stored promise or house identity.
+      // Only translate the canonical authored name: an altered runtime name must
+      // never be replaced by a counterpart fingerprinted against another name.
+      houseName: (() => {
+        const name = w.houses.get(p.toHouse)?.name;
+        if (name === undefined) return p.toHouse;
+        const authored = ctx.content.house(p.toHouse);
+        return authored?.name === name
+          ? proseForContentField(ctx, 'houses', p.toHouse, 'name', name)
+          : name;
+      })(),
       year: p.year,
       lot: p.lot,
       // A lot is a spellbook, an heirloom, or a page of somebody's chronicle.
