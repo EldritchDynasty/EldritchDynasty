@@ -405,6 +405,51 @@ describe('choice-scoped Record wording (#864)', () => {
   });
 });
 
+describe('Hollow Days burial changes the cast kin\'s life state (#1113)', () => {
+  const event = content.events.find((item) => item.id === 'a_death_in_the_hollow_days');
+  if (!event || event.interaction.kind !== 'choice') {
+    throw new Error('The authored Hollow Days choice is missing');
+  }
+
+  for (const [index, { choiceId, outcomeId }] of [
+    { choiceId: 'bury_within_two_days', outcomeId: 'buried' },
+    { choiceId: 'wait_for_the_keeper', outcomeId: 'waited' },
+  ].entries()) {
+    it(`${choiceId} kills KIN once and preserves the result across a save/load`, () => {
+      const seed = 111300 + index;
+      const ctx = fixture(seed, 1200);
+      const kin = place(ctx, { sex: 'female', age: 52, name: 'Hollow Days witness ' + seed });
+      const head = place(ctx, { sex: 'male', age: 45, name: 'Hollow Days head ' + seed, castSlots: ['head'] });
+      expect(ctx.world.people.get(kin.id)?.status).toBe('alive');
+
+      // Commit the real authored choice and its single, weight-100 outcome,
+      // rather than testing a fabricated effect in isolation.
+      const pending = queueChoice(ctx, event, event.body, { HEAD: head.id, KIN: kin.id }, []);
+      const answer = resolveChoice(ctx, pending.id, choiceId, makeRng(seed + 1));
+      expect(answer.ok, answer.reason).toBe(true);
+      expect(ctx.world.decisionLog.at(-1)).toMatchObject({
+        kind: 'outcome', event: event.id, choiceId, outcomeId,
+      });
+      expect(ctx.world.people.get(kin.id)?.status).toBe('dead');
+      expect(ctx.world.people.living().some((person) => person.id === kin.id)).toBe(false);
+      expect(ctx.world.people.get(head.id)?.status).toBe('alive');
+
+      const restored = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      expect(restored.world.people.get(kin.id)?.status).toBe('dead');
+      expect(restored.world.people.living().some((person) => person.id === kin.id)).toBe(false);
+      expect(restored.world.decisionLog).toEqual(ctx.world.decisionLog);
+    });
+  }
+
+  it('keeps the translated Hollow Days body accurate in a six-day year (#1114)', () => {
+    const address = 'content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].body';
+    const variant = content.proseVariants.find((item) => item.address === address);
+    expect(variant?.of).toBe(proseOriginalHash(event.body));
+    expect(variant?.plainenglish).toContain('the Hollow Days have their own rules');
+    expect(variant?.plainenglish).not.toContain('the five Hollow Days');
+  });
+});
+
 // Use the real authored choice and its real outcome/effects, but restrict
 // the random outcome draw to one authored result. Each witness is therefore
 // deterministic without seed-mining a Long Line or rewriting the outcome.
