@@ -379,3 +379,185 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
     rumour: { id: rumour_what_they_saw_at_cawdry, accuracy: 0.3, spread: 2 }
+
+# Plain English alternatives for every ladder bargain and consequence (#1178).
+proseVariants:
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].title"
+    of: ddea6979bc0490dd
+    plainenglish: >-
+      The Mill Race Is Blocked
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].body"
+    of: e2d644240a78f2f8
+    plainenglish: >-
+      The water channel above Wick's mill has filled with silt. Since Greening, villagers
+      have carried water uphill. Hiring workers would cost 200 crowns and most of a season,
+      and the house cannot afford it this year. Someone suggests that {ASCENDANT} could
+      clear the channel in an afternoon. Everyone knows the work would affect him, although
+      nobody has recorded the cost. After using his power this way, he sits silently by the
+      fire and seems himself again after three days. Each time, though, he has changed.
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].label"
+    of: 81511a3aeb6e1e1e
+    plainenglish: >-
+      Ask him to do the work. It will take one afternoon.
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].outcomes[id=done_by_evening].text"
+    of: b784ad5c7df49eb8
+    plainenglish: >-
+      The mill's water channel is clear by evening. Wick is grateful, and the reeve tells
+      the story in the alehouse for about four years. {ASCENDANT} barely eats supper and
+      goes to bed early. By the third day he seems himself again. The house decides that
+      means he has paid the full cost.
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=hire_the_gang].label"
+    of: c565eb7e4648ac1a
+    plainenglish: >-
+      Hire the workers. Do not ask him.
+  - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=hire_the_gang].outcomes[id=paid_for].text"
+    of: 702fad1ea6e7ba22
+    plainenglish: >-
+      The house pays 200 crowns to eleven workers. They spend most of a season clearing the
+      mill channel, which runs again by Ingathering. No one from the house has to work near
+      the water. The money has bought protection from an unknown cost.
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].title"
+    of: 9fb1f213db9f8ecf
+    plainenglish: >-
+      Beyond the First Third of the Book
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].body"
+    of: d505afc9f3fff165
+    plainenglish: >-
+      A man at Cawdry sold the house an expensive greater work. {ASCENDANT} has studied it
+      for eleven months, but can understand only the first third, which introduces the rest
+      of the work. The problem is not the language. He knows the words, but they have no
+      effect. He keeps repeating them at night in the room above the stable. He believes he
+      has found a way to continue but has not said how. At the table he told everyone he was
+      close. He did not ask permission directly, but everyone understood what he meant.
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].interaction.choices[id=let_him_go_on].label"
+    of: c159b3049c2d4920
+    plainenglish: >-
+      Allow him to continue. He says he is close.
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].interaction.choices[id=let_him_go_on].outcomes[id=it_works_in_march].text"
+    of: 9355c243664fe95f
+    plainenglish: >-
+      The work succeeds in March, but not in the way the book describes. He becomes visibly
+      more capable. He is also changed: quicker, harder to surprise, and sometimes answering
+      before a question is finished. The house benefits from his abilities for six decades.
+      Nobody records the other cost of his discovery, so the family cannot later check what
+      he gave up.
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].interaction.choices[id=take_the_book].label"
+    of: 477e3111dd578a65
+    plainenglish: >-
+      Take the book and return it to the shelf.
+  - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].interaction.choices[id=take_the_book].outcomes[id=shelved].text"
+    of: 37e4e8e563efb009
+    plainenglish: >-
+      The book stays on the shelf, and the house guards the key more carefully for a while.
+      He does not argue with the decision, but he resents it for the rest of his life.
+      Whenever the library comes up in conversation, he makes sure he is somewhere else.
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].title"
+    of: 00eb47f80233663c
+    plainenglish: >-
+      Wick Requests Him by Name
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].body"
+    of: 2d593cf02b3dbd6c
+    plainenglish: >-
+      After another wet spring, the mill channel fills with silt again. This time Wick sends
+      its reeve directly to the house. He arrives on foot with mud up to his knees and asks
+      for {ASCENDANT} by name. The villagers know that hiring a gang takes a season, while
+      his power cleared the channel in an afternoon. They do not know what that work cost
+      him. The reeve waits in the yard for an answer.
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].interaction.choices[id=send_him_down].label"
+    of: 18f30ba4c2a9d4d0
+    plainenglish: >-
+      Send him to help. Wick is also his village.
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].interaction.choices[id=send_him_down].outcomes[id=the_race_runs_again].text"
+    of: 3e306c343c0bda28
+    plainenglish: >-
+      He goes down with the reeve and clears the channel before dark. Villagers line the
+      bank to watch, and some applaud. {ASCENDANT} does not know how to respond. He walks
+      back up the hill more slowly than before, but he has begun to enjoy being asked for
+      help.
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].interaction.choices[id=keep_him_in].label"
+    of: 9533b1e30c6d1a1f
+    plainenglish: >-
+      Keep him at home. Tell the reeve it was a one-time favour.
+  - address: "content:events/the_ladder.yaml#events[id=wick_asks_for_him_by_name].interaction.choices[id=keep_him_in].outcomes[id=wick_digs_it_out].text"
+    of: 5b06235320806ef7
+    plainenglish: >-
+      The reeve returns to Wick. The villagers dig the channel clear themselves with spades
+      over five weeks. In the alehouse they say the house has become proud. {ASCENDANT}
+      watches the work from an upper window for much of that week. When the water runs
+      again, he stays away from supper.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].title"
+    of: d5e1efdb6a8ad0ef
+    plainenglish: >-
+      Writing in the Book's Margins
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].body"
+    of: d762d8e6c640855a
+    plainenglish: >-
+      In the cold months, {ASCENDANT} takes the greater work from the library and writes
+      notes in its margins. He works at the kitchen table at night, beside the fire. He
+      writes directions beyond the point where the book stops explaining: which word to say,
+      which door to use, and how long to wait in darkness for an answer. These notes are not
+      themselves a spell. Anyone of the blood who can read could follow them. The house must
+      decide whether future readers should inherit those instructions.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].interaction.choices[id=let_the_margins_stand].label"
+    of: c2b2da68c8f5fb44
+    plainenglish: >-
+      Keep his notes in the book so future readers can use them.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].interaction.choices[id=let_the_margins_stand].outcomes[id=finished_in_one_winter].text"
+    of: 83f2a3b24597a48e
+    plainenglish: >-
+      He completes the notes in one winter and repeats the work twice more to check the
+      order. The margins fill with instructions. When he finally closes the book, he appears
+      relieved that he has finished recording what he learned.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].interaction.choices[id=let_the_margins_stand].outcomes[id=finished_in_one_winter].effects[2].text"
+    of: 96ac3d56ea69ecc2
+    plainenglish: >-
+      A greater work in the library was annotated by someone in the family with instructions
+      that go beyond the original text.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].interaction.choices[id=cut_the_pages].label"
+    of: eaee2284bf49d540
+    plainenglish: >-
+      Cut out the notes and burn them where he can watch.
+  - address: "content:events/the_ladder.yaml#events[id=what_he_wrote_past_it].interaction.choices[id=cut_the_pages].outcomes[id=eleven_pages].text"
+    of: e031c146e0bb97a2
+    plainenglish: >-
+      Using a kitchen knife, the house cuts eleven pages from the book. The pages burn one
+      by one in the hall fireplace. {ASCENDANT} watches without speaking, and never
+      discusses it afterwards. He still knows how to perform what he wrote, but no one else
+      can learn those instructions from the book.
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].title"
+    of: ea875c10c20de364
+    plainenglish: >-
+      A Public Display at Cawdry
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].body"
+    of: be519712066f5e0e
+    plainenglish: >-
+      The provincial assize meets at Cawdry in autumn. Two generations ago, the family
+      demonstrated its unusual power privately, and the province still talks about it.
+      Officials now want one public demonstration to quiet the rumours. Someone whose
+      judgement the house trusts says the display would improve its standing. Those
+      officials want a story they can tell about the family. They are asking {ASCENDANT} to
+      use an afternoon of his life. Neither the spectators nor he can know the full personal
+      cost.
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].interaction.choices[id=let_them_see].label"
+    of: 2b5f01339a960cc7
+    plainenglish: >-
+      Allow one public demonstration.
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].interaction.choices[id=let_them_see].outcomes[id=the_yard_at_cawdry].text"
+    of: f528bd5da9bac349
+    plainenglish: >-
+      He demonstrates his power in the yard at Cawdry before ninety people. The act takes
+      less time than the reading of the charge. Two magistrates who witness it never discuss
+      it with anyone, even each other. From that autumn, the house gains respect in the
+      province and beyond. {ASCENDANT} refuses to appear in a yard for any purpose for the
+      rest of his life.
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].interaction.choices[id=nothing_to_show].label"
+    of: 2efeb3f2d9428176
+    plainenglish: >-
+      Say the family only owns land.
+  - address: "content:events/the_ladder.yaml#events[id=what_the_province_asks_to_see].interaction.choices[id=nothing_to_show].outcomes[id=accepted_not_believed].text"
+    of: 7f2033764df0a6ca
+    plainenglish: >-
+      The house says it has owned land in the Nethering for 200 years, which is true, and
+      makes no claim about its power. The assize accepts the statement but does not believe
+      it. The family bears the consequences of that doubt for years without anyone making a
+      formal demand.
