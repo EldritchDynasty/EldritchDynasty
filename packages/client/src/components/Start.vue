@@ -163,6 +163,13 @@ async function retryLibrary(): Promise<void> {
   try { await props.actions.retryLibrary(); } catch { /* Retry remains visible. */ }
 }
 
+function requestClearLibrary(): void {
+  // Disabled controls alone do not protect against a stale dispatched click.
+  if (clearingLibrary.value || removingRun.value !== null) return;
+  confirmingRemoveRun.value = null;
+  confirmingClearLibrary.value = true;
+}
+
 async function clearLibrary(): Promise<void> {
   // Clear and Remove share one host Library. Refuse stale/programmatic clicks
   // as well as disabling the controls while either write is in flight.
@@ -285,7 +292,7 @@ onMounted(() => { void refreshSaves(); });
           v-if="!confirmingClearLibrary"
           class="quiet small"
           :disabled="removingRun !== null || clearingLibrary"
-          @click="confirmingRemoveRun = null; confirmingClearLibrary = true"
+          @click="requestClearLibrary()"
         >{{ clearingLibrary ? 'Clearing…' : 'Clear' }}</button>
         <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
           <p class="rubric small">Clear all {{ completedHouses.length }} completed houses? This cannot be undone.</p>
