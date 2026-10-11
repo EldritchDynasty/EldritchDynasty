@@ -50,6 +50,7 @@ const afterimage = computed(() => afterimageModel({
 }));
 
 const savingAfterimage = ref(false);
+const afterimageError = ref<string | null>(null);
 
 /**
  * ONE PAGE SOMEBODY CAN HAND TO SOMEBODY ELSE (#260).
@@ -59,10 +60,12 @@ const savingAfterimage = ref(false);
  * current viewport is an accident; the finished house is not.
  */
 async function saveAfterimage(): Promise<void> {
+  if (savingAfterimage.value) return;
   savingAfterimage.value = true;
+  afterimageError.value = null;
   try {
     const gauge = document.createElement('canvas').getContext('2d');
-    if (!gauge) return;
+    if (!gauge) throw new Error('2D canvas unavailable');
     const measure: Measure = (text, font) => {
       gauge.font = font;
       return gauge.measureText(text).width;
@@ -79,7 +82,7 @@ async function saveAfterimage(): Promise<void> {
     canvas.width = width;
     canvas.height = layout.height;
     const ink = canvas.getContext('2d');
-    if (!ink) return;
+    if (!ink) throw new Error('2D canvas unavailable');
 
     ink.fillStyle = PLATE.ground;
     ink.fillRect(0, 0, canvas.width, canvas.height);
@@ -167,8 +170,10 @@ async function saveAfterimage(): Promise<void> {
     ink.fillText('Eldritch Dynasty · House Afterimage', PLATE.pad, canvas.height - 28);
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-    if (!blob) return;
+    if (!blob) throw new Error('PNG export unavailable');
     downloadBlob(blob, afterimageName(props.view.houseName, props.view.seed, props.epilogue.year));
+  } catch {
+    afterimageError.value = 'The house afterimage could not be saved. Try again.';
   } finally {
     savingAfterimage.value = false;
   }
@@ -272,6 +277,7 @@ async function saveAfterimage(): Promise<void> {
       </button>
       <button class="quiet" @click="actions.restart()">Another house</button>
     </div>
+    <p v-if="afterimageError" class="afterimage-error rubric small" role="alert">{{ afterimageError }}</p>
   </main>
 </template>
 
@@ -301,4 +307,5 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
   font-size: var(--t-lead); color: var(--ink);
 }
 .ending-actions { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.afterimage-error { margin: 10px 0 0; }
 </style>
