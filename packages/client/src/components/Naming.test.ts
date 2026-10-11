@@ -62,6 +62,7 @@ describe('child naming with an input method (#1286)', () => {
     await wrapper.get('input').setValue('林');
     await wrapper.get('button').trigger('click');
 
-    expect(name).toHaveBeenCalledExactlyOnceWith('child_1', '林');
+    expect(name).toHaveBeenCalledTimes(1);
+    expect(name).toHaveBeenCalledWith('child_1', '林');
   });
 });
