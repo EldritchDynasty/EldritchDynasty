@@ -683,8 +683,6 @@ export function tickPlatIllumination(ctx: SimCtx): void {
 export interface LandView {
   treasury: number;
   rentsPolicy: RentPolicy;
-  /** Active cadet halls to which the seat may grant a non-caput parcel. */
-  branches: { id: string; name: string; grievance: number }[];
   held: {
     parcel: string; name: string; kind?: ParcelKind; place: string;
     acres: number; provenance: string; heldSince: Year;
@@ -783,9 +781,7 @@ export function landView(ctx: SimCtx): LandView {
   }
 
   return {
-    treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy,
-    branches: [...w.branches.values()].filter(isActiveBranch)
-      .map((b) => ({ id: b.id, name: b.name, grievance: b.grievance })),
-    held, market, lost: w.lostParcels.map((l) => lostView(ctx, l)),
+    treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy, held, market,
+    lost: w.lostParcels.map((l) => lostView(ctx, l)),
   };
 }
