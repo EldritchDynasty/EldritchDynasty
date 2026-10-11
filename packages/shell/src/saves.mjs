@@ -34,6 +34,18 @@ export function saveRoot(userData) {
 }
 
 /**
+ * Keep the native read, list and write boundaries symmetrical. A present
+ * non-save JSON value must stay visible as unreadable, never turn into a
+ * missing slot in the preload. Core remains the save-schema authority.
+ */
+function requireSaveEnvelope(save) {
+  if (save === null || typeof save !== 'object' || Array.isArray(save) || typeof save.format !== 'number') {
+    throw new TypeError('a save is an object with a numeric format');
+  }
+  return save;
+}
+
+/**
  * Every slot in the directory, newest first, with enough of the save read back
  * to draw a list: what year the run stands at, and when it was written.
  *
@@ -54,8 +66,8 @@ export function listSaves(root) {
     try {
       const stat = regularSaveStat(path);
       entry.bytes = stat.size;
-      const save = JSON.parse(readFileSync(path, 'utf8'));
-      entry.format = typeof save?.format === 'number' ? save.format : undefined;
+      const save = requireSaveEnvelope(JSON.parse(readFileSync(path, 'utf8')));
+      entry.format = save.format;
       entry.year = typeof save?.year === 'number' ? save.year : undefined;
       entry.savedAt = typeof save?.savedAt === 'string' ? save.savedAt : undefined;
     } catch (e) {
@@ -76,7 +88,7 @@ function regularSaveStat(path) {
 export function readSave(root, slot) {
   const path = resolveSavePath(root, slot);
   regularSaveStat(path);
-  return JSON.parse(readFileSync(path, 'utf8'));
+  return requireSaveEnvelope(JSON.parse(readFileSync(path, 'utf8')));
 }
 
 /**
@@ -94,9 +106,7 @@ export function writeSave(root, slot, save) {
   // without one cannot be a save from this application at all. Everything else
   // about whether this is a real run is `SavedGameS`'s business, in core,
   // where the schema lives.
-  if (save === null || typeof save !== 'object' || Array.isArray(save) || typeof save.format !== 'number') {
-    throw new TypeError('a save is an object with a numeric format');
-  }
+  requireSaveEnvelope(save);
 
   return writeJsonAtomically(resolveSavePath(root, slot), save);
 }
