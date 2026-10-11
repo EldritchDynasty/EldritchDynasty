@@ -1047,3 +1047,65 @@ proseVariants:
     of: "84b2b95a264a070e"
     plainenglish: >-
       could not accept the relic because the chapel was being repaired
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].title"
+    of: "67cdc73529677ff9"
+    plainenglish: >-
+      The Archdeacon Can Read the Books on Our Fourth Shelf
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].body"
+    of: "acdcd9b99d938bf5"
+    plainenglish: >-
+      The archdeacon visits about a lease and settles it in twenty minutes. Then he casually asks
+      to see the fourth shelf. Old Ambric is used in Church services, legal formulas and
+      physicians' labels; he has read it since he was nine. Nobody in this house can read two
+      books on that shelf. {READER} has pretended to understand them for six years. The archdeacon
+      has already spent forty minutes in the room.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].interaction.choices[id=let_him_read].label"
+    of: "021b16be31ca95ea"
+    plainenglish: >-
+      Let him read the shelf. We have nothing to hide.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].interaction.choices[id=let_him_read].outcomes[id=he_reads_it].text"
+    of: "fee9c397f4d05423"
+    plainenglish: >-
+      He spends ninety minutes at the shelf, then gives the house a handwritten translation for
+      free. It is a page the family has owned for two hundred years without understanding it. The
+      page is simply a grant of pasture. The archdeacon is pleased and leaves his translation on
+      the table.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].interaction.choices[id=let_him_read].outcomes[id=he_stops_reading].text"
+    of: "fc6cef3a7ab9363e"
+    plainenglish: >-
+      After forty minutes at the shelf, he closes the second volume, keeping a finger between its
+      pages. In a friendly voice he asks where the house got it. He is told Sarrow, which is true.
+      He repeats 'Sarrow' as though he intends to check the answer.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].interaction.choices[id=refuse_the_shelf].label"
+    of: "7b75ed90efd72af4"
+    plainenglish: >-
+      Refuse. The fourth shelf has nothing to do with the lease.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].interaction.choices[id=refuse_the_shelf].outcomes[id=refused_the_shelf].text"
+    of: "0c117b5e1a3d43d2"
+    plainenglish: >-
+      He accepts the refusal at once without showing any reaction. His work has taught him to ask
+      questions and to understand what a refusal means. The lease is signed. During the ride back
+      to Bramme, he tells his clerk to record the refusal. The clerk writes six words.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].record.subject"
+    of: "827529f400c7db18"
+    plainenglish: >-
+      the fourth shelf and the people who have read its books
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].record.options.record.chronicle"
+    of: "40f74e92dbef0536"
+    plainenglish: >-
+      The archdeacon read the books on our fourth shelf and translated a page into our language.
+      It was a grant of pasture. Our house had owned it for two hundred years without knowing what
+      it said.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].record.options.record.claims[0].text"
+    of: "ff9ba7602b9c7804"
+    plainenglish: >-
+      showed the archdeacon the fourth shelf and learned that one book contained a pasture grant
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].record.options.embellish.chronicle"
+    of: "5e53997550fc76f9"
+    plainenglish: >-
+      The archdeacon asked to see the fourth shelf. We showed him every book there. He confirmed
+      that our books concerned worship and farming.
+  - address: "content:events/rare_church.yaml#events[id=the_archdeacon_at_the_shelf].record.options.embellish.claims[0].text"
+    of: "bf9bd15eaa943a02"
+    plainenglish: >-
+      showed the archdeacon everything on the fourth shelf
