@@ -926,3 +926,124 @@ proseVariants:
     of: "98dd027416b94b70"
     plainenglish: >-
       had the chapel stone lifted and found everything as the Wick roll recorded
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].title"
+    of: "c12b786b921afcff"
+    plainenglish: >-
+      No Burials, Marriages or Church Rites
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].body"
+    of: "149bcbbcfe94cbe0"
+    plainenglish: >-
+      Starting on the first day of Slaughter, the Church bans burials in consecrated ground,
+      marriages and all other rites in this parish. All one hundred and twenty residents are
+      affected, although the order is aimed at a single household. The Church will lift it in
+      return for ninety crowns and a written admission. Three people in Wick die during the first
+      tenday, and there is nowhere permitted to bury them.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=pay_the_composition].label"
+    of: "43234045cc2f3169"
+    plainenglish: >-
+      Pay ninety crowns and sign the admission the Church demands.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=pay_the_composition].outcomes[id=composed].text"
+    of: "59649fbde543f559"
+    plainenglish: >-
+      The house pays ninety crowns and signs four lines admitting something it does not believe it
+      did. The Church lifts the interdict within a tenday, and the three dead are buried in
+      consecrated ground. The village never learns what the four lines say. The chapter house
+      keeps the document, and it will still be there in 1542. It is the shortest document this
+      family has ever signed.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].label"
+    of: "538d167f6b2da4d3"
+    plainenglish: >-
+      Refuse to pay. Bury the dead in the orchard and let the province see.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=the_orchard].text"
+    of: "8596439723fc5353"
+    plainenglish: >-
+      The whole village of Wick gathers around three graves in the house's orchard. The reeve
+      reads the burial words from a borrowed book. Eleven tendays later, the Church lifts the
+      interdict without explaining itself or apologising. The house pays nothing, and the
+      villagers remember who stood with them in the orchard.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=it_holds_too_long].text"
+    of: "812e906a1f78e776"
+    plainenglish: >-
+      The interdict continues past eleven tendays, then past one year and into a second. Nineteen
+      people are buried in the orchard. Four marriages cannot take place, and villagers start
+      going to Ockleigh for their needs. The Church lifts the interdict in the third year, but the
+      house must pay one hundred and forty crowns.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].record.subject"
+    of: "736ea4341b957b18"
+    plainenglish: >-
+      the interdict and how the house responded
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].record.options.record.chronicle"
+    of: "67608b25ed831791"
+    plainenglish: >-
+      Because of our house, the parish was under interdict for one year and eight months. Nineteen
+      people from Wick were buried in our orchard. We did not pay or sign anything.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].record.options.record.claims[0].text"
+    of: "397f56b1c58a27bd"
+    plainenglish: >-
+      refused to pay or sign during one year and eight months of interdict
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].record.options.embellish.chronicle"
+    of: "d74fdfbc86072668"
+    plainenglish: >-
+      A misunderstanding caused a brief interdict. Our house paid to settle it within a tenday,
+      and no burials were delayed.
+  - address: "content:events/rare_church.yaml#events[id=the_interdict].record.options.embellish.claims[0].text"
+    of: "e01df0eabe4cb796"
+    plainenglish: >-
+      paid to settle the interdict within a tenday at the house's own expense
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].title"
+    of: "1d757837509f21db"
+    plainenglish: >-
+      A Church Relic Is Offered to Our Chapel
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].body"
+    of: "b7e43080225dba44"
+    plainenglish: >-
+      A chapter house four counties to the east needs money and has many relics. It offers
+      Ardwen's chapel a finger bone in a gilt-copper case. The account of its origins goes back
+      eleven hundred years and is supported by four documents. A house that keeps a relic must
+      employ a chaplain, open its chapel to the parish on nine days each year, and accept Church
+      visits. The relic costs sixty crowns. The visits are an additional cost.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].interaction.choices[id=take_the_relic].label"
+    of: "467076433ae152d7"
+    plainenglish: >-
+      Buy the relic for sixty crowns so the house appears ordinary.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].interaction.choices[id=take_the_relic].outcomes[id=installed].text"
+    of: "cea7befd993968e9"
+    plainenglish: >-
+      The house pays sixty crowns and hires a chaplain for five marks a year. From now on, the
+      chapel that the family has always preferred to keep private opens to all one hundred and
+      twenty parishioners on nine days every year. The arrangement is permanent. No one in the
+      province suspects that a house with a relic could be hiding anything. That protection is
+      what the house bought, and it works.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].interaction.choices[id=decline_the_bone].label"
+    of: "efdfaa58651e6d1c"
+    plainenglish: >-
+      Refuse the relic. Keep the chapel closed.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].interaction.choices[id=decline_the_bone].outcomes[id=declined].text"
+    of: "5e0c74c4adbfa278"
+    plainenglish: >-
+      The house refuses politely. Within a year, a house at Cawdry that ranks three lines above
+      ours accepts the offer and improves its standing even further. Ardwen's chapel stays closed
+      on all nine days, as it has since the founding. Someone at the chapter house records every
+      house that refused. The list is short, which makes people more likely to read it.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.subject"
+    of: "3671f346cb1b5922"
+    plainenglish: >-
+      the relic and the nine days the chapel would open
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.record.chronicle"
+    of: "1a721f7ba9055fdf"
+    plainenglish: >-
+      The Church offered our chapel a relic for sixty crowns. We refused it. This was the second
+      offer from the Church that our house has rejected in a hundred years.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.record.claims[0].text"
+    of: "3051120f581527fb"
+    plainenglish: >-
+      refused the relic offered to the chapel for sixty crowns
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.embellish.chronicle"
+    of: "e7fb2a2ce834a0a0"
+    plainenglish: >-
+      The Church offered our chapel a relic, but we could not accept it because the chapel was
+      being repaired that year and the following year.
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.embellish.claims[0].text"
+    of: "84b2b95a264a070e"
+    plainenglish: >-
+      could not accept the relic because the chapel was being repaired
