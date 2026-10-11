@@ -521,3 +521,336 @@ events:
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -8 }
                 - { kind: rumour, op: seed, id: rumour_what_wick_knew_first, accuracy: 0.45 }
+
+# Plain English counterparts for common letter, news, and travel scenes (#1178).
+proseVariants:
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].title"
+    of: 92dbd38a733c1a56
+    plainenglish: >-
+      Two Letters Cross on the Road
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].body"
+    of: 3448f2baf693c356
+    plainenglish: >-
+      In the first ten days of Frostfall, the house sent Cawdry a letter proposing terms.
+      Cawdry sent a different offer in the second ten days. The letters crossed near the
+      ford at Ockleigh, so neither writer knew about the other offer. Both proposals are
+      sincere and still open. The only evidence of which came first is their dates, four
+      days apart.
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=take_theirs_as_first].label"
+    of: a41a0eb9048d043d
+    plainenglish: >-
+      Accept Cawdry's offer as the first and reply to it.
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=take_theirs_as_first].outcomes[id=theirs_first].text"
+    of: ced0d4037f5f47ff
+    plainenglish: >-
+      The house politely withdraws its own offer and accepts Cawdry's. Cawdry sees this as
+      generous. It costs the house about four crowns compared with its original proposal,
+      but helps build goodwill in a correspondence that will last thirty years.
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].label"
+    of: 42c5d10fc8dc8823
+    plainenglish: >-
+      Our letter was dated four days earlier. Insist on our terms.
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].outcomes[id=ours_first].text"
+    of: 927b2a2556c5b0a1
+    plainenglish: >-
+      The house insists on its earlier offer and is correct about the dates. Cawdry replies
+      eleven days later and now knows how strictly this house negotiates. Our terms are
+      accepted. Both houses date their letters with great care for the next thirty years.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].title"
+    of: 51c55b71e38f9ded
+    plainenglish: >-
+      Paying for Faster Mail
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].body"
+    of: 25dcad30d5fdffc4
+    plainenglish: >-
+      The Crown and Church's post relay changes horses at each stage and travels sixty miles
+      a day, faster than any other service. At Bramme, the postmaster may carry a private
+      letter for four marks. An ordinary rider takes nine days to reach Caster and only
+      costs the use of a horse. A matter worth about thirty crowns will be decided at Caster
+      in roughly two weeks.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=pay_the_relay].label"
+    of: 707fdf57dcd8182b
+    plainenglish: >-
+      Pay four marks for the relay. The letter will arrive in three days, not nine.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=pay_the_relay].outcomes[id=relayed].text"
+    of: fc99e33c7d3dd780
+    plainenglish: >-
+      The house pays four marks and its letter reaches Caster in three days, before the
+      decision. Without the relay it would have arrived four days too late. The postmaster
+      at Bramme learns that the family pays for fast messages. Within a year, everyone he
+      drinks with knows it too.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].label"
+    of: 09aeb9e1cabd604d
+    plainenglish: >-
+      Send our own rider. The journey takes nine days.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].outcomes[id=nine_days].text"
+    of: be6d62c816892d74
+    plainenglish: >-
+      The rider takes nine days each way and enjoys the journey. The decision at Caster is
+      delayed from two ten-day periods to four, so the letter arrives in time. The house
+      saves four marks and learns nothing new.
+  - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].outcomes[id=four_days_late].text"
+    of: a6b902f72610d34b
+    plainenglish: >-
+      The rider takes nine days, but the decision is made on day eleven. The family's letter
+      arrives after the decision and cannot change it. Nobody made a mistake. The house
+      loses thirty crowns because of the distance.
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].title"
+    of: ebc4273d871e9119
+    plainenglish: >-
+      A Song Spreads Before the News
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].body"
+    of: dbd34e642f641988
+    plainenglish: >-
+      In Highsun, a travelling troupe sings a song about a house four counties east
+      supposedly losing its seat. The song is performed twice in the hall and once at the
+      alehouse. Nine days later, drovers bring the real news: that house lost a lawsuit, not
+      its seat, and no one died. Four people at Wick have already learned the wrong song.
+      Only the steward has heard the correction.
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].interaction.choices[id=pay_them_to_get_it_right].label"
+    of: a6fa0dcada5907a6
+    plainenglish: >-
+      Pay the troupe to spread the corrected song.
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].interaction.choices[id=pay_them_to_get_it_right].outcomes[id=corrected_version].text"
+    of: 5283ec2c14273788
+    plainenglish: >-
+      The house pays two crowns and spends an evening helping the troupe make a corrected
+      verse. The troupe likes the change and carries it as far as Sarrow. When treated well,
+      the Wayfolk may sing a house's version for a century. The family has found an
+      inexpensive way to influence a story, though it does not yet realise how useful it
+      could be.
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].interaction.choices[id=let_the_song_stand].label"
+    of: 511e2110eb167734
+    plainenglish: >-
+      Leave the song alone. It is about another house.
+  - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].interaction.choices[id=let_the_song_stand].outcomes[id=song_stands].text"
+    of: a54e7e0e7ddd3ff2
+    plainenglish: >-
+      The song travels west, and the names become less clear as people repeat it. Around
+      forty years later, it returns to this parish with a different house named in it.
+      Nobody at Ardwen recognises it. Two people at Wick do.
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].title"
+    of: 101026deafd58a02
+    plainenglish: >-
+      Eleven Months Without an Answer
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].body"
+    of: a91eea239ff0aebf
+    plainenglish: >-
+      The house sent an important letter south eleven months ago and has received no answer.
+      The letter may have been lost, its recipient may have died, or a ship may never have
+      sailed. There is no way to know. Writing again costs nine crowns and begins another
+      wait. If the house does nothing, the matter will close automatically in about two
+      years.
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].interaction.choices[id=write_again].label"
+    of: e74b263430edee60
+    plainenglish: >-
+      Send another letter and include a copy of the first.
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].interaction.choices[id=write_again].outcomes[id=written_again].text"
+    of: f3f75b00bed73e64
+    plainenglish: >-
+      The second letter costs nine crowns and repeats the first letter in full. This means
+      either letter can explain the house's entire position when it arrives. The family uses
+      this method for the next four hundred years. One letter gets through, but nobody ever
+      finds out which.
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].interaction.choices[id=let_it_close].label"
+    of: aafceda00f15010c
+    plainenglish: >-
+      Do not send another letter. Let the matter close after two years.
+  - address: "content:events/letters.yaml#events[id=the_letter_nobody_answered].interaction.choices[id=let_it_close].outcomes[id=closed].text"
+    of: 8685e1b58aae04e1
+    plainenglish: >-
+      The matter expires, and the family never learns what a reply might have said or what
+      the missed answer cost. In 1290, a bundle of letters is discovered among a factor's
+      belongings at Sarrow. One of those letters is addressed to this house.
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].title"
+    of: eb94309d4015c0a1
+    plainenglish: >-
+      News of a Death Arrives Four Months Late
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].body"
+    of: be28371780adbd1b
+    plainenglish: >-
+      A cousin living in the east died in the second ten days of Slaughter, but the news
+      reaches the house in Greening, four months later. The family has held a Slaughter
+      feast, the Hollow Days and Thaw while still counting his place at the table. Custom
+      calls for eleven days of grey mourning after death. Nobody knows whether those days
+      should still be observed four months later, because most families here hear about a
+      death nearby.
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].interaction.choices[id=keep_them_now].label"
+    of: 79ee341c8bf9c140
+    plainenglish: >-
+      Observe the eleven days now. Mourning is for the family.
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].interaction.choices[id=keep_them_now].outcomes[id=kept_now].text"
+    of: b63bc4e6e88b6292
+    plainenglish: >-
+      The household wears undyed wool for eleven days in Greening, four months after the
+      death. The family performs the mourning customs and finds they help, to everyone's
+      surprise. The keeper at Wick knows of no rule or precedent against it and records the
+      observance.
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].interaction.choices[id=let_it_pass].label"
+    of: 82ab28aa9836a40e
+    plainenglish: >-
+      Do not hold another mourning period. Four months have passed.
+  - address: "content:events/letters.yaml#events[id=news_of_a_death_arrives_late].interaction.choices[id=let_it_pass].outcomes[id=passed].text"
+    of: 912412ebed01ee67
+    plainenglish: >-
+      The household does not wear grey or leave an empty place at the table. Someone filled
+      the cousin's place at Slaughter without knowing he was dead, so the family has never
+      marked his departure. About six years later, grief appears suddenly at another funeral
+      in someone who had seemed unaffected.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].title"
+    of: 54daafa64fb9854a
+    plainenglish: >-
+      A Tinker Who Sells News
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].body"
+    of: 4c8cce9ddeece439
+    plainenglish: >-
+      A travelling tinker arrives at the gate with one mule and a pot to repair. He charges
+      for goods, for repairs, and for telling news he heard four parishes away. The third
+      fee is the main source of his livelihood. He clearly has something to tell, but the
+      steward has decided not to ask for it.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].interaction.choices[id=pay_the_third_price].label"
+    of: ce94e7c07260a8fc
+    plainenglish: >-
+      Pay four mites to hear his news.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].interaction.choices[id=pay_the_third_price].outcomes[id=heard_it].text"
+    of: 678105448c392260
+    plainenglish: >-
+      The house pays four mites and listens for fifteen minutes. About a third of the news
+      is useful: who has died, who is selling, and which roads have dangerous men on them.
+      The tinker tries to be accurate because repeated false news would cost him customers.
+      He now also knows how much this house will pay for information.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].interaction.choices[id=pay_the_third_price].outcomes[id=it_is_about_us].text"
+    of: 15bbef53b06ded37
+    plainenglish: >-
+      The house pays four mites and learns that the tinker has heard a story about this
+      family four parishes away. He repeats it exactly while carefully watching the Head's
+      reaction. The story is not accurate, but it is close to the truth. He can name where
+      he heard it.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].interaction.choices[id=mend_the_pot_only].label"
+    of: d49feeef5be3c61b
+    plainenglish: >-
+      Pay only to repair the pot. We will not buy rumours.
+  - address: "content:events/letters.yaml#events[id=the_tinker_and_the_third_price].interaction.choices[id=mend_the_pot_only].outcomes[id=pot_only].text"
+    of: 8ab9cacff67421db
+    plainenglish: >-
+      The tinker repairs the pot for two mites, then sells his news at Ockleigh for four.
+      Ockleigh learns something about two weeks before this house does, which is not until
+      Slaughter. Usually that delay does not matter, but about once a generation it does.
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].title"
+    of: d2402e229b37387e
+    plainenglish: >-
+      Who Hears a Letter Read Aloud?
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].body"
+    of: fdae2b5abbc46386
+    plainenglish: >-
+      The household usually has letters read aloud because most people living here cannot
+      read. This has been the custom since the founding, so many servants hear the family's
+      business. A sealed letter from Cawdry has arrived. Eleven people are gathered in the
+      long room by the fire, where letters are normally opened.
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].interaction.choices[id=open_it_in_the_long_room].label"
+    of: ba98a048387a98e4
+    plainenglish: >-
+      Open and read it here, as the house has done for 200 years.
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].interaction.choices[id=open_it_in_the_long_room].outcomes[id=read_aloud].text"
+    of: 54d57d90c80fd064
+    plainenglish: >-
+      The letter is read aloud to eleven people, including nine servants. That is the usual
+      practice, and no sender has objected before. The house keeps sharing its letters this
+      way without questioning it. When a private letter eventually arrives, changing the
+      custom without explaining why will be difficult.
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].interaction.choices[id=take_it_to_the_press].label"
+    of: 5bc1a60eb91108ea
+    plainenglish: >-
+      Take the letter elsewhere and read it alone.
+  - address: "content:events/letters.yaml#events[id=the_letter_read_aloud].interaction.choices[id=take_it_to_the_press].outcomes[id=read_alone].text"
+    of: 097b58423ae14c56
+    plainenglish: >-
+      The letter is taken from a warm room full of people expecting to hear it read.
+      Everyone notices this unusual choice immediately. The Head has established a new
+      boundary around private letters. It costs nothing now, but the change cannot simply be
+      undone.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].title"
+    of: 20c6f59936716a8d
+    plainenglish: >-
+      Cattle Drovers Bring Price News
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].body"
+    of: 0de6438b8d923917
+    plainenglish: >-
+      Drovers move cattle 200 miles along the green roads at ten miles a day. Their families
+      have used the same routes for generations, carrying money, promissory notes and
+      reliable market prices. This year's drover warns that southern wool prices are
+      falling, four ten-day periods before the factors are due. He has no reason to lie and
+      has been wrong only once in nineteen years.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=sell_early_on_his_word].label"
+    of: a67eeeb1b788c8a5
+    plainenglish: >-
+      Trust the drover and sell the wool early at Bramme.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=sell_early_on_his_word].outcomes[id=he_was_right].text"
+    of: 0a81021a8df596d6
+    plainenglish: >-
+      The wool is sold four ten-day periods early at a price that seems low. By Haying, that
+      sale has earned twenty-two crowns more than the factors would have offered at the
+      gate. The house gives the drover a crown at Ingathering. He had not requested it but
+      accepts, and brings this house everything he hears for the next eleven years.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=sell_early_on_his_word].outcomes[id=he_was_wrong].text"
+    of: 529b750ca4bb2dc8
+    plainenglish: >-
+      The wool price stays steady. Selling early costs the house eleven crowns. The drover
+      is ashamed because his predictions have been reliable for nineteen years. The house
+      does not blame him, but he avoids passing on prices for four years out of
+      embarrassment.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=wait_for_the_factors].label"
+    of: fbf34858cdd249bc
+    plainenglish: >-
+      Wait for the factors to set the price, as usual.
+  - address: "content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=wait_for_the_factors].outcomes[id=waited_for_them].text"
+    of: ca2a84db832c61a7
+    plainenglish: >-
+      The factors arrive in Haying and give the price they intended to offer for the wool.
+      The house paid nothing for the drover's warning but cannot know whether selling early
+      would have been better. It never learns the value of that other choice.
+  - address: "content:events/letters.yaml#events[id=nobody_owns_a_clock].title"
+    of: 363b56c02d1fc50c
+    plainenglish: >-
+      No One at the House Owns a Clock
+  - address: "content:events/letters.yaml#events[id=nobody_owns_a_clock].body"
+    of: 39160bff43b92ed3
+    plainenglish: >-
+      Towns mark the hours with bells, while the countryside uses the sun. Tower clocks at
+      Caster, Sarrow and Corran are so unusual that people visit to see them. {KIN} returns
+      from Bramme wanting the household to know the time. They start marking where sunlight
+      from a gap in the shutter falls on the long-room wall. After four months, those marks
+      give a more accurate time than Bramme's bells, though the marks are not a clock.
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].title"
+    of: bb9517067c4ac8c2
+    plainenglish: >-
+      Wick Hears the Rumour First
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].body"
+    of: 4ed8a06b87c14687
+    plainenglish: >-
+      Something involving this family happened at Cawdry. People at the alehouse in Wick
+      hear a version of the news a full day before a rider reaches the hall. Usually Wick
+      hears such news first. This time the reeve comes to tell the Head what people are
+      saying without being asked. He has never done this before and is unsure whether he
+      should.
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].interaction.choices[id=thank_him_and_ask_for_more].label"
+    of: 9ab9d33e36801a72
+    plainenglish: >-
+      Thank the reeve and ask him to bring news like this again.
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].interaction.choices[id=thank_him_and_ask_for_more].outcomes[id=an_arrangement].text"
+    of: 3a2a351a165e611e
+    plainenglish: >-
+      The Head and reeve make a short, unwritten agreement in the yard. For the next thirty
+      years, the reeve tells the house what people in its own parish are saying about it.
+      This costs nothing and proves valuable. The arrangement exists because he chose to
+      bring difficult news despite his doubts.
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].interaction.choices[id=tell_him_it_is_not_his_business].label"
+    of: 4ba8c52ce9061aa8
+    plainenglish: >-
+      Tell the reeve politely that the hall's business is private.
+  - address: "content:events/letters.yaml#events[id=the_rumour_arrives_before_the_rider].interaction.choices[id=tell_him_it_is_not_his_business].outcomes[id=not_his_business].text"
+    of: 9a68761aeee529de
+    plainenglish: >-
+      The Head kindly tells the reeve not to involve himself in the hall's affairs. He
+      understands and never brings such news up the hill again. Wick continues to hear
+      rumours before the house, which returns to hearing them last.
