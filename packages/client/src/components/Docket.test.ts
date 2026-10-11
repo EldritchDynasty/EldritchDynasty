@@ -1363,6 +1363,43 @@ describe('modal overlays guard the docket keyboard shortcuts (#1170)', () => {
       w.unmount();
     }
   });
+
+  it('leaves numbered IME candidate presses alone, then accepts an intentional choice (#1305)', async () => {
+    const actions = spyActions();
+    const w = mount(Docket, {
+      attachTo: document.body,
+      props: { decision: choiceDecision(), actions: actions as unknown as GameActions },
+    });
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const composing = new KeyboardEvent('keydown', {
+        key: '1', isComposing: true, bubbles: true, cancelable: true,
+      });
+      expect(window.dispatchEvent(composing)).toBe(true);
+      expect(composing.defaultPrevented).toBe(false);
+      expect(actions.choose).not.toHaveBeenCalled();
+
+      // Some IMEs report the legacy process-key code rather than isComposing.
+      const legacy = new KeyboardEvent('keydown', {
+        key: '1', bubbles: true, cancelable: true,
+      });
+      Object.defineProperty(legacy, 'keyCode', { value: 229 });
+      expect(window.dispatchEvent(legacy)).toBe(true);
+      expect(legacy.defaultPrevented).toBe(false);
+      expect(actions.choose).not.toHaveBeenCalled();
+
+      const intentional = new KeyboardEvent('keydown', {
+        key: '1', bubbles: true, cancelable: true,
+      });
+      expect(window.dispatchEvent(intentional)).toBe(false);
+      expect(intentional.defaultPrevented).toBe(true);
+      expect(actions.choose).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
 });
 
 
