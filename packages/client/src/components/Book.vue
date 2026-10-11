@@ -151,6 +151,10 @@ async function follow(id: string): Promise<void> {
   }, 2400);
 }
 
+// The volume can remain mounted while its caller targets another Chronicle
+// page. Honour subsequent focus requests using the same last-request-wins
+// navigation path as a cause link; undefined does not move the reader.
+watch(() => props.focus, (id) => { if (id) void follow(id); });
 onMounted(() => { if (props.focus) void follow(props.focus); });
 
 /**
