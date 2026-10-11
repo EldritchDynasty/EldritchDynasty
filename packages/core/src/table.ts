@@ -299,6 +299,10 @@ export const TUTOR_GAIN = 9;
  */
 export function beginTutoring(ctx: SimCtx, p: Person, attrId: string, charge = true): OrderResult {
   const w = ctx.world;
+  // Both billed and free terms must refer to a living, world-owned pupil.
+  // A stale detached snapshot or dead record must not buy a ghost term,
+  // consume treasury or schedule work against someone else with the same id.
+  if (p.status !== 'alive' || w.people.get(p.id) !== p) return { ok: false };
   const subject = ctx.content.attributes.find((a) => String(a.id) === attrId);
   if (!subject) return { ok: false, reason: msg(ctx, 'table.tutor.no_subject', 'nothing anybody teaches') };
   if (!canBeTaught(subject.kind)) {
