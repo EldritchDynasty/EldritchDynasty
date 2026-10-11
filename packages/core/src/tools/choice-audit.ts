@@ -297,6 +297,25 @@ export function renderChoiceWorklistJson(
   return JSON.stringify(choiceWorklist(content, decisions), null, 2) + '\n';
 }
 
+/**
+ * Attribute an unread key to EVERY file that writes it, not just its first
+ * writer. One key still counts only once within a file, even when that file
+ * contains multiple writes. The text audit uses this to guide file-scoped
+ * #334 cleanup; the JSON worklist already preserves full provenance.
+ */
+export function writeOnlyBySource(audit: ChoiceAudit, content: Content) {
+  const byFile = new Map<string, ChoiceAudit['writeOnly']>();
+  for (const item of audit.writeOnly) {
+    for (const [file, writers] of groupBy(item.writers, (where) => fileOf(where, content))) {
+      const row = { ...item, writers };
+      const entries = byFile.get(file);
+      if (entries) entries.push(row);
+      else byFile.set(file, [row]);
+    }
+  }
+  return new Map([...byFile].sort(([a], [b]) => a.localeCompare(b)));
+}
+
 export function renderChoiceAudit(content: Content): string {
   const audit = auditChoices(content);
   const b = baseline(audit);
@@ -342,8 +361,8 @@ export function renderChoiceAudit(content: Content): string {
   mem('arc_flag', 'arc_flag', audit.written.arc_flag);
 
   line();
-  line('PER FILE — choices · prose-only · resource-only · write-only keys first written here');
-  const writeOnlyByFile = groupBy(audit.writeOnly, (w) => fileOf(w.writers[0]!, content));
+  line('PER FILE — choices · prose-only · resource-only · write-only keys written here');
+  const writeOnlyByFile = writeOnlyBySource(audit, content);
   const files = groupBy(audit.rows, (r) => fileOf(`event:${r.event}`, content));
   const allFiles = [...new Set([...files.keys(), ...writeOnlyByFile.keys()])].sort();
   for (const f of allFiles) {
