@@ -517,6 +517,40 @@ describe('the auction pages speak the reader\'s setting (#745)', () => {
   }
 
 
+  it.each(['original', 'plainenglish'] as const)(
+    'records a renamed rival instead of its authored name in %s mode (#1122)',
+    (mode) => {
+      const rivalHouse = bundle.houses.find((h) => h.id === 'house_marrow')!;
+      const row = {
+        address: `content:${bundle.sourceOf(rivalHouse.id)}#houses[id=${encodeURIComponent(rivalHouse.id)}].name`,
+        of: proseOriginalHash(rivalHouse.name),
+        plainenglish: 'Marrow Family',
+      };
+      const renamed = 'Marrow House by the River';
+      const outbidWorld = world(mode, [row]);
+      const live = outbidWorld.world.houses.get(rivalHouse.id);
+      if (!live) throw new Error('Expected Marrow house in the world');
+      live.name = renamed;
+      const outbid = sell(outbidWorld, codex, 50);
+      expect(outbid.text).toBe(say(mode, 'auction.outbid', { SELLER: renamed }));
+      expect(missingPlainEnglish(outbidWorld)).not.toContain(row.address);
+      setProseMode(outbidWorld, mode === 'original' ? 'plainenglish' : 'original');
+      expect(outbid.text).toBe(say(mode, 'auction.outbid', { SELLER: renamed }));
+
+      const evidenceWorld = withLie(world(mode, [row]));
+      const evidenceHouse = evidenceWorld.world.houses.get(rivalHouse.id);
+      if (!evidenceHouse) throw new Error('Expected Marrow house in the world');
+      evidenceHouse.name = renamed;
+      evidenceWorld.world.treasury = 0;
+      evidenceWorld.world.bidCeiling = 0;
+      const evidence = sell(evidenceWorld, page);
+      expect(evidence.text).toBe(say(mode, 'auction.read_elsewhere', { SELLER: renamed }));
+      expect(evidenceWorld.world.discrepancies.get('test_discrepancy')?.state).toBe('proven');
+      setProseMode(evidenceWorld, mode === 'original' ? 'plainenglish' : 'original');
+      expect(evidence.text).toBe(say(mode, 'auction.read_elsewhere', { SELLER: renamed }));
+    },
+  );
+
   it('selects reviewed names in auction Chronicle consumers (#928)', () => {
     const book = bundle.spellbooks.find((b) => b.id === 'the_marrow_codex')!;
     const heirloom = bundle.heirlooms.find((h) => h.id === 'portion_of_agelessness')!;
