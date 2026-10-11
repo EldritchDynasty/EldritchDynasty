@@ -156,6 +156,38 @@ describe('naming a parcel from the plat', () => {
     expect(w.find('[role="alert"]').exists()).toBe(false);
   });
 
+  it('keeps a blank draft visible with an accessible refusal on Enter and blur, then allows retry (#1079)', async () => {
+    const actions = spyActions();
+    const nameParcel = vi.mocked(actions.nameParcel);
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', actions, close: () => {},
+    } });
+
+    await w.get('button.rename').trigger('click');
+    const input = w.get('input');
+    await input.setValue('   ');
+    await input.trigger('keyup.enter');
+    expect(nameParcel).not.toHaveBeenCalled();
+    expect(w.find('input').exists()).toBe(true);
+    expect((w.get('input').element as HTMLInputElement).value).toBe('   ');
+    expect(w.get('[role="alert"]').text()).toContain('Enter a parcel name');
+    expect(w.get('input').attributes('aria-invalid')).toBe('true');
+    expect(w.get('input').attributes('aria-describedby')).toBe(w.get('[role="alert"]').attributes('id'));
+
+    await input.trigger('blur');
+    expect(nameParcel).not.toHaveBeenCalled();
+    expect(w.find('input').exists()).toBe(true);
+    expect(w.get('[role="alert"]').text()).toContain('Enter a parcel name');
+
+    await input.setValue('  The New Meadow  ');
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    await input.trigger('keyup.enter');
+    expect(nameParcel).toHaveBeenCalledTimes(1);
+    expect(nameParcel).toHaveBeenCalledWith('longmere', 'The New Meadow');
+    expect(w.find('input').exists()).toBe(false);
+    w.unmount();
+  });
+
   it('does not dispatch the same successful rename again when Enter and blur both fire', async () => {
     const actions = spyActions();
     const nameParcel = vi.mocked(actions.nameParcel);
