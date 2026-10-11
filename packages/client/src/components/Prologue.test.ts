@@ -127,6 +127,43 @@ describe('The Examination (#343)', () => {
     expect(wrapper.text()).not.toContain('Owed 1.1');
   });
 
+  it('does not bypass disabled signing requirements when Enter is pressed (#1143)', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: prologueView(),
+        actions: game,
+        refused: null,
+        startYear: 1042,
+      },
+    });
+    await revealChoices(wrapper);
+    const house = wrapper.get('input[aria-label="Name the house"]');
+    await house.setValue('House Ash');
+
+    // Enter dispatches the handler even though the Sign button is disabled.
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+    await house.trigger('keyup.enter');
+    expect(game.found).not.toHaveBeenCalled();
+
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+    }
+    await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+    await house.trigger('keyup.enter');
+    expect(game.found).toHaveBeenCalledTimes(1);
+    expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+      houseName: 'House Ash',
+      heirloom: 'seal',
+      grudge: 'house_marrow',
+      answers: expect.objectContaining({ question_1: 'answer_1_1' }),
+    }));
+    wrapper.unmount();
+  });
+
   it('requires every Examination choice and sends founder name plus stable answer ids to found()', async () => {
     const game = actions();
     const wrapper = mount(Prologue, {
