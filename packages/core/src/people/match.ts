@@ -332,7 +332,8 @@ export function matchFuture(
   }
 
   const byKind: Record<MatchFutureKind, FutureCase> = { blood, standing, continuity, mystery };
-  for (const priority of priorities) {
+  // Each declared kind represents one priority, even if a caller repeats it.
+  for (const priority of new Set(priorities)) {
     const case_ = byKind[priority];
     if (case_.score <= 0) continue;
     case_.score += 3;
