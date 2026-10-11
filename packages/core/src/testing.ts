@@ -397,9 +397,13 @@ export function worldViolations(ctx: SimCtx): WorldViolation[] {
   // ── INVARIANT 15: a hall is not a house ─────────────────────────────────
   // Two open membership records puts someone in two halls at once, and half
   // of `core` reads their household with `.find(m => m.to === undefined)`,
-  // which silently picks whichever was written first.
+  // which silently picks whichever was written first. Zero is also wrong for
+  // someone still alive: they have vanished from household accounting.
   for (const p of all) {
     const open = openMemberships(p);
+    if (p.status === 'alive' && open.length === 0) {
+      say('INVARIANT 15', `${p.id} (${p.name}) is alive with no open membership record`);
+    }
     if (open.length > 1) {
       say('INVARIANT 15', `${p.id} has ${open.length} open membership records: `
         + open.map((m) => `${m.house}/${m.branch ?? MAIN_BRANCH}(${m.kind} from ${m.from})`).join(' + '));
