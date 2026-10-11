@@ -275,8 +275,11 @@ describe('the family tree as a planning board (#268)', () => {
     expect(wrapper.find('.relationship').exists()).toBe(false);
 
     // The next click must start a new trace, not secretly target the departed anchor.
+    // Relationship controls are present only on the card currently open in App.
+    await wrapper.setProps({ selected: 'p002' });
     await wrapper.get('#member-p002 [data-relationship]').trigger('click');
     expect(wrapper.text()).toContain('Tracing from Member 002');
+    await wrapper.setProps({ selected: 'p003' });
     await wrapper.get('#member-p003 [data-relationship]').trigger('click');
     expect(wrapper.text()).toContain('Recorded relationship:');
 
