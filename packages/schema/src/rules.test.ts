@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD_RITE_FAILED, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
 
 const content = loadContent();
 
@@ -1948,6 +1948,55 @@ describe('choices/consequence', () => {
       other.conditions = other.conditions ? { all: [other.conditions, reader] } : reader;
     });
     expect(probe(read)).toHaveLength(0);
+  });
+
+  it('counts the failed God rite as a real ending reader, without exempting other memory (#1187)', () => {
+    const probe = (kind: 'flag' | 'knowledge' | 'arc_flag', flag: string) => {
+      let eventId = '';
+      let choiceId = '';
+      const b = withEvents((x) => {
+        const e = plain(x);
+        eventId = String(e.id);
+        const choice = choicesOf(e)[0]!;
+        choiceId = choice.id;
+        // This branch does only one thing: write the requested memory key.
+        // Other authored outcomes must not lend it an unrelated consequence.
+        for (const o of choice.outcomes) {
+          o.effects = [];
+          o.tags = o.tags.filter((tag) => tag !== 'self_expression');
+        }
+        const effect = kind === 'knowledge'
+          ? { kind: 'knowledge' as const, op: 'grant' as const, flag }
+          : { kind, flag, set: true };
+        choice.outcomes[0]!.effects.push(effect);
+      });
+      const audit = auditChoices(indexContent(b));
+      const row = audit.rows.find((r) => r.event === eventId && r.choice === choiceId)!;
+      const warning = runRule('choices/consequence', b)
+        .some((issue) => issue.message.includes(`'${flag}' is written`));
+      return { audit, row, warning };
+    };
+
+    const ending = probe('flag', GOD_RITE_FAILED);
+    expect(ending.row.categories).toEqual(['eligibility']);
+    expect(ending.audit.read.flag).toContain(GOD_RITE_FAILED);
+    expect(ending.audit.writeOnly).not.toContainEqual(expect.objectContaining({
+      kind: 'flag', key: GOD_RITE_FAILED,
+    }));
+    expect(ending.warning).toBe(false);
+
+    for (const [kind, key] of [
+      ['flag', 'unrelated_ending_probe'],
+      ['knowledge', GOD_RITE_FAILED],
+      ['arc_flag', GOD_RITE_FAILED],
+    ] as const) {
+      const other = probe(kind, key);
+      expect(other.row.categories, `${kind}:${key}`).toEqual(['write_only']);
+      expect(other.audit.writeOnly, `${kind}:${key}`).toContainEqual(
+        expect.objectContaining({ kind, key }),
+      );
+      expect(other.warning, `${kind}:${key}`).toBe(true);
+    }
   });
 
   it('counts a successor with fromChoice as a callback on that choice', () => {
