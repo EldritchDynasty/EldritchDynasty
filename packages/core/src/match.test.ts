@@ -168,6 +168,8 @@ describe('reviewed house names on Match cards (#970)', () => {
     const variant = variants.find((row) => row.address.endsWith(
       `houses[id=${encodeURIComponent(target.house)}].name`));
     if (!authored || !variant) throw new Error('Expected an authored house and reviewed variant');
+    const live = ctx.world.houses.get(target.house);
+    if (!live) throw new Error('Expected a live rival house before removing its row');
     expect(ctx.world.houses.delete(target.house)).toBe(true);
 
     setProseVariants(ctx, [variant]);
@@ -190,6 +192,14 @@ describe('reviewed house names on Match cards (#970)', () => {
     const stale = dealMatch(ctx, subject, makeRng(970));
     expect(stale.cards.find((card) => card.id === target.id)?.houseName).toBe(authored.name);
     expect(missingPlainEnglish(ctx)).toContain(variant.address);
+
+    // A name changed during play must still take precedence over reviewed text.
+    const renamed = `${authored.name} by the River`;
+    ctx.world.houses.set(target.house, { ...live, name: renamed });
+    setProseVariants(ctx, [variant]);
+    const current = dealMatch(ctx, subject, makeRng(970));
+    expect(current.cards.find((card) => card.id === target.id)?.houseName).toBe(renamed);
+    expect(missingPlainEnglish(ctx)).not.toContain(variant.address);
   });
 });
 
