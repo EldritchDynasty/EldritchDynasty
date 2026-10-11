@@ -149,12 +149,14 @@ export function browserPlatform(): Platform {
     async readSave(slot) {
       const storage = browserStorage();
       if (!storage) return null;
-      try {
-        const text = storage.getItem(PREFIX + slot);
-        return text ? JSON.parse(text) : null;
-      } catch {
-        return null;
-      }
+      const text = storage.getItem(PREFIX + slot);
+      // Missing is not the same as unreadable: an existing corrupt slot must
+      // reject rather than masquerade as an absent run (#1252). In particular,
+      // JSON.parse('null') succeeds but cannot represent a saved game.
+      if (text === null) return null;
+      const save: unknown = JSON.parse(text);
+      if (save === null) throw new TypeError('the browser save record is invalid');
+      return save;
     },
 
     async writeSave(slot, save) {
