@@ -273,7 +273,11 @@ function memoryVoice(
 } {
   const rivals = ctx.content.houses.filter((h) => !h.isPlayerHouse);
   const rival = rivals.length ? rng.pick(rivals) : undefined;
-  const RIVAL = rival?.name ?? msg(ctx, 'library.rival_unknown', 'a rival house');
+  // The selected rival's identity stays the same; only its authored display
+  // name may be translated for this newly frozen Library memory.
+  const RIVAL = rival
+    ? proseForContentField(ctx, 'houses', String(rival.id), 'name', rival.name)
+    : msg(ctx, 'library.rival_unknown', 'a rival house');
   const template = rng.pick(LIBRARY_VOICES);
   return {
     form: template.form,
@@ -348,7 +352,12 @@ export function libraryRunOf(ctx: SimCtx): LibraryRun | undefined {
     campaign: w.campaign,
     endedYear: w.ending.year,
     house,
-    ending: { id: w.ending.id, title: ending?.title ?? human(w.ending.id) },
+    ending: {
+      id: w.ending.id,
+      title: ending
+        ? proseForContentField(ctx, 'endings', String(ending.id), 'title', ending.title)
+        : human(w.ending.id),
+    },
     entries,
   };
 }
