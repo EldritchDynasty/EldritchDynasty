@@ -881,6 +881,9 @@ export interface SessionView {
   ageRecordPriorities: AgeRecordPriority[];
   halls: HallView[];
   chronicle: ChronicleEntry[];
+  /** Names for people named by the windowed Chronicle, including those no longer in a living hall.
+   * This is a read-model index, not a new saved-world record. */
+  chroniclePeople: { id: string; name: string }[];
   /** The frame (concept §2, issue #13) — separate from `chronicle` on purpose. See `world.frame`. */
   frame: FrameEntry[];
   docket: SessionDecisionView[];
@@ -1344,6 +1347,16 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     });
   }
 
+  // Provenance survives a person's death, but the hall view deliberately
+  // contains living members only. Resolve the displayed pages' references
+  // here, without sending the whole person store (or hidden facts) to Vue.
+  const chronicle = w.chronicle.slice(-chronicleLines);
+  const chroniclePeople = [...new Set(chronicle.flatMap((entry) => entry.people ?? []))]
+    .flatMap((id) => {
+      const person = w.people.get(id);
+      return person ? [{ id: String(id), name: person.name }] : [];
+    });
+
   const campaign = campaignDef(w.campaign);
   const view: SessionView = {
     year: w.year,
@@ -1417,7 +1430,8 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     ageMatchPriorities: activeMatchPriorities(ctx),
     ageRecordPriorities: activeRecordPriorities(ctx),
     halls: hallViews,
-    chronicle: w.chronicle.slice(-chronicleLines),
+    chronicle,
+    chroniclePeople,
     // COPIED, like every other array on this object. This one line handed the
     // caller `world.frame.entries` itself, so a view taken before the clock
     // moved grew a new interlude when it moved — `session.test.ts` calls that
