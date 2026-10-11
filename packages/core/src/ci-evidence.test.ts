@@ -455,17 +455,21 @@ describe('CI evidence inventory', () => {
 describe('manual pre-release tag evidence (#321)', () => {
   const workflow = readFileSync(join(root, '.github/workflows/prerelease-tag.yml'), 'utf8');
 
-  function scriptFromWorkflow(): string {
+  function scriptsFromWorkflow(): string[] {
     const lines = workflow.split('\n');
-    const marker = lines.findIndex((line) => line.trim() === 'script: |');
-    expect(marker, 'pre-release tag workflow must use a reviewed github-script step').toBeGreaterThan(-1);
-    const script: string[] = [];
-    for (const line of lines.slice(marker + 1)) {
-      if (line.startsWith('            ')) script.push(line.slice(12));
-      else if (line.trim() === '') script.push('');
-      else break;
+    const scripts: string[] = [];
+    for (let marker = 0; marker < lines.length; marker++) {
+      if (lines[marker]?.trim() !== 'script: |') continue;
+      const script: string[] = [];
+      for (const line of lines.slice(marker + 1)) {
+        if (line.startsWith('            ')) script.push(line.slice(12));
+        else if (line.trim() === '') script.push('');
+        else break;
+      }
+      scripts.push(script.join('\n'));
     }
-    return script.join('\n');
+    expect(scripts, 'verification and App-authenticated write must be separate steps').toHaveLength(2);
+    return scripts;
   }
 
   interface ScriptCase {
@@ -474,6 +478,7 @@ describe('manual pre-release tag evidence (#321)', () => {
     sha?: string;
     mainHead?: string;
     secondMainHead?: string;
+    thirdMainHead?: string;
     runStatus?: string;
     runConclusion?: string | null;
     runEvent?: string;
@@ -486,14 +491,15 @@ describe('manual pre-release tag evidence (#321)', () => {
     const created: Array<{ ref: string; sha: string }> = [];
     const failures: string[] = [];
     const queried: Array<Record<string, unknown>> = [];
+    const outputs: Record<string, string> = {};
     let mainReads = 0;
     const github = {
       rest: {
         repos: {
           getBranch: async () => ({
-            data: { commit: { sha: ++mainReads === 2
-              ? (options.secondMainHead ?? expected)
-              : (options.mainHead ?? expected) } },
+            data: { commit: { sha: (++mainReads === 2
+              ? options.secondMainHead
+              : mainReads === 3 ? options.thirdMainHead : options.mainHead) ?? expected } },
           }),
         },
         actions: {
@@ -526,20 +532,25 @@ describe('manual pre-release tag evidence (#321)', () => {
     };
     const core = {
       setFailed: (reason: string) => { failures.push(reason); },
+      setOutput: (name: string, value: string) => { outputs[name] = value; },
       info: (_message: string) => {},
     };
-    await Promise.resolve(runInNewContext(
-      '(async () => {\n' + scriptFromWorkflow() + '\n})()',
-      {
-        context: { ref: options.ref ?? 'refs/heads/main',
-          repo: { owner: 'EldritchDynasty', repo: 'EldritchDynasty' } },
-        process: { env: { TAG_NAME: options.tag ?? 'v0.3.0-beta.1',
-          EXPECTED_SHA: options.sha ?? expected } },
-        github,
-        core,
-      },
-      { timeout: 1000 },
-    ));
+    for (const [stage, script] of scriptsFromWorkflow().entries()) {
+      await Promise.resolve(runInNewContext(
+        '(async () => {\n' + script + '\n})()',
+        {
+          context: { ref: options.ref ?? 'refs/heads/main',
+            repo: { owner: 'EldritchDynasty', repo: 'EldritchDynasty' } },
+          process: { env: { TAG_NAME: stage === 0
+            ? (options.tag ?? 'v0.3.0-beta.1') : outputs.tag,
+            EXPECTED_SHA: stage === 0 ? (options.sha ?? expected) : outputs.sha } },
+          github,
+          core,
+        },
+        { timeout: 1000 },
+      ));
+      if (failures.length) break;
+    }
     return { created, failures, queried };
   }
 
@@ -547,7 +558,12 @@ describe('manual pre-release tag evidence (#321)', () => {
     expect(workflow).toContain('  workflow_dispatch:');
     expect(workflow).not.toMatch(/^  push:/m);
     expect(workflow).toContain('permissions:\n  contents: read');
-    expect(workflow).toContain('      contents: write\n      actions: read');
+    expect(workflow).toContain('      contents: read\n      actions: read');
+    expect(workflow).toContain('uses: actions/create-github-app-token@v3');
+    expect(workflow).toContain('client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}');
+    expect(workflow).toContain('private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}');
+    expect(workflow).toContain('permission-contents: write');
+    expect(workflow).toContain('github-token: ${{ steps.app-token.outputs.token }}');
     expect(workflow).toContain('cancel-in-progress: false');
     expect(workflow).toContain('EXPECTED_SHA: ${{ inputs.expected_sha }}');
     expect(workflow).toContain('TAG_NAME: ${{ inputs.tag }}');
@@ -574,6 +590,7 @@ describe('manual pre-release tag evidence (#321)', () => {
     [{ runEvent: 'workflow_dispatch' }, 'No completed successful'],
     [{ requiredConclusion: 'failure' }, 'CI required'],
     [{ secondMainHead: 'c'.repeat(40) }, 'main advanced'],
+    [{ thirdMainHead: 'c'.repeat(40) }, 'main advanced'],
   ] as Array<[ScriptCase, string]>)(
     'rejects unverified or unsafe tag request %#', async (input, message) => {
       const result = await exercise(input);
