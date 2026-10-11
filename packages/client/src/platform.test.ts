@@ -396,6 +396,48 @@ describe('save-list failures at the real game/platform seam (#1176)', () => {
 });
 
 describe('the platform seam', () => {
+  it('propagates browser save enumeration failures without claiming the runs vanished (#1234)', async () => {
+    const values = new Map([
+      ['ed:save:chapter-1-1080', JSON.stringify({ format: 28, year: 1080 })],
+      ['ed:save:unreadable', '{bad JSON'],
+    ]);
+    let enumerationFails = false;
+    const storage = {
+      get length() {
+        if (enumerationFails) throw new Error('save enumeration unavailable');
+        return values.size;
+      },
+      key: (index: number) => [...values.keys()][index] ?? null,
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+      clear: () => values.clear(),
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const platform = browserPlatform();
+      const known = [
+        { slot: 'chapter-1-1080', year: 1080, format: 28, savedAt: undefined },
+        { slot: 'unreadable' },
+      ];
+      await expect(platform.listSaves()).resolves.toEqual(known);
+
+      enumerationFails = true;
+      await expect(platform.listSaves()).rejects.toThrow('save enumeration unavailable');
+      expect(values.size).toBe(2);
+
+      enumerationFails = false;
+      await expect(platform.listSaves()).resolves.toEqual(known);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('takes an injected host whole, rather than detecting one below composition', async () => {
     const injected = bridge();
     const platform = platformForWindow({ edPlatform: injected } as Window);
