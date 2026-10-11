@@ -451,7 +451,7 @@ events:
       kind: choice
       choices:
         - id: cut_and_carry
-          label: Cut it and carry it. Eighteen crowns is eighteen crowns.
+          label: Cut it and carry it. Nine crowns is nine crowns.
           outcomes:
             - id: cut
               weight: 100
@@ -480,3 +480,300 @@ events:
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+
+# Prospective Plain English text. Original narration and gameplay above are preserved.
+proseVariants:
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].title"
+    of: "a7512e5a80c5f09e"
+    plainenglish: >-
+      Eleven Tenants Owe Rent, and Four Cannot Pay
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].body"
+    of: "c867b4ca78bbb276"
+    plainenglish: >-
+      Rent is due when the first fair weather arrives. By the second ten-day period of Thaw,
+      the steward knows four tenants will not pay. He has known since Slaughter. A tenant
+      visited in person may pay about half in goods and stay on the land. A tenant who gets a
+      legal summons may pay nothing and leave with his sons, remembering how the house treated
+      him. {HEAD} can send anyone the hall can spare, despite the poor roads in Thaw.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=they_come_back_with_it].label"
+    of: "6ce6dc2260afd3b6"
+    plainenglish: >-
+      The riders collect the rent and keep all four tenants on the land.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=they_come_back_with_it].outcomes[id=all_four].text"
+    of: "d9c75be35508d84f"
+    plainenglish: >-
+      The riders visit four homes, sit by four fires, and agree on payments in barley and days
+      of work. By Greening, the steward has recorded a payment for each tenant. Nobody loses a
+      home, but no debt is forgiven. The house must make this kind of choice eleven times a
+      year, and often gets it wrong.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=they_come_back_with_half].label"
+    of: "7533f99f66d2b743"
+    plainenglish: >-
+      The riders recover half the rent.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=they_come_back_with_half].outcomes[id=half].text"
+    of: "fc16e3470330b8b3"
+    plainenglish: >-
+      Two tenants settle their debts. The other two give unclear answers, although they have
+      already decided what to do. The steward records both unpaid debts as carried forward,
+      not forgiven. Only the Head can forgive them, and the Head has not done so.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=two_holdings_stand_empty].label"
+    of: "f2ed542512a4ba39"
+    plainenglish: >-
+      The riders recover nothing, and two holdings are left empty.
+  - address: "content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=two_holdings_stand_empty].outcomes[id=empty].text"
+    of: "63c4fd893b406dbd"
+    plainenglish: >-
+      Two families leave at night, sharing a cart. They have the legal right to go. By
+      Highsun, two new families who can pay have taken over the holdings. The first two
+      families were not formally evicted, but people will remember the departures as evictions
+      for four generations.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].title"
+    of: "16222e38143a5424"
+    plainenglish: >-
+      The Fields Are Too Wet to Sow
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].body"
+    of: "a0cca8de6f6e0092"
+    plainenglish: >-
+      It has rained for nineteen days. Water stands ankle-deep in the low fields. Seed sown
+      now may rot. Seed held back will go in late and produce a smaller crop. There is no good
+      third option. Eleven tenants are waiting for the house to decide because it owns the
+      seed corn and will bear the loss. The reeve has an opinion, but will only share it if
+      asked twice.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].label"
+    of: "efad7174f030fe20"
+    plainenglish: >-
+      Sow now. Risk flooded seed rather than planting too late.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_took].text"
+    of: "898c2a08af1125bc"
+    plainenglish: >-
+      Three unexpected dry days arrive in the last ten days of Seedmonth. The seed grows on
+      high ground but rots on low ground. The harvest is one-fifth smaller than usual. The
+      house gets back enough to replace the seed it planted, and nothing more.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_rotted].text"
+    of: "ada3e049ab6e3df5"
+    plainenglish: >-
+      The rain continues for another four ten-day periods. Only scattered patches of seed
+      grow, thin enough to count from the gate. The tenants do not say whose decision caused
+      the failure, but their silence tells the house that they know.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].label"
+    of: "b9f20af20693899e"
+    plainenglish: >-
+      Keep the seed back. Wait until the ground is dry enough to walk on.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].outcomes[id=late_and_short].text"
+    of: "74c458ff43b91753"
+    plainenglish: >-
+      The ground finally dries, and sowing begins fourteen days late. The crop stays two weeks
+      behind until Harvest. The harvest will be small, but the loss is predictable. After
+      being asked twice, the reeve had said exactly that. He never mentions it again.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].title"
+    of: "669fb5c105b12aa5"
+    plainenglish: >-
+      Wool Buyers Offer Too Little
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].body"
+    of: "9a8e7b1f00d01a5b"
+    plainenglish: >-
+      The wool buyers come in Haying. They inspect about nine fleeces out of two thousand and
+      offer a price. They seem friendly, but they are judging the house's finances and writing
+      notes in a book the house will never see. Their offer is three-eighths lower than the
+      price in Bramme. Bramme is eleven miles away; selling there will take four carts and
+      about a week of someone's time. One buyer waits with his hand out and shows no sign of
+      leaving.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].interaction.choices[id=sell_at_the_gate].label"
+    of: "9f00de235802b85f"
+    plainenglish: >-
+      Sell the wool here. Receive the money today.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].interaction.choices[id=sell_at_the_gate].outcomes[id=sold_at_the_gate].text"
+    of: "83e2bb1ee702a3c2"
+    plainenglish: >-
+      The buyer counts out the money on the mounting block and is gone by noon. The house gets
+      its annual wool payment four ten-day periods earlier than usual. In his private book,
+      the buyer records that this house sells at its gate. From now on, buyers offer the same
+      low gate price every year. The house cannot prove they are doing it deliberately.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].interaction.choices[id=cart_it_to_bramme].label"
+    of: "5898d5e74753159b"
+    plainenglish: >-
+      Take the wool to Bramme and sell it ourselves.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].interaction.choices[id=cart_it_to_bramme].outcomes[id=carted_and_sold].text"
+    of: "8dfb0ab04db8c744"
+    plainenglish: >-
+      Four carts spend six days on the journey. Two men miss part of the harvest, and an axle
+      breaks at the ford. In Bramme, the wool sells to a surprised buyer at the higher local
+      price. Before paying for the broken axle, the house receives eleven crowns more than it
+      would have at the gate.
+  - address: "content:events/the_turning_year.yaml#events[id=the_clip_and_the_factors].interaction.choices[id=cart_it_to_bramme].outcomes[id=the_price_moved].text"
+    of: "5aa36faee996fa1a"
+    plainenglish: >-
+      The wool arrives on the fourth day of the fair. By then, Bramme's price has fallen to
+      match the price offered at home. The same factors have been buying wool in Bramme since
+      Greening. The house gets one crown less than the offer it refused at home.
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].title"
+    of: "ac78c9fb4c5f06ff"
+    plainenglish: >-
+      The Village Has Sixty-One Pigs Where Only Thirty Are Allowed
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].body"
+    of: "609b1dafef6d0e7b"
+    plainenglish: >-
+      Pannage is the right to let pigs feed on fallen nuts in the house's wood for six ten-day
+      periods. For Wick, this right is worth more than all its other rights combined: acorns
+      fatten pigs for winter. The customary limit is thirty pigs. There are sixty-one in the
+      wood this year. The woodward has counted twice and reported the number both times. The
+      wood belongs to the house, and nobody disputes the count.
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].interaction.choices[id=let_the_number_stand].label"
+    of: "3234a9148e61c468"
+    plainenglish: >-
+      Let all sixty-one pigs stay. Say nothing and let them feed.
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].interaction.choices[id=let_the_number_stand].outcomes[id=sixty_one].text"
+    of: "6279e91d97334ef1"
+    plainenglish: >-
+      The village gets grazing for thirty-one extra pigs without the house announcing it.
+      Everyone knows because the villagers counted the pigs too. The wood is thinner in
+      spring, and it produces fewer acorns for the next two years. Nobody asks the house for
+      anything the following Thaw, and all the rent is paid.
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].interaction.choices[id=take_the_thirty_one].label"
+    of: "2e47a81c9fed9c58"
+    plainenglish: >-
+      Take the extra thirty-one pigs. The customary limit is thirty.
+  - address: "content:events/the_turning_year.yaml#events[id=pannage_in_smoke].interaction.choices[id=take_the_thirty_one].outcomes[id=taken].text"
+    of: "d7775076933bf42a"
+    plainenglish: >-
+      The thirty-one extra pigs are driven uphill in one afternoon while their owners watch.
+      The hall salts the meat at Slaughter and eats it until Greening. The house owns the wood
+      and has the legal right to take the pigs. At Thaw, the woodward asks to leave his post
+      but will not say why.
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].title"
+    of: "eb650ebe45cc66ca"
+    plainenglish: >-
+      Salt Costs Much More This Year
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].body"
+    of: "9638100280d8329e"
+    plainenglish: >-
+      Meat must be salted at Slaughter or the house will not be able to eat it later. Salt
+      comes overland from Sarrow through four traders, each adding to the price. Bad weather
+      in the Grey has raised the price at Bramme to nine mites a pound, and it is still rising
+      in the second ten-day period of Ingathering. The hall and byre need eleven crowns' worth
+      of salt at this price. Buying only half means deciding which months next year the house
+      will have no meat.
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].interaction.choices[id=buy_it_all].label"
+    of: "ef03bf5c438b87a0"
+    plainenglish: >-
+      Buy all the salt at nine mites a pound.
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].interaction.choices[id=buy_it_all].outcomes[id=bought_whole].text"
+    of: "6c2537b4e79c5d38"
+    plainenglish: >-
+      The house pays eleven crowns and salts all the slaughtered meat properly. The hall eats
+      salted pork from Slaughter to Greening, as it normally would. By Frostfall, salt costs
+      fourteen mites a pound, and every house in the Nethering that waited must pay that
+      higher price.
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].interaction.choices[id=buy_half].label"
+    of: "35dbdc9d4d306881"
+    plainenglish: >-
+      Buy half the salt. Hope the price falls again.
+  - address: "content:events/the_turning_year.yaml#events[id=the_salt_before_slaughter].interaction.choices[id=buy_half].outcomes[id=half_bought].text"
+    of: "096b06bca64acbc0"
+    plainenglish: >-
+      The house pays six crowns. Half the meat is salted properly; the other half is hung and
+      smoked. That keeps it edible for about eleven ten-day periods, but no longer. From
+      Frostfall, the hall eats peas and weak beer. The kitchen staff say nothing because they
+      were not consulted. Salt reaches fourteen mites a pound by Frostfall.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].title"
+    of: "410d5de408982978"
+    plainenglish: >-
+      A Relative Dies During the Hollow Days
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].body"
+    of: "7cd4fbbb4d2e576f"
+    plainenglish: >-
+      {KIN} dies on the second of the Hollow Days. Custom says the dead must be buried within
+      two days, but the five Hollow Days have their own rules: nobody makes decisions, seals
+      documents, or travels. The keeper is in Bramme until the Days are over. By dusk, the
+      women of the household have prepared the body. The family must decide whether to open
+      the grave tomorrow or wait another four days.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].label"
+    of: "4d12d2630baccccf"
+    plainenglish: >-
+      Bury the dead within two days. Follow the older burial custom.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].outcomes[id=buried].text"
+    of: "659b34dfc9174343"
+    plainenglish: >-
+      The yard worker and two tenants open the grave in the dark. The burial happens on the
+      third Hollow Day, with no keeper, no written entry, and none of the Quieting prayers.
+      The roll at Wick records the date the keeper was finally told, four days later. It is
+      the only wrong date in eleven hundred years of that roll, and nobody corrects it.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].label"
+    of: "b4fc381ec7accda2"
+    plainenglish: >-
+      Wait four days for the keeper and hold a proper burial.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].outcomes[id=waited].text"
+    of: "86d81312cfaadf06"
+    plainenglish: >-
+      The body stays in a cold room behind a closed door for four days. A candle is changed
+      twice each night, and everyone passes the door on the way to the kitchen. The keeper
+      returns on the first of Thaw and performs the burial correctly. Nobody in the hall
+      sleeps well for a month, and nobody says that this is why.
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].title"
+    of: "a7a246db724543af"
+    plainenglish: >-
+      A Family Argument Lasts Through Winter
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].body"
+    of: "53df24749eeaaa60"
+    plainenglish: >-
+      From Smoke to Longnight, little happens outdoors, so the household has time to argue.
+      Every generation of this family has had a long winter argument. This one began over the
+      west wing six ten-day periods ago, but by the middle of Frostfall it was about something
+      else. {KIN} has started speaking openly about the private disagreement at meals, even in
+      front of servants. Nine ten-day periods of winter remain.
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].interaction.choices[id=settle_it_at_the_board].label"
+    of: "ee8b3722f32f6b06"
+    plainenglish: >-
+      Discuss the disagreement openly at dinner tonight.
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].interaction.choices[id=settle_it_at_the_board].outcomes[id=settled].text"
+    of: "cc00361daf8dea31"
+    plainenglish: >-
+      The discussion goes badly for about four minutes, then ends. Two things nobody has said
+      aloud in this hall for nine years are spoken in front of the cook. The rest of the
+      winter is peaceful. Everyone in the house now knows what the disagreement was really
+      about, although that does not mean every secret has been revealed.
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].interaction.choices[id=let_it_run].label"
+    of: "ec6715d3fae6c2ff"
+    plainenglish: >-
+      Leave the argument alone. Winter will end.
+  - address: "content:events/the_turning_year.yaml#events[id=the_long_argument].interaction.choices[id=let_it_run].outcomes[id=ran].text"
+    of: "d0743dccb5a4b030"
+    plainenglish: >-
+      The argument continues until Thaw, then goes quiet without being resolved. {KIN} behaves
+      politely for eleven years. The next Head inherits the disagreement without ever hearing
+      it explained, and starts it again during a difficult year without knowing its history.
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].title"
+    of: "96f7c360ea14f834"
+    plainenglish: >-
+      A Second Hay Crop Grows by the River
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].body"
+    of: "aeaa0ca5bb04d091"
+    plainenglish: >-
+      After a wet Highsun and a warm Haying, the river meadow has enough grass for a second
+      cut, something that happens about twice in a generation. By custom, the tenants may
+      graze animals on the grass that grows after the first cut; by law, the grass belongs to
+      the house. Cutting and storing it would bring in nine crowns of hay at a time when hay
+      is valuable. Letting animals graze will help eleven tenants fatten their livestock for
+      winter, when the house might otherwise be asked to support them.
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].interaction.choices[id=cut_and_carry].label"
+    of: "fff86561bb70eac5"
+    plainenglish: >-
+      Cut and store the extra hay. It is worth nine crowns.
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].interaction.choices[id=cut_and_carry].outcomes[id=cut].text"
+    of: "75848b3ab0b5a86e"
+    plainenglish: >-
+      The house hires as many workers as it can, and after six days the meadow is bare
+      stubble. Cutting the grass is entirely legal, but no Head has claimed the tenants'
+      aftermath for eleven generations. Four men in Wick can still name the last Head who did
+      it and the year.
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].interaction.choices[id=leave_the_aftermath].label"
+    of: "a202766ea225d942"
+    plainenglish: >-
+      Leave the extra grass for the tenants to graze, as usual.
+  - address: "content:events/the_turning_year.yaml#events[id=the_second_hay].interaction.choices[id=leave_the_aftermath].outcomes[id=grazed].text"
+    of: "ff58d7f26381d2ee"
+    plainenglish: >-
+      Eleven tenants graze their animals on the river meadow until Slaughter. Their cattle
+      enter winter well fed, which means the house may have less need to help them during a
+      bad Frostfall. This grazing custom has never been written down. By respecting it again,
+      the house keeps it alive.
