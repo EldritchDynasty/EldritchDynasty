@@ -58,6 +58,16 @@ describe('what a keypress means', () => {
     expect(shortcutFor({ key: '0' })).toBeNull();
   });
 
+  it('ignores composite key names instead of choosing an invalid decision (#1162)', () => {
+    // String ranges are lexicographic: `10` used to map to index 9 and
+    // `1x` to NaN. Only a single 1–9 key denotes a numbered choice.
+    for (const key of ['10', '1x', '99', '01', '9suffix', '1\n']) {
+      expect(shortcutFor({ key }), JSON.stringify(key)).toBeNull();
+    }
+    expect(shortcutFor({ key: '1' })).toEqual({ kind: 'take', index: 0 });
+    expect(shortcutFor({ key: '9' })).toEqual({ kind: 'take', index: 8 });
+  });
+
   /** A player typing their house name is not steering the clock. */
   it('says nothing at all while somebody is typing', () => {
     for (const key of [' ', 'Enter', '1', '?', 'a']) {
