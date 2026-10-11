@@ -146,6 +146,38 @@ describe('collapseContext', () => {
     expect(out[0]!.kind).not.toBe('gap');
   });
 
+  it('marks the unchanged suffix after an early edit (#1315)', () => {
+    const before = lines(20);
+    const after = before.split('\n').map((l, i) => (i === 2 ? 'EDIT' : l)).join('\n');
+    const out = collapseContext(diffLines(before, after), 2);
+
+    expect(out.at(-1)).toEqual({ kind: 'gap' });
+    expect(out.filter((l) => l.kind === 'gap')).toHaveLength(1);
+    expect(out.some((l) => 'text' in l && l.text === 'line 19')).toBe(false);
+  });
+
+  it('marks both the hidden prefix and suffix around a middle edit (#1315)', () => {
+    const before = lines(30);
+    const after = before.split('\n').map((l, i) => (i === 15 ? 'EDIT' : l)).join('\n');
+    const out = collapseContext(diffLines(before, after), 2);
+
+    expect(out[0]).toEqual({ kind: 'gap' });
+    expect(out.at(-1)).toEqual({ kind: 'gap' });
+    expect(out.filter((l) => l.kind === 'gap')).toHaveLength(2);
+  });
+
+  it('does not invent a trailing gap when the actual last line is shown (#1315)', () => {
+    const before = lines(20);
+    const after = before.split('\n').map((l, i) => (i === 19 ? 'EDIT' : l)).join('\n');
+    const out = collapseContext(diffLines(before, after), 2);
+
+    expect(out[0]).toEqual({ kind: 'gap' });
+    expect(out.at(-1)).toEqual({ kind: 'add', text: 'EDIT' });
+    expect(out.filter((l) => l.kind === 'gap')).toHaveLength(1);
+    expect(collapseContext([], 2)).toEqual([]);
+    expect(collapseContext(diffLines(before, before), 2)).toEqual(diffLines(before, before));
+  });
+
   it('a wide enough context window elides nothing', () => {
     const before = lines(10);
     const after = before.split('\n').map((l, i) => (i === 5 ? 'CHANGED' : l)).join('\n');

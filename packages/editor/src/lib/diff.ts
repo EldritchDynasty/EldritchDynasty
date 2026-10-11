@@ -67,5 +67,8 @@ export function collapseContext(lines: DiffLine[], context = 2): (DiffLine | { k
     out.push(lines[i]!);
     lastKept = i;
   }
+  // A preview that hides the untouched suffix must say so. Without this
+  // marker the author can mistake a truncated file for its actual end.
+  if (lastKept < lines.length - 1) out.push({ kind: 'gap' });
   return out;
 }
