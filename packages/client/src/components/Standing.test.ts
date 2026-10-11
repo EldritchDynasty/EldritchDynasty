@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
+import Naming from './Naming.vue';
 import Member from './Member.vue';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
@@ -254,5 +255,71 @@ describe('married-in spouse provenance on family cards (#1147)', () => {
     });
     expect(wrapper.find('.from').exists()).toBe(false);
     wrapper.unmount();
+  });
+});
+
+/** Keep small client-component regressions in this measured jsdom suite,
+ * rather than introducing an unmeasured test shard file. */
+function namingView(...people: string[]): SessionView {
+  return {
+    namesWanted: people.map((person, index) => ({
+      person,
+      born: 1080,
+      sex: index % 2 === 0 ? 'male' : 'female',
+      suggested: `Suggested ${index}`,
+      because: 'The chronicler has a reason.',
+    })),
+  } as unknown as SessionView;
+}
+
+function namingActions(): GameActions {
+  return {
+    name: vi.fn(() => true),
+    keepSuggestedName: vi.fn(() => true),
+    keepSuggestedNames: vi.fn(),
+  } as unknown as GameActions;
+}
+
+describe('naming draft lifetime (#1319)', () => {
+  it('discards drafts after Keep all empties the queue, even if a person id appears again', async () => {
+    const game = namingActions();
+    const wrapper = mount(Naming, { props: { view: namingView('child-1', 'child-2'), actions: game } });
+    try {
+      await wrapper.get('.child input').setValue('A name still being considered');
+
+      const keepAll = wrapper.findAll('button')
+        .find((button) => button.text() === 'Keep the names he suggests');
+      expect(keepAll).toBeTruthy();
+      await keepAll!.trigger('click');
+      expect(game.keepSuggestedNames).toHaveBeenCalledOnce();
+
+      // The parent publishes the resolved queue after the action.
+      await wrapper.setProps({ view: namingView() });
+      expect(wrapper.find('.child input').exists()).toBe(false);
+
+      // New sessions may recycle person ids; an old, unsubmitted name must not return.
+      await wrapper.setProps({ view: namingView('child-1') });
+      expect((wrapper.get('.child input').element as HTMLInputElement).value).toBe('');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('preserves typed drafts for still-waiting children while removing departed drafts', async () => {
+    const wrapper = mount(Naming, { props: { view: namingView('child-1', 'child-2'), actions: namingActions() } });
+    try {
+      await wrapper.findAll('.child input')[0]!.setValue('First draft');
+      await wrapper.findAll('.child input')[1]!.setValue('Second draft');
+
+      await wrapper.setProps({ view: namingView('child-2') });
+      expect((wrapper.get('.child input').element as HTMLInputElement).value).toBe('Second draft');
+
+      await wrapper.setProps({ view: namingView('child-1', 'child-2') });
+      const inputs = wrapper.findAll('.child input');
+      expect((inputs[0]!.element as HTMLInputElement).value).toBe('');
+      expect((inputs[1]!.element as HTMLInputElement).value).toBe('Second draft');
+    } finally {
+      wrapper.unmount();
+    }
   });
 });
