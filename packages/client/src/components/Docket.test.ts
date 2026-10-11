@@ -15,6 +15,7 @@ import type {
 } from '@ed/core';
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
+import Interlude from './Interlude.vue';
 import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
 import Outcome from './Outcome.vue';
@@ -1465,3 +1466,54 @@ describe('child naming with an input method (#1286)', () => {
   });
 });
 
+describe('Interlude shared focus trap (#1321)', () => {
+  it('focuses Go on, traps Tab, leaves IME Escape alone, and restores prior focus', () => {
+    const before = document.createElement('button');
+    before.textContent = 'Return to game';
+    document.body.appendChild(before);
+    before.focus();
+
+    // A synchronous animation-frame callback lets this mounted test assert
+    // focus restoration without depending on the jsdom frame scheduler.
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+
+    const actions = { dismissInterlude: vi.fn() } as unknown as GameActions;
+    const wrapper = mount(Interlude, {
+      attachTo: document.body,
+      props: { entry: { text: 'A quiet page from the record.' } as FrameEntry, actions },
+    });
+    let unmounted = false;
+    try {
+      const goOn = wrapper.get('button').element;
+      expect(document.activeElement).toBe(goOn);
+
+      for (const shiftKey of [false, true]) {
+        const tab = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true });
+        window.dispatchEvent(tab);
+        expect(tab.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(goOn);
+      }
+
+      const composing = new KeyboardEvent('keydown', {
+        key: 'Escape', isComposing: true, bubbles: true, cancelable: true,
+      });
+      window.dispatchEvent(composing);
+      expect(actions.dismissInterlude).not.toHaveBeenCalled();
+      expect(composing.defaultPrevented).toBe(false);
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      expect(actions.dismissInterlude).toHaveBeenCalledOnce();
+
+      wrapper.unmount();
+      unmounted = true;
+      expect(document.activeElement).toBe(before);
+    } finally {
+      if (!unmounted) wrapper.unmount();
+      before.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
