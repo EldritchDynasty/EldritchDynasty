@@ -508,7 +508,12 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
     if (rival && rival.amount >= lot.reserveCoin) {
       w.auction.history.push({ lot, year: w.year, winner: 'rival', winningHouse: rival.house });
       const house = ctx.content.house(rival.house);
-      const seller = house ? proseForContentField(ctx, 'houses', house.id, 'name', house.name) : rival.house;
+      const liveName = w.houses.get(rival.house)?.name;
+      // A reviewed content variant names the Original, not a house since
+      // renamed in this world. Record what the rival is called at the sale.
+      const seller = house && (liveName === undefined || liveName === house.name)
+        ? proseForContentField(ctx, 'houses', house.id, 'name', house.name)
+        : liveName ?? rival.house;
 
       // A RIVAL WITH THE EVIDENCE IS HOW A LIE GETS PROVEN (issue #74).
       //
