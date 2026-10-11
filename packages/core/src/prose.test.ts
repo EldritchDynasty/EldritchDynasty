@@ -420,6 +420,26 @@ describe('prospective prose selection', () => {
     expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
   });
 
+  it('clears a transient stale migration miss once that address renders its reviewed Original', () => {
+    const ctx = testWorld(loadBundle());
+    const original = 'The family keeps the record in the tower.';
+    const changed = 'The family has lost the record in the tower.';
+    setProseVariants(ctx, [{
+      address: ADDRESS,
+      of: proseOriginalHash(original),
+      plainenglish: 'The record remains in the tower.',
+    }]);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(renderProse(ctx, ADDRESS, changed)).toBe(changed);
+    expect(missingPlainEnglish(ctx)).toEqual([ADDRESS]);
+
+    // A valid render must not leave a false diagnostic from an earlier
+    // encounter with different source wording at the same stable address.
+    expect(renderProse(ctx, ADDRESS, original)).toBe('The record remains in the tower.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
   it('rejects runtime variants whose interpolation tokens differ even with a current fingerprint', () => {
     const ctx = testWorld(loadBundle());
     const original = 'The {HEAD} showed {house} to {HEAD} before {endYear}.';
