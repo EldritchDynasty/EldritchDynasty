@@ -23,6 +23,9 @@ export const ENDING_ORDER = [
   'devoured',
 ] as const;
 
+/** World flag set by a failed final God rite; read by ending selection. */
+export const GOD_RITE_FAILED = 'god_rite_failed';
+
 export const EndingIdS = z.enum(ENDING_ORDER);
 export type EndingId = z.infer<typeof EndingIdS>;
 
