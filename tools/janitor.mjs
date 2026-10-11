@@ -113,14 +113,21 @@ function dryIssueEvidence(n) {
 function issueState(n) {
   if (DRY && process.env.JANITOR_ISSUES_JSON) {
     const state = dryIssueEvidence(n)?.state;
-    return state === 'OPEN' || state === 'CLOSED' ? state : 'UNKNOWN';
+    return state === 'OPEN' || state === 'CLOSED' || state === 'PULL_REQUEST'
+      ? state : 'UNKNOWN';
   }
-  if (!HAS_GH) return 'UNKNOWN';
-  const r = spawnSync('gh', ['issue', 'view', String(n), '--json', 'state', '--jq', '.state'], {
-    cwd: CWD, encoding: 'utf8',
-  });
+  if (!HAS_GH || !REPOSITORY) return 'UNKNOWN';
+  // GitHub issue and PR numbers share one namespace. A merged PR body can
+  // mention an earlier "fix #123" that was itself a PR; `gh issue view`
+  // rejects that number, incorrectly turning an ordinary sweep red.
+  // The issues REST endpoint returns both kinds and marks PRs explicitly.
+  const r = spawnSync('gh', [
+    'api', `/repos/${REPOSITORY}/issues/${n}`,
+    '--jq', 'if has("pull_request") then "PULL_REQUEST" elif .state == "open" then "OPEN" elif .state == "closed" then "CLOSED" else "UNKNOWN" end',
+  ], { cwd: CWD, encoding: 'utf8' });
   const out = (r.stdout ?? '').trim();
-  return !r.error && r.status === 0 && out ? out : 'UNKNOWN';
+  return !r.error && r.status === 0 && ['OPEN', 'CLOSED', 'PULL_REQUEST'].includes(out)
+    ? out : 'UNKNOWN';
 }
 
 /**
@@ -600,6 +607,8 @@ if (RANGE || RECENT_MERGED_PRS.length) {
       else say(`- FAILED to close #${n} — ${source}`);
     } else if (state === 'CLOSED') {
       say(`- #${n} already closed — ${source}`);
+    } else if (state === 'PULL_REQUEST') {
+      say(`- skipped #${n} — pull request, not an issue (${source})`);
     } else {
       // A local/dry run has no authenticated repository context and UNKNOWN is
       // expected there. A live Actions reconciliation does have that context:
