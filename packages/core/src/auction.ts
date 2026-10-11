@@ -290,14 +290,17 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
     if (ctx.content.heirloom(heirloomOffered)?.cannotBeSold) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_burden', 'a Burden cannot be traded away') };
     }
-    const pledged = w.auction.upcoming.some((l) => l.id !== lot.id && l.playerBid?.heirloomOffered === heirloomOffered);
+    const pledged = w.auction.upcoming.some((l) => l.id !== lot.id
+      && l.playerBid?.currency === 'heirloom' && l.playerBid.heirloomOffered === heirloomOffered);
     if (pledged) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_pledged', 'that heirloom is already offered for another lot') };
     }
   }
 
   const bid: AuctionBid = { house: w.playerHouse, currency, amount };
-  if (heirloomOffered) bid.heirloomOffered = heirloomOffered;
+  // Only an heirloom-currency bid commits collateral; extra input on a coin
+  // or favour bid must not falsely pledge it against another lot.
+  if (currency === 'heirloom' && heirloomOffered) bid.heirloomOffered = heirloomOffered;
   lot.playerBid = bid;
   return { ok: true };
 }
