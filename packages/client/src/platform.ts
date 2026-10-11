@@ -1,5 +1,8 @@
 import { downloadBlob } from './lib/download.js';
 
+/** Distinct from a selected but unreadable save. Only browser picker cancellation yields this. */
+export const BROWSER_IMPORT_CANCELLED = Symbol('browser-import-cancelled');
+
 /**
  * The client's only door into its host.
  *
@@ -210,10 +213,10 @@ export function browserPlatform(): Platform {
         input.type = 'file';
         input.accept = 'application/json,.json,.edsave';
         // Cancelling the native picker does not dispatch a change event.
-        input.addEventListener('cancel', () => resolve(null), { once: true });
+        input.addEventListener('cancel', () => resolve(BROWSER_IMPORT_CANCELLED), { once: true });
         input.onchange = () => {
           const file = input.files?.[0];
-          if (!file) { resolve(null); return; }
+          if (!file) { resolve(BROWSER_IMPORT_CANCELLED); return; }
           try {
             const reader = new FileReader();
             reader.onerror = () => resolve(null);
