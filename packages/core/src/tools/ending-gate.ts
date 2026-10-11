@@ -148,7 +148,7 @@ export function configureAscendant(ctx: SimCtx): void {
 export function prepareAscendantYear(ctx: SimCtx): void {
   const w = ctx.world;
   nameScion(ctx);
-  nameScionHeir(ctx);
+  nameScionHeir(ctx, true);
   if (w.treasury < 600) return;
   const onShelf = new Set(heldBooks(ctx).map((s) => ctx.content.spellbook(s.id)?.affinity));
   const missing = ctx.content.spellbooks.find((b) => b.tier === 'minor'

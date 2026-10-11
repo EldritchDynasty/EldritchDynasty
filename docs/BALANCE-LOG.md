@@ -10237,3 +10237,77 @@ near kin is not ahead of ranking on the broker's sentence on any column, and
 is behind on carriers. That is a statement about this comparator's weights,
 not about what the panel shows the player; 64 seeds is a probe, not the gate's
 2,048-pair sample. Wall clock 4m31s per side on four cores.
+
+## 2026-10-11 — #332: prepare the elder's descendant before the tutoring window closes
+
+**Decision and completion boundary.** The owner chose #378 route A: measure
+intentional play as well as ordinary runs. That dependency shipped in #993.
+#332's authoritative 2026-10-05 plan closes after the CI commit-closing guard
+is on main and a supply mechanism has been changed and measured. The guard is
+already present. This entry completes the paired preparation/timing work;
+it does not declare the owner's 8–29% target achieved. The 8% floor remains
+printed and report-only during pre-production, exactly as authorized.
+
+**Finding and retained change.** The composite ascendant policy held a named
+heir for life and treated the elder's sibling and child as equivalent kin.
+That can spend the book-and-Mind-tutor programme on a brother who can never
+receive that elder's Unmaking: the authored rite requires a descendant.
+The composite policy now moves a collateral appointment to a living expressing
+descendant when one becomes available, before his tutoring window closes.
+It holds an eligible appointment and continues supporting a successful
+Unmaking recipient after the elder is spent. The relation is evaluated by the
+existing content filter, including grandchildren through dead parents.
+The isolated pair policies retain their lifetime appointments. No game rule,
+floor, fee, authored outcome, or random stream changes.
+
+**Paired evidence.** Source `342bf769`, both policies, 500 years, four workers.
+The continuity probe uses seeds 5100–5199; the larger batch uses 5100–5611.
+Each experiment changes just the appointment mechanism. Every chronicler raw
+row is identical before and after (100/100 and 512/512).
+
+| Ascendant measure | 100 before | 100 after | 512 before | 512 after |
+|---|---:|---:|---:|---:|
+| Apotheosis | 0 | 1 | 1 | 1 |
+| Unmade | 6 | 4 | 27 | 15 |
+| Broken Line | 33 | 36 | 167 | 167 |
+| Forgotten | 31 | 28 | 154 | 151 |
+| Devoured | 30 | 31 | 163 | 178 |
+| Runs with successful Unmaking | 5 | 8 | 37 | 35 |
+| Successful recipients | 6 | 9 | 48 | 39 |
+| Recipients attaining Demigod | 0 | 1 | 4 | 2 |
+| Runs whose recipient peaks at God | 0 | 1 | 2 | 1 |
+| Successful Ledger searches | 0 | 2 | 3 | 2 |
+
+The joint recipient gates (alive / power / books / circle / Madness / Mind /
+clauses / Respect / God) change from `5/3/2/2/1/0/0/0/0` to
+`8/5/4/4/4/3/2/1/1` at 100, and from `37/23/18/18/11/4/2/2/2` to
+`35/22/20/20/13/6/3/1/1` at 512. Recipient Mind peak rises from 165 to 185;
+Madness peak changes from 212 to 200. Both aggregate ending verdicts pass.
+Ordinary endings at 512 stay Broken Line 178, Forgotten 250, Devoured 82,
+Unmade 2, Apotheosis 0 (at 100: 33, 47, 19, 1, 0 respectively).
+
+**Limits.** The larger batch does not show an Apotheosis-rate improvement:
+1/512 remains 0.2%, below the 8% target. It also has fewer recipients and
+Demigod attainers, while the joint personal-gate overlap is slightly larger.
+These are measured tradeoffs, not statistical improvement claims. Retain the
+change because it prepares the actual eligible successor instead of silently
+misdirecting that programme. Power, containment, the persistent Ledger and
+Exalted standing still have to overlap; none is waived by this calibration.
+
+**Rejected timing experiments.** On the same `342bf769` baseline, allowing
+Ledger searches for any living successful recipient, before Demigod, increased
+searches from 3 to 30 but changed Apotheosis from 1 to 0; it is not retained.
+Resolving successive ready table rites in the same year, with a continuous
+decision-RNG cursor, reduced successful Unmaking runs from 37 to 26 and
+Apotheosis from 1 to 0; it is not retained. The initial version restarted that
+cursor per call and gave an optimistic 100-seed result, so it is not evidence
+for the mechanism. An earlier two-rite Ledger-access probe on source
+`94eb0100` increased searches from 3 to 629 but left Apotheosis at 0/512 and
+reduced successful Unmaking runs from 40 to 35; it is also not retained.
+
+**Verification.** Deterministic fixtures prove the ordinary pair appointment
+is preserved, the composite moves to an eligible child, a grandchild remains
+eligible through a dead parent, and a successful recipient keeps support.
+Focused ending/ladder tests and package typechecks pass; the paired ending
+gate supplies the full-run evidence above. Native merge-group CI remains the
+authoritative landing check.
