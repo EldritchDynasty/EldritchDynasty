@@ -269,7 +269,16 @@ export function mobileStorage(
 
   async function readLibrary(): Promise<unknown | null> {
     const durable = await readFile(LIBRARY_PATH);
-    if (durable.present) return durable.value;
+    if (durable.present) {
+      // A present native Library file with invalid JSON or unreadable bytes
+      // is not an absent Library. Returning null here would let the client
+      // overwrite the player's existing history with an invented empty one.
+      // Never fall back to an older Preferences snapshot over those bytes.
+      if (durable.value === null) {
+        throw new TypeError('the native Library of Houses file is unreadable');
+      }
+      return durable.value;
+    }
 
     const legacy = await readLegacy(LEGACY_LIBRARY_KEY);
     if (legacy === null) return null;
