@@ -298,6 +298,39 @@ describe('the save directory', () => {
     expect(entry?.unreadable).toBeTruthy();
   });
 
+  it('keeps valid JSON of the wrong save shape visible but unreadable (#1248)', () => {
+    const invalid = [
+      ['null-json', 'null'],
+      ['array-json', '[]'],
+      ['string-json', '"not a save"'],
+      ['number-json', '42'],
+      ['boolean-json', 'false'],
+      ['missing-format', '{"year":1442}'],
+      ['string-format', '{"format":"28"}'],
+    ] as const;
+    writeSave(root, 'healthy', aSave({ year: 1500 }));
+
+    for (const [slot, bytes] of invalid) {
+      writeFileSync(join(root, `${slot}.edsave.json`), bytes, 'utf8');
+    }
+
+    const bySlot = new Map(listSaves(root).map((entry) => [entry.slot, entry]));
+    expect(bySlot.size).toBe(invalid.length + 1);
+    expect(bySlot.get('healthy')).toMatchObject({ year: 1500, format: 6 });
+    expect(readSave(root, 'healthy')).toEqual(aSave({ year: 1500 }));
+
+    for (const [slot, bytes] of invalid) {
+      const entry = bySlot.get(slot);
+      expect(entry?.unreadable).toContain('a save is an object with a numeric format');
+      expect(entry?.bytes).toBe(Buffer.byteLength(bytes, 'utf8'));
+      expect(entry?.format).toBeUndefined();
+      expect(entry?.year).toBeUndefined();
+      expect(() => readSave(root, slot)).toThrow('a save is an object with a numeric format');
+      // A bad existing slot is never deleted or rewritten as a healthy run.
+      expect(readFileSync(join(root, `${slot}.edsave.json`), 'utf8')).toBe(bytes);
+    }
+  });
+
   it('reports a directory-shaped slot while keeping valid saves visible', () => {
     mkdirSync(join(root, 'not-a-file.edsave.json'));
     // The slot name syntax forbids an internal dot but permits dashes.
