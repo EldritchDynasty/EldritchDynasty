@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { loadContent } from '@ed/content';
+import { loadBundle, loadContent } from '@ed/content';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
@@ -275,6 +275,62 @@ describe('autosave mutation ordering', () => {
     expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
     expect(game.resumable.value).toBe(false);
     expect(game.saveStatus.value).toBe('saved');
+  });
+});
+
+describe('chapter-boundary save integrity (#1194)', () => {
+  it('captures a boundary at its own year even when the same press turns later years', () => {
+    const host = memoryPlatform();
+    const boundaryWrites: Array<{ slot: string; year: number }> = [];
+    const write = host.writeSave;
+    host.writeSave = async (slot, snapshot) => {
+      if (slot.startsWith('chapter-')) {
+        boundaryWrites.push({ slot, year: (snapshot as { year: number }).year });
+      }
+      await write(slot, snapshot);
+    };
+
+    // Isolate the Age clock from authored choice dockets so a multi-year
+    // press can pass a closing and continue. The Age scheduler itself is real.
+    const bundle = loadBundle();
+    bundle.events.splice(0);
+    const game = createGame(bundle, host);
+    game.actions.begin(1194, 'long');
+    const signing = game.prologue.value!;
+    expect(game.actions.found({
+      houseName: 'House Boundary',
+      heirloom: signing.heirlooms[0]!.heirloom,
+      grudge: signing.grudges[0]!.house,
+      answers: Object.fromEntries(signing.examination.map((question) => [
+        question.id, question.answers[0]!.id,
+      ])),
+    }).ok).toBe(true);
+    game.actions.enter();
+
+    let crossedBoundary = false;
+    for (let attempt = 0; attempt < 300 && !crossedBoundary && !game.ended.value; attempt++) {
+      if (game.view.value?.namesWanted.length) {
+        game.actions.keepSuggestedNames();
+        continue;
+      }
+      if (game.docket.value.length) {
+        game.actions.letHimDecide();
+        continue;
+      }
+
+      const prior = boundaryWrites.length;
+      game.actions.advance(25);
+      const after = game.view.value!.year;
+      for (const { slot, year } of boundaryWrites.slice(prior)) {
+        const closing = /^chapter-.+-(\d+)$/.exec(slot);
+        expect(closing, `unexpected chapter save slot: ${slot}`).not.toBeNull();
+        expect(year, `${slot} must resume in its own closing year`).toBe(Number(closing![1]));
+        if (after > year) crossedBoundary = true;
+      }
+    }
+
+    expect(boundaryWrites.length).toBeGreaterThan(0);
+    expect(crossedBoundary, 'fixture must turn past a saved chapter in one press').toBe(true);
   });
 });
 
