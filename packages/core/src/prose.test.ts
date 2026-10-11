@@ -93,6 +93,48 @@ describe('married-in spouse house names in the selected prose mode (#968)', () =
   });
 });
 
+describe('marriage promise counterparty names in the selected prose mode (#1100)', () => {
+  it('renders an authored counterpart without changing the saved promise or runtime renames', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const house = ctx.content.house('house_marrow');
+    if (!house) throw new Error('Marrow house fixture is missing');
+    expect(ctx.world.houses.get(house.id)?.name).toBe(house.name);
+
+    ctx.world.marriagePromises.push({
+      toHouse: house.id, year: ctx.world.year, lot: 'the_ring',
+    });
+    const address = `content:${ctx.content.sourceOf(String(house.id))}#houses[id=${encodeURIComponent(String(house.id))}].name`;
+    const promise = () => session.view().marriagePromises[0]!;
+    expect(promise().houseName).toBe(house.name);
+    const originalSave = canonical(saveGame(ctx));
+
+    const variant = {
+      address, of: proseOriginalHash(house.name), plainenglish: 'The Marrow household',
+    };
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(promise().houseName).toBe(variant.plainenglish);
+    expect(promise().house).toBe(house.id);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    expect(promise().houseName).toBe(house.name);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(promise().houseName).toBe(house.name);
+    expect(canonical(saveGame(ctx))).toBe(originalSave);
+
+    // A world-renamed house is not the authored Original; do not substitute
+    // the reviewed translation for that different, current name.
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    ctx.world.houses.get(house.id)!.name = 'A name changed after the promise';
+    expect(promise().houseName).toBe('A name changed after the promise');
+  });
+});
+
 describe('live attribute names in the selected prose mode (#959)', () => {
   it('translates eligible names, keeps one-word names, and falls back on stale wording', () => {
     const session = newGame(loadContent());
