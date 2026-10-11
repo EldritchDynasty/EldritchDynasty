@@ -450,6 +450,15 @@ describe('the installation library on disk', () => {
     writeFileSync(join(userData, 'library.json'), '{not json', 'utf8');
     expect(() => readRunLibrary(userData)).toThrow();
   });
+
+  it('rejects present JSON null, primitives and arrays without losing the Library bytes (#1246)', () => {
+    const path = join(userData, 'library.json');
+    for (const json of ['null', 'false', '42', '"unexpected"', '[]']) {
+      writeFileSync(path, json, 'utf8');
+      expect(() => readRunLibrary(userData)).toThrow('the library is a JSON object');
+      expect(readFileSync(path, 'utf8')).toBe(json);
+    }
+  });
 });
 
 
