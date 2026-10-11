@@ -14,6 +14,7 @@ import {
   type SmokeResult,
 } from './platform.js';
 import { mobileStorage } from '../../mobile/src/storage.js';
+import { chooseSaveFile } from '../../mobile/src/file-chooser.js';
 import { readSave as readDesktopSave, saveRoot, writeSave as writeDesktopSave } from '../../shell/src/saves.mjs';
 
 function bridge(): Platform {
@@ -1066,6 +1067,58 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
       expect(digestOf(fromAndroid)).toBe(digestOf(fromWindows));
       expect(digestOf(fromAndroid)).toBe(digestOf(original));
     } finally {
+      rmSync(userData, { recursive: true, force: true });
+    }
+  });
+
+  it('imports a desktop JSON export through the real mobile file chooser (#1117)', async () => {
+    const content = loadContent();
+    const source = bootstrap(content, 32217, 1042, 'short');
+    runYears(source, 24);
+    const userData = mkdtempSync(join(tmpdir(), 'ed-picker-transfer-'));
+    const oldReader = Object.getOwnPropertyDescriptor(globalThis, 'FileReader');
+
+    try {
+      // Exercise the desktop's JSON file writer and the mobile bridge's actual
+      // picker parser. The storage-only test above bypasses this import seam.
+      const exported = writeDesktopSave(saveRoot(userData), 'windows export', saveGame(source));
+      const bytes = readFileSync(exported, 'utf8');
+      const picker = {
+        files: [{ fixture: bytes }] as File[],
+        onchange: null as (() => void) | null,
+        addEventListener(_event: string, _listener: () => void) {},
+        click() {},
+      };
+      Object.defineProperty(globalThis, 'FileReader', {
+        configurable: true,
+        value: class {
+          result: string | null = null;
+          onload: (() => void) | null = null;
+          onabort: (() => void) | null = null;
+          onerror: (() => void) | null = null;
+          readAsText(file: File) {
+            this.result = (file as File & { fixture: string }).fixture;
+            this.onload?.();
+          }
+        },
+      });
+
+      const pending = chooseSaveFile(picker as unknown as HTMLInputElement);
+      expect(picker.onchange).toBeTypeOf('function');
+      picker.onchange!();
+      const selected = await pending;
+      expect(selected).toEqual(JSON.parse(bytes));
+
+      const mobileFiles = mobileFileStore();
+      const android = mobileStorage(mobileFiles, mobilePreferenceStore());
+      await android.writeSave('selected export', selected);
+      const mobile = loadGame(await android.readSave('selected export'), content);
+      runYears(source, 20);
+      runYears(mobile, 20);
+      expect(digestOf(mobile)).toBe(digestOf(source));
+    } finally {
+      if (oldReader) Object.defineProperty(globalThis, 'FileReader', oldReader);
+      else Reflect.deleteProperty(globalThis, 'FileReader');
       rmSync(userData, { recursive: true, force: true });
     }
   });
