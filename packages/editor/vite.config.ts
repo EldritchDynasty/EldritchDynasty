@@ -16,7 +16,7 @@ const CORE_SOURCE = join(REPO, 'packages/core/src');
  * Resolve the Node-only TypeScript AST extractor while Vite is building, never
  * in the editor renderer. The shipped module contains JSON data, not a parser.
  */
-function coreProseCatalogue() {
+export function coreProseCatalogue() {
   const moduleId = 'virtual:ed-core-prose';
   const resolvedId = '\0' + moduleId;
 
