@@ -2,7 +2,7 @@ import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
   SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant,
 } from '@ed/schema';
-import { MAIN_BRANCH } from '@ed/schema';
+import { MAIN_BRANCH, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -1365,9 +1365,19 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     });
 
   const campaign = campaignDef(w.campaign);
+  // A campaign's name is reader-facing prose, not world state. Keep the
+  // identity and campaign clock unchanged when the reader switches wording.
+  const campaignName = (() => {
+    switch (campaign.id) {
+      case 'short': return msg(ctx, 'session.campaign.short', 'A Short Line');
+      case 'long': return msg(ctx, 'session.campaign.long', 'A Long Line');
+      case 'demo': return msg(ctx, 'session.campaign.demo', 'A Demonstration');
+      default: return assertNever(campaign.id, 'session campaign');
+    }
+  })();
   const view: SessionView = {
     year: w.year,
-    campaign: { id: campaign.id, name: campaign.name, startYear: campaign.startYear, endYear: campaign.endYear },
+    campaign: { id: campaign.id, name: campaignName, startYear: campaign.startYear, endYear: campaign.endYear },
     generation: w.generation,
     ...(() => {
       const current = w.succession.at(-1);
