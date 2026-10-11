@@ -124,7 +124,7 @@ describe('stable core prose editor wiring (#1011)', () => {
 describe('actual generated core catalogue (#1011)', () => {
   it('extracts unique, source-located stable msg keys and Originals without browser-side TS parsing', () => {
     const plugin = coreProseCatalogue();
-    const generated = plugin.load('\\0virtual:ed-core-prose');
+    const generated = plugin.load('\0virtual:ed-core-prose');
     expect(generated).toMatch(/^export default \[/);
     const rows = JSON.parse(generated!.slice('export default '.length, -1)) as {
       address: string; file: string; text: string; interpolations: string[];
@@ -133,7 +133,7 @@ describe('actual generated core catalogue (#1011)', () => {
     expect(rows.map((row) => row.address)).toEqual([...new Set(rows.map((row) => row.address))]);
     expect(rows.map((row) => row.address)).toEqual(rows.map((row) => row.address).sort());
     const assessor = rows.find((row) => row.address === 'core:messages#assize.the_assessors_call');
-    expect(assessor?.file).toMatch(/^packages\\/core\\/src\\/.*assize\\.ts$/);
+    expect(assessor?.file).toMatch(/^packages\/core\/src\/.*assize\.ts$/);
     expect(assessor?.text.length).toBeGreaterThan(20);
     expect(assessor?.interpolations).toEqual(contentInterpolationTokens(assessor!.text));
   });
