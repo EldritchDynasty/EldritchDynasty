@@ -108,6 +108,12 @@ describe('the volume', () => {
       await w.setProps({ focus: undefined });
       await flushPromises();
       expect(marked(w)).toEqual(['chr_other']);
+
+      // A later explicit target works after the caller clears the prop.
+      await w.setProps({ focus: 'chr_act' });
+      await flushPromises();
+      expect(marked(w)).toEqual(['chr_act']);
+      expect(document.activeElement).toBe(w.get('[data-entry="chr_act"]').element);
     } finally {
       w.unmount();
     }
