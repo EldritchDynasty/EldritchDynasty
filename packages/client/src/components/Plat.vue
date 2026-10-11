@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { LandView } from '@ed/core';
+import type { LandView, SessionView } from '@ed/core';
 import { useModal } from '../lib/modal';
 import type { GameActions } from '../lib/game';
 
 const props = defineProps<{
   /** The house's land (issue #94) — this component draws nothing an order screen does not already know. */
   land: LandView;
+  halls: SessionView['halls'];
   houseName: string;
   actions: GameActions;
   close: () => void;
@@ -56,6 +57,9 @@ interface PlatItem {
   provenance?: string;
   detail: string;
   contestedBy?: string;
+  caput?: boolean;
+  holder?: string;
+  holderName?: string;
 }
 
 const items = computed<PlatItem[]>(() => {
@@ -69,6 +73,7 @@ const items = computed<PlatItem[]>(() => {
     return {
       key: p.parcel, parcel: p.parcel, name: p.name, place: p.place, state,
       acres: p.acres, provenance: p.provenance, contestedBy: p.contestedBy, detail,
+      caput: p.caput, holder: p.holder, holderName: p.holderName,
     };
   });
 
@@ -82,6 +87,27 @@ const items = computed<PlatItem[]>(() => {
 
   return [...held, ...lost];
 });
+
+// Only living cadet halls appear. The simulation's Table order owns validation.
+const cadetHalls = computed(() => props.halls.filter((h) => !h.isSeat && h.members.length > 0));
+const selectedHall = ref<Record<string, string>>({});
+const giftError = ref<{ parcel: string; reason: string } | null>(null);
+
+function giveLand(item: PlatItem): void {
+  const parcel = item.parcel;
+  if (!parcel || item.caput || item.holder) return;
+  const branch = selectedHall.value[parcel];
+  if (!branch || !cadetHalls.value.some((hall) => hall.id === branch)) return;
+  const result = props.actions.order({ kind: 'endow', parcel, branch });
+  giftError.value = result.ok ? null : { parcel, reason: result.reason ?? 'The land could not be endowed.' };
+}
+
+function recallLand(item: PlatItem): void {
+  const parcel = item.parcel;
+  if (!parcel || !item.holder) return;
+  const result = props.actions.order({ kind: 'endow', parcel, branch: null });
+  giftError.value = result.ok ? null : { parcel, reason: result.reason ?? 'The land could not be recalled.' };
+}
 
 // ── The drawing ──────────────────────────────────────────────────────────
 
@@ -248,7 +274,27 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
             </td>
             <td>{{ STATE_WORD[item.state] }}</td>
             <td>{{ item.place }}</td>
-            <td>{{ item.detail }}</td>
+            <td>
+              {{ item.detail }}
+              <template v-if="item.parcel && item.holder">
+                <p class="small dim">Held by {{ item.holderName ?? item.holder }}.</p>
+                <button class="small recall-land" type="button" @click="recallLand(item)">Recall this land</button>
+              </template>
+              <div v-else-if="item.parcel && !item.caput && cadetHalls.length" class="gift-controls">
+                <label class="small" :for="`endow-${item.parcel}`">Give to a cadet hall</label>
+                <select
+                  :id="`endow-${item.parcel}`"
+                  v-model="selectedHall[item.parcel ?? '']"
+                  :aria-label="`Hall to receive ${item.name}`"
+                  @change="giftError = null"
+                >
+                  <option value="">Choose a hall</option>
+                  <option v-for="hall in cadetHalls" :key="hall.id" :value="hall.id">{{ hall.name }}</option>
+                </select>
+                <button class="small endow" type="button" :disabled="!selectedHall[item.parcel ?? '']" @click="giveLand(item)">Endow</button>
+              </div>
+              <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftError.reason }}</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -295,4 +341,6 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
   font-size: var(--t-label); color: var(--ink-faint); cursor: pointer; text-decoration: underline;
 }
 .rename:hover { color: var(--ink); }
+.gift-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.gift-controls select { max-width: 22ch; }
 </style>
