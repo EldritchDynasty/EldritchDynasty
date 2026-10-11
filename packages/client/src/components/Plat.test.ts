@@ -281,12 +281,14 @@ describe('deferred modal focus restoration (#1323)', () => {
     });
     const first = mount(Plat, { attachTo: document.body, props: props() });
     const second = mount(Plat, { attachTo: document.body, props: props() });
+    let firstUnmounted = false;
 
     try {
       const successorFocus = document.activeElement;
       expect(second.element.contains(successorFocus)).toBe(true);
 
       first.unmount();
+      firstUnmounted = true;
       expect(callbacks).toHaveLength(1);
       callbacks.shift()!(0);
 
@@ -295,7 +297,7 @@ describe('deferred modal focus restoration (#1323)', () => {
       expect(document.activeElement).toBe(successorFocus);
       expect(second.element.contains(document.activeElement)).toBe(true);
     } finally {
-      first.unmount();
+      if (!firstUnmounted) first.unmount();
       second.unmount();
       while (callbacks.length) callbacks.shift()!(0);
       previous.remove();
