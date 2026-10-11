@@ -10378,3 +10378,46 @@ after membership closes, guarding the ordering explicitly. All 12 canonical
 merge-blocking batch gates pass, including the 100-run Short Line distribution
 (Broken Line 31, Settled 18, Forgotten 37, Devoured 14) and the 90-run land gate.
 Native merge-group CI remains the authoritative landing check.
+
+## 2026-10-12 — #1279: the guardian crossing ends both sides of the earthly marriage
+
+**Finding and change.** The narrator's guardian redirect closed only his own
+vow, leaving the surviving spouse unavailable to the Match and making the
+marriage disagree with itself. Both `kill` paths now use `closeMarriage`.
+The narrator still becomes the guardian, keeps that cast role, relinquishes
+the seal and returns false from the death gate. A repeated death request does
+nothing. No save shape, new RNG draw or separate death/marriage gate is added.
+
+**Paired evidence.** Baseline `09e0c2c2`, identical ordinary seeds 1000 + 7·i,
+32 Long Lines of 500 years. Mean people minted changes 452.4 → 453.8; living
+at the term 50.4 → 50.2; annual household size remains 47.7 and completed
+family size 1.3. Branches ever founded changes 14.1 → 14.3, Regency spells
+2.0 → 1.9 and Regency years 110.0 → 108.1. Clauses remain 5.3, with 13/32
+recovering at least seven. Final standing remains Regarded 3, Eminent 7,
+Known 6, Exalted 14, Unknown 2. Chronicle entries change 435.7 → 435.8;
+frame interludes remain 5.9. Mad women and incapable men remain zero.
+These are descriptive probes, not statistical improvement claims.
+
+The first eight seeds were also sampled every 25 years for coherence. The
+baseline's four guardian-marriage complaints become **zero violations** on
+the change. Their annual household and treasury readings are identical;
+annual mean treasury is 1,392.8 crowns on both sides. Across the larger batch,
+newly available marriages can alter later descendants, so this is a measured
+population correction rather than a refactor. Existing frame-cadence debt is
+unaffected.
+
+`npm run digest -- 8 400` changes four fingerprints; seeds 1014, 1035, 1042
+and 1049 are identical. The four changed seeds are:
+
+| Seed | Before | After |
+|---|---|---|
+| 1000 | `12ad3ad8ce5ed426:1527901` | `6185c3ca896eceb0:1527901` |
+| 1007 | `58db5b506009a924:315687` | `be5bb15cb83b8784:315687` |
+| 1021 | `f66505a1b2b46c3d:428467` | `f401aa95740be371:428467` |
+| 1028 | `80dcdfa34997a4ff:1470683` | `8faeb0cd780d8719:1470683` |
+
+**Deterministic proof.** The former pinned-bug test now asserts both vow
+endpoints, surviving-spouse eligibility, the guardian role/status, no marriage
+complaint and an unchanged crossing date/cause on repeated death requests.
+Store and world-health suites pass all 25 tests. Canonical batch gates and
+the rebased preflight are recorded in the issue's PR before landing.
