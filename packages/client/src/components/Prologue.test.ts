@@ -247,5 +247,47 @@ describe('Age opening replay on a reused Chapter dialog (#410)', () => {
     wrapper.unmount();
     vi.unstubAllGlobals();
   });
+  it('keeps Escape and Tab trapping after an initially skipped opening, and removes the listener on unmount', async () => {
+    const repeated = 'An opening already read in a previous sitting.';
+    rememberSeenProse(window.localStorage, seenProseKey('chapter-opening', repeated));
+
+    const dismissChapter = vi.fn();
+    const actions = { dismissChapter } as unknown as GameActions;
+    const opening = (text: string) => ({
+      kind: 'opening', opening: { text },
+    } as ChapterBeat);
+    const outside = document.createElement('button');
+    outside.textContent = 'Outside the dialog';
+    document.body.appendChild(outside);
+
+    // App reuses the mounted dialog when dismissing one queued Chapter.
+    const wrapper = mount(Chapter, {
+      attachTo: document.body,
+      props: { beat: opening(repeated), actions, skipSeenProse: true },
+    });
+    try {
+      expect(dismissChapter).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ beat: opening('An unread Age begins.') });
+      expect(dismissChapter).toHaveBeenCalledTimes(1);
+
+      // Without the mount-time keydown listener, focus escapes a modal dialog.
+      outside.focus();
+      expect(document.activeElement).toBe(outside);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      expect(document.activeElement).toBe(wrapper.get('button').element);
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(dismissChapter).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
+      wrapper.unmount();
+      vi.unstubAllGlobals();
+      outside.remove();
+    }
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(dismissChapter).toHaveBeenCalledTimes(2);
+  });
+
 });
 
