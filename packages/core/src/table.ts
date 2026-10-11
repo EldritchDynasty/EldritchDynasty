@@ -643,10 +643,12 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
     }
 
     case 'bid': {
-      if (!Number.isFinite(o.ceiling) || o.ceiling < 0) {
+      // The Table speaks in whole crowns. Refuse malformed runtime values
+      // rather than rounding fractions or accepting imprecise amounts.
+      if (!Number.isSafeInteger(o.ceiling) || o.ceiling < 0) {
         return { ok: false, reason: msg(ctx, 'table.order.bid.not_a_figure', 'not a figure') };
       }
-      w.bidCeiling = Math.round(o.ceiling);
+      w.bidCeiling = o.ceiling;
       return { ok: true };
     }
 
