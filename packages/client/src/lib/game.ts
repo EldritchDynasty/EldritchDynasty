@@ -943,7 +943,7 @@ export function createGame(
   function saveChapterBoundary(g: GameSession, view: ChapterView): void {
     const save = g.save();
     const slot = slotForCampaign(`chapter-${view.age}-${view.to}`, save.campaign);
-    void platform.writeSave(slot, save).then(refreshSaves).catch(() => undefined);
+    void platform.writeSave(slot, save).then(() => refreshSaves()).catch(() => undefined);
   }
 
   function archiveFinished(g: GameSession): void {
