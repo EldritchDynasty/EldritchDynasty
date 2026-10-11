@@ -739,6 +739,24 @@ describe('a contract ends with the man who signed it', () => {
     expectRetainerPresent(ctx, servant, false);
   });
 
+  it('measures a released retainer\'s service before closing their membership', () => {
+    const { ctx, servant } = staffed({
+      term: 'yearly', wage: 200, loyalty: 0,
+      knowsSecrets: [asId('what_the_archive_holds')],
+    });
+    servant.membership[0]!.from = ctx.world.year - 25;
+    ctx.world.treasury = 9;
+    // Force the leak, since this witness concerns service length, not its odds.
+    const rng = { ...testRng('departure'), bool: () => true };
+
+    expect(releaseContracts(ctx, rng).map((ended) => ended.reason)).toEqual(['unpaid']);
+    expectRetainerPresent(ctx, servant, false);
+    expect(ctx.world.looseSecrets).toHaveLength(1);
+    expect(ctx.world.looseSecrets[0]).toMatchObject({
+      carrier: servant.id, secret: 'what_the_archive_holds', severity: 'major',
+    });
+  });
+
   it('keeps the short-term staff while the house can still pay them', () => {
     const { ctx, servant } = staffed({ term: 'yearly', wage: 200 });
     ctx.world.treasury = 11; // over wage/20
