@@ -247,6 +247,10 @@ function take(index: number): void {
 }
 
 function onKey(e: KeyboardEvent): void {
+  // IME candidate selection is text entry, not an irreversible numbered answer.
+  // The App-level shortcut guard is separate; it cannot stop this listener.
+  if (e.isComposing || e.keyCode === 229) return;
+
   // The docket remains mounted behind Book, Plat and Line dialogs. A global
   // number shortcut must never answer a decision hidden by a modal overlay.
   if (document.querySelector('[aria-modal="true"]')) return;
