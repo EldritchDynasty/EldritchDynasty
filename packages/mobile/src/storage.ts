@@ -196,6 +196,11 @@ export function mobileStorage(
     try {
       keys = (await preferences.keys()).keys;
     } catch (error) {
+      // Native Data entries are authoritative and must remain listable when
+      // the optional legacy store is unavailable (#1230). With no native
+      // entries, however, a failed legacy scan says nothing about whether old
+      // Android saves exist. Surface Retry rather than declaring zero runs.
+      if (nativeSlots.size === 0) throw error;
       console.warn('[mobile] could not enumerate legacy save slots:', error);
     }
     for (const key of keys.filter((candidate) => candidate.startsWith(LEGACY_SAVE_PREFIX))) {
