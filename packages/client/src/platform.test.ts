@@ -1547,7 +1547,7 @@ describe('mobile durable storage', () => {
     const preferences = mobilePreferenceStore({ 'ed:save:autosave': old });
     const store = mobileStorage(files, preferences);
 
-    await expect(store.readSave('autosave')).resolves.toBeNull();
+    await expect(store.readSave('autosave')).rejects.toThrow('the native save file is unreadable');
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:save:autosave')).toBe(old);
     expect(files.writes).toEqual([]);
