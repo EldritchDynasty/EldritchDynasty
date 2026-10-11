@@ -360,6 +360,7 @@ events:
                 is four days out. It is the only wrong date in eleven hundred
                 years of that roll and it is still there.
               effects:
+                - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
                 - { kind: knowledge, op: grant, flag: knows_the_wrong_date_on_the_roll }
                 - { kind: rumour, op: seed, id: rumour_the_burial_in_the_hollow_days, accuracy: 0.4 }
         - id: wait_for_the_keeper
@@ -374,6 +375,7 @@ events:
                 everything correctly. Nobody in the hall sleeps well for a
                 month and nobody gives that as the reason.
               effects:
+                - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
                 - { kind: respect, delta: 1 }
                 - { kind: attribute, target: household, attr: health, delta: -1 }
 
@@ -683,7 +685,7 @@ proseVariants:
     of: "7cd4fbbb4d2e576f"
     plainenglish: >-
       {KIN} dies on the second of the Hollow Days. Custom says the dead must be buried within
-      two days, but the five Hollow Days have their own rules: nobody makes decisions, seals
+      two days, but the Hollow Days have their own rules: nobody makes decisions, seals
       documents, or travels. The keeper is in Bramme until the Days are over. By dusk, the
       women of the household have prepared the body. The family must decide whether to open
       the grave tomorrow or wait another four days.
