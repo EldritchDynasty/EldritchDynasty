@@ -1330,8 +1330,9 @@ describe('mobile durable storage', () => {
     // A corrupt slot stays visible without invented metadata, and without
     // overwriting its native bytes with a legacy Preferences snapshot.
     await expect(store.listSaves()).resolves.toEqual([
-      { slot: 'healthy', format: 28, year: 1300, savedAt: undefined },
+      // Both entries have no savedAt: the existing stable tie-break is by slot.
       { slot: 'autosave' },
+      { slot: 'healthy', format: 28, year: 1300, savedAt: undefined },
     ]);
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:save:autosave')).toBe(old);
