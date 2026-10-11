@@ -238,6 +238,52 @@ describe('named saves', () => {
 });
 
 
+
+describe('save list host failures (#1137)', () => {
+  it('explains a rejected listing and restores the actual saves when Retry succeeds', async () => {
+    const actions = spyActions([{ slot: 'chapter-1-1080', year: 1080 }]);
+    vi.mocked(actions.listSaves).mockRejectedValueOnce(new Error('host unavailable'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      expect(w.get('.save-list-error[role="alert"]').text()).toContain('could not be listed');
+      expect(w.find('section.saved').exists()).toBe(false);
+      expect(actions.listSaves).toHaveBeenCalledTimes(1);
+
+      await w.get('.save-list-error button').trigger('click');
+      await flush();
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+      expect(w.find('.save-list-error[role="alert"]').exists()).toBe(false);
+      expect(w.text()).toContain('chapter-1-1080');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps the retry available after two host failures, then clears the error', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.listSaves)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockRejectedValueOnce(new Error('still offline'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      await w.get('.save-list-error button').trigger('click');
+      await flush();
+      expect(w.get('.save-list-error[role="alert"]').text()).toContain('could not be listed');
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+
+      await w.get('.save-list-error button').trigger('click');
+      await flush();
+      expect(actions.listSaves).toHaveBeenCalledTimes(3);
+      expect(w.find('.save-list-error').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
+
 describe('the Library of Houses', () => {
   it('shows a completed house, one surviving page, and removal controls', async () => {
     const actions = spyActions();
