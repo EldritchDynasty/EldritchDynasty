@@ -60,6 +60,28 @@ describe('a slot is a name, not a path', () => {
     rejects('x'.repeat(65));
   });
 
+  it('rejects Windows device basenames with the .edsave.json extension on either OS (#1228)', () => {
+    const devices = [
+      'CON', 'PRN', 'AUX', 'NUL',
+      ...Array.from({ length: 9 }, (_, i) => `COM${i + 1}`),
+      ...Array.from({ length: 9 }, (_, i) => `LPT${i + 1}`),
+    ];
+    for (const device of devices) {
+      for (const slot of [device, device.toLowerCase(), device[0]! + device.slice(1).toLowerCase()]) {
+        // Windows reserves device names even when our file extension follows.
+        rejects(slot);
+        expect(slotOfFile(`${slot}.edsave.json`)).toBeUndefined();
+      }
+    }
+  });
+
+  it('allows names which merely contain a Windows device-name prefix', () => {
+    for (const slot of ['CONRAD', 'PRN backup', 'AUXILIARY', 'NUL_1', 'COM0', 'COM10', 'LPT0', 'LPT10']) {
+      expect(resolveSavePath(ROOT, slot)).toBe(resolve(ROOT, `${slot}.edsave.json`));
+      expect(slotOfFile(`${slot}.edsave.json`)).toBe(slot);
+    }
+  });
+
   it('reads its own files back out of a listing and ignores everything else', () => {
     expect(slotOfFile('the autumn run.edsave.json')).toBe('the autumn run');
     expect(slotOfFile('the autumn  run.edsave.json')).toBe('the autumn  run');
