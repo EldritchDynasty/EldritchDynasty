@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { auditChoices, isProseOnly, type ChoiceAudit, type Content, type ContentSources } from '@ed/schema';
+import { auditChoices, GOD_RITE_FAILED, isProseOnly, type ChoiceAudit, type Content, type ContentSources } from '@ed/schema';
 import {
   choiceWorklist,
   loadChoiceDecisions,
@@ -42,6 +42,18 @@ describe('the #334 choice-debt worklist', () => {
 
     expect(work.proseOnly.map((row) => [row.event, row.choice, row.decider]).sort())
       .toEqual(prose.map((row) => [row.event, row.choice, row.decider]).sort());
+  });
+
+  it('counts the built-in ending reader without a stale unread-key decision (#1187)', () => {
+    const audit = auditChoices(content);
+    const work = choiceWorklist(content, loadChoiceDecisions());
+    expect(audit.read.flag).toContain(GOD_RITE_FAILED);
+    expect(audit.writeOnly).not.toContainEqual(expect.objectContaining({
+      kind: 'flag', key: GOD_RITE_FAILED,
+    }));
+    expect(work.summary.writeOnlyKeys).toBe(111);
+    expect(work.memory.some((row) => row.kind === 'flag' && row.key === GOD_RITE_FAILED)).toBe(false);
+    expect(work.summary.unclassifiedWriteOnlyKeys).toBe(0);
   });
 
   it('loads the committed decision ledger and accounts for classified versus unclassified keys', () => {
