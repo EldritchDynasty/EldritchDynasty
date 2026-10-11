@@ -28,6 +28,33 @@ const CHOICE_LABEL_ADDRESS =
 const RECORD_SUBJECT_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.subject';
 
+describe('main hall label in the selected prose mode (#1108)', () => {
+  it('renders a reviewed core label and keeps the saved hall unchanged', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const address = 'core:messages#session.hall.main';
+    const seat = () => session.view().halls.find((hall) => hall.isSeat)?.name;
+    const originalSave = canonical(saveGame(ctx));
+
+    expect(seat()).toBe('the main hall');
+    const variant = {
+      address, of: proseOriginalHash('the main hall'), plainenglish: 'the family seat',
+    };
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(seat()).toBe('the family seat');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    expect(seat()).toBe('the main hall');
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(seat()).toBe('the main hall');
+    expect(canonical(saveGame(ctx))).toBe(originalSave);
+  });
+});
+
 describe('live trait names in the selected prose mode (#957)', () => {
   it('translates eligible names in the view, falls back safely, and never changes saves', () => {
     const session = newGame(loadContent());
