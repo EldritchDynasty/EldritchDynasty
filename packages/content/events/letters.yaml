@@ -854,3 +854,15 @@ proseVariants:
       The Head kindly tells the reeve not to involve himself in the hall's affairs. He
       understands and never brings such news up the hill again. Wick continues to hear
       rumours before the house, which returns to hearing them last.
+  - address: "content:events/letters.yaml#events[id=nobody_owns_a_clock].interaction.outcomes[id=the_marks_on_the_wall].text"
+    of: 8f342f8330316717
+    plainenglish: >-
+      The marks remain on the wall for eleven years. In 1211 a maid who does not know what
+      they mean covers them with limewash. Nobody in the house speaks of them again or
+      realises that eleven years of work have been lost.
+  - address: "content:events/letters.yaml#events[id=nobody_owns_a_clock].interaction.outcomes[id=somebody_notices].text"
+    of: 0a3505005e94a15c
+    plainenglish: >-
+      A visitor from Cawdry recognises the wall marks in about a minute. He is impressed,
+      although he seems reluctant to admit it. He mentions them at three tables that winter.
+      People spread the strange news that a house in the Nethering keeps track of the hour.
