@@ -286,50 +286,55 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   const item = items?.find((x) => identityOf(collectionKey, x) === id);
   if (!item) return { ok: false, error: `'${id}' is not in the live model` };
 
-  // Review is not a lock: the file may change between preview and confirmation.
-  // Fail closed before mutating the parsed document, not just before the write.
-  let disk: Awaited<ReturnType<typeof readFile>>;
-  try {
-    disk = await readFile(located.path);
-  } catch (cause) {
-    disk = { ok: false, error: cause instanceof Error ? cause.message : String(cause) };
-  }
-  if (!disk.ok || disk.text === undefined || disk.text !== file.loadedText) {
-    const error = !disk.ok || disk.text === undefined
-      ? `Cannot verify '${located.path}' before saving: ${disk.error ?? 'read failed'}`
-      : `'${located.path}' changed on disk since the editor loaded it. Reload before saving.`;
-    store.errors[located.path] = error;
-    return { ok: false, error };
-  }
-
-  file.doc.setIn([yamlKey, located.index], node(file.doc, item));
-  syncProseVariants(file.doc);
-  const text = file.doc.toString(STRINGIFY_OPTS);
+  // Keep the snapshot, generation, and Saving indicator synchronous. Existing
+  // callers can edit while the disk verification awaits IPC; that next edit
+  // must not be silently folded into an older save or marked clean.
+  const snapshot = JSON.parse(JSON.stringify(item)) as StoreItem;
   const savedGeneration = dirtyGeneration.get(located.path) ?? 0;
-
   store.saving.add(located.path);
-  let res: WriteResult;
   try {
-    res = await writeFile(located.path, text);
-  } catch (error) {
-    // Network/IPC failures can reject instead of returning { ok: false }.
-    // A rejected promise must not strand the Saving UI or hide unsaved edits.
-    res = { ok: false, error: error instanceof Error ? error.message : String(error) };
+    // Review is not a lock: the file may change between preview and confirmation.
+    // Fail closed before mutating the parsed document, not just before the write.
+    let disk: Awaited<ReturnType<typeof readFile>>;
+    try {
+      disk = await readFile(located.path);
+    } catch (cause) {
+      disk = { ok: false, error: cause instanceof Error ? cause.message : String(cause) };
+    }
+    if (!disk.ok || disk.text === undefined || disk.text !== file.loadedText) {
+      const error = !disk.ok || disk.text === undefined
+        ? `Cannot verify '${located.path}' before saving: ${disk.error ?? 'read failed'}`
+        : `'${located.path}' changed on disk since the editor loaded it. Reload before saving.`;
+      store.errors[located.path] = error;
+      return { ok: false, error };
+    }
+
+    file.doc.setIn([yamlKey, located.index], node(file.doc, snapshot));
+    syncProseVariants(file.doc);
+    const text = file.doc.toString(STRINGIFY_OPTS);
+    let res: WriteResult;
+    try {
+      res = await writeFile(located.path, text);
+    } catch (error) {
+      // Network/IPC failures can reject instead of returning { ok: false }.
+      // A rejected promise must not strand the Saving UI or hide unsaved edits.
+      res = { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+
+    if (res.ok) {
+      file.loadedText = text;
+      // The transport wrote the snapshot, not edits made while it was waiting.
+      if ((dirtyGeneration.get(located.path) ?? 0) === savedGeneration) {
+        store.dirty.delete(located.path);
+      }
+      delete store.errors[located.path];
+    } else {
+      store.errors[located.path] = res.error ?? 'write failed';
+    }
+    return res;
   } finally {
     store.saving.delete(located.path);
   }
-
-  if (res.ok) {
-    file.loadedText = text;
-    // The transport wrote the snapshot, not edits made while it was waiting.
-    if ((dirtyGeneration.get(located.path) ?? 0) === savedGeneration) {
-      store.dirty.delete(located.path);
-    }
-    delete store.errors[located.path];
-  } else {
-    store.errors[located.path] = res.error ?? 'write failed';
-  }
-  return res;
 }
 
 export function saveEvent(id: string): Promise<WriteResult> {
