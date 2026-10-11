@@ -549,8 +549,8 @@ describe('manual pre-release tag evidence (#321)', () => {
     expect(workflow).toContain('permissions:\n  contents: read');
     expect(workflow).toContain('      contents: write\n      actions: read');
     expect(workflow).toContain('cancel-in-progress: false');
-    expect(workflow).toContain('EXPECTED_SHA: \${{ inputs.expected_sha }}');
-    expect(workflow).toContain('TAG_NAME: \${{ inputs.tag }}');
+    expect(workflow).toContain('EXPECTED_SHA: ${{ inputs.expected_sha }}');
+    expect(workflow).toContain('TAG_NAME: ${{ inputs.tag }}');
   });
 
   it('creates a single immutable tag only for green push-to-main evidence at HEAD', async () => {
