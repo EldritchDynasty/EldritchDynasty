@@ -120,8 +120,17 @@ export function browserPlatform(): Platform {
       if (!storage) return [];
       const saves: SaveSummary[] = [];
       try {
-        for (let i = 0; i < storage.length; i++) {
-          const key = storage.key(i);
+        // A failing key lookup is not proof that all the other save slots
+        // vanished. Preserve their entries even when one Storage.key(i)
+        // fails (reading a particular item is already isolated below).
+        const count = storage.length;
+        for (let i = 0; i < count; i++) {
+          let key: string | null;
+          try {
+            key = storage.key(i);
+          } catch {
+            continue;
+          }
           if (!key?.startsWith(PREFIX)) continue;
           const slot = key.slice(PREFIX.length);
           try {
