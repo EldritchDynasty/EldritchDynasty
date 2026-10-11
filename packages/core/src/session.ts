@@ -1242,6 +1242,18 @@ function circulatingTales(ctx: SimCtx): CirculatingTale[] {
   return out;
 }
 
+/** Select an authored house name only when the live world still uses that text.
+ * A player-facing record must preserve runtime renames, unknown house ids and
+ * stable house identity independently of the current reading preference. */
+function presentedHouseName(ctx: SimCtx, id: string): string {
+  const name = ctx.world.houses.get(id)?.name;
+  if (name === undefined) return id;
+  const authored = ctx.content.house(id);
+  return authored?.name === name
+    ? proseForContentField(ctx, 'houses', id, 'name', name)
+    : name;
+}
+
 export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): SessionView {
   const w = ctx.world;
   const guardian = w.people.guardian();
@@ -1453,17 +1465,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     tales: circulatingTales(ctx),
     marriagePromises: w.marriagePromises.map((p) => ({
       house: p.toHouse,
-      // Display wording is a live preference, not the stored promise or house identity.
-      // Only translate the canonical authored name: an altered runtime name must
-      // never be replaced by a counterpart fingerprinted against another name.
-      houseName: (() => {
-        const name = w.houses.get(p.toHouse)?.name;
-        if (name === undefined) return p.toHouse;
-        const authored = ctx.content.house(p.toHouse);
-        return authored?.name === name
-          ? proseForContentField(ctx, 'houses', p.toHouse, 'name', name)
-          : name;
-      })(),
+      houseName: presentedHouseName(ctx, p.toHouse),
       year: p.year,
       lot: p.lot,
       // A lot is a spellbook, an heirloom, or a page of somebody's chronicle.
@@ -1528,7 +1530,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       secret: l.secret,
       carrier: l.carrierName,
       house: l.house,
-      houseName: w.houses.get(l.house)?.name ?? l.house,
+      houseName: presentedHouseName(ctx, l.house),
       since: l.since,
       ...(l.told !== undefined ? { told: l.told } : {}),
     })),
