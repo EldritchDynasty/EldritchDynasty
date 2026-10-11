@@ -30,57 +30,6 @@ const SEEDS = Array.from({ length: 8 }, (_, i) => 2200 + i * 97);
 const EVERY = 50;
 const END = END_YEAR;
 
-/**
- * ── THE ONE THING THE WORLD IS CURRENTLY ALLOWED TO GET WRONG ─────────────
- *
- * `kill()`'s guardian branch closes only Daveed's half of his marriage, so
- * his widow keeps an open vow to a man who is now a guardian spirit. The
- * ordinary death path eight lines below it closes both sides, with a comment
- * explaining why. See `world-health.test.ts`, which pins the mechanism, and
- * `people/store.ts`, which carries the measurement.
- *
- * IT IS PINNED HERE RATHER THAN FIXED because the fix moves `npm run digest`
- * on 3 of 4 seeds — it changes how long the widow is invisible to the Match —
- * and that is a balance change wanting the harness and a BALANCE-LOG entry,
- * not a quiet correction on a test-suite branch.
- *
- * THE PIN IS TIGHT ON PURPOSE. It admits this exact complaint and no other,
- * and it fails if the count GROWS as well as if it goes to zero — an
- * allowance that only ever gets looser is how a known bug becomes the
- * specification. Measured at 2 checkpoints of 160 across these eight runs:
- * the vow opens when he dies (around 1070–1090) and something downstream
- * closes it within a century, which is why an end-of-run check sees nothing
- * and this one does.
- *
- * ── 2 → 3, AND WHAT WIDENED IT (issue #113) ──────────────────────────────
- *
- * Raised once, with the forensic the message above asks for. Issue #113 made
- * `drawAllele` take ONE number out of the stream where it used to take one or
- * two, which reshuffles every draw downstream of an allele without changing
- * any distribution (`allele-draw.test.ts` proves the frequencies are
- * identical). Mortality timing therefore moves by a year or two per run.
- *
- * Enumerated on both sides, the pinned hits are:
- *
- *   before   seed 2394 year 1092 · seed 2685 year 1092
- *   after    seed 2394 year 1092 · seed 2685 year 1092 · seed 2879 year 1092
- *
- * The same single instance — `p_2` holding an open vow to `p_1`, Daveed and
- * his widow — at the same checkpoint, in one more of the eight runs. The bug
- * did not spread: it has one mechanism, one couple, and one window per run,
- * and this number counts how many of those windows happen to contain the
- * year-1092 SAMPLE. It is a proxy for the bug, not a measure of it, and it
- * will tick again for any future change that moves when Daveed dies. If it
- * moves by one with the same detail string at the same checkpoint, that is
- * this, again; if a second couple or a second year appears, that is the bug
- * actually spreading and the pin has done its job.
- */
-const PINNED = {
-  rule: 'marriage',
-  matches: /has an open marriage to .* and .* does not agree/,
-  checkpoints: 3,
-};
-
 describe('a played world stays internally coherent', () => {
   /**
    * One pass, eight runs, every rule at every checkpoint. Reported as a
@@ -90,7 +39,6 @@ describe('a played world stays internally coherent', () => {
   it('across eight millennia, sampled every fifty years', () => {
     const tally = new Map<string, { n: number; first: string; when: number }>();
     let checkpoints = 0;
-    let pinned = 0;
 
     for (const seed of SEEDS) {
       const ctx = bootstrap(bundle, seed, 1042);
@@ -98,7 +46,6 @@ describe('a played world stays internally coherent', () => {
         runYears(ctx, Math.min(EVERY, END - year));
         checkpoints += 1;
         for (const v of worldViolations(ctx)) {
-          if (v.rule === PINNED.rule && PINNED.matches.test(v.detail)) { pinned += 1; continue; }
           const seen = tally.get(v.rule);
           if (seen) seen.n += 1;
           else tally.set(v.rule, { n: 1, first: v.detail, when: ctx.world.year });
@@ -115,22 +62,6 @@ describe('a played world stays internally coherent', () => {
     expect([...tally.keys()], `the world came apart across ${checkpoints} checkpoints:\n${report}`)
       .toEqual([]);
 
-    /**
-     * AND THE PIN IS EXACTLY AS TIGHT AS IT WAS. Both directions are
-     * failures with instructions, because both mean this comment is now
-     * lying about the game.
-     */
-    expect(
-      pinned,
-      pinned === 0
-        ? 'The guardian redirect no longer leaves his widow married to him — somebody fixed '
-          + 'it. Delete PINNED and the test in world-health.test.ts that pins the mechanism, '
-          + 'and record in docs/BALANCE-LOG.md what the fix did to the run: measured, it '
-          + 'moved the digest on 3 of 4 seeds.'
-        : `The half-closed vow now shows up at ${pinned} checkpoints, not ${PINNED.checkpoints}. `
-          + 'A pinned bug that is spreading is not pinned. Find what widened it before '
-          + 'updating this number.',
-    ).toBe(PINNED.checkpoints);
   });
 
   /**
