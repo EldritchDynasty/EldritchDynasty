@@ -72,7 +72,7 @@ describe('the Plain English editor review verdict (#945)', () => {
     const text = 'The archive was silent.';
     expect(proseVariantStatus({ text, interpolations: [] }, {
       of: proseOriginalHash(text),
-      plainenglish: '  \\t \\n',
+      plainenglish: '  \t \n',
     })).toEqual({ ok: false, text: 'Plain English is missing.' });
   });
 
