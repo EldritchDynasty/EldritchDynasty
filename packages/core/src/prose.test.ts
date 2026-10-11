@@ -6,7 +6,7 @@ import { ASSIZE_RESPONSES } from './assize.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { coreMessageAddress, msg } from './messages.js';
 import { marry, place } from './testing.js';
-import { outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome } from './prose.js';
+import { choiceLabelAddress, eventBodyAddress, eventTitleAddress, outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome, recordChronicleAddress, recordSubjectAddress } from './prose.js';
 import { loadBundle, loadContent } from '@ed/content';
 import { canonical } from './save.js';
 import {
@@ -960,5 +960,93 @@ describe('core message counterparts (#1010)', () => {
       answered++;
     }
     expect(answered).toBeGreaterThan(0);
+  });
+});
+
+
+/**
+ * Event prose identity is a contract between the authored #411 worklist and
+ * the runtime selectors. A well-formed variant at the wrong address silently
+ * falls back to Original forever; testing only one fixture cannot detect an
+ * address drift in another event or interaction shape.
+ *
+ * This covers the event fields with dedicated runtime address selectors.
+ * Other content collections and consumer call sites remain separate #410
+ * coverage work; the parent must not close on the strength of this test.
+ */
+describe('authored event address coverage (#410)', () => {
+  it('keeps all eligible runtime event addresses aligned with the shared worklist', () => {
+    const bundle = loadBundle();
+    const ctx = testWorld(bundle);
+    let checked = 0;
+
+    for (const event of bundle.events) {
+      const file = ctx.content.sourceOf(String(event.id));
+      // Generated/in-memory events cannot have authored prose variants.
+      if (file === undefined) continue;
+
+      const base = `content:${file}#events[id=${encodeURIComponent(String(event.id))}]`;
+      const originals = new Map(
+        contentProseEntries(file, { events: [event] }).map(({ address, text }) => [address, text]),
+      );
+      const check = (expected: string, actual: string | undefined, original: string | null | undefined) => {
+        // Worklist eligibility skips single-word names and non-prose strings.
+        // No runtime variant is expected for fields absent from that worklist.
+        if (!originals.has(expected)) return;
+        expect(actual, `${event.id}: ${expected}`).toBe(expected);
+        expect(original, `${event.id}: ${expected} Original`).toBe(originals.get(expected));
+        checked++;
+      };
+      check(`${base}.title`, eventTitleAddress(ctx, event), event.title);
+      check(`${base}.body`, eventBodyAddress(ctx, event), event.body);
+      check(`${base}.absentBody`, eventBodyAddress(ctx, event, true), event.absentBody);
+
+      if (event.record) {
+        check(`${base}.record.subject`, recordSubjectAddress(ctx, event), event.record.subject);
+        for (const option of ['record', 'embellish'] as const) {
+          check(
+            `${base}.record.options.${option}.chronicle`,
+            recordChronicleAddress(ctx, event, option),
+            event.record.options[option].chronicle,
+          );
+        }
+      }
+
+      const checkOutcome = (outcome: Outcome, path: string, choiceId?: string) => {
+        check(`${path}.text`, outcomeTextAddress(ctx, event, outcome, choiceId), outcome.text);
+        outcome.effects.forEach((effect, index) => {
+          if (effect.kind === 'chronicle') {
+            check(
+              `${path}.effects[${index}].text`,
+              outcomeChronicleEffectAddress(ctx, event, outcome, index, choiceId),
+              effect.text,
+            );
+          }
+        });
+      };
+
+      if (event.interaction.kind === 'narration') {
+        for (const outcome of event.interaction.outcomes) {
+          checkOutcome(
+            outcome,
+            `${base}.interaction.outcomes[id=${encodeURIComponent(outcome.id)}]`,
+          );
+        }
+      } else {
+        for (const choice of event.interaction.choices) {
+          const choicePath = `${base}.interaction.choices[id=${encodeURIComponent(choice.id)}]`;
+          check(`${choicePath}.label`, choiceLabelAddress(ctx, event, choice), choice.label);
+          for (const outcome of choice.outcomes) {
+            checkOutcome(
+              outcome,
+              `${choicePath}.outcomes[id=${encodeURIComponent(outcome.id)}]`,
+              choice.id,
+            );
+          }
+        }
+      }
+    }
+    // Do not let a broken content loader turn the coverage test into a vacuous pass.
+    expect(checked).toBeGreaterThan(250);
   });
 });
