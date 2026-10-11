@@ -55,7 +55,7 @@ describe('the volume', () => {
     try {
       const search = w.get('input[type="search"]').element as HTMLInputElement;
       const label = w.get('label[for="chronicle-book-search"]').element as HTMLLabelElement;
-      expect([...search.labels ?? []]).toContain(label);
+      expect(Array.from(search.labels ?? [])).toContain(label);
 
       await w.get('input[type="search"]').setValue('market');
       expect(w.find('[data-entry="chr_act"]').exists()).toBe(false);
