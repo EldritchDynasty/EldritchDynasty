@@ -53,7 +53,7 @@ import {
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, mentions, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, mentions, actions,
 } = game;
 
 /**
@@ -394,6 +394,7 @@ const yearAndBirths = computed(() => {
     :resumable="resumable"
     :library="library"
     :library-ready="libraryReady"
+    :library-read-error="libraryReadError"
     :text-scale="accessibility.textScale"
     :reading-font="accessibility.readingFont"
     :prose-mode="accessibility.proseMode"
