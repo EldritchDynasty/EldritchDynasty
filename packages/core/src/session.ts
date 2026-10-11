@@ -1405,7 +1405,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     // What the PLAYER called it, where there was a player to call it anything.
     // `houses.yaml` is what the world calls the house; `founding` is what the
     // family does, and the family's name for itself is the one on the page.
-    houseName: w.founding?.houseName ?? w.houses.get(w.playerHouse)?.name ?? w.playerHouse,
+    // The authored default is reader-facing prose; a signed/player-chosen
+    // founding name still wins and is never translated as content.
+    houseName: w.founding?.houseName ?? presentedHouseName(ctx, w.playerHouse),
     ...(ambitionView(ctx) ? { ambition: ambitionView(ctx)! } : {}),
     ambitionOptions: ambitionOptions(ctx),
     attributes: ctx.content.attributes.map((a) => ({
