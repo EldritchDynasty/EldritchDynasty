@@ -297,6 +297,10 @@ describe('the family tree as a planning board (#268)', () => {
         named: false,
         people: ['p001'],
       }],
+      chroniclePeople: [
+        { id: 'p001', name: 'Member 001' },
+        { id: 'somebody-no-longer-living', name: 'Former member' },
+      ],
     } as unknown as SessionView;
 
     const wrapper = mount(Chronicle, {
@@ -316,6 +320,7 @@ describe('the family tree as a planning board (#268)', () => {
     const person = people[0]!;
     expect(person.text()).toBe('Member 001');
     expect(wrapper.find('[data-person="somebody-no-longer-living"]').exists()).toBe(false);
+    expect(wrapper.get('[data-person-history="somebody-no-longer-living"]').text()).toContain('Former member');
     expect(wrapper.get('[data-entry="entry-blank"]').find('[data-person]').exists()).toBe(false);
 
     await person.trigger('click');
