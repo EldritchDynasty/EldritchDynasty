@@ -126,11 +126,12 @@ export function browserPlatform(): Platform {
           const slot = key.slice(PREFIX.length);
           try {
             const text = storage.getItem(key);
-            if (!text) continue;
-            saves.push(summary(slot, JSON.parse(text)));
+            saves.push(text ? summary(slot, JSON.parse(text)) : { slot });
           } catch {
-            // An unreadable slot must not conceal the other, healthy runs.
-            // The player can still resume them; readSave handles the bad slot.
+            // An unreadable run is still a saved slot. Show its name rather
+            // than silently hiding the entry; readSave rejects invalid JSON
+            // without taking any of the other, healthy runs away.
+            saves.push({ slot });
           }
         }
       } catch {
