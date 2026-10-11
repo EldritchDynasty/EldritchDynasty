@@ -286,6 +286,22 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   const item = items?.find((x) => identityOf(collectionKey, x) === id);
   if (!item) return { ok: false, error: `'${id}' is not in the live model` };
 
+  // Review is not a lock: the file may change between preview and confirmation.
+  // Fail closed before mutating the parsed document, not just before the write.
+  let disk: Awaited<ReturnType<typeof readFile>>;
+  try {
+    disk = await readFile(located.path);
+  } catch (cause) {
+    disk = { ok: false, error: cause instanceof Error ? cause.message : String(cause) };
+  }
+  if (!disk.ok || disk.text === undefined || disk.text !== file.loadedText) {
+    const error = !disk.ok || disk.text === undefined
+      ? `Cannot verify '${located.path}' before saving: ${disk.error ?? 'read failed'}`
+      : `'${located.path}' changed on disk since the editor loaded it. Reload before saving.`;
+    store.errors[located.path] = error;
+    return { ok: false, error };
+  }
+
   file.doc.setIn([yamlKey, located.index], node(file.doc, item));
   syncProseVariants(file.doc);
   const text = file.doc.toString(STRINGIFY_OPTS);
