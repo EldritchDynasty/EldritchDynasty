@@ -489,6 +489,59 @@ describe('the platform seam', () => {
     }
   });
 
+  it('keeps healthy browser saves when one enumeration key lookup fails (#1223)', async () => {
+    // A hostile Storage.key() should not suppress the other saved runs or
+    // hide malformed records that the front door can still offer to delete.
+    const records = new Map<string, string>([
+      ['ed:save:older', JSON.stringify({ year: 1142, savedAt: '2026-10-08T00:00:00.000Z', format: 28 })],
+      ['ed:save:inaccessible', JSON.stringify({ year: 1192 })],
+      ['ed:save:damaged', '{broken-json'],
+      ['other-app:key', 'not ours'],
+      ['ed:save:newer', JSON.stringify({ year: 1242, savedAt: '2026-10-09T00:00:00.000Z', format: 28 })],
+    ]);
+    const keys = [...records.keys()];
+    const getItem = vi.fn((key: string) => records.get(key) ?? null);
+    const setItem = vi.fn();
+    const removeItem = vi.fn();
+    const storage = {
+      get length() { return keys.length; },
+      key(index: number) {
+        if (index === 1) throw new Error('one key is inaccessible');
+        return keys[index] ?? null;
+      },
+      getItem,
+      setItem,
+      removeItem,
+      clear: vi.fn(),
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { localStorage: storage } });
+    try {
+      const platform = browserPlatform();
+      await expect(platform.listSaves()).resolves.toEqual([
+        { slot: 'newer', year: 1242, savedAt: '2026-10-09T00:00:00.000Z', format: 28 },
+        { slot: 'older', year: 1142, savedAt: '2026-10-08T00:00:00.000Z', format: 28 },
+        { slot: 'damaged' },
+      ]);
+      expect(getItem.mock.calls.map(([key]) => key)).toEqual([
+        'ed:save:older', 'ed:save:damaged', 'ed:save:newer',
+      ]);
+      expect(setItem).not.toHaveBeenCalled();
+      expect(removeItem).not.toHaveBeenCalled();
+
+      // Failure to access localStorage itself is different: no enumeration
+      // can begin, so the platform safely reports no available save slots.
+      Object.defineProperty(globalThis, 'window', {
+        configurable: true,
+        value: { get localStorage(): Storage { throw new Error('storage denied'); } },
+      });
+      await expect(platform.listSaves()).resolves.toEqual([]);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('keeps browser JSON save downloads alive until their URL can safely be revoked (#1012)', async () => {
     const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
     const previousURL = Object.getOwnPropertyDescriptor(globalThis, 'URL');
