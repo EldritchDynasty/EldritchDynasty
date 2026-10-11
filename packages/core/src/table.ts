@@ -7,7 +7,7 @@ import { beginStudy, canStudySpellbook, heldBooks, spellbookDef } from './people
 import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type PedigreeGrade } from './people/papers.js';
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
 import { DEBT_FLOOR } from './economy.js';
-import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, commissionBook } from './auction.js';
+import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, bidAtAuction, commissionBook, lotName, sellerName, tradeableHeirlooms, withdrawBid } from './auction.js';
 import { evalCondition } from './events/conditions.js';
 import { queueChoice } from './events/decisions.js';
 import { candidatesFor, resolveSlots, type SlotResolution } from './events/slots.js';
@@ -21,7 +21,7 @@ import {
 } from './land.js';
 import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
-import { proseForClause, proseForContentField, proseForEventTitle } from './prose.js';
+import { proseForClause, proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 import { msg } from './messages.js';
 
 /**
@@ -78,6 +78,14 @@ export type TableOrder =
   | { kind: 'career'; person: string; career: string }
   /** How high the house will go at the next auction, in crowns. */
   | { kind: 'bid'; ceiling: number }
+  /**
+   * THE HOUSE'S OWN BID ON ONE LOT (issue #1183) — coin, or an heirloom traded
+   * for it, and `null` to withdraw. It outranks the ceiling and the steward
+   * for that lot. §14's marriage promise and favours are not offered here
+   * until something collects a promise and something grants a favour (#1184):
+   * a pledge nothing ever calls in would be the cheapest bid in the game.
+   */
+  | { kind: 'lotBid'; lot: string; bid: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string } | null }
   /** Pay a broker to bring a missing common affinity book to a sale in twelve years. */
   | { kind: 'seekBook'; book: string }
   /**
@@ -652,6 +660,13 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       return { ok: true };
     }
 
+    case 'lotBid': {
+      if (o.bid === null) return withdrawBid(ctx, o.lot);
+      return o.bid.currency === 'coin'
+        ? bidAtAuction(ctx, o.lot, 'coin', o.bid.amount)
+        : bidAtAuction(ctx, o.lot, 'heirloom', 0, o.bid.heirloom);
+    }
+
     case 'seekBook':
       return commissionBook(ctx, o.book);
 
@@ -772,6 +787,18 @@ function ours(ctx: SimCtx, id: string): Person | undefined {
   return w.people.household(w.playerHouse, w.year).some((q) => q.id === p.id) ? p : undefined;
 }
 
+/** One announced lot, as the Table draws it (issue #1183). */
+export interface TableLot {
+  id: string;
+  kind: 'spellbook' | 'heirloom' | 'chronicle_page';
+  name: string;
+  seller: string;
+  saleYear: Year;
+  reserve: number;
+  /** The house's own standing bid on this lot, if it has placed one. */
+  bid?: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string; name: string };
+}
+
 /** What the table can currently be told to do. A client draws this. */
 export interface TableView {
   treasury: number;
@@ -787,7 +814,19 @@ export interface TableView {
    * from the only screen that needed it. Absent where nothing is coming, which
    * is most years and is itself the answer to "should I be holding money".
    */
-  auction?: { year: Year; lots: number; lowestReserve: number };
+  auction?: {
+    year: Year; lots: number; lowestReserve: number;
+    /**
+     * EVERY LOT, NAMED (issue #1183). The panel used to say how many lots and
+     * the cheapest reserve, and nothing about what they were — so the player
+     * set one ceiling for a sale without knowing whether it held a book or a
+     * page that proves one of their own lies. A page is named as a page and
+     * never by its Discrepancy; no rival's ceiling is shown.
+     */
+    items: TableLot[];
+    /** Heirlooms the house could trade for a lot: held, not spent, not a Burden. */
+    heirlooms: { id: string; name: string }[];
+  };
   /** The standing order on marriage (issue #41). See the `marriages` order. */
   marriagePolicy: 'in' | 'out' | 'as_it_falls';
   /**
@@ -996,6 +1035,21 @@ export function tableView(ctx: SimCtx): TableView {
           year,
           lots: atYear.length,
           lowestReserve: Math.min(...atYear.map((l) => l.reserveCoin)),
+          items: [...coming]
+            .sort((a, b) => a.saleYear - b.saleYear || a.id.localeCompare(b.id))
+            .map((l): TableLot => {
+              const item: TableLot = {
+                id: l.id, kind: l.kind, name: lotName(ctx, l), seller: sellerName(ctx, l.house),
+                saleYear: l.saleYear, reserve: l.reserveCoin,
+              };
+              const b = l.playerBid;
+              if (b?.currency === 'coin') item.bid = { currency: 'coin', amount: b.amount };
+              else if (b?.currency === 'heirloom' && b.heirloomOffered !== undefined) {
+                item.bid = { currency: 'heirloom', heirloom: b.heirloomOffered, name: proseForPromiseLot(ctx, b.heirloomOffered) };
+              }
+              return item;
+            }),
+          heirlooms: tradeableHeirlooms(ctx).map((id) => ({ id, name: proseForPromiseLot(ctx, id) })),
         },
       };
     })(),
