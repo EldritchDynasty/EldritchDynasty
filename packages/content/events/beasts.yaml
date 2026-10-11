@@ -498,3 +498,95 @@ events:
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
                 - { kind: treasury, delta: -6 }
+
+# Plain English alternatives for the horse, mill-cat and dovecote scenes (#1094).
+# Reviewed against the Original; mechanics and original words are unchanged.
+proseVariants:
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].title"
+    of: 81e9ffa82e976f44
+    plainenglish: >-
+      The Horse Refuses the Gate
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].body"
+    of: 187ddaaef38ee4ea
+    plainenglish: >-
+      An eight-crown riding horse has passed through the gatehouse four hundred times. For the past
+      tenday, it has refused to go through with {RIDER} riding it. It passes without trouble when the
+      groom rides it. The groom has no explanation. He says the horse is otherwise healthy and eating
+      well.
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=sell_the_horse].label"
+    of: 2b844b0d5c0dec99
+    plainenglish: >-
+      Sell the horse at Bramme. It is no use if it will not pass through the gate.
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=sell_the_horse].outcomes[id=sold].text"
+    of: df0bf055cf331ed1
+    plainenglish: >-
+      A buyer at Bramme pays seven crowns, then rides the horse straight through the town gate without
+      difficulty. The house now has a smaller problem, four fewer crowns and one less worry. The horse
+      serves its new owner well for eleven years.
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=give_him_to_the_groom].label"
+    of: ccff6d53174bb7b7
+    plainenglish: >-
+      Keep the horse for the groom to ride. Buy another horse for the house.
+  - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=give_him_to_the_groom].outcomes[id=kept].text"
+    of: 9d84dffce06a8ab8
+    plainenglish: >-
+      The family spends eight crowns on a second horse and keeps the first one. It is an expensive
+      choice, made partly out of affection. The groom now rides a better horse than his master. Nobody
+      tries to take the first horse through the gate with {RIDER} riding it again. Nobody asks the groom
+      to try, and no one talks about it in the yard.
+  - address: "content:events/beasts.yaml#events[id=the_mill_cat].title"
+    of: be11378d6125ba71
+    plainenglish: >-
+      Why Every Mill Cat Has the Same Name
+  - address: "content:events/beasts.yaml#events[id=the_mill_cat].body"
+    of: 695d0a398bcb3c6d
+    plainenglish: >-
+      Cats live in halls, mills and churches. They are not pets and are not usually named. Mill cats are
+      different: every parish gives its mill cat the same name, and nobody knows why. The mill cat at
+      Wick has died at about fourteen years old. The miller has already brought in another cat and given
+      it the same name. He would not understand why anyone would question it.
+  - address: "content:events/beasts.yaml#events[id=the_mill_cat].interaction.outcomes[id=another_one].text"
+    of: 075ff46e25617ee2
+    plainenglish: >-
+      Within a tenday, the new cat is working in the mill under the same name and doing the same job as
+      the last one. Nobody in the parish gives the custom much thought. Yet the name has remained
+      unchanged longer than anything else at Wick.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].title"
+    of: 54a88cc1bffecf35
+    plainenglish: >-
+      The Dovecote Is Losing Birds
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].body"
+    of: 4a1f9611e0a2452d
+    plainenglish: >-
+      About nine doves disappear from the dovecote every tenday, more than a local hawk normally takes.
+      They vanish when nobody is watching. The falconer at Cawdry thinks it might be a goshawk, although
+      no one has seen one. The yard man thinks a person is more likely to be taking the birds, but
+      accusing a neighbour requires evidence. The doves are food worth four crowns each season.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].interaction.choices[id=sit_up_and_watch].label"
+    of: 38b84f31717de3bd
+    plainenglish: >-
+      Stay up for four nights and find out what is taking the doves.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].interaction.choices[id=sit_up_and_watch].outcomes[id=it_is_a_goshawk].text"
+    of: d4615997d6983fe3
+    plainenglish: >-
+      On the fourth morning, they see a magnificent goshawk twice. It is only hunting as goshawks do.
+      The falconer at Cawdry would pay six crowns for the bird, but he cannot catch it. The goshawk
+      leaves in Slaughter. The dovecote is safe for the next nine years.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].interaction.choices[id=sit_up_and_watch].outcomes[id=it_is_a_person].text"
+    of: cc336dc18d4ccafd
+    plainenglish: >-
+      On the third night, they catch a cottager's boy of about eleven carrying a bag. He is terrified.
+      He has been using the stolen birds to feed four people since Highsun. What happens next is low
+      justice, which belongs to the house. Everyone in the yard watches to see what kind of household
+      this is.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].interaction.choices[id=net_the_cote].label"
+    of: a204d0840ce21b78
+    plainenglish: >-
+      Put netting over the dovecote and stop investigating.
+  - address: "content:events/beasts.yaml#events[id=the_dovecote_and_the_hawk].interaction.choices[id=net_the_cote].outcomes[id=netted].text"
+    of: e1f42378b45fdcd4
+    plainenglish: >-
+      The house spends two crowns on netting over the flight holes, and the birds stop disappearing that
+      same tenday. Everyone in the yard understands what was taking them. Nobody is named or punished.
+      Four people at the bottom of the lane have less food from then on, and the house never learns who
+      they are.
