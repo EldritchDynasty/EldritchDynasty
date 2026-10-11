@@ -493,3 +493,43 @@ events:
           effects:
             - { kind: treasury, delta: -14 }
             - { kind: rumour, op: seed, id: rumour_the_drover_who_did_not_come, accuracy: 0.35 }
+
+proseVariants:
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].title"
+    of: 2775d074752505e0
+    plainenglish: >-
+      Four Barrels of Sour Beer
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].body"
+    of: 7801c8f9cb42d03d
+    plainenglish: >-
+      Everyone in the house, including the children, drinks small beer because the water has
+      been unsafe since the founding. Four barrels have gone sour in ten days. The brewer blames
+      the weather; the cook blames the brewer. Buying beer from the alewife at Wick costs four
+      times as much as brewing it here. The other option is to drink water for two weeks and see
+      who was right.
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].interaction.choices[id=buy_from_the_alewife].label"
+    of: dfad2ed6c6390f5a
+    plainenglish: >-
+      Buy beer from Wick until the next batch is ready.
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].interaction.choices[id=buy_from_the_alewife].outcomes[id=bought_in].text"
+    of: f97e956a7cd2161e
+    plainenglish: >-
+      The house spends nine crowns on two weeks of beer from an alewife who has never supplied
+      the hall before. She now knows how much beer the household drinks. The next batch brews
+      successfully, but nobody discovers whether the weather or the brewer caused the problem.
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].interaction.choices[id=drink_the_water].label"
+    of: 7b59d0ba79f46fd6
+    plainenglish: >-
+      Drink the water for the next two weeks.
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].interaction.choices[id=drink_the_water].outcomes[id=the_flux].text"
+    of: 8be326f17b3f1b95
+    plainenglish: >-
+      After eleven days, four people in the household develop the flux, including two children.
+      The household accepts that the brewer was right, although he takes no pleasure in it. The
+      illness passes, but the house loses two weeks of useful work.
+  - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].interaction.choices[id=drink_the_water].outcomes[id=nothing_happens].text"
+    of: b760f1fa219f88d6
+    plainenglish: >-
+      No one falls ill. The well water was safer than anyone expected, and the fortnight was
+      dry. The house saves nine crowns, but wrongly concludes that drinking the water is a good
+      idea. About forty years later, it will act on that mistaken lesson.
