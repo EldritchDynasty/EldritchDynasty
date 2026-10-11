@@ -77,3 +77,41 @@ careers:
       Sarrow, eleven days east, and a berth bought rather than earned. The
       income is the widest swing on this list in both directions and the
       mortality is real, and both of those are the same fact about weather.
+
+proseVariants:
+  - address: "content:careers.yaml#careers[id=military].blurb"
+    of: "557a23b35d8c52af"
+    plainenglish: >-
+      The house buys a military post rather than earning it. This raises the family's standing, but the person holding the post risks dying in service.
+  - address: "content:careers.yaml#careers[id=clergy].blurb"
+    of: "5d2cdd3998e3767d"
+    plainenglish: >-
+      Joining the clergy removes the person from succession. It also gives the house more protection from scrutiny when it behaves strangely in private.
+  - address: "content:careers.yaml#careers[id=court].blurb"
+    of: "250958e9f6b15105"
+    plainenglish: >-
+      A court post puts the person close to people with power. Over time, it brings the family better marriage offers.
+  - address: "content:careers.yaml#careers[id=merchant].blurb"
+    of: "369cceba434a3f2e"
+    plainenglish: >-
+      Trading brings money into the treasury but does not raise the family's standing.
+  - address: "content:careers.yaml#careers[id=scholar].blurb"
+    of: "65013f9be913607f"
+    plainenglish: >-
+      A scholar brings the house no income or standing, but can study spellbooks faster.
+  - address: "content:careers.yaml#careers[id=advocate].blurb"
+    of: "bebb251641d0b37a"
+    plainenglish: >-
+      An advocate's work is worth two marks a day. Learning to read Old Ambric takes four years. This knowledge helps when the family must answer an important question correctly.
+  - address: "content:careers.yaml#careers[id=factor].blurb"
+    of: "4445d0b436ddfb50"
+    plainenglish: >-
+      A factor is an agent for another counting house, usually a Braccish one, and is paid when deals are completed. Sending money across borders by letter of credit costs two per cent and takes a month. A family with its own man in that process keeps the two per cent and hears news a month sooner.
+  - address: "content:careers.yaml#careers[id=sea].name"
+    of: "4ab4b893507f7d17"
+    plainenglish: >-
+      Work at Sea
+  - address: "content:careers.yaml#careers[id=sea].blurb"
+    of: "6d1805792f813c45"
+    plainenglish: >-
+      The house buys a berth in Sarrow, eleven days to the east. This career has the widest range of possible income, both high and low. There is also a real risk of death. Both the income and the danger depend on the weather.
