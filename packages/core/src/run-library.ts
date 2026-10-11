@@ -124,7 +124,7 @@ function laterReading(
         values: { PERSON, QUALITY: claimName(ctx, content, changed), VALUE: String(Math.round(changed.value * 10) / 10) },
       };
     case 'trait':
-      return { shape: changed.has ? 'trait_with' : 'trait_without', values: { PERSON, TRAIT: claimName(content, changed) } };
+      return { shape: changed.has ? 'trait_with' : 'trait_without', values: { PERSON, TRAIT: claimName(ctx, content, changed) } };
     case 'death':
       return { shape: 'death', values: { PERSON, YEAR: String(changed.year) } };
     default:
