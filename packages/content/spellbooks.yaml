@@ -248,3 +248,107 @@ spellbooks:
       Named for the woman of this house who first gets the tide tables of the
       Lag right, and useless to anybody who has not stood in that water. Every
       hand after hers is a correction to a correction.
+
+# Plain English counterparts for spellbook blurbs; Originals above stay unchanged.
+proseVariants:
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_fluid].blurb"
+    of: f20cb591340c455d
+    plainenglish: >-
+      A basic shipwright's guide. It teaches how to calm water that resists being calmed.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_thermal].blurb"
+    of: 265d37a4a87ed5d8
+    plainenglish: >-
+      Explains how to keep a hearth burning during a siege, or put one out from across a room.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_aero].blurb"
+    of: 2de22674f5a6a600
+    plainenglish: >-
+      Written for sailors, but more useful to archers.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_terra].blurb"
+    of: c26709dd13eb57a1
+    plainenglish: >-
+      Explains how to build foundations that do not settle and how to find buried things before
+      digging.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_life].blurb"
+    of: e7e4eeccb1c055a0
+    plainenglish: >-
+      A midwife's notes, copied so often that errors have appeared in the copies.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_death].blurb"
+    of: 0dbe8130cc05fe5c
+    plainenglish: >-
+      Explains how to persuade a body that less time has passed, so it lasts a while longer.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_light].blurb"
+    of: 535fc8de3e6345ba
+    plainenglish: >-
+      The Church produced hundreds of copies and burns any it finds outside its own libraries.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_darkness].blurb"
+    of: 48c8bf9562e4f381
+    plainenglish: >-
+      The binding has no identifying marks on purpose. Owners do not want anyone to recognise it
+      on a shelf.
+  - address: "content:spellbooks.yaml#spellbooks[id=the_marrow_codex].blurb"
+    of: 94cad0aa53b99dae
+    plainenglish: >-
+      House Marrow wrote this book. Copies cost a great deal and were made without their
+      permission. They always try to buy it back and bid on it first.
+  - address: "content:spellbooks.yaml#spellbooks[id=the_ilm_lightbook].blurb"
+    of: 9536893d046c4939
+    plainenglish: >-
+      A scholarly book about light, with footnotes added by three generations. The Church bids
+      on it and burns every copy it wins.
+  - address: "content:spellbooks.yaml#spellbooks[id=the_first_working].blurb"
+    of: 2d7e7762cf0018e6
+    plainenglish: >-
+      Named for the first woman in this house to write it down correctly. Everyone after her
+      only adds a footnote.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_fluid].blurb"
+    of: db5892d7c3293e33
+    plainenglish: >-
+      A man wrote this after draining forty miles of the Lag for a Warden who never paid him.
+      Half the book complains about this, but all of its instructions are correct.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_thermal].blurb"
+    of: d6c982bc3c9bbcb8
+    plainenglish: >-
+      A book about sieges. Three chapters explain how to keep people alive through winter. The
+      Church twice asked to inspect the final chapter, but was refused.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_aero].blurb"
+    of: a10231698154417d
+    plainenglish: >-
+      A Sarrow pilot wrote this book about ships and weather. He never says he changed the
+      weather, but his sailing times suggest he did.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_terra].blurb"
+    of: 6d2340a226c842c6
+    plainenglish: >-
+      A book about quarry work from Hesk, in a dialect two of the Colleges refuse to examine in.
+      About nine pages of it underpin every roof in the province.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_life].blurb"
+    of: b4f6416605294a1a
+    plainenglish: >-
+      A house buys this book during a plague and keeps reading it for two hundred years. Women
+      can study it, which is why clean copies are rare.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_death].blurb"
+    of: da02b669a088e6dd
+    plainenglish: >-
+      It is legal to own and study this book, but being seen carrying it during a Crusade can
+      ruin you. House Marrow bids on every copy, sometimes for reasons other than reading.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_light].blurb"
+    of: a52d9d05734fb091
+    plainenglish: >-
+      This book is safe to own in every Age. That makes up its whole reputation and about half
+      its value. In four hundred years the Church has never objected to any page of it.
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_darkness].blurb"
+    of: 4706fbaa68549f56
+    plainenglish: >-
+      Nothing in this book is a crime, but all of it could lead to accusations. Houses buy it
+      through an agent and hide it behind other books.
+  - address: "content:spellbooks.yaml#spellbooks[id=the_braccish_weight_book].blurb"
+    of: f9c9d6b6a198111a
+    plainenglish: >-
+      A book of workings written by Bracc's counting houses. It covers something Bracc has never
+      allowed outsiders to judge. Its wooden covers have outlasted two of the families that
+      owned it.
+  - address: "content:spellbooks.yaml#spellbooks[id=the_drowned_calendar].blurb"
+    of: 3766cea487b08fb8
+    plainenglish: >-
+      Named for the first woman in this house to calculate the Lag's tides correctly. It is no
+      use to someone who has never stood in that water. Later writers only correct earlier
+      corrections.
