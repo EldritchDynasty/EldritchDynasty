@@ -1053,10 +1053,10 @@ export function createGame(
       // namespace must not leak into the normal "Runs written down" list.
       saves.value = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
     } catch (error) {
-      // Background discovery cannot fail the game. Explicit listings must
-      // preserve previously loaded names and let the front door show Retry.
+      // A failed background read says nothing about the saves already found.
+      // Keep those known runs visible; explicit reads still reject so Start
+      // can offer Retry rather than reporting an empty library of saves.
       if (throwOnFailure) throw error;
-      saves.value = [];
     }
   }
 
