@@ -391,7 +391,7 @@ const WORTH_WRITING: Record<ReleaseReason, boolean> = {
 
 /**
  * End one contract through the same secret-release path, whatever caused it.
- * Dismissal closes household membership only AFTER `walkSecrets` has measured
+ * Every ending closes retainer membership only AFTER `walkSecrets` has measured
  * years of service from that still-open record.
  */
 function endService(
@@ -400,7 +400,6 @@ function endService(
   text: string,
   reason: ReleaseReason,
   rng: Rng,
-  closeMembership = false,
 ): ServiceEnded | undefined {
   const contract = p.contract;
   if (!contract) return undefined;
@@ -414,21 +413,21 @@ function endService(
   }
   walkSecrets(ctx, p, contract, reason, rng);
 
-  if (closeMembership) {
-    const open = p.membership.find((m) =>
-      m.kind === 'retainer'
-        && m.house === w.playerHouse
-        && m.from <= w.year
-        && (m.to === undefined || m.to > w.year),
-    );
-    if (open) open.to = w.year;
-  }
+  // Only the retainer affiliation ends with employment: someone of the blood
+  // or married into the house must not lose their independent household tie.
+  const open = p.membership.find((m) =>
+    m.kind === 'retainer'
+      && m.house === w.playerHouse
+      && m.from <= w.year
+      && (m.to === undefined || m.to > w.year),
+  );
+  if (open) open.to = w.year;
   return ended;
 }
 
 /** A founding choice can dismiss one named retainer immediately. */
 export function dismissRetainer(ctx: SimCtx, p: Person, rng: Rng): ServiceEnded | undefined {
-  return endService(ctx, p, msg(ctx, 'service.dismissed', '{PERSON} was dismissed from the house.', { PERSON: p.name }), 'dismissed', rng, true);
+  return endService(ctx, p, msg(ctx, 'service.dismissed', '{PERSON} was dismissed from the house.', { PERSON: p.name }), 'dismissed', rng);
 }
 
 export function releaseContracts(ctx: SimCtx, rng: Rng): ServiceEnded[] {
