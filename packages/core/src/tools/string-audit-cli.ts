@@ -21,10 +21,9 @@ export interface PendingPlainEnglishWorkItem extends PlainEnglishWorkItem {
 /**
  * What still needs author attention in #415.
  *
- * A current content counterpart disappears from the worklist. A missing one is
- * work, and a stale one becomes work again when Original changes. Core prose
- * has stable work-item addresses but no runtime variant store yet, so it stays
- * explicitly missing until that separate seam exists.
+ * A current content or keyed core msg() counterpart disappears from the worklist.
+ * A missing one is work, and a stale one becomes work again when Original changes.
+ * Legacy core literal[N] items remain owed until they gain a runtime message key.
  */
 export function pendingPlainEnglishWorklist(
   items: readonly PlainEnglishWorkItem[],
@@ -35,7 +34,7 @@ export function pendingPlainEnglishWorklist(
 
   for (const item of items) {
     const expectedOf = proseOriginalHash(item.text);
-    if (item.source === 'core') {
+    if (item.source === 'core' && !item.address.startsWith('core:messages#')) {
       pending.push({ ...item, variantStatus: 'missing', expectedOf });
       continue;
     }
