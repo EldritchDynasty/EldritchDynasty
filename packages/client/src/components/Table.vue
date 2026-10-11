@@ -164,6 +164,9 @@ function idle(panel: string, hasWork: boolean): boolean {
 
 /** Can the house pay for a term, a place, a paper? Drawn, not only enforced. */
 const broke = computed(() => props.table.treasury <= 0);
+/** Endowment/recall is actionable even in a year when no parcel is for sale. */
+const landHasWork = computed(() => props.land.market.length > 0
+  || props.land.held.some((p) => !!p.holder || (!p.caput && props.land.branches.length > 0)));
 
 /** The standing order on marriage, in the house's own words. */
 const MARRIAGE_ORDERS = [
@@ -352,7 +355,7 @@ const MARRIAGE_ORDERS = [
          have. On the same screen as the shelf and the tutor's fee, under the
          same treasury above — a land panel with its own budget would have
          failed the whole point of building this. -->
-    <div class="panel" :class="{ idle: idle('land', land.market.length > 0) }">
+    <div class="panel" :class="{ idle: idle('land', landHasWork) }">
       <h3 class="label row">
         <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">The land</button>
         <button class="quiet small plat-link" @click="emit('open-plat')">See the plat</button>
