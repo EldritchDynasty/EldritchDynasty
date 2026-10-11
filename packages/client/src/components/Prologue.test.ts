@@ -332,9 +332,9 @@ describe('Age opening replay on a reused Chapter dialog (#410)', () => {
 
 
 /**
- * Chapter and Interlude own independent global keyboard listeners; the shared
- * useModal fix for composition does not protect either one. Keep these mounted
- * regressions in an existing measured suite, not a new fast-lane suite.
+ * Both Chapter and Interlude now delegate global Escape handling to useModal.
+ * This mounted regression proves the IME/repeat behavior survived the move,
+ * rather than trusting a source-level import alone.
  */
 describe('standalone dialog Escape while composing an IME candidate (#1290)', () => {
   function escapeKey(composing = false, legacyKeyCode?: number, repeat = false): KeyboardEvent {
@@ -403,6 +403,86 @@ describe('standalone dialog Escape while composing an IME candidate (#1290)', ()
       expect(dismiss).toHaveBeenCalledTimes(1);
     },
   );
+});
+
+
+/**
+ * Chapter's keyboard semantics are shared with every full-screen modal.
+ * Mount real cards to guard the wiring, not just the source import.
+ */
+describe('Chapter canonical modal keyboard and focus (#1325)', () => {
+  const opening = (text: string) => ({ kind: 'opening', opening: { text } } as ChapterBeat);
+
+  it('tabs to the actual usable control instead of disabled, hidden or negative-tabindex stops', () => {
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    const game = { dismissChapter: vi.fn() } as unknown as GameActions;
+    const wrapper = mount(Chapter, {
+      attachTo: document.body,
+      props: { beat: opening('The chapter begins.'), actions: game },
+    });
+
+    try {
+      const dialog = wrapper.get('[role="dialog"]').element;
+      dialog.insertAdjacentHTML('afterbegin', `
+        <a href="#outside" tabindex="-1">Not tabbable</a>
+        <select disabled><option>Disabled</option></select>
+        <textarea disabled>Disabled</textarea>
+        <button hidden>Hidden</button>
+        <span style="display:none"><button>CSS hidden</button></span>
+      `);
+      outside.focus();
+      const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      window.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(wrapper.get('button.quiet').element);
+
+    } finally {
+      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => cb(0));
+      wrapper.unmount();
+      vi.unstubAllGlobals();
+      outside.remove();
+    }
+  });
+
+  it('does not restore a dismissed chapter over a successor modal', async () => {
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    });
+    const actions = { dismissChapter: vi.fn() } as unknown as GameActions;
+    const first = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('First.'), actions },
+    });
+    const second = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('Second.'), actions },
+    });
+    let firstUnmounted = false;
+
+    try {
+      const successorFocus = document.activeElement;
+      expect(second.element.contains(successorFocus)).toBe(true);
+      first.unmount();
+      firstUnmounted = true;
+      expect(callbacks).toHaveLength(1);
+      callbacks.shift()!(0);
+      expect(document.activeElement).toBe(successorFocus);
+
+      await second.setProps({ beat: opening('Next beat, same dialog.') });
+      expect(document.activeElement).toBe(second.get('button.quiet').element);
+    } finally {
+      if (!firstUnmounted) first.unmount();
+      second.unmount();
+      while (callbacks.length) callbacks.shift()!(0);
+      vi.unstubAllGlobals();
+      outside.remove();
+    }
+  });
 });
 
 /**

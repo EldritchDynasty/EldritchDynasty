@@ -40,18 +40,13 @@ describe('what a keypress means', () => {
     }
   });
 
-  it('guards direct and shared Escape listeners without disabling Tab focus traps (#912, #1321)', () => {
+  it('guards shared Escape listeners without disabling Tab focus traps (#912, #1321, #1325)', () => {
     const chapter = readFileSync(join(import.meta.dirname, '../components/Chapter.vue'), 'utf8');
-    expect(chapter).toMatch(
-      /if \(e\.key === 'Escape'\) \{\s*e\.preventDefault\(\);(?:\s*\/\/[^\n]*)?\s*if \(e\.repeat\) return;/,
-    );
-    expect(chapter).toContain("if (e.key !== 'Tab') return;");
-
-    // Interlude now uses the canonical modal keyboard trap. Assert that the
-    // delegation exists AND that its handler retains repeat/IME protection and
-    // Tab trapping, rather than requiring a second copy in Interlude.vue.
+    // Chapter and Interlude must share the same policy rather than maintaining
+    // independent listeners that drift on IME, repeat and tabbable filtering.
     const interlude = readFileSync(join(import.meta.dirname, '../components/Interlude.vue'), 'utf8');
     const shared = readFileSync(join(import.meta.dirname, './modal.ts'), 'utf8');
+    expect(chapter).toMatch(/useModal\(card,\s*\(\)\s*=>/);
     expect(interlude).toMatch(/useModal\(card,\s*\(\)\s*=>/);
     expect(shared).toMatch(
       /if \(e\.key === 'Escape'\) \{[\s\S]*?e\.preventDefault\(\);[\s\S]*?if \(e\.repeat\) return;/,

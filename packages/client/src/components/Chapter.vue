@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
 import { chapterReplayDisposition } from '../lib/accessibility';
+import { useModal } from '../lib/modal';
 
 const props = withDefaults(defineProps<{
   beat: ChapterBeat;
@@ -28,49 +29,13 @@ const props = withDefaults(defineProps<{
  */
 const card = ref<HTMLElement | null>(null);
 const goOn = ref<HTMLButtonElement | null>(null);
-let cameFrom: HTMLElement | null = null;
+useModal(card, () => props.actions.dismissChapter());
 
 function readingStorage(): Storage | null {
   try {
     return typeof window === 'undefined' ? null : window.localStorage;
   } catch {
     return null;
-  }
-}
-
-function focusable(): HTMLElement[] {
-  if (!card.value) return [];
-  return [...card.value.querySelectorAll<HTMLElement>(
-    'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-  )];
-}
-
-function onKey(e: KeyboardEvent): void {
-  // An IME candidate's Escape is not a request to dismiss the Age dialog.
-  if (e.key === 'Escape' && (e.isComposing || e.keyCode === 229)) return;
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    // One held key must dismiss at most one overlay, even when another mounts.
-    if (e.repeat) return;
-    props.actions.dismissChapter();
-    return;
-  }
-  if (e.key !== 'Tab') return;
-
-  const inside = focusable();
-  if (!inside.length) {
-    e.preventDefault();
-    return;
-  }
-  const first = inside[0]!;
-  const last = inside[inside.length - 1]!;
-  const here = document.activeElement;
-  if (e.shiftKey && (here === first || !card.value?.contains(here))) {
-    e.preventDefault();
-    last.focus();
-  } else if (!e.shiftKey && (here === last || !card.value?.contains(here))) {
-    e.preventDefault();
-    first.focus();
   }
 }
 
@@ -91,18 +56,9 @@ function skipSeenOpening(beat: ChapterBeat): boolean {
 }
 
 onMounted(() => {
-  // Always install the trap: dismissChapter can advance to another beat
-  // without unmounting this dialog, even when this opening was already read.
-  // Returning before registration left that next beat without Escape/Tab.
-  window.addEventListener('keydown', onKey);
-  if (skipSeenOpening(props.beat)) {
-    props.actions.dismissChapter();
-    return;
-  }
-
-  const active = document.activeElement;
-  cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
-  goOn.value?.focus();
+  // The shared hook has already installed the keyboard trap, even if this
+  // opening is skipped and the same instance later shows the next beat.
+  if (skipSeenOpening(props.beat)) props.actions.dismissChapter();
 });
 
 // App keeps the same Chapter component mounted as the chapter queue shifts.
@@ -118,19 +74,6 @@ watch(() => props.beat, (beat) => {
   goOn.value?.focus();
 }, { flush: 'post' });
 
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKey);
-  const back = cameFrom;
-  requestAnimationFrame(() => {
-    if (back?.isConnected && !back.hasAttribute('disabled')) {
-      back.focus();
-      if (document.activeElement === back) return;
-    }
-    document.querySelector<HTMLElement>(
-      '.clock button:not([disabled]), .board button:not([disabled])',
-    )?.focus();
-  });
-});
 </script>
 
 <template>
