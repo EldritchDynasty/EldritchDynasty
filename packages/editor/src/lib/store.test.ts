@@ -91,6 +91,19 @@ function event(id: string) {
 }
 
 beforeEach(() => {
+  // Tests share the real parsed-document store. Reset the fake disk to each
+  // file's current successful-save baseline, not the original import snapshot:
+  // external-change tests intentionally diverge disk from loadedText.
+  for (const [collection, id] of [
+    ['events', EVENT],
+    ['arcs', 'arc_the_eight_days'],
+    ['characterTemplates', 'suitor_of_ilm'],
+  ] as const) {
+    const preview = pendingText(collection, id);
+    if (preview) h.disk.set(preview.path, preview.before);
+  }
+  const coreProse = pendingCoreProseText();
+  if (coreProse) h.disk.set(coreProse.path, coreProse.before);
   h.writes.length = 0;
   h.refuse.value = false;
   h.throwWrite.value = false;
@@ -524,10 +537,15 @@ describe('noticing that the file moved underneath us', () => {
   });
 
   it('says yes, and hands back the newer text, when something else wrote it', async () => {
-    h.disk.set(CRUSADE, `# touched by git\n${h.disk.get(CRUSADE)}`);
-    const res = await externalChange(CRUSADE);
-    expect(res.changed).toBe(true);
-    expect(res.text).toContain('# touched by git');
+    const originalDisk = h.disk.get(CRUSADE)!;
+    try {
+      h.disk.set(CRUSADE, `# touched by git\n${originalDisk}`);
+      const res = await externalChange(CRUSADE);
+      expect(res.changed).toBe(true);
+      expect(res.text).toContain('# touched by git');
+    } finally {
+      h.disk.set(CRUSADE, originalDisk);
+    }
   });
 
   it('goes quiet on a file it never loaded, rather than claiming a change', async () => {
