@@ -95,3 +95,27 @@ describe('the Plain English editor review verdict (#945)', () => {
     })).toEqual({ ok: true, text: 'No placeholders to preserve.' });
   });
 });
+
+describe('stable core prose editor wiring (#1011)', () => {
+  it('enumerates real msg() keys at Vite build-time, not in the browser runtime', () => {
+    const vite = readFileSync(join(COMPONENTS, '../../vite.config.ts'), 'utf8');
+    const editor = readFileSync(join(COMPONENTS, 'CoreProseEditor.vue'), 'utf8');
+    const app = readFileSync(join(COMPONENTS, '../App.vue'), 'utf8');
+    expect(vite).toContain('coreMessageEntries');
+    expect(vite).toContain("virtual:ed-core-prose");
+    expect(editor).toContain("import coreEntries from 'virtual:ed-core-prose'");
+    expect(editor).not.toContain("from 'typescript'");
+    expect(editor).not.toContain('coreMessageEntries(');
+    expect(app).toContain('<CoreProseEditor');
+  });
+
+  it('keeps the Original read-only and refuses to save invalid or reference-only drafts', () => {
+    const editor = readFileSync(join(COMPONENTS, 'CoreProseEditor.vue'), 'utf8');
+    expect(editor).toContain(':value="entry.text" readonly');
+    expect(editor).toContain('isWritableContentPath(FILE)');
+    expect(editor).toContain('badDrafts.value.length');
+    expect(editor).toContain('externalChange(FILE)');
+    expect(editor).toContain('saveCoreProseCatalogue');
+    expect(editor).toContain('DiffView');
+  });
+});
