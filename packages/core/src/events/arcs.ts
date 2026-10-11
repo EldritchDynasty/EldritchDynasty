@@ -9,10 +9,10 @@ import { minimumArcYears } from './arc-reach.js';
 
 export { minimumArcYears } from './arc-reach.js';
 
-/** The single-person half of a fill, which is all an arc binding can carry. */
-function soleBindings(fill: SlotFill): Record<string, string> {
+/** Only declared persistent slots survive a beat; each binding is one person. */
+function soleBindings(fill: SlotFill, slots: readonly string[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const sid of Object.keys(fill)) {
+  for (const sid of slots) {
     const who = soleCast(fill, sid);
     if (who) out[sid] = who;
   }
@@ -43,7 +43,7 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
      * rejects `bind: arc` on one outright rather than letting four of the five
      * fall out of the story between scenes.
      */
-    bindings: soleBindings(seedBindings),
+    bindings: soleBindings(seedBindings, arc.bindings),
     localFlags: {},
     startedYear: ctx.world.year,
     dueYear: arc.inline && entry ? scheduleNext(entry, ctx, rng) : ctx.world.year,
@@ -194,7 +194,9 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng): ArcStep[] {
     // `arcFlag`/`arcVisited` read this instance, as successors' `when` do.
     if (!evalCondition(event.conditions, ctx, { arc: inst })) { inst.dueYear = ctx.world.year + 5; continue; }
 
-    const res = resolveSlots(event, ctx, rng, inst.bindings);
+    // Old saves can contain the entire parent fill (#1285). Unkept slots
+    // must still recast from the current world instead of inheriting it.
+    const res = resolveSlots(event, ctx, rng, soleBindings(inst.bindings, arc.bindings));
     if (!res.ok) { inst.dueYear = ctx.world.year + 5; continue; }
 
     out.push({ instance: inst, node, fill: res.fill, playerCast: res.playerCast, absent });

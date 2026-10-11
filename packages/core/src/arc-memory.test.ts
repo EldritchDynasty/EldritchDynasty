@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
 import { evalCondition } from '@ed/core';
-import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, place, startArc, testRng, testWorld } from '@ed/core';
 import { executeOutcomeWitness } from './events/reach.js';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
@@ -12,6 +12,17 @@ import { executeOutcomeWitness } from './events/reach.js';
 const base = loadBundle();
 
 describe('inline follow-up entry delays (#1278)', () => {
+  it.each([false, true])('retains only declared persistent slots when inline is %s (#1285)', (inline) => {
+    const arc = { ...structuredClone(TWO_BEAT), inline, bindings: ['MENTOR'] };
+    const ctx = testWorld(bundleWith(arc, [node('first'), node('second')]));
+    const mentor = place(ctx, { sex: 'male', age: 40 });
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    const instance = startArc(ctx.content.mustArc(arc.id), ctx, testRng(), {
+      MENTOR: mentor.id, HEAD: head.id,
+    });
+    expect(instance?.bindings).toEqual({ MENTOR: mentor.id });
+  });
+
   it.each([
     { after: 'immediate' as const, min: 0, max: 0 },
     { after: 'next_generation' as const, min: 20, max: 31 },

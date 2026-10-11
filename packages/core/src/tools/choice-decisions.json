@@ -75,12 +75,6 @@
     },
     {
       "kind": "flag",
-      "key": "no_carpenter_at_wick",
-      "disposition": "read",
-      "reason": "Paying Bramme rates explicitly removes the parish trade and says the full arithmetic takes two generations to become visible. Preserve the flag for the later local-cost/trade consequence that makes that promise real."
-    },
-    {
-      "kind": "flag",
       "key": "on_the_caster_list",
       "disposition": "read",
       "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."

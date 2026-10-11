@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
+import { loadGame, saveGame } from '../save.js';
 import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
@@ -3321,6 +3322,93 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
     }
 
     expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+describe('Wick carpenter consequence witnesses (#1276, #334)', () => {
+  const rootId = 'the_carpenter_is_getting_old';
+  const billId = 'the_price_of_no_carpenter';
+
+  function buyOutsideTheParish() {
+    const ctx = fixture(127601);
+    const root = content.mustEvent(rootId);
+    const year = ctx.world.year;
+    const result = executeOutcomeWitnessRaw(ctx, root, {
+      choiceId: 'pay_bramme_rates', expectedOutcomeId: 'bramme_rates', rng: makeRng(127602),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get('no_carpenter_at_wick')).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((entry) =>
+      content.arc(entry.arc)?.nodes.some((node) => node.event === billId));
+    if (!instance) throw new Error('buying Bramme work did not schedule its later bill');
+    expect(instance.dueYear).toBeGreaterThanOrEqual(year + 40);
+    expect(instance.dueYear).toBeLessThanOrEqual(year + 50);
+    return { ctx, instance };
+  }
+
+  it.each([
+    { choice: 'pay_the_bill', outcome: 'paid', cost: 28, restored: false },
+    { choice: 'bring_a_carpenter_to_wick', outcome: 'settled', cost: 36, restored: true },
+  ])('executes $choice as the earned due step, with the current Head', ({ choice, outcome, cost, restored }) => {
+    const { ctx, instance } = buyOutsideTheParish();
+    const bill = content.mustEvent(billId);
+    expect(ambientPool(ctx).some((event) => event.id === bill.id)).toBe(false);
+    expect(dueArcSteps(ctx, makeRng(127603))).toHaveLength(0);
+    ctx.world.year = instance.dueYear! - 1;
+    expect(dueArcSteps(ctx, makeRng(127604))).toHaveLength(0);
+    ctx.world.year += 1;
+
+    const oldHead = ctx.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    ctx.world.people.kill(oldHead.id, ctx.world.year, 'test succession');
+    const successor = place(ctx, { sex: 'male', age: 27, castSlots: ['head'] });
+    const step = dueArcSteps(ctx, makeRng(127605)).find((entry) => entry.instance.id === instance.id);
+    if (!step) throw new Error('the carpenter bill never came due');
+    expect(step.fill.HEAD).toBe(successor.id);
+    const before = ctx.world.treasury;
+    const result = executeOutcomeWitness(ctx, bill, {
+      choiceId: choice, expectedOutcomeId: outcome, rng: makeRng(127606), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(before - cost);
+    expect(ctx.world.flags.get('no_carpenter_at_wick')).toBe(!restored);
+    expect(instance.status).toBe('ended');
+    expect(ctx.world.chronicle.some((entry) => entry.eventId === bill.id)).toBe(true);
+  });
+
+  it('withholds the bill when the parish no longer lacks a carpenter', () => {
+    const { ctx, instance } = buyOutsideTheParish();
+    const bill = content.mustEvent(billId);
+    ctx.world.year = instance.dueYear!;
+    ctx.world.flags.set('no_carpenter_at_wick', false);
+    expect(evalCondition(bill.conditions, ctx)).toBe(false);
+    expect(dueArcSteps(ctx, makeRng(127607))).toHaveLength(0);
+    ctx.world.flags.set('no_carpenter_at_wick', true);
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, makeRng(127608))[0]?.node.event).toBe(bill.id);
+  });
+
+  it('preserves the due date through a save and ignores an unkept legacy Head binding (#1285)', () => {
+    const { ctx, instance } = buyOutsideTheParish();
+    const oldHead = ctx.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    instance.bindings.HEAD = oldHead.id;
+    const loaded = loadGame(saveGame(ctx), content);
+    const restored = loaded.world.arcs.get(instance.id)!;
+    expect(restored.dueYear).toBe(instance.dueYear);
+    loaded.world.year = restored.dueYear!;
+    loaded.world.people.kill(oldHead.id, loaded.world.year, 'test succession');
+    const successor = place(loaded, { sex: 'male', age: 27, castSlots: ['head'] });
+    const step = dueArcSteps(loaded, makeRng(127611)).find((entry) => entry.instance.id === restored.id);
+    expect(step?.fill.HEAD).toBe(successor.id);
+  });
+
+  it.each(['apprenticed', 'the_boy_leaves'])('does not schedule the Bramme bill after $0', (outcome) => {
+    const ctx = fixture(127609);
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'apprentice_a_boy', expectedOutcomeId: outcome,
+      targetWeightedOutcome: true, rng: makeRng(127610),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.arcs.size).toBe(0);
   });
 });
 
