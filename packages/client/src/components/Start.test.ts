@@ -340,6 +340,41 @@ describe('saved-run action failures (#1149)', () => {
   });
 });
 
+describe('named-save failures belong to their row (#1342)', () => {
+  it('anchors load/export refusal to the affected slot and removes it after a successful retry', async () => {
+    const actions = spyActions([
+      { slot: 'chapter-1080', year: 1080 },
+      { slot: 'chapter-1090', year: 1090 },
+    ]);
+    vi.mocked(actions.load).mockRejectedValueOnce(new Error('host read refused'));
+    vi.mocked(actions.exportSave).mockRejectedValueOnce(new Error('download refused'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const rows = w.findAll('section.saved li');
+      expect(rows).toHaveLength(2);
+
+      await rows[1]!.find('button').trigger('click');
+      await flush();
+      expect(rows[1]!.get('.save-action-error[role="status"]').text()).toContain('could not be read');
+      expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+      expect(w.find('div.row > [role="status"]').exists()).toBe(false);
+
+      await rows[0]!.findAll('button')[1]!.trigger('click');
+      await flush();
+      expect(rows[0]!.get('.save-action-error[role="status"]').text()).toContain('could not be written out');
+      expect(rows[1]!.find('.save-action-error').exists()).toBe(false);
+
+      await rows[0]!.findAll('button')[1]!.trigger('click');
+      await flush();
+      expect(w.find('section.saved [role="status"]').exists()).toBe(false);
+      expect(actions.exportSave).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('save list host failures (#1137)', () => {
   it('explains a rejected listing and restores the actual saves when Retry succeeds', async () => {
     const actions = spyActions([{ slot: 'chapter-1-1080', year: 1080 }]);
