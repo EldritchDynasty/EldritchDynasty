@@ -88,7 +88,7 @@ events:
       kind: choice
       choices:
         - id: wheat_for_the_hall
-          label: Wheat for everybody, or rye for everybody. Not both.
+          label: Wheat for everybody. One bread on every table.
           outcomes:
             - id: wheat_throughout
               weight: 100
@@ -549,10 +549,10 @@ proseVariants:
       and guests wheat tells the servants what the house thinks of them. She has said this
       only to the steward, twice and at length.
   - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=wheat_for_the_hall].label"
-    of: 2dbde863ea3e2dcf
+    of: 426047e4b3cfb820
     plainenglish: >-
-      Give everyone wheat or everyone rye. Do not serve different bread to different
-      tables.
+      Serve wheat bread to everyone, rather than keeping a separate bread for the
+      high table.
   - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=wheat_for_the_hall].outcomes[id=wheat_throughout].text"
     of: 7626adf8b924f074
     plainenglish: >-
