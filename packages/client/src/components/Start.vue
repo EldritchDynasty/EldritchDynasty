@@ -53,6 +53,7 @@ function newRunSeed(): number {
 const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const refused = ref<string | null>(null);
+const resumeRefused = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 const confirmingClearLibrary = ref(false);
 /**
@@ -98,13 +99,13 @@ async function refreshSaves(): Promise<void> {
 
 async function continueLastSitting(): Promise<void> {
   // The rolling save may have become unreadable after the front door offered it.
-  // A refused resume must not look like an inert Continue button.
+  // Report this next to Continue, not down beside unrelated import/export actions.
   const explanation = 'The last sitting could not be resumed. Try a saved run or begin anew.';
-  refused.value = null;
+  resumeRefused.value = null;
   try {
-    if (!await props.actions.resume()) refused.value = explanation;
+    if (!await props.actions.resume()) resumeRefused.value = explanation;
   } catch {
-    refused.value = explanation;
+    resumeRefused.value = explanation;
   }
 }
 
@@ -186,6 +187,7 @@ onMounted(() => { void refreshSaves(); });
         {{ !libraryIsReady ? 'Reading the library…' : resumable ? 'Begin a new signing' : 'Begin the signing' }}
       </button>
     </div>
+    <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ resumeRefused }}</p>
 
     <section class="reading panel" aria-label="Reading settings">
       <h2>Reading</h2>
