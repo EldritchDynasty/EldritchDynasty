@@ -293,7 +293,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
                 </select>
                 <button class="small endow" type="button" :disabled="!selectedHall[item.parcel ?? '']" @click="giveLand(item)">Endow</button>
               </div>
-              <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftError.reason }}</p>
+              <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftError?.reason }}</p>
             </td>
           </tr>
         </tbody>
