@@ -314,6 +314,24 @@ describe('the future on a Match card (issue #214)', () => {
     expect(reading.competing).toBe('continuity');
   });
 
+  it('does not double-count a strategic priority when the same kind is supplied twice', () => {
+    const card = visibleCard({
+      kind: 'household',
+      kinship: 0.0625,
+      line: 'ordinary',
+      lineSeen: 3,
+    });
+    // One continuity boost narrowly overtakes blood; a second would
+    // incorrectly change a mixed reading into a confident one.
+    const single = matchFuture(card, ['continuity']);
+    expect(single).toMatchObject({
+      kind: 'continuity',
+      confidence: 'mixed',
+      competing: 'blood',
+    });
+    expect(matchFuture(card, ['continuity', 'continuity'])).toEqual(single);
+  });
+
   it('does not manufacture three archetypes when two cards honestly read alike', () => {
     const a = visibleCard({
       id: 'a',
