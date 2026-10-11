@@ -89,6 +89,73 @@ describe('a bond is a debt, and the debt holds', () => {
   });
 });
 
+describe('bond mutations require the living world-owned servant (#1212)', () => {
+  it('a detached record cannot spend treasury or put a phantom bond in the Chronicle', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const p = place(ctx, { sex: 'male', age: 30, name: 'Real', contract: contract() });
+    const detached = { ...p, contract: { ...p.contract! } };
+    const pages = ctx.world.chronicle.length;
+
+    expect(bindService(ctx, detached, 100)).toBe(false);
+    expect(ctx.world.treasury).toBe(1000);
+    expect(p.contract?.term).toBe('yearly');
+    expect(p.contract?.debt).toBe(0);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    // Valid callers still mutate precisely the canonical debtor.
+    expect(bindService(ctx, p, 100)).toBe(true);
+    expect(p.contract?.debt).toBe(100);
+    expect(ctx.world.treasury).toBe(1000 - 100 / CROWN);
+  });
+
+  it('a detached bonded record cannot free the real debtor or punish other servants', () => {
+    const ctx = testWorld(bundle);
+    const p = place(ctx, {
+      sex: 'male', age: 30, name: 'Debtor',
+      contract: contract({ term: 'bonded', debt: 90, loyalty: 45 }),
+    });
+    const witness = place(ctx, {
+      sex: 'female', age: 30, name: 'Witness',
+      contract: contract({ term: 'bonded', debt: 60, loyalty: 50 }),
+    });
+    const detached = { ...p, contract: { ...p.contract! } };
+    const pages = ctx.world.chronicle.length;
+
+    expect(freeBond(ctx, detached)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(p.contract?.debt).toBe(90);
+    expect(p.contract?.term).toBe('bonded');
+    expect(p.contract?.loyalty).toBe(45);
+    expect(witness.contract?.loyalty).toBe(50);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    expect(freeBond(ctx, p).ok).toBe(true);
+    expect(p.contract?.term).toBe('yearly');
+    expect(witness.contract?.loyalty).toBe(50 - RESENTMENT_OF_FREEDOM);
+  });
+
+  it('dead servants cannot be bound or freed even if their contracts remain', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const unbound = place(ctx, {
+      sex: 'male', age: 30, name: 'Unbound', contract: contract(),
+    });
+    const bound = place(ctx, {
+      sex: 'female', age: 30, name: 'Bound',
+      contract: contract({ term: 'bonded', debt: 80 }),
+    });
+    ctx.world.people.kill(unbound.id, ctx.world.year, 'a test');
+    ctx.world.people.kill(bound.id, ctx.world.year, 'a test');
+    const pages = ctx.world.chronicle.length;
+
+    expect(bindService(ctx, unbound, 50)).toBe(false);
+    expect(freeBond(ctx, bound)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(ctx.world.treasury).toBe(1000);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+    expect(bound.contract?.debt).toBe(80);
+  });
+});
+
 describe('and the debt is paid off', () => {
   it('the wage services it, and discharges to wages when it is worked off', () => {
     const ctx = testWorld(bundle);
