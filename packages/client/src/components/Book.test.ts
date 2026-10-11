@@ -88,6 +88,31 @@ describe('the volume', () => {
     w.unmount();
   });
 
+  it('follows a changed focus prop without remounting the volume (#1126)', async () => {
+    const w = mountBook('chr_act');
+    try {
+      await flushPromises();
+      expect(marked(w)).toEqual(['chr_act']);
+
+      // The new target is hidden by the active search. The prop must use the
+      // same widening + focus path as clicking a causal backlink.
+      await w.find('input[type="search"]').setValue('market');
+      expect(w.find('[data-entry="chr_other"]').exists()).toBe(false);
+      await w.setProps({ focus: 'chr_other' });
+      await flushPromises();
+      expect((w.get('input[type="search"]').element as HTMLInputElement).value).toBe('');
+      expect(marked(w)).toEqual(['chr_other']);
+      expect(document.activeElement).toBe(w.get('[data-entry="chr_other"]').element);
+
+      // Clearing the optional focus target is not a navigation request.
+      await w.setProps({ focus: undefined });
+      await flushPromises();
+      expect(marked(w)).toEqual(['chr_other']);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('keeps the last target focused when two cause links fire in one tick', async () => {
     const book = [...BOOK, entry('chr_extra', 1072, 'One more reckoning.', { year: 1050, page: 'chr_other' })];
     const w = mount(Book, {
