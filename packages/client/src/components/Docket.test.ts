@@ -1216,3 +1216,43 @@ describe('child naming refusal feedback (#1075)', () => {
     w.unmount();
   });
 });
+
+
+describe('modal overlays guard the docket keyboard shortcuts (#1170)', () => {
+  it('never answers a hidden decision but restores numbered keys after closing the dialog', async () => {
+    const actions = spyActions();
+    const w = mount(Docket, {
+      attachTo: document.body,
+      props: { decision: choiceDecision(), actions: actions as unknown as GameActions },
+    });
+    const modal = document.createElement('section');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    const close = document.createElement('button');
+    close.textContent = 'Close';
+    modal.appendChild(close);
+
+    const pressOne = () => window.dispatchEvent(new KeyboardEvent('keydown', {
+      key: '1', bubbles: true, cancelable: true,
+    }));
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      pressOne();
+      expect(actions.choose).toHaveBeenCalledTimes(1);
+
+      document.body.appendChild(modal);
+      close.focus();
+      pressOne();
+      expect(actions.choose, 'a hidden decision must not respond to a number key')
+        .toHaveBeenCalledTimes(1);
+
+      modal.remove();
+      pressOne();
+      expect(actions.choose).toHaveBeenCalledTimes(2);
+    } finally {
+      modal.remove();
+      w.unmount();
+    }
+  });
+});
