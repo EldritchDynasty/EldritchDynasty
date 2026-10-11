@@ -103,6 +103,18 @@ function clearRelationship(): void {
   relationshipTo.value = null;
 }
 
+// The tree reuses its UI state across immutable world snapshots. Once a person
+// leaves the displayed halls, their invisible relationship anchor must not
+// prevent the reader from starting a new trace from a visible person.
+watch(allMembers, (members) => {
+  const ids = new Set(members.map((member) => member.id));
+  if (relationshipFrom.value && !ids.has(relationshipFrom.value)) {
+    clearRelationship();
+  } else if (relationshipTo.value && !ids.has(relationshipTo.value)) {
+    relationshipTo.value = null;
+  }
+});
+
 function matchesMemberFilter(member: MemberView, hall: HallView): boolean {
   switch (memberFilter.value) {
     case 'all': return true;
