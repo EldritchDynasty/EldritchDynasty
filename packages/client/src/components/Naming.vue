@@ -13,6 +13,9 @@ const refusals = ref<Record<string, string>>({});
 // naming offer if that child has left the queue.
 watch(() => props.view.namesWanted, (wanted) => {
   const waiting = new Set(wanted.map((child) => child.person));
+  for (const person of Object.keys(drafts.value)) {
+    if (!waiting.has(person)) delete drafts.value[person];
+  }
   for (const person of Object.keys(refusals.value)) {
     if (!waiting.has(person)) delete refusals.value[person];
   }
