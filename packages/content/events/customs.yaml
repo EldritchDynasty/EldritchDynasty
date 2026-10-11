@@ -384,3 +384,242 @@ events:
                 is nothing to connect. A dog is a dog four evenings out of five.
               effects:
                 - { kind: relationship, from: { slot: CHILD }, to: { slot: ELDER }, sentiment: -8 }
+
+# Plain English counterparts for the seven household customs scenes (issue #1089).
+proseVariants:
+  - address: "content:events/customs.yaml#events[id=the_second_cup].title"
+    of: 6be7469c4f7a6e18
+    plainenglish: >-
+      The Cup for the Dead
+  - address: "content:events/customs.yaml#events[id=the_second_cup].body"
+    of: e0548ae6bbe4e00a
+    plainenglish: >-
+      At the Slaughter feast, the family pours a second cup for those who died that year. Nobody drinks
+      it, and in most years nobody mentions it. This year the steward pours a second cup twice. Without
+      being asked or looking up, he pours both cups, and the hall falls silent even though forty people
+      are present. {MOURNER} has to reach out and steady the table.
+  - address: "content:events/customs.yaml#events[id=the_second_cup].interaction.choices[id=say_nothing].label"
+    of: 7a7a05fcd11fb4a0
+    plainenglish: >-
+      Say nothing. Leave both cups standing and let the music begin again.
+  - address: "content:events/customs.yaml#events[id=the_second_cup].interaction.choices[id=say_nothing].outcomes[id=stood].text"
+    of: 0068b640b1557194
+    plainenglish: >-
+      The pipe and small drum start playing again, unevenly at first and then properly. People dance in
+      circles until the fires burn low. Both cups remain full at the head of the table all night. By
+      morning, someone has drunk from one of them, but nobody ever learns who.
+  - address: "content:events/customs.yaml#events[id=the_second_cup].interaction.choices[id=name_them].label"
+    of: e96742affa9a0bbb
+    plainenglish: >-
+      Stand up and say both names aloud.
+  - address: "content:events/customs.yaml#events[id=the_second_cup].interaction.choices[id=name_them].outcomes[id=named].text"
+    of: 782b09ab55410697
+    plainenglish: >-
+      It is unusual but not forbidden, and saying the names takes about nine seconds. The tenants at the
+      lower tables do not know where to look. By Thaw, everyone in Wick has heard the story, though one
+      name is wrong. They respect the house more for this than for anything it bought that year.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].title"
+    of: fada52f144670615
+    plainenglish: >-
+      A Guest Drinks While Standing
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].body"
+    of: 5464f76e96168e32
+    plainenglish: >-
+      A tenant offered beer in the hall is expected to sit down. At Greening, {GUEST} drinks his beer
+      while standing beside the door, in view of the whole lower table. He has insulted the household
+      without saying anything that could be reported to a magistrate. Nobody can easily prove what he
+      meant, but the insult will be remembered, and it cost him nothing. {HEAD} has perhaps four seconds
+      to decide how the room should understand it. This family normally pretends that nothing notable
+      happens in front of forty witnesses.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].interaction.choices[id=fill_it_again].label"
+    of: 3a928e5d38a1f5d1
+    plainenglish: >-
+      Refill his cup and bring him a stool.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].interaction.choices[id=fill_it_again].outcomes[id=seated].text"
+    of: 1fac3eb6465d2a8a
+    plainenglish: >-
+      He sits down, though he does not want to. Everyone watches, then returns to the music. The whole
+      exchange lasts eleven seconds and settles the dispute for nine years.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].interaction.choices[id=fill_it_again].outcomes[id=he_stays_up].text"
+    of: 86790d96813183e2
+    plainenglish: >-
+      He refuses to sit. For a moment, the fireplace stops drawing smoke up the chimney. Smoke spreads
+      across the floorboards, and forty people turn towards the fire instead of the guest by the door.
+      It is probably a downdraught. Almost certainly.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].interaction.choices[id=let_him_stand].label"
+    of: 3f32e2537e1ed5cf
+    plainenglish: >-
+      Let him remain standing. Everyone can see what he means.
+  - address: "content:events/customs.yaml#events[id=a_man_who_drinks_standing].interaction.choices[id=let_him_stand].outcomes[id=counted].text"
+    of: 73d49bb9412497d5
+    plainenglish: >-
+      He finishes his beer and sets the cup on the edge of the table rather than on its surface. He
+      leaves through the yard while people are still dancing. Nobody speaks of it for thirty years. Then
+      someone brings it up at exactly the wrong assize.
+  - address: "content:events/customs.yaml#events[id=the_third_night].title"
+    of: 668a9207e6c2886b
+    plainenglish: >-
+      A Visitor's Third Night
+  - address: "content:events/customs.yaml#events[id=the_third_night].body"
+    of: 2a663bc915590b5d
+    plainenglish: >-
+      A traveller arriving at the door is given food. For two nights, that person is a guest. On the
+      third night, {TRAVELLER} becomes a member of the household: given work, fed at the lower table and
+      subject to the house's local justice. Both the visitor and the family know the rule, and both can
+      use it. The risk for this family is that someone who works here for a season also sees its private
+      life, especially in winter when only three grates are burning and everyone is tired and indoors.
+  - address: "content:events/customs.yaml#events[id=the_third_night].interaction.choices[id=keep_him].label"
+    of: 81cc3f59992886cd
+    plainenglish: >-
+      Keep him here. The yard needs another worker.
+  - address: "content:events/customs.yaml#events[id=the_third_night].interaction.choices[id=keep_him].outcomes[id=kept].text"
+    of: 313666eeb6564d1a
+    plainenglish: >-
+      He works well with horses and even better on the roof. He stays eleven months, then leaves quietly
+      in Highsun. During that time he spends one hundred and forty evenings in the same room as the
+      family. Whatever secrets he learns, he carries them away in his memory, not in writing.
+  - address: "content:events/customs.yaml#events[id=the_third_night].interaction.choices[id=pay_him_out].label"
+    of: f2df2679c43df80d
+    plainenglish: >-
+      Pay him and send him away on the second morning.
+  - address: "content:events/customs.yaml#events[id=the_third_night].interaction.choices[id=pay_him_out].outcomes[id=paid_out].text"
+    of: 9a0e8806add044d2
+    plainenglish: >-
+      He receives two mites, bread and permission to travel on. That is lawful. But turning someone away
+      is remembered longer than almost anything else a house does. In Bramme, he tells exactly what
+      happened without anger and without leaving anything out. That makes the account harder to dismiss.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].title"
+    of: 7c16a8fa4d80239e
+    plainenglish: >-
+      Telling the Bees About a Death
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].body"
+    of: 6704333421f863d0
+    plainenglish: >-
+      When the Head dies, someone must tell the beehives before dark and must tell them the truth aloud.
+      That makes the hives the one place at Ardwen where this family cannot use its usual habit of
+      changing the story. {TELLER} has to go. Standing in the cold with one hand on the third straw
+      hive, the messenger says what happened. By Thaw, the Chronicle will describe the same death
+      differently.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=tell_them_plainly].label"
+    of: 65f755b79e16cd83
+    plainenglish: >-
+      Tell the bees the truth, as the custom requires.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=tell_them_plainly].outcomes[id=told].text"
+    of: 6a73da8090ed28bc
+    plainenglish: >-
+      The bees remain in their hives through Frostfall. By Thaw, they are gathering from the willow
+      again. The family does not admit how worried it was. Nothing about this proves that the custom
+      worked. Signs never provide proof.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=tell_them_plainly].outcomes[id=they_go].text"
+    of: cfc15a6984454ded
+    plainenglish: >-
+      Within a month, two of the four straw hives are empty. Bees leave for eleven ordinary reasons.
+      Everyone in the yard knows those reasons, but nobody says them aloud. In spring the house buys new
+      bees at Bramme. The cook refuses to put them into the old hives.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=send_the_cook].label"
+    of: c868cfc28377a7d6
+    plainenglish: >-
+      Send the cook instead. She has done it before, and she is not of the bloodline.
+  - address: "content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=send_the_cook].outcomes[id=delegated].text"
+    of: 80f1e26361ccf92f
+    plainenglish: >-
+      The cook does the task properly and quickly, then comes inside without anyone questioning her. The
+      custom does not specify who must visit the hives. It only specifies what must be said. Over nine
+      hundred years, the family has learned how much that difference matters.
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].title"
+    of: cba13bd75fb7c19b
+    plainenglish: >-
+      Eleven Days of Mourning
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].body"
+    of: b5fc97c2c1f012a6
+    plainenglish: >-
+      The family wears undyed wool for eleven days after a death. It cancels no work, because continuing
+      to work is part of mourning. The dead person's place at the table remains empty until the next
+      feast. When the place is filled, the loss finally feels real. On the fourth night, {BEREAVED}
+      waits in the chapel the family rarely uses, hoping for something that has never come to anyone in
+      this bloodline.
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].interaction.choices[id=keep_the_days].label"
+    of: 0e0aaeceb567cb52
+    plainenglish: >-
+      Keep the full eleven days of mourning. Do not cancel or add anything.
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].interaction.choices[id=keep_the_days].outcomes[id=kept].text"
+    of: 94cb0c2dd21ca299
+    plainenglish: >-
+      On the sixth day, the household collects rent while dressed in grey wool. Two tenants apologise
+      for arriving and are told to continue. On the twelfth morning, the family wears its usual colours
+      again. The dead person's place at the table remains empty until Greening.
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].interaction.choices[id=fill_the_place].label"
+    of: 546b4c54e80bceb0
+    plainenglish: >-
+      Fill the empty place at the table now. The living still need to eat.
+  - address: "content:events/customs.yaml#events[id=eleven_days_of_grey].interaction.choices[id=fill_the_place].outcomes[id=filled_early].text"
+    of: 38087ef632f2577a
+    plainenglish: >-
+      The family fills the place at the third supper. It is done kindly, but it breaks the custom.
+      Nobody at the table will say so. Forty years later, {BEREAVED} tells a child about the day,
+      remembering the date incorrectly but the feeling exactly.
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].title"
+    of: 079ffd0cabfd69d8
+    plainenglish: >-
+      The Child Who Has No Name Yet
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].body"
+    of: e28c23675db068f3
+    plainenglish: >-
+      For the first eleven days, the newborn is called only 'the child'. Iron stays across the
+      birthing-room door throughout that time. Half the province believes it protects against fever; the
+      other half believes it serves another purpose. Both groups follow the custom, and nobody asks
+      {MOTHER} which belief she holds. On the eleventh day, the keeper arrives from Wick with a pen and
+      the parish roll. From then on, the child's name appears in a Church record kept continuously since
+      year 180.
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].interaction.choices[id=enter_it_at_wick].label"
+    of: 4e1302119ea0b645
+    plainenglish: >-
+      Register the child in Wick on the proper day, as the parish expects.
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].interaction.choices[id=enter_it_at_wick].outcomes[id=entered].text"
+    of: f5607788b3138a24
+    plainenglish: >-
+      The keeper writes down the name, date, mother and father and signs the entry himself. It takes
+      four minutes. That record may last longer than anything else in the child's life. Centuries later,
+      an angry clerk could find the entry in a single afternoon.
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].interaction.choices[id=keep_the_iron_longer].label"
+    of: 091af3a00f8869cc
+    plainenglish: >-
+      Leave the iron in place and make the keeper wait another ten days.
+  - address: "content:events/customs.yaml#events[id=the_child_with_no_name].interaction.choices[id=keep_the_iron_longer].outcomes[id=waited].text"
+    of: e3fa2f1c707b90c0
+    plainenglish: >-
+      The keeper waits and records the later date. He casually mentions the delay at the chapter house
+      in Bramme. Someone there writes it into another book for another reason. The two records now
+      disagree by ten days about when the child's life began.
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].title"
+    of: c91a5a4016556f4c
+    plainenglish: >-
+      The Last Piece of Bread
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].body"
+    of: c5573fd22e3d0ace
+    plainenglish: >-
+      The last piece of bread is left on the table. Taking it is considered greedy; leaving it is good
+      manners. People also claim there is a superstitious reason, but nobody will explain it. At supper,
+      {CHILD} takes the last piece in front of eleven people and eats it while staring directly at
+      {ELDER}. The older relative has waited years for a child to challenge this rule.
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].interaction.choices[id=let_the_elder_answer].label"
+    of: 40be171bd48d55cf
+    plainenglish: >-
+      Let the older relative explain the rule.
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].interaction.choices[id=let_the_elder_answer].outcomes[id=answered].text"
+    of: 2c35cd8cfc901228
+    plainenglish: >-
+      The explanation takes most of the meal. It covers famine, the Empire, two grandmothers and a
+      winter in 1109, but never gives the real reason. Years later, the child realises there was no real
+      reason. Learning that turns out to be the most useful thing anyone at the table ever taught the
+      child.
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].interaction.choices[id=put_it_back].label"
+    of: 133db0eb45c41947
+    plainenglish: >-
+      Make the child return the bread to the table.
+  - address: "content:events/customs.yaml#events[id=the_last_of_the_bread].interaction.choices[id=put_it_back].outcomes[id=put_back].text"
+    of: f42d85f0c661017c
+    plainenglish: >-
+      The bread goes back to the table. Later it is fed to the dogs with the scraps. That evening, the
+      yard dog refuses to come to the door. Nobody connects the two events because they are unrelated.
+      Most evenings, a dog behaves like any other dog.
