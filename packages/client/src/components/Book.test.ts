@@ -110,6 +110,43 @@ describe('the volume', () => {
     w.unmount();
   });
 
+  it('clears the outstanding page-highlight timeout when the volume closes (#1299)', async () => {
+    const scheduled = vi.spyOn(globalThis, 'setTimeout');
+    const cleared = vi.spyOn(globalThis, 'clearTimeout');
+    const w = mountBook('chr_act');
+    let unmounted = false;
+    try {
+      await flushPromises();
+      expect(marked(w)).toEqual(['chr_act']);
+      const timerIndex = scheduled.mock.calls.findIndex((args) => args[1] === 2400);
+      expect(timerIndex, 'the follow highlight must have a timed expiry').toBeGreaterThanOrEqual(0);
+      const handle = scheduled.mock.results[timerIndex]!.value;
+      w.unmount();
+      unmounted = true;
+      expect(cleared).toHaveBeenCalledWith(handle);
+    } finally {
+      if (!unmounted) w.unmount();
+      cleared.mockRestore();
+      scheduled.mockRestore();
+    }
+  });
+
+  it('does not scroll to a Chronicle page after its volume was closed mid-follow (#1299)', async () => {
+    const scrolled = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const w = mountBook('chr_act');
+    let unmounted = false;
+    try {
+      // onMounted starts follow(), then yields at nextTick before scrolling.
+      w.unmount();
+      unmounted = true;
+      await flushPromises();
+      expect(scrolled).not.toHaveBeenCalled();
+    } finally {
+      if (!unmounted) w.unmount();
+      scrolled.mockRestore();
+    }
+  });
+
   it('follows a changed focus prop without remounting the volume (#1126)', async () => {
     const w = mountBook('chr_act');
     try {
