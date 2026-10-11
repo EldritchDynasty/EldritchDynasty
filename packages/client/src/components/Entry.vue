@@ -30,8 +30,8 @@ const props = defineProps<{
   links?: EntryLinks;
   /** Briefly marked, because the reader just followed a link to it. */
   marked?: boolean;
-  /** Living people structurally recorded in this page's authored cast (#268). */
-  people?: { id: string; name: string }[];
+  /** A recorded person may no longer have a navigable live-hall card. */
+  people?: { id: string; name: string; available?: boolean }[];
 }>();
 
 const emit = defineEmits<{
@@ -99,19 +99,23 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
       <span aria-hidden="true">&nbsp;</span>
     </p>
     <!-- PERSON PROVENANCE (#268), not name parsing. applyOutcome recorded the
-         cast ids when the page was made; Chronicle.vue resolves only people
-         still in the living halls. The words of the page remain prose, while
-         this quiet ledger line is a route back to the person it was about. -->
+         cast ids when the page was made. Even when someone has left the
+         living halls, the page still names them without offering a dead-end
+         navigation control. -->
     <div v-if="entry.text !== null && people?.length && !read" class="people small">
       <span class="dim">with</span>
-      <button
-        v-for="person in people"
-        :key="person.id"
-        type="button"
-        class="link small"
-        :data-person="person.id"
-        @click="emit('person', person.id)"
-      >{{ person.name }}</button>
+      <template v-for="person in people" :key="person.id">
+        <button
+          v-if="person.available !== false"
+          type="button"
+          class="link small"
+          :data-person="person.id"
+          @click="emit('person', person.id)"
+        >{{ person.name }}</button>
+        <span v-else class="dim" :data-person-history="person.id">
+          {{ person.name }} (not in a living hall)
+        </span>
+      </template>
     </div>
     <!-- AND VISIBLY (issue #107). A ruled blank with its explanation in a
          tooltip reads, on a phone, as a rendering bug — which is the worst
