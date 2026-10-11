@@ -922,6 +922,70 @@ function buttonContaining(wrapper: VueWrapper, text: string) {
   return found;
 }
 
+/** Bid controls share this measured jsdom suite with the rest of The Table. */
+describe('auction ceiling input (#1090)', () => {
+  function mountAuction() {
+    const actions = spyActions();
+    const wrapper = mount(Table, {
+      props: {
+        table: riteTable(vesselAssembly),
+        land: riteLand,
+        actions: actions as unknown as GameActions,
+        refusal: null,
+        receipt: null,
+      },
+    });
+    const field = wrapper.get('input[aria-label="Maximum auction bid in crowns"]');
+    const button = buttonContaining(wrapper, 'Set the ceiling');
+    return { wrapper, actions, field, button };
+  }
+
+  it.each([
+    ['empty', ''],
+    ['negative', '-1'],
+    ['fraction', '10.9'],
+    ['unsafe integer', '9007199254740992'],
+    ['overflow', '1e309'],
+  ])('refuses %s rather than dispatching a rounded or unsafe bid', async (_name, value) => {
+    const { wrapper, actions, field, button } = mountAuction();
+    try {
+      await field.setValue(value);
+      expect(field.attributes('step')).toBe('1');
+      expect(field.attributes('aria-invalid')).toBe('true');
+      expect(field.attributes('aria-describedby')).toBe('bid-ceiling-error');
+      expect(button.attributes('disabled')).toBeDefined();
+      expect(wrapper.get('#bid-ceiling-error[role="alert"]').text()).toContain('whole number');
+      await button.trigger('click');
+      expect(actions.order).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('allows zero and exact positive whole crowns after correcting a blank', async () => {
+    const { wrapper, actions, field, button } = mountAuction();
+    try {
+      await field.setValue('');
+      expect(button.attributes('disabled')).toBeDefined();
+
+      await field.setValue('0');
+      expect(field.attributes('aria-invalid')).toBe('false');
+      expect(button.attributes('disabled')).toBeUndefined();
+      expect(wrapper.find('#bid-ceiling-error').exists()).toBe(false);
+      await button.trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({ kind: 'bid', ceiling: 0 });
+
+      await field.setValue('42');
+      expect(button.attributes('disabled')).toBeUndefined();
+      await button.trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({ kind: 'bid', ceiling: 42 });
+      expect(actions.order).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('standing preference controls (#219)', () => {
   it('lets the player withdraw both choice and Record policies from the Table', async () => {
     const actions = spyActions();
