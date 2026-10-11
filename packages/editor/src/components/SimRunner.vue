@@ -15,6 +15,7 @@ import Mark from './Mark.vue';
 import Seal from './Seal.vue';
 import { SOUND } from '../lib/audio-key';
 import { valenceOf } from '../lib/valence';
+import { submitsOnEnter } from '../lib/keys';
 import type { MarkName } from '../lib/marks';
 
 const props = defineProps<{ content: Content }>();
@@ -502,7 +503,7 @@ const household = computed(() => {
             type="text"
             :placeholder="b.suggested"
             v-model="nameDrafts[b.person]"
-            @keyup.enter="commitName(b.person)"
+            @keydown.enter="submitsOnEnter($event) && commitName(b.person)"
           />
           <div style="font-size:11px;color:var(--ink-faint);margin-top:3px">
             born {{ b.born }} · {{ b.sex === 'female' ? 'a daughter' : 'a son' }}
