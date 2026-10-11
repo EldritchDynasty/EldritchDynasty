@@ -909,9 +909,11 @@ export function dealMatch(ctx: SimCtx, subject: Person, rng: Rng): MatchOffer {
 
 /** Select reviewed wording for a card's house, not its saved identity. */
 function matchHouseName(ctx: SimCtx, houseId: string): string {
-  const name = ctx.world.houses.get(houseId)?.name;
-  if (name === undefined) return houseId;
   const authored = ctx.content.house(houseId);
+  // A known authored house can outlive its live world row. Its name is still
+  // preferable to displaying a raw internal id on a Match card.
+  const name = ctx.world.houses.get(houseId)?.name ?? authored?.name;
+  if (name === undefined) return houseId;
   // An authored variant cannot rename a house whose runtime name has changed.
   if (!authored || authored.name !== name) return name;
   return proseForContentField(ctx, 'houses', String(authored.id), 'name', name);
