@@ -487,6 +487,6 @@ describe('Passage navigation only offers currently drawable family cards (#1085)
 
   it('connects Passage navigation to the same current halls that draw the family tree', () => {
     const app = readFileSync('packages/client/src/App.vue', 'utf8');
-    expect(app).toMatch(/<PassageLog\\s+:passages="passages"\\s+:halls="view\\.halls"\\s+@select="look"/);
+    expect(app).toMatch(/<PassageLog\s+:passages="passages"\s+:halls="view\.halls"\s+@select="look"/);
   });
 });
