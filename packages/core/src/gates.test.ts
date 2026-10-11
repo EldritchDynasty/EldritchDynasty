@@ -6,7 +6,7 @@ import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
-  gateVocabularyReach,
+  gateVocabularyReach, gateVocabularyReachTelemetry,
   gatePostFillability, gateSlotFillability, judgeZeroReach, madnessHolderRow, judgeLadderFloor,
 } from './tools/gates.js';
 import { firedUnderClimbing, ladderPolicyMatrix, playOnce } from './tools/ladder-gate.js';
@@ -183,6 +183,17 @@ describe('the gates pass the shipped game', () => {
     expect(ok, out).toBe(true);
     expect(out).toMatch(/owed, and pinned: recast/);
     expect(out).not.toMatch(/owed, and pinned: recast, schedule/);
+  });
+
+  it('nightly vocabulary telemetry keeps recast owed but recognises authored schedule (#1015)', () => {
+    // This is the sampled NIGHTLY path, not the separately tested blocking
+    // gate 10. Authored debt is static; two short runs suffice to verify it.
+    const { ok, lines } = gateVocabularyReachTelemetry(content, { runs: 2, years: 5 });
+    const out = lines.join('\n');
+    expect(ok, out).toBe(true);
+    expect(out).toMatch(/owed, and pinned: recast/);
+    expect(out).not.toContain('schedule is authored now');
+    expect(out).not.toContain('owed, and pinned: recast, schedule');
   });
 
   it('keeps sampled vocabulary reach beside the scheduled fire-rate corpus', () => {
