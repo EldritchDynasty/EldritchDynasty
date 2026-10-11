@@ -336,3 +336,166 @@ events:
             id: the_cellar_list_lie
             severity: minor
             provableBy: [the_church, house_marrow]
+
+# Plain English counterparts for the Wend events (issue #1087, child of #415).
+proseVariants:
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].title"
+    of: 9800d90747a95cfb
+    plainenglish: >-
+      The Reeve's Request
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].body"
+    of: 474dc3d3729b506f
+    plainenglish: >-
+      The reeve comes from Wick the day after Ingathering, as he does every year. He stands in the
+      yard holding his hat until {HEAD} notices him. It has rained for six weeks. The mill has
+      ground half as much grain as last year, and the tenants have already eaten most of it. He has
+      written the figures on a tally twice, making them small enough to carry. He waits for someone
+      to ask what he needs. Then he asks for the year's payment to be forgiven. He has clearly
+      practised the word on his way to the hall. This house is not used to forgiving debts.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.decidedBy.state[0].because"
+    of: 096a20feb3852012
+    plainenglish: >-
+      the treasury has too little money to give up a year's income
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.decidedBy.state[1].because"
+    of: cf3064ebc575ad57
+    plainenglish: >-
+      the village is already close to its limit
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=forgive].label"
+    of: 108bd56b5ee9f45f
+    plainenglish: >-
+      Forgive what the tenants owe for this year.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=forgive].outcomes[id=forgiven].text"
+    of: d408be9b2865da2f
+    plainenglish: >-
+      The debt is cancelled in the ledger. The person writing the entry has an unsteady hand. By the
+      following week, three men from Wick have each told someone who was not there. Each has made
+      the story sound better.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=take_in_kind].label"
+    of: cf4dd92b8665fc0f
+    plainenglish: >-
+      Accept goods instead of money, and take a smaller amount.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=take_in_kind].outcomes[id=taken_in_kind].text"
+    of: 1100c8840c3d70b0
+    plainenglish: >-
+      The house receives barley, two pigs and enough poor-quality cheese to last until Greening.
+      Nobody is pleased, but nobody loses everything. The reeve appears to have expected that
+      result.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=take_it_whole].label"
+    of: 95989be8b33e142c
+    plainenglish: >-
+      Collect the full amount. The roof still needs repairs, whatever the weather.
+  - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].interaction.choices[id=take_it_whole].outcomes[id=taken_whole].text"
+    of: 6a296786f4d161ea
+    plainenglish: >-
+      By spring, two families have left. Their holdings pass to people who can pay. By the house's
+      own measures, this is the right result. People in Wick judge it differently.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].title"
+    of: 4ba4a2d8bf798dfc
+    plainenglish: >-
+      The Mill Wheel Stops at Night
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].body"
+    of: ca62bf5e4d624832
+    plainenglish: >-
+      The mill wheel stops during the night. The missing noise wakes the household. It is February,
+      and the water of the Wend makes a person's hands go numb almost immediately. Alder trees swept
+      down from four miles upstream have blocked the millrace all at once. {HEAD} can send only the
+      people the hall can spare. The reeve says Wick will run out of flour in two days. He has been
+      wrong about such deadlines before, and his mistakes have cost the village.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_clear_it].label"
+    of: 734fd789e1493365
+    plainenglish: >-
+      They remove the blockage before dawn.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_clear_it].outcomes[id=cleared].text"
+    of: 58ccfa00088f65c4
+    plainenglish: >-
+      The wheel begins turning again shortly after four in the morning. Its noise keeps everyone at
+      the hall awake for the rest of the night. Nobody complains.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_clear_it_hard].label"
+    of: f8df41cb00ed560f
+    plainenglish: >-
+      They clear the blockage, but someone is hurt.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_clear_it_hard].outcomes[id=cleared_hard].text"
+    of: 219b662baeb8ece7
+    plainenglish: >-
+      They eventually remove the alder. A hand is badly injured when a beam shifts. The beam had
+      supported the whole tangle of wood, under far more pressure than anyone standing in the water
+      had realised.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_come_back_wet].label"
+    of: 4bcb6fdfcced2b6b
+    plainenglish: >-
+      They return soaked, and the wheel remains stopped.
+  - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_come_back_wet].outcomes[id=not_shifted].text"
+    of: 6710db1e7e70d62a
+    plainenglish: >-
+      They work until daylight, then stand quietly in the yard with steam rising from their wet
+      clothes. Wick must buy flour from Bramme for a month, at Bramme's prices. The village
+      remembers the failure much longer than that.
+  - address: "content:events/wend.yaml#events[id=the_boy_and_the_east_cellar].title"
+    of: 0a5eda9d3e9e8371
+    plainenglish: >-
+      The Cellar Key on the Nail
+  - address: "content:events/wend.yaml#events[id=the_boy_and_the_east_cellar].body"
+    of: 2482eabc4fd4dbd0
+    plainenglish: >-
+      The family stores things it would rather not examine in the east cellar. The key hangs on a
+      nail in the long room because nobody has ever thought to hide it. {CHILD} can reach the nail
+      by standing on a bench. Nobody notices that the key is missing for two days. When someone
+      finally looks, it is back on the nail, but hanging the wrong way round. A boot-width strip of
+      dust is missing from the middle of the third step.
+  - address: "content:events/wend.yaml#events[id=the_boy_and_the_east_cellar].interaction.outcomes[id=went_down].text"
+    of: 23cdcabca910c710
+    plainenglish: >-
+      Nobody talks about what happened. In this house, remaining silent is a deliberate choice.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].title"
+    of: 0e0f842ac1ee38a6
+    plainenglish: >-
+      A Clerk Who Has All Day
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].body"
+    of: 106a6b4471ebc5f8
+    plainenglish: >-
+      At Ingathering, a clerk comes to the gate with a wax tablet and a letter from the chapter
+      house at Bramme. He wants a list of everything stored in the house's cellars. {CHILD} has not
+      gone down those steps since childhood and has never mentioned the third room. Nobody else in
+      the hall knows about it. The clerk is in no hurry. He says twice that he has all day.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].absentBody"
+    of: ecf8f66537e80a29
+    plainenglish: >-
+      At Ingathering, a clerk comes to the gate with a wax tablet and a letter from the chapter
+      house at Bramme. He wants a list of everything stored in the house's cellars. The only person
+      who ever went down to look died four years ago and told nobody what was there. The key still
+      hangs on its nail the wrong way round. Nobody remembers it ever hanging differently. The clerk
+      is in no hurry. He says twice that he has all day.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].interaction.choices[id=give_him_the_short_list].label"
+    of: 3536309ec7bf8d12
+    plainenglish: >-
+      Give him the shorter list normally given to the assessor.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].interaction.choices[id=give_him_the_short_list].outcomes[id=short_list].text"
+    of: b10f59a6a6528542
+    plainenglish: >-
+      The clerk copies the list and thanks the household. As he leaves through the yard, he asks
+      another question. He had no reason to ask it before coming here, but he will remember the
+      answer.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].interaction.choices[id=walk_him_down].label"
+    of: 77b64cf4c9df8770
+    plainenglish: >-
+      Take the clerk to the cellars and show him everything.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].interaction.choices[id=walk_him_down].outcomes[id=shown].text"
+    of: bb15c57cbac63e68
+    plainenglish: >-
+      The clerk stays downstairs longer than the family expected. When he returns, he says almost
+      nothing. That worries the household more than anything he might have said. He says much more
+      when he reaches Bramme, and the chapter house spreads what it hears.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.subject"
+    of: 5ab9d8f721de7783
+    plainenglish: >-
+      what is stored in the house's cellars
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.record.chronicle"
+    of: 2b93d97f7b9934eb
+    plainenglish: >-
+      The chapter house asked what we keep in our cellars. There is a room beneath the east cellar
+      that we have never included on any list given to anyone.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.embellish.chronicle"
+    of: 49862ea7fc5b1b7b
+    plainenglish: >-
+      We gave the chapter house a complete list of our cellars, just as we have done for the
+      assessor for two hundred years.
