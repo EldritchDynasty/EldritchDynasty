@@ -527,3 +527,173 @@ events:
                 shape it has always been by the time anyone in the village
                 thinks to check it.
               effects: []
+
+proseVariants:
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].title
+    of: "9963bbb38eb61b8f"
+    plainenglish: "Longmere Used to Be a Lake"
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].body
+    of: "f89ee7fa56dd62fe"
+    plainenglish: "Cold water rises quietly through land that has been dry for three generations. By the time a farm boy rides up to tell the house, the low field is flooded. {HEAD} can hear the water rising from the yard before the boy speaks. The old drainage ditches are blocked by ten years of fallen leaves that nobody cleared. Longmere was drained a hundred years ago to make a farm. The water is returning."
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].interaction.choices[id=dig_it_out].label
+    of: "ccbe9dd38a6c830f"
+    plainenglish: "Hire diggers from Bramme to clear the ditches."
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].interaction.choices[id=dig_it_out].outcomes[id=dug_out].text
+    of: "d41dd098a49bfb54"
+    plainenglish: "The diggers arrive within a week. Their boots are ruined by the second day, but the water has drained away by the end of the month. The field earns back the cost of the work and continues to produce income."
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].interaction.choices[id=let_it_sit].label
+    of: "b28192e5e901f361"
+    plainenglish: "Allow the low field to flood this year. Use the other land."
+  - address: content:events/land.yaml#events[id=the_low_ground_floods].interaction.choices[id=let_it_sit].outcomes[id=went_under].text
+    of: "2fb1af9f869ae0bb"
+    plainenglish: "The field stays flooded through the harvest, and the water drains slowly afterwards. Longmere brings in less rent this winter, especially from the ground that stayed underwater longest. Nobody drowned, but nobody cleared the ditches either."
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].title
+    of: "bda57f83e6a1fe6f"
+    plainenglish: "Repair the Neglected Fields"
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].body
+    of: "aa382d6b86f1c5df"
+    plainenglish: "Coldharbour still produces the best hay of any field the house holds, but its harvest has declined for years. Only the old accounts could show how long. Since the last man who measured them died, the hedges have grown a foot into the field on each side. {HEAD} walks the field in the cold before breakfast and calculates the loss twice. Both calculations give the same result. Good land needs maintenance."
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].interaction.choices[id=put_it_right].label
+    of: "5b1f428558484839"
+    plainenglish: "Pay for new hedges, new drains, and a full season of work."
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].interaction.choices[id=put_it_right].outcomes[id=worn_down_no_longer].text
+    of: "a651230f6dbf66f3"
+    plainenglish: "The repairs take a full season and cost as much as a season of hired labour usually does. They do not make the field bigger. They restore Coldharbour to the condition it was in thirty years ago, before the house stopped checking it closely."
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].interaction.choices[id=leave_it].label
+    of: "f242b51bb0ce8167"
+    plainenglish: "Leave the field as it is. It still earns money."
+  - address: content:events/land.yaml#events[id=what_the_years_wore_down].interaction.choices[id=leave_it].outcomes[id=left_as_it_was].text
+    of: "d42722bba93bdcbf"
+    plainenglish: "Coldharbour earns the same rent as last year. That is still useful income. The house keeps the money it would have spent on hedges for its next expense."
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].title
+    of: "6b9e82495d791825"
+    plainenglish: "Take Grazing from the Common"
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].body
+    of: "b54282cd8bc571f1"
+    plainenglish: "The boundary stone above Wick Common has not moved within anyone's lifetime, so nobody is likely to check its position now. Moving it would give the house a season's free grazing on the far side and save the cost of hay. The common is the only land on the roll that costs nothing to take from. {HEAD} has passed the stone a hundred times without asking who watches it. Nobody does: it is shared ground."
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].interaction.choices[id=move_the_marker].label
+    of: "ab55857cfa825490"
+    plainenglish: "Move the marker out to gain a season's grazing. Nobody is checking."
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].interaction.choices[id=move_the_marker].outcomes[id=marker_moved].text
+    of: "260e06fa5262c34e"
+    plainenglish: "The stone is replanted a rod beyond its old position. The sheep graze there as usual. Eventually the villagers notice that a field which fed their cattle no longer does."
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].interaction.choices[id=leave_the_stone].label
+    of: "aa63f90b196e6a1f"
+    plainenglish: "Keep the stone in its old position."
+  - address: content:events/land.yaml#events[id=the_common_is_grazed_thin].interaction.choices[id=leave_the_stone].outcomes[id=stone_untouched].text
+    of: "092e9a3c99a325d0"
+    plainenglish: "The stone stays in place. Wick keeps its common grazing, one reason the village tolerates a house that owns most of the surrounding land. In most years, keeping that goodwill is worth more than one season's grazing."
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].title
+    of: "65a4f51e5fb8b52a"
+    plainenglish: "The Colcocks Have No Son to Farm Sowerhay"
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].body
+    of: "6654a23f4264d60b"
+    plainenglish: "Old Colcock does not discuss the farm himself. His steward passes on the news over a fence, without directly offering a sale. The Colcocks have worked Sowerhay for three generations, but the eldest son has become a soldier and seems unwilling to return to farming when his service ends. The Michaelmas rent must be paid regardless. {HEAD} has until then to decide whether to make the first offer for Sowerhay."
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].interaction.choices[id=buy_it_now].label
+    of: "4196e1a716dc81f3"
+    plainenglish: "Make an offer before another house hears the news."
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].interaction.choices[id=buy_it_now].outcomes[id=sowerhay_bought].text
+    of: "15d35a36fd42a9f2"
+    plainenglish: "Colcock accepts the offer that day. He seems to have been waiting a long time for one. The house adds Sowerhay to its rent book, and the Colcocks keep enough of the sale price to leave the parish with some money after paying their debts."
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].interaction.choices[id=let_it_go].label
+    of: "41b85dadc6699959"
+    plainenglish: "Pass up this farm. Other land may become available."
+  - address: content:events/land.yaml#events[id=a_neighbour_short_before_michaelmas].interaction.choices[id=let_it_go].outcomes[id=sowerhay_passed].text
+    of: "0890726c30cf22a8"
+    plainenglish: "Another house's steward hears the news a week later. That house buys Sowerhay because it acted faster or asked first. Other land is available in most years, but this opportunity is gone."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].title
+    of: "2d6d120b4874dcc7"
+    plainenglish: "The Missing Ashcroft Deed"
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].body
+    of: "50802185b4264e89"
+    plainenglish: "A man from Bramme arrives with a notary and a document older than anyone living in the house. It says Ashcroft was never legally transferred to the house. The man is polite and confident that he has won. {HEAD} asks for the house's copy of the grant, but an hour's search fails to find it. The house has accumulated so many documents that the important one cannot be located."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=fight_it].label
+    of: "0ec133d57d8a3c49"
+    plainenglish: "Challenge the claim at the assize court. The house has held Ashcroft for generations."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=fight_it].outcomes[id=held_it].text
+    of: "a7856842b640d4a6"
+    plainenglish: "The assize court rules that generations of unchallenged possession outweigh the old document. The man from Bramme leaves with nothing except his notary's bill. The house keeps Ashcroft but must pay its own legal costs."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=fight_it].outcomes[id=lost_it_anyway].text
+    of: "89f95a5f91f45833"
+    plainenglish: "The document is genuine, and the assize court upholds it. Ashcroft changes owners for the second time in its history. The house loses the field and still pays the legal costs."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=concede_it].label
+    of: "bc423fbc4b6a6690"
+    plainenglish: "Give up Ashcroft rather than pay to fight a case the house might lose."
+  - address: content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=concede_it].outcomes[id=conceded].text
+    of: "27e98a233d153a27"
+    plainenglish: "{HEAD} returns the field instead of spending a generation's worth of notary fees on the dispute. The man from Bramme almost apologises for how easily he won. The house avoids a costly fight but loses valuable land."
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].title
+    of: "250f07d8c04d8f7c"
+    plainenglish: "Redmoor's Rent Is Short for a Second Year"
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].body
+    of: "f0856d2965e1ea25"
+    plainenglish: "{TENANT} farms Redmoor. The soil is poor, but the family has never used that as an excuse before. They say so before {HEAD} can mention it. This is the second year they have failed to pay the full rent. The reeve has already asked what the house will do. The farm must earn money, but the family also needs somewhere to live."
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].interaction.choices[id=evict_them].label
+    of: "a53bd0d11bb2d86d"
+    plainenglish: "Evict the family before the next rent payment is due."
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].interaction.choices[id=evict_them].outcomes[id=evicted].text
+    of: "7c6670787e6094cc"
+    plainenglish: "{TENANT} and the family leave within a month. The field lies unused for a season while a new tenant learns to farm unfamiliar ground. Eventually the house receives rent again. The parish remembers the eviction for much longer than one season."
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].interaction.choices[id=forgive_the_arrears].label
+    of: "962e5d29dc771825"
+    plainenglish: "Allow the unpaid rent to remain outstanding for another year."
+  - address: content:events/land.yaml#events[id=the_tenant_who_cannot_pay].interaction.choices[id=forgive_the_arrears].outcomes[id=arrears_forgiven].text
+    of: "1e84f495083e53a9"
+    plainenglish: "{HEAD} tells the reeve only that {TENANT}'s family may stay at Redmoor a little longer. The family hears the decision that day. The soil is still poor, but this year they are grateful to have it."
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].title
+    of: "7b34a23dec67e4f9"
+    plainenglish: "Pikeworth's Unpaid Debt"
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].body
+    of: "c37d3f054b847509"
+    plainenglish: "For three winters in a row, {DEBTOR} borrowed money using Pikeworth as security. The house's steward has the documents. The small farm has never earned enough to pay both the interest and the family's living costs. This year the farm itself is all that remains to repay the debt. {DEBTOR} says so in the yard, avoiding {HEAD}'s eyes and expecting a particular answer."
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].interaction.choices[id=call_in_the_debt].label
+    of: "468359f3f6911547"
+    plainenglish: "Take Pikeworth to settle the debt, as the documents permit."
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].interaction.choices[id=call_in_the_debt].outcomes[id=pikeworth_taken].text
+    of: "f684b54176799295"
+    plainenglish: "{HEAD} follows the written terms. {DEBTOR} transfers the farm without disputing any clause because none can be challenged. The house acquires a small farm legally. {DEBTOR}'s family remembers how they lost it, and their children will remember too."
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].interaction.choices[id=take_a_payment_instead].label
+    of: "17d352b318b0cf67"
+    plainenglish: "Accept whatever money the family can raise and let them keep Pikeworth."
+  - address: content:events/land.yaml#events[id=the_debt_pikeworth_owed].interaction.choices[id=take_a_payment_instead].outcomes[id=payment_taken].text
+    of: "b10bf4fbd69ed807"
+    plainenglish: "{HEAD} accepts what {DEBTOR} can pay this year and carries the remaining debt forward to next year's harvest. The debt is not forgiven, though {DEBTOR} feels almost as relieved as if it were. The Pikes keep their farm for now and still owe the rest."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].title
+    of: "65d484f2f35bd226"
+    plainenglish: "No Farrows Remain to Claim the Farm"
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].body
+    of: "9210116fe7533c23"
+    plainenglish: "The last Farrow at Farrowmere was buried three weeks ago. This winter he had no sons, no nephews, and no daughter whose marriage gave her enough standing to contest a claim. His family's name dies with him. As the law requires, the Warden's clerk writes to the nearest houses in good standing. This house is the nearest. Nobody caused the family to end. {HEAD} did not even know the dead man's Christian name before the letter came."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=accept_the_reassignment].label
+    of: "a359da00372b82cc"
+    plainenglish: "Accept Farrowmere. The farm needs a house responsible for it."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=accept_the_reassignment].outcomes[id=farrowmere_accepted].text
+    of: "2e5e978fc74255d3"
+    plainenglish: "The house pays the clerk's fee and sends its own reeve to manage Farrowmere's first planting. Together, those costs are higher than the letter suggested. The house does not complain publicly: a Regarded house is expected to accept the costs of receiving free land."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=decline_it].label
+    of: "2e1df0e8ca7fdb4c"
+    plainenglish: "Decline Farrowmere and let the Warden offer it to another house."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=decline_it].outcomes[id=farrowmere_declined].text
+    of: "3df04fb8f4de8d0c"
+    plainenglish: "{HEAD} replies that the house already has enough land this year. The clerk seems mildly surprised. Before spring ends, another house adds Farrowmere to its holdings. The Farrow name still dies out."
+  - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=decline_it].outcomes[id=farrowmere_declined].effects[0].text
+    of: "8168ff084d4a750c"
+    plainenglish: "After the last Farrow died, the Warden offered the house Farrowmere"
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].title
+    of: "fa2ee68f57312cdb"
+    plainenglish: "The Boundary Marker Stays in Its New Position"
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].body
+    of: "62bec8154169b061"
+    plainenglish: "The boundary stone above Wick Common has been moved out to gain a season's grazing before. Whenever anyone noticed, it was moved back. This year {HEAD} gives no order to return it. Nobody in the house mentions the change. This corner of common land has no deed or rent record. Until someone records a claim, whoever occupies it in spring can treat it as theirs."
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].interaction.choices[id=keep_the_ground].label
+    of: "d3bcbde19dc0aa1d"
+    plainenglish: "Keep the stone in its new position without announcing a claim."
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].interaction.choices[id=keep_the_ground].outcomes[id=farthing_kept].text
+    of: "b09bcf54928b4360"
+    plainenglish: "The house calls no notary, sets no rent, and records no new boundary. In spring it simply uses the land that used to be part of the common. Nobody living can say exactly when people stopped disputing this change."
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].interaction.choices[id=walk_it_back].label
+    of: "489e18d16826a77d"
+    plainenglish: "Return the stone to its original position."
+  - address: content:events/land.yaml#events[id=the_marker_stays_moved].interaction.choices[id=walk_it_back].outcomes[id=farthing_returned].text
+    of: "83a1c3e374cc3a07"
+    plainenglish: "{HEAD} sends a man to return the stone before the spring grazing begins. By the time the villagers check, the common has its original boundary."
