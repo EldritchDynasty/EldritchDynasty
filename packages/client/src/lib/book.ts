@@ -121,14 +121,41 @@ const SIZE: Record<string, number> = { line: 15, paragraph: 17, page: 19, illumi
 /** How wide a string is, in the font the plate is about to draw it in. */
 export type Measure = (text: string, font: string) => number;
 
-/** Greedy wrap. Never drops a word, even one wider than the column. */
+/**
+ * Greedy wrap, with grapheme-safe fallback for a word wider than the column.
+ * A Chronicle may contain long identifiers or scripts without spaces. Leaving
+ * those words intact lets both PNG and SVG exports draw past the plate's edge.
+ * An indivisible grapheme wider than max stays on its own row.
+ */
 export function wrap(text: string, font: string, max: number, measure: Measure): string[] {
   const out: string[] = [];
   let row = '';
+  const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
   for (const word of text.split(/\s+/).filter(Boolean)) {
     const next = row ? `${row} ${word}` : word;
-    if (measure(next, font) > max && row) { out.push(row); row = word; }
-    else row = next;
+    if (measure(next, font) <= max) {
+      row = next;
+      continue;
+    }
+    if (row) { out.push(row); row = ''; }
+
+    if (measure(word, font) <= max) {
+      row = word;
+      continue;
+    }
+
+    // Never split a surrogate pair, combining mark or joined emoji. Measure
+    // each candidate because glyph widths are not proportional to characters.
+    for (const { segment } of graphemes.segment(word)) {
+      const candidate = row + segment;
+      if (row && measure(candidate, font) > max) {
+        out.push(row);
+        row = segment;
+      } else {
+        row = candidate;
+      }
+    }
   }
   if (row) out.push(row);
   return out;
