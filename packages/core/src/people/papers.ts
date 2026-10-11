@@ -176,6 +176,13 @@ export function forgedPapers(p: Person): LineageDocument[] {
  * them changes what the genetics thinks it is looking at.
  */
 export function filePedigree(ctx: SimCtx, p: Person, grade: PedigreeGrade): LineageDocument {
+  // A detached snapshot can be written to without changing the actual world;
+  // a dead person cannot commission fresh papers. Validate at the mutation
+  // boundary even though the Table normally resolves a living resident first.
+  if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) {
+    throw new Error('cannot file a pedigree for a dead or detached person');
+  }
+
   const doc: LineageDocument = {
     generations: PEDIGREE_COVERS[grade],
     // Quoted as {NOTARY} by the filing line and by the exposure page, so it is
