@@ -590,3 +590,96 @@ proseVariants:
       same tenday. Everyone in the yard understands what was taking them. Nobody is named or punished.
       Four people at the bottom of the lane have less food from then on, and the house never learns who
       they are.
+# Plain English alternatives for boar, plough oxen and terrier scenes (#1098).
+# Counterparts only: event rules and the Original text remain unchanged.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].title"
+    of: "3036f5bbdf956f77"
+    plainenglish: >-
+      This Year, a Boar Is Ruining the Oats
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].body"
+    of: "543393b8a0f3920c"
+    plainenglish: >-
+      A boar from the house's own wood has been eating oats on three holdings for a tenday. In this
+      province, boars kill people about once a generation, even armed riders on horses. The wood
+      belongs to the house, so the boar and the trouble it causes are the house's responsibility.
+      Everyone at Wick understands that. Nobody has managed to drive it away. {HUNTER} has the dogs
+      ready.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].label"
+    of: "a062255cacfd10b0"
+    plainenglish: >-
+      Hunt the boar this week with four men and the dogs.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=killed].text"
+    of: "e5ae907413c13f30"
+    plainenglish: >-
+      The hunt takes two days and four men, and one dog dies. A sow weighing about nine score is laid
+      on the board at Slaughter. The boar no longer troubles the three holdings. News of the hunt
+      spreads through the province, as it always does. That attention is worth more to the family than
+      the lost oats.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=it_goes_wrong].text"
+    of: "2b19e8f2f670f40e"
+    plainenglish: >-
+      The boar charges back through the hunting line toward a man who is not braced for it. It knocks
+      {HUNTER} down and cuts his thigh to the bone. Four men carry him out of the wood. Somebody else
+      kills the boar four tendays later, but nobody mentions that afterward.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=pay_for_the_oats].label"
+    of: "ecf1e9cbaaad9497"
+    plainenglish: >-
+      Pay for the ruined oats and leave the boar in the wood.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=pay_for_the_oats].outcomes[id=paid_for].text"
+    of: "3be5c66a40c70d86"
+    plainenglish: >-
+      At Thaw, the house pays eleven crowns in full to the three holdings, without arguing. Nobody
+      enters the wood for two years, and the boar stays there. Paying is the cheapest and most
+      sensible answer. But the landed family has refused to hunt, and people across the province keep
+      talking about it.
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].title"
+    of: "17d7fee59bcb0649"
+    plainenglish: >-
+      The Year's Sowing Depends on Eight Oxen at Three Crowns Each
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].body"
+    of: "9df1c182d48bba46"
+    plainenglish: >-
+      An ox costs three crowns, and a plough team needs eight. Four holdings share one team owned by
+      the house. A month before Seedmonth, two of the eight oxen go lame in the same tenday. The
+      remaining six cannot pull a heavy plough through Nethering clay. The four holdings owe the
+      labour-days needed to work the team.
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].interaction.choices[id=buy_two].label"
+    of: "5bde2163ec8acc67"
+    plainenglish: >-
+      Buy two oxen for six crowns so the sowing can go ahead.
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].interaction.choices[id=buy_two].outcomes[id=bought_two].text"
+    of: "a79e34c0294db4cc"
+    plainenglish: >-
+      The house spends six crowns at the Bramme fair on two oxen it would not have chosen if there had
+      been more time. The full team of eight is in the field on the eighth of Seedmonth, and all four
+      holdings are sown on time. Nobody thanks the house for something that was supposed to happen
+      anyway.
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].interaction.choices[id=sow_with_six].label"
+    of: "47df247dac7bbf91"
+    plainenglish: >-
+      Sow with the six remaining oxen. It will take longer, but the work will be done.
+  - address: "content:events/beasts.yaml#events[id=the_oxen_and_the_plough_team].interaction.choices[id=sow_with_six].outcomes[id=six].text"
+    of: "e26e5cdcd2007df8"
+    plainenglish: >-
+      With six oxen pulling through the clay, ploughing takes four tendays instead of two. Two of the
+      four holdings are sown too late, and their Harvest is short by about the price of two oxen. The
+      tenants still work every labour-day they owe, so the hall's accounts show nothing missing. The
+      two holdings have less to eat. The steward works out the figures afterward and says nothing.
+  - address: "content:events/beasts.yaml#events[id=the_terrier_and_the_barn].title"
+    of: "1ee00be81a4ac9cc"
+    plainenglish: >-
+      A Terrier Is the Only Answer to the Rats
+  - address: "content:events/beasts.yaml#events[id=the_terrier_and_the_barn].body"
+    of: "741c40227fcab3f6"
+    plainenglish: >-
+      The house has kept a terrier at Ardwen to catch rats for as long as the records go back. The
+      current dog is old, and the barn is losing about four crowns' worth of grain each season to
+      pests a cat cannot stop. A good terrier pup from a litter at Bramme costs one crown. The yard
+      man wants the old dog to spend the rest of its life indoors, though terriers are not usually
+      kept for comfort.
+  - address: "content:events/beasts.yaml#events[id=the_terrier_and_the_barn].interaction.outcomes[id=both].text"
+    of: "5d353b88a3688e7c"
+    plainenglish: >-
+      The yard man buys a pup for one crown and gives the old terrier a sack beside the kitchen fire
+      until Thaw. It is what everyone wanted, though nobody was willing to suggest it. He arranges it
+      himself and announces the decision on a Tuesday morning.
