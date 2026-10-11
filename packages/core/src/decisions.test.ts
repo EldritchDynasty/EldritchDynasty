@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import { EventTemplateS, indexContent, proseOriginalHash, type EventTemplate } from '@ed/schema';
 import { makeRng } from './rng.js';
 import { loadGame, saveGame } from './save.js';
-import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
+import { missingPlainEnglish, renderProse, setProseMode, setProseVariants } from './prose.js';
 import { place, testWorld } from './testing.js';
 import { stepYear } from './year/step.js';
 import { coreMessageAddress } from './messages.js';
@@ -448,6 +448,45 @@ describe('Hollow Days burial changes the cast kin\'s life state (#1113)', () => 
     expect(variant?.plainenglish).toContain('the Hollow Days have their own rules');
     expect(variant?.plainenglish).not.toContain('the five Hollow Days');
   });
+});
+
+describe('Hollow Days chronology respects the extra day every fourth year (#1116)', () => {
+  const event = content.events.find((item) => item.id === 'a_death_in_the_hollow_days');
+  if (!event || event.interaction.kind !== 'choice') {
+    throw new Error('The authored Hollow Days choice is missing');
+  }
+  const waited = event.interaction.choices.find((choice) => choice.id === 'wait_for_the_keeper');
+  const buried = event.interaction.choices.find((choice) => choice.id === 'bury_within_two_days');
+  if (!waited || !buried) throw new Error('Hollow Days burial options are missing');
+  const base = 'content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days]';
+  const rows = [
+    { path: '.body', original: event.body },
+    { path: '.interaction.choices[id=wait_for_the_keeper].label', original: waited.label },
+    { path: '.interaction.choices[id=wait_for_the_keeper].outcomes[id=waited].text', original: waited.outcomes[0]!.text },
+    { path: '.interaction.choices[id=bury_within_two_days].outcomes[id=buried].text', original: buried.outcomes[0]!.text },
+  ];
+
+  for (const { year, hollowDays } of [
+    { year: 1201, hollowDays: 5 },
+    { year: 1204, hollowDays: 6 },
+  ]) {
+    it(`uses a date, not a fixed wait, with ${hollowDays} Hollow Days in ${year}`, () => {
+      const ctx = fixture(111600 + year, year);
+      setProseVariants(ctx, content.proseVariants);
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        for (const { path, original } of rows) {
+          const address = base + path;
+          const variant = content.proseVariants.find((entry) => entry.address === address);
+          expect(variant?.of, address).toBe(proseOriginalHash(original));
+          const text = renderProse(ctx, address, original);
+          expect(text, `${mode}: ${address}`).toContain('first of Thaw');
+          expect(text, `${mode}: ${address}`).not.toMatch(/\\b(?:four|five) days\\b/i);
+          expect(missingPlainEnglish(ctx)).not.toContain(address);
+        }
+      }
+    });
+  }
 });
 
 // Use the real authored choice and its real outcome/effects, but restrict
