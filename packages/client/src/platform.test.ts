@@ -357,6 +357,42 @@ describe('save-list failures at the real game/platform seam (#1176)', () => {
     await expect(game.actions.listSaves()).resolves.toEqual(expected);
     expect(game.saves.value).toEqual(expected);
   });
+  it('keeps previously discovered saves after a failed background refresh, and updates on recovery (#1232)', async () => {
+    const host = memoryPlatform();
+    host.saves.set('chapter-1-1080', { year: 1080 });
+    host.saves.set('demo-autosave', { year: 1090 });
+    const originalList = host.listSaves;
+    let offline = false;
+    let calls = 0;
+    host.listSaves = async () => {
+      calls++;
+      if (offline) throw new Error('temporary background listing failure');
+      return originalList();
+    };
+
+    const game = createGame(loadContent(), host);
+    const known = await game.actions.listSaves();
+    expect(known).toEqual([{ slot: 'chapter-1-1080', year: 1080 }]);
+
+    // A successful autosave schedules a background refresh. If that separate
+    // read fails, the durable chapter is still there; a transient host outage
+    // must not make the front door display an empty list of runs.
+    const beforeBackground = calls;
+    offline = true;
+    game.actions.begin(12320);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(calls).toBeGreaterThan(beforeBackground);
+    expect(game.saves.value).toEqual(known);
+
+    offline = false;
+    const recovered = await game.actions.listSaves();
+    expect(recovered).toEqual(expect.arrayContaining([
+      { slot: 'chapter-1-1080', year: 1080 },
+      expect.objectContaining({ slot: 'autosave' }),
+    ]));
+    expect(recovered.some((save) => save.slot === 'demo-autosave')).toBe(false);
+    expect(game.saves.value).toEqual(recovered);
+  });
 });
 
 describe('the platform seam', () => {
