@@ -1,14 +1,60 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 // One implementation of the write guard, shared with the Electron main process.
 import { resolveExistingContentPath } from '../content/tools/content-path.mjs';
+import { coreMessageEntries } from '../core/src/tools/core-message-audit.js';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const REPO = r('../..');
 const CONTENT = join(REPO, 'packages/content');
+const CORE_SOURCE = join(REPO, 'packages/core/src');
+
+/**
+ * Resolve the Node-only TypeScript AST extractor while Vite is building, never
+ * in the editor renderer. The shipped module contains JSON data, not a parser.
+ */
+export function coreProseCatalogue() {
+  const moduleId = 'virtual:ed-core-prose';
+  const resolvedId = '\0' + moduleId;
+
+  function sourceFiles(folder: string): string[] {
+    return readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
+      const path = join(folder, entry.name);
+      if (entry.isDirectory()) return sourceFiles(path);
+      return entry.isFile() && entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts')
+        ? [path] : [];
+    });
+  }
+
+  return {
+    name: 'ed-core-prose-catalogue',
+    resolveId(id: string) {
+      if (id === moduleId) return resolvedId;
+    },
+    load(id: string) {
+      if (id !== resolvedId) return;
+      const seen = new Set<string>();
+      const entries = sourceFiles(CORE_SOURCE).sort().flatMap((path) => {
+        const file = path.slice(CORE_SOURCE.length + 1).replaceAll('\\', '/');
+        return coreMessageEntries(readFileSync(path, 'utf8')).map((entry) => {
+          if (seen.has(entry.address)) throw new Error('duplicate stable core msg key: ' + entry.address);
+          seen.add(entry.address);
+          return {
+            address: entry.address,
+            file: 'packages/core/src/' + file,
+            text: entry.text,
+            interpolations: entry.interpolations,
+          };
+        });
+      });
+      return 'export default ' + JSON.stringify(entries.sort((a, b) =>
+        a.address.localeCompare(b.address))) + ';';
+    },
+  };
+}
 
 /**
  * Dev-only content bridge. The editor reads YAML through import.meta.glob and
@@ -100,7 +146,7 @@ export default defineConfig({
   // Relative asset paths, so the built editor loads from file:// inside the
   // Electron shell as well as from a web server.
   base: './',
-  plugins: [vue(), contentBridge(), buildTimeCsp()],
+  plugins: [vue(), contentBridge(), coreProseCatalogue(), buildTimeCsp()],
   resolve: {
     alias: {
       '@ed/schema': r('../schema/src/index.ts'),

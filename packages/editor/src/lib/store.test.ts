@@ -76,6 +76,7 @@ const {
   store, fileOf, fileOfId, filesHolding, isDirty, markDirty,
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
   createItem, externalChange, removeProseVariant, stageProseVariant,
+  applyCoreProseEdits, pendingCoreProseText, saveCoreProseCatalogue,
 } = await import('./store.js');
 
 /** A file with a long header comment block and four events in it. */
@@ -652,5 +653,95 @@ describe('authored Plain English variants (#414)', () => {
     expect(existing!.plainenglish).toBe(originalWording);
     expect(store.bundle.proseVariants).toHaveLength(before);
     expect(store.dirty.has(CRUSADE)).toBe(false);
+  });
+});
+
+describe('core prose messages.yaml authoring (#1011)', () => {
+  const FILE = 'messages.yaml';
+  const ADDRESS = 'core:messages#editor_test_roundtrip';
+  const ORIGINAL = 'A witness took {PERSON} before the court.';
+  const EDIT = { address: ADDRESS, original: ORIGINAL, plainenglish: '{PERSON} went to court with a witness.' };
+
+  async function cleanUp() {
+    h.refuse.value = false;
+    h.writable.value = true;
+    applyCoreProseEdits([{ ...EDIT, plainenglish: '' }]);
+    await saveCoreProseCatalogue();
+    h.writes.length = 0;
+    store.dirty.clear();
+  }
+
+  it('adds, previews and removes a core counterpart in its own YAML file, preserving header and siblings', async () => {
+    const before = h.disk.get(FILE)!;
+    expect(before).toContain('# Plain English counterparts for the engine');
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      expect(pendingCoreProseText()!.after).toContain(ADDRESS);
+      expect(h.disk.get(FILE)).toBe(before); // a preview is not a write
+      expect((await saveCoreProseCatalogue()).ok).toBe(true);
+      const after = h.disk.get(FILE)!;
+      expect(after).toContain(ADDRESS);
+      expect(after).toContain('# Plain English counterparts for the engine');
+      expect(after).toContain('core:messages#assize.the_assessors_call');
+      expect(store.dirty.has(FILE)).toBe(false);
+
+      expect(applyCoreProseEdits([{ ...EDIT, plainenglish: '' }]).ok).toBe(true);
+      // File-level save must work after the removed row no longer has an id
+      // for saveItem('proseVariants', address) to look up.
+      expect((await saveCoreProseCatalogue()).ok).toBe(true);
+      expect(h.disk.get(FILE)).not.toContain(ADDRESS);
+      expect(h.disk.get(FILE)).toContain('core:messages#assize.the_assessors_call');
+      expect(h.writes.every((write) => write.path === FILE)).toBe(true);
+    } finally {
+      await cleanUp();
+    }
+  });
+
+  it('rejects malformed or repeated interpolation placeholders atomically', () => {
+    const before = pendingCoreProseText()!.after;
+    const result = applyCoreProseEdits([
+      EDIT,
+      { address: 'core:messages#another_test_key', original: '{PERSON} greeted {PERSON}.',
+        plainenglish: '{PERSON} said hello.' },
+    ]);
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/missing.*\\{PERSON\\}/);
+    expect(pendingCoreProseText()!.after).toBe(before);
+    expect(store.bundle.proseVariants.some((v) => v.address === ADDRESS)).toBe(false);
+  });
+
+  it('refuses all shipped catalogue writes in Mod Editor mode', async () => {
+    h.writable.value = false;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(false);
+      const result = await saveCoreProseCatalogue();
+      expect(result.ok).toBe(false);
+      expect(result.error).toMatch(/read-only/i);
+      expect(h.writes).toHaveLength(0);
+    } finally {
+      h.writable.value = true;
+    }
+  });
+
+  it('retains edits and the diff baseline when the write transport fails', async () => {
+    const before = h.disk.get(FILE)!;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      h.refuse.value = true;
+      const failure = await saveCoreProseCatalogue();
+      expect(failure.ok).toBe(false);
+      expect(store.errors[FILE]).toMatch(/refused/);
+      expect(store.dirty.has(FILE)).toBe(true);
+      expect(h.disk.get(FILE)).toBe(before);
+      expect(pendingCoreProseText()!.before).toBe(before);
+      expect(pendingCoreProseText()!.after).toContain(ADDRESS);
+
+      h.refuse.value = false;
+      expect((await saveCoreProseCatalogue()).ok).toBe(true);
+      expect(store.errors[FILE]).toBeUndefined();
+      expect(store.saving.has(FILE)).toBe(false);
+    } finally {
+      await cleanUp();
+    }
   });
 });
