@@ -117,7 +117,7 @@ export function leakChance(contract: RetainerContract, reason: ReleaseReason, ye
  * indoors. The player's own house is not a place to go from the player's own
  * house.
  */
-function newEmployer(ctx: SimCtx, rng: Rng): string | undefined {
+export function newEmployer(ctx: SimCtx, rng: Rng): string | undefined {
   const rivals = ctx.content.houses.filter((h) => h.id !== ctx.world.playerHouse);
   return rng.weighted(rivals, (h) => Math.min(h.wealth, 1000))?.id;
 }
