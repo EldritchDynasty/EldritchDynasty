@@ -26,6 +26,7 @@ function spyActions(saves: SaveSummary[] = []) {
     exportSave: vi.fn(async () => true),
     deleteLibraryRun: vi.fn(async () => undefined),
     clearLibrary: vi.fn(async () => undefined),
+    setProseMode: vi.fn(),
   } as unknown as GameActions;
 }
 
@@ -644,6 +645,29 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     expect(w.find('.library [role="alert"]').exists()).toBe(false);
     expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(2);
     expect(w.find('.library-remove-confirm').exists()).toBe(false);
+  });
+});
+
+describe('Start routes prose changes through its parent (#1340)', () => {
+  it('emits the chosen mode once without dispatching directly to the game store', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, proseMode: 'original' } });
+    try {
+      await flush();
+      const select = w.get('select[aria-label="Prose style"]');
+      expect((select.element as HTMLSelectElement).value).toBe('original');
+
+      await select.setValue('plainenglish');
+      expect(w.emitted('update:proseMode')).toEqual([['plainenglish']]);
+      // App.vue owns createProseModeSelector and its async catalogue loading.
+      // Start must not issue a second setProseMode/refresh behind that owner.
+      expect(actions.setProseMode).not.toHaveBeenCalled();
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect((select.element as HTMLSelectElement).value).toBe('plainenglish');
+    } finally {
+      w.unmount();
+    }
   });
 });
 
