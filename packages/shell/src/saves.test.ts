@@ -65,6 +65,9 @@ describe('a slot is a name, not a path', () => {
     expect(slotOfFile('notes.txt')).toBeUndefined();
     expect(slotOfFile('../escaped.edsave.json')).toBeUndefined();
     expect(slotOfFile('.edsave.json')).toBeUndefined();
+    // These file names look shell-owned, but readSave/deleteSave reject the slots.
+    expect(slotOfFile('run .edsave.json')).toBeUndefined();
+    expect(slotOfFile(' run.edsave.json')).toBeUndefined();
   });
 });
 
@@ -147,6 +150,22 @@ describe('the save directory', () => {
 
     deleteSave(root, 'the autumn run');
     expect(listSaves(root)).toEqual([]);
+  });
+
+  it('does not advertise a foreign filename that cannot be read or deleted as a slot', () => {
+    const foreign = join(root, 'run .edsave.json');
+    const original = JSON.stringify(aSave({ year: 1300 }));
+    writeFileSync(foreign, original, 'utf8');
+    writeSave(root, 'valid run', aSave({ year: 1450 }));
+
+    expect(() => readSave(root, 'run ')).toThrow(SaveSlotError);
+    expect(() => deleteSave(root, 'run ')).toThrow(SaveSlotError);
+    expect(listSaves(root).map((s) => s.slot)).toEqual(['valid run']);
+    expect(readSave(root, 'valid run')).toMatchObject({ year: 1450 });
+
+    deleteSave(root, 'valid run');
+    expect(listSaves(root)).toEqual([]);
+    expect(readFileSync(foreign, 'utf8')).toBe(original);
   });
 
   it('refuses a save-root directory symlink before any save can escape the profile', () => {
