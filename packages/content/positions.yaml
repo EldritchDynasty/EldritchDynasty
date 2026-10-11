@@ -46,3 +46,21 @@ positions:
     perYear: 18
     multiplier: 3.2
     minRespect: eminent
+
+proseVariants:
+  - address: "content:positions.yaml#positions[id=none].name"
+    of: "88b2374cd9f5fb70"
+    plainenglish: >-
+      No war banner
+  - address: "content:positions.yaml#positions[id=serjeanty].name"
+    of: "e22bbad7b081db53"
+    plainenglish: >-
+      A military service pledge
+  - address: "content:positions.yaml#positions[id=a_captaincy].name"
+    of: "0e9c11e03c5413dc"
+    plainenglish: >-
+      A captain's command
+  - address: "content:positions.yaml#positions[id=a_banner].name"
+    of: "c85c2f7e86da8d4a"
+    plainenglish: >-
+      The house's own war banner
