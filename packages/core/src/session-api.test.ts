@@ -616,6 +616,27 @@ describe('family planning fields do not read hidden blood', () => {
 });
 
 describe('the read model a client draws', () => {
+  it('retains a deceased person\'s Chronicle link name outside the living halls (#1077)', () => {
+    const game = newGame(content, { seed: 1042, decider: 'chronicler' });
+    const person = place(game.ctx, { sex: 'female', age: 26, name: 'Old Chronicle witness' });
+    const year = game.ctx.world.year;
+    game.ctx.world.chronicle.push({
+      id: 'chr_dead_name_witness',
+      year,
+      text: 'The Chronicle remembers her.',
+      weight: 'line',
+      named: false,
+      people: [person.id],
+    } as ChronicleEntry);
+
+    expect(game.ctx.world.people.kill(person.id, year, 'test illness')).toBe(true);
+    const shown = viewOf(game.ctx);
+    expect(shown.halls.flatMap((hall) => hall.members).some((m) => m.id === person.id)).toBe(false);
+    expect(shown.chronicle.some((entry) => entry.id === 'chr_dead_name_witness')).toBe(true);
+    expect(shown.chroniclePeople).toContainEqual({ id: person.id, name: person.name });
+    expect(Object.keys(shown.chroniclePeople.find((p) => p.id === person.id)!)).toEqual(['id', 'name']);
+  });
+
   it('keeps Awakening separate from expression for a female carrier', () => {
     const game = newGame(content, { seed: 1042, decider: 'chronicler' });
     let carrier: ReturnType<typeof place> | undefined;
