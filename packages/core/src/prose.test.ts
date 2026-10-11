@@ -336,12 +336,16 @@ function fixture() {
 }
 
 describe('prospective prose selection', () => {
-  it('loads the authored catalogue from content without host-side injection', () => {
+  it.each([false, true])('loads the authored catalogue without host-side injection (existing row: %s)', (hasExistingRow) => {
     const { bundle } = fixture();
-    bundle.proseVariants.push({
+    // Exercise both coverage states independently of how far the corpus has
+    // been translated. A real authored row must not collide with this fixture.
+    bundle.proseVariants = bundle.proseVariants.filter((variant) => variant.address !== ADDRESS);
+    if (hasExistingRow) bundle.proseVariants.push({ address: ADDRESS, plainenglish: 'An earlier counterpart.' });
+    bundle.proseVariants = [...bundle.proseVariants.filter((variant) => variant.address !== ADDRESS), {
       address: ADDRESS,
       plainenglish: 'The authored catalogue reaches the runtime directly.',
-    });
+    }];
 
     const session = newGame(bundle, { proseMode: 'plainenglish' });
 
