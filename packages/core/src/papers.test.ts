@@ -118,7 +118,7 @@ describe('buying a grandmother', () => {
     expect(ctx.world.treasury).toBe(treasury);
 
     // The ordinary living world-owned record remains a valid filing target.
-    expect(filePedigree(ctx, living, 'bramme').generations).toBe(PEDIGREE_COVERS.bramme);
+    expect(filePedigree(ctx, living, 'bramme').generations).toBe(2);
     expect(living.lineageDocuments).toHaveLength(1);
   });
 
