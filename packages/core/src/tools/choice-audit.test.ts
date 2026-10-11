@@ -200,7 +200,7 @@ describe('the #334 choice-debt worklist', () => {
 
     for (const file of work.files) {
       const normalise = (item: { kind: string; key: string; writers: string[] }) =>
-        [item.kind, item.key, ...[...item.writers].sort()].join('\\u0000');
+        [item.kind, item.key, ...[...item.writers].sort()].join('\u0000');
       expect((grouped.get(file.file) ?? []).map(normalise).sort())
         .toEqual(file.memory.map(normalise).sort());
     }
