@@ -38,7 +38,7 @@ export function saveRoot(userData) {
  * non-save JSON value must stay visible as unreadable, never turn into a
  * missing slot in the preload. Core remains the save-schema authority.
  */
-function requireSaveEnvelope(save) {
+export function requireSaveEnvelope(save) {
   if (save === null || typeof save !== 'object' || Array.isArray(save) || typeof save.format !== 'number') {
     throw new TypeError('a save is an object with a numeric format');
   }
