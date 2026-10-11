@@ -53,7 +53,7 @@ describe('Plain English variant guardrails (#415)', () => {
   });
 
   it('rejects whitespace-only Plain English while preserving authored spacing (#1317)', () => {
-    for (const blank of [' ', '   ', '\\t', '\\n', '  \\n \\t']) {
+    for (const blank of [' ', '   ', '\t', '\n', '  \n \t']) {
       expect(ProseVariantS.safeParse({
         address: fixture.address,
         plainenglish: blank,
