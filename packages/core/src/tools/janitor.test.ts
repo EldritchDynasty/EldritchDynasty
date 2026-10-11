@@ -533,13 +533,14 @@ describe('the janitor', () => {
       const reopenedAt = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const pr = {
         ...prEvidence(f.agent, f.head, { merged_at: mergedAt }),
-        body: 'Closes #701. Closes #702. Closes #703. Closes #704.',
+        body: 'Closes #701. Closes #702. Closes #703. Closes #704. Closes #705.',
       };
       const issues = {
         701: { state: 'OPEN', reopenings: [] },
         702: { state: 'OPEN', reopenings: [reopenedAt] },
         703: { state: 'OPEN' }, // Unavailable history fails safe.
         704: { state: 'OPEN', reopenings: ['not-a-timestamp'] },
+        705: { state: 'UNKNOWN', reopenings: [] }, // Unreadable issue state also fails safe.
       };
       const sweep = (state: typeof issues) => janitor(f.sweep, {
         ...withPrEvidence([pr]),
@@ -553,9 +554,22 @@ describe('the janitor', () => {
       expect(first.out).toContain('kept #702 open — reopened after merged PR #900');
       expect(first.out).toContain('kept #703 open — reopening history UNKNOWN');
       expect(first.out).toContain('kept #704 open — reopening history UNKNOWN');
-      for (const n of [702, 703, 704]) {
+      for (const n of [702, 703, 704, 705]) {
         expect(first.out).not.toContain(`would: gh issue close ${n}`);
       }
+
+      // Actions writes decisions to GITHUB_STEP_SUMMARY rather than stdout.
+      // The failure reason must still name the issue in its searchable job log.
+      const logged = janitor(f.sweep, {
+        ...withPrEvidence([pr]),
+        JANITOR_ISSUES_JSON: JSON.stringify(issues),
+      });
+      expect(logged.code).toBe(0);
+      expect(logged.out).toContain('issue reconciliation: #703 reopening history UNKNOWN');
+      expect(logged.out).toContain('issue reconciliation: #704 reopening history UNKNOWN');
+      expect(logged.out).toContain('issue reconciliation: #705 state UNKNOWN');
+      expect(logged.out).not.toContain('would: gh issue close 705');
+      expect(logged.out).not.toContain('- kept #703 open');
 
       // Model GitHub having accepted the first close. A later push/schedule
       // retries the same inventory without ever re-closing the reopened issue.
