@@ -99,13 +99,12 @@ async function refreshSaves(): Promise<void> {
 async function continueLastSitting(): Promise<void> {
   // The rolling save may have become unreadable after the front door offered it.
   // A refused resume must not look like an inert Continue button.
+  const explanation = 'The last sitting could not be resumed. Try a saved run or begin anew.';
   refused.value = null;
   try {
-    if (!await props.actions.resume()) {
-      refused.value = 'The last sitting could not be resumed. Try a saved run or begin anew.';
-    }
+    if (!await props.actions.resume()) refused.value = explanation;
   } catch {
-    refused.value = 'The last sitting could not be resumed. Try a saved run or begin anew.';
+    refused.value = explanation;
   }
 }
 
