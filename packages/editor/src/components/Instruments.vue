@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { Content, Issue, EventTemplate, ClauseDef } from '@ed/schema';
 import { PurposeS } from '@ed/schema';
 import { CAMPAIGN_YEARS, TEST_FAMILIES, autoCast, castPeople, decideBranch, nameList, resolveSlots, runFireRateGate, testRng, type FireRateGateResult, type SimCtx } from '@ed/core';
 import { deciderKind } from '@ed/schema';
 import { fileOfId } from '../lib/store';
+import { fireRateInputError } from '../lib/fire-rate-input';
 
 const props = defineProps<{ content: Content; issues: Issue[] }>();
 
@@ -100,6 +101,9 @@ const runs = ref(15);
 const years = ref(300);
 const running = ref(false);
 const fireRate = ref<FireRateGateResult | undefined>(undefined);
+const fireRateError = computed(() => fireRateInputError(runs.value, years.value, CAMPAIGN_YEARS));
+// A verdict is evidence for the sampled settings only, never edited settings.
+watch([runs, years], () => { fireRate.value = undefined; });
 
 function useCiFireRateSettings() {
   runs.value = 800;
@@ -107,6 +111,7 @@ function useCiFireRateSettings() {
 }
 
 async function runFireRate() {
+  if (running.value || fireRateError.value) return;
   running.value = true;
   fireRate.value = undefined;
   await new Promise((r) => setTimeout(r, 0)); // let "running…" paint before the synchronous simulation
@@ -394,11 +399,12 @@ const talePairs = computed(() =>
   <!-- ── Fire rate ──────────────────────────────────────────────────── -->
   <div v-else-if="section === 'firerate'">
     <div class="bar">
-      <label style="margin:0">Runs<input v-model.number="runs" type="number" min="1" max="800" style="width:80px" /></label>
-      <label style="margin:0">Years<input v-model.number="years" type="number" min="10" :max="CAMPAIGN_YEARS" step="10" style="width:80px" /></label>
+      <label style="margin:0">Runs<input v-model.number="runs" type="number" min="1" max="800" :disabled="running" style="width:80px" /></label>
+      <label style="margin:0">Years<input v-model.number="years" type="number" min="10" :max="CAMPAIGN_YEARS" step="10" :disabled="running" style="width:80px" /></label>
       <button class="btn" :disabled="running" @click="useCiFireRateSettings">Use CI settings</button>
-      <button class="btn primary" :disabled="running" @click="runFireRate">{{ running ? 'Running…' : 'Run gate 4' }}</button>
+      <button class="btn primary" :disabled="running || !!fireRateError" @click="runFireRate">{{ running ? 'Running…' : 'Run gate 4' }}</button>
     </div>
+    <p v-if="fireRateError" class="issue error" role="alert">{{ fireRateError }}</p>
     <p class="note">
       <strong><code>frequency</code> is a rationing tier, not a weight.</strong>
       Adding thirty <code>common</code> templates silently rations every other common template.
