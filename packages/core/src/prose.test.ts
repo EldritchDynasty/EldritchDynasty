@@ -34,9 +34,10 @@ describe('main hall label in the selected prose mode (#1108)', () => {
     const { ctx } = session;
     const address = 'core:messages#session.hall.main';
     const seat = () => session.view().halls.find((hall) => hall.isSeat)?.name;
-    const originalSave = canonical(saveGame(ctx));
-
+    // Establish the view's initial state before comparing saves: constructing
+    // its first read may materialize the initial suitor draft.
     expect(seat()).toBe('the main hall');
+    const originalSave = canonical(saveGame(ctx));
     const variant = {
       address, of: proseOriginalHash('the main hall'), plainenglish: 'the family seat',
     };
