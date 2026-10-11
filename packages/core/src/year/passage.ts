@@ -73,7 +73,7 @@ import { msg } from '../messages.js';
  * the chronicle keeps only the endings the HOUSE caused: wages it could not
  * pay, and a man's will.
  */
-export type PassageKind = 'birth' | 'death' | 'awakening' | 'study' | 'service';
+export type PassageKind = 'birth' | 'stillbirth' | 'death' | 'awakening' | 'study' | 'service';
 
 export interface PassageLine {
   kind: PassageKind;
@@ -123,6 +123,13 @@ export function passageOf(ctx: SimCtx, report: YearReport): Passage | undefined 
 
   for (const p of report.births) {
     lines.push({ kind: 'birth', person: p.id, text: born(ctx, p) });
+  }
+
+  // The same phase, and the same demography: a son the blood took in the
+  // womb is a fact about this year exactly as a son born is (#1180).
+  for (const s of report.stillbirths) {
+    const text = stillborn(ctx, s);
+    if (text !== undefined) lines.push({ kind: 'stillbirth', person: String(s.mother), text });
   }
 
   return lines.length ? { year: report.year, lines } : undefined;
@@ -193,4 +200,30 @@ function born(ctx: SimCtx, child: Person): string {
   return child.sex === 'female'
     ? msg(ctx, 'passage.birth.daughter.unknown', 'A daughter born.')
     : msg(ctx, 'passage.birth.son.unknown', 'A son born.');
+}
+
+/**
+ * A CONCEPTION THAT DID NOT LIVE (#1180).
+ *
+ * `conceiveChild` has always known why, and nothing read it: the births phase
+ * dropped the loss on the floor, so a hot line losing its sons in the womb
+ * (§11) looked on screen like a line with bad luck at the coin flip, which is
+ * the one reading the brief says it is not.
+ *
+ * Shaped like `born` on purpose, and naming the mother for the same reasons.
+ * The cause is the brief's own phrase, quoted the way `died` quotes a cause of
+ * death, not explained: §11 says the houses have no word for why.
+ *
+ * Undefined only when the mother is no longer in the store, which a mother in
+ * labour this year cannot be; the guard is for a report read out of its year.
+ */
+function stillborn(ctx: SimCtx, s: YearReport['stillbirths'][number]): string | undefined {
+  const mother = ctx.world.people.get(s.mother);
+  if (!mother) return undefined;
+  const cause = s.cause === 'overflow'
+    ? msg(ctx, 'passage.stillbirth.cause.overflow', 'pressure with no vessel')
+    : msg(ctx, 'passage.stillbirth.cause.close_blood', 'the blood ran too close');
+  return s.sex === 'female'
+    ? msg(ctx, 'passage.stillbirth.daughter', 'A daughter born to {MOTHER} did not live — {CAUSE}.', { MOTHER: mother.name, CAUSE: cause })
+    : msg(ctx, 'passage.stillbirth.son', 'A son born to {MOTHER} did not live — {CAUSE}.', { MOTHER: mother.name, CAUSE: cause });
 }

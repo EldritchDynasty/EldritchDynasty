@@ -1,4 +1,4 @@
-import type { Person } from '@ed/schema';
+import type { Person, PersonId } from '@ed/schema';
 import { asId, MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { hashSeed, type Rng } from '../rng.js';
@@ -397,6 +397,8 @@ export function crowding(size: number, cap: number): number {
 
 export interface Conception {
   birth: ReturnType<typeof conceiveChild>;
+  /** Carried for the conception that does not live, which has no child to read her from (#1180). */
+  mother: PersonId;
   branch: string;
   /** Two contracted parents: a servant family, of the household but not the blood. */
   servants: boolean;
@@ -484,6 +486,7 @@ export function rollBirths(ctx: SimCtx, rng: Rng): Conception[] {
           mother, father, ordinal, w.year, ctx.genetics, ctx.takenNames, dynastic, household, w,
           { friends: w.friends },
         ),
+        mother: mother.id,
         branch,
         servants: Boolean(mother.contract && father.contract),
       });
