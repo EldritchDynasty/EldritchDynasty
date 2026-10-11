@@ -1,4 +1,5 @@
-import type { FrameEntry, Person, PersonId } from '@ed/schema';
+import type { FrameEntry, Person, PersonId, Sex } from '@ed/schema';
+import type { StillbirthCause } from '../people/factory.js';
 import type { PendingDecision } from '../events/decisions.js';
 import type { ResolvedEvent } from '../events/effects.js';
 import type { AssizeReport } from '../assize.js';
@@ -10,6 +11,12 @@ import type { LandRiskResult } from '../land.js';
 export interface YearReport {
   year: number;
   births: Person[];
+  /**
+   * Conceptions in the house that did not live (#1180). The child never
+   * enters the world, so this is the only place the loss is anywhere; the
+   * passage log reads it, which is the whole of why it exists.
+   */
+  stillbirths: { mother: PersonId; sex: Sex; cause: StillbirthCause }[];
   deaths: Person[];
   awakenings: Person[];
   agesBegan: string[];
@@ -68,7 +75,7 @@ export interface YearReport {
 export function emptyReport(year: number): YearReport {
   return {
     year,
-    births: [], deaths: [], awakenings: [],
+    births: [], stillbirths: [], deaths: [], awakenings: [],
     agesBegan: [], agesEnded: [], agesNamed: [],
     resolved: [], pending: [], branchesFounded: [], studiesFinished: [], serviceEnded: [],
   };

@@ -72,6 +72,9 @@ li { font-size: var(--t-fine); line-height: 1.5; color: var(--ink-soft); }
 /* A death is the only line here the house cannot undo, and the only one that
    takes somebody off the tree. It gets the ink. */
 li.death { color: var(--ink); }
+/* A child the blood took before birth is the same kind of loss, and §11's
+   "the blood takes sons" is otherwise visible nowhere (#1180). Same ink. */
+li.stillbirth { color: var(--ink); }
 /* A foregrounded death gets a second, quieter line rather than a warning
    treatment. The passage is still a flat account; this merely reads back the
    one fact that made the player notice this person last spring. */

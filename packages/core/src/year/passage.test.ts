@@ -6,12 +6,13 @@ import { join } from 'node:path';
 import { coreMessageAddress, msg } from '../messages.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
-import { beget, phase, place, testWorld } from '../testing.js';
+import { beget, marry, phase, place, testWorld } from '../testing.js';
+import { genomeOf } from '../people/factory.js';
 import { beginStudy } from '../people/library.js';
 import { rollDeath } from '../people/demography.js';
 import { makeRng } from '../rng.js';
 import type { SimCtx } from '../world.js';
-import { emptyReport } from './report.js';
+import { emptyReport, type YearReport } from './report.js';
 import { passageOf } from './passage.js';
 
 const bundle = loadContent();
@@ -147,6 +148,86 @@ describe('a year, as lines', () => {
 });
 
 /**
+ * A CONCEPTION THAT DID NOT LIVE (#1180).
+ *
+ * `conceiveChild` has returned a stillbirth and its reason since it was
+ * written, and the births phase dropped both: no line, no report field, no
+ * test. §11's "the blood takes sons" was a mechanism with no surface.
+ */
+describe('a stillbirth, as a line', () => {
+  it('names the mother and the cause, never a child who was never in the world', () => {
+    const ctx = testWorld(bundle, 4420);
+    const mother = place(ctx, { sex: 'female', age: 27, name: 'Isolde' });
+
+    const report = emptyReport(ctx.world.year);
+    report.stillbirths.push({ mother: mother.id, sex: 'male', cause: 'overflow' });
+    report.stillbirths.push({ mother: mother.id, sex: 'female', cause: 'close_blood' });
+
+    const lines = passageOf(ctx, report)!.lines;
+    expect(lines.map((line) => line.kind)).toEqual(['stillbirth', 'stillbirth']);
+    expect(lines.map((line) => line.text)).toEqual([
+      'A son born to Isolde did not live — pressure with no vessel.',
+      'A daughter born to Isolde did not live — the blood ran too close.',
+    ]);
+    // A click goes to the person the line is about, and there is only her.
+    expect(lines.every((line) => line.person === mother.id)).toBe(true);
+  });
+
+  it('comes after the year\'s births, from the same phase', () => {
+    const ctx = testWorld(bundle, 4421);
+    const mother = place(ctx, { sex: 'female', age: 30, name: 'Branwen' });
+    const child = place(ctx, { sex: 'female', age: 0, name: 'Wren' });
+    beget(ctx, child, mother);
+
+    const report = emptyReport(ctx.world.year);
+    report.births.push(child);
+    report.stillbirths.push({ mother: mother.id, sex: 'male', cause: 'close_blood' });
+    expect(passageOf(ctx, report)!.lines.map((line) => line.kind)).toEqual(['birth', 'stillbirth']);
+  });
+
+  /**
+   * The engine half, against the real births phase: couples homozygous for
+   * every lethal allele the locus table has, so each conception risks the
+   * close-blood draw. Asserts the mechanism (what was lost is reported, and
+   * only for these mothers), not how many a given seed produces.
+   */
+  it('is reported by the births phase whenever the blood runs too close', () => {
+    const ctx = testWorld(bundle, 4422);
+    const w = ctx.world;
+    const { table } = ctx.genetics;
+    const lethal: [number, number][] = [];
+    table.autosomal.forEach((locus, i) => {
+      table.autosomalAlleles[i]!.forEach((allele, a) => {
+        if (locus.kind === 'deleterious' && allele.tags.includes('lethal_homozygous')) lethal.push([i, a]);
+      });
+    });
+    expect(lethal.length, 'the locus table has no lethal recessive to build this from').toBeGreaterThan(0);
+
+    const wives = new Set<string>();
+    for (let n = 0; n < 8; n++) {
+      // A hall each, so the seat's crowding brake is not what this measures.
+      const wife = place(ctx, { sex: 'female', age: 19, name: `Wife${n}`, branch: `hall_${n}` });
+      const husband = place(ctx, { sex: 'male', age: 21, name: `Husband${n}`, branch: `hall_${n}` });
+      for (const parent of [wife, husband]) {
+        const g = genomeOf(parent, ctx.genetics);
+        for (const [i, a] of lethal) { g.autosomal[0][i] = a; g.autosomal[1][i] = a; }
+      }
+      marry(ctx, wife, husband);
+      wives.add(String(wife.id));
+    }
+
+    const lost: YearReport['stillbirths'] = [];
+    for (let year = 0; year < 20; year++) {
+      lost.push(...phase('births', ctx).stillbirths);
+      w.year += 1;
+    }
+
+    expect(lost.length).toBeGreaterThan(0);
+    expect(lost.every((s) => wives.has(String(s.mother)) && s.cause === 'close_blood')).toBe(true);
+  });
+});
+
+/**
  * The yearly report is a view, not saved history. A reader may switch wording
  * before asking for the next report without changing the people it records.
  */
@@ -166,8 +247,12 @@ describe('year-passage prose identities (#710)', () => {
       coreMessageAddress('passage.birth.son.named'),
       coreMessageAddress('passage.birth.daughter.unknown'),
       coreMessageAddress('passage.birth.son.unknown'),
+      coreMessageAddress('passage.stillbirth.son'),
+      coreMessageAddress('passage.stillbirth.daughter'),
+      coreMessageAddress('passage.stillbirth.cause.overflow'),
+      coreMessageAddress('passage.stillbirth.cause.close_blood'),
     ]));
-    expect(keys).toHaveLength(9);
+    expect(keys).toHaveLength(13);
     // New preceding literals may move old ordinal positions, but cannot
     // renumber a reviewed core:messages key.
     const inserted = plainEnglishCoreWorkItems(

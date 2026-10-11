@@ -494,8 +494,11 @@ export const YEAR_PHASES: readonly Phase[] = [
     run({ ctx, rng, report }) {
       const w = ctx.world;
       const newborns: { child: Person; servants: boolean }[] = [];
-      for (const { birth: b, branch, servants } of rollBirths(ctx, rng)) {
-        if (!b.child) continue;
+      for (const { birth: b, mother, branch, servants } of rollBirths(ctx, rng)) {
+        if (!b.child) {
+          if (b.stillborn && b.cause && b.sex) report.stillbirths.push({ mother, sex: b.sex, cause: b.cause });
+          continue;
+        }
 
         // Born into the hall their mother lives in, not into the seat. This is
         // what makes a branch a lineage rather than a list of exiles.

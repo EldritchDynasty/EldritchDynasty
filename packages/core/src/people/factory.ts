@@ -221,10 +221,20 @@ export function makePerson(init: {
   };
 }
 
+/**
+ * Why a conception did not live (#1180). A closed kind, not a phrase: the
+ * words are the passage log's, keyed through `msg()`, and this layer is
+ * genetics.
+ */
+export type StillbirthCause = 'close_blood' | 'overflow';
+
 export interface BirthResult {
   child?: Person;
   stillborn: boolean;
-  reason?: string;
+  /** Set exactly when `stillborn` is. */
+  cause?: StillbirthCause;
+  /** The sex of the child that did not live; set exactly when `stillborn` is. */
+  sex?: Sex;
 }
 
 /**
@@ -298,7 +308,7 @@ export function conceiveChild(
   // Deleterious homozygosity kills either sex.
   const load = countLethal(genome, ctx.table);
   if (load > 0 && rng.bool(Math.min(0.75, 0.28 * load))) {
-    return { stillborn: true, reason: 'the blood ran too close' };
+    return { stillborn: true, cause: 'close_blood', sex };
   }
 
   // Overflow in the womb is a MALE outcome: a daughter's second copy of the
@@ -308,7 +318,7 @@ export function conceiveChild(
   const profile = eldritch(genome, sex, ctx.table);
   if (profile.canExpress && profile.overflowMadness > 0) {
     const risk = Math.min(0.55, profile.overflowMadness / 90);
-    if (rng.bool(risk)) return { stillborn: true, reason: 'pressure with no vessel' };
+    if (rng.bool(risk)) return { stillborn: true, cause: 'overflow', sex };
   }
 
   // DYNASTIC. A child of the house is named for somebody, and the ordinal
