@@ -516,6 +516,26 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     }
   });
 
+  it('clearing the Library cancels an unrelated pending single-house removal', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-title button').trigger('click');
+      expect(w.find('.library-remove-confirm').exists()).toBe(true);
+
+      await w.get('.library-head button').trigger('click');
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('never submits a second deletion while the host is still removing that house', async () => {
     const actions = spyActions();
     let finishDelete: (() => void) | undefined;
