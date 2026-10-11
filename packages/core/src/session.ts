@@ -1340,18 +1340,13 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         }
         if (spouse) {
           const marriedIn = spouse.houseOfOrigin !== w.playerHouse;
-          const spouseHouse = marriedIn ? ctx.content.house(spouse.houseOfOrigin) : undefined;
           m.spouse = {
             id: spouse.id,
             name: spouse.name,
             marriedIn,
-            // Show the house's selected wording, without translating its
-            // identity or the relationship recorded in the saved world.
-            ...(marriedIn
-              ? { house: spouseHouse
-                ? proseForContentField(ctx, 'houses', String(spouseHouse.id), 'name', spouseHouse.name)
-                : spouse.houseOfOrigin }
-              : {}),
+            // The current name takes precedence over an authored translation:
+            // this is the same house name promises and loose secrets display.
+            ...(marriedIn ? { house: presentedHouseName(ctx, spouse.houseOfOrigin) } : {}),
           };
         }
         return m;
