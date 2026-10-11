@@ -191,13 +191,16 @@ const boundaries = computed(() =>
  * book down to their forty blanks wants a plate of the blanks.
  */
 const plating = ref(false);
+const plateError = ref<string | null>(null);
+const PLATE_ERROR = 'The page could not be saved. Try a smaller selection or another browser.';
 
 async function plate(): Promise<void> {
+  plateError.value = null;
   plating.value = true;
   try {
     const entries = shown.value;
     const gauge = document.createElement('canvas').getContext('2d');
-    if (!gauge) return;
+    if (!gauge) { plateError.value = PLATE_ERROR; return; }
     const measure: Measure = (text, font) => {
       gauge.font = font;
       return gauge.measureText(text).width;
@@ -221,7 +224,7 @@ async function plate(): Promise<void> {
     canvas.width = PLATE.width;
     canvas.height = height;
     const c = canvas.getContext('2d');
-    if (!c) return;
+    if (!c) { plateError.value = PLATE_ERROR; return; }
 
     c.fillStyle = PLATE.ground;
     c.fillRect(0, 0, canvas.width, canvas.height);
@@ -260,8 +263,12 @@ async function plate(): Promise<void> {
     c.fillText('Eldritch Dynasty', PLATE.pad, canvas.height - 28);
 
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-    if (!blob) return;
+    if (!blob) { plateError.value = PLATE_ERROR; return; }
     downloadBlob(blob, plateName(props.houseName, entries));
+  } catch {
+    // Canvas allocation/encoding and browser download APIs can all fail.
+    // A silent click would leave a reader thinking their page was saved.
+    plateError.value = PLATE_ERROR;
   } finally {
     plating.value = false;
   }
@@ -307,6 +314,7 @@ const counts = computed(() => ({
           {{ counts.all }} entries · {{ counts.blank }} left blank ·
           {{ counts.improved }} improved · {{ counts.illuminated }} illuminated
         </p>
+        <p v-if="plateError" role="alert" class="note">{{ plateError }}</p>
 
         <div class="wrap lenses">
           <button
