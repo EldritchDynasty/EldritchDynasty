@@ -117,6 +117,42 @@ describe('live trait names in the selected prose mode (#957)', () => {
   });
 });
 
+describe('player house name in the selected prose mode (#410)', () => {
+  it('renders the authored default, but never replaces a renamed house or changes a save', () => {
+    const session = newGame(loadContent());
+    const { ctx } = session;
+    const house = ctx.content.house(ctx.world.playerHouse);
+    if (!house) throw new Error('The authored player house is missing');
+    const address = `content:${ctx.content.sourceOf(String(house.id))}#houses[id=${encodeURIComponent(String(house.id))}].name`;
+    expect(session.view().houseName).toBe(house.name);
+    const originalSave = canonical(saveGame(ctx));
+    const variant = { address, of: proseOriginalHash(house.name), plainenglish: 'The Gearithy family' };
+
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(session.view().houseName).toBe(variant.plainenglish);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
+    expect(session.view().houseName).toBe(house.name);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(session.view().houseName).toBe(house.name);
+    expect(canonical(saveGame(ctx))).toBe(originalSave);
+
+    // A live house rename is not the authored Original and must always win.
+    ctx.world.houses.get(ctx.world.playerHouse)!.name = 'The House I Renamed';
+    const renamedSave = canonical(saveGame(ctx));
+    setProseVariants(ctx, [variant]);
+    session.setProseMode('plainenglish');
+    expect(session.view().houseName).toBe('The House I Renamed');
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+    session.setProseMode('original');
+    expect(session.view().houseName).toBe('The House I Renamed');
+    expect(canonical(saveGame(ctx))).toBe(renamedSave);
+  });
+});
 describe('married-in spouse house names in the selected prose mode (#968)', () => {
   it('renders a reviewed house name and preserves Original, stale fallback and saves', () => {
     const session = newGame(loadContent());
