@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import {
-  applyEffect, beget, bootstrap, dealMatch, filePedigree, hashSeed, makeRng, maternalDepth,
+  announceAuction, applyEffect, beget, bootstrap, dealMatch, resolveDueLots, worldViolations, filePedigree, hashSeed, makeRng, maternalDepth,
   order, papersDemanded, papersHeld, phase, place, saveGame, loadGame, setProseMode,
   setProseVariants, testRng, testWorld, tickPapers,
   PEDIGREE_PRICE, FULL_PEDIGREE,
@@ -223,8 +223,77 @@ describe('and getting caught', () => {
     expect(opened.length).toBeGreaterThan(0);
     for (const [, d] of opened) {
       expect(d.state).toBe('open');
-      expect(d.provableBy).toContain('the parish roll');
+      // The parish roll's keeper, a Church office (world §16). This asserted
+      // the English phrase until #1190, which is how a parish register came
+      // to bid at auction.
+      expect(d.provableBy).toEqual(['the_church']);
     }
+  });
+
+  /**
+   * WHO CAN PROVE IT IS A HOUSE (#1190).
+   *
+   * `provableBy` is read as house ids by the auction (who sells the page, and
+   * who bids for it), by the relationship threads, and by every proof scene
+   * that narrows to a prover. Two English phrases there made "the parish roll"
+   * a bidder and kept every Church scene from reaching the lie.
+   */
+  describe('the exposed forgery is the Church\'s to prove', () => {
+    const exposed = (seed: number) => {
+      const ctx = testWorld(bundle, seed);
+      const p = place(ctx, { sex: 'female', age: 22, name: 'Bought' });
+      filePedigree(ctx, p, 'caster');
+      const before = new Set(ctx.world.discrepancies.keys());
+      tickPapers(ctx, { ...testRng('expose', seed), bool: (_chance: number) => true });
+      const id = [...ctx.world.discrepancies.keys()].find((k) => !before.has(k))!;
+      return { ctx, id };
+    };
+
+    it('names a house, so a world holding it is still a healthy one', () => {
+      const { ctx, id } = exposed(1190);
+      expect(ctx.world.discrepancies.get(id)!.provableBy.every((h) => ctx.content.house(h))).toBe(true);
+      expect(worldViolations(ctx).filter((v) => v.rule === 'discrepancy/prover')).toEqual([]);
+
+      // And the check can fail: a prover that is not a house is named.
+      ctx.world.discrepancies.set('planted', { severity: 'minor', provableBy: ['the parish roll'], state: 'open' });
+      expect(worldViolations(ctx)).toContainEqual({
+        rule: 'discrepancy/prover', detail: "planted is provable by 'the parish roll', which is not a house",
+      });
+    });
+
+    it('can be proved by a scene that narrows to the Church', () => {
+      const { ctx, id } = exposed(1191);
+      for (const [other, d] of ctx.world.discrepancies) if (other !== id) d.state = 'buried';
+      applyEffect({ kind: 'discrepancy', op: 'prove', provableBy: ['the_church'] }, ctx, {});
+      expect(ctx.world.discrepancies.get(id)!.state).toBe('proven');
+    });
+
+    it('is sold at auction by the Church, and the Chronicle names the Church', () => {
+      let sold = false;
+      for (let seed = 0; seed < 200 && !sold; seed++) {
+        const { ctx, id } = exposed(2000 + seed);
+        const w = ctx.world;
+        w.auction.upcoming = [];
+        const lot = announceAuction(ctx, testRng('announce', seed)).find((l) => l.refId === id);
+        if (!lot) continue;
+        sold = true;
+        expect(lot.house).toBe('the_church');
+
+        // A house that cannot bid: the Church takes the page at its motive.
+        w.treasury = 0;
+        w.bidCeiling = 0;
+        w.auction.upcoming = [lot];
+        w.year = lot.saleYear;
+        const pages = w.chronicle.length;
+        resolveDueLots(ctx, true);
+        expect(w.discrepancies.get(id)!.state).toBe('proven');
+        const church = ctx.content.house('the_church')!.name;
+        const page = w.chronicle.slice(pages).find((c) => c.text?.includes('outbid the house'));
+        expect(page?.text).toContain(church);
+        expect(page?.text).not.toContain('parish roll');
+      }
+      expect(sold, 'no announcement in 200 seeds offered the exposed page').toBe(true);
+    });
   });
 
   it('opens separate evidence records when two forgeries on one person are caught together', () => {
@@ -360,7 +429,7 @@ describe('the exposure page speaks the reader\'s setting (#733)', () => {
     );
     const d = ctx.world.discrepancies.get(page.discrepancyId!);
     expect(d?.state).toBe('open');
-    expect(d?.provableBy).toContain('the parish roll');
+    expect(d?.provableBy).toEqual(['the_church']);
     expect(doc.exposed).toBe(ctx.world.year);
 
     setProseMode(ctx, 'original');

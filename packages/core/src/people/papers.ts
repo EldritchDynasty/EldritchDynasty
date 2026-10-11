@@ -235,9 +235,18 @@ export function tickPapers(ctx: SimCtx, rng: Rng): number {
       for (let suffix = 2; w.discrepancies.has(id); suffix++) {
         id = `${stem}_${suffix}`;
       }
+      // WHO CAN PROVE IT is a list of HOUSES (#1190), because the auction
+      // sells the page to one, a thread is drawn to one, and a proof scene
+      // narrowed to one asks whether it is here. This held two English
+      // phrases instead, so "the parish roll" bid at auction, outbid the
+      // house, and proved the lie in its own name — and no Church scene could
+      // reach it at all. The parish roll is the keeper's, a Church office
+      // whose copies go to the chapter house (world §16). The Roll of Houses
+      // is the Assembly's heralds', who are not a party in the content and
+      // cannot bid; the prose below still names both records.
       w.discrepancies.set(id, {
         severity: grade === 'caster' ? 'major' : 'minor',
-        provableBy: ['the parish roll', 'the Roll of Houses at Caster'],
+        provableBy: ['the_church'],
         state: 'open',
       });
       w.chronicle.push({
