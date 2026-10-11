@@ -1084,7 +1084,7 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
       const exported = writeDesktopSave(saveRoot(userData), 'windows export', saveGame(source));
       const bytes = readFileSync(exported, 'utf8');
       const picker = {
-        files: [{ fixture: bytes }] as File[],
+        files: [{ fixture: bytes } as File & { fixture: string }],
         onchange: null as (() => void) | null,
         addEventListener(_event: string, _listener: () => void) {},
         click() {},
