@@ -27,6 +27,7 @@ describe('the cadet land choice is visible on the Table (#1219)', () => {
   it('offers eligible farms, but never the caput, and submits the existing Table order', async () => {
     const { wrapper, actions } = mountedLand();
     const selector = wrapper.get('select[aria-label="Choose a cadet hall for Hallowfield"]');
+    expect(selector.element.closest('.panel')?.classList.contains('idle')).toBe(false);
     expect(wrapper.find('select[aria-label="Choose a cadet hall for The Wend Mill"]').exists()).toBe(false);
     const button = wrapper.findAll('button').find((b) => b.text() === 'Endow the hall')!;
     expect(button.attributes('disabled')).toBeDefined();
