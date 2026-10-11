@@ -65,6 +65,16 @@ function give(person: string): void {
  * bag while the child kept it and strip a blessing nobody declined. The verb
  * exists on the session for exactly this reason.
  */
+/**
+ * IME candidate confirmation also uses Enter. Submitting on keyup would see
+ * the release AFTER composition ends and accidentally accept a partial name.
+ * The ordinary, non-composing keydown remains a keyboard shortcut for Name.
+ */
+function submitOnEnter(person: string, event: KeyboardEvent): void {
+  if (event.isComposing || event.keyCode === 229) return;
+  give(person);
+}
+
 function keep(person: string): void {
   if (props.actions.keepSuggestedName(person)) {
     delete drafts.value[person];
@@ -100,7 +110,7 @@ function keep(person: string): void {
           :aria-invalid="Boolean(refusals[child.person])"
           :aria-describedby="refusals[child.person] ? 'naming-refusal-' + child.person : undefined"
           @input="clearRefusal(child.person)"
-          @keyup.enter="give(child.person)"
+          @keydown.enter="submitOnEnter(child.person, $event)"
         />
         <button @click="give(child.person)">Name</button>
         <!-- Per child, because the daughter and the four sons are not one
