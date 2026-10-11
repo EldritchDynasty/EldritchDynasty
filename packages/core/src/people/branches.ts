@@ -1,5 +1,5 @@
 import type { BranchId, BranchState, Person, PersonId, Year } from '@ed/schema';
-import { MAIN_BRANCH, asId, isActiveBranch } from '@ed/schema';
+import { MAIN_BRANCH, asId, currentMembership, isActiveBranch } from '@ed/schema';
 import type { SimCtx, WorldState } from '../world.js';
 import { phenotypeOf } from './factory.js';
 import { escheatBranchLand } from '../land.js';
@@ -82,6 +82,30 @@ export function halls(w: WorldState, year: Year): Map<string, Person[]> {
     else out.set(key, [p]);
   }
   return out;
+}
+
+/**
+ * A branch resident belongs to its family only when this year's membership
+ * is blood, cadet or married-in. Servants, wards and hostages can fill a hall
+ * without giving the bloodline another way to continue.
+ */
+export function cadetFamilyMember(p: Person, year: Year): boolean {
+  const kind = currentMembership(p, year)?.kind;
+  return kind === 'blood' || kind === 'cadet' || kind === 'married_in';
+}
+
+/**
+ * One blood relative and a spouse can sustain a cadet family; one relative
+ * and a servant cannot. Two outsiders cannot sustain the player's bloodline
+ * either. Read-only: no world state, decisions or RNG are changed.
+ */
+export function viableCadetHall(members: readonly Person[], year: Year): boolean {
+  const family = members.filter((p) => cadetFamilyMember(p, year));
+  if (family.length < 2) return false;
+  return family.some((p) => {
+    const kind = currentMembership(p, year)?.kind;
+    return kind === 'blood' || kind === 'cadet';
+  });
 }
 
 export function hall(w: WorldState, branch: string, year: Year): Person[] {

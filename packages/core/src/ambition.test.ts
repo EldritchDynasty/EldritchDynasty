@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { EventTemplate } from '@ed/schema';
 import { newGame, resumeGame } from '@ed/core';
-import { proseOriginalHash, type HouseAmbitionId } from '@ed/schema';
+import { MAIN_BRANCH, asId, proseOriginalHash, type BranchId, type HouseAmbitionId } from '@ed/schema';
 import { ambitionOptions, ambitionRelevance, ambitionView } from './ambition.js';
+import { relevantPeople } from './people/relevance.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { mustSurface } from './delegation.js';
@@ -174,6 +175,49 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().ambition?.id).toBe('secure_branches');
     expect(g.setAmbition(null)).toBe(true);
     expect(g.view().ambition).toBeUndefined();
+  });
+
+
+  it('counts family members, not staff, when securing cadet halls (#1201)', () => {
+    const g = newGame(content, { seed: 1201, campaign: 'short', decider: 'chronicler' });
+    const w = g.ctx.world;
+    const [blood, resident] = w.people.household(w.playerHouse, w.year);
+    if (!blood || !resident) throw new Error('the founded household needs two residents');
+
+    const branchId = asId<BranchId>('br_ambition_viability_test');
+    w.branches.set(branchId, {
+      id: branchId,
+      name: 'The younger hall',
+      house: asId(w.playerHouse),
+      founder: blood.id,
+      splitFrom: MAIN_BRANCH,
+      foundedYear: w.year,
+      speaker: blood.id,
+      grievance: 0,
+    });
+    const inBranch = (p: typeof blood, kind: typeof p.membership[number]['kind']) => {
+      const membership = p.membership.find((m) => m.to === undefined);
+      if (!membership) throw new Error('a living resident needs an open membership');
+      membership.branch = branchId;
+      membership.kind = kind;
+    };
+    inBranch(blood, 'cadet');
+    inBranch(resident, 'retainer');
+    g.setAmbition('secure_branches');
+
+    // A relative and a servant do not make a viable family hall.
+    expect(ambitionView(g.ctx)?.progress).toMatchObject({ current: 0, target: 1 });
+    expect(relevantPeople(g.ctx).get(blood.id)).toContain('keeps a thin cadet hall alive');
+    expect(relevantPeople(g.ctx).get(resident.id) ?? []).not.toContain('keeps a thin cadet hall alive');
+
+    // A married-in spouse does: the same two residents can continue the line.
+    inBranch(resident, 'married_in');
+    expect(ambitionView(g.ctx)?.progress.current).toBe(1);
+    expect(relevantPeople(g.ctx).get(blood.id) ?? []).not.toContain('keeps a thin cadet hall alive');
+
+    // Two non-blood residents cannot earn a bloodline ambition either.
+    inBranch(blood, 'retainer');
+    expect(ambitionView(g.ctx)?.progress.current).toBe(0);
   });
 
   it('persists only the selected ambition and resumes it', () => {
