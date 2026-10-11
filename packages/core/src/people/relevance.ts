@@ -1,7 +1,7 @@
 import { assertNever, MAIN_BRANCH, type PersonId } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { measureAscension } from '../ascension.js';
-import { halls } from './branches.js';
+import { cadetFamilyMember, halls, viableCadetHall } from './branches.js';
 import { knownSuccession } from './succession.js';
 import { msg } from '../messages.js';
 
@@ -72,8 +72,10 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       break;
     case 'secure_branches':
       for (const [hall, members] of halls(w, w.year)) {
-        if (hall === MAIN_BRANCH || members.length >= 2) continue;
-        for (const person of members) {
+        if (hall === MAIN_BRANCH || viableCadetHall(members, w.year)) continue;
+        // Staff living in the hall cannot preserve its bloodline; the
+        // relevance cue belongs to family members who can act on this aim.
+        for (const person of members.filter((p) => cadetFamilyMember(p, w.year))) {
           add(out, person.id, msg(ctx, 'relevance.thin_hall', 'keeps a thin cadet hall alive'));
         }
       }

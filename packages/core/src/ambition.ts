@@ -8,7 +8,7 @@ import {
   type HouseAmbitionId,
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
-import { branchOf, halls } from './people/branches.js';
+import { branchOf, halls, viableCadetHall } from './people/branches.js';
 import { measureAscension, rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
 import { msg } from './messages.js';
@@ -550,7 +550,7 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   }
 
   if (id === 'secure_branches') {
-    const viable = [...halls(w, w.year)].filter(([hall, people]) => hall !== MAIN_BRANCH && people.length >= 2).length;
+    const viable = [...halls(w, w.year)].filter(([hall, people]) => hall !== MAIN_BRANCH && viableCadetHall(people, w.year)).length;
     const target = w.campaign === 'short' ? 1 : 2;
     return {
       ...shown,
