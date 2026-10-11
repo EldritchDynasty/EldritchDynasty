@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ChronicleEntry, SessionView } from '@ed/core';
 import { useModal } from '../lib/modal';
 import { findEntry, linksFor } from '../lib/causes';
@@ -117,6 +117,13 @@ const pages = ref<HTMLElement | null>(null);
 const marked = ref<string | null>(null);
 let unmark: ReturnType<typeof setTimeout> | undefined;
 let followRequest = 0;
+
+// Closing the volume disposes its transient page highlight and invalidates
+// follow() calls suspended at nextTick, so they cannot focus a dead page.
+onBeforeUnmount(() => {
+  ++followRequest;
+  clearTimeout(unmark);
+});
 
 /**
  * Follow a link to the page it names. A lens, a search or a century can hide
