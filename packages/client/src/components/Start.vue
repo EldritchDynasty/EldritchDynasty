@@ -56,6 +56,8 @@ const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const saveListError = ref<string | null>(null);
 const refused = ref<string | null>(null);
+/** A named-run refusal belongs beside that slot, not beneath the import picker. */
+const saveActionError = ref<{ slot: string; message: string } | null>(null);
 const resumeRefused = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 const confirmingClearLibrary = ref(false);
@@ -130,11 +132,11 @@ async function continueLastSitting(): Promise<void> {
 }
 
 async function load(slot: string): Promise<void> {
-  refused.value = null;
+  saveActionError.value = null;
   try {
-    if (!await props.actions.load(slot)) refused.value = 'That saved run could not be read.';
+    if (!await props.actions.load(slot)) saveActionError.value = { slot, message: 'That saved run could not be read.' };
   } catch {
-    refused.value = 'That saved run could not be read.';
+    saveActionError.value = { slot, message: 'That saved run could not be read.' };
   }
 }
 
@@ -149,11 +151,11 @@ async function importSave(): Promise<void> {
 }
 
 async function exportSave(slot: string): Promise<void> {
-  refused.value = null;
+  saveActionError.value = null;
   try {
-    if (!await props.actions.exportSave(slot)) refused.value = 'That saved run could not be written out.';
+    if (!await props.actions.exportSave(slot)) saveActionError.value = { slot, message: 'That saved run could not be written out.' };
   } catch {
-    refused.value = 'That saved run could not be written out.';
+    saveActionError.value = { slot, message: 'That saved run could not be written out.' };
   }
 }
 
@@ -340,6 +342,9 @@ onMounted(() => { void refreshSaves(); });
             <span class="dim">— {{ save.year ?? 'an unread year' }}</span>
           </button>
           <button class="quiet small" @click="exportSave(save.slot)">Copy out</button>
+          <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
+            {{ saveActionError.message }}
+          </p>
         </li>
       </ul>
     </section>
@@ -415,6 +420,7 @@ input { width: 9ch; }
 .saved p { margin: 8px 0; }
 .saved ul { list-style: none; padding: 0; margin: 0; }
 .saved li + li { margin-top: 4px; }
+.saved .save-action-error { margin: 6px 0 0; }
 .save-list-error { margin-top: 14px; }
 .save-list-error p { margin: 0 0 8px; }
 .advanced { margin-top: 46px; }
