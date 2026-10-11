@@ -31,6 +31,9 @@ function focusable(): HTMLElement[] {
 }
 
 function onKey(e: KeyboardEvent): void {
+  // Escape also cancels the active IME candidate list. Leave it to the input
+  // method without closing this dialog or preventing its default action.
+  if (e.key === 'Escape' && (e.isComposing || e.keyCode === 229)) return;
   if (e.key === 'Escape') {
     e.preventDefault();
     // One held key must dismiss at most one overlay, even when another mounts.
