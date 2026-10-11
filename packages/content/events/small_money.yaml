@@ -499,3 +499,90 @@ proseVariants:
       marks it could have claimed. People in the parish decide the hall will meet a tenant
       halfway when his home is damaged. Over the next eleven years, three more men say they
       have lost their tally halves. Two of them are lying.
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].title"
+    of: 45f8c0e727b9c353
+    plainenglish: >-
+      Four Coins Are Underweight
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].body"
+    of: a83a92b4ca9ee5c0
+    plainenglish: >-
+      Aubren, Anvary and the Marches all mint coins. The counting house weighs every coin against
+      the Braccish standard, charges a fee and is never wrong. Four marks from this year's rent
+      payments are underweight. Cutting metal from coins is punishable by hanging. The coins came
+      from three different people, and none of them is likely to have done the clipping. Rejecting
+      the coins means accusing someone.
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].interaction.choices[id=take_the_loss].label"
+    of: 1009b87557a87829
+    plainenglish: >-
+      Accept the loss. Weigh all coins from now on and say nothing.
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].interaction.choices[id=take_the_loss].outcomes[id=loss_taken].text"
+    of: 8b65f338bd26f6f4
+    plainenglish: >-
+      The house writes off four marks. From the following Thaw, a small brass scale sits on the
+      rent table where everyone can see it. Nobody explains why it is there, but everyone visiting
+      the hall understands. No one is accused. The house receives no more underweight coins for
+      nineteen years.
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].interaction.choices[id=send_the_four_to_bramme].label"
+    of: 0ae13dcb93b27c97
+    plainenglish: >-
+      Send the four coins to the magistrate. Coin clipping is his responsibility.
+  - address: "content:events/small_money.yaml#events[id=the_clipped_coin].interaction.choices[id=send_the_four_to_bramme].outcomes[id=sent_to_bramme].text"
+    of: 73d7f3e2a31e0d66
+    plainenglish: >-
+      The magistrate investigates the four coins for two tendays. He questions three households
+      but finds no culprit. A coin passes through nine hands, and the ninth person is not the one
+      who clipped it. Nobody is hanged, to everyone's relief. But because the hall reported four
+      underweight marks, a court has questioned three families on its land about their honesty.
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].title"
+    of: bb9c52d9c78af7d5
+    plainenglish: >-
+      A Wedding Ring Held for Two Marks
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].body"
+    of: cefd4563b8ab387f
+    plainenglish: >-
+      This parish has no lending house. The steward keeps nine objects pledged as security for
+      loans in a box. When tenants need two marks during Frostfall, they bring something valuable
+      to the hall, which holds it until Harvest. Four of the objects have been in the box for more
+      than three years. One is a wedding ring. Once each year, the steward asks what the house
+      will do with them.
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].interaction.choices[id=give_them_back].label"
+    of: a97364df7601a83b
+    plainenglish: >-
+      Return the four objects and cancel the debts they secure.
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].interaction.choices[id=give_them_back].outcomes[id=given_back].text"
+    of: 3d2a414ee11fb6d2
+    plainenglish: >-
+      At Ingathering, the house gives all four objects back across a table in the yard and
+      forgives about six marks of debt. A sixty-year-old woman silently puts her wedding ring back
+      on and walks home. This is the smallest amount the house forgives that decade, but it is the
+      only act of forgiveness people remember.
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].interaction.choices[id=sell_them_at_bramme].label"
+    of: 0740357e50fbaa62
+    plainenglish: >-
+      Sell the four objects at Bramme. The debts are more than three years old.
+  - address: "content:events/small_money.yaml#events[id=the_pledge_in_the_box].interaction.choices[id=sell_them_at_bramme].outcomes[id=sold].text"
+    of: ce3319142084bc90
+    plainenglish: >-
+      A dealer at Bramme pays about eleven marks for the four objects, more than the debts they
+      secured. The steward correctly credits the extra amount against each debt. The sale follows
+      the law, local custom and the agreed terms. For the next two years, a wedding ring from this
+      parish is displayed in a Bramme shop window. People from the parish visit Bramme and see it.
+  - address: "content:events/small_money.yaml#events[id=two_per_cent_and_a_month].title"
+    of: 7edd57412edd3b25
+    plainenglish: >-
+      The Counting House Takes Two Percent
+  - address: "content:events/small_money.yaml#events[id=two_per_cent_and_a_month].body"
+    of: f2c6b102a24bf48e
+    plainenglish: >-
+      Cross-border payments use letters of credit from a Braccish house. Each payment costs two
+      percent and takes a month. The house has paid the Corran fees this way for nineteen years
+      without checking the total cost. Now the steward has done the sums. The two-percent charges
+      across those nineteen years exceed the fees paid during the last four years. There is no
+      other payment method available anywhere in this world.
+  - address: "content:events/small_money.yaml#events[id=two_per_cent_and_a_month].interaction.outcomes[id=there_is_no_alternative].text"
+    of: 618b8409a6dd6345
+    plainenglish: >-
+      The steward writes the total on a slate. Two men read it, then erase it, because the family
+      can do nothing to avoid the charge. The Braccish weigh the coins everyone else uses and take
+      a fee on every exchange. They have done so since before this house existed. The steward
+      still keeps a copy of the calculation. It remains in the press in 1500.
