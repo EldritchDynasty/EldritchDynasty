@@ -6,6 +6,8 @@ import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from 
 import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
 import Prologue from './Prologue.vue';
 import Chapter from './Chapter.vue';
+import Interlude from './Interlude.vue';
+import type { FrameEntry } from '@ed/schema';
 
 function prologueView(): PrologueView {
   return {
@@ -328,3 +330,77 @@ describe('Age opening replay on a reused Chapter dialog (#410)', () => {
 
 });
 
+
+/**
+ * Chapter and Interlude own independent global keyboard listeners; the shared
+ * useModal fix for composition does not protect either one. Keep these mounted
+ * regressions in an existing measured suite, not a new fast-lane suite.
+ */
+describe('standalone dialog Escape while composing an IME candidate (#1290)', () => {
+  function escapeKey(composing = false, legacyKeyCode?: number, repeat = false): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+      key: 'Escape', bubbles: true, cancelable: true, repeat,
+    });
+    Object.defineProperty(event, 'isComposing', { value: composing });
+    if (legacyKeyCode !== undefined) {
+      Object.defineProperty(event, 'keyCode', { value: legacyKeyCode });
+    }
+    return event;
+  }
+
+  it.each(['Chapter', 'Interlude'] as const)(
+    '%s preserves composing Escape and only dismisses on an ordinary Escape',
+    (kind) => {
+      const dismissChapter = vi.fn();
+      const dismissInterlude = vi.fn();
+      const game = { dismissChapter, dismissInterlude } as unknown as GameActions;
+      const wrapper = kind === 'Chapter'
+        ? mount(Chapter, {
+          attachTo: document.body,
+          props: {
+            beat: { kind: 'opening', opening: { text: 'A new Age opens.' } } as ChapterBeat,
+            actions: game,
+          },
+        })
+        : mount(Interlude, {
+          attachTo: document.body,
+          props: {
+            entry: { eventId: 'a_frame', year: 1092, text: 'A voice outside the record.' } as FrameEntry,
+            actions: game,
+          },
+        });
+      const dismiss = kind === 'Chapter' ? dismissChapter : dismissInterlude;
+
+      try {
+        expect(wrapper.find('[role="dialog"][aria-modal="true"]').exists()).toBe(true);
+
+        const composing = escapeKey(true);
+        window.dispatchEvent(composing);
+        expect(composing.defaultPrevented).toBe(false);
+        expect(dismiss).not.toHaveBeenCalled();
+
+        // Some browsers use 229 for a process key even after isComposing turns false.
+        const legacy = escapeKey(false, 229);
+        window.dispatchEvent(legacy);
+        expect(legacy.defaultPrevented).toBe(false);
+        expect(dismiss).not.toHaveBeenCalled();
+
+        const normal = escapeKey();
+        window.dispatchEvent(normal);
+        expect(normal.defaultPrevented).toBe(true);
+        expect(dismiss).toHaveBeenCalledTimes(1);
+
+        window.dispatchEvent(escapeKey(false, undefined, true));
+        expect(dismiss).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
+        wrapper.unmount();
+        vi.unstubAllGlobals();
+      }
+
+      // The detached dialog may not intercept any subsequent key.
+      window.dispatchEvent(escapeKey());
+      expect(dismiss).toHaveBeenCalledTimes(1);
+    },
+  );
+});
