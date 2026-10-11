@@ -683,7 +683,7 @@ const yearAndBirths = computed(() => {
       :skip-seen-prose="accessibility.skipSeenProse"
     />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
-    <Plat v-if="platOpen && land" :land="land" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
+    <Plat v-if="platOpen && land" :land="land" :halls="view.halls" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
     <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
   </template>
 </template>
