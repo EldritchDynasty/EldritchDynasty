@@ -644,7 +644,7 @@ const yearAndBirths = computed(() => {
             @open-plat="platOpen = true"
           />
         </template>
-        <Abroad v-else-if="middle === 'abroad'" :view="view" />
+        <Abroad v-else-if="middle === 'abroad'" :view="view" :prose-mode="accessibility.proseMode" />
         <template v-else>
           <!-- Five or six people out of seventy, each with the one thing that
                is true of them and of nobody else. The tree is still under it;
