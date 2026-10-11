@@ -179,6 +179,28 @@ const MARRIAGE_ORDERS = [
         {{ table.treasury }} crowns. A term of tutoring is {{ table.tutorFee }}.
       </p>
 
+      <!-- WARDSHIP (issue #1206). The engine has taken the land income away
+           for as long as this stands and offered the customary buy-back since
+           #91, and no client drew either: the purse shrank for sixteen years
+           with nothing on the screen to say why, or what could be done. -->
+      <section v-if="table.wardship" class="wardship" aria-label="Wardship">
+        <p class="small" :class="table.wardship.boughtBack ? 'dim' : 'rubric'">
+          <template v-if="table.wardship.boughtBack">
+            {{ table.wardship.wardName }} is still under age, but the wardship was bought back and the land is the house's again.
+          </template>
+          <template v-else>
+            {{ table.wardship.wardName }} is under age, and since {{ table.wardship.since }} the Warden has taken the harvest.
+          </template>
+        </p>
+        <button
+          v-if="!table.wardship.boughtBack && table.wardship.buyBackCost !== undefined"
+          @click="actions.order({ kind: 'buyBackWardship' })"
+        >
+          Buy the wardship back — {{ table.wardship.buyBackCost }} crowns
+        </button>
+        <p v-if="refusedIn('buyBackWardship')" class="small rubric">{{ refusedIn('buyBackWardship') }}</p>
+      </section>
+
       <!-- THE AUCTION READS AS A DECISION (issue #55). `bidCeiling` defaults to
            zero and the panel said "the house will bid up to 0", which is a
            house that will never bid on anything, forever, with nothing

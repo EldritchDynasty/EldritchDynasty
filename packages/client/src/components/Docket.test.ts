@@ -1064,6 +1064,54 @@ describe('a bid on one lot (#1183)', () => {
   });
 });
 
+describe('wardship on the Table (#1206)', () => {
+  function mountWardship(wardship: TableView['wardship'], refusal: { kind: string; reason: string } | null = null) {
+    const actions = spyActions();
+    const table = riteTable(vesselAssembly);
+    if (wardship) table.wardship = wardship;
+    const wrapper = mount(Table, {
+      props: { table, land: riteLand, actions: actions as unknown as GameActions, refusal, receipt: null },
+    });
+    return { wrapper, actions };
+  }
+
+  it('draws nothing when no Warden holds the estate', () => {
+    const { wrapper } = mountWardship(undefined);
+    try {
+      expect(wrapper.find('section[aria-label="Wardship"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('names the ward, says the Warden has the harvest, and offers the buy-back', async () => {
+    const { wrapper, actions } = mountWardship(
+      { ward: 'p_9', wardName: 'Osric', since: 1120, boughtBack: false, buyBackCost: 120 },
+      { kind: 'buyBackWardship', reason: 'cannot afford the wardship' },
+    );
+    try {
+      const section = wrapper.get('section[aria-label="Wardship"]');
+      expect(section.text()).toContain('Osric is under age, and since 1120 the Warden has taken the harvest.');
+      expect(section.text()).toContain('cannot afford the wardship');
+      await buttonContaining(wrapper, 'Buy the wardship back — 120 crowns').trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({ kind: 'buyBackWardship' });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('once bought back, says the land is the house\'s again and offers nothing', () => {
+    const { wrapper } = mountWardship({ ward: 'p_9', wardName: 'Osric', since: 1120, boughtBack: true });
+    try {
+      const section = wrapper.get('section[aria-label="Wardship"]');
+      expect(section.text()).toContain('the land is the house\'s again');
+      expect(section.findAll('button')).toHaveLength(0);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('standing preference controls (#219)', () => {
   it('lets the player withdraw both choice and Record policies from the Table', async () => {
     const actions = spyActions();
