@@ -93,6 +93,19 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
     return { ok: false, reason: msg(ctx, 'heirloom.refuse.dead', 'it is no use to the dead') };
   }
 
+  // One translated address, reused by both rejection paths. The prose audit
+  // requires each core message key to have exactly one source declaration.
+  const wrongBearerReason = () => msg(ctx, 'heirloom.refuse.wrong_bearer', 'they are not who it is for');
+
+  // Filters must inspect the SAME person that BEARER effects will change.
+  // A stale copy with a familiar id can otherwise pass a filter that the
+  // world-owned person would fail. Nor can the house spend its own heirloom
+  // on a rival's resident: a target filter only narrows the household.
+  if (ctx.world.people.get(bearer.id) !== bearer
+    || ctx.world.people.householdOf(bearer.id, ctx.world.year) !== ctx.world.playerHouse) {
+    return { ok: false, reason: wrongBearerReason() };
+  }
+
   if (def.use.spends === 'cooldown' && state.lastUsedYear !== undefined) {
     const ready = state.lastUsedYear + def.use.cooldownYears;
     if (ctx.world.year < ready) {
@@ -104,7 +117,7 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
 
   for (const f of def.target) {
     if (!evalFilter(f, bearer, ctx, {})) {
-      return { ok: false, reason: msg(ctx, 'heirloom.refuse.wrong_bearer', 'they are not who it is for') };
+      return { ok: false, reason: wrongBearerReason() };
     }
   }
 

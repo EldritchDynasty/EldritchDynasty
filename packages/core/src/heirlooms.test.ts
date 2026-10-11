@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash } from '@ed/schema';
+import { asId, proseOriginalHash, type HouseId } from '@ed/schema';
 import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
@@ -298,6 +298,43 @@ describe('the spend flag', () => {
 });
 
 describe('targeting', () => {
+  it('refuses an outsider or detached record without spending the house seal (#1203)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const bearer = someone(ctx);
+    const seal = ctx.world.heirlooms.get('the_ninefold_seal')!;
+    const beforeUses = seal.usedOn.length;
+    const beforeEntries = ctx.world.chronicle.length;
+    const beforeCharm = bearer.acquired.charm;
+    const membership = bearer.membership.find((m) =>
+      m.from <= ctx.world.year && (m.to === undefined || m.to > ctx.world.year));
+    if (!membership) throw new Error('the bearer must belong to a house');
+    const home = membership.house;
+    const rival = bundle.houses.find((h) => h.id !== ctx.world.playerHouse);
+    if (!rival) throw new Error('an outside house is needed for the witness');
+
+    // The same living, age-eligible person has moved out of the player's house.
+    membership.house = asId<HouseId>(rival.id);
+    expect(canUseHeirloom(ctx, 'the_ninefold_seal', bearer)).toMatchObject({
+      ok: false, reason: 'they are not who it is for',
+    });
+    expect(useHeirloom(ctx, 'the_ninefold_seal', bearer).ok).toBe(false);
+
+    // A stale detached copy cannot substitute different filter data for the
+    // world-owned person that the BEARER effects would actually change.
+    membership.house = home;
+    const detached = { ...bearer };
+    expect(canUseHeirloom(ctx, 'the_ninefold_seal', detached).ok).toBe(false);
+    expect(useHeirloom(ctx, 'the_ninefold_seal', detached).ok).toBe(false);
+    expect(seal.usedOn).toHaveLength(beforeUses);
+    expect(bearer.acquired.charm).toBe(beforeCharm);
+    expect(ctx.world.chronicle).toHaveLength(beforeEntries);
+
+    // The genuine bearer still receives the relic and its normal effects.
+    expect(useHeirloom(ctx, 'the_ninefold_seal', bearer).ok).toBe(true);
+    expect(seal.usedOn).toHaveLength(beforeUses + 1);
+    expect(ctx.world.chronicle).toHaveLength(beforeEntries + 1);
+  });
+
   it('refuses somebody the heirloom is not for', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     grantHeirloom(ctx, 'portion_of_fertility');
