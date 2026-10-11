@@ -50,6 +50,27 @@ const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
 
 describe('the volume', () => {
+  it('associates the search input with a label without nesting the clear button (#1173)', async () => {
+    const w = mountBook();
+    try {
+      const search = w.get('input[type="search"]').element as HTMLInputElement;
+      const label = w.get('label[for="chronicle-book-search"]').element as HTMLLabelElement;
+      expect([...search.labels ?? []]).toContain(label);
+
+      await w.get('input[type="search"]').setValue('market');
+      expect(w.find('[data-entry="chr_act"]').exists()).toBe(false);
+
+      const clear = w.get('.find button');
+      expect(label.contains(clear.element), 'another interactive control cannot live inside an input label')
+        .toBe(false);
+      await clear.trigger('click');
+      expect(search.value).toBe('');
+      expect(w.find('[data-entry="chr_act"]').exists()).toBe(true);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('draws "see {year}" on the echo and "answered in {year}" on the act', () => {
     const w = mountBook();
     expect(w.find('[data-entry="chr_echo"] button.link').text()).toBe('see 1042');
