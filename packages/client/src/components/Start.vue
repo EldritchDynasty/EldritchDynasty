@@ -276,7 +276,7 @@ onMounted(() => { void refreshSaves(); });
         :reduce-motion="reduceMotion"
         @update:text-scale="emit('update:textScale', $event)"
         @update:reading-font="emit('update:readingFont', $event)"
-        @update:prose-mode="emit('update:proseMode', $event); actions.setProseMode($event)"
+        @update:prose-mode="emit('update:proseMode', $event)"
         @update:skip-seen-prose="emit('update:skipSeenProse', $event)"
         @update:reduce-motion="emit('update:reduceMotion', $event)"
       />
