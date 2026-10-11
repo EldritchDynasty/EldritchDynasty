@@ -554,8 +554,8 @@ describe('the platform seam', () => {
       await platform.writeSave('older', { format: 28, year: 1142, savedAt: '2026-10-08T00:00:00.000Z' });
       await platform.writeSave('newer', { format: 28, year: 1222, savedAt: '2026-10-09T00:00:00.000Z' });
 
-      await expect(platform.readSave('damaged')).resolves.toBeNull();
-      await expect(platform.readSave('empty')).resolves.toBeNull();
+      await expect(platform.readSave('damaged')).rejects.toThrow(SyntaxError);
+      await expect(platform.readSave('empty')).rejects.toThrow(SyntaxError);
       await expect(platform.listSaves()).resolves.toEqual([
         { slot: 'newer', year: 1222, format: 28, savedAt: '2026-10-09T00:00:00.000Z' },
         { slot: 'older', year: 1142, format: 28, savedAt: '2026-10-08T00:00:00.000Z' },
@@ -564,6 +564,60 @@ describe('the platform seam', () => {
       ]);
     } finally {
       Object.defineProperty(globalThis, 'window', { configurable: true, value: prior });
+    }
+  });
+
+  it('rejects present unreadable browser saves but keeps genuine absence distinct (#1252)', async () => {
+    const records = new Map<string, string>([
+      ['ed:save:bad-json', '{"format":'],
+      ['ed:save:empty-json', ''],
+      ['ed:save:null-json', 'null'],
+      ['ed:save:healthy', '{"format":28,"year":1442}'],
+    ]);
+    const original = new Map(records);
+    let readBlocked = false;
+    const storage = {
+      get length() { return records.size; },
+      key: (i: number) => [...records.keys()][i] ?? null,
+      getItem(key: string) {
+        if (readBlocked) throw new Error('storage read refused');
+        return records.get(key) ?? null;
+      },
+      setItem: (key: string, value: string) => { records.set(key, value); },
+      removeItem: (key: string) => { records.delete(key); },
+      clear: () => records.clear(),
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+
+    try {
+      const platform = browserPlatform();
+      await expect(platform.readSave('missing')).resolves.toBeNull();
+      await expect(platform.readSave('healthy')).resolves.toEqual({ format: 28, year: 1442 });
+      await expect(platform.readSave('bad-json')).rejects.toThrow(SyntaxError);
+      await expect(platform.readSave('empty-json')).rejects.toThrow(SyntaxError);
+      await expect(platform.readSave('null-json')).rejects.toThrow('the browser save record is invalid');
+
+      const listed = await platform.listSaves();
+      expect(listed).toHaveLength(4);
+      expect(listed).toEqual(expect.arrayContaining([
+        { slot: 'healthy', format: 28, year: 1442, savedAt: undefined },
+        { slot: 'bad-json' },
+        { slot: 'empty-json' },
+        { slot: 'null-json' },
+      ]));
+      // Neither listing nor a failed read changes any recoverable bytes.
+      expect(records).toEqual(original);
+
+      readBlocked = true;
+      await expect(platform.readSave('healthy')).rejects.toThrow('storage read refused');
+      expect(records).toEqual(original);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
     }
   });
 
