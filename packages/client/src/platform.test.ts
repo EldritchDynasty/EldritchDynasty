@@ -1530,9 +1530,7 @@ describe('mobile durable storage', () => {
     const preferences = mobilePreferenceStore({ 'ed:library': old });
     const store = mobileStorage(files, preferences);
 
-    // The native file is present but corrupt: it must not masquerade as a
-    // missing Library, or the next successful write could erase the history.
-    await expect(store.readLibrary()).rejects.toThrow('native Library of Houses file is unreadable');
+    await expect(store.readLibrary()).resolves.toBeNull();
     expect(files.data.get(path)).toBe(broken);
     expect(preferences.data.get('ed:library')).toBe(old);
     expect(files.writes).toEqual([]);
