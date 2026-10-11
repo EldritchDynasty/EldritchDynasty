@@ -49,7 +49,17 @@ function refusedIn(kind: string): string | null {
  * and it only exists if both are on the same screen with one treasury above
  * them.
  */
-const ceiling = ref(props.table.bidCeiling);
+/** The number input's .number modifier also yields '' for an emptied field.
+ * A ceiling is whole crowns, including zero, and must survive exact numeric
+ * round-tripping rather than being silently rounded by the simulation. */
+const ceiling = ref<number | string>(props.table.bidCeiling);
+function validCeiling(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+function setBidCeiling(): void {
+  if (!validCeiling(ceiling.value)) return;
+  props.actions.order({ kind: 'bid', ceiling: ceiling.value });
+}
 
 const pupil = ref('');
 const subject = ref('');
@@ -167,9 +177,17 @@ const MARRIAGE_ORDERS = [
       <p v-else class="small dim">Nothing has been announced.</p>
 
       <div class="row">
-        <input type="number" min="0" v-model.number="ceiling" aria-label="Maximum auction bid in crowns" />
-        <button @click="actions.order({ kind: 'bid', ceiling })">Set the ceiling</button>
+        <input
+          type="number" min="0" step="1" v-model.number="ceiling"
+          aria-label="Maximum auction bid in crowns"
+          :aria-invalid="!validCeiling(ceiling)"
+          :aria-describedby="!validCeiling(ceiling) ? 'bid-ceiling-error' : undefined"
+        />
+        <button :disabled="!validCeiling(ceiling)" @click="setBidCeiling">Set the ceiling</button>
       </div>
+      <p v-if="!validCeiling(ceiling)" id="bid-ceiling-error" class="small rubric" role="alert">
+        Enter zero or a whole number of crowns within the safe counting range.
+      </p>
       <p v-if="refusedIn('bid')" class="small rubric">{{ refusedIn('bid') }}</p>
       <!-- THE RECEIPT (issue #59). §13 means these to hurt — the money is gone
            the day it is spent and the auction is in eleven years — and a spend
