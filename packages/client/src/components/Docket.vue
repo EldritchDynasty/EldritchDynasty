@@ -247,6 +247,10 @@ function take(index: number): void {
 }
 
 function onKey(e: KeyboardEvent): void {
+  // The docket remains mounted behind Book, Plat and Line dialogs. A global
+  // number shortcut must never answer a decision hidden by a modal overlay.
+  if (document.querySelector('[aria-modal="true"]')) return;
+
   const el = document.activeElement;
   const press = shortcutFor({
     key: e.key,
