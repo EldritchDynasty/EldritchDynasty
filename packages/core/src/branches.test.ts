@@ -217,6 +217,9 @@ describe('escheat on extinction (issue #91, Stage H)', () => {
 
     expect(w.branches.get('branch_gone' as never)!.extinct).toBe(w.year);
     expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBeUndefined();
+    // Escheat cannot dishonour a defunct hall: recall's grievance fee only
+    // applies when a living branch has its gift taken back (#1337).
+    expect(w.branches.get('branch_gone' as never)!.grievance).toBe(0);
   });
 
   it('leaves an extinct hall\'s other affairs alone when it held no land', () => {
