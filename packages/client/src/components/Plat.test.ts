@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { LandView } from '@ed/core';
+import type { LandView, SessionView } from '@ed/core';
 import Plat from './Plat.vue';
 import type { GameActions } from '../lib/game';
 
@@ -36,13 +36,14 @@ function mockLand(over: Partial<LandView> = {}): LandView {
 function spyActions() {
   const actions = {} as Record<string, ReturnType<typeof vi.fn>>;
   for (const n of ['nameParcel']) actions[n] = vi.fn().mockReturnValue(true);
+  actions.order = vi.fn().mockReturnValue({ ok: true });
   return actions as unknown as GameActions;
 }
 
 describe('the plat draws each state', () => {
   it('a held parcel: solid, and its provenance is in the table', () => {
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'The House of Gearithy', actions: spyActions(), close: () => {},
+      land: mockLand(), houseName: 'The House of Gearithy', halls: [], actions: spyActions(), close: () => {},
     } });
     expect(w.text()).toContain('Longmere');
     expect(w.text()).toContain('bought 1204 from Aldous Renn');
@@ -53,7 +54,7 @@ describe('the plat draws each state', () => {
   it('title not proved: dotted, and says so in words, not only in the stroke', () => {
     const w = mount(Plat, { props: {
       land: mockLand({ held: [baseHeld({ titleProved: false })] }),
-      houseName: 'House', actions: spyActions(), close: () => {},
+      houseName: 'House', halls: [], actions: spyActions(), close: () => {},
     } });
     expect(w.find('.plot.title_not_proved').exists()).toBe(true);
     expect(w.text()).toContain('title not proved');
@@ -68,7 +69,7 @@ describe('the plat draws each state', () => {
   it('contested: drawn as held and as claimed by somebody else, and adjudicates neither', () => {
     const w = mount(Plat, { props: {
       land: mockLand({ held: [baseHeld({ contestedBy: 'the man from Bramme' })] }),
-      houseName: 'House', actions: spyActions(), close: () => {},
+      houseName: 'House', halls: [], actions: spyActions(), close: () => {},
     } });
     expect(w.find('.plot.contested').exists(), 'the house\'s own held cell').toBe(true);
     expect(w.find('.contested-overlay').exists(), 'the second, contesting claim').toBe(true);
@@ -85,7 +86,7 @@ describe('the plat draws each state', () => {
         held: [],
         lost: [{ defId: 'longmere', name: 'Longmere', place: 'below the mill', year: 1310, by: 'Aldous the Younger' }],
       }),
-      houseName: 'House', actions: spyActions(), close: () => {},
+      houseName: 'House', halls: [], actions: spyActions(), close: () => {},
     } });
     expect(w.find('.plot.lost').exists()).toBe(true);
     expect(w.find('.strike').exists(), 'no strikethrough drawn for a lost parcel').toBe(true);
@@ -95,7 +96,7 @@ describe('the plat draws each state', () => {
 
   it('nothing held or lost: says so, and draws no cell', () => {
     const w = mount(Plat, { props: {
-      land: mockLand({ held: [], lost: [] }), houseName: 'House', actions: spyActions(), close: () => {},
+      land: mockLand({ held: [], lost: [] }), houseName: 'House', halls: [], actions: spyActions(), close: () => {},
     } });
     expect(w.find('svg').exists()).toBe(false);
     expect(w.text()).toContain('holds no ground at all');
@@ -107,7 +108,7 @@ describe('naming a parcel from the plat', () => {
     const actions = spyActions();
     const nameParcel = vi.mocked(actions.nameParcel);
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
 
     try {
@@ -140,7 +141,7 @@ describe('naming a parcel from the plat', () => {
   it('renaming calls actions.nameParcel with the parcel and the new word', async () => {
     const actions = spyActions();
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
 
     await w.find('button.rename').trigger('click');
@@ -155,7 +156,7 @@ describe('naming a parcel from the plat', () => {
   it('does not call nameParcel when the name is unchanged', async () => {
     const actions = spyActions();
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
     await w.find('button.rename').trigger('click');
     await w.find('input').trigger('keydown.enter');
@@ -167,7 +168,7 @@ describe('naming a parcel from the plat', () => {
     const nameParcel = vi.mocked(actions.nameParcel);
     nameParcel.mockReturnValue(false);
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
 
     await w.find('button.rename').trigger('click');
@@ -194,7 +195,7 @@ describe('naming a parcel from the plat', () => {
     const actions = spyActions();
     const nameParcel = vi.mocked(actions.nameParcel);
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
 
     await w.get('button.rename').trigger('click');
@@ -226,7 +227,7 @@ describe('naming a parcel from the plat', () => {
     const actions = spyActions();
     const nameParcel = vi.mocked(actions.nameParcel);
     const w = mount(Plat, { props: {
-      land: mockLand(), houseName: 'House', actions, close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions, close: () => {},
     } });
 
     await w.find('button.rename').trigger('click');
@@ -277,7 +278,7 @@ describe('deferred modal focus restoration (#1323)', () => {
     });
 
     const props = () => ({
-      land: mockLand(), houseName: 'House', actions: spyActions(), close: () => {},
+      land: mockLand(), houseName: 'House', halls: [], actions: spyActions(), close: () => {},
     });
     const first = mount(Plat, { attachTo: document.body, props: props() });
     const second = mount(Plat, { attachTo: document.body, props: props() });
@@ -303,5 +304,69 @@ describe('deferred modal focus restoration (#1323)', () => {
       previous.remove();
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('land gifts are playable from the Plat (#1219)', () => {
+  function halls(): SessionView['halls'] {
+    return [
+      { id: 'main', name: 'Main Hall', isSeat: true, grievance: 0, members: [] },
+      { id: 'cadet_a', name: 'Younger Hall', isSeat: false, grievance: 21, members: [{} as SessionView['halls'][number]['members'][number]] },
+    ];
+  }
+
+  function open(over: Partial<LandView['held'][number]> = {}) {
+    const actions = spyActions();
+    const w = mount(Plat, { props: {
+      land: mockLand({ held: [baseHeld(over)] }), halls: halls(),
+      houseName: 'House', actions, close: () => {},
+    } });
+    return { w, actions };
+  }
+
+  it('offers a living cadet rather than the seat and requires a selected hall', async () => {
+    const { w, actions } = open();
+    expect(w.get('button.endow').attributes('disabled')).toBeDefined();
+    expect(w.findAll('option').map((o) => o.text())).toEqual(['Choose a hall', 'Younger Hall']);
+    await w.get('select').setValue('cadet_a');
+    await w.get('button.endow').trigger('click');
+    expect(actions.order).toHaveBeenCalledTimes(1);
+    expect(actions.order).toHaveBeenCalledWith({ kind: 'endow', parcel: 'longmere', branch: 'cadet_a' });
+    w.unmount();
+  });
+
+  it('shows the recipient and recalls a gift before another hall can receive it', async () => {
+    const { w, actions } = open({ holder: 'cadet_a', holderName: 'Younger Hall', sellable: false });
+    expect(w.text()).toContain('Held by Younger Hall');
+    expect(w.find('select').exists()).toBe(false);
+    expect(w.find('button.endow').exists()).toBe(false);
+    await w.get('button.recall-land').trigger('click');
+    expect(actions.order).toHaveBeenCalledWith({ kind: 'endow', parcel: 'longmere', branch: null });
+    w.unmount();
+  });
+
+  it('offers neither the caput nor a parcel with no living cadet halls', () => {
+    const { w } = open({ caput: true });
+    expect(w.find('button.endow').exists()).toBe(false);
+    w.unmount();
+    const empty = mount(Plat, { props: {
+      land: mockLand(), halls: [], houseName: 'House', actions: spyActions(), close: () => {},
+    } });
+    expect(empty.find('button.endow').exists()).toBe(false);
+    empty.unmount();
+  });
+
+  it('preserves the chosen hall and an order refusal until retry succeeds', async () => {
+    const { w, actions } = open();
+    const order = vi.mocked(actions.order);
+    order.mockReturnValueOnce({ ok: false, reason: 'The hall refused this gift' }).mockReturnValue({ ok: true });
+    await w.get('select').setValue('cadet_a');
+    await w.get('button.endow').trigger('click');
+    expect(w.get('[role="alert"]').text()).toContain('The hall refused this gift');
+    expect((w.get('select').element as HTMLSelectElement).value).toBe('cadet_a');
+    await w.get('button.endow').trigger('click');
+    expect(order).toHaveBeenCalledTimes(2);
+    expect(w.find('[role="alert"]').exists()).toBe(false);
+    w.unmount();
   });
 });
