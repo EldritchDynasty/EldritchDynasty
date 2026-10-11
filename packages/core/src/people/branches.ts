@@ -34,6 +34,9 @@ export const BRANCH_SOFT_CAP = 8;
  * what keeps the aggrieved branch to one or two rather than all five.
  */
 const GRIEVANCE_FADE = -0.08;
+/** Yearly relief per endowed parcel's authored base yield; capped so land cannot silence a blood grievance. */
+const GRIEVANCE_ENDOWED_PER_YIELD = 0.03;
+const MAX_ENDOWMENT_RELIEF = 0.5;
 const GRIEVANCE_PASSED_OVER = 0.55;
 const GRIEVANCE_REGENCY = 0.25;
 const GRIEVANCE_HONOURED = 45;
@@ -328,6 +331,16 @@ export function tickBranches(ctx: SimCtx): void {
     // and the heir's, out of the same finite house. A hall holding one of
     // the pair is only half passed over.
     if (w.scionHeir && !members.some((p) => p.id === w.scionHeir)) delta += GRIEVANCE_SCION_FED;
+
+    // A younger hall with land to support itself has less reason to resent the
+    // seat. Its deed, not this year's harvest or Respect, determines the relief;
+    // a damaged harvest does not erase the gift. The cap preserves the force of
+    // being passed over, Regency and the Scion programme (#1219).
+    const endowedBaseYield = [...w.parcels.values()].reduce((sum, parcel) => {
+      if (parcel.holder !== b.id || parcel.heldSince > w.year || !parcel.defId) return sum;
+      return sum + (ctx.content.parcel(parcel.defId)?.baseYield ?? 0);
+    }, 0);
+    delta -= Math.min(MAX_ENDOWMENT_RELIEF, endowedBaseYield * GRIEVANCE_ENDOWED_PER_YIELD);
 
     b.grievance = Math.max(0, Math.min(100, b.grievance + delta));
     total += b.grievance;
