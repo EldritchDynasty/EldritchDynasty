@@ -55,7 +55,11 @@ export function shortcutFor(p: KeyPress): Shortcut | null {
   if (p.key === 'Enter') return { kind: 'advance', years: p.shift ? 5 : 1 };
   if (p.key === ' ') return { kind: 'advance', years: 1 };
 
-  if (p.key >= '1' && p.key <= '9') return { kind: 'take', index: Number(p.key) - 1 };
+  // A key name must be one ASCII digit. Lexicographic string comparisons
+  // also accept `10` and `1x`, which would dispatch a nonexistent choice.
+  if (p.key.length === 1 && p.key >= '1' && p.key <= '9') {
+    return { kind: 'take', index: Number(p.key) - 1 };
+  }
 
   return null;
 }
