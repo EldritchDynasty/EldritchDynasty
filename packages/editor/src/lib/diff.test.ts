@@ -137,10 +137,11 @@ describe('collapseContext', () => {
     const out = collapseContext(diffLines(before, after), 2);
     const gaps = out.filter((l) => l.kind === 'gap');
 
-    // One gap between the two changed regions, and none before the first,
-    // which begins within the context window of line 0.
-    expect(gaps).toHaveLength(1);
+    // One gap between changed regions, plus the omitted suffix after the
+    // second edit. The first edit starts within the top context window.
+    expect(gaps).toHaveLength(2);
     expect(out[0]!.kind).not.toBe('gap');
+    expect(out.at(-1)).toEqual({ kind: 'gap' });
   });
 
   it('marks the unchanged suffix after an early edit (#1315)', () => {
