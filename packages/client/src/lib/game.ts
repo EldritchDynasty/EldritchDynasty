@@ -249,8 +249,10 @@ export interface GameStore {
   saves: Ref<SaveSummary[]>;
   /** Completed houses held by this installation/profile (issue #70). */
   library: Ref<RunLibrary>;
-  /** False only while the host's profile store is still being read. */
+  /** True only after a successful host read; failure must not invent an empty profile. */
   libraryReady: Ref<boolean>;
+  /** A failed initial Library read needs an explicit retry before any writes. */
+  libraryReadError: Ref<boolean>;
   /** Chronicle entry ids whose authored cast explicitly included this person. */
   mentions(person: string): string[];
   actions: GameActions;
@@ -310,6 +312,8 @@ export interface GameActions {
   exportSave(slot: string): Promise<boolean>;
   deleteLibraryRun(id: string): Promise<void>;
   clearLibrary(): Promise<void>;
+  /** Retry discovering the existing Library after a host read failure. */
+  retryLibrary(): Promise<void>;
   /** Return to the front door without discarding the current autosave. */
   leave(): void;
   restart(): void;
@@ -404,6 +408,7 @@ export function createGame(
   const saves = ref<SaveSummary[]>([]);
   const library = ref<RunLibrary>(emptyRunLibrary());
   const libraryReady = ref(false);
+  const libraryReadError = ref(false);
   // The browser can answer synchronously, native hosts cannot. Keeping the
   // snapshot outside Vue means the saved world is never made reactive merely
   // because the front door needs to know it exists.
@@ -450,6 +455,9 @@ export function createGame(
   }
 
   async function changeLibrary(snapshot: RunLibrary): Promise<void> {
+    // A failed profile read is NOT an empty Library. Never overwrite old
+    // completed houses with an invented baseline after a transient outage.
+    if (!libraryReady.value) throw new Error('the Library is unavailable; retry reading it');
     const revision = ++libraryRevision;
     library.value = snapshot;
     try {
@@ -676,6 +684,10 @@ export function createGame(
 
     async clearLibrary() {
       await changeLibrary(emptyRunLibrary());
+    },
+
+    async retryLibrary() {
+      await loadLibrary();
     },
 
     leave() {
@@ -1177,27 +1189,30 @@ export function createGame(
     return smokeSnapshot();
   }
 
-  const libraryLoad = platform.readLibrary()
-    .then((raw) => {
-      persistedLibrary = readRunLibrary(raw);
-      library.value = persistedLibrary;
-    })
-    .catch(() => {
-      persistedLibrary = emptyRunLibrary();
-      library.value = persistedLibrary;
-    })
-    .finally(() => {
+  async function loadLibrary(): Promise<void> {
+    libraryReady.value = false;
+    libraryReadError.value = false;
+    try {
+      // A rejected read (or invalid profile data) says nothing about whether
+      // completed houses remain on disk. Only a successful read may establish
+      // the baseline against which later mutations are written.
+      const recovered = readRunLibrary(await platform.readLibrary());
+      persistedLibrary = recovered;
+      library.value = recovered;
       libraryReady.value = true;
-      // A resumed save may already be on its ending screen. If the host read
-      // finished after it loaded, archive it now rather than waiting for a
-      // verb the player may never press.
+      // A resumed save might already be on its ending screen. Archive it
+      // only after the prior history has been read, never over a fake empty one.
       const g = session.value;
       if (g) archiveFinished(g);
-    });
+    } catch (error) {
+      libraryReadError.value = true;
+      throw error;
+    }
+  }
 
-  // Native stores answer asynchronously, so discover a resumable run after
-  // composition instead of assuming a browser-only storage API exists.
-  void libraryLoad;
+  // Native stores answer asynchronously. A failed read stays unavailable
+  // until the player explicitly retries from the front door.
+  void loadLibrary().catch(() => undefined);
   void readKept();
   void refreshSaves();
   platform.onPause(() => {
@@ -1208,6 +1223,6 @@ export function createGame(
 
   return {
     view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
-    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, mentions, actions,
+    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, libraryReadError, mentions, actions,
   };
 }
