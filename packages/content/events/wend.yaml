@@ -417,9 +417,9 @@ proseVariants:
   - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_clear_it_hard].outcomes[id=cleared_hard].text"
     of: 219b662baeb8ece7
     plainenglish: >-
-      They eventually remove the alder. A hand is badly injured when a beam shifts. The beam had
-      supported the whole tangle of wood, under far more pressure than anyone standing in the water
-      had realised.
+      They eventually remove the alder, but a supporting beam nearly cuts through someone's
+      hand. The beam had held up the whole tangle of wood under far more pressure than anyone
+      standing in the water had realised.
   - address: "content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_come_back_wet].label"
     of: 4bcb6fdfcced2b6b
     plainenglish: >-
