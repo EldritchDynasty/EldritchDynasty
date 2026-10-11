@@ -1,7 +1,8 @@
 import { parse, parseDocument, type Document } from 'yaml';
 import { reactive } from 'vue';
 import type { ContentBundle, ProseVariant } from '@ed/schema';
-import { assembleBundle, CONTENT_LAYOUT } from '@ed/schema';
+import { assembleBundle, CONTENT_LAYOUT, contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
+import { proseVariantStatus } from './prose-status.js';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
 
 /**
@@ -377,4 +378,118 @@ export async function createItem(collectionKey: string, path: string, item: { id
 
   const res = await saveItem(collectionKey, item.id);
   return { ...res, path };
+}
+
+/**
+ * The core-message catalogue has no authored event/arc parent to anchor the
+ * normal per-item SaveControl. Keep this write-back *file-scoped* and hardwired
+ * to the one canonical YAML home, so deleting the last row remains saveable.
+ * Its Document is patched at individual field nodes to preserve other rows'
+ * comments, source ordering, and YAML scalar formatting.
+ */
+const CORE_PROSE_FILE = 'messages.yaml';
+
+export interface CoreProseEdit {
+  address: string;
+  original: string;
+  plainenglish: string;
+}
+
+/** Mark an in-memory draft as unsaved before it is accepted into the YAML. */
+export function markCoreProseDraftDirty(): void {
+  if (files.has(CORE_PROSE_FILE) && isWritableContentPath(CORE_PROSE_FILE)) {
+    markFileDirty(CORE_PROSE_FILE);
+  }
+}
+
+export function applyCoreProseEdits(edits: readonly CoreProseEdit[]): WriteResult {
+  const file = files.get(CORE_PROSE_FILE);
+  if (!file) return { ok: false, error: 'core message catalogue is not loaded' };
+  if (!isWritableContentPath(CORE_PROSE_FILE)) {
+    return { ok: false, error: 'shipped messages.yaml is read-only in Mod Editor' };
+  }
+
+  // Validate the whole batch BEFORE mutating the live bundle or Document.
+  const seen = new Set<string>();
+  for (const edit of edits) {
+    if (!edit.address.startsWith('core:messages#') || edit.address.length <= 'core:messages#'.length) {
+      return { ok: false, error: 'not a stable core message key: ' + edit.address };
+    }
+    if (seen.has(edit.address)) return { ok: false, error: 'duplicate edit: ' + edit.address };
+    seen.add(edit.address);
+    if (edit.plainenglish.length > 0) {
+      const status = proseVariantStatus(
+        { text: edit.original, interpolations: contentInterpolationTokens(edit.original) },
+        { plainenglish: edit.plainenglish, of: proseOriginalHash(edit.original) },
+      );
+      if (!status.ok) return { ok: false, error: edit.address + ': ' + status.text };
+    }
+  }
+
+  for (const edit of edits) {
+    if (!edit.plainenglish.length) {
+      removeProseVariant(CORE_PROSE_FILE, edit.address);
+      continue;
+    }
+    const of = proseOriginalHash(edit.original);
+    const existing = store.bundle.proseVariants.find((v) => v.address === edit.address);
+    if (!existing) {
+      const added = stageProseVariant(CORE_PROSE_FILE, edit.address, edit.plainenglish);
+      if (!added) return { ok: false, error: 'cannot stage ' + edit.address };
+      added.of = of;
+    } else {
+      existing.plainenglish = edit.plainenglish;
+      existing.of = of;
+    }
+
+    // setIn on the *field nodes*, not the entire entry. Rewriting all entries
+    // here would quietly strip comments from unrelated core message variants.
+    const located = locate('proseVariants', edit.address);
+    if (!located || located.path !== CORE_PROSE_FILE) {
+      return { ok: false, error: 'cannot locate catalogue row: ' + edit.address };
+    }
+    file.doc.setIn(['proseVariants', located.index, 'plainenglish'], edit.plainenglish);
+    file.doc.setIn(['proseVariants', located.index, 'of'], of);
+    markFileDirty(CORE_PROSE_FILE);
+  }
+  return { ok: true };
+}
+
+export function pendingCoreProseText(): { path: string; before: string; after: string } | undefined {
+  const file = files.get(CORE_PROSE_FILE);
+  return file && {
+    path: CORE_PROSE_FILE,
+    before: file.loadedText,
+    after: file.doc.toString(STRINGIFY_OPTS),
+  };
+}
+
+export async function saveCoreProseCatalogue(): Promise<WriteResult> {
+  const file = files.get(CORE_PROSE_FILE);
+  if (!file) return { ok: false, error: 'core message catalogue is not loaded' };
+  if (!isWritableContentPath(CORE_PROSE_FILE)) {
+    return { ok: false, error: 'shipped messages.yaml is read-only in Mod Editor' };
+  }
+
+  const savedGeneration = dirtyGeneration.get(CORE_PROSE_FILE) ?? 0;
+  const snapshot = file.doc.toString(STRINGIFY_OPTS);
+  store.saving.add(CORE_PROSE_FILE);
+  let result: WriteResult;
+  try {
+    result = await writeFile(CORE_PROSE_FILE, snapshot);
+  } catch (error) {
+    result = { ok: false, error: error instanceof Error ? error.message : String(error) };
+  } finally {
+    store.saving.delete(CORE_PROSE_FILE);
+  }
+  if (result.ok) {
+    file.loadedText = snapshot;
+    if ((dirtyGeneration.get(CORE_PROSE_FILE) ?? 0) === savedGeneration) {
+      store.dirty.delete(CORE_PROSE_FILE);
+    }
+    delete store.errors[CORE_PROSE_FILE];
+  } else {
+    store.errors[CORE_PROSE_FILE] = result.error ?? 'write failed';
+  }
+  return result;
 }
