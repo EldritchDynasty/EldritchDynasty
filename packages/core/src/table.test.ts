@@ -397,6 +397,41 @@ describe('Age-valued player commissions (#216)', () => {
   });
 });
 
+describe('tutoring requires the world-owned living pupil (#1214)', () => {
+  it('cannot charge for a detached record, but can teach the genuine pupil', () => {
+    const ctx = testWorld(bundle, 1214);
+    ctx.world.treasury = 500;
+    const pupil = place(ctx, { sex: 'female', age: 12, name: 'Pupil' });
+    const detached = { ...pupil };
+    const existingTerms = ctx.world.tutoring.length;
+
+    expect(beginTutoring(ctx, detached, 'mind').ok).toBe(false);
+    expect(ctx.world.treasury).toBe(500);
+    expect(ctx.world.tutoring).toHaveLength(existingTerms);
+
+    expect(beginTutoring(ctx, pupil, 'mind').ok).toBe(true);
+    expect(ctx.world.treasury).toBe(500 - TUTOR_FEE);
+    expect(ctx.world.tutoring).toContainEqual({
+      person: pupil.id,
+      attr: 'mind',
+      completes: ctx.world.year + TUTOR_YEARS,
+    });
+  });
+
+  it('cannot bill or start either charged or free terms for a dead child', () => {
+    const ctx = testWorld(bundle, 1215);
+    ctx.world.treasury = 500;
+    const child = place(ctx, { sex: 'male', age: 12, name: 'Gone' });
+    ctx.world.people.kill(child.id, ctx.world.year, 'a test');
+    const beforeTerms = ctx.world.tutoring.length;
+
+    expect(beginTutoring(ctx, child, 'mind').ok).toBe(false);
+    expect(beginTutoring(ctx, child, 'mind', false).ok).toBe(false);
+    expect(ctx.world.treasury).toBe(500);
+    expect(ctx.world.tutoring).toHaveLength(beforeTerms);
+  });
+});
+
 describe('giving the house an order', () => {
   it('pays for a term of tutoring now, and delivers it in eight years', () => {
     const ctx = testWorld(bundle, 7001);
