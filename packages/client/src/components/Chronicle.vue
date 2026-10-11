@@ -22,13 +22,12 @@ const emit = defineEmits<{
 const entries = computed(() => [...props.view.chronicle].reverse());
 
 /**
- * STRUCTURAL PEOPLE LINKS (#268). ChronicleEntry.people is provenance written
- * when the authored page was made. Resolve it against the current halls and
- * never grep a name out of prose: renamed people, repeated names and omitted
- * pages all remain unambiguous this way.
+ * STRUCTURAL PEOPLE LINKS (#268). A Chronicle page outlives its cast:
+ * current halls omit the dead, so resolve the IDs against the engine's
+ * window-scoped provenance names. Never infer identities from prose.
  */
-const livingById = computed(() => new Map(
-  props.view.halls.flatMap((hall) => hall.members).map((member) => [member.id, member.name]),
+const chronicleNamesById = computed(() => new Map(
+  (props.view.chroniclePeople ?? []).map((person) => [person.id, person.name]),
 ));
 function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name: string }[] {
   const seen = new Set<string>();
@@ -36,7 +35,7 @@ function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name:
   for (const id of entry.people ?? []) {
     if (seen.has(id)) continue;
     seen.add(id);
-    const name = livingById.value.get(id);
+    const name = chronicleNamesById.value.get(id);
     if (name) out.push({ id, name });
   }
   return out;
