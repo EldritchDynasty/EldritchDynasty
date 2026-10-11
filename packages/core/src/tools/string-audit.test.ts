@@ -3,8 +3,9 @@ import { readFileSync, readdirSync, statSync, mkdtempSync, mkdirSync, writeFileS
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contentProseEntries, proseOriginalHash, setContentProseText } from '@ed/schema';
+import { CORE_MESSAGE_VARIANTS_FILE, contentProseEntries, proseOriginalHash, setContentProseText } from '@ed/schema';
 import { coreMessageAddress } from '../messages.js';
+import { pendingPlainEnglishWorklist } from './string-audit-cli.js';
 import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
   plainEnglishCoverage, plainEnglishCoverageFor,
@@ -204,6 +205,33 @@ describe('the string-source audit (issue #276)', () => {
       .toMatchObject({ invalid: 1 });
   });
 
+  it('credits keyed core counterparts but never legacy literal addresses in the pending worklist (#1019)', () => {
+    const items = plainEnglishCoreWorkItems('example.ts', [
+      "msg(ctx, 'audit.pending', 'The archivist saw {NAME} return.');",
+      "const legacy = 'A sentence that still lacks a runtime key.';",
+    ].join('\n'));
+    const keyed = items.find((item) => item.address === coreMessageAddress('audit.pending'))!;
+    const legacy = items.find((item) => item.address.includes('#literal['))!;
+    const reviewed = {
+      address: keyed.address, of: proseOriginalHash(keyed.text),
+      plainenglish: 'The archivist watched {NAME} come back.',
+    };
+    // A fabricated legacy row must not get credit: there is no runtime lookup.
+    const fakeLegacy = {
+      address: legacy.address, of: proseOriginalHash(legacy.text),
+      plainenglish: 'This sentence still has no message key.',
+    };
+    const current = pendingPlainEnglishWorklist(items, [reviewed, fakeLegacy]);
+    expect(current.map((row) => [row.address, row.variantStatus])).toEqual([
+      [legacy.address, 'missing'],
+    ]);
+    expect(pendingPlainEnglishWorklist(items, [fakeLegacy]).find((row) => row.address === keyed.address))
+      .toMatchObject({ variantStatus: 'missing', expectedOf: reviewed.of });
+    expect(pendingPlainEnglishWorklist(items, [{ ...reviewed, of: '0000000000000000' }])
+      .find((row) => row.address === keyed.address))
+      .toMatchObject({ variantStatus: 'stale', expectedOf: reviewed.of, authoredOf: '0000000000000000' });
+  });
+
   it('finds sentences in code, and not comments, imports or developer messages', () => {
     const found = sentenceLiterals([
       "import { x } from './a module with spaces.js';",
@@ -370,6 +398,47 @@ describe('the string-source audit (issue #276)', () => {
       rmSync(join(events, 'two.yaml'));
       expect(plainEnglishCoverage(root)).toMatchObject({
         total: 1, current: 1, missing: 0, stale: 0, invalid: 0,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('credits stable core message counterparts only in the shipped messages catalogue (#1019)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-core-prose-coverage-'));
+    const core = join(root, 'packages/core/src');
+    const content = join(root, 'packages/content');
+    mkdirSync(core, { recursive: true });
+    mkdirSync(content, { recursive: true });
+    const source = "msg(ctx, 'audit.coverage', 'A name for {NAME} is written.');";
+    const item = plainEnglishCoreWorkItems('example.ts', source)[0]!;
+    const originalHash = proseOriginalHash(item.text);
+    const yamlFor = (of: string) => [
+      'proseVariants:',
+      '  - address: ' + JSON.stringify(item.address),
+      '    of: ' + of,
+      '    plainenglish: The clerk recorded {NAME}.',
+    ].join('\n') + '\n';
+    const messages = join(content, CORE_MESSAGE_VARIANTS_FILE);
+
+    try {
+      writeFileSync(join(core, 'example.ts'), source);
+      writeFileSync(messages, yamlFor(originalHash));
+      expect(plainEnglishCoverage(root)).toMatchObject({
+        total: 1, current: 1, missing: 0, stale: 0, invalid: 0, remaining: [],
+      });
+      writeFileSync(messages, yamlFor('0000000000000000'));
+      expect(plainEnglishCoverage(root)).toMatchObject({
+        total: 1, current: 0, missing: 0, stale: 1, invalid: 0,
+        remaining: [{ address: item.address, status: 'stale', expectedOf: originalHash }],
+      });
+      // A valid-looking key in another YAML file must never be counted.
+      const other = join(content, 'events');
+      mkdirSync(other, { recursive: true });
+      writeFileSync(join(other, 'elsewhere.yaml'), yamlFor(originalHash));
+      writeFileSync(messages, 'proseVariants: []\n');
+      expect(plainEnglishCoverage(root)).toMatchObject({
+        total: 1, current: 0, missing: 1, stale: 0,
       });
     } finally {
       rmSync(root, { recursive: true, force: true });
