@@ -251,6 +251,12 @@ export function sellParcel(ctx: SimCtx, parcel: string): OrderResult {
   const found = liveStateOf(ctx, parcel);
   if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.sell_not_held', 'the house does not hold it') };
   const [id, state] = found;
+  // Selling an endowed gift cannot silently avoid the grievance of taking it
+  // back. Recall to the seat first, so the one authoritative recall route
+  // books that grievance once (#1337).
+  if (state.holder !== undefined) {
+    return { ok: false, reason: msg(ctx, 'land.refuse.sell_endowed', 'recall this parcel from its hall before selling it') };
+  }
 
   const price = Math.round(parcelPrice(def) * SELL_FACTOR);
   recordLoss(ctx, state, def);
@@ -751,7 +757,7 @@ export function landView(ctx: SimCtx): LandView {
       baseYield: def?.baseYield ?? 0,
       yieldBonus: state.yieldBonus ?? 0,
       yieldFactor: state.yieldFactor ?? 1,
-      sellable: def !== undefined && def.kind !== 'demesne',
+      sellable: def !== undefined && def.kind !== 'demesne' && state.holder === undefined,
       sellPrice: Math.round(cost * SELL_FACTOR),
       ...(completes !== undefined ? { improving: completes } : {}),
       improveCost: cost,
