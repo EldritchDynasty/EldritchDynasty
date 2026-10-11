@@ -561,6 +561,9 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
     return { ok: false, reason: msg(ctx, 'land.refuse.endow_no_hall', 'no such hall stands to hold it') };
   }
   if (state.holder === branch) return { ok: true }; // already endowed there
+  if (state.holder !== undefined) {
+    return { ok: false, reason: msg(ctx, 'land.refuse.endow_recall_first', 'recall the parcel before giving it to another hall') };
+  }
 
   state.holder = branch;
   w.chronicle.push({
@@ -581,6 +584,12 @@ export function recallParcel(ctx: SimCtx, parcel: string): OrderResult {
 
   const b = w.branches.get(state.holder);
   const def = ctx.content.parcel(parcel);
+  // Taking back a gift is not free. The caput never leaves the seat, and
+  // escheat of a dead hall must not punish a hall that no longer exists.
+  // Base yield measures the size of the broken promise, independent of weather.
+  if (b && isActiveBranch(b)) {
+    b.grievance = Math.min(100, b.grievance + 2 + (def?.baseYield ?? 0) * 0.25);
+  }
   state.holder = undefined;
   w.chronicle.push({
     year: w.year, weight: 'line', named: false,
@@ -674,6 +683,8 @@ export function tickPlatIllumination(ctx: SimCtx): void {
 export interface LandView {
   treasury: number;
   rentsPolicy: RentPolicy;
+  /** Active cadet halls to which the seat may grant a non-caput parcel. */
+  branches: { id: string; name: string; grievance: number }[];
   held: {
     parcel: string; name: string; kind?: ParcelKind; place: string;
     acres: number; provenance: string; heldSince: Year;
@@ -772,7 +783,9 @@ export function landView(ctx: SimCtx): LandView {
   }
 
   return {
-    treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy, held, market,
-    lost: w.lostParcels.map((l) => lostView(ctx, l)),
+    treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy,
+    branches: [...w.branches.values()].filter(isActiveBranch)
+      .map((b) => ({ id: b.id, name: b.name, grievance: b.grievance })),
+    held, market, lost: w.lostParcels.map((l) => lostView(ctx, l)),
   };
 }
