@@ -647,6 +647,9 @@ describe('Table bid ceiling is a safe whole-crown count (#1066)', () => {
       expect(result.reason).toBe('not a figure');
       expect({ ...saveGame(ctx), savedAt: before.savedAt }).toEqual(before);
     }
+    // A rejected input does not poison the next valid instruction.
+    expect(order(ctx, { kind: 'bid', ceiling: 0 }).ok).toBe(true);
+    expect(ctx.world.bidCeiling).toBe(0);
   });
 });
 
