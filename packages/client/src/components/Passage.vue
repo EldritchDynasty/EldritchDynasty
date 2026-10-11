@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import type { SessionView } from '@ed/core';
 import type { RememberedPassage } from '../lib/game';
 
 /**
@@ -18,8 +20,18 @@ import type { RememberedPassage } from '../lib/game';
  * years. This cannot. It is what happened, in the order it happened, and its
  * flatness is the whole difference between them.
  */
-defineProps<{ passages: RememberedPassage[] }>();
+const props = defineProps<{
+  passages: RememberedPassage[];
+  halls: SessionView['halls'];
+}>();
 defineEmits<{ (e: 'select', id: string): void }>();
+
+// A long jump can record a birth or deed and then a death before the player
+// sees this log. Such a person has no current tree card. Show the history,
+// but only offer navigation where the current halls can actually open it.
+const onTree = computed(() => new Set(
+  props.halls.flatMap((hall) => hall.members.map((member) => member.id)),
+));
 </script>
 
 <template>
@@ -29,11 +41,11 @@ defineEmits<{ (e: 'select', id: string): void }>();
     <div v-for="year in passages" :key="year.year" class="year">
       <span class="dim small when">{{ year.year }}</span>
       <ul>
-        <!-- Clickable, because every line is about somebody and the tree is
-             the other half of the answer. A death is the one line that is
-             not: they have left the halls, and there is no card to open. -->
+        <!-- Only current hall members have a tree card to open. A death
+             cannot be opened, but neither can an earlier line about someone
+             who died or left during a multi-year jump. Keep their words. -->
         <li v-for="(line, i) in year.lines" :key="i" :class="line.kind">
-          <button v-if="line.kind !== 'death'" class="row" @click="$emit('select', line.person)">
+          <button v-if="line.kind !== 'death' && onTree.has(line.person)" class="row" @click="$emit('select', line.person)">
             {{ line.text }}
           </button>
           <template v-else>
@@ -41,7 +53,7 @@ defineEmits<{ (e: 'select', id: string): void }>();
             <!-- The cast named them before this year took them. The label and
                  sentence are the engine's own words, read back rather than
                  rewritten into an epitaph (issue #44). -->
-            <p v-if="line.remembered" class="remembered small">
+            <p v-if="line.kind === 'death' && line.remembered" class="remembered small">
               <span class="rubric">{{ line.remembered.label }}</span> &mdash; {{ line.remembered.because }}
             </p>
           </template>
