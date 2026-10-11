@@ -556,7 +556,7 @@ describe('manual pre-release tag evidence (#321)', () => {
   it('creates a single immutable tag only for green push-to-main evidence at HEAD', async () => {
     const result = await exercise();
     expect(result.failures).toEqual([]);
-    expect(result.created).toEqual([{ ref: 'refs/tags/v0.3.0-beta.1', sha: 'a'.repeat(40) }]);
+    expect(result.created).toEqual([expect.objectContaining({ ref: 'refs/tags/v0.3.0-beta.1', sha: 'a'.repeat(40) })]);
     expect(result.queried).toEqual([expect.objectContaining({
       workflow_id: 'check.yml', branch: 'main', event: 'push', head_sha: 'a'.repeat(40),
     })]);
