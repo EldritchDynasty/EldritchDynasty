@@ -278,6 +278,31 @@ describe('autosave mutation ordering', () => {
   });
 });
 
+describe('save-list failures at the real game/platform seam (#1176)', () => {
+  it('propagates explicit host failure without losing earlier saves, then recovers on retry', async () => {
+    const host = memoryPlatform();
+    host.saves.set('chapter-1-1080', { year: 1080 });
+    host.saves.set('demo-autosave', { year: 1090 });
+    const list = host.listSaves;
+    let offline = false;
+    host.listSaves = async () => {
+      if (offline) throw new Error('host listing unavailable');
+      return list();
+    };
+    const game = createGame(loadContent(), host);
+    const expected = [{ slot: 'chapter-1-1080', year: 1080 }];
+
+    await expect(game.actions.listSaves()).resolves.toEqual(expected);
+    offline = true;
+    await expect(game.actions.listSaves()).rejects.toThrow('host listing unavailable');
+    expect(game.saves.value, 'a failed retry must not erase previously listed runs').toEqual(expected);
+
+    offline = false;
+    await expect(game.actions.listSaves()).resolves.toEqual(expected);
+    expect(game.saves.value).toEqual(expected);
+  });
+});
+
 describe('the platform seam', () => {
   it('takes an injected host whole, rather than detecting one below composition', async () => {
     const injected = bridge();
