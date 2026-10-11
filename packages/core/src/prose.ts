@@ -55,6 +55,9 @@ export function renderProse(ctx: SimCtx, address: string | undefined, original: 
     const variantTokens = contentInterpolationTokens(variant.plainenglish).sort();
     if (originalTokens.length === variantTokens.length
       && originalTokens.every((token, i) => token === variantTokens[i])) {
+      // A transient stale read must not remain a reported migration gap after
+      // this same address is shown with its reviewed Original again.
+      ctx.prose.missing.delete(address);
       return variant.plainenglish;
     }
   }
