@@ -61,6 +61,29 @@ function setBidCeiling(): void {
   props.actions.order({ kind: 'bid', ceiling: ceiling.value });
 }
 
+/**
+ * A BID ON ONE LOT (issue #1183). The ceiling above is what the house will
+ * spend on a sale it has not looked at; these are the lots, named, and the
+ * house's own offer on each — crowns, or an heirloom traded for it. The
+ * engine refuses what the house cannot honour and voids, at the sale, what it
+ * no longer can.
+ */
+const lotCoin = ref<Record<string, number | string>>({});
+const lotHeirloom = ref<Record<string, string>>({});
+function validLotCoin(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 1;
+}
+function bidCoin(lot: string): void {
+  const amount = lotCoin.value[lot];
+  if (!validLotCoin(amount)) return;
+  props.actions.order({ kind: 'lotBid', lot, bid: { currency: 'coin', amount } });
+}
+function bidHeirloom(lot: string): void {
+  const heirloom = lotHeirloom.value[lot];
+  if (!heirloom) return;
+  props.actions.order({ kind: 'lotBid', lot, bid: { currency: 'heirloom', heirloom } });
+}
+
 const pupil = ref('');
 const subject = ref('');
 
@@ -175,6 +198,41 @@ const MARRIAGE_ORDERS = [
         {{ table.auction.lowestReserve }}.
       </p>
       <p v-else class="small dim">Nothing has been announced.</p>
+
+      <div v-for="lot in table.auction?.items ?? []" :key="lot.id" class="line lot">
+        <div class="small">
+          <strong>{{ lot.name }}</strong>
+          <span class="dim"> · {{ lot.seller }} · sold in {{ lot.saleYear }} · reserved at {{ lot.reserve }}</span>
+        </div>
+        <p v-if="lot.kind === 'chronicle_page'" class="small rubric blurb">
+          Whoever buys this page reads it. If a rival buys it, what it proves is proven.
+        </p>
+        <p v-if="lot.bid" class="small dim">
+          The house has bid
+          {{ lot.bid.currency === 'coin' ? `${lot.bid.amount} crowns` : lot.bid.name }} for it.
+        </p>
+        <div class="row">
+          <input
+            type="number" min="1" step="1" v-model.number="lotCoin[lot.id]"
+            :aria-label="`Bid in crowns for ${lot.name}`"
+          />
+          <button :disabled="!validLotCoin(lotCoin[lot.id])" @click="bidCoin(lot.id)">Bid crowns</button>
+          <template v-if="table.auction?.heirlooms.length">
+            <select v-model="lotHeirloom[lot.id]" :aria-label="`Heirloom to trade for ${lot.name}`">
+              <option value="">an heirloom…</option>
+              <option v-for="h in table.auction.heirlooms" :key="h.id" :value="h.id">{{ h.name }}</option>
+            </select>
+            <button :disabled="!lotHeirloom[lot.id]" @click="bidHeirloom(lot.id)">Trade it</button>
+          </template>
+          <button
+            v-if="lot.bid" class="quiet small"
+            @click="actions.order({ kind: 'lotBid', lot: lot.id, bid: null })"
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
+      <p v-if="refusedIn('lotBid')" class="small rubric">{{ refusedIn('lotBid') }}</p>
 
       <div class="row">
         <input

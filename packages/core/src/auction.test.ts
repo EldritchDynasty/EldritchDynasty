@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash, type AuctionLot } from '@ed/schema';
 import {
-  announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, grantHeirloom, grantParcel,
-  order, resolveDueLots, setProseMode, setProseVariants, testRng, tickAuction,
+  announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, DEBT_FLOOR, grantHeirloom, grantParcel,
+  order, resolveDueLots, setProseMode, setProseVariants, tableView, testRng, tickAuction,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
@@ -646,8 +646,15 @@ describe('the broker and the bidding table refuse in the reader\'s setting (#800
       'auction.refuse.search_due': 'a copy is already due at auction',
       'auction.refuse.search_fee': 'the broker asks {FEE} crowns before he leaves',
       'auction.refuse.bid_amount': 'not a valid bid amount',
+      'auction.refuse.bid_closed': 'that sale has been held',
+      'auction.refuse.bid_favours': 'the house is not owed that many favours',
+      'auction.refuse.bid_heirloom_burden': 'a Burden cannot be traded away',
+      'auction.refuse.bid_heirloom_pledged': 'that heirloom is already offered for another lot',
+      'auction.refuse.bid_heirloom_spent': 'that heirloom is spent',
       'auction.refuse.bid_no_lot': 'no such lot',
       'auction.refuse.bid_no_heirloom': 'the house does not hold that heirloom',
+      'auction.refuse.bid_purse': 'the house cannot raise {AMOUNT} crowns',
+      'auction.refuse.withdraw_no_lot': 'no such lot',
     });
   });
 
@@ -716,7 +723,168 @@ describe('auction bids store only valid numeric amounts (#1057)', () => {
     expect(lot!.playerBid).toMatchObject({
       currency: 'heirloom', amount: 0, heirloomOffered: 'portion_of_fertility',
     });
+    // A purse that can pay it: since #1183 a coin bid past the debt floor is
+    // refused, and this test is about the integer, not the treasury.
+    ctx.world.treasury = 1_000;
     expect(bidAtAuction(ctx, lot!.id, 'coin', 500).ok).toBe(true);
     expect(lot!.playerBid).toMatchObject({ currency: 'coin', amount: 500 });
+  });
+});
+
+describe('the house bids on a lot of its own choosing (#1183)', () => {
+  const heirloomLot = (ctx: SimCtx, id = 'test_lot_h'): AuctionLot => ({
+    id, kind: 'heirloom', refId: 'portion_of_agelessness',
+    house: 'house_marrow', announcedYear: ctx.world.year, saleYear: ctx.world.year + 3, reserveCoin: 400,
+  });
+  const sell = (ctx: SimCtx, lot: AuctionLot) => {
+    ctx.world.year = lot.saleYear;
+    resolveDueLots(ctx, false);
+    return ctx.world.auction.history.find((h) => h.lot.id === lot.id);
+  };
+
+  it('a coin order registers the bid, outbids the rival at the sale, and charges the treasury', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const lot: AuctionLot = {
+      id: 'test_lot_book', kind: 'spellbook', refId: 'the_marrow_codex',
+      house: 'house_marrow', announcedYear: ctx.world.year, saleYear: ctx.world.year + 3,
+      reserveCoin: ctx.content.mustSpellbook('the_marrow_codex').price.min,
+    };
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.treasury = 5_000;
+    const rivalCeiling = Math.max(0, ...bundle.houses.flatMap((h) => h.motives.map((m) => m.bidsUpTo)));
+    const amount = rivalCeiling + 1;
+
+    expect(order(ctx, { kind: 'lotBid', lot: lot.id, bid: { currency: 'coin', amount } })).toEqual({ ok: true });
+    expect(lot.playerBid).toMatchObject({ currency: 'coin', amount, house: ctx.world.playerHouse });
+
+    expect(sell(ctx, lot)?.winner).toBe('player');
+    expect(ctx.world.library.has('the_marrow_codex')).toBe(true);
+    expect(ctx.world.treasury).toBe(5_000 - amount);
+  });
+
+  it('an heirloom order trades the heirloom for the lot and spends no coin', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    grantHeirloom(ctx, 'portion_of_fertility');
+    const lot = heirloomLot(ctx);
+    ctx.world.auction.upcoming = [lot];
+    const treasury = ctx.world.treasury;
+
+    expect(order(ctx, { kind: 'lotBid', lot: lot.id, bid: { currency: 'heirloom', heirloom: 'portion_of_fertility' } }).ok).toBe(true);
+    expect(sell(ctx, lot)?.winner).toBe('player');
+    expect(ctx.world.heirlooms.has('portion_of_fertility')).toBe(false);
+    expect(ctx.world.heirlooms.has('portion_of_agelessness')).toBe(true);
+    expect(ctx.world.treasury).toBe(treasury);
+  });
+
+  it('withdrawing hands the lot back to the ceiling and the steward', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const lot = heirloomLot(ctx);
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.treasury = 1_000;
+    expect(order(ctx, { kind: 'lotBid', lot: lot.id, bid: { currency: 'coin', amount: 500 } }).ok).toBe(true);
+    expect(order(ctx, { kind: 'lotBid', lot: lot.id, bid: null }).ok).toBe(true);
+    expect(lot.playerBid).toBeUndefined();
+    expect(order(ctx, { kind: 'lotBid', lot: 'no_such_lot', bid: null }).ok).toBe(false);
+  });
+
+  it('refuses what the house cannot honour, and mutates nothing', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    grantHeirloom(ctx, 'portion_of_fertility');
+    grantHeirloom(ctx, 'portion_of_agelessness');
+    grantHeirloom(ctx, 'the_ring');
+    const lot = heirloomLot(ctx, 'test_lot_a');
+    const other = { ...heirloomLot(ctx, 'test_lot_b'), refId: 'the_unmirrored_eye' };
+    const closed = { ...heirloomLot(ctx, 'test_lot_c'), refId: 'the_forty_leaves', saleYear: ctx.world.year };
+    ctx.world.auction.upcoming = [lot, other, closed];
+    expect(bidAtAuction(ctx, other.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+    ctx.world.heirlooms.get('portion_of_agelessness')!.spent = true;
+
+    const before = JSON.stringify({ auction: ctx.world.auction, treasury: ctx.world.treasury, chronicle: ctx.world.chronicle });
+    const reasons = [
+      bidAtAuction(ctx, closed.id, 'coin', 10),
+      bidAtAuction(ctx, lot.id, 'coin', ctx.world.treasury - DEBT_FLOOR + 1),
+      bidAtAuction(ctx, lot.id, 'favour', 1),
+      bidAtAuction(ctx, lot.id, 'heirloom', 0, 'portion_of_agelessness'),
+      bidAtAuction(ctx, lot.id, 'heirloom', 0, 'portion_of_fertility'),
+      bidAtAuction(ctx, lot.id, 'heirloom', 0, 'the_ring'),
+    ].map((r) => (r.ok ? 'ACCEPTED' : r.reason));
+    expect(reasons).toEqual([
+      'that sale has been held',
+      `the house cannot raise ${ctx.world.treasury - DEBT_FLOOR + 1} crowns`,
+      'the house is not owed that many favours',
+      'that heirloom is spent',
+      'that heirloom is already offered for another lot',
+      'a Burden cannot be traded away',
+    ]);
+    expect(JSON.stringify({ auction: ctx.world.auction, treasury: ctx.world.treasury, chronicle: ctx.world.chronicle })).toBe(before);
+    // Re-offering the same heirloom on the lot it is already pledged to is a change of mind, not a second pledge.
+    expect(bidAtAuction(ctx, other.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+  });
+
+  it('voids a bid the treasury can no longer cover at the sale, says so, and lets the ceiling bid instead', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const lot = heirloomLot(ctx);
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.treasury = 1_000;
+    expect(bidAtAuction(ctx, lot.id, 'coin', 900).ok).toBe(true);
+    ctx.world.bidCeiling = 500;
+    ctx.world.treasury = 600; // 900 is now past the debt floor
+
+    const lines = ctx.world.chronicle.length;
+    expect(sell(ctx, lot)?.winner).toBe('player');
+    const voided = ctx.world.chronicle.slice(lines).find((e) => /struck the bid out/.test(e.text ?? ''));
+    expect(voided, 'a voided bid writes its own line').toBeDefined();
+    // The ceiling paid what the lot took (reserve × 1.05), not the void 900.
+    expect(ctx.world.treasury).toBe(600 - Math.round(400 * 1.05));
+    expect(ctx.world.treasury).toBeGreaterThan(DEBT_FLOOR);
+  });
+
+  it('voids an heirloom offer the house no longer holds on the day', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    grantHeirloom(ctx, 'portion_of_fertility');
+    const lot = heirloomLot(ctx);
+    ctx.world.auction.upcoming = [lot];
+    expect(bidAtAuction(ctx, lot.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+    ctx.world.heirlooms.delete('portion_of_fertility');
+    ctx.world.treasury = 0; // nor can the steward pay
+
+    expect(sell(ctx, lot)?.winner).toBe('nobody');
+    expect(ctx.world.heirlooms.has('portion_of_agelessness')).toBe(false);
+  });
+
+  it('a won marriage promise is owed to the house that sold the lot, not to the bidder', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const lot = heirloomLot(ctx);
+    ctx.world.auction.upcoming = [lot];
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
+    expect(sell(ctx, lot)?.winner).toBe('player');
+    expect(ctx.world.marriagePromises).toEqual([{ toHouse: 'house_marrow', year: lot.saleYear, lot: lot.refId }]);
+    expect(ctx.world.marriagePromises[0]!.toHouse).not.toBe(ctx.world.playerHouse);
+  });
+
+  it('the Table names every upcoming lot and the house\'s bid on it, and never a page\'s Discrepancy', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    ctx.world.treasury = 1_000;
+    grantHeirloom(ctx, 'portion_of_fertility');
+    grantHeirloom(ctx, 'the_ring');
+    const lot = heirloomLot(ctx);
+    const page: AuctionLot = {
+      id: 'test_lot_page', kind: 'chronicle_page', refId: 'secret_discrepancy_id',
+      house: 'house_marrow', announcedYear: ctx.world.year, saleYear: ctx.world.year + 5, reserveCoin: 500,
+    };
+    ctx.world.auction.upcoming = [page, lot];
+    expect(bidAtAuction(ctx, lot.id, 'coin', 450).ok).toBe(true);
+
+    const view = tableView(ctx).auction!;
+    expect(view.items.map((i) => i.id)).toEqual([lot.id, page.id]);
+    expect(view.items[0]).toMatchObject({
+      kind: 'heirloom', name: ctx.content.heirloom('portion_of_agelessness')!.name,
+      saleYear: lot.saleYear, reserve: 400, bid: { currency: 'coin', amount: 450 },
+    });
+    expect(view.items[0]!.seller.length).toBeGreaterThan(0);
+    expect(view.items[1]!.name).toBe('a page that names the family');
+    expect(JSON.stringify(view)).not.toContain('secret_discrepancy_id');
+    // A Burden is held but not offered.
+    expect(view.heirlooms.map((h) => h.id)).toEqual(['portion_of_fertility']);
   });
 });

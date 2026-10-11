@@ -1004,6 +1004,66 @@ describe('auction ceiling input (#1090)', () => {
   });
 });
 
+describe('a bid on one lot (#1183)', () => {
+  function mountLots(withBid: boolean) {
+    const actions = spyActions();
+    const table = riteTable(vesselAssembly);
+    table.auction = {
+      year: 1050, lots: 2, lowestReserve: 300,
+      items: [
+        {
+          id: 'lot_1', kind: 'spellbook', name: 'The Marrow Codex', seller: 'House Marrow',
+          saleYear: 1050, reserve: 300,
+          ...(withBid ? { bid: { currency: 'coin' as const, amount: 420 } } : {}),
+        },
+        { id: 'lot_2', kind: 'chronicle_page', name: 'a page that names the family', seller: 'House Marrow', saleYear: 1050, reserve: 500 },
+      ],
+      heirlooms: [{ id: 'portion_of_fertility', name: 'A Portion of Fertility' }],
+    };
+    const wrapper = mount(Table, {
+      props: { table, land: riteLand, actions: actions as unknown as GameActions, refusal: null, receipt: null },
+    });
+    return { wrapper, actions };
+  }
+
+  it('names each lot, warns about a page, and sends a coin bid or an heirloom trade for that lot', async () => {
+    const { wrapper, actions } = mountLots(false);
+    try {
+      expect(wrapper.text()).toContain('The Marrow Codex');
+      expect(wrapper.text()).toContain('If a rival buys it, what it proves is proven.');
+
+      const coin = wrapper.get('input[aria-label="Bid in crowns for The Marrow Codex"]');
+      await coin.setValue('0');
+      const bids = wrapper.findAll('button').filter((b) => b.text() === 'Bid crowns');
+      expect(bids[0]!.attributes('disabled')).toBeDefined();
+      await coin.setValue('420');
+      await bids[0]!.trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({ kind: 'lotBid', lot: 'lot_1', bid: { currency: 'coin', amount: 420 } });
+
+      await wrapper.get('select[aria-label="Heirloom to trade for a page that names the family"]').setValue('portion_of_fertility');
+      const trades = wrapper.findAll('button').filter((b) => b.text() === 'Trade it');
+      await trades[1]!.trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({
+        kind: 'lotBid', lot: 'lot_2', bid: { currency: 'heirloom', heirloom: 'portion_of_fertility' },
+      });
+      expect(wrapper.findAll('button').some((b) => b.text() === 'Withdraw')).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('shows a standing bid and withdraws it', async () => {
+    const { wrapper, actions } = mountLots(true);
+    try {
+      expect(wrapper.text()).toContain('The house has bid 420 crowns for it.');
+      await buttonContaining(wrapper, 'Withdraw').trigger('click');
+      expect(actions.order).toHaveBeenLastCalledWith({ kind: 'lotBid', lot: 'lot_1', bid: null });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('standing preference controls (#219)', () => {
   it('lets the player withdraw both choice and Record policies from the Table', async () => {
     const actions = spyActions();

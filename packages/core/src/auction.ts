@@ -1,4 +1,4 @@
-import type { AuctionBid, AuctionLot, BidCurrency, HouseDef } from '@ed/schema';
+import type { AuctionBid, AuctionLot, BidCurrency, HeirloomState, HouseDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { DEBT_FLOOR } from './economy.js';
@@ -7,7 +7,7 @@ import { acquireLibraryCopy } from './people/library.js';
 import { grantHeirloom, transferHeirloom } from './people/heirlooms.js';
 import { relationshipThreads } from './relationship-threads.js';
 import { msg } from './messages.js';
-import { proseForContentField } from './prose.js';
+import { proseForContentField, proseForPromiseLot } from './prose.js';
 
 /**
  * THE AUCTION (issue #17) — the largest single subsystem in the tracker, and
@@ -244,10 +244,25 @@ export interface BidResult {
   reason?: string;
 }
 
+/**
+ * THE PLAYER'S OWN BID (issue #1183), and the one place one is registered.
+ *
+ * This was reachable from tests only for as long as the auction existed — no
+ * table order and no session verb called it — so in a played game the house
+ * had only ever bid coin, through the ceiling and the steward, and §14's
+ * heirloom trade had never happened. `order({ kind: 'lotBid' })` reaches it
+ * now, and reaching it is what made every refusal below necessary: a coin bid
+ * the house cannot pay drove the treasury straight through `DEBT_FLOOR` at
+ * the sale, and one spent portion could be offered for every lot at once.
+ *
+ * A placed bid is still only a promise. The sale is years out, and
+ * `resolveDueLots` asks again whether it can be honoured on the day.
+ */
 export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency, amount: number, heirloomOffered?: string): BidResult {
   const w = ctx.world;
   const lot = w.auction.upcoming.find((l) => l.id === lotId_);
   if (!lot) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_lot', 'no such lot') };
+  if (lot.saleYear <= w.year) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_closed', 'that sale has been held') };
 
   // Amount is a count of coins/favours, and is still serialized for the
   // currencies whose value is fixed. Refuse NaN, fractions and unsafe numbers
@@ -256,9 +271,28 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
     return { ok: false, reason: msg(ctx, 'auction.refuse.bid_amount', 'not a valid bid amount') };
   }
 
+  if (currency === 'coin' && amount > w.treasury - DEBT_FLOOR) {
+    return {
+      ok: false,
+      reason: msg(ctx, 'auction.refuse.bid_purse', 'the house cannot raise {AMOUNT} crowns', { AMOUNT: String(amount) }),
+    };
+  }
+  if (currency === 'favour' && amount > w.auction.favours) {
+    return { ok: false, reason: msg(ctx, 'auction.refuse.bid_favours', 'the house is not owed that many favours') };
+  }
   if (currency === 'heirloom') {
     if (!heirloomOffered || !w.heirlooms.has(heirloomOffered)) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
+    }
+    if (spentHeirloom(w.heirlooms.get(heirloomOffered)!)) {
+      return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_spent', 'that heirloom is spent') };
+    }
+    if (ctx.content.heirloom(heirloomOffered)?.cannotBeSold) {
+      return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_burden', 'a Burden cannot be traded away') };
+    }
+    const pledged = w.auction.upcoming.some((l) => l.id !== lot.id && l.playerBid?.heirloomOffered === heirloomOffered);
+    if (pledged) {
+      return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_pledged', 'that heirloom is already offered for another lot') };
     }
   }
 
@@ -266,6 +300,64 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   if (heirloomOffered) bid.heirloomOffered = heirloomOffered;
   lot.playerBid = bid;
   return { ok: true };
+}
+
+/** Take the house's own bid off a lot; the ceiling and the steward bid for it again. */
+export function withdrawBid(ctx: SimCtx, lotId_: string): BidResult {
+  const lot = ctx.world.auction.upcoming.find((l) => l.id === lotId_);
+  if (!lot) return { ok: false, reason: msg(ctx, 'auction.refuse.withdraw_no_lot', 'no such lot') };
+  delete lot.playerBid;
+  return { ok: true };
+}
+
+/** `canUseHeirloom`'s reading of spent: flagged, or out of uses. */
+function spentHeirloom(state: HeirloomState): boolean {
+  return state.spent || (state.usesLeft !== undefined && state.usesLeft <= 0);
+}
+
+/** What the house could trade for a lot today: held, not spent, and not a Burden (§15). */
+export function tradeableHeirlooms(ctx: SimCtx): string[] {
+  return [...ctx.world.heirlooms]
+    .filter(([id, h]) => !spentHeirloom(h) && !ctx.content.heirloom(id)?.cannotBeSold)
+    .map(([id]) => id)
+    .sort();
+}
+
+/**
+ * Whether a bid placed years ago can still be paid on the day of the sale.
+ * The treasury moves and heirlooms get used between the two; a bid that is
+ * charged anyway either overdraws the house or trades away a thing it no
+ * longer has.
+ */
+function honourable(ctx: SimCtx, bid: AuctionBid): boolean {
+  const w = ctx.world;
+  switch (bid.currency) {
+    case 'coin': return bid.amount <= w.treasury - DEBT_FLOOR;
+    case 'favour': return bid.amount <= w.auction.favours;
+    case 'heirloom': {
+      const held = bid.heirloomOffered === undefined ? undefined : w.heirlooms.get(bid.heirloomOffered);
+      return held !== undefined && !spentHeirloom(held);
+    }
+    case 'marriage_promise': return true;
+  }
+}
+
+/** What the lot is, in the reader's setting. A page is never named by its Discrepancy: that is the secret. */
+export function lotName(ctx: SimCtx, lot: AuctionLot): string {
+  return lot.kind === 'chronicle_page'
+    ? msg(ctx, 'auction.lot.page', 'a page that names the family')
+    : proseForPromiseLot(ctx, lot.refId);
+}
+
+/** Who is selling, as the world calls them on the day. */
+export function sellerName(ctx: SimCtx, houseId: string): string {
+  const house = ctx.content.house(houseId);
+  const liveName = ctx.world.houses.get(houseId)?.name;
+  // A reviewed content variant names the Original, not a house since
+  // renamed in this world. Record what the rival is called at the sale.
+  return house && (liveName === undefined || liveName === house.name)
+    ? proseForContentField(ctx, 'houses', house.id, 'name', house.name)
+    : liveName ?? houseId;
 }
 
 /** What a `bid` is worth, for comparing against a coin reserve and a rival's coin bid. */
@@ -474,7 +566,11 @@ function chargeBid(ctx: SimCtx, bid: AuctionBid, lot: AuctionLot): void {
     // the whole of what makes this record legible: an unborn granddaughter
     // pledged for a book, with no way to say which book, is a line of
     // bookkeeping rather than the thing a house has to explain in 1512.
-    w.marriagePromises.push({ toHouse: bid.house, year: w.year, lot: lot.refId });
+    //
+    // OWED TO THE SELLER (issue #1183). This was `bid.house`, which is always
+    // the player's own house — a granddaughter pledged to herself, and a
+    // relationship thread reading "{our house} is owed the marriage".
+    w.marriagePromises.push({ toHouse: lot.house, year: w.year, lot: lot.refId });
   }
 }
 
@@ -490,7 +586,20 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
     // gave the table, then the steward's floor. `autoResolve` no longer gates
     // the floor — see `autoBid`.
     void autoResolve;
-    const bid = lot.playerBid ?? standingBid(ctx, lot) ?? autoBid(ctx, lot);
+    // A bid the house can no longer make good is VOID, and says so (issue
+    // #1183): the ceiling and the steward bid instead, within what is left.
+    let own = lot.playerBid;
+    if (own && !honourable(ctx, own)) {
+      own = undefined;
+      w.chronicle.push({
+        year: w.year, weight: 'line',
+        text: msg(ctx, 'auction.bid_void',
+          'The house had bid for {LOT} with what it no longer had, and the auctioneer struck the bid out.',
+          { LOT: lotName(ctx, lot) }),
+        named: false,
+      });
+    }
+    const bid = own ?? standingBid(ctx, lot) ?? autoBid(ctx, lot);
     const rival = bestRivalBid(ctx, lot);
 
     const playerValue = bid ? bidValue(bid) : -1;
@@ -507,13 +616,7 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
 
     if (rival && rival.amount >= lot.reserveCoin) {
       w.auction.history.push({ lot, year: w.year, winner: 'rival', winningHouse: rival.house });
-      const house = ctx.content.house(rival.house);
-      const liveName = w.houses.get(rival.house)?.name;
-      // A reviewed content variant names the Original, not a house since
-      // renamed in this world. Record what the rival is called at the sale.
-      const seller = house && (liveName === undefined || liveName === house.name)
-        ? proseForContentField(ctx, 'houses', house.id, 'name', house.name)
-        : liveName ?? rival.house;
+      const seller = sellerName(ctx, rival.house);
 
       // A RIVAL WITH THE EVIDENCE IS HOW A LIE GETS PROVEN (issue #74).
       //
