@@ -131,7 +131,7 @@ describe('actual generated core catalogue (#1011)', () => {
     }[];
     expect(rows.length).toBeGreaterThan(20);
     expect(rows.map((row) => row.address)).toEqual([...new Set(rows.map((row) => row.address))]);
-    expect(rows.map((row) => row.address)).toEqual(rows.map((row) => row.address).sort());
+    expect(rows.map((row) => row.address)).toEqual([...rows.map((row) => row.address)].sort((a, b) => a.localeCompare(b)));
     const assessor = rows.find((row) => row.address === 'core:messages#assize.the_assessors_call');
     expect(assessor?.file).toMatch(/^packages\/core\/src\/.*assize\.ts$/);
     expect(assessor?.text.length).toBeGreaterThan(20);
