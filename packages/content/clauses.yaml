@@ -133,3 +133,53 @@ clauses:
     effect: >-
       The last night is a scene the player cannot decline. Sets the frame:
       two at a table, and one of them reading.
+
+# Plain English text for each Ledger clause; originals and design notes stay intact.
+proseVariants:
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_term].text"
+    of: 00e2986d161cc591
+    plainenglish: >-
+      The contract lasts five hundred years, starting with the day it was signed. It
+      cannot be extended. Every party must be present when the debt is collected.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_kept_thing].text"
+    of: ac6b0f7014a9f59c
+    plainenglish: >-
+      What was given must remain in the care of the party that owes it, and that party
+      must be able to keep it. If the party cannot hold it, the condition has not been
+      met.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_blood_entire].text"
+    of: b32c0bd2a6d5631e
+    plainenglish: >-
+      The bloodline owes this debt, not one man. Dividing the family among heirs does not
+      divide or reduce the debt.
+  - address: "content:clauses.yaml#clauses[id=clause_of_substitution].text"
+    of: d66de3c5039367c1
+    plainenglish: >-
+      Someone else may make the payment, if the person they replace is of the bloodline
+      and agrees. Agreement still counts even if that person does not understand what
+      they are agreeing to.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_ninth_name].text"
+    of: f7adfcce28ef566a
+    plainenglish: >-
+      The other party to this contract is named nine times, but all nine names belong to
+      the same party. Acting against one name counts as acting against all of them.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_broken_line].text"
+    of: e546ac072a50106b
+    plainenglish: >-
+      If the bloodline ends before the contract term, the debt remains. It passes to
+      whoever holds the family name, and that name belongs to whoever keeps the house.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_made_thing].text"
+    of: ee3387f34a841bc7
+    plainenglish: >-
+      Even if a party is no longer a person, it is still bound by this contract. Rising
+      to a higher state neither pays the debt nor removes the obligation.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_witness].text"
+    of: eee3771ea0cba78a
+    plainenglish: >-
+      A debtor's own writing does not count as evidence. A witness's writing does. The
+      other party to the contract is a witness to everything.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_final_accounting].text"
+    of: 831acbabb4cf72e7
+    plainenglish: >-
+      When the term ends, the whole debt must be read aloud, and someone must answer.
+      Saying nothing counts as an answer and is recorded as refusal.
