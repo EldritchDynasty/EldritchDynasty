@@ -29,14 +29,17 @@ const entries = computed(() => [...props.view.chronicle].reverse());
 const chronicleNamesById = computed(() => new Map(
   (props.view.chroniclePeople ?? []).map((person) => [person.id, person.name]),
 ));
-function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name: string }[] {
+const navigableIds = computed(() => new Set(
+  (props.view.halls ?? []).flatMap((hall) => hall.members.map((member) => member.id)),
+));
+function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name: string; available: boolean }[] {
   const seen = new Set<string>();
-  const out: { id: string; name: string }[] = [];
+  const out: { id: string; name: string; available: boolean }[] = [];
   for (const id of entry.people ?? []) {
     if (seen.has(id)) continue;
     seen.add(id);
     const name = chronicleNamesById.value.get(id);
-    if (name) out.push({ id, name });
+    if (name) out.push({ id, name, available: navigableIds.value.has(id) });
   }
   return out;
 }
