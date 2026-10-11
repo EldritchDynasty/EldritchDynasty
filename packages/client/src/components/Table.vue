@@ -422,6 +422,7 @@ const MARRIAGE_ORDERS = [
       <p v-if="!table.shelf.length" class="small dim">The house holds no book anybody can read.</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
         <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ book.years }} years</span></div>
+        <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
         <!-- A SELECT, like Places (issue #55). This was one button per reader
              per book — sixteen on turn one across two books, and it grew with
              the household — while the identical interaction was solved with a
@@ -448,11 +449,14 @@ const MARRIAGE_ORDERS = [
       </div>
       <div v-if="table.missingPrimers.length" class="reading">
         <p class="small dim">Ask a Sarrow broker to bring a missing working to a sale. The search costs 25 crowns now; the book has its own reserve later.</p>
-        <div v-for="book in table.missingPrimers" :key="book.book" class="line row">
-          <span class="small"><strong>{{ book.affinity }}</strong> · {{ book.name }} · {{ book.reserve }} crown reserve in {{ book.saleYear }}</span>
-          <button class="small" :disabled="book.queued" @click="actions.order({ kind: 'seekBook', book: book.book })">
-            {{ book.queued ? 'Broker sent' : 'Seek this book' }}
-          </button>
+        <div v-for="book in table.missingPrimers" :key="book.book" class="line">
+          <div class="row">
+            <span class="small"><strong>{{ book.affinity }}</strong> · {{ book.name }} · {{ book.reserve }} crown reserve in {{ book.saleYear }}</span>
+            <button class="small" :disabled="book.queued" @click="actions.order({ kind: 'seekBook', book: book.book })">
+              {{ book.queued ? 'Broker sent' : 'Seek this book' }}
+            </button>
+          </div>
+          <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
         </div>
         <p v-if="refusedIn('seekBook')" class="small rubric">{{ refusedIn('seekBook') }}</p>
       </div>
