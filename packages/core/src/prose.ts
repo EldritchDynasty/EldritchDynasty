@@ -118,6 +118,15 @@ export function proseForPromiseLot(ctx: SimCtx, id: string): string {
   return renderContentProse(ctx, file, `${collection}[id=${encodeURIComponent(id)}].name`, item.name);
 }
 
+/**
+ * Only ask for a Plain English counterpart when the shared content worklist
+ * can enumerate its Original. In particular, one-word clause names and tale
+ * tellers are not migratable; one-word tale bias deliberately is.
+ */
+function renderWorklistProse(ctx: SimCtx, address: string | undefined, field: string, original: string): string {
+  return isContentProseField(field, original) ? renderProse(ctx, address, original) : original;
+}
+
 /** Live tale views render now; Match panels freeze these words when dealt. */
 export function proseForTale(
   ctx: SimCtx,
@@ -128,9 +137,9 @@ export function proseForTale(
     ? undefined
     : contentProseAddress(file, `tales[id=${encodeURIComponent(tale.id)}]`);
   return {
-    teller: renderProse(ctx, base === undefined ? undefined : `${base}.teller`, tale.teller),
-    bias: renderProse(ctx, base === undefined ? undefined : `${base}.bias`, tale.bias),
-    text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, tale.text),
+    teller: renderWorklistProse(ctx, base === undefined ? undefined : `${base}.teller`, 'teller', tale.teller),
+    bias: renderWorklistProse(ctx, base === undefined ? undefined : `${base}.bias`, 'bias', tale.bias),
+    text: renderWorklistProse(ctx, base === undefined ? undefined : `${base}.text`, 'text', tale.text),
   };
 }
 
@@ -144,8 +153,8 @@ export function proseForClause(
     ? undefined
     : contentProseAddress(file, `clauses[id=${encodeURIComponent(clause.id)}]`);
   return {
-    name: renderProse(ctx, base === undefined ? undefined : `${base}.name`, clause.name),
-    text: renderProse(ctx, base === undefined ? undefined : `${base}.text`, clause.text),
+    name: renderWorklistProse(ctx, base === undefined ? undefined : `${base}.name`, 'name', clause.name),
+    text: renderWorklistProse(ctx, base === undefined ? undefined : `${base}.text`, 'text', clause.text),
   };
 }
 
