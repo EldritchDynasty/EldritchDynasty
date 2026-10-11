@@ -96,6 +96,19 @@ async function refreshSaves(): Promise<void> {
   saves.value = await props.actions.listSaves();
 }
 
+async function continueLastSitting(): Promise<void> {
+  // The rolling save may have become unreadable after the front door offered it.
+  // A refused resume must not look like an inert Continue button.
+  refused.value = null;
+  try {
+    if (!await props.actions.resume()) {
+      refused.value = 'The last sitting could not be resumed. Try a saved run or begin anew.';
+    }
+  } catch {
+    refused.value = 'The last sitting could not be resumed. Try a saved run or begin anew.';
+  }
+}
+
 async function load(slot: string): Promise<void> {
   refused.value = await props.actions.load(slot) ? null : 'That saved run could not be read.';
 }
@@ -165,7 +178,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" @click="actions.resume()">Continue the last sitting</button>
+      <button v-if="resumable" class="primary" @click="continueLastSitting()">Continue the last sitting</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
