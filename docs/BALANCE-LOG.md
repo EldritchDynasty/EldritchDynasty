@@ -10311,3 +10311,70 @@ eligible through a dead parent, and a successful recipient keeps support.
 Focused ending/ladder tests and package typechecks pass; the paired ending
 gate supplies the full-run evidence above. Native merge-group CI remains the
 authoritative landing check.
+
+## 2026-10-12 — #1218: released staff leave the household as well as the payroll
+
+**Finding and change.** `endService` cleared every ended contract but only
+direct dismissal closed the retainer's household interval. Unpaid wages,
+destitution, the employer's death and freedom left departed people in the
+household's nutrition, upkeep and crowding counts. All service endings now
+close the active player-house retainer membership, after `walkSecrets` reads
+the years of service. Blood and married-in memberships remain independent;
+continued, hereditary and heir-transferred service stays open. No content,
+save shape, price, probability or RNG stream changes.
+
+**Paired measurement.** Current-main baseline `bbc44ece`; changed simulation
+`34bf5f7d`. `npm run harness -- 32 500`, seeds 1000 + 7·i, on both sides:
+
+| Measure, mean per Long Line unless stated | Before | After |
+|---|---:|---:|
+| People ever minted | 452.4 | 486.4 |
+| Living people at the term | 50.4 | 56.3 |
+| Household size, sampled annually | 47.7 | 49.8 |
+| Completed family size | 1.3 | 1.4 |
+| Main hall at the term | 19.3 | 20.2 |
+| Live branches / branches ever founded | 3.8 / 14.1 | 4.2 / 15.5 |
+| Clauses recovered | 5.3 | 5.5 |
+| Runs recovering at least seven clauses | 13/32 | 11/32 |
+| Secrets walked / told | 1.6 / 1.6 | 1.7 / 1.7 |
+| Regency spells / Regency years | 2.0 / 110.0 | 1.8 / 114.9 |
+| Chronicle entries / frame interludes | 435.7 / 5.9 | 464.4 / 6.1 |
+| Mad women / incapable men, total | 0 / 0 | 0 / 0 |
+
+The final standing distribution changes from Regarded 3, Eminent 7, Known 6,
+Exalted 14, Unknown 2 to Regarded 5, Eminent 6, Known 5, Exalted 14, Unknown 2.
+These are descriptive paired probes, not statistical improvement claims.
+Removing departed staff changes later marriages, births and expenses; the
+overall household need not shrink. Frame cadence remains below its stated
+target on both sides; this fix makes no claim to resolve that existing debt.
+
+**Mechanism and economy probe.** Eight additional paired Long Lines use the
+first eight seeds above. Track only people named by `YearReport.serviceEnded`,
+not uncontracted children of serving retainer families. Their still-active
+retainer membership contributes **11,833 person-years before, zero after**.
+Distinct reported leavers total 378 before and 394 after. Annual mean treasury
+changes from 1,392.8 to 1,288.1 crowns. This is not a treasury-raising tweak.
+World coherence was sampled every 25 years: both sides report the same four
+marriage violations on seeds 1007 and 1021, the already documented/pinned
+guardian-widow asymmetry in `PersonStore.kill`; no other rule is reported.
+
+**Digest evidence.** `npm run digest -- 8 400` moves all eight fingerprints,
+as expected for a population correction rather than a refactor:
+
+| Seed | Before | After |
+|---|---|---|
+| 1000 | `12ad3ad8ce5ed426:1527901` | `c07dfbfbe187ff29:1537205` |
+| 1007 | `58db5b506009a924:315687` | `b18c20aeaeffb6aa:1455482` |
+| 1014 | `72ea06731a021c19:1625675` | `49293968813fa7f8:1446209` |
+| 1021 | `f66505a1b2b46c3d:428467` | `38808243997c965d:368789` |
+| 1028 | `80dcdfa34997a4ff:1470683` | `e4be22e83337701c:1503300` |
+| 1035 | `8ff3ed07c79a35e3:1504773` | `f21fdead9a294073:1575369` |
+| 1042 | `04f3628b57f836bb:1563099` | `23e21e81c6d215c5:1572319` |
+| 1049 | `147c01e428499b76:1552610` | `34d841ea915e7306:1522662` |
+
+**Verification.** Succession and secret suites pass. A deterministic release
+witness forces a leak after 25 years of service and asserts major severity
+after membership closes, guarding the ordering explicitly. All 12 canonical
+merge-blocking batch gates pass, including the 100-run Short Line distribution
+(Broken Line 31, Settled 18, Forgotten 37, Devoured 14) and the 90-run land gate.
+Native merge-group CI remains the authoritative landing check.
