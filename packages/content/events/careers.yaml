@@ -567,3 +567,179 @@ events:
             severity: minor
             provableBy: [house_calder, commons]
     rumour: { id: rumour_the_man_who_came_back_on_a_cart, accuracy: 0.45, spread: 1 }
+
+proseVariants:
+  - address: content:events/careers.yaml#events[id=the_commission].title
+    of: "88dd464d482f7bc9"
+    plainenglish: "Buying a Military Commission"
+  - address: content:events/careers.yaml#events[id=the_commission].body
+    of: "8f50a512ea453dee"
+    plainenglish: "The recruiting captain arrives in the last week of the dry season. The roads are firm enough for marching, and the price of a commission will stay the same all year. He waits in the lower room with a ledger and an untouched drink instead of asking to meet anyone. After visits to eleven houses, he knows how long families take to choose a son. This house chooses {SON}. The price is one hundred and forty crowns, with no discount. It buys a coat and an entry in the Roll of Houses that people will still read in sixty years. The house must also pay for a horse. The personal cost is more direct."
+  - address: content:events/careers.yaml#events[id=the_commission].interaction.choices[id=buy_it].label
+    of: "0f27510f00eef833"
+    plainenglish: "Pay for the commission. The house has made worse purchases."
+  - address: content:events/careers.yaml#events[id=the_commission].interaction.choices[id=buy_it].outcomes[id=sworn].text
+    of: "3cc38cd54a700741"
+    plainenglish: "He leaves before the roads become muddy. His coat fits poorly and will fit worse later. The horse he receives is not the one the house paid for. That first winter he sends eleven crowns from his pay and a letter written by someone else. The family reads it twice and stores the money. His name is now in the Roll, which was the purpose of buying the commission."
+  - address: content:events/careers.yaml#events[id=the_commission].interaction.choices[id=send_him_off].label
+    of: "7f2ea74aa12c3396"
+    plainenglish: "Refuse the commission and send the captain away."
+  - address: content:events/careers.yaml#events[id=the_commission].interaction.choices[id=send_him_off].outcomes[id=kept].text
+    of: "ad4339b36e1172af"
+    plainenglish: "The captain takes no offence. More prominent houses have refused him, and he has four more visits before the rain. The young man stays. He heard the discussion and now knows the exact price the house almost paid to send him away. He will share the family's tables for the next fifty years."
+  - address: content:events/careers.yaml#events[id=the_commission].record.subject
+    of: "e9c937598f4938e5"
+    plainenglish: "the recruiting captain's visit and the house's payment"
+  - address: content:events/careers.yaml#events[id=the_commission].record.options.record.chronicle
+    of: "e374ce7f5d2e7043"
+    plainenglish: "This year the house bought a commission for the second son at the captain's full asking price. The house paid the money, and the boy left. We record both because both happened."
+  - address: content:events/careers.yaml#events[id=the_commission].record.options.record.claims[0].text
+    of: "17a51d540d0b5790"
+    plainenglish: "left with a commission the house bought at the captain's full asking price"
+  - address: content:events/careers.yaml#events[id=the_commission].record.options.embellish.chronicle
+    of: "f6b921558e614261"
+    plainenglish: "The captain sought out our most capable son. He had heard of the family before coming within a day's ride and accepted him without payment."
+  - address: content:events/careers.yaml#events[id=the_commission].record.options.embellish.claims[1].text
+    of: "2692475cdc867d08"
+    plainenglish: "was recruited at the captain's request without any payment"
+  - address: content:events/careers.yaml#events[id=the_ordination].title
+    of: "070a5c092c0acc5d"
+    plainenglish: "Entering the Clergy"
+  - address: content:events/careers.yaml#events[id=the_ordination].body
+    of: "c28a96955a2ee8a9"
+    plainenglish: "The chapter house sends a four-line letter. One line states the fee. This year they will accept one man from a house of this standing. They need an answer before the feast or will give the place to someone in Caster. It is a good position, but a permanent one. Once {POSTULANT} takes the vow, he will have no descendants to carry the family's blood. The house has discussed it all evening without deciding. Everyone understands the consequences, but nobody wants to state them. There are two sons and only one place."
+  - address: content:events/careers.yaml#events[id=the_ordination].interaction.choices[id=send_him].label
+    of: "8c5b1aa52f278bd1"
+    plainenglish: "Accept before the feast. A clerical post can help conceal the family's troubles."
+  - address: content:events/careers.yaml#events[id=the_ordination].interaction.choices[id=send_him].outcomes[id=vowed].text
+    of: "9402063027176134"
+    plainenglish: "He takes the vow in an afternoon. His stipend begins at midsummer: fourteen crowns each quarter, even if nobody attends the chapel. The house also gains an unplanned benefit. Having a man in the clergy means fewer questions about the family, and in coming years that protection will matter more than the income. He does the work well. He will have no children, which everyone understood before signing."
+  - address: content:events/careers.yaml#events[id=the_ordination].interaction.choices[id=keep_the_blood].label
+    of: "f9e7e8706d46a5a4"
+    plainenglish: "Keep both sons available to continue the bloodline. Let Caster take the place."
+  - address: content:events/careers.yaml#events[id=the_ordination].interaction.choices[id=keep_the_blood].outcomes[id=refused].text
+    of: "36df23aa86744fde"
+    plainenglish: "The house sends no reply. The chapter house accepts that as a refusal and does not ask again for a generation. Both sons remain available to have children. The house has chosen to prioritise its bloodline."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].title
+    of: "36d9501e05db22da"
+    plainenglish: "Buying a Place Near Court"
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].body
+    of: "958e87dfb409c433"
+    plainenglish: "The fourth-row place gives no actual seat. It lets a man stand in a corridor while men of higher standing pass. It costs ninety crowns each year and permits the house to collect only four crowns a year in fees. Financially it is a poor purchase. The hope is that {COURTIER} will be there when someone urgently needs a name to put forward. By then he will have spent eleven years learning how to be useful in that corridor."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].interaction.choices[id=take_the_seat].label
+    of: "54dfd0db1de85127"
+    plainenglish: "Buy the place near court. The house can wait for a long-term benefit."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].interaction.choices[id=take_the_seat].outcomes[id=placed].text
+    of: "4f8b616945b9afd5"
+    plainenglish: "The first three years are humiliating in ways nobody described beforehand. He stops mentioning them in his letters home. In the fourth year, a chamberlain remembers the family name without a reminder. There is still no measurable financial gain, but he begins writing home again."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].interaction.choices[id=not_this_year].label
+    of: "04573d68d0b7022c"
+    plainenglish: "Refuse to pay ninety crowns for a place in a corridor."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].interaction.choices[id=not_this_year].outcomes[id=declined].text
+    of: "3c68ffdeb5d2ef22"
+    plainenglish: "All the available figures support refusing. Over four generations the house makes this decision three times. Each time, the place goes to a family that initially had less money. The long-term pattern cannot be seen in a single year."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].interaction.choices[id=not_this_year].outcomes[id=declined].effects[0].text
+    of: "a994baf568fa8ec9"
+    plainenglish: "Another house took the fourth-row place once again."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].record.subject
+    of: "75f5c435f458de09"
+    plainenglish: "the purpose of the fourth-row place at court"
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].record.options.record.chronicle
+    of: "30b89634b559b868"
+    plainenglish: "The house pays ninety crowns a year for permission to stand in a corridor. We know how that sounds, but record it so someone forty years from now can see when the payments began."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].record.options.record.claims[0].text
+    of: "f67b23088326f144"
+    plainenglish: "held a place near court that cost ninety crowns each year"
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].record.options.embellish.chronicle
+    of: "64e97a1fa3c54893"
+    plainenglish: "This year he was invited to court and given a seat in recognition of a service. The family considers it impolite to describe that service."
+  - address: content:events/careers.yaml#events[id=a_seat_near_it].record.options.embellish.claims[1].text
+    of: "0c835f4b19bef0e7"
+    plainenglish: "was invited to court and given a seat in recognition of his service"
+  - address: content:events/careers.yaml#events[id=the_factor].title
+    of: "bcb8bcbfb09b90db"
+    plainenglish: "Working for a Merchant's Agent"
+  - address: content:events/careers.yaml#events[id=the_factor].body
+    of: "9d1f7263f1e7da1f"
+    plainenglish: "The merchant's agent has an accounts office above a tannery. It is the warmest room the family has entered all year, unlike their own halls in the third week of this wet spring. He needs a clerk from an established house because debtors pay a house faster than they pay a merchant. The wage is twenty-two crowns a year, and he states the arrangement honestly. The work will not improve the family's standing at any table in the county. The tannery smell gets into everything and never fully washes out."
+  - address: content:events/careers.yaml#events[id=the_factor].interaction.choices[id=send_him].label
+    of: "10816b61892933b5"
+    plainenglish: "Accept the twenty-two crowns of annual pay."
+  - address: content:events/careers.yaml#events[id=the_factor].interaction.choices[id=send_him].outcomes[id=apprenticed].text
+    of: "9db0a42fab582303"
+    plainenglish: "He learns the work quickly, surprising even himself. Every quarterly payment arrives. Within ten years, that income saves the house through three winters it could not otherwise have survived. He does not receive the invitations his brothers get. At first he notices the difference. Eventually he stops noticing, which is more troubling."
+  - address: content:events/careers.yaml#events[id=the_factor].interaction.choices[id=refuse_the_trade].label
+    of: "ffff0352d00462c6"
+    plainenglish: "Refuse. The family will not keep accounts for someone else."
+  - address: content:events/careers.yaml#events[id=the_factor].interaction.choices[id=refuse_the_trade].outcomes[id=refused].text
+    of: "fece1b4592b05a39"
+    plainenglish: "The merchant's agent hires a boy from a house two valleys away and treats him well. A few years later that house buys a mill. This family's refusal was never really about the work itself."
+  - address: content:events/careers.yaml#events[id=the_factor].interaction.choices[id=refuse_the_trade].outcomes[id=refused].effects[0].text
+    of: "e7681e30b55f7abc"
+    plainenglish: "The merchant's agent hired a clerk from another house for his office above the tannery."
+  - address: content:events/careers.yaml#events[id=the_factor].record.subject
+    of: "40d60b76ebc6004a"
+    plainenglish: "the accounts office of the merchant's agent, above the tannery"
+  - address: content:events/careers.yaml#events[id=the_factor].record.options.record.chronicle
+    of: "b0a76866bf4b5312"
+    plainenglish: "He took a job keeping accounts for a merchant's agent in the lower town for twenty-two crowns. The family had not expected to record this kind of work, but the income got us through the winter."
+  - address: content:events/careers.yaml#events[id=the_factor].record.options.record.claims[0].text
+    of: "443e9aa45d72e248"
+    plainenglish: "kept someone else's accounts in the lower town for twenty-two crowns"
+  - address: content:events/careers.yaml#events[id=the_factor].record.options.embellish.chronicle
+    of: "6c46e36abad3ae8e"
+    plainenglish: "He was given responsibility for some of the family's business in the lower town. He now manages all of those interests on the house's behalf."
+  - address: content:events/careers.yaml#events[id=the_factor].record.options.embellish.claims[0].text
+    of: "4850b7324dc9b29e"
+    plainenglish: "manages the family's own business interests in the lower town"
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].title
+    of: "e1c297f3970a19b7"
+    plainenglish: "An Unpaid College Post"
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].body
+    of: "93894f97f75111e3"
+    plainenglish: "The Colleges offer a post with no wage. It provides a bed in an unheated room and access to a library whose books cannot be borrowed. Men accept because that access speeds their reading. A book that normally takes a careful reader nine years takes someone with this library six. By sending a son, the house would save three years of study on every volume it ever owns. {READER} has already calculated the benefit but says nothing. The head finds that silence more irritating than an argument."
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].interaction.choices[id=let_him_go].label
+    of: "bf12c9ad36722a71"
+    plainenglish: "Allow him to take the cold room and save three years of study on each book, permanently."
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].interaction.choices[id=let_him_go].outcomes[id=enrolled].text
+    of: "26ce1404b65c0620"
+    plainenglish: "The room is as cold as promised. He visits home twice in the first decade. Both times he is thinner and brings a method of reading the house did not have before. He earns no money for the treasury, but changes how the house studies its books."
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].interaction.choices[id=keep_him_home].label
+    of: "6e501cf3d708dbe7"
+    plainenglish: "Keep him home. The house would have to support a son with no income."
+  - address: content:events/careers.yaml#events[id=the_stipend_refused].interaction.choices[id=keep_him_home].outcomes[id=kept].text
+    of: "9ed0f660481f7044"
+    plainenglish: "He again makes no argument. He reads at the kitchen table at the family's usual pace. The difference between six and nine years of study will accumulate for longer than anyone in the room will live to measure."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].title
+    of: "0d6ab5b666b55c2a"
+    plainenglish: "The Veteran Wants to Leave the Army"
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].body
+    of: "6bb8e41ad196cd36"
+    plainenglish: "He returns on a cart without his horse. Nobody learns what happened to the horse that first evening. His military pay has been a regular entry in the house's accounts for years. The steward will need an order to remove it and will ask why. {VETERAN} says he is finished with the army. For the first time, he speaks as though he is telling the family rather than asking permission."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].interaction.choices[id=let_him_stop].label
+    of: "da5b19e23372e3c6"
+    plainenglish: "Stop counting his pay. He has earned a place at home by the fire."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].interaction.choices[id=let_him_stop].outcomes[id=home].text
+    of: "4b5c77a9dfeb3385"
+    plainenglish: "The house sells back the commission for a small part of its original price. The steward removes the pay from the accounts. The veteran remains at home every day. He seems to be of little use, and nobody says so. But when the roof needs repairing in a bad autumn, he climbs up first and stays longest."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].interaction.choices[id=send_him_back].label
+    of: "7c36346f5bb1b08b"
+    plainenglish: "Tell him to return to the army because the house needs his pay."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].interaction.choices[id=send_him_back].outcomes[id=returned].text
+    of: "ea73db72b9cc38f6"
+    plainenglish: "He returns to the army. Nobody discusses the decision again, with him or with anyone else. His pay remains in the accounts, giving the house eleven crowns a quarter for as long as it continues. He still writes at midwinter, but his letters become shorter."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].record.subject
+    of: "2512bd79731b9f75"
+    plainenglish: "why he returned home by cart"
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].record.options.record.chronicle
+    of: "c802a997e5c4db8b"
+    plainenglish: "He returned in spring before his service ended and without the horse he left on. He explained neither. His pay was removed from the accounts that same day."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].record.options.record.claims[0].text
+    of: "baf89fba39052a3e"
+    plainenglish: "returned before his service ended, without his original horse, and explained neither"
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].record.options.embellish.chronicle
+    of: "1579df7fc151bc1b"
+    plainenglish: "His colonel released him with thanks after he fought in the field three times and was carried away from it once."
+  - address: content:events/careers.yaml#events[id=the_coat_hung_up].record.options.embellish.claims[1].text
+    of: "54561d7ac70fee16"
+    plainenglish: "was released with his colonel's thanks after being carried from the battlefield"
