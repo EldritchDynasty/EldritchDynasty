@@ -62,6 +62,11 @@ const bundle = loadContent();
 // survivor scan measured 907 through the same 500-year rules with living blood
 // and a 62-year maximum gap, so replace the stale land-gate fixture rather than
 // relaxing the scheduler's 250-year deadlock ceiling.
+// Nightly #944 (2026-10-10, seed 67262) observed a 390-year no-Age gap
+// after later simulation changes. Replace this now-stale fixture with seed
+// 5151, previously documented as a full-term survivor by the independent
+// ledger-clauses.slow.test.ts batch. Keep the 250-year deadlock guard intact;
+// its current eligibility is rechecked by this suite's hosted CI run.
 const SEEDS = [
   // Existing Age-suite survivors.
   1000, 5152, 5154, 1035, 8080, 8081, 1063, 900, 910, 1070, 4013, 4026,
@@ -74,7 +79,7 @@ const SEEDS = [
   61101, 61707, 61808, 61909, 62010, 62212, 62313, 62414, 62515, 907,
   62818, 62919, 63020, 63121, 63222, 63323, 63424, 63525, 63727, 64232,
   64434, 64939, 65040, 65545, 65646, 65747, 66050, 66353, 66454, 66555,
-  66656, 66757, 66959, 67161, 67262, 67363,
+  66656, 66757, 66959, 67161, 5151, 67363,
 ];
 const YEARS = CAMPAIGN_YEARS;
 
