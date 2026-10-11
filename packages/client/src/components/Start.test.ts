@@ -417,6 +417,10 @@ describe('the Library of Houses', () => {
 
     const remove = w.findAll('button').find((button) => button.text() === 'Remove');
     await remove!.trigger('click');
+    expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+    expect(w.get('.library-remove-confirm').text()).toContain('House Salt');
+    expect(w.get('.library-remove-confirm').text()).toContain('cannot be undone');
+    await w.get('button.confirm-remove').trigger('click');
     expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
 
     const clear = w.findAll('button').find((button) => button.text() === 'Clear');
@@ -480,6 +484,62 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     expect(actions.clearLibrary).toHaveBeenCalledTimes(2);
   });
 
+  it('cancels individual removal, and a different house cannot confirm the first', async () => {
+    const actions = spyActions();
+    const multiple: RunLibrary = {
+      ...library,
+      runs: [...library.runs, { ...library.runs[0]!, id: 'lib_other', house: 'House Ash' }],
+    };
+    const w = mount(Start, { props: { actions, resumable: false, library: multiple } });
+    try {
+      await flush();
+      // The Library is drawn newest first: Ash then Salt.
+      await w.findAll('.library-run')[0]!.find('button').trigger('click');
+      expect(w.get('.library-remove-confirm').text()).toContain('House Ash');
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.findAll('.library-remove-confirm button')
+        .find((button) => button.text() === 'Cancel')!.trigger('click');
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.findAll('.library-run')[0]!.find('button').trigger('click');
+      await w.findAll('.library-run')[1]!.find('button').trigger('click');
+      expect(w.findAll('.library-remove-confirm')).toHaveLength(1);
+      expect(w.get('.library-remove-confirm').text()).toContain('House Salt');
+
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('never submits a second deletion while the host is still removing that house', async () => {
+    const actions = spyActions();
+    let finishDelete: (() => void) | undefined;
+    vi.mocked(actions.deleteLibraryRun).mockImplementation(() => new Promise<void>((resolve) => {
+      finishDelete = resolve;
+    }));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-title button').trigger('click');
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      expect(w.get('button.confirm-remove').attributes('disabled')).toBeDefined();
+
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      finishDelete!();
+      await flush();
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('reports a rejected Remove without an unhandled rejection, and lets it retry', async () => {
     const actions = spyActions();
     vi.mocked(actions.deleteLibraryRun).mockRejectedValueOnce(new Error('read-only host'));
@@ -487,15 +547,20 @@ describe('Library write failures are visible and retryable (#1034)', () => {
     await flush();
 
     await w.get('.library-title button').trigger('click');
+    expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+    await w.get('button.confirm-remove').trigger('click');
     await flush();
     expect(w.get('.library [role="alert"]').text()).toContain('could not be removed');
     expect(w.text()).toContain('House Salt');
     expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
 
-    await w.get('.library-title button').trigger('click');
+    // The rejected host write retains the confirmation so a retry is explicit.
+    expect(w.get('.library-remove-confirm').text()).toContain('House Salt');
+    await w.get('button.confirm-remove').trigger('click');
     await flush();
     expect(w.find('.library [role="alert"]').exists()).toBe(false);
     expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(2);
+    expect(w.find('.library-remove-confirm').exists()).toBe(false);
   });
 });
 
