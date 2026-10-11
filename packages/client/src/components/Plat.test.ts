@@ -103,6 +103,40 @@ describe('the plat draws each state', () => {
 });
 
 describe('naming a parcel from the plat', () => {
+  it('does not rename while an IME candidate is confirmed with Enter (#1294)', async () => {
+    const actions = spyActions();
+    const nameParcel = vi.mocked(actions.nameParcel);
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', actions, close: () => {},
+    } });
+
+    try {
+      await w.get('button.rename').trigger('click');
+      const input = w.get('input');
+      await input.setValue('林地');
+      await input.trigger('compositionstart');
+      await input.trigger('keydown', { key: 'Enter', isComposing: true });
+      await input.trigger('compositionend');
+      // The key release happens after composition ends, and cannot submit.
+      await input.trigger('keyup', { key: 'Enter' });
+
+      expect(nameParcel).not.toHaveBeenCalled();
+      expect(w.find('input').exists()).toBe(true);
+      expect((w.get('input').element as HTMLInputElement).value).toBe('林地');
+
+      // Legacy IME process key, even if isComposing was already reset.
+      await input.trigger('keydown', { key: 'Enter', isComposing: false, keyCode: 229 });
+      expect(nameParcel).not.toHaveBeenCalled();
+
+      await input.trigger('keydown', { key: 'Enter', isComposing: false });
+      expect(nameParcel).toHaveBeenCalledTimes(1);
+      expect(nameParcel).toHaveBeenCalledWith('longmere', '林地');
+      expect(w.find('input').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('renaming calls actions.nameParcel with the parcel and the new word', async () => {
     const actions = spyActions();
     const w = mount(Plat, { props: {
@@ -113,7 +147,7 @@ describe('naming a parcel from the plat', () => {
     const input = w.find('input');
     expect(input.exists(), 'no input appeared to rename with').toBe(true);
     await input.setValue('Aldous’s Strip');
-    await input.trigger('keyup.enter');
+    await input.trigger('keydown.enter');
 
     expect(actions.nameParcel).toHaveBeenCalledWith('longmere', 'Aldous’s Strip');
   });
@@ -124,7 +158,7 @@ describe('naming a parcel from the plat', () => {
       land: mockLand(), houseName: 'House', actions, close: () => {},
     } });
     await w.find('button.rename').trigger('click');
-    await w.find('input').trigger('keyup.enter');
+    await w.find('input').trigger('keydown.enter');
     expect(actions.nameParcel).not.toHaveBeenCalled();
   });
 
@@ -138,7 +172,7 @@ describe('naming a parcel from the plat', () => {
 
     await w.find('button.rename').trigger('click');
     await w.find('input').setValue('The New Clearing');
-    await w.find('input').trigger('keyup.enter');
+    await w.find('input').trigger('keydown.enter');
 
     expect(nameParcel).toHaveBeenCalledWith('longmere', 'The New Clearing');
     expect(w.find('input').exists()).toBe(true);
@@ -148,7 +182,7 @@ describe('naming a parcel from the plat', () => {
 
     nameParcel.mockReturnValue(true);
     await w.find('input').setValue('The Old Clearing');
-    await w.find('input').trigger('keyup.enter');
+    await w.find('input').trigger('keydown.enter');
 
     expect(nameParcel).toHaveBeenCalledTimes(2);
     expect(nameParcel).toHaveBeenLastCalledWith('longmere', 'The Old Clearing');
@@ -166,7 +200,7 @@ describe('naming a parcel from the plat', () => {
     await w.get('button.rename').trigger('click');
     const input = w.get('input');
     await input.setValue('   ');
-    await input.trigger('keyup.enter');
+    await input.trigger('keydown.enter');
     expect(nameParcel).not.toHaveBeenCalled();
     expect(w.find('input').exists()).toBe(true);
     expect((w.get('input').element as HTMLInputElement).value).toBe('   ');
@@ -181,7 +215,7 @@ describe('naming a parcel from the plat', () => {
 
     await input.setValue('  The New Meadow  ');
     expect(w.find('[role="alert"]').exists()).toBe(false);
-    await input.trigger('keyup.enter');
+    await input.trigger('keydown.enter');
     expect(nameParcel).toHaveBeenCalledTimes(1);
     expect(nameParcel).toHaveBeenCalledWith('longmere', 'The New Meadow');
     expect(w.find('input').exists()).toBe(false);
@@ -199,7 +233,7 @@ describe('naming a parcel from the plat', () => {
     const input = w.find('input');
     await input.setValue('A New Name');
     // Dispatch both before the Vue render removes the edit field.
-    await Promise.all([input.trigger('keyup.enter'), input.trigger('blur')]);
+    await Promise.all([input.trigger('keydown.enter'), input.trigger('blur')]);
 
     expect(nameParcel).toHaveBeenCalledTimes(1);
     expect(nameParcel).toHaveBeenCalledWith('longmere', 'A New Name');

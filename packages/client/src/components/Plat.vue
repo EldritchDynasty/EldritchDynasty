@@ -146,6 +146,16 @@ function confirmNaming(item: PlatItem): void {
   renameError.value = null;
   naming.value = null;
 }
+
+/**
+ * IME candidate confirmation also sends Enter. On keyup, composition may
+ * already have ended, which would submit a partial parcel name. Only an
+ * intentional non-composing keydown commits the edit.
+ */
+function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
+  if (event.isComposing || event.keyCode === 229) return;
+  confirmNaming(item);
+}
 </script>
 
 <template>
@@ -221,7 +231,7 @@ function confirmNaming(item: PlatItem): void {
                   :aria-invalid="Boolean(renameError)"
                   :aria-describedby="renameError ? 'parcel-rename-error-' + item.parcel : undefined"
                   @input="renameError = null"
-                  @keyup.enter="confirmNaming(item)"
+                  @keydown.enter="submitOnEnter(item, $event)"
                   @blur="confirmNaming(item)"
                 />
                 <p
