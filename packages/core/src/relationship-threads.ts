@@ -103,7 +103,13 @@ function readableId(id: string): string {
  */
 function houseName(ctx: SimCtx, house: string): string {
   const def = ctx.content.house(house);
-  return def ? proseForContentField(ctx, 'houses', house, 'name', def.name) : readableId(house);
+  const liveName = ctx.world.houses.get(house)?.name;
+  // A live rename is world state, not the authored Original. Translating the
+  // old label here would misname the house in thread headers and facts.
+  if (liveName !== undefined && liveName !== def?.name) return liveName;
+  return def
+    ? proseForContentField(ctx, 'houses', house, 'name', def.name)
+    : liveName ?? readableId(house);
 }
 
 function refName(ctx: SimCtx, ref: string): string {
