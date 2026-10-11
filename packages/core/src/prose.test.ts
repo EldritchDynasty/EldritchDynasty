@@ -28,6 +28,35 @@ const CHOICE_LABEL_ADDRESS =
 const RECORD_SUBJECT_ADDRESS =
   'content:events/the_ladder.yaml#events[id=the_race_silted_through].record.subject';
 
+describe('live campaign labels in the selected prose mode (#1133)', () => {
+  it.each([
+    ['short', 'A Short Line', 'The Brief Line'],
+    ['long', 'A Long Line', 'The Extended Line'],
+    ['demo', 'A Demonstration', 'A Short Preview'],
+  ] as const)('renders a reviewed %s label without changing campaign state or the save', (campaign, original, plainenglish) => {
+    const session = newGame(loadContent(), { campaign });
+    const { ctx } = session;
+    const address = coreMessageAddress(`session.campaign.${campaign}`);
+    const before = session.view().campaign;
+    expect(before.name).toBe(original);
+    const snapshot = canonical(saveGame(ctx));
+
+    setProseVariants(ctx, [{ address, of: proseOriginalHash(original), plainenglish }]);
+    session.setProseMode('plainenglish');
+    expect(session.view().campaign).toEqual({ ...before, name: plainenglish });
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
+
+    // An outdated translation must never mask changed Original copy.
+    setProseVariants(ctx, [{ address, of: '0000000000000000', plainenglish }]);
+    expect(session.view().campaign).toEqual(before);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    session.setProseMode('original');
+    expect(session.view().campaign).toEqual(before);
+    expect(canonical(saveGame(ctx))).toBe(snapshot);
+  });
+});
+
 describe('main hall label in the selected prose mode (#1108)', () => {
   it('renders a reviewed core label and keeps the saved hall unchanged', () => {
     const session = newGame(loadContent());
