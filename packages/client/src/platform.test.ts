@@ -7,6 +7,7 @@ import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
 import {
+  BROWSER_IMPORT_CANCELLED,
   browserPlatform,
   platformForWindow,
   type Platform,
@@ -396,6 +397,21 @@ describe('save-list failures at the real game/platform seam (#1176)', () => {
 });
 
 describe('the platform seam', () => {
+  it('distinguishes cancelling a browser import from rejecting a selected invalid save (#1275)', async () => {
+    const host = memoryPlatform();
+    const game = createGame(loadContent(), host);
+    host.importSave = async () => BROWSER_IMPORT_CANCELLED;
+    await expect(game.actions.importSave()).resolves.toBe('cancelled');
+    expect(game.view.value).toBeNull();
+
+    // Malformed JSON or an invalid loaded snapshot still gets the refusal.
+    host.importSave = async () => null;
+    await expect(game.actions.importSave()).resolves.toBe(false);
+    host.importSave = async () => ({ format: 28, year: 1142 });
+    await expect(game.actions.importSave()).resolves.toBe(false);
+    expect(game.view.value).toBeNull();
+  });
+
   it('propagates browser save enumeration failures without claiming the runs vanished (#1234)', async () => {
     const values = new Map([
       ['ed:save:chapter-1-1080', JSON.stringify({ format: 28, year: 1080 })],
@@ -822,11 +838,11 @@ describe('the platform seam', () => {
       expect(state.input?.accept).toBe('application/json,.json,.edsave');
       expect(state.input?.cancel).toBeTypeOf('function');
       state.input!.cancel!();
-      await expect(cancelled).resolves.toBeNull();
+      await expect(cancelled).resolves.toBe(BROWSER_IMPORT_CANCELLED);
 
       const empty = host.importSave();
       state.input!.onchange!();
-      await expect(empty).resolves.toBeNull();
+      await expect(empty).resolves.toBe(BROWSER_IMPORT_CANCELLED);
 
       const valid = host.importSave();
       state.input!.files = [{ fixture: '{"format":28,"year":1142}' } as File & { fixture: string }];

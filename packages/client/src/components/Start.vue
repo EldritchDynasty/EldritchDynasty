@@ -136,7 +136,8 @@ async function load(slot: string): Promise<void> {
 async function importSave(): Promise<void> {
   refused.value = null;
   try {
-    if (!await props.actions.importSave()) refused.value = 'That file was not a run this version can read.';
+    // Dismissing the browser picker is not a failed or invalid import.
+    if (await props.actions.importSave() === false) refused.value = 'That file was not a run this version can read.';
   } catch {
     refused.value = 'That file was not a run this version can read.';
   }

@@ -15,6 +15,7 @@ import {
 } from '@ed/core';
 import { foldStanding } from './jump.js';
 import {
+  BROWSER_IMPORT_CANCELLED,
   currentPlatform,
   type Platform,
   type SaveSummary,
@@ -308,7 +309,8 @@ export interface GameActions {
   resume(): Promise<boolean>;
   load(slot: string): Promise<boolean>;
   listSaves(): Promise<SaveSummary[]>;
-  importSave(): Promise<boolean>;
+  /** `cancelled` is a browser picker dismissal, not an invalid selected file. */
+  importSave(): Promise<boolean | 'cancelled'>;
   exportSave(slot: string): Promise<boolean>;
   deleteLibraryRun(id: string): Promise<void>;
   clearLibrary(): Promise<void>;
@@ -671,7 +673,9 @@ export function createGame(
 
     async importSave() {
       try {
-        return loadSave(await platform.importSave());
+        const imported = await platform.importSave();
+        if (imported === BROWSER_IMPORT_CANCELLED) return 'cancelled';
+        return loadSave(imported);
       } catch {
         return false;
       }
