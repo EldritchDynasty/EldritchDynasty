@@ -533,7 +533,7 @@ describe('the janitor', () => {
       const reopenedAt = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const pr = {
         ...prEvidence(f.agent, f.head, { merged_at: mergedAt }),
-        body: 'Closes #701. Closes #702. Closes #703. Closes #704. Closes #705.',
+        body: 'Closes #701. Closes #702. Closes #703. Closes #704. Closes #705. Earlier fix #706 merged.',
       };
       const issues = {
         701: { state: 'OPEN', reopenings: [] },
@@ -541,6 +541,7 @@ describe('the janitor', () => {
         703: { state: 'OPEN' }, // Unavailable history fails safe.
         704: { state: 'OPEN', reopenings: ['not-a-timestamp'] },
         705: { state: 'UNKNOWN', reopenings: [] }, // Unreadable issue state also fails safe.
+        706: { state: 'PULL_REQUEST', reopenings: [] }, // PR number must not fail a sweep.
       };
       const sweep = (state: typeof issues) => janitor(f.sweep, {
         ...withPrEvidence([pr]),
@@ -554,7 +555,8 @@ describe('the janitor', () => {
       expect(first.out).toContain('kept #702 open — reopened after merged PR #900');
       expect(first.out).toContain('kept #703 open — reopening history UNKNOWN');
       expect(first.out).toContain('kept #704 open — reopening history UNKNOWN');
-      for (const n of [702, 703, 704, 705]) {
+      expect(first.out).toContain('skipped #706 — pull request, not an issue');
+      for (const n of [702, 703, 704, 705, 706]) {
         expect(first.out).not.toContain(`would: gh issue close ${n}`);
       }
 
@@ -568,6 +570,7 @@ describe('the janitor', () => {
       expect(logged.out).toContain('issue reconciliation: #703 reopening history UNKNOWN');
       expect(logged.out).toContain('issue reconciliation: #704 reopening history UNKNOWN');
       expect(logged.out).toContain('issue reconciliation: #705 state UNKNOWN');
+      expect(logged.out).not.toContain('issue reconciliation: #706 state UNKNOWN');
       expect(logged.out).not.toContain('would: gh issue close 705');
       expect(logged.out).not.toContain('- kept #703 open');
 
@@ -578,6 +581,7 @@ describe('the janitor', () => {
       expect(again.out).toContain('#701 already closed');
       expect(again.out).not.toContain('would: gh issue close 701');
       expect(again.out).toContain('kept #702 open — reopened after');
+      expect(again.out).toContain('skipped #706 — pull request, not an issue');
       expect(again.out).not.toContain('would: gh issue close 702');
     } finally {
       rmSync(f.fixture, { recursive: true, force: true });
