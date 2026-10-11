@@ -59,6 +59,9 @@ const refused = ref<string | null>(null);
 const resumeRefused = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 const confirmingClearLibrary = ref(false);
+/** A single completed house should never disappear on the first Remove click. */
+const confirmingRemoveRun = ref<string | null>(null);
+const removingRun = ref<string | null>(null);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -170,12 +173,32 @@ async function clearLibrary(): Promise<void> {
   }
 }
 
+function requestRemoveLibraryRun(id: string): void {
+  if (removingRun.value !== null) return;
+  confirmingClearLibrary.value = false;
+  confirmingRemoveRun.value = id;
+  libraryError.value = null;
+}
+
+function cancelRemoveLibraryRun(): void {
+  if (removingRun.value !== null) return;
+  confirmingRemoveRun.value = null;
+}
+
 async function removeLibraryRun(id: string): Promise<void> {
+  // A stale click, or a second click while the host is deleting, cannot
+  // remove another house or issue the same irreversible command twice.
+  if (confirmingRemoveRun.value !== id || removingRun.value !== null) return;
+  removingRun.value = id;
   libraryError.value = null;
   try {
     await props.actions.deleteLibraryRun(id);
+    confirmingRemoveRun.value = null;
   } catch {
+    // Keep the confirmation visible so the player can retry or cancel.
     libraryError.value = 'That house could not be removed from the Library. Try again.';
+  } finally {
+    removingRun.value = null;
   }
 }
 
@@ -252,7 +275,7 @@ onMounted(() => { void refreshSaves(); });
           <h2>The Library of Houses</h2>
           <p class="dim small">Finished lines remain here. A new house may hear them repeated badly.</p>
         </div>
-        <button v-if="!confirmingClearLibrary" class="quiet small" @click="confirmingClearLibrary = true">Clear</button>
+        <button v-if="!confirmingClearLibrary" class="quiet small" @click="confirmingRemoveRun = null; confirmingClearLibrary = true">Clear</button>
         <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
           <p class="rubric small">Clear all {{ completedHouses.length }} completed houses? This cannot be undone.</p>
           <button class="quiet small confirm-clear" @click="clearLibrary()">Yes, clear all</button>
@@ -264,7 +287,26 @@ onMounted(() => { void refreshSaves(); });
         <div class="library-title">
           <strong>{{ run.house }}</strong>
           <span class="dim small">— {{ run.ending.title }}, {{ run.endedYear }}</span>
-          <button class="quiet small" @click="removeLibraryRun(run.id)">Remove</button>
+          <button
+            v-if="confirmingRemoveRun !== run.id"
+            class="quiet small"
+            :disabled="removingRun !== null"
+            @click="requestRemoveLibraryRun(run.id)"
+          >Remove</button>
+          <div
+            v-else
+            class="library-remove-confirm"
+            role="group"
+            :aria-label="`Confirm removing ${run.house}`"
+          >
+            <span class="rubric small">Remove {{ run.house }}? This cannot be undone.</span>
+            <button
+              class="quiet small confirm-remove"
+              :disabled="removingRun !== null"
+              @click="removeLibraryRun(run.id)"
+            >{{ removingRun === run.id ? 'Removing…' : 'Yes, remove' }}</button>
+            <button class="quiet small" :disabled="removingRun !== null" @click="cancelRemoveLibraryRun()">Cancel</button>
+          </div>
         </div>
         <p v-if="survivingPage(run)" class="small excerpt">“{{ survivingPage(run) }}”</p>
       </article>
