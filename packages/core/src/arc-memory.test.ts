@@ -3,12 +3,62 @@ import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
 import { evalCondition } from '@ed/core';
 import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, startArc, testRng, testWorld } from '@ed/core';
+import { executeOutcomeWitness } from './events/reach.js';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
 // hands an already-indexed `Content` straight back — so spreading one would give
 // an object whose `arcs` array had the new arc in it and whose `arc()` lookup
 // did not.
 const base = loadBundle();
+
+describe('inline follow-up entry delays (#1278)', () => {
+  it.each([
+    { after: 'immediate' as const, min: 0, max: 0 },
+    { after: 'next_generation' as const, min: 20, max: 31 },
+    { after: { minYears: 7, maxYears: 7 }, min: 7, max: 7 },
+    { after: { minYears: 40, maxYears: 50 }, min: 40, max: 50 },
+  ])('waits for the authored $after before presenting the first follow-up', ({ after, min, max }) => {
+    const root = {
+      ...node('test_delayed_parent'),
+      interaction: {
+        kind: 'narration',
+        outcomes: [{
+          ...outcome('sent'),
+          next: { event: 'test_delayed_child', after, keep: [] },
+        }],
+      },
+    } as EventTemplate;
+    const child = node('test_delayed_child');
+    const ctx = testWorld({ ...base, events: [...base.events, root, child] });
+    const year = ctx.world.year;
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent(root.id), {
+      expectedOutcomeId: 'sent', rng: testRng(),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((entry) =>
+      ctx.content.arc(entry.arc)?.inline);
+    expect(instance).toBeDefined();
+    if (!instance) throw new Error('the parent did not start its compiled follow-up');
+    expect(instance.dueYear).toBeGreaterThanOrEqual(year + min);
+    expect(instance.dueYear).toBeLessThanOrEqual(year + max);
+    const due = instance.dueYear!;
+    if (min > 0) {
+      expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
+      ctx.world.year = due - 1;
+      expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
+    }
+    ctx.world.year = due;
+    expect(dueArcSteps(ctx, testRng()).map((step) => step.node.event)).toEqual([child.id]);
+  });
+
+  it('keeps authored arc entries immediate even when they declare a schedule', () => {
+    const arc = structuredClone(TWO_BEAT);
+    arc.nodes[0]!.schedule = { minYears: 40, maxYears: 50 };
+    const { ctx, instance } = running(arc, [node('first'), node('second')]);
+    expect(instance.dueYear).toBe(ctx.world.year);
+    expect(dueArcSteps(ctx, testRng())[0]?.node.id).toBe('first');
+  });
+});
 
 /**
  * WHAT A STORY REMEMBERS.

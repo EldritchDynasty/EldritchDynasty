@@ -28,6 +28,10 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
   const minimumYears = minimumArcYears(arc);
   if (!Number.isFinite(minimumYears) || ctx.world.year + minimumYears > campaignDef(ctx.world.campaign).endYear) return undefined;
 
+  // An inline arc starts AFTER its ambient parent has committed. Its entry
+  // schedule is Outcome.next.after, so treating it like an authored arc's
+  // immediate opening silently brings a decades-later consequence back now.
+  const entry = arc.nodes.find((node) => node.id === arc.entry);
   const instance: ArcInstance = {
     id: `arc_${(ctx.world.counters.arc += 1).toString(36)}`,
     arc: arc.id,
@@ -42,12 +46,11 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
     bindings: soleBindings(seedBindings),
     localFlags: {},
     startedYear: ctx.world.year,
-    dueYear: ctx.world.year,
+    dueYear: arc.inline && entry ? scheduleNext(entry, ctx, rng) : ctx.world.year,
     history: [],
     status: 'active',
   };
   ctx.world.arcs.set(instance.id, instance);
-  void rng;
   return instance;
 }
 

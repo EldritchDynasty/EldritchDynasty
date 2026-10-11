@@ -28,6 +28,22 @@ function arc(nodes: ArcNode[]): ArcDef {
 }
 
 describe('arc start windows (#133)', () => {
+  it.each(['short', 'long'] as const)('includes the inline entry delay in the %s campaign start window (#1278)', (campaign) => {
+    const a = arc([node('entry', { minYears: 40, maxYears: 40 }, ['end'])]);
+    a.inline = true;
+    expect(minimumArcYears(a)).toBe(40);
+    const end = CAMPAIGNS[campaign].endYear;
+    const exact = testWorld(content, 1, end - 40);
+    exact.world.campaign = campaign;
+    expect(startArc(a, exact, testRng())?.dueYear).toBe(end);
+    const late = testWorld(content, 1, end - 39);
+    late.world.campaign = campaign;
+    const counter = late.world.counters.arc;
+    expect(startArc(a, late, testRng())).toBeUndefined();
+    expect(late.world.counters.arc).toBe(counter);
+    expect(late.world.arcs.size).toBe(0);
+  });
+
   it('derives the shortest possible route through a branched graph', () => {
     const a = arc([
       node('entry', 'immediate', ['slow', 'fast']),

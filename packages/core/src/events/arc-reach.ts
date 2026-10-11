@@ -28,13 +28,10 @@ function minimumScheduleYears(schedule: ArcNode['schedule']): number {
  * may still run long; what this refuses is offering (or starting) one that
  * was impossible at the moment it began.
  *
- * THE ENTRY NODE'S OWN `schedule` CONTRIBUTES NOTHING. `startArc` sets the
- * new instance's `dueYear` to the current year directly, never through
- * `scheduleNext` — the entry event fires the same year the arc starts,
- * whatever its own `schedule` field says. Every node reached AFTER the
- * entry has its delay counted from `scheduleNext(nextNode, ...)` in
- * `advanceArc`, which this walk mirrors by only adding a node's own delay
- * when arriving at it as a SUCCESSOR, never for `arc.entry` itself.
+ * Authored arcs open immediately; their entry schedule contributes nothing.
+ * Inline arcs begin after an ambient parent, so their entry schedule is the
+ * parent's Outcome.next.after and DOES contribute. Every successor's own
+ * delay is counted in both forms, mirroring scheduleNext in advanceArc.
  *
  * Cycles contribute Infinity until an alternate exit is found. A story whose
  * graph has no terminal route is therefore not startable near (or before) the
@@ -70,5 +67,7 @@ export function minimumArcYears(arc: ArcDef): number {
     return best;
   };
 
-  return from(arc.entry, new Set());
+  const entry = nodes.get(arc.entry);
+  const entryDelay = arc.inline && entry ? minimumScheduleYears(entry.schedule) : 0;
+  return entryDelay + from(arc.entry, new Set());
 }
