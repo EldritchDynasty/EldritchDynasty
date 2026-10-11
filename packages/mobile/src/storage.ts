@@ -157,6 +157,9 @@ export function mobileStorage(
   async function listSaves(): Promise<SaveSummary[]> {
     const saves = new Map<string, SaveSummary>();
     const nativeSlots = new Set<string>();
+    // A parseable native file may retire its legacy backup; a directory entry
+    // that cannot be read must NOT. It still owns the slot and blocks migration.
+    const readableNativeSlots = new Set<string>();
     try {
       const { files: entries } = await files.readdir({
         path: SAVE_DIR,
@@ -166,15 +169,20 @@ export function mobileStorage(
         if (entry.type === 'directory') continue;
         const slot = slotFromFile(entry.name);
         if (!slot) continue;
+        // Directory membership is evidence of an existing native save even if
+        // a subsequent read throws or its JSON will not parse. Never migrate
+        // an older Preferences snapshot over those bytes.
+        nativeSlots.add(slot);
+        saves.set(slot, { slot });
         try {
           const native = await readFile(`${SAVE_DIR}/${entry.name}`);
-          if (native.present) {
-            nativeSlots.add(slot);
-            if (native.value !== null) saves.set(slot, saveSummary(slot, native.value));
+          if (native.present && native.value !== null) {
+            readableNativeSlots.add(slot);
+            saves.set(slot, saveSummary(slot, native.value));
           }
         } catch (error) {
-          // A single inaccessible native file must not hide healthy saves.
-          // Keep directory-level failures fatal, but report this one slot.
+          // Preserve the slot in the list, without inventing metadata, so a
+          // transient read error cannot make the run disappear from the UI.
           console.warn(`[mobile] could not read save slot ${slot}:`, error);
         }
       }
@@ -191,7 +199,7 @@ export function mobileStorage(
         // Even a malformed native file is authoritative for migration: leave
         // its bytes and the old Preferences key intact for explicit recovery.
         // Only valid files can safely complete the legacy-key cleanup.
-        if (saves.has(slot)) {
+        if (readableNativeSlots.has(slot)) {
           try {
             await preferences.remove({ key });
           } catch {
