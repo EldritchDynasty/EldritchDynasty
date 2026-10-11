@@ -198,6 +198,57 @@ describe('the volume', () => {
 });
 
 describe('the panel', () => {
+  it('clears the panel highlight timer when switching panes (#1299)', async () => {
+    const scheduled = vi.spyOn(globalThis, 'setTimeout');
+    const cleared = vi.spyOn(globalThis, 'clearTimeout');
+    const w = mount(Chronicle, {
+      props: {
+        view: { chronicle: BOOK, campaign: { endYear: 1542 } } as never,
+        frame: [],
+        actions: readsOver(BOOK),
+      },
+      attachTo: document.body,
+    });
+    let unmounted = false;
+    try {
+      await w.get('[data-entry="chr_echo"] button.link').trigger('click');
+      await flushPromises();
+      const timerIndex = scheduled.mock.calls.findIndex((args) => args[1] === 2400);
+      expect(timerIndex, 'the panel highlight must expire after the follow').toBeGreaterThanOrEqual(0);
+      const handle = scheduled.mock.results[timerIndex]!.value;
+      w.unmount();
+      unmounted = true;
+      expect(cleared).toHaveBeenCalledWith(handle);
+    } finally {
+      if (!unmounted) w.unmount();
+      cleared.mockRestore();
+      scheduled.mockRestore();
+    }
+  });
+
+  it('does not focus a panel entry after switching away mid-follow (#1299)', async () => {
+    const scrolled = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const w = mount(Chronicle, {
+      props: {
+        view: { chronicle: BOOK, campaign: { endYear: 1542 } } as never,
+        frame: [],
+        actions: readsOver(BOOK),
+      },
+      attachTo: document.body,
+    });
+    let unmounted = false;
+    try {
+      (w.get('[data-entry="chr_echo"] button.link').element as HTMLButtonElement).click();
+      w.unmount();
+      unmounted = true;
+      await flushPromises();
+      expect(scrolled).not.toHaveBeenCalled();
+    } finally {
+      if (!unmounted) w.unmount();
+      scrolled.mockRestore();
+    }
+  });
+
   it('dates each frame interlude at its real year instead of the campaign end (#1283)', () => {
     const frame = [
       { eventId: 'the_first_whisper', year: 1108, text: 'The first account was heard.' },
