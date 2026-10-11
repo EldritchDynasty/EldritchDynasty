@@ -120,6 +120,12 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     window.removeEventListener('keydown', onKey);
     const back = cameFrom;
     requestAnimationFrame(() => {
+      // If a successor dialog has mounted since this one began closing,
+      // its focus must win over the old dialog's deferred return focus.
+      // Exclude our own card for synchronous frame mocks during unmount.
+      if ([...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
+        .some((dialog) => dialog !== card.value)) return;
+
       if (back?.isConnected && !back.hasAttribute('disabled')) {
         back.focus();
         if (document.activeElement === back) return;
