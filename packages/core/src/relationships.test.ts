@@ -752,6 +752,32 @@ describe('relationship threads name things in the reader\'s setting (#917)', () 
     expect(externalThreadFor(ctx, 'house_marrow')).toEqual(original);
   });
 
+  it('keeps live house renames in thread titles and facts in both reading modes (#1271)', () => {
+    const { ctx, variants, scene } = named();
+    const renamed = 'Marrow by the River';
+    ctx.world.houses.get('house_marrow')!.name = renamed;
+
+    const original = externalThreadFor(ctx, 'house_marrow')!;
+    expect(original.name).toBe(renamed);
+    expect(detail(original, 'recent_contact')).toBe(
+      `Sera Marrow of ${renamed} dealt with the family in “${scene.title}” in 1199.`);
+    expect(detail(original, 'marriage_promise')).toContain(`${renamed} is owed the marriage`);
+
+    setProseVariants(ctx, variants);
+    setProseMode(ctx, 'plainenglish');
+    const plain = externalThreadFor(ctx, 'house_marrow')!;
+    expect(plain.name).toBe(renamed);
+    expect(detail(plain, 'recent_contact')).toBe(
+      `Sera Marrow of ${renamed} dealt with the family in “A Plain Scene” in 1199.`);
+    expect(detail(plain, 'marriage_promise')).toBe(
+      `${renamed} is owed the marriage pledged in 1198 for A Plain Heirloom.`);
+    expect(missingPlainEnglish(ctx)).not.toContain(variants[1]!.address);
+    expect(structure(plain)).toEqual(structure(original));
+
+    setProseMode(ctx, 'original');
+    expect(externalThreadFor(ctx, 'house_marrow')).toEqual(original);
+  });
+
   it('asks for no name in the hot recurrence query, which shows the player nothing', () => {
     const { ctx } = named();
     setProseMode(ctx, 'plainenglish');
