@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { FrameEntry } from '@ed/schema';
 import type { HelpTier, SessionView } from '@ed/core';
 import { findEntry, linksFor } from '../lib/causes';
@@ -57,6 +57,14 @@ const links = computed(() => linksFor(entries.value, {
 const panel = ref<HTMLElement | null>(null);
 const marked = ref<string | null>(null);
 let unmark: ReturnType<typeof setTimeout> | undefined;
+let followRequest = 0;
+
+// Switching panes destroys this component. Cancel its transient highlight and
+// prevent a follow() suspended at nextTick from focusing a disposed entry.
+onBeforeUnmount(() => {
+  ++followRequest;
+  clearTimeout(unmark);
+});
 
 function askAdviser(tier: HelpTier) {
   return props.actions.advice('chronicle', 'chronicle', tier);
@@ -68,6 +76,7 @@ function askAdviser(tier: HelpTier) {
  * the volume opens at it instead.
  */
 async function follow(id: string): Promise<void> {
+  const request = ++followRequest;
   if (!entries.value.some((e) => e.id === id)) return emit('open', id);
   // Entry is focusable only while marked (tabindex=-1). Render that state
   // BEFORE attempting focus so keyboard readers follow the cause link too.
@@ -76,12 +85,12 @@ async function follow(id: string): Promise<void> {
   await nextTick();
   // Two links may be followed before Vue finishes rendering the first one.
   // Only the latest destination may take focus or clear its highlight.
-  if (marked.value !== id) return;
+  if (request !== followRequest) return;
   const el = findEntry(panel.value, id);
   el?.scrollIntoView({ block: 'center' });
   el?.focus({ preventScroll: true });
   unmark = setTimeout(() => {
-    if (marked.value === id) marked.value = null;
+    if (request === followRequest) marked.value = null;
   }, 2400);
 }
 </script>
