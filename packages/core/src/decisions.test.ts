@@ -481,7 +481,7 @@ describe('Hollow Days chronology respects the extra day every fourth year (#1116
           expect(variant?.of, address).toBe(proseOriginalHash(original));
           const text = renderProse(ctx, address, original);
           expect(text, `${mode}: ${address}`).toContain('first of Thaw');
-          expect(text, `${mode}: ${address}`).not.toMatch(/\\b(?:four|five) days\\b/i);
+          expect(text, `${mode}: ${address}`).not.toMatch(/\b(?:four|five) days\b/i);
           expect(missingPlainEnglish(ctx)).not.toContain(address);
         }
       }
