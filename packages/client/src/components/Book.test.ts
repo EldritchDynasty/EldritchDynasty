@@ -7,6 +7,7 @@ import type { GameActions } from '../lib/game';
 import Interlude from './Interlude.vue';
 import Book from './Book.vue';
 import Chronicle from './Chronicle.vue';
+import Ending from './Ending.vue';
 
 /**
  * FOLLOWING A LINK SELECTS THE PAGE IT NAMES (issue #269).
@@ -230,6 +231,71 @@ describe('Interlude keyboard focus (#937)', () => {
       wrapper.unmount();
       outside.remove();
       vi.unstubAllGlobals();
+    }
+  });
+});
+
+
+/** Keep the export-failure UI regression in this measured component suite. */
+describe('house afterimage export failure (#1141)', () => {
+  function mountEnding() {
+    return mount(Ending, {
+      props: {
+        view: {
+          houseName: 'House Salt', seed: 123,
+          campaign: { name: 'A Long Line', startYear: 1042 },
+        } as never,
+        epilogue: {
+          year: 1542,
+          title: 'The last account',
+          summary: 'The house reached the table.',
+          opening: 'One final reading.',
+          read: [],
+          ring: [],
+          closing: 'The book was shut.',
+          reckoning: {
+            pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+            clauses: 0, clausesTotal: 9, attested: 'none', livingBlood: 0,
+            rungsWithheld: 0,
+          },
+        } as never,
+        actions: { restart: vi.fn() } as unknown as GameActions,
+      },
+    });
+  }
+
+  it('reports an unavailable canvas instead of silently doing nothing, and permits retry', async () => {
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const wrapper = mountEnding();
+    try {
+      const save = wrapper.get('.ending-actions button');
+      await save.trigger('click');
+      await flushPromises();
+      expect(wrapper.get('.afterimage-error[role="alert"]').text()).toContain('could not be saved');
+      expect(save.attributes('disabled')).toBeUndefined();
+      await save.trigger('click');
+      await flushPromises();
+      expect(canvas).toHaveBeenCalledTimes(2);
+      expect(wrapper.get('.afterimage-error[role="alert"]').text()).toContain('could not be saved');
+    } finally {
+      wrapper.unmount();
+      canvas.mockRestore();
+    }
+  });
+
+  it('catches a canvas exception without an unhandled rejection', async () => {
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
+      throw new Error('rendering unavailable');
+    });
+    const wrapper = mountEnding();
+    try {
+      await wrapper.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(wrapper.get('.afterimage-error[role="alert"]').text()).toContain('could not be saved');
+      expect(wrapper.get('.ending-actions button').attributes('disabled')).toBeUndefined();
+    } finally {
+      wrapper.unmount();
+      canvas.mockRestore();
     }
   });
 });
