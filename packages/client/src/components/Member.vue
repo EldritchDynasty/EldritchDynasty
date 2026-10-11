@@ -141,7 +141,7 @@ const mentionPages = computed(() =>
          trading blood, so the house a spouse married in from is the one fact
          about her the tree has to carry — and it lived inside a card. -->
     <div v-if="member.spouse?.marriedIn && member.spouse.house" class="dim small from">
-      of {{ member.spouse.house }}
+      married to {{ member.spouse.name }}, of {{ member.spouse.house }}
     </div>
 
     <div v-if="loudest.length" class="claimed dim small">
