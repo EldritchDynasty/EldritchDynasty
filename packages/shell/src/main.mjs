@@ -9,6 +9,7 @@ import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mj
 import { rendererEntry } from './renderer-entry.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
+import { parseImportedRun } from './run-import.mjs';
 import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
@@ -260,7 +261,7 @@ ipcMain.handle('ed:import-save', async (event) => {
     });
     const chosen = filePaths?.[0];
     if (canceled || !chosen) return { ok: false, cancelled: true };
-    return { ok: true, save: JSON.parse(readFileSync(chosen, 'utf8')), path: chosen };
+    return { ok: true, save: parseImportedRun(readFileSync(chosen, 'utf8')), path: chosen };
   } catch (e) {
     return { ok: false, error: String(e) };
   }
