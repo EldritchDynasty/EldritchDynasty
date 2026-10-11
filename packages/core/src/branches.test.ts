@@ -4,7 +4,7 @@ import { loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
 import type { ProseMode } from '@ed/schema';
 import {
-  branchOf, endowParcel, heldParcels, loadGame, missingPlainEnglish, order, phase, place,
+  branchOf, endowParcel, heldParcels, landIncome, landView, loadGame, missingPlainEnglish, order, phase, place,
   recallToMain, saveGame, setProseMode, setProseVariants, settleBranches, testWorld, tickBranches,
 } from '@ed/core';
 import { coreMessageEntries } from './tools/core-message-audit.js';
@@ -276,5 +276,69 @@ describe('the heir is fed too, and a hall notices twice (issue #61, Stage E4)', 
       neitherHall.grievance,
       'a hall holding neither did not end more aggrieved than one holding the heir',
     ).toBeGreaterThan(heirHall.grievance);
+  });
+});
+
+
+/** Endowment is a sustained concession, not a free rearrangement of labels (#1219). */
+describe('cadet endowment has a measured political cost and benefit (#1219)', () => {
+  function twoHalls() {
+    const ctx = testWorld(bundle, 1219001);
+    const w = ctx.world;
+    for (const id of ['branch_gift', 'branch_other']) {
+      const founder = place(ctx, { name: 'A Cousin', sex: 'male', age: 30, branch: id });
+      w.branches.set(id as never, {
+        id, name: id === 'branch_gift' ? 'Gift Hall' : 'Other Hall',
+        house: w.playerHouse, founder: founder.id, splitFrom: 'main',
+        foundedYear: w.year - 30, grievance: 20,
+      } as never);
+    }
+    return { ctx, gift: w.branches.get('branch_gift' as never)!, other: w.branches.get('branch_other' as never)! };
+  }
+
+  it('reduces the endowed hall grievance by 0.03 times authored base yield, not the other hall', () => {
+    const { ctx, gift, other } = twoHalls();
+    const oldIncome = landIncome(ctx);
+    expect(order(ctx, { kind: 'endow', parcel: 'hallowfield', branch: gift.id }).ok).toBe(true);
+    expect(landIncome(ctx)).toBeLessThan(oldIncome);
+    phase('branches', ctx);
+    // Identical founders/tenure mean every other grievance contribution is identical.
+    expect(other.grievance - gift.grievance).toBeCloseTo(8 * 0.03, 8);
+    expect(gift.grievance).toBeLessThan(other.grievance);
+    expect(landView(ctx).branches).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: gift.id, name: 'Gift Hall', grievance: gift.grievance }),
+    ]));
+  });
+
+  it('caps relief from many deeds but never erases the Head grievance', () => {
+    const { ctx, gift, other } = twoHalls();
+    for (const parcel of ['hallowfield', 'nettlecombe', 'longmere']) {
+      expect(endowParcel(ctx, parcel, gift.id).ok).toBe(true);
+    }
+    phase('branches', ctx);
+    expect(other.grievance - gift.grievance).toBeCloseTo(0.5, 8);
+  });
+
+  it('charges the former hall for recall exactly once and prevents free direct transfers', () => {
+    const { ctx, gift, other } = twoHalls();
+    expect(endowParcel(ctx, 'hallowfield', gift.id).ok).toBe(true);
+    expect(endowParcel(ctx, 'hallowfield', other.id).ok).toBe(false);
+    expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBe(gift.id);
+    expect(order(ctx, { kind: 'endow', parcel: 'hallowfield', branch: null }).ok).toBe(true);
+    expect(gift.grievance).toBeCloseTo(24, 8); // 2 + 0.25 × 8
+    expect(order(ctx, { kind: 'endow', parcel: 'hallowfield', branch: null }).ok).toBe(true);
+    expect(gift.grievance).toBeCloseTo(24, 8);
+    expect(order(ctx, { kind: 'endow', parcel: 'hallowfield', branch: other.id }).ok).toBe(true);
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.holderName).toBe('Other Hall');
+  });
+
+  it('persists the deed and its grievance consequence across save and resume', () => {
+    const { ctx, gift } = twoHalls();
+    endowParcel(ctx, 'hallowfield', gift.id);
+    const loaded = loadGame(saveGame(ctx), ctx.content);
+    expect(landView(loaded).held.find((p) => p.parcel === 'hallowfield')?.holder).toBe(gift.id);
+    phase('branches', ctx);
+    phase('branches', loaded);
+    expect(loaded.world.branches.get(gift.id)?.grievance).toBeCloseTo(gift.grievance, 8);
   });
 });
