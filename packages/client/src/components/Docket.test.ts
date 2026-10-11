@@ -612,7 +612,7 @@ describe('the docket draws what it is handed', () => {
 });
 
 describe('the year-one progressive surface (#368)', () => {
-  it('mounts the standing header and announces platform-neutral save failures (#1151)', async () => {
+  it('keeps a mounted save-status live region across updates (#1151, #1156)', async () => {
     const view = {
       year: 1042,
       campaign: { id: 'short', name: 'Short Line', startYear: 1042, endYear: 1342 },
@@ -661,15 +661,21 @@ describe('the year-one progressive surface (#368)', () => {
 
     // Browser runs use localStorage, while native hosts can save to disk.
     // A failed save is the same failure to the reader on either platform.
-    expect(wrapper.find('.save[role="status"]').exists()).toBe(false);
+    const region = wrapper.get('.save[role="status"]');
+    expect(region.text()).toBe(''); // Present before any update, so first change can be announced.
+    expect(region.classes()).not.toContain('warn');
     await wrapper.setProps({ saveStatus: 'saving' });
-    expect(wrapper.get('.save[role="status"]').text()).toBe('saving…');
+    expect(wrapper.get('.save[role="status"]').element).toBe(region.element);
+    expect(region.text()).toBe('saving…');
     await wrapper.setProps({ saveStatus: 'error' });
-    expect(wrapper.get('.save[role="status"]').text()).toBe('not saved — could not save this run');
-    expect(wrapper.get('.save').classes()).toContain('warn');
+    expect(region.text()).toBe('not saved — could not save this run');
+    expect(region.classes()).toContain('warn');
     await wrapper.setProps({ saveStatus: 'saved' });
-    expect(wrapper.get('.save[role="status"]').text()).toBe('saved');
-    expect(wrapper.get('.save').classes()).not.toContain('warn');
+    expect(region.text()).toBe('saved');
+    expect(region.classes()).not.toContain('warn');
+    await wrapper.setProps({ saveStatus: 'idle' });
+    expect(region.text()).toBe('');
+    expect(wrapper.get('.save[role="status"]').element).toBe(region.element);
     wrapper.unmount();
   });
 });
