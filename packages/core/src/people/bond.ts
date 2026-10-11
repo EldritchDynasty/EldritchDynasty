@@ -54,6 +54,16 @@ export function isBonded(p: Person): boolean {
   return p.contract?.term === 'bonded' && p.contract.debt > 0;
 }
 
+/**
+ * Contract mutations must name the living person the world currently owns.
+ * Effects and orders normally resolve that instance, but this is a public
+ * core verb: a detached snapshot must not spend treasury or free somebody
+ * else's bond while leaving the actual world-owned contract untouched.
+ */
+function currentServant(ctx: SimCtx, p: Person): boolean {
+  return p.status === 'alive' && ctx.world.people.get(p.id) === p;
+}
+
 /** Everyone the house is currently holding by debt. */
 export function bondsmen(ctx: SimCtx): Person[] {
   return ctx.world.people.living().filter(isBonded);
@@ -69,7 +79,7 @@ export function bondsmen(ctx: SimCtx): Person[] {
  */
 export function bindService(ctx: SimCtx, p: Person, marks: number): boolean {
   const c = p.contract;
-  if (!c || isBonded(p)) return false;
+  if (!currentServant(ctx, p) || !c || isBonded(p)) return false;
   // A cleared number input, non-finite value or fractional debt must never
   // reach the contract or treasury. NaN passes ordinary bounds comparisons.
   if (!Number.isSafeInteger(marks) || marks < 1 || marks > MAX_BOND) return false;
@@ -150,7 +160,7 @@ export interface Freeing {
  */
 export function freeBond(ctx: SimCtx, p: Person): Freeing {
   const c = p.contract;
-  if (!c || c.term !== 'bonded') return { ok: false, forgiven: 0, resented: 0 };
+  if (!currentServant(ctx, p) || !c || c.term !== 'bonded') return { ok: false, forgiven: 0, resented: 0 };
 
   const forgiven = c.debt;
   c.debt = 0;
