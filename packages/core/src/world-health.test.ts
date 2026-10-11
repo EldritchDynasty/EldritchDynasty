@@ -89,6 +89,15 @@ describe('and the worlds it must reject', () => {
     expect(() => expectHealthyWorld(ctx)).toThrow(/INVARIANT 15/);
   });
 
+  it('INVARIANT 15 — a living person cannot lose their only household', () => {
+    const { ctx, wife } = house();
+    wife.membership[0]!.to = ctx.world.year;
+
+    const bad = worldViolations(ctx);
+    expect(complaint(bad, 'INVARIANT 15')).toContain('alive with no open membership');
+    expect(() => expectHealthyWorld(ctx)).toThrow(/INVARIANT 15/);
+  });
+
   it('INVARIANT 2 — a death that did not come through kill()', () => {
     const { ctx, wife } = house();
     // Exactly what an authored `status` effect that skipped the gate looks like.
