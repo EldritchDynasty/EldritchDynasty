@@ -93,8 +93,8 @@ describe('married-in spouse house names in the selected prose mode (#968)', () =
   });
 });
 
-describe('marriage promise counterparty names in the selected prose mode (#1100)', () => {
-  it('renders an authored counterpart without changing the saved promise or runtime renames', () => {
+describe('marriage promise and loose secret house names in selected prose mode (#1100)', () => {
+  it('renders reviewed counterparts without changing stored records or runtime renames', () => {
     const session = newGame(loadContent());
     const { ctx } = session;
     const house = ctx.content.house('house_marrow');
@@ -104,9 +104,15 @@ describe('marriage promise counterparty names in the selected prose mode (#1100)
     ctx.world.marriagePromises.push({
       toHouse: house.id, year: ctx.world.year, lot: 'the_ring',
     });
+    ctx.world.looseSecrets.push({
+      secret: 'what_the_archive_holds', carrier: 'p_gone', carrierName: 'Ilsabet',
+      house: house.id, since: ctx.world.year, severity: 'minor',
+    });
     const address = `content:${ctx.content.sourceOf(String(house.id))}#houses[id=${encodeURIComponent(String(house.id))}].name`;
     const promise = () => session.view().marriagePromises[0]!;
+    const looseSecret = () => session.view().looseSecrets[0]!;
     expect(promise().houseName).toBe(house.name);
+    expect(looseSecret().houseName).toBe(house.name);
     const originalSave = canonical(saveGame(ctx));
 
     const variant = {
@@ -115,15 +121,19 @@ describe('marriage promise counterparty names in the selected prose mode (#1100)
     setProseVariants(ctx, [variant]);
     session.setProseMode('plainenglish');
     expect(promise().houseName).toBe(variant.plainenglish);
+    expect(looseSecret().houseName).toBe(variant.plainenglish);
     expect(promise().house).toBe(house.id);
+    expect(looseSecret().house).toBe(house.id);
     expect(missingPlainEnglish(ctx)).not.toContain(address);
 
     setProseVariants(ctx, [{ ...variant, of: '0000000000000000' }]);
     expect(promise().houseName).toBe(house.name);
+    expect(looseSecret().houseName).toBe(house.name);
     expect(missingPlainEnglish(ctx)).toContain(address);
 
     session.setProseMode('original');
     expect(promise().houseName).toBe(house.name);
+    expect(looseSecret().houseName).toBe(house.name);
     expect(canonical(saveGame(ctx))).toBe(originalSave);
 
     // A world-renamed house is not the authored Original; do not substitute
@@ -132,6 +142,7 @@ describe('marriage promise counterparty names in the selected prose mode (#1100)
     session.setProseMode('plainenglish');
     ctx.world.houses.get(house.id)!.name = 'A name changed after the promise';
     expect(promise().houseName).toBe('A name changed after the promise');
+    expect(looseSecret().houseName).toBe('A name changed after the promise');
   });
 });
 
