@@ -126,6 +126,31 @@ describe('mobile native save-list read failures', () => {
     }
   });
 
+  it('reports a failed legacy-only enumeration instead of showing no saved runs (#1236)', async () => {
+    const nativeEmpty = {
+      ...files,
+      async readdir() { return { files: [] }; },
+    };
+    const older = { format: 28, year: 1100, savedAt: '2026-09-30T00:00:00.000Z' };
+    let unavailable = true;
+    const legacyOnly = {
+      ...preferences,
+      async keys() {
+        if (unavailable) throw new Error('legacy enumeration temporarily unavailable');
+        return { keys: ['ed:save:ancestral'] };
+      },
+      async get() { return { value: JSON.stringify(older) }; },
+    };
+    const store = mobileStorage(nativeEmpty, legacyOnly);
+
+    // No native files does not mean an unmigrated install has no saves.
+    // A failed Preferences scan must reach Start's Retry path.
+    await expect(store.listSaves()).rejects.toThrow('legacy enumeration temporarily unavailable');
+
+    unavailable = false;
+    await expect(store.listSaves()).resolves.toEqual([{ slot: 'ancestral', ...older }]);
+  });
+
   it('skips a damaged legacy key without losing native or later legacy saves (#1230)', async () => {
     const oldSave = { format: 28, year: 1250, savedAt: '2026-10-03T00:00:00.000Z' };
     const unreliablePreferences = {
