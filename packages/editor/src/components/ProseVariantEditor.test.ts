@@ -68,6 +68,21 @@ describe('the Plain English editor review verdict (#945)', () => {
     )).toEqual({ ok: true, text: 'Placeholders match.' });
   });
 
+  it('does not treat spaces as reviewed Plain English, even with a matching fingerprint (#1317)', () => {
+    const text = 'The archive was silent.';
+    expect(proseVariantStatus({ text, interpolations: [] }, {
+      of: proseOriginalHash(text),
+      plainenglish: '  \\t \\n',
+    })).toEqual({ ok: false, text: 'Plain English is missing.' });
+  });
+
+  it('never stages or retains whitespace-only counterpart text (#1317)', () => {
+    const source = readFileSync(join(COMPONENTS, 'ProseVariantEditor.vue'), 'utf8');
+    expect(source).toContain('if (!text.trim()) {');
+    expect(source).toContain('if (!text.trim() || !sourceFile.value) return;');
+    expect(source).toContain('removeProseVariant(sourceFile.value, entry.address)');
+  });
+
   it('flags legacy variants with no reviewed fingerprint', () => {
     expect(proseVariantStatus(entry, {
       plainenglish: '{PERSON} read {BOOK}. {BOOK} was old.',

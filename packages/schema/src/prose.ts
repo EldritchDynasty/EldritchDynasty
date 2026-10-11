@@ -100,7 +100,8 @@ export const ProseVariantS = z.object({
   address: z.string().min(1),
   /** Short fingerprint of the Original wording this counterpart was reviewed against. */
   of: z.string().regex(/^[0-9a-f]{16}$/).optional(),
-  plainenglish: z.string().min(1),
+  plainenglish: z.string().min(1).refine((text) => text.trim().length > 0,
+    'Plain English must contain non-whitespace text'),
 });
 export type ProseVariant = z.infer<typeof ProseVariantS>;
 

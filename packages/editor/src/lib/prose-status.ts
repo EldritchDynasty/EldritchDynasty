@@ -26,7 +26,7 @@ export function proseVariantStatus(
   entry: Pick<ContentProseEntry, 'text' | 'interpolations'>,
   variant: Pick<ProseVariant, 'plainenglish' | 'of'> | undefined,
 ): ProseVariantStatus {
-  if (!variant?.plainenglish) {
+  if (!variant?.plainenglish.trim()) {
     return { ok: false, text: 'Plain English is missing.' };
   }
   if (variant.of !== proseOriginalHash(entry.text)) {

@@ -53,7 +53,7 @@ function setPlain(entry: ContentProseEntry, text: string): void {
   if (!writable.value) return;
   const existing = variant(entry.address);
   if (existing) {
-    if (!text.length) {
+    if (!text.trim()) {
       if (sourceFile.value) removeProseVariant(sourceFile.value, entry.address);
       return;
     }
@@ -66,7 +66,7 @@ function setPlain(entry: ContentProseEntry, text: string): void {
   // Do not manufacture an invalid empty catalogue row merely because the
   // author focused the field. The first real character stages the counterpart;
   // the normal SaveControl for the source item writes both columns together.
-  if (!text.length || !sourceFile.value) return;
+  if (!text.trim() || !sourceFile.value) return;
   const staged = stageProseVariant(sourceFile.value, entry.address, text);
   if (staged) {
     staged.of = proseOriginalHash(entry.text);
