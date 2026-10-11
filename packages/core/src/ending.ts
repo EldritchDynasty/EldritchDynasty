@@ -1,5 +1,5 @@
 import type { EndingDef, EndingId, Rung } from '@ed/schema';
-import { assertNever } from '@ed/schema';
+import { assertNever, isContentProseField } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
@@ -498,6 +498,10 @@ export function endingDef(ctx: SimCtx, id: EndingId): EndingDef | undefined {
 }
 
 function endingProse(ctx: SimCtx, def: EndingDef, path: string, original: string): string {
+  // The migration worklist excludes one-word titles (such as "Apotheosis").
+  // A reader must not request a variant that the worklist cannot author.
+  const field = path.slice(path.lastIndexOf('.') + 1);
+  if (!isContentProseField(field, original)) return original;
   const file = ctx.content.sourceOf(String(def.id));
   if (file === undefined) return original;
   return renderContentProse(
