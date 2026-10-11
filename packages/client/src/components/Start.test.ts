@@ -239,6 +239,74 @@ describe('named saves', () => {
 
 
 
+describe('saved-run action failures (#1149)', () => {
+  const savedRun: SaveSummary = { slot: 'chapter-1-1080', year: 1080 };
+
+  it('explains a rejected named save load, then clears the refusal on retry', async () => {
+    const actions = spyActions([savedRun]);
+    vi.mocked(actions.load).mockRejectedValueOnce(new Error('host read failed'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const open = w.get('section.saved li > button');
+      await open.trigger('click');
+      await flush();
+      expect(w.get('[role="status"]').text()).toContain('That saved run could not be read.');
+      expect(actions.load).toHaveBeenCalledWith(savedRun.slot);
+
+      await open.trigger('click');
+      await flush();
+      expect(actions.load).toHaveBeenCalledTimes(2);
+      expect(w.find('[role="status"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('explains a rejected import and recovers when the next import succeeds', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.importSave).mockRejectedValueOnce(new Error('file picker unavailable'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const bringIn = w.findAll('button').find((button) => button.text() === 'Bring a run in');
+      expect(bringIn).toBeDefined();
+      await bringIn!.trigger('click');
+      await flush();
+      expect(w.get('[role="status"]').text()).toContain('That file was not a run this version can read.');
+
+      await bringIn!.trigger('click');
+      await flush();
+      expect(actions.importSave).toHaveBeenCalledTimes(2);
+      expect(w.find('[role="status"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('explains rejected export and allows the same named run to be exported on retry', async () => {
+    const actions = spyActions([savedRun]);
+    vi.mocked(actions.exportSave).mockRejectedValueOnce(new Error('download blocked'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const copyOut = w.findAll('section.saved li button').find((button) => button.text() === 'Copy out');
+      expect(copyOut).toBeDefined();
+      await copyOut!.trigger('click');
+      await flush();
+      expect(w.get('[role="status"]').text()).toContain('That saved run could not be written out.');
+      expect(actions.exportSave).toHaveBeenCalledWith(savedRun.slot);
+
+      await copyOut!.trigger('click');
+      await flush();
+      expect(actions.exportSave).toHaveBeenCalledTimes(2);
+      expect(w.find('[role="status"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('save list host failures (#1137)', () => {
   it('explains a rejected listing and restores the actual saves when Retry succeeds', async () => {
     const actions = spyActions([{ slot: 'chapter-1-1080', year: 1080 }]);
