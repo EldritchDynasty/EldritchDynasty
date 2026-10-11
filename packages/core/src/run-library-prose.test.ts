@@ -68,4 +68,63 @@ describe('Plain English inherited Library claims (#410)', () => {
     expect(stale.memory.text).not.toContain(translated);
     expect(missingPlainEnglish(stale.ctx)).toContain(address);
   });
+
+  it('archives a reviewed ending title without changing the historical run when settings change', () => {
+    const ending = content.ending('broken_line');
+    if (!ending) throw new Error('Expected multiword ending title');
+    const endingFile = content.sourceOf(String(ending.id));
+    if (!endingFile) throw new Error('Expected ending provenance');
+    const endingAddress = `content:${endingFile}#endings[id=${encodeURIComponent(String(ending.id))}].title`;
+    const title = 'The Family Line Has Ended';
+    expect(contentProseEntries(endingFile, { endings: [ending] })
+      .some((entry) => entry.address === endingAddress)).toBe(true);
+
+    const game = newGame(content, { seed: 413, campaign: 'short', decider: 'chronicler' });
+    game.ctx.world.ending = { id: ending.id, year: 1342 };
+    const original = libraryRunOf(game.ctx);
+    if (!original) throw new Error('Expected a finished run');
+
+    setProseVariants(game.ctx, [{ address: endingAddress, of: proseOriginalHash(ending.title), plainenglish: title }]);
+    setProseMode(game.ctx, 'plainenglish');
+    const translated = libraryRunOf(game.ctx);
+    expect(translated?.ending.title).toBe(title);
+    expect(translated?.ending.id).toBe(original.ending.id);
+    expect(translated?.id).toBe(original.id);
+    expect(missingPlainEnglish(game.ctx)).not.toContain(endingAddress);
+
+    setProseMode(game.ctx, 'original');
+    expect(libraryRunOf(game.ctx)?.ending.title).toBe(ending.title);
+    expect(translated?.ending.title).toBe(title);
+  });
+
+  it('selects a reviewed rival house name before freezing a Library retelling', () => {
+    const previous = priorRun();
+    const current = newGame(content, { seed: 411, campaign: 'short', decider: 'chronicler' });
+    const original = seedLibraryMemories(current.ctx, [previous])
+      .find((item) => item.sourceText === claimText);
+    if (!original) throw new Error('Expected a baseline inherited memory');
+    const house = content.houses.find((row) => !row.isPlayerHouse
+      && original.teller.includes(row.name));
+    if (!house) throw new Error('Expected a named rival in the Library teller');
+    const houseFile = content.sourceOf(String(house.id));
+    if (!houseFile) throw new Error('Expected rival source provenance');
+    const houseAddress = `content:${houseFile}#houses[id=${encodeURIComponent(String(house.id))}].name`;
+    const translatedName = 'The Other Household';
+    expect(contentProseEntries(houseFile, { houses: [house] })
+      .some((entry) => entry.address === houseAddress)).toBe(true);
+
+    const plain = newGame(content, { seed: 411, campaign: 'short', decider: 'chronicler' });
+    setProseVariants(plain.ctx, [{
+      address: houseAddress, of: proseOriginalHash(house.name), plainenglish: translatedName,
+    }]);
+    setProseMode(plain.ctx, 'plainenglish');
+    const memory = seedLibraryMemories(plain.ctx, [previous])
+      .find((item) => item.sourceText === claimText);
+    if (!memory) throw new Error('Expected translated inherited memory');
+    expect(memory.teller).toContain(translatedName);
+    expect(memory.teller).not.toContain(house.name);
+    expect(memory.sourceHouse).toBe(original.sourceHouse);
+    expect(memory.claims).toEqual(original.claims);
+    expect(missingPlainEnglish(plain.ctx)).not.toContain(houseAddress);
+  });
 });
