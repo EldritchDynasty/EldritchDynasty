@@ -128,8 +128,13 @@ function matchesMemberFilter(member: MemberView, hall: HallView): boolean {
   }
 }
 
+const directLineIds = computed(() => new Set((props.line ?? []).map((entry) => entry.person)));
+
 function membersOf(hall: HallView): MemberView[] {
-  return hall.members.filter((member) => matchesMemberFilter(member, hall));
+  // Recursive Kin receives this same collection as its child lookup. Filtering
+  // roots alone still draws every off-line descendant below those roots.
+  return hall.members.filter((member) =>
+    matchesMemberFilter(member, hall) && (!directLine.value || directLineIds.value.has(member.id)));
 }
 
 /**
@@ -179,8 +184,7 @@ const shownHalls = computed(() => {
     ? props.view.halls
     : props.view.halls.filter((h) => h.id === hallFilter.value);
   if (directLine.value) {
-    const ids = new Set((props.line ?? []).map((entry) => entry.person));
-    halls = halls.filter((hall) => hall.members.some((member) => ids.has(member.id)));
+    halls = halls.filter((hall) => membersOf(hall).length > 0);
   }
   if (memberFilter.value === 'all') return halls;
   return halls.filter((hall) => membersOf(hall).length > 0);
@@ -194,10 +198,8 @@ function rootsOf(hall: HallView): MemberView[] {
     if (found) return [found];
   }
   if (directLine.value) {
-    const ids = new Set((props.line ?? []).map((entry) => entry.person));
-    const candidates = members.filter((member) => ids.has(member.id));
-    const candidateIds = new Set(candidates.map((member) => member.id));
-    return candidates.filter((member) => {
+    const candidateIds = new Set(members.map((member) => member.id));
+    return members.filter((member) => {
       const parentIds = [member.record.parents.mother, member.record.parents.father];
       return !parentIds.some((id) => id !== undefined && candidateIds.has(id));
     });
