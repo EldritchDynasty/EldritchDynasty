@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fireRateInputError } from './fire-rate-input';
 import { describe, expect, it } from 'vitest';
 import { collapseContext, diffLines, type DiffLine } from './diff.js';
 
@@ -159,5 +162,33 @@ describe('collapseContext', () => {
     const texts = out.filter((l): l is DiffLine => 'text' in l).map((l) => l.text);
 
     expect(texts).toEqual(['line 5', 'CHANGED']);
+  });
+});
+
+describe('fire-rate evidence input safety (#1311)', () => {
+  it('accepts valid whole-number run/year bounds', () => {
+    expect(fireRateInputError(1, 10, 500)).toBeNull();
+    expect(fireRateInputError(800, 500, 500)).toBeNull();
+    expect(fireRateInputError(15, 300, 500)).toBeNull();
+  });
+
+  it('rejects zero, partial, out-of-range, and non-finite run counts', () => {
+    for (const runs of [0, -1, 0.5, 1.5, 801, NaN, Infinity, -Infinity]) {
+      expect(fireRateInputError(runs, 300, 500), String(runs)).toContain('Runs');
+    }
+  });
+
+  it('rejects invalid years before sampling', () => {
+    for (const years of [0, -1, 9, 10.5, 501, NaN, Infinity]) {
+      expect(fireRateInputError(10, years, 500), String(years)).toContain('Years');
+    }
+  });
+
+  it('routes the actual Instruments view through the same guard', () => {
+    const source = readFileSync(join(import.meta.dirname, '../components/Instruments.vue'), 'utf8');
+    expect(source).toContain('fireRateInputError(runs.value, years.value, CAMPAIGN_YEARS)');
+    expect(source).toContain('if (running.value || fireRateError.value) return;');
+    expect(source).toContain(':disabled="running || !!fireRateError"');
+    expect(source).toContain('watch([runs, years], () => { fireRate.value = undefined; });');
   });
 });
