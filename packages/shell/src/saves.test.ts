@@ -6,7 +6,7 @@ import { loadContent } from '@ed/content';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { findPackagedExecutable, smokePackagedApp } from '../scripts/packaged-smoke.mjs';
 import { resolveSavePath, SaveSlotError, slotOfFile } from '../tools/save-slot.mjs';
-import { deleteSave, listSaves, readSave, saveRoot, writeSave } from './saves.mjs';
+import { deleteSave, listSaves, readSave, requireSaveEnvelope, saveRoot, writeSave } from './saves.mjs';
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { mobileStorage } from '../../mobile/src/storage.js';
 import { writeJsonAtomically } from './atomic-json.mjs';
@@ -146,10 +146,26 @@ describe('atomic exported run replacement (#904)', () => {
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
     const handler = source.slice(start, end);
+    expect(handler).toContain('requireSaveEnvelope(save)');
     expect(handler).toContain('writeJsonAtomically(filePath, save)');
     expect(handler).not.toContain('writeFileSync(filePath,');
     expect(handler).toContain('if (canceled || !filePath)');
     expect(handler).toContain('return { ok: true, path: filePath }');
+  });
+});
+
+describe('a shared shell save envelope for writing and export (#1253)', () => {
+  it('rejects disguised arrays before JSON could turn a reported-success export into []', () => {
+    const disguised = [] as unknown[] & { format?: number };
+    disguised.format = 28;
+    expect(typeof disguised.format).toBe('number');
+    expect(JSON.stringify(disguised)).toBe('[]');
+
+    for (const invalid of [null, [], disguised, false, 'run', 28, { year: 1042 }, { format: '28' }]) {
+      expect(() => requireSaveEnvelope(invalid)).toThrow('a save is an object with a numeric format');
+    }
+    const healthy = { format: 28, year: 1042 };
+    expect(requireSaveEnvelope(healthy)).toBe(healthy);
   });
 });
 
