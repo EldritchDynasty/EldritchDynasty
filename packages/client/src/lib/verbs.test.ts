@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { GameSession } from '@ed/core';
 import { createGame } from './game.js';
+import type { Platform } from '../platform.js';
 
 const SRC = join(import.meta.dirname, '..');
 
@@ -237,5 +238,74 @@ describe('the store drives a game', () => {
     // something else happens to fail.
     game.actions.order({ kind: 'marriages', policy: 'as_it_falls' });
     expect(game.refusal.value).toBeNull();
+  });
+});
+
+
+describe('a failed Library load is not an empty profile (#1238)', () => {
+  function libraryHost(): Platform & { writes: unknown[]; readCount: () => number } {
+    let reads = 0;
+    let existing: unknown = {
+      format: 1,
+      runs: [{
+        id: 'before-outage', seed: 74, campaign: 'short', endedYear: 1342,
+        house: 'The Prior House', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+      }],
+    };
+    const writes: unknown[] = [];
+    return {
+      writes,
+      readCount: () => reads,
+      listSaves: async () => [],
+      readSave: async () => null,
+      writeSave: async () => undefined,
+      deleteSave: async () => undefined,
+      readLibrary: async () => {
+        if (++reads === 1) throw new Error('Library host temporarily unavailable');
+        return existing;
+      },
+      writeLibrary: async (next) => { writes.push(next); existing = next; },
+      readUserContent: async () => ({}),
+      exportSave: async () => undefined,
+      importSave: async () => null,
+      onPause: () => () => undefined,
+      onBack: () => () => undefined,
+    };
+  }
+
+  it('fails closed on an initial read error and recovers history on explicit retry', async () => {
+    const host = libraryHost();
+    const game = createGame(loadContent(), host);
+    // The first read starts at composition and settles asynchronously.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(game.libraryReadError.value).toBe(true);
+    expect(game.libraryReady.value).toBe(false);
+    await expect(game.actions.clearLibrary()).rejects.toThrow('the Library is unavailable');
+    await expect(game.actions.deleteLibraryRun('before-outage')).rejects.toThrow('the Library is unavailable');
+    expect(host.writes).toEqual([]);
+
+    await game.actions.retryLibrary();
+    expect(host.readCount()).toBe(2);
+    expect(game.libraryReadError.value).toBe(false);
+    expect(game.libraryReady.value).toBe(true);
+    expect(game.library.value.runs.map((run) => run.id)).toEqual(['before-outage']);
+    expect(host.writes).toEqual([]);
+
+    await game.actions.deleteLibraryRun('before-outage');
+    expect(host.writes).toHaveLength(1);
+    expect(game.library.value.runs).toEqual([]);
+  });
+
+  it('still accepts a genuinely absent first-time Library as empty', async () => {
+    const host = libraryHost();
+    host.readLibrary = async () => null;
+    const game = createGame(loadContent(), host);
+    // Editing immediately after composition must await the authoritative read.
+    await game.actions.clearLibrary();
+    expect(game.libraryReadError.value).toBe(false);
+    expect(game.libraryReady.value).toBe(true);
+    expect(host.writes).toHaveLength(1);
+    expect(host.writes[0]).toMatchObject({ format: 1, runs: [] });
   });
 });
