@@ -586,3 +586,192 @@ proseVariants:
       can do nothing to avoid the charge. The Braccish weigh the coins everyone else uses and take
       a fee on every exchange. They have done so since before this house existed. The steward
       still keeps a copy of the calculation. It remains in the press in 1500.
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].title"
+    of: 2084213078b6d284
+    plainenglish: >-
+      A Tenant Dies Owing Fourteen Marks
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].body"
+    of: d012bb81b7dfac1d
+    plainenglish: >-
+      A tenant has died with a debt of fourteen marks recorded on a tally stick. His widow now
+      holds the farm and cares for their four children. The family owns about nine marks' worth of
+      movable goods. By law, the debt remains attached to the farm after his death. This custom
+      allows the house to lend money at all. Every other tenant will hear what the hall does next
+      and judge the family by that decision.
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].interaction.choices[id=strike_it_out].label"
+    of: 68b0a8b207ad8f36
+    plainenglish: >-
+      Cancel the debt publicly at the graveside.
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].interaction.choices[id=strike_it_out].outcomes[id=struck_out].text"
+    of: c8eefcbce561ff38
+    plainenglish: >-
+      At the churchyard in Wick, the house announces in one sentence that the fourteen-mark debt
+      is forgiven. The whole parish hears it. The widow keeps her farm, and her four children
+      remain on the land. That afternoon eleven households form an opinion of the family that
+      lasts four generations. Forgiving the debt cost the house the price of a horse.
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].interaction.choices[id=carry_it_against_the_holding].label"
+    of: 163d425f652700ab
+    plainenglish: >-
+      Keep the debt attached to the farm. The law allows it.
+  - address: "content:events/small_money.yaml#events[id=the_debt_that_outlives_him].interaction.choices[id=carry_it_against_the_holding].outcomes[id=carried_over].text"
+    of: 75c53965e0021741
+    plainenglish: >-
+      The house keeps the fourteen-mark debt against the farm, to be paid whenever the family can
+      afford it. Every house in the province follows this lawful and ordinary practice. Still,
+      nobody at the graveside had hoped for this answer. In 1223, a grandson pays the whole amount
+      in one payment. He does not stay for a drink.
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].title"
+    of: 8d6a6eee4a15ce72
+    plainenglish: >-
+      A Year's Income Due to the Crown
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].body"
+    of: 876b426a0e5bb516
+    plainenglish: >-
+      When a family seat passes to a new holder, the Crown charges a relief equal to one year's
+      income. It is due at the moment the family can least afford it, and that is intentional. The
+      Warden's clerk arrives at the gate with the usual assessment. The house can pay immediately
+      from its savings, borrow at four percent from Bracc, or ask the Crown to let it pay later.
+      Other houses will know if it asks for more time.
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].interaction.choices[id=pay_it_from_the_box].label"
+    of: 3a2889e4b7adcdd8
+    plainenglish: >-
+      Pay the whole relief from the coffer today.
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].interaction.choices[id=pay_it_from_the_box].outcomes[id=paid_whole].text"
+    of: 17a9cbff470034fb
+    plainenglish: >-
+      The house pays a full year's income in one afternoon and receives a receipt. It then spends
+      three years eating plainly. The record at Cawdry says the family paid on the due date, as
+      about one third of the province manages to do. The coffer is empty, but the house still has
+      its roof.
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].interaction.choices[id=ask_for_terms].label"
+    of: 1d910c14035203e8
+    plainenglish: >-
+      Ask to pay over four years. The Crown has granted this before.
+  - address: "content:events/small_money.yaml#events[id=the_relief_falls_due].interaction.choices[id=ask_for_terms].outcomes[id=terms].text"
+    of: da5e3d15ceee6bb9
+    plainenglish: >-
+      The Crown grants four years to pay, without interest. This is routine, so the family keeps
+      its money and its dignity. Its name also goes onto the public schedule of houses paying by
+      instalments. The heralds read that list and remember it when the Roll of Houses is next
+      announced.
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].title"
+    of: 346460916d9acb1d
+    plainenglish: >-
+      One Mite for Every Wheel
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].body"
+    of: 34d2b2886037e6cc
+    plainenglish: >-
+      The bridge charges one mite per wheel and raises about four crowns a year. The tenant living
+      in the gate cottage collects the toll for that decade. He is allowed to keep one tenth, but
+      everyone, including the steward, assumes he keeps more. The difference is about nine marks
+      each year. To audit the toll, the house would have to send someone to stand on the bridge
+      and watch the man count every payment.
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].interaction.choices[id=audit_the_gate].label"
+    of: 23290b651485b7d9
+    plainenglish: >-
+      Count the tolls for one month. The missing nine marks matter.
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].interaction.choices[id=audit_the_gate].outcomes[id=audited].text"
+    of: 28b4e84444fdea58
+    plainenglish: >-
+      A worker from the yard spends a month on the bridge recording payments on a slate. The
+      records show that the gatekeeper keeps about one sixth, not the one tenth he is owed. After
+      the hall confronts him, he takes only one tenth from the next Thaw onward. He keeps the
+      cottage, but for nine years he refuses to look directly at anyone from the hall.
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].interaction.choices[id=leave_the_gate_alone].label"
+    of: f9428cf3f3741c3f
+    plainenglish: >-
+      Leave the arrangement alone. He earns the extra money by tending the bridge.
+  - address: "content:events/small_money.yaml#events[id=the_toll_and_the_tenth_mite].interaction.choices[id=leave_the_gate_alone].outcomes[id=left_alone].text"
+    of: 677ff6fc306c2220
+    plainenglish: >-
+      The gatekeeper continues to receive about nine extra marks each year, without anyone
+      recording them. He maintains the bridge in every kind of weather. His official share, one
+      tenth of four crowns, could never support him and was never intended as a living wage. The
+      arrangement lasts eleven decades. Four successive stewards accept it and leave it out of
+      their records.
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].title"
+    of: 506628fdc684bcb9
+    plainenglish: >-
+      The Steward Lists Every Household Expense
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].body"
+    of: da5b99768351d62a
+    plainenglish: >-
+      All winter, the steward has listed the house's regular costs on four sheets: wages, repairs,
+      expenses needed to maintain the family's rank on the Roll, and support for relatives in
+      branch halls. The total spending is greater than the income, as it has been for six years.
+      Nobody has seen the house's complete finances on one page before. The sheets now sit on a
+      table where eleven family members eat.
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].interaction.choices[id=read_it_to_the_family].label"
+    of: c99a1c2de4360579
+    plainenglish: >-
+      Read the costs aloud. Everyone at the table contributes to them.
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].interaction.choices[id=read_it_to_the_family].outcomes[id=read_out].text"
+    of: 5991f76bb9d3f9cf
+    plainenglish: >-
+      For the first time in the family's history, someone reads all four sheets to everyone at the
+      table. Four people who have never had to think about money learn the full cost of the
+      household. Two do nothing useful with the information. The other two reduce what they cost
+      the house within a season, without ever mentioning it.
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].interaction.choices[id=keep_it_between_two].label"
+    of: 3ceca8c939f15ec5
+    plainenglish: >-
+      Keep the figures between the Head and the steward. Do not alarm the family.
+  - address: "content:events/small_money.yaml#events[id=the_price_of_everything_in_a_thin_year].interaction.choices[id=keep_it_between_two].outcomes[id=between_two].text"
+    of: ac82da593170bfad
+    plainenglish: >-
+      Only two men see the four sheets before they go into a press. The rest of the family
+      continues spending as before because the Head has chosen not to tell them about the deficit.
+      The steward updates the accounts every winter for eleven years. Each year, the gap between
+      spending and income grows. Only the same two people see it.
+  - address: "content:events/small_money.yaml#events[id=a_crown_in_the_hand].title"
+    of: 84bcecaf7df84b13
+    plainenglish: >-
+      The Reeve Has Never Held a Gold Crown
+  - address: "content:events/small_money.yaml#events[id=a_crown_in_the_hand].body"
+    of: 32272bc0304031b4
+    plainenglish: >-
+      A crown is a gold coin, but most people use it only when counting money. A tenant farmer
+      might never hold one. The reeve at Wick has managed the parish accounts from memory for
+      thirty years and knows exactly how many mites make a crown. Even so, he has never held a
+      crown himself. A payment must now be made, and the house has no smaller coins in the box.
+      Holding the crown briefly leaves him visibly shaken.
+  - address: "content:events/small_money.yaml#events[id=a_crown_in_the_hand].interaction.outcomes[id=he_takes_it_to_bramme].text"
+    of: bdcc277ec3f0f5b2
+    plainenglish: >-
+      The reeve carries the crown eleven miles to Bramme to exchange it instead of spending it. He
+      returns with a bag of two hundred and forty mites and a story he tells for the rest of his
+      life. Nobody who sits at the high table ever learns that the coin became a story.
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].title"
+    of: 8e078fc67704d252
+    plainenglish: >-
+      Seven Hearths Counted for Tax
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].body"
+    of: b1633d55a1b48721
+    plainenglish: >-
+      The Crown taxes what its assessors can count. In a house, they count hearths, whether they
+      are used or not. Ardwen has seven hearths, but only three are usually lit in winter. An
+      assessor has arrived to count all seven. The annual tax is four crowns for every hearth, and
+      the recorded number stays fixed forever. Two hearths in the west wing have not been lit
+      since 1104.
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].interaction.choices[id=brick_the_two].label"
+    of: 25915077b6d33ceb
+    plainenglish: >-
+      Brick up the two unused hearths before the assessor returns. Pay tax on five.
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].interaction.choices[id=brick_the_two].outcomes[id=bricked].text"
+    of: fc5327a18227e3e5
+    plainenglish: >-
+      The bricks cost two crowns and save eight crowns in tax every year from now on. It is the
+      family's best financial decision of the decade. But nobody can heat the two west-wing rooms
+      again. In 1291, eleven family members need those rooms during a hard winter and cannot use
+      them. Nobody alive knows why the hearths were bricked up.
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].interaction.choices[id=pay_on_seven].label"
+    of: 488ea2156781c039
+    plainenglish: >-
+      Pay tax on all seven hearths. The house has always had seven.
+  - address: "content:events/small_money.yaml#events[id=the_hearth_tax_assessment].interaction.choices[id=pay_on_seven].outcomes[id=paid_on_seven].text"
+    of: 7b6121c131165e45
+    plainenglish: >-
+      The house pays twenty-eight crowns a year even though it heats only three rooms. This is
+      honest but costly, and it reflects how the family always answers such demands. The assessor
+      is mildly surprised because he is accustomed to finding chimneys that owners have
+      deliberately bricked up.
