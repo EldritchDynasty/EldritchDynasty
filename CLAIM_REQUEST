@@ -1,1 +1,0 @@
-/claim 1307 --agent chatgpt/1307-editor-save-disk-guard-20261012 --paths packages/editor/src/lib/store.ts,packages/editor/src/lib/store.test.ts
