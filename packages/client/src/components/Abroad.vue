@@ -1,9 +1,47 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { accountsOf } from '../lib/tales';
 
-const props = defineProps<{ view: SessionView }>();
+const props = withDefaults(defineProps<{ view: SessionView; proseMode?: ProseMode }>(), {
+  proseMode: 'original',
+});
+
+/**
+ * The core already selects the authored tale text. This counter-record's
+ * surrounding prose is local UI copy and follows the same reader-only choice.
+ */
+const copy = computed(() => props.proseMode === 'plainenglish' ? {
+  talesHeading: 'What other people say',
+  noTales: 'Nobody has shared a story about this family yet.',
+  contested: 'Two accounts describe the same event. Neither is the official record.',
+  retold: (count: number) => 'retold ' + count + ' times; the story has changed',
+  secretsHeading: 'Secrets outside the house',
+  noSecrets: 'No secrets are known to have left the house.',
+  secretMove: (year: number, house: string) => 'took this secret to ' + house + ' in ' + year + '.',
+  secretUntold: 'Only that house has the secret so far.',
+  secretTold: (year: number) => 'Shared in ' + year + '. It can now be proved.',
+  promisesHeading: 'Marriage promises',
+  noPromises: 'No future daughters have been promised in marriage.',
+  promise: (year: number, house: string) =>
+    'In ' + year + ', the house promised a future daughter to ' + house + ' in exchange for',
+} : {
+  talesHeading: 'What else is being said',
+  noTales: 'Nothing about this family has got far enough to be repeated.',
+  contested: 'Two accounts of the same thing. Neither of them is the record.',
+  retold: (count: number) => 'retold ' + count + ' times, and it has moved',
+  secretsHeading: 'What has left the house',
+  noSecrets: 'Everybody who knows anything is still being paid.',
+  secretMove: (year: number, house: string) =>
+    'walked out with it in ' + year + ', and ' + house + ' have had it since.',
+  secretUntold: 'It is still only theirs.',
+  secretTold: (year: number) => 'Told, in ' + year + '. It is a thing that can be proved now.',
+  promisesHeading: 'Promised',
+  noPromises: 'The house has not pledged anybody it does not have.',
+  promise: (year: number, house: string) =>
+    'A daughter of this house, unborn in ' + year + ', promised to ' + house + ' for',
+});
 
 /**
  * Grouped by the event each is an account of (issue #52). See `lib/tales.ts`
@@ -35,9 +73,9 @@ const accounts = computed(() => accountsOf(props.view.tales));
 <template>
   <section class="abroad stack">
     <div class="panel">
-      <h3 class="label">What else is being said</h3>
+      <h3 class="label">{{ copy.talesHeading }}</h3>
       <p v-if="!view.tales.length" class="small dim">
-        Nothing about this family has got far enough to be repeated.
+        {{ copy.noTales }}
       </p>
       <!-- TWO ACCOUNTS OF ONE NIGHT, FACING (issue #52).
            `about` is the event; two accounts sharing it contradict each other,
@@ -51,14 +89,14 @@ const accounts = computed(() => accountsOf(props.view.tales));
            has an opinion about which account is true. One loop cannot. -->
       <div v-for="group in accounts" :key="group.about" class="account">
         <p v-if="group.tales.length > 1" class="small dim contested">
-          Two accounts of the same thing. Neither of them is the record.
+          {{ copy.contested }}
         </p>
         <div class="facing" :class="{ pair: group.tales.length > 1 }">
           <article v-for="tale in group.tales" :key="tale.id" class="tale">
             <p class="text">{{ tale.text }}</p>
             <p class="small dim">
               {{ tale.form }} · told by {{ tale.teller }} · since {{ tale.since }}
-              <span v-if="tale.mutations">· retold {{ tale.mutations }} times, and it has moved</span>
+              <span v-if="tale.mutations">· {{ copy.retold(tale.mutations) }}</span>
             </p>
             <p class="small bias">{{ tale.bias }}</p>
           </article>
@@ -68,32 +106,28 @@ const accounts = computed(() => accountsOf(props.view.tales));
 
     <!-- The one part of the record the player can neither write nor omit. -->
     <div class="panel">
-      <h3 class="label">What has left the house</h3>
+      <h3 class="label">{{ copy.secretsHeading }}</h3>
       <p v-if="!view.looseSecrets.length" class="small dim">
-        Everybody who knows anything is still being paid.
+        {{ copy.noSecrets }}
       </p>
       <article v-for="secret in view.looseSecrets" :key="secret.secret + secret.carrier" class="loose">
         <p class="text">
-          <strong>{{ secret.carrier }}</strong> walked out with it in {{ secret.since }},
-          and {{ secret.houseName }} have had it since.
+          <strong>{{ secret.carrier }}</strong> {{ copy.secretMove(secret.since, secret.houseName) }}
         </p>
         <p class="small" :class="secret.told === undefined ? 'dim' : 'rubric'">
-          {{ secret.told === undefined
-            ? 'It is still only theirs.'
-            : 'Told, in ' + secret.told + '. It is a thing that can be proved now.' }}
+          {{ secret.told === undefined ? copy.secretUntold : copy.secretTold(secret.told) }}
         </p>
       </article>
     </div>
 
     <div class="panel">
-      <h3 class="label">Promised</h3>
+      <h3 class="label">{{ copy.promisesHeading }}</h3>
       <p v-if="!view.marriagePromises.length" class="small dim">
-        The house has not pledged anybody it does not have.
+        {{ copy.noPromises }}
       </p>
       <article v-for="(promise, i) in view.marriagePromises" :key="i" class="promise">
         <p class="text">
-          A daughter of this house, unborn in {{ promise.year }}, promised to
-          {{ promise.houseName }} for <em>{{ promise.lotName }}</em>.
+          {{ copy.promise(promise.year, promise.houseName) }} <em>{{ promise.lotName }}</em>.
         </p>
       </article>
     </div>
