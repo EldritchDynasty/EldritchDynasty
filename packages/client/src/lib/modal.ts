@@ -77,6 +77,13 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   const focusable = (): HTMLElement[] => modalFocusable(card.value);
 
   function onKey(e: KeyboardEvent): void {
+    // Several overlays can coexist briefly (or be opened in succession before
+    // the previous one unmounts). Each registered its own window listener; only
+    // the topmost dialog may dismiss or redirect keyboard focus. The older
+    // modal takes over again automatically once the top one has gone.
+    const dialogs = document.querySelectorAll<HTMLElement>('[aria-modal="true"]');
+    if (dialogs[dialogs.length - 1] !== card.value) return;
+
     if (e.key === 'Escape') {
       // Escape dismisses IME candidate popups as well as dialogs. While a
       // composition is active, the input method must receive it untouched.
