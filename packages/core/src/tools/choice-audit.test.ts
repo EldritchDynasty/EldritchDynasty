@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { auditChoices, isProseOnly, type ContentSources } from '@ed/schema';
+import { auditChoices, isProseOnly, type ChoiceAudit, type Content, type ContentSources } from '@ed/schema';
 import {
   choiceWorklist,
   loadChoiceDecisions,
   renderChoiceWorklistJson,
+  writeOnlyBySource,
   type ChoiceDecisionFile,
 } from './choice-audit.js';
 
@@ -159,6 +160,50 @@ describe('the #334 choice-debt worklist', () => {
         [file.file, row.event, row.choice, row.decider].join('\u0000')))
       .sort();
     expect(proseByFile).toEqual(proseByKey);
+  });
+
+  it('attributes a shared unread key to every writing file without double-counting a file', () => {
+    const audit = {
+      writeOnly: [{
+        kind: 'flag',
+        key: 'shared_test_flag',
+        writers: [
+          'event:alpha/choices[0]/outcomes[0]',
+          'event:alpha/choices[1]/outcomes[0]',
+          'event:beta/choices[0]/outcomes[0]',
+        ],
+      }],
+    } as unknown as ChoiceAudit;
+    const fixture = { sourceOf: (id: string) => `events/${id}.yaml` } as unknown as Content;
+
+    expect([...writeOnlyBySource(audit, fixture)]).toEqual([
+      ['events/alpha.yaml', [{
+        kind: 'flag',
+        key: 'shared_test_flag',
+        writers: [
+          'event:alpha/choices[0]/outcomes[0]',
+          'event:alpha/choices[1]/outcomes[0]',
+        ],
+      }]],
+      ['events/beta.yaml', [{
+        kind: 'flag',
+        key: 'shared_test_flag',
+        writers: ['event:beta/choices[0]/outcomes[0]'],
+      }]],
+    ]);
+  });
+
+  it('keeps text-audit per-file memory attribution aligned with the JSON worklist', () => {
+    const audit = auditChoices(content);
+    const grouped = writeOnlyBySource(audit, content);
+    const work = choiceWorklist(content);
+
+    for (const file of work.files) {
+      const normalise = (item: { kind: string; key: string; writers: string[] }) =>
+        [item.kind, item.key, ...[...item.writers].sort()].join('\\u0000');
+      expect((grouped.get(file.file) ?? []).map(normalise).sort())
+        .toEqual(file.memory.map(normalise).sort());
+    }
   });
 
   it('sorts keys and file slices so two commits can be diffed mechanically', () => {
