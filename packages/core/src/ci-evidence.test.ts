@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -448,4 +449,136 @@ describe('CI evidence inventory', () => {
     expect(orient).toContain('scheduled evidence has not answered yet');
   });
 
+});
+
+
+describe('manual pre-release tag evidence (#321)', () => {
+  const workflow = readFileSync(join(root, '.github/workflows/prerelease-tag.yml'), 'utf8');
+
+  function scriptFromWorkflow(): string {
+    const lines = workflow.split('\n');
+    const marker = lines.findIndex((line) => line.trim() === 'script: |');
+    expect(marker, 'pre-release tag workflow must use a reviewed github-script step').toBeGreaterThan(-1);
+    const script: string[] = [];
+    for (const line of lines.slice(marker + 1)) {
+      if (line.startsWith('            ')) script.push(line.slice(12));
+      else if (line.trim() === '') script.push('');
+      else break;
+    }
+    return script.join('\n');
+  }
+
+  interface ScriptCase {
+    ref?: string;
+    tag?: string;
+    sha?: string;
+    mainHead?: string;
+    secondMainHead?: string;
+    runStatus?: string;
+    runConclusion?: string | null;
+    runEvent?: string;
+    requiredConclusion?: string;
+    noRun?: boolean;
+  }
+
+  async function exercise(options: ScriptCase = {}) {
+    const expected = 'a'.repeat(40);
+    const created: Array<{ ref: string; sha: string }> = [];
+    const failures: string[] = [];
+    const queried: Array<Record<string, unknown>> = [];
+    let mainReads = 0;
+    const github = {
+      rest: {
+        repos: {
+          getBranch: async () => ({
+            data: { commit: { sha: ++mainReads === 2
+              ? (options.secondMainHead ?? expected)
+              : (options.mainHead ?? expected) } },
+          }),
+        },
+        actions: {
+          listWorkflowRuns: async (args: Record<string, unknown>) => {
+            queried.push(args);
+            return {
+              data: { workflow_runs: options.noRun ? [] : [{
+                id: 23,
+                head_sha: expected,
+                head_branch: 'main',
+                event: options.runEvent ?? 'push',
+                status: options.runStatus ?? 'completed',
+                conclusion: options.runConclusion === undefined ? 'success' : options.runConclusion,
+                run_number: 5,
+                run_attempt: 1,
+              }] },
+            };
+          },
+          listJobsForWorkflowRun: async () => ({}),
+        },
+        git: {
+          createRef: async (args: { ref: string; sha: string }) => { created.push(args); },
+        },
+      },
+      paginate: async () => [{
+        name: 'CI required',
+        status: 'completed',
+        conclusion: options.requiredConclusion ?? 'success',
+      }],
+    };
+    const core = {
+      setFailed: (reason: string) => { failures.push(reason); },
+      info: (_message: string) => {},
+    };
+    await Promise.resolve(runInNewContext(
+      '(async () => {\n' + scriptFromWorkflow() + '\n})()',
+      {
+        context: { ref: options.ref ?? 'refs/heads/main',
+          repo: { owner: 'EldritchDynasty', repo: 'EldritchDynasty' } },
+        process: { env: { TAG_NAME: options.tag ?? 'v0.3.0-beta.1',
+          EXPECTED_SHA: options.sha ?? expected } },
+        github,
+        core,
+      },
+      { timeout: 1000 },
+    ));
+    return { created, failures, queried };
+  }
+
+  it('never grants write permissions at the workflow default or triggers automatically', () => {
+    expect(workflow).toContain('  workflow_dispatch:');
+    expect(workflow).not.toMatch(/^  push:/m);
+    expect(workflow).toContain('permissions:\n  contents: read');
+    expect(workflow).toContain('      contents: write\n      actions: read');
+    expect(workflow).toContain('cancel-in-progress: false');
+    expect(workflow).toContain('EXPECTED_SHA: \${{ inputs.expected_sha }}');
+    expect(workflow).toContain('TAG_NAME: \${{ inputs.tag }}');
+  });
+
+  it('creates a single immutable tag only for green push-to-main evidence at HEAD', async () => {
+    const result = await exercise();
+    expect(result.failures).toEqual([]);
+    expect(result.created).toEqual([{ ref: 'refs/tags/v0.3.0-beta.1', sha: 'a'.repeat(40) }]);
+    expect(result.queried).toEqual([expect.objectContaining({
+      workflow_id: 'check.yml', branch: 'main', event: 'push', head_sha: 'a'.repeat(40),
+    })]);
+  });
+
+  it.each([
+    [{ ref: 'refs/heads/feature' }, 'dispatching on main'],
+    [{ tag: 'v0.3.0' }, 'versioned pre-release'],
+    [{ tag: 'v0.3.0-beta.1;echo unsafe' }, 'versioned pre-release'],
+    [{ sha: 'abc123' }, '40-character'],
+    [{ mainHead: 'b'.repeat(40) }, 'current head of main'],
+    [{ noRun: true }, 'No completed successful'],
+    [{ runStatus: 'in_progress', runConclusion: null }, 'No completed successful'],
+    [{ runConclusion: 'failure' }, 'No completed successful'],
+    [{ runEvent: 'workflow_dispatch' }, 'No completed successful'],
+    [{ requiredConclusion: 'failure' }, 'CI required'],
+    [{ secondMainHead: 'c'.repeat(40) }, 'main advanced'],
+  ] as Array<[ScriptCase, string]>)(
+    'rejects unverified or unsafe tag request %#', async (input, message) => {
+      const result = await exercise(input);
+      expect(result.created).toEqual([]);
+      expect(result.failures.join(' ')).toContain(message);
+    },
+  );
 });
