@@ -131,7 +131,13 @@ function confirmNaming(item: PlatItem): void {
   // still-open edit may submit, or one name can create two Chronicle pages.
   if (!item.parcel || naming.value !== item.parcel) return;
   const trimmed = draftName.value.trim();
-  if (trimmed && trimmed !== item.name && !props.actions.nameParcel(item.parcel, trimmed)) {
+  if (!trimmed) {
+    // Empty drafts are not a cancellation: keep the input and explain why
+    // nothing changed, whether submission came from Enter or blur.
+    renameError.value = 'Enter a parcel name, or restore its previous name.';
+    return;
+  }
+  if (trimmed !== item.name && !props.actions.nameParcel(item.parcel, trimmed)) {
     // The parcel may have left the house since the editor opened. Do not
     // discard a name the player tried to give it when the engine refuses.
     renameError.value = 'That parcel could not be renamed. It may no longer be held by the house.';
@@ -212,7 +218,9 @@ function confirmNaming(item: PlatItem): void {
                   v-model="draftName"
                   size="18"
                   :aria-label="'Rename ' + item.name"
+                  :aria-invalid="Boolean(renameError)"
                   :aria-describedby="renameError ? 'parcel-rename-error-' + item.parcel : undefined"
+                  @input="renameError = null"
                   @keyup.enter="confirmNaming(item)"
                   @blur="confirmNaming(item)"
                 />
