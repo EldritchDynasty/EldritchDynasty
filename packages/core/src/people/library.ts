@@ -84,6 +84,11 @@ export interface CanStudy {
 }
 
 export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): CanStudy {
+  // A study and its eventual grant must address the live, world-owned person.
+  // An old snapshot with the same id is not that person: letting it pass can
+  // create a ghost study or acquire a shelf copy for someone the world never
+  // taught. Dead and guardian records cannot take up new books either.
+  if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
   // §11's LEARNING GATE (issue #79). "Until a character Awakens, all power is
   // written down and unreachable. Learning cannot begin."
   //
