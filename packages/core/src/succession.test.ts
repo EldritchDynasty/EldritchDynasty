@@ -1216,3 +1216,53 @@ describe('staff service uses prospective Chronicle prose (#840)', () => {
     }
   });
 });
+
+
+describe('a former retainer still belongs to a household (#1330)', () => {
+  it('closes service and returns a named outsider to their own house', () => {
+    const ctx = testWorld(bundle);
+    const servant = place(ctx, { sex: 'female', age: 36, name: 'Seren of Marrow' });
+    servant.membership[0]!.kind = 'retainer';
+    servant.contract = staffContract(ctx.world.playerHouse);
+    const former = servant.membership[0]!;
+
+    expect(dismissRetainer(ctx, servant, testRng('named-release'))?.reason).toBe('dismissed');
+    expect(former.to).toBe(ctx.world.year);
+    const open = servant.membership.filter((m) => m.to === undefined);
+    expect(open).toHaveLength(1);
+    expect(open[0]).toMatchObject({
+      house: asId('house_marrow'), kind: 'none', from: ctx.world.year,
+    });
+    expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)).not.toContain(servant);
+  });
+
+  it('uses a reproducible outsider destination without consuming the annual RNG', () => {
+    const depart = () => {
+      const ctx = testWorld(bundle, 1330);
+      const servant = place(ctx, { sex: 'male', age: 40, name: 'A Retired Steward' });
+      servant.membership[0]!.kind = 'retainer';
+      servant.contract = staffContract(ctx.world.playerHouse);
+      const stream = testRng('release-stream');
+      const untouched = testRng('release-stream');
+      dismissRetainer(ctx, servant, stream);
+      expect(stream.next()).toBe(untouched.next());
+      const open = servant.membership.filter((m) => m.to === undefined);
+      expect(open).toHaveLength(1);
+      expect(open[0]!.kind).toBe('none');
+      expect(open[0]!.house).not.toBe(ctx.world.playerHouse);
+      return open[0]!.house;
+    };
+    expect(depart()).toBe(depart());
+  });
+
+  it('keeps an independent blood tie when a contract ends', () => {
+    const ctx = testWorld(bundle);
+    const servant = place(ctx, { sex: 'male', age: 35, name: 'A Household Son' });
+    servant.contract = staffContract(ctx.world.playerHouse);
+    const original = servant.membership[0]!;
+    expect(dismissRetainer(ctx, servant, testRng('family-departure'))?.reason).toBe('dismissed');
+    expect(servant.membership).toEqual([original]);
+    expect(original.to).toBeUndefined();
+    expect(original.kind).toBe('blood');
+  });
+});
