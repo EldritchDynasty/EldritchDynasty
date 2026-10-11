@@ -118,6 +118,37 @@ describe('the Library content', () => {
 });
 
 describe('applying a spellbook is generic', () => {
+  it('does not register a ghost study or acquire a copy for dead or detached readers (#1210)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    const priorStudies = ctx.world.studies.length;
+    const priorPages = ctx.world.chronicle.length;
+
+    expect(canStudySpellbook(ctx, reader, def).ok).toBe(true);
+    const detached = { ...reader };
+    expect(canStudySpellbook(ctx, detached, def).ok).toBe(false);
+    expect(beginStudy(ctx, detached, def)).toBe(false);
+    expect(gainSpellbook(ctx, detached, def)).toBe(false);
+    expect(reader.spellsKnown.map(String)).not.toContain(def.id);
+
+    ctx.world.people.kill(reader.id, ctx.world.year, 'a test');
+    expect(reader.status).toBe('dead');
+    expect(canStudySpellbook(ctx, reader, def).ok).toBe(false);
+    expect(beginStudy(ctx, reader, def)).toBe(false);
+    expect(gainSpellbook(ctx, reader, def)).toBe(false);
+
+    expect(ctx.world.studies).toHaveLength(priorStudies);
+    expect(ctx.world.library.has(def.id)).toBe(false);
+    expect(ctx.world.chronicle).toHaveLength(priorPages);
+
+    // The same book remains learnable by an actual living world-owned reader.
+    const living = place(ctx, { sex: 'male', age: 30, awakened: true });
+    expect(canStudySpellbook(ctx, living, def).ok).toBe(true);
+    expect(beginStudy(ctx, living, def)).toBe(true);
+    expect(ctx.world.studies).toHaveLength(priorStudies + 1);
+  });
+
   it('gain puts a copy on the shelf and teaches the person, through the normal effect path', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const p = place(ctx, { sex: 'male', age: 30, awakened: true });
