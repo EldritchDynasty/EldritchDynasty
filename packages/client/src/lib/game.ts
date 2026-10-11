@@ -456,11 +456,15 @@ export function createGame(
     return done;
   }
 
-  async function changeLibrary(snapshot: RunLibrary): Promise<void> {
-    // A failed profile read is NOT an empty Library. Never overwrite old
-    // completed houses with an invented baseline after a transient outage.
+  async function ensureLibraryReady(): Promise<void> {
+    // A failed profile read is NOT an empty Library. The first explicit edit
+    // may arrive while the initial asynchronous read is still in flight.
     if (!libraryReady.value && !libraryReadError.value) await libraryLoad;
     if (!libraryReady.value) throw new Error('the Library is unavailable; retry reading it');
+  }
+
+  async function changeLibrary(snapshot: RunLibrary): Promise<void> {
+    await ensureLibraryReady();
     const revision = ++libraryRevision;
     library.value = snapshot;
     try {
@@ -682,6 +686,10 @@ export function createGame(
     },
 
     async deleteLibraryRun(id) {
+      // Take the snapshot AFTER the initial read completes. Otherwise an
+      // immediate Remove can filter an invented empty local Library and
+      // overwrite historical runs as soon as the delayed host read resolves.
+      await ensureLibraryReady();
       await changeLibrary({ ...library.value, runs: library.value.runs.filter((run) => run.id !== id) });
     },
 
