@@ -622,6 +622,37 @@ describe('giving the house an order', () => {
     expect(daughter.marriages).toEqual([]);
   });
 });
+describe('Table bid ceiling is a safe whole-crown count (#1066)', () => {
+  it('accepts zero and nonnegative safe integers exactly', () => {
+    const ctx = testWorld(bundle, 10660);
+    for (const ceiling of [0, 1, 42, Number.MAX_SAFE_INTEGER]) {
+      expect(order(ctx, { kind: 'bid', ceiling }).ok).toBe(true);
+      expect(ctx.world.bidCeiling).toBe(ceiling);
+    }
+  });
+
+  it('rejects fractional, unsafe, negative and malformed runtime ceilings without mutating the world', () => {
+    const ctx = testWorld(bundle, 10661);
+    ctx.world.bidCeiling = 37;
+    const before = saveGame(ctx);
+    // The schema types call sites, but external/host inputs can still be malformed.
+    const invalid: unknown[] = [
+      -1, -0.1, 0.1, 10.9, Number.NaN, Infinity, -Infinity,
+      Number.MAX_SAFE_INTEGER + 1, 1e308,
+      '', '20', null, undefined,
+    ];
+    for (const ceiling of invalid) {
+      const result = order(ctx, { kind: 'bid', ceiling: ceiling as number });
+      expect(result.ok, `accepted ${String(ceiling)}`).toBe(false);
+      expect(result.reason).toBe('not a figure');
+      expect({ ...saveGame(ctx), savedAt: before.savedAt }).toEqual(before);
+    }
+    // A rejected input does not poison the next valid instruction.
+    expect(order(ctx, { kind: 'bid', ceiling: 0 }).ok).toBe(true);
+    expect(ctx.world.bidCeiling).toBe(0);
+  });
+});
+
 describe('what the table shows', () => {
   it('survives a save and a load with its orders intact', () => {
     const g = newGame(loadContent(), { seed: 7006 });
