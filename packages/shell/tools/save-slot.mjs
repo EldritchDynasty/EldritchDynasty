@@ -36,6 +36,11 @@ const MAX_SLOT = 64;
  */
 const SLOT_SHAPE = /^[A-Za-z0-9][A-Za-z0-9 _-]*$/;
 
+// Windows treats these basenames as device files even with .edsave.json
+// appended. Apply the same restriction on Linux so a slot created there can
+// still be opened by the supported Windows shell.
+const WINDOWS_DEVICE_SLOT = /^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
+
 /** Thrown for anything that is not a slot. Callers turn it into their transport's error. */
 export class SaveSlotError extends Error {
   constructor(message) {
@@ -57,6 +62,10 @@ export function resolveSavePath(root, slot) {
   if (slot !== slot.trim()) throw new SaveSlotError('a save slot name may not begin or end with a space');
   if (!SLOT_SHAPE.test(slot)) {
     throw new SaveSlotError('a save slot name is letters, digits, spaces, dashes and underscores');
+  }
+
+  if (WINDOWS_DEVICE_SLOT.test(slot)) {
+    throw new SaveSlotError('a save slot may not use a Windows device name');
   }
 
   const target = resolve(root, slot + SAVE_EXTENSION);
@@ -82,5 +91,6 @@ export function slotOfFile(fileName) {
   // Directory enumeration must use the same slot-name rules as read/delete:
   // an otherwise plausible filename ending with a space before the extension
   // must not become an unopenable, undeletable save-list entry.
-  return SLOT_SHAPE.test(slot) && slot.length <= MAX_SLOT && slot === slot.trim() ? slot : undefined;
+  return SLOT_SHAPE.test(slot) && slot.length <= MAX_SLOT
+    && slot === slot.trim() && !WINDOWS_DEVICE_SLOT.test(slot) ? slot : undefined;
 }
