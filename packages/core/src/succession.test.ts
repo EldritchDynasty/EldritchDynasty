@@ -673,15 +673,25 @@ describe('a contract ends with the man who signed it', () => {
     const ctx = emptyHouse();
     const employer = place(ctx, { sex: 'male', age: 45, name: 'Employer', castSlots: ['head'] });
     const servant = place(ctx, { sex: 'female', age: 35, name: 'Servant' });
+    // Production minting gives employees an explicit retainer membership.
+    servant.membership[0]!.kind = 'retainer';
     servant.contract = contract({ boundTo: employer.id, ...over });
     ctx.world.treasury = 500;
     return { ctx, employer, servant };
+  }
+
+  function expectRetainerPresent(ctx: SimCtx, servant: Person, present: boolean) {
+    expect(servant.membership[0]!.kind).toBe('retainer');
+    expect(servant.membership[0]!.to).toBe(present ? undefined : ctx.world.year);
+    expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .some((p) => p.id === servant.id)).toBe(present);
   }
 
   it('keeps a servant whose employer is alive and whose wages are paid', () => {
     const { ctx, servant } = staffed();
     expect(releaseContracts(ctx, testRng())).toEqual([]);
     expect(servant.contract).toBeDefined();
+    expectRetainerPresent(ctx, servant, true);
   });
 
   it('passes the servant to the heir when the man who hired them dies', () => {
@@ -692,6 +702,7 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng())).toEqual([]);
     expect(servant.contract?.boundTo).toBe(heir.id);
+    expectRetainerPresent(ctx, servant, true);
   });
 
   it('releases the servant when the contract ends with the employer', () => {
@@ -700,6 +711,7 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng()).map((r) => r.person.id)).toEqual([servant.id]);
     expect(servant.contract).toBeUndefined();
+    expectRetainerPresent(ctx, servant, false);
     // NOT in the chronicle (issue #87). An employer dying releases everybody
     // bound to him at once, and one line per servant was 18% of the panel's
     // window. It is a passage — the years doing what the years do — and the
@@ -714,6 +726,7 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng())).toEqual([]);
     expect(servant.contract).toBeDefined();
+    expectRetainerPresent(ctx, servant, true);
   });
 
   it('is the first thing an empty treasury costs: the quarter\'s staff go', () => {
@@ -722,6 +735,8 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng()).map((r) => r.person.id)).toEqual([servant.id]);
     expect(ctx.world.chronicle.some((e) => e.text?.includes('wages'))).toBe(true);
+    expect(servant.contract).toBeUndefined();
+    expectRetainerPresent(ctx, servant, false);
   });
 
   it('keeps the short-term staff while the house can still pay them', () => {
@@ -730,6 +745,7 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng())).toEqual([]);
     expect(servant.contract).toBeDefined();
+    expectRetainerPresent(ctx, servant, true);
   });
 
   it('loses even the staff it swore to keep once the house is destitute', () => {
@@ -738,6 +754,7 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng()).map((r) => r.person.id)).toEqual([servant.id]);
     expect(servant.contract).toBeUndefined();
+    expectRetainerPresent(ctx, servant, false);
   });
 
   it('does not lose the hereditary family, who are bound to the house and not to a wage', () => {
@@ -746,6 +763,36 @@ describe('a contract ends with the man who signed it', () => {
 
     expect(releaseContracts(ctx, testRng())).toEqual([]);
     expect(servant.contract).toBeDefined();
+    expectRetainerPresent(ctx, servant, true);
+  });
+
+  it('closes a freed retainer membership after the employer dies', () => {
+    const { ctx, employer, servant } = staffed({ term: 'lifetime', onEmployerDeath: 'freed' });
+    ctx.world.people.kill(employer.id, ctx.world.year, 'a fever');
+
+    expect(releaseContracts(ctx, testRng()).map((r) => r.reason)).toEqual(['freed']);
+    expect(servant.contract).toBeUndefined();
+    expectRetainerPresent(ctx, servant, false);
+  });
+
+  it('closes membership on direct dismissal', () => {
+    const { ctx, servant } = staffed();
+    expect(dismissRetainer(ctx, servant, testRng())?.reason).toBe('dismissed');
+    expect(servant.contract).toBeUndefined();
+    expectRetainerPresent(ctx, servant, false);
+  });
+
+  it('does not end an independent blood or married-in membership', () => {
+    for (const kind of ['blood', 'married_in'] as const) {
+      const { ctx, servant } = staffed({ term: 'yearly', wage: 200 });
+      servant.membership[0]!.kind = kind;
+      ctx.world.treasury = 9;
+      expect(releaseContracts(ctx, testRng()).map((r) => r.person.id)).toEqual([servant.id]);
+      expect(servant.contract).toBeUndefined();
+      expect(servant.membership[0]!.to).toBeUndefined();
+      expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+        .some((p) => p.id === servant.id)).toBe(true);
+    }
   });
 });
 
