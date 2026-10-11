@@ -7,6 +7,7 @@ import {
 import type { SimCtx } from './world.js';
 import { hashSeed, streamFor, type Rng } from './rng.js';
 import { msg } from './messages.js';
+import { proseForContentField } from './prose.js';
 
 /** A historical claim that can be contradicted mechanically rather than by literary judgement. */
 function canContradict(claim: ResolvedClaim): boolean {
@@ -78,10 +79,16 @@ function subjectOf(ctx: SimCtx, entry: LibraryEntry, person: string): string {
   return entry.people[person] ?? msg(ctx, 'library.subject_unknown', 'the person named there');
 }
 
-function claimName(content: Content, claim: Extract<ResolvedClaim, { kind: 'attr' | 'trait' }>): string {
-  return claim.kind === 'attr'
-    ? content.attribute(claim.attr)?.name ?? human(claim.attr)
-    : content.trait(claim.trait)?.name ?? human(claim.trait);
+function claimName(ctx: SimCtx, content: Content, claim: Extract<ResolvedClaim, { kind: 'attr' | 'trait' }>): string {
+  const id = claim.kind === 'attr' ? claim.attr : claim.trait;
+  const collection = claim.kind === 'attr' ? 'attributes' : 'traits';
+  const named = claim.kind === 'attr' ? content.attribute(claim.attr) : content.trait(claim.trait);
+  // These labels become part of the newly authored memory, not a live view.
+  // Select a reviewed variant when the memory is created, just as the voice
+  // sentence around it does. Unknown claim ids keep their original fallback.
+  return named
+    ? proseForContentField(ctx, collection, String(id), 'name', named.name)
+    : human(id);
 }
 
 /** One later reading of an inherited page: which sentence shape a voice tells it in. */
@@ -114,7 +121,7 @@ function laterReading(
     case 'attr':
       return {
         shape: 'attr',
-        values: { PERSON, QUALITY: claimName(content, changed), VALUE: String(Math.round(changed.value * 10) / 10) },
+        values: { PERSON, QUALITY: claimName(ctx, content, changed), VALUE: String(Math.round(changed.value * 10) / 10) },
       };
     case 'trait':
       return { shape: changed.has ? 'trait_with' : 'trait_without', values: { PERSON, TRAIT: claimName(content, changed) } };
