@@ -1664,6 +1664,7 @@ describe('authored simple flag-gated outcome witnesses', () => {
     });
 
     expect(cases.map((event) => String(event.id)).sort()).toEqual([
+      'the_carpenter_is_getting_old',
       'the_inquest_that_sits_for_nine_days',
       'the_muster_is_called',
       'the_wayfolk_have_it_first',
@@ -3334,11 +3335,17 @@ describe('Wick carpenter consequence witnesses (#1276, #334)', () => {
     const ctx = fixture(127601);
     const root = content.mustEvent(rootId);
     const year = ctx.world.year;
+    // The source scene needs an actual carpenter before the house buys Bramme labour.
+    expect(evalCondition(root.conditions, ctx)).toBe(true);
+    expect(ambientPool(ctx).some((event) => event.id === root.id)).toBe(true);
     const result = executeOutcomeWitnessRaw(ctx, root, {
       choiceId: 'pay_bramme_rates', expectedOutcomeId: 'bramme_rates', rng: makeRng(127602),
     });
     expect(result.ok, result.reason).toBe(true);
     expect(ctx.world.flags.get('no_carpenter_at_wick')).toBe(true);
+    // Having no local carpenter must prevent the same source from reappearing.
+    expect(evalCondition(root.conditions, ctx)).toBe(false);
+    expect(ambientPool(ctx).some((event) => event.id === root.id)).toBe(false);
     const instance = [...ctx.world.arcs.values()].find((entry) =>
       content.arc(entry.arc)?.nodes.some((node) => node.event === billId));
     if (!instance) throw new Error('buying Bramme work did not schedule its later bill');
@@ -3372,6 +3379,10 @@ describe('Wick carpenter consequence witnesses (#1276, #334)', () => {
     expect(result.ok, result.reason).toBe(true);
     expect(ctx.world.treasury).toBe(before - cost);
     expect(ctx.world.flags.get('no_carpenter_at_wick')).toBe(!restored);
+    // Paying the delayed bill leaves the source blocked; resettling Wick restores it.
+    const source = content.mustEvent(rootId);
+    expect(evalCondition(source.conditions, ctx)).toBe(restored);
+    expect(ambientPool(ctx).some((event) => event.id === source.id)).toBe(restored);
     expect(instance.status).toBe('ended');
     expect(ctx.world.chronicle.some((entry) => entry.eventId === bill.id)).toBe(true);
   });
