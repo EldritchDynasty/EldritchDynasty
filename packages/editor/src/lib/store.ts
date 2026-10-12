@@ -132,8 +132,13 @@ export const store = reactive({
  * before the later edit).
  */
 const dirtyGeneration = new Map<string, number>();
+/** Unsaved items inside a file; the file-level dirty flag alone cannot say which rows were written. */
+const dirtyItems = new Map<string, Map<string, number>>();
 
 function markFileDirty(path: string): void {
+  // A clean path starts a new editing cycle; this also lets test fixtures reset
+  // the public dirty Set without leaking private bookkeeping between cases.
+  if (!store.dirty.has(path)) dirtyItems.delete(path);
   dirtyGeneration.set(path, (dirtyGeneration.get(path) ?? 0) + 1);
   store.dirty.add(path);
 }
@@ -265,7 +270,11 @@ export async function externalChange(path: string): Promise<{ changed: boolean; 
 /** Mark an item's file dirty. Called on every edit; cheap enough (files × items) at content-directory scale. */
 export function markDirty(collectionKey: string, id: string): void {
   const located = locate(collectionKey, id);
-  if (located) markFileDirty(located.path);
+  if (!located) return;
+  markFileDirty(located.path);
+  const pending = dirtyItems.get(located.path) ?? new Map<string, number>();
+  pending.set(`${collectionKey}\u0000${id}`, dirtyGeneration.get(located.path)!);
+  dirtyItems.set(located.path, pending);
 }
 
 export function isDirty(collectionKey: string, id: string): boolean {
@@ -297,6 +306,8 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   // must not be silently folded into an older save or marked clean.
   const snapshot = JSON.parse(JSON.stringify(item)) as StoreItem;
   const savedGeneration = dirtyGeneration.get(located.path) ?? 0;
+  const dirtyKey = `${collectionKey}\u0000${id}`;
+  const savedItemGeneration = dirtyItems.get(located.path)?.get(dirtyKey);
   store.saving.add(located.path);
   try {
     // Review is not a lock: the file may change between preview and confirmation.
@@ -329,8 +340,16 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
 
     if (res.ok) {
       file.loadedText = text;
-      // The transport wrote the snapshot, not edits made while it was waiting.
-      if ((dirtyGeneration.get(located.path) ?? 0) === savedGeneration) {
+      // This write persisted only the selected item (plus staged prose). A
+      // sibling edited before this save began still needs its own write.
+      // Retain even this item's marker if it was edited again during the await.
+      const pending = dirtyItems.get(located.path);
+      if (savedItemGeneration !== undefined && pending?.get(dirtyKey) === savedItemGeneration) {
+        pending.delete(dirtyKey);
+        if (pending.size === 0) dirtyItems.delete(located.path);
+      }
+      if ((dirtyGeneration.get(located.path) ?? 0) === savedGeneration
+        && !dirtyItems.get(located.path)?.size) {
         store.dirty.delete(located.path);
       }
       delete store.errors[located.path];
