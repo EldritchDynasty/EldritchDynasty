@@ -119,7 +119,7 @@ events:
               # #341: carrying a debt nobody was paying cost the box nothing new.
               # What it buys is a page and a man back on the hill.
               effects:
-                - { kind: chronicle, text: The arrears on the holding at the top of the lane were written into its terms as a charge, and carried. }
+                - { kind: chronicle, text: "The arrears on the holding at the top of the lane were written into its terms as a charge, and carried." }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: the_burgesses_answer_is_no
@@ -317,7 +317,7 @@ events:
                 book, and the line is true.
               effects:
                 - { kind: treasury, delta: -3 }
-                - { kind: chronicle, text: The chain at the Wick bridge comes down on market days, because the house once said the Bramme charter bound it, and a house keeps what it said. }
+                - { kind: chronicle, text: "The chain at the Wick bridge comes down on market days, because the house once said the Bramme charter bound it, and a house keeps what it said." }
         - id: it_was_a_courtesy
           label: Say it was a courtesy then, and was never the law.
           outcomes:
