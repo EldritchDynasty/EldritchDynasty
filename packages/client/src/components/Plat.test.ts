@@ -545,6 +545,49 @@ describe('reader-local Table guidance (#1441)', () => {
     }
   });
 
+  it('retains wardship dates and auction page disclosures, and submits the same buyback order', async () => {
+    const { wrapper, ctx, action } = mountedShelf(40);
+    try {
+      const table = tableView(ctx);
+      table.wardship = { ward: 'ward-1', wardName: 'Mara', since: 1222, boughtBack: false, buyBackCost: 63 };
+      table.bidCeiling = 110;
+      table.auction = {
+        year: 1299, lots: 1, lowestReserve: 70, heirlooms: [],
+        items: [{
+          id: 'page-1', kind: 'chronicle_page', name: 'The Witness Page',
+          seller: 'A Bramme seller', saleYear: 1299, reserve: 70,
+          bid: { currency: 'coin', amount: 75 },
+        }],
+      };
+      await wrapper.setProps({ table });
+      expect(wrapper.text()).toContain('Mara is under age, and since 1222 the Warden has taken the harvest.');
+      expect(wrapper.text()).toContain('Whoever buys this page reads it.');
+      expect(wrapper.text()).toContain('The house will go to 110 at the next sale.');
+      const original = wrapper.findAll('button').find((b) => b.text().includes('Buy the wardship back'))!;
+      expect(original.text()).toContain('63 crowns');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      const plain = wrapper.text();
+      expect(plain).toContain('Mara is a minor. Since 1222 the Warden has received the harvest income.');
+      expect(plain).toContain('The buyer can read this Chronicle page.');
+      expect(plain).toContain('The house will bid up to 110 crowns at the next auction.');
+      expect(plain).toContain('1299');
+      expect(plain).toContain('70');
+      expect(plain).toContain('75 crowns');
+      expect(plain).not.toContain('Whoever buys this page reads it.');
+      const translated = wrapper.findAll('button').find((b) => b.text().includes('Pay to end wardship'))!;
+      expect(translated.attributes('disabled')).toBe(original.attributes('disabled'));
+      await translated.trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'buyBackWardship' });
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('Mara is under age, and since 1222 the Warden has taken the harvest.');
+      await original.trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'buyBackWardship' });
+      expect(action).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('keeps engine refusals untouched while translating rent consequences and financial guidance', async () => {
     const { wrapper, ctx } = mountedShelf(40);
     try {
