@@ -248,6 +248,64 @@ describe('the string-source audit (issue #276)', () => {
     expect(found).toEqual(['X was born, and named.', 'The house paid, and did not say why.']);
   });
 
+  it('excludes multiline console arguments without renumbering neighbouring narrative (#1443)', () => {
+    const source = [
+      "const before = 'The house kept its book.';",
+      'console.log(',
+      '  reportHeading.padEnd(80),',
+      "  'This diagnostic has no player consumer.',",
+      "  ready ? 'The diagnostic batch is ready.' : 'The diagnostic batch is incomplete.',",
+      ');',
+      "const after = 'The house read its book.';",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('example.ts', source.replace('console.log', 'showPlayerNotice'));
+    const found = plainEnglishCoreWorkItems('example.ts', source);
+    expect(found).toEqual(all.filter((row) => row.text.startsWith('The house')));
+    expect(found.map((row) => row.address)).toEqual([
+      'core:example.ts#literal[1]', 'core:example.ts#literal[5]',
+    ]);
+  });
+
+  it('excludes only phase metadata, retaining other why fields and phase-run prose (#1443)', () => {
+    const source = [
+      "const narrative = { why: 'The house refused the creditor.' };",
+      'export const YEAR_PHASES = [',
+      '  {',
+      "    why: 'This explanation concerns internal ordering. ' + 'It is not a chronicle page.',",
+      '    run() {',
+      "      const notice = { why: 'The creditor came for the book.' };",
+      '    },',
+      '  },',
+      "  { 'why': 'Another internal ordering explanation.' },",
+      '] as const;',
+      "const tail = 'The book stayed in the house.';",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('year/phases.ts', source.replace('YEAR_PHASES', 'PLAYER_NOTICES'));
+    const found = plainEnglishCoreWorkItems('year/phases.ts', source);
+    expect(found).toEqual(all.filter((row) => [
+      'The house refused the creditor.', 'The creditor came for the book.', 'The book stayed in the house.',
+    ].includes(row.text)));
+    expect(plainEnglishCoreWorkItems('year\\phases.ts', source)).toEqual(found.map((row) => ({
+      ...row, file: 'year\\phases.ts', address: row.address.replace('year/phases.ts', 'year\\phases.ts'),
+    })));
+    // A similarly named field/constant elsewhere has not been classified as
+    // developer-only: never discard it based on the word "why" alone.
+    expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+  });
+
+  it('keeps explicit message Originals and callback prose inside diagnostic calls (#1443)', () => {
+    const source = [
+      "console.log(msg(ctx, 'audit.visible', 'The house kept the signed page.'));",
+      "console.log(() => { return 'The creditor read the signed page.'; });",
+      "const line = 'Another page for the player.';",
+    ].join('\n');
+    expect(plainEnglishCoreWorkItems('example.ts', source).map((row) => [row.address, row.text])).toEqual([
+      [coreMessageAddress('audit.visible'), 'The house kept the signed page.'],
+      ['core:example.ts#literal[3]', 'The creditor read the signed page.'],
+      ['core:example.ts#literal[4]', 'Another page for the player.'],
+    ]);
+  });
+
   it('reads a component three ways and skips bound attributes and mustaches', () => {
     const rows = auditVueFile('components/Thing.vue', [
       '<template>',
