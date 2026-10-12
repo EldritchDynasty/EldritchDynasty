@@ -626,6 +626,76 @@ describe('saved-run action failures (#1149)', () => {
   });
 });
 
+describe('named save exports are single-flight per slot (#1510)', () => {
+  it('refuses two same-tick clicks, disables the active button and permits a later export', async () => {
+    const actions = spyActions([{ slot: 'chapter-1', year: 1080 }]);
+    let finish!: (value: boolean) => void;
+    vi.mocked(actions.exportSave).mockImplementationOnce(() =>
+      new Promise<boolean>((resolve) => { finish = resolve; }));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const button = w.get('section.saved li').findAll('button')[1]!.element as HTMLButtonElement;
+      // Both clicks use the old DOM before Vue patches its disabled state.
+      button.click();
+      button.click();
+      expect(actions.exportSave).toHaveBeenCalledTimes(1);
+      expect(actions.exportSave).toHaveBeenCalledWith('chapter-1');
+      await flush();
+      expect(button.disabled).toBe(true);
+      expect(button.textContent).toContain('Copying out');
+
+      finish(true);
+      await flush();
+      expect(button.disabled).toBe(false);
+      expect(button.textContent).toContain('Copy out');
+      button.click();
+      await flush();
+      expect(actions.exportSave).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('allows another slot while a prior export is pending, then unlocks the rejected slot', async () => {
+    const actions = spyActions([
+      { slot: 'chapter-old', year: 1080 },
+      { slot: 'chapter-new', year: 1090 },
+    ]);
+    let rejectOld!: (error: Error) => void;
+    vi.mocked(actions.exportSave).mockImplementationOnce(() =>
+      new Promise<boolean>((_resolve, reject) => { rejectOld = reject; }));
+    const w = mount(Start, { props: { actions, resumable: false, proseMode: 'plainenglish' } });
+    try {
+      await flush();
+      const rows = w.findAll('section.saved li');
+      const oldButton = rows[0]!.findAll('button')[1]!.element as HTMLButtonElement;
+      const newButton = rows[1]!.findAll('button')[1]!.element as HTMLButtonElement;
+      oldButton.click();
+      await flush();
+      expect(oldButton.disabled).toBe(true);
+      expect(newButton.disabled).toBe(false);
+
+      newButton.click();
+      await flush();
+      expect(actions.exportSave).toHaveBeenNthCalledWith(1, 'chapter-old');
+      expect(actions.exportSave).toHaveBeenNthCalledWith(2, 'chapter-new');
+      expect(newButton.disabled).toBe(false);
+      expect(oldButton.disabled).toBe(true);
+
+      rejectOld(new Error('host export failed'));
+      await flush();
+      expect(oldButton.disabled).toBe(false);
+      oldButton.click();
+      await flush();
+      expect(actions.exportSave).toHaveBeenNthCalledWith(3, 'chapter-old');
+      expect(oldButton.disabled).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 /** The newest named save action owns the shared refusal row (#1469). */
 describe('out-of-order named save actions (#1469)', () => {
   it.each(['refused', 'rejected'] as const)(
