@@ -662,6 +662,51 @@ describe('Chapter canonical modal keyboard and focus (#1325)', () => {
     }
   });
 
+  it('keeps fallback focus in the parent when the child's return target is disabled (#1526)', () => {
+    const board = document.createElement('div');
+    board.className = 'board';
+    const boardButton = document.createElement('button');
+    board.appendChild(boardButton);
+    document.body.appendChild(board);
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    });
+    const actions = { dismissChapter: vi.fn() } as unknown as GameActions;
+    const parent = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('Parent.'), actions },
+    });
+    const originalButton = parent.get('button.quiet').element as HTMLButtonElement;
+    const fallback = document.createElement('button');
+    fallback.textContent = 'Another usable parent action';
+    parent.get('[role="dialog"]').element.appendChild(fallback);
+    const child = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('Child.'), actions },
+    });
+    let childUnmounted = false;
+
+    try {
+      expect(document.activeElement).toBe(child.get('button.quiet').element);
+      // The button that opened the child is no longer available when it closes.
+      originalButton.disabled = true;
+      child.unmount();
+      childUnmounted = true;
+      expect(callbacks).toHaveLength(1);
+      callbacks.shift()!(0);
+
+      expect(document.activeElement).toBe(fallback);
+      expect(parent.get('[role="dialog"]').element.contains(document.activeElement)).toBe(true);
+      expect(document.activeElement).not.toBe(boardButton);
+    } finally {
+      if (!childUnmounted) child.unmount();
+      parent.unmount();
+      while (callbacks.length) callbacks.shift()!(0);
+      vi.unstubAllGlobals();
+      board.remove();
+    }
+  });
+
   it('does not restore a dismissed chapter over a successor modal', async () => {
     const outside = document.createElement('button');
     document.body.appendChild(outside);
