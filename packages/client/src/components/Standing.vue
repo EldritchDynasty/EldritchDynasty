@@ -53,7 +53,9 @@ const namesake = computed(() => {
 const guardian = computed(() => {
   const watcher = props.view.guardian;
   if (!watcher) return null;
-  if (!plain.value) return `${watcher.name} watches, and has since ${watcher.since ?? ''}.`;
+  if (!plain.value) return watcher.since === undefined
+    ? `${watcher.name} watches over the house.`
+    : `${watcher.name} watches, and has since ${watcher.since}.`;
   return watcher.since === undefined
     ? `${watcher.name} watches over the house.`
     : `${watcher.name} has watched over the house since ${watcher.since}.`;
