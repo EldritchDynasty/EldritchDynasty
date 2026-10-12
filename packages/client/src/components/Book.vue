@@ -195,6 +195,9 @@ const plateError = ref<string | null>(null);
 const PLATE_ERROR = 'The page could not be saved. Try a smaller selection or another browser.';
 
 async function plate(): Promise<void> {
+  // The disabled button updates on Vue's next render tick. Two synchronous
+  // clicks before that patch must not start competing canvas exports.
+  if (plating.value) return;
   plateError.value = null;
   plating.value = true;
   try {
