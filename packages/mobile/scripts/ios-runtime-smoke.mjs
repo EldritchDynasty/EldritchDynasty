@@ -1,7 +1,7 @@
 import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertFinalEvidence } from './ios-smoke-evidence.mjs';
+import { assertFinalEvidence, changedSnapshotPaths } from './ios-smoke-evidence.mjs';
 import { runSimctlWithTerminationRetry } from './ios-simctl-retry.mjs';
 
 const APP_ID = 'nz.eldritchdynasty.game';
@@ -62,6 +62,21 @@ async function findNamedFile(directory, name) {
 
 const dataContainer = simctl(['get_app_container', udid, APP_ID, 'data']);
 let resultPath = await findNamedFile(dataContainer, RESULT_NAME);
+
+/**
+ * Read the actual native Data file, not a new GameSession.save() in the
+ * driver. This is diagnostic only: it must not make a successful simulator
+ * smoke depend on an extra filesystem traversal.
+ */
+async function nativeAutosaveSnapshot() {
+  const location = await findNamedFile(dataContainer, 'autosave.json');
+  if (!location || path.basename(path.dirname(location)) !== 'saves'
+      || path.basename(path.dirname(path.dirname(location))) !== 'eldritch') {
+    throw new Error('could not locate the native Data autosave');
+  }
+  return JSON.parse(await readFile(location, 'utf8'));
+}
+
 
 async function waitForReady() {
   const deadline = Date.now() + READY_TIMEOUT_MS;
@@ -145,9 +160,33 @@ await waitForReady();
 const saved = await command('save', 'eldritchdynasty-smoke://save?seed=1042&years=40');
 if (saved.year !== 1082) throw new Error(`save reached ${saved.year}, expected 1082`);
 
+// A failing resume must explain which persisted fields changed, not merely
+// print two opaque hashes. Never log the saved values or weaken the hash gate.
+// Best-effort disk inspection cannot turn an otherwise passing smoke red.
+let nativeAtSave;
+let nativeReadError;
+try {
+  nativeAtSave = await nativeAutosaveSnapshot();
+} catch (error) {
+  nativeReadError = error instanceof Error ? error.message : String(error);
+}
 const resumed = await command('resume', 'eldritchdynasty-smoke://resume');
 if (resumed.sha256 !== saved.sha256) {
-  throw new Error(`save/resume mismatch: ${saved.sha256} != ${resumed.sha256}`);
+  let detail = nativeReadError
+    ? `native snapshot inspection unavailable after save: ${nativeReadError}`
+    : 'native snapshot inspection unavailable';
+  if (nativeAtSave !== undefined) {
+    try {
+      const nativeAtResume = await nativeAutosaveSnapshot();
+      const diff = changedSnapshotPaths(nativeAtSave, nativeAtResume);
+      detail = diff.paths.length
+        ? `changed native JSON paths: ${diff.paths.join(', ')}${diff.truncated ? ', (more omitted)' : ''}`
+        : 'native JSON snapshots were identical; investigate writes around evidence capture';
+    } catch (error) {
+      detail = `native snapshot inspection unavailable after resume: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+  throw new Error(`save/resume mismatch: ${saved.sha256} != ${resumed.sha256}; ${detail}`);
 }
 
 const exported = await command('export', 'eldritchdynasty-smoke://export');
