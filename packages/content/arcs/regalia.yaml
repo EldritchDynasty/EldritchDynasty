@@ -78,3 +78,13 @@ arcs:
         schedule: { minYears: 90, maxYears: 220 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/regalia.yaml#arcs[id=arc_the_two_it_fitted].title"
+    of: "c4efce799b225aed"
+    plainenglish: >-
+      The Two People the Ring Fitted
+  - address: "content:arcs/regalia.yaml#arcs[id=arc_everybody_has_a_theory].title"
+    of: "cb27ca674232ddc3"
+    plainenglish: >-
+      Everyone Has Had a Theory

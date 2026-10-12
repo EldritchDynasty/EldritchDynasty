@@ -181,6 +181,114 @@ describe('the dirty set', () => {
   });
 });
 
+describe('pre-existing unsaved sibling edits (#1387)', () => {
+  it('leaves a second edited event dirty after saving only the first event', async () => {
+    const firstEvent = event(EVENT);
+    const sibling = event(SIBLING);
+    const firstOriginal = firstEvent.title;
+    const siblingOriginal = sibling.title;
+
+    try {
+      // Both changes exist before either save. A file-only dirty generation
+      // previously cleared both indicators after writing just the first row.
+      firstEvent.title = 'First Preexisting Unsaved Title';
+      markDirty('events', EVENT);
+      sibling.title = 'Second Preexisting Unsaved Title';
+      markDirty('events', SIBLING);
+
+      expect(pendingText('events', EVENT)!.after).toContain('First Preexisting Unsaved Title');
+      expect(pendingText('events', EVENT)!.after).not.toContain('Second Preexisting Unsaved Title');
+
+      expect((await saveEvent(EVENT)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Preexisting Unsaved Title');
+      expect(h.disk.get(CRUSADE)).not.toContain('Second Preexisting Unsaved Title');
+      expect(isDirty('events', SIBLING), 'the unwritten sibling must still need a save').toBe(true);
+      expect(pendingText('events', SIBLING)!.after).toContain('Second Preexisting Unsaved Title');
+
+      expect((await saveEvent(SIBLING)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Preexisting Unsaved Title');
+      expect(h.disk.get(CRUSADE)).toContain('Second Preexisting Unsaved Title');
+      expect(isDirty('events', SIBLING)).toBe(false);
+    } finally {
+      firstEvent.title = firstOriginal;
+      sibling.title = siblingOriginal;
+      markDirty('events', EVENT);
+      markDirty('events', SIBLING);
+      await saveEvent(EVENT);
+      await saveEvent(SIBLING);
+    }
+  });
+});
+
+describe('per-file save serialization (#1384)', () => {
+  it('refuses a second item save in the same YAML file while its first write is pending', async () => {
+    const firstEvent = event(EVENT);
+    const secondEvent = event(SIBLING);
+    const originalFirst = firstEvent.title;
+    const originalSecond = secondEvent.title;
+    let pending: ReturnType<typeof saveEvent> | undefined;
+
+    try {
+      firstEvent.title = 'First Concurrent Save Snapshot';
+      markDirty('events', EVENT);
+      h.holdWrite.value = true;
+      pending = saveEvent(EVENT);
+      await vi.waitFor(() => expect(h.releaseWrite.current).toBeTypeOf('function'));
+
+      secondEvent.title = 'Second Concurrent Save Snapshot';
+      markDirty('events', SIBLING);
+      expect(await saveEvent(SIBLING)).toEqual({
+        ok: false,
+        error: `'${CRUSADE}' is already being saved. Try again when it finishes.`,
+      });
+      expect(h.writes, 'overlapping save must never reach disk').toHaveLength(0);
+      expect(store.saving.has(CRUSADE)).toBe(true);
+
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await pending).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Concurrent Save Snapshot');
+      expect(h.disk.get(CRUSADE)).not.toContain('Second Concurrent Save Snapshot');
+      expect(isDirty('events', SIBLING), 'the refused newer edit must remain dirty').toBe(true);
+
+      expect((await saveEvent(SIBLING)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Concurrent Save Snapshot');
+      expect(h.disk.get(CRUSADE)).toContain('Second Concurrent Save Snapshot');
+      expect(store.saving.has(CRUSADE)).toBe(false);
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      if (pending) await pending;
+      firstEvent.title = originalFirst;
+      secondEvent.title = originalSecond;
+      markDirty('events', EVENT);
+      markDirty('events', SIBLING);
+      await saveEvent(EVENT);
+      await saveEvent(SIBLING);
+    }
+  });
+
+  it('does not start a second core prose catalogue write while one is pending', async () => {
+    h.holdWrite.value = true;
+    const first = saveCoreProseCatalogue();
+    try {
+      expect(store.saving.has('messages.yaml')).toBe(true);
+      expect(await saveCoreProseCatalogue()).toEqual({
+        ok: false,
+        error: "'messages.yaml' is already being saved. Try again when it finishes.",
+      });
+      expect(h.writes.filter((write) => write.path === 'messages.yaml')).toHaveLength(0);
+      expect(store.saving.has('messages.yaml')).toBe(true);
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await first).ok).toBe(true);
+    }
+    expect(h.writes.filter((write) => write.path === 'messages.yaml')).toHaveLength(1);
+    expect(store.saving.has('messages.yaml')).toBe(false);
+  });
+});
+
 describe('editing during an in-flight save (#947)', () => {
   it('keeps the new version dirty after an earlier snapshot has been written', async () => {
     const target = event(EVENT);
@@ -733,6 +841,44 @@ describe('core prose messages.yaml authoring (#1011)', () => {
     h.writes.length = 0;
     store.dirty.clear();
   }
+
+  it('refuses an external messages.yaml edit instead of overwriting it after review', async () => {
+    const loaded = h.disk.get(FILE)!;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      h.disk.set(FILE, loaded + '\n# Changed outside the editor\n');
+
+      const result = await saveCoreProseCatalogue();
+      expect(result.ok).toBe(false);
+      expect(result.error).toMatch(/changed on disk.*Reload/i);
+      expect(store.errors[FILE]).toBe(result.error);
+      expect(store.dirty.has(FILE)).toBe(true);
+      expect(h.writes).toHaveLength(0);
+      expect(h.disk.get(FILE)).toContain('Changed outside the editor');
+      expect(pendingCoreProseText()!.before).toBe(loaded);
+      expect(pendingCoreProseText()!.after).toContain(ADDRESS);
+    } finally {
+      h.disk.set(FILE, loaded);
+      await cleanUp();
+    }
+  });
+
+  it('fails closed when the current catalogue cannot be read', async () => {
+    const loaded = h.disk.get(FILE)!;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      h.disk.delete(FILE);
+
+      const result = await saveCoreProseCatalogue();
+      expect(result.ok).toBe(false);
+      expect(result.error).toMatch(/Cannot verify.*messages.yaml.*no such file/i);
+      expect(h.writes).toHaveLength(0);
+      expect(store.dirty.has(FILE)).toBe(true);
+    } finally {
+      h.disk.set(FILE, loaded);
+      await cleanUp();
+    }
+  });
 
   it('adds, previews and removes a core counterpart in its own YAML file, preserving header and siblings', async () => {
     const before = h.disk.get(FILE)!;

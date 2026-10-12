@@ -544,3 +544,354 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: knowledge, op: grant, flag: knows_what_the_case_book_holds }
+
+proseVariants:
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].title"
+    of: "26c6d3ea53b81b76"
+    plainenglish: >-
+      The Doctor Wants to Bleed Him
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].body"
+    of: "280c1d23732f2137"
+    plainenglish: >-
+      {SICK} has had a fever for three days. The doctor from Bramme wants to take four ounces of
+      blood from his arm. That is everything this world's medicine recommends, and he believes
+      in it completely. The midwife thinks a body fighting an illness should keep what it has.
+      Nobody in this room can ever find out which of them is right, and both of them know it,
+      and neither will say so.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=let_him_bleed].label"
+    of: "48798249d008ac9d"
+    plainenglish: >-
+      Let him do it. He trained for nine years.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=let_him_bleed].outcomes[id=bled].text"
+    of: "1498f2740f46bef8"
+    plainenglish: >-
+      Four ounces into a basin, and he recovers over the next tenday. Everyone in the house
+      credits the bleeding, but the doctor is far too honest to claim it. He says it may have
+      been the bleeding, in a voice that carries nine years of not really knowing.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=let_him_bleed].outcomes[id=bled_and_worse].text"
+    of: "88bed9f382dfef7f"
+    plainenglish: >-
+      Four ounces, and the next morning he is clearly weaker. It takes him three tendays instead
+      of one to recover. The midwife does not say a single word about it to anyone, ever, and
+      everyone notices.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=keep_what_he_has].label"
+    of: "83e2c381d7334795"
+    plainenglish: >-
+      No bleeding. A warm room, water, and wait.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=keep_what_he_has].outcomes[id=waited].text"
+    of: "64ff5511b059fdbd"
+    plainenglish: >-
+      Four days in a warm room with someone always there, and on the fifth day the fever breaks.
+      Nobody can say what did it, any more than they could have if he had been bled. The doctor
+      is paid for his visit and takes being overruled graciously, which costs him something.
+  - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].interaction.choices[id=keep_what_he_has].outcomes[id=it_does_not_turn].text"
+    of: "3cc8c13eac51f4c2"
+    plainenglish: >-
+      The fever does not break for eleven days. Halfway through, the household is quietly making
+      funeral arrangements in the next room. Then it breaks, and he stays thin for a season.
+      Nobody in this house ever turns away a doctor again, whoever advises it.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].title"
+    of: "073cd82ae20bccd6"
+    plainenglish: >-
+      There Is Only One Cure for a Bad Tooth
+  - address: "content:events/the_body.yaml#events[id=the_tooth].body"
+    of: "e7e9338802bbaae4"
+    plainenglish: >-
+      {SUFFERER} has had a bad tooth for four tendays. He has stopped chewing on that side and
+      is sleeping badly. There is exactly one cure in this world, and everyone knows what it is.
+      The smith at Wick pulls teeth for two mites, quickly and badly. The doctor at Bramme does
+      it for a crown, slowly and rather better. Neither of them has anything for the pain except
+      a leather strap to bite on.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].interaction.choices[id=the_smith].label"
+    of: "01cfb2765b2ea242"
+    plainenglish: >-
+      The smith. Quick is the only mercy there is.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].interaction.choices[id=the_smith].outcomes[id=smith_did_it].text"
+    of: "2b9a0d1e348e7562"
+    plainenglish: >-
+      Two mites and about four seconds. His jaw is a wreck for a tenday, then fine. He is
+      chewing on both sides again by Slaughter. The smith will not take payment and gets no
+      thanks either, because neither man ever wants to talk about it again.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].interaction.choices[id=the_smith].outcomes[id=it_breaks].text"
+    of: "a3fa377906450f05"
+    plainenglish: >-
+      The tooth breaks at the root and comes out in three pieces over about a minute. The hole
+      is bad for six tendays, and the fever that comes with it is worse than the tooth was. He
+      lives. Plenty of people in this world die of exactly this.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].interaction.choices[id=the_physician].label"
+    of: "131ad7bb8e0551cf"
+    plainenglish: >-
+      Pay a crown for a doctor who has pulled four hundred.
+  - address: "content:events/the_body.yaml#events[id=the_tooth].interaction.choices[id=the_physician].outcomes[id=physician_did_it].text"
+    of: "6b1835e2370e8ee6"
+    plainenglish: >-
+      A crown and four hours on the road, and a man who takes his time and gets the tooth out
+      whole. The hole heals cleanly within a tenday. By every measure it is the right decision.
+      It is also a crown spent on one tooth, in a house where the yard man's whole family lives
+      on three marks a year, and the yard man is standing in the passage.
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].title"
+    of: "774b418bc8f00f0f"
+    plainenglish: >-
+      They Say She Has a Healing Touch
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].body"
+    of: "527e3bac089a6698"
+    plainenglish: >-
+      At the far end of the parish there is a woman whose sick patients get better more often
+      than anyone else's. The province says she has a 'green hand', without meaning anything
+      precise by it. She has no licence. If healing is her trade, that makes it a crime in both
+      the Church and the King's courts. If it is just kindness, it is nothing. She has never
+      charged anyone. The doctor at Bramme knows about her and has never reported her, which
+      tells you what he thinks.
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].interaction.choices[id=send_for_her].label"
+    of: "909d44b2375cf8de"
+    plainenglish: >-
+      Send for her when the house needs her, and pay her in goods, not coin.
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].interaction.choices[id=send_for_her].outcomes[id=she_comes].text"
+    of: "861b33940800ed08"
+    plainenglish: >-
+      She comes. What she really does is keep the room clean and warm, make the sick person
+      drink, and sit up all night. That is not magic, and it is better than most of what a crown
+      buys. The house pays her in flour, because paying in coin would make it a trade. Everyone
+      in the parish notices that the hall sends for her.
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].interaction.choices[id=keep_the_hall_clear_of_her].label"
+    of: "32c5c56466853960"
+    plainenglish: >-
+      Not in this house. Healing without a licence is a crime in both courts.
+  - address: "content:events/the_body.yaml#events[id=the_green_hand].interaction.choices[id=keep_the_hall_clear_of_her].outcomes[id=kept_clear].text"
+    of: "052e87ed742561f9"
+    plainenglish: >-
+      It is completely proper and completely legal. At Wick it is understood as the hall turning
+      away the one person in this parish who has ever got anyone's child through a bad winter.
+      For thirty years she goes on not charging and not being reported. This house never sends
+      for her, and never stops hearing about her.
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].title"
+    of: "d1c776672ee49b23"
+    plainenglish: >-
+      He Can No Longer Read the Rent Book
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].body"
+    of: "0c4a72c796037bc3"
+    plainenglish: >-
+      {READER}'s eyes have failed the way eyes do at that age, in a house lit by tallow candles.
+      For four tendays a maid has been reading the rent book aloud to him. He has arranged it so
+      quietly that only the maid and the steward know. A doctor's lens made of clear glass would
+      cost fourteen crowns and take eleven months to arrive from Anvary. There is only one in
+      this province, and it belongs to the doctor at Bramme.
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].interaction.choices[id=order_the_lens].label"
+    of: "63397d03ac7ea017"
+    plainenglish: >-
+      Buy the lens: fourteen crowns, and an eleven-month wait.
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].interaction.choices[id=order_the_lens].outcomes[id=lens_ordered].text"
+    of: "f400a997fdaafb23"
+    plainenglish: >-
+      Fourteen crowns and eleven months buy a piece of ground glass that gives a man back the
+      last twenty years of his working life. It is the most useful thing this house buys that
+      decade. Within two generations it is lying in the cupboard with the leases, because nobody
+      remembers what it was for.
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].interaction.choices[id=let_the_maid_read].label"
+    of: "4ab699f7977da9d3"
+    plainenglish: >-
+      Let the maid keep reading to him. It is working.
+  - address: "content:events/the_body.yaml#events[id=the_eyes_go].interaction.choices[id=let_the_maid_read].outcomes[id=the_maid_reads].text"
+    of: "897ca5d9001d1b45"
+    plainenglish: >-
+      It works for nine years and costs nothing. And for nine years, one maid of this household
+      hears every figure in this estate's rent book read aloud, twice a tenday. Nobody asks her
+      to keep it to herself. Nobody thinks to. In 1216 she marries a carter from Bramme.
+  - address: "content:events/the_body.yaml#events[id=the_old_wound_in_frostfall].title"
+    of: "c8f382783aeae3ac"
+    plainenglish: >-
+      The Old Wound Comes Back Every Frostfall
+  - address: "content:events/the_body.yaml#events[id=the_old_wound_in_frostfall].body"
+    of: "d3c77c5ca7974b48"
+    plainenglish: >-
+      {WOUNDED} was injured in the leg a long time ago. For eleven years the pain has come back
+      every Frostfall, and everyone in this house has planned the winter around it without ever
+      talking about it. The doctor says the body's humours settle in the cold. The still-room
+      says a poultice helps about half the time. What really helps is a fire, and not being
+      asked to walk anywhere.
+  - address: "content:events/the_body.yaml#events[id=the_old_wound_in_frostfall].interaction.outcomes[id=the_hall_arranges_itself].text"
+    of: "3a16592ef6c85d7a"
+    plainenglish: >-
+      In the second tenday of Frostfall the good chair is moved closer to the fire, and at Thaw
+      it is moved back. Whoever is nearest moves it, and in eleven years nobody has ever said
+      out loud why. That is the whole custom. Every household in this world has four or five
+      like it.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].title"
+    of: "e717ddcf7121d67b"
+    plainenglish: >-
+      A Licensed Healer, with Her Prices on Show
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].body"
+    of: "bec31e30a133de24"
+    plainenglish: >-
+      At the Ingathering fair there is a licensed healer who practises Life magic. Her licence
+      is nailed to the post beside her with her prices written underneath, because a licensed
+      trade in this kingdom must show its prices. She will treat {SICK} for six crowns, and she
+      claims nothing beyond what her licence allows. Six crowns is twice what the doctor
+      charges. She is also the only healer in the province whose methods anyone can look up.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].interaction.choices[id=pay_the_six].label"
+    of: "450bdf7b0284b8cf"
+    plainenglish: >-
+      Pay the six crowns. A posted price is an honest price.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].interaction.choices[id=pay_the_six].outcomes[id=she_attends].text"
+    of: "41eb04399862629d"
+    plainenglish: >-
+      Six crowns and two days. The recovery is faster than the house expected, and slower than
+      the price suggests. She writes down what she did and gives the house the sheet, because
+      the Colleges require it. It is the only medical record this family has ever owned.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].interaction.choices[id=pay_the_six].outcomes[id=within_the_warrant].text"
+    of: "aa82864d79185f71"
+    plainenglish: >-
+      Six crowns and two days. On the second morning she says this is outside what her licence
+      covers, that she will not take money for pretending otherwise, and gives back four of the
+      six crowns. The house has now seen up close what a licensed trade really is: a limit that
+      someone actually keeps.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].interaction.choices[id=the_physician_is_cheaper].label"
+    of: "dfb872e58ac98701"
+    plainenglish: >-
+      The doctor costs three crowns, and has known this family for twenty years.
+  - address: "content:events/the_body.yaml#events[id=the_warranted_healer_at_the_fair].interaction.choices[id=the_physician_is_cheaper].outcomes[id=the_physician_again].text"
+    of: "bb21f45fc277cecb"
+    plainenglish: >-
+      Three crowns for a man who has treated four generations of this house. His method is based
+      on a theory of humours that is completely wrong, but his care at the bedside is worth more
+      than his theory. He does as well as he ever does. The licensed healer is not at the fair
+      the next year, or any year after.
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].title"
+    of: "1c8b2cf8f5dde274"
+    plainenglish: >-
+      Three Marks, and Everything the House Owes Her
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].body"
+    of: "3cb8ea90a88a08ac"
+    plainenglish: >-
+      {MIDWIFE} is paid three marks a year, the lowest wage on the list. For nineteen years she
+      has been there for every birth in this family, and about half the births at Wick as well.
+      She has not been paid since Thaw. She has not mentioned it and never will, because the one
+      thing a midwife in a parish this small cannot do is be seen quarrelling with the hall.
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].interaction.choices[id=pay_and_raise_her].label"
+    of: "cf201659589a46fd"
+    plainenglish: >-
+      Pay her, raise her to six marks, and say why in front of the household.
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].interaction.choices[id=pay_and_raise_her].outcomes[id=raised].text"
+    of: "50c3ee274603d543"
+    plainenglish: >-
+      Six marks a year from Thaw, and one sentence at the table about her nineteen years, said
+      in front of everyone. It costs a crown. It changes what that woman will do for this house
+      in a bad room at three in the morning, for the rest of her life. She stays fourteen more
+      years.
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].interaction.choices[id=pay_the_arrears_only].label"
+    of: "241244a316f109df"
+    plainenglish: >-
+      Pay what she is owed. Three marks is the rate, and always has been.
+  - address: "content:events/the_body.yaml#events[id=the_midwife_who_is_owed_a_year].interaction.choices[id=pay_the_arrears_only].outcomes[id=arrears_only].text"
+    of: "8525c2fca0921308"
+    plainenglish: >-
+      Three marks, paid properly on the day, and she says thank you and means it, because she
+      does need the money. Over the next four years she is at Wick more and at Ardwen less.
+      Nobody can point to the moment it changed.
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].title"
+    of: "67fe5b3e230c5012"
+    plainenglish: >-
+      Who Is Allowed in the Sickroom
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].body"
+    of: "90ae610bce27545f"
+    plainenglish: >-
+      In this world, people die at home, in their room, with the family there. The women of the
+      household wash the body and lay it out, and everyone expects to be in that room at the
+      end. {SICK} is very ill, and right now is not quite making sense. The things a man says in
+      a fever are not things this family can have said in front of nine servants. The custom is
+      perfectly clear. So is the risk.
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].interaction.choices[id=keep_the_room_clear].label"
+    of: "20d400258f97a7f9"
+    plainenglish: >-
+      Family only. Give the household a reason, and make it a good one.
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].interaction.choices[id=keep_the_room_clear].outcomes[id=kept_clear].text"
+    of: "d090a7f945e0f745"
+    plainenglish: >-
+      The reason given is infection. It is a good reason, and about half of them believe it. For
+      nine days the room holds four people instead of fourteen. He says a great deal in those
+      nine days. Four people hear it, and one of them is nineteen and will live until 1247.
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].interaction.choices[id=keep_the_custom].label"
+    of: "7f79fadb43911427"
+    plainenglish: >-
+      Keep the custom. The whole household, as always.
+  - address: "content:events/the_body.yaml#events[id=the_sickroom_rule].interaction.choices[id=keep_the_custom].outcomes[id=custom_kept].text"
+    of: "ea69cc132e27f59f"
+    plainenglish: >-
+      Fourteen people in one room for nine days, which is what this world does and what everyone
+      expects, and a man saying things in a fever in front of all of them. Most of it means
+      nothing. Two sentences do mean something, and they are now in nine people's heads, and
+      four of those nine will one day leave this household alive.
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].title"
+    of: "dbfa49580d5f7c94"
+    plainenglish: >-
+      Everyone Down There Has Had the Fever
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].body"
+    of: "96ba99ccb084d358"
+    plainenglish: >-
+      Every Highsun a shaking fever comes up the Wend from the Lag. Everyone down there has had
+      it, and in a bad year about a third of this parish catches it. It does not kill many, but
+      it takes a tenday out of everyone who gets it. This is a bad year. The peat-cutters who
+      come up to sell their peat are the obvious carriers, and they are also the cheapest fuel
+      this house buys. The reeve has asked whether they should be turned back at the river
+      crossing.
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].interaction.choices[id=turn_them_back].label"
+    of: "a5b85e65191160b1"
+    plainenglish: >-
+      Turn them back at the crossing until Slaughter.
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].interaction.choices[id=turn_them_back].outcomes[id=turned_back].text"
+    of: "678677226f7d217e"
+    plainenglish: >-
+      Four tendays without peat, and the parish buys wood at wood prices. There is about as much
+      fever as last year, because nobody in this world knows how it really spreads, and the
+      decision was only a guess. The Lag folk take their peat to Ockleigh instead, and keep
+      going there for eleven years.
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].interaction.choices[id=let_them_come_up].label"
+    of: "45ef539ded37f329"
+    plainenglish: >-
+      Let them come. Nobody knows how it spreads, and the peat is cheap.
+  - address: "content:events/the_body.yaml#events[id=the_ague_out_of_the_lag].interaction.choices[id=let_them_come_up].outcomes[id=let_up].text"
+    of: "64bc8124683aa9a0"
+    plainenglish: >-
+      The peat comes up as it always has, and the fever does what it does. It takes a tenday out
+      of about forty people and kills two of them, both old. Whether the peat and the deaths are
+      connected is a question nobody in this world has the tools to ask.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].title"
+    of: "973cdffad84f333e"
+    plainenglish: >-
+      He Keeps Notes on Everyone
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].body"
+    of: "c51a3640bab93494"
+    plainenglish: >-
+      The doctor at Bramme keeps a casebook, because the Colleges taught him to. It lists every
+      household he has treated in thirty-one years, by name, with what he found and what he did.
+      This family appears in it about forty times. He mentions it in passing, proudly, as a tool
+      of his trade. He has no idea that he has just told this house where its last four
+      generations are written down.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].interaction.choices[id=ask_to_see_ours].label"
+    of: "ab3399cc92c32778"
+    plainenglish: >-
+      Ask, politely, to see this family's entries.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].interaction.choices[id=ask_to_see_ours].outcomes[id=he_shows].text"
+    of: "3e72c0ba7d74fbc6"
+    plainenglish: >-
+      He shows them without hesitation, because it has never occurred to him that anyone would
+      mind. Forty entries in neat handwriting are read at his own table in one afternoon. Three
+      of them are about things this family has never written down anywhere. They are not wrong.
+      That is the problem.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].interaction.choices[id=ask_to_see_ours].outcomes[id=he_declines].text"
+    of: "34b7b265df5639d1"
+    plainenglish: >-
+      He refuses, kindly and firmly. A casebook, he says, belongs to every household in it and
+      to none of them alone. That is a better principle than anyone in this province is used to,
+      and this family cannot argue with it. He is completely right. The book stays where it is.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].interaction.choices[id=buy_the_book_eventually].label"
+    of: "fe0001361c5ede8a"
+    plainenglish: >-
+      Say nothing now. Ask his widow when the time comes.
+  - address: "content:events/the_body.yaml#events[id=the_physician_writes_it_down].interaction.choices[id=buy_the_book_eventually].outcomes[id=bought_later].text"
+    of: "b4bfe5ffae75a853"
+    plainenglish: >-
+      Nineteen years later he dies, and his practice is sold. Within a tenday a letter goes to
+      his widow offering eleven crowns for a book that is worth nothing to anyone else. She
+      accepts, and is grateful. It is the coldest thing this family does that decade, and it
+      works perfectly.

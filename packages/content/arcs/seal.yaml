@@ -69,3 +69,9 @@ arcs:
         schedule: { minYears: 60, maxYears: 140 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/seal.yaml#arcs[id=arc_the_given_seal].title"
+    of: "62e16a5726863bb3"
+    plainenglish: >-
+      Who Gets the Seal

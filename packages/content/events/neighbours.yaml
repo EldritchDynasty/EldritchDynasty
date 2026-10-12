@@ -154,7 +154,7 @@ events:
               # stood in for it was read by nothing (#334).
               effects:
                 - { kind: treasury, delta: -7 }
-                - { kind: chronicle, text: The house mended the march wall on the high pasture with its own men, and said nothing about whose wall it was. }
+                - { kind: chronicle, text: "The house mended the march wall on the high pasture with its own men, and said nothing about whose wall it was." }
         - id: take_it_to_cawdry
           label: Take it to the assize and make them produce something.
           outcomes:
@@ -170,7 +170,7 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
-                - { kind: chronicle, text: The march wall was found for the house at Cawdry, on the word of its own tenants. }
+                - { kind: chronicle, text: "The march wall was found for the house at Cawdry, on the word of its own tenants." }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
             - id: found_against
               weight: 38
@@ -184,7 +184,7 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: -1 }
-                - { kind: chronicle, text: The march wall was found against the house at Cawdry, and the line entered. }
+                - { kind: chronicle, text: "The march wall was found against the house at Cawdry, and the line entered." }
 
   - id: the_invitation_from_cawdry
     title: What It Costs to Be Seen There

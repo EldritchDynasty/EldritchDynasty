@@ -42,6 +42,14 @@ import { gateLibraryNeutrality } from './library-gate.js';
 import { gateSigning } from './signing-gate.js';
 import { gateUnwitnessedOutcomeReach } from './outcome-reach-blocking.js';
 import {
+  gatePartitionWorkerCount,
+  partitionGateInputs,
+  reduceGatePartitions,
+  runGatePartitionsInWorkers,
+  type GatePartition,
+  type GatePartitionResult,
+} from './gate-partition.js';
+import {
   MADNESS_FLOOR, MIND_FLOOR, POWER_FLOOR, eldritchPower, madnessOf, mindOf, standingOf,
 } from '../ascension.js';
 import type { Rung } from '@ed/schema';
@@ -168,30 +176,71 @@ function conditionNamesCareer(c: Condition, careerId: string): boolean {
  * GATE 7 — the clause gate (issue #4). Per-Age assignment means which
  * clauses a run recovers now depends on which Ages it drew; the floor this
  * protects is the design's own — a run that reaches 2042 having recovered
- * three clauses should be rarer than the median, and the God rung (seven of
- * nine) needs the median run within striking distance of it.
+ * three clauses should be the exception, and the God rung (seven of nine)
+ * needs the ordinary run within striking distance of it.
+ *
+ * A MEAN OVER A WIDE BATCH, NOT A MEDIAN OF TWELVE (#1351). Recovery is
+ * bimodal: about a fifth of runs stall at one to three, with no record-keeper
+ * or no line left, and the rest land at five to nine. The old gate took the
+ * median of twelve hand-picked seeds against a floor of six, and the true
+ * median IS six, so any commit that re-rolled the draw failed it about one
+ * time in five whatever it did to clauses. PR #1292 was refused that way
+ * while its own 120-run mean rose. The floor now sits two standard errors
+ * under the measured mean at this batch size; a real loss of a clause per run
+ * still fails it, and an unrelated content change does not.
  */
+export function runClauseGatePartition(
+  source: Source,
+  partition: GatePartition<number>,
+  years: number,
+): GatePartitionResult<number> {
+  const content = indexContent(source);
+  return {
+    id: partition.id,
+    observations: partition.items.map(({ index, input: seed }) => {
+      const ctx = bootstrap(content, seed, START_YEAR);
+      runYears(ctx, years);
+      return { index, value: ctx.world.clausesRecovered.size };
+    }),
+  };
+}
+
 export function gateClauses(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number; floor?: number } = {},
+  opts: { seeds?: number[]; years?: number; floor?: number; workers?: number } = {},
 ): GateResult {
-  const bundle = indexContent(source);
+  const content = indexContent(source);
   const config = BLOCKING_GATE_CONFIG.clauses;
-  const seeds = opts.seeds ?? [...config.seeds];
+  const seeds = opts.seeds
+    ?? Array.from({ length: config.runs }, (_, i) => config.seedStart + i * config.seedStep);
   const years = opts.years ?? config.years;
   const floor = opts.floor ?? config.floor;
 
-  const counts = seeds.map((seed) => {
-    const ctx = bootstrap(bundle, seed, START_YEAR);
-    runYears(ctx, years);
-    return ctx.world.clausesRecovered.size;
-  });
-  const sorted = [...counts].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)]!;
-  const ok = median >= floor;
+  // Fixture calls stay serial; the merge batch takes the bounded workers the
+  // blood, war and endings gates already use.
+  const workers = opts.workers ?? (seeds.length >= 8 ? gatePartitionWorkerCount() : 1);
+  const plan = partitionGateInputs(seeds, workers);
+  const results = plan.length === 1
+    ? plan.map((partition) => runClauseGatePartition(content, partition, years))
+    : runGatePartitionsInWorkers<number, number>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runClauseGatePartition',
+      argsBefore: [content.bundle],
+      argsAfter: [years],
+    });
+  const counts = reduceGatePartitions(plan, results);
 
-  const lines = [`gate 7 (clauses): median ${median} of 9 recovered across ${seeds.length} runs — [${sorted.join(', ')}]`];
-  if (!ok) lines.push(`  FAIL: median must be at least ${floor} of 9`);
+  const n = counts.length;
+  const sorted = [...counts].sort((a, b) => a - b);
+  const mean = counts.reduce((a, b) => a + b, 0) / n;
+  const sd = n > 1 ? Math.sqrt(counts.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)) : 0;
+  const ok = mean >= floor;
+
+  const lines = [
+    `gate 7 (clauses): mean ${mean.toFixed(2)} of 9 recovered across ${n} runs `
+    + `(median ${sorted[Math.floor(n / 2)]}, sd ${sd.toFixed(2)}) — [${sorted.join(', ')}]`,
+  ];
+  if (!ok) lines.push(`  FAIL: mean must be at least ${floor} of 9`);
   return { ok, lines };
 }
 

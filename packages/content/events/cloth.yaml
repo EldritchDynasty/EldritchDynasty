@@ -499,3 +499,332 @@ events:
             by his father except which days that family comes down.
           effects:
             - { kind: rumour, op: seed, id: rumour_the_knife_that_will_not_hold, accuracy: 0.45 }
+
+proseVariants:
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].title"
+    of: "817a5876f3f4c8aa"
+    plainenglish: >-
+      True Black, and Who Is Allowed to Wear It
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].body"
+    of: "9da874919815d715"
+    plainenglish: >-
+      In this kingdom, true black and deep red are reserved for the highest families. The
+      permission is a family's place on the Roll, not a written document, so whether this house
+      may wear them is decided by whoever happens to be in the room. The dyer at Bramme will
+      take the order without asking questions. It costs four crowns a yard, and about nine yards
+      would dress the family for the two feasts. A house that dresses above its rank gets
+      corrected once, in public, by a steward with a list.
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].interaction.choices[id=order_the_black].label"
+    of: "49316c375f2f59b3"
+    plainenglish: >-
+      Order it. This family's rank allows it, and always has.
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].interaction.choices[id=order_the_black].outcomes[id=ordered].text"
+    of: "64e8432f06d1a0e3"
+    plainenglish: >-
+      Thirty-six crowns buys nine yards of the best black in the province. At the Greening feast
+      the family looks exactly like what it claims to be. Nobody corrects anyone. Two houses
+      that had been quietly wondering stop wondering, and that is all the money was for.
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].interaction.choices[id=order_the_black].outcomes[id=corrected].text"
+    of: "df9dbf2298810a46"
+    plainenglish: >-
+      It costs thirty-six crowns. Then at Cawdry, during Ingathering, a steward with a list
+      mentions, pleasantly and in front of four people, that the register puts this house at a
+      rank where black is not usual. It is not an accusation. It is a correction, it is right,
+      and it is repeated in three halls before Slaughter.
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].interaction.choices[id=good_green_instead].label"
+    of: "49dc467f494aa783"
+    plainenglish: >-
+      Good green cloth instead. Nobody has ever been corrected for wearing green.
+  - address: "content:events/cloth.yaml#events[id=the_licensed_colour].interaction.choices[id=good_green_instead].outcomes[id=green].text"
+    of: "f22eb4a534b7e0d1"
+    plainenglish: >-
+      Eleven crowns of good green cloth, proper for this rank or any rank, and completely
+      unremarkable in every hall in the Nethering. The family is well dressed and nobody looks
+      at them twice. Not being looked at is worth a great deal to a house with something in its
+      cellar, and nobody at this table says so out loud.
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].title"
+    of: "fa14a2b357491d9f"
+    plainenglish: >-
+      Keeping Enough Wool to Clothe Ourselves
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].body"
+    of: "213f822dc5e2be21"
+    plainenglish: >-
+      Every shearing, some of the wool is held back from sale and spun and woven here to make
+      the household's own cloth. Servants are really paid in food, a bed and clothing. The wool
+      merchants would buy all of it and pay for it. But buying the cloth back at Bramme
+      afterwards costs about twice as much as keeping the wool, and keeping it takes four women
+      of this household most of a winter.
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].interaction.choices[id=keep_the_wool].label"
+    of: "dcf4d38fd2e3b34b"
+    plainenglish: >-
+      Keep the wool. Four women and one winter.
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].interaction.choices[id=keep_the_wool].outcomes[id=kept].text"
+    of: "927b5ab986d28365"
+    plainenglish: >-
+      Four women spend one winter on it, and everyone in the household is dressed in cloth from
+      this land. That is how it has been done since the house was founded, and it is nine crowns
+      cheaper than the alternative. It also means four women did nothing else from Smoke to
+      Thaw, and nobody has ever counted that cost, because nobody has ever thought to.
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].interaction.choices[id=sell_it_all_and_buy].label"
+    of: "c06f192aab14a5c6"
+    plainenglish: >-
+      Sell all the wool and buy the cloth at Bramme.
+  - address: "content:events/cloth.yaml#events[id=the_clip_the_house_keeps].interaction.choices[id=sell_it_all_and_buy].outcomes[id=sold_and_bought].text"
+    of: "c50345621875ff06"
+    plainenglish: >-
+      All the wool is sold at the gate and the cloth comes back from Bramme. It costs nine
+      crowns more, the winter is free, and four women of this household spend it on things other
+      than weaving. Two of them learn to read that winter. For two generations, nobody connects
+      that to anything.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].title"
+    of: "e453379027821564"
+    plainenglish: >-
+      One Fleece in Nine Will Not Dye
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].body"
+    of: "5684ac270f300cd3"
+    plainenglish: >-
+      The dyer at Bramme sends back about one fleece in nine from the upper sheep pen, with a
+      note saying it will not take the colour. He says this happens everywhere and is down to
+      the sheep, not the land. The shepherds say otherwise, and have said so for three
+      generations. They can tell you which pen and roughly which ewes. Nobody has ever written
+      any of it down. Every theory about it falls apart after two questions.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].interaction.choices[id=write_down_which_ewes].label"
+    of: "727414ed310ef6e1"
+    plainenglish: >-
+      Write it down: which pen, which ewes, which years.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].interaction.choices[id=write_down_which_ewes].outcomes[id=written_down].text"
+    of: "0330a8de16842b22"
+    plainenglish: >-
+      Four years of a list that only the steward has any use for, and at the end of it a fact.
+      It is one pen, the upper one, and the cause is the land, not the sheep, because the same
+      ewes take the dye perfectly in the year they are moved. The house has found out something
+      true about its own land and has no idea what to do with it.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].interaction.choices[id=write_down_which_ewes].outcomes[id=written_down].effects[0].text"
+    of: "83187f28cef511bc"
+    plainenglish: >-
+      Four years of wool from the upper pen, written down: the cause is the land, not the sheep.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].interaction.choices[id=sell_them_separately].label"
+    of: "4bfac7c2e298b246"
+    plainenglish: >-
+      Sell that pen's wool separately and say nothing.
+  - address: "content:events/cloth.yaml#events[id=the_wool_that_will_not_take].interaction.choices[id=sell_them_separately].outcomes[id=sold_apart].text"
+    of: "62fa7015c93c8f29"
+    plainenglish: >-
+      The upper pen's wool goes to a buyer of rough wool at a rough price, and the rest sells at
+      the proper price. That earns four crowns a year more than sending it all and having a
+      ninth sent back. Within two years the shepherds notice that the hall has started believing
+      them, and they take it as the compliment it is.
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].title"
+    of: "8f0bdde9315a7da5"
+    plainenglish: >-
+      Four Yards of Silk Nobody Living Bought
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].body"
+    of: "846b3fbc3db034f8"
+    plainenglish: >-
+      There are four yards of Yssene silk in the linen chest, and nobody alive knows how the
+      family came to have them. Silk is inherited, not bought, and this was inherited four
+      generations ago. It is worth sixteen crowns, and worth much more than that as something
+      the family simply owns. {DAUGHTER} is getting married, and someone must decide whether to
+      cut it.
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].interaction.choices[id=cut_it_for_her].label"
+    of: "13b11d9c1409dd88"
+    plainenglish: >-
+      Cut it. Silk kept in a chest is useless.
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].interaction.choices[id=cut_it_for_her].outcomes[id=cut].text"
+    of: "50a53fbb2717f9af"
+    plainenglish: >-
+      The four yards become one gown. People at Cawdry talk about it for nine years, and she
+      wears it eleven times in her life. From that day on, the linen chest holds only things
+      this family bought. Nobody after 1200 has any idea that it once held something nobody
+      could explain.
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].interaction.choices[id=leave_it_folded].label"
+    of: "269ae756983eacd2"
+    plainenglish: >-
+      Leave it folded. It has been there for four generations.
+  - address: "content:events/cloth.yaml#events[id=the_yssene_silk_in_the_chest].interaction.choices[id=leave_it_folded].outcomes[id=left_folded].text"
+    of: "fd2bb80cdf9015d8"
+    plainenglish: >-
+      It stays folded in the same chest and the same paper. About once a generation, whoever
+      holds the keys looks at it. Every one of them asks the same question and gets the same
+      answer: nobody knows. It is still there in 1500. It is the oldest thing in this house
+      whose origin is not written down anywhere.
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].title"
+    of: "cc349ed067fee74c"
+    plainenglish: >-
+      The Tailor Measures Everyone
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].body"
+    of: "c906a90f11be387b"
+    plainenglish: >-
+      About every four years a tailor comes up from Bramme and measures the whole family in one
+      afternoon. It is efficient, and it is also the only time anyone from outside the house
+      touches every member of the family. He writes the measurements in a book he keeps for
+      thirty years, which is how a tailor knows what a customer used to look like. Two of the
+      family have marks on their bodies that a tailor could not fail to notice. He has never
+      said anything about them.
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=let_him_measure_everybody].label"
+    of: "10a68022ca16791e"
+    plainenglish: >-
+      Let him measure everyone. Four years of clothes in one afternoon.
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=let_him_measure_everybody].outcomes[id=measured].text"
+    of: "bfaefb28c8455154"
+    plainenglish: >-
+      One afternoon and eleven fittings. A book in Bramme now holds this family's shoulder and
+      arm measurements going back thirty years, and nobody has ever thought of it as a record.
+      He is a good tailor and a discreet man. When he dies, his book is sold along with the
+      shop.
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=the_womens_side_measures_its_own].label"
+    of: "ef52808c905905b0"
+    plainenglish: >-
+      The women of the house measure each other. He only measures the men.
+  - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=the_womens_side_measures_its_own].outcomes[id=split].text"
+    of: "113e3f819ed8e385"
+    plainenglish: >-
+      Half the family is measured by the household. That is normal in a poorer house and a
+      little odd in this one, and the tailor accepts it without a flicker, because tailors
+      accept everything. The clothes fit slightly worse. His book now has a gap in it, and a
+      later reader would find that gap more interesting than anything written there.
+  - address: "content:events/cloth.yaml#events[id=the_eleven_days_of_undyed_wool].title"
+    of: "e7df37ffed549afb"
+    plainenglish: >-
+      Undyed Wool, and No Work Stops
+  - address: "content:events/cloth.yaml#events[id=the_eleven_days_of_undyed_wool].body"
+    of: "810d1d9317835327"
+    plainenglish: >-
+      After a death there are eleven days of grey. The household wears undyed wool, and the
+      house cancels nothing, because work is how it mourns. The dead person's place at the table
+      is left empty until the next feast, then filled without a word, and that is the moment the
+      family truly knows. It is the cheapest and most precise custom in this kingdom, and every
+      house keeps it the same way. The cupboard holds enough undyed wool for nine people, and
+      there are fourteen in this household.
+  - address: "content:events/cloth.yaml#events[id=the_eleven_days_of_undyed_wool].interaction.outcomes[id=nine_of_fourteen].text"
+    of: "1f5960262de8dbca"
+    plainenglish: >-
+      Nine people wear grey and five wear what they have, and nobody says a word about which
+      five. For eleven days the work of the house goes on exactly as if nothing had happened,
+      which is what the eleven days are for. At Slaughter the empty place at the table is filled
+      without a word. Everyone at the table notices the moment it happens.
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].title"
+    of: "de35fb2726b668ab"
+    plainenglish: >-
+      One Good Coat for the Heir
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].body"
+    of: "1d478ce71e745aeb"
+    plainenglish: >-
+      For the next forty years, {HEIR} will be seen at Cawdry, at Bramme and at every table in
+      this province. Right now he would be seen in a coat made for someone else eleven years
+      ago. A good coat costs nine crowns. Nine crowns would also pay for two years of a tutor,
+      or a third of the roof, and all of it comes out of the same cash box. Nobody in this world
+      has ever gained standing for having a well-educated second son.
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].interaction.choices[id=buy_the_coat].label"
+    of: "b0bc5b8a711eea6e"
+    plainenglish: >-
+      Buy the coat. The province judges this family by him.
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].interaction.choices[id=buy_the_coat].outcomes[id=coated].text"
+    of: "a543751252253c26"
+    plainenglish: >-
+      Nine crowns buys a coat that fits him and will keep fitting for fifteen years if he does
+      not fill out. Now he is a young man taken seriously in rooms where he would otherwise have
+      been ignored. It is the most cynical nine crowns this house spends all decade, and it
+      works perfectly.
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].interaction.choices[id=spend_it_on_the_tutor].label"
+    of: "df847fcca14de958"
+    plainenglish: >-
+      Pay for the tutor. A coat is just a coat, but a mind lasts forty years.
+  - address: "content:events/cloth.yaml#events[id=a_coat_for_the_heir].interaction.choices[id=spend_it_on_the_tutor].outcomes[id=tutored].text"
+    of: "0a513210ab510aa4"
+    plainenglish: >-
+      Two more years of lessons at the long room table for a young man in someone else's coat.
+      At twenty-five he is clearly cleverer, and he is still ignored in every room he enters
+      until he is about forty. Both of those things are true, and this family has never once
+      managed to hold both in mind at the same time.
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].title"
+    of: "fe7d21e9ba987815"
+    plainenglish: >-
+      Nobody Thinks About the Servants’ Shoes
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].body"
+    of: "d4b05f8e83919e82"
+    plainenglish: >-
+      A servant is paid in food, a bed and clothing, and nobody has ever been sure whether shoes
+      count as clothing. Four of the indoor servants have shoes that will not last the winter,
+      and two of them are wrapping their feet in cloth. Nobody mentions it, and the Head walks
+      past it twice a day. Shoes for the whole household would cost three crowns. Nobody has
+      asked.
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].interaction.choices[id=shoe_the_household].label"
+    of: "8160d8afab35a50b"
+    plainenglish: >-
+      Buy everyone shoes. Three crowns, and make no fuss about it.
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].interaction.choices[id=shoe_the_household].outcomes[id=shod].text"
+    of: "423966e6a02d541a"
+    plainenglish: >-
+      Three crowns to a shoemaker in Bramme. The steward hands out nine pairs on a Tuesday with
+      no ceremony at all, which is the only way to do it. Nobody thanks anybody. Four people
+      work that winter without sore feet, and none of them ever forgets which Head it was.
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].interaction.choices[id=leave_it_to_them].label"
+    of: "9c46e5c31c8a535f"
+    plainenglish: >-
+      Leave it. Their wages are theirs to spend.
+  - address: "content:events/cloth.yaml#events[id=the_shoes_the_household_wears].interaction.choices[id=leave_it_to_them].outcomes[id=left_to_them].text"
+    of: "b073394bfbebeacf"
+    plainenglish: >-
+      Their wage is three marks a year and shoes cost eleven mites, and both facts are true.
+      Nine people do that sum every winter, and nobody at the high table ever does. Two of them
+      wrap their feet until Thaw. It costs the house nothing. Later, someone who left describes
+      it in one sentence that does more damage than a lawsuit.
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].title"
+    of: "9867c71addc19316"
+    plainenglish: >-
+      Listing the Linen Chest
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].body"
+    of: "c0ea5603c120853f"
+    plainenglish: >-
+      The linen chest is only listed when the keys pass to someone new, which means about once a
+      generation. {LADY} is doing it now, with a maid and a slate. Sheets, tablecloths,
+      christening linen, the grey wool for the eleven days of mourning, and four things at the
+      bottom. Those four are on the last list, but nobody can now match their descriptions to
+      anything in the house.
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].interaction.choices[id=go_looking_for_the_four].label"
+    of: "643fe9c6624ce892"
+    plainenglish: >-
+      Find the four things. A list that does not match the chest is not a list.
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].interaction.choices[id=go_looking_for_the_four].outcomes[id=three_of_four].text"
+    of: "9f3741c81990498c"
+    plainenglish: >-
+      Three of them turn up: in a cupboard, in a chapel cupboard, and at the bottom of a
+      different chest. Each is exactly what the last list said, which is a great relief to
+      everyone. The fourth is not in this house. In handwriting nobody recognises, it is
+      described as a wrapping, and there is no note anywhere of what it wrapped.
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].interaction.choices[id=write_a_fresh_one].label"
+    of: "b66257f1597a0f9d"
+    plainenglish: >-
+      Write a new list of what is actually there.
+  - address: "content:events/cloth.yaml#events[id=the_linen_chest_inventory].interaction.choices[id=write_a_fresh_one].outcomes[id=fresh].text"
+    of: "b90be8c114a0803d"
+    plainenglish: >-
+      A clean list of a full chest, in clear handwriting, done in one afternoon. It is the
+      sensible thing to do. Four descriptions from the last generation now match nothing in any
+      list this family has. The old list is not destroyed. It is simply the one nobody reads any
+      more.
+  - address: "content:events/cloth.yaml#events[id=the_knife_everybody_wears].title"
+    of: "6271829e7c2a966a"
+    plainenglish: >-
+      Everyone Carries a Knife
+  - address: "content:events/cloth.yaml#events[id=the_knife_everybody_wears].body"
+    of: "1ee1f2f8e41760b4"
+    plainenglish: >-
+      Everyone in this world carries a knife and eats with it. A man who brings any other weapon
+      to another man's hall is either a fool or making a point. {KIN}'s knife has been
+      resharpened four times in two years, and the smith has stopped charging for it. He has
+      also stopped chatting while he works on it, which he has not stopped doing for anyone
+      else.
+  - address: "content:events/cloth.yaml#events[id=the_knife_everybody_wears].interaction.outcomes[id=a_horn_handle].text"
+    of: "418e972fabc7f83b"
+    plainenglish: >-
+      The knife is replaced with a plainer one that gets sharpened twice a year like everyone
+      else's. Nobody at this table ever says why it was replaced, and the smith starts chatting
+      again.
+  - address: "content:events/cloth.yaml#events[id=the_knife_everybody_wears].interaction.outcomes[id=he_keeps_it].text"
+    of: "002696ba739fbf36"
+    plainenglish: >-
+      He keeps the knife, because it was his father's. It goes to the smith four times a year
+      for the rest of his life. When the smith's son takes over the sharpening, his father tells
+      him nothing about it, except which days that family comes down.

@@ -574,3 +574,459 @@ events:
             id: the_return_written_short
             severity: major
             provableBy: [house_bracc, house_calder]
+
+proseVariants:
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].title"
+    of: "87f21caa2aa60a16"
+    plainenglish: >-
+      The Notary Keeps His Own Copy
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].body"
+    of: "d9d66c9bd4327b67"
+    plainenglish: >-
+      Having a notary witness a document costs one mark and gets you two things, though the
+      house has only ever thought about the first. The second is that everything he witnesses
+      goes into his own register, in his own handwriting, with the date. That register passes to
+      his son and is sold along with the business. He is retiring. While finishing up, he
+      mentions pleasantly that his register goes back to 1088 and that the house appears in it
+      forty-one times.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].interaction.choices[id=buy_the_register].label"
+    of: "1f8194097e454325"
+    plainenglish: >-
+      Buy the whole register.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].interaction.choices[id=buy_the_register].outcomes[id=bought].text"
+    of: "43803c0a51f565ee"
+    plainenglish: >-
+      Ninety crowns for eleven volumes and a cart. He is surprised, and accepts. It is what the
+      west wing roof would cost, and it removes forty-one dated entries from the province for
+      good. The business is sold to a man from Cawdry, who asks within a month where the old
+      register went.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].interaction.choices[id=leave_it].label"
+    of: "b9a5c4ffe1770fe3"
+    plainenglish: >-
+      Leave it. Nobody has read it, and nobody will.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].interaction.choices[id=leave_it].outcomes[id=left].text"
+    of: "372bada22e1c0e86"
+    plainenglish: >-
+      It goes with the business, as it has three times before. It sits in a back room at Bramme
+      and is looked at about eight times a year for perfectly ordinary reasons. It survives two
+      fires and a flood, because a back room at Bramme is drier than Ardwen.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].record.subject"
+    of: "7d0a48e3e281c21f"
+    plainenglish: >-
+      the notary's register and what it contains
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].record.options.record.chronicle"
+    of: "4f5c7ac590c3e811"
+    plainenglish: >-
+      The Bramme register has forty-one entries under this house's name, going back to 1088, and
+      we have read none of them.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].record.options.record.claims[0].text"
+    of: "5209c6bdd9943741"
+    plainenglish: >-
+      found forty-one entries under the house's name in the Bramme register and had not read any
+      of them
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].record.options.embellish.chronicle"
+    of: "49ccacedd04496c1"
+    plainenglish: >-
+      The whole Bramme register was checked and found to contain nothing this house would not
+      read out at the court.
+  - address: "content:events/papers.yaml#events[id=the_notarys_book].record.options.embellish.claims[0].text"
+    of: "1615836716fd1ecb"
+    plainenglish: >-
+      checked the whole Bramme register
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].title"
+    of: "bfd8fec5dd982261"
+    plainenglish: >-
+      Sworn on the Scales
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].body"
+    of: "e6cbb97aa6b6db36"
+    plainenglish: >-
+      Merchants from Bracc keep a counting house at Cawdry. They swear no oaths in a Church
+      court; they swear on the scales. The Church has formally objected to that for two hundred
+      years and accepted it in practice for four hundred. Their account book is the one record
+      in the Settled Lands that nobody has ever successfully disputed. A letter of credit for
+      the fees at Corran costs two per cent and takes a month, and the entry it makes will still
+      be readable in 1542. The weigher is polite. He asks {HEAD} once whose name the payment is
+      in, and writes down what he is told.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].interaction.choices[id=the_house_name].label"
+    of: "5e9c17d806a0718c"
+    plainenglish: >-
+      In the house's own name, and pay the two per cent.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].interaction.choices[id=the_house_name].outcomes[id=plainly].text"
+    of: "a45cd553eed6dda7"
+    plainenglish: >-
+      It goes into the account book cleanly, with a weight and a date beside it, and the money
+      reaches Corran in five tendays. After that it is all arithmetic, and the merchants of
+      Bracc never lose track of their arithmetic.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].interaction.choices[id=through_a_factor].label"
+    of: "434bd00b58ecb2b7"
+    plainenglish: >-
+      Through a merchant at Bramme, in his name.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].interaction.choices[id=through_a_factor].outcomes[id=at_one_remove].text"
+    of: "e8407d65f997e951"
+    plainenglish: >-
+      Two per cent to Bracc and four to the merchant, and the account book now shows a Bramme
+      wool dealer paying College fees for a student he has never met. The weigher says nothing.
+      The weigher never says anything and never forgets, and neither does the column he wrote it
+      in.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].record.subject"
+    of: "c250577e131d6f62"
+    plainenglish: >-
+      who paid the fees, and under whose name
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].record.options.record.chronicle"
+    of: "c8d7d2251136ea29"
+    plainenglish: >-
+      The Corran fees were paid by a letter of credit from Cawdry, in this house's name, at two
+      per cent.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].record.options.record.claims[0].text"
+    of: "b243b85aa67dcede"
+    plainenglish: >-
+      paid the Corran fees by a letter of credit from Cawdry
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].record.options.embellish.chronicle"
+    of: "fc1ef31bc64d2b17"
+    plainenglish: >-
+      The Corran fees were paid in coin at Bramme, out of the year's wool money, with no letter
+      of credit.
+  - address: "content:events/papers.yaml#events[id=the_weighers_ledger].record.options.embellish.claims[0].text"
+    of: "0f955e6d1a59ec39"
+    plainenglish: >-
+      paid the Corran fees at Bramme in cash
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].title"
+    of: "beba37684247beac"
+    plainenglish: >-
+      The Herald's Visit
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].body"
+    of: "b28a2735cf1eff31"
+    plainenglish: >-
+      Every third year the Assembly meets at Caster and updates the Roll of Houses, and once in
+      a long while it sends someone out to check. This man has spent nine days in a cart getting
+      here. He sits in the long room with a clerk and asks what this house is: its family line,
+      its land, its dead, its coat of arms, and the exact wording of its rank. He writes neatly,
+      does not hurry, and will be gone in three days. What he leaves behind is one line about
+      this family in the only book in the kingdom that decides where they sit.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].interaction.choices[id=full_descent].label"
+    of: "b9a8ff3b659d1567"
+    plainenglish: >-
+      Give him the whole family line, generation by generation.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].interaction.choices[id=full_descent].outcomes[id=full].text"
+    of: "dbb78368d4384364"
+    plainenglish: >-
+      It takes two days, including walking the chapel floor and reading out the older
+      gravestones where the carving has worn away. He is impressed in the precise, unemotional
+      way of a man whose job is to be impressed accurately, and the family's line at Caster
+      improves.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].interaction.choices[id=the_short_descent].label"
+    of: "61eb54730082f797"
+    plainenglish: >-
+      Four generations and the land. That is all he needs.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].interaction.choices[id=the_short_descent].outcomes[id=short].text"
+    of: "4a6ce717199c6663"
+    plainenglish: >-
+      He writes down four generations and the amount of land, plus one line in the herald's
+      careful shorthand: the older family line was not produced. That note stays an open
+      question, in a book read out every third year for centuries afterwards.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].record.subject"
+    of: "9380a04ba5e2b13f"
+    plainenglish: >-
+      what the herald was given
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].record.options.record.chronicle"
+    of: "87b904b007c2ed2c"
+    plainenglish: >-
+      We gave the herald four generations and the land. He asked twice for the older family
+      line, and did not get it.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].record.options.record.claims[0].text"
+    of: "e613a403f3fa4f8f"
+    plainenglish: >-
+      gave the herald four generations and the land, but not the older family line
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].record.options.embellish.chronicle"
+    of: "70597186bd80ec2a"
+    plainenglish: >-
+      We gave the herald the whole family line, back to the founding, and he left satisfied.
+  - address: "content:events/papers.yaml#events[id=the_heralds_visitation].record.options.embellish.claims[0].text"
+    of: "512fc1fb74c91777"
+    plainenglish: >-
+      gave the herald the whole family line
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].title"
+    of: "82121e4b9fa1e857"
+    plainenglish: >-
+      The Wool Merchant's Estimate
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].body"
+    of: "217e665c561f5350"
+    plainenglish: >-
+      Buyers from the south come up in Haying, set a price for the wool, and leave. They are
+      pleasant, and they are putting a price on your whole year. It is the one time each season
+      an outsider judges this house's real position and writes it down somewhere the house
+      cannot see. He walks through the sheep pen, handles four fleeces out of nine hundred, and
+      offers a tenth less than last year. He is right about the wool, and wrong about the
+      reason.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=take_the_offer].label"
+    of: "67f5fca0ebd30394"
+    plainenglish: >-
+      Accept. The money comes at Harvest either way.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=take_the_offer].outcomes[id=taken].text"
+    of: "222e351a80200b36"
+    plainenglish: >-
+      It is signed on the back of a cart in the yard and paid at Ingathering. The figure goes
+      south in his book with a note beside it about the state of the fences. To somebody, that
+      note is worth more than the wool was.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].label"
+    of: "ea992644e4c79860"
+    plainenglish: >-
+      Keep the wool and sell it at the Ingathering fair.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=held_and_sold].text"
+    of: "6bde9168ba03f40c"
+    plainenglish: >-
+      At Bramme it sells for four crowns more after transport costs. It is a small win, and the
+      price is that an important man in a southern counting house writes the word 'difficult'
+      next to the family's name.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=it_rains].text"
+    of: "46182941425c55a5"
+    plainenglish: >-
+      It rains for three tendays, the wool sits in the barn the whole time, and it comes out
+      worth less than the offer. The merchant is polite about it next Haying, sets his price to
+      match, and keeps doing so for eleven years.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].record.subject"
+    of: "b4ef063f4830b6b3"
+    plainenglish: >-
+      what the wool was worth
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].record.options.record.chronicle"
+    of: "3ddc48701fe99624"
+    plainenglish: >-
+      The wool sold for a tenth less than the year before, because of the state of the fences.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].record.options.record.claims[0].text"
+    of: "ed3849c6c4f0f11a"
+    plainenglish: >-
+      sold the wool for a tenth less than the year before
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].record.options.embellish.chronicle"
+    of: "093c4adeacece01a"
+    plainenglish: >-
+      The wool sold for a tenth more than the year before, the flock being in better condition
+      than the province expected.
+  - address: "content:events/papers.yaml#events[id=the_wool_factors_book].record.options.embellish.claims[0].text"
+    of: "a931b496de55b862"
+    plainenglish: >-
+      sold the wool for more than the year before
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].title"
+    of: "49c0ccae7426e212"
+    plainenglish: >-
+      Witnesses at Two Marks a Day
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].body"
+    of: "29b71fd1bf3843fd"
+    plainenglish: >-
+      Men follow the travelling court from town to town and sell their testimony for two marks a
+      day. Everyone knows it. The Warden's clerk knows it and weighs their word accordingly,
+      which is why proving a lie in the record needs documents, not witnesses. The case in court
+      is about a boundary. The real matter behind it is what four men from Wick say they saw
+      {KIN} do in a barn one bad summer. Someone who is not from this house has already
+      approached one of the four.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].interaction.choices[id=buy_the_four].label"
+    of: "ab2b9e4f8f125443"
+    plainenglish: >-
+      Pay all four and be done with it.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].interaction.choices[id=buy_the_four].outcomes[id=bought_four].text"
+    of: "cbd4d0c614726bca"
+    plainenglish: >-
+      Eight marks a day for two days. The boundary goes the house's way, and the barn is never
+      mentioned. Four men now know exactly what this house will pay to keep a barn from being
+      mentioned, and three of them will be at the next court session too.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].interaction.choices[id=bring_the_deed].label"
+    of: "e27b3cd59c82a8e1"
+    plainenglish: >-
+      Bring the property deed instead, and let the witnesses say what they like.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].interaction.choices[id=bring_the_deed].outcomes[id=paper_wins].text"
+    of: "7aa712842e7964d0"
+    plainenglish: >-
+      The deed is ninety years old and badly kept, and it wins in about four minutes, because a
+      court in Aubren will trust a bad document over a good witness every day of the year. The
+      barn is mentioned twice and goes nowhere. The paid witnesses are paid by the other side,
+      and do not much care.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].record.subject"
+    of: "76ec1f15154de7d9"
+    plainenglish: >-
+      how the boundary case was won
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].record.options.record.chronicle"
+    of: "c077291af06bc056"
+    plainenglish: >-
+      The boundary case at court was won on a ninety-year-old deed, and in the end neither side
+      paid the four witnesses from Wick.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].record.options.record.claims[0].text"
+    of: "969091cabe46f846"
+    plainenglish: >-
+      won at court on a ninety-year-old deed, not on the witnesses
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].record.options.embellish.chronicle"
+    of: "2440d8e03a24fd6c"
+    plainenglish: >-
+      The boundary case at court was won on the honest testimony of four men from Wick, freely
+      given.
+  - address: "content:events/papers.yaml#events[id=the_oath_men_at_the_assize].record.options.embellish.claims[0].text"
+    of: "6884849509075e01"
+    plainenglish: >-
+      won at court thanks to four witnesses who spoke freely
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].title"
+    of: "6ea2f99503158d19"
+    plainenglish: >-
+      An Unwritten Right Older Than the Province
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].body"
+    of: "1a4d8733f885bc5f"
+    plainenglish: >-
+      The hill shepherds take their flocks up at Greening and bring them down at Slaughter. They
+      graze the hills by a custom older than the province, and in eleven hundred years none of
+      them has ever produced a document for it. Neither has anyone else. So the hilltops above
+      the house are held by two parties with equally good claims and no paperwork between them.
+      Now the Warden's clerk has started taking an interest, because a clerk with a blank space
+      on a map has a career ahead of him.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].interaction.choices[id=make_common_cause].label"
+    of: "a17cda52f6ec7ffe"
+    plainenglish: >-
+      Join forces. Two claims without paper beat one clerk.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].interaction.choices[id=make_common_cause].outcomes[id=common_cause].text"
+    of: "7f39b1b89617e73c"
+    plainenglish: >-
+      A shepherd and a Head standing in the same room, telling a clerk the same story about a
+      hill, is something the Nethering has not seen in living memory. It works. It also means
+      that, for the first time, the shepherds have a written account of what they hold and who
+      agreed to it, in this house's handwriting.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].interaction.choices[id=file_first].label"
+    of: "34559fc0835cf31c"
+    plainenglish: >-
+      File the house's claim first, and let them find out at court.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].interaction.choices[id=file_first].outcomes[id=filed].text"
+    of: "af586f595cb8acf5"
+    plainenglish: >-
+      Four hundred acres of high grazing land, won because this house was the only party in the
+      room that owns a pen. The shepherds spend half of every year on the hills, and they hear
+      about it at Slaughter. They are not people who go to court. They have, however, seen
+      everything that has ever happened on that hill.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].record.subject"
+    of: "aaea97fa7fba2a66"
+    plainenglish: >-
+      who owns the hilltops
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].record.options.record.chronicle"
+    of: "2c63810454f31678"
+    plainenglish: >-
+      The court recorded the hilltops as this house's property, although the shepherds had held
+      them by custom with nothing in writing.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].record.options.record.claims[0].text"
+    of: "57b01e6061dd5204"
+    plainenglish: >-
+      had the hilltops recorded as the house's, while the shepherds held them by unwritten
+      custom
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].record.options.embellish.chronicle"
+    of: "dd93f34e6e11368a"
+    plainenglish: >-
+      The court recorded the hilltops as this house's property, with the shepherds' agreement,
+      as they have agreed since the founding.
+  - address: "content:events/papers.yaml#events[id=the_fell_graziers_have_no_paper].record.options.embellish.claims[0].text"
+    of: "91d06c49cb59743d"
+    plainenglish: >-
+      took the hilltops with the shepherds' agreement
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].title"
+    of: "b4760577e733d623"
+    plainenglish: >-
+      The Inquest
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].body"
+    of: "c812acdd4ff38591"
+    plainenglish: >-
+      Cases of violent death belong to the Warden's court, and the house only has the right to
+      judge minor matters. So a body found on the house's land brings an official from Cawdry
+      within four days, whether anyone wants him or not. The dead man is a hired worker, the
+      cause was a fall, and the fall is real. What is not ordinary is that he was found inside
+      the yard wall, at an hour when the gate has been shut, though never locked, for ninety
+      years. And the two hall hounds left the yard at first light and would not come back into
+      it until noon.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].interaction.choices[id=plain_account].label"
+    of: "a945ef8801a9359c"
+    plainenglish: >-
+      Tell it simply. A fall is a fall.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].interaction.choices[id=plain_account].outcomes[id=plain].text"
+    of: "b0a3f9f125644e85"
+    plainenglish: >-
+      Recorded at Cawdry as an accident, after four days, eleven marks in fees and a cart. The
+      clerk asks about the gate and writes down the answer. He asks about the dogs and does not
+      write down the answer, a difference his office makes on purpose.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].interaction.choices[id=settle_with_the_kin].label"
+    of: "a1b43f451bb7a341"
+    plainenglish: >-
+      Settle with his family before the man from Cawdry arrives.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].interaction.choices[id=settle_with_the_kin].outcomes[id=settled].text"
+    of: "8334466b64198247"
+    plainenglish: >-
+      Six crowns to a widow at Wick, and the body taken to her parish before Tuesday. That is
+      lawful and generous, and it looks exactly like someone tidying something away. The inquest
+      is held anyway, over an empty spot in a yard, and the record says so.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].record.subject"
+    of: "7398db8bd947431f"
+    plainenglish: >-
+      the man found dead inside the yard wall
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].record.options.record.chronicle"
+    of: "cfc5755a7c38fda6"
+    plainenglish: >-
+      A hired man was found dead inside the yard wall at dawn while the gate was shut, and the
+      hounds would not come in until noon.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].record.options.record.claims[0].text"
+    of: "346bd72dca9b2fc1"
+    plainenglish: >-
+      had a hired man found dead at dawn inside the yard wall, with the gate shut
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].record.options.embellish.chronicle"
+    of: "3ebece05a7408e41"
+    plainenglish: >-
+      A hired man was found dead on the Wick road after a fall, and was taken to his own parish
+      the same day.
+  - address: "content:events/papers.yaml#events[id=the_coroners_view].record.options.embellish.claims[0].text"
+    of: "36beb4786d2fe91c"
+    plainenglish: >-
+      had the man taken from the Wick road to his own parish
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].title"
+    of: "f20140015fe3a0f5"
+    plainenglish: >-
+      A Year's Income in Inheritance Tax
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].body"
+    of: "d98664e7ae885b73"
+    plainenglish: >-
+      The tax on inheriting the estate is one year's income. The Crown works it out from the
+      last statement of income, which the house wrote itself. At Cawdry there is a clerk whose
+      whole job is the gap between what a house declares and what its sheep pens look like from
+      the road. He has ridden past these pens. The Head of the house has just changed, and the
+      tax is due before Thaw. Every crown declared now stays declared for ever, in a book that
+      also shows what was declared last time.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].interaction.choices[id=declare_true].label"
+    of: "656c747ce681c808"
+    plainenglish: >-
+      Declare the true amount.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].interaction.choices[id=declare_true].outcomes[id=true_return].text"
+    of: "d01aa804eb894470"
+    plainenglish: >-
+      Sixty-four crowns, paid in two parts, and the clerk moves on to a house he finds more
+      interesting. An honest statement is expensive once and cheap for two hundred years, but
+      nobody in this family has ever been able to prove that second part to anyone.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].interaction.choices[id=declare_short].label"
+    of: "bfd9d1bea3ff572a"
+    plainenglish: >-
+      Declare less. The sheep had a bad sickness and the roof is gone.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].interaction.choices[id=declare_short].outcomes[id=short_return].text"
+    of: "a2b8eaa758ecd50b"
+    plainenglish: >-
+      Forty-one crowns, all of it defensible and none of it true, and the clerk accepts it in a
+      single afternoon. The next inheritance tax comes in about thirty years, and it will be
+      checked against this afternoon's number by someone with both books open.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].record.subject"
+    of: "c2629ab5e1d227f9"
+    plainenglish: >-
+      what the house declared for the inheritance tax
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].record.options.record.chronicle"
+    of: "0a88b2c31e2ec807"
+    plainenglish: >-
+      The inheritance tax was set at forty-one crowns, based on a statement this house wrote
+      short. The flock was in better shape than we said.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].record.options.record.claims[0].text"
+    of: "cab1bbb6b0b3424a"
+    plainenglish: >-
+      under-declared for the inheritance tax and was charged forty-one crowns
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].record.options.embellish.chronicle"
+    of: "d66211003006b9c4"
+    plainenglish: >-
+      The inheritance tax was set at forty-one crowns on an honest statement, given the sheep
+      sickness and the roof.
+  - address: "content:events/papers.yaml#events[id=the_relief_on_inheritance].record.options.embellish.claims[0].text"
+    of: "0342e09ea1f0e27a"
+    plainenglish: >-
+      made an honest statement for the inheritance tax

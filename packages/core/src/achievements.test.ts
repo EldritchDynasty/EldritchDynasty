@@ -247,6 +247,38 @@ describe('achievement earn-rate report (#323)', () => {
     ])).toThrow('Invalid achievement sample seed');
   });
 
+  it('rejects out-of-cohort evidence instead of silently excluding it from all rates', () => {
+    const badCampaign = { ...samples[0]!, campaign: 'demo' } as unknown as AchievementSample;
+    const badPolicy = { ...samples[0]!, policy: 'automated' } as unknown as AchievementSample;
+    expect(() => achievementRates([badCampaign])).toThrow('Invalid achievement sample campaign: demo');
+    expect(() => renderAchievementRates([badPolicy])).toThrow('Invalid achievement sample policy: automated');
+  });
+
+  it('rejects malformed earned IDs before treating a typo as an unearned achievement', () => {
+    const unknownId = {
+      ...samples[0]!, earned: ['ending_settled_typo'],
+    } as unknown as AchievementSample;
+    const nonArray = {
+      ...samples[0]!, earned: 'ending_settled',
+    } as unknown as AchievementSample;
+    const wrongType = {
+      ...samples[0]!, earned: [123],
+    } as unknown as AchievementSample;
+
+    expect(() => achievementRates([unknownId])).toThrow(
+      'Invalid achievement sample achievement ID: ending_settled_typo',
+    );
+    expect(() => renderAchievementRates([nonArray])).toThrow(
+      'Invalid achievement sample earned IDs: expected an array',
+    );
+    expect(() => achievementRates([wrongType])).toThrow(
+      'Invalid achievement sample achievement ID: 123',
+    );
+    // Deliberate repeated *known* IDs remain legal and count only once per run.
+    expect(achievementRates([samples[0]!]).find((row) => row.id === 'ladder_touched'))
+      .toMatchObject({ short: { chronicler: { earned: 1, runs: 1, pct: 100 } } });
+  });
+
   it('does not misreport the cross-run Library achievement as an isolated-run zero', () => {
     expect(achievementRates(samples).find((row) => row.id === 'ending_all_long')).toEqual({
       id: 'ending_all_long',
