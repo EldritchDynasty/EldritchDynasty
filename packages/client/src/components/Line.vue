@@ -1,9 +1,41 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import { useModal } from '../lib/modal';
 
-const props = defineProps<{ line: ReturnType<GameActions['line']>; close: () => void }>();
+const props = withDefaults(defineProps<{
+  line: ReturnType<GameActions['line']>;
+  close: () => void;
+  proseMode?: ProseMode;
+}>(), { proseMode: 'original' });
+
+/** This history is a fresh reading, not a saved Chronicle page. */
+const copy = computed(() => props.proseMode === 'plainenglish' ? {
+  dialog: 'History of the heads of the house',
+  title: 'Family leaders',
+  close: 'Close',
+  count: (n: number) => `${n} ${n === 1 ? 'leader' : 'leaders'} since the house began.`,
+  guardian: (born: number, year: number) =>
+    `Born in ${born}. Became the family's guardian spirit in ${year}.`,
+  claimedDeath: (year: number, cause: string) =>
+    `The book says this leader died in ${year} from ${cause}.`,
+  death: (born: number, died: number) => `Born in ${born}; died in ${died}.`,
+  born: (year: number) => `Born in ${year}.`,
+  empty: 'No one has led the house since it began.',
+} : {
+  dialog: 'who has held the seal',
+  title: 'The seal',
+  close: 'Close it',
+  count: (n: number) => `${n} ${n === 1 ? 'head' : 'heads'} since the signing.`,
+  guardian: (born: number, year: number) =>
+    `born ${born} · did not die — he has watched the house since ${year}`,
+  claimedDeath: (year: number, cause: string) =>
+    `the book has him dying in ${year}, of ${cause}`,
+  death: (born: number, died: number) => `born ${born}, died ${died}`,
+  born: (year: number) => `born ${year}`,
+  empty: '{{ copy.empty }}',
+});
 
 /**
  * THE SPINE (issue #56).
@@ -27,6 +59,11 @@ useModal(card, () => props.close());
 
 /** How long he had it. The sitting head's reign is still running. */
 function held(h: ReturnType<GameActions['line']>[number]): string {
+  if (props.proseMode === 'plainenglish') {
+    if (h.to === undefined) return `Leader since ${h.from} (still serving).`;
+    const years = h.to - h.from;
+    return `Led from ${h.from} to ${h.to} (${years} ${years === 1 ? 'year' : 'years'}).`;
+  }
   if (h.to === undefined) return `${h.from} — and holds it still`;
   const years = h.to - h.from;
   return `${h.from}–${h.to} · ${years} ${years === 1 ? 'year' : 'years'}`;
@@ -35,14 +72,14 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
 
 <template>
   <div class="scrim" @click="close()">
-    <article ref="card" class="spine" role="dialog" aria-modal="true" aria-label="who has held the seal" @click.stop>
+    <article ref="card" class="spine" role="dialog" aria-modal="true" :aria-label="copy.dialog" @click.stop>
       <header>
         <div class="row top">
-          <h3 class="label">The seal</h3>
-          <button class="quiet small" @click="close()">Close it</button>
+          <h3 class="label">{{ copy.title }}</h3>
+          <button class="quiet small" @click="close()">{{ copy.close }}</button>
         </div>
         <p class="dim small">
-          {{ line.length }} {{ line.length === 1 ? 'head' : 'heads' }} since the signing.
+          {{ copy.count(line.length) }}
         </p>
       </header>
 
@@ -59,15 +96,15 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
                  to `guardian` and sets `died` on the way past, so the one man
                  in this list who did not die was being shown dying. -->
             <div v-if="h.guardian" class="dim small">
-              born {{ h.born }} · did not die — he has watched the house since {{ h.died }}
+              {{ copy.guardian(h.born, h.died) }}
             </div>
             <div v-else-if="h.claimedDeath" class="small said">
-              the book has him dying in {{ h.claimedDeath.year }}, of {{ h.claimedDeath.cause }}
+              {{ copy.claimedDeath(h.claimedDeath.year, h.claimedDeath.cause) }}
             </div>
             <div v-else-if="h.died !== undefined" class="dim small">
-              born {{ h.born }}, died {{ h.died }}
+              {{ copy.death(h.born, h.died) }}
             </div>
-            <div v-else-if="h.born !== undefined" class="dim small">born {{ h.born }}</div>
+            <div v-else-if="h.born !== undefined" class="dim small">{{ copy.born(h.born) }}</div>
           </div>
         </li>
       </ol>
