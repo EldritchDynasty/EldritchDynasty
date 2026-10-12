@@ -4,7 +4,7 @@ import {
   CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse, missingPlainEnglish,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
-import { ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
+import { contentProseEntries, ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { coreMessageAddress } from './messages.js';
 import { rungTitle } from './ascension.js';
@@ -763,6 +763,81 @@ describe('the epilogue rings the prologue', () => {
     expect(restored.ring[0]!.owed).toBe(original.ring[0]!.owed);
     expect(restored.closing).toBe(original.closing);
     expect(restored.thesis).toBe(original.thesis);
+  });
+});
+
+describe('all authored endings have live Plain English consumers (#410)', () => {
+  it('renders every eligible worklist field in all six endings without changing the reckoning', () => {
+    const entries = contentProseEntries('endings.yaml', { endings: content.endings });
+    const variants = entries.map(({ address, text }) => ({
+      address, of: proseOriginalHash(text), plainenglish: `Plain: ${text}`,
+    }));
+    const byAddress = new Set(entries.map(({ address }) => address));
+    const visited = new Set<string>();
+    expect(entries.length).toBeGreaterThan(0);
+
+    for (const def of content.endings) {
+      const ctx = atTheTerm();
+      ctx.world.ending = { id: def.id, year: ctx.world.year };
+      const original = epilogueOf(ctx)!;
+      setProseVariants(ctx, variants);
+      setProseMode(ctx, 'plainenglish');
+      const selected = epilogueOf(ctx)!;
+      const base = `content:endings.yaml#endings[id=${encodeURIComponent(def.id)}]`;
+      const check = (path: string, actual: string, originalText: string) => {
+        const address = `${base}.${path}`;
+        if (byAddress.has(address)) {
+          visited.add(address);
+          expect(actual, address).toBe(`Plain: ${originalText}`);
+        } else {
+          // A one-word title is deliberately absent from the worklist.
+          expect(actual, address).toBe(originalText);
+        }
+      };
+
+      check('title', selected.title, def.title);
+      check('opening', selected.opening, def.opening);
+      check('closing', selected.closing, def.closing);
+      const changedBeat = selected.ring[def.ring.beat - 1]!;
+      if (def.ring.given !== undefined) {
+        check('ring.given', changedBeat.given, def.ring.given);
+      } else if (def.ring.owed !== undefined) {
+        check('ring.owed', changedBeat.owed, def.ring.owed);
+      } else {
+        throw new Error(`Ending ${def.id} has no replacement ring line`);
+      }
+
+      expect(selected.id).toBe(original.id);
+      expect(selected.reckoning).toEqual(original.reckoning);
+      expect(missingPlainEnglish(ctx).filter((address) => address.startsWith(base))).toEqual([]);
+      setProseMode(ctx, 'original');
+      expect(epilogueOf(ctx)).toEqual(original);
+    }
+
+    // An authored field added to endings.yaml must acquire a runtime consumer,
+    // not merely a worklist address: one test guards both sides of the seam.
+    expect([...visited].sort()).toEqual([...byAddress].sort());
+  });
+
+  it('falls back to Original for a stale given-ring variant and reports its address', () => {
+    const ctx = atTheTerm();
+    ctx.world.ending = { id: 'unmade', year: ctx.world.year };
+    const address = 'content:endings.yaml#endings[id=unmade].ring.given';
+    const original = epilogueOf(ctx)!.ring[1]!.given;
+    expect(proseOriginalAt(ctx.content, address)).toBe(original);
+
+    setProseVariants(ctx, [{
+      address, of: '0000000000000000', plainenglish: `Plain: ${original}`,
+    }]);
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.ring[1]!.given).toBe(original);
+    expect(missingPlainEnglish(ctx)).toContain(address);
+
+    setProseVariants(ctx, [{
+      address, of: proseOriginalHash(original), plainenglish: `Plain: ${original}`,
+    }]);
+    expect(epilogueOf(ctx)!.ring[1]!.given).toBe(`Plain: ${original}`);
+    expect(missingPlainEnglish(ctx)).not.toContain(address);
   });
 });
 
