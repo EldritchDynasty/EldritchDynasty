@@ -64,6 +64,8 @@ export interface LibraryBookState {
    * with it.
    */
   condition: number;
+  /** Return year while this physical copy is away with the binder. */
+  restoresAt?: number;
   /**
    * A Named Art (tier `named`) is permanently recorded under the name of its
    * first holder the moment anyone first gains it. Undefined for ordinary

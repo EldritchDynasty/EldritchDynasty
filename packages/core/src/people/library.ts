@@ -94,8 +94,47 @@ function wearHeldCopy(copy: LibraryBookState, amount: number): void {
  */
 export function tickLibraryWear(ctx: SimCtx): void {
   for (const copy of ctx.world.library.values()) {
-    if (copy.acquiredYear >= ctx.world.year) continue;
+    if (copy.acquiredYear >= ctx.world.year || copy.restoresAt !== undefined) continue;
     wearHeldCopy(copy, YEARLY_BOOK_WEAR);
+  }
+}
+
+/** The same quote and refusals serve the Table, its read model and the binder. */
+export interface RestorationQuote {
+  fee: number;
+  years: number;
+  returns: number;
+  ok: boolean;
+  reason?: string;
+}
+
+export function restorationQuote(ctx: SimCtx, id: string): RestorationQuote | undefined {
+  const copy = ctx.world.library.get(id);
+  const def = spellbookDef(ctx, id);
+  if (!copy || !def) return undefined;
+  const missing = Math.max(0, 100 - copy.condition);
+  const fee = Math.max(1, Math.ceil(def.price.min * 0.2 * missing / 100));
+  const years = Math.max(1, Math.ceil(missing / 50));
+  const returns = copy.restoresAt ?? ctx.world.year + years;
+  if (copy.restoresAt !== undefined) {
+    return { fee, years, returns, ok: false, reason: msg(ctx, 'library.restore.in_progress', 'the copy is already with the binder') };
+  }
+  if (missing === 0) {
+    return { fee, years, returns, ok: false, reason: msg(ctx, 'library.restore.pristine', 'the copy needs no repair') };
+  }
+  if (ctx.world.studies.some((study) => study.book === id
+    && ctx.world.people.get(study.person)?.status === 'alive')) {
+    return { fee, years, returns, ok: false, reason: msg(ctx, 'library.restore.reading', 'someone is still reading this copy') };
+  }
+  return { fee, years, returns, ok: true };
+}
+
+/** Finish binding AFTER annual wear; the returned copy is pristine this year. */
+export function tickRestorations(ctx: SimCtx): void {
+  for (const copy of ctx.world.library.values()) {
+    if (copy.restoresAt === undefined || copy.restoresAt > ctx.world.year) continue;
+    copy.condition = 100;
+    delete copy.restoresAt;
   }
 }
 
@@ -116,6 +155,9 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   // create a ghost study or acquire a shelf copy for someone the world never
   // taught. Dead and guardian records cannot take up new books either.
   if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
+  if (ctx.world.library.get(def.id)?.restoresAt !== undefined) {
+    return { ok: false, reason: msg(ctx, 'library.refuse.binder', 'the copy is with the binder') };
+  }
   // §11's LEARNING GATE (issue #79). "Until a character Awakens, all power is
   // written down and unreachable. Learning cannot begin."
   //

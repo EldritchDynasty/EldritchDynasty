@@ -6,10 +6,10 @@ import { coreMessageAddress } from './messages.js';
 import {
   acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, canTakePost, degradeLibraryCopy,
   canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, libraryRunOf, loadGame, newGame, phenotypeOf, place,
-  saveGame, seedLibraryMemories, setProseMode, setProseVariants, useHeirloom,
+  saveGame, seedLibraryMemories, setProseMode, setProseVariants, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
-import { completeStudies, tickLibraryWear } from './people/library.js';
+import { completeStudies, restorationQuote, tickLibraryWear, tickRestorations } from './people/library.js';
 import { canonical } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -176,6 +176,73 @@ describe('deterministic physical-copy wear (first slice of #1293)', () => {
     tickLibraryWear(loaded);
     expect(loaded.world.library.get(id)?.condition).toBe(99.6);
     expect(ctx.world.library.get(id)?.condition).toBe(99.8);
+  });
+});
+
+describe('paid binder restoration (#1293)', () => {
+  it('quotes from missing condition, refuses active readers, pays once, and returns pristine on the exact year', () => {
+    const ctx = bootstrap(bundle, 1296, 1042);
+    const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const copy = acquireLibraryCopy(ctx, def.id)!;
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    const prior = { person: reader.id, name: reader.name, year: ctx.world.year };
+    copy.namedFor = prior;
+    ctx.world.treasury = 500;
+    expect(order(ctx, { kind: 'restore', book: def.id }).ok).toBe(false);
+
+    copy.condition = 40;
+    const quote = restorationQuote(ctx, def.id)!;
+    expect(quote.fee).toBe(Math.max(1, Math.ceil(def.price.min * .2 * .6)));
+    expect(quote.years).toBe(2);
+    expect(beginStudy(ctx, reader, def)).toBe(true);
+    expect(restorationQuote(ctx, def.id)?.ok).toBe(false);
+    expect(order(ctx, { kind: 'restore', book: def.id }).ok).toBe(false);
+    ctx.world.studies = [];
+
+    const start = ctx.world.year;
+    const opened = order(ctx, { kind: 'restore', book: def.id });
+    expect(opened).toMatchObject({ ok: true, spent: quote.fee, left: 500 - quote.fee });
+    expect(copy.restoresAt).toBe(start + 2);
+    expect(tableView(ctx).shelf.find((b) => b.book === def.id)?.restoringUntil).toBe(start + 2);
+    expect(canStudySpellbook(ctx, reader, def).ok).toBe(false);
+    expect(beginStudy(ctx, reader, def)).toBe(false);
+    expect(gainSpellbook(ctx, reader, def)).toBe(false);
+    expect(order(ctx, { kind: 'restore', book: def.id }).ok).toBe(false);
+    expect(ctx.world.treasury).toBe(500 - quote.fee);
+
+    ctx.world.year = start + 1;
+    tickLibraryWear(ctx);
+    tickRestorations(ctx);
+    expect(copy.condition).toBe(40);
+    expect(copy.restoresAt).toBe(start + 2);
+
+    // Save and reload while the binder holds the original physical copy.
+    const resumed = loadGame(saveGame(ctx), bundle);
+    const back = resumed.world.library.get(def.id)!;
+    expect(back.restoresAt).toBe(start + 2);
+    resumed.world.year = start + 2;
+    tickLibraryWear(resumed);
+    tickRestorations(resumed);
+    expect(back.condition).toBe(100);
+    expect(back.restoresAt).toBeUndefined();
+    expect(back.namedFor).toEqual(prior);
+    expect(canStudySpellbook(resumed, resumed.world.people.get(reader.id)!, def).ok).toBe(true);
+    expect(ctx.world.library.get(def.id)?.condition).toBe(40);
+  });
+
+  it('refuses to cross the debt floor without charging or setting a term', () => {
+    const ctx = bootstrap(bundle, 1297, 1042);
+    const copy = acquireLibraryCopy(ctx, 'lesser_workings_of_fluid')!;
+    copy.condition = 0;
+    ctx.world.treasury = DEBT_FLOOR;
+    const result = order(ctx, { kind: 'restore', book: copy.id });
+    expect(result.ok).toBe(false);
+    expect(result.spent).toBeUndefined();
+    expect(copy.restoresAt).toBeUndefined();
+    const shelf = tableView(ctx).shelf.find((b) => b.book === copy.id)!;
+    expect(shelf.restore?.canPay).toBe(false);
+    expect(shelf.restore?.reason).toBeTruthy();
+    expect(ctx.world.treasury).toBe(DEBT_FLOOR);
   });
 });
 
