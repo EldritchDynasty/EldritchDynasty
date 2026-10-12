@@ -495,7 +495,7 @@ describe('saved-run action failures (#1149)', () => {
   });
 
   it.each(['refused', 'rejected'] as const)(
-    'keeps the newest named-save refusal visible after an older load is %s (#1462)',
+    'keeps a later named-save refusal on its own row after the first load is %s (#1462, #1502)',
     async (olderOutcome) => {
       const actions = spyActions([
         { slot: 'chapter-old', year: 1080 },
@@ -515,16 +515,24 @@ describe('saved-run action failures (#1149)', () => {
         const rows = w.findAll('section.saved li');
         expect(rows).toHaveLength(2);
         await rows[0]!.find('button').trigger('click');
+        // With single-flight selection, a second row cannot supersede the
+        // original selection while its host request is still in flight.
         await rows[1]!.find('button').trigger('click');
         await flush();
-        expect(rows[1]!.get('.save-action-error').text()).toContain('could not be read');
-        expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+        expect(actions.load).toHaveBeenCalledTimes(1);
+        expect(rows[1]!.find('.save-action-error').exists()).toBe(false);
 
-        // GameStore returns false for a superseded selection; a real host
-        // rejection must be equally unable to rewrite the newest row.
         if (olderOutcome === 'refused') resolveOld(false);
         else rejectOld(new Error('older host read failed'));
         await flush();
+        expect(rows[0]!.get('.save-action-error').text()).toContain('could not be read');
+        expect(rows[1]!.find('button').attributes('disabled')).toBeUndefined();
+
+        // The next deliberate selection clears the old refusal, reports its
+        // own result and cannot be overwritten by the already-settled read.
+        await rows[1]!.find('button').trigger('click');
+        await flush();
+        expect(actions.load).toHaveBeenCalledTimes(2);
         expect(rows[1]!.get('.save-action-error').text()).toContain('could not be read');
         expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
       } finally {
