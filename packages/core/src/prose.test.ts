@@ -6,7 +6,7 @@ import { ASSIZE_RESPONSES } from './assize.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { coreMessageAddress, msg } from './messages.js';
 import { marry, place } from './testing.js';
-import { choiceLabelAddress, eventBodyAddress, eventTitleAddress, outcomeChronicleEffectAddress, outcomeTextAddress, proseForOutcome, recordChronicleAddress, recordSubjectAddress } from './prose.js';
+import { choiceLabelAddress, eventBodyAddress, eventTitleAddress, outcomeChronicleEffectAddress, outcomeTextAddress, proseForChoiceLabel, proseForEventTitle, proseForOutcome, recordChronicleAddress, recordSubjectAddress } from './prose.js';
 import { loadBundle, loadContent } from '@ed/content';
 import { canonical } from './save.js';
 import {
@@ -372,6 +372,41 @@ function fixture() {
 }
 
 describe('prospective prose selection', () => {
+  it('does not invent translation gaps for one-word event titles and choice labels (#410)', () => {
+    const { bundle, event } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('fixture must be a choice');
+    const oneWord: EventTemplate = {
+      ...event,
+      title: 'Wait',
+      interaction: {
+        ...event.interaction,
+        choices: event.interaction.choices.map((choice) =>
+          choice.id === 'ask_him' ? { ...choice, label: 'Decline' } : choice),
+      },
+    };
+    if (oneWord.interaction.kind !== 'choice') throw new Error('fixture must be a choice');
+    const shortChoice = oneWord.interaction.choices.find((choice) => choice.id === 'ask_him');
+    const longChoice = event.interaction.choices.find((choice) => choice.id === 'ask_him');
+    if (!shortChoice || !longChoice) throw new Error('fixture choice is missing');
+
+    // The worklist intentionally excludes one-word prose outside tale bias.
+    const entries = contentProseEntries('events/the_ladder.yaml', { events: [oneWord] });
+    expect(entries.map((entry) => entry.address)).not.toContain(TITLE_ADDRESS);
+    expect(entries.map((entry) => entry.address)).not.toContain(CHOICE_LABEL_ADDRESS);
+
+    const ctx = testWorld(bundle);
+    setProseVariants(ctx, []);
+    setProseMode(ctx, 'plainenglish');
+    expect(proseForEventTitle(ctx, oneWord)).toBe('Wait');
+    expect(proseForChoiceLabel(ctx, oneWord, shortChoice)).toBe('Decline');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    // Eligible prose still requests its exact stable address.
+    expect(proseForEventTitle(ctx, event)).toBe(event.title);
+    expect(proseForChoiceLabel(ctx, event, longChoice)).toBe(longChoice.label);
+    expect(missingPlainEnglish(ctx)).toEqual([TITLE_ADDRESS, CHOICE_LABEL_ADDRESS].sort());
+  });
+
   it.each([false, true])('loads the authored catalogue without host-side injection (existing row: %s)', (hasExistingRow) => {
     const { bundle } = fixture();
     // Exercise both coverage states independently of how far the corpus has
