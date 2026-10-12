@@ -23,6 +23,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
+import ts from 'typescript';
 import { CONTENT_PROSE_KEYS, CORE_MESSAGE_VARIANTS_FILE, contentInterpolationTokens, contentProseEntries, proseOriginalHash, ProseVariantS, type ProseVariant } from '@ed/schema';
 import { coreMessageEntries } from './core-message-audit.js';
 
@@ -240,6 +241,47 @@ export function literals(src: string): Literal[] {
 /** Arguments to these are for a developer, not a player. */
 const DEVELOPER_CALL = /(?:\bError|\bassert\w*|\bconsole\.\w+|\bdescribe|\bit|\btest|\bexpect)\s*\(\s*$/;
 
+/** Syntax supplies context that a short lexical lookbehind cannot carry. */
+function developerLiteralStarts(src: string, file?: string): Set<number> {
+  const tree = ts.createSourceFile('audit.ts', src, ts.ScriptTarget.Latest, true);
+  const starts = new Set<number>();
+  const phaseFile = file?.replace(/\\/g, '/') === 'year/phases.ts';
+  function mark(node: ts.Node): void {
+    // A callback can write player prose; logging the callback does not make
+    // its body a diagnostic. Explicit msg() Originals are inventoried apart.
+    if (ts.isFunctionLike(node)) return;
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)
+      || ts.isTemplateExpression(node)) starts.add(node.getStart(tree));
+    ts.forEachChild(node, mark);
+  }
+  function phaseNote(node: ts.PropertyAssignment): boolean {
+    if (!phaseFile || !(ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))
+      || node.name.text !== 'why'
+      || !ts.isObjectLiteralExpression(node.parent)
+      || !ts.isArrayLiteralExpression(node.parent.parent)) return false;
+    let array: ts.Node = node.parent.parent;
+    while (ts.isAsExpression(array.parent) || ts.isSatisfiesExpression(array.parent)
+      || ts.isParenthesizedExpression(array.parent)) array = array.parent;
+    return ts.isVariableDeclaration(array.parent)
+      && ts.isIdentifier(array.parent.name) && array.parent.name.text === 'YEAR_PHASES'
+      && array.parent.initializer === array;
+  }
+  function visit(node: ts.Node): void {
+    if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      const callee = node.expression;
+      const diagnostic = ts.isIdentifier(callee)
+        ? /^(?:Error|assert\w*|describe|it|test|expect)$/.test(callee.text)
+        : ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)
+          && callee.expression.text === 'console';
+      if (diagnostic) node.arguments?.forEach(mark);
+    }
+    if (ts.isPropertyAssignment(node) && phaseNote(node)) mark(node.initializer);
+    ts.forEachChild(node, visit);
+  }
+  visit(tree);
+  return starts;
+}
+
 interface IndexedLiteral {
   literal: Literal;
   /** 1-based position among every source literal, before prose filtering. */
@@ -254,12 +296,14 @@ interface IndexedLiteral {
  * heuristic would renumber every later Plain English work item, even though
  * none of those later strings moved.
  */
-function sentenceLiteralEntries(src: string): IndexedLiteral[] {
+function sentenceLiteralEntries(src: string, file?: string): IndexedLiteral[] {
+  const developerStarts = developerLiteralStarts(src, file);
   return literals(src)
     .map((literal, index) => ({ literal, ordinal: index + 1 }))
     .filter(({ literal }) => /[a-z]/.test(literal.text) && words(literal.text) >= 3)
     .filter(({ literal }) => !/\b(?:import|from|require)\s*\(?\s*$/.test(literal.before))
-    .filter(({ literal }) => !DEVELOPER_CALL.test(literal.before));
+    .filter(({ literal }) => !DEVELOPER_CALL.test(literal.before))
+    .filter(({ literal }) => !developerStarts.has(literal.start));
 }
 
 function sentenceLiteralDetails(src: string): Literal[] {
@@ -292,7 +336,7 @@ export function plainEnglishCoreWorkItems(file: string, text: string): PlainEngl
   const voice: Voice = /(^|\/)advisers\.ts$/.test(file.split(sep).join('/')) ? 'adviser' : 'chronicler';
   const messages = coreMessageEntries(text);
   const keyedStarts = new Set(messages.map((entry) => entry.start));
-  const legacy = sentenceLiteralEntries(text)
+  const legacy = sentenceLiteralEntries(text, file)
     .filter(({ literal }) => !keyedStarts.has(literal.start))
     .map(({ literal, ordinal }) => ({
       start: literal.start,
