@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { electronEnvironment } from './electron-environment.mjs';
-import { findWindowsInstaller, sha256File } from './windows-release-proof.mjs';
+import { findWindowsInstaller, sha256File, verifyAuthenticode } from './windows-release-proof.mjs';
 
 /**
  * Issue #712: smoke the artifact a player installs, not the win-unpacked tree
@@ -29,7 +29,9 @@ export function checkedWindowsReleaseProof(proof) {
     || !fileLeaf(proof.installer.file)
     || proof.executable.file !== GAME_EXECUTABLE
     || !HASH.test(proof.installer.sha256)
-    || !HASH.test(proof.executable.sha256)) {
+    || !HASH.test(proof.executable.sha256)
+    || !['valid', 'not-checked'].includes(proof.installer.authenticode)
+    || proof.installer.authenticode !== proof.executable.authenticode) {
     throw new Error('invalid Windows release proof manifest (version, paths or SHA-256)');
   }
   return proof;
@@ -75,6 +77,7 @@ export async function smokeInstalledWindowsArtifact(
     run = runExecutable,
     makeDirectory = mkdtemp,
     removeDirectory = rm,
+    verifySignature = verifyAuthenticode,
   } = {},
 ) {
   if (platform !== 'win32') throw new Error('installed Windows smoke requires a Windows runner');
@@ -91,6 +94,11 @@ export async function smokeInstalledWindowsArtifact(
     throw new Error('downloaded Windows installer SHA-256 mismatch; refusing to execute');
   }
 
+  // A signed proof must be verified again on the clean runner before the
+  // downloaded installer is executed. Hash equality alone does not establish
+  // Authenticode status on this host.
+  if (proof.installer.authenticode === 'valid') await verifySignature(installer);
+
   // NSIS accepts /D=<absolute-directory> only as its last argument, without
   // enclosing quotes. mkdtemp supplies a fresh target on this new runner.
   const installDir = await makeDirectory(join(tempRoot, 'ed-installed-smoke-'));
@@ -101,6 +109,9 @@ export async function smokeInstalledWindowsArtifact(
     if (actualGameHash.toLowerCase() !== proof.executable.sha256.toLowerCase()) {
       throw new Error('installed Windows game SHA-256 mismatch; refusing to boot');
     }
+    // The installed executable is independently signed, not merely unpacked
+    // from a signed installer. Check it before any executable launch.
+    if (proof.executable.authenticode === 'valid') await verifySignature(installedGame);
     await run(installedGame, ['--smoke'], electronEnvironment(parentEnv));
 
     // The original renderer test proves a one-process bridge round trip only.
