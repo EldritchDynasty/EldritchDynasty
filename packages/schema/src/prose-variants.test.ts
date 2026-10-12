@@ -105,6 +105,41 @@ describe('Plain English variant guardrails (#415)', () => {
     ]);
   });
 
+  it('accepts template Plain English when an event shares its bare id (#1383)', () => {
+    const sharedId = 'the_match_that_never_comes';
+    const template = content.characterTemplates.find((item) => item.id === sharedId);
+    expect(template).toBeDefined();
+    // The global source map sees the event before characterTemplates.
+    expect(content.sourceOf(sharedId)).toBe('events/marriage.yaml');
+
+    const entries = contentProseEntries('characters/templates.yaml', {
+      characterTemplates: [template],
+    }).filter((entry) => /\\.(title|blurb)$/.test(entry.address));
+    expect(entries.map((entry) => entry.address)).toEqual([
+      `content:characters/templates.yaml#characterTemplates[id=${sharedId}].title`,
+      `content:characters/templates.yaml#characterTemplates[id=${sharedId}].blurb`,
+    ]);
+    for (const entry of entries) {
+      expect(proseOriginalAt(content, entry.address)).toBe(entry.text);
+    }
+
+    const bundle = structuredClone(content.bundle);
+    bundle.proseVariants = entries.map((entry) => ({
+      address: entry.address,
+      of: proseOriginalHash(entry.text),
+      plainenglish: `${entry.text} In plain words.`,
+    }));
+    expect(runRule('prose/variants', bundle)).toEqual([]);
+
+    // The same id still has a distinct event provenance; a false filename
+    // for that event must remain invalid.
+    const eventAddress = `content:events/marriage.yaml#events[id=${sharedId}].title`;
+    expect(proseOriginalAt(content, eventAddress)).toBe('The Terms Are Impossible');
+    expect(proseOriginalAt(content, eventAddress.replace(
+      'events/marriage.yaml', 'events/not_the_source.yaml',
+    ))).toBeUndefined();
+  });
+
   it('does not let the right id under the wrong YAML filename count as resolved', () => {
     const wrongFile = fixture.address.replace(/^content:[^#]+#/, 'content:events/not_the_source_file.yaml#');
     expect(proseOriginalAt(content, wrongFile)).toBeUndefined();
