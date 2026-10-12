@@ -228,6 +228,13 @@ describe('paid binder restoration (#1293)', () => {
     expect(back.namedFor).toEqual(prior);
     expect(canStudySpellbook(resumed, resumed.world.people.get(reader.id)!, def).ok).toBe(true);
     expect(ctx.world.library.get(def.id)?.condition).toBe(40);
+
+    // The uninterrupted copy and the saved-and-resumed copy must finish
+    // with identical durable world state, not just the same condition number.
+    ctx.world.year = start + 2;
+    tickLibraryWear(ctx);
+    tickRestorations(ctx);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(ctx)));
   });
 
   it('refuses to cross the debt floor without charging or setting a term', () => {
