@@ -202,6 +202,9 @@ async function plate(): Promise<void> {
   plating.value = true;
   try {
     const entries = shown.value;
+    // A PNG encoding can finish after the caller changes houses. The page and
+    // its download name must refer to the same house selected at click time.
+    const houseName = props.houseName;
     const gauge = document.createElement('canvas').getContext('2d');
     if (!gauge) { plateError.value = PLATE_ERROR; return; }
     const measure: Measure = (text, font) => {
@@ -215,10 +218,10 @@ async function plate(): Promise<void> {
     // Chronicle line (and the ruled omissions) in a vector download instead
     // of silently dropping the entire image when getContext/toBlob fails.
     if (height > MAX_PLATE_CANVAS_HEIGHT) {
-      const svg = plateSvg(rows, props.houseName, plateSubtitle(entries, lens.value));
+      const svg = plateSvg(rows, houseName, plateSubtitle(entries, lens.value));
       downloadBlob(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
-        plateName(props.houseName, entries).replace(/\.png$/, '.svg'),
+        plateName(houseName, entries).replace(/\.png$/, '.svg'),
       );
       return;
     }
@@ -234,7 +237,7 @@ async function plate(): Promise<void> {
 
     c.fillStyle = PLATE.ink;
     c.font = `500 30px ${PLATE.serif}`;
-    c.fillText(props.houseName, PLATE.pad, 64);
+    c.fillText(houseName, PLATE.pad, 64);
     c.fillStyle = PLATE.faint;
     c.font = `13px ${PLATE.serif}`;
     c.fillText(plateSubtitle(entries, lens.value), PLATE.pad, 88);
@@ -267,7 +270,7 @@ async function plate(): Promise<void> {
 
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
     if (!blob) { plateError.value = PLATE_ERROR; return; }
-    downloadBlob(blob, plateName(props.houseName, entries));
+    downloadBlob(blob, plateName(houseName, entries));
   } catch {
     // Canvas allocation/encoding and browser download APIs can all fail.
     // A silent click would leave a reader thinking their page was saved.
