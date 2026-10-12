@@ -377,3 +377,236 @@ traits:
     description: >-
       He cleared the mill race above Wick in an afternoon. The village has not
       forgotten, and it has not been told what the afternoon cost.
+
+proseVariants:
+  - address: "content:traits.yaml#traits[id=reads_the_signs].name"
+    of: "d8541b135021750f"
+    plainenglish: >-
+      Can Read the Signs
+  - address: "content:traits.yaml#traits[id=reads_the_signs].description"
+    of: "eb58d02b96c73047"
+    plainenglish: >-
+      She can tell what a girl carries in her blood from how the room behaves around her. Every
+      house has its own folk theory about the signs, and no two theories agree. Hers is right
+      more often than not.
+  - address: "content:traits.yaml#traits[id=competent_physician].name"
+    of: "0a629f03dd300acf"
+    plainenglish: >-
+      A Good Doctor
+  - address: "content:traits.yaml#traits[id=competent_physician].description"
+    of: "a811dc013731bfe5"
+    plainenglish: >-
+      The most interesting effects of having someone around are the ones where nothing happens.
+      She does not make the plague go better; she cuts off one of the ways it goes wrong. The
+      family finds out what she was worth when she dies.
+  - address: "content:traits.yaml#traits[id=the_tutors_aphorisms].name"
+    of: "88bd3f28bf75907c"
+    plainenglish: >-
+      The Teacher's Sayings
+  - address: "content:traits.yaml#traits[id=the_tutors_aphorisms].description"
+    of: "70e271649ab6b490"
+    plainenglish: >-
+      The things he said become the family's sayings, quoted in the chronicle for centuries by
+      people who never met him.
+  - address: "content:traits.yaml#traits[id=sign_of_the_blood].name"
+    of: "4d4eb0464b9aab02"
+    plainenglish: >-
+      A Sign in the Blood
+  - address: "content:traits.yaml#traits[id=sign_of_the_blood].description"
+    of: "aee420be966cf6a2"
+    plainenglish: >-
+      Iron goes dull where she has slept. Milk turns sweet. It is unreliable, cheap and
+      everywhere, and every marriage broker in the province has an opinion about it.
+  - address: "content:traits.yaml#traits[id=early_waking].name"
+    of: "429115c7d696e743"
+    plainenglish: >-
+      Woke Early
+  - address: "content:traits.yaml#traits[id=early_waking].description"
+    of: "ba7f06afcf62417b"
+    plainenglish: >-
+      She woke at nine, in front of witnesses. In a marriage market built almost entirely on
+      forged papers, this is the one sign nobody can fake. People saw it, and it is worth more
+      than any family tree signed by a notary.
+  - address: "content:traits.yaml#traits[id=hard_hands].name"
+    of: "353b7312a58a746e"
+    plainenglish: >-
+      Rough Hands
+  - address: "content:traits.yaml#traits[id=bought_grandmother].name"
+    of: "6d158e9abb284656"
+    plainenglish: >-
+      A Grandmother Bought on Paper
+  - address: "content:traits.yaml#traits[id=bought_grandmother].description"
+    of: "e912269d9b8c7ef9"
+    plainenglish: >-
+      Three generations of records on her mother's side, signed by a notary, and every page of
+      it paid for. Papers like these are easy to forge, and they stand in for the one real proof
+      there is: what her sons turn out to be.
+  - address: "content:traits.yaml#traits[id=keeps_a_night_watch].name"
+    of: "d06fba0fb87d08b3"
+    plainenglish: >-
+      Keeps Watch at Night
+  - address: "content:traits.yaml#traits[id=keeps_a_night_watch].description"
+    of: "44d80513c495d767"
+    plainenglish: >-
+      Someone in this house is awake at every hour that matters, on a rota nobody wrote down and
+      everyone still follows. For three generations, trouble on the river road has found the
+      gate already locked.
+  - address: "content:traits.yaml#traits[id=hardened_by_the_line].name"
+    of: "30e6f5827f54fcc6"
+    plainenglish: >-
+      Toughened by the Army
+  - address: "content:traits.yaml#traits[id=hardened_by_the_line].description"
+    of: "ae04d0f783551f63"
+    plainenglish: >-
+      Ten years as an officer, in a post that was bought rather than earned, and after a while
+      how it was bought stops mattering. What is left is a man who does not flinch at the things
+      that make other men flinch.
+  - address: "content:traits.yaml#traits[id=keeps_the_tollgate].name"
+    of: "d53bbc50d848d86c"
+    plainenglish: >-
+      Runs the Tollgate
+  - address: "content:traits.yaml#traits[id=keeps_the_tollgate].description"
+    of: "9d3d8957f9ad262b"
+    plainenglish: >-
+      A plank bridge, a chain, and a toll nobody has talked down in forty years. It is not much
+      next to the treasury. But it is never nothing.
+  - address: "content:traits.yaml#traits[id=keeps_the_sickroom].name"
+    of: "7774183fdf197e4b"
+    plainenglish: >-
+      Runs the Sickroom
+  - address: "content:traits.yaml#traits[id=keeps_the_sickroom].description"
+    of: "360fc77233e8e6e6"
+    plainenglish: >-
+      Boiled linen, a window opened when she says and not earlier, and a rule about who may be
+      in the room that she enforces even against the Head himself. Nobody understands any of it,
+      including her. All of it works, and the house cannot tell by how much, because what it
+      pays for is a list of years in which nothing went wrong.
+  - address: "content:traits.yaml#traits[id=keeps_the_house_songs].name"
+    of: "c56251bcf26d0578"
+    plainenglish: >-
+      Keeps the Songs of the House
+  - address: "content:traits.yaml#traits[id=keeps_the_house_songs].description"
+    of: "30b8217bfc999cbf"
+    plainenglish: >-
+      She knows eleven verses nobody else has, and she holds back the last turn of each until
+      the room is full enough to finish it. The house is not paying for the singing. It is
+      paying so that the version sung at Ardwen is the version the Wayfolk carry away from
+      Ardwen. A house that lets a stranger choose the tune has already lost the argument about
+      what happened.
+  - address: "content:traits.yaml#traits[id=keeps_a_fair_hand].name"
+    of: "00c3bdb97c5d97cd"
+    plainenglish: >-
+      Writes a Clean Record
+  - address: "content:traits.yaml#traits[id=keeps_a_fair_hand].description"
+    of: "f9d4dfd9cecf3c75"
+    plainenglish: >-
+      A clerk's handwriting, ruled lines, dates in the margin, and each entry made in the same
+      week as the event, not forty years later by a man trying to remember. The Warden's clerk
+      accepts his copies without checking twice, and at the court that is worth more than any
+      oath the house can swear.
+  - address: "content:traits.yaml#traits[id=keeps_the_house_archive].name"
+    of: "1cffe084ba109998"
+    plainenglish: >-
+      Looks After the Archive
+  - address: "content:traits.yaml#traits[id=keeps_the_house_archive].description"
+    of: "69fa7da4c5172cf8"
+    plainenglish: >-
+      Eleven bundles of index, in one handwriting, covering four hundred years of a house that
+      has never thrown anything away. She did not write most of what is on the shelves. She
+      wrote down where all of it is, and that turns out to be the more valuable record and the
+      harder one to keep.
+  - address: "content:traits.yaml#traits[id=ordained_and_useful].name"
+    of: "fcac842865c24904"
+    plainenglish: >-
+      A Priest, and Useful
+  - address: "content:traits.yaml#traits[id=ordained_and_useful].description"
+    of: "7b9019d34b56e3ff"
+    plainenglish: >-
+      After twelve years in the chapter house he knows which archdeacon reads what, which
+      questions are only asked because the form demands them, and how to keep an inspection to
+      ten questions out of eleven. He cannot inherit and cannot marry, and for exactly those
+      reasons he is the only member of this family the Church has ever been fully at ease with.
+  - address: "content:traits.yaml#traits[id=knows_who_to_ask].name"
+    of: "feaba3e9edc6efa5"
+    plainenglish: >-
+      Knows Whom to Ask
+  - address: "content:traits.yaml#traits[id=knows_who_to_ask].description"
+    of: "9025ed32f69bc33e"
+    plainenglish: >-
+      Fourteen years of standing close enough to power to be seen there. It gets him nothing at
+      all until the year it gets him everything. He does not have influence. He has the seating
+      plan, four hundred names, and a good sense of which of them is about to stop mattering.
+  - address: "content:traits.yaml#traits[id=prices_everything].name"
+    of: "1d51959c9841b470"
+    plainenglish: >-
+      Puts a Price on Everything
+  - address: "content:traits.yaml#traits[id=prices_everything].description"
+    of: "9f4193829810e09e"
+    plainenglish: >-
+      After ten years in trade he cannot look at a room without adding up what it is worth. None
+      of this brings any standing, and the treasury does not care about standing. What the house
+      gets is a man who has never once been surprised by a price, including the prices it did
+      not want to hear.
+  - address: "content:traits.yaml#traits[id=reads_faster_than_he_should].name"
+    of: "f8f3cd800c47fc0c"
+    plainenglish: >-
+      Reads Unnaturally Fast
+  - address: "content:traits.yaml#traits[id=reads_faster_than_he_should].description"
+    of: "df9d6d1ab1cfd586"
+    plainenglish: >-
+      Nine years with no income and no standing, and at the end of it a man who finishes a whole
+      book in the time the last one took him to get through its index. He cannot explain how.
+      Nobody at Corran can either, which is why the Colleges take nine years over it instead of
+      four.
+  - address: "content:traits.yaml#traits[id=reads_old_ambric].name"
+    of: "f2882bf36156ae67"
+    plainenglish: >-
+      Can Read Old Ambric
+  - address: "content:traits.yaml#traits[id=reads_old_ambric].description"
+    of: "3249b1e5299a7e79"
+    plainenglish: >-
+      Four years to learn to read it and four more to stop needing the dictionary, and after
+      that the house never again pays two marks a day to a man who will not tell it what a
+      formula means. The Church's services, the law's set phrases and a physician's labels are
+      all the same dead language, and he is now the only person at Ardwen who has noticed.
+  - address: "content:traits.yaml#traits[id=keeps_the_letter_of_credit].name"
+    of: "376c8b78526c3f4c"
+    plainenglish: >-
+      Handles the Letters of Credit
+  - address: "content:traits.yaml#traits[id=keeps_the_letter_of_credit].description"
+    of: "af21613a491d2aee"
+    plainenglish: >-
+      Money that crosses a border moves by a letter drawn on a Braccish bank, at a cost of two
+      percent and a month's wait. A family with its own man in that chain keeps the two percent
+      and hears the news a month early. After eleven years he is part of the chain, not at the
+      end of it. He swears his oath on the weight now, in front of the keeper, and nobody at
+      Wick knows what to think of that.
+  - address: "content:traits.yaml#traits[id=eleven_days_east].name"
+    of: "e5461fe8cb489f74"
+    plainenglish: >-
+      Eleven Days to the East
+  - address: "content:traits.yaml#traits[id=eleven_days_east].description"
+    of: "675f55e78697be93"
+    plainenglish: >-
+      Sarrow is eleven days east, and its nine years bring the biggest swings in income on the
+      list, up and down, all because of the weather. The man who comes home is calm in a way
+      that unsettles the hall, and nobody can tell him anything about a hard winter.
+  - address: "content:traits.yaml#traits[id=went_past_the_book].name"
+    of: "78ef604b4123732f"
+    plainenglish: >-
+      Went Beyond the Book
+  - address: "content:traits.yaml#traits[id=went_past_the_book].description"
+    of: "025dc771c8713ca5"
+    plainenglish: >-
+      He kept reading a greater work after the point where it stops explaining itself, and it
+      worked. He has been quicker since, and harder to surprise, and nobody has asked him what
+      else changed.
+  - address: "content:traits.yaml#traits[id=asked_for_in_wick].name"
+    of: "bc9b21974882ee53"
+    plainenglish: >-
+      Wanted in Wick
+  - address: "content:traits.yaml#traits[id=asked_for_in_wick].description"
+    of: "f3f0c8ff73b8b7d3"
+    plainenglish: >-
+      He cleared the mill stream above Wick in one afternoon. The village has not forgotten, and
+      nobody has told it what that afternoon cost.

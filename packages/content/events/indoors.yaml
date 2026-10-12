@@ -512,3 +512,344 @@ events:
                 once written down.
               effects:
                 - { kind: rumour, op: seed, id: rumour_where_they_sleep_at_ardwen, accuracy: 0.4 }
+
+proseVariants:
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].title"
+    of: "a23327b9eaaf2835"
+    plainenglish: >-
+      She Will Not Use That Passage Any More
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].body"
+    of: "5ce26627522d0d63"
+    plainenglish: >-
+      For four tendays one of the maids has stopped using the passage between the long room and
+      the west stairs. She goes round through the yard instead, even in the rain. Nobody has
+      asked her why, and everyone in the kitchen knows. She is nineteen and good at her work,
+      and she has nothing tying her here, because maids do not get contracts. The steward has
+      raised it because going round costs about an hour a day.
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].interaction.choices[id=ask_her].label"
+    of: "121e59243cd64848"
+    plainenglish: >-
+      Ask her directly, and take her answer seriously.
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].interaction.choices[id=ask_her].outcomes[id=she_tells_you].text"
+    of: "6d0eb64a16991b3e"
+    plainenglish: >-
+      Asked directly, she answers directly. Between the fourth and fifth steps of that passage
+      there is a cold that is not anywhere else in the house. She has felt it since Frostfall,
+      and she would rather go round. She had told nobody. Now she has told the Head, and that
+      changes something about this household compared with an hour ago.
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].interaction.choices[id=ask_her].outcomes[id=she_says_nothing].text"
+    of: "f5e260b91c13203d"
+    plainenglish: >-
+      She says it is the draught, which is what a nineteen-year-old says when the Head of the
+      house asks her a direct question. From the next morning she uses the passage, and hates
+      every walk through it for two years. What she tells her sister at Wick on her half-day off
+      is not that it is the draught.
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].interaction.choices[id=leave_her_to_it].label"
+    of: "979b5cab2337e78f"
+    plainenglish: >-
+      Leave her be. An hour a day is only an hour a day.
+  - address: "content:events/indoors.yaml#events[id=the_maid_who_saw_something].interaction.choices[id=leave_her_to_it].outcomes[id=left_to_it].text"
+    of: "ab984acfb0c97213"
+    plainenglish: >-
+      Nobody asks. She goes round for three years, and the household quietly adjusts around a
+      route nobody ever talks about, the way households do. Within a year, two more of them are
+      going round through the yard. By the time it is four, nobody can say who started it.
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].title"
+    of: "847fcebbd79019af"
+    plainenglish: >-
+      Three Marks, Four Months Late
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].body"
+    of: "fc9aaf17f9b83e5b"
+    plainenglish: >-
+      A servant's yearly wage is three marks, and it is only pocket money. Their real pay is
+      food, a bed and clothing, and they have had all of those. But the three marks have a due
+      date, and the date was Thaw, and now it is Highsun. Nine people are owed. None of them has
+      said anything, because someone earning three marks does not complain. Every tenday the
+      steward puts the wage list on the table without a word, which is his way of saying it.
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].interaction.choices[id=pay_it_whole].label"
+    of: "704ac49d641d0489"
+    plainenglish: >-
+      Pay everyone in full now, and pay the steward first.
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].interaction.choices[id=pay_it_whole].outcomes[id=paid].text"
+    of: "dc5e953a2d5ef456"
+    plainenglish: >-
+      Twenty-seven marks, which is one crown and seven marks. That is nothing against a bad
+      year, and it is four months of dignity for nine people. It comes out of the cash box in
+      front of the steward. For a tenday the house eats plainer food, and nobody mentions why.
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].interaction.choices[id=carry_it_to_harvest].label"
+    of: "15688225ed633361"
+    plainenglish: >-
+      Pay them at Harvest. They have food and a roof.
+  - address: "content:events/indoors.yaml#events[id=the_wage_roll_in_a_thin_year].interaction.choices[id=carry_it_to_harvest].outcomes[id=carried].text"
+    of: "9072b956b21e2cfa"
+    plainenglish: >-
+      They do have food and a roof, and that is true, and every house in the province would say
+      the same. The wages are paid in full at Harvest, with nothing left owing. At the next
+      Thaw, two of the maids leave for a household at Ockleigh that pays on the day. The house
+      never connects the two.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].title"
+    of: "1f787535019f7291"
+    plainenglish: >-
+      He Is on the Road More Than the Horses
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].body"
+    of: "71b0f19d3cd0a539"
+    plainenglish: >-
+      In two months the groom has made eleven trips on the Bramme road, for errands that needed
+      four. He has been careful about it, and that is the interesting part, more than the eleven
+      trips. He is a good groom, he has been here nine years, and the horses are in better shape
+      than anything else on this property. The steward would like to know who he is meeting. On
+      reflection, so would everyone.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].interaction.choices[id=ask_him_directly].label"
+    of: "7220ba73ab67247f"
+    plainenglish: >-
+      Ask him. Nine years of service earns a straight question.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].interaction.choices[id=ask_him_directly].outcomes[id=a_woman_at_bramme].text"
+    of: "7dffff5f0e1e04e3"
+    plainenglish: >-
+      It is a woman in Bramme, a widow who keeps a shop. For nine years he has been a man who
+      thought a household this size would laugh at him, and it does, briefly, then forgets about
+      it. He marries her in the spring and gives proper notice. The house loses the best groom
+      it has had in forty years over four hours of embarrassment nobody could have avoided.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].interaction.choices[id=ask_him_directly].outcomes[id=he_will_not_say].text"
+    of: "3e6ffa1a2c0bf1de"
+    plainenglish: >-
+      He politely refuses to say, twice, then a third time. A man who will not answer his own
+      Head after nine years has told the room something, whether he meant to or not. He stays
+      on. Nobody trusts him to carry anything important again, and the horses stay the best-kept
+      thing on the property.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].interaction.choices[id=have_him_followed].label"
+    of: "08117303272f381f"
+    plainenglish: >-
+      Have someone follow him to Bramme.
+  - address: "content:events/indoors.yaml#events[id=the_groom_and_the_bramme_road].interaction.choices[id=have_him_followed].outcomes[id=followed].text"
+    of: "d63506c587d9ab79"
+    plainenglish: >-
+      The yard man does it for two mites, and does it badly. By the second tenday, everyone in
+      the kitchen knows that the hall had a man followed. What they find out is a widow with a
+      shop. What everyone learns is what this house does when it gets curious, and nine people
+      remember that for good.
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].title"
+    of: "7cd9114863be65bc"
+    plainenglish: >-
+      He Wants Someone to Train
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].body"
+    of: "d06661139c332527"
+    plainenglish: >-
+      The steward is fifty-three. He keeps the rent book, the wage list, the stores, and about
+      nine hundred things that are not written down anywhere. Once, briefly and with obvious
+      difficulty, he has asked for a boy he can train. It would cost three marks a year and a
+      bed. What it really means, though neither man says so, is the difference between this
+      household surviving his death and spending four years rebuilding from nothing.
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].interaction.choices[id=give_him_a_boy].label"
+    of: "582990a0b643417c"
+    plainenglish: >-
+      Give him a boy. Three marks against four years of chaos.
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].interaction.choices[id=give_him_a_boy].outcomes[id=a_boy_behind_him].text"
+    of: "708aabb69bc554a2"
+    plainenglish: >-
+      A cottager's third son, for three marks and a bed. For eleven years the steward teaches
+      everything he knows to someone who will still be here in 1230. When the steward dies, the
+      rent comes in on time that Thaw and every Thaw after. It is the cheapest thing this house
+      does all century.
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].interaction.choices[id=not_this_year].label"
+    of: "0ea3a96fad7a24ab"
+    plainenglish: >-
+      Not this year. The roof comes first this year.
+  - address: "content:events/indoors.yaml#events[id=the_steward_asks_for_a_boy].interaction.choices[id=not_this_year].outcomes[id=not_this_year_out].text"
+    of: "26d6ecc3dc14232f"
+    plainenglish: >-
+      It is a reasonable answer in a bad year, and he gets the same reasonable answer four more
+      times over eleven years. He dies in Frostfall of 1219 with everything he knew still in his
+      head. It takes this house four years and about ninety crowns to find out what it lost.
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].title"
+    of: "945321b5bb5f0c19"
+    plainenglish: >-
+      What Goes Down the Hill on a Day Off
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].body"
+    of: "85c76486274665da"
+    plainenglish: >-
+      Every indoor servant gets half a day off each tenday, and every one of them spends it at
+      Wick with people they grew up with. That is the whole reason the parish knows everything
+      that happens in this house. Nobody has ever tried to stop it, and it could not be stopped.
+      The steward has carefully suggested spreading out the days off so fewer of them are down
+      there at once. He is right about what that would do.
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].interaction.choices[id=stagger_them].label"
+    of: "0a7073d8cb13478c"
+    plainenglish: >-
+      Spread them out. One at a time, and see what changes.
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].interaction.choices[id=stagger_them].outcomes[id=staggered].text"
+    of: "9b51ba14c03f1080"
+    plainenglish: >-
+      It works, in the sense that clearly less news leaves this hill over the next year. But
+      nine people who were never told why the schedule changed work it out within a tenday,
+      because they are not stupid. They conclude that the house has something to hide. It does,
+      but until now that was not what they thought about it.
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].interaction.choices[id=leave_the_half_days].label"
+    of: "f538619464d9edb0"
+    plainenglish: >-
+      Leave them as they are. This house could never keep that kind of secret.
+  - address: "content:events/indoors.yaml#events[id=the_half_day_at_wick].interaction.choices[id=leave_the_half_days].outcomes[id=left].text"
+    of: "1ff0155b8bb0b92f"
+    plainenglish: >-
+      For the next forty years, nine people go down the hill together every tenday. Wick knows
+      everything about this household within three days of it happening, as it always has since
+      the house was founded, and it has never once told anyone outside the parish. That is not
+      loyalty. Wick simply thinks this house's business is Wick's business.
+  - address: "content:events/indoors.yaml#events[id=the_yard_man_who_will_not_go_in].title"
+    of: "ff4ee7ec1f0e2fe8"
+    plainenglish: >-
+      He Only Works Outside
+  - address: "content:events/indoors.yaml#events[id=the_yard_man_who_will_not_go_in].body"
+    of: "a637257335f67f8f"
+    plainenglish: >-
+      The yard man has been here fourteen years and has never once gone into the main hall past
+      the kitchen door. Nobody arranged it and nobody has commented, because a yard man's work
+      is outside. It came up only because a message needed carrying and he handed it to a maid
+      at the door. He is not afraid of anything. He has simply not gone in for fourteen years,
+      and he cannot give any reason why.
+  - address: "content:events/indoors.yaml#events[id=the_yard_man_who_will_not_go_in].interaction.outcomes[id=nobody_asks].text"
+    of: "f39aa964381ce6c0"
+    plainenglish: >-
+      Nobody asks him, because there is no way to ask without making it a big thing. He goes on
+      doing the outside work for eleven more years, and dies at sixty in the cottage where he
+      was born. His son takes over the yard. His son does not go in either, and nobody has ever
+      told him anything about it.
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].title"
+    of: "3aa335aa95936436"
+    plainenglish: >-
+      She Is Leaving for Ockleigh
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].body"
+    of: "96160055ca6c0ec1"
+    plainenglish: >-
+      At Thaw, a maid who has been here six years gives notice to go to a household at Ockleigh.
+      It is entirely her right, and she does it properly and at the proper time of year. Six
+      years of knowledge about this house walks out of the gate with her and into another hall's
+      kitchen. There, people with nothing else to talk about will ask her about it every evening
+      for six years. There is no contract to keep her, and anything the house offered her would
+      only look like an admission.
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].interaction.choices[id=let_her_go_well].label"
+    of: "2a1045df6c80e0bb"
+    plainenglish: >-
+      Let her leave on good terms. A reference, her wages, and the door left open.
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].interaction.choices[id=let_her_go_well].outcomes[id=gone_well].text"
+    of: "488b71e39755f70f"
+    plainenglish: >-
+      A written reference in the steward's best handwriting, her wages paid to the day, and the
+      Head thanking her at the gate in front of the yard. For the next six years, what she says
+      about this family at Ockleigh is shaped entirely by four minutes in a cold yard. It is
+      warm, about everything, including the things she noticed.
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].interaction.choices[id=let_her_go_badly].label"
+    of: "b81d5ef7e79a2403"
+    plainenglish: >-
+      Let her go without a reference. She chose to leave.
+  - address: "content:events/indoors.yaml#events[id=a_servant_gives_notice].interaction.choices[id=let_her_go_badly].outcomes[id=gone_badly].text"
+    of: "d0f518cd8db26a51"
+    plainenglish: >-
+      She leaves without a reference. She does not need one, because Ockleigh has already taken
+      her on. Of her six years here, the refusal is the only thing she describes to anyone in
+      detail. Those last four minutes are what gets repeated, again and again, for thirty years,
+      in another county's kitchen.
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].title"
+    of: "9c5f7a6d437e69e9"
+    plainenglish: >-
+      A Quarrel in the Kitchen
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].body"
+    of: "6d6adf9963fe038d"
+    plainenglish: >-
+      The cook has been here thirty-one years. The new maid is the reeve's niece. Neither of
+      them is wrong about anything, which is why a kitchen quarrel can never be settled. It has
+      been going on since Greening. Nothing is being burnt and nobody is being hit, but for four
+      tendays the whole indoor side of the house has been arranging itself around two women who
+      will not be in the same room. {LADY} holds the household keys and has not stepped in.
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].interaction.decidedBy.state[0].because"
+    of: "b90643c36f1f532f"
+    plainenglish: >-
+      a house of this standing cannot afford a household that has stopped working
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].interaction.choices[id=let_her_settle_it].label"
+    of: "640debb66e20423a"
+    plainenglish: >-
+      This is for whoever holds the keys. Leave it to her.
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].interaction.choices[id=let_her_settle_it].outcomes[id=she_settles_it].text"
+    of: "2518da38fcb31fcc"
+    plainenglish: >-
+      It takes her nine days and one very short talk with each of them. Nobody else ever learns
+      what was agreed, and the kitchen runs smoothly from the following Tuesday. The reeve's
+      niece stays eleven years. The cook mentions the whole business once, in 1231, as a lesson
+      to a girl she is training.
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].interaction.choices[id=the_head_settles_it].label"
+    of: "41a592247b9a0158"
+    plainenglish: >-
+      Settle it from the head of the table. This has gone on long enough.
+  - address: "content:events/indoors.yaml#events[id=the_cook_and_the_new_maid].interaction.choices[id=the_head_settles_it].outcomes[id=settled_from_above].text"
+    of: "42c79bbb72193e87"
+    plainenglish: >-
+      It is settled in four minutes and stays settled. But the woman who holds the keys has been
+      overruled in front of all the indoor servants. Everyone below stairs now knows that about
+      this hall, and nobody above stairs has noticed. The kitchen works. It works the way a
+      kitchen does for someone it has stopped bringing its problems to.
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].title"
+    of: "62eb4268746498dc"
+    plainenglish: >-
+      An Extra Servant for Show
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].body"
+    of: "b51a6273c2963b5f"
+    plainenglish: >-
+      This house runs on eight indoor servants, and keeps a ninth when it can afford to. The
+      ninth is always whatever the times say a house of this rank should have. A generation ago
+      it was a second groom. Now the idea is a man who can serve at table properly. He would
+      cost four marks a year and be worth nothing at all except on the two days a year when
+      there are guests.
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].interaction.choices[id=hire_the_ninth].label"
+    of: "7784bf6fce2c072b"
+    plainenglish: >-
+      Hire him. The province judges us by the two feasts.
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].interaction.choices[id=hire_the_ninth].outcomes[id=hired].text"
+    of: "3b4bf53be6f485f7"
+    plainenglish: >-
+      Four marks a year for a man with nothing to do on three hundred and sixty days and who is
+      essential on five. The two feasts look like those of a house one rank higher. Four guests
+      notice. None of them says anything, which is how you know it worked.
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].interaction.choices[id=eight_will_do].label"
+    of: "5a45cb43b002fc27"
+    plainenglish: >-
+      Eight is enough. The maids can serve at table.
+  - address: "content:events/indoors.yaml#events[id=whoever_the_house_is_buying_this_decade].interaction.choices[id=eight_will_do].outcomes[id=eight].text"
+    of: "e9fc4b8575335cf1"
+    plainenglish: >-
+      Eight it is, and the maids serve at the two feasts as they have since the house was
+      founded, capably and without embarrassment. A guest from Cawdry sees a house that does not
+      keep a man to serve at table, and remembers it. Nine years later it comes out in a remark
+      about someone else, with this family's name in the second half of the sentence.
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].title"
+    of: "9ce0afad764ad979"
+    plainenglish: >-
+      Where the Servants Actually Sleep
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].body"
+    of: "8379a41b1439d857"
+    plainenglish: >-
+      Indoor servants sleep wherever there is room. That means the kitchen floor, the passage
+      above the pantry, and for two of them, the end of a corridor with a curtain across it. It
+      has been like that since the house was founded. The carpenter says a partition and four
+      beds in the west wing would cost eleven crowns and two weeks, and the west wing is the
+      wing with the roof everyone argues about.
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].interaction.choices[id=partition_the_west_wing].label"
+    of: "1098deae70d9c132"
+    plainenglish: >-
+      Do it. Eleven crowns gets four people off the kitchen floor.
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].interaction.choices[id=partition_the_west_wing].outcomes[id=partitioned].text"
+    of: "2b5215ca900ed3f6"
+    plainenglish: >-
+      Eleven crowns and two weeks buy four beds in a wing that leaks, which is still four beds.
+      Nobody says thank you, because what has been fixed is something nobody was allowed to
+      complain about. For the first time in two hundred years, the kitchen floor is empty at
+      night, and the cook finds it eerie.
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].interaction.choices[id=leave_the_arrangements].label"
+    of: "406cdb0dc97572d1"
+    plainenglish: >-
+      Leave it as it is. It has done since the house was founded.
+  - address: "content:events/indoors.yaml#events[id=the_bed_in_the_kitchen].interaction.choices[id=leave_the_arrangements].outcomes[id=left_as_is].text"
+    of: "d367a0be980fecf2"
+    plainenglish: >-
+      It has done since the founding, and it does for two hundred years more. Every servant this
+      house ever has sleeps on a floor because someone decided not to spend eleven crowns. The
+      decision is made four times over three centuries. It is never once written down.

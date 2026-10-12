@@ -755,3 +755,371 @@ characterTemplates:
       loyalty on this roll and the only guard the house has ever had who has
       done the work for a living. He keeps the night watch and not the
       tollgate, because he cannot read a toll book and has never said so.
+
+proseVariants:
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_common_stock].title"
+    of: "e10d8bf32cd86287"
+    plainenglish: >-
+      A Daughter From an Ordinary Family
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_common_stock].blurb"
+    of: "47971c97be32dacb"
+    plainenglish: >-
+      She costs little, she is willing, and she carries nothing at all. Her sons will be
+      mundane, safe and useless, and the house will be one step closer to a Regency.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_ilm].title"
+    of: "8fddae68e0031bcc"
+    plainenglish: >-
+      The Daughter of a Scholar
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_ilm].blurb"
+    of: "02b25a32f9571afe"
+    plainenglish: >-
+      House Ilm keeps good records and better secrets. There is a two-percent chance she has
+      deep blood, and you will certainly be asked what you want it for.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_deep_blood].title"
+    of: "694d621689feffca"
+    plainenglish: >-
+      Deep Blood, and Her Family Knows It
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_deep_blood].blurb"
+    of: "76a4e6156936f0a9"
+    plainenglish: >-
+      She woke at eleven in front of witnesses, and that is the one thing in this market nobody
+      can fake. The price shows it. So does the clause about her firstborn.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_ruined_nobility].title"
+    of: "4a3a7d074c9f96d3"
+    plainenglish: >-
+      A Ruined House, Ready to Deal
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_ruined_nobility].blurb"
+    of: "147cc244fe05a4b8"
+    plainenglish: >-
+      Six months ago her family would not have let your steward through the door. Her blood is
+      excellent, her family's standing is ruined, and the terms would be an insult in any other
+      year.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_who_marries_in].title"
+    of: "d6db03b77575fb1b"
+    plainenglish: >-
+      A Man Who Will Take Our Name
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_who_marries_in].blurb"
+    of: "af466e1df79fa6a1"
+    plainenglish: >-
+      If every living member of a house's blood is female, the house must marry its men in under
+      her name, or die out. Everyone finds this shocking. Everyone would do it.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_ward_of_the_church].title"
+    of: "f12723c14161dd55"
+    plainenglish: >-
+      A Girl Placed by the Church
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_ward_of_the_church].blurb"
+    of: "c2be27b6874101a2"
+    plainenglish: >-
+      The chapter house raised her and paid her dowry, and it would like a report on how she is
+      doing. Every year. In writing.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_widow_with_land].title"
+    of: "9f31debbb448baaf"
+    plainenglish: >-
+      A Widow With Three Living Children
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_widow_with_land].blurb"
+    of: "f86579a9bb2c3625"
+    plainenglish: >-
+      She has buried a husband and had three children who lived, and that is the only fact in
+      this market anyone can check. She is ten years older than the others, and worth all ten if
+      you want a house full of children.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_marrow_cousin].title"
+    of: "af9b805d80cd0931"
+    plainenglish: >-
+      A Cousin From the Rival House
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_marrow_cousin].blurb"
+    of: "045aeb1a8cf920e6"
+    plainenglish: >-
+      Marrow never sends its daughters out for nothing. This one comes with an unwritten deal
+      about the western pasture. Her blood is better than her terms.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_second_son].title"
+    of: "f12ac0b088b7836c"
+    plainenglish: >-
+      A Second Son Who Will Inherit Nothing
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_second_son].blurb"
+    of: "c2c1203d66f2fb79"
+    plainenglish: >-
+      His brother gets the land, and he gets whatever he can arrange for himself. He will take
+      your name without arguing, which tells you how little anyone else offered him.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_ilm_scholar].title"
+    of: "82b15c4db2bdf6b9"
+    plainenglish: >-
+      A Reading Man
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_ilm_scholar].blurb"
+    of: "54f5e433735d1e5f"
+    plainenglish: >-
+      He has read more of the archive than your own archivist, and he asks about the east wing
+      before he asks about the dowry. He is useful, and the kind of useful that notices things.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_marrow_younger].title"
+    of: "f8274bdcdc04a818"
+    plainenglish: >-
+      Marrow's Younger Son
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_marrow_younger].blurb"
+    of: "ab3cd66a47a220fe"
+    plainenglish: >-
+      Marrow has spent two generations calling this house inbred, so offering it a son is not
+      kindness. It puts their man in your hall for forty years, and he will be a good husband
+      all the time he is there.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_bracc].title"
+    of: "395884cb7210562f"
+    plainenglish: >-
+      A Daughter of the Bankers
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_bracc].blurb"
+    of: "7c24d6c323627237"
+    plainenglish: >-
+      No font, no affinity, no signs, and her dowry comes as a letter of credit instead of land.
+      What she brings is a head for numbers that her children will inherit, and a family who
+      will know this house's accounts by spring.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_bracc].title"
+    of: "17577aae97b8fca2"
+    plainenglish: >-
+      The Banker Who Married In
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_bracc].blurb"
+    of: "74e67e006501eaf4"
+    plainenglish: >-
+      He takes the two percent lost on every payment that crosses a border in this world, and
+      now that money stays in the family. Nobody in the province can decide whether the house
+      has married up or been put under inspection.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_hesk].title"
+    of: "8b1e0fad4608a8b9"
+    plainenglish: >-
+      The Match From the Quarry
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_hesk].blurb"
+    of: "8ede42d8851dbb04"
+    plainenglish: >-
+      She comes from eighteen miles north, as strong as the wall she grew up behind, and she is
+      the cheapest match the house will ever be offered. Her people have married each other for
+      three hundred years, and she carries more hidden harm in her blood than anyone from any
+      other family in this game. None of it shows, and none of it is her fault.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_second_son_of_hesk].title"
+    of: "fd5bc5220e73d296"
+    plainenglish: >-
+      A Second Son From Hesk
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_second_son_of_hesk].blurb"
+    of: "6f9e54ca7a541726"
+    plainenglish: >-
+      He can lift what it takes two men to lift, and he can read things nobody needs read. He
+      will work a farm the way he worked a slate face. He carries the same thing she carries:
+      the same three hundred years.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_tutor].title"
+    of: "4e1f4f0872fcf324"
+    plainenglish: >-
+      The Teacher
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_tutor].blurb"
+    of: "6ac877b240c9103e"
+    plainenglish: >-
+      Kind, funny and good at his job, and gone before the heir grows up. The things he said
+      become the family's sayings, repeated for centuries by people who never met him.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_midwife].title"
+    of: "df70c82b3e523a5f"
+    plainenglish: >-
+      The Midwife Who Can Read the Signs
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_midwife].blurb"
+    of: "ed286c858c5a0b41"
+    plainenglish: >-
+      She is the only way the house has to guess what its women carry. She is also the only
+      person who knows what happened in the second cellar, so she is useful and dangerous at the
+      same time.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_steward].title"
+    of: "3dc1151480551920"
+    plainenglish: >-
+      The House Steward
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_steward].blurb"
+    of: "40788f8a52a14b76"
+    plainenglish: >-
+      His contract is hereditary, so his children inherit it. Families of servants need a real
+      line of descent too.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_archivist].title"
+    of: "28b7dbe1ab39ba5d"
+    plainenglish: >-
+      The Keeper of the Archive
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_archivist].blurb"
+    of: "ac30fe2577283e79"
+    plainenglish: >-
+      Nobody fights over a woman's forty years. She cannot move the house forward, so she has
+      time to look after it. The archive slowly ends up in her hands and stays there.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_gatekeeper].title"
+    of: "08ec9c85f9290bc9"
+    plainenglish: >-
+      The Keeper of the Gate
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_gatekeeper].blurb"
+    of: "337a340eb24bc5ba"
+    plainenglish: >-
+      He has run both the gate and the bridge since before anyone thought to ask whether one man
+      should. Nobody crosses either one without him knowing, and nothing crosses for free.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_physician].title"
+    of: "3b78057cb75817d0"
+    plainenglish: >-
+      The House Doctor
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_physician].blurb"
+    of: "976b41892d06eb95"
+    plainenglish: >-
+      Trained at Bramme, licensed for nothing, and worth every one of her seven marks. Hers is
+      the only contract on the wage roll that is renewed each year, so she is the first name
+      crossed off when money runs short. What she was worth shows up only as a list of years in
+      which nothing went wrong.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_singer].title"
+    of: "31d18404b5ca1ab8"
+    plainenglish: >-
+      The Singer of the House
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_singer].blurb"
+    of: "c2f0a6adecbf27c1"
+    plainenglish: >-
+      Two marks and a bed beside the fire. That is the cheapest thing on the wage roll, and the
+      only thing that decides what the province will believe in eighty years. The Wayfolk spread
+      whichever version was sung best.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_chronicler].title"
+    of: "e8c9d831696538b5"
+    plainenglish: >-
+      The House Chronicler
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_chronicler].blurb"
+    of: "2da60d471e124d6b"
+    plainenglish: >-
+      The archivist keeps what the house owns. He writes down what the house did, in the same
+      week it did it, in handwriting the Warden's clerk will accept without checking twice. Half
+      of them were schooled by the Church. That opens a door into the hall and a door out of it,
+      and the house needs both and fears one.
+  - address: "content:characters/templates.yaml#characterTemplates[id=rival_named_opposite].title"
+    of: "7f952ad0bb1a2c5c"
+    plainenglish: >-
+      The Enemy
+  - address: "content:characters/templates.yaml#characterTemplates[id=rival_named_opposite].blurb"
+    of: "637763f201d5dc16"
+    plainenglish: >-
+      He is cruel to you personally, and he is completely right about your arrogance. He does
+      not call you cruel. He calls you inbred, and it works because it is true.
+  - address: "content:characters/templates.yaml#characterTemplates[id=the_wanderer_who_knows].title"
+    of: "e838c9074ff4ce8b"
+    plainenglish: >-
+      A Stranger Who Knows the Name
+  - address: "content:characters/templates.yaml#characterTemplates[id=the_wanderer_who_knows].blurb"
+    of: "f225c01ed51baa22"
+    plainenglish: >-
+      They arrive in a bad winter, ask for nothing, and use one of the nine names correctly in
+      an ordinary sentence. Nobody sent them. Nobody can find out where they went afterwards,
+      and in the end the house stops asking.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_the_marches].title"
+    of: "0f1b489dc4d5a8c9"
+    plainenglish: >-
+      A Daughter of a Small Hold
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_the_marches].blurb"
+    of: "7a8f3300bf7bb31c"
+    plainenglish: >-
+      Two hundred small holds have had no ruler since 604, and there is no rank anywhere among
+      them worth marrying for. That makes it the least inbred group in the game. She arrives
+      with no family tree at all and with the healthiest grandchildren on this list, and the
+      province will spend forty years calling it a cheap match.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_the_marches].title"
+    of: "2acff436aba69e2a"
+    plainenglish: >-
+      A Hired Soldier Between Wars
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_the_marches].blurb"
+    of: "8149c57e6acdd562"
+    plainenglish: >-
+      He is paid by the month and loyal until the month is over. He will take your name because
+      it is the only thing on offer that lasts longer than a contract. Nobody can find a single
+      document saying where he comes from.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_yssanne].title"
+    of: "56affb606f92a134"
+    plainenglish: >-
+      A Daughter of an Yssene House
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_yssanne].blurb"
+    of: "2fd39a0529a8b971"
+    plainenglish: >-
+      There are perhaps nine such families in the kingdom. They are poor, have perfect manners,
+      and follow a law of inheritance that Aubren does not recognise and cannot simply ignore.
+      She is a distant match without the year of letters, and she brings a legal argument nobody
+      in the Nethering knows how to have.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_yssanne].title"
+    of: "ee0382cb575e242f"
+    plainenglish: >-
+      A Second Son of Yssanne
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_yssanne].blurb"
+    of: "350e965eb73964da"
+    plainenglish: >-
+      He will take your name without complaint, because under his own law he was never going to
+      inherit anything anyway. People will talk about his manners at every feast for thirty
+      years, and never once kindly.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_the_fell].title"
+    of: "48a790849f0a4d18"
+    plainenglish: >-
+      The Daughter of a Herder
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_of_the_fell].blurb"
+    of: "0d18ef0f897ea623"
+    plainenglish: >-
+      Up on the hills at Greening, down again at Slaughter, and away for half of every year
+      since she could walk. She comes from long-lived people, has no money, and her family has
+      seen everything that ever happened on the high ground.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_the_lag].title"
+    of: "a9567a3e6c29cc8a"
+    plainenglish: >-
+      A Man From the Lag
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_the_lag].blurb"
+    of: "1e3c3e881352cdb4"
+    plainenglish: >-
+      Eels, peat and wild birds, the marsh fever every Highsun since he was a boy, and a body
+      that has survived all of it. Aubren says the people of the Lag have webbed feet. Aubren
+      says a lot of things and writes none of them down.
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_burgess_daughter].title"
+    of: "6fd326d4e337b958"
+    plainenglish: >-
+      The Daughter of a Bramme Burgess
+  - address: "content:characters/templates.yaml#characterTemplates[id=suitor_burgess_daughter].blurb"
+    of: "c94e02a82f8772a4"
+    plainenglish: >-
+      Her family is one of Bramme's forty chartered households. They resent every landed house
+      within a day's ride and send their own delegates to the Assembly. Real money, no standing
+      at all, and a father who will want the terms written out twice.
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_hesk_quarryman].title"
+    of: "59d01b4ab74dccf6"
+    plainenglish: >-
+      A Quarry Worker From Hesk
+  - address: "content:characters/templates.yaml#characterTemplates[id=groom_of_hesk_quarryman].blurb"
+    of: "dd223fefce92ac23"
+    plainenglish: >-
+      Eighteen miles north, one trade, three hundred years of marrying each other, and every
+      roof in the province, including the one that leaks. He is cheap and he is strong, and the
+      hidden harm he carries in his blood is the highest of anyone in this file.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_steward_of_the_weight].title"
+    of: "8d64a059bbf5dd9d"
+    plainenglish: >-
+      The Steward From a Bank
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_steward_of_the_weight].blurb"
+    of: "72e740070576082b"
+    plainenglish: >-
+      He costs nine marks instead of six. His contract lasts his lifetime instead of passing to
+      his children, and he brings a kind of arithmetic the house has never had. He swears his
+      oath on the weight, not on the roll, his contract ends when his employer dies, and within
+      four years he will know exactly what this family is worth.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_tutor_who_did_not_finish].title"
+    of: "940dfae5e4454c29"
+    plainenglish: >-
+      The Teacher Who Left Corran Early
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_tutor_who_did_not_finish].blurb"
+    of: "202c8e4b4342f6cf"
+    plainenglish: >-
+      He did seven of the nine years, then something happened that he will explain four
+      different ways while he works here. He knows more than the kind teacher and is trusted
+      less. He teaches Old Ambric properly, and he is on a yearly contract because he asked for
+      one.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_midwife_of_the_lag].title"
+    of: "50c67a3feaef8c93"
+    plainenglish: >-
+      The Midwife From the Lag
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_midwife_of_the_lag].blurb"
+    of: "582a54f5fdb1cc11"
+    plainenglish: >-
+      Her country has been flooded for four hundred years, with marsh fever every summer, and
+      she has delivered more living children than the Bramme physician has ever seen. She does
+      not read the signs and does not pretend to. That is what makes her different from the
+      woman the house usually hires.
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_guard_of_the_companies].title"
+    of: "2f1132ea795ec0be"
+    plainenglish: >-
+      The Guard Who Was Paid Monthly
+  - address: "content:characters/templates.yaml#characterTemplates[id=retainer_guard_of_the_companies].blurb"
+    of: "aac122bbe218160f"
+    plainenglish: >-
+      A hired soldier who stayed behind when his company went south. He has the lowest loyalty
+      of anyone on this roll, and he is the only guard the house has ever had who did this work
+      for a living. He keeps the night watch and not the tollgate, because he cannot read a toll
+      book and has never admitted it.

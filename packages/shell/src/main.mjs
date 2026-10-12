@@ -241,7 +241,7 @@ ipcMain.handle('ed:export-save', async (event, save) => {
     if (canceled || !filePath) return { ok: false, cancelled: true };
     // Preserve an earlier export if serialization or disk writing fails.
     // The exclusive sibling scratch never follows a pre-planted symlink.
-    writeJsonAtomically(filePath, save);
+    writeJsonAtomically(filePath, save, requireSaveEnvelope);
     return { ok: true, path: filePath };
   } catch (e) {
     return { ok: false, error: String(e) };

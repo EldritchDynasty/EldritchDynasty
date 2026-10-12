@@ -32,3 +32,9 @@ arcs:
         schedule: { minYears: 55, maxYears: 90 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/formula.yaml#arcs[id=arc_the_formula_on_two_desks].title"
+    of: "f50b12eb720f0eef"
+    plainenglish: >-
+      One Formula, Two Desks

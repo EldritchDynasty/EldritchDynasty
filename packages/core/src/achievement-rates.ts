@@ -18,6 +18,8 @@ export const ACHIEVEMENT_POLICIES = ['chronicler', 'ascendant'] as const;
 export type AchievementPolicy = typeof ACHIEVEMENT_POLICIES[number];
 
 const LIBRARY_SCOPED = new Set<AchievementId>(['ending_all_long']);
+// A malformed ID must not silently become a zero-per-cent achievement rate.
+const KNOWN_ACHIEVEMENT_IDS: ReadonlySet<string> = new Set(ACHIEVEMENT_IDS);
 
 export interface AchievementSample {
   campaign: 'short' | 'long';
@@ -78,8 +80,28 @@ function campaignRates(
 function assertUniqueSamples(samples: readonly AchievementSample[]): void {
   const seen = new Set<string>();
   for (const sample of samples) {
+    // TypeScript's unions disappear at runtime. Refuse malformed evidence
+    // before filtering cohorts; otherwise unknown values disappear from every
+    // denominator and an unknown earned ID is misreported as 0%.
+    if (!sample || typeof sample !== 'object') {
+      throw new Error('Invalid achievement sample: expected an object');
+    }
+    if (sample.campaign !== 'short' && sample.campaign !== 'long') {
+      throw new Error(`Invalid achievement sample campaign: ${String(sample.campaign)}`);
+    }
+    if (sample.policy !== 'chronicler' && sample.policy !== 'ascendant') {
+      throw new Error(`Invalid achievement sample policy: ${String(sample.policy)}`);
+    }
     if (!Number.isSafeInteger(sample.seed)) {
       throw new Error(`Invalid achievement sample seed: ${sample.seed}`);
+    }
+    if (!Array.isArray(sample.earned)) {
+      throw new Error('Invalid achievement sample earned IDs: expected an array');
+    }
+    for (const id of sample.earned) {
+      if (typeof id !== 'string' || !KNOWN_ACHIEVEMENT_IDS.has(id)) {
+        throw new Error(`Invalid achievement sample achievement ID: ${String(id)}`);
+      }
     }
     const key = JSON.stringify([sample.campaign, sample.policy, sample.seed]);
     if (seen.has(key)) {

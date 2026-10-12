@@ -254,3 +254,135 @@ heirlooms:
       three quarters of, in a hand nobody at Ardwen can read. It has no
       paperwork and will never have any, which is the second thing wrong with
       owning it.
+
+proseVariants:
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].name"
+    of: "ae030099f286a51d"
+    plainenglish: >-
+      A Dose of Agelessness
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].chronicle"
+    of: "ada5f6ed77720f31"
+    plainenglish: >-
+      {BEARER} drank it in the small hall with four people watching. There was no light, no
+      sound, nothing to see. The change took eleven years to show. Then it went on not showing,
+      year after year, and the house began to count.
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_agelessness].blurb"
+    of: "7796f37d36699cf9"
+    plainenglish: >-
+      It adds forty-some years to the most a body can live, and nothing else. It does not make
+      anyone young. It makes them take longer to stop.
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_fertility].name"
+    of: "1a4ecb72069f225e"
+    plainenglish: >-
+      A Dose of Fertility
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_fertility].chronicle"
+    of: "78f372b156304ad5"
+    plainenglish: >-
+      They gave it to {BEARER} in water, because the woman who sold it said to use water and
+      would not say why. It tasted of the cup. Whatever it did, it did quietly, and the house
+      did not know whether to thank anyone until the next autumn.
+  - address: "content:heirlooms.yaml#heirlooms[id=portion_of_fertility].blurb"
+    of: "8cc51887fa00b51b"
+    plainenglish: >-
+      Three doses in the flask, and sixty years must pass between them, so no generation gets it
+      twice. What it buys is a chance of a child, not a child.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_unmirrored_eye].name"
+    of: "77137a9060d25384"
+    plainenglish: >-
+      The Eye With No Reflection
+  - address: "content:heirlooms.yaml#heirlooms[id=the_unmirrored_eye].chronicle"
+    of: "30a65de07a6a94f4"
+    plainenglish: >-
+      It came down the same road as the flask, wrapped in a cloth that nobody in the house would
+      later admit was theirs. {BEARER} looked into it once, by lamplight, alone. What gets
+      written down afterwards is never what {BEARER} says happened.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_unmirrored_eye].blurb"
+    of: "17448979c7e03c3d"
+    plainenglish: >-
+      Six uses, five years apart. It does not need the blood to have done anything at all, only
+      to be able to.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ninefold_seal].name"
+    of: "ab920d19e37fad0d"
+    plainenglish: >-
+      The Seal of Nine Folds
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ninefold_seal].chronicle"
+    of: "8bc6e9635cb0bfbf"
+    plainenglish: >-
+      {BEARER} pressed it into the wax in front of the Warden's clerk, and the clerk counted the
+      folds without being asked, the way every clerk in the province has always counted them.
+      Nine. It is always nine. Someone at the back of the room said so out loud, and was not
+      thanked for it.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ninefold_seal].blurb"
+    of: "b0fa8a28eb242fec"
+    plainenglish: >-
+      Brass, with nine folds, and older than the hall. It can be used again and again and can
+      never be sold, because a house that sells its seal has not sold a thing. It has lost the
+      means to say who it is.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ring].name"
+    of: "135b26ee669de6c2"
+    plainenglish: >-
+      The Family Ring
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ring].chronicle"
+    of: "351e6e9c8c55cba0"
+    plainenglish: >-
+      It slid on without any struggle. That had not happened in four generations, and the
+      household noticed before {BEARER} did. Nobody said anything at supper. Afterwards two
+      people went to look at the portrait in the west passage, separately, and neither mentioned
+      going.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_ring].blurb"
+    of: "753521cf504c230b"
+    plainenglish: >-
+      Too big for the founder and too big for his son. The family remembers four people wearing
+      it, forty years apart, and has never decided whether the ring chooses badly or is simply
+      right about people.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_rod].name"
+    of: "e7943e39f50f5d75"
+    plainenglish: >-
+      The Black Rod
+  - address: "content:heirlooms.yaml#heirlooms[id=the_rod].chronicle"
+    of: "8740e3a43fbe6c40"
+    plainenglish: >-
+      A yard of black wood with no marks on it. {BEARER} held it for the length of a short
+      conversation, and afterwards was warmer than the room, and stayed warmer than the room for
+      most of a day. The steward wrote down the hour. Four generations of stewards have written
+      down the hour, and no two of them have recorded the same thing happening.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_rod].blurb"
+    of: "c6852b3d389d6c99"
+    plainenglish: >-
+      Nobody in the family has ever worked out what it is for, and everyone has had a theory.
+      Eight uses should be enough to test almost any of them, and have never once been enough to
+      prove one.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_bramme_register].name"
+    of: "3a714b6b3bbab897"
+    plainenglish: >-
+      The Bramme Register in Eleven Volumes
+  - address: "content:heirlooms.yaml#heirlooms[id=the_bramme_register].chronicle"
+    of: "3b46a08407664ca8"
+    plainenglish: >-
+      {BEARER} read the fourth volume in eleven evenings and came out of it able to date
+      someone's handwriting to within nine years. Nobody in the house asked what was in the
+      other ten. Someone in the house has read all of them now, and it is not who the family
+      would guess.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_bramme_register].blurb"
+    of: "13b5d272d4b503ee"
+    plainenglish: >-
+      A retired notary's own register, dated and in one handwriting, going back to 1088. It is
+      not a spellbook and cannot be studied, and it is the only object in this file that makes a
+      reader better at reading.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_forty_leaves].name"
+    of: "fa0a3778ecb74d64"
+    plainenglish: >-
+      The Forty Pages
+  - address: "content:heirlooms.yaml#heirlooms[id=the_forty_leaves].chronicle"
+    of: "ea10a0b41e923900"
+    plainenglish: >-
+      {BEARER} had the pages spread out on the long table for most of a winter, with the lamp
+      moved to that end and the household walking around it. The writing is not Ambric, not Old
+      Ambric and not Yssene. On the last evening {BEARER} wrapped them back in the oiled cloth,
+      said nothing about it at supper, and never spoke of it again.
+  - address: "content:heirlooms.yaml#heirlooms[id=the_forty_leaves].blurb"
+    of: "11b508fcbdc18180"
+    plainenglish: >-
+      Forty pages from a Rimefell cart, out of a book whose other three quarters nobody has, in
+      a writing nobody at Ardwen can read. It has no papers and never will, and that is the
+      second thing wrong with owning it.

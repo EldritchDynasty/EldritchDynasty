@@ -36,3 +36,9 @@ arcs:
         schedule: { minYears: 55, maxYears: 90 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/song.yaml#arcs[id=arc_the_song_we_taught_them].title"
+    of: "b7ea33d42e403680"
+    plainenglish: >-
+      The Song We Gave Them

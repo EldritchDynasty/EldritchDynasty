@@ -110,3 +110,46 @@ ages:
     mortalityMultiplier: 10.0
     namedAfterYears: 4
     clauseBearing: false
+
+proseVariants:
+  - address: "content:ages/ages.yaml#ages[id=the_long_peace].opening"
+    of: "1363959a932dede6"
+    plainenglish: >-
+      For a while the harvests were large and the burials were few. The house began to believe,
+      as every house does when the good years last long enough, that this was simply how things
+      were now.
+  - address: "content:ages/ages.yaml#ages[id=the_wars].opening"
+    of: "f93de50dd3ff7e79"
+    plainenglish: >-
+      Word came that men were needed, and then that more men were needed. The house learned what
+      a son is worth to an army that never asks what he was worth to his mother.
+  - address: "content:ages/ages.yaml#ages[id=the_crusade].opening"
+    of: "c778552aa3bddace"
+    plainenglish: >-
+      Somewhere a clerk with a very good memory had started, without any real ill will, to take
+      an interest in the family. The family had the uneasy feeling of a door that had always
+      stood open being quietly measured for a lock.
+  - address: "content:ages/ages.yaml#ages[id=the_insurrection].opening"
+    of: "8be603f808e91654"
+    plainenglish: >-
+      Houses that had stood for longer than anyone alive could remember began, one after
+      another, to find out that standing for longer than anyone could remember was not the same
+      as standing forever.
+  - address: "content:ages/ages.yaml#ages[id=the_withering].opening"
+    of: "89503cb091edd0bc"
+    plainenglish: >-
+      Fewer children woke to the gift that should have been theirs, and fewer books changed
+      hands. Nobody could name the year it started, because it had not started in any one year.
+      Little by little, things had simply stopped being replaced.
+  - address: "content:ages/ages.yaml#ages[id=the_quickening].opening"
+    of: "752b13efa6cf4223"
+    plainenglish: >-
+      The gift came early now, and to more of the blood than it had any right to. The house
+      found that the ladder it had climbed alone for generations was suddenly and uncomfortably
+      crowded with other men's sons.
+  - address: "content:ages/ages.yaml#ages[id=the_plague].opening"
+    of: "98fcbd17c571685b"
+    plainenglish: >-
+      It did not care about bloodlines, affinities, or which houses had been careful. In one
+      season, the people who had built their lives on being strong learned what the people who
+      had built theirs on being clever already knew.
