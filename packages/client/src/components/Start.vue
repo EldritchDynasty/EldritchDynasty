@@ -125,8 +125,10 @@ const libraryIsReady = computed(() => props.libraryReady ?? true);
  */
 const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
 /** A pending host restore owns the session until it settles. */
+/** Do not snapshot inherited houses while an asynchronous Library mutation is unsettled. */
 const mayBegin = computed(() => libraryIsReady.value && validSeed.value
-  && !resuming.value && loadingSlot.value === null && !importingSave.value);
+  && !resuming.value && loadingSlot.value === null && !importingSave.value
+  && !retryingLibrary.value && !clearingLibrary.value && removingRun.value === null);
 /** A double click can arrive before Vue replaces the Start screen with the prologue. */
 let beginning = false;
 
