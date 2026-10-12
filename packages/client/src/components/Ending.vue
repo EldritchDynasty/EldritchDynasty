@@ -71,7 +71,10 @@ async function saveAfterimage(): Promise<void> {
       return gauge.measureText(text).width;
     };
 
+    // Keep the export filename paired with the same snapshot painted below.
+    // `toBlob` is asynchronous: the mounted ending can receive new props mid-encode.
     const model = afterimage.value;
+    const filename = afterimageName(props.view.houseName, props.view.seed, props.epilogue.year);
     const layout = afterimageLayout(model, measure);
     const width = PLATE.width;
     const {
@@ -171,7 +174,7 @@ async function saveAfterimage(): Promise<void> {
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('PNG export unavailable');
-    downloadBlob(blob, afterimageName(props.view.houseName, props.view.seed, props.epilogue.year));
+    downloadBlob(blob, filename);
   } catch {
     afterimageError.value = 'The house afterimage could not be saved. Try again.';
   } finally {
