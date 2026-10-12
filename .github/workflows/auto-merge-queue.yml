@@ -316,7 +316,16 @@ jobs:
               -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
               -F pullRequestId="$node" \
               -F expectedHeadOid="$head" >"$response" 2>&1; then
-              echo "PR #$number admitted to native queue for head $head."
+              # GraphQL can succeed at the transport layer without returning
+              # an admission entry. Match the ordinary PR-head admission guard.
+              entry_id="$(jq -r '.data.enqueuePullRequest.mergeQueueEntry.id // empty' "$response")"
+              if [[ -z "$entry_id" ]]; then
+                echo "::error::PR #$number admission returned no queue entry:"
+                cat "$response"
+                failed=1
+              else
+                echo "PR #$number admitted to native queue for head $head."
+              fi
             elif grep -Eqi 'already (in|on) (the )?merge queue|already in the queue' "$response"; then
               echo "PR #$number is already queued."
             elif grep -Eq 'Required status check .*CI required.* is expected' "$response"; then
