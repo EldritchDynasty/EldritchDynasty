@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { FOUNDER_NAME_MAX as PERSON_NAME_MAX } from '../lib/game';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
@@ -25,6 +25,26 @@ function clearRefusal(person: string): void {
   delete refusals.value[person];
 }
 
+// A child must receive one naming order per render, even if Enter and both
+// buttons are activated before the parent has refreshed namesWanted.
+const submitting = new Set<string>();
+function submitOnce(person: string, order: () => boolean, rejection: string): void {
+  if (submitting.has(person)) return;
+  submitting.add(person);
+  try {
+    if (order()) {
+      delete drafts.value[person];
+      clearRefusal(person);
+    } else {
+      refusals.value[person] = rejection;
+    }
+  } finally {
+    // A refused order can be retried after the next render, and an exception
+    // must not leave this child's controls locked forever.
+    void nextTick(() => { submitting.delete(person); });
+  }
+}
+
 /**
  * A QUEUE THAT SAYS HOW LONG IT IS (issue #53).
  *
@@ -43,6 +63,9 @@ const waiting = computed(() => props.view.namesWanted.length);
  * way of playing too.
  */
 function give(person: string): void {
+  // Check before validation: the first successful action already cleared its
+  // draft, but a second same-tick click must not create a false empty-name error.
+  if (submitting.has(person)) return;
   const chosen = (drafts.value[person] ?? '').trim();
   if (!chosen) {
     refusals.value[person] = 'Enter a name, or let him keep his suggestion.';
@@ -52,12 +75,8 @@ function give(person: string): void {
     refusals.value[person] = `A name must be at most ${PERSON_NAME_MAX} characters. Shorten it and try again.`;
     return;
   }
-  if (props.actions.name(person, chosen)) {
-    delete drafts.value[person];
-    clearRefusal(person);
-  } else {
-    refusals.value[person] = 'That name could not be accepted. Try a different name.';
-  }
+  submitOnce(person, () => props.actions.name(person, chosen),
+    'That name could not be accepted. Try a different name.');
 }
 
 /**
@@ -79,11 +98,21 @@ function submitOnEnter(person: string, event: KeyboardEvent): void {
 }
 
 function keep(person: string): void {
-  if (props.actions.keepSuggestedName(person)) {
-    delete drafts.value[person];
-    clearRefusal(person);
-  } else {
-    refusals.value[person] = 'His suggested name could not be accepted. Try naming this child yourself.';
+  submitOnce(person, () => props.actions.keepSuggestedName(person),
+    'His suggested name could not be accepted. Try naming this child yourself.');
+}
+
+function keepAll(): void {
+  // Keeping the whole queue must not race an individual child's name/Keep.
+  if (submitting.size > 0) return;
+  const people = props.view.namesWanted.map((child) => child.person);
+  for (const person of people) submitting.add(person);
+  try {
+    props.actions.keepSuggestedNames();
+  } finally {
+    void nextTick(() => {
+      for (const person of people) submitting.delete(person);
+    });
   }
 }
 </script>
@@ -130,7 +159,7 @@ function keep(person: string): void {
         role="alert"
       >{{ refusals[child.person] }}</p>
     </div>
-    <button v-if="waiting > 1" class="quiet small" @click="actions.keepSuggestedNames()">
+    <button v-if="waiting > 1" class="quiet small" @click="keepAll()">
       Keep the names he suggests
     </button>
   </section>
