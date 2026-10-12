@@ -68,7 +68,7 @@ describe('iOS runtime smoke protocol', () => {
 });
 
 
-describe('native Data persistence rejects unreadable root JSON (#1374)', () => {
+describe('native Data persistence rejects unreadable root JSON (#1374, #1408)', () => {
   it('preserves existing save and Library bytes and legacy keys on rejected writes', async () => {
     const oldSave = { format: 28, year: 1220 };
     const oldLibrary = { format: 1, runs: [] };
@@ -95,8 +95,19 @@ describe('native Data persistence rejects unreadable root JSON (#1374)', () => {
     };
     const host = mobileStorage(files, preferences);
 
-    // Even JSON root null is not a readable snapshot on this host.
-    for (const bad of [null, undefined, () => 1, Symbol('missing'), { toJSON: () => null }]) {
+    // JSON serialization can turn an apparent object into an array or scalar.
+    // Those roots must not replace durable Data bytes or clear legacy keys.
+    const badRoots: unknown[] = [
+      null, undefined, () => 1, Symbol('missing'),
+      [], [1], 'text', 0, false,
+      { toJSON: () => null },
+      { toJSON: () => [] },
+      { toJSON: () => ['unexpected'] },
+      { toJSON: () => 'text' },
+      { toJSON: () => 0 },
+      { toJSON: () => false },
+    ];
+    for (const bad of badRoots) {
       await expect(host.writeSave('autosave', bad)).rejects.toThrow(TypeError);
       await expect(host.writeLibrary(bad)).rejects.toThrow(TypeError);
     }
@@ -111,8 +122,12 @@ describe('native Data persistence rejects unreadable root JSON (#1374)', () => {
     const nextLibrary = { format: 1, runs: [{ id: 'second-house' }] };
     await host.writeSave('autosave', nextSave);
     await host.writeLibrary(nextLibrary);
-    expect(files.writeFile).toHaveBeenCalledTimes(2);
-    expect(preferences.remove).toHaveBeenCalledTimes(2);
+    // Custom serializers that still produce objects remain readable, and
+    // normal objects must continue to be accepted without a second schema.
+    await host.writeSave('autosave', { toJSON: () => nextSave });
+    await host.writeLibrary({ toJSON: () => nextLibrary });
+    expect(files.writeFile).toHaveBeenCalledTimes(4);
+    expect(preferences.remove).toHaveBeenCalledTimes(4);
     await expect(host.readSave('autosave')).resolves.toEqual(nextSave);
     await expect(host.readLibrary()).resolves.toEqual(nextLibrary);
   });
