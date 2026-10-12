@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId, indexContent, type ActiveAge, type HouseId } from '@ed/schema';
 import { place, testWorld } from './testing.js';
-import { ageMortality, thinBloodFertility, thinBloodMortality } from './people/demography.js';
+import { ageMortality, thinBloodFertility, thinBloodMortality, wed } from './people/demography.js';
 import { conceiveChild } from './people/factory.js';
 import type { SimCtx } from './world.js';
 
@@ -244,5 +244,73 @@ describe('the Age the house is living through', () => {
     ctx.world.age.active = [running(plague.id, ctx.world.year), running(wars.id, ctx.world.year)];
     expect(ageMortality(ctx)).toBeCloseTo(plague.mortalityMultiplier * wars.mortalityMultiplier);
     expect(ageMortality(ctx)).toBeGreaterThan(plague.mortalityMultiplier);
+  });
+});
+
+/**
+ * One wedding gate must commit the marriage and the household move together.
+ * A person without a current household must never become a recorded spouse
+ * while the other person is left in the old hall (#1523).
+ */
+describe('wedding records and residence agree', () => {
+  it('does not record a marriage when the intended stayer has no destination', () => {
+    const ctx = testWorld(content);
+    const groom = place(ctx, { sex: 'male', age: 25, name: 'Homeless Groom' });
+    const bride = place(ctx, { sex: 'female', age: 23, name: 'Foreign Bride', house: 'foreign_wed_test' });
+    groom.membership = [];
+    const before = bride.membership.map((m) => ({ ...m }));
+
+    wed(ctx, groom, bride);
+
+    expect(groom.marriages).toEqual([]);
+    expect(bride.marriages).toEqual([]);
+    expect(groom.membership).toEqual([]);
+    expect(bride.membership).toEqual(before);
+    expect(ctx.world.people.householdOf(bride.id, ctx.world.year)).toBe(asId<HouseId>('foreign_wed_test'));
+  });
+
+  it('records both spouses and moves an ordinary bride into the groom\'s house', () => {
+    const ctx = testWorld(content);
+    const groom = place(ctx, { sex: 'male', age: 26, name: 'House Groom' });
+    const bride = place(ctx, { sex: 'female', age: 22, name: 'Joining Bride', house: 'foreign_wed_test' });
+
+    wed(ctx, groom, bride);
+
+    expect(groom.marriages).toEqual([{ spouse: bride.id, from: ctx.world.year }]);
+    expect(bride.marriages).toEqual([{ spouse: groom.id, from: ctx.world.year }]);
+    expect(groom.membership).toHaveLength(1);
+    expect(bride.membership).toHaveLength(2);
+    expect(bride.membership[0]?.to).toBe(ctx.world.year);
+    expect(bride.membership[1]).toMatchObject({
+      house: asId<HouseId>(ctx.world.playerHouse),
+      kind: 'married_in',
+      from: ctx.world.year,
+    });
+    expect(ctx.world.people.householdOf(bride.id, ctx.world.year)).toBe(ctx.world.playerHouse);
+  });
+
+  it('keeps a cadet bride in her hall when an outsider groom marries in', () => {
+    const ctx = testWorld(content);
+    const bride = place(ctx, {
+      sex: 'female', age: 23, name: 'Cadet Bride', branch: 'cadet_wed_test',
+    });
+    const groom = place(ctx, {
+      sex: 'male', age: 25, name: 'Cadet Groom', house: 'foreign_wed_test',
+    });
+
+    wed(ctx, bride, groom);
+
+    expect(bride.marriages).toEqual([{ spouse: groom.id, from: ctx.world.year }]);
+    expect(groom.marriages).toEqual([{ spouse: bride.id, from: ctx.world.year }]);
+    expect(bride.membership).toHaveLength(1);
+    expect(bride.membership[0]?.branch).toBe('cadet_wed_test');
+    expect(groom.membership[0]?.to).toBe(ctx.world.year);
+    expect(groom.membership[1]).toMatchObject({
+      house: asId<HouseId>(ctx.world.playerHouse),
+      kind: 'married_in',
+      branch: 'cadet_wed_test',
+      from: ctx.world.year,
+    });
+    expect(ctx.world.people.householdOf(groom.id, ctx.world.year)).toBe(ctx.world.playerHouse);
   });
 });
