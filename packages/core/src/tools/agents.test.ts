@@ -241,6 +241,47 @@ describe('the claim ref', () => {
     expect(after.code).toBe(1);
   });
 
+  it('renews a claim without erasing its paths, exclusive lane or note', () => {
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+    const origin = join(root, 'origin.git');
+    const claimedPath = 'packages/content/events/renewal.yaml';
+
+    const taken = agents(alpha, 'take', '155', '--agent', 'renewing',
+      '--paths', claimedPath, '--lane', 'content', '--note', 'original scope');
+    expect(taken.code).toBe(0);
+    const firstSha = git(origin, 'rev-parse', 'refs/heads/claim/155');
+
+    // Renewing only the clock must not turn a content claim into an empty
+    // code claim. The second agent must still see the overlap via the ref.
+    const renewed = agents(alpha, 'take', '155', '--agent', 'renewing', '--renew');
+    expect(renewed.code).toBe(0);
+    const renewedSha = git(origin, 'rev-parse', 'refs/heads/claim/155');
+    expect(renewedSha).not.toBe(firstSha);
+    const message = git(origin, 'log', '-1', '--format=%B', renewedSha);
+    expect(message).toContain(`path: ${claimedPath}`);
+    expect(message).toContain('lane: content');
+    expect(message).toContain('note: original scope');
+
+    const contender = agents(beta, 'take', '156', '--agent', 'contender',
+      '--paths', claimedPath);
+    expect(contender.code).toBe(0);
+    expect(contender.out).toContain('overlapping paths on 155');
+
+    // No --renew and no explicit changes is still a no-op.
+    expect(agents(alpha, 'take', '155', '--agent', 'renewing').code).toBe(0);
+    expect(git(origin, 'rev-parse', 'refs/heads/claim/155')).toBe(renewedSha);
+
+    // An intentional path/lane change still replaces the declared scope.
+    const moved = agents(alpha, 'take', '155', '--agent', 'renewing',
+      '--paths', 'packages/core/src/renewal.ts', '--lane', 'code');
+    expect(moved.code).toBe(0);
+    const movedMessage = git(origin, 'log', '-1', '--format=%B', 'refs/heads/claim/155');
+    expect(movedMessage).toContain('path: packages/core/src/renewal.ts');
+    expect(movedMessage).toContain('lane: code');
+    expect(movedMessage).not.toContain(`path: ${claimedPath}`);
+  });
+
   it('says how many paths an all-clear was clear over', () => {
     // "None overlapping yours" over a stale list is a confident wrong answer,
     // and the count is what makes it checkable by whoever reads it.
