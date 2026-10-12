@@ -752,7 +752,7 @@ const MARRIAGE_ORDERS = [
             Enter a whole number of marks from 1 to {{ table.maxBond }}.
           </p>
           <button
-            v-else
+            v-if="s.bonded"
             class="small"
             @click="actions.order({ kind: 'bond', person: s.person, op: 'free' })"
           >
