@@ -79,6 +79,21 @@ const {
   applyCoreProseEdits, pendingCoreProseText, saveCoreProseCatalogue,
 } = await import('./store.js');
 
+describe('authoring-store load validation', () => {
+  it('refuses truncated effect prose before creating the live authoring bundle', async () => {
+    const { rawFiles } = await import('./content.js');
+    const path = 'events/flow_guard.yaml';
+    rawFiles[path] = 'events:\n  - effects:\n      - { kind: chronicle, text: The debt stood, unpaid. }';
+    vi.resetModules();
+    try {
+      await expect(import('./store.js')).rejects.toThrow(/events\/flow_guard.yaml:3 .*yaml\/flow-comma/);
+    } finally {
+      delete rawFiles[path];
+      vi.resetModules();
+    }
+  });
+});
+
 /** A file with a long header comment block and four events in it. */
 const CRUSADE = 'events/age_crusade.yaml';
 const EVENT = 'the_shelf_that_has_to_go';

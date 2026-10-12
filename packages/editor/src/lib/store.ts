@@ -1,9 +1,10 @@
-import { parse, parseDocument, type Document } from 'yaml';
+import { parseDocument, type Document } from 'yaml';
 import { reactive } from 'vue';
 import type { ContentBundle, ProseVariant } from '@ed/schema';
-import { assembleBundle, CONTENT_LAYOUT, contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
+import { CONTENT_LAYOUT, contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
 import { proseVariantStatus } from './prose-status.js';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
+import { assembleYamlBundle } from '../../../content/src/yaml.js';
 
 /**
  * THE WRITE-BACK STORE (issue #20).
@@ -118,7 +119,7 @@ export interface WriteResult {
 }
 
 export const store = reactive({
-  bundle: assembleBundle(rawFiles, parse) as ContentBundle,
+  bundle: assembleYamlBundle(rawFiles) as ContentBundle,
   /** File paths with edits not yet written to disk. */
   dirty: new Set<string>(),
   saving: new Set<string>(),

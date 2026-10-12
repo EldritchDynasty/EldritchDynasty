@@ -4,7 +4,7 @@ import {
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parse } from 'yaml';
+import { contentYamlParser, parseContentYaml, type ParsedContentYaml } from './yaml.js';
 import {
   assembleBundle, indexContent,
   type Content, type ContentBundle, type ContentSources,
@@ -68,10 +68,12 @@ export function contentFiles(root = ROOT): Record<string, string> {
  */
 const CACHE_DIR = join(ROOT, '..', '..', 'node_modules', '.cache', 'ed-content');
 
-let memo: { key: string; docs: Record<string, unknown> } | undefined;
+let memo: { key: string; docs: Record<string, ParsedContentYaml> } | undefined;
 
 function cacheKey(files: Record<string, string>): string {
   const h = createHash('sha1');
+  // Old cache entries contain values without the source-node diagnostics.
+  h.update('flow-prose-ast-v1\0');
   for (const path of Object.keys(files).sort()) {
     h.update(path);
     h.update('\0');
@@ -81,17 +83,16 @@ function cacheKey(files: Record<string, string>): string {
   return h.digest('hex');
 }
 
-function parseAll(files: Record<string, string>): Record<string, unknown> {
-  const docs: Record<string, unknown> = {};
-  // `?? null` so a document that is empty survives the JSON round trip as a
-  // present key rather than a missing one. `assembleBundle` reads `doc?.[key]`,
-  // which treats both the same, and this keeps cached and uncached identical.
-  for (const [path, text] of Object.entries(files)) docs[path] = parse(text) ?? null;
+function parseAll(files: Record<string, string>): Record<string, ParsedContentYaml> {
+  const docs: Record<string, ParsedContentYaml> = {};
+  // Empty YAML becomes a null document inside the envelope, so it survives
+  // the cache's JSON round trip together with its source diagnostics.
+  for (const [path, text] of Object.entries(files)) docs[path] = parseContentYaml(text);
   return docs;
 }
 
 /** Read the cache, parse on a miss, and write the result back. Never throws. */
-function parsedDocs(files: Record<string, string>): Record<string, unknown> {
+function parsedDocs(files: Record<string, string>): Record<string, ParsedContentYaml> {
   if (process.env.ED_CONTENT_CACHE === 'off') return parseAll(files);
 
   const key = cacheKey(files);
@@ -99,7 +100,9 @@ function parsedDocs(files: Record<string, string>): Record<string, unknown> {
 
   const file = join(CACHE_DIR, `${key}.json`);
   try {
-    const docs = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+    const docs = JSON.parse(readFileSync(file, 'utf8')) as Record<string, ParsedContentYaml>;
+    if (Object.keys(files).some((path) => !docs[path] || !('document' in docs[path]!)
+      || !Array.isArray(docs[path]!.flowProseIssues))) throw new Error('stale parsed YAML cache');
     memo = { key, docs };
     return docs;
   } catch {
@@ -138,11 +141,11 @@ export function loadBundle(root = ROOT, sources?: ContentSources): ContentBundle
   // `assembleBundle` reads each file's text through the parser it is handed.
   // Ours answers from the documents already parsed above; the fallback covers
   // a caller that passes files the cache was not built from.
-  const byText = new Map<string, unknown>();
+  const byText = new Map<string, ParsedContentYaml>();
   for (const [path, text] of Object.entries(files)) {
-    if (path in docs) byText.set(text, docs[path]);
+    if (path in docs) byText.set(text, docs[path]!);
   }
-  return assembleBundle(files, (text) => (byText.has(text) ? byText.get(text) : parse(text)), sources);
+  return assembleBundle(files, contentYamlParser(byText), sources);
 }
 
 /** The bundle with its indexes built. What the simulation actually wants. */
