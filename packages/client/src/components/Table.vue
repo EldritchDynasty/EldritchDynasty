@@ -371,14 +371,14 @@ const MARRIAGE_ORDERS = [
         <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">The land</button>
         <button class="quiet small plat-link" @click="emit('open-plat')">See the plat</button>
       </h3>
-      <p v-if="!land.market.length" class="small dim">Nothing is on the market this year.</p>
+      <p v-if="!land.market.length" class="small dim">{{ local('Nothing is on the market this year.', 'No land is available to buy this year.') }}</p>
       <div v-for="lot in land.market" :key="lot.parcel" class="line">
         <div class="small">
           <strong>{{ lot.name }}</strong>
           <span class="dim"> · {{ lot.place }} · {{ lot.price }} crowns · gone by {{ lot.closesYear }}</span>
         </div>
         <div class="small dim blurb">
-          {{ lot.reason === 'neighbour_short' ? 'A neighbour is short before Michaelmas.' : 'Offered at the Bramme fair.' }}
+          {{ lot.reason === 'neighbour_short' ? local('A neighbour is short before Michaelmas.', 'A neighbour needs money before Michaelmas.') : local('Offered at the Bramme fair.', 'For sale at the Bramme fair.') }}
         </div>
         <div class="row">
           <button :disabled="!lot.canBuy" @click="actions.order({ kind: 'buy', parcel: lot.parcel })">
@@ -403,7 +403,7 @@ const MARRIAGE_ORDERS = [
         </button>
       </div>
       <p v-if="land.rentsPolicy !== 'customary'" class="small rubric">
-        {{ land.rentsPolicy === 'rack' ? 'Most now, and longest remembered.' : 'More now, and remembered later.' }}
+        {{ land.rentsPolicy === 'rack' ? local('Most now, and longest remembered.', 'Highest rent now, with lasting resentment.') : local('More now, and remembered later.', 'Higher rent now, but tenants will remember it.') }}
       </p>
       <p v-if="refusedIn('rents')" class="small rubric">{{ refusedIn('rents') }}</p>
 
@@ -436,10 +436,10 @@ const MARRIAGE_ORDERS = [
       <h3 class="label">
         <button class="fold" :aria-expanded="!idle('shelf', table.shelf.length > 0)" @click="shut['shelf'] = !shut['shelf']">The shelf</button>
       </h3>
-      <p v-if="!table.shelf.length" class="small dim">The house holds no book anybody can read.</p>
+      <p v-if="!table.shelf.length" class="small dim">{{ local('The house holds no book anybody can read.', 'The house has no readable books.') }}</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
         <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ studyYears(book) }} {{ studyYears(book) === 1 ? 'year' : 'years' }} · {{ book.conditionLabel }} ({{ book.condition }}%)</span></div>
-        <p v-if="book.restoringUntil !== undefined" class="small dim">With the binder until {{ book.restoringUntil }}</p>
+        <p v-if="book.restoringUntil !== undefined" class="small dim">{{ local('With the binder until', 'Being repaired until') }} {{ book.restoringUntil }}</p>
         <div v-else-if="book.restore" class="row">
           <button class="small" :disabled="!book.restore.canPay" :aria-label="'Restore ' + book.name" @click="actions.order({ kind: 'restore', book: book.book })">
             Restore — {{ book.restore.fee }} crowns, {{ book.restore.years }} {{ book.restore.years === 1 ? 'year' : 'years' }}
@@ -470,10 +470,10 @@ const MARRIAGE_ORDERS = [
       <p v-if="refusedIn('study')" class="small rubric">{{ refusedIn('study') }}</p>
       <p v-if="refusedIn('restore')" class="small rubric">{{ refusedIn('restore') }}</p>
       <div v-if="table.studying.length" class="small dim reading">
-        reading now: {{ table.studying.map((s) => s.name + ' until ' + s.completes).join(', ') }}
+        {{ local('reading now:', 'Currently reading:') }} {{ table.studying.map((s) => s.name + ' until ' + s.completes).join(', ') }}
       </div>
       <div v-if="table.missingPrimers.length" class="reading">
-        <p class="small dim">Ask a Sarrow broker to bring a missing working to a sale. The search costs 25 crowns now; the book has its own reserve later.</p>
+        <p class="small dim">{{ local('Ask a Sarrow broker to bring a missing working to a sale. The search costs 25 crowns now; the book has its own reserve later.', 'Pay a Sarrow broker 25 crowns now to look for a missing spellbook. If one comes to auction, you must also pay its reserve price later.') }}</p>
         <div v-for="book in table.missingPrimers" :key="book.book" class="line">
           <div class="row">
             <span class="small"><strong>{{ book.affinity }}</strong> · {{ book.name }} · {{ book.reserve }} crown reserve in {{ book.saleYear }}</span>
@@ -507,10 +507,10 @@ const MARRIAGE_ORDERS = [
           Pay the {{ table.tutorFee }}
         </button>
       </div>
-      <p v-if="!table.canTutor" class="small rubric">The house cannot raise the {{ table.tutorFee }}.</p>
+      <p v-if="!table.canTutor" class="small rubric">{{ local('The house cannot raise the', 'The house cannot afford the tutoring fee of') }} {{ table.tutorFee }}.</p>
       <p v-if="refusedIn('tutor')" class="small rubric">{{ refusedIn('tutor') }}</p>
       <div v-if="table.tutoring.length" class="small dim">
-        in a term: {{ table.tutoring.map((t) => t.name + ' until ' + t.completes).join(', ') }}
+        {{ local('in a term:', 'Currently being tutored:') }} {{ table.tutoring.map((t) => t.name + ' until ' + t.completes).join(', ') }}
       </div>
     </div>
 
@@ -522,17 +522,17 @@ const MARRIAGE_ORDERS = [
       <p
         v-if="!table.posts.some((p) => p.eligible.length)"
         class="small dim"
-      >Nobody of the house is of an age to be placed.</p>
+      >{{ local('Nobody of the house is of an age to be placed.', 'No family member is currently eligible for a post.') }}</p>
       <div v-for="post in table.posts" :key="post.career" class="line">
         <div class="small">
           <strong>{{ post.name }}</strong>
           <span class="dim"> · {{ post.fee }} crowns</span>
-          <span v-if="post.usualFee" class="rubric"> · usually {{ post.usualFee }}; these years make this place cheaper</span>
+          <span v-if="post.usualFee" class="rubric"> · {{ local('usually', 'normal price:') }} {{ post.usualFee }}; {{ local('these years make this place cheaper', 'the current discount lowers the cost') }}</span>
           <span class="dim"> · standing {{ post.respectYield }}</span>
         </div>
         <div v-if="post.blurb" class="small dim blurb">{{ post.blurb }}</div>
         <div v-if="post.holders.length" class="small dim">
-          held by {{ post.holders.map((h) => h.name).join(', ') }}
+          {{ local('held by', 'Current holders:') }} {{ post.holders.map((h) => h.name).join(', ') }}
         </div>
         <div class="row">
           <select v-model="placing[post.career]" :aria-label="'Choose someone for ' + post.name">
@@ -559,8 +559,7 @@ const MARRIAGE_ORDERS = [
     <div class="panel">
       <h3 class="label">Who the house marries</h3>
       <p class="small dim blurb">
-        When nobody asks you. The blood runs out of a family that marries outward and
-        thins in one that will not.
+        {{ local('When nobody asks you. The blood runs out of a family that marries outward and thins in one that will not.', 'This policy controls routine marriages that you do not choose yourself. Marrying outside the family loses the bloodline; marrying only within the family can weaken it.') }}
       </p>
       <div class="wrap">
         <button
@@ -571,7 +570,7 @@ const MARRIAGE_ORDERS = [
           :aria-pressed="table.marriagePolicy === option.policy"
           @click="actions.order({ kind: 'marriages', policy: option.policy })"
         >
-          {{ option.label }}
+          {{ local(option.label, option.simple) }}
         </button>
       </div>
       <p v-if="refusedIn('marriages')" class="small rubric">{{ refusedIn('marriages') }}</p>
@@ -589,15 +588,14 @@ const MARRIAGE_ORDERS = [
         >The programme</button>
       </h3>
       <p class="small dim blurb">
-        Name the one the house will put first in its books, tutoring and marriages, and the one it will build beside him.
-        These places do not pass by themselves.
+        {{ local('Name the one the house will put first in its books, tutoring and marriages, and the one it will build beside him. These places do not pass by themselves.', 'Choose the main candidate for family books, tutoring and marriages, and a second candidate to support him. The positions do not transfer automatically when someone leaves.') }}
       </p>
 
       <p v-if="table.scionVacant" class="small rubric">
-        {{ table.scionVacant.wasName }} left the first place in {{ table.scionVacant.since }}. Nobody stands there now.
+        {{ table.scionVacant.wasName }} {{ local('left the first place in', 'left the first position in') }} {{ table.scionVacant.since }}. {{ local('Nobody stands there now.', 'The position is now vacant.') }}
       </p>
       <p v-if="table.scionHeirVacant" class="small rubric">
-        {{ table.scionHeirVacant.wasName }} left the second place in {{ table.scionHeirVacant.since }}. Nobody stands there now.
+        {{ table.scionHeirVacant.wasName }} {{ local('left the second place in', 'left the second position in') }} {{ table.scionHeirVacant.since }}. {{ local('Nobody stands there now.', 'The position is now vacant.') }}
       </p>
 
       <div class="line">
@@ -657,7 +655,7 @@ const MARRIAGE_ORDERS = [
         <button class="fold" :aria-expanded="!idle('market', table.market.length > 0)" @click="shut['market'] = !shut['market']">The market</button>
       </h3>
       <p v-if="!table.market.length" class="small dim">
-        Nobody of the house is of an age to be spent this year.
+        {{ local('Nobody of the house is of an age to be spent this year.', 'No family member is eligible for the marriage market this year.') }}
       </p>
       <div class="wrap">
         <button
@@ -668,7 +666,7 @@ const MARRIAGE_ORDERS = [
           :aria-pressed="p.held"
           @click="actions.order({ kind: 'withhold', person: p.person, hold: !p.held })"
         >
-          {{ p.name }}, {{ p.age }} — {{ p.held ? 'kept back' : 'on the market' }}
+          {{ p.name }}, {{ p.age }} — {{ p.held ? local('kept back', 'withheld from marriage') : local('on the market', 'available for marriage') }}
         </button>
       </div>
       <p v-if="refusedIn('withhold')" class="small rubric">{{ refusedIn('withhold') }}</p>
@@ -682,15 +680,14 @@ const MARRIAGE_ORDERS = [
       <h3 class="label">
         <button class="fold" :aria-expanded="!idle('papers', table.papers.length > 0)" @click="shut['papers'] = !shut['papers']">The papers</button>
       </h3>
-      <p v-if="!table.papers.length" class="small dim">Nobody of the house has a match to make.</p>
+      <p v-if="!table.papers.length" class="small dim">{{ local('Nobody of the house has a match to make.', 'No family member needs marriage papers right now.') }}</p>
       <p class="small dim blurb">
-        Three generations of maternal record, notarised. What a great house asks for
-        before it will open the conversation, and what a young house has not got.
+        {{ local('Three generations of maternal record, notarised. What a great house asks for before it will open the conversation, and what a young house has not got.', 'Great houses require notarised records for three generations through the mother before considering a marriage. A younger house may not have those records.') }}
       </p>
       <div v-for="row in table.papers" :key="row.person" class="line">
         <div class="small">
           <strong>{{ row.name }}</strong>
-          <span class="dim"> · the record shows {{ row.shows }} of 3</span>
+          <span class="dim"> · {{ local('the record shows', 'recorded generations:') }} {{ row.shows }} {{ local('of 3', 'out of 3') }}</span>
           <span v-if="row.forged" class="dim"> · {{ row.forged }} bought</span>
           <span v-if="row.exposed" class="rubric"> · {{ row.exposed }} questioned</span>
         </div>
@@ -720,7 +717,7 @@ const MARRIAGE_ORDERS = [
       <h3 class="label">
         <button class="fold" :aria-expanded="!idle('servants', table.servants.length > 0)" @click="shut['servants'] = !shut['servants']">The house's people</button>
       </h3>
-      <p v-if="!table.servants.length" class="small dim">Nobody is in the house's service.</p>
+      <p v-if="!table.servants.length" class="small dim">{{ local("Nobody is in the house's service.", 'The house has no servants.') }}</p>
       <div v-for="s in table.servants" :key="s.person" class="line">
         <div class="small">
           <strong>{{ s.name }}</strong>
@@ -765,9 +762,7 @@ const MARRIAGE_ORDERS = [
       </div>
       <p v-if="refusedIn('bond')" class="small rubric">{{ refusedIn('bond') }}</p>
       <p v-if="table.servants.some((s) => s.bonded)" class="small dim blurb">
-        A bond costs nothing in wages and cannot be ended by a bad year. Nobody whose
-        debt is standing is ever glad of it, and everybody still held remembers who
-        was let off.
+        {{ local('A bond costs nothing in wages and cannot be ended by a bad year. Nobody whose debt is standing is ever glad of it, and everybody still held remembers who was let off.', 'A debt bond requires no wages and continues through bad years. People held by debt resent it, and those still held notice when someone else is released.') }}
       </p>
     </div>
   </section>
