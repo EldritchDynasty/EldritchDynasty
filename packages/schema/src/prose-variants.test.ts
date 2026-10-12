@@ -115,9 +115,9 @@ describe('Plain English variant guardrails (#415)', () => {
     const entries = contentProseEntries('characters/templates.yaml', {
       characterTemplates: [template],
     }).filter((entry) => /\.(title|blurb)$/.test(entry.address));
-    expect(entries.map((entry) => entry.address)).toEqual([
-      `content:characters/templates.yaml#characterTemplates[id=${sharedId}].title`,
+    expect(entries.map((entry) => entry.address).sort()).toEqual([
       `content:characters/templates.yaml#characterTemplates[id=${sharedId}].blurb`,
+      `content:characters/templates.yaml#characterTemplates[id=${sharedId}].title`,
     ]);
     for (const entry of entries) {
       expect(proseOriginalAt(content, entry.address)).toBe(entry.text);
