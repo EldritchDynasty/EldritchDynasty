@@ -1586,3 +1586,95 @@ describe('live Skip seen preference on an active Age opening (#1516)', () => {
     }
   });
 });
+
+
+describe('Begin waits for profile Library operations (#1545)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'older-house', seed: 77, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+    }],
+  };
+
+  it('blocks Begin during a pending Clear and re-enables it after success', async () => {
+    const actions = spyActions();
+    let finish!: () => void;
+    vi.mocked(actions.clearLibrary).mockImplementationOnce(() =>
+      new Promise<void>((resolve) => { finish = resolve; }));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head button').trigger('click');
+      await w.get('button.confirm-clear').trigger('click');
+      const begin = w.get('button.primary');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+      expect(begin.attributes('disabled')).toBeDefined();
+      // Even a stale dispatched click must not snapshot pre-clear history.
+      await begin.trigger('click');
+      expect(actions.begin).not.toHaveBeenCalled();
+
+      finish();
+      await flush();
+      expect(begin.attributes('disabled')).toBeUndefined();
+      await begin.trigger('click');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('blocks Begin during a pending single-house Remove and unlocks it after failure', async () => {
+    const actions = spyActions();
+    let fail!: (error: Error) => void;
+    vi.mocked(actions.deleteLibraryRun).mockImplementationOnce(() =>
+      new Promise<void>((_resolve, reject) => { fail = reject; }));
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-run button').trigger('click');
+      await w.get('button.confirm-remove').trigger('click');
+      const begin = w.get('button.primary');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      expect(begin.attributes('disabled')).toBeDefined();
+      await begin.trigger('click');
+      expect(actions.begin).not.toHaveBeenCalled();
+
+      fail(new Error('host refused remove'));
+      await flush();
+      expect(w.get('.library [role="alert"]').text()).toContain('could not be removed');
+      expect(begin.attributes('disabled')).toBeUndefined();
+      await begin.trigger('click');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('does not begin from newly-ready Library props until its retry settles', async () => {
+    const actions = spyActions();
+    let finish!: () => void;
+    vi.mocked(actions.retryLibrary).mockImplementationOnce(() =>
+      new Promise<void>((resolve) => { finish = resolve; }));
+    const w = mount(Start, { props: {
+      actions, resumable: false, libraryReady: false, libraryReadError: true,
+    } });
+    try {
+      await flush();
+      await w.get('.save-list-error button').trigger('click');
+      await w.setProps({ libraryReady: true, libraryReadError: false });
+      const begin = w.get('button.primary');
+      expect(begin.attributes('disabled')).toBeDefined();
+      await begin.trigger('click');
+      expect(actions.begin).not.toHaveBeenCalled();
+
+      finish();
+      await flush();
+      expect(begin.attributes('disabled')).toBeUndefined();
+      await begin.trigger('click');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+});
