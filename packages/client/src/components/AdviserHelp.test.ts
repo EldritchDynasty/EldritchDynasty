@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import type { AdviserAdvice, HelpTier } from '@ed/core';
 import AdviserHelp from './AdviserHelp.vue';
+import ReadingSettings from './ReadingSettings.vue';
 import Chronicle from './Chronicle.vue';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
@@ -118,6 +119,98 @@ describe('Chronicle adviser counsel freshness (#1139)', () => {
       await wrapper.get('.adviser-help button').trigger('click');
       expect(advice).toHaveBeenCalledTimes(2);
       expect(wrapper.text()).toContain('Begin with one name.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+describe('reader-local ReadingSettings copy (#1454)', () => {
+  const preferences = {
+    textScale: 'standard' as const,
+    readingFont: 'book' as const,
+    proseMode: 'original' as const,
+    skipSeenProse: false,
+    reduceMotion: false,
+    showEverythingFromStart: false,
+    showProgressiveRevealOption: false,
+  };
+
+  it('changes only its local wording on Original → Plain English → Original', async () => {
+    const wrapper = mount(ReadingSettings, { props: preferences });
+    try {
+      const original = wrapper.text();
+      expect(original).toContain('Text size');
+      expect(original).toContain('Typeface');
+      expect(original).toContain('Skip reading I\'ve already done');
+      expect(original).toContain('pages already written in the Chronicle keep the words');
+      expect(wrapper.get('select[aria-label="Prose style"]').element).toBeTruthy();
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('How big the text is');
+      expect(wrapper.text()).toContain('Book-style letters');
+      expect(wrapper.text()).toContain('Skip passages I have read before');
+      expect(wrapper.text()).toContain('Use fewer animations');
+      expect(wrapper.text()).toContain('Your reading choices do not change the game rules.');
+      expect(wrapper.text()).not.toContain('pages already written in the Chronicle keep the words');
+      expect(wrapper.get('select[aria-label="Writing style"]').element).toBeTruthy();
+      expect(wrapper.findAll('select')).toHaveLength(3);
+      expect(wrapper.get('option[value="original"]').text()).toBe('Original');
+      expect(wrapper.get('option[value="plainenglish"]').text()).toBe('Plain English');
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(wrapper.get('select[aria-label="Prose style"]').element).toBeTruthy();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps every settings value and update event unchanged in both modes', async () => {
+    const wrapper = mount(ReadingSettings, { props: { ...preferences, proseMode: 'plainenglish' } });
+    try {
+      const selects = wrapper.findAll('select');
+      expect(selects[0]!.element.value).toBe('standard');
+      expect(selects[1]!.element.value).toBe('book');
+      expect(selects[2]!.element.value).toBe('plainenglish');
+      await selects[0]!.setValue('largest');
+      await selects[1]!.setValue('readable');
+      await selects[2]!.setValue('original');
+      expect(wrapper.emitted('update:textScale')).toEqual([['largest']]);
+      expect(wrapper.emitted('update:readingFont')).toEqual([['readable']]);
+      expect(wrapper.emitted('update:proseMode')).toEqual([['original']]);
+
+      const checks = wrapper.findAll('input[type="checkbox"]');
+      expect(checks).toHaveLength(2);
+      await checks[0]!.setValue(true);
+      await checks[1]!.setValue(true);
+      expect(wrapper.emitted('update:skipSeenProse')).toEqual([[true]]);
+      expect(wrapper.emitted('update:reduceMotion')).toEqual([[true]]);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.findAll('select')[0]!.element.value).toBe('standard');
+      await wrapper.findAll('select')[0]!.setValue('large');
+      expect(wrapper.emitted('update:textScale')).toEqual([['largest'], ['large']]);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('shows the progressive reveal setting only when requested, with the same event', async () => {
+    const wrapper = mount(ReadingSettings, { props: { ...preferences, proseMode: 'plainenglish' } });
+    try {
+      expect(wrapper.text()).not.toContain('Show all options right away');
+      expect(wrapper.findAll('input[type="checkbox"]')).toHaveLength(2);
+      await wrapper.setProps({ showProgressiveRevealOption: true });
+      expect(wrapper.text()).toContain('Show all options right away');
+      const controls = wrapper.findAll('input[type="checkbox"]');
+      expect(controls).toHaveLength(3);
+      await controls[2]!.setValue(true);
+      expect(wrapper.emitted('update:showEverythingFromStart')).toEqual([[true]]);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('Show everything from the start');
+      await wrapper.setProps({ showProgressiveRevealOption: false });
+      expect(wrapper.findAll('input[type="checkbox"]')).toHaveLength(2);
     } finally {
       wrapper.unmount();
     }
