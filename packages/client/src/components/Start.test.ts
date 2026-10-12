@@ -142,6 +142,40 @@ describe('campaign choice (#66)', () => {
 });
 
 describe('Continue leads when a run can be resumed', () => {
+  it('keeps Continue single-flight and permits retry after refusal (#1360)', async () => {
+    const actions = spyActions();
+    let settleFirst: ((value: boolean) => void) | undefined;
+    vi.mocked(actions.resume).mockImplementationOnce(
+      () => new Promise<boolean>((resolve) => { settleFirst = resolve; }),
+    );
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      expect(continueButton).toBeTruthy();
+
+      await continueButton!.trigger('click');
+      expect(continueButton!.attributes('disabled')).toBeDefined();
+      expect(continueButton!.text()).toContain('Continuing');
+      // Even a second dispatched click while the first host request is pending
+      // must not attempt to load the same saved session twice.
+      await continueButton!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledTimes(1);
+
+      settleFirst!(false);
+      await flush();
+      expect(w.get('.resume-refusal').text()).toContain('could not be resumed');
+      expect(continueButton!.attributes('disabled')).toBeUndefined();
+
+      await continueButton!.trigger('click');
+      await flush();
+      expect(actions.resume).toHaveBeenCalledTimes(2);
+      expect(w.find('.resume-refusal').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('offers Continue first and calls resume, not begin, when pressed', async () => {
     const actions = spyActions();
     const w = mount(Start, { props: { actions, resumable: true } });
