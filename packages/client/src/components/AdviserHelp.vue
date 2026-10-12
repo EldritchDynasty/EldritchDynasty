@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { AdviserAdvice, HelpTier } from '@ed/core';
 
 const props = defineProps<{
@@ -30,15 +30,26 @@ const buttonLabel = computed(() => {
   }
 });
 
+// One rendered button offers one tier. Vue does not patch its label until the
+// next tick; duplicate clicks on that old button must not consume later tiers.
+let awaitingRender = false;
+
 function askNext(): void {
+  if (awaitingRender) return;
   const tier = nextTier.value;
   if (!tier) return;
-  const lines = props.ask(tier);
-  if (lines.length === 0) {
-    unanswered.value = true;
-    return;
+  awaitingRender = true;
+  try {
+    const lines = props.ask(tier);
+    if (lines.length === 0) {
+      unanswered.value = true;
+    } else {
+      shown.value.push({ tier, lines });
+    }
+  } finally {
+    // Re-enable only after the next tier (or unanswered state) is on screen.
+    void nextTick().then(() => { awaitingRender = false; });
   }
-  shown.value.push({ tier, lines });
 }
 
 watch(() => props.resetKey, () => {
