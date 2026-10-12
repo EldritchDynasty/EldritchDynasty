@@ -17,6 +17,10 @@ const props = defineProps<{
   receipt: string | null;
 }>();
 
+function studyYears(book: TableView['shelf'][number]): number {
+  return book.readers.find((reader) => reader.person === reading.value[book.book])?.years ?? book.years;
+}
+
 /**
  * THE PLAT LIVES INSIDE THE TABLE (issue #96, Phase C, per the ruling on
  * #91/#102): never a fifth pane. `App.vue` renders it — the same split
@@ -421,11 +425,11 @@ const MARRIAGE_ORDERS = [
       </h3>
       <p v-if="!table.shelf.length" class="small dim">The house holds no book anybody can read.</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
-        <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ book.years }} years · {{ book.conditionLabel }} ({{ book.condition }}%)</span></div>
+        <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ studyYears(book) }} {{ studyYears(book) === 1 ? 'year' : 'years' }} · {{ book.conditionLabel }} ({{ book.condition }}%)</span></div>
         <p v-if="book.restoringUntil !== undefined" class="small dim">With the binder until {{ book.restoringUntil }}</p>
         <div v-else-if="book.restore" class="row">
-          <button class="small" :disabled="!book.restore.canPay" @click="actions.order({ kind: 'restore', book: book.book })">
-            Restore — {{ book.restore.fee }} crowns, {{ book.restore.years }} years
+          <button class="small" :disabled="!book.restore.canPay" :aria-label="'Restore ' + book.name" @click="actions.order({ kind: 'restore', book: book.book })">
+            Restore — {{ book.restore.fee }} crowns, {{ book.restore.years }} {{ book.restore.years === 1 ? 'year' : 'years' }}
           </button>
           <span v-if="book.restore.reason" class="small rubric">{{ book.restore.reason }}</span>
         </div>
@@ -443,7 +447,7 @@ const MARRIAGE_ORDERS = [
           </select>
           <button
             class="small"
-            :disabled="!reading[book.book]"
+            :disabled="!reading[book.book] || !book.readers.length"
             @click="actions.order({ kind: 'study', person: reading[book.book] ?? '', book: book.book })"
           >
             Set them reading

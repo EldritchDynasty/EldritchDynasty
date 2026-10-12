@@ -203,6 +203,7 @@ describe('paid binder restoration (#1293)', () => {
     const opened = order(ctx, { kind: 'restore', book: def.id });
     expect(opened).toMatchObject({ ok: true, spent: quote.fee, left: 500 - quote.fee });
     expect(copy.restoresAt).toBe(start + 2);
+    expect(ctx.world.chronicle.at(-1)?.text).toContain(`The house paid ${quote.fee} crowns`);
     expect(tableView(ctx).shelf.find((b) => b.book === def.id)?.restoringUntil).toBe(start + 2);
     expect(canStudySpellbook(ctx, reader, def).ok).toBe(false);
     expect(beginStudy(ctx, reader, def)).toBe(false);
@@ -227,6 +228,9 @@ describe('paid binder restoration (#1293)', () => {
     expect(back.restoresAt).toBeUndefined();
     expect(back.namedFor).toEqual(prior);
     expect(canStudySpellbook(resumed, resumed.world.people.get(reader.id)!, def).ok).toBe(true);
+    expect(resumed.world.chronicle.filter((entry) => entry.text?.startsWith('The binder returned'))).toHaveLength(1);
+    tickRestorations(resumed);
+    expect(resumed.world.chronicle.filter((entry) => entry.text?.startsWith('The binder returned'))).toHaveLength(1);
     expect(ctx.world.library.get(def.id)?.condition).toBe(40);
 
     // The uninterrupted copy and the saved-and-resumed copy must finish
@@ -250,6 +254,22 @@ describe('paid binder restoration (#1293)', () => {
     expect(shelf.restore?.canPay).toBe(false);
     expect(shelf.restore?.reason).toBeTruthy();
     expect(ctx.world.treasury).toBe(DEBT_FLOOR);
+    ctx.world.treasury += shelf.restore!.fee;
+    expect(order(ctx, { kind: 'restore', book: copy.id }).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(DEBT_FLOOR);
+  });
+
+  it('shows the worn-copy duration and the chosen reader duration from core', () => {
+    const ctx = bootstrap(bundle, 1293, 1042);
+    const def = ctx.content.mustSpellbook('lesser_workings_of_life');
+    const copy = acquireLibraryCopy(ctx, def.id)!;
+    copy.condition = 20;
+    const reader = place(ctx, { sex: 'female', age: 30, awakened: true });
+    const book = tableView(ctx).shelf.find((book) => book.book === def.id)!;
+    expect(book.years).toBe(4);
+    expect(book.readers.find((entry) => entry.person === reader.id)?.years).toBe(4);
+    expect(order(ctx, { kind: 'study', book: def.id, person: reader.id }).ok).toBe(true);
+    expect(ctx.world.studies.find((study) => study.person === reader.id)?.completes).toBe(ctx.world.year + 4);
   });
 });
 

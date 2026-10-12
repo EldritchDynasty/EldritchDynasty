@@ -3,7 +3,7 @@ import { assertNever, canBeTaught } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { attr } from './people/factory.js';
-import { beginStudy, canStudySpellbook, heldBooks, restorationQuote, spellbookDef } from './people/library.js';
+import { beginStudy, canStudySpellbook, conditionDrag, effectiveStudyYears, heldBooks, restorationQuote, spellbookDef } from './people/library.js';
 import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type PedigreeGrade } from './people/papers.js';
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
 import { DEBT_FLOOR } from './economy.js';
@@ -586,6 +586,13 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       }
       w.treasury -= quote.fee;
       w.library.get(o.book)!.restoresAt = quote.returns;
+      const def = spellbookDef(ctx, o.book)!;
+      const name = proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name);
+      w.chronicle.push({
+        year: w.year, weight: 'line', named: false,
+        text: msg(ctx, 'library.binder_paid', 'The house paid {FEE} crowns to repair {BOOK}. The binder will return it in {YEAR}.',
+          { FEE: String(quote.fee), BOOK: name, YEAR: String(quote.returns) }),
+      });
       return { ok: true };
     }
 
@@ -883,7 +890,7 @@ export interface TableView {
     ward: string; wardName: string; since: Year; boughtBack: boolean; buyBackCost?: number;
   };
   /** Books on the shelf, and who in the house could take one up. */
-  shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string }[]; condition: number; conditionLabel: string; restoringUntil?: number; restore?: { fee: number; years: number; returns: number; canPay: boolean; reason?: string } }[];
+  shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string; years?: number }[]; condition: number; conditionLabel: string; restoringUntil?: number; restore?: { fee: number; years: number; returns: number; canPay: boolean; reason?: string } }[];
   /** Common books the house may ask a broker to seek; payment and sale are separate. */
   missingPrimers: { book: string; name: string; blurb?: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean; canPay: boolean }[];
   /** A late-game record-keeper search for one unrecovered contract clause. */
@@ -1000,13 +1007,13 @@ export function tableView(ctx: SimCtx): TableView {
         .filter((p) => canStudySpellbook(ctx, p, def).ok
           && !p.spellsKnown.some((b) => String(b) === state.id)
           && !w.studies.some((s) => s.person === p.id && s.book === state.id))
-        .map((p) => ({ person: p.id, name: p.name }))
+        .map((p) => ({ person: p.id, name: p.name, years: effectiveStudyYears(ctx, p, def) }))
       : [];
     return {
       book: state.id,
       name: def ? proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name) : state.id,
       ...(def?.blurb ? { blurb: proseForContentField(ctx, 'spellbooks', def.id, 'blurb', def.blurb) } : {}),
-      years: def?.studyYears ?? 0,
+      years: def ? Math.max(1, Math.round(def.studyYears * conditionDrag(ctx, state.id))) : 0,
       condition: state.condition,
       conditionLabel: state.condition === 100 ? 'pristine'
         : state.condition >= 75 ? 'worn' : state.condition >= 25 ? 'frayed' : 'ruined',

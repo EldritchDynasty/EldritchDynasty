@@ -451,6 +451,21 @@ function mountedShelf(condition: number, options: { treasury?: number; restoresA
 }
 
 describe('mounted shelf binder controls (#1293)', () => {
+  it('shows the selected reader duration without calculating study rules in the client', async () => {
+    const { wrapper, shelf, ctx } = mountedShelf(40);
+    try {
+      const table = tableView(ctx);
+      const book = table.shelf.find((book) => book.book === bookId)!;
+      book.years = 4;
+      book.readers = [{ person: 'reader', name: 'Ada', years: 1 }];
+      await wrapper.setProps({ table });
+      const row = shelf.findAll('.line').find((row) => row.find('strong').text() === book.name)!;
+      expect(row.find('.small').text()).toContain('4 years');
+      await row.get('select').setValue('reader');
+      expect(row.find('.small').text()).toContain('1 year ·');
+    } finally { wrapper.unmount(); }
+  });
+
   it('displays damaged condition, the real quote, and sends the restore order', async () => {
     const { shelf, action, ctx } = mountedShelf(40);
     const quote = tableView(ctx).shelf.find((b) => b.book === bookId)!.restore!;
