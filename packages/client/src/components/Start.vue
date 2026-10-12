@@ -155,12 +155,19 @@ async function continueLastSitting(): Promise<void> {
   }
 }
 
+/** Newer selections win in GameStore; stale host replies must not move the row error back. */
+let namedLoadRevision = 0;
 async function load(slot: string): Promise<void> {
+  const revision = ++namedLoadRevision;
   saveActionError.value = null;
   try {
-    if (!await props.actions.load(slot)) saveActionError.value = { slot, message: 'That saved run could not be read.' };
+    if (!await props.actions.load(slot) && revision === namedLoadRevision) {
+      saveActionError.value = { slot, message: 'That saved run could not be read.' };
+    }
   } catch {
-    saveActionError.value = { slot, message: 'That saved run could not be read.' };
+    if (revision === namedLoadRevision) {
+      saveActionError.value = { slot, message: 'That saved run could not be read.' };
+    }
   }
 }
 
