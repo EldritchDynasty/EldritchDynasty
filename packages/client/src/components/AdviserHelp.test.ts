@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import type { AdviserAdvice, HelpTier } from '@ed/core';
 import AdviserHelp from './AdviserHelp.vue';
+import Ambition from './Ambition.vue';
 import ReadingSettings from './ReadingSettings.vue';
 import Chronicle from './Chronicle.vue';
 import TreeCounsel from './TreeCounsel.vue';
@@ -310,6 +311,52 @@ describe('reader-local ReadingSettings copy (#1454)', () => {
       expect(wrapper.text()).toContain('Show everything from the start');
       await wrapper.setProps({ showProgressiveRevealOption: false });
       expect(wrapper.findAll('input[type="checkbox"]')).toHaveLength(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+/** A first house plan starts outside the Change editor, but a refusal must
+ * survive the same fresh world photograph every order publishes. (#1519) */
+describe('first house ambition refusal after view refresh (#1519)', () => {
+  function ambitionView(id: string | null = null): SessionView {
+    return {
+      ambition: id ? {
+        id, name: id === 'land' ? 'Keep the estate' : 'Keep the bloodline',
+        purpose: 'Keep a plan in sight.',
+        progress: { label: 'The house has begun.' },
+        status: 'Ongoing', next: 'Continue the work.',
+      } : null,
+      ambitionOptions: [
+        { id: 'blood', name: 'Keep the bloodline', purpose: 'Remember the children.' },
+        { id: 'land', name: 'Keep the estate', purpose: 'Hold what the family owns.' },
+      ],
+    } as unknown as SessionView;
+  }
+
+  it('holds the refused first draft across a refreshed world and allows retry', async () => {
+    const setAmbition = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView(), actions: { setAmbition } as unknown as GameActions },
+    });
+    try {
+      expect(wrapper.find('.ambition-head button').exists()).toBe(false);
+      await wrapper.get('select').setValue('land');
+      await wrapper.get('.ambition-actions button').trigger('click');
+      expect(setAmbition).toHaveBeenCalledWith('land');
+
+      // GameStore.setAmbition publishes a fresh world even after refusal.
+      await wrapper.setProps({ view: ambitionView() });
+      expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('land');
+      expect(wrapper.get('[role="alert"]').text()).toContain('could not keep that ambition');
+
+      await wrapper.get('.ambition-actions button').trigger('click');
+      expect(setAmbition.mock.calls).toEqual([['land'], ['land']]);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      await wrapper.setProps({ view: ambitionView('land') });
+      expect(wrapper.text()).toContain('Keep the estate');
+      expect(wrapper.find('select').exists()).toBe(false);
     } finally {
       wrapper.unmount();
     }
