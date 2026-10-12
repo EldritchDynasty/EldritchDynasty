@@ -372,9 +372,9 @@ describe('saved-run action failures (#1149)', () => {
 
   it('does not reopen a pending Import picker and recovers after dismissal or failure (#1477)', async () => {
     const actions = spyActions();
-    let finishPicker!: (result: boolean | void) => void;
+    let finishPicker!: (result: boolean | 'cancelled') => void;
     vi.mocked(actions.importSave)
-      .mockImplementationOnce(() => new Promise<boolean | void>((resolve) => {
+      .mockImplementationOnce(() => new Promise<boolean | 'cancelled'>((resolve) => {
         finishPicker = resolve;
       }))
       .mockRejectedValueOnce(new Error('host picker unavailable'));
@@ -391,7 +391,7 @@ describe('saved-run action failures (#1149)', () => {
       // Even a synthetic click on a disabled control must not open another picker.
       await importButton!.trigger('click');
       expect(actions.importSave).toHaveBeenCalledTimes(1);
-      finishPicker(undefined); // Dismissal is not an invalid save.
+      finishPicker('cancelled'); // Dismissal is not an invalid save.
       await flush();
       expect(importButton!.attributes('disabled')).toBeUndefined();
       expect(w.find('[role="status"]').exists()).toBe(false);
