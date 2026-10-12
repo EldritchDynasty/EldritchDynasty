@@ -587,6 +587,44 @@ describe('Chapter canonical modal keyboard and focus (#1325)', () => {
     }
   });
 
+  it('returns focus to a still-open parent when a nested dialog closes (#1496)', () => {
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    });
+    const actions = { dismissChapter: vi.fn() } as unknown as GameActions;
+    const parent = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('Parent.'), actions },
+    });
+    const parentButton = parent.get('button.quiet').element;
+    const child = mount(Chapter, {
+      attachTo: document.body, props: { beat: opening('Child.'), actions },
+    });
+    let childUnmounted = false;
+
+    try {
+      expect(document.activeElement).toBe(child.get('button.quiet').element);
+      child.unmount();
+      childUnmounted = true;
+      expect(callbacks).toHaveLength(1);
+
+      // The parent is still the topmost modal. Unlike a newly opened
+      // successor, its button is exactly where this child began.
+      callbacks.shift()!(0);
+      expect(document.activeElement).toBe(parentButton);
+    } finally {
+      if (!childUnmounted) child.unmount();
+      parent.unmount();
+      while (callbacks.length) callbacks.shift()!(0);
+      vi.unstubAllGlobals();
+      outside.remove();
+    }
+  });
+
   it('does not restore a dismissed chapter over a successor modal', async () => {
     const outside = document.createElement('button');
     document.body.appendChild(outside);
