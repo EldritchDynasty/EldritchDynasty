@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { LibraryRun, ProseMode, RunLibrary } from '@ed/schema';
@@ -120,10 +120,19 @@ const libraryIsReady = computed(() => props.libraryReady ?? true);
  */
 const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
 const mayBegin = computed(() => libraryIsReady.value && validSeed.value);
+/** A double click can arrive before Vue replaces the Start screen with the prologue. */
+const beginning = ref(false);
 
 function begin(): void {
-  if (!mayBegin.value) return;
-  props.actions.begin(seed.value, campaign.value);
+  if (!mayBegin.value || beginning.value) return;
+  beginning.value = true;
+  try {
+    props.actions.begin(seed.value, campaign.value);
+  } finally {
+    // Keep the latch until the old button has been repainted/removed. A
+    // deliberate later attempt is still possible if the screen remains open.
+    void nextTick().then(() => { beginning.value = false; });
+  }
 }
 
 function survivingPage(run: LibraryRun): string | undefined {
@@ -314,7 +323,7 @@ onMounted(() => { void refreshSaves(); });
       <button v-if="resumable" class="primary" :disabled="resuming" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
-        :disabled="!mayBegin"
+        :disabled="!mayBegin || beginning"
         @click="begin()"
       >
         {{ !libraryIsReady ? (plain ? 'Loading completed games…' : 'Reading the library…') : resumable ? (plain ? 'Start a new game' : 'Begin a new signing') : (plain ? 'Start playing' : 'Begin the signing') }}
