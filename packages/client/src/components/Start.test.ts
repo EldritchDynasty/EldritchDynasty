@@ -869,3 +869,100 @@ describe('advanced seed rejects empty and invalid numbers (#1051)', () => {
     }
   });
 });
+
+
+describe('reader-local Start guidance and actions (#1452)', () => {
+  const finished: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'house_ending', seed: 9, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' },
+      entries: [{
+        id: 'recorded-page', year: 1222,
+        said: 'A recorded sentence that must not be translated.',
+        people: {}, claims: [],
+      }],
+    }],
+  };
+
+  it('switches Original -> Plain English -> Original without changing begin, import or export', async () => {
+    const actions = spyActions([{ slot: 'chapter-one', year: 1120 }]);
+    const w = mount(Start, { props: {
+      actions, resumable: true, proseMode: 'original', library: finished,
+    } });
+    try {
+      await flush();
+      expect(w.text()).toContain('The length of the line');
+      expect(w.text()).toContain('Continue the last sitting');
+      expect(w.text()).toContain('Bring a run in');
+      expect(w.text()).toContain('The Library of Houses');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.text()).toContain('Choose the length of your game');
+      expect(w.text()).toContain('Continue your last game');
+      expect(w.text()).toContain('Start a new game');
+      expect(w.text()).toContain('Import a saved game');
+      expect(w.text()).toContain('Completed houses');
+      expect(w.text()).toContain('300 years');
+      expect(w.text()).toContain('1120');
+      expect(w.text()).toContain('A recorded sentence that must not be translated.');
+
+      await w.findAll('button').find((b) => b.text() === 'Start a new game')!.trigger('click');
+      expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'short');
+      await w.findAll('.saved button').find((b) => b.text() === 'Export')!.trigger('click');
+      expect(actions.exportSave).toHaveBeenCalledWith('chapter-one');
+      await w.findAll('button').find((b) => b.text() === 'Import a saved game')!.trigger('click');
+      expect(actions.importSave).toHaveBeenCalledTimes(1);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.text()).toContain('Continue the last sitting');
+      expect(w.text()).toContain('Bring a run in');
+      expect(w.text()).toContain('The Library of Houses');
+      expect(w.text()).not.toContain('Completed houses');
+      expect(w.text()).toContain('A recorded sentence that must not be translated.');
+      expect(actions.setProseMode).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps warning/disabled states and destructive dispatch while translating live errors', async () => {
+    const actions = spyActions([{ slot: 'chapter-one', year: 1120 }]);
+    vi.mocked(actions.resume).mockResolvedValue(false);
+    vi.mocked(actions.exportSave).mockResolvedValue(false);
+    const w = mount(Start, { props: {
+      actions, resumable: true, proseMode: 'plainenglish', library: finished, libraryReady: true,
+    } });
+    try {
+      await flush();
+      await w.findAll('button').find((b) => b.text() === 'Continue your last game')!.trigger('click');
+      await flush();
+      expect(w.get('.resume-refusal').text()).toContain('Could not continue your last game');
+
+      await w.findAll('.saved button').find((b) => b.text() === 'Export')!.trigger('click');
+      await flush();
+      expect(w.get('.saved .save-action-error').text()).toContain('Could not export this saved game.');
+
+      const advanced = w.findAll('button').find((b) => b.text() === 'Advanced options')!;
+      await advanced.trigger('click');
+      await w.get('#seed').setValue('');
+      const start = w.findAll('button').find((b) => b.text() === 'Start a new game')!;
+      expect(start.attributes('disabled')).toBeDefined();
+      expect(w.get('#seed-error').text()).toContain('whole number');
+      expect(actions.begin).not.toHaveBeenCalled();
+
+      await w.get('.library-head button').trigger('click');
+      expect(w.get('.library-clear-confirm').text()).toContain('cannot be undone');
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.resume-refusal').text()).toContain('The last sitting could not be resumed.');
+      expect(w.get('.saved .save-action-error').text()).toContain('That saved run could not be written out.');
+      expect(w.text()).toContain('The Library of Houses');
+    } finally {
+      w.unmount();
+    }
+  });
+});
