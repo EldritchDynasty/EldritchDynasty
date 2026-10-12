@@ -119,7 +119,15 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   onMounted(() => {
     const active = document.activeElement;
     cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
-    focusable()[0]?.focus();
+    const first = focusable()[0];
+    first?.focus();
+    if (card.value && document.activeElement !== first) {
+      // With no reachable control (or a control whose focus() failed),
+      // the dialog must own focus instead of leaving it behind the scrim.
+      // Programmatic focus must not introduce a new Tab stop.
+      if (!card.value.hasAttribute('tabindex')) card.value.tabIndex = -1;
+      card.value.focus();
+    }
     window.addEventListener('keydown', onKey);
   });
 
