@@ -57,10 +57,14 @@ describe('browser host rejects unreadable root writes (#1372)', () => {
       ['ed:library', JSON.stringify(oldLibrary)],
     ]);
     const setItem = vi.fn((key: string, value: string) => { bytes.set(key, value); });
-    const storage = {
+    const storage: Storage = {
+      get length() { return bytes.size; },
+      key: (index: number) => [...bytes.keys()][index] ?? null,
       getItem: (key: string) => bytes.get(key) ?? null,
       setItem,
-    } as Storage;
+      removeItem: (key: string) => { bytes.delete(key); },
+      clear: () => { bytes.clear(); },
+    };
     const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
