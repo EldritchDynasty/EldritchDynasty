@@ -335,7 +335,7 @@ describe('counter-record prose selection and retelling grammar (#1430)', () => {
         since: 1100, mutations: 1, bias: 'A household account' },
       { id: 'song', about: 'south_road', form: 'song',
         text: 'The southern road was open.', teller: 'Ronan',
-        since: 1110, mutations: 3, bias: 'A traveler's account' },
+        since: 1110, mutations: 3, bias: "A traveler's account" },
     ] as unknown as SessionView['tales'];
     const wrapper = mount(Abroad, { props: {
       view: { ...view(), tales }, proseMode: 'original',
