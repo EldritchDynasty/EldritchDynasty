@@ -1,5 +1,5 @@
 import type { MarriagePromise, Person } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import { chronicleEntryId, type SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { eligibleToMarry, wed } from './demography.js';
 import { eligibleTemplates, mintRecipe, rollRecipe } from './minting.js';
@@ -33,11 +33,12 @@ function claimedGranddaughter(ctx: SimCtx, girl: Person, promise: MarriagePromis
 
 function breakPledge(ctx: SimCtx, promise: MarriagePromise, reason: string): void {
   const w = ctx.world;
+  const page = chronicleEntryId(ctx);
   applyEffect({ kind: 'respect', delta: -1 }, ctx, {});
   addGrudge(ctx, promise.toHouse, w.playerHouse,
-    { severity: 50, inheritance: 'all_blood' }, 'auction_marriage_pledge');
+    { severity: 50, inheritance: 'all_blood' }, 'auction_marriage_pledge', page);
   w.chronicle.push({
-    year: w.year, weight: 'paragraph', named: true,
+    id: page, year: w.year, weight: 'paragraph', named: true,
     text: msg(ctx, 'auction.pledge_broken',
       '{HOUSE} called in the granddaughter {HEAD} promised for {LOT} in {YEAR}. {REASON} The house lost a tier of Respect, and the creditor held the debt against its blood. The pledge was broken.',
       { HOUSE: sellerName(ctx, promise.toHouse), HEAD: w.people.get(promise.pledgedBy)?.name ?? promise.pledgedBy,

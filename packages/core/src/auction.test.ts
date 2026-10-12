@@ -6,7 +6,7 @@ import {
   announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, DEBT_FLOOR, grantHeirloom, grantParcel,
   order, resolveDueLots, setProseMode, setProseVariants, tableView, testRng, tickAuction,
   beget, digestOf, expectHealthyWorld, loadGame, matchSubjects, onTheMarket, phase, place, saveGame, wed,
-  relationshipThreads, viewOf,
+  ECHO_AFTER, bitterestAgainst, grudgeAgainstUs, grudgesAgainst, relationshipThreads, tickRelationships, viewOf,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
@@ -201,12 +201,29 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     const grudges = [...ctx.world.relationships.values()].flatMap((rel) => rel.grudges);
     expect(grudges).toHaveLength(1);
     expect(grudges[0]).toMatchObject({ severity: 50, inheritance: 'all_blood' });
+    expect(grudgeAgainstUs(ctx.world)).toBe(50);
+    expect(grudgesAgainst(ctx.world, girl.id)).toHaveLength(1);
+    const claimant = ctx.world.people.mustGet(bitterestAgainst(ctx.world, ctx.world.playerHouse)!);
+    expect(ctx.world.people.householdOf(claimant.id, ctx.world.year)).toBe(promise.toHouse);
+    expect(claimant.status).toBe('alive');
+    ctx.world.year += 1;
+    tickRelationships(ctx);
+    expect(grudgeAgainstUs(ctx.world)).toBeGreaterThan(49);
+    expect(relationshipThreads(ctx, 10).find((thread) => thread.house === promise.toHouse)
+      ?.pressures.some((fact) => fact.kind === 'grudge')).toBe(true);
+    expect(grudges[0]!.originPage).toBeDefined();
+    expect(ctx.world.chronicle.find((entry) => entry.id === grudges[0]!.originPage)?.text)
+      .toContain('The pledge was broken.');
     expect(ctx.world.marriagePromises).toEqual([]);
     const lines = ctx.world.chronicle.length;
     phase('promises', ctx);
     expect(ctx.world.respect).toBe('known');
     expect(ctx.world.chronicle).toHaveLength(lines);
     expectHealthyWorld(ctx);
+    ctx.world.year += ECHO_AFTER;
+    tickRelationships(ctx);
+    expect(ctx.world.chronicle.filter((entry) => entry.cause?.page === grudges[0]!.originPage)).toHaveLength(1);
+    expect(grudgeAgainstUs(ctx.world)).toBeGreaterThan(49);
   });
 
   it('replaces a dead reservation without renewing the deadline, then bills an unfulfilled pledge once', () => {

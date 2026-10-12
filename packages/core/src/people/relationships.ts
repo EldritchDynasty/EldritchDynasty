@@ -104,8 +104,13 @@ export function addGrudge(
 /** Every grudge anyone currently holds against this person. */
 export function grudgesAgainst(w: WorldState, id: string): Grudge[] {
   const out: Grudge[] = [];
+  const person = w.people.get(id);
   for (const rel of w.relationships.values()) {
-    if (rel.to === id) out.push(...rel.grudges);
+    if (rel.to === id || (w.houses.has(rel.to) && person
+      && (person.houseOfOrigin === rel.to
+        || person.membership.some((m) => m.house === rel.to && m.to === undefined)))) {
+      out.push(...rel.grudges);
+    }
   }
   return out;
 }
@@ -115,7 +120,7 @@ export function grudgeAgainstUs(w: WorldState): number {
   let worst = 0;
   for (const rel of w.relationships.values()) {
     const target = w.people.get(rel.to);
-    const theirs = (target?.houseOfOrigin) === w.playerHouse
+    const theirs = rel.to === w.playerHouse || (target?.houseOfOrigin) === w.playerHouse
       || target?.membership.some((m) => m.house === w.playerHouse && m.to === undefined);
     if (!theirs) continue;
     for (const g of rel.grudges) worst = Math.max(worst, g.severity);
@@ -165,6 +170,9 @@ function successorTo(w: WorldState, id: string, mode: Grudge['inheritance']): st
 export function tickRelationships(ctx: SimCtx): void {
   const w = ctx.world;
   const dead = (id: string) => {
+    // A contract can bind houses directly. Their blood inherits the debt
+    // without replacing either institutional endpoint at each succession.
+    if (w.houses.has(id)) return false;
     const p = w.people.get(id);
     return !p || (p.status !== 'alive' && p.status !== 'guardian');
   };
@@ -268,6 +276,7 @@ function grudgeLineIndex(year: number, house: string, n: number): number {
 }
 
 function ours(w: WorldState, id: string): boolean {
+  if (id === w.playerHouse) return true;
   const p = w.people.get(id);
   return p?.houseOfOrigin === w.playerHouse
     || (p?.membership.some((m) => m.house === w.playerHouse && m.to === undefined) ?? false);
@@ -275,7 +284,8 @@ function ours(w: WorldState, id: string): boolean {
 
 export function echoGrudges(ctx: SimCtx): number {
   const w = ctx.world;
-  const holderHouse = (rel: Relationship) => w.people.get(rel.from)?.houseOfOrigin;
+  const holderHouse = (rel: Relationship) => w.people.get(rel.from)?.houseOfOrigin
+    ?? (w.houses.has(rel.from) ? rel.from : undefined);
   let written = 0;
   for (const rel of w.relationships.values()) {
     if (!ours(w, rel.to)) continue;
@@ -330,15 +340,16 @@ export function bitterestAgainst(w: WorldState, houseId: string): PersonId | und
   let worst: { id: string; severity: number } | undefined;
   for (const rel of w.relationships.values()) {
     const target = w.people.get(rel.to);
-    if (!target) continue;
-    const theirs = target.membership.some(
+    const theirs = rel.to === houseId || target?.membership.some(
       (m) => m.house === houseId && m.to === undefined,
     );
     if (!theirs) continue;
-    const holder = w.people.get(rel.from);
+    const holder = w.people.get(rel.from) ?? (w.houses.has(rel.from)
+      ? w.people.household(rel.from, w.year).sort((a, b) => a.born - b.born || (a.id < b.id ? -1 : 1))[0]
+      : undefined);
     if (!holder || holder.status !== 'alive') continue;
     for (const g of rel.grudges) {
-      if (!worst || g.severity > worst.severity) worst = { id: rel.from, severity: g.severity };
+      if (!worst || g.severity > worst.severity) worst = { id: holder.id, severity: g.severity };
     }
   }
   return worst ? asId<PersonId>(worst.id) : undefined;
