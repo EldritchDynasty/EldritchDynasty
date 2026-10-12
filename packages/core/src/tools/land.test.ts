@@ -1102,6 +1102,41 @@ describe('the native merge queue CI contract', () => {
   });
 });
 
+
+describe('native queue recovery after green main CI (#1458)', () => {
+  const admission = readFileSync(join(REPO, '.github/workflows/auto-merge-queue.yml'), 'utf8');
+  const recovered = admission.slice(admission.indexOf('\n  reconcile-after-main:\n'));
+
+  it('reacts to a successful main push, not every dequeue or failed merge-group', () => {
+    expect(recovered).toContain("github.event_name == 'workflow_run'");
+    expect(recovered).toContain("github.event.workflow_run.event == 'push'");
+    expect(recovered).toContain("github.event.workflow_run.head_branch == 'main'");
+    expect(recovered).toContain("github.event.workflow_run.conclusion == 'success'");
+    expect(recovered).toContain('github.event.workflow_run.head_repository.full_name == github.repository');
+    expect(admission).not.toMatch(/types:\s*\[[^\]]*dequeued/);
+    expect(recovered).toContain('current_main" != "$EXPECTED_MAIN_SHA"');
+  });
+
+  it('filters drafts, forks and conflicted PRs before checking the newest exact-head verdict', () => {
+    expect(recovered).toContain('.state == "open" and .draft == false');
+    expect(recovered).toContain('.base.ref == "main"');
+    expect(recovered).toContain('.head.repo.full_name == $repo');
+    expect(recovered).toContain('.mergeable == true and .mergeable_state == "clean"');
+    expect(recovered).toContain('select(.name == "CI required")');
+    expect(recovered).toContain('sort_by(.id) | last');
+    expect(recovered).toContain('if [[ "$required" != "success" || -z "$node" ]]');
+  });
+
+  it('uses an expected head SHA and only native queue admission, never a main push', () => {
+    expect(recovered).toContain('enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid})');
+    expect(recovered).toContain('-F expectedHeadOid="$head"');
+    expect(recovered).toContain('already in the queue');
+    expect(recovered).not.toContain('git push');
+    expect(recovered).not.toContain('mergePullRequest');
+    expect(recovered).not.toContain('gh pr merge');
+  });
+});
+
 const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
   parseVerdict: (m: string) => { conclusion: string; sha: string; run: string; jobs: { name: string; result: string }[] } | null;
   stateOf: (v: unknown) => string;
