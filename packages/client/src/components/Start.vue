@@ -79,6 +79,8 @@ const saveActionError = ref<{ slot: string; message: string } | null>(null);
 const resumeRefused = ref<string | null>(null);
 /** Only one host resume can run at a time; a slow response must not race a retry. */
 const resuming = ref(false);
+/** Named-slot reads are asynchronous host selections, not just button clicks. */
+const loadingSlot = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 /** A slow host recovery must not overlap a second Library read. */
 const retryingLibrary = ref(false);
@@ -120,7 +122,8 @@ const libraryIsReady = computed(() => props.libraryReady ?? true);
  */
 const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
 /** A pending host restore owns the session until it settles. */
-const mayBegin = computed(() => libraryIsReady.value && validSeed.value && !resuming.value);
+const mayBegin = computed(() => libraryIsReady.value && validSeed.value
+  && !resuming.value && loadingSlot.value === null && !importingSave.value);
 /** A double click can arrive before Vue replaces the Start screen with the prologue. */
 let beginning = false;
 
@@ -159,7 +162,7 @@ async function refreshSaves(): Promise<void> {
 async function continueLastSitting(): Promise<void> {
   // A second click cannot start a competing host load or overwrite the result
   // of a successful continuation with an older, slower refusal.
-  if (resuming.value || beginning) return;
+  if (resuming.value || beginning || loadingSlot.value !== null || importingSave.value) return;
   resuming.value = true;
   // The rolling save may have become unreadable after the front door offered it.
   // Report this next to Continue, not down beside unrelated import/export actions.
@@ -177,6 +180,10 @@ async function continueLastSitting(): Promise<void> {
 /** Named save actions share one error row; older host replies must not replace newer actions. */
 let saveActionRevision = 0;
 async function load(slot: string): Promise<void> {
+  // One named host read owns the session until it resolves. Prevent both a
+  // second slot and Begin/Continue/Import from superseding it mid-read.
+  if (loadingSlot.value !== null || resuming.value || importingSave.value || beginning) return;
+  loadingSlot.value = slot;
   const revision = ++saveActionRevision;
   saveActionError.value = null;
   try {
@@ -187,11 +194,14 @@ async function load(slot: string): Promise<void> {
     if (revision === saveActionRevision) {
       saveActionError.value = { slot, message: 'That saved run could not be read.' };
     }
+  } finally {
+    // A refused/rejected read must let the player select a different slot.
+    loadingSlot.value = null;
   }
 }
 
 async function importSave(): Promise<void> {
-  if (importingSave.value) return;
+  if (importingSave.value || loadingSlot.value !== null || resuming.value || beginning) return;
   importingSave.value = true;
   refused.value = null;
   try {
@@ -321,7 +331,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" :disabled="resuming" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
+      <button v-if="resumable" class="primary" :disabled="resuming || loadingSlot !== null || importingSave" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
@@ -405,9 +415,10 @@ onMounted(() => { void refreshSaves(); });
       <p class="dim small">{{ plain ? 'These games remain saved after you close the app.' : 'They remain here when the application closes.' }}</p>
       <ul>
         <li v-for="save in namedSaves" :key="save.slot">
-          <button class="quiet" @click="load(save.slot)">
+          <button class="quiet" :disabled="loadingSlot !== null || resuming || importingSave" @click="load(save.slot)">
             {{ save.slot === 'autosave' ? (plain ? 'Most recent game' : 'The last sitting') : save.slot }}
             <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
+            <span v-if="loadingSlot === save.slot" class="dim"> · Loading…</span>
           </button>
           <button class="quiet small" @click="exportSave(save.slot)">{{ plain ? 'Export' : 'Copy out' }}</button>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
@@ -423,7 +434,7 @@ onMounted(() => { void refreshSaves(); });
     </div>
 
     <div class="row">
-      <button class="quiet small" :disabled="importingSave" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
+      <button class="quiet small" :disabled="importingSave || loadingSlot !== null || resuming" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
       <p v-if="refused" class="rubric small" role="status">{{ displayError(refused) }}</p>
     </div>
 
