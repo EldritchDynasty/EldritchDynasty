@@ -354,6 +354,48 @@ describe('Plain English prologue replay identity (#410)', () => {
   });
 });
 
+/** A synchronous activation burst cannot consume several queued Age beats. */
+describe('Chapter dismissal is single-flight (#1488)', () => {
+  const opening = (text: string) => ({ kind: 'opening', opening: { text } } as ChapterBeat);
+
+  it('coalesces button, backdrop and Escape until a successor renders', async () => {
+    const dismissChapter = vi.fn();
+    const game = { dismissChapter } as unknown as GameActions;
+    const wrapper = mount(Chapter, {
+      attachTo: document.body,
+      props: { beat: opening('First Age.'), actions: game },
+    });
+
+    try {
+      const goOn = wrapper.get('button.quiet').element as HTMLButtonElement;
+      // Deliberately use native events rather than trigger(), which adds a tick.
+      goOn.click();
+      goOn.click();
+      wrapper.get('.scrim').element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Escape', bubbles: true, cancelable: true,
+      }));
+      expect(dismissChapter).toHaveBeenCalledTimes(1);
+
+      // App retains the same instance as its next queued beat replaces this one.
+      await wrapper.setProps({ beat: opening('Second Age.') });
+      expect(wrapper.text()).toContain('Second Age.');
+      goOn.click();
+      goOn.click();
+      expect(dismissChapter).toHaveBeenCalledTimes(2);
+
+      // A refusal/no-op must also be retryable if the queue is not updated.
+      await nextTick();
+      goOn.click();
+      expect(dismissChapter).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
+      wrapper.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('Age opening replay on a reused Chapter dialog (#410)', () => {
   it('records each unseen opening and skips a repeat when the chapter queue advances', async () => {
     window.localStorage.clear();
