@@ -119,7 +119,7 @@ const libraryIsReady = computed(() => props.libraryReady ?? true);
  * Zero is a valid deterministic seed; do not replace invalid input silently.
  */
 const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
-const mayBegin = computed(() => libraryIsReady.value && validSeed.value);
+const mayBegin = computed(() => libraryIsReady.value && validSeed.value && !resuming.value);
 /** A double click can arrive before Vue replaces the Start screen with the prologue. */
 let beginning = false;
 
@@ -158,7 +158,7 @@ async function refreshSaves(): Promise<void> {
 async function continueLastSitting(): Promise<void> {
   // A second click cannot start a competing host load or overwrite the result
   // of a successful continuation with an older, slower refusal.
-  if (resuming.value) return;
+  if (resuming.value || beginning) return;
   resuming.value = true;
   // The rolling save may have become unreadable after the front door offered it.
   // Report this next to Continue, not down beside unrelated import/export actions.
