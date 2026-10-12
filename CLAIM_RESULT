@@ -1,8 +1,10 @@
 verdict: ok
 exit: 0
-request: /claim lane-gates --agent chatgpt/1499-queue-diagnostics-20261013b --paths .github/workflows/auto-merge-queue.yml tools/auto-merge-queue.test.ts --lane gates
-request-commit: b679a687063847bb5743e8cb68e1ee0dab926b1f
+request: /claim 1499 --agent chatgpt/1499-queue-diagnostics-20261013b --paths docs/MERGE-QUEUE-INCIDENT.md .github/workflows/auto-merge-queue.yml tools/auto-merge-queue.test.ts --lane gates
+request-commit: f0f9c13e4fa779b6beb5db6c24ca276a99f15bd3
 
-held: lane-gates → chatgpt/1499-queue-diagnostics-20261013b (lane gates)
+widened 1499: + .github/workflows/auto-merge-queue.yml, tools/auto-merge-queue.test.ts
+held: 1499 → chatgpt/1499-queue-diagnostics-20261013b (lane gates)
   land it with: Closes #1499
   the janitor retires the claims and deletes the branch behind that.
+  ⚠ chatgpt/1499-queue-diagnostics-20261013b declared overlapping paths on lane-gates: .github/workflows/auto-merge-queue.yml, tools/auto-merge-queue.test.ts
