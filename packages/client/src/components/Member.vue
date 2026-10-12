@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { MARKS, type Mark, madnessMark } from '../lib/marks';
 
 type MemberView = SessionView['halls'][number]['members'][number];
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   member: MemberView;
+  proseMode?: ProseMode;
   /** What the content calls things. See `SessionView.attributes` / `.traits`. */
   names: SessionView['attributes'];
   traitNames: SessionView['traits'];
@@ -14,7 +16,48 @@ const props = defineProps<{
   showRelevance?: boolean;
   mentions?: (person: string) => { id: string; year: number }[];
   relationshipAnchor?: { id: string; name: string };
-}>();
+}>(), { proseMode: 'original' });
+
+/** UI-only words: names, recorded claims, dates and true values stay unchanged. */
+const copy = computed(() => props.proseMode === 'plainenglish' ? {
+  successionHeir: 'next to lead the house',
+  successionPossible: 'could become head of the house',
+  plan: 'Relevant to the plan:',
+  spouse: (name: string, house?: string) => `Married to ${name}${house ? ` (from ${house})` : ''}.`,
+  trait: 'Recorded traits:',
+  contract: (role: string) => `Contract: ${role}`,
+  post: (role: string) => `Position: ${role}`,
+  traceStart: 'Show family relationships from here',
+  traceStop: 'Stop tracing this relationship',
+  traceTo: (from: string, to: string) => `Show how ${from} and ${to} are related`,
+  mentions: 'Chronicle pages:',
+  leaders: 'History of family leaders',
+  death: (year: number, cause: string) => `The book says they died in ${year} from ${cause}.`,
+  parentage: 'The book names different parents from their actual parents.',
+  attribute: 'Attribute',
+  record: 'Recorded',
+  actual: 'Actual',
+  unknown: 'The book has not described this person.',
+} : {
+  successionHeir: 'next to hold the seal',
+  successionPossible: 'may hold the seal',
+  plan: 'For the plan:',
+  spouse: (name: string, house?: string) => `married to ${name}${house ? `, of ${house}` : ''}`,
+  trait: 'said to be',
+  contract: (role: string) => `holds a contract as ${role}`,
+  post: (role: string) => `holds a post as ${role}`,
+  traceStart: 'Trace a relationship from here',
+  traceStop: 'Stop tracing from here',
+  traceTo: (from: string, to: string) => `Trace from ${from} to ${to}`,
+  mentions: 'In the book:',
+  leaders: 'Who has held the seal',
+  death: (year: number, cause: string) => `the book has them dying in ${year}, of ${cause}`,
+  parentage: 'the book gives them a different mother or father than they have',
+  attribute: 'attribute',
+  record: 'the book',
+  actual: 'the person',
+  unknown: 'The book has never said a word about what they were like.',
+});
 defineEmits<{
   (e: 'select', id: string): void;
   (e: 'line'): void;
@@ -90,8 +133,8 @@ const foundling = computed(() => {
 
 const relevance = computed(() => props.showRelevance ? (props.member.relevance ?? []) : []);
 const succession = computed(() => {
-  if (props.member.succession === 'heir') return 'next to hold the seal';
-  if (props.member.succession === 'possible') return 'may hold the seal';
+  if (props.member.succession === 'heir') return copy.value.successionHeir;
+  if (props.member.succession === 'possible') return copy.value.successionPossible;
   return undefined;
 });
 const mentionPages = computed(() =>
@@ -131,7 +174,7 @@ const mentionPages = computed(() =>
 
     <div v-if="succession" class="succession small rubric">{{ succession }}</div>
     <div v-if="relevance.length" class="relevance small">
-      <span class="rubric">For the plan:</span>
+      <span class="rubric">{{ copy.plan }}</span>
       <span v-for="(item, i) in relevance" :key="item.reason">
         <span v-if="i" class="dim"> · </span>{{ item.reason }}
       </span>
@@ -141,7 +184,7 @@ const mentionPages = computed(() =>
          trading blood, so the house a spouse married in from is the one fact
          about her the tree has to carry — and it lived inside a card. -->
     <div v-if="member.spouse?.marriedIn && member.spouse.house" class="dim small from">
-      married to {{ member.spouse.name }}, of {{ member.spouse.house }}
+      {{ copy.spouse(member.spouse.name, member.spouse.house) }}
     </div>
 
     <div v-if="loudest.length" class="claimed dim small">
@@ -150,26 +193,25 @@ const mentionPages = computed(() =>
 
     <div v-if="open" :id="'detail-' + member.id" class="detail">
       <div v-if="claimedTraits.length" class="small">
-        <span class="dim">said to be</span> {{ claimedTraits.join(', ') }}
+        <span class="dim">{{ copy.trait }}</span> {{ claimedTraits.join(', ') }}
       </div>
       <div v-if="member.spouse" class="small dim">
-        married to {{ member.spouse.name }}<span v-if="member.spouse.marriedIn && member.spouse.house">,
-        of {{ member.spouse.house }}</span>
+        {{ copy.spouse(member.spouse.name, member.spouse.marriedIn ? member.spouse.house : undefined) }}
       </div>
-      <div v-if="member.contract" class="small dim">holds a contract as {{ member.contract }}</div>
-      <div v-if="member.post" class="small dim">holds a post as {{ member.post }}</div>
+      <div v-if="member.contract" class="small dim">{{ copy.contract(member.contract) }}</div>
+      <div v-if="member.post" class="small dim">{{ copy.post(member.post) }}</div>
       <button
         type="button"
         class="quiet small relationship"
         data-relationship
         @click.stop="$emit('relationship', member.id)"
       >
-        <template v-if="!relationshipAnchor">Trace a relationship from here</template>
-        <template v-else-if="relationshipAnchor.id === member.id">Stop tracing from here</template>
-        <template v-else>Trace from {{ relationshipAnchor.name }} to {{ member.name }}</template>
+        <template v-if="!relationshipAnchor">{{ copy.traceStart }}</template>
+        <template v-else-if="relationshipAnchor.id === member.id">{{ copy.traceStop }}</template>
+        <template v-else>{{ copy.traceTo(relationshipAnchor.name, member.name) }}</template>
       </button>
       <div v-if="mentionPages.length" class="small mentions">
-        <span class="dim">In the book:</span>
+        <span class="dim">{{ copy.mentions }}</span>
         <button
           v-for="page in mentionPages"
           :key="page.id"
@@ -183,20 +225,19 @@ const mentionPages = computed(() =>
            halls are the living household; the line behind them is a different
            question, asked from the person currently answering it. -->
       <button v-if="member.head" class="quiet small" @click.stop="$emit('line')">
-        Who has held the seal
+        {{ copy.leaders }}
       </button>
       <div v-if="member.record.claimedDeath" class="small dim">
-        the book has them dying in {{ member.record.claimedDeath.year }},
-        of {{ member.record.claimedDeath.cause }}
+        {{ copy.death(member.record.claimedDeath.year, member.record.claimedDeath.cause) }}
       </div>
-      <div v-if="foundling" class="small rubric">the book gives them a different mother or father than they have</div>
+      <div v-if="foundling" class="small rubric">{{ copy.parentage }}</div>
 
       <!-- CLAIMED, then REAL. In that order, always: the recorded person is
            the one the house has, and the other one is what you are checking
            them against. -->
       <table v-if="said.length" class="attrs small">
         <thead>
-          <tr class="dim"><th>attribute</th><th>the book</th><th>the person</th></tr>
+          <tr class="dim"><th>{{ copy.attribute }}</th><th>{{ copy.record }}</th><th>{{ copy.actual }}</th></tr>
         </thead>
         <tbody>
           <tr v-for="a in said" :key="a.attr" :class="{ apart: a.claimed !== a.real }">
@@ -204,7 +245,7 @@ const mentionPages = computed(() =>
           </tr>
         </tbody>
       </table>
-      <p v-else class="small dim">The book has never said a word about what they were like.</p>
+      <p v-else class="small dim">{{ copy.unknown }}</p>
     </div>
   </div>
 </template>
