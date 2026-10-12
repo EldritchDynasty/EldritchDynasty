@@ -662,7 +662,7 @@ describe('Chapter canonical modal keyboard and focus (#1325)', () => {
     }
   });
 
-  it('keeps fallback focus in the parent when the child's return target is disabled (#1526)', () => {
+  it('keeps fallback focus in the parent when the return target is disabled (#1526)', () => {
     const board = document.createElement('div');
     board.className = 'board';
     const boardButton = document.createElement('button');
