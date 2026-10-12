@@ -154,6 +154,10 @@ describe('finding where an item lives', () => {
     expect(fileOfId('arc_the_eight_days')).toBe('arcs/eight_days.yaml');
     expect(fileOfId('suitor_of_ilm')).toBe('characters/templates.yaml');
     expect(fileOfId('mind')).toBe('attributes.yaml');
+    // Prose counterparts use `address`, unlike the id/key collections. The
+    // provenance lookup must resolve their real authored YAML file too.
+    expect(fileOfId('core:messages#assize.the_assessors_call')).toBe('messages.yaml');
+    expect(fileOfId('core:messages#missing_prose_counterpart')).toBeUndefined();
     expect(fileOfId('no_such_content_id')).toBeUndefined();
   });
 
