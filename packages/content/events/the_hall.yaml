@@ -456,3 +456,303 @@ events:
                 - { kind: treasury, delta: -5 }
                 - { kind: attribute, target: household, attr: health, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: 5 }
+
+proseVariants:
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].title"
+    of: "d28a10a31d0d9a7f"
+    plainenglish: >-
+      The Roof Has Leaked Since 1090
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].body"
+    of: "0fbaa54b576b4b97"
+    plainenglish: >-
+      Water comes through the west wing roof in the second tenday of Thaw. It comes through in
+      the same four places it did for the last Head, and the Head before him. The slaters from
+      Hesk will fix it properly for ninety crowns and a summer of scaffolding. They say so
+      without pushing, because they have told this family the same thing four times. The other
+      choice is what the house has done all four times. {HEAD} has the accounts open on the
+      table, and can hear the dripping in the next room.
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].interaction.choices[id=hesk_properly].label"
+    of: "2c83955cb2327b00"
+    plainenglish: >-
+      Pay Hesk the ninety crowns. Fix it once and stop paying for it.
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].interaction.choices[id=hesk_properly].outcomes[id=slated].text"
+    of: "a7f2b957299f142b"
+    plainenglish: >-
+      It takes eighteen men and eleven weeks, and the roof will outlast everyone who argued
+      about it. The house eats plain food for two years, and the west wing stays dry for eighty.
+      Nobody thanks a Head for a problem that simply stops.
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].interaction.choices[id=patch_it_again].label"
+    of: "2a7be3ebaf6aef97"
+    plainenglish: >-
+      Patch it once more. That has worked before.
+  - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].interaction.choices[id=patch_it_again].outcomes[id=patched].text"
+    of: "2f6e05f5e9d58289"
+    plainenglish: >-
+      It costs twelve crowns and two weeks, with the yard man up a ladder in weather nobody
+      should be up a ladder in. It holds. It holds the way it did last time, which means until
+      the wind turns to the north.
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].title"
+    of: "9b9cd49f3bd7275b"
+    plainenglish: >-
+      Three Fires Out of Seven
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].body"
+    of: "15fbf3eb15dd45d7"
+    plainenglish: >-
+      There are seven fireplaces, and in an ordinary winter only three are lit. Someone decides
+      which three in Frostfall, and everyone lives with it until Thaw. The charcoal burners have
+      come out of the woods with charcoal that burns clean and hot, at fourteen crowns for the
+      season. The house's own woods are full of green ash, which fills a room with smoke and
+      gives half the heat. The steward has set out both costs on the table and is waiting to
+      hear which rooms stay warm.
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].interaction.choices[id=buy_charcoal].label"
+    of: "81c7de03fd45909f"
+    plainenglish: >-
+      Buy the charcoal. Light four fires and keep the hall warm.
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].interaction.choices[id=buy_charcoal].outcomes[id=warm].text"
+    of: "e9fd325109ab9f5d"
+    plainenglish: >-
+      Four fires burn from Frostfall to Thaw. The long room stops being a place people go to
+      argue and becomes a place where they sit. The charcoal burners are paid in full on the
+      day, which they are not used to, and they talk about it in three villages.
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].interaction.choices[id=burn_green].label"
+    of: "4c1a4f19e5fa2a75"
+    plainenglish: >-
+      Burn our own wood. Three fires, as always.
+  - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].interaction.choices[id=burn_green].outcomes[id=smoke].text"
+    of: "3fef9514dcdb28f8"
+    plainenglish: >-
+      They burn green ash all winter. By Deepwinter everyone in the hall is coughing, and nobody
+      mentions it. The money saved is real, and the steward writes it down. Two of the youngest
+      children are still coughing at Greening.
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].title"
+    of: "ed14f49cc9085b38"
+    plainenglish: >-
+      A Gate Nobody Has Closed in Ninety Years
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].body"
+    of: "e003d0a7dda2d8cb"
+    plainenglish: >-
+      The gates have stood open so long that the hinges have set in place, and the left gate has
+      sunk four inches into the mud. A smith from Bramme says he can hang a new pair for
+      twenty-two crowns. He says it loudly, in the yard, in front of the reeve. For three
+      generations this family has been quietly proud of its open gate. It also means anyone can
+      walk in.
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].interaction.choices[id=hang_new_gates].label"
+    of: "0135498848cbeb9c"
+    plainenglish: >-
+      Hang new gates. A house anyone can walk into, people will walk into.
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].interaction.choices[id=hang_new_gates].outcomes[id=hung].text"
+    of: "fdf953957de3b6c1"
+    plainenglish: >-
+      Oak, iron, and a bar that takes two men to lift. They are closed for the first time on the
+      second night, and the sound carries down to Wick. Four people who have never once thought
+      about the house stand in the street and listen.
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].interaction.choices[id=leave_it_open].label"
+    of: "dc7db32a645ec316"
+    plainenglish: >-
+      Leave it. Ninety years is a good reason.
+  - address: "content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].interaction.choices[id=leave_it_open].outcomes[id=left].text"
+    of: "ca6dbc132f907747"
+    plainenglish: >-
+      The smith is paid a mark for his trip and goes back down the hill with a story to tell.
+      The gate stays as it is. The house keeps the one claim it has that costs nothing: anyone
+      may come up, and anyone always could.
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].title"
+    of: "ef0d909e7839996a"
+    plainenglish: >-
+      Walled Up, Opened, and Walled Up Again
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].body"
+    of: "451faa7d15fe1cc1"
+    plainenglish: >-
+      The second cellar is cold and dry. It has been bricked up and opened again more times than
+      the house can explain, and that is the interesting thing about it. {KIN} wants it opened,
+      because a dry cellar is worth money and the house has none to waste. The mason wants six
+      crowns and a day's work. For three crowns and a morning, he can add a new layer of bricks
+      over the old one and settle the matter the way the last four Heads settled it.
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].interaction.choices[id=open_it].label"
+    of: "52fc8ac23cea8cc6"
+    plainenglish: >-
+      Open it. A dry cellar is useful.
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].interaction.choices[id=open_it].outcomes[id=opened].text"
+    of: "0f1540376f329feb"
+    plainenglish: >-
+      It costs six crowns. Behind the bricks is a room with nothing in it but a bench, a drain
+      cut into the floor, and four iron rings fixed into the wall at about the height of a
+      standing man. The mason works the rest of the day without saying a word.
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].interaction.choices[id=brick_it].label"
+    of: "0e637bee12ab4552"
+    plainenglish: >-
+      Brick it up. It was bricked up for a reason, and that reason is gone.
+  - address: "content:events/the_hall.yaml#events[id=the_second_cellar_again].interaction.choices[id=brick_it].outcomes[id=bricked].text"
+    of: "4973eed3cb60f817"
+    plainenglish: >-
+      It costs three crowns and a morning. {KIN} watches the last row of bricks go in and does
+      not argue, but does not forget either. The house has now made this decision five times
+      without ever writing down why.
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].title"
+    of: "d3ab6ee5f9330fd9"
+    plainenglish: >-
+      Tallow Candles, and the Smell
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].body"
+    of: "5b1d928eb35fef2a"
+    plainenglish: >-
+      Wax candles are for the chapel and for guests. Everyone else gets tallow, and tallow
+      stinks like boiled-down sheep, because that is what it is. Nine crowns would buy enough
+      wax to light the long room properly from Smoke to Thaw. The house has never done it. A
+      visitor coming up the hill after dark can smell which one is burning from the yard, and so
+      can everyone who lives here.
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].interaction.choices[id=buy_wax].label"
+    of: "85ce6f64121be738"
+    plainenglish: >-
+      Wax candles in the long room, all winter.
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].interaction.choices[id=buy_wax].outcomes[id=waxed].text"
+    of: "96155de67799ccc2"
+    plainenglish: >-
+      Nine crowns, and it feels like a different room. People stay after the table is cleared,
+      which they have not done for years, and two arguments that had gone on since Harvest are
+      settled within a week.
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].interaction.choices[id=keep_tallow].label"
+    of: "0508f43e43590d42"
+    plainenglish: >-
+      Tallow. The chapel gets the wax, as it always has.
+  - address: "content:events/the_hall.yaml#events[id=tallow_and_wax].interaction.choices[id=keep_tallow].outcomes[id=tallow].text"
+    of: "13ef789857fe296c"
+    plainenglish: >-
+      The money saved goes into the cash box and the smell goes into everyone's clothes, and by
+      Longnight nobody notices either. A visitor from Bramme notices both within four steps, and
+      is far too polite to say so.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].title"
+    of: "46313d7b76c836df"
+    plainenglish: >-
+      What the Pigeons Eat
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].body"
+    of: "235ffaf5adfd8651"
+    plainenglish: >-
+      A landed house has the right to keep a dovecote, and this one holds four hundred birds.
+      Every spring, those four hundred birds eat from the fields of eleven tenant farms without
+      asking. The reeve raises the matter the way he raises everything, by talking about
+      something else first. Nobody questions the right. They question the number of birds, and
+      they have been questioning it politely since 1074.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=cull_the_flight].label"
+    of: "8d741a627d3a966e"
+    plainenglish: >-
+      Cut the flock to two hundred. Explain why, out loud, in the yard.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=cull_the_flight].outcomes[id=culled].text"
+    of: "5bddd9be42ae6a8a"
+    plainenglish: >-
+      Two hundred birds are killed in one morning and salted, and half of them go to Wick in the
+      reeve's own cart. The house does not give up the right, and everyone understands that. It
+      is the first thing this house has given up without being forced to in about sixty years.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=hold_the_right].label"
+    of: "dbc1767653069ed2"
+    plainenglish: >-
+      Keep the full right. A right you do not use is a right you lose.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=hold_the_right].outcomes[id=held].text"
+    of: "d7bfc39b23364047"
+    plainenglish: >-
+      The birds stay, and the house eats well in a hungry month, which is what a dovecote is
+      for. The reeve never raises it again, this year or any year. When his grandson becomes
+      reeve, there are still four hundred birds.
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].title"
+    of: "23b9671b8db189c7"
+    plainenglish: >-
+      The Old Dog by the Fire
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].body"
+    of: "55d58a51e71d4e3d"
+    plainenglish: >-
+      She has been the best of the hall's hounds for eleven years, and now she cannot get up the
+      step. In the morning the yard man will kill her behind the barn, as he has done for six
+      dogs before her without anyone being told. {CHILD} has worked out what the yard man is
+      for. There is something else too, which nobody in the hall says but everyone has noticed:
+      she has not gone into the west wing since Slaughter.
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].interaction.choices[id=let_the_yard_man].label"
+    of: "9a38a47098d26394"
+    plainenglish: >-
+      Let the yard man do it. That is his job.
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].interaction.choices[id=let_the_yard_man].outcomes[id=done_behind_the_barn].text"
+    of: "6e8934c82dfba224"
+    plainenglish: >-
+      It is over quickly, and for two weeks the hall is quieter in a way nobody can quite
+      explain. {CHILD} does not speak to the yard man for two years. The other dogs still will
+      not go into the west wing.
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].interaction.choices[id=keep_her].label"
+    of: "cf340b70aae07df4"
+    plainenglish: >-
+      Keep her by the fire until she dies.
+  - address: "content:events/the_hall.yaml#events[id=the_old_bitch_by_the_fire].interaction.choices[id=keep_her].outcomes[id=by_the_fire].text"
+    of: "7d7b1f894428ef8d"
+    plainenglish: >-
+      She lives four more months, mostly asleep, and at Thaw she is carried out by two men who
+      have both had a drink first. It costs the house nothing, and the household notices anyway.
+      Dogs are the one thing in this house you cannot ask the same question twice.
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].title"
+    of: "954eba8b5ba3a237"
+    plainenglish: >-
+      Rushes or Floorboards
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].body"
+    of: "321bad1283c69406"
+    plainenglish: >-
+      The long room still has rushes on the floor, because it is in the old wing. Rushes are
+      cut, laid down, walked on for a year, then taken up along with whatever has fallen into
+      them. The new wings have wooden floors. A carpenter from Bramme will lay a wooden floor in
+      the long room for sixteen crowns. It will take him four tendays in the middle of the year,
+      and the family will eat in the kitchen. Fresh rushes cost two crowns and a morning.
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].interaction.choices[id=board_it].label"
+    of: "da56a441488caa75"
+    plainenglish: >-
+      Lay the floor. The family can eat in the kitchen for a month.
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].interaction.choices[id=board_it].outcomes[id=boarded].text"
+    of: "80efc4a56d8d1b69"
+    plainenglish: >-
+      Sixteen crowns and four tendays buy a floor you can sweep. The room sounds different, and
+      everyone says so for a year. When the last old rushes come up, they contain three coins, a
+      knife and a child's shoe, and nobody can explain any of them.
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].interaction.choices[id=fresh_rushes].label"
+    of: "8eb77caab14ffd06"
+    plainenglish: >-
+      Fresh rushes. They have been good enough since the house was founded.
+  - address: "content:events/the_hall.yaml#events[id=rushes_or_boards].interaction.choices[id=fresh_rushes].outcomes[id=rushes].text"
+    of: "ca07f11778c665b3"
+    plainenglish: >-
+      Two crowns and a morning, and the room smells of fresh-cut reeds for about nine days. The
+      house at Cawdry has wooden floors everywhere and mentions it whenever anyone from the
+      Nethering is there. Nobody from Ardwen has ever been in that room.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].title"
+    of: "a7f2c1ae6dcdd19a"
+    plainenglish: >-
+      The Well Runs Low in a Dry Summer
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].body"
+    of: "82c4dc7f876a2a43"
+    plainenglish: >-
+      It is Highsun, and there has been no rain since Greening. The yard well is down to a foot
+      of water, and it comes up the colour of the bucket. The well-digger from Cawdry wants
+      twenty crowns to dig another fifteen feet down, and he will not promise anything, because
+      no well-digger ever does. The Wend river is a quarter mile downhill and still flowing. A
+      cart with two barrels can make six trips a day. Wick has already been drawing water from
+      the river for a tenday.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].interaction.choices[id=sink_it_deeper].label"
+    of: "90efc418da5a83ec"
+    plainenglish: >-
+      Dig deeper. Twenty crowns and no promises.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].interaction.choices[id=sink_it_deeper].outcomes[id=struck_water].text"
+    of: "71916f9d13cf6ae1"
+    plainenglish: >-
+      Fifteen feet, then nineteen, and on the fourth day water comes in cold enough to hurt your
+      hand. The well has not run dry since, in any summer, in all the years this chronicle
+      covers.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].interaction.choices[id=sink_it_deeper].outcomes[id=nothing_down_there].text"
+    of: "70e2f25a81a5d2ee"
+    plainenglish: >-
+      Nineteen feet of rock, four days and twenty crowns, and at the end there is the same foot
+      of brown water as before. The well-digger is sorry, and he is paid anyway, because that
+      was the deal and this house keeps its deals.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].interaction.choices[id=cart_from_the_river].label"
+    of: "54f4a29770046063"
+    plainenglish: >-
+      Bring water up from the Wend by cart and wait for rain.
+  - address: "content:events/the_hall.yaml#events[id=the_well_in_a_dry_year].interaction.choices[id=cart_from_the_river].outcomes[id=carted].text"
+    of: "7e3dff10d83e374c"
+    plainenglish: >-
+      Six trips a day for five tendays, and the hall drinks what Wick drinks, which everyone at
+      Wick notices. Everyone drinks weak beer, children included, because the water cannot be
+      trusted and this year it is river water as well. By Harvest, two of the maids and a groom
+      have dysentery.

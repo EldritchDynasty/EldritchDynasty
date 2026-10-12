@@ -484,3 +484,311 @@ events:
                 - { kind: attribute, target: { slot: GIRL }, attr: charm, delta: 3 }
                 - { kind: treasury, delta: 3 }
                 - { kind: relationship, from: { slot: TUTOR }, to: head, sentiment: -7 }
+
+proseVariants:
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].title"
+    of: "a6bad2d2c1398a66"
+    plainenglish: >-
+      The Iron Over the Door for Eleven Days
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].body"
+    of: "4eb4431c011ea0f8"
+    plainenglish: >-
+      When labour starts, a ploughshare is hung over the birthing-room door, and it stays there
+      for eleven days. Half the Nethering will tell you it keeps out bad air. The other half
+      will not tell you anything. {MOTHER} is four days in and doing well. The parish priest has
+      come up from Wick to see her. He has stopped in the passage under the iron and is looking
+      at it, the way a man looks at something he has decided not to mention. He is a pleasant
+      man on nine marks a year, and he has christened eleven members of this family.
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].interaction.choices[id=take_it_down].label"
+    of: "7768368f11c669d3"
+    plainenglish: >-
+      Take the iron down while he is in the house.
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].interaction.choices[id=take_it_down].outcomes[id=taken_down].text"
+    of: "d7176e3c833cb5e0"
+    plainenglish: >-
+      It comes down in about four seconds, and after he leaves it goes back up in about four
+      more. Everyone who saw both understands exactly what happened. He says nothing, blesses
+      the child on the eleventh day, and writes it in the parish register. The two maids who
+      watched the iron come down talk about it for a year.
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].interaction.choices[id=leave_the_iron].label"
+    of: "7090449de9076cd1"
+    plainenglish: >-
+      Leave it up. Every house in the province does this.
+  - address: "content:events/the_young.yaml#events[id=the_iron_over_the_door].interaction.choices[id=leave_the_iron].outcomes[id=left_up].text"
+    of: "37a5385d4bb9cfd9"
+    plainenglish: >-
+      Every house in the province does do this, and he knows it. He walks under it, does his
+      duty, eats his dinner and leaves. What he does not do is ask about it, in a house where he
+      has asked about everything else for nineteen years. That is the part worth noticing, and
+      nobody in the passage notices it.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].title"
+    of: "68aa8f065df1b412"
+    plainenglish: >-
+      One Child in Three
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].body"
+    of: "de123824e545e7a8"
+    plainenglish: >-
+      {SICK} has had a fever for three days, and the midwife has stopped saying her usual
+      reassuring words. In this province, two children in three live to the age of five. This
+      family has buried its share and knows the odds without anyone spelling them out. The
+      doctor at Bramme will come for three crowns and a night's food and bed. He will bleed the
+      child, give a purge and apply a poultice, and he will be honest about which of the three
+      he thinks will help. The midwife thinks the room should be kept warm and quiet, and that
+      is all.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=send_for_bramme].label"
+    of: "2271aeec01f4f558"
+    plainenglish: >-
+      Send for the doctor. Three crowns is no reason not to.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=send_for_bramme].outcomes[id=he_comes].text"
+    of: "bce5894f81762483"
+    plainenglish: >-
+      He arrives in the dark and takes four ounces of blood. He leaves a poultice that smells of
+      vinegar and something worse, and he sits up the rest of the night with the mother, which
+      turns out to be what matters. The fever breaks on the sixth day.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=send_for_bramme].outcomes[id=he_comes_too_late].text"
+    of: "d8e6c684e96de0b8"
+    plainenglish: >-
+      The road in Frostfall is as bad as ever, and he spends nine hours on it. He does
+      everything right and charges for none of it. He stays for the eleven days of mourning,
+      which nobody asked him to do.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=keep_the_room_warm].label"
+    of: "ef770120bfacc1bc"
+    plainenglish: >-
+      Keep the room warm and quiet. The midwife has seen more of these than the doctor.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=keep_the_room_warm].outcomes[id=it_breaks].text"
+    of: "c68889c15f5ed8c5"
+    plainenglish: >-
+      Four fires are lit for one room, and someone sits awake in it every hour for five days. On
+      the fifth day the fever breaks, the way fevers do, and nobody can say what did it. The
+      midwife will not accept thanks, and says so before anyone tries.
+  - address: "content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=keep_the_room_warm].outcomes[id=it_does_not_break].text"
+    of: "a431457fee26f5a3"
+    plainenglish: >-
+      It does not break. There are eleven days of mourning in grey, undyed wool. The house
+      cancels nothing, because work is how it mourns. The child's place at the table is left
+      empty until the next feast, then filled without a word. That is the moment the family
+      truly knows.
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].title"
+    of: "f99023a52ea3d051"
+    plainenglish: >-
+      Sent to Live with Another House, and Why
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].body"
+    of: "f9d94811ad92b2ed"
+    plainenglish: >-
+      A house at Cawdry with two hundred more acres, and three places higher on the Roll than
+      this one, would take {DAUGHTER} to live with them until she is seventeen. It is normal and
+      legal, and it is how alliances are kept in this kingdom. It also means a child of the
+      blood living in someone else's hall for nine years. Their letter is warm and mentions her
+      by name twice. In the last line, it also mentions that they have their own doctor living
+      in the house.
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].interaction.choices[id=send_her].label"
+    of: "bc5f1902650d2ede"
+    plainenglish: >-
+      Send her. Nine years, with a house three places above us.
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].interaction.choices[id=send_her].outcomes[id=fostered_out].text"
+    of: "483787cf25cae7cb"
+    plainenglish: >-
+      She leaves at Greening with two chests and a maid. She writes once a season, and her
+      handwriting clearly improves over the first two years. The alliance lasts forty years.
+      Someone in another county now watches a girl of this family grow up, up close, every day
+      for nine years, and writes letters of their own.
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].interaction.choices[id=keep_her_home].label"
+    of: "6294aaeae6506ece"
+    plainenglish: >-
+      Keep her home. There are things in this house nobody should learn in nine years.
+  - address: "content:events/the_young.yaml#events[id=the_fostering_offer].interaction.choices[id=keep_her_home].outcomes[id=kept].text"
+    of: "0dc686f4e5a48258"
+    plainenglish: >-
+      The refusal takes three drafts to get right. Within a tenday, Cawdry understands it for
+      exactly what it is: a house refusing to be looked at closely. The alliance never forms.
+      She is at the Greening feast every year of her life, and the household is better for it in
+      ways nobody could measure.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].title"
+    of: "798a8e97b330f0eb"
+    plainenglish: >-
+      A Future Head Who Cannot Read
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].body"
+    of: "f400f88cb950d2c8"
+    plainenglish: >-
+      {TUTOR} has been teaching {BOY} at the long room table for four years. The boy can sign
+      his name, but he cannot read a lease. In this world, nobody at the top is illiterate and
+      almost nobody at the bottom can read. A Head who cannot read would be a scandal his
+      grandchildren would still be explaining. The tutor says, carefully, that the boy is not
+      stupid, but he will not learn to read from him. He also says the boy can do sums in his
+      head faster than the steward can do them on paper.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].interaction.choices[id=keep_him_at_it].label"
+    of: "7f788cc50f6618a9"
+    plainenglish: >-
+      Keep him at the table until it works.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].interaction.choices[id=keep_him_at_it].outcomes[id=it_takes].text"
+    of: "b63179c43d3f3f20"
+    plainenglish: >-
+      Three more years, most of them unpleasant, and some time in the second year it suddenly
+      clicks, the way it sometimes does. At fifteen he reads a lease, and reads it properly. He
+      never once reads a book for pleasure for the rest of his life.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].interaction.choices[id=keep_him_at_it].outcomes[id=it_does_not].text"
+    of: "7cb4affd0e7609e9"
+    plainenglish: >-
+      Three more years, and at the end he can sign his name but still cannot read a lease.
+      Meanwhile he has learned that he is the family's disappointment, and that lesson he learns
+      completely. The tutor asks to leave at the end of his contract, and nobody replaces him
+      for two years.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].interaction.choices[id=put_him_to_the_counting].label"
+    of: "fcd1fc0cbdebbf80"
+    plainenglish: >-
+      Send him to work with the steward on the accounts instead.
+  - address: "content:events/the_young.yaml#events[id=the_boy_who_will_not_read].interaction.choices[id=put_him_to_the_counting].outcomes[id=to_the_accounts].text"
+    of: "d04723f50daf7a91"
+    plainenglish: >-
+      At fourteen he is working on the rent book, and by Thaw he has found two mistakes in it.
+      One is nineteen years old and in the last steward's handwriting. He still cannot read a
+      lease. The house now has a man who knows to the last penny what it is owed, but who cannot
+      be trusted alone with a document. It will be a hundred years before anyone works out what
+      that cost.
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].title"
+    of: "77faadd6782efe92"
+    plainenglish: >-
+      Who Feeds the Baby
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].body"
+    of: "99b66c1a1cab4d3e"
+    plainenglish: >-
+      A house of this rank sends its babies to be fed by a wet nurse. This spring there are two
+      women in Wick who could do it, and the reeve has already decided which one the house
+      should pick, though nobody asked him. The midwife says {MOTHER} should feed the baby
+      herself, and her reason is about the mother, not the child. The house has done it both
+      ways within living memory and cannot say which worked better. Nobody in this world has
+      numbers for things like this.
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].interaction.choices[id=put_it_out_to_nurse].label"
+    of: "588354d94310f9fd"
+    plainenglish: >-
+      Send the baby to a wet nurse, as the house always has.
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].interaction.choices[id=put_it_out_to_nurse].outcomes[id=to_the_nurse].text"
+    of: "b3c2fa0b231517d7"
+    plainenglish: >-
+      It costs two marks a year and a cottage half a mile downhill. The child lives at Wick
+      until weaned, and comes back knowing the nurse's face better than its mother's, which
+      everyone expects and nobody likes. The nurse's own children are the child's first friends,
+      and they stay friends. For four generations, a family in Wick calls itself 'milk-kin' to
+      this house, and means it.
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].interaction.choices[id=she_feeds_it].label"
+    of: "31c45c77f2de57b3"
+    plainenglish: >-
+      She feeds the baby herself. The midwife has her reason.
+  - address: "content:events/the_young.yaml#events[id=the_nurse_from_wick].interaction.choices[id=she_feeds_it].outcomes[id=she_fed_it].text"
+    of: "e5fb86b298e978a6"
+    plainenglish: >-
+      It is unusual enough for a family of this rank that people talk about it at Bramme, though
+      not unkindly. {MOTHER} does not get pregnant again for two years, which the midwife had
+      also said, though nobody asked her. For ten years the child is the healthiest person in
+      the hall.
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].title"
+    of: "15c39120bcffbf0c"
+    plainenglish: >-
+      Down the Hill, and Back Before Dark
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].body"
+    of: "4b7087e277fff2d6"
+    plainenglish: >-
+      Most days when the tutor is not watching, {CHILD} is down at Wick: in the lane, in the
+      mill yard, and in the shallow water below the ford, with about nine children whose fathers
+      rent land from this house. The steward thinks it is a scandal. The reeve thinks it is the
+      best thing to happen between the hall and the village in forty years, and is far too
+      careful to say so. Someone down there taught {CHILD} the counting rhyme with all nine
+      names in it, in the wrong order.
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].interaction.choices[id=stop_it].label"
+    of: "85809df488a1c538"
+    plainenglish: >-
+      Stop it. There is a difference between them, and the child should learn it.
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].interaction.choices[id=stop_it].outcomes[id=stopped].text"
+    of: "0e01abe246fd317e"
+    plainenglish: >-
+      It stops within a tenday. The difference is learned completely and for good, which is what
+      was wanted. By Thaw, nine children in Wick understand that they were only being put up
+      with. Twenty years later that child is Head and cannot get a straight answer out of anyone
+      in that village.
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].interaction.choices[id=let_them_run].label"
+    of: "72c54a7df0e499f9"
+    plainenglish: >-
+      Let them play. There are nine years of this, and then it is over.
+  - address: "content:events/the_young.yaml#events[id=the_children_of_wick].interaction.choices[id=let_them_run].outcomes[id=let_run].text"
+    of: "253ee25bd2590e97"
+    plainenglish: >-
+      Nine more years of the lane and the mill yard, and a child of this house who knows every
+      family in Wick by their kitchen. What the child brings back up the hill is the rhyme, four
+      songs, and a firm opinion about the miller. Two houses in the province mention it at
+      Cawdry, and one of them calls it 'familiar'.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].title"
+    of: "e7675bf70525414b"
+    plainenglish: >-
+      The Warden's Deer Belong to the Warden
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].body"
+    of: "79952bc2f6db8d0e"
+    plainenglish: >-
+      {SON} is old enough for his first real hunt, and there are two places to take him. Wild
+      boar in the house's own wood belong to the house. They are truly dangerous, and in this
+      province about once a generation one kills a well-armed man on horseback. The deer belong
+      to the Warden. Their land is four miles off, across a boundary nobody has walked in years,
+      and every morning this month they have been standing in the house's own oat field at first
+      light.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_boar_in_our_wood].label"
+    of: "91079f3637a87c92"
+    plainenglish: >-
+      Hunt boar in our own wood, with the dogs and four men.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_boar_in_our_wood].outcomes[id=the_boar].text"
+    of: "95076efe7444cf32"
+    plainenglish: >-
+      Two hours standing shin-deep in cold water, then about eleven seconds of something the boy
+      will describe badly for the rest of his life. He has made his first kill, the sow is
+      served at the Slaughter feast, and the whole province hears about it, because the province
+      always hears about a boar.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_boar_in_our_wood].outcomes[id=it_goes_wrong].text"
+    of: "adce0b8e62d5407a"
+    plainenglish: >-
+      The dogs turn the boar, and it charges back through the line at the one man who is not
+      ready: the boy. Its tusk goes in above the knee and out again, opening the thigh to the
+      bone. Four men carry him out of the wood. He is walking again by Greening, but badly.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_deer_in_our_oats].label"
+    of: "d2d359ec5e0de0b0"
+    plainenglish: >-
+      Hunt the deer. They are eating our oats, and nobody really knows where the boundary is.
+  - address: "content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_deer_in_our_oats].outcomes[id=took_a_deer].text"
+    of: "32d9001af90da25e"
+    plainenglish: >-
+      A clean shot at eighty yards, on ground that probably belongs to the house and certainly
+      does not clearly belong to the Warden. The boy has taken his first deer and can never talk
+      about it at any table. The venison is eaten inside the hall. The hide is buried, and that
+      tells you what everyone thinks the legal position is.
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].title"
+    of: "5e7d03efa0b605d3"
+    plainenglish: >-
+      What Daughters Are Allowed to Learn
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].body"
+    of: "3b180efa90f6bcee"
+    plainenglish: >-
+      In this province, a daughter's lessons stop at twelve, and then she is taught to run a
+      household. That is a real education, but it is a different one. {TUTOR} wants to keep
+      teaching {GIRL} for three more years, and has come to say so, holding a folded page of her
+      Old Ambric. Old Ambric is the language of Church services, legal phrases and doctors'
+      labels, and a woman who reads it can follow an inquest. Nobody has ever asked this house
+      for a daughter who can follow an inquest.
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].interaction.choices[id=keep_her_at_the_table].label"
+    of: "ff36c0d32e7e7c4f"
+    plainenglish: >-
+      Three more years. Let her learn the language.
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].interaction.choices[id=keep_her_at_the_table].outcomes[id=kept_at_it].text"
+    of: "3d0bbc1f50b2a253"
+    plainenglish: >-
+      It costs four marks a year for three years. At fifteen she can read a legal phrase and
+      tell you which of two clauses is older. People at Bramme comment on it, in a tone the
+      family cannot quite read. In 1123 there is an inquest. She is forty, and she is the only
+      person on the house's side of the room who understands what is being asked.
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].interaction.choices[id=household_management].label"
+    of: "0e4e943b283592bf"
+    plainenglish: >-
+      Teach her to run the household, as always.
+  - address: "content:events/the_young.yaml#events[id=the_lessons_stop_at_twelve].interaction.choices[id=household_management].outcomes[id=to_the_keys].text"
+    of: "415aacb7b50b53db"
+    plainenglish: >-
+      The keys, the stores, the wage list and the still-room, taught by the steward and by her
+      mother. By nineteen she runs the indoor side of this house better than the last three
+      women who did it. That is no small thing, and this family has never once written it down.
+      The tutor keeps the folded page, and it is found in his cupboard when he dies.
