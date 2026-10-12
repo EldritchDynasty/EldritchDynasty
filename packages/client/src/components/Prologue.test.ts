@@ -396,6 +396,51 @@ describe('Chapter dismissal is single-flight (#1488)', () => {
   });
 });
 
+/** One click burst can no longer consume multiple queued frame scenes. */
+describe('Interlude dismissal is single-flight (#1512)', () => {
+  const entry = (name: string): FrameEntry => ({
+    eventId: name, year: 1092, text: name,
+  } as FrameEntry);
+
+  it('coalesces button, backdrop and Escape for one rendered scene, then unlocks the next', async () => {
+    const dismissInterlude = vi.fn();
+    const game = { dismissInterlude } as unknown as GameActions;
+    const wrapper = mount(Interlude, {
+      attachTo: document.body,
+      props: { entry: entry('First frame.'), actions: game },
+    });
+
+    try {
+      const goOn = wrapper.get('button.quiet').element as HTMLButtonElement;
+      // Vue Test Utils trigger() adds a render tick, so use native events
+      // to reproduce the actual same-frame activation burst.
+      goOn.click();
+      goOn.click();
+      wrapper.get('.scrim').element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Escape', bubbles: true, cancelable: true,
+      }));
+      expect(dismissInterlude).toHaveBeenCalledTimes(1);
+
+      // The modal can be reused for a different queued scene.
+      await wrapper.setProps({ entry: entry('Second frame.') });
+      expect(wrapper.text()).toContain('Second frame.');
+      goOn.click();
+      goOn.click();
+      expect(dismissInterlude).toHaveBeenCalledTimes(2);
+
+      // A refusal/no-op leaves this same scene mounted; retry after a tick.
+      await nextTick();
+      goOn.click();
+      expect(dismissInterlude).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => callback(0));
+      wrapper.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('Age opening replay on a reused Chapter dialog (#410)', () => {
   it('records each unseen opening and skips a repeat when the chapter queue advances', async () => {
     window.localStorage.clear();

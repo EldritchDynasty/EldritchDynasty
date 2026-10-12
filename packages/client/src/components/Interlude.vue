@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import type { FrameEntry } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import { useModal } from '../lib/modal';
@@ -13,7 +13,28 @@ const props = defineProps<{ entry: FrameEntry; actions: GameActions }>();
  * let the shared trap handle Tab, Escape (including IME), and restoration.
  */
 const card = ref<HTMLElement | null>(null);
-useModal(card, () => props.actions.dismissInterlude());
+
+// An activation burst on the same rendered interlude must not consume the
+// next frame scene before Vue has replaced this one. A failed/no-op dismissal
+// becomes retryable after a render tick.
+let dismissingEntry: FrameEntry | null = null;
+function dismissOnce(): void {
+  if (dismissingEntry !== null) return;
+  const entry = props.entry;
+  dismissingEntry = entry;
+  try {
+    props.actions.dismissInterlude();
+  } finally {
+    void nextTick(() => {
+      if (dismissingEntry === entry) dismissingEntry = null;
+    });
+  }
+}
+
+// App may reuse the modal instance while moving through queued interludes.
+// Reset as soon as a different frame entry has rendered.
+watch(() => props.entry, () => { dismissingEntry = null; }, { flush: 'post' });
+useModal(card, () => dismissOnce());
 </script>
 
 <template>
@@ -21,7 +42,7 @@ useModal(card, () => props.actions.dismissInterlude());
        with the family out of the way and nothing to click but the way back:
        the temperature change IS the feature. A long jump does not stop here —
        twenty of these in a row is a column of panels, not an interruption. -->
-  <div class="scrim" @click="actions.dismissInterlude()">
+  <div class="scrim" @click="dismissOnce()">
     <!-- No year in the label. `FrameEntry.year` is the simulated year this was
          SHOWN at — "pacing, not diegetic time" — and the frame is the collection looking
          back, so a date here would announce one the frame does not claim. -->
@@ -34,7 +55,7 @@ useModal(card, () => props.actions.dismissInterlude());
       @click.stop
     >
       <p>{{ entry.text }}</p>
-      <button class="quiet small" @click="actions.dismissInterlude()">Go on</button>
+      <button class="quiet small" @click="dismissOnce()">Go on</button>
     </article>
   </div>
 </template>
