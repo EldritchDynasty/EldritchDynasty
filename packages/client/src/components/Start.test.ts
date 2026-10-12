@@ -414,6 +414,102 @@ describe('saved-run action failures (#1149)', () => {
   });
 });
 
+/** The newest named save action owns the shared refusal row (#1469). */
+describe('out-of-order named save actions (#1469)', () => {
+  it.each(['refused', 'rejected'] as const)(
+    'does not let an older %s export move the newest failed export to another row',
+    async (olderOutcome) => {
+      const actions = spyActions([
+        { slot: 'chapter-old', year: 1080 },
+        { slot: 'chapter-new', year: 1090 },
+      ]);
+      let resolveOld!: (result: boolean) => void;
+      let rejectOld!: (error: Error) => void;
+      const oldExport = new Promise<boolean>((resolve, reject) => {
+        resolveOld = resolve;
+        rejectOld = reject;
+      });
+      vi.mocked(actions.exportSave).mockImplementation((slot) =>
+        slot === 'chapter-old' ? oldExport : Promise.resolve(false));
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        const rows = w.findAll('section.saved li');
+        await rows[0]!.findAll('button')[1]!.trigger('click');
+        await rows[1]!.findAll('button')[1]!.trigger('click');
+        await flush();
+        expect(rows[1]!.get('.save-action-error').text()).toContain('could not be written out');
+        expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+
+        if (olderOutcome === 'refused') resolveOld(false);
+        else rejectOld(new Error('old export failed'));
+        await flush();
+        expect(rows[1]!.get('.save-action-error').text()).toContain('could not be written out');
+        expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+        expect(actions.exportSave).toHaveBeenNthCalledWith(1, 'chapter-old');
+        expect(actions.exportSave).toHaveBeenNthCalledWith(2, 'chapter-new');
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('clears a pending export refusal when a newer load succeeds', async () => {
+    const actions = spyActions([
+      { slot: 'chapter-old', year: 1080 },
+      { slot: 'chapter-new', year: 1090 },
+    ]);
+    let rejectOld!: (error: Error) => void;
+    vi.mocked(actions.exportSave).mockImplementationOnce(
+      () => new Promise<boolean>((_resolve, reject) => { rejectOld = reject; }),
+    );
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const rows = w.findAll('section.saved li');
+      await rows[0]!.findAll('button')[1]!.trigger('click');
+      await rows[1]!.find('button').trigger('click');
+      await flush();
+      expect(w.find('section.saved .save-action-error').exists()).toBe(false);
+
+      rejectOld(new Error('old export failed after newer load'));
+      await flush();
+      expect(w.find('section.saved .save-action-error').exists()).toBe(false);
+      expect(actions.load).toHaveBeenCalledWith('chapter-new');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps the newest failed export visible after an older load rejects', async () => {
+    const actions = spyActions([
+      { slot: 'chapter-old', year: 1080 },
+      { slot: 'chapter-new', year: 1090 },
+    ]);
+    let rejectOld!: (error: Error) => void;
+    vi.mocked(actions.load).mockImplementationOnce(
+      () => new Promise<boolean>((_resolve, reject) => { rejectOld = reject; }),
+    );
+    vi.mocked(actions.exportSave).mockResolvedValueOnce(false);
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const rows = w.findAll('section.saved li');
+      await rows[0]!.find('button').trigger('click');
+      await rows[1]!.findAll('button')[1]!.trigger('click');
+      await flush();
+      expect(rows[1]!.get('.save-action-error').text()).toContain('could not be written out');
+
+      rejectOld(new Error('old load failed'));
+      await flush();
+      expect(rows[1]!.get('.save-action-error').text()).toContain('could not be written out');
+      expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('import feedback stays beside the import picker (#1342)', () => {
   it('keeps a rejected import separate from named-save errors', async () => {
     const actions = spyActions([{ slot: 'chapter-1080', year: 1080 }]);
