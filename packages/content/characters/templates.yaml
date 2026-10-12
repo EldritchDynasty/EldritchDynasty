@@ -1123,3 +1123,13 @@ proseVariants:
       of anyone on this roll, and he is the only guard the house has ever had who did this work
       for a living. He keeps the night watch and not the tollgate, because he cannot read a toll
       book and has never admitted it.
+  - address: "content:characters/templates.yaml#characterTemplates[id=the_match_that_never_comes].title"
+    of: "aaceff1d580c8109"
+    plainenglish: >-
+      The Marriage Match That Never Happens
+  - address: "content:characters/templates.yaml#characterTemplates[id=the_match_that_never_comes].blurb"
+    of: "617211261432e1fa"
+    plainenglish: >-
+      Every time it is a different woman from the same house, but the marriage terms
+      are always impossible to accept. The family still wonders what could have happened.
+      Its records contain four letters about this, written by four people over 110 years.
