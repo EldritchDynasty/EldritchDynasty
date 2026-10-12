@@ -6,8 +6,8 @@ import { edContent } from './packages/client/build/content-plugin.js';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
-/** Where the suites that mount a component live. See `projects` below. */
-export const DOM_SUITES = '**/packages/client/src/components/**/*.test.ts';
+/** Mounting suites in this checkout only, never sibling .worktrees checkouts. */
+export const DOM_SUITES = 'packages/client/src/components/**/*.test.ts';
 
 /**
  * TWO SPEEDS, AND THE FILENAME SAYS WHICH.
