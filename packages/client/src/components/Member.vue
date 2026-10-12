@@ -245,7 +245,7 @@ const mentionPages = computed(() =>
           </tr>
         </tbody>
       </table>
-      <p v-else class="small dim">{{ copy.unknown }}</p>
+      <p v-else-if="!claimedTraits.length" class="small dim">{{ copy.unknown }}</p>
     </div>
   </div>
 </template>
