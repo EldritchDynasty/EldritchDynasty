@@ -506,6 +506,15 @@ describe('reader-local Table guidance (#1441)', () => {
   it('switches Original → Plain English → Original without changing data, enabled states or orders', async () => {
     const { wrapper, action, ctx } = mountedShelf(40);
     try {
+      // Make the baseline independent of seeded auction and broker availability.
+      const table = tableView(ctx);
+      table.bidCeiling = 0;
+      delete table.auction;
+      table.missingPrimers = [{
+        book: 'unowned-primer', name: 'The Missing Primer', affinity: 'life',
+        fee: 25, reserve: 42, saleYear: 1299, queued: false, canPay: true,
+      }];
+      await wrapper.setProps({ table });
       const original = wrapper.text();
       const disabled = wrapper.findAll('button').map((b) => b.attributes('disabled') !== undefined);
       expect(original).toContain('A two-rite elder can be unmade');
