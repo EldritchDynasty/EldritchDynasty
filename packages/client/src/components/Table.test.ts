@@ -25,7 +25,7 @@ function mountedShelf(condition: number, options: { treasury?: number; restoresA
       receipt: null,
     },
   });
-  const shelf = wrapper.findAll('.panel').find((p) => p.find('h3 .fold').text() === 'The shelf');
+  const shelf = wrapper.findAll('.panel').find((p) => p.find('h3 .fold').exists() && p.find('h3 .fold').text() === 'The shelf');
   if (!shelf) throw new Error('Shelf panel not rendered');
   return { wrapper, shelf, action, ctx };
 }
