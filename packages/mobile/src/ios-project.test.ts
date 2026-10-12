@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { chooseSaveFile } from './file-chooser.js';
+import { serializeInterchange } from './interchange.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -8,6 +9,47 @@ const MOBILE = join(import.meta.dirname, '..');
 function text(path: string): string {
   return readFileSync(join(MOBILE, path), 'utf8');
 }
+
+
+describe('native exported interchange JSON roots (#1411)', () => {
+  it('rejects non-object roots before Capacitor can write an unusable export', () => {
+    const invalid: unknown[] = [
+      null, undefined, [], [1], 'not a run', 0, false, () => 1, Symbol('missing'),
+      { toJSON: () => null },
+      { toJSON: () => [] },
+      { toJSON: () => 'not a run' },
+      { toJSON: () => 0 },
+      { toJSON: () => false },
+      { toJSON: () => undefined },
+    ];
+    for (const root of invalid) {
+      expect(() => serializeInterchange(root)).toThrow(
+        'mobile interchange must serialize to a JSON object',
+      );
+    }
+  });
+
+  it('preserves readable pretty JSON while invoking toJSON only once', () => {
+    const save = { format: 28, year: 1260, family: 'The Salt House' };
+    expect(serializeInterchange(save)).toBe(JSON.stringify(save, null, 2));
+
+    let serializations = 0;
+    const custom = { toJSON() {
+      serializations += 1;
+      return { format: 28, year: 1261 };
+    } };
+    expect(serializeInterchange(custom)).toBe('{\\n  "format": 28,\\n  "year": 1261\\n}');
+    expect(serializations).toBe(1);
+  });
+
+  it('uses the checked serialized value for both share and smoke interchange writes', () => {
+    const bridge = text('src/platform-bridge.ts');
+    expect(bridge).toContain("import { serializeInterchange } from './interchange.js'");
+    expect(bridge).toContain('data: serializeInterchange(save)');
+    expect(bridge).toContain('await writeInterchange(save, name)');
+    expect(bridge).toContain('writeSmokeInterchange: writeInterchange');
+  });
+});
 
 describe('Capacitor iOS project', () => {
   it('keeps the checked-in native target aligned with the shipped mobile identity', () => {
