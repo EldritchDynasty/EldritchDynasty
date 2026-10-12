@@ -3,7 +3,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { autoResolveAll, bootstrap, resolveChoice, resolveRecord, stepYear, testRng, viewOf } from '@ed/core';
-import type { SimCtx } from '@ed/core';
+import type { SimCtx, TableView } from '@ed/core';
+import { revealTransition, type RevealElement } from './reveal';
 
 const SRC = join(import.meta.dirname, '..');
 
@@ -198,5 +199,78 @@ describe('every field on the read model reaches a template', () => {
   it('does not excuse a field that is drawn anyway', () => {
     const needless = Object.keys(NOT_DRAWN).filter((k) => new RegExp(`\\b${k}\\b`).test(drawn));
     expect(needless, 'these are drawn, so the excuse is stale — delete it').toEqual([]);
+  });
+});
+
+
+/**
+ * THE TABLE'S EARLY DOOR (#1450).
+ *
+ * The normal ten-year introduction must not hide an action whose deadline
+ * arrives first. This pure fixture keeps every other Table trigger false,
+ * so an advertised auction and a genuinely eligible book reader cannot
+ * accidentally pass by way of a tutoring fee or a late rite.
+ */
+describe('Table early reveal for available orders (#1450)', () => {
+  const quietTable = {
+    canTutor: false,
+    pupils: [],
+    teachable: [],
+    shelf: [],
+    posts: [],
+    papers: [],
+    pedigreePrices: [],
+    missingPrimers: [],
+    ledgerSearch: { ready: false, fee: 40 },
+    unmaking: { ready: false },
+    vesselRite: { ready: false },
+    greatRite: { ready: false },
+  } as unknown as TableView;
+
+  const quietView = {
+    year: 1042,
+    campaign: { startYear: 1042 },
+    tales: [],
+    ascension: { foremost: null },
+    assize: { pressure: 0 },
+    muster: null,
+  } as unknown as Parameters<typeof revealTransition>[0];
+
+  function visible(table: TableView, year = 1042): boolean {
+    const result = revealTransition(
+      { ...quietView, year }, table, new Set<RevealElement>(), { showEverything: false },
+    );
+    return result.shown.has('table') && result.newlyShown.includes('table');
+  }
+
+  it('keeps the normal ten-year floor when there is no available order', () => {
+    expect(visible(quietTable)).toBe(false);
+    expect(visible(quietTable, 1051)).toBe(false);
+    expect(visible(quietTable, 1052)).toBe(true);
+    expect(visible({ ...quietTable, auction: {
+      year: 1045, lots: 0, lowestReserve: 0, items: [], heirlooms: [],
+    } })).toBe(false);
+  });
+
+  it('opens for an actual free shelf study, not an unreadable shelf copy', () => {
+    const book: TableView['shelf'][number] = {
+      book: 'book-test', name: 'A primer', years: 4,
+      readers: [], condition: 100, conditionLabel: 'pristine',
+    };
+    expect(visible({ ...quietTable, shelf: [book] })).toBe(false);
+    expect(visible({ ...quietTable, shelf: [
+      { ...book, readers: [{ person: 'reader', name: 'A reader' }] },
+    ] })).toBe(true);
+  });
+
+  it('opens while an auction with a real lot is announced', () => {
+    expect(visible({ ...quietTable, auction: {
+      year: 1045, lots: 1, lowestReserve: 60,
+      items: [{
+        id: 'test-lot', kind: 'spellbook', name: 'A primer',
+        seller: 'A creditor', saleYear: 1045, reserve: 60,
+      }],
+      heirlooms: [],
+    } })).toBe(true);
   });
 });
