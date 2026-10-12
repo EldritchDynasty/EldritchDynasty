@@ -509,9 +509,28 @@ export async function saveCoreProseCatalogue(): Promise<WriteResult> {
   store.saving.add(CORE_PROSE_FILE);
   let result: WriteResult;
   try {
-    result = await writeFile(CORE_PROSE_FILE, snapshot);
-  } catch (error) {
-    result = { ok: false, error: error instanceof Error ? error.message : String(error) };
+    // Review-time checks are advisory: a second editor can modify messages.yaml
+    // before confirmation. Verify the loaded baseline again, immediately before
+    // sending the new text, just as the ordinary per-item write path does.
+    let disk: Awaited<ReturnType<typeof readFile>>;
+    try {
+      disk = await readFile(CORE_PROSE_FILE);
+    } catch (cause) {
+      disk = { ok: false, error: cause instanceof Error ? cause.message : String(cause) };
+    }
+    if (!disk.ok || disk.text === undefined || disk.text !== file.loadedText) {
+      const error = !disk.ok || disk.text === undefined
+        ? `Cannot verify '${CORE_PROSE_FILE}' before saving: ${disk.error ?? 'read failed'}`
+        : `'${CORE_PROSE_FILE}' changed on disk since the editor loaded it. Reload before saving.`;
+      store.errors[CORE_PROSE_FILE] = error;
+      return { ok: false, error };
+    }
+
+    try {
+      result = await writeFile(CORE_PROSE_FILE, snapshot);
+    } catch (error) {
+      result = { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
   } finally {
     store.saving.delete(CORE_PROSE_FILE);
   }
