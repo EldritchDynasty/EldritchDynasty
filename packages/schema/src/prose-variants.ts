@@ -98,7 +98,18 @@ export function proseOriginalAt(content: Content, address: string): string | und
       // Nested choice/outcome ids are intentionally not global content ids.
       if (i === 0) {
         const actualFile = content.sourceOf(wanted);
-        if (actualFile !== undefined && actualFile !== file) return undefined;
+        // sourceOf is keyed by bare id, not (collection, id). An event and a
+        // character template may share an id: the event's provenance must not
+        // invalidate a perfectly real template's worklist address (#1383).
+        // Only enforce that global provenance when its source belongs to the
+        // selected collection. The layout check above still guards file-backed
+        // collections and the directory itself.
+        const sameCollectionSource = actualFile !== undefined && (
+          layout.source.kind === 'file'
+            ? actualFile === layout.source.path
+            : actualFile.startsWith(layout.source.prefix) && actualFile.endsWith('.yaml')
+        );
+        if (sameCollectionSource && actualFile !== file) return undefined;
       }
     } else if (indexText !== undefined) {
       if (!Array.isArray(current)) return undefined;
