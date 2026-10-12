@@ -196,7 +196,7 @@ import { CommitmentS } from './muster.js';
  * ids; replay needs those bootstrap inputs, so the exact-current-format loader
  * refuses older shapes rather than inventing them.
  */
-export const SAVE_FORMAT = 29;
+export const SAVE_FORMAT = 30;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -406,6 +406,7 @@ export const AuctionBidS = z.object({
   currency: BidCurrencyS,
   amount: z.number(),
   heirloomOffered: z.string().optional(),
+  pledgedBy: z.string().optional(),
 });
 
 export const AuctionLotS = z.object({
@@ -437,6 +438,8 @@ export const MarriagePromiseS = z.object({
   toHouse: z.string(),
   year: z.number(),
   lot: z.string(),
+  pledgedBy: z.string(),
+  girl: z.string().optional(),
 });
 
 /** A secret that walked out with a released retainer. See `schema/src/person.ts`. */

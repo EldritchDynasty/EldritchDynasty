@@ -10,6 +10,8 @@ import { BASELINE_MAX_AGE, coupleFertility, MOTHER_SHARE } from './vitality.js';
 import { branchOf, halls, softCapFor } from './branches.js';
 import { mintForRole } from './minting.js';
 import { onTheMarket } from '../table.js';
+import { marriagePledge } from './pledges.js';
+import type { MarriagePromise } from '@ed/schema';
 import { careerMortality, inBreedingPool } from './careers.js';
 import { deleteriousLoad } from '../genetics/expression.js';
 import { musterMortality } from '../muster.js';
@@ -633,8 +635,14 @@ export function autoMarry(ctx: SimCtx, rng: Rng, skip: ReadonlySet<string> = new
  * automatic pairing both come through here, so what marrying MEANS is written
  * once and neither path can drift from the other.
  */
-export function wed(ctx: SimCtx, p: Person, partner: Person): void {
+export function wed(ctx: SimCtx, p: Person, partner: Person, pledge?: MarriagePromise): void {
   const w = ctx.world;
+  for (const person of [p, partner]) {
+    const reserved = marriagePledge(ctx, person);
+    if (reserved && (reserved !== pledge || person !== partner
+      || p.sex !== 'male' || w.people.householdOf(p.id, w.year) !== reserved.toHouse
+      || person.castSlots.includes('head'))) return;
+  }
   p.marriages.push({ spouse: partner.id, from: w.year });
   partner.marriages.push({ spouse: p.id, from: w.year });
 

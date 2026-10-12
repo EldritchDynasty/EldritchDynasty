@@ -702,7 +702,7 @@ describe('relationship threads name things in the reader\'s setting (#917)', () 
       kind: 'outcome', year: 1199, event: scene.id, outcomeId: 'thread-917',
       fill: { HEAD: head.id, RIVAL: marrow.id },
     });
-    ctx.world.marriagePromises.push({ toHouse: 'house_marrow', year: 1198, lot: String(heirloom.id) });
+    ctx.world.marriagePromises.push({ toHouse: 'house_marrow', year: 1198, lot: String(heirloom.id), pledgedBy: head.id });
 
     const house = ctx.content.house('house_marrow')!;
     const variants: ProseVariant[] = [

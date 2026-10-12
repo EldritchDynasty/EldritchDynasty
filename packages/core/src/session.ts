@@ -23,6 +23,7 @@ import { phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
 import { visibleRecordView } from './record.js';
 import { loadGame, saveGame } from './save.js';
+import { marriagePromiseLotName } from './auction.js';
 import { assizeFavour } from './assize.js';
 import { order, tableView, type OrderResult, type TableOrder, type TableView } from './table.js';
 import { landView, nameParcel, type LandView } from './land.js';
@@ -53,7 +54,7 @@ import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCau
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
 import {
-  createProseRuntime, proseForContentField, proseForPromiseLot, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
+  createProseRuntime, proseForContentField, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
   type ProseRuntime,
 } from './prose.js';
 
@@ -1477,7 +1478,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       lot: p.lot,
       // A lot is a spellbook, an heirloom, or a page of somebody's chronicle.
       // Whichever it is, the family knows what it gave a daughter for.
-      lotName: proseForPromiseLot(ctx, p.lot),
+      lotName: marriagePromiseLotName(ctx, p),
     })),
     ascension: {
       rung: w.ascension.rung,

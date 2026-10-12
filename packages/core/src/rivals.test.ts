@@ -424,6 +424,7 @@ describe('external relationship threads (issue #217)', () => {
       toHouse: 'house_yssanne',
       year: 1191,
       lot: 'thread_marriage_lot',
+      pledgedBy: ctx.world.people.all()[0]!.id,
     });
 
     const all = relationshipThreads(ctx, 10);
@@ -458,6 +459,7 @@ describe('external relationship threads (issue #217)', () => {
       toHouse: 'house_marrow',
       year: 1198,
       lot: 'thread_useful_lot',
+      pledgedBy: head.id,
     });
 
     const hostile = relationshipThreads(ctx, 10).find((thread) => thread.house === 'house_marrow');
@@ -484,6 +486,7 @@ describe('external relationship threads (issue #217)', () => {
       toHouse: 'house_hesk',
       year: 1199,
       lot: 'thread_recall_lot',
+      pledgedBy: ctx.world.people.all()[0]!.id,
     });
 
     const hesk = place(ctx, { sex: 'female', age: 27, name: 'Ilya Hesk', house: 'house_hesk' });
@@ -513,6 +516,7 @@ describe('external relationship threads (issue #217)', () => {
       toHouse: 'house_hesk',
       year: 1199,
       lot: 'thread_recall_lot',
+      pledgedBy: active.world.people.all()[0]!.id,
     });
 
     const quietLots = announceAuction(quiet, testRng('thread-auction'));

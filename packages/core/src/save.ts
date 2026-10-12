@@ -561,6 +561,12 @@ export function digest(save: SavedGame): string {
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
   }
+  // #1449: a run without marriage bids or debts owns no pledge state.
+  if (value.format === 30 && save.marriagePromises.length === 0
+    && [...save.auction.upcoming, ...save.auction.history.map((entry) => entry.lot)]
+      .every((lot) => lot.playerBid?.currency !== 'marriage_promise')) {
+    value.format = 29;
+  }
   // #1293: binder restoration adds a field to physical copies only while
   // they are actually away. A run which never ordered restoration has no
   // new simulation state, and should retain its earlier digest across this

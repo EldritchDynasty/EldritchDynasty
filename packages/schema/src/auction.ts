@@ -29,6 +29,8 @@ export interface AuctionBid {
   amount: number;
   /** The heirloom traded away, when `currency` is `heirloom`. */
   heirloomOffered?: string;
+  /** The Head who signed a marriage bid; succession does not replace him. */
+  pledgedBy?: string;
 }
 
 export interface AuctionLot {
@@ -75,4 +77,7 @@ export interface MarriagePromise {
   toHouse: string;
   year: number;
   lot: string;
+  pledgedBy: string;
+  /** Reserved by claimed descent; a dead reservation may be replaced. */
+  girl?: string;
 }

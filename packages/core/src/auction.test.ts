@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash, type AuctionLot } from '@ed/schema';
+import { asId, proseOriginalHash, type AuctionLot } from '@ed/schema';
 import {
   announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, DEBT_FLOOR, grantHeirloom, grantParcel,
   order, resolveDueLots, setProseMode, setProseVariants, tableView, testRng, tickAuction,
+  beget, digestOf, expectHealthyWorld, loadGame, matchSubjects, onTheMarket, phase, place, saveGame, wed,
+  relationshipThreads, viewOf,
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
@@ -12,6 +14,239 @@ import { missingPlainEnglish } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
+
+describe('a granddaughter pays an auction pledge (#1449)', () => {
+  function wonPledge() {
+    const ctx = bootstrap(bundle, 1449, 1042);
+    const head = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => p.castSlots.includes('head'))!;
+    const lot: AuctionLot = {
+      id: 'pledge_lot', kind: 'heirloom', refId: 'portion_of_agelessness', house: 'house_marrow',
+      announcedYear: 1042, saleYear: 1045, reserveCoin: 800,
+    };
+    ctx.world.auction.upcoming = [lot];
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0)).toEqual({ ok: true });
+    ctx.world.year = lot.saleYear;
+    resolveDueLots(ctx, false);
+    expect(ctx.world.auction.history[0]!.winner).toBe('player');
+    return { ctx, head, lot, promise: ctx.world.marriagePromises[0]! };
+  }
+  function granddaughter(ctx: SimCtx, head: ReturnType<typeof place>, name = 'Alys') {
+    const parent = place(ctx, { sex: 'male', age: 25, name: `${name}'s father` });
+    beget(ctx, parent, undefined, head);
+    const girl = place(ctx, { sex: 'female', age: 0, name });
+    beget(ctx, girl, undefined, parent);
+    return { girl, parent };
+  }
+
+  it('records the signer, prices by the reserve, and permits only one outstanding pledge', () => {
+    const { ctx, head, lot, promise } = wonPledge();
+    expect(promise).toEqual({ toHouse: lot.house, year: lot.saleYear, lot: lot.refId, pledgedBy: head.id });
+    expect(ctx.world.chronicle.some((e) => e.text?.includes(head.name) && e.text.includes('future granddaughter'))).toBe(true);
+    const next = { ...lot, id: 'second_pledge', saleYear: ctx.world.year + 3, playerBid: undefined };
+    ctx.world.auction.upcoming = [next];
+    expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(false);
+  });
+
+  it('keeps the original signer through succession and refuses a second registered promise bid', () => {
+    const ctx = bootstrap(bundle, 1449, 1042);
+    const head = ctx.world.people.living().find((p) => p.castSlots.includes('head'))!;
+    const lot: AuctionLot = { id: 'signed', kind: 'heirloom', refId: 'portion_of_agelessness',
+      house: 'house_marrow', announcedYear: 1042, saleYear: 1045, reserveCoin: 800 };
+    const next = { ...lot, id: 'second' };
+    ctx.world.auction.upcoming = [lot, next];
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
+    expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(false);
+    ctx.world.people.kill(head.id, ctx.world.year, 'test');
+    phase('succession', ctx);
+    ctx.world.year = 1045;
+    resolveDueLots(ctx, false);
+    expect(ctx.world.marriagePromises[0]!.pledgedBy).toBe(head.id);
+  });
+
+  it('a rival winning the lot creates no marriage debt', () => {
+    const ctx = bootstrap(bundle, 1449, 1042);
+    const lot: AuctionLot = { id: 'lost', kind: 'chronicle_page', refId: 'pledge_test_lie',
+      house: 'house_marrow', announcedYear: 1042, saleYear: 1045, reserveCoin: 900 };
+    ctx.world.discrepancies.set(lot.refId, { state: 'open', severity: 'total', provableBy: ['house_marrow'] });
+    ctx.world.auction.upcoming = [lot];
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
+    ctx.world.year = 1045;
+    resolveDueLots(ctx, false);
+    expect(ctx.world.auction.history[0]!.winner).toBe('rival');
+    expect(ctx.world.marriagePromises).toEqual([]);
+  });
+
+  it('resumes an unsold signed bid and keeps a page name public throughout its pledge', () => {
+    const ctx = bootstrap(bundle, 1449, 1042);
+    const lot: AuctionLot = { id: 'page_pledge', kind: 'chronicle_page', refId: 'private_discrepancy_key',
+      house: 'house_marrow', announcedYear: 1042, saleYear: 1045, reserveCoin: 220 };
+    ctx.world.discrepancies.set(lot.refId, { state: 'open', severity: 'minor', provableBy: ['house_marrow'] });
+    ctx.world.auction.upcoming = [lot];
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
+    const loaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(loaded.world.auction.upcoming[0]!.playerBid).toEqual(lot.playerBid);
+    loaded.world.year = lot.saleYear;
+    resolveDueLots(loaded, false);
+    expect(viewOf(loaded).marriagePromises[0]!.lotName).toBe('a page that names the family');
+    expect(relationshipThreads(loaded, 10).flatMap((thread) => thread.pressures)
+      .find((fact) => fact.kind === 'marriage_promise')?.detail).toContain('a page that names the family');
+    loaded.world.year += 1;
+    const head = loaded.world.people.mustGet(lot.playerBid!.pledgedBy!);
+    const { girl } = granddaughter(loaded, head);
+    phase('promises', loaded);
+    loaded.world.year = girl.born + 18;
+    expect(order(loaded, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
+    phase('promises', loaded);
+    const lines = loaded.world.chronicle.filter((entry) => entry.text?.includes('pledge'));
+    expect(lines.every((entry) => !entry.text!.includes(lot.refId))).toBe(true);
+    expect(lines.some((entry) => entry.text!.endsWith('The pledge was broken.'))).toBe(true);
+  });
+
+  it('reserves only a future granddaughter named by claimed parentage', () => {
+    const { ctx, head, promise } = wonPledge();
+    const { girl: sameYear } = granddaughter(ctx, head, 'Before the pledge');
+    ctx.world.year += 1;
+    const { girl: biological, parent } = granddaughter(ctx, head, 'Biological only');
+    parent.claimedParents = {};
+    const { girl: recorded, parent: recordedParent } = granddaughter(ctx, head, 'Recorded granddaughter');
+    ctx.world.people.setParents(recordedParent.id, {});
+    const daughter = place(ctx, { sex: 'female', age: 0, name: 'Daughter' });
+    beget(ctx, daughter, undefined, head);
+    phase('promises', ctx);
+    expect(promise.girl).toBe(recorded.id);
+    expect([sameYear.id, biological.id, daughter.id]).not.toContain(promise.girl);
+    expect(onTheMarket(ctx, recorded)).toBe(false);
+  });
+
+  it('blocks the ordinary draft and direct weddings, then sends her to the creditor with her knowledge', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    ctx.world.year = girl.born + 18;
+    const ordinary = place(ctx, { sex: 'male', age: 23, name: 'Ordinary match' });
+    const groom = place(ctx, { sex: 'male', age: 25, name: 'Marrow husband', house: promise.toHouse });
+    const book = ctx.content.spellbooks[0]!;
+    girl.spellsKnown.push(asId(book.id));
+    ctx.world.library.set(book.id, { id: book.id, acquiredYear: ctx.world.year, condition: 73 });
+    expect(matchSubjects(ctx).some((p) => p.id === girl.id)).toBe(false);
+    wed(ctx, ordinary, girl);
+    wed(ctx, girl, ordinary);
+    expect(girl.marriages).toEqual([]);
+    phase('promises', ctx);
+    expect(ctx.world.people.householdOf(girl.id, ctx.world.year)).toBe(promise.toHouse);
+    expect(girl.marriages).toEqual([{ spouse: groom.id, from: ctx.world.year }]);
+    expect(groom.marriages).toEqual([{ spouse: girl.id, from: ctx.world.year }]);
+    expect(girl.spellsKnown).toContain(book.id);
+    expect(ctx.world.library.get(book.id)?.condition).toBe(73);
+    expect(ctx.world.marriagePromises).toEqual([]);
+    expect(ctx.world.chronicle.some((e) => e.text?.includes(girl.name) && e.text.includes(groom.name)
+      && e.text.includes(head.name) && e.text.includes(String(promise.year)))).toBe(true);
+    expectHealthyWorld(ctx);
+  });
+
+  it('mints a creditor groom through the existing template door only when she can marry', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    const count = ctx.world.people.all().length;
+    phase('promises', ctx);
+    expect(ctx.world.people.all()).toHaveLength(count);
+    ctx.world.year = girl.born + 18;
+    ctx.world.generation = 1;
+    phase('promises', ctx);
+    const spouse = ctx.world.people.mustGet(girl.marriages[0]!.spouse);
+    expect(spouse.mintedFrom).toBeDefined();
+    expect(spouse.houseOfOrigin).toBe(promise.toHouse);
+    expect(ctx.world.people.householdOf(girl.id, ctx.world.year)).toBe(promise.toHouse);
+    expectHealthyWorld(ctx);
+  });
+
+  it('gives the Table one adult turn to keep her back before collection', () => {
+    const { ctx, head } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    ctx.world.year = girl.born + 17;
+    phase('promises', ctx);
+    expect(girl.marriages).toEqual([]);
+    expect(tableView(ctx).market.some((row) => row.person === girl.id && row.age === 17)).toBe(true);
+    expect(ctx.world.chronicle.some((entry) => entry.text?.includes(girl.name)
+      && entry.text.includes('next year'))).toBe(true);
+    expect(order(ctx, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
+    ctx.world.year += 1;
+    phase('promises', ctx);
+    expect(girl.marriages).toEqual([]);
+    expect(ctx.world.marriagePromises).toEqual([]);
+    expect(ctx.world.chronicle.some((entry) => entry.text?.endsWith('The pledge was broken.'))).toBe(true);
+  });
+
+  it.each(['withhold', 'head'] as const)('bills %s once and preserves the girl and main seal', (route) => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    ctx.world.year = girl.born + 18;
+    ctx.world.respect = 'regarded';
+    if (route === 'withhold') expect(order(ctx, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
+    else {
+      head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
+      girl.castSlots.push('head');
+    }
+    phase('promises', ctx);
+    expect(ctx.world.respect).toBe('known');
+    expect(ctx.world.people.householdOf(girl.id, ctx.world.year)).toBe(ctx.world.playerHouse);
+    expect(girl.marriages).toEqual([]);
+    const grudges = [...ctx.world.relationships.values()].flatMap((rel) => rel.grudges);
+    expect(grudges).toHaveLength(1);
+    expect(grudges[0]).toMatchObject({ severity: 50, inheritance: 'all_blood' });
+    expect(ctx.world.marriagePromises).toEqual([]);
+    const lines = ctx.world.chronicle.length;
+    phase('promises', ctx);
+    expect(ctx.world.respect).toBe('known');
+    expect(ctx.world.chronicle).toHaveLength(lines);
+    expectHealthyWorld(ctx);
+  });
+
+  it('replaces a dead reservation without renewing the deadline, then bills an unfulfilled pledge once', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    ctx.world.people.kill(girl.id, ctx.world.year, 'test');
+    const { girl: replacement } = granddaughter(ctx, head, 'Replacement');
+    phase('promises', ctx);
+    expect(promise.girl).toBe(replacement.id);
+    expect(promise.year).toBe(1045);
+    ctx.world.people.kill(replacement.id, ctx.world.year, 'test');
+    ctx.world.year = promise.year + 50;
+    ctx.world.respect = 'regarded';
+    phase('promises', ctx);
+    expect(ctx.world.respect).toBe('known');
+    expect(ctx.world.marriagePromises).toEqual([]);
+    const lines = ctx.world.chronicle.length;
+    phase('promises', ctx);
+    expect(ctx.world.chronicle).toHaveLength(lines);
+  });
+
+  it.each(['fulfill', 'withhold'] as const)('resumes a signed bid and reserved girl with the same %s result', (route) => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    const loaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(loaded.world.marriagePromises).toEqual([promise]);
+    expect(loaded.world.auction.history[0]!.lot.playerBid?.pledgedBy).toBe(head.id);
+    for (const world of [ctx, loaded]) {
+      world.world.year = girl.born + 18;
+      if (route === 'withhold') expect(order(world, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
+      phase('promises', world);
+    }
+    expect(digestOf(loaded)).toBe(digestOf(ctx));
+    expectHealthyWorld(loaded);
+  });
+});
 
 describe('announcing an auction', () => {
   it('makes a held Sarrow bottom a real road to spellbook lots', () => {
@@ -654,6 +889,8 @@ describe('the broker and the bidding table refuse in the reader\'s setting (#800
       'auction.refuse.bid_no_lot': 'no such lot',
       'auction.refuse.bid_no_heirloom': 'the house does not hold that heirloom',
       'auction.refuse.bid_purse': 'the house cannot raise {AMOUNT} crowns',
+      'auction.refuse.pledge_head': 'the sitting Head must sign the pledge',
+      'auction.refuse.pledge_outstanding': 'the house has already promised a granddaughter',
       'auction.refuse.withdraw_no_lot': 'no such lot',
     });
   });
@@ -885,7 +1122,8 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     ctx.world.auction.upcoming = [lot];
     expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
     expect(sell(ctx, lot)?.winner).toBe('player');
-    expect(ctx.world.marriagePromises).toEqual([{ toHouse: 'house_marrow', year: lot.saleYear, lot: lot.refId }]);
+    expect(ctx.world.marriagePromises).toEqual([{ toHouse: 'house_marrow', year: lot.saleYear, lot: lot.refId,
+      pledgedBy: lot.playerBid!.pledgedBy }]);
     expect(ctx.world.marriagePromises[0]!.toHouse).not.toBe(ctx.world.playerHouse);
   });
 

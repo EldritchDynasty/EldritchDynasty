@@ -1607,7 +1607,8 @@ const STEWARD_TUTOR_FLOOR = 150;
 
 /** Whether the market may be shown this person (`withhold`). */
 export function onTheMarket(ctx: SimCtx, p: Person): boolean {
-  return ctx.world.withheld[p.id] === undefined;
+  return ctx.world.withheld[p.id] === undefined
+    && !ctx.world.marriagePromises.some((promise) => promise.girl === p.id);
 }
 
 /** How much this person has been taught, over what the blood gave them. */
