@@ -1517,3 +1517,86 @@ describe('Interlude shared focus trap (#1321)', () => {
     }
   });
 });
+
+describe('reader-local docket instructions in Plain English (#410)', () => {
+  it('changes player UI copy live, without rewriting the authored choice or delegated action', async () => {
+    const decision = choiceDecision(false);
+    if (decision.kind !== 'choice') throw new Error('fixture is not a choice');
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const wrapper = mount(Docket, {
+      props: { decision, actions: actions as unknown as GameActions },
+    });
+    try {
+      expect(wrapper.text()).toContain('The branch is not yours to take.');
+      expect(wrapper.text()).toContain('Let him decide');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Their combined abilities decide the result');
+      expect(wrapper.text()).toContain('Send the selected people');
+      expect(wrapper.text()).toContain('Let Daveed decide');
+      expect(wrapper.text()).toContain(decision.body);
+      expect(wrapper.text()).toContain(decision.callback);
+      await wrapper.findAll('button').find((b) => b.text().includes('Send the selected people'))!.trigger('click');
+      expect(actions.send).toHaveBeenCalledWith(decision.id, {}, 'Send them');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('The branch is not yours to take.');
+      expect(wrapper.text()).not.toContain('Their combined abilities decide the result');
+      expect(decision).toEqual(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('translates match explanations while preserving all source evidence and choice IDs', async () => {
+    const decision = matchDecision();
+    if (decision.kind !== 'match') throw new Error('fixture is not a match');
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const wrapper = mount(Docket, {
+      props: { decision, actions: actions as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.text()).toContain('These are the cards the year dealt.');
+      expect(wrapper.text()).toContain('What is known of her');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Here are the possible matches.');
+      expect(wrapper.text()).toContain('What people know about this candidate');
+      expect(wrapper.text()).toContain('Family record:');
+      expect(wrapper.text()).toContain('Choose none of these matches');
+      expect(wrapper.text()).toContain('Aldren’s house carried the missing leaf away in 1141.');
+      expect(wrapper.text()).toContain('4 of 5 children');
+      await wrapper.findAll('button').find((b) => b.text().includes('Choose this match'))!.trigger('click');
+      expect(actions.match).toHaveBeenCalledWith(decision.id, decision.cards[0]!.id, decision.cards[0]!.name);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('These are the cards the year dealt.');
+      expect(wrapper.text()).toContain('What is known of her');
+      expect(decision).toEqual(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps the recorded chronicle and original action label when the record reading changes', async () => {
+    const decision = recordDecision();
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const wrapper = mount(Docket, {
+      props: { decision, actions: actions as unknown as GameActions },
+    });
+    try {
+      expect(wrapper.text()).toContain('what the book will say');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Choose what to record');
+      expect(wrapper.text()).toContain('Remember my answer for routine repeats');
+      expect(wrapper.text()).toContain('It happened, and it is written down.');
+      await wrapper.findAll('.choices button')[0]!.trigger('click');
+      expect(actions.record).toHaveBeenCalledWith(decision.id, 'record', 'Write it as it happened');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('what the book will say');
+      expect(wrapper.text()).toContain('Use the answer I choose for routine repeats');
+      expect(decision).toEqual(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});

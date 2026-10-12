@@ -492,6 +492,7 @@ const yearAndBirths = computed(() => {
           :key="docket[0]!.id"
           :decision="docket[0]!"
           :actions="actions"
+          :prose-mode="accessibility.proseMode"
           :age-match-priorities="view.ageMatchPriorities"
           :age-record-priorities="view.ageRecordPriorities"
           :founded-year="view.campaign.startYear"
