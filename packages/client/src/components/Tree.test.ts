@@ -640,3 +640,82 @@ describe('Plain English seal history (#410)', () => {
     }
   });
 });
+
+
+/** A reading mode is presentation-only; it must reach descendants without
+ * translating names, changing known claims, or revealing hidden attributes. */
+describe('Plain English family member cards (#410)', () => {
+  it('updates recursive cards and their controls when the reader changes mode', async () => {
+    const founder = person({
+      id: 'founder', name: 'Daveed', sex: 'male', head: true,
+      spouse: { id: 'partner', name: 'Alys', marriedIn: true, house: 'House Cawdry' },
+      contract: 'scribe', post: 'court adviser',
+      record: {
+        attrs: {}, claimedTraits: [], claimed: [], parents: {},
+        claimedDeath: { year: 1100, cause: 'fever' },
+      },
+    });
+    const heir = person({
+      id: 'heir', name: 'Ronan', sex: 'female', succession: 'heir',
+      parents: { father: 'founder' },
+      attrs: { Resolve: 11 },
+      record: {
+        attrs: { Resolve: 7 }, claimed: ['Resolve'],
+        claimedTraits: ['steady'], parents: { father: 'founder' },
+      },
+    });
+    const view = {
+      ...largeView(),
+      attributes: [{ attr: 'Resolve', name: 'Resolve' }],
+      traits: [{ trait: 'steady', name: 'Steady' }],
+      halls: [{
+        id: 'seat', name: 'The Seat', isSeat: true, grievance: 0,
+        members: [founder, heir],
+      }],
+    } as unknown as SessionView;
+    const wrapper = mount(Tree, {
+      props: {
+        view, selected: 'founder', proseMode: 'original',
+        mentions: () => [{ id: 'page-1', year: 1100 }],
+      },
+    });
+    try {
+      expect(wrapper.findAll('.member')).toHaveLength(2);
+      expect(wrapper.text()).toContain('married to Alys, of House Cawdry');
+      expect(wrapper.text()).toContain('the book has them dying in 1100, of fever');
+      expect(wrapper.text()).toContain('next to hold the seal');
+      expect(wrapper.text()).toContain('Who has held the seal');
+      expect(wrapper.text()).toContain('Trace a relationship from here');
+      expect(wrapper.text()).toContain('holds a contract as scribe');
+
+      await wrapper.setProps({ proseMode: 'plainenglish', selected: 'heir' });
+      expect(wrapper.findAll('.member')).toHaveLength(2);
+      expect(wrapper.text()).toContain('Married to Alys (from House Cawdry).');
+      expect(wrapper.text()).toContain('next to lead the house');
+      expect(wrapper.text()).toContain('Recorded traits: Steady');
+      expect(wrapper.text()).toContain('Attribute');
+      expect(wrapper.text()).toContain('Recorded');
+      expect(wrapper.text()).toContain('Actual');
+      expect(wrapper.get('#member-heir').text()).toContain('Resolve 7');
+      expect(wrapper.get('#member-heir').text()).toContain('11');
+      expect(wrapper.text()).not.toContain('next to hold the seal');
+
+      await wrapper.setProps({ selected: 'founder' });
+      expect(wrapper.text()).toContain('The book says they died in 1100 from fever.');
+      expect(wrapper.text()).toContain('History of family leaders');
+      expect(wrapper.text()).toContain('Show family relationships from here');
+      expect(wrapper.text()).toContain('Contract: scribe');
+      expect(wrapper.text()).toContain('Position: court adviser');
+      expect(wrapper.text()).toContain('Chronicle pages:');
+      expect(wrapper.findAll('.member')).toHaveLength(2);
+      expect(wrapper.get('#member-founder').text()).toContain('Daveed');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('connects the saved reader preference through App into Tree', () => {
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
+    expect(app).toMatch(/<Tree\s+:view="view"\s+:selected="selected"\s+:prose-mode="accessibility\.proseMode"/);
+  });
+});
