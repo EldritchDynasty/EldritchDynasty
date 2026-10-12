@@ -107,10 +107,14 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     const first = inside[0]!;
     const last = inside[inside.length - 1]!;
     const here = document.activeElement;
-    if (e.shiftKey && (here === first || !card.value?.contains(here))) {
+    // The card itself may be focused while its children are loading, or a
+    // once-focused control may have become disabled. Neither is a Tab stop:
+    // start a fresh cycle within the dialog instead of escaping its scrim.
+    const notTabbable = !inside.some((element) => element === here);
+    if (e.shiftKey && (here === first || notTabbable)) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && (here === last || !card.value?.contains(here))) {
+    } else if (!e.shiftKey && (here === last || notTabbable)) {
       e.preventDefault();
       first.focus();
     }
