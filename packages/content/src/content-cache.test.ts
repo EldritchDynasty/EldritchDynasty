@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,6 +27,20 @@ function withCopiedContent<T>(fn: (root: string) => T): T {
 }
 
 describe('the content cache', () => {
+  it('retains truncation diagnostics after the in-memory cache is discarded', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'ed-content-flow-'));
+    try {
+      cpSync(CONTENT_ROOT, root, { recursive: true, filter: (src) => !src.includes('node_modules') });
+      writeFileSync(join(root, 'events', 'flow_guard.yaml'),
+        'events:\n  - effects:\n      - { kind: chronicle, text: The debt stood, unpaid. }');
+      expect(() => loadBundle(root)).toThrow(/yaml\/flow-comma/);
+      vi.resetModules();
+      const fresh = await import('./index.js');
+      expect(() => fresh.loadBundle(root)).toThrow(/events\/flow_guard.yaml:3 .*yaml\/flow-comma.*unpaid/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   it('rejects truncated prose with the cache warm, on repeat loads, and without the cache', () => {
     withCopiedContent((root) => {
       loadBundle(root);

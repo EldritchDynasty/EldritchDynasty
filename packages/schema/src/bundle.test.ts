@@ -139,6 +139,8 @@ describe('YAML flow prose guard (#1352)', () => {
     assertNoTruncatedFlowProse(file, parseContentYaml(source).flowProseIssues);
   it.each([
     'events:\n  - effects:\n      - { kind: chronicle, text: The house answered, no. }',
+    'events:\n  - effects:\n      - { kind: chronicle, text: His answer came back, false }',
+    'events:\n  - effects:\n      - { kind: chronicle, text: The count was entered, 3 }',
     'events:\n  - effects:\n      - { kind: chronicle,\n          text: The house answered, and the debt stood.\n        }',
   ])('rejects single-word and multiline truncation', (source) => {
     expect(() => inspect('events/test.yaml', source))
