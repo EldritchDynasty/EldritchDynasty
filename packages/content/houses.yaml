@@ -246,3 +246,116 @@ houses:
         strength_5: [{ allele: strength_5_c, p: 0.3 }]
         longevity_2: [{ allele: longevity_2_d, p: 0.24 }, { allele: longevity_2_c, p: 0.3 }]
         longevity_5: [{ allele: longevity_5_c, p: 0.28 }]
+
+proseVariants:
+  - address: "content:houses.yaml#houses[id=house_gearithy].name"
+    of: "2b85272939f70825"
+    plainenglish: >-
+      The Eldritch Family
+  - address: "content:houses.yaml#houses[id=house_gearithy].blurb"
+    of: "ef519323026d98b7"
+    plainenglish: >-
+      Your family. In 1042 your ancestor signed something.
+  - address: "content:houses.yaml#houses[id=house_marrow].name"
+    of: "75493e855860e789"
+    plainenglish: >-
+      The Marrow Family
+  - address: "content:houses.yaml#houses[id=house_marrow].blurb"
+    of: "bd0e820099e73edc"
+    plainenglish: >-
+      They always want books on Death. Their chronicle can be bought at auction, and that is how
+      a Discrepancy gets proven.
+  - address: "content:houses.yaml#houses[id=house_calder].name"
+    of: "03a60a8e0740df42"
+    plainenglish: >-
+      The Calder Family
+  - address: "content:houses.yaml#houses[id=house_calder].blurb"
+    of: "753bc1230c7a3f1f"
+    plainenglish: >-
+      A family of soldiers. Little affinity, plenty of Strength, and cheap to marry into.
+  - address: "content:houses.yaml#houses[id=house_ilm].name"
+    of: "ac8c5d63bbf89f27"
+    plainenglish: >-
+      The Ilm Family
+  - address: "content:houses.yaml#houses[id=house_ilm].blurb"
+    of: "47045246711975da"
+    plainenglish: >-
+      Scholars, with a gift for light. They will not say what they use it for, and the Church
+      has stopped asking.
+  - address: "content:houses.yaml#houses[id=the_church].blurb"
+    of: "b661b51b6858796f"
+    plainenglish: >-
+      It teaches that the law comes from God and that practising magic is evil, and it has never
+      settled that contradiction. That is why it can be bribed.
+  - address: "content:houses.yaml#houses[id=commons].name"
+    of: "54bb9602471f7286"
+    plainenglish: >-
+      The Common People
+  - address: "content:houses.yaml#houses[id=commons].blurb"
+    of: "030a38e9198790d5"
+    plainenglish: >-
+      Servants, hired workers, and whoever the house is paying this decade.
+  - address: "content:houses.yaml#houses[id=house_bracc].name"
+    of: "9e07680c40875b40"
+    plainenglish: >-
+      The Counting House of Bracc
+  - address: "content:houses.yaml#houses[id=house_bracc].blurb"
+    of: "d6fccad1c66cc17d"
+    plainenglish: >-
+      Not a family, and not quite a house either: a standard of weight, an account book, and the
+      same eleven surnames for four generations. Every debt between anyone in the Settled Lands
+      is measured against their figures, at their counting house, and they take a cut.
+  - address: "content:houses.yaml#houses[id=house_hesk].name"
+    of: "ffb962caa4954f06"
+    plainenglish: >-
+      The Quarry Workers of Hesk
+  - address: "content:houses.yaml#houses[id=house_hesk].blurb"
+    of: "0703931856b05f54"
+    plainenglish: >-
+      Eighteen miles north, one trade, and three hundred years of marrying each other. They made
+      every roof in the province, including the one that leaks. They have never been rich, and
+      nobody has ever once asked them to leave anywhere.
+  - address: "content:houses.yaml#houses[id=house_yssanne].name"
+    of: "925f576e7a0a7cca"
+    plainenglish: >-
+      The Families of Yssanne
+  - address: "content:houses.yaml#houses[id=house_yssanne].blurb"
+    of: "70226dd133594bbd"
+    plainenglish: >-
+      Perhaps nine families in the whole kingdom, either exiled here or married in. They are
+      poor, have perfect manners, and follow a law of inheritance that Aubren does not recognise
+      and cannot simply ignore. A foreign match without the year of letters, and a legal
+      argument nobody in the Nethering knows how to have.
+  - address: "content:houses.yaml#houses[id=the_marches].name"
+    of: "af5ea7953b1239c9"
+    plainenglish: >-
+      The Small Holds of the Marches
+  - address: "content:houses.yaml#houses[id=the_marches].blurb"
+    of: "052bb19ce1e70508"
+    plainenglish: >-
+      Two hundred small holds between Aubren and the east, with no ruler since 604, and the
+      hired companies of soldiers that come out of them between wars. Nobody there has a family
+      tree, everybody has cousins in four holds, and a daughter of the Marches costs a quarter
+      of what a Calder daughter costs and comes with no papers at all.
+  - address: "content:houses.yaml#houses[id=the_lag].name"
+    of: "bcdf90c2e589d03e"
+    plainenglish: >-
+      The People of the Lag
+  - address: "content:houses.yaml#houses[id=the_lag].blurb"
+    of: "950e23a09b931be4"
+    plainenglish: >-
+      Forty miles down the Wend: eel fishers, bird hunters and peat cutters, with their own
+      reeves and their own flood calendar. Marsh fever comes every Highsun, and everyone there
+      has had it. Aubren says they have webbed feet, which is an insult. What they really are is
+      four hundred years of everyone who could not be buried anywhere else.
+  - address: "content:houses.yaml#houses[id=the_fell].name"
+    of: "fa7be7577c95ccdb"
+    plainenglish: >-
+      The Hill Herders
+  - address: "content:houses.yaml#houses[id=the_fell].blurb"
+    of: "ad390bc2600c49b6"
+    plainenglish: >-
+      Sheep farmers of the high Nethering, up the hills at Greening, down again at Slaughter,
+      and somewhere else for half of every year. They hold their grazing land by a custom older
+      than the province and have never shown a single document for it. They are half the
+      province's witnesses to anything that happened on a hill.

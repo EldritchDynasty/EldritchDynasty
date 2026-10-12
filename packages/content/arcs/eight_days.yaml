@@ -41,3 +41,9 @@ arcs:
         schedule: { minYears: 150, maxYears: 320 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/eight_days.yaml#arcs[id=arc_the_eight_days].title"
+    of: "96476e47e7f3b643"
+    plainenglish: >-
+      What He Wrote Eight Days Afterwards

@@ -33,3 +33,9 @@ arcs:
         schedule: { minYears: 30, maxYears: 55 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/second_table.yaml#arcs[id=arc_the_second_table].title"
+    of: "1461da28aa07a2bc"
+    plainenglish: >-
+      The Second Table Has Not Forgotten

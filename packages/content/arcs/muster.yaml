@@ -139,3 +139,9 @@ arcs:
         schedule: { minYears: 1, maxYears: 6 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/muster.yaml#arcs[id=arc_the_muster].title"
+    of: "1b095b8ed3830c92"
+    plainenglish: >-
+      Calling Up the Men
