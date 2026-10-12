@@ -357,7 +357,8 @@ describe('named-save host selection is single-flight (#1502)', () => {
       const importButton = w.findAll('button').find((b) => b.text() === 'Bring a run in')!;
 
       await saved[0]!.trigger('click');
-      expect(actions.load).toHaveBeenCalledExactlyOnceWith('house-one');
+      expect(actions.load).toHaveBeenCalledTimes(1);
+      expect(actions.load).toHaveBeenCalledWith('house-one');
       expect(saved[0]!.text()).toContain('Loading');
       for (const button of [saved[0]!, saved[1]!, continueButton, beginButton, importButton]) {
         expect(button.attributes('disabled')).toBeDefined();
