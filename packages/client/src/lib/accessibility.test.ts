@@ -797,6 +797,23 @@ describe('modal focus when controls cannot take focus (#1541)', () => {
         window.dispatchEvent(tab);
         expect(tab.defaultPrevented).toBe(true);
         expect(document.activeElement).toBe(card);
+
+        // A control may become available after an asynchronous operation.
+        // Focus is still on the card; Shift+Tab must enter the new cycle,
+        // not walk backwards to the page behind the scrim.
+        button.disabled = false;
+        const shiftTab = new KeyboardEvent('keydown', {
+          key: 'Tab', shiftKey: true, cancelable: true,
+        });
+        window.dispatchEvent(shiftTab);
+        expect(shiftTab.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(button);
+
+        card.focus();
+        const forwardTab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+        window.dispatchEvent(forwardTab);
+        expect(forwardTab.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(button);
       }
     } finally {
       app.unmount();
