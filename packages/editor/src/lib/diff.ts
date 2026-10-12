@@ -50,9 +50,14 @@ export function collapseContext(lines: DiffLine[], context = 2): (DiffLine | { k
   const changed = lines.map((l, i) => (l.kind !== 'same' ? i : -1)).filter((i) => i >= 0);
   if (!changed.length) return lines;
 
+  // A fractional window walks fractional indexes and never keeps the changed
+  // integer indexes; a negative/NaN window can hide every edit altogether.
+  // Normalize first so even a bad caller cannot conceal the author's changes.
+  const radius = context === Infinity ? lines.length
+    : Number.isFinite(context) ? Math.max(0, Math.floor(context)) : 0;
   const keep = new Set<number>();
   for (const c of changed) {
-    for (let k = Math.max(0, c - context); k <= Math.min(lines.length - 1, c + context); k++) keep.add(k);
+    for (let k = Math.max(0, c - radius); k <= Math.min(lines.length - 1, c + radius); k++) keep.add(k);
   }
 
   const out: (DiffLine | { kind: 'gap' })[] = [];
