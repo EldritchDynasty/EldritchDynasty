@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { ChronicleEntry } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
+import { assertNever } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 
 /**
@@ -60,17 +61,21 @@ const answered = computed(() => answeredLabel(props.links?.answered ?? []));
  * `causeOfDeath`.
  */
 const claims = computed(() => (props.entry.claims ?? []).map((c) => {
-  // The deed is authored Chronicle evidence, not UI framing; never rewrite it.
-  if (c.kind === 'deed') return c.text;
-  if (props.proseMode === 'plainenglish') {
-    if (c.kind === 'death') return `The record says they died in ${c.year} from ${c.cause}.`;
-    if (c.kind === 'trait') return c.has
-      ? `The record says they were ${c.trait}.` : `The record says they were not ${c.trait}.`;
-    return `The record says their ${c.attr.replace(/_/g, ' ')} was ${c.value}.`;
+  const plain = props.proseMode === 'plainenglish';
+  switch (c.kind) {
+    // The deed is authored Chronicle evidence, not UI framing; never rewrite it.
+    case 'deed': return c.text;
+    case 'death': return plain
+      ? `The record says they died in ${c.year} from ${c.cause}.`
+      : `that they died in ${c.year}, ${c.cause}`;
+    case 'trait': return plain
+      ? (c.has ? `The record says they were ${c.trait}.` : `The record says they were not ${c.trait}.`)
+      : (c.has ? `that they were ${c.trait}` : `that they were not ${c.trait}`);
+    case 'attr': return plain
+      ? `The record says their ${c.attr.replace(/_/g, ' ')} was ${c.value}.`
+      : `that their ${c.attr.replace(/_/g, ' ')} stood at ${c.value}`;
+    default: return assertNever(c);
   }
-  if (c.kind === 'death') return `that they died in ${c.year}, ${c.cause}`;
-  if (c.kind === 'trait') return c.has ? `that they were ${c.trait}` : `that they were not ${c.trait}`;
-  return `that their ${c.attr.replace(/_/g, ' ')} stood at ${c.value}`;
 }));
 
 const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
