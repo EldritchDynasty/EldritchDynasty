@@ -83,13 +83,15 @@ describe('Begin is single-flight until the Start screen updates (#1482)', () => 
       expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'short');
 
       // In production the successful Begin replaces Start with the prologue;
-      // here the stub leaves it mounted so that a later deliberate retry works.
+      // here the stub leaves it mounted so a deliberate new campaign works.
+      const firstSeed = vi.mocked(actions.begin).mock.calls[0]![0];
       await w.vm.$nextTick();
+      const long = w.findAll('input[type="radio"]')
+        .find((input) => input.attributes('value') === 'long');
+      await long!.setValue(true);
       begin.click();
       expect(actions.begin).toHaveBeenCalledTimes(2);
-      expect(vi.mocked(actions.begin).mock.calls[1]).toEqual(
-        vi.mocked(actions.begin).mock.calls[0],
-      );
+      expect(actions.begin).toHaveBeenLastCalledWith(firstSeed, 'long');
     } finally {
       w.unmount();
     }
