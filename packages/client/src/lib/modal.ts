@@ -127,11 +127,14 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     window.removeEventListener('keydown', onKey);
     const back = cameFrom;
     requestAnimationFrame(() => {
-      // If a successor dialog has mounted since this one began closing,
-      // its focus must win over the old dialog's deferred return focus.
+      // A nested child closing should return to the still-open parent that
+      // held focus before it opened. An unrelated successor, however, owns
+      // focus and must not be displaced by this deferred restoration.
       // Exclude our own card for synchronous frame mocks during unmount.
-      if ([...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
-        .some((dialog) => dialog !== card.value)) return;
+      const survivingDialogs = [...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
+        .filter((dialog) => dialog !== card.value);
+      const top = survivingDialogs[survivingDialogs.length - 1];
+      if (top && !top.contains(back)) return;
 
       if (back?.isConnected && !back.hasAttribute('disabled')) {
         back.focus();
