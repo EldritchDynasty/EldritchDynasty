@@ -59,7 +59,7 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: arc, op: start, arc: arc_nine_years_at_corran }
         - id: keep_him
-          label: Keep him. Ninety-five crowns roofs the west wing and he is needed here.
+          label: Keep him. Ninety crowns roofs the west wing and he is needed here.
           outcomes:
             - id: kept
               weight: 100
@@ -102,9 +102,9 @@ proseVariants:
       what it has bought. Everyone knows exactly how much it cost. For the next decade, that
       uncertainty is hard to live with.
   - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].label"
-    of: 9797a8cd4e3f36c9
+    of: f46be2c46c58ef98
     plainenglish: >-
-      Keep him here. Ninety-five crowns could repair the west wing, and the house needs him.
+      Keep him here. Ninety crowns could repair the west wing, and the house needs him.
   - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].outcomes[id=kept].text"
     of: 204fbabf92eedb23
     plainenglish: >-
