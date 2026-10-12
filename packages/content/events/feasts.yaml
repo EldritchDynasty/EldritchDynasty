@@ -178,6 +178,67 @@ events:
               effects:
                 - { kind: flag, flag: butts_at_wick_unkept, set: true }
                 - { kind: respect, delta: -1 }
+              # #334: the clause is read when a war comes, as this outcome
+              # promises. Chained rather than drawn, like the Crown readers: an
+              # ambient reader of a key one outcome writes mostly loses the draw.
+              # Due in nine years; the reader's own condition waits for a war.
+              next: { event: the_clause_about_the_butts, after: { minYears: 9, maxYears: 9 } }
+
+  # #334: the reader of butts_at_wick_unkept. Fires only inside The Wars, so
+  # "nine years, then a war" is the earliest it can come, not a promise that
+  # the war is due. No HEAD binding: the levy finds whoever holds the seal.
+  - id: the_clause_about_the_butts
+    title: The Clause About the Butts
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [levy, tenants, warden, war]
+    purposes: [change_standing, change_relationship, worldbuild_through_action]
+    conditions:
+      all:
+        - { flag: butts_at_wick_unkept, is: true }
+        - { ageActive: the_wars }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The Warden's serjeant comes up the lane in the rain with the levy list
+      wrapped in oilcloth. Wick is on it. Beside Wick, in a clerk's hand nine
+      years old, is one clause: the butts at Wick are not kept. The serjeant
+      reads it out to {HEAD} without being asked, the way a man reads out a
+      debt. The levy has no use for men who cannot draw. The Warden will take
+      thirty crowns for Wick's share instead, or he will take Wick's men as
+      they are and put them where he puts men who cannot shoot. Nobody has cut
+      the hawthorn.
+    interaction:
+      kind: choice
+      choices:
+        - id: pay_in_coin
+          label: Pay the thirty crowns, and put the butts right.
+          outcomes:
+            - id: paid_in_coin
+              weight: 100
+              text: >-
+                The serjeant counts thirty crowns into his saddlebag and rides
+                on. Wick sends nobody to the war. By the next tenth-day the
+                hawthorn is out, the banks are cut fresh, and eleven men are
+                shooting badly behind the alehouse. The next clerk writes that
+                the butts are kept.
+              effects:
+                - { kind: treasury, delta: -30 }
+                - { kind: flag, flag: butts_at_wick_unkept, set: false }
+        - id: send_them_as_they_are
+          label: Send Wick's men as they are.
+          outcomes:
+            - id: sent_as_they_are
+              weight: 100
+              text: >-
+                Nine men go with the serjeant. The levy captain puts them where
+                he puts men who cannot draw, out in front of the archers with
+                the stakes. Seven come home at Ingathering. The parish knows
+                what the four crowns bought.
+              effects:
+                - { kind: respect, delta: -1 }
+                - { kind: relationship, from: household, to: head, sentiment: -8 }
 
   - id: the_merlin_on_the_block
     title: A Lady's Merlin, and What It Is Worth
@@ -627,6 +688,40 @@ proseVariants:
       The clerk passes in the second tenday of Highsun, slows down, and does not stop. What he
       writes is one line in a survey of eleven parishes, and nobody reads it for nine years.
       Then there is a war, and it is read.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].title"
+    of: "e7851cf5fa6f5371"
+    plainenglish: >-
+      The Line About the Archery Range
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].body"
+    of: "608b2edf290d6bb3"
+    plainenglish: >-
+      The Warden's officer rides up the lane in the rain with the army call-up list wrapped in
+      oilcloth. Wick is on it. Next to Wick's name is one line in a clerk's handwriting from nine
+      years ago: the archery range at Wick is not kept. The officer reads it out to {HEAD}
+      without being asked, the way a man reads out a debt. The army has no use for men who
+      cannot shoot. The Warden will accept thirty crowns instead of Wick's men, or he will take
+      the men as they are and put them where he puts men who cannot shoot. Nobody has cut down
+      the hawthorn.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=pay_in_coin].label"
+    of: "98703885adbc3bf1"
+    plainenglish: >-
+      Pay the thirty crowns, and fix the archery range.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=pay_in_coin].outcomes[id=paid_in_coin].text"
+    of: "7bf69aa204408cfe"
+    plainenglish: >-
+      The officer counts thirty crowns into his saddlebag and rides on. Wick sends nobody to the
+      war. By the next practice day the hawthorn is gone, the earth banks are rebuilt, and eleven
+      men are shooting badly behind the alehouse. The next clerk writes that the range is kept.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=send_them_as_they_are].label"
+    of: "74feb4e5f3daa0b9"
+    plainenglish: >-
+      Send Wick's men without training.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=send_them_as_they_are].outcomes[id=sent_as_they_are].text"
+    of: "5110f35d67662431"
+    plainenglish: >-
+      Nine men go with the officer. The army captain puts them where he puts men who cannot
+      shoot: in front of the archers, carrying the stakes. Seven come home at Ingathering. The
+      village knows what the four crowns saved really cost.
   - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].title"
     of: "72497fab47b29a57"
     plainenglish: >-

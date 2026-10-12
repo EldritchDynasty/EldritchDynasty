@@ -6461,3 +6461,69 @@ describe('the Bramme manuscript follow-up (#952)', () => {
     expect(ctx.world.scheduled.some((e) => e.event === margin!.id)).toBe(false);
   });
 });
+
+describe('#334 butts clause reader witnesses', () => {
+  // The writer promises "nine years, and then there is a war". The reader is
+  // its chained follow-up: due nine years on, and held by its own condition
+  // until The Wars is the running Age.
+  const rootId = 'the_butts_have_rotted';
+  const readerId = 'the_clause_about_the_butts';
+  const war = (ctx: ReturnType<typeof fixture>): ActiveAge => (
+    { age: 'the_wars', began: ctx.world.year, named: true, paid: { standing: false } }
+  );
+
+  function leaveTheHawthorn(seed: number) {
+    const ctx = fixture(seed);
+    const year = ctx.world.year;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'leave_the_hawthorn', expectedOutcomeId: 'noted', rng: makeRng(seed + 1),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get('butts_at_wick_unkept')).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((entry) =>
+      content.arc(entry.arc)?.nodes.some((node) => node.event === readerId));
+    if (!instance) throw new Error('leaving the butts did not schedule the clause');
+    expect(instance.dueYear).toBe(year + 9);
+    return { ctx, instance };
+  }
+
+  it('waits past its due year until a war is running', () => {
+    const { ctx, instance } = leaveTheHawthorn(33450);
+    ctx.world.age.active = [];
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, makeRng(33452))).toHaveLength(0);
+    expect(instance.dueYear).toBeGreaterThan(ctx.world.year);
+    ctx.world.year = instance.dueYear!;
+    ctx.world.age.active = [war(ctx)];
+    expect(dueArcSteps(ctx, makeRng(33453))[0]?.node.event).toBe(readerId);
+  });
+
+  it.each([
+    { choice: 'pay_in_coin', outcome: 'paid_in_coin', cost: 30, unkept: false },
+    { choice: 'send_them_as_they_are', outcome: 'sent_as_they_are', cost: 0, unkept: true },
+  ])('executes $choice as the due arc step inside The Wars', ({ choice, outcome, cost, unkept }) => {
+    const { ctx, instance } = leaveTheHawthorn(33460);
+    const reader = content.mustEvent(readerId);
+    ctx.world.year = instance.dueYear!;
+    ctx.world.age.active = [war(ctx)];
+    const step = dueArcSteps(ctx, makeRng(33461)).find((entry) => entry.instance.id === instance.id);
+    if (!step) throw new Error('the clause never came due');
+    const before = ctx.world.treasury;
+    const result = executeOutcomeWitness(ctx, reader, {
+      choiceId: choice, expectedOutcomeId: outcome, rng: makeRng(33462), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(before - cost);
+    expect(ctx.world.flags.get('butts_at_wick_unkept')).toBe(unkept);
+    expect(instance.status).toBe('ended');
+  });
+
+  it('is never scheduled by putting the butts right', () => {
+    const ctx = fixture(33470);
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'put_them_right', expectedOutcomeId: 'shooting_again', rng: makeRng(33471),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.arcs.size).toBe(0);
+  });
+});
