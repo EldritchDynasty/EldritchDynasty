@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import Kin from './Kin.vue';
 import { kinshipPath, roots, type MemberView } from '../lib/kin';
 
@@ -15,6 +16,7 @@ type LineEntry = { person: string };
 const props = defineProps<{
   view: SessionView;
   selected: string | null;
+  proseMode?: ProseMode;
   /** Explicit navigation request from outside the tree (Chronicle/passage links). */
   reveal?: { id: string; token: number } | null;
   line?: readonly LineEntry[];
@@ -398,6 +400,7 @@ watch(() => props.reveal?.token, () => {
           :names="view.attributes"
           :trait-names="view.traits"
           :selected="selected"
+          :prose-mode="proseMode"
           :show-relevance="showRelevance"
           :mentions="mentions"
           :relationship-anchor="relationAnchor"
