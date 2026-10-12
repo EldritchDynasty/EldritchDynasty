@@ -164,6 +164,94 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     expect(basename(invocations[1]!.program)).toBe('Eldritch Dynasty.exe');
   });
 
+  it('rechecks signed release bytes on the clean host before each executable runs', async () => {
+    const { dir, installer, proof } = await installedFixture();
+    proof.installer.authenticode = 'valid';
+    proof.executable.authenticode = 'valid';
+    await writeFile(join(dir, 'windows-release-proof.json'), JSON.stringify(proof));
+
+    const operations: string[] = [];
+    const run = vi.fn(async (program: string, args: string[], env: Record<string, string>) => {
+      operations.push(`run:${args[0]}`);
+      if (program === installer) {
+        await writeFile(join(args[1]!.slice(3), 'Eldritch Dynasty.exe'), 'app');
+      } else if (args[0] === '--smoke-save' || args[0] === '--smoke-resume') {
+        await mkdir(env.ED_SMOKE_PROFILE!, { recursive: true });
+        await writeFile(join(env.ED_SMOKE_PROFILE!, 'smoke-evidence.json'), JSON.stringify({
+          command: args[0] === '--smoke-save' ? 'save' : 'resume',
+          ok: true, nonce: env.ED_SMOKE_NONCE, year: 1054, sha256: hash('save'),
+        }));
+      }
+    });
+    const verifySignature = vi.fn(async (path: string) => {
+      operations.push(`verify:${basename(path)}`);
+    });
+
+    await smokeInstalledWindowsArtifact(dir, {
+      platform: 'win32', tempRoot: dir, run, verifySignature,
+    });
+
+    expect(operations).toEqual([
+      'verify:Eldritch Dynasty Setup 0.1.0.exe',
+      'run:/S',
+      'verify:Eldritch Dynasty.exe',
+      'run:--smoke',
+      'run:--smoke-save',
+      'run:--smoke-resume',
+    ]);
+    expect(verifySignature).toHaveBeenCalledTimes(2);
+    expect(run).toHaveBeenCalledTimes(4);
+  });
+
+  it.each(['installer', 'game'] as const)(
+    'refuses to execute a signed %s that fails native signature verification',
+    async (invalid) => {
+      const { dir, installer, proof } = await installedFixture();
+      proof.installer.authenticode = 'valid';
+      proof.executable.authenticode = 'valid';
+      await writeFile(join(dir, 'windows-release-proof.json'), JSON.stringify(proof));
+
+      const run = vi.fn(async (program: string, args: string[]) => {
+        if (program === installer) {
+          await writeFile(join(args[1]!.slice(3), 'Eldritch Dynasty.exe'), 'app');
+        }
+      });
+      const verifySignature = vi.fn(async (path: string) => {
+        if ((invalid === 'installer' && path === installer)
+          || (invalid === 'game' && basename(path) === 'Eldritch Dynasty.exe')) {
+          throw new Error('invalid Authenticode signature');
+        }
+      });
+
+      await expect(smokeInstalledWindowsArtifact(dir, {
+        platform: 'win32', tempRoot: dir, run, verifySignature,
+      })).rejects.toThrow('invalid Authenticode signature');
+      expect(run).toHaveBeenCalledTimes(invalid === 'installer' ? 0 : 1);
+    },
+  );
+
+  it('rejects missing, mixed or unknown signature attestations before executing', async () => {
+    const { dir, proof } = await installedFixture();
+    const run = vi.fn();
+    for (const [installer, executable] of [
+      [undefined, undefined],
+      ['valid', 'not-checked'],
+      ['not-checked', 'valid'],
+      ['invalid', 'invalid'],
+      ['valid', undefined],
+    ]) {
+      await writeFile(join(dir, 'windows-release-proof.json'), JSON.stringify({
+        ...proof,
+        installer: { ...proof.installer, authenticode: installer },
+        executable: { ...proof.executable, authenticode: executable },
+      }));
+      await expect(smokeInstalledWindowsArtifact(dir, {
+        platform: 'win32', tempRoot: dir, run,
+      })).rejects.toThrow(/invalid Windows release proof/);
+    }
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('refuses absent, malformed and stale native smoke receipts', () => {
     const good = { command: 'save', ok: true, nonce: 'unique-run', year: 1054, sha256: hash('save') };
     expect(checkedNativeSmokeEvidence(good, 'save', 'unique-run')).toEqual(good);
