@@ -16,7 +16,9 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   talesHeading: 'What other people say',
   noTales: 'Nobody has shared a story about this family yet.',
   contested: 'Two accounts describe the same event. Neither is the official record.',
-  retold: (count: number) => 'retold ' + count + ' times; the story has changed',
+  retold: (count: number) => 'retold ' + count + (count === 1 ? ' time' : ' times') + '; the story has changed',
+  attribution: (form: string, teller: string, since: number) =>
+    'Type: ' + form + ' · Told by: ' + teller + ' · First shared in ' + since,
   secretsHeading: 'Secrets outside the house',
   noSecrets: 'No secrets are known to have left the house.',
   secretMove: (year: number, house: string) => 'took this secret to ' + house + ' in ' + year + '.',
@@ -30,7 +32,9 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   talesHeading: 'What else is being said',
   noTales: 'Nothing about this family has got far enough to be repeated.',
   contested: 'Two accounts of the same thing. Neither of them is the record.',
-  retold: (count: number) => 'retold ' + count + ' times, and it has moved',
+  retold: (count: number) => 'retold ' + count + (count === 1 ? ' time' : ' times') + ', and it has moved',
+  attribution: (form: string, teller: string, since: number) =>
+    form + ' · told by ' + teller + ' · since ' + since,
   secretsHeading: 'What has left the house',
   noSecrets: 'Everybody who knows anything is still being paid.',
   secretMove: (year: number, house: string) =>
@@ -95,7 +99,7 @@ const accounts = computed(() => accountsOf(props.view.tales));
           <article v-for="tale in group.tales" :key="tale.id" class="tale">
             <p class="text">{{ tale.text }}</p>
             <p class="small dim">
-              {{ tale.form }} · told by {{ tale.teller }} · since {{ tale.since }}
+              {{ copy.attribution(tale.form, tale.teller, tale.since) }}
               <span v-if="tale.mutations">· {{ copy.retold(tale.mutations) }}</span>
             </p>
             <p class="small bias">{{ tale.bias }}</p>
