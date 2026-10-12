@@ -1307,3 +1307,584 @@ events:
             provableBy: [the_church, house_marrow]
     rumour: { id: rumour_two_under_one_roof, accuracy: 0.2, spread: 3 }
     accounts: [chapter_house_note_on_the_counting, the_water_girls_telling]
+
+proseVariants:
+  - address: "content:events/rites.yaml#events[id=the_drowning].title"
+    of: "2c10394241958276"
+    plainenglish: >-
+      The Drowning Rite
+  - address: "content:events/rites.yaml#events[id=the_drowning].body"
+    of: "0b9cfaaf3e55e413"
+    plainenglish: >-
+      The trough is filled the night before, so the water is the same temperature as the room
+      and not as cold as the well. The old book insists on this and does not say why. {CHILD} is
+      told what will happen, and told plainly, because the book insists on that too. {HEAD}
+      keeps the count. In all its forty pages, the book never says what it costs.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].label"
+    of: "3457b299a3a4415d"
+    plainenglish: >-
+      Do the full count, as the book says.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=woke].text"
+    of: "6b385702b7eb94a6"
+    plainenglish: >-
+      He wakes on the ninth day, and he is changed. Nobody had prepared a word for this kind of
+      change.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=nothing].text"
+    of: "23c8c159521f24f5"
+    plainenglish: >-
+      Nothing happens. He is cold for a week, then he is fine, and then he is ordinary.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=lost].text"
+    of: "80b16be07d67c3fc"
+    plainenglish: >-
+      They bring him out on the sixth day and he is breathing. He goes on breathing for eleven
+      more years, but he never again says anything that follows from what he said before.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].label"
+    of: "1ef428b9ef24f6f5"
+    plainenglish: >-
+      Stop early. Half the count, half the risk.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].outcomes[id=safe_nothing].text"
+    of: "70475ae428ccae58"
+    plainenglish: >-
+      Nothing happens. That is what the short count was paid for.
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].outcomes[id=partial].text"
+    of: "fb6d23d6f45a11aa"
+    plainenglish: >-
+      He wakes anyway, four years later. Nobody can say whether the water did it.
+  - address: "content:events/rites.yaml#events[id=the_drowning].record.subject"
+    of: "2bd3f8a175a77455"
+    plainenglish: >-
+      what the Drowning cost
+  - address: "content:events/rites.yaml#events[id=the_drowning].record.options.record.chronicle"
+    of: "8ecc20d11c6c5355"
+    plainenglish: >-
+      The Drowning takes nine days, and it takes something else as well. The book does not say
+      so. Do not try it on a child you want to keep whole.
+  - address: "content:events/rites.yaml#events[id=the_drowning].record.options.record.claims[0].text"
+    of: "e6a05a86305fd50a"
+    plainenglish: >-
+      came through the nine-day Drowning with a cost that the old books do not name
+  - address: "content:events/rites.yaml#events[id=the_drowning].record.options.embellish.chronicle"
+    of: "dcdd3615c3fcf719"
+    plainenglish: >-
+      The rite was done and the boy woke, just as the old books promise, and he came to no harm.
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].title"
+    of: "a1ed756bc76370e7"
+    plainenglish: >-
+      Nobody Remembers Why That Room Was Bricked Up
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].body"
+    of: "22329c3cafed0e20"
+    plainenglish: >-
+      The book is in the second cellar, behind a door that someone bricked up and someone else
+      later opened again. There is no note with it. Forty pages, nine days, a trough of water at
+      room temperature. It reads like a generous thing to do for a promising child. {HEAD} has
+      no reason at all to think otherwise, and that is exactly the price of leaving it out of
+      the record.
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].interaction.outcomes[id=full_price].text"
+    of: "7ee294b735a67b43"
+    plainenglish: >-
+      They pay the price again, all of it, two hundred years after it was first paid. Nobody
+      wrote it down then.
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.subject"
+    of: "8fbae1258d202819"
+    plainenglish: >-
+      finding the rite again
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.options.record.chronicle"
+    of: "81605f4beb6743a7"
+    plainenglish: >-
+      We have done this before. We know we did it before, because we have just done it again.
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.options.record.claims[0].text"
+    of: "2d346ba5d1dd7b59"
+    plainenglish: >-
+      was put through the Drowning after the house found out it had done the rite before
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.options.embellish.chronicle"
+    of: "20592c0bb4acad57"
+    plainenglish: >-
+      An ancient rite, found again through careful study, and at last performed correctly.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].title"
+    of: "8106ff0d7c7d33c1"
+    plainenglish: >-
+      The Vigil of Seven Lamps
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].body"
+    of: "cb4a17ce232cd16a"
+    plainenglish: >-
+      The seven lamps have been trimmed and placed around the bed. For seven nights {CHILD} is
+      to be kept awake. {HEAD} has paid for the oil and sent away the servants who ask what the
+      light is for. The instructions give the number of nights but say nothing about the morning
+      after.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].label"
+    of: "a4946786b9078e62"
+    plainenglish: >-
+      Keep every lamp burning until the seventh dawn.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=woke].text"
+    of: "b93f1ac493808580"
+    plainenglish: >-
+      At the seventh dawn he answers a question nobody has said out loud. He knows what was
+      asked. From now on his hands will never be still.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].text"
+    of: "27276feaa244146e"
+    plainenglish: >-
+      During the sixth night the boy starts to sleep. At the seventh dawn the lamps are still
+      burning, and nobody can wake him.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].effects[0].cause"
+    of: "6d53baedf8311d61"
+    plainenglish: >-
+      the Vigil of seven lamps
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=put_out_the_lamps].label"
+    of: "b12cdb4f80a018ab"
+    plainenglish: >-
+      Put the lamps out and send for a physician.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=put_out_the_lamps].outcomes[id=spared].text"
+    of: "04bdfa4488db6320"
+    plainenglish: >-
+      He falls asleep before the physician arrives. The house pays for a treatment nobody says
+      was needed, and the lamps stay cold.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].record.subject"
+    of: "07dc128a5fad29de"
+    plainenglish: >-
+      what the seven-lamp Vigil cost
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].record.options.record.chronicle"
+    of: "1edad3ddde3da189"
+    plainenglish: >-
+      Seven lamps were set round a child's bed to force him to wake. The house chose when to put
+      them out, and paid for that choice.
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].record.options.embellish.chronicle"
+    of: "298cf7ca297e07f6"
+    plainenglish: >-
+      No lamps were ever lit in the child's room. The house never tried to force an awakening,
+      and nobody was in danger.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].title"
+    of: "89aab6c13400789d"
+    plainenglish: >-
+      The Dark Year Fast
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].body"
+    of: "f033c1935ae94dd7"
+    plainenglish: >-
+      An old calendar calls this a dark year, though the harvest and the sun have come at their
+      usual times. The instructions say {CHILD} may have no bread by day and no light by night
+      until the year turns. {HEAD} holds the key to the shuttered room. The last page of the
+      instructions is missing.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].label"
+    of: "30838337f8c812eb"
+    plainenglish: >-
+      Keep the Dark Year fast to its final night.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=woke].text"
+    of: "60b9cf4bdd6b4f2f"
+    plainenglish: >-
+      He is up before the doors are opened. Nobody tells him it is morning; he heard it coming
+      through the stone.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].text"
+    of: "e11c7430e2d7c1a4"
+    plainenglish: >-
+      They find him against the door. He had crawled there in the dark. The key turns easily,
+      and it is no use to him.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].effects[0].cause"
+    of: "6960bcdda8cbd171"
+    plainenglish: >-
+      the fast of the Dark Year
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=break_the_fast].label"
+    of: "7fdaba58d274f83c"
+    plainenglish: >-
+      End the fast and bring him to the table.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=break_the_fast].outcomes[id=fed].text"
+    of: "facce94722316693"
+    plainenglish: >-
+      He eats a little and keeps it down. The house still sends for a physician and pays for the
+      first food he will take.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].record.subject"
+    of: "6960bcdda8cbd171"
+    plainenglish: >-
+      the fast of the Dark Year
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].record.options.record.chronicle"
+    of: "92892ae084d07fe4"
+    plainenglish: >-
+      The house had instructions to keep a young man away from daylight and bread. It chose when
+      to open the door, and counted the cost afterwards.
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].record.options.embellish.chronicle"
+    of: "944b07ab96b07e97"
+    plainenglish: >-
+      No instructions were followed and no shuttered room was made ready. It was an ordinary
+      household fast, and nobody was in danger.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].title"
+    of: "62e16a5726863bb3"
+    plainenglish: >-
+      The Seal Is Questioned
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].body"
+    of: "77279e24bdabb998"
+    plainenglish: >-
+      {CHALLENGER} does not raise his voice, and that is what makes it frightening. In front of
+      the whole house, he asks by what right {HEAD} holds the Seal, and whether a man whose sons
+      have not woken can be said to hold anything at all. Behind him, a chair moves. Nobody sits
+      in it.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].label"
+    of: "7af8e3179e1e6e4b"
+    plainenglish: >-
+      Answer the way the Head answers.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].text"
+    of: "6d353c573ce63893"
+    plainenglish: >-
+      It is over fast, and the house stays quiet for eleven years after.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].effects[0].cause"
+    of: "53d5db979585c873"
+    plainenglish: >-
+      the challenge to the Seal
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].text"
+    of: "933786343c3edaa8"
+    plainenglish: >-
+      It is over fast.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].effects[0].cause"
+    of: "53d5db979585c873"
+    plainenglish: >-
+      the challenge to the Seal
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=concede].label"
+    of: "91e9662be03bb94f"
+    plainenglish: >-
+      Hand over the Seal.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=concede].outcomes[id=conceded].text"
+    of: "69b6f774a2272f30"
+    plainenglish: >-
+      The Seal passes sideways. The house has no word for that, and it will spend two hundred
+      years failing to find one.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.subject"
+    of: "725cba30e2af7ca4"
+    plainenglish: >-
+      how the Seal was lost
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.record.chronicle"
+    of: "1a88b1812b868555"
+    plainenglish: >-
+      The Seal passed sideways, and the house never fully got it back.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.record.claims[0].text"
+    of: "6be8d6fdcd3d6e91"
+    plainenglish: >-
+      let the Seal pass sideways and never fully got it back
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.embellish.chronicle"
+    of: "38b88ce732371a73"
+    plainenglish: >-
+      The Seal was given as a gift to a lesser cousin of good blood.
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.embellish.claims[0].text"
+    of: "718e012a5eb7fa8e"
+    plainenglish: >-
+      gave the Seal away as a gift to a cousin of good blood
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].title"
+    of: "bdc69d5627cd331a"
+    plainenglish: >-
+      The Nine Libraries Burn
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].body"
+    of: "062c71f4b6821698"
+    plainenglish: >-
+      It lasts nine days. It is not nine fires but one fire told nine times, moving east as fast
+      as a man on a good horse. When it stops, there is nothing left outside this house that
+      anyone can learn from. At the end, {HEAD} stands in his own library and understands, very
+      clearly and with no pleasure at all, that every book in the room can no longer be
+      replaced, and that every house in the world now wants one.
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].interaction.outcomes[id=survived].text"
+    of: "ca15a97a967c1f36"
+    plainenglish: >-
+      What you own is now all there is. For four hundred years, people will keep trying to take
+      it from you.
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.subject"
+    of: "3be55d7abea9f55e"
+    plainenglish: >-
+      what the house did while the libraries burned
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.record.chronicle"
+    of: "8ab25ace2eeb2f2a"
+    plainenglish: >-
+      We shut the doors and kept them shut, and nine libraries burned.
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.record.claims[0].text"
+    of: "f489629520ac4761"
+    plainenglish: >-
+      kept the doors shut while nine libraries burned
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.embellish.chronicle"
+    of: "9945077474082100"
+    plainenglish: >-
+      We rode out and saved what we could, and whatever we kept, we kept in trust.
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.embellish.claims[0].text"
+    of: "f73dac7c08146d08"
+    plainenglish: >-
+      rode out and saved what they could from the fire
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].title"
+    of: "d86d9ecec92ecdd2"
+    plainenglish: >-
+      The Vessel Rite
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].body"
+    of: "5183528333dfde7f"
+    plainenglish: >-
+      The rite needs a name said out loud, in a cold room, by someone with the standing to say
+      it. {ASCENDANT} has read what the books say about the hour, the words and the cold, and
+      none of that is the hard part. The hard part is that the house has to choose a person, and
+      everyone in the house can count. The rite takes all of who they are: what they were born
+      with, what they learned, and what their mother's mother passed down to them. Afterwards
+      the family tree is redrawn with a mark that is not the mark for death. There is no mark
+      for this.
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].interaction.choices[id=speak_the_name].label"
+    of: "f636d0806cf9b304"
+    plainenglish: >-
+      Say the name. All of who they are goes into him.
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].interaction.choices[id=speak_the_name].outcomes[id=taken].text"
+    of: "f94625c10f069ddd"
+    plainenglish: >-
+      {ASCENDANT} says {VESSEL}'s name once, and the room does what the books said it would.
+      Everything {VESSEL} was arrives all at once. None of it stops at the door to ask.
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].interaction.choices[id=speak_the_name].outcomes[id=taken].effects[0].cause"
+    of: "8a253d7ad05e9936"
+    plainenglish: >-
+      named aloud in the rite
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].interaction.choices[id=send_them_out_of_the_room].label"
+    of: "8d5015654dcdc0b9"
+    plainenglish: >-
+      Send them out of the room. Not for this, and not for anything else.
+  - address: "content:events/rites.yaml#events[id=the_vessel_rite].interaction.choices[id=send_them_out_of_the_room].outcomes[id=spared].text"
+    of: "46f8cff53e228039"
+    plainenglish: >-
+      {ASCENDANT} says no in a room that was set up for a different answer. The candles are put
+      out, the doors are opened, and the house goes to bed. Nobody thanks him. {VESSEL} will
+      live a long life knowing what the family weighed them against, and so will everyone who
+      was in the room.
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].title"
+    of: "58cad5f79c1d3ad3"
+    plainenglish: >-
+      What the Book Says Happened to Them
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].body"
+    of: "30618476839c016a"
+    plainenglish: >-
+      There is a page for this, as there is a page for everything, and the page will outlast
+      everyone who was in the room. What goes on it is not what happened. It is what the house
+      has decided the Church will be reading two hundred years from now.
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].interaction.outcomes[id=the_page].text"
+    of: "732dd0c5dec7dbd9"
+    plainenglish: >-
+      The archivist has done this work for thirty years. She wets the ink stone and waits, and
+      the waiting is what decides it.
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].record.subject"
+    of: "22831b20c86313dc"
+    plainenglish: >-
+      the person who was named
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].record.options.record.chronicle"
+    of: "01773b8e98a5ce12"
+    plainenglish: >-
+      We gave {VESSEL}, one of our own, by name, into {ASCENDANT}. We wrote the name down so
+      that it would be a name and not just a number.
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].record.options.record.claims[0].text"
+    of: "b2848ee660b72032"
+    plainenglish: >-
+      agreed to be given by name as the vessel, and the house recorded her name
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].record.options.embellish.chronicle"
+    of: "97c9b437ac7df7bb"
+    plainenglish: >-
+      She went to the northern house in her nineteenth year, and nobody heard from her again.
+  - address: "content:events/rites.yaml#events[id=the_vessel_remembered].record.options.embellish.claims[0].cause"
+    of: "242e737ee07c6e32"
+    plainenglish: >-
+      went to the northern house and was never heard from
+  - address: "content:events/rites.yaml#events[id=the_great_rite].body"
+    of: "34d33d5e48129b22"
+    plainenglish: >-
+      What the books call the Great Rite is mostly arithmetic, and the arithmetic is not the
+      hard part. For eleven years now {ASCENDANT} has held more than he can hold, and everyone
+      in the house has learned the sound of a door being shut carefully. The rite does not add
+      anything to him. It makes him wider, so that what is already inside him has room to go.
+      {WITNESS} has been asked to stand in the room and count, because the books insist that
+      someone must, and they insist on nothing else.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=ask_for_sanction].label"
+    of: "f2f8cb74ddd03f70"
+    plainenglish: >-
+      Ask the Church. Make it something that was allowed.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=ask_for_sanction].outcomes[id=sanctioned].text"
+    of: "f56f903d2feca869"
+    plainenglish: >-
+      The letter goes south in spring. It comes back in autumn with a seal on it and one
+      sentence that allows everything and admits nothing. A canon comes to attend. {WITNESS}
+      stands in the room and counts while {ASCENDANT} is made wider. The canon stands at the
+      back with his hands folded and writes nothing down.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=ask_for_sanction].outcomes[id=refused_permission].text"
+    of: "2d6de958d7d74de4"
+    plainenglish: >-
+      The letter goes south in spring. In autumn a different letter comes back. It does not
+      mention the request, and it spends four pages on repairs to the chapel roof. {ASCENDANT}
+      reads it twice, though he understood it the first time. {WITNESS} puts away the count that
+      was never needed.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].label"
+    of: "5e9210b7a717898b"
+    plainenglish: >-
+      Ask no one. It is our blood and our house.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].outcomes[id=defied].text"
+    of: "4849af2a741cf2a6"
+    plainenglish: >-
+      They do it on a Tuesday, with no canon, no letter, and no word to the village about the
+      lights. {WITNESS} counts while {ASCENDANT} is made wider. By morning the distance between
+      the house and everyone who might have been asked has grown wider too. The Church does not
+      respond for nineteen years.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=let_him_carry_it].label"
+    of: "4b278354193fca28"
+    plainenglish: >-
+      Let him carry it. He has carried it this long already.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=let_him_carry_it].outcomes[id=carried].text"
+    of: "4c5467e35971326f"
+    plainenglish: >-
+      Nobody actually says no. The room is just never booked, the books go back in the case, and
+      {ASCENDANT} keeps holding what he holds in a house that has decided not to watch him do
+      it. {WITNESS} is not asked to count anything, and is grateful for it, and will be less
+      grateful later.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].record.subject"
+    of: "16c0e4639996782f"
+    plainenglish: >-
+      what happened in the long room
+  - address: "content:events/rites.yaml#events[id=the_great_rite].record.options.record.chronicle"
+    of: "d7c02f5c5e407848"
+    plainenglish: >-
+      We made {ASCENDANT} wider, on purpose, and we recorded that {WITNESS} stood in the room
+      while it was done.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].record.options.embellish.chronicle"
+    of: "cdc1821da3500599"
+    plainenglish: >-
+      A season of illness in the main house, followed by a recovery no one expected.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].body"
+    of: "b0b55a97c3b31b2b"
+    plainenglish: >-
+      The books describe this only once, in four lines, which in this book means the writer had
+      done it. They do not say how. They say who must be in the room, they say the elder must be
+      told, and they say twice, in the same words, that the thing being taken apart will have
+      opinions about it. {ELDER} spent years becoming what he is. {ASCENDANT} needs him to stop
+      being it.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].label"
+    of: "b41524704e00011c"
+    plainenglish: >-
+      Take him apart. All he was made into goes into the younger man.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=taken].text"
+    of: "fdb697e252dc79e6"
+    plainenglish: >-
+      It works, and nobody in the room is ready for that. What {ELDER} was made into comes out
+      of him in the order it went in, years running backwards in about four minutes, and lands
+      in {ASCENDANT}, where it can be used. At the very end he is briefly himself again, and
+      says something ordinary about the cold.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].text"
+    of: "ed1dd17eacfd574a"
+    plainenglish: >-
+      It fails in the last quarter, and it is not the rite that fails. The rite does exactly
+      what the four lines say. What fails is that none of it has anywhere to go. It leaves
+      {ELDER} and never reaches {ASCENDANT}, and the people in the small hall watch something
+      that has been in this family since its founding leave it.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].effects[1].cause"
+    of: "696d7dfa7e9709fe"
+    plainenglish: >-
+      the final step of the Great Work
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=let_him_be].label"
+    of: "ecbacdbb0d8d42f7"
+    plainenglish: >-
+      Leave him alone. There will be another year and another way.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=let_him_be].outcomes[id=left].text"
+    of: "69f9eb25b1c5b381"
+    plainenglish: >-
+      {ASCENDANT} shuts the book and puts it back on the shelf at the same height, and in the
+      years they have left together the two of them never talk about it again. {ELDER} knows. He
+      knew before the book was taken down.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].record.subject"
+    of: "43801e84f9cb4638"
+    plainenglish: >-
+      what happened in the small hall
+  - address: "content:events/rites.yaml#events[id=the_unmaking].record.options.record.chronicle"
+    of: "a8b4cd8870bdac04"
+    plainenglish: >-
+      In front of eleven witnesses, we took apart {ELDER}, a man of our own blood who had spent
+      years becoming what he was, to raise {ASCENDANT}. We have written down that we did it, and
+      why.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].record.options.record.claims[0].text"
+    of: "d8b0a0d247f0fa96"
+    plainenglish: >-
+      was taken apart in front of eleven witnesses after sixty years of becoming what he was
+  - address: "content:events/rites.yaml#events[id=the_unmaking].record.options.embellish.chronicle"
+    of: "b1709b6cb6b56218"
+    plainenglish: >-
+      A hard winter in the old hall, and two of the family died of it within a month.
+  - address: "content:events/rites.yaml#events[id=the_unmaking].record.options.embellish.claims[0].cause"
+    of: "85f676fe93d6fbd2"
+    plainenglish: >-
+      a harsh winter in the old hall
+  - address: "content:events/rites.yaml#events[id=the_second_name].title"
+    of: "0c47fec34aadd067"
+    plainenglish: >-
+      A Second Name
+  - address: "content:events/rites.yaml#events[id=the_second_name].body"
+    of: "591c6363b47e6897"
+    plainenglish: >-
+      The cellar holds the cold better than the hall does. That is why the books say to do it
+      down there, and why nobody is grateful to them for it. {ASCENDANT} has stood half a step
+      behind {FOREMOST} for most of his life and has never been asked for anything that cost
+      him. What the books want at the top is two men. A house that has spent four generations
+      pouring everything it had into one name must decide whether it can bear to start a second,
+      knowing the second may outlive the first and may not be grateful. The rite takes a living
+      member of the blood, and it takes all of them. First, a chair has to be emptied.
+  - address: "content:events/rites.yaml#events[id=the_second_name].interaction.choices[id=name_the_second].label"
+    of: "3f3f7800df748bd4"
+    plainenglish: >-
+      Name them. The house will have two, or nothing.
+  - address: "content:events/rites.yaml#events[id=the_second_name].interaction.choices[id=name_the_second].outcomes[id=raised].text"
+    of: "bbfd27109b8fdbec"
+    plainenglish: >-
+      The name is said once, in the cold, by a man who has never been allowed to say anything
+      important. What comes, comes all at once and does not stop at the door. Upstairs someone
+      counts the places at the table twice and writes down the second number.
+  - address: "content:events/rites.yaml#events[id=the_second_name].interaction.choices[id=name_the_second].outcomes[id=raised].effects[0].cause"
+    of: "dda9e871533e6c55"
+    plainenglish: >-
+      given to the second rite and never mentioned again
+  - address: "content:events/rites.yaml#events[id=the_second_name].interaction.choices[id=one_is_enough].label"
+    of: "3835d566627be6aa"
+    plainenglish: >-
+      One is enough. It has been for four generations.
+  - address: "content:events/rites.yaml#events[id=the_second_name].interaction.choices[id=one_is_enough].outcomes[id=refused].text"
+    of: "32fb1b5496fac2f8"
+    plainenglish: >-
+      The candles are put out, the doors are opened, and the house goes up to bed in its usual
+      order. {ASCENDANT} is thanked for his understanding by three people who cannot look him in
+      the eye. The one who was named will live a long life knowing what the family weighed them
+      against, and so will everyone who stood in the room and said nothing.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].title"
+    of: "5b0ccfe388ff270f"
+    plainenglish: >-
+      What the Second Man Is Due
+  - address: "content:events/rites.yaml#events[id=the_second_widening].body"
+    of: "7734dfcd972a6ac1"
+    plainenglish: >-
+      Whatever the cellar took, it did not take it quietly. For three weeks the house has had
+      doors left open, a man who will not sit down, and a room nobody walks past twice.
+      {ASCENDANT} is holding more than he was made to hold. The Vessel filled him but did not
+      make him any wider, and the books are blunt about what happens to a man left like that.
+      They give him a year, and that is generous. The widening is the other half of the same
+      act, and the house has already paid for the worse half. What remains is the asking: who to
+      ask, and whether to ask anyone at all. Two is a number the Church knows how to count.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].label"
+    of: "680d1ca1f75dd745"
+    plainenglish: >-
+      Widen him. Quietly, in our own house.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].outcomes[id=widened].text"
+    of: "b3482e1a0e8699ee"
+    plainenglish: >-
+      It is done on an ordinary morning with the shutters closed, and it takes less time than a
+      letter would have needed to reach the chapter house. By noon there are two men under this
+      roof who can do what one man could do at breakfast. Nobody writes the second name down.
+      That is a decision, and everyone in the house knows whose it was.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=leave_him_as_he_is].label"
+    of: "404bef19eed2d885"
+    plainenglish: >-
+      Leave him as he is. He was filled; nobody promised him more.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=leave_him_as_he_is].outcomes[id=left].text"
+    of: "07ecfa18c3507114"
+    plainenglish: >-
+      Nobody refuses him out loud. The room is just never booked, the books go back on the shelf
+      in the order they came off, and after a while the house stops leaving the doors open for
+      him. He carries what was put into him, and it does not fit. Some of it comes out as noise
+      at night, and some of it comes out as nothing at all, which is worse.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].record.subject"
+    of: "8e8e1a23075f5007"
+    plainenglish: >-
+      the second one named
+  - address: "content:events/rites.yaml#events[id=the_second_widening].record.options.record.chronicle"
+    of: "f99c4f10902a5e1c"
+    plainenglish: >-
+      A second of the blood was raised in the same year as the first, and a cousin from that
+      hall was given to the rite to make it happen. Both names are written here. Neither is
+      written anywhere else.
+  - address: "content:events/rites.yaml#events[id=the_second_widening].record.options.embellish.chronicle"
+    of: "4d8039219cec38b5"
+    plainenglish: >-
+      The house raised a second of the blood, and the cousin who died that year died of a fever.

@@ -492,3 +492,336 @@ events:
                 - { kind: treasury, delta: 4 }
                 - { kind: relationship, from: household, to: head, sentiment: -6 }
                 - { kind: rumour, op: seed, id: rumour_the_oath_the_house_refused, accuracy: 0.5 }
+
+proseVariants:
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].title"
+    of: "ff0e60ad75f3e1b1"
+    plainenglish: >-
+      A Sack of Seed Corn, and the Low Justice
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].body"
+    of: "12a7d78907f0793d"
+    plainenglish: >-
+      In the lean end of Frostfall, a cottager's wife took seed corn from the house's own store.
+      The yard man caught her with it, and all of Wick knew before the hall did. The low justice
+      belongs to the house. It can give her a fine she cannot pay, a day in the stocks, which
+      she can bear, or nothing at all. She has four children in that cottage, and the whole
+      village walks past that store every day of the winter. Everyone in the yard is waiting to
+      hear which of the three kinds of house this one is.
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].interaction.choices[id=the_stocks].label"
+    of: "40917727ca8377fb"
+    plainenglish: >-
+      A day in the stocks. A store has to stay a store.
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].interaction.choices[id=the_stocks].outcomes[id=stocked].text"
+    of: "9d65932f5615299b"
+    plainenglish: >-
+      She stands on the green from dawn to dusk, with her own parish watching. Nobody throws
+      anything, and that says what they think of the sentence. Nothing is taken from that store
+      again for nineteen years. Her eldest takes over the tenancy in 1074, pays every rent on
+      the day it is due, and has never once come up to the hall.
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].interaction.choices[id=fine_and_forgive].label"
+    of: "08c1b1930611401f"
+    plainenglish: >-
+      Fine her a mark, then let her off the mark.
+  - address: "content:events/bramme.yaml#events[id=the_stocks_at_wick].interaction.choices[id=fine_and_forgive].outcomes[id=forgiven].text"
+    of: "4b726c0d9d570031"
+    plainenglish: >-
+      She is sentenced in the yard in front of the reeve and let off in the same breath. It is
+      the only way to do both at once, and everyone there understands it as exactly that. It
+      costs a mark that was never going to be paid. Two more things go missing from the store
+      before Thaw, and the yard man stops mentioning them.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].title"
+    of: "efa022c76b8a366b"
+    plainenglish: >-
+      Four Generations Will Remember
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].body"
+    of: "335d3df99757ea5d"
+    plainenglish: >-
+      The holding at the top of the lane is three years behind on its rent. The man has stopped
+      coming up the hill and stopped answering the steward, and now answers him in the alehouse
+      instead. Eviction is lawful, the terms allow it, and the magistrate at Bramme will sign it
+      in a morning for a mark. People at Wick will also still be reciting it in 1190, people
+      whose great-grandparents have not yet been born. A man at Ockleigh would take the holding
+      tomorrow and pay for it.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].interaction.choices[id=put_him_off].label"
+    of: "59f55ecf8ee1d323"
+    plainenglish: >-
+      Turn him out. Three years is three years.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].interaction.choices[id=put_him_off].outcomes[id=evicted].text"
+    of: "dc8ce48c9595e8f8"
+    plainenglish: >-
+      It costs a mark to the magistrate and a morning, and there is a cart on the lane before
+      the tenday is out. The new tenant pays on the day, every time, for thirty-one years, and
+      the holding becomes worth a third more than it was. For a hundred years nobody in Wick
+      will say the family's name and the word fair in the same sentence, and the house never
+      once hears them not saying it.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].interaction.choices[id=carry_the_arrears].label"
+    of: "c173cc4e36e6a8da"
+    plainenglish: >-
+      Carry the debt, and put in writing that we are carrying it.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].interaction.choices[id=carry_the_arrears].outcomes[id=carried].text"
+    of: "f44c2d5c227caf68"
+    plainenglish: >-
+      The arrears are written into the terms as a charge on the holding, notarised for a mark,
+      and payable by whoever holds it whenever it can be paid. That turns three bad years into a
+      debt with a date on it, instead of a quarrel with a memory. At Thaw he comes up the hill
+      for the first time in three years. The debt is not paid off in his lifetime, but the
+      matter is settled.
+  - address: "content:events/bramme.yaml#events[id=an_eviction_remembered].interaction.choices[id=carry_the_arrears].outcomes[id=carried].effects[0].text"
+    of: "9468b98fba0ad8c3"
+    plainenglish: >-
+      The arrears on the holding at the top of the lane were written into its terms as a charge
+      and kept on the books.
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].title"
+    of: "26217a7c5e87d0a0"
+    plainenglish: >-
+      Bramme Says No
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].body"
+    of: "a83d28afdb7af5b3"
+    plainenglish: >-
+      Bramme's forty chartered households elect the town's two delegates to the Assembly. The
+      Assembly keeps the Roll of Houses, and the Roll is where this family's line is recorded.
+      The forty resent every landed house within a day's ride as a matter of principle, and this
+      one for reasons they can list. The house wants the market day moved by a tenday so that
+      the clip and the fair do not fall together. The answer comes from a wool-draper in a good
+      coat, and it is no.
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].interaction.choices[id=feed_the_forty].label"
+    of: "69e3f07ab1db79c6"
+    plainenglish: >-
+      Feed them. Two long tables at the Ingathering fair, and we pay.
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].interaction.choices[id=feed_the_forty].outcomes[id=fed].text"
+    of: "08700c5cb1b867f8"
+    plainenglish: >-
+      Nineteen crowns pays for somebody else's town to eat somebody else's beef. By the third
+      hour, four of the forty are calling the Head by name in a way they have not done for sixty
+      years. The market day does not move. Nine years later something else is asked for, and
+      that one goes through.
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].interaction.choices[id=over_their_heads].label"
+    of: "d39dcb0aa9defc8e"
+    plainenglish: >-
+      Go over their heads. The magistrate can set a market day.
+  - address: "content:events/bramme.yaml#events[id=the_burgesses_answer_is_no].interaction.choices[id=over_their_heads].outcomes[id=went_over].text"
+    of: "8a823742158227a6"
+    plainenglish: >-
+      The magistrate can, and he does, in about four minutes. He is the Warden's man, and the
+      Warden's man does not much care what forty drapers think. The day moves. Bramme's two
+      delegates now have a specific grievance instead of a general one, and a grievance with a
+      date on it lasts about four times as long.
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].title"
+    of: "448267000afabcec"
+    plainenglish: >-
+      Three Rooms, and Our Man in the Second
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].body"
+    of: "baa6f1e487e8b478"
+    plainenglish: >-
+      The gaol at Bramme has three rooms, and the house's carter is in the middle one. He is
+      there for a fight outside an alehouse that he did not start but did finish. The magistrate
+      will take four crowns and a word from the house and let him go. If the word does not come,
+      he will take nothing and keep him for six tendays. He is a good carter and a bad drinker.
+      The house has already bailed him once, in 1069, and the clerk's book records it on the
+      very page the clerk is looking at now.
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].interaction.choices[id=pay_and_speak_for_him].label"
+    of: "47f0a069684d2ac5"
+    plainenglish: >-
+      Four crowns and our word. He is one of ours.
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].interaction.choices[id=pay_and_speak_for_him].outcomes[id=bailed].text"
+    of: "c1854537e1160cc3"
+    plainenglish: >-
+      He is home the same evening, riding on the back of his own cart, and he stays sober for
+      about nine months. The clerk writes the house's name in the book for the second time in
+      eleven years. That book is read at the assize by people who do not know the carter but do
+      know how to count.
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].interaction.choices[id=let_him_sit].label"
+    of: "4615a07ac474d2c6"
+    plainenglish: >-
+      Leave him there. He knew a second time would be a second time.
+  - address: "content:events/bramme.yaml#events[id=three_rooms_at_the_gaol].interaction.choices[id=let_him_sit].outcomes[id=he_sits].text"
+    of: "596f7e1bc986c1b7"
+    plainenglish: >-
+      He spends six tendays on gaol bread. The house does the carting with a hired man at three
+      mites a day, and a shaft breaks in the second tenday. He comes back thinner and works the
+      rest of his life without ever once being late. Nothing is written in any book at Bramme.
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].title"
+    of: "068a7a8dc3394a79"
+    plainenglish: >-
+      A Plank Bridge, Its Chain, and Its Rate
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].body"
+    of: "3bd945314a8c462d"
+    plainenglish: >-
+      The bridge below Wick belongs to the house, and so does the chain across it. Nobody has
+      argued the rate down in forty years, because nobody has bothered to argue. Now the Bramme
+      carriers have bothered. Their man has a copy of a clause from the town's own charter book,
+      read to him by an advocate who charges two marks a day. He stands in the yard and reads
+      the sentence out twice. It says nothing at all about this bridge, and it says it in Old
+      Ambric, which is the point.
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].interaction.choices[id=halve_the_rate].label"
+    of: "937854d176670995"
+    plainenglish: >-
+      Halve the rate, and say the charter convinced us.
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].interaction.choices[id=halve_the_rate].outcomes[id=halved].text"
+    of: "6e379de21ec9131e"
+    plainenglish: >-
+      The toll loses two crowns a year. The house has also agreed in public that a clause means
+      something it does not mean, which is something the house may need to have agreed to in
+      about ninety years. After that the carriers come through in numbers. Two mites a wheel on
+      twice as many wheels is not nothing.
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].interaction.choices[id=hold_the_chain].label"
+    of: "18479ee5406af731"
+    plainenglish: >-
+      Keep the chain. The clause is about a ford in another county.
+  - address: "content:events/bramme.yaml#events[id=the_toll_on_the_plank_bridge].interaction.choices[id=hold_the_chain].outcomes[id=held].text"
+    of: "38f887df87be5903"
+    plainenglish: >-
+      It is about a ford in another county. An advocate says so, at two marks a day, and is
+      worth every mite of it. The carriers go round by Ockleigh for eleven years. The rate stays
+      as it is. The toll brings in about a third of what it did, but the right is intact, and
+      the right is what is worth having.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].title"
+    of: "5979b2a2b66ff26e"
+    plainenglish: >-
+      What the House Said About the Charter
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].body"
+    of: "eef7c99c09ff4968"
+    plainenglish: >-
+      Rain falls on the gate arch. Under it stands a carriers' man, holding a satchel against
+      his chest the way you hold something that must not get wet. His grandfather stood in this
+      yard with a clause about a ford in another county, and the house halved the rate and said
+      the charter had convinced it. That answer is written in the town's book at Bramme, in a
+      clerk's round hand, and the grandson has a clean copy. He reads it out once. If the clause
+      covered the bridge then, he says, it covers the chain now, and the chain must come down on
+      market days. Everyone at the table remembers what the house said the charter said, and
+      nobody remembers the charter itself. It was in Old Ambric.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].interaction.choices[id=keep_the_word].label"
+    of: "0dea5a1a1c7c3776"
+    plainenglish: >-
+      Lower the chain on market days. The house said what it said.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].interaction.choices[id=keep_the_word].outcomes[id=chain_down].text"
+    of: "a2a869948ac7d780"
+    plainenglish: >-
+      The chain comes down at first light on market days and goes back up at dusk. The carts
+      come through Wick in a line you can hear from the hall. The toll box is light on those
+      days and stays light. The house's own book has a line about it, and the line is true.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].interaction.choices[id=keep_the_word].outcomes[id=chain_down].effects[1].text"
+    of: "519fab659ae781f1"
+    plainenglish: >-
+      The chain at the Wick bridge is lowered on market days, because the house once said the
+      Bramme charter covered it, and a house keeps to what it said.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].interaction.choices[id=it_was_a_courtesy].label"
+    of: "4a4e38634b2bbff7"
+    plainenglish: >-
+      Say it was a courtesy back then, and never the law.
+  - address: "content:events/bramme.yaml#events[id=the_clause_read_back].interaction.choices[id=it_was_a_courtesy].outcomes[id=courtesy].text"
+    of: "9b616c31377e5d0d"
+    plainenglish: >-
+      The carriers' man writes the answer down while it is still being given, which his
+      grandfather did not think to do. The chain stays up. At Bramme the two answers sit in the
+      same book, eleven pages apart, and any clerk who turns eleven pages can read both.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].title"
+    of: "51c34bc3fdd5b18f"
+    plainenglish: >-
+      The Bonesetter, or the Bramme Man
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].body"
+    of: "d425b032154bafee"
+    plainenglish: >-
+      {HURT} had a fall on the ice in the yard, and the arm is bent wrong below the elbow.
+      Everyone in the room can see it and nobody wants to look at it. The bonesetter at Wick has
+      set four hundred of these on an alehouse table for two mites, and gets most of them right.
+      The physician at Bramme was trained at the Colleges and works by the humours. He is four
+      hours away on an icy road and costs three crowns before he even opens his bag. The arm is
+      going cold, and somebody has to name one of them.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].interaction.choices[id=send_for_the_bonesetter].label"
+    of: "54f4ac776c68d0db"
+    plainenglish: >-
+      The bonesetter. He is a mile off, and he is good.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].interaction.choices[id=send_for_the_bonesetter].outcomes[id=set_at_wick].text"
+    of: "e03be46fbd4c295b"
+    plainenglish: >-
+      It costs two mites and one very bad minute, and before the light goes the arm is splinted
+      between two lengths of ash. It heals straight. The bonesetter will not take more than the
+      two mites and is offended to be offered it.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].interaction.choices[id=send_for_the_bonesetter].outcomes[id=it_knits_crooked].text"
+    of: "be4e376842689adc"
+    plainenglish: >-
+      It heals, but about four degrees off. Nobody notices until the next Highsun, when a bow
+      will not draw back the way it used to. Nothing can be done about it afterwards, and
+      everyone says so kindly.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].interaction.choices[id=send_to_bramme].label"
+    of: "8eef448505f30821"
+    plainenglish: >-
+      Send to Bramme, and pay the three crowns.
+  - address: "content:events/bramme.yaml#events[id=the_bonesetter_or_the_physician].interaction.choices[id=send_to_bramme].outcomes[id=the_physician_comes].text"
+    of: "549c9806ebf34e4a"
+    plainenglish: >-
+      There are nine hours of waiting with the arm as it is. Then a man arrives with a case of
+      instruments and sets it in about the time the bonesetter would have taken. He charges
+      three crowns and a night's board for it. It heals straight. He also looks at {HURT} for
+      rather longer than the arm needs, and asks two questions about the family that have
+      nothing to do with the arm.
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].title"
+    of: "54010320fec76514"
+    plainenglish: >-
+      Where to Seat the Warden's Clerk
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].body"
+    of: "2fd55681653242cd"
+    plainenglish: >-
+      The Warden's clerk rides around the province twice a year and writes down what he sees. He
+      is a commoner paid eleven marks a year. By precedence he sits at the low table with the
+      reeve and the carter. By every other measure he is the most important person who comes up
+      this hill, because what he writes is what Cawdry knows about this house. He is standing in
+      the doorway with his satchel, and the steward is looking at {HEAD}.
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].interaction.choices[id=seat_him_high].label"
+    of: "99b05d88e1bd3b64"
+    plainenglish: >-
+      Put him at the high table. Precedence will survive one evening.
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].interaction.choices[id=seat_him_high].outcomes[id=seated_high].text"
+    of: "7387c796c365a1b2"
+    plainenglish: >-
+      He is uncomfortable for a quarter of an hour, and then he is not. He talks for three hours
+      about eleven parishes and what is in each of them. The house learns more about the
+      Nethering in one evening than in the last nine years. Two of the guests notice where a
+      clerk was sitting, and mention it at Cawdry, twice.
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].interaction.choices[id=keep_the_precedence].label"
+    of: "726dfa0ba9c628ef"
+    plainenglish: >-
+      The low table. That is a clerk's place.
+  - address: "content:events/bramme.yaml#events[id=the_wardens_clerk_at_the_low_table].interaction.choices[id=keep_the_precedence].outcomes[id=seated_low].text"
+    of: "eeba3f20f3dafe1c"
+    plainenglish: >-
+      He sits with the reeve, eats well, is thanked properly at the door, and rides off at first
+      light without having formed any opinion at all, which is exactly what a house wants from a
+      clerk. Precedence is kept in front of a hall that was watching to see whether it would be.
+      What he writes is the usual entry.
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].title"
+    of: "7202aed2d0926296"
+    plainenglish: >-
+      Sworn on the Roll
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].body"
+    of: "a21808f253634b5e"
+    plainenglish: >-
+      A tenant says he paid the Michaelmas portion in coin at the gate. The steward says he did
+      not. There is one entry and one man's word, and they disagree. The steward has kept this
+      house's book for nineteen years. The tenant offers to swear on the roll. That is his own
+      parish entry and the strongest oath a commoner in this kingdom can take, and he means to
+      swear it in front of a keeper. Men do not offer that lightly, and everyone in the yard
+      knows they do not.
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].interaction.choices[id=let_him_swear].label"
+    of: "4fd1cf5bdd7f6627"
+    plainenglish: >-
+      Let him swear, and accept the loss if he does.
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].interaction.choices[id=let_him_swear].outcomes[id=he_swore].text"
+    of: "b7739f64fcf76d30"
+    plainenglish: >-
+      He swears it in the chapel with the keeper's hand on the book, and he does not falter
+      once. The steward strikes out the entry in his own hand, which is the hardest part of the
+      whole afternoon. Four crowns are lost. Every tenant on the land now knows there is a way
+      to be heard here. About one a decade uses it, and two of those are lying.
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].interaction.choices[id=back_the_book].label"
+    of: "407efe09692fb0bd"
+    plainenglish: >-
+      The book stands. Nineteen years of it.
+  - address: "content:events/bramme.yaml#events[id=he_swears_on_the_roll].interaction.choices[id=back_the_book].outcomes[id=book_stands].text"
+    of: "7f59145366961e2f"
+    plainenglish: >-
+      The oath is politely refused, on the grounds that the house does not make its tenants
+      swear. That is a kind way of saying the book cannot be wrong. He pays twice and does not
+      appeal, because there is nowhere to appeal to. The steward is steadier for a year and the
+      yard is quieter, and those are not the same thing.

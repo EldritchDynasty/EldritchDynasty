@@ -474,3 +474,320 @@ events:
                 within his rights.
               effects:
                 - { kind: flag, flag: the_lent_book_left_alone, set: true }
+
+proseVariants:
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].title"
+    of: "a2935b9c3e1446b0"
+    plainenglish: >-
+      A Letter Eleven Months on the Road
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].body"
+    of: "84277a0df24d0ef9"
+    plainenglish: >-
+      It arrives from Sarrow in a factor's bag, eleven months after it left Yssanne. Nobody at
+      Ardwen can read the handwriting. Pinned to it is an Ambric translation, made by someone
+      who was paid two marks a day for it. A Yssene house is asking about a marriage. This
+      family's records put it four generations back; theirs put it five. A reply will take
+      another eleven months, and the man who asked will be dead before it arrives. The gap
+      between four and five is the gap between a cousin and a stranger, under a law that Aubren
+      does not recognise and cannot quite ignore.
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=answer_it_properly].label"
+    of: "fc4cc1d1dda615ad"
+    plainenglish: >-
+      Reply, and set out the full descent.
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=answer_it_properly].outcomes[id=answered].text"
+    of: "237db873536781ff"
+    plainenglish: >-
+      It costs nine crowns for a copyist, an advocate and the carriage. A document leaves this
+      house stating, in writing, to a party abroad, what this house says its own descent is. It
+      is the fullest account of the line the family has ever written down. Someone in Yssanne
+      files it, and Yssene houses do not lose paper either.
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=let_it_lie].label"
+    of: "7c8733c9baac1ddd"
+    plainenglish: >-
+      Leave it. He will be dead before any reply arrives.
+  - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=let_it_lie].outcomes[id=unanswered].text"
+    of: "8f89ac444aae7c60"
+    plainenglish: >-
+      No reply goes south, and after the second year nobody expects one. Within a generation the
+      letter is just a curiosity kept in the press. The Yssene house records that the question
+      was asked and not answered, because that is what their law does with silence. By their
+      count, the descent stands at five.
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].title"
+    of: "a47e76d8ebdfbbe4"
+    plainenglish: >-
+      Who Walks Through First
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].body"
+    of: "8654b242096c9f86"
+    plainenglish: >-
+      At the door of the assize hall at Cawdry, with about forty people in the passage behind,
+      {RIVAL} walks through ahead of {HEAD}. He does not hurry, and that is what makes it an
+      insult. Here, politeness is all about who goes first. An insult of this kind can be
+      denied, lasts for ever and costs nothing. All forty people in that passage understood it,
+      and none of them will ever mention it. The Warden sits in a quarter of an hour.
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].interaction.choices[id=answer_it_now].label"
+    of: "0e698f580faff07c"
+    plainenglish: >-
+      Answer it now, in the passage, in front of all forty.
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].interaction.choices[id=answer_it_now].outcomes[id=answered_in_the_passage].text"
+    of: "196697039d23266f"
+    plainenglish: >-
+      Six quiet words, close enough that only the four at the front hear. By noon those four
+      have told the other thirty-six. {RIVAL} goes white and says nothing. The Warden's steward,
+      who is paid well to stop exactly this, notes both of them as men who will need to be
+      seated apart for the next thirty years.
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].interaction.choices[id=remember_it].label"
+    of: "466c38bd7cb39061"
+    plainenglish: >-
+      Say nothing, but remember it.
+  - address: "content:events/neighbours.yaml#events[id=a_slight_at_a_door].interaction.choices[id=remember_it].outcomes[id=remembered].text"
+    of: "cb97d293f5cae63f"
+    plainenglish: >-
+      Nothing happens in the passage, and the assize starts on time. It happens twice more that
+      year, at Bramme and at a wedding, and each time it looks a little more natural. By the
+      third time it is no longer an insult. It is simply the order of precedence, and sooner or
+      later the heralds write the order down.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].title"
+    of: "705cdace1fc6f732"
+    plainenglish: >-
+      Four Hundred Yards of Wall
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].body"
+    of: "7375ba68248b2f6c"
+    plainenglish: >-
+      The march wall between this house's high pasture and the next holding has been broken in
+      three places since a bad Frostfall. In two years the other side has not sent a single man
+      to fix it. Their animals come through and graze the house's grass every day of the summer.
+      That is either neglect or a very slow claim to the land, and from here there is no telling
+      which. Mending it would take the house's own men nine days, and would admit that the wall
+      on that line is the house's to mend. The Warden will hear a boundary case at Cawdry in
+      Ingathering, and will want papers that neither side has.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=mend_it_ourselves].label"
+    of: "cb550c63dd0feb47"
+    plainenglish: >-
+      Mend it ourselves, and say nothing about whose wall it is.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=mend_it_ourselves].outcomes[id=mended].text"
+    of: "02e35566e6a92a2a"
+    plainenglish: >-
+      Four men spend nine days rebuilding four hundred yards of drystone, and they know how to
+      do it. By Haying the grass is the house's again. In 1148 a clerk finds a note that this
+      house mended that wall, and reads it exactly the way the other side would want it read.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=mend_it_ourselves].outcomes[id=mended].effects[1].text"
+    of: "609c8ea5d429cbc9"
+    plainenglish: >-
+      The house used its own men to mend the march wall on the high pasture, and said nothing
+      about whose wall it was.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].label"
+    of: "e68ad499267aff2d"
+    plainenglish: >-
+      Take it to the assize and make them show something.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=heard_at_cawdry].text"
+    of: "4c1ee506b0333c52"
+    plainenglish: >-
+      It takes two days at Cawdry and four crowns for an advocate. Neither side brings a single
+      sheet of paper, so the Warden does what the Warden always does: he rules by custom, as the
+      oldest men present describe it. Two of those oldest men are the house's tenants. For the
+      first time in its history, the line is written into the province's record.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=heard_at_cawdry].effects[2].text"
+    of: "70f3db155eb7f3e1"
+    plainenglish: >-
+      At Cawdry the march wall was ruled to be the house's, on the word of its own tenants.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=found_against].text"
+    of: "e1af35a4340af408"
+    plainenglish: >-
+      It takes two days at Cawdry and four crowns. Three fell-graziers who have been on that
+      hill every summer of their lives say the wall has always been the house's. They say it
+      plainly, and they are not lying. The line is written down against the house. It is a
+      hundred and eleven yards of pasture, and a permanent entry in the province's record.
+  - address: "content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=found_against].effects[2].text"
+    of: "91b12d50bb9879cc"
+    plainenglish: >-
+      At Cawdry the march wall was ruled against the house, and the line was written down.
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].title"
+    of: "424bf7c1da67a735"
+    plainenglish: >-
+      The Price of Being Seen There
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].body"
+    of: "66fda09a4a1304d6"
+    plainenglish: >-
+      Twice a year the Warden holds a dinner, and this house is on the list for the Ingathering
+      one, which it is not always. Going means four days of riding, a night at an inn each way,
+      and clothes the family does not own: at this rank, true black and deep red are licensed,
+      and licensed colour is expensive. Not going leaves no mark in anyone's book, only an empty
+      place at a table for thirty. A refusal takes four lines and a mark to pay the rider.
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].interaction.decidedBy.state[0].because"
+    of: "2a61c8a8b78840d4"
+    plainenglish: >-
+      the house cannot afford the right clothes, and everyone at that table would know it
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].interaction.choices[id=go_to_cawdry].label"
+    of: "e084a911d069904d"
+    plainenglish: >-
+      Go. Sit at the table and be seen there.
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].interaction.choices[id=go_to_cawdry].outcomes[id=went].text"
+    of: "d32ddc1fee98f79b"
+    plainenglish: >-
+      It costs twenty-six crowns in cloth and four days on the road. For one evening, eleven
+      people who have not spoken to this family in nine years speak to it. Nothing is agreed and
+      nothing is asked. Two years later, someone proposes a marriage they would never have
+      proposed to a house nobody had seen.
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].interaction.choices[id=write_the_regrets].label"
+    of: "d26d5ddf1f30621b"
+    plainenglish: >-
+      Send apologies. Four lines and a mark for the rider.
+  - address: "content:events/neighbours.yaml#events[id=the_invitation_from_cawdry].interaction.choices[id=write_the_regrets].outcomes[id=regrets].text"
+    of: "93ae7f90e73c1d2c"
+    plainenglish: >-
+      Four properly worded lines in the steward's best handwriting, and an empty place at a
+      table for thirty that is laid out in a careful order. The Warden does not notice. The
+      Warden's steward does, because noticing is his job, and he is the one who draws up the
+      list for next Ingathering.
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].title"
+    of: "2442c7f12fe512bd"
+    plainenglish: >-
+      Perfectly Mannered, Poor, and Not at All Impressed
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].body"
+    of: "84739b951d256369"
+    plainenglish: >-
+      There are perhaps nine Yssene families in the whole kingdom. One of them lives nineteen
+      miles away at Cawdry. They were exiled two generations ago, they are very poor, and their
+      manners are better than anyone in the Nethering has ever had to deal with. {YSSENE} visits
+      in Highsun, drinks one cup, and suggests a match between the two houses. It takes four
+      minutes, and the word is never once used. Their inheritance law is not Aubren's: it would
+      put a daughter's line ahead of a brother's. Nobody in this province knows how to have that
+      argument, and everybody in it knows a good match when they see one.
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].interaction.choices[id=open_the_question].label"
+    of: "e7bcb44a46ad551e"
+    plainenglish: >-
+      Open talks. A good match is a good match.
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].interaction.choices[id=open_the_question].outcomes[id=opened].text"
+    of: "183bf5183d44871c"
+    plainenglish: >-
+      Three visits, two letters, and an advocate at two marks a day. On the second afternoon he
+      admits he cannot tell the house what it is agreeing to. The manners are the best this hall
+      has ever seen, and nobody in it can understand the terms. Somewhere in the fourth clause
+      is a sentence about heirs that will matter in about ninety years.
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].interaction.choices[id=stay_clear].label"
+    of: "a01d6148d6b5e25c"
+    plainenglish: >-
+      Keep away. We cannot read their law, and they can read ours.
+  - address: "content:events/neighbours.yaml#events[id=the_yssene_house_at_cawdry].interaction.choices[id=stay_clear].outcomes[id=stayed_clear].text"
+    of: "43e316599f44f0b5"
+    plainenglish: >-
+      With someone so well mannered, the only way to say no is never quite to answer, and that
+      takes a year and a half. {YSSENE} behaves perfectly to the very end. The house has refused
+      the one alliance in the province that nobody else in the province could have made. Its own
+      cadets will remind it of this twice a generation.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].title"
+    of: "47f42a039bba5bf7"
+    plainenglish: >-
+      Marches Men, Waiting for a War
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].body"
+    of: "3554ca462b5d7dea"
+    plainenglish: >-
+      Two hundred Marches men are camped in the water meadow outside Bramme, enough of them to
+      make the magistrate very polite. They are paid by the month and loyal until the month runs
+      out, and there is no war anywhere to send them to. On the second day their captain rides
+      up the hill alone. He is courteous, and asks whether the house needs eleven men for the
+      winter, at eleven crowns a month for all of them. It is a fair price. It is also the only
+      offer he will make, and everyone in the yard knows the alternative is not another offer.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=take_eleven].label"
+    of: "48dfb3b11437cc5d"
+    plainenglish: >-
+      Hire eleven of them for the winter.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=take_eleven].outcomes[id=hired].text"
+    of: "92bc9f122e0c720e"
+    plainenglish: >-
+      It costs forty-four crowns over four months. Eleven men live in the yard, polite, filthy,
+      capable and not at all interested in anything that goes on in this house. For the first
+      time in ninety years, the gate is watched every night. Nothing at all happens all winter,
+      and that is what the money bought.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=bar_the_gate].label"
+    of: "190dddf375850e17"
+    plainenglish: >-
+      Say no, and bring the tenants' animals inside the wall.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=bar_the_gate].outcomes[id=refused].text"
+    of: "44466be38b8ffcc7"
+    plainenglish: >-
+      Within three tendays they have left the water meadow and gone north, following someone
+      else's news, and nothing at all happens on this land. For twenty-one nights the house's
+      animals are kept inside the wall, and the tenants' animals with them. People remember
+      that.
+  - address: "content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=bar_the_gate].outcomes[id=they_take_it_anyway].text"
+    of: "21af159efa5765fa"
+    plainenglish: >-
+      Nothing is stolen from this house, because it stands on a rise behind a wall. In one night
+      four cottages at the bottom of the lane are stripped, and a man at Ockleigh is killed for
+      a horse. Killing is a matter for the Warden's assize, which sits in eleven weeks. Everyone
+      at Wick knows what was offered, and that the house said no.
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].title"
+    of: "436a7a97bce6d573"
+    plainenglish: >-
+      A Draper's Daughter and Two Hundred Crowns
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].body"
+    of: "e14f7a2371ea5d67"
+    plainenglish: >-
+      The wool-draper who turned this house down over the market day has one daughter and no
+      sons. He would settle a hundred and ten crowns on her the day she married {SON}. She is
+      nineteen, has been taught to keep accounts, and is better company than anyone this family
+      has been offered in a generation. Her father is a burgess of Bramme, and her grandfather
+      carted fleeces. A hundred and ten crowns is most of two years of this house's income, and
+      the Roll of Houses has no column for it.
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].interaction.choices[id=take_the_match].label"
+    of: "a4d0257b0c694107"
+    plainenglish: >-
+      Accept. A hundred and ten crowns, and a woman who can keep accounts.
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].interaction.choices[id=take_the_match].outcomes[id=married_in].text"
+    of: "275a7ccf31eb8393"
+    plainenglish: >-
+      At Greening a hundred and ten crowns go into the coffer. Within a year the new
+      daughter-in-law has the wage roll in order, and within two the rent book too. The heralds
+      record the marriage without comment, because the heralds record everything. Four houses
+      stop inviting this one, and nineteen years pass before anyone notices.
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].interaction.choices[id=refuse_it].label"
+    of: "bfcb7da7bf8771c3"
+    plainenglish: >-
+      Refuse. The line is not for sale by the crown.
+  - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].interaction.choices[id=refuse_it].outcomes[id=refused_below].text"
+    of: "e22cb9e40ff9c518"
+    plainenglish: >-
+      The refusal is meant kindly, and Bramme hears it for exactly what it is. The forty
+      households hear it within a tenday, because they hear everything. {SON} marries five years
+      later, well enough, with sixty crowns. The draper's daughter marries at Cawdry, and thirty
+      years on she is the richest woman in the province.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].title"
+    of: "49f19ec9f960196d"
+    plainenglish: >-
+      Lent in 1061
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].body"
+    of: "1febc64c4ab33148"
+    plainenglish: >-
+      Reading a book takes a year of someone's life, and copying it takes half a year of someone
+      else's. This house once lent a book to the house {RIVAL} now holds, and an entry in the
+      archive says so and gives the year. Two generations have gone by. The book sits on their
+      shelf and is talked of as theirs. Their mark is cut into the board, over another mark that
+      is not quite hidden. Asking for it back means saying, in writing, that this family keeps a
+      record of what it lends and to whom.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].interaction.choices[id=ask_for_it_back].label"
+    of: "58643abaa46b213e"
+    plainenglish: >-
+      Ask for it, in writing, with the entry copied out.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].interaction.choices[id=ask_for_it_back].outcomes[id=asked].text"
+    of: "cae5c7c4a4e97888"
+    plainenglish: >-
+      Within two months it comes back with a polite letter that admits nothing and does not need
+      to. The old mark is still under theirs. The house is nine crowns better off, and has shown
+      another house exactly how good its records are.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].interaction.choices[id=ask_for_it_back].outcomes[id=they_deny_it].text"
+    of: "41529ecc28d0e308"
+    plainenglish: >-
+      The reply says the book was bought at Sarrow in 1058, three years before the entry, and
+      includes a copy of a receipt. Either the receipt is wrong or this family's archive is.
+      Both are now out in the world, and no third document anywhere can settle it.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].interaction.choices[id=leave_it_on_their_shelf].label"
+    of: "b977423d9a483981"
+    plainenglish: >-
+      Let it go. Two generations is a long time.
+  - address: "content:events/neighbours.yaml#events[id=the_book_they_never_returned].interaction.choices[id=leave_it_on_their_shelf].outcomes[id=left].text"
+    of: "58a76b93547d19e7"
+    plainenglish: >-
+      The entry stays in the archive. In about ninety years someone will read it without knowing
+      the book was given up on. He will write to Cawdry about it. He will do it in a far worse
+      year than this one, and he will be completely within his rights.
