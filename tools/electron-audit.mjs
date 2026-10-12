@@ -15,10 +15,15 @@ const ELECTRON_NAMES = new Set([
 
 export function inspectDependencyAudit(report) {
   if (!report || typeof report !== 'object' || Array.isArray(report)
-    || report.error || !report.vulnerabilities
-    || typeof report.vulnerabilities !== 'object'
-    || Array.isArray(report.vulnerabilities)) {
-    throw new Error('npm audit did not return a valid vulnerabilities object');
+    || report.error || report.auditReportVersion !== 2
+    || !report.vulnerabilities || typeof report.vulnerabilities !== 'object'
+    || Array.isArray(report.vulnerabilities)
+    || !report.metadata || typeof report.metadata !== 'object'
+    || Array.isArray(report.metadata)
+    || !report.metadata.vulnerabilities
+    || typeof report.metadata.vulnerabilities !== 'object'
+    || Array.isArray(report.metadata.vulnerabilities)) {
+    throw new Error('npm audit did not return a complete v2 vulnerabilities report');
   }
 
   const findings = Object.entries(report.vulnerabilities).map(([name, row]) => {
@@ -35,6 +40,17 @@ export function inspectDependencyAudit(report) {
 
   const counts = Object.fromEntries(SEVERITIES.map((severity) =>
     [severity, findings.filter((row) => row.severity === severity).length]));
+  // npm audits report package totals twice: per vulnerable package and in
+  // metadata. A valid JSON response with an incomplete vulnerabilities list
+  // must not be misreported as "no Electron advisories" or a green audit.
+  const reportedCounts = report.metadata.vulnerabilities;
+  if (SEVERITIES.some((severity) =>
+    !Number.isSafeInteger(reportedCounts[severity]) || reportedCounts[severity] < 0
+    || reportedCounts[severity] !== counts[severity])
+    || !Number.isSafeInteger(reportedCounts.total)
+    || reportedCounts.total !== findings.length) {
+    throw new Error('npm audit vulnerability totals do not match listed packages');
+  }
   const blocking = findings.filter((row) => row.severity === 'critical' || row.severity === 'high');
   const electron = findings.filter((row) => ELECTRON_NAMES.has(row.name));
   return { findings, counts, blocking, electron };
