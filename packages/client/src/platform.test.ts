@@ -816,6 +816,23 @@ describe('the platform seam', () => {
         format: 28, year: 1342, houseName: 'House of Salt',
       }, null, 2));
 
+      // A present export must be a JSON object before a Blob or download URL
+      // is created. Custom toJSON can disguise invalid serialized roots.
+      const invalidRoots: unknown[] = [
+        null, undefined, [], [1], 'not a save', 0, false, () => 1, Symbol('missing'),
+        { toJSON: () => null },
+        { toJSON: () => [] },
+        { toJSON: () => 'not a save' },
+        { toJSON: () => 0 },
+        { toJSON: () => false },
+        { toJSON: () => undefined },
+      ];
+      for (const invalid of invalidRoots) {
+        await expect(host.exportSave(invalid)).rejects.toThrow(TypeError);
+      }
+      expect(createObjectURL).toHaveBeenCalledTimes(1);
+      expect(steps).toEqual(['append', 'click', 'remove']);
+
       vi.advanceTimersByTime(59_999);
       expect(revokeObjectURL).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
@@ -830,6 +847,20 @@ describe('the platform seam', () => {
       vi.advanceTimersByTime(60_000);
       expect(revokeObjectURL).toHaveBeenCalledWith('blob:json-save-2');
       expect(revokeObjectURL).toHaveBeenCalledTimes(2);
+
+      failClick = false;
+      let serializations = 0;
+      const customSave = { toJSON() {
+        serializations += 1;
+        return { format: 28, year: 1343 };
+      } };
+      await host.exportSave(customSave);
+      expect(serializations).toBe(1);
+      expect(link.download).toBe('eldritch-run.json');
+      expect(await blobs[2]!.text()).toBe(JSON.stringify({ format: 28, year: 1343 }, null, 2));
+      vi.advanceTimersByTime(60_000);
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:json-save-3');
+      expect(revokeObjectURL).toHaveBeenCalledTimes(3);
     } finally {
       vi.useRealTimers();
       if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
