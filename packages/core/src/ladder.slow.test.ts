@@ -23,10 +23,14 @@ describe('the ladder gate', () => {
   const seeds = [4000, 4013, 4026, 4039, 4052, 4065];
   const years = 500;
 
+  // These synchronous batches are bounded by the CI job, not by per-test
+  // wall-clock limits (vitest.config.ts). Busy runners can exceed 120s
+  // after completing the same deterministic simulation and assertions.
+
   it('passes the shipped game: paying separates from refusing', () => {
     const { ok, lines } = gateLadder(bundle, { seeds, years });
     expect(ok, lines.join('\n')).toBe(true);
-  }, 120_000);
+  });
 
   it('fails a game whose ladder costs are removed', () => {
     // Remove every cost that `costsTheClimber` recognises: direct Madness
@@ -70,5 +74,5 @@ describe('the ladder gate', () => {
 
     const { ok, lines } = gateLadder(declawed, { seeds, years });
     expect(ok, `the gate passed a game that charges nobody:\n${lines.join('\n')}`).toBe(false);
-  }, 120_000);
+  });
 });
