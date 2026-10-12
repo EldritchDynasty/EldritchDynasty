@@ -7,6 +7,7 @@ import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/gam
 import Prologue from './Prologue.vue';
 import Chapter from './Chapter.vue';
 import Interlude from './Interlude.vue';
+import Line from './Line.vue';
 import type { FrameEntry } from '@ed/schema';
 
 function prologueView(): PrologueView {
@@ -567,5 +568,44 @@ describe('signing the founding with an input method (#1296)', () => {
     house.element.dispatchEvent(enterKey(false));
     expect(game.found).not.toHaveBeenCalled();
     wrapper.unmount();
+  });
+});
+
+/** The seal's history keeps unknown years unknown, without broken prose (#1466). */
+describe('seal-history partial dates (#1466)', () => {
+  it('renders missing guardian/birth years without undefined in both reading modes', async () => {
+    const line = [
+      { person: 'g0', name: 'Undated guardian', from: 1042, guardian: true },
+      { person: 'g1', name: 'Birth only', from: 1050, born: 1009, guardian: true },
+      { person: 'g2', name: 'Year only', from: 1060, died: 1080, guardian: true },
+      { person: 'g3', name: 'Full guardian', from: 1070, born: 1010, died: 1090, guardian: true },
+      { person: 'd0', name: 'Unknown birth', from: 1090, to: 1120, died: 1120 },
+      { person: 'd1', name: 'Known birth', from: 1120, to: 1150, born: 1070, died: 1150 },
+    ] as unknown as ReturnType<GameActions['line']>;
+    const wrapper = mount(Line, {
+      attachTo: document.body,
+      props: { line, close: () => {}, proseMode: 'original' },
+    });
+    const rows = () => wrapper.findAll('.held li').map((row) => row.text());
+    try {
+      expect(rows()[0]).toContain('did not die — he has watched the house');
+      expect(rows()[1]).toContain('born 1009 · did not die — he has watched the house');
+      expect(rows()[2]).toContain('did not die — he has watched the house since 1080');
+      expect(rows()[3]).toContain('born 1010 · did not die — he has watched the house since 1090');
+      expect(rows()[4]).toContain('died 1120');
+      expect(rows()[5]).toContain('born 1070, died 1150');
+      expect(wrapper.text()).not.toContain('undefined');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(rows()[0]).toContain("Became the family's guardian spirit.");
+      expect(rows()[1]).toContain("Born in 1009. Became the family's guardian spirit.");
+      expect(rows()[2]).toContain("Became the family's guardian spirit in 1080.");
+      expect(rows()[3]).toContain("Born in 1010. Became the family's guardian spirit in 1090.");
+      expect(rows()[4]).toContain('Died in 1120.');
+      expect(rows()[5]).toContain('Born in 1070; died in 1150.');
+      expect(wrapper.text()).not.toContain('undefined');
+    } finally {
+      wrapper.unmount();
+    }
   });
 });
