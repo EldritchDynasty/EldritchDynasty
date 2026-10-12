@@ -48,6 +48,60 @@ describe('AdviserHelp', () => {
     expect(ask).toHaveBeenCalledTimes(3);
   });
 
+  it('requires a newly rendered button before revealing another advice tier (#1480)', async () => {
+    const ask = vi.fn((tier: HelpTier) => [line(tier)]);
+    const wrapper = mount(AdviserHelp, { props: { ask } });
+    try {
+      const button = wrapper.get('button').element as HTMLButtonElement;
+      // These clicks all target the same tier-one label before Vue repaints.
+      button.click();
+      button.click();
+      button.click();
+      expect(ask.mock.calls.map(([tier]) => tier)).toEqual([1]);
+
+      await wrapper.vm.$nextTick();
+      expect(wrapper.text()).toContain('Begin with one name.');
+      expect(wrapper.text()).not.toContain('family record');
+      expect(wrapper.get('button').text()).toBe('Ask what the house knows');
+
+      // Once the next label is visible, one more tier is intentional.
+      button.click();
+      button.click();
+      expect(ask.mock.calls.map(([tier]) => tier)).toEqual([1, 2]);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.text()).toContain('family record');
+      expect(wrapper.text()).not.toContain('Find somebody');
+
+      await wrapper.get('button').trigger('click');
+      expect(ask.mock.calls.map(([tier]) => tier)).toEqual([1, 2, 3]);
+      expect(wrapper.text()).toContain('Find somebody');
+      expect(wrapper.find('button').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('does not repeat an unanswered advice request in the same tick (#1480)', async () => {
+    const ask = vi.fn((): AdviserAdvice[] => []);
+    const wrapper = mount(AdviserHelp, { props: { ask, resetKey: 'first' } });
+    try {
+      const button = wrapper.get('button').element as HTMLButtonElement;
+      button.click();
+      button.click();
+      expect(ask).toHaveBeenCalledTimes(1);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.text()).toContain('Nobody at the table answers.');
+      expect(wrapper.find('button').exists()).toBe(false);
+
+      await wrapper.setProps({ resetKey: 'second' });
+      expect(wrapper.get('button').text()).toBe('Ask an adviser');
+      await wrapper.get('button').trigger('click');
+      expect(ask).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('attributes every rendered line to the named adviser', async () => {
     const wrapper = mount(AdviserHelp, {
       props: { ask: (tier: HelpTier) => [line(tier)] },
