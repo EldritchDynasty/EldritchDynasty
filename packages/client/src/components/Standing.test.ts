@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
+import Abroad from './Abroad.vue';
 import Naming from './Naming.vue';
 import Member from './Member.vue';
 import Ambition from './Ambition.vue';
@@ -318,6 +319,46 @@ describe('naming draft lifetime (#1319)', () => {
       const inputs = wrapper.findAll('.child input');
       expect((inputs[0]!.element as HTMLInputElement).value).toBe('');
       expect((inputs[1]!.element as HTMLInputElement).value).toBe('Second draft');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+/** A retelling count is reader-facing, not a new interpretation of a tale.
+ * Keep these mounted assertions in the existing measured client test suite. */
+describe('counter-record prose selection and retelling grammar (#1430)', () => {
+  it('formats one and many retellings in both modes and leaves tale evidence untouched', async () => {
+    const tales = [
+      { id: 'letter', about: 'north_road', form: 'letter',
+        text: 'The northern road was closed.', teller: 'Alys',
+        since: 1100, mutations: 1, bias: 'A household account' },
+      { id: 'song', about: 'south_road', form: 'song',
+        text: 'The southern road was open.', teller: 'Ronan',
+        since: 1110, mutations: 3, bias: 'A traveler's account' },
+    ] as unknown as SessionView['tales'];
+    const wrapper = mount(Abroad, { props: {
+      view: { ...view(), tales }, proseMode: 'original',
+    } });
+    try {
+      expect(wrapper.text()).toContain('letter · told by Alys · since 1100');
+      expect(wrapper.text()).toContain('retold 1 time, and it has moved');
+      expect(wrapper.text()).toContain('retold 3 times, and it has moved');
+      expect(wrapper.text()).not.toContain('retold 1 times');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Type: letter · Told by: Alys · First shared in 1100');
+      expect(wrapper.text()).toContain('Type: song · Told by: Ronan · First shared in 1110');
+      expect(wrapper.text()).toContain('retold 1 time; the story has changed');
+      expect(wrapper.text()).toContain('retold 3 times; the story has changed');
+      expect(wrapper.text()).not.toContain('retold 1 times');
+
+      // The mode must not translate, reorder or adjudicate the actual accounts.
+      expect(wrapper.text()).toContain('The northern road was closed.');
+      expect(wrapper.text()).toContain('The southern road was open.');
+      expect(wrapper.text()).toContain('A household account');
+      expect(wrapper.text()).toContain("A traveler's account");
+      expect(wrapper.findAll('.account')).toHaveLength(2);
     } finally {
       wrapper.unmount();
     }
