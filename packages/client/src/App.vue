@@ -433,6 +433,7 @@ const yearAndBirths = computed(() => {
   <template v-else>
     <Standing
       :view="view"
+      :prose-mode="accessibility.proseMode"
       :jump="jump"
       :save-status="saveStatus"
       :show-assize="isRevealed('assize')"

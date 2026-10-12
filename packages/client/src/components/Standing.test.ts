@@ -2,6 +2,8 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
 import Abroad from './Abroad.vue';
@@ -131,6 +133,98 @@ describe('Standing legibility (#356)', () => {
 
     expect(wrapper.text()).not.toContain('seed #47');
     expect(control.attributes('aria-expanded')).toBe('false');
+  });
+});
+
+describe('Standing reader-local Plain English (#1439)', () => {
+  it('switches current explanations while retaining Original and the supplied world data', async () => {
+    const current = view();
+    current.assize = { ...current.assize, favour: true, mercy: true, exaction: true,
+      measuredAgainst: { name: 'Maren', before: 1091 } };
+    current.guardian = { id: 'founder', name: 'Daveed', since: 1063 };
+    const before = JSON.stringify(current);
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle' } });
+    try {
+      const original = wrapper.text();
+      expect(original).toContain('The world has noticed you.');
+      expect(original).toContain('a favour is owed · a mercy is running · an exaction is being collected');
+      expect(original).toContain('Measured against the Maren who came before.');
+      expect(original).toContain('Daveed watches, and has since 1063.');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('The wider world is putting pressure on the house.');
+      expect(wrapper.text()).toContain('a favour is owed to the house · temporary help is in effect · extra costs are being collected');
+      expect(wrapper.get('.namesake').text()).toBe('Compared with the earlier Maren.');
+      expect(wrapper.get('.assize-explainer').text()).toBe('The Assize is the wider world helping a struggling house or putting pressure on one that is far ahead.');
+      expect(wrapper.get('.gauge-reading').text()).toBe('World pressure: against the house (0.40 of 1).');
+      expect(wrapper.text()).toContain('Highest reached · Hierophant, reached in 1114.');
+      expect(wrapper.text()).toContain('Daveed has watched over the house since 1063.');
+      expect(wrapper.get('.house-ledger').text()).toContain('252 crowns');
+      expect(wrapper.get('.ladder-measure').text()).toContain('power 42 of 100 · 3 books');
+      expect(JSON.stringify(current)).toBe(before);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+    } finally { wrapper.unmount(); }
+  });
+
+  it.each([
+    ['resents', 0.4, 'The world has noticed you.', 'The wider world is putting pressure on the house.', 'against the house'],
+    ['steadies', -0.4, 'The world is being gentle with you.', 'The wider world is helping the house recover.', 'in its favour'],
+    ['indifferent', 0, 'The world is not thinking about you.', 'The wider world is leaving the house alone.', 'neither way'],
+  ] as const)('retains the meaning of the %s world arm', async (arm, pressure, original, plain, lean) => {
+    const current = view();
+    current.assize = { ...current.assize, arm, pressure };
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle' } });
+    try {
+      expect(wrapper.text()).toContain(original);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain(plain);
+      expect(wrapper.get('.gauge-reading').text()).toBe(`World pressure: ${lean} (${pressure.toFixed(2)} of 1).`);
+    } finally { wrapper.unmount(); }
+  });
+
+  it.each([
+    [40, 'against the house', 'against the house'],
+    [41, 'holding, for now', 'evenly balanced for now'],
+    [59, 'holding, for now', 'evenly balanced for now'],
+    [60, "in the house's favour", "in the house's favour"],
+  ])('preserves the war reading at tide %i', async (tide, original, plain) => {
+    const current = view();
+    current.muster = { began: 1126, men: 1, maxMen: 10, officers: [], credit: 0, tide: Number(tide), positions: [] };
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle' } });
+    try {
+      expect(wrapper.text()).toContain(`1 man in the field, and the tide runs ${original}.`);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain(`1 man is fighting. The war is ${plain}.`);
+      await wrapper.setProps({ view: { ...current, muster: { ...current.muster!, men: 3 } } });
+      expect(wrapper.text()).toContain(`3 men are fighting. The war is ${plain}.`);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('preserves progressive reveal and omits unknown dates without changing the view', async () => {
+    const current = view();
+    current.guardian = { id: 'founder', name: 'Daveed' };
+    delete current.ascension.bestAt;
+    const wrapper = mount(Standing, { props: {
+      view: current, jump: null, saveStatus: 'idle', proseMode: 'plainenglish', showAssize: false, showLadder: false,
+    } });
+    try {
+      expect(wrapper.find('.assize-explainer').exists()).toBe(false);
+      expect(wrapper.find('.gauge').exists()).toBe(false);
+      expect(wrapper.find('.rung').exists()).toBe(false);
+      expect(wrapper.text()).toContain('Daveed watches over the house.');
+      expect(wrapper.text()).not.toContain('undefined');
+      await wrapper.setProps({ showLadder: true });
+      expect(wrapper.text()).toContain('Highest reached · Hierophant, reached earlier.');
+      await wrapper.setProps({ view: { ...current, ascension: { ...current.ascension, best: current.ascension.rung } } });
+      expect(wrapper.text()).not.toContain('Highest reached');
+    } finally { wrapper.unmount(); }
+  });
+
+  it('wires the current reader preference into the game header', () => {
+    const app = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
+    const mount = app.match(/<Standing\b[\s\S]*?\/>/)?.[0];
+    expect(mount).toContain(':prose-mode="accessibility.proseMode"');
   });
 });
 
