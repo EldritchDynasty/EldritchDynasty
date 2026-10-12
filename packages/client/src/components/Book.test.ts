@@ -142,9 +142,8 @@ describe('the volume', () => {
       await w.setProps({ houseName: 'A Different House' });
       callbacks[0]!(new Blob(['page'], { type: 'image/png' }));
       await flushPromises();
-      expect(download).toHaveBeenCalledExactlyOnceWith(
-        expect.any(Blob), 'gearithy-1042-1067.png',
-      );
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(download).toHaveBeenCalledWith(expect.any(Blob), 'gearithy-1042-1067.png');
       expect(drawn).not.toContain('A Different House');
     } finally {
       w.unmount();
