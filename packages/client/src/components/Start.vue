@@ -62,6 +62,8 @@ const resumeRefused = ref<string | null>(null);
 /** Only one host resume can run at a time; a slow response must not race a retry. */
 const resuming = ref(false);
 const libraryError = ref<string | null>(null);
+/** A slow host recovery must not overlap a second Library read. */
+const retryingLibrary = ref(false);
 const confirmingClearLibrary = ref(false);
 /** A single completed house should never disappear on the first Remove click. */
 const confirmingRemoveRun = ref<string | null>(null);
@@ -168,9 +170,14 @@ async function exportSave(slot: string): Promise<void> {
 }
 
 async function retryLibrary(): Promise<void> {
+  // Two host recovery reads could complete out of order and restore stale
+  // Library history. Refuse a second attempt until the first has settled.
+  if (retryingLibrary.value) return;
+  retryingLibrary.value = true;
   // The store keeps the Library unavailable on failure and exposes retry.
   // A rejected retry must not become an unhandled button-click Promise.
   try { await props.actions.retryLibrary(); } catch { /* Retry remains visible. */ }
+  finally { retryingLibrary.value = false; }
 }
 
 function requestClearLibrary(): void {
@@ -273,7 +280,7 @@ onMounted(() => { void refreshSaves(); });
     <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ resumeRefused }}</p>
     <div v-if="!libraryIsReady && libraryReadError" class="save-list-error" role="alert">
       <p class="rubric small">The Library of Houses could not be read. Its saved history has not been changed.</p>
-      <button class="quiet small" @click="retryLibrary()">Retry reading the Library</button>
+      <button class="quiet small" :disabled="retryingLibrary" @click="retryLibrary()">{{ retryingLibrary ? 'Retrying…' : 'Retry reading the Library' }}</button>
     </div>
 
     <section class="reading panel" aria-label="Reading settings">
