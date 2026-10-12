@@ -125,6 +125,7 @@ events:
     weight: 70
     tags: [tenants, trade, upkeep, hardship]
     purposes: [advance_clause, buy_patience, change_relationship]
+    conditions: { flag: no_carpenter_at_wick, is: false }
     slots:
       HEAD: { role: head }
     body: >-
