@@ -234,3 +234,98 @@ jobs:
           fi
 
           echo "PR #$PR_NUMBER is in the native merge queue (state=$state, position=$position)."
+
+  # GitHub may dequeue an otherwise green PR when an earlier merge-group
+  # advances main. That does not emit any of the PR/head events handled above.
+  # Recover once a NEW main push passes its own CI; never on "dequeued" itself,
+  # since a genuinely failing merge-group must not be retried in a loop.
+  reconcile-after-main:
+    name: re-admit ready PRs after main advances
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Mint merge-queue GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}
+          permission-merge-queues: write
+          permission-pull-requests: write
+          permission-contents: write
+
+      - name: Reconcile eligible PRs against the green main
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENQUEUE_TOKEN: ${{ steps.app-token.outputs.token }}
+          EXPECTED_MAIN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          # Ignore late workflow_run deliveries for a main head that is no
+          # longer current. Its successor will have its own push-CI handoff.
+          current_main="$(gh api "/repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          if [[ "$current_main" != "$EXPECTED_MAIN_SHA" ]]; then
+            echo "main moved from $EXPECTED_MAIN_SHA to $current_main; newer run owns reconciliation."
+            exit 0
+          fi
+
+          # Only an open, ready, same-repository PR with a CURRENT and green
+          # exact-head required check can re-enter. GitHub's merge_group still
+          # tests the actual rebased integration; this job cannot merge main.
+          numbers="$(gh api --paginate "/repos/$GITHUB_REPOSITORY/pulls?state=open&base=main&per_page=100" --jq '.[].number')"
+          failed=0
+          while IFS= read -r number; do
+            [[ -z "$number" ]] && continue
+            pr="$(gh api "/repos/$GITHUB_REPOSITORY/pulls/$number")"
+            if ! jq -e --arg repo "$GITHUB_REPOSITORY" '
+              .state == "open" and .draft == false
+              and .base.ref == "main"
+              and .head.repo.full_name == $repo
+              and .mergeable == true and .mergeable_state == "clean"
+            ' <<<"$pr" >/dev/null; then
+              echo "PR #$number is not currently safe to re-admit."
+              continue
+            fi
+
+            head="$(jq -r '.head.sha' <<<"$pr")"
+            node="$(jq -r '.node_id' <<<"$pr")"
+            required="$(gh api "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last | if . == null then "" elif .status == "completed" then (.conclusion // "") else "pending" end')"
+            if [[ "$required" != "success" || -z "$node" ]]; then
+              echo "PR #$number has no completed green exact-head CI required check."
+              continue
+            fi
+
+            # The base may advance during a scan; leave retries to the newer
+            # successful main run rather than admitting against stale proof.
+            if [[ "$(gh api "/repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')" != "$EXPECTED_MAIN_SHA" ]]; then
+              echo "main advanced during reconciliation; stopping."
+              break
+            fi
+
+            response="$(mktemp)"
+            if GH_TOKEN="$ENQUEUE_TOKEN" gh api graphql \
+              -f query='mutation($pullRequestId:ID!,$expectedHeadOid:GitObjectID!){enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid}){mergeQueueEntry{id position state}}}' \
+              -F pullRequestId="$node" \
+              -F expectedHeadOid="$head" >"$response" 2>&1; then
+              echo "PR #$number admitted to native queue for head $head."
+            elif grep -Eqi 'already (in|on) (the )?merge queue|already in the queue' "$response"; then
+              echo "PR #$number is already queued."
+            elif grep -Eq 'Required status check .*CI required.* is expected' "$response"; then
+              echo "PR #$number: GitHub no longer sees the required head check; leaving unqueued."
+            else
+              echo "::error::PR #$number queue recovery failed:"
+              cat "$response"
+              failed=1
+            fi
+            rm -f "$response"
+          done <<< "$numbers"
+          exit "$failed"
