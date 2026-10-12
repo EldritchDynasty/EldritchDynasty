@@ -2605,3 +2605,2453 @@ tales:
       that when the speaking stopped she counted the feet on the stair coming
       down, and that she has never been able to make the number come out the
       same way twice.
+
+proseVariants:
+  - address: "content:tales.yaml#tales[id=ballad_of_the_given_seal].teller"
+    of: "1f41566e4753b50a"
+    plainenglish: >-
+      the singers of the Eldritch household
+  - address: "content:tales.yaml#tales[id=ballad_of_the_given_seal].bias"
+    of: "b6517d7d18c9f791"
+    plainenglish: >-
+      longing
+  - address: "content:tales.yaml#tales[id=ballad_of_the_given_seal].text"
+    of: "c5e6f61d2d608db1"
+    plainenglish: >-
+      They say the Seal was lent. Lending is a word that leaves a door open, and the singers who
+      first put that word into a tune were paid, back then, by the same house whose door that
+      word opened. The Seal went west in a box a little too fine for it. A cousin carried it, no
+      older than the grief he carried beside it. It has not come home yet, though every third
+      generation swears it is on its way. The song has no ending. Each time, it just stops at
+      the point where someone alive still hopes.
+  - address: "content:tales.yaml#tales[id=west_house_ledger_1502].teller"
+    of: "806c09be10f6d5aa"
+    plainenglish: >-
+      the western hall's stewards
+  - address: "content:tales.yaml#tales[id=west_house_ledger_1502].bias"
+    of: "8a135648f5576ec4"
+    plainenglish: >-
+      sure it is owed
+  - address: "content:tales.yaml#tales[id=west_house_ledger_1502].text"
+    of: "e812fa8d95863569"
+    plainenglish: >-
+      Item: the Seal. This hall has held it since the year it was lawfully given to us, and a
+      gift, we note for whoever reads this after us, does not need renewing. The main house
+      calls the matter unsettled, because an unsettled matter might still be settled in its
+      favour. We do not call it unsettled. We call it closed. We have called it closed for four
+      generations, and we will keep calling it closed for as many more as it takes.
+  - address: "content:tales.yaml#tales[id=church_inquest_minute_1604].teller"
+    of: "7bb68c134efbc17f"
+    plainenglish: >-
+      the record-keepers of the Church of the Nine Quiet Names
+  - address: "content:tales.yaml#tales[id=church_inquest_minute_1604].bias"
+    of: "e57b8ac235635aae"
+    plainenglish: >-
+      distrustful
+  - address: "content:tales.yaml#tales[id=church_inquest_minute_1604].text"
+    of: "9505a3856eef4f81"
+    plainenglish: >-
+      Minutes of the ninth session: the Regalia was brought out for inspection. By the
+      registrars' own count it came to two pieces, where three had been sworn to. The house's
+      steward explained it as a long-standing loan to the west. This body does not accept that
+      explanation, but cannot disprove it either, because there is no third piece anywhere to
+      examine. We record the shortfall. We also record that a house able to count to three has
+      never yet miscounted by accident.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_thumb_sized_bottle].teller"
+    of: "780f3c3f8bb2486b"
+    plainenglish: >-
+      travelling singers on the low road
+  - address: "content:tales.yaml#tales[id=ballad_of_the_thumb_sized_bottle].bias"
+    of: "c41541ecea9bb9a0"
+    plainenglish: >-
+      jealous
+  - address: "content:tales.yaml#tales[id=ballad_of_the_thumb_sized_bottle].text"
+    of: "4f2030e6a9c5b5ea"
+    plainenglish: >-
+      The singers say there is a shop on a road nobody can find twice, and a woman in it who
+      sells forty years the way other women sell bread. The people who could afford that bread
+      never talk about its price. We could not afford it, so we made a song instead. A song
+      costs nothing and buys nothing, and on the whole that is the fairer trade. Sing it, and
+      grow old like everyone else. Someone has to.
+  - address: "content:tales.yaml#tales[id=a_scholars_footnote].teller"
+    of: "77a36a42ce305efe"
+    plainenglish: >-
+      an unnamed note-writer in House Ilm's library
+  - address: "content:tales.yaml#tales[id=a_scholars_footnote].bias"
+    of: "7025453785fe9a8b"
+    plainenglish: >-
+      scornful
+  - address: "content:tales.yaml#tales[id=a_scholars_footnote].text"
+    of: "65d887e04fab10a4"
+    plainenglish: >-
+      See above, "flask, three doses." I have looked into eleven claims like this, in eleven
+      different houses. Every time I found either an ordinary tonic sold at an extraordinary
+      price, or nothing sold at all, only remembered as if it had been. The reader is free to
+      believe the twelfth is different. I will not count it among my examples until it produces
+      something a physician could weigh.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_ninth_day].teller"
+    of: "5dd0a2ddf06ba689"
+    plainenglish: >-
+      the household's nursemaids
+  - address: "content:tales.yaml#tales[id=ballad_of_the_ninth_day].bias"
+    of: "7bd13c7a354a815e"
+    plainenglish: >-
+      afraid
+  - address: "content:tales.yaml#tales[id=ballad_of_the_ninth_day].text"
+    of: "70c355270e4cb2f3"
+    plainenglish: >-
+      Nine days in the water, and the water at room temperature. The nursemaids sing it softly
+      to boys too young to know the song is about them. It does not say what the ninth day
+      costs. It only says that a house pays it gladly, has always paid it gladly, and will keep
+      singing that it was glad long after all gladness has left the room.
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1188].teller"
+    of: "0c4600a263456df6"
+    plainenglish: >-
+      the death-clerks of House Marrow
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1188].bias"
+    of: "7006043a85b8183e"
+    plainenglish: >-
+      smug
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1188].text"
+    of: "3590db5c1a20d280"
+    plainenglish: >-
+      We hear that the Eldritch boy was put through the old water-rite and came out of it
+      changed. Those people call that an awakening. We deal honestly in the currency of the
+      dead, and we call it a debt taken out against a child too young to have signed for it. We
+      record the date. We expect to record another like it before the century is out, and we
+      usually do.
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1408].teller"
+    of: "b49945cfb5b208cb"
+    plainenglish: >-
+      House Marrow's chroniclers, writing later
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1408].bias"
+    of: "0afa6cf73914ff53"
+    plainenglish: >-
+      full of contempt
+  - address: "content:tales.yaml#tales[id=marrow_chronicle_fragment_1408].text"
+    of: "81c7862d4f5f3a79"
+    plainenglish: >-
+      The Eldritch seat changed hands again this year, sideways. That is the word that house
+      prefers to the one we would use. Our own dead keep better order than their living do. We
+      write this down without further comment, since the facts already say everything we could,
+      and say it more plainly.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_nine_days].teller"
+    of: "3783c4224b2d5046"
+    plainenglish: >-
+      the common people of nine burned towns
+  - address: "content:tales.yaml#tales[id=ballad_of_the_nine_days].bias"
+    of: "997b13babe706bfe"
+    plainenglish: >-
+      deeply respectful
+  - address: "content:tales.yaml#tales[id=ballad_of_the_nine_days].text"
+    of: "9079edbcc4348180"
+    plainenglish: >-
+      For nine days the fire moved on, never resting, and no one ever outran it. The towns it
+      passed through have given it nine names, one for each day, though no two singers agree on
+      the order. It is sung with respect now, the way ruin is sung once enough years have passed
+      that nobody alive lost anything in it. And in the last verse, every time, the one house
+      left still holding books is named, but not thanked. The singers have never quite decided
+      which of the two the house deserved.
+  - address: "content:tales.yaml#tales[id=ilm_lament_for_the_burned].teller"
+    of: "c9338140d4695af4"
+    plainenglish: >-
+      House Ilm's scholars
+  - address: "content:tales.yaml#tales[id=ilm_lament_for_the_burned].bias"
+    of: "3fc0acb0949d9dec"
+    plainenglish: >-
+      mourning
+  - address: "content:tales.yaml#tales[id=ilm_lament_for_the_burned].text"
+    of: "d243fa2b63cd1667"
+    plainenglish: >-
+      We once had a library, the lament goes, and a library is a kind of family, and ours is now
+      ash on nine roads we no longer walk. Somewhere a single house has kept whole what the fire
+      could not reach, and it calls that a rescue. We lost what it did not, and we have not yet
+      found a word for our grief small enough to argue with. We only have the rhyme. We teach it
+      to our children before we teach them to read, because we have nothing left to teach them
+      to read from.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_northern_house].teller"
+    of: "663c893f35553323"
+    plainenglish: >-
+      travelling singers who never found out the truth
+  - address: "content:tales.yaml#tales[id=ballad_of_the_northern_house].bias"
+    of: "7d0b0e81c63cf4fd"
+    plainenglish: >-
+      easily fooled
+  - address: "content:tales.yaml#tales[id=ballad_of_the_northern_house].text"
+    of: "949fbcfdcc7e03e9"
+    plainenglish: >-
+      The song says she went north, to a house with a kinder climate and a better name, and
+      married well. The singers who carry the tune from village to village have never once been
+      asked to name the house or the husband, because a good story does not survive being
+      checked. Now, of all places, it is sung at weddings, as if it were an ending and not a
+      door nobody has ever seen opened from the other side.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_second_table].teller"
+    of: "ad31c443c29fdbe7"
+    plainenglish: >-
+      the smaller hall's own fireside singers
+  - address: "content:tales.yaml#tales[id=ballad_of_the_second_table].bias"
+    of: "8ec274c9dd5839bd"
+    plainenglish: >-
+      full of pride
+  - address: "content:tales.yaml#tales[id=ballad_of_the_second_table].text"
+    of: "d88e70360d9cb092"
+    plainenglish: >-
+      We keep our own accounts, and we keep them well, the song goes. It is sung better in the
+      smaller hall than the bigger one has ever managed to notice, and being noticed was never
+      really why we kept them. Let the big house count its own books slowly. Ours have always
+      balanced. A family that balances its books is a family the road does not forget, no matter
+      which table it sits at when the meat is passed round.
+  - address: "content:tales.yaml#tales[id=hall_book_of_the_lesser_house].teller"
+    of: "19dfe8e07c308374"
+    plainenglish: >-
+      the clerk of the smaller hall
+  - address: "content:tales.yaml#tales[id=hall_book_of_the_lesser_house].bias"
+    of: "b4384a61867f38e5"
+    plainenglish: >-
+      bitter
+  - address: "content:tales.yaml#tales[id=hall_book_of_the_lesser_house].text"
+    of: "39dd711c8f90a9e0"
+    plainenglish: >-
+      Delivered this year: a clean copy of all our accounts, sent to the main table without
+      being asked and without thanks, as is now the custom. The main house calls this a gift. We
+      call it proof, offered again because it seems the last eleven times were not enough, that
+      a smaller hall can keep better order than the hall that never has to.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_river_road].teller"
+    of: "db7a5bd44d6d63d8"
+    plainenglish: >-
+      the common people who sheltered behind the gate
+  - address: "content:tales.yaml#tales[id=ballad_of_the_river_road].bias"
+    of: "5eda73882b125edc"
+    plainenglish: >-
+      full of admiration
+  - address: "content:tales.yaml#tales[id=ballad_of_the_river_road].text"
+    of: "72b5095484850190"
+    plainenglish: >-
+      The song remembers that they came up the river road at night, sure of themselves, like men
+      who had done it before and never been stopped. That once, they were stopped, by a man who
+      stood at the gate, because standing at the gate was, it seems, still something the old
+      houses did. The common people sing it now the way they sing anything that happened to
+      someone else and, this once, turned out to be worth standing for.
+  - address: "content:tales.yaml#tales[id=cawdry_garrison_log_1218].teller"
+    of: "ecdd4eb977ae3e4d"
+    plainenglish: >-
+      the keeper of the garrison log at Cawdry
+  - address: "content:tales.yaml#tales[id=cawdry_garrison_log_1218].bias"
+    of: "e1957acfd44c45bb"
+    plainenglish: >-
+      grudging
+  - address: "content:tales.yaml#tales[id=cawdry_garrison_log_1218].text"
+    of: "59dec2e2be0480ae"
+    plainenglish: >-
+      Arrived two days after we were needed, as usual, and found the gate already held. The
+      house's own account gives itself all the credit for that. We would point out that a
+      garrison two days away is a garrison that was, in fact, coming, and that arriving second
+      is not the same as never arriving. That difference seems worth keeping on record
+      somewhere, even if only here.
+  - address: "content:tales.yaml#tales[id=ballad_of_the_empty_chair].teller"
+    of: "608c1c7932f2d13d"
+    plainenglish: >-
+      the house's own singers, singing softly
+  - address: "content:tales.yaml#tales[id=ballad_of_the_empty_chair].bias"
+    of: "7b0dd2e43808b7f0"
+    plainenglish: >-
+      ill at ease
+  - address: "content:tales.yaml#tales[id=ballad_of_the_empty_chair].text"
+    of: "6637236db5cb3231"
+    plainenglish: >-
+      The singers say, quietly, the way you say something when the room itself might be
+      listening, that a chair is kept at the head of the table that nobody alive sits in. The
+      Head himself does not sit in it either, in the years when the chair has reason to disagree
+      with him. We do not say who is in it. In all the versions of this song, we have never once
+      said who is in it. Every version agrees on that, and that is the part that stops us
+      calling it just a song.
+  - address: "content:tales.yaml#tales[id=cawdry_clerks_endorsement].teller"
+    of: "2ca8233a9e29fefe"
+    plainenglish: >-
+      a clerk at the Warden's record office in Cawdry
+  - address: "content:tales.yaml#tales[id=cawdry_clerks_endorsement].bias"
+    of: "a833d5c2f92ec936"
+    plainenglish: >-
+      businesslike
+  - address: "content:tales.yaml#tales[id=cawdry_clerks_endorsement].text"
+    of: "1d6ee6b6bf35cd92"
+    plainenglish: >-
+      Received from that house: eleven full years, in one handwriting all the way through, with
+      the dates ruled in the margin and each entry made close to the event. This office does not
+      often see that, and does not expect it. Copies like this are accepted as read. I add a
+      note, because a note costs nothing and may one day cost someone else a great deal: a book
+      made well is a book made by a man who means it to be believed.
+  - address: "content:tales.yaml#tales[id=wick_alehouse_on_the_book].teller"
+    of: "c985cccd0a6d9a91"
+    plainenglish: >-
+      the alehouse at Wick, which means nobody and everybody
+  - address: "content:tales.yaml#tales[id=wick_alehouse_on_the_book].bias"
+    of: "0ab99a96e9751ada"
+    plainenglish: >-
+      in the know
+  - address: "content:tales.yaml#tales[id=wick_alehouse_on_the_book].text"
+    of: "c228e30f4b18c69b"
+    plainenglish: >-
+      Eleven years, and every one of them fair. The fair ones are the trouble, because a man who
+      writes eleven fair years has had eleven years to decide what fair means. They sent it up
+      to Cawdry in a box. Ask the carter what the box weighed on the way there and what it
+      weighed on the way back. He will tell you it was the same, and he will tell you in a way
+      that makes it plain he has been asked before.
+  - address: "content:tales.yaml#tales[id=bramme_chapter_house_note].teller"
+    of: "9a48363ab4178b2e"
+    plainenglish: >-
+      the daughter of the cataloguer at the Bramme chapter house
+  - address: "content:tales.yaml#tales[id=bramme_chapter_house_note].bias"
+    of: "d4521e02a472bf16"
+    plainenglish: >-
+      on the defensive
+  - address: "content:tales.yaml#tales[id=bramme_chapter_house_note].text"
+    of: "ec1898aa669d3796"
+    plainenglish: >-
+      My mother made that index in her own time, on paper she paid for, in a house that let her
+      go in a lean year without a quarter's wages and without a word at the gate. Copying is not
+      stealing. The law is perfectly clear, and so is the chapter house, and anyone who wants to
+      say otherwise can come to Bramme and say it here. We have never sold anything of theirs.
+      We have sold something of hers.
+  - address: "content:tales.yaml#tales[id=the_booksellers_list_at_cawdry].teller"
+    of: "fb9983300f933d6c"
+    plainenglish: >-
+      the bookseller at Cawdry, in his own catalogue
+  - address: "content:tales.yaml#tales[id=the_booksellers_list_at_cawdry].bias"
+    of: "bc341fa357c52c4f"
+    plainenglish: >-
+      out to sell
+  - address: "content:tales.yaml#tales[id=the_booksellers_list_at_cawdry].text"
+    of: "016a3134837ce058"
+    plainenglish: >-
+      Item forty-one. Eleven quires, all in one handwriting: an index of a gentleman's library
+      in the Nethering, with a chest of sermons. Nine crowns for the lot. The handwriting is
+      good, and the library, judging by what is listed in it, is a great deal better than the
+      gentleman. I say no more than that, because I am a tradesman and not a lawyer.
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_item_nine].teller"
+    of: "69d891deb3a28122"
+    plainenglish: >-
+      the Warden's clerk at the record office in Cawdry
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_item_nine].bias"
+    of: "801711c25fc0908e"
+    plainenglish: >-
+      by the book
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_item_nine].text"
+    of: "e528d052f500ff1e"
+    plainenglish: >-
+      Item nine, entered as read: an index of a library in the Nethering, brought in to date a
+      boundary and accepted for that purpose only. Whether it should be accepted for any other
+      purpose is not a question this office answers, and nobody asked it. It is entered. It
+      stays entered. That is all a record office is, and all it is for.
+  - address: "content:tales.yaml#tales[id=the_advocates_dinner_story].teller"
+    of: "61c0ebddb8005a01"
+    plainenglish: >-
+      a Cawdry lawyer, after dinner, telling it for the fourth time
+  - address: "content:tales.yaml#tales[id=the_advocates_dinner_story].bias"
+    of: "f745ccb293912576"
+    plainenglish: >-
+      entertained
+  - address: "content:tales.yaml#tales[id=the_advocates_dinner_story].text"
+    of: "77fb3b3270035b26"
+    plainenglish: >-
+      So I am reading out — a weir, gentlemen, a weir, nine years of it — and I read out where
+      some box or other is kept in some cellar or other, just for the date. And at the back of
+      that room there is a man who has come forty miles in the rain, and I watch him hear it. He
+      does not move. That is how you know. A man who does not move when you read out his own
+      cellar has a very good reason not to, and I have dined out on that reason for eleven years
+      without ever once having to say what it is.
+  - address: "content:tales.yaml#tales[id=the_song_of_the_two_hands].teller"
+    of: "93cd8a2cdd0765b0"
+    plainenglish: >-
+      the household singers, and after them everyone
+  - address: "content:tales.yaml#tales[id=the_song_of_the_two_hands].bias"
+    of: "5eda73882b125edc"
+    plainenglish: >-
+      full of admiration
+  - address: "content:tales.yaml#tales[id=the_song_of_the_two_hands].text"
+    of: "edd02e0bc18043c7"
+    plainenglish: >-
+      They sing that it kept going without anyone working at it, which is true, and that the
+      hall knew before the hand did, which is the kind of thing people sing rather than know.
+      The middle verses are all about the eleven good years: the arguments won, the winter
+      nobody starved in, the letter that came back from Caster in nine days instead of thirty.
+      The song has no last verse. It was made while the eleven years were still going on, and
+      nobody has ever been willing to finish it. When the room reaches the place where the
+      ending should be, everyone simply stops together and moves on to another song, and they
+      have done this for two hundred years.
+  - address: "content:tales.yaml#tales[id=the_four_lines_of_that_night].teller"
+    of: "bb2d8a534f1a1607"
+    plainenglish: >-
+      the house's own book, written by someone who signed and dated it
+  - address: "content:tales.yaml#tales[id=the_four_lines_of_that_night].bias"
+    of: "45c7a694aa465c18"
+    plainenglish: >-
+      holding back
+  - address: "content:tales.yaml#tales[id=the_four_lines_of_that_night].text"
+    of: "70f52f453a7dc829"
+    plainenglish: >-
+      Item: the Ring was on the hand of one of this blood on the eve of the Greening. Item: it
+      was taken off the same night. Item: it was taken off on the Head's orders and on no one
+      else's authority. Item: this is written down so that it will be known to have happened.
+      There is no fifth line. Whoever wrote the four had a whole long night to write a fifth,
+      and knew what a book is for, and did not.
+  - address: "content:tales.yaml#tales[id=ilm_note_on_the_nethering_rod].teller"
+    of: "54db9b71f0bb01fd"
+    plainenglish: >-
+      a lecturer at the Colleges, writing to House Ilm
+  - address: "content:tales.yaml#tales[id=ilm_note_on_the_nethering_rod].bias"
+    of: "7025453785fe9a8b"
+    plainenglish: >-
+      scornful
+  - address: "content:tales.yaml#tales[id=ilm_note_on_the_nethering_rod].text"
+    of: "f8dbd9ffcf8f8803"
+    plainenglish: >-
+      You ask what I think of the Nethering rod. I think of it what I think of every object a
+      family from the provinces has kept for four hundred years without ever letting a properly
+      qualified person look at it: that they have measured something, that they have measured it
+      honestly, and that they have no framework at all in which to have measured it correctly.
+      Two of the blood in the room. It is very nearly good work. I would give a great deal to
+      know what else was in that room, and they will not tell me, and I do not think it has
+      occurred to them to wonder.
+  - address: "content:tales.yaml#tales[id=the_household_rule_as_taught].teller"
+    of: "f8b74d7c2ad76c80"
+    plainenglish: >-
+      whoever teaches the children that year
+  - address: "content:tales.yaml#tales[id=the_household_rule_as_taught].bias"
+    of: "3f55c869668ea4cd"
+    plainenglish: >-
+      sure
+  - address: "content:tales.yaml#tales[id=the_household_rule_as_taught].text"
+    of: "8fbf4c03ba248a9f"
+    plainenglish: >-
+      Two in the room and it answers, one in the room and it sleeps. That is the whole of it. It
+      is taught before the grates, before counting, before the names of the tenant farms. It is
+      taught in exactly those words and no others, because a rule that gets improved is a rule
+      that gets lost. Some children in this house could say it before they could say the name of
+      the river. No one teaching it has ever been asked how it is known, and no one teaching it
+      has ever needed to be told.
+  - address: "content:tales.yaml#tales[id=advocates_opinion_on_the_half_sheets].teller"
+    of: "f2d47c284ea167e4"
+    plainenglish: >-
+      a Cawdry lawyer who reads Old Ambric, at two marks a day
+  - address: "content:tales.yaml#tales[id=advocates_opinion_on_the_half_sheets].bias"
+    of: "a833d5c2f92ec936"
+    plainenglish: >-
+      businesslike
+  - address: "content:tales.yaml#tales[id=advocates_opinion_on_the_half_sheets].text"
+    of: "5a82c1dab1cd6966"
+    plainenglish: >-
+      Both readings are good. That is my whole opinion, not the start of one, and I will not be
+      drawn any further for any fee. I have seen this kind of document twice before. Both were
+      older than this house, and neither was in a language I would swear to. If it were a lease,
+      I would tell them to go back to the other party and ask. I did tell them so. And I have
+      thought about how the room went afterwards rather more often than I would like.
+  - address: "content:tales.yaml#tales[id=the_house_on_its_own_second_obligation].teller"
+    of: "b3bb0b310378ef95"
+    plainenglish: >-
+      the Eldritch House, writing about itself in its own book
+  - address: "content:tales.yaml#tales[id=the_house_on_its_own_second_obligation].bias"
+    of: "30fc573a7201f016"
+    plainenglish: >-
+      untroubled
+  - address: "content:tales.yaml#tales[id=the_house_on_its_own_second_obligation].text"
+    of: "a3285b91ceb3ba35"
+    plainenglish: >-
+      The second obligation is written in the founder's own hand. It has been kept without a
+      break since the year of the signing, in the way set out below, and how it is kept has
+      never been in doubt in this house. Four generations have kept it that way. In an uncertain
+      business, it is a great comfort to the family to have one part that is plain. The sentence
+      saying so has been copied forward, word for word, by every chronicler this house has
+      employed since the year it was written.
+  - address: "content:tales.yaml#tales[id=wick_on_the_afternoon_the_dogs_went_out].teller"
+    of: "cec4d56e068b16a2"
+    plainenglish: >-
+      Wick, which heard it from a carter, who heard it from a girl at the gate
+  - address: "content:tales.yaml#tales[id=wick_on_the_afternoon_the_dogs_went_out].bias"
+    of: "293e41c78fde7fa3"
+    plainenglish: >-
+      scared
+  - address: "content:tales.yaml#tales[id=wick_on_the_afternoon_the_dogs_went_out].text"
+    of: "48f8727b0cde56cf"
+    plainenglish: >-
+      The dogs went out and stood in the rain with their backs to the house. That is the part
+      everyone agrees on, and it is the part nobody in the village will say twice in one
+      evening. There was a smell of burning in a room with no fire in it. There was a paper on a
+      table that turned the colour of the table. And the rhyme has a fourth line, which changes
+      depending on who is saying it. It has been four different things in sixty years, and every
+      version is about something the family did long ago and could not now undo.
+  - address: "content:tales.yaml#tales[id=the_heads_sentence_as_it_is_taught].teller"
+    of: "1dd245d0c79c456c"
+    plainenglish: >-
+      each Head of the house to the next, on the day of the seal
+  - address: "content:tales.yaml#tales[id=the_heads_sentence_as_it_is_taught].bias"
+    of: "1c61800c16268cd0"
+    plainenglish: >-
+      facing it squarely
+  - address: "content:tales.yaml#tales[id=the_heads_sentence_as_it_is_taught].text"
+    of: "9bf708657b30f189"
+    plainenglish: >-
+      You are shown the sheet, and you are told this and nothing else: that on an ordinary
+      afternoon, four hundred years after it was written, its ink turned the colour of its own
+      paper; that the other sheet did not; and that nobody in this family knows what that meant
+      or has ever been able to find out. Nine Heads have been told it. Not one of them has
+      improved the sentence, though several liked improving sentences. The reason is that the
+      sentence stops exactly where the knowledge stops, and everyone who has heard it has
+      understood why that matters.
+  - address: "content:tales.yaml#tales[id=corran_register_entry].teller"
+    of: "e30ce22a89ffb046"
+    plainenglish: >-
+      the proctors' register at the Colleges in Corran
+  - address: "content:tales.yaml#tales[id=corran_register_entry].bias"
+    of: "801711c25fc0908e"
+    plainenglish: >-
+      by the book
+  - address: "content:tales.yaml#tales[id=corran_register_entry].text"
+    of: "6e95b9736a2ba817"
+    plainenglish: >-
+      Admitted in the fourth year, Terra, by examination. Removed in the ninth, no reason
+      recorded, and not in the registrar's usual handwriting. This house's practice is to record
+      a reason, and that practice has held for two hundred years without exception before this
+      line and without exception after it. Anyone who wants to make something of that is welcome
+      to. The Colleges do not keep track of where anyone goes, only of what they were taught
+      while they were here.
+  - address: "content:tales.yaml#tales[id=wick_on_the_man_who_came_back].teller"
+    of: "0d3b74064f57d3f2"
+    plainenglish: >-
+      Wick, and in particular the girl who was on the gate that afternoon
+  - address: "content:tales.yaml#tales[id=wick_on_the_man_who_came_back].bias"
+    of: "fcde51659dc04091"
+    plainenglish: >-
+      not convinced
+  - address: "content:tales.yaml#tales[id=wick_on_the_man_who_came_back].text"
+    of: "b8ec577bfdab619f"
+    plainenglish: >-
+      He knew the bad step on the cellar stairs, and he knew about the second cup, and he called
+      the west passage by the name only the family uses. Everyone up at the house made a great
+      fuss of all three. He did not know the dog. That dog had been in the yard eleven years and
+      went to everybody, and it went to him, and he held his hand out at the wrong height for it
+      — the height you hold your hand out for a dog you have only been told about. That is all I
+      saw, and nobody from that house has ever once asked me about it.
+  - address: "content:tales.yaml#tales[id=the_stave_of_the_high_grazing].teller"
+    of: "4c2be05b179e5357"
+    plainenglish: >-
+      the hill farmers who graze the high Nethering
+  - address: "content:tales.yaml#tales[id=the_stave_of_the_high_grazing].bias"
+    of: "9c7e2568661fdc34"
+    plainenglish: >-
+      robbed of what was theirs
+  - address: "content:tales.yaml#tales[id=the_stave_of_the_high_grazing].text"
+    of: "ee618bb1f5bf3c1d"
+    plainenglish: >-
+      They had the hill before the province had a name for it, and they will tell you so any
+      evening you are foolish enough to buy the beer. Their grandmothers walked up it at
+      Greening when the road below was a track and the hall below that was a heap of good
+      intentions, and in all those hundreds of summers nobody thought to write it down, because
+      a thing everybody knows does not need a pen. That sentence is the song's whole argument.
+      The song is wrong, and every man singing it knows exactly how wrong, and he sings it
+      anyway. It ends on the word paper. It has always ended on the word paper, and it is sung
+      more slowly there.
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_the_tops].teller"
+    of: "c33054c925e1dfcd"
+    plainenglish: >-
+      the clerks of the Warden's court at Cawdry
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_the_tops].bias"
+    of: "801711c25fc0908e"
+    plainenglish: >-
+      by the book
+  - address: "content:tales.yaml#tales[id=cawdry_assize_roll_the_tops].text"
+    of: "cce10a799efb69e5"
+    plainenglish: >-
+      Entered this session: the high grazing above Ardwen, about four hundred acres, to the
+      house that came forward and produced its proof. Nothing stands against this entry: no
+      counter-claim, no document, no witness statement, and no one answering when called. The
+      parties said to have an interest were up on the hill itself at that time of year, and so,
+      in this office's view, were content. It is not a roll's job to ask why a man is absent. It
+      is a roll's job to record that he was.
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_note].teller"
+    of: "745e90fa66f5e02e"
+    plainenglish: >-
+      the Assembly's heralds at Caster
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_note].bias"
+    of: "acef21aa4499e846"
+    plainenglish: >-
+      precise to a fault
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_note].text"
+    of: "b1857ac0b45b7eec"
+    plainenglish: >-
+      On the Nethering house at Ardwen: we were given four generations of them, and the acreage,
+      freely and without dodging, and we asked twice for the older line of descent and it was
+      not produced. We do not write that a thing is false. We write that it was not produced. We
+      write it in the margin, where every herald after us will find it in the normal course of
+      copying, and where none of them can leave it out without leaving something out himself.
+  - address: "content:tales.yaml#tales[id=ardwen_stave_of_the_long_descent].teller"
+    of: "1f41566e4753b50a"
+    plainenglish: >-
+      the singers of the Eldritch household
+  - address: "content:tales.yaml#tales[id=ardwen_stave_of_the_long_descent].bias"
+    of: "7fed667d6c5a9b89"
+    plainenglish: >-
+      bragging
+  - address: "content:tales.yaml#tales[id=ardwen_stave_of_the_long_descent].text"
+    of: "2e18b29dccf49931"
+    plainenglish: >-
+      Sing of the man from Caster, who came nine days by cart and left with a heavy satchel. He
+      was walked across the whole chapel floor, and he read out the old stones where the carving
+      has worn soft, and he wrote down every generation of them from the founding to the present
+      one, and wrote it down admiringly. There is no verse in it about a question asked twice.
+      There never was a verse about a question asked twice, and any man who says he remembers
+      one has mixed this house up with a smaller one.
+  - address: "content:tales.yaml#tales[id=the_wick_rhyme_of_the_shut_gate].teller"
+    of: "b9cac250394e40bc"
+    plainenglish: >-
+      the children of Wick, and the mothers who taught it to them
+  - address: "content:tales.yaml#tales[id=the_wick_rhyme_of_the_shut_gate].bias"
+    of: "293e41c78fde7fa3"
+    plainenglish: >-
+      scared
+  - address: "content:tales.yaml#tales[id=the_wick_rhyme_of_the_shut_gate].text"
+    of: "8b2e45a4ab0c06c0"
+    plainenglish: >-
+      The gate was shut but not locked, and the man was inside it anyway; count to eleven and do
+      not go up; the dogs went out at first light and would not go back in till noon, and dogs
+      are the only thing in this parish that has never once been wrong about that house. It is
+      four lines and a skipping step, and it will outlast every document named in this file.
+      Nobody at Wick believes it. Nobody at Wick lets a child go up that hill at dusk either,
+      and those two facts have sat happily side by side for four hundred years.
+  - address: "content:tales.yaml#tales[id=the_cawdry_view_minute].teller"
+    of: "47919e2660bb7cea"
+    plainenglish: >-
+      the Warden's officer who views dead bodies
+  - address: "content:tales.yaml#tales[id=the_cawdry_view_minute].bias"
+    of: "a73bca84b86e4100"
+    plainenglish: >-
+      not curious
+  - address: "content:tales.yaml#tales[id=the_cawdry_view_minute].text"
+    of: "539d7b8a153ff1d6"
+    plainenglish: >-
+      View of the body held on the fourth day. Death by accident, from a fall. The injuries were
+      consistent throughout, and the dead man was known to the household and employed by it.
+      Questions were asked about the gate and were answered. Questions were asked about the
+      dogs, and the answers do not matter to a view, since this office deals with the cause of a
+      death and not the mood of a dog. The fee was eleven marks. The matter is closed, and was
+      closed before the cart had finished turning in the yard.
+  - address: "content:tales.yaml#tales[id=the_bramme_masons_account].teller"
+    of: "4243ba8aec6005ee"
+    plainenglish: >-
+      the masons' guild at Bramme, in its own book
+  - address: "content:tales.yaml#tales[id=the_bramme_masons_account].bias"
+    of: "b811b72ff822dbcb"
+    plainenglish: >-
+      wronged as craftsmen
+  - address: "content:tales.yaml#tales[id=the_bramme_masons_account].text"
+    of: "e87f2a4601274882"
+    plainenglish: >-
+      A note for whichever of our men is next sent up to that chapel: under the third slab from
+      the north wall lies a second, older stone. It was cut before the carving we were asked to
+      match, and it has a name on it. The house did not ask what the name was. We write this
+      down because a man of this guild was paid eighteen crowns to lift a floor, and was not
+      paid, did not expect to be paid, and was not thanked, for being the only person in four
+      hundred years to read what was under it.
+  - address: "content:tales.yaml#tales[id=the_ardwen_chapel_register].teller"
+    of: "9f0145514cfb21fd"
+    plainenglish: >-
+      the keeper of the parish register at Wick
+  - address: "content:tales.yaml#tales[id=the_ardwen_chapel_register].bias"
+    of: "a8d355fef6471ab2"
+    plainenglish: >-
+      comforting
+  - address: "content:tales.yaml#tales[id=the_ardwen_chapel_register].text"
+    of: "5b0a8b0d08e3a7a1"
+    plainenglish: >-
+      The chapel at Ardwen was opened during ordinary repairs and its stones were reset along
+      the north wall. All of them were read and all of them were entered, and all of them agree
+      with this register, which has been kept here without a break since the parish became a
+      parish. Where the carving has worn past reading, we have entered what the line of descent
+      requires. That is the practice everywhere in this province, and the only practice open to
+      a man with a worn-down stone and a duty to write something.
+  - address: "content:tales.yaml#tales[id=the_greening_and_the_slaughter].teller"
+    of: "1f41566e4753b50a"
+    plainenglish: >-
+      the singers of the Eldritch household
+  - address: "content:tales.yaml#tales[id=the_greening_and_the_slaughter].bias"
+    of: "8ec274c9dd5839bd"
+    plainenglish: >-
+      full of pride
+  - address: "content:tales.yaml#tales[id=the_greening_and_the_slaughter].text"
+    of: "2b104f7ceaa8eac0"
+    plainenglish: >-
+      The singers say the hall was given something twice in the same year: once when the ground
+      was opening, and once when the animals were coming down off the hill. The song turns this
+      into a doubling, a favour, and a sign that the house's long patience had at last been
+      noticed. It does not say noticed by what. That is not the song's business, and the singers
+      who made it were fed at the low table by the family whose year they were turning into a
+      favour.
+  - address: "content:tales.yaml#tales[id=ardwen_archivists_note_on_the_year].teller"
+    of: "92c9f96583b2b0c9"
+    plainenglish: >-
+      the Eldritch hall's archivist
+  - address: "content:tales.yaml#tales[id=ardwen_archivists_note_on_the_year].bias"
+    of: "d4521e02a472bf16"
+    plainenglish: >-
+      on the defensive
+  - address: "content:tales.yaml#tales[id=ardwen_archivists_note_on_the_year].text"
+    of: "9185b03a3fea48ce"
+    plainenglish: >-
+      Searched: four hundred and eleven years of entries, in eleven days, twice. Found: no other
+      case of two in one year, in this house or in any house whose records we hold. The next
+      note is the important one, and I write it plainly because I do not want whoever comes
+      after me to quote me otherwise: a gap in the entries is not a gap in the world. It is only
+      a gap in the entries, and this house has left things out before.
+  - address: "content:tales.yaml#tales[id=the_smiths_account_of_the_edge].teller"
+    of: "73dd0aacb43be540"
+    plainenglish: >-
+      the smith at Wick, and his sons after him
+  - address: "content:tales.yaml#tales[id=the_smiths_account_of_the_edge].bias"
+    of: "3f55c869668ea4cd"
+    plainenglish: >-
+      sure
+  - address: "content:tales.yaml#tales[id=the_smiths_account_of_the_edge].text"
+    of: "ad430b4613d9756a"
+    plainenglish: >-
+      Leave it one night in the house on the hill and it comes back to you as soft as a lead
+      spoon. The smiths of Wick have a rhyme about it, four lines long. It has been four lines
+      long for a hundred years, and none of those lines has ever named the family. It does not
+      need to. Everyone who sings it knows which house is on which hill, and every smith in the
+      Nethering has been told by his father to take the work, charge for it, and ask nothing at
+      all.
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_damp].teller"
+    of: "c8257d61da61aafd"
+    plainenglish: >-
+      the Eldritch hall's stewards
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_damp].bias"
+    of: "ce4751a24fedc21e"
+    plainenglish: >-
+      efficient
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_damp].text"
+    of: "94c23ce88737d12c"
+    plainenglish: >-
+      Item: the east chamber, found damp at the lintel and along the north course. The fault is
+      in the roof lead above it and has been there a long time. Item: rebuilt for thirty-one
+      crowns, mason and carpenter, six tendays. Item: the trouble the village smith complained
+      of stopped when the damp did, as this office expected. It is entered here so that anyone
+      who looks can find it, which is all an entry is for.
+  - address: "content:tales.yaml#tales[id=what_the_dairymaids_counted].teller"
+    of: "b14a6e0e0630890a"
+    plainenglish: >-
+      the milkmaids of Ardwen and the women of Wick
+  - address: "content:tales.yaml#tales[id=what_the_dairymaids_counted].bias"
+    of: "0ab99a96e9751ada"
+    plainenglish: >-
+      in the know
+  - address: "content:tales.yaml#tales[id=what_the_dairymaids_counted].text"
+    of: "dc607c2751164d13"
+    plainenglish: >-
+      They counted the days the milk turned sweet, and they counted who was in the dairy on each
+      of those days. The count was never written down and was never wrong. The charm they made
+      from it is still said over a churn today, by women who could not tell you whose daughter
+      it was about. Say it and the milk keeps. That is all the charm claims, and all it has ever
+      claimed. The claim beneath it — that there is something a churn needs to be kept safe from
+      — is not in the words at all.
+  - address: "content:tales.yaml#tales[id=the_midwifes_written_note].teller"
+    of: "94ee4656baab483a"
+    plainenglish: >-
+      the household midwife, writing because the Head asked
+  - address: "content:tales.yaml#tales[id=the_midwifes_written_note].bias"
+    of: "244cda274ef9a973"
+    plainenglish: >-
+      cautious
+  - address: "content:tales.yaml#tales[id=the_midwifes_written_note].text"
+    of: "2177359d66b264f1"
+    plainenglish: >-
+      Examined over four days: a girl of her age, healthy, ordinary in every way. I write
+      ordinary because it is the true word, not because I was asked to. What I say beyond this
+      note I say once and do not write down: my trade has never had an exception, and I am not
+      offering one here. Watch her sons. I have said that about four girls and been right about
+      three, and the fourth is why I put none of it on the page.
+  - address: "content:tales.yaml#tales[id=the_ninth_day_and_the_tenth].teller"
+    of: "096623a645c40c42"
+    plainenglish: >-
+      a troupe of actors at the Bramme fair
+  - address: "content:tales.yaml#tales[id=the_ninth_day_and_the_tenth].bias"
+    of: "10ec1cedb5221b29"
+    plainenglish: >-
+      making fun
+  - address: "content:tales.yaml#tales[id=the_ninth_day_and_the_tenth].text"
+    of: "3dc0aab67d45a642"
+    plainenglish: >-
+      The play lasts a quarter of an hour and has three parts: a lord, a steward and a chair.
+      The joke, which the fair has laughed at for sixty years, is that the lord is right about
+      everything for nine speeches and wrong about one thing in the tenth, and the audience is
+      never told which. It is set in no county and names no house. It has been performed at
+      Bramme, at Cawdry, and once, through a mistake nobody has ever fully explained, at Ardwen.
+  - address: "content:tales.yaml#tales[id=the_hall_servants_telling].teller"
+    of: "c38477869500c302"
+    plainenglish: >-
+      nine members of the household who were in the long room
+  - address: "content:tales.yaml#tales[id=the_hall_servants_telling].bias"
+    of: "fdea2a01b11f4065"
+    plainenglish: >-
+      badly shaken
+  - address: "content:tales.yaml#tales[id=the_hall_servants_telling].text"
+    of: "bbaba97608c1d4ca"
+    plainenglish: >-
+      Nine of them were standing there, and nine versions came out of that afternoon. No two put
+      the seal in the same hand, and every one agrees that he did not argue. That is the part
+      they all keep. He did not argue. He sat down afterwards, and he was at the table that
+      evening as if the room had been about someone else. The ones who told it longest were the
+      ones who had stood nearest.
+  - address: "content:tales.yaml#tales[id=what_the_carters_man_told_in_five_counties].teller"
+    of: "4c2174a1b521a8dd"
+    plainenglish: >-
+      a carter's helper, telling it for drinks in five counties
+  - address: "content:tales.yaml#tales[id=what_the_carters_man_told_in_five_counties].bias"
+    of: "8b258232f961887e"
+    plainenglish: >-
+      exaggerating
+  - address: "content:tales.yaml#tales[id=what_the_carters_man_told_in_five_counties].text"
+    of: "6d405fc5a1881281"
+    plainenglish: >-
+      He says he was at the wall, and what he saw in that yard is worth a drink wherever men are
+      drinking. It has been worth a drink for thirty years, and it has grown by about one
+      impossible thing every ten years in the telling. In the earliest version there is a boy
+      standing still. In the latest there is a light, a beast, and a door in the air. The man
+      telling it stopped being the man who was there long ago, and became whoever bought the
+      last round.
+  - address: "content:tales.yaml#tales[id=the_ardwen_yard_book].teller"
+    of: "927f0ec4ed8a65a8"
+    plainenglish: >-
+      the steward's daily book at Ardwen
+  - address: "content:tales.yaml#tales[id=the_ardwen_yard_book].bias"
+    of: "a73bca84b86e4100"
+    plainenglish: >-
+      not curious
+  - address: "content:tales.yaml#tales[id=the_ardwen_yard_book].text"
+    of: "b6b290d5b61d0e99"
+    plainenglish: >-
+      Entered for that tenday: a traveller at the gate, fed; a traveller at the gate, fed; a man
+      taken on for the yard at the usual wage. Nothing else is entered for those three days, in
+      a book that recorded a broken hinge and the price of two hens in the same week. The gap is
+      the only thing in it any later reader has ever found interesting.
+  - address: "content:tales.yaml#tales[id=the_cadet_halls_own_reckoning].teller"
+    of: "a5fcdb3dca4dd071"
+    plainenglish: >-
+      the smaller house's stewards
+  - address: "content:tales.yaml#tales[id=the_cadet_halls_own_reckoning].bias"
+    of: "2dfb3a1597f00d11"
+    plainenglish: >-
+      wronged
+  - address: "content:tales.yaml#tales[id=the_cadet_halls_own_reckoning].text"
+    of: "8817633e4c552cf2"
+    plainenglish: >-
+      Let it be written here, since it is written nowhere up on the hill, that the year the main
+      house had nothing was the year it remembered where we were. Four miles of gravel, not
+      mended in thirty years, is a long way when they are sending, and no distance at all when
+      they are asking. We keep our own records now. We started keeping them that year, and
+      anyone can make of that whatever they like.
+  - address: "content:tales.yaml#tales[id=the_archivists_second_check].teller"
+    of: "92c9f96583b2b0c9"
+    plainenglish: >-
+      the record-keeper of the Eldritch hall
+  - address: "content:tales.yaml#tales[id=the_archivists_second_check].bias"
+    of: "946895a482ffd1e0"
+    plainenglish: >-
+      precise
+  - address: "content:tales.yaml#tales[id=the_archivists_second_check].text"
+    of: "55e5dfaf7f882ab3"
+    plainenglish: >-
+      I checked this twice, first because the Head asked and then for my own sake. Four sons
+      reached the age and none of them woke. I also record this, because someone will need it
+      and because no one alive now will thank me for it: the same thing is written for 1096, in
+      a different hand, with no note of what was done about it. That missing note in 1096 is the
+      reason this entry has one.
+  - address: "content:tales.yaml#tales[id=the_masons_deposition_of_1211].teller"
+    of: "5dc3a4de9a3f6392"
+    plainenglish: >-
+      a mason of Bramme, who gave sworn evidence and was paid for it
+  - address: "content:tales.yaml#tales[id=the_masons_deposition_of_1211].bias"
+    of: "8e4477076406f4c3"
+    plainenglish: >-
+      paid for his time
+  - address: "content:tales.yaml#tales[id=the_masons_deposition_of_1211].text"
+    of: "8731a757ef554da3"
+    plainenglish: >-
+      Sworn evidence before the magistrate at Bramme. The mason was an adult and was paid a
+      day's wage. He said he went down the cellar stairs at the house in question. At the bottom
+      he found a drain. In his opinion, what was in the drain was ordinary yard waste. Asked
+      whether the drain had been cut or had worn away, he said it was cut. Asked why anyone
+      would cut a drain at that slope, he said he was a mason, not a lawyer. The clerk wrote
+      down both the question and the answer. That is the clerk's habit, and it is why people
+      still read this document.
+  - address: "content:tales.yaml#tales[id=the_kennelmans_own_account].teller"
+    of: "f890cceabbe8c106"
+    plainenglish: >-
+      the kennel keeper at Ardwen, speaking to the man who will take over from him
+  - address: "content:tales.yaml#tales[id=the_kennelmans_own_account].bias"
+    of: "18b9509686429b52"
+    plainenglish: >-
+      believing in omens
+  - address: "content:tales.yaml#tales[id=the_kennelmans_own_account].text"
+    of: "75c875344329a0a0"
+    plainenglish: >-
+      He tells it to the boy who will take over the kennels after him, the same way it was told
+      to him. It is less a story than an instruction. Where the dogs stop, you stop. You do not
+      go on alone with the lamp. And you do not tell the hall that you stopped. No one has ever
+      asked him to explain it, and he would not like the question. Three kennel keepers have now
+      passed it down, one after another, and the dogs have been right every time.
+  - address: "content:tales.yaml#tales[id=the_four_who_were_in_the_chapel].teller"
+    of: "2d26ed8354282607"
+    plainenglish: >-
+      two of the four, and later nobody who had been there
+  - address: "content:tales.yaml#tales[id=the_four_who_were_in_the_chapel].bias"
+    of: "293e41c78fde7fa3"
+    plainenglish: >-
+      scared
+  - address: "content:tales.yaml#tales[id=the_four_who_were_in_the_chapel].text"
+    of: "0f32485209f9ed06"
+    plainenglish: >-
+      Four went in and four came out. The song is careful never to say what came out with them,
+      because two of the four helped write it and both insisted on that. What it does say, in
+      the line everyone in the province knows, is that each of them heard his own voice
+      answering from the dark end of a room he had known since he was a child. The tune is a
+      common one. The words fit it badly, and that tells a good singer they were written by
+      someone who was not a singer.
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_marginal_note].teller"
+    of: "a1a19eb1c3cbfcad"
+    plainenglish: >-
+      the keeper at Wick, writing in the margin of his own service book
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_marginal_note].bias"
+    of: "8982cc34c8cb22a8"
+    plainenglish: >-
+      worried
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_marginal_note].text"
+    of: "002364bd51f12a89"
+    plainenglish: >-
+      Written small in the margin, next to the form of the ninth petition: the family on the
+      hill said the Quieting in their own chapel that year, which is lawful and enough. They
+      have not done so since, which is also lawful. Now they come down to Bramme in every year
+      of the nine, without fail. That is neither lawful nor unlawful, but it is a change. And
+      when a house that has changed nothing else in a hundred years makes a change, a keeper
+      writes it in the margin and not in the main part of the book.
+  - address: "content:tales.yaml#tales[id=the_chapter_house_minute].teller"
+    of: "7bb68c134efbc17f"
+    plainenglish: >-
+      the record clerks of the Church of the Nine Quiet Names
+  - address: "content:tales.yaml#tales[id=the_chapter_house_minute].bias"
+    of: "801711c25fc0908e"
+    plainenglish: >-
+      by the book
+  - address: "content:tales.yaml#tales[id=the_chapter_house_minute].text"
+    of: "3823bfc584e89419"
+    plainenglish: >-
+      Record of the nine sessions: the household attended every day, answered every day, and was
+      never in contempt. We also record, because we were asked to and because the asking is
+      itself on record, that on the sixth day the pause before the answer was longer than on the
+      other eight days. We draw no conclusion from it. This body keeps records. Drawing
+      conclusions is for others, later.
+  - address: "content:tales.yaml#tales[id=what_bramme_said_the_inquest_was_for].teller"
+    of: "5c0cf2010cfc6d7d"
+    plainenglish: >-
+      the alehouses of Bramme, during the nine days and long afterwards
+  - address: "content:tales.yaml#tales[id=what_bramme_said_the_inquest_was_for].bias"
+    of: "a73c67a710f6144b"
+    plainenglish: >-
+      delighted
+  - address: "content:tales.yaml#tales[id=what_bramme_said_the_inquest_was_for].text"
+    of: "01b1543e0caadaba"
+    plainenglish: >-
+      Nine days is a long time to sit in a town that has two fairs a year and nothing else, and
+      Bramme made the most of it. Its idea of what the inquest was for changed every day and was
+      never once right. By the fourth day it was witchcraft. By the seventh it was money,
+      because Bramme thinks everything is about money. The rhyme that survives is about the
+      summoner's hat and does not mention the family at all.
+  - address: "content:tales.yaml#tales[id=the_physicians_four_lines].teller"
+    of: "602617003eb27a84"
+    plainenglish: >-
+      a doctor of Cawdry, paid by the court
+  - address: "content:tales.yaml#tales[id=the_physicians_four_lines].bias"
+    of: "ecb9d8e4d8e911a0"
+    plainenglish: >-
+      sticking to the facts
+  - address: "content:tales.yaml#tales[id=the_physicians_four_lines].text"
+    of: "ef04ded8e2aa574c"
+    plainenglish: >-
+      Four lines, signed, with not one word in them the writer could not swear to: what was
+      under the stone, what state it was in, what could be said about it and what could not.
+      Later he was asked twice to say more than four lines. He refused both times. That refusal
+      is why people have believed those four lines for centuries, even people who believe
+      nothing else about that afternoon.
+  - address: "content:tales.yaml#tales[id=the_wick_roll_and_what_it_says].teller"
+    of: "f6fc220905e90d35"
+    plainenglish: >-
+      the parish roll at Wick, and the keepers who have looked after it
+  - address: "content:tales.yaml#tales[id=the_wick_roll_and_what_it_says].bias"
+    of: "fbc2a0d10a6de28d"
+    plainenglish: >-
+      unbending
+  - address: "content:tales.yaml#tales[id=the_wick_roll_and_what_it_says].text"
+    of: "2b9134f0f7316024"
+    plainenglish: >-
+      The roll says a woman is buried there. It has said so since 1071, in writing that four
+      keepers have certified. The roll does not argue and has never needed to. What is under the
+      stone is a matter for whoever lifted it. What is on the roll is a matter for the Church.
+      The Church has kept the count without a break since year 180, and whenever the ground has
+      disagreed with the roll, it has always turned out that the ground had been disturbed.
+  - address: "content:tales.yaml#tales[id=the_reeves_book_of_the_orchard].teller"
+    of: "e2355379c19e5bcd"
+    plainenglish: >-
+      the reeve at Wick, in a book he kept himself
+  - address: "content:tales.yaml#tales[id=the_reeves_book_of_the_orchard].bias"
+    of: "0dab8e3262918586"
+    plainenglish: >-
+      faithful
+  - address: "content:tales.yaml#tales[id=the_reeves_book_of_the_orchard].text"
+    of: "657f5cb655f9faea"
+    plainenglish: >-
+      He kept the names because somebody had to and because the parish roll would not take them.
+      He kept them in his own book, and nobody asked for it for sixty years. Nineteen names,
+      with dates, and next to each one the row of the orchard it went into. At the front,
+      written slowly and with care, is the sentence that made the book worth keeping: the house
+      stood in the orchard with us for every one of them.
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_composition].teller"
+    of: "d98c554aafd3ba5e"
+    plainenglish: >-
+      the Church's chapter house at Bramme
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_composition].bias"
+    of: "2c602900eaa2d3bc"
+    plainenglish: >-
+      official
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_composition].text"
+    of: "ef980cda9d05e466"
+    plainenglish: >-
+      The settlement offered was ninety crowns and a four-line admission. That is the standard
+      form, and it has been since before any man alive now was ordained. The standard form
+      exists exactly so that no household has to believe what it signs. The interdict lasted
+      until it ended. This office does not record why it was lifted. Lifting an interdict needs
+      no reason. That is how the instrument works, not a gap in the office's records.
+  - address: "content:tales.yaml#tales[id=the_eastern_chapter_houses_ledger].teller"
+    of: "7d979d130649fea7"
+    plainenglish: >-
+      a chapter house four counties to the east, short of money
+  - address: "content:tales.yaml#tales[id=the_eastern_chapter_houses_ledger].bias"
+    of: "d8dcc7d72cfc021b"
+    plainenglish: >-
+      money-minded
+  - address: "content:tales.yaml#tales[id=the_eastern_chapter_houses_ledger].text"
+    of: "0c7aa0e2ab601ee6"
+    plainenglish: >-
+      Written against the year: one relic, offered to a household in the Nethering for sixty
+      crowns; refused. Below it, in the same handwriting: offered to a household at Cawdry for
+      sixty crowns; bought. The ledger has a third column that is not money and has no heading.
+      In that column, next to the first entry, there is one mark. Nobody alive now knows what it
+      means, and every archivist who has read the ledger has wanted to know.
+  - address: "content:tales.yaml#tales[id=what_the_parish_thought_of_the_refusal].teller"
+    of: "226c11f157d83dcd"
+    plainenglish: >-
+      the parish at Wick, across four generations
+  - address: "content:tales.yaml#tales[id=what_the_parish_thought_of_the_refusal].bias"
+    of: "eef5b8b724ce544b"
+    plainenglish: >-
+      shut out
+  - address: "content:tales.yaml#tales[id=what_the_parish_thought_of_the_refusal].text"
+    of: "e6d46fd1b0bb92fd"
+    plainenglish: >-
+      For nine days a year the chapel at Cawdry is open to anyone who walks there. The chapel on
+      the hill is open on none of them. Wick has had four generations to decide what that means.
+      What Wick decided on is a charm you say at your own door on those nine days instead. It is
+      a perfectly holy charm, and every word of it is about a door that does not open.
+  - address: "content:tales.yaml#tales[id=the_archdeacons_own_translation].teller"
+    of: "ce3a632f623b25cb"
+    plainenglish: >-
+      the archdeacon, in his own handwriting, left on the table
+  - address: "content:tales.yaml#tales[id=the_archdeacons_own_translation].bias"
+    of: "c0c4104b84c5b6bf"
+    plainenglish: >-
+      kind
+  - address: "content:tales.yaml#tales[id=the_archdeacons_own_translation].text"
+    of: "ed1010adf2bb2f01"
+    plainenglish: >-
+      One sheet, not asked for and not paid for. It turns a page of Old Ambric into Ambric, with
+      the doubtful words marked as doubtful and the guessed words marked as guessed. That is
+      more honesty than any document has ever shown this family. It is a grant of pasture. Every
+      line of it is a grant of pasture, and the pasture it names has been under water since
+      1104. The archdeacon knew that and translated it anyway.
+  - address: "content:tales.yaml#tales[id=the_clerks_six_words].teller"
+    of: "4236aa69ef174b75"
+    plainenglish: >-
+      the archdeacon's clerk, riding back to Bramme
+  - address: "content:tales.yaml#tales[id=the_clerks_six_words].bias"
+    of: "8a489a146f196290"
+    plainenglish: >-
+      doing his duty
+  - address: "content:tales.yaml#tales[id=the_clerks_six_words].text"
+    of: "524a7968c0c7d124"
+    plainenglish: >-
+      Six words, written on his knee, on a road, out in the weather: asked for the shelf; not
+      shown. Six words are not an accusation and were not meant as one. A clerk who wrote nine
+      hundred entries in his career meant nothing at all by these. But six words in a bag become
+      a line in a file, and a line in a file becomes a reason to ride up a hill. The man who
+      rode up the hill in 1288 had never heard of the clerk.
+  - address: "content:tales.yaml#tales[id=the_letter_that_was_not_signed].teller"
+    of: "b7410bf4182c6ac8"
+    plainenglish: >-
+      a company of actors three counties away, who never knew whose story it was
+  - address: "content:tales.yaml#tales[id=the_letter_that_was_not_signed].bias"
+    of: "a177239f1daa348b"
+    plainenglish: >-
+      soft-hearted
+  - address: "content:tales.yaml#tales[id=the_letter_that_was_not_signed].text"
+    of: "5d9375dbed2604df"
+    plainenglish: >-
+      In the play the letter is signed, because you cannot act out an unsigned letter. The
+      priest who sends it comes home at the end, and in front of the audience his father, who
+      has understood everything, hugs him. The actors have no idea whose family they are
+      playing. The one thing they get exactly right is the four seconds when the letter is held
+      over a fire and not dropped. They got that from a version that got it from someone who was
+      in the room.
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_file_note].teller"
+    of: "65ccf3fad656a8e6"
+    plainenglish: >-
+      the registry at Bramme, about its own procedure
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_file_note].bias"
+    of: "6c0424695fb6b765"
+    plainenglish: >-
+      trusting
+  - address: "content:tales.yaml#tales[id=the_chapter_houses_file_note].text"
+    of: "4b0b8e1bd1ddef6f"
+    plainenglish: >-
+      Noted on the file: requested, produced, read, returned. Also noted, because the form says
+      it must be: the household answered every part of the request fully and on time, and
+      nothing was found missing from the answer. The form does not ask for any note of what was
+      not requested. So there is no such note anywhere in this registry.
+  - address: "content:tales.yaml#tales[id=the_diocesan_registers_own_note].teller"
+    of: "4843bbee82ff74c2"
+    plainenglish: >-
+      the diocese's register at Cawdry
+  - address: "content:tales.yaml#tales[id=the_diocesan_registers_own_note].bias"
+    of: "ea59a62455a11238"
+    plainenglish: >-
+      sure of itself
+  - address: "content:tales.yaml#tales[id=the_diocesan_registers_own_note].text"
+    of: "ba3e0aac1c646b18"
+    plainenglish: >-
+      This register has been the official copy since the diocese was created. Where a parish
+      roll and this register disagree, the register wins. That is the rule, not the opinion of
+      whoever holds the office. Against this parish there is a note, made in the year the roll
+      was called in, saying that what came in was a copy and not the roll. The note does not
+      complain. It is just a note, and it is still there, and it will be there in every century
+      that has a Cawdry in it.
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_receipt].teller"
+    of: "c8a6928cd3edd508"
+    plainenglish: >-
+      the keeper at Wick, who wanted proof on paper
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_receipt].bias"
+    of: "6b0719383fda6c1c"
+    plainenglish: >-
+      careful
+  - address: "content:tales.yaml#tales[id=the_wick_keepers_receipt].text"
+    of: "8dfe2bb049d4f354"
+    plainenglish: >-
+      He would not let it go down the hill without a receipt, and he was right. The receipt is
+      four lines long and sits in his own cupboard. It names what went, the day it went, who
+      carried it and who took it. Once someone asked him why a keeper needs a receipt from his
+      own diocese. He said he had kept the roll for thirty years and would like it back, and
+      that the two halves of that sentence had nothing to do with each other. Everyone there
+      understood that they did.
+  - address: "content:tales.yaml#tales[id=the_court_clerks_entry].teller"
+    of: "f9aed8ac0f688518"
+    plainenglish: >-
+      the clerk who keeps the record of the Church court at Bramme
+  - address: "content:tales.yaml#tales[id=the_court_clerks_entry].bias"
+    of: "e6b91608e2154afc"
+    plainenglish: >-
+      neutral
+  - address: "content:tales.yaml#tales[id=the_court_clerks_entry].text"
+    of: "65386c67db0d0bf3"
+    plainenglish: >-
+      Written down as spoken, because the clerk writes what is said, has no choice about it, and
+      would not want one. The name; the request to say it again; and then, depending on the day,
+      either the repeat or the word refusal. Nothing in the entry says which of those is worse.
+      Nothing in the entry says anything at all. That is exactly why men who wanted it to say
+      something have quoted it in three later cases.
+  - address: "content:tales.yaml#tales[id=what_the_nineteen_in_the_room_say].teller"
+    of: "07789f8e4f374caa"
+    plainenglish: >-
+      some of the nineteen who were in court that day
+  - address: "content:tales.yaml#tales[id=what_the_nineteen_in_the_room_say].bias"
+    of: "279eb61657e1622a"
+    plainenglish: >-
+      horrified
+  - address: "content:tales.yaml#tales[id=what_the_nineteen_in_the_room_say].text"
+    of: "551e9df8cda45b5c"
+    plainenglish: >-
+      Nineteen people were in that room, and about eleven of them ever talked about it. What
+      they agree on is how the silence felt, and not one sound of what caused it. None of them
+      will say the name. So the song made from them has a hole in the middle of its second verse
+      where the word should go. Singers fill it with a hum, and for two hundred years that hum
+      has been the most frightening part of the song.
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_correction].teller"
+    of: "84142f2905e413fd"
+    plainenglish: >-
+      one of the heralds' clerks at Caster
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_correction].bias"
+    of: "801711c25fc0908e"
+    plainenglish: >-
+      following procedure
+  - address: "content:tales.yaml#tales[id=the_heralds_marginal_correction].text"
+    of: "c8e4a228640e63c4"
+    plainenglish: >-
+      In the margin, in small careful writing, next to the line where a marriage was recorded in
+      1103: read for the branch above, not the branch below. That is the whole correction, and
+      it took four minutes. Those four minutes needed a man to travel nine days from the
+      Nethering and wait eleven weeks. The clerk did not think about that, and no one has ever
+      asked him to.
+  - address: "content:tales.yaml#tales[id=what_cawdry_made_of_four_lines].teller"
+    of: "41b95b71ac38f8f5"
+    plainenglish: >-
+      people across the province, at the assize and at both fairs
+  - address: "content:tales.yaml#tales[id=what_cawdry_made_of_four_lines].bias"
+    of: "f745ccb293912576"
+    plainenglish: >-
+      laughing
+  - address: "content:tales.yaml#tales[id=what_cawdry_made_of_four_lines].text"
+    of: "f218701a2f15fb1e"
+    plainenglish: >-
+      Four lines are nothing on a page and everything at a door, and the province worked that
+      out about a thousand years before anyone wrote a Roll. The rhyme counts down from nine,
+      stops at four, and does not say what happens next. That is the joke. Everyone in the
+      Nethering has known which family it is about since roughly the second time it was sung.
+  - address: "content:tales.yaml#tales[id=the_wardens_summary_of_the_assize].teller"
+    of: "5fb478c78c0d5c3b"
+    plainenglish: >-
+      the clerk who works for the Warden at Cawdry
+  - address: "content:tales.yaml#tales[id=the_wardens_summary_of_the_assize].bias"
+    of: "251c43e0952bc854"
+    plainenglish: >-
+      formal
+  - address: "content:tales.yaml#tales[id=the_wardens_summary_of_the_assize].text"
+    of: "4e8bbc452aeda6c1"
+    plainenglish: >-
+      The summary is four lines, and those four lines are all that Cawdry knows: that someone
+      died, that there was a hearing or there was not, and what the household that held the land
+      did about it. Where the household sent the man, the summary praises it. Where it did not,
+      the summary does not accuse. It just records that the man was not sent, which in a
+      four-line document takes up a quarter of the space.
+  - address: "content:tales.yaml#tales[id=what_wick_says_about_that_night].teller"
+    of: "bab72e5a8030c7b6"
+    plainenglish: >-
+      the alehouse at Wick, and after it the widow's family
+  - address: "content:tales.yaml#tales[id=what_wick_says_about_that_night].bias"
+    of: "6374da4b3ab2246f"
+    plainenglish: >-
+      one-sided
+  - address: "content:tales.yaml#tales[id=what_wick_says_about_that_night].text"
+    of: "a0a13279a5dd0415"
+    plainenglish: >-
+      There are two songs, and Wick sings whichever one it is living in at the time. One is
+      about a house that sent a man from its own parish two days up a road to be hanged by
+      strangers. The other is about a house that stood between a man and a rope and paid for it
+      out of its own money box. Both use the same tune. That is either the singers' accident or
+      the most honest thing anyone in this parish has ever done.
+  - address: "content:tales.yaml#tales[id=the_captains_letter_home].teller"
+    of: "00cb2568836faccc"
+    plainenglish: >-
+      a captain of the levy, who could not spell the family's name
+  - address: "content:tales.yaml#tales[id=the_captains_letter_home].bias"
+    of: "d76adca2b0d47abe"
+    plainenglish: >-
+      going through the motions
+  - address: "content:tales.yaml#tales[id=the_captains_letter_home].text"
+    of: "004cbd16512f845a"
+    plainenglish: >-
+      Nine lines, written at the end of a season by a man who had written forty of them. The
+      family name is spelled two different ways in it, and neither is how the family spells it.
+      What the letter says is that he did well and that there was no body to send. What the
+      letter is, to the household that got it, is the only document in the world that touches
+      the last year of that person's life. It is nine lines long, and they had it copied.
+  - address: "content:tales.yaml#tales[id=the_wick_list_the_reeve_wrote].teller"
+    of: "6925f244644cf828"
+    plainenglish: >-
+      the reeve at Wick, who wrote down the eleven names in Highsun
+  - address: "content:tales.yaml#tales[id=the_wick_list_the_reeve_wrote].bias"
+    of: "4f49384f7a6e4dcb"
+    plainenglish: >-
+      involved
+  - address: "content:tales.yaml#tales[id=the_wick_list_the_reeve_wrote].text"
+    of: "29138eec42af0988"
+    plainenglish: >-
+      Eleven names in his own handwriting. Everyone in the parish read it, because he nailed it
+      to the door, which is what a reeve does and must do. He kept the list afterwards. Years
+      later, in different ink, he wrote the word home next to seven of the names. Next to four
+      he wrote nothing at all. The nothing is on purpose, and it is the only thing he ever said
+      about it.
+  - address: "content:tales.yaml#tales[id=the_clerks_two_paragraphs].teller"
+    of: "ed04ec1b9fc9270f"
+    plainenglish: >-
+      a clerk at Cawdry, who had already written six hundred of them
+  - address: "content:tales.yaml#tales[id=the_clerks_two_paragraphs].bias"
+    of: "d76adca2b0d47abe"
+    plainenglish: >-
+      just doing the job
+  - address: "content:tales.yaml#tales[id=the_clerks_two_paragraphs].text"
+    of: "3bb5c073d0dc23d7"
+    plainenglish: >-
+      Two paragraphs on half a sheet. The first is the same first paragraph as the other five
+      hundred and ninety-nine. The second names a number of men and a place, and thanks the
+      house for its service to the province in wording that was fixed in the last war and has
+      not changed since. It does not say whose banner they served under, because a clerk writing
+      at Cawdry assumes everyone already knows. In ninety years nobody will.
+  - address: "content:tales.yaml#tales[id=what_the_men_who_came_back_said].teller"
+    of: "c267f1fdb7554f21"
+    plainenglish: >-
+      the seven who came back, telling it at Wick over eleven years
+  - address: "content:tales.yaml#tales[id=what_the_men_who_came_back_said].bias"
+    of: "4f49384f7a6e4dcb"
+    plainenglish: >-
+      involved
+  - address: "content:tales.yaml#tales[id=what_the_men_who_came_back_said].text"
+    of: "729459018ad428ed"
+    plainenglish: >-
+      None of them ever told the whole of it, and all of them told parts. The parts fit together
+      the way things people really saw fit together: the details do not match, but the shape
+      does. They agree that they marched under a banner that was not this house's. They agree
+      about the ford. Ask any of the seven who this house sent, and he will give you four names
+      before he gives you the officer's. Then he will give you the officer's.
+  - address: "content:tales.yaml#tales[id=the_wardens_stewards_list_of_the_line].teller"
+    of: "c0dc93538b388177"
+    plainenglish: >-
+      the Warden's steward, who is paid a lot to prevent trouble
+  - address: "content:tales.yaml#tales[id=the_wardens_stewards_list_of_the_line].bias"
+    of: "4b4bb4f247bbaf2e"
+    plainenglish: >-
+      exact
+  - address: "content:tales.yaml#tales[id=the_wardens_stewards_list_of_the_line].text"
+    of: "6b5cb36fa22b6a3b"
+    plainenglish: >-
+      Ninety houses, in order, on one sheet, and none of them was asked where it should stand.
+      The steward's whole job rests on the fact that a list of ninety names in the right order
+      prevents four duels every ten years. He is right, and he is the only man in the province
+      who fully understands what that list does. Where a house is missing, he draws a short line
+      through the gap. He does not write a note beside the line.
+  - address: "content:tales.yaml#tales[id=the_hayfield_and_the_progress].teller"
+    of: "d6e07e1faaa59b83"
+    plainenglish: >-
+      the households of Wick, who lived with the weather
+  - address: "content:tales.yaml#tales[id=the_hayfield_and_the_progress].bias"
+    of: "b3e06f703edb147c"
+    plainenglish: >-
+      down-to-earth
+  - address: "content:tales.yaml#tales[id=the_hayfield_and_the_progress].text"
+    of: "27f269c4ff2b7070"
+    plainenglish: >-
+      People at Wick have a saying about a dry Highsun. It has the word king in it, but it is
+      not about the king at all. It is about four days of weather that a family spent forty
+      miles away in a field full of standing horses, or did not, and about whether the hay came
+      in because of it. A parish measures a reign in cut grass. It has no other way to measure,
+      and needs none.
+  - address: "content:tales.yaml#tales[id=the_cawdry_list_of_the_four].teller"
+    of: "667934e2f6d59f66"
+    plainenglish: >-
+      the households at Cawdry who kept score
+  - address: "content:tales.yaml#tales[id=the_cawdry_list_of_the_four].bias"
+    of: "35de4bcc3c7f26b0"
+    plainenglish: >-
+      keen to win
+  - address: "content:tales.yaml#tales[id=the_cawdry_list_of_the_four].text"
+    of: "07099dcd32c12f51"
+    plainenglish: >-
+      Four names were put forward. Within a tenday the province could recite all four, and it
+      has been able to ever since. The reciting is the point: a name on that list is still on it
+      in 1400. Three of the four spent sixty crowns and did not get the office. All three would
+      spend it again. The fourth got the office, and its steward has said privately, more than
+      once, that he wishes it had not.
+  - address: "content:tales.yaml#tales[id=what_the_province_expected].teller"
+    of: "dc036669d15416dd"
+    plainenglish: >-
+      the Nethering, during the nine months when nothing was announced
+  - address: "content:tales.yaml#tales[id=what_the_province_expected].bias"
+    of: "d4f04a08018be464"
+    plainenglish: >-
+      expecting the worst
+  - address: "content:tales.yaml#tales[id=what_the_province_expected].text"
+    of: "fb27372723c7ecb3"
+    plainenglish: >-
+      The rhyme was made in the second month and got the right answer by accident. That is what
+      a province does when it has nine months and no news: it comes up with every answer, one of
+      them is right, and afterwards everyone remembers singing that one. It names four houses.
+      It is unkind about all four, and unkindest about the one that put no name forward, which
+      the rhyme did not know at the time and figured out later.
+  - address: "content:tales.yaml#tales[id=the_crown_register_of_the_sale].teller"
+    of: "4e434122764eb5e6"
+    plainenglish: >-
+      the Crown's register of seized land
+  - address: "content:tales.yaml#tales[id=the_crown_register_of_the_sale].bias"
+    of: "4e8e8aab1c503677"
+    plainenglish: >-
+      uncaring
+  - address: "content:tales.yaml#tales[id=the_crown_register_of_the_sale].text"
+    of: "a2ba0989cde0742d"
+    plainenglish: >-
+      Acres, price, buyer, date, and four lines above all of them the reason the land was
+      forfeited. The register does not treat these as connected, because a register does not
+      think. Every later reader makes the connection in the first two seconds and can never undo
+      it. The buyers' names are written in the same hand and the same ink as the treason, on the
+      same page, forever.
+  - address: "content:tales.yaml#tales[id=what_the_attainted_family_told_its_children].teller"
+    of: "7a640f2ec3262b8a"
+    plainenglish: >-
+      the attainted family, living in a rented house, for four generations
+  - address: "content:tales.yaml#tales[id=what_the_attainted_family_told_its_children].bias"
+    of: "a593ab39020a4bed"
+    plainenglish: >-
+      hurt
+  - address: "content:tales.yaml#tales[id=what_the_attainted_family_told_its_children].text"
+    of: "bd9b36532ae22d4f"
+    plainenglish: >-
+      They kept a song and taught it to children who had never seen the land it is about. The
+      song names every family that bought and never once names the Crown, because the Crown is
+      like the weather and the neighbours are people. When the attainder was reversed in 1247
+      they did not stop singing it. The reversal said nothing about the neighbours, and the song
+      had never been about the attainder.
+  - address: "content:tales.yaml#tales[id=the_treaty_schedule_of_sureties].teller"
+    of: "bbdd5bce2ac9cb8a"
+    plainenglish: >-
+      the list attached to the treaty, at Caster
+  - address: "content:tales.yaml#tales[id=the_treaty_schedule_of_sureties].bias"
+    of: "a97fee83ff754f47"
+    plainenglish: >-
+      paper-pushing
+  - address: "content:tales.yaml#tales[id=the_treaty_schedule_of_sureties].text"
+    of: "a7dbc48a5df40f96"
+    plainenglish: >-
+      Nine households, nine lines, and next to each line what was given: a name, an age, and the
+      year of return. One line has no name and no age. In their place is a sum of money. The
+      list gives no opinion about the swap, because a list gives no opinions. Everyone who has
+      read it in six hundred years has had an opinion within four seconds of reaching that line.
+  - address: "content:tales.yaml#tales[id=the_clerks_mark_against_one_name].teller"
+    of: "ec49dd41495bb355"
+    plainenglish: >-
+      the Warden's clerk, writing in his own file
+  - address: "content:tales.yaml#tales[id=the_clerks_mark_against_one_name].bias"
+    of: "0476a3d3b9f3f90f"
+    plainenglish: >-
+      alert
+  - address: "content:tales.yaml#tales[id=the_clerks_mark_against_one_name].text"
+    of: "bd7616c2ed9dbe76"
+    plainenglish: >-
+      A small mark, of a kind he uses maybe twice a year, next to one of the nine. No note
+      anywhere in the file explains what the mark is for. He knew. Two clerks after him knew,
+      because he told them, the way an office passes things on to itself. The fourth clerk did
+      not know and asked. He was told it meant the household was worth a second look, and by
+      then nobody could say why anyone had thought so.
+  - address: "content:tales.yaml#tales[id=the_heralds_file_on_the_descent].teller"
+    of: "b2cce77c7b6eca48"
+    plainenglish: >-
+      the heralds' office at Caster
+  - address: "content:tales.yaml#tales[id=the_heralds_file_on_the_descent].bias"
+    of: "44e514b4e4cc28e8"
+    plainenglish: >-
+      demanding
+  - address: "content:tales.yaml#tales[id=the_heralds_file_on_the_descent].text"
+    of: "b1fc3825ad94de61"
+    plainenglish: >-
+      The file holds what was sent and a note of what was not. The heralds are careful men. They
+      have been lied to by better forgers than this century produces, so they never write the
+      word forgery. They write supported, and they write without documents, and the two phrases
+      sit in the same file like a pair of scales. Without documents does not harm a house. What
+      harms a house is whoever comes looking for that phrase in two hundred years.
+  - address: "content:tales.yaml#tales[id=the_rimefell_parish_answer].teller"
+    of: "e60c05bd9b1b9579"
+    plainenglish: >-
+      a parish keeper in the Rimefell, replying to a letter fourteen months late
+  - address: "content:tales.yaml#tales[id=the_rimefell_parish_answer].bias"
+    of: "a333331066afc734"
+    plainenglish: >-
+      no help
+  - address: "content:tales.yaml#tales[id=the_rimefell_parish_answer].text"
+    of: "cfe9d9a558f5a739"
+    plainenglish: >-
+      Six lines, in poor Ambric, from a man who was asked one question and answered exactly
+      that. A woman of that name was entered in that year. She did not leave. She was buried
+      here in 1131, and he can show the stone. He adds, because he is honest and has no idea
+      what he is doing, that it was a common name in that valley and there were four of them.
+  - address: "content:tales.yaml#tales[id=the_advocates_recollection].teller"
+    of: "f53ca7c809b8e714"
+    plainenglish: >-
+      a lawyer of Bramme, who was paid not to ask
+  - address: "content:tales.yaml#tales[id=the_advocates_recollection].bias"
+    of: "59e43944986602d8"
+    plainenglish: >-
+      tactful
+  - address: "content:tales.yaml#tales[id=the_advocates_recollection].text"
+    of: "66734ebeb4373f6a"
+    plainenglish: >-
+      He was paid two marks a day for four days and asked nothing, which is what he was paid
+      for. Afterwards he wrote down, only for himself, that the heading was a formula, and which
+      formula. Then he added a line he seems to have written, thought twice about, and kept:
+      that he has read that formula twice in his life and did not expect to read it in a farming
+      book in a hall in the Nethering.
+  - address: "content:tales.yaml#tales[id=the_cawdry_booksellers_lot_book].teller"
+    of: "0aa2cade10fad31a"
+    plainenglish: >-
+      a bookseller at Cawdry, about his own lots
+  - address: "content:tales.yaml#tales[id=the_cawdry_booksellers_lot_book].bias"
+    of: "bc341fa357c52c4f"
+    plainenglish: >-
+      business-minded
+  - address: "content:tales.yaml#tales[id=the_cawdry_booksellers_lot_book].text"
+    of: "224fe5bfa84b54eb"
+    plainenglish: >-
+      Lot, price, buyer, and next to this one the word mixed, which is trade talk for a lot the
+      seller has not read and does not plan to. He bought it from a house at Cawdry that was
+      clearing out, and that house had got it from somewhere else. The lot book goes back four
+      owners and stops, as lot books do, at the point where someone died without paperwork.
+  - address: "content:tales.yaml#tales[id=the_copyists_word_to_his_daughter].teller"
+    of: "86608978e5a82c94"
+    plainenglish: >-
+      a copyist of Bramme, speaking once to his daughter
+  - address: "content:tales.yaml#tales[id=the_copyists_word_to_his_daughter].bias"
+    of: "7b0dd2e43808b7f0"
+    plainenglish: >-
+      uncomfortable
+  - address: "content:tales.yaml#tales[id=the_copyists_word_to_his_daughter].text"
+    of: "41bd6f3cda3e3480"
+    plainenglish: >-
+      He told her one thing about that house, told it once and never again, and it was not about
+      the book. He said he was paid nearly double and did not ask why. A man who does not ask
+      why has decided something about himself, he said, and she should notice when she is being
+      paid too much. She noticed twice in her own life. Both times she asked.
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_fifth_month].teller"
+    of: "8032081cc315e788"
+    plainenglish: >-
+      the steward of the Eldritch hall, who was there in the room
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_fifth_month].bias"
+    of: "db000249f39ffaad"
+    plainenglish: >-
+      sharp-eyed
+  - address: "content:tales.yaml#tales[id=the_stewards_note_on_the_fifth_month].text"
+    of: "0589f7a0f7026bec"
+    plainenglish: >-
+      Written against the fifth month, in the usual way, with the wages: the copyist went back
+      eleven pages and read them again slowly. This is recorded because the steward was asked
+      afterwards what he had seen, and he preferred to have it written down on the day. He adds
+      nothing more. He believed one entry made on the day was worth four made later, and he was
+      right.
+  - address: "content:tales.yaml#tales[id=the_booksellers_day_book].teller"
+    of: "5fce5b49c307c34d"
+    plainenglish: >-
+      the daily record book of a condemned bookseller, seized and kept
+  - address: "content:tales.yaml#tales[id=the_booksellers_day_book].bias"
+    of: "4f79ed46b28171ca"
+    plainenglish: >-
+      unknowing
+  - address: "content:tales.yaml#tales[id=the_booksellers_day_book].text"
+    of: "f9e600857a22ed89"
+    plainenglish: >-
+      Every standing order in the province, by household, by title and by year, kept for nine
+      years by a man who was proud of his handwriting and had no idea what he was making. The
+      stock burned in one afternoon. The day-book did not burn, because a day-book is evidence
+      and evidence is not condemned. It is the most complete record of what the Nethering was
+      reading in that decade, and every family in it would give a great deal to get it back.
+  - address: "content:tales.yaml#tales[id=what_the_square_at_cawdry_remembers].teller"
+    of: "4df1a0dfd3a0e52b"
+    plainenglish: >-
+      the town of Cawdry, which saw four hundred books burned
+  - address: "content:tales.yaml#tales[id=what_the_square_at_cawdry_remembers].bias"
+    of: "279eb61657e1622a"
+    plainenglish: >-
+      shocked
+  - address: "content:tales.yaml#tales[id=what_the_square_at_cawdry_remembers].text"
+    of: "26e8ddd7c9f9ba23"
+    plainenglish: >-
+      Nobody was burned, and the song is very clear about that. But the song is still about a
+      burning, because a town that watches nine years of a man's trade go up in flames in its
+      square has been shown something about what can be done and how long it takes. It took one
+      afternoon. The last line of the song is about how fast it was over and how ordinary the
+      square looked on the Wednesday.
+  - address: "content:tales.yaml#tales[id=the_colleges_register_of_warrants].teller"
+    of: "68acee58559f84f4"
+    plainenglish: >-
+      the Colleges at Corran, in their register
+  - address: "content:tales.yaml#tales[id=the_colleges_register_of_warrants].bias"
+    of: "2c602900eaa2d3bc"
+    plainenglish: >-
+      official
+  - address: "content:tales.yaml#tales[id=the_colleges_register_of_warrants].text"
+    of: "fb1c3c017e64c665"
+    plainenglish: >-
+      Name, house, province, affinities, year of examination, and a column for practice. The
+      Colleges ask their warranted men to keep that column up to date, and maybe half of them
+      do. Next to this name the practice column runs for four years and then stops. The register
+      reads nothing into that; men stop practising for a hundred reasons. But the register is
+      read by people who are looking for the ones who stopped.
+  - address: "content:tales.yaml#tales[id=what_hesk_wanted_him_for].teller"
+    of: "8f2dbbe9dc077f6d"
+    plainenglish: >-
+      the slate quarrymen of Hesk, who wanted the terra work
+  - address: "content:tales.yaml#tales[id=what_hesk_wanted_him_for].bias"
+    of: "90424907ba6e26ab"
+    plainenglish: >-
+      hard-headed
+  - address: "content:tales.yaml#tales[id=what_hesk_wanted_him_for].text"
+    of: "bc339ccf7727cf2b"
+    plainenglish: >-
+      Eighteen miles north there is a village with one trade that has married only among itself
+      for three hundred years. It wanted a warranted man for the same reason everyone does: a
+      face of slate comes down on people. Whether it got him is the only thing Hesk remembers
+      about that family. Hesk's memory is a charm said at the top of a quarry before the first
+      cut of the season, and the charm has a gap where a name used to be.
+  - address: "content:tales.yaml#tales[id=the_sarrow_brokers_private_book].teller"
+    of: "d36ffd0dbdbcad21"
+    plainenglish: >-
+      a broker at Sarrow, in the book he shows to no one
+  - address: "content:tales.yaml#tales[id=the_sarrow_brokers_private_book].bias"
+    of: "ccf7013b6813d267"
+    plainenglish: >-
+      greedy
+  - address: "content:tales.yaml#tales[id=the_sarrow_brokers_private_book].text"
+    of: "ecfced1b52911427"
+    plainenglish: >-
+      Eleven names: who was asked, who came, who bid and who stopped. The book is shown to
+      nobody and is worth more than the lot was. A broker at a great sale gets paid twice: once
+      by the seller, and then for sixty years afterwards by everyone who wants to know who was
+      in the room. He keeps the book with great care. He has never sold a page of it, and every
+      broker after him has known that he could.
+  - address: "content:tales.yaml#tales[id=the_printed_catalogue_of_three_hundred_and_eleven].teller"
+    of: "f3928cb4e7ac78d0"
+    plainenglish: >-
+      the printed list of lots from the great sale at Sarrow
+  - address: "content:tales.yaml#tales[id=the_printed_catalogue_of_three_hundred_and_eleven].bias"
+    of: "55caed82488f4e26"
+    plainenglish: >-
+      leaving nothing out
+  - address: "content:tales.yaml#tales[id=the_printed_catalogue_of_three_hundred_and_eleven].text"
+    of: "4c7b25e4085a9130"
+    plainenglish: >-
+      Three hundred and eleven lots, described, numbered and priced. It is the most honest
+      document from that sale and the most misleading, both for the same reason: it is complete,
+      it says it is complete, and it is. Every scholar who has studied that sale over four
+      hundred years has worked from it. The numbers run to three hundred and eleven and stop
+      there, neatly, the way something stops when someone has decided where it stops.
+  - address: "content:tales.yaml#tales[id=the_third_hand_in_the_margin].teller"
+    of: "ab6a4800ba3e4814"
+    plainenglish: >-
+      three generations of another house, writing in the margins of a borrowed book
+  - address: "content:tales.yaml#tales[id=the_third_hand_in_the_margin].bias"
+    of: "67ce0277c31269fb"
+    plainenglish: >-
+      looking for answers
+  - address: "content:tales.yaml#tales[id=the_third_hand_in_the_margin].text"
+    of: "cc45fe97095962b3"
+    plainenglish: >-
+      Sixty years of attention, in three handwritings, all closing in on one sentence about
+      grafting. The amazing thing about the margin notes is how patient they are. The first hand
+      is only curious. The second has a theory and drops it. The third writes a question mark
+      and two words, and then nothing more for eleven years. What they were doing was research
+      across generations, which is what this family does too, but aimed at this family.
+  - address: "content:tales.yaml#tales[id=the_courteous_note_in_the_crate].teller"
+    of: "8ecac424eb054b18"
+    plainenglish: >-
+      the house that sent it back, in four lines and no explanation
+  - address: "content:tales.yaml#tales[id=the_courteous_note_in_the_crate].bias"
+    of: "77c87c54097bbc80"
+    plainenglish: >-
+      dodging
+  - address: "content:tales.yaml#tales[id=the_courteous_note_in_the_crate].text"
+    of: "99198cc79b467283"
+    plainenglish: >-
+      Four lines: the volume is returned with thanks, it has been in their keeping a long time,
+      and they are glad to give it back. Nothing about the sixty years, nothing about the three
+      hands, nothing about why it comes back now, without being asked for. It is a perfect note.
+      It answers every question a note has to answer and none of the questions anyone opening
+      the crate actually has.
+  - address: "content:tales.yaml#tales[id=the_marrow_stewards_account_of_the_yard].teller"
+    of: "78a4027bcb2e8c1f"
+    plainenglish: >-
+      House Marrow's stewards, during a bad ten years
+  - address: "content:tales.yaml#tales[id=the_marrow_stewards_account_of_the_yard].bias"
+    of: "e961d0fb14ec9d0f"
+    plainenglish: >-
+      shamed
+  - address: "content:tales.yaml#tales[id=the_marrow_stewards_account_of_the_yard].text"
+    of: "b1590c55ab97e801"
+    plainenglish: >-
+      He would not go inside, and he drank what he was given standing up. He decided both of
+      those things on the road up, and neither was an accident. This office writes them down
+      because in forty years someone will say he was made to stand in a yard. He was not. He
+      chose the yard. A man selling the thing his house is known for has the right to choose
+      where he does it. That is very nearly the last thing this office ever got to write down
+      about him.
+  - address: "content:tales.yaml#tales[id=what_the_province_priced_it_at].teller"
+    of: "ea8bf1ea729a266e"
+    plainenglish: >-
+      the Nethering, working out the sums aloud
+  - address: "content:tales.yaml#tales[id=what_the_province_priced_it_at].bias"
+    of: "4a6a64b83d136c24"
+    plainenglish: >-
+      counting the cost
+  - address: "content:tales.yaml#tales[id=what_the_province_priced_it_at].text"
+    of: "16b1f5e913fe83dd"
+    plainenglish: >-
+      Three hundred and twenty is four years of everything for an average house. The province
+      could do that sum in its head, and it did, at both fairs, for a season. The rhyme did not
+      settle what the book was worth. It settled what the buying family had to spare. That is a
+      different number, and a far more interesting one. The province has never once been wrong
+      about it, and has never once been told.
+  - address: "content:tales.yaml#tales[id=the_archivists_own_note].teller"
+    of: "84354fb34a65b6c7"
+    plainenglish: >-
+      the archivist, writing in his own hand, in his own room
+  - address: "content:tales.yaml#tales[id=the_archivists_own_note].bias"
+    of: "a833d5c2f92ec936"
+    plainenglish: >-
+      matter-of-fact
+  - address: "content:tales.yaml#tales[id=the_archivists_own_note].text"
+    of: "539a00349f8e4288"
+    plainenglish: >-
+      It is not in the collation book, where he was told what to write and wrote it. It is on a
+      loose sheet in his own cupboard: the date, the volume, the gathering, the size of the cut
+      and the age of the thread over it. Archivists have kept notes like this for as long as
+      there have been archivists. Every house that employs one knows they exist, and no house
+      has ever asked to see one. He is not disloyal. He just cannot let a thing go unrecorded,
+      and that is why he was hired.
+  - address: "content:tales.yaml#tales[id=the_collation_book_of_this_house].teller"
+    of: "06b5c7d7e713a1d3"
+    plainenglish: >-
+      the collation book at Ardwen, written up every ten years
+  - address: "content:tales.yaml#tales[id=the_collation_book_of_this_house].bias"
+    of: "251c43e0952bc854"
+    plainenglish: >-
+      by the book
+  - address: "content:tales.yaml#tales[id=the_collation_book_of_this_house].text"
+    of: "70269c2eaaec1022"
+    plainenglish: >-
+      Volume, date, handwriting, and one word: entire. It has said entire at every collation
+      since the founding, in eleven different hands. The eleven hands are the point. One word
+      was repeated for four hundred years by people who each trusted the ten before them. Any
+      one of them could have been the one who wrote it while looking at a gap.
+  - address: "content:tales.yaml#tales[id=the_brokers_two_private_opinions].teller"
+    of: "cd67376236d41b9e"
+    plainenglish: >-
+      two marriage-brokers of the province, talking privately to each other
+  - address: "content:tales.yaml#tales[id=the_brokers_two_private_opinions].bias"
+    of: "a833d5c2f92ec936"
+    plainenglish: >-
+      speaking as experts
+  - address: "content:tales.yaml#tales[id=the_brokers_two_private_opinions].text"
+    of: "6e401ac39eeb1667"
+    plainenglish: >-
+      They would not put any price on her in public. A woman with no papers cannot be priced,
+      and to price her would be to admit that the papers are not what is really being priced. In
+      private they said something else to each other, once, in a room at Cawdry, and one of them
+      wrote it down years later in a working paper. She was the best blood either of them had
+      seen come down that road in thirty years, and neither of them could have sold her to
+      anyone.
+  - address: "content:tales.yaml#tales[id=the_wick_keeper_writing_a_name_twice].teller"
+    of: "d054142e031d7202"
+    plainenglish: >-
+      the record-keeper at Wick, writing down a marriage
+  - address: "content:tales.yaml#tales[id=the_wick_keeper_writing_a_name_twice].bias"
+    of: "8a489a146f196290"
+    plainenglish: >-
+      doing his duty
+  - address: "content:tales.yaml#tales[id=the_wick_keeper_writing_a_name_twice].text"
+    of: "327595e3163f16bf"
+    plainenglish: >-
+      He had to be told the name twice, and he wrote it as he heard it. That is what a keeper
+      does, and it is why parish rolls across this kingdom are full of the same woman under four
+      spellings. Next to the entry there is no note of her family line, because the form has no
+      space for one and because there was nothing to put there. The roll is not lying. It just
+      has no column for the thing that matters.
+  - address: "content:tales.yaml#tales[id=the_brokers_nine_matches].teller"
+    of: "6d3d8f845bcb12d0"
+    plainenglish: >-
+      a marriage-broker of Cawdry, writing on four sheets of her own
+  - address: "content:tales.yaml#tales[id=the_brokers_nine_matches].bias"
+    of: "c5b43545734a3ab9"
+    plainenglish: >-
+      orderly
+  - address: "content:tales.yaml#tales[id=the_brokers_nine_matches].text"
+    of: "2ac65b8cd8b42530"
+    plainenglish: >-
+      Nine matches over thirty years. Next to each one she wrote what she thought beforehand and
+      what happened afterwards, in handwriting that gets smaller and smaller as the sheets fill
+      up. She got seven right. She did not know why she got seven right, and she says so on the
+      fourth sheet, in the most honest sentence in the whole document: she has a feeling about
+      grandmothers and no argument to back it up.
+  - address: "content:tales.yaml#tales[id=what_cawdry_paid_for_the_list].teller"
+    of: "52b0d7e70a025563"
+    plainenglish: >-
+      Cawdry, which loves to know what something sold for
+  - address: "content:tales.yaml#tales[id=what_cawdry_paid_for_the_list].bias"
+    of: "ccf7013b6813d267"
+    plainenglish: >-
+      money-minded
+  - address: "content:tales.yaml#tales[id=what_cawdry_paid_for_the_list].text"
+    of: "d3f055250e1c2959"
+    plainenglish: >-
+      Sixty crowns for four sheets of paper is the kind of number a town turns into a rhyme.
+      Cawdry did, and the rhyme is about the buyer, not the seller and not the sheets. What the
+      rhyme never worked out, even after four generations of singing it, is why a house would
+      want thirty years of somebody else's guesses.
+  - address: "content:tales.yaml#tales[id=the_dispensation_register].teller"
+    of: "d842fe2eecffd872"
+    plainenglish: >-
+      the diocese's register of dispensations
+  - address: "content:tales.yaml#tales[id=the_dispensation_register].bias"
+    of: "8c4b1ad82aadd9ec"
+    plainenglish: >-
+      taking no side
+  - address: "content:tales.yaml#tales[id=the_dispensation_register].text"
+    of: "3c3d2b4491bd1b70"
+    plainenglish: >-
+      Eleven a year in this diocese, at four crowns each, written down by name, degree and date.
+      The register treats all eleven the same, because there is no difference to note: they are
+      all lawful and all the same in form. What the register does is make them possible to
+      count. Someone counting later will notice that one family appears in it in four separate
+      centuries. No single entry would ever suggest that.
+  - address: "content:tales.yaml#tales[id=what_wick_said_at_that_wedding].teller"
+    of: "a6e29be2bb62b3c6"
+    plainenglish: >-
+      the guests at the lower tables at that Greening wedding
+  - address: "content:tales.yaml#tales[id=what_wick_said_at_that_wedding].bias"
+    of: "5a7c4252a0b36c0e"
+    plainenglish: >-
+      crude
+  - address: "content:tales.yaml#tales[id=what_wick_said_at_that_wedding].text"
+    of: "8444b89b3cb1bb0f"
+    plainenglish: >-
+      They had put a price on it before the second course and made a song of it before the
+      dancing. The song is crude and cheerful and completely accurate about what everyone in
+      that hall knew was being tried. It has one cruel verse, added later, about the second son.
+      Wick has stopped singing that verse twice in three hundred years, and has started again
+      both times.
+  - address: "content:tales.yaml#tales[id=what_wick_decided_the_letter_meant].teller"
+    of: "ccc762479ec4fc1b"
+    plainenglish: >-
+      the tenants who saw the archdeacon's man ride up twice in one spring
+  - address: "content:tales.yaml#tales[id=what_wick_decided_the_letter_meant].bias"
+    of: "18b9509686429b52"
+    plainenglish: >-
+      quick to see bad omens
+  - address: "content:tales.yaml#tales[id=what_wick_decided_the_letter_meant].text"
+    of: "43377b2ff9c641eb"
+    plainenglish: >-
+      Twice in one spring the archdeacon's man came up the road, and both times he did not stay
+      the night. Within the week, without being told, Wick decided what that meant: the house
+      had been judged for marrying its cousins and found wanting, and no fee paid to the diocese
+      can buy back what a marriage bed like that costs a family. Nobody at the chapter house
+      said anything of the kind. Nobody at Wick has stopped saying it.
+  - address: "content:tales.yaml#tales[id=the_specialists_two_lists].teller"
+    of: "215e357e7efcbdaa"
+    plainenglish: >-
+      an expert in family lines, who kept two lists and sold neither
+  - address: "content:tales.yaml#tales[id=the_specialists_two_lists].bias"
+    of: "33c05ee8d0990e34"
+    plainenglish: >-
+      practical
+  - address: "content:tales.yaml#tales[id=the_specialists_two_lists].text"
+    of: "1c486b38ae315094"
+    plainenglish: >-
+      One list was of houses that bought, and one was of houses that did not. He was proud of
+      the second in a way he could never have explained to a customer. He never sold either
+      list, and he had four offers for the first. When he died in 1219 both went to his son, who
+      was proud of nothing and who had six offers. The histories of about nine families in this
+      kingdom depend on what that son did next.
+  - address: "content:tales.yaml#tales[id=the_caster_file_that_was_never_queried].teller"
+    of: "92ebd396b45f232a"
+    plainenglish: >-
+      the heralds' file at Caster, which found no fault
+  - address: "content:tales.yaml#tales[id=the_caster_file_that_was_never_queried].bias"
+    of: "7357f9ab3e0f3537"
+    plainenglish: >-
+      content
+  - address: "content:tales.yaml#tales[id=the_caster_file_that_was_never_queried].text"
+    of: "f32806dd314003e9"
+    plainenglish: >-
+      Four generations, three seals, two handwritings, and a note on the file in the heralds'
+      own form: examined and found sufficient. Nobody has ever questioned it, and there is no
+      reason anyone should. The document is better made than the genuine ones beside it in the
+      same drawer. That is the whole problem. The heralds have known about it for three
+      centuries and have no answer to it. A real family line is written by tired men over four
+      hundred years. A false one is written by an expert in good light.
+  - address: "content:tales.yaml#tales[id=the_advocates_incidental_finding].teller"
+    of: "c7a0a29eed6b86c2"
+    plainenglish: >-
+      an advocate reading the house's deeds and records for some other matter entirely
+  - address: "content:tales.yaml#tales[id=the_advocates_incidental_finding].bias"
+    of: "e545cc3afcefd4de"
+    plainenglish: >-
+      by chance
+  - address: "content:tales.yaml#tales[id=the_advocates_incidental_finding].text"
+    of: "653603f4e5f7e4a8"
+    plainenglish: >-
+      He was looking at a boundary and he noticed a date. That is what advocates do, and they
+      cannot stop doing it. The note he made is four words long and names an office and a year.
+      The seal on the sixth generation comes from a house that did not hold that office until
+      nine years after the date on it. He did not report it. He did not need to. He wrote it in
+      a file that anyone may ask to see.
+  - address: "content:tales.yaml#tales[id=the_brides_familys_own_account].teller"
+    of: "42088ab5f0ee9339"
+    plainenglish: >-
+      the bride's family, who had six generations of lineage and no money
+  - address: "content:tales.yaml#tales[id=the_brides_familys_own_account].bias"
+    of: "8ec274c9dd5839bd"
+    plainenglish: >-
+      full of pride
+  - address: "content:tales.yaml#tales[id=the_brides_familys_own_account].text"
+    of: "30e9f353f0ae2e77"
+    plainenglish: >-
+      They had nothing to give but their family line, and they gave all of it. The song they
+      made about that is truly moving. It has been sung at four weddings in every generation
+      since, and every word of it is about how much better six generations are than money. The
+      family that made the song believed it. The song does not ask whether the man who wrote out
+      the sixth generation believed it.
+  - address: "content:tales.yaml#tales[id=the_yssene_houses_own_record].teller"
+    of: "d245782734b76083"
+    plainenglish: >-
+      a Yssene house that is older than the Empire
+  - address: "content:tales.yaml#tales[id=the_yssene_houses_own_record].bias"
+    of: "80ee595e4ee67eca"
+    plainenglish: >-
+      unhurried
+  - address: "content:tales.yaml#tales[id=the_yssene_houses_own_record].text"
+    of: "d0114103d2b5300f"
+    plainenglish: >-
+      Their record of it is one paragraph. It is not about the money, which their law treats as
+      a formality, and not about the girl, whom their law treats as a party to the deal. It is
+      about the fourth clause, which their law treats as the point of the whole agreement. The
+      record notes that the other side never mentioned that clause in three years of letters.
+      They draw no conclusion. Their records rarely do. Instead, they keep them for six hundred
+      years.
+  - address: "content:tales.yaml#tales[id=what_sarrow_heard_about_the_portion].teller"
+    of: "447427ea475fbcde"
+    plainenglish: >-
+      the port of Sarrow, which keeps count of everything unloaded from a ship
+  - address: "content:tales.yaml#tales[id=what_sarrow_heard_about_the_portion].bias"
+    of: "76ce71d7e6597e93"
+    plainenglish: >-
+      amazed
+  - address: "content:tales.yaml#tales[id=what_sarrow_heard_about_the_portion].text"
+    of: "f4c6f7ceb75c51ea"
+    plainenglish: >-
+      Four hundred crowns crossing the Grey for one woman from the Nethering is the kind of
+      number a port repeats for ten years. Sarrow repeated it. By the third year the number in
+      the rhyme was six hundred, and by the ninth it was a thousand. Nobody at Sarrow ever knew
+      whether the family took it. The rhyme has both endings, and singers choose one to suit
+      their mood.
+  - address: "content:tales.yaml#tales[id=the_midwifes_view_of_the_counting].teller"
+    of: "54b645936b32cea7"
+    plainenglish: >-
+      the household midwife, speaking to the women of the hall
+  - address: "content:tales.yaml#tales[id=the_midwifes_view_of_the_counting].bias"
+    of: "06769bca3e9f35ee"
+    plainenglish: >-
+      shielding
+  - address: "content:tales.yaml#tales[id=the_midwifes_view_of_the_counting].text"
+    of: "58d592a4e6b69e70"
+    plainenglish: >-
+      What she said, and kept saying for nine years to anyone who would listen, was this: a
+      household that counts is doing the one thing sure to make it worse. She had seen four of
+      these cases settle, and three of the four settled in the year the counting stopped. She
+      had no argument for that either. She had thirty years of rooms she had worked in, and in
+      her trade that is the argument.
+  - address: "content:tales.yaml#tales[id=the_slaughter_board_as_wick_had_it].teller"
+    of: "04cd68590662d2c5"
+    plainenglish: >-
+      the lower tables at the Slaughter board, who heard it read aloud
+  - address: "content:tales.yaml#tales[id=the_slaughter_board_as_wick_had_it].bias"
+    of: "967f0f562b4ee262"
+    plainenglish: >-
+      kind
+  - address: "content:tales.yaml#tales[id=the_slaughter_board_as_wick_had_it].text"
+    of: "288d318bcc1feed7"
+    plainenglish: >-
+      Four sentences, written out in advance and read aloud rather than spoken, in front of
+      everyone. The low tables heard every word and understood all of it, and they did not make
+      a crude song about it. For that hall on that night, that was remarkable, and people
+      remarked on it. What they made instead is quiet and short, and it is about a woman sitting
+      still while something is read.
+  - address: "content:tales.yaml#tales[id=the_widows_four_words].teller"
+    of: "9eddac372a3da84b"
+    plainenglish: >-
+      the widow, three times, never adding a fifth word
+  - address: "content:tales.yaml#tales[id=the_widows_four_words].bias"
+    of: "6d09905f6d157e9b"
+    plainenglish: >-
+      unbending
+  - address: "content:tales.yaml#tales[id=the_widows_four_words].text"
+    of: "8a8a2f4e4f814572"
+    plainenglish: >-
+      Four words, said exactly the same way to three houses. She never gave a fifth word to
+      anyone in twenty-six years, and ever since, women in this province have repeated the four
+      words when they turn something down. Nobody outside that hall has ever agreed on what the
+      four words were. Everyone agrees there were four, that she said them the same way each
+      time, and that after the third time nobody asked again.
+  - address: "content:tales.yaml#tales[id=what_two_houses_stopped_calling_about].teller"
+    of: "3ed4d75194960bed"
+    plainenglish: >-
+      two houses of the province, writing in their own books
+  - address: "content:tales.yaml#tales[id=what_two_houses_stopped_calling_about].bias"
+    of: "206bd247d21b22b3"
+    plainenglish: >-
+      insulted
+  - address: "content:tales.yaml#tales[id=what_two_houses_stopped_calling_about].text"
+    of: "c2ae2a5bd08dfd1f"
+    plainenglish: >-
+      Both books record the refusal, and neither records the reason. Both also record, in the
+      same decade, that they stopped visiting that hall. Neither uses the word insult. One uses
+      the phrase no longer convenient. In the language of these books, that is the strongest
+      thing that can be written about a neighbour, and everyone who could see the book read it
+      that way. For eighty years, that was nobody.
+  - address: "content:tales.yaml#tales[id=the_wards_own_answer_at_table].teller"
+    of: "38891026bdaa4d6a"
+    plainenglish: >-
+      a company of actors who heard it fourth-hand and turned it into a scene
+  - address: "content:tales.yaml#tales[id=the_wards_own_answer_at_table].bias"
+    of: "e053bcc43a3a5358"
+    plainenglish: >-
+      dramatic
+  - address: "content:tales.yaml#tales[id=the_wards_own_answer_at_table].text"
+    of: "c8f5d4b5a9383df9"
+    plainenglish: >-
+      In the play she says it on purpose, at a table full of enemies, and brings down a house
+      with one sentence, because that is what a play needs and no audience has ever wanted the
+      other version. The other version is this. She was twenty-three. She was asked, and she
+      answered properly rather than briefly, about something she had seen when she was eleven
+      and had never had any reason to think was unusual.
+  - address: "content:tales.yaml#tales[id=the_letter_from_her_family].teller"
+    of: "176490f9338622ad"
+    plainenglish: >-
+      her own family, asking to have her back after thirteen years
+  - address: "content:tales.yaml#tales[id=the_letter_from_her_family].bias"
+    of: "92edad3e5d91121a"
+    plainenglish: >-
+      treating it as a deal
+  - address: "content:tales.yaml#tales[id=the_letter_from_her_family].text"
+    of: "36c17efe33ea814a"
+    plainenglish: >-
+      Nine lines: warm in the first three, business in the last six. They ask for the return of
+      a daughter they last saw when she was six, and in the final line they name the match they
+      have in mind for her. She is called by her name throughout, and once, in the sixth line,
+      the arrangement. Nobody in either house thought that word was worth noticing. It is the
+      only word in the letter that anyone remembers now.
+  - address: "content:tales.yaml#tales[id=the_wick_account_of_the_fire].teller"
+    of: "1d3a2a0b39008fe7"
+    plainenglish: >-
+      the village of Wick, which watched from the lane
+  - address: "content:tales.yaml#tales[id=the_wick_account_of_the_fire].bias"
+    of: "4ff50cd83c0ee934"
+    plainenglish: >-
+      filled with wonder
+  - address: "content:tales.yaml#tales[id=the_wick_account_of_the_fire].text"
+    of: "38dad41ffff4592b"
+    plainenglish: >-
+      They saw it from the lane, and half of them came up the hill and stood in the frost with
+      the family. The song is not about the fire. It is about what was carried out, and in what
+      order. Sixty people watched that by the light of the fire itself. The song names each
+      thing, one by one, in a list that has grown by one impossible object every other
+      generation.
+  - address: "content:tales.yaml#tales[id=the_stewards_inventory_after].teller"
+    of: "fc48c7c8b4eaf314"
+    plainenglish: >-
+      the steward at dawn, writing on a wax tablet
+  - address: "content:tales.yaml#tales[id=the_stewards_inventory_after].bias"
+    of: "c5b43545734a3ab9"
+    plainenglish: >-
+      careful and orderly
+  - address: "content:tales.yaml#tales[id=the_stewards_inventory_after].text"
+    of: "604b16f0bb683064"
+    plainenglish: >-
+      He made it in the yard before the ashes were cold, because a man who has spent his life
+      keeping a book does not stop when the building is gone. It lists what is out, what is in
+      the barrow and what is certainly lost, and it has a fourth column headed not found. That
+      is the column every later reader looks at first. There are nine things in it. The steward
+      did not think the fourth column mattered. He made it because a tidy list has four columns.
+  - address: "content:tales.yaml#tales[id=the_three_halls_own_draft].teller"
+    of: "767f8d71adc80edd"
+    plainenglish: >-
+      the three cadet halls, in the first draft their advocate wrote
+  - address: "content:tales.yaml#tales[id=the_three_halls_own_draft].bias"
+    of: "170104f0aebc076c"
+    plainenglish: >-
+      careful and logical
+  - address: "content:tales.yaml#tales[id=the_three_halls_own_draft].text"
+    of: "cf469cbd446e56b1"
+    plainenglish: >-
+      The draft is better than the letter that was actually sent, which is normal. The halls
+      kept it, which is not. It lays out the case in eleven numbered points. The eleventh was
+      crossed out before sending, and it is the one everyone since has wanted to read. It says
+      that a debt owed by the blood is owed by all of the blood, and it asks what the main house
+      thinks the three of them are, if not that.
+  - address: "content:tales.yaml#tales[id=the_assize_record_of_the_four_days].teller"
+    of: "755a9a19cc9e10a5"
+    plainenglish: >-
+      the Warden's law court at Cawdry
+  - address: "content:tales.yaml#tales[id=the_assize_record_of_the_four_days].bias"
+    of: "251c43e0952bc854"
+    plainenglish: >-
+      formal
+  - address: "content:tales.yaml#tales[id=the_assize_record_of_the_four_days].text"
+    of: "0cfd2e3618b67412"
+    plainenglish: >-
+      Four days of one family's private arrangements read aloud in a public hall, by an advocate
+      paid to make them sound as bad as possible, and the court found for the main house on
+      every point. The ruling is nine lines long. The record of what was read out over those
+      four days runs to sixty lines. Every one of those sixty lines is open to anyone with a
+      reason to ask, and reasons are easy to find.
+  - address: "content:tales.yaml#tales[id=the_bearers_count].teller"
+    of: "d467f622576d2d1e"
+    plainenglish: >-
+      the Bearers, hooded, paid with nothing but bread
+  - address: "content:tales.yaml#tales[id=the_bearers_count].bias"
+    of: "2c4a31ca5a5cc676"
+    plainenglish: >-
+      hard-headed
+  - address: "content:tales.yaml#tales[id=the_bearers_count].text"
+    of: "057adac06e842f6c"
+    plainenglish: >-
+      They count, because somebody has to and because counting is half of what they are for.
+      Their count is a number said aloud at the edge of the pit at the end of each day, and
+      written down nowhere. Ninety-four. They do not say whose land it was. They have carried
+      the dead of nine parishes, and never once in four hundred years has anyone heard them
+      comment on whose land anything was.
+  - address: "content:tales.yaml#tales[id=the_parish_register_of_the_plague_year].teller"
+    of: "1ea7322619e68c62"
+    plainenglish: >-
+      the parish register at Wick, in handwriting that gets worse and worse
+  - address: "content:tales.yaml#tales[id=the_parish_register_of_the_plague_year].bias"
+    of: "2f0b17bd8ca35c11"
+    plainenglish: >-
+      swamped
+  - address: "content:tales.yaml#tales[id=the_parish_register_of_the_plague_year].text"
+    of: "5da04984ac51dc48"
+    plainenglish: >-
+      Names for the first tenday. Then names and dates without parents. Then a number and a
+      date. Then, for three tendays, nothing at all. Then one line recording the pit, where it
+      lies, and on whose land. The handwriting at the start and at the end belongs to the same
+      man, though it does not look it. That line about the land is the sentence with the biggest
+      consequences that any keeper of this parish ever wrote, and he wrote it in the middle of
+      the worst month of his life.
+  - address: "content:tales.yaml#tales[id=the_stewards_second_book_itself].teller"
+    of: "3c78f81717695fbb"
+    plainenglish: >-
+      the steward, in his own handwriting, over nineteen years
+  - address: "content:tales.yaml#tales[id=the_stewards_second_book_itself].bias"
+    of: "9fb902b202c76846"
+    plainenglish: >-
+      off guard
+  - address: "content:tales.yaml#tales[id=the_stewards_second_book_itself].text"
+    of: "ccb4302c3e944f40"
+    plainenglish: >-
+      Every figure matches the house's own books down to the smallest coin. That is the
+      remarkable thing, and it is why nobody could ever call it a fraud. Next to about four
+      hundred of the figures is a note of what was said in the room when the entry was made.
+      Nineteen years of a family being itself in front of a man it had stopped noticing. He was
+      not spying. He was keeping a book, which was his job, and nobody had ever told him where a
+      book stops.
+  - address: "content:tales.yaml#tales[id=what_bramme_said_when_he_arrived].teller"
+    of: "1a217671d23dd785"
+    plainenglish: >-
+      the counting-houses of Bramme, taking in a man of fifty-four
+  - address: "content:tales.yaml#tales[id=what_bramme_said_when_he_arrived].bias"
+    of: "0ab99a96e9751ada"
+    plainenglish: >-
+      in the know
+  - address: "content:tales.yaml#tales[id=what_bramme_said_when_he_arrived].text"
+    of: "5c1faf09c16ad2c5"
+    plainenglish: >-
+      A steward let go at fifty-four after nineteen years arrives in a town like Bramme carrying
+      one thing everyone can see and one thing nobody can. Bramme put a price on the second
+      within a tenday and made a rhyme about it. The rhyme is wrong about what he did with it.
+      It has been wrong for two hundred years, in whichever direction is funnier that season.
+  - address: "content:tales.yaml#tales[id=the_keepers_form_for_unknown_dead].teller"
+    of: "21bf1c04052ec160"
+    plainenglish: >-
+      the record-keeper at Wick, filling in a form he has used twice
+  - address: "content:tales.yaml#tales[id=the_keepers_form_for_unknown_dead].bias"
+    of: "d19dab1ae5913bbe"
+    plainenglish: >-
+      by the rules
+  - address: "content:tales.yaml#tales[id=the_keepers_form_for_unknown_dead].text"
+    of: "0a4c7061784aeccd"
+    plainenglish: >-
+      Unknown, date unknown, thirty-one, reburied at the expense of the household on whose land
+      they were found. The form exists for exactly this, and has existed since before the
+      diocese was marked out. Using it is the correct and godly thing to do. What the form does
+      not have is a space for the shape of the ground they were lying in. He wrote that
+      underneath, outside the form, because he could not leave it unwritten.
+  - address: "content:tales.yaml#tales[id=what_the_four_men_told_their_wives].teller"
+    of: "770d83320285ea8e"
+    plainenglish: >-
+      four men of the household, each telling one person, once
+  - address: "content:tales.yaml#tales[id=what_the_four_men_told_their_wives].bias"
+    of: "293e41c78fde7fa3"
+    plainenglish: >-
+      scared
+  - address: "content:tales.yaml#tales[id=what_the_four_men_told_their_wives].text"
+    of: "1d6e7a7b24428f57"
+    plainenglish: >-
+      Four men, two days, two feet of soil put back over a corner of an orchard, in weather
+      nobody should be out in. Each of them told exactly one person, and no two of them told the
+      same story. Two of the four versions have rows in them. One has a number. One has nothing
+      but the weather and being ordered to do it. That fourth version is the one that survived,
+      because the man who told it lived to eighty.
+  - address: "content:tales.yaml#tales[id=the_two_witnesses_at_the_press].teller"
+    of: "aff6fd8b3d8ad307"
+    plainenglish: >-
+      the two people standing there when the box was opened
+  - address: "content:tales.yaml#tales[id=the_two_witnesses_at_the_press].bias"
+    of: "505f6f3762a9032b"
+    plainenglish: >-
+      clearing themselves of blame
+  - address: "content:tales.yaml#tales[id=the_two_witnesses_at_the_press].text"
+    of: "1937e27687600802"
+    plainenglish: >-
+      Both of them wrote down what they saw within the tenday, without being asked, in almost
+      the same words. Two people do that when they understand what they will be asked for the
+      rest of their lives. The lock was not forced. The box was where it is always kept. It was
+      opened for an ordinary reason, and both of them name the reason. Neither of them ever says
+      a word about who had a key.
+  - address: "content:tales.yaml#tales[id=what_the_household_says_about_the_search].teller"
+    of: "4014a29e3f4a2fe2"
+    plainenglish: >-
+      fourteen members of the household, who were searched
+  - address: "content:tales.yaml#tales[id=what_the_household_says_about_the_search].bias"
+    of: "b4384a61867f38e5"
+    plainenglish: >-
+      bitter
+  - address: "content:tales.yaml#tales[id=what_the_household_says_about_the_search].text"
+    of: "05b6e3629cc74e36"
+    plainenglish: >-
+      Eleven hours, every room and every chest, and the song that came out of that day is not
+      about the seal at all. It is about being one of fourteen people in a house you have served
+      all your life while the family you serve goes through your box in front of you. It has no
+      chorus. Household songs about a bad day rarely do. This one has outlasted four of the
+      families that heard it sung.
+  - address: "content:tales.yaml#tales[id=what_the_sixty_of_wick_remember].teller"
+    of: "e2116d3c66748238"
+    plainenglish: >-
+      sixty people of Wick, who were inside the wall for twenty-eight days
+  - address: "content:tales.yaml#tales[id=what_the_sixty_of_wick_remember].bias"
+    of: "48b0657c7a7a3b10"
+    plainenglish: >-
+      split
+  - address: "content:tales.yaml#tales[id=what_the_sixty_of_wick_remember].text"
+    of: "d8fa990e77d4b47a"
+    plainenglish: >-
+      There is one tune with two sets of words. Ever since that Slaughter, which set a Wick
+      family sings has been settled by which table its grandparents ate at. Neither set is
+      false. One is about a yard where everyone ate the same food, and one is about a yard where
+      they did not. For four hundred years the parish has been quietly split into two halves by
+      one month of food.
+  - address: "content:tales.yaml#tales[id=the_household_ration_book].teller"
+    of: "6d08736231703b36"
+    plainenglish: >-
+      the steward's ration book, written up every day for twenty-eight days
+  - address: "content:tales.yaml#tales[id=the_household_ration_book].bias"
+    of: "946895a482ffd1e0"
+    plainenglish: >-
+      precise
+  - address: "content:tales.yaml#tales[id=the_household_ration_book].text"
+    of: "13fc5b45056a8b49"
+    plainenglish: >-
+      Twenty-eight pages, one for each day. Each is headed with the number of people in the yard
+      and ruled into either two columns or one. That is all the evidence there is. It is
+      perfectly clear, and perhaps nine people have read it in nine hundred years, none of them
+      from Wick. A village does not read a ration book. It sings, and the singing is what the
+      family is really judged by, while the book sits in the cupboard being right.
+  - address: "content:tales.yaml#tales[id=the_weighers_four_sheets].teller"
+    of: "00b67d1cd4d5bc70"
+    plainenglish: >-
+      a Braccish trading agent, writing on four sheets, sworn on the weight
+  - address: "content:tales.yaml#tales[id=the_weighers_four_sheets].bias"
+    of: "946895a482ffd1e0"
+    plainenglish: >-
+      precise to the coin
+  - address: "content:tales.yaml#tales[id=the_weighers_four_sheets].text"
+    of: "30fd7e92e218c886"
+    plainenglish: >-
+      Nineteen years of withdrawals, in date order, in two currencies, with the two per cent
+      shown separately and the running total in the margin. Nobody in this kingdom has ever
+      managed to challenge a single figure in it. He swears on the weight instead of in a Church
+      court. The Church has formally objected to that for two hundred years and accepted it in
+      practice for four hundred, and that is why nobody argues with these sheets in front of a
+      keeper.
+  - address: "content:tales.yaml#tales[id=what_wick_paid_to_grind_at_ockleigh].teller"
+    of: "63d7b3b8da547464"
+    plainenglish: >-
+      the households of Wick, each Thaw for eleven years
+  - address: "content:tales.yaml#tales[id=what_wick_paid_to_grind_at_ockleigh].bias"
+    of: "2dfb3a1597f00d11"
+    plainenglish: >-
+      wronged
+  - address: "content:tales.yaml#tales[id=what_wick_paid_to_grind_at_ockleigh].text"
+    of: "8208520eb8dc623a"
+    plainenglish: >-
+      Ockleigh's price, and the four miles there and four miles back with a loaded cart. People
+      said it as a rhyme every Thaw for eleven years, and they did not care at all what a letter
+      of credit is. The rhyme blames the family, and it is right to. It has no idea why, and it
+      never finds out. It is still sung sixty years after the mill came back.
+  - address: "content:tales.yaml#tales[id=the_eighty_one_leaves].teller"
+    of: "e0ab16a174d4a1dd"
+    plainenglish: >-
+      the last of the bloodline, alone, across four tendays
+  - address: "content:tales.yaml#tales[id=the_eighty_one_leaves].bias"
+    of: "77a8289af4f54186"
+    plainenglish: >-
+      holding nothing back
+  - address: "content:tales.yaml#tales[id=the_eighty_one_leaves].text"
+    of: "15ca62952332b1e1"
+    plainenglish: >-
+      Eighty-one sheets in one handwriting, set out plainly, once: what the family is, what it
+      signed, what it has done about it, and what it has written down instead of doing
+      something. There is no embellishment anywhere in it, and no omission the writer knew of.
+      Those are two different claims, and he makes both. It is the only honest document in nine
+      hundred years of this house. The document cannot tell you whether anyone ever read it.
+  - address: "content:tales.yaml#tales[id=the_advocates_delicate_question].teller"
+    of: "02e9ba4227b942ae"
+    plainenglish: >-
+      an advocate of Bramme, who did not like asking
+  - address: "content:tales.yaml#tales[id=the_advocates_delicate_question].bias"
+    of: "167a3abd25b2d9c9"
+    plainenglish: >-
+      unwilling
+  - address: "content:tales.yaml#tales[id=the_advocates_delicate_question].text"
+    of: "7aeb25bac5cc2afe"
+    plainenglish: >-
+      He raised it because he was paid to raise everything, and because a man who does not raise
+      it has failed his client. Afterwards he wrote in his own file that he wished he had found
+      another way to put it. The law of Aubren has no answer to what happens to a debt owed by
+      the blood when the blood runs out. He looked. He looked for eleven years, in his own time,
+      and left a note for whoever came after him saying how far he had got.
+  - address: "content:tales.yaml#tales[id=the_hall_that_was_taken_down].teller"
+    of: "9540f8374dbd9a73"
+    plainenglish: >-
+      the children of the cadet halls, who picked it up from other children
+  - address: "content:tales.yaml#tales[id=the_hall_that_was_taken_down].bias"
+    of: "30d54c3636d624b2"
+    plainenglish: >-
+      blaming
+  - address: "content:tales.yaml#tales[id=the_hall_that_was_taken_down].text"
+    of: "982c1bb21da5bdf6"
+    plainenglish: >-
+      One for the hook and one for the wall, one for the hall that is not there at all. It is
+      four lines long, children skip to it, and the third line names a hall by a name the house
+      no longer uses. Every version outside the walls keeps the third line. Every version sung
+      inside them has only three lines.
+  - address: "content:tales.yaml#tales[id=marrow_note_on_the_gallery].teller"
+    of: "2d9de9c801615834"
+    plainenglish: >-
+      a Marrow archivist, paid per page
+  - address: "content:tales.yaml#tales[id=marrow_note_on_the_gallery].bias"
+    of: "d991d64ab36b5e76"
+    plainenglish: >-
+      fussy
+  - address: "content:tales.yaml#tales[id=marrow_note_on_the_gallery].text"
+    of: "4b073973efd5e317"
+    plainenglish: >-
+      That house writes down, in its own hand, that the hanging at the north end of its long
+      room was lost to damp. The wall at the north end gets the afternoon sun, and has since it
+      was built. Damp is a problem of north-facing walls, and this one faces south. We note the
+      mismatch without drawing any conclusion from it, as we are paid to do.
+  - address: "content:tales.yaml#tales[id=marrow_daybook_entry].teller"
+    of: "ee3a52032b8c9f0f"
+    plainenglish: >-
+      a Marrow steward with good handwriting and no special ill will
+  - address: "content:tales.yaml#tales[id=marrow_daybook_entry].bias"
+    of: "7a0c75897d02e855"
+    plainenglish: >-
+      very careful
+  - address: "content:tales.yaml#tales[id=marrow_daybook_entry].text"
+    of: "fe90ef1510cb6581"
+    plainenglish: >-
+      Item, the eleventh of a wet March: the woman who keeps their records waited outside a door
+      for most of a day and then went away again. Item, nine years later: the same thing, at the
+      same door. We record it because we record everything. A house that cannot hear its own
+      archivist will one day be unable to hear us, and we would rather know which year that
+      began.
+  - address: "content:tales.yaml#tales[id=the_house_on_the_daybook].teller"
+    of: "2761e9b619ebbff2"
+    plainenglish: >-
+      the house's own steward, teaching whoever will take his place
+  - address: "content:tales.yaml#tales[id=the_house_on_the_daybook].bias"
+    of: "d4521e02a472bf16"
+    plainenglish: >-
+      on the defensive
+  - address: "content:tales.yaml#tales[id=the_house_on_the_daybook].text"
+    of: "6a9d59c4ecb94cd8"
+    plainenglish: >-
+      A list of dates is not an accusation. You will be shown one and asked to read it as if it
+      were. Every house has afternoons when something was left unsaid. Ours happen to be written
+      down by someone else. That is a fact about them, not about us, and you will say so
+      politely, as often as you need to.
+  - address: "content:tales.yaml#tales[id=homily_on_the_small_hall].teller"
+    of: "4866f4b042ffd0bc"
+    plainenglish: >-
+      a preacher of the chapter house, working from a report of a report
+  - address: "content:tales.yaml#tales[id=homily_on_the_small_hall].bias"
+    of: "30d54c3636d624b2"
+    plainenglish: >-
+      blaming
+  - address: "content:tales.yaml#tales[id=homily_on_the_small_hall].text"
+    of: "db87010a7bc2ee26"
+    plainenglish: >-
+      There was a family, the sermon goes, that had been given a great deal and had been told
+      what it was for. One winter it decided that what it had been given was not enough, and
+      that the family itself could improve on the arrangement. The sermon does not say what they
+      did. It says four times what happened afterwards. The preacher always pauses before the
+      fourth time, and the pause is the part the congregation takes home.
+  - address: "content:tales.yaml#tales[id=the_householders_account_of_that_winter].teller"
+    of: "769705c35f983e6f"
+    plainenglish: >-
+      a cousin of the house who was nineteen that year and away
+  - address: "content:tales.yaml#tales[id=the_householders_account_of_that_winter].bias"
+    of: "0dab8e3262918586"
+    plainenglish: >-
+      faithful
+  - address: "content:tales.yaml#tales[id=the_householders_account_of_that_winter].text"
+    of: "6a8ed3faa3bd3056"
+    plainenglish: >-
+      This account says he had been ill for two winters. Everybody had known it and nobody had
+      said it. At the end the family was with him in the small hall, because the great hall had
+      not been heated since the old man's father died. It lists who was there. It gets two of
+      the eleven wrong. It does not say what they were there for, and reads all the way through
+      as if that were too obvious to write down.
+  - address: "content:tales.yaml#tales[id=chapter_house_note_on_the_counting].teller"
+    of: "3822830d16b049a1"
+    plainenglish: >-
+      a canon who was sent to count, and who wrote before he got there
+  - address: "content:tales.yaml#tales[id=chapter_house_note_on_the_counting].bias"
+    of: "30d54c3636d624b2"
+    plainenglish: >-
+      finger-pointing
+  - address: "content:tales.yaml#tales[id=chapter_house_note_on_the_counting].text"
+    of: "61fa77faf22c9576"
+    plainenglish: >-
+      It is the chapter house's view, written in a hand that did not wait for the road to dry,
+      that when one man of a family has been made wider than a man is made, the family has made
+      a mistake in its arithmetic. When two have, it has done something the canons have a word
+      for and will not write next to a house's name. The note records that the shutters were
+      closed at an hour when no house closes its shutters. It records that the second of them
+      did not come down to be looked at. About what was actually done, it says only that it was
+      done twice. The writer had that from a carter, who had it from a girl who carried the
+      water up and was not allowed past the second landing.
+  - address: "content:tales.yaml#tales[id=the_water_girls_telling].teller"
+    of: "aab2687aceaaa286"
+    plainenglish: >-
+      the girl who carried the water up, telling it forty years later
+  - address: "content:tales.yaml#tales[id=the_water_girls_telling].bias"
+    of: "0dab8e3262918586"
+    plainenglish: >-
+      faithful
+  - address: "content:tales.yaml#tales[id=the_water_girls_telling].text"
+    of: "0638df297bd3a19d"
+    plainenglish: >-
+      She got as far as the second landing and no further. What she knew was that the house was
+      cold in a way houses are not cold in the third week of a mild spring, and that someone
+      upstairs was talking steadily, without stopping, for far longer than a man has breath for.
+      She says there was one of them. She says it every time she is asked. She has been asked by
+      people who wanted the other answer and by people who wanted no answer at all, and she has
+      never once said two. What she will say at the end, and only if she has been asked kindly,
+      is that when the talking stopped she counted the feet on the stairs coming down, and she
+      has never been able to make the number come out the same twice.

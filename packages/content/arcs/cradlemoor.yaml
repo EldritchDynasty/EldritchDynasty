@@ -46,3 +46,9 @@ arcs:
         schedule: { minYears: 30, maxYears: 45 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/cradlemoor.yaml#arcs[id=arc_cradlemoor_drained].title"
+    of: "f0c842b05fa6f374"
+    plainenglish: >-
+      What Cradlemoor Needs

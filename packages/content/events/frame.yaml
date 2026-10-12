@@ -931,3 +931,442 @@ events:
           text: >-
             There is a third account of that room, in a hand nobody has since
             identified, which gives no name at all and records only the hour.
+
+proseVariants:
+  - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].title"
+    of: "0bfa3e55f85ffc39"
+    plainenglish: >-
+      A Box Kept in Someone Else's House
+  - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].body"
+    of: "3363c161f437397d"
+    plainenglish: >-
+      Tonight two of the seven fireplaces are lit, one more than usual. The guardian has not
+      mentioned the Seal in the last eleven tellings, and he does not mention it now.
+  - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].interaction.outcomes[id=only].text"
+    of: "417c62fababc8cf6"
+    plainenglish: >-
+      Long ago, someone called it a loan. Nobody has corrected that since.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ledger_says_of_the_seal].title"
+    of: "15c8f89dd6d956e1"
+    plainenglish: >-
+      A Trusted Branch of the Family
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ledger_says_of_the_seal].body"
+    of: "dfa12bbee74e2b52"
+    plainenglish: >-
+      There is a page about the letter from the western line. It is polite and witnessed by a
+      notary, and it names the house that had the Seal when the letter came. Whatever the family
+      wrote underneath it, whether admitting fault, leaving a dated blank, or inventing a
+      trusted branch of the family, the guardian was in the room when that answer was chosen.
+      Whether the Seal came home afterwards was a separate matter, paid for in money or in
+      pride. The letter stayed.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ledger_says_of_the_seal].interaction.outcomes[id=only].text"
+    of: "38fd6bf0cef44b3c"
+    plainenglish: >-
+      The last of the blood reads it twice, more slowly the second time, and asks nothing.
+  - address: "content:events/frame.yaml#events[id=frame_two_of_three].title"
+    of: "2d32a0b732495783"
+    plainenglish: >-
+      The Missing Third Piece
+  - address: "content:events/frame.yaml#events[id=frame_two_of_three].body"
+    of: "21447aac0cf64d70"
+    plainenglish: >-
+      The record says the set is complete. The guardian counts on fingers that are no longer
+      real fingers, out of a habit that outlived his hand. He gets to two, as he always does,
+      and stops there, as he always does.
+  - address: "content:events/frame.yaml#events[id=frame_two_of_three].interaction.outcomes[id=only].text"
+    of: "9a89fc76c8493b6a"
+    plainenglish: >-
+      Whatever the ritual was for, it has still not been paid.
+  - address: "content:events/frame.yaml#events[id=frame_the_cost_not_written].title"
+    of: "d2c8924ed5e6bf32"
+    plainenglish: >-
+      What the Book Left Out
+  - address: "content:events/frame.yaml#events[id=frame_the_cost_not_written].body"
+    of: "775bbde340e8f8a7"
+    plainenglish: >-
+      A hundred years ago, somewhere in this house, a water trough was filled and then emptied.
+      The record gives the year and the boy's name, and says nothing at all about the cold. The
+      guardian was cold that night. He is not cold now, because being cold is something only
+      living bodies do.
+  - address: "content:events/frame.yaml#events[id=frame_the_cost_not_written].interaction.outcomes[id=only].text"
+    of: "3357fee81703dad4"
+    plainenglish: >-
+      The last of the blood asks, once, whether it hurt. He answers a different question.
+  - address: "content:events/frame.yaml#events[id=frame_the_second_time].title"
+    of: "cfe14f40b34c62b4"
+    plainenglish: >-
+      Nine Days, Happening Twice
+  - address: "content:events/frame.yaml#events[id=frame_the_second_time].body"
+    of: "586bebbcfe2ea718"
+    plainenglish: >-
+      It happened again, two hundred years later, the same in every way that matters, and there
+      is a second page for it. That page may call it a rediscovery, admit that the house already
+      knew, or say nothing. The guardian turns to it without being told where it is.
+  - address: "content:events/frame.yaml#events[id=frame_the_second_time].interaction.outcomes[id=only].text"
+    of: "9251dfb2bdaf0886"
+    plainenglish: >-
+      Some debts get paid twice, because the first receipt was thrown away on purpose.
+  - address: "content:events/frame.yaml#events[id=frame_nine_libraries].title"
+    of: "cdbfb2df1ba472f3"
+    plainenglish: >-
+      The Books That Burned, and the Ones Kept
+  - address: "content:events/frame.yaml#events[id=frame_nine_libraries].body"
+    of: "8441c606c25af87a"
+    plainenglish: >-
+      The page says: we rode out and saved what could be saved, and what we kept, we kept in
+      trust for others. The guardian has heard the house tell this story proudly in three
+      different centuries, in three different voices.
+  - address: "content:events/frame.yaml#events[id=frame_nine_libraries].interaction.outcomes[id=only].text"
+    of: "bdadee0411276ef0"
+    plainenglish: >-
+      He does not say what the house really kept. Tonight, the record does not say either.
+  - address: "content:events/frame.yaml#events[id=frame_the_northern_house].title"
+    of: "112d2974106a1540"
+    plainenglish: >-
+      Never Heard From Again
+  - address: "content:events/frame.yaml#events[id=frame_the_northern_house].body"
+    of: "21afce7c99bddb08"
+    plainenglish: >-
+      She was nineteen, and the page she appears on is the last page that mentions her. Whatever
+      it says happened, and the guardian has read it more often than the family ever did, the
+      account stops there. It stops the way his own sentences stop when he has decided something
+      is not to be told. By now, the last of the blood has learned what that silence is hiding.
+  - address: "content:events/frame.yaml#events[id=frame_the_northern_house].interaction.outcomes[id=only].text"
+    of: "4bb2d8657d5ea689"
+    plainenglish: >-
+      Nobody at this table will be the one to ask him to finish the story.
+  - address: "content:events/frame.yaml#events[id=frame_the_short_account].title"
+    of: "9ea583b7c986040b"
+    plainenglish: >-
+      Three Other Versions
+  - address: "content:events/frame.yaml#events[id=frame_the_short_account].body"
+    of: "10b128f3438fefef"
+    plainenglish: >-
+      Decades later, someone else's record said more about 1341 than the house's own record did,
+      and it said it to men with the power to keep repeating it. Ever since the day the tea went
+      cold, the guardian has known which version would win.
+  - address: "content:events/frame.yaml#events[id=frame_the_short_account].interaction.outcomes[id=only].text"
+    of: "a3f398dddb06ff89"
+    plainenglish: >-
+      Being caught out costs more than telling the truth would have. It always does.
+  - address: "content:events/frame.yaml#events[id=frame_the_bought_silence].title"
+    of: "116fd22bf3d561b7"
+    plainenglish: >-
+      Eighty Years of Nobody Looking Closely
+  - address: "content:events/frame.yaml#events[id=frame_the_bought_silence].body"
+    of: "799565530733d51f"
+    plainenglish: >-
+      A fine, a minor heresy confessed, and a great deal of tea left to go cold: with that, the
+      house bought eighty years in which nobody asked any more questions. The guardian thinks it
+      was cheap. He has never once said so where the record could hear him.
+  - address: "content:events/frame.yaml#events[id=frame_the_bought_silence].interaction.outcomes[id=only].text"
+    of: "63737510146375a4"
+    plainenglish: >-
+      The last of the blood works out the cost anyway, and agrees that it was cheap.
+  - address: "content:events/frame.yaml#events[id=frame_the_west_house_again].title"
+    of: "a872451bb0bffc4f"
+    plainenglish: >-
+      Still Never Corrected
+  - address: "content:events/frame.yaml#events[id=frame_the_west_house_again].body"
+    of: "e8a75e6a5e0c4b9e"
+    plainenglish: >-
+      Another telling, and another generation that has never once seen the Seal in this house,
+      and on paper it is still a loan. The guardian has stopped expecting anyone to ask who is
+      supposed to collect it.
+  - address: "content:events/frame.yaml#events[id=frame_the_west_house_again].interaction.outcomes[id=quiet].text"
+    of: "05a8576595911b41"
+    plainenglish: >-
+      A debt this old has mostly stopped being a debt and turned into part of the furniture.
+  - address: "content:events/frame.yaml#events[id=frame_the_west_house_again].interaction.outcomes[id=pointed].text"
+    of: "9d47ca3451f13508"
+    plainenglish: >-
+      The last of the blood looks at the empty spot on the wall where a box like that would sit,
+      and says nothing about that either.
+  - address: "content:events/frame.yaml#events[id=frame_the_keeping_of_it].title"
+    of: "ac97b98bfd1a0ca7"
+    plainenglish: >-
+      The Branch That Never Existed
+  - address: "content:events/frame.yaml#events[id=frame_the_keeping_of_it].body"
+    of: "09ff984410934910"
+    plainenglish: >-
+      Every so often someone asks which branch of the family is looking after the Seal. They
+      mean it kindly, as small talk. The guardian answers with a name he has had ready for a
+      very long time. It is not a real branch.
+  - address: "content:events/frame.yaml#events[id=frame_the_keeping_of_it].interaction.outcomes[id=only].text"
+    of: "8eb776d51c2030d9"
+    plainenglish: >-
+      He tells the story well. He has had hundreds of years to get the details right.
+  - address: "content:events/frame.yaml#events[id=frame_the_missing_third_returns].title"
+    of: "1b60429d25466ed9"
+    plainenglish: >-
+      Counting Them Again
+  - address: "content:events/frame.yaml#events[id=frame_the_missing_third_returns].body"
+    of: "95045848c3785ac4"
+    plainenglish: >-
+      In the story, someone is always about to count the family treasures again. The guardian
+      already knows the number, and watches them reach for the box anyway. In nine hundred
+      years, two out of three has never become three out of three.
+  - address: "content:events/frame.yaml#events[id=frame_the_missing_third_returns].interaction.outcomes[id=only].text"
+    of: "6d07ed315c47bb7d"
+    plainenglish: >-
+      He could tell them. He never has.
+  - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].title"
+    of: "d115b58782c1f723"
+    plainenglish: >-
+      The Water Trough Is Still Filled
+  - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].body"
+    of: "7b73791b766a656f"
+    plainenglish: >-
+      Every few generations a boy goes under the water for nine days and comes up changed, or
+      comes up unchanged, and the record gives it one line either way. The guardian has never
+      once added to that line. He has his reasons.
+  - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].interaction.outcomes[id=only].text"
+    of: "178d892e235b994a"
+    plainenglish: >-
+      The last of the blood has stopped asking what his reasons are.
+  - address: "content:events/frame.yaml#events[id=frame_the_index_in_another_hand].title"
+    of: "cca6ab255e11d691"
+    plainenglish: >-
+      Eleven Bound Sections
+  - address: "content:events/frame.yaml#events[id=frame_the_index_in_another_hand].body"
+    of: "ecfa072abdbc05d6"
+    plainenglish: >-
+      The page for that century says that nobody outside the family has ever indexed this
+      house's bookcases. It says so in beautiful handwriting that belongs to the family, and the
+      guardian does not look up from it. Somewhere to the east, in a room nobody alive has been
+      shown, there are eleven bound sections that say otherwise. They have said so patiently, in
+      a woman's careful lettering, for a very long time.
+  - address: "content:events/frame.yaml#events[id=frame_the_index_in_another_hand].interaction.outcomes[id=only].text"
+    of: "436888c2f09188ae"
+    plainenglish: >-
+      She was paid five marks a year and let go in a poor autumn, and what she made has
+      outlasted the wing she made it in.
+  - address: "content:events/frame.yaml#events[id=frame_the_copy_that_was_short].title"
+    of: "7d91461d3561d6f1"
+    plainenglish: >-
+      Ten and a Half Years
+  - address: "content:events/frame.yaml#events[id=frame_the_copy_that_was_short].body"
+    of: "dcec435c860a0f68"
+    plainenglish: >-
+      The page says: eleven clean years, neatly copied and accepted by the court without a
+      single question. The guardian turns back one page, then another. The dates in the margin
+      run straight through an autumn that is not there. They were ruled first and filled in
+      afterwards, exactly as they always were, by a man who never once said what he thought of
+      being asked.
+  - address: "content:events/frame.yaml#events[id=frame_the_copy_that_was_short].interaction.outcomes[id=only].text"
+    of: "ee34eb1e498ccf1a"
+    plainenglish: >-
+      The only gaps anyone ever notices are gaps in messy handwriting, which is why this one was
+      made in neat handwriting.
+  - address: "content:events/frame.yaml#events[id=frame_read_out_in_a_hall_at_cawdry].title"
+    of: "97e2a6aae4bc2da6"
+    plainenglish: >-
+      Line Nine
+  - address: "content:events/frame.yaml#events[id=frame_read_out_in_a_hall_at_cawdry].body"
+    of: "b1e10896b2d56a52"
+    plainenglish: >-
+      There is a page about an afternoon in a provincial records office. During a lawsuit about
+      a weir, a bored lawyer read out, for the record, where a certain box is kept in a cellar.
+      Whether the family wrote that fact down, left the page blank, or wrote that nothing of
+      theirs was recorded, the clerk's copy is still there. It has now been on record longer
+      than the wing the box was carried out of has been standing. The ninth line of the pact is
+      not a difficult line. Everyone who has ever read it has understood it the same way, and
+      hoped they were wrong.
+  - address: "content:events/frame.yaml#events[id=frame_read_out_in_a_hall_at_cawdry].interaction.outcomes[id=only].text"
+    of: "7749746ef2fa8532"
+    plainenglish: >-
+      What the debtor writes does not count as evidence. Someone wrote that down for us in
+      advance, and we filed it away.
+  - address: "content:events/frame.yaml#events[id=frame_nothing_worth_the_ink].title"
+    of: "40399202d0cb4c76"
+    plainenglish: >-
+      In the Usual Way
+  - address: "content:events/frame.yaml#events[id=frame_nothing_worth_the_ink].body"
+    of: "244cff8afbb9a186"
+    plainenglish: >-
+      There is a page for the eleven days of mourning. Whatever the family chose to write on it,
+      a careful account, a kind one, or a dated blank, which is a kind of account in itself, the
+      page is about a room. The guardian has stood beside more of those deathbeds than the page
+      has years. He has watched iron laid across a doorway turn dull along its whole length in
+      about the time it takes someone to notice. In eleven hundred years he has not found the
+      words for what that was. Describing a room is the one thing the record has always been
+      good at, and it does not lie about this one. It lies by treating it as ordinary.
+  - address: "content:events/frame.yaml#events[id=frame_nothing_worth_the_ink].interaction.outcomes[id=only].text"
+    of: "fa4c5a6eea9df64a"
+    plainenglish: >-
+      At the time, the family said those two weeks were 'not worth the ink'. Read one way, it is
+      the truest thing any of them ever said. Read the other way, it is the only lie in the book
+      that has ever mattered.
+  - address: "content:events/frame.yaml#events[id=frame_the_short_minute].title"
+    of: "17beceee1f54bbb2"
+    plainenglish: >-
+      Three Things Named, and a Record of Only One
+  - address: "content:events/frame.yaml#events[id=frame_the_short_minute].body"
+    of: "4b952b2cfede8618"
+    plainenglish: >-
+      The heralds asked to see three objects and were shown one. The note they wrote is the
+      oldest description of these objects ever made by anyone outside this family, and it names
+      the seal and stops. The guardian has had a very long time to think about that stop. A
+      house is a word other people use about you when you are not in the room. For four hundred
+      years, the word other people have had has been missing two of its three parts, and nobody
+      outside ever asked why, because nobody outside ever knew there were three.
+  - address: "content:events/frame.yaml#events[id=frame_the_short_minute].interaction.outcomes[id=only].text"
+    of: "629c96de0539a642"
+    plainenglish: >-
+      It was a good lunch that afternoon. The family has always been very good at lunches.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ring_cost].title"
+    of: "c0d89b0faeeab9a3"
+    plainenglish: >-
+      Two People, Both of Them Trouble
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ring_cost].body"
+    of: "a6e6ddd4a9f5b640"
+    plainenglish: >-
+      The page says of two people, four hundred years apart, that they never cost the house
+      anything it was not glad to give. It is written by someone who never met either of them.
+      The guardian met both. He does not say so, and he does not correct the page. He has now
+      gone without correcting it for longer than either of their lives lasted, and even to him
+      it is starting to look like a kind of agreement.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_ring_cost].interaction.outcomes[id=only].text"
+    of: "6946951f7a5cd78b"
+    plainenglish: >-
+      They were glad to give it. That is the part the page gets right, and the part nobody has
+      ever been able to bear.
+  - address: "content:events/frame.yaml#events[id=frame_the_rule_of_two].title"
+    of: "59017ff02af95aa4"
+    plainenglish: >-
+      What Was in the Room the Whole Time
+  - address: "content:events/frame.yaml#events[id=frame_the_rule_of_two].body"
+    of: "7e8028603b7221ec"
+    plainenglish: >-
+      Eleven years of a lined notebook, the weather recorded before breakfast, and one column
+      nobody else had thought to keep. It is the best work this family ever did. It is in the
+      book as a discovery, and it is wrong. The fire was in the room. It was in the room for
+      every test in the notebook, and for every test over two hundred years, because a family
+      does not test something it cares about in a cold room, and nobody writes down that a fire
+      was lit.
+  - address: "content:events/frame.yaml#events[id=frame_the_rule_of_two].interaction.outcomes[id=only].text"
+    of: "4520d02b71746287"
+    plainenglish: >-
+      They were right to believe it. That is a different sentence from the one they wrote, and
+      it is the only one still true.
+  - address: "content:events/frame.yaml#events[id=frame_one_word_and_eight_days].title"
+    of: "48ac7da4dafd35b0"
+    plainenglish: >-
+      One Word, and Eight Days Later
+  - address: "content:events/frame.yaml#events[id=frame_one_word_and_eight_days].body"
+    of: "5806741e9e20dce2"
+    plainenglish: >-
+      The page says it was written in the founder's own hand and has been kept without a break
+      or any doubt since the year of the signing. It has said so in eleven copies, in nine
+      different handwritings, and has never once been made to say anything else. Both
+      half-sheets are still in the box. The guardian wrote one of them on a night he can still
+      describe, and the other eight days later, from a memory he already did not trust. Of
+      everything he has been unable to tell this family in five hundred years, that is the thing
+      he has come closest to telling.
+  - address: "content:events/frame.yaml#events[id=frame_one_word_and_eight_days].interaction.outcomes[id=only].text"
+    of: "1ef70df4e7ea1d68"
+    plainenglish: >-
+      He would tell them now, if telling them now were still possible. It is very late to be
+      finding that out.
+  - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].title"
+    of: "9f32d2b940229a4d"
+    plainenglish: >-
+      The Ink Faded to the Colour of the Paper
+  - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].body"
+    of: "89fd1becc7b9b7a8"
+    plainenglish: >-
+      The guardian turns to the date of a wet autumn afternoon and stops. Some writers mention
+      the ink and the dogs, some blame damp, and some leave the line blank. He does not need the
+      sentence. He was there when the dogs stood outside with their backs to the hall, and the
+      writing of the second obligation faded to the colour of its own paper. The record chose an
+      ordinary cause, an impossible fact, or silence, and all three sit in the place where an
+      answer should have been. The page says enough.
+  - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].interaction.outcomes[id=only].text"
+    of: "a4a56b6ab6648bd6"
+    plainenglish: >-
+      That is not a lie, and it is not the truth. It is the family's whole method, and it very
+      nearly worked.
+  - address: "content:events/frame.yaml#events[id=frame_the_grates_and_the_hour].title"
+    of: "1d547fcf989cfc33"
+    plainenglish: >-
+      Seven Fireplaces, One Lit
+  - address: "content:events/frame.yaml#events[id=frame_the_grates_and_the_hour].body"
+    of: "cd06da286b418b34"
+    plainenglish: >-
+      The long room has seven fireplaces, and one is lit, as on every night like this. The house
+      has had three roofs and four names, and it has never once been warm from end to end. The
+      guardian sits where the guardian always sits. He has been sitting there since before the
+      oldest thing in the room was made, and the chair under him is a hundred and forty years
+      old, and both of those things are true.
+  - address: "content:events/frame.yaml#events[id=frame_the_grates_and_the_hour].interaction.outcomes[id=only].text"
+    of: "e04934798e407945"
+    plainenglish: >-
+      Few people now remember what the other six fires were for. For eight centuries the house
+      has been careful never to be the one who asks.
+  - address: "content:events/frame.yaml#events[id=frame_the_hour_the_clocks_agree].title"
+    of: "200eced44ba85328"
+    plainenglish: >-
+      Four Lost Minutes
+  - address: "content:events/frame.yaml#events[id=frame_the_hour_the_clocks_agree].body"
+    of: "f3d3fd7538b63759"
+    plainenglish: >-
+      Somewhere between one page and the next, every clock in the house loses four minutes, all
+      of them together, as they have on this night for longer than anyone has bothered to
+      notice. The guardian does not look up. Whatever takes the four minutes has never taken
+      anything else, and has never taken them from anywhere but here.
+  - address: "content:events/frame.yaml#events[id=frame_the_hour_the_clocks_agree].interaction.outcomes[id=only].text"
+    of: "8c63367ae5e2ed6e"
+    plainenglish: >-
+      The clockmaker from Wick came twice and would not come a third time. He wrote that the
+      clocks had nothing wrong with them, and his handwriting got smaller towards the end of the
+      line.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_table_was].title"
+    of: "16b8ce2ec6546e5a"
+    plainenglish: >-
+      How Long the Table Is
+  - address: "content:events/frame.yaml#events[id=frame_what_the_table_was].body"
+    of: "fb84c31c73cc0300"
+    plainenglish: >-
+      The table seats thirty and there are two people at it. It was built long because, in the
+      year it was made, there were thirty, the hall was loud, and the man who ordered it joked
+      about how much louder it would be by the time his grandsons had it. He was not wrong about
+      the grandsons. Now there is a great deal of table between the two of them. The far end is
+      dark, and the wood there has never been worn by anyone's elbows.
+  - address: "content:events/frame.yaml#events[id=frame_what_the_table_was].interaction.outcomes[id=only].text"
+    of: "0da3f94b231c9737"
+    plainenglish: >-
+      It is a fine piece of work. Whatever else is said about the house, it bought well, in the
+      century when it could afford to.
+  - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].title"
+    of: "c861a1b769ff2aa3"
+    plainenglish: >-
+      A Page He Always Skips
+  - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].body"
+    of: "4e840361c43e4ddd"
+    plainenglish: >-
+      There is one page he always turns past. He turns past it at exactly the same speed as the
+      others, and that is the only reason anyone ever noticed. In eight hundred years it has
+      been read aloud in this room perhaps four times, each time by someone who did not know it
+      was that page. Each of those four people describes it differently from the other three.
+  - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].interaction.outcomes[id=only].text"
+    of: "0b2899926d123d0e"
+    plainenglish: >-
+      Whether the difference is in the accounts or in the page itself, the chronicle does not
+      say. It was, after all, written by the house.
+  - address: "content:events/frame.yaml#events[id=frame_the_ninth_name_unspoken].title"
+    of: "3576e47b2b351737"
+    plainenglish: >-
+      Eight Names Out of Nine
+  - address: "content:events/frame.yaml#events[id=frame_the_ninth_name_unspoken].body"
+    of: "d9d8a025b93ae6c9"
+    plainenglish: >-
+      The Church keeps nine names and speaks eight of them. Over four centuries it has explained
+      the ninth in four different ways, each explanation complete and none of them the same. The
+      guardian was once in a room where someone tried saying the ninth. He has never said what
+      happened, and he has never said that nothing happened, and the difference between those
+      two silences is all the family has to go on.
+  - address: "content:events/frame.yaml#events[id=frame_the_ninth_name_unspoken].interaction.outcomes[id=only].text"
+    of: "1f84f0f9c7dd55bd"
+    plainenglish: >-
+      There is a third account of that room, in handwriting nobody has ever identified. It gives
+      no name at all, and records only the hour.

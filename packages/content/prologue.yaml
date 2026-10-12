@@ -375,3 +375,316 @@ prologue:
       province now but the book and what is said of it. The saying has passed,
       as such things pass, to {teller}; and whether the book or the telling is
       the truer, the chronicle does not say.
+
+proseVariants:
+  - address: "content:prologue.yaml#prologue[id=the_signing].opening"
+    of: "aa2e4a6011052714"
+    plainenglish: >-
+      It was the last of the Hollow Days, the time when the old year has ended and the new one
+      has not yet begun, and every table in the province keeps an empty seat without anyone
+      agreeing why. The hall was cold, the way a room gets when it was built for four times the
+      family living in it. Seven candles burned in holders meant for forty, and a dog lay by the
+      fire where it had slept every winter of its life.
+
+
+      Nobody saw what came in. The dog got up and went outside and would not come back when
+      called. In the morning they found it in the yard, with the snow melted around it in a
+      shape nobody wanted to measure. The iron on the table went dull between one sentence and
+      the next, so the seal, which had been bright when the man sat down, had to be cleaned
+      before it would take wax. There was a smell of wet ash indoors, as if it were summer, in
+      the middle of winter. Afterwards none of the four people who had been in that room could
+      agree how long they had been there, and two of them would not talk about it at all.
+
+
+      Three things were given. Three things were owed in return. The man was told which was
+      which, in order, and the order was not an accident.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[0].given"
+    of: "5a75adbfb7d50173"
+    plainenglish: >-
+      THE ROOF. The house had a weak claim to its land and a weaker claim to the name over its
+      door, and two families and a bishop could have said so in court. After that night none of
+      them did. That silence lasted through the Fall of the next royal line, the burning of the
+      Marches and four royal surveys, and it still holds.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[0].owed"
+    of: "1413a3895dffaecd"
+    plainenglish: >-
+      A PAGE A YEAR. Someone of the blood had to write down what the house had done, truthfully,
+      in a book kept only for that and kept nowhere else. The man thought this was a formality.
+      He had never yet done anything he needed to leave out.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[1].given"
+    of: "135cd2ddb117ad89"
+    plainenglish: >-
+      THE THING IN THE BLOOD. Nobody explained it, then or since. It comes to the sons and never
+      to the daughters; the daughters carry it and pass it on without ever having it themselves.
+      Nobody alive can ask for it, plan it, teach it or make it happen on purpose, and it has
+      never come the same way twice.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[1].owed"
+    of: "cc9e0b59d2345a65"
+    plainenglish: >-
+      THE SONS. Not taken: used up. The gift and the price are the same thing. In five hundred
+      years no house of this line has managed to have the gift without paying the price, though
+      several have written books claiming they did.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[2].given"
+    of: "be1b65200f8f910c"
+    plainenglish: >-
+      THE KEEPING. Three objects were left on the table: a seal, a ring, and a rod nobody has
+      ever found a use for. There was one condition: the family must keep them in a hand that
+      could be shown.
+  - address: "content:prologue.yaml#prologue[id=the_signing].triad[2].owed.campaignText"
+    of: "1029d118b647c23c"
+    plainenglish: >-
+      THE TERM. {years} years, to the day, ending in {endYear}. Then the account would be read
+      back and settled in whatever currency the account turned out to be written in. The man
+      agreed to this part quickly. The two members of his household sober enough to remember
+      said afterwards that he agreed to it faster than to the others. He was fifty-one. {years}
+      years was just a number, not something that happens to anyone.
+  - address: "content:prologue.yaml#prologue[id=the_signing].namePrompt"
+    of: "a585358c96a3a1b0"
+    plainenglish: >-
+      Before any seal was warmed, and before the house was asked what it would call itself, the
+      other party asked the man his name. When he answered, the name was written down in a
+      handwriting that none of the four people in the room could ever copy afterwards. The page
+      stayed open on the table. What is your name?
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].situation"
+    of: "18b266cc7d1e62f8"
+    plainenglish: >-
+      In the year before the signing, at a ford below Cawdry, the river rose after dark and
+      trapped one wheel of a loaded cart between two stones. The Warden's men watched from the
+      far bank, and the last useful light left the sky. The question was what the man did then.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].says"
+    of: "b02a14f982d5d39d"
+    plainenglish: >-
+      I pushed the wheel out with my own back.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].given"
+    of: "60ee56ee323c8e52"
+    plainenglish: >-
+      Strength grew a little in the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].owed"
+    of: "878cb55b47acdf0f"
+    plainenglish: >-
+      Mind weakened a little in the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wardens_men].says"
+    of: "0f4c895d27d6b061"
+    plainenglish: >-
+      I persuaded the Warden's men to lend me theirs.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wardens_men].given"
+    of: "ef3bf50ea33ae69a"
+    plainenglish: >-
+      Charm grew a little in the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wardens_men].owed"
+    of: "58e1b8c66d85a6fa"
+    plainenglish: >-
+      Strength weakened a little in the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wait_for_water].says"
+    of: "10e3ad38ba3dc2ac"
+    plainenglish: >-
+      I waited for the river to go down.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wait_for_water].given"
+    of: "08ab810f8af3cb8b"
+    plainenglish: >-
+      Long life grew a little in the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=wait_for_water].owed"
+    of: "83ab387d73614089"
+    plainenglish: >-
+      A small cut was taken from all of the line's inherited strengths.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].situation"
+    of: "9112c154ac92cfa0"
+    plainenglish: >-
+      Before Eilwen came from Ilm, there were two letters. One was written by a woman who had
+      known her mother, and one by a steward who had counted what came with the marriage. Both
+      were kept. The question was not which letter he believed, but why the man married her.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].says"
+    of: "6ce0c8e096accbcc"
+    plainenglish: >-
+      Because of how many children her mother had.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].given"
+    of: "4020a799ef40ad7d"
+    plainenglish: >-
+      Eilwen's fecundity was improved.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].owed"
+    of: "cb156bc2f989e6e6"
+    plainenglish: >-
+      Some of Eilwen's charm was the cost.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].says"
+    of: "aa640149341489c5"
+    plainenglish: >-
+      Because of the light in her.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].given"
+    of: "f2943492c99b00f6"
+    plainenglish: >-
+      Light and Life grew stronger in Eilwen's blood.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].owed"
+    of: "915ee77b8349a3c7"
+    plainenglish: >-
+      Eilwen's fecundity weakened.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=for_the_dowry].says"
+    of: "ca79214ef86d8862"
+    plainenglish: >-
+      For the money she brought.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=for_the_dowry].given"
+    of: "de504bc4042091d8"
+    plainenglish: >-
+      The treasury started with more money.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=for_the_dowry].owed"
+    of: "2e1572a87f762104"
+    plainenglish: >-
+      A small cut was taken from all of Eilwen's inherited strengths.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].situation"
+    of: "40026dfe4a41670a"
+    plainenglish: >-
+      In the worst winter anyone then alive could remember, there was only enough bread for two,
+      and three people stood at the door: a teacher, a midwife, and a man who could make a
+      column of numbers add up. Snow already covered the lower road. The question was who he let
+      in.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_teacher].says"
+    of: "8057852441c6b078"
+    plainenglish: >-
+      I let the teacher in.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_teacher].given"
+    of: "8a1ee76516c4d4c1"
+    plainenglish: >-
+      Osric became more loyal to the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_teacher].owed"
+    of: "1e7cfc33835e4397"
+    plainenglish: >-
+      Hesper was sent away, and what she knew left with her.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_midwife].says"
+    of: "5ca4022be1270b3f"
+    plainenglish: >-
+      I let the midwife in.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_midwife].given"
+    of: "acee8aa6a223e5e2"
+    plainenglish: >-
+      Hesper became more loyal to the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_midwife].owed"
+    of: "4a17bbea7632aa0e"
+    plainenglish: >-
+      Osric and Bertram became less loyal to the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=all_three].says"
+    of: "458b4cfd0d26e271"
+    plainenglish: >-
+      All three, on half rations.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=all_three].given"
+    of: "62af3aed47eb54c9"
+    plainenglish: >-
+      The house saved more money through the winter.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=all_three].owed"
+    of: "ed95549af78b92d6"
+    plainenglish: >-
+      All three servants became less loyal to the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].situation"
+    of: "779ab1b61f5d54d2"
+    plainenglish: >-
+      One morning a boundary stone stood one furrow further onto the house's land than it had
+      the night before. There were no boot prints around it, and the rain had not been heavy
+      enough to move anything made of stone. The neighbour said nothing. The question was what
+      the man did.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=assize_at_cawdry].says"
+    of: "27919ec8bca1f074"
+    plainenglish: >-
+      I took it to the court at Cawdry.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=assize_at_cawdry].given"
+    of: "95f8f4a1bb4ca425"
+    plainenglish: >-
+      The house's standing went up.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=assize_at_cawdry].owed"
+    of: "97e81021390f77ed"
+    plainenglish: >-
+      The court, the travel and a winter in rented rooms cost a lot of money.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=move_it_back].says"
+    of: "dfb15118167d90e4"
+    plainenglish: >-
+      I put it back myself, after dark.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=move_it_back].given"
+    of: "4e3691bb8a101197"
+    plainenglish: >-
+      The house kept the rent from that furrow.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=move_it_back].owed"
+    of: "32983ce7bb40c8e3"
+    plainenglish: >-
+      Calder held a small grudge against the line.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=let_it_lie].says"
+    of: "ab53a556a9ac9b2a"
+    plainenglish: >-
+      I left it where it was.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=let_it_lie].given"
+    of: "cbfd5410351eae44"
+    plainenglish: >-
+      Osric, Hesper and Bertram became a little more loyal to the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=let_it_lie].owed"
+    of: "5aef3295c8c1ecb9"
+    plainenglish: >-
+      The house lost the value of the furrow.
+  - address: "content:prologue.yaml#prologue[id=the_signing].housePrompt"
+    of: "8038dc3fc8e4bcbb"
+    plainenglish: >-
+      Only after these answers did the other party ask what the house would be called. The man's
+      own name was already on the page. This name was for the door, the seal, and everyone who
+      would come after him. Name the house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].friendsPrompt"
+    of: "a0171a3f15dc5c73"
+    plainenglish: >-
+      There was one more question. It was not about the house, and the man answered it without
+      realising he had been asked anything. It said: name five people who are not of your blood,
+      without whom your life would have been a different life. He gave five names. Nobody asked
+      him why, he did not say, and none of the four people in that room could later remember a
+      single one of them.
+
+
+      They have been coming back ever since, about one every half century, and then they
+      stopped. A midwife from Kettlewick in 1094. A rival's second son with the wrong
+      grandmother. A girl offered to a table that had already turned down two that season, in a
+      year when the house could not afford to be picky. The last of the five arrived some time
+      before 1300, and there has not been another. The family would find that worse if it had
+      ever counted them.
+
+
+      Each of them was a little better than they had any right to be: a strong back, a long
+      life, a mind that got there first. None of them was ever more than that. Nobody in the
+      house has commented on it, because nobody in the house was in that room, and the man who
+      was there did not write the names down.
+  - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[0].line"
+    of: "91bcf61b1429e28f"
+    plainenglish: >-
+      He asked for time, because time was the only thing anyone in that room seemed to have too
+      much of.
+  - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[1].line"
+    of: "e3896372948141de"
+    plainenglish: >-
+      He asked for children. It was the least imaginative thing anyone could have asked for in
+      that room, and the only one that has never yet ruined a house.
+  - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[2].line"
+    of: "37faa8738c6ad83f"
+    plainenglish: >-
+      He asked to be able to see it. Nothing in the agreement said anyone had to tell him what
+      he would be looking at, and nobody has.
+  - address: "content:prologue.yaml#prologue[id=the_signing].grudges[0].line"
+    of: "b9f41bab68418b4f"
+    plainenglish: >-
+      The Marrow family had the better claim to the upper field, and two witnesses to prove it.
+      One witness was dead by Thaw, and the other had moved to Bramme and would not answer
+      letters. Marrow has never accused this house of anything. They simply buy every book that
+      comes up at auction, and they read them.
+  - address: "content:prologue.yaml#prologue[id=the_signing].grudges[1].line"
+    of: "3346fa3e1044100a"
+    plainenglish: >-
+      That winter Calder sent eleven men to hold the ford because this house promised to come.
+      This house did not come, and four of the men came back. Soldiers hold this kind of thing
+      against a seat, not a family, so it falls on whoever is sitting in it.
+  - address: "content:prologue.yaml#prologue[id=the_signing].grudges[2].line"
+    of: "e056da1c3598afe8"
+    plainenglish: >-
+      The man burned a scholar's letters rather than answer the question in them. Ilm does not
+      forget and does not strike back. It writes, patiently, for three hundred years, and lends
+      what it writes to anyone who asks.
+  - address: "content:prologue.yaml#prologue[id=the_signing].thesis"
+    of: "e3208e1764517113"
+    plainenglish: >-
+      Everything after this was done by people who never signed it.
+  - address: "content:prologue.yaml#prologue[id=the_signing].inheritedLine"
+    of: "b92c1aac5b8c45b0"
+    plainenglish: >-
+      Before this house there was another one. It called itself {house} and kept a book, as this
+      house will. Nothing of that house is left in the province now except the book and what
+      people say about it. That story has passed, as such stories do, to {teller}. The chronicle
+      does not say whether the book or the story is closer to the truth.
