@@ -177,6 +177,65 @@ describe('campaign choice (#66)', () => {
   });
 });
 
+describe('Begin and Continue never race on the Start screen (#1493)', () => {
+  it('disables Begin while Continue is pending and ignores a stale synthetic click', async () => {
+    const actions = spyActions();
+    let settle: ((value: boolean) => void) | undefined;
+    vi.mocked(actions.resume).mockImplementationOnce(
+      () => new Promise<boolean>((resolve) => { settle = resolve; }),
+    );
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      const beginButton = w.findAll('button').find((b) => b.text() === 'Begin a new signing');
+      expect(continueButton).toBeTruthy();
+      expect(beginButton).toBeTruthy();
+
+      await continueButton!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledTimes(1);
+      expect(beginButton!.attributes('disabled')).toBeDefined();
+      // An already-queued/programmatic DOM event can bypass the native disabled
+      // state. The action handler must independently refuse it.
+      beginButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(actions.begin).not.toHaveBeenCalled();
+
+      settle!(false);
+      await flush();
+      expect(beginButton!.attributes('disabled')).toBeUndefined();
+      await beginButton!.trigger('click');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('refuses a same-tick Continue after Begin dispatches', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const continueButton = w.findAll('button').find((b) => b.text() === 'Continue the last sitting');
+      const beginButton = w.findAll('button').find((b) => b.text() === 'Begin a new signing');
+      expect(continueButton).toBeTruthy();
+      expect(beginButton).toBeTruthy();
+
+      // Both actions arrive before the Start screen has rendered the new run.
+      beginButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      continueButton!.element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      expect(actions.resume).not.toHaveBeenCalled();
+
+      // If a test host keeps Start mounted, the next deliberate action is valid.
+      await flush();
+      await continueButton!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('Continue leads when a run can be resumed', () => {
   it('keeps Continue single-flight and permits retry after refusal (#1360)', async () => {
     const actions = spyActions();
