@@ -10,6 +10,7 @@ import { deleteSave, listSaves, readSave, requireSaveEnvelope, saveRoot, writeSa
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { mobileStorage } from '../../mobile/src/storage.js';
 import { writeJsonAtomically } from './atomic-json.mjs';
+import { parseImportedRun } from './run-import.mjs';
 import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 
 /**
@@ -170,6 +171,21 @@ describe('a shared shell save envelope for writing and export (#1253)', () => {
   });
 });
 
+describe('the shell import and persistence format boundary (#1367)', () => {
+  it('rejects non-finite formats without rejecting other finite numeric envelopes', () => {
+    for (const format of [NaN, Infinity, -Infinity]) {
+      expect(() => requireSaveEnvelope({ format })).toThrow('a save is an object with a numeric format');
+    }
+    // JSON.parse permits overflowing exponents, even though a JSON writer
+    // would silently reserialize those same values as null.
+    for (const raw of ['{"format":1e999}', '{"format":-1e999}']) {
+      expect(() => parseImportedRun(raw)).toThrow('a save is an object with a numeric format');
+    }
+    expect(parseImportedRun('{"format":28,"year":1042}')).toEqual({ format: 28, year: 1042 });
+    expect(requireSaveEnvelope({ format: Number.MAX_VALUE })).toEqual({ format: Number.MAX_VALUE });
+  });
+});
+
 describe('the save directory', () => {
   let userData = '';
   let root = '';
@@ -181,6 +197,35 @@ describe('the save directory', () => {
   afterEach(() => rmSync(userData, { recursive: true, force: true }));
 
   const aSave = (over: Record<string, unknown> = {}) => ({ format: 6, year: 1442, savedAt: '2026-08-22T00:00:00.000Z', ...over });
+
+  it('refuses non-finite writes without corrupting an existing save slot (#1367)', () => {
+    writeSave(root, 'kept', aSave({ year: 1442 }));
+    const path = join(root, 'kept.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    for (const format of [NaN, Infinity, -Infinity]) {
+      expect(() => writeSave(root, 'kept', aSave({ format })))
+        .toThrow('a save is an object with a numeric format');
+      expect(readFileSync(path, 'utf8')).toBe(original);
+    }
+
+    expect(listSaves(root)).toHaveLength(1);
+    expect(readSave(root, 'kept')).toMatchObject({ year: 1442, format: 6 });
+    expect(readdirSync(root)).toEqual(['kept.edsave.json']);
+  });
+
+  it('reports an overflowing numeric format in an existing JSON file as unreadable', () => {
+    const bytes = '{"format":1e999,"year":1442}';
+    const path = join(root, 'overflow.edsave.json');
+    writeFileSync(path, bytes, 'utf8');
+
+    expect(listSaves(root)[0]).toMatchObject({
+      slot: 'overflow',
+      unreadable: expect.stringContaining('a save is an object with a numeric format'),
+    });
+    expect(() => readSave(root, 'overflow')).toThrow('a save is an object with a numeric format');
+    expect(readFileSync(path, 'utf8')).toBe(bytes);
+  });
 
   it('writes, lists, reads back and deletes a slot', () => {
     writeSave(root, 'the autumn run', aSave());
