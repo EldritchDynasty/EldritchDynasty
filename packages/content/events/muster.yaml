@@ -727,3 +727,321 @@ events:
                 - { kind: relationship, from: household, to: head, sentiment: 4 }
                 - { kind: flag, flag: house_is_in_the_field, set: false }
                 - { kind: muster, op: settle }
+
+proseVariants:
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].title"
+    of: "700915b0b21b830c"
+    plainenglish: >-
+      Two Households in Every Five
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].body"
+    of: "c18be4dd9fb89fe9"
+    plainenglish: >-
+      In Greening the sergeants come up the Cawdry road with a cart, a list, and the good
+      manners of men who do not need to be rude. The call-up is two households in every five.
+      That means eleven men from this land, with one of the family in charge of them, or a
+      payment of a hundred and twenty crowns and nobody goes. For four hundred years the men
+      have practised at the archery range behind Wick after every tenth-day rest, for exactly
+      this morning. {HEAD} is handed the list and given until noon to answer. What the sergeants
+      will remember is what kind of answer it was.
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].interaction.choices[id=send_them].label"
+    of: "841e3e89e6231d7d"
+    plainenglish: >-
+      Send them. This house has a name, and this is how it keeps it.
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].interaction.choices[id=send_them].outcomes[id=they_go].text"
+    of: "879e6dfddafbe909"
+    plainenglish: >-
+      By the end of the week the eleven are on the Cawdry road, and the cart goes with them. The
+      hall is quieter, by exactly as much noise as eleven men make. Nobody has said how long
+      they will be gone.
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].interaction.choices[id=commute_it].label"
+    of: "88816644a685cb80"
+    plainenglish: >-
+      Pay instead. A hundred and twenty crowns, and the archery stays practice.
+  - address: "content:events/muster.yaml#events[id=the_muster_is_called].interaction.choices[id=commute_it].outcomes[id=commuted].text"
+    of: "04c3c31229f3f40e"
+    plainenglish: >-
+      The money goes into a box on the cart, and a receipt comes back in handwriting that has
+      written four hundred of them. Eleven men bring in their own harvest during a war that
+      takes four men from every parish around this one. The houses that sent men are named in
+      the war reports. This house is named in an account book.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].title"
+    of: "316a3d51bcfd1b95"
+    plainenglish: >-
+      The Men Who Go With Him
+  - address: "content:events/muster.yaml#events[id=who_leads_them].body"
+    of: "82b15ad68674ff82"
+    plainenglish: >-
+      The cart is loaded. The list is short by however many the family puts on it, and the road
+      to Cawdry takes two days in this weather. {OFFICER} will lead the eleven, because someone
+      of the blood has to, and the Warden's clerk writes down his name. The real question is who
+      goes with him. The men at the archery range have shot at a straw target after every
+      tenth-day rest since they were nine years old, and not one of them has ever shot at a man.
+      Nobody says that part out loud.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_company].label"
+    of: "2acd66a6ed60235a"
+    plainenglish: >-
+      They go down the road looking like real soldiers.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_company].outcomes[id=a_company].text"
+    of: "6c003c341ffd53e8"
+    plainenglish: >-
+      By Bramme they are marching in step without being told to. The sergeant notices and
+      mentions it to someone who matters. The Warden's clerk spells the family's name right on
+      his second try.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_levy].label"
+    of: "6cfc276bf40f7f97"
+    plainenglish: >-
+      They go down the road looking like ordinary conscripts.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_levy].outcomes[id=a_levy].text"
+    of: "a25d6e9598e77319"
+    plainenglish: >-
+      Eleven men and a cart, led by one of the family on an ordinary horse that was never meant
+      for war. Every other house on this road is sending the same. Nobody bothers to write it
+      down.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_list].label"
+    of: "d219392dd9de6a41"
+    plainenglish: >-
+      They go down the road looking like names on a list.
+  - address: "content:events/muster.yaml#events[id=who_leads_them].interaction.choices[id=they_are_a_list].outcomes[id=a_list].text"
+    of: "7a465d8581028f79"
+    plainenglish: >-
+      The youngest has never been further than Bramme, and the oldest should not be going at
+      all. The sergeant counts them twice to make sure that is all of them. He says nothing. He
+      writes the number down and moves on to the next gate.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].title"
+    of: "448fd831934659c5"
+    plainenglish: >-
+      Buying a Command, and What It Costs
+  - address: "content:events/muster.yaml#events[id=the_position_offered].body"
+    of: "fe03f6e191b04a95"
+    plainenglish: >-
+      A clerk from the Warden's household writes with three offers. A sergeant's post over the
+      Nethering companies is open for twenty-five crowns, plus two a year. A captain's post in a
+      Marches company costs ninety, for a man already serving. And a banner of the house's own,
+      raised and paid for by this family and listed under its name alone, costs two hundred and
+      sixty. It is only offered to houses rich enough not to be laughed at for offering less.
+      None of the three wins an inch of ground or keeps a single man alive. What they buy is the
+      line in the war report saying whose banner the men fought under, which is the only part of
+      a war that gets written down at Caster. {HEAD} can also do nothing. Word gets around
+      anyway, but it is not written down. The clerk wants an answer by Ingathering.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_serjeanty].label"
+    of: "a2e5638142d184ad"
+    plainenglish: >-
+      The sergeant's post. Twenty-five crowns, and the name goes on the roll.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_serjeanty].outcomes[id=bought_serjeanty].text"
+    of: "ba7551d13884a015"
+    plainenglish: >-
+      Twenty-five crowns out of the cash box, and two a year after that. The family's name goes
+      into a document at Cawdry that nobody in this house will ever read. But it is there, and
+      that is all the money was for.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_captaincy].label"
+    of: "02db7821d368c9a5"
+    plainenglish: >-
+      The captain's post. Ninety crowns, and the war reports name one of ours.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_captaincy].outcomes[id=bought_captaincy].text"
+    of: "d13172d840dd363c"
+    plainenglish: >-
+      Ninety crowns would buy a warhorse and a half, or the roof of the west wing. What it buys
+      instead is a company of hired soldiers who answer to one of the blood, and a line in the
+      Caster war reports that names him. The soldiers stay loyal until the end of the month.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_banner].label"
+    of: "9f2170740f5a1630"
+    plainenglish: >-
+      A banner of the house's own. Two hundred and sixty crowns, under no name but ours.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_the_banner].outcomes[id=bought_banner].text"
+    of: "fab2910cc6a607e8"
+    plainenglish: >-
+      Two hundred and sixty crowns is most of a year's income, and everything Wick was going to
+      spend on the mill. It buys a banner with this house's name and no one else's, carried by
+      men this house pays and who answer to it first. For once, the clerk at Caster writes the
+      family's name at the top of a line instead of somewhere further down.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_nothing].label"
+    of: "c88e9a3545a56da1"
+    plainenglish: >-
+      Buy nothing. The men have already gone, and this letter changes nothing.
+  - address: "content:events/muster.yaml#events[id=the_position_offered].interaction.choices[id=buy_nothing].outcomes[id=bought_nothing].text"
+    of: "c60014c03fc7135c"
+    plainenglish: >-
+      Nobody writes back to the clerk, which is an answer in itself, and he takes it as one. The
+      eleven march under the banner of a house forty miles to the east that sent nine men. Word
+      gets around. But word is not a written record.
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].title"
+    of: "b68afda9c86b1025"
+    plainenglish: >-
+      News from the Road
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].body"
+    of: "c643e2ff93df3ca3"
+    plainenglish: >-
+      News comes up the Cawdry road only as fast as whoever is walking it. When a war has gone
+      on for years, it arrives about twice a season and is mostly wrong. {OFFICER} is somewhere
+      south of the Lag, or was in Greening. At supper the hall says out loud that it is not
+      counting the days, and counts them anyway.
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].absentBody"
+    of: "eb74042a1cfee28e"
+    plainenglish: >-
+      News comes up the Cawdry road only as fast as whoever is walking it. By now the news is
+      about a company, not a man, because the man it used to be about has not been named in any
+      of it for two winters. At supper the hall says out loud that it is not counting the days.
+      It counts them anyway.
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].interaction.outcomes[id=it_is_going_well].text"
+    of: "bd3823ee2cfdd0f2"
+    plainenglish: >-
+      In Ripening a place with a name nobody here can pronounce is captured and held through the
+      winter. Men who were not there tell the story and name two of the eleven. In Greening a
+      cart comes back up the road with three of them on it. They get down and walk the last mile
+      beside it, because they want to be seen walking.
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].interaction.outcomes[id=it_is_going_nowhere].text"
+    of: "52fc181a0c8b6fbe"
+    plainenglish: >-
+      Nothing is won and nothing is lost, and the wages still have to be paid. The war becomes
+      something nobody asks about at supper any more. Two more seasons pass. The barley is
+      brought in by women and men over fifty, and it is brought in late.
+  - address: "content:events/muster.yaml#events[id=word_from_the_field].interaction.outcomes[id=it_is_going_badly].text"
+    of: "54be47b976878085"
+    plainenglish: >-
+      Four of the eleven have died at a river crossing that was not worth having. The man who
+      brings the news is one of the eleven, and he will not sit down while he tells it. He goes
+      back the next morning, because his name is on the list and nobody has changed the list.
+      There is a great deal this house could do, and none of it would make any difference.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].title"
+    of: "1450a57a31722e16"
+    plainenglish: >-
+      Calling the Men Home
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].body"
+    of: "526b0c298582ef55"
+    plainenglish: >-
+      A house may take its own men off a list it put them on. The Warden's clerk will cross them
+      out, and there is no fine, no court case, and nothing said to anyone's face. The cost is
+      everything the house has gained so far: within about a season, the war reports close over
+      the gap as if they were never there. {HEAD} would get back however many are still alive.
+      Wick would get its men back before the barley harvest. And everyone at Caster would learn
+      something about this house that they would never forget.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].absentBody"
+    of: "85dcc5bfc933a4eb"
+    plainenglish: >-
+      A house may take its own men off a list it put them on. The Warden's clerk will cross them
+      out, and there is no fine, no court case, and nothing said to anyone's face. Nobody has
+      named the man who led them since the winter before last. {HEAD} would get back however
+      many are still alive. Wick would get its men back before the barley harvest. And everyone
+      at Caster would learn something about this house that they would never forget.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].interaction.choices[id=call_them_home].label"
+    of: "1fddf3dd5399f099"
+    plainenglish: >-
+      Call them home. Keep the men, and give up the rest.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].interaction.choices[id=call_them_home].outcomes[id=called_home].text"
+    of: "a304b8af96ecb3b3"
+    plainenglish: >-
+      They are back in eleven days, faster than they went. Wick has them for the barley and does
+      not pretend to be anything but glad. Nothing is said at Cawdry. Nothing is written at
+      Caster. By Ingathering the war reports have closed over the gap, and this house is on the
+      wrong side of it.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].interaction.choices[id=leave_them_in].label"
+    of: "623e51d59da6f6a1"
+    plainenglish: >-
+      Leave them there. It has cost too much to end with nothing.
+  - address: "content:events/muster.yaml#events[id=the_withdrawal].interaction.choices[id=leave_them_in].outcomes[id=left_in].text"
+    of: "c705161422f5ea38"
+    plainenglish: >-
+      The letter is never written. At supper a man nobody argues with explains the reasons at
+      length, and they are good reasons, and every one of them is about what has already been
+      spent.
+  - address: "content:events/muster.yaml#events[id=the_settlement].title"
+    of: "96562af8fa4718e4"
+    plainenglish: >-
+      What the Book Will Say About the War
+  - address: "content:events/muster.yaml#events[id=the_settlement].body"
+    of: "53ad198239fd3076"
+    plainenglish: >-
+      The war ends the way wars end. The carts stop coming, and one day a man says the word
+      'peace' at the market and nobody contradicts him. What comes back to this house is fewer
+      men than went, and a two-paragraph letter from a clerk who has written six hundred like
+      it. {HEAD} sits down with the book and the letter and works out what really happened. It
+      takes most of an afternoon and is not hard. Putting it into the book is the hard part.
+  - address: "content:events/muster.yaml#events[id=the_settlement].absentBody"
+    of: "839ecb1f64a39953"
+    plainenglish: >-
+      The war ends the way wars end. The carts stop coming, and one day a man says the word
+      'peace' at the market and nobody contradicts him. What comes back is fewer men than went,
+      and no letter at all, because the man the letter would have been about has not been on
+      anyone's list for ten years. {HEAD} sits down with the book and works out what really
+      happened. Putting it into the book is the hard part.
+  - address: "content:events/muster.yaml#events[id=the_settlement].interaction.choices[id=count_the_cost].label"
+    of: "f6866e7d6dc09bd9"
+    plainenglish: >-
+      Write down what it cost, and write it honestly.
+  - address: "content:events/muster.yaml#events[id=the_settlement].interaction.choices[id=count_the_cost].outcomes[id=counted].text"
+    of: "fc6d7bd531e7fa59"
+    plainenglish: >-
+      Four names, a sum of crowns, and the word 'nothing' in the column where a house that had
+      bought a banner would have written something. It is an accurate page. It is not a page
+      anyone will ever read out loud.
+  - address: "content:events/muster.yaml#events[id=the_settlement].interaction.choices[id=take_what_is_owed].label"
+    of: "c762d084a6f910f8"
+    plainenglish: >-
+      Accept whatever the clerk says the house is owed.
+  - address: "content:events/muster.yaml#events[id=the_settlement].interaction.choices[id=take_what_is_owed].outcomes[id=taken].text"
+    of: "b6de88f77c150cfb"
+    plainenglish: >-
+      The house writes to the clerk twice, and he answers once. His answer is a phrase that is
+      generous about the house and vague about everything else. It goes in the book on a line of
+      its own. That one line is doing a lot of work.
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.subject"
+    of: "c0d93a7221bd6cc6"
+    plainenglish: >-
+      the war, and what this house will be remembered for in it
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.record.chronicle"
+    of: "e2f00b767abf176a"
+    plainenglish: >-
+      The house sent men to the war, and they did not fight under a banner of its own. Here is
+      how many went and how many came back, and the second number is smaller.
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.record.claims[0].text"
+    of: "bc9caf76d16cb11a"
+    plainenglish: >-
+      went to war with the house's men under someone else's banner, not their own
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.embellish.chronicle"
+    of: "8586f7073627d60b"
+    plainenglish: >-
+      The house sent men to the war under its own banner, and they were named in the war reports
+      at Caster. What it cost is written down elsewhere, and is not the point of this page.
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.embellish.claims[0].text"
+    of: "c78b1dbc612df570"
+    plainenglish: >-
+      led the house's men under its own banner and was named in the war reports
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].title"
+    of: "36c6e5eb0f731017"
+    plainenglish: >-
+      What the Book Already Says About the War
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].body"
+    of: "38703a7b06207217"
+    plainenglish: >-
+      The war ends the way wars end. The carts stop coming, and one day a man says the word
+      'peace' at the market and nobody contradicts him. What comes back to this house is fewer
+      men than went, and a letter from a clerk who already has the family's name on file under
+      its own command, before {HEAD} even opens the book. There is nothing to decide here. There
+      is only how much to say about it.
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].absentBody"
+    of: "6906ca34fa1de340"
+    plainenglish: >-
+      The war ends the way wars end. The carts stop coming, and one day a man says the word
+      'peace' at the market and nobody contradicts him. What comes back is fewer men than went,
+      a command already on file at Caster, and no letter naming the man it would have named,
+      because he has not been on anyone's list for ten years. {HEAD} writes it down anyway. The
+      record of the command speaks for itself and does not need him.
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].interaction.choices[id=write_it_plain].label"
+    of: "c330cf1c09750198"
+    plainenglish: >-
+      Write it simply. The record of the command already says what it needs to.
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].interaction.choices[id=write_it_plain].outcomes[id=written_plain].text"
+    of: "f6ed7d1710b28feb"
+    plainenglish: >-
+      Men, a command, and fewer coming back than went. It reads like every other page in the
+      records at Caster, which is exactly what buying the command was for.
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].interaction.choices[id=make_it_noticed].label"
+    of: "9214a239ebee0515"
+    plainenglish: >-
+      Make sure people notice it. It cost enough to be worth reading twice.
+  - address: "content:events/muster.yaml#events[id=the_settlement_with_banner].interaction.choices[id=make_it_noticed].outcomes[id=made_noticed].text"
+    of: "d04876064308082a"
+    plainenglish: >-
+      The same men and the same command, with a copy sent to a second clerk who owes this house
+      nothing but reads slowly and reads everything. Nothing on the page is untrue. It is simply
+      read by more people than the first clerk would ever have shown it to.

@@ -898,3 +898,509 @@ proseVariants:
     of: "a58ad601b55f7fc5"
     plainenglish: >-
       declined the foreign offer because its terms were unsuitable
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].title"
+    of: "1327984ddfe74579"
+    plainenglish: >-
+      A Bride with a Name, a Horse, and No Papers
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].body"
+    of: "aec02c197ff3d03d"
+    plainenglish: >-
+      The Rimefell men come down in Frostfall with ore, horn, rough wool and horses, and go home
+      before the mountain passes close. This year one of them has brought his sister. {BRIDE}
+      has a name, a horse, four words of Ambric, and no documents of any kind. Every
+      marriage-broker in the province would say she is worth nothing, though two of them have
+      privately said otherwise. She is what a house gets when, on paper, a person cannot exist.
+      {SON} has spent three afternoons in the yard with her and the interpreter.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].label"
+    of: "88fdd1d88541ca94"
+    plainenglish: >-
+      Accept her. Papers can be bought, but a bloodline cannot.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].outcomes[id=married_in].text"
+    of: "414703d99a66334d"
+    plainenglish: >-
+      They marry at Wick in Thaw, with her brother as witness and the priest writing down a name
+      he has to hear twice. There is nothing at all behind that entry: no family line, no
+      notary, no seal, nothing anywhere in the Settled Lands. Her sons will be the proof. Her
+      sons are the only proof, and they are twenty years away, and the heralds are not.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=buy_her_a_descent].label"
+    of: "85c0944bb78cd8e7"
+    plainenglish: >-
+      Accept her, but buy her three generations of family history at Bramme first.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=buy_her_a_descent].outcomes[id=papered].text"
+    of: "a8cc9796f0c3e5da"
+    plainenglish: >-
+      Twenty-five crowns to a notary at Bramme who does not ask where the Rimefell is, and a
+      woman who arrived with a horse now has three generations of family on her mother's side.
+      It is good enough for Bramme, which is what was paid for. The heralds at Caster are a
+      different matter, with far more time, and this family has just handed them a document.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].record.subject"
+    of: "0e800e6528ed0221"
+    plainenglish: >-
+      where the bride really came from
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].record.options.record.chronicle"
+    of: "a66f6cbf0c964c4b"
+    plainenglish: >-
+      One of our family married a woman from the Rimefell, who came down with her brother in
+      Frostfall with a name, a horse and no documents of any kind. We bought her three
+      generations of family history at Bramme.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].record.options.record.claims[0].text"
+    of: "2a22ce11115ce205"
+    plainenglish: >-
+      came from the Rimefell with no documents, and had three generations of family history
+      bought for her at Bramme
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].record.options.embellish.chronicle"
+    of: "b7c5da793986c5a5"
+    plainenglish: >-
+      One of our family married the daughter of a respected northern house, whose family line
+      was shown for three generations under a notary's seal.
+  - address: "content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].record.options.embellish.claims[0].text"
+    of: "24b6c0a7248aa86b"
+    plainenglish: >-
+      showed three generations of family line under a notary's seal
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].title"
+    of: "32a32192c9e2920e"
+    plainenglish: >-
+      Every Matchmaker Has a Theory, and Hers Works
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].body"
+    of: "fd53b3593eb63f25"
+    plainenglish: >-
+      Omens are real, cheap, unreliable and everywhere. Every matchmaker in the province has a
+      theory about them, and they all disagree, which is why nobody has ever been able to judge
+      a girl by anything but her family. {BROKER} has come up from Cawdry with a list. It covers
+      nine marriages she arranged over thirty years and how each turned out, and in seven of the
+      nine she predicted the outcome before the wedding. She has not come to sell a marriage.
+      She has come to sell the list.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].interaction.choices[id=buy_the_list].label"
+    of: "5dc01a6436eab788"
+    plainenglish: >-
+      Buy it. Forty crowns for thirty years of someone's careful attention.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].interaction.choices[id=buy_the_list].outcomes[id=bought_the_list].text"
+    of: "e6c8f68d330f7051"
+    plainenglish: >-
+      Forty crowns for nine marriages on four sheets. What the sheets really contain is not a
+      theory about omens. It is thirty years of who married whom and who their grandmothers
+      were. That is the same information the heralds hold, arranged by someone who was asking a
+      different question.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].interaction.choices[id=buy_the_list].outcomes[id=she_keeps_a_copy].text"
+    of: "b29c0564289a5488"
+    plainenglish: >-
+      Forty crowns for four sheets. For thirty years this woman has made copies of her own
+      working papers, because that is what people in her trade do, and she has never thought of
+      it as anything more. The copy is in Cawdry. It mentions this family seven times, more than
+      any other name in it.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].interaction.choices[id=send_her_away].label"
+    of: "558259f825ac8cb4"
+    plainenglish: >-
+      Send her away. This family is not something to be studied.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].interaction.choices[id=send_her_away].outcomes[id=sent_away].text"
+    of: "e0dc1962b1e70a06"
+    plainenglish: >-
+      She is fed, thanked, paid two crowns for her journey and sent back down the Cawdry road
+      before dark, with her four sheets. She is a professional and takes no offence. In 1206 she
+      sells the list to a house at Cawdry that has been asking the same question for two
+      generations. That house pays sixty.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].record.subject"
+    of: "e1a4c364cfdb91d8"
+    plainenglish: >-
+      the matchmaker's nine marriages
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].record.options.record.chronicle"
+    of: "27b3f45cd0760cc0"
+    plainenglish: >-
+      A matchmaker from Cawdry offered us thirty years of her own working papers. She had
+      predicted seven of nine marriages before the weddings, and we sent her away with them.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].record.options.record.claims[0].text"
+    of: "36cdabb0eafaf8dc"
+    plainenglish: >-
+      offered thirty years of working papers that had predicted seven marriages out of nine
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].record.options.embellish.chronicle"
+    of: "800dc32d44c323a9"
+    plainenglish: >-
+      A matchmaker visited Ardwen with her cards, was listened to politely, and had no match to
+      offer that suited the house.
+  - address: "content:events/rare_match.yaml#events[id=the_broker_who_is_right].record.options.embellish.claims[0].text"
+    of: "83d1e6c8630aa78c"
+    plainenglish: >-
+      visited with her cards and had no suitable match to offer
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].title"
+    of: "41fe152ce13691e8"
+    plainenglish: >-
+      The One Possible Match
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].body"
+    of: "f4173cea43fac976"
+    plainenglish: >-
+      At this distance of kinship it is legal. The Church will grant permission for four crowns,
+      and does so eleven times a year in this diocese. It is the only marriage open to this
+      family that puts what the blood carries on both sides of the bed. {SON} and {COUSIN} have
+      met at the same two feasts every year of their lives, and have opinions about each other
+      that nobody has asked for. Everyone in this hall understands what is being proposed, and
+      why. Nobody in this hall has said the second part out loud.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].interaction.choices[id=make_the_match].label"
+    of: "7a718f8a6b9fab1e"
+    plainenglish: >-
+      Arrange it. Four crowns to the diocese, and the wedding at Greening.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].interaction.choices[id=make_the_match].outcomes[id=it_concentrates].text"
+    of: "6bfb9b4245e4051e"
+    plainenglish: >-
+      Four crowns, the Church's permission, and a wedding at Greening that the province attends
+      and judges instantly and correctly. There are three sons. The eldest wakes at eleven, the
+      earliest this family has seen in four generations. The second is not right, in a way that
+      has a name in every isolated village in this kingdom.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].interaction.choices[id=make_the_match].outcomes[id=it_does_not_concentrate].text"
+    of: "551bdb62c623cc46"
+    plainenglish: >-
+      Four crowns, the Church's permission, a wedding, and four children, of whom two survive.
+      Neither carries any more of the blood than the cousins on either side did. The province
+      judged it. The blood did not care. In three generations this family will try it again,
+      because nobody wrote down that it did not work.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].interaction.choices[id=marry_them_outward].label"
+    of: "b38a9e5a02f98f66"
+    plainenglish: >-
+      Marry them both outside the family, as this house always has.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].interaction.choices[id=marry_them_outward].outcomes[id=outward].text"
+    of: "f9b2d474ba912808"
+    plainenglish: >-
+      Two marriages and two dowries, ninety crowns between them, and two bloodlines leaving this
+      house for families that have never carried anything. It is the safe decision, and everyone
+      involved is happier. The blood is thinner in the next generation than in this one,
+      measurably so, and nobody in this world has any way to measure it.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].record.subject"
+    of: "719830fc8c317398"
+    plainenglish: >-
+      the marriage between cousins
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].record.options.record.chronicle"
+    of: "8d081b8962973f8d"
+    plainenglish: >-
+      Two of our family were married to each other with the Church's permission, for four
+      crowns. Of their children, the eldest woke at eleven and the second was not right. Both
+      facts are in the same sentence, because they belong together.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].record.options.record.claims[0].text"
+    of: "e28e6588379c4174"
+    plainenglish: >-
+      married within his own house with the Church's permission, for four crowns
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].record.options.embellish.chronicle"
+    of: "133787cb47df2b2f"
+    plainenglish: >-
+      In the same year, two of our family married into respected houses outside the family, each
+      with a dowry of forty-five crowns.
+  - address: "content:events/rare_match.yaml#events[id=the_one_permutation].record.options.embellish.claims[0].text"
+    of: "3896248992318465"
+    plainenglish: >-
+      married into a respected house outside the family
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].title"
+    of: "16b7e53a64156b0e"
+    plainenglish: >-
+      A Forged Family Tree for a Hundred and Twenty Crowns
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].body"
+    of: "f01185756aa731b1"
+    plainenglish: >-
+      A forged family tree good enough to fool Bramme costs twenty-five crowns. One good enough
+      for Caster costs a hundred and twenty. The difference is four generations, three seals,
+      two different handwritings, and a man who knows which registers nobody ever checks and
+      which ones they do. The man who does Caster-quality work comes to the house, not the other
+      way round. He is pleasant and thorough, and he asks {SUBJECT} four questions that nobody
+      in this family has ever thought to ask themselves.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].interaction.choices[id=buy_the_caster_grade].label"
+    of: "dab53e551c2faa39"
+    plainenglish: >-
+      Pay the hundred and twenty crowns. Do it properly or not at all.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].interaction.choices[id=buy_the_caster_grade].outcomes[id=caster_grade].text"
+    of: "b77daec90528bb65"
+    plainenglish: >-
+      Eleven weeks and a hundred and twenty crowns buy a document better than this family's real
+      ones. A real family line is written by tired priests over four hundred years, and this one
+      was written by an expert in good light. Nobody has ever questioned it. It is the single
+      most dangerous thing in this house, and it is in the cupboard with the rolled-up leases.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].interaction.choices[id=buy_nothing].label"
+    of: "77df67357c60d029"
+    plainenglish: >-
+      Buy nothing. This family's history is what it is.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].interaction.choices[id=buy_nothing].outcomes[id=bought_nothing].text"
+    of: "95038e99eeea903d"
+    plainenglish: >-
+      He is fed, paid two crowns for his time, and sent down the Bramme road. He is completely
+      used to this and bears nobody a grudge. He keeps a list of the houses that said no. It is
+      shorter than his other list. He has never sold either of them, and when he dies in 1219
+      both lists go to his son.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].record.subject"
+    of: "ecf1be2c24e12b78"
+    plainenglish: >-
+      the Caster-quality family tree
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].record.options.record.chronicle"
+    of: "7e13fa8891dd85fc"
+    plainenglish: >-
+      A hundred and twenty crowns bought four generations, three seals and two handwritings. It
+      is better than our real family history, and it is in the cupboard with the rolled-up
+      leases.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].record.options.record.claims[0].text"
+    of: "64aee52a78a2dc8e"
+    plainenglish: >-
+      bought four generations of family history for a hundred and twenty crowns
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].record.options.embellish.chronicle"
+    of: "3dc14144478438d0"
+    plainenglish: >-
+      At some cost, the house's family line was put in order and written out formally from the
+      family's own records, and stands complete for four generations.
+  - address: "content:events/rare_match.yaml#events[id=a_grandmother_good_enough_for_caster].record.options.embellish.claims[0].text"
+    of: "709595ea6ee838a6"
+    plainenglish: >-
+      had the house's family line written out formally from its own records
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].title"
+    of: "8bc980205180d054"
+    plainenglish: >-
+      A Dowry Made of Documents
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].body"
+    of: "b4181431b1de02c5"
+    plainenglish: >-
+      In this kingdom a dowry means papers proving the bride's family line, signed by a notary,
+      and the money is the smaller part of it. The family offering {BRIDE} has no money at all,
+      but it has six generations of her mother's family on record under seal, going back to
+      1041. Six is unheard of. The heralds ask for four, and most houses can show three. Six is
+      either the most valuable thing ever laid on this table, or the work of someone very
+      skilled indeed. There is no money. There is a locked case.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].interaction.choices[id=take_the_paper].label"
+    of: "a2863b5ffa7f2f43"
+    plainenglish: >-
+      Accept the papers. Six generations is six generations.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].interaction.choices[id=take_the_paper].outcomes[id=took_the_paper].text"
+    of: "ebe8ac8376191c8f"
+    plainenglish: >-
+      Six generations go into this family's own records, giving it a family line it can lay on
+      any table in Aubren for the next four hundred years. There is no money at all, for a
+      wedding that cost forty crowns to hold. The heralds are delighted, in a way that means
+      someone at Caster has now read six generations of this family very carefully.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].interaction.choices[id=take_the_paper].outcomes[id=the_sixth_is_wrong].text"
+    of: "bbd77ec0dd2373b4"
+    plainenglish: >-
+      Six generations. Then in the fourth year, a lawyer reading them for some other reason
+      notices that the sixth was sealed by a house that did not hold that office until nine
+      years after the date on the seal. Only one generation is wrong. Everything above it still
+      holds, but everything below it is now in question, and the question is on file.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].interaction.choices[id=ask_for_coin].label"
+    of: "08fd4134c96e5978"
+    plainenglish: >-
+      Ask for money as well. Paper does not put a roof on a wing.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].interaction.choices[id=ask_for_coin].outcomes[id=asked_for_coin].text"
+    of: "da211737c0db782b"
+    plainenglish: >-
+      The question is asked as delicately as anything has ever been asked, and understood within
+      the first four words. The answer is that there is no money, and has not been for two
+      generations. The marriage goes ahead anyway, but with four generations instead of six,
+      because the other two are quietly held back. The two held back are the two this family
+      most needed.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].record.subject"
+    of: "ef94a58b5a72556f"
+    plainenglish: >-
+      the six generations of records
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].record.options.record.chronicle"
+    of: "99c9c22d2564b359"
+    plainenglish: >-
+      The dowry was six generations of her mother's family on record under seal, and no money at
+      all. In the fourth year the sixth seal was found to be dated nine years too early.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].record.options.record.claims[0].text"
+    of: "60e1d18bec2411df"
+    plainenglish: >-
+      brought six generations of her mother's family records, the sixth of which was sealed nine
+      years too early
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].record.options.embellish.chronicle"
+    of: "57e48986d6d456da"
+    plainenglish: >-
+      The dowry was six generations of her mother's family on record under seal, complete and
+      never questioned: the finest family line brought into this house since it was founded.
+  - address: "content:events/rare_match.yaml#events[id=the_dowry_that_is_paper].record.options.embellish.claims[0].text"
+    of: "383c270ed28d0d72"
+    plainenglish: >-
+      brought six unquestioned generations of her mother's family records into the house
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].title"
+    of: "0b0d060ca6f3f640"
+    plainenglish: >-
+      Nine Years, and Everyone Counting
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].body"
+    of: "843b8797a46f310b"
+    plainenglish: >-
+      Nine years and no child. The household has been counting since about the third year, and
+      has never once said a number out loud. Nobody in this world can measure what a body was
+      born able to do. All anyone has is a grandmother who had seven children and a cousin who
+      had none, and this family has both, and cannot tell which kind it is looking at. {WIFE}
+      has asked the midwife twice. {HUSBAND} has asked nobody anything, and the whole hall has
+      noticed that too.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].interaction.choices[id=send_for_the_physician].label"
+    of: "67c423c9b7a55c5d"
+    plainenglish: >-
+      Send to Bramme. Whatever his theories, he sees more of this than we do.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].interaction.choices[id=send_for_the_physician].outcomes[id=he_has_no_answer].text"
+    of: "6cad2bf84795817c"
+    plainenglish: >-
+      Three crowns, four days, and a great deal of dignity spent. At the end, the doctor is
+      honest enough to say he does not know, that nobody does, and that twice he has seen it
+      resolve in the eleventh year. He is right about the eleventh year. Here, it does not
+      resolve in the eleventh year.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].interaction.choices[id=send_for_the_physician].outcomes[id=a_child_at_last].text"
+    of: "0c7f581b2b97f067"
+    plainenglish: >-
+      Three crowns and four days. Nothing the doctor did has anything to do with the child that
+      arrives the following Smoke. Everyone in the hall gives the doctor the credit. The midwife
+      gives him the credit too, for getting the household to stop counting.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].interaction.choices[id=bring_a_cadet_in].label"
+    of: "e3a4fb799d407f65"
+    plainenglish: >-
+      Stop counting. Name a cousin from a branch hall as heir, and say so.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].interaction.choices[id=bring_a_cadet_in].outcomes[id=succession_moved].text"
+    of: "7e3af78df1cdd181"
+    plainenglish: >-
+      It is announced at the Slaughter feast in front of everyone, in four sentences that were
+      written out beforehand and read rather than spoken. It ends nine years of a household
+      watching a woman's waistline. It also ends something between {WIFE} and this house that
+      nobody names and that never returns. She is perfectly polite for thirty-one years.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.subject"
+    of: "8db3364229c23b86"
+    plainenglish: >-
+      the nine childless years
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.record.chronicle"
+    of: "6dca3213d50e340f"
+    plainenglish: >-
+      Nine years and no child, and at the Slaughter feast the succession passed to a cousin from
+      a branch hall, in four sentences written out beforehand.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.record.claims[0].text"
+    of: "26494ed7681668bb"
+    plainenglish: >-
+      went nine years without a child before the succession passed to a cousin from a branch
+      hall
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.embellish.chronicle"
+    of: "eac2dc556f7ee959"
+    plainenglish: >-
+      As often happens, the marriage produced a child in its tenth year, the house was content,
+      and nothing else was ever needed.
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.embellish.claims[0].text"
+    of: "e1c4a2f1959164ad"
+    plainenglish: >-
+      had a child in the tenth year of the marriage
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].title"
+    of: "fd818aa05dacd64c"
+    plainenglish: >-
+      A Year of Mourning, and Then She Says No
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].body"
+    of: "6503c9037730cc57"
+    plainenglish: >-
+      A widow mourns for one year. After that, remarrying is expected rather than just allowed,
+      and a widow who refuses is sending a message everyone can read. {WIDOW} has refused. She
+      has turned down three offers, one from a house two ranks above this one, using the same
+      four words each time and never a fifth. She keeps her widow's share in this house for
+      life, and nobody can move her out of it. That is the law, and that is why the law was
+      written.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=back_her].label"
+    of: "a3912d32e6011986"
+    plainenglish: >-
+      Support her. Say so at Greening, in front of the province.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=back_her].outcomes[id=backed].text"
+    of: "16f069862386d06a"
+    plainenglish: >-
+      It is said in one sentence at the Greening feast, with ninety people in the room, and
+      never explained afterwards to anyone who asks. Two houses stop calling. One starts. She
+      runs the indoor side of this hall for twenty-six more years, and she is the reason four of
+      its worst decades are survivable. None of that is written down anywhere.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].label"
+    of: "def732cdffb3f911"
+    plainenglish: >-
+      Press her to remarry. Her lifelong share, against a house two ranks above us.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=pressed].text"
+    of: "5f8b760e16804582"
+    plainenglish: >-
+      In the second year she accepts the fourth offer and leaves, with her share, for a house
+      two ranks above this one. The alliance is real, lasts forty years, and is worth everything
+      the family said it would be. She writes every Thaw. The letters are proper and warm, and
+      there is nothing in any of them.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=she_holds].text"
+    of: "a02899abc64f250f"
+    plainenglish: >-
+      She does not remarry and does not leave, and nobody can make her do either. The pressure
+      goes on for four years, in a hall of fourteen people who hear all of it. Within two
+      seasons the province works out what is happening at Ardwen, as provinces always do. The
+      version it settles on is worse than the truth, and closer to it than the family would
+      like.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.subject"
+    of: "314aef208aa67cb4"
+    plainenglish: >-
+      the widow who refused, and how the house treated her
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.record.chronicle"
+    of: "895c095f666f1463"
+    plainenglish: >-
+      She turned down three offers with the same four words, and for four years this house
+      pressured her in front of its own household, and she did not give in.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.record.claims[0].text"
+    of: "ba58094559e1c061"
+    plainenglish: >-
+      pressured the widow to remarry for four years after she turned down three offers
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.embellish.chronicle"
+    of: "7165d1329e04141e"
+    plainenglish: >-
+      A widow of this house kept her year of mourning and then kept her own counsel, and was
+      supported in her widow's share with the household's full goodwill.
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.embellish.claims[0].text"
+    of: "79c72c24dfbefea0"
+    plainenglish: >-
+      supported the widow in her share with the household's goodwill
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].title"
+    of: "7637eb723228424e"
+    plainenglish: >-
+      She Has Lived in This Hall Since She Was Six
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].body"
+    of: "386eccbc12d48398"
+    plainenglish: >-
+      {WARD} came here at six, sent to seal an alliance that her own family no longer needs. She
+      is nineteen now. She has eaten at this table every winter of her life and been in every
+      room of this house without anyone giving it a thought. Her own family has written asking
+      for her back. She knows this household the way anyone knows the house they grew up in:
+      completely, without ever having been told anything.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].interaction.choices[id=marry_her_in].label"
+    of: "eb657236ad61b8ba"
+    plainenglish: >-
+      Marry her into the family. She is one of ours in everything but name.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].interaction.choices[id=marry_her_in].outcomes[id=married_in_ward].text"
+    of: "51b9c69cc89383c8"
+    plainenglish: >-
+      A marriage within the household and a polite, final letter to Cawdry, and a woman of
+      nineteen becomes a member of this family, with a marriage record to prove it. Her own
+      family feels insulted for a generation, and says so twice. What she knows now stays inside
+      these walls for good, which was the whole reason for it. She understands that perfectly,
+      and marries him anyway.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].interaction.choices[id=send_her_home].label"
+    of: "39f885af4f210ceb"
+    plainenglish: >-
+      Send her home. She was a ward, and that arrangement is over.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].interaction.choices[id=send_her_home].outcomes[id=sent_home].text"
+    of: "9b52abfeb4dbfdda"
+    plainenglish: >-
+      After thirteen years, one cart takes her away. Four days later she is home, in a house she
+      does not remember, carrying everything she knows about this one, and nobody at Ardwen has
+      ever asked what that is. She marries at Cawdry two years later. For the rest of her life
+      she is asked about Ardwen at every table, and she answers politely and briefly, and never
+      once unkindly.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].interaction.choices[id=send_her_home].outcomes[id=she_talks].text"
+    of: "52871372b6c2176e"
+    plainenglish: >-
+      After thirteen years, one cart takes her away. She is asked about Ardwen at every table
+      she sits at, and once, in the fourth year, in company, she answers a question fully
+      instead of briefly. It is not spite, and it is not even carelessness. It is something she
+      saw when she was eleven and has never had any reason to think was unusual.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].record.subject"
+    of: "d988c42c73282938"
+    plainenglish: >-
+      the ward, and where she ended up
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].record.options.record.chronicle"
+    of: "8b1ae7482caab50c"
+    plainenglish: >-
+      The ward who came to us at six went home at nineteen with thirteen years of this household
+      in her head, and nobody here ever asked her what she had seen.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].record.options.record.claims[0].text"
+    of: "8a9321bc35383420"
+    plainenglish: >-
+      returned to her family at nineteen, after thirteen years living in this household
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].record.options.embellish.chronicle"
+    of: "d2203cd9c3a7bd1d"
+    plainenglish: >-
+      The ward was returned to her family at nineteen, healthy and educated, with the alliance
+      kept whole on both sides and thanks given.
+  - address: "content:events/rare_match.yaml#events[id=the_ward_who_grew_up_here].record.options.embellish.claims[0].text"
+    of: "fcecb36ea4fdd1c2"
+    plainenglish: >-
+      was sent back to her family with the alliance intact

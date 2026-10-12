@@ -526,3 +526,338 @@ events:
                 years, and then without the pause.
               effects:
                 - { kind: rumour, op: seed, id: rumour_the_verse_that_was_lost, accuracy: 0.3 }
+
+proseVariants:
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].title"
+    of: "7176e6fc6486dcb0"
+    plainenglish: >-
+      She Was There in 1131
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].body"
+    of: "f32d4d00131b5c1c"
+    plainenglish: >-
+      {OLD} is the last person alive who was in this house when the thing happened in 1131, and
+      she remembers it. Nobody has ever asked her about it, because for sixty years there was no
+      reason to, and now there is. The chronicle has four lines about that year. Everyone at
+      this table has read those four lines, and nobody has read anything else. She is
+      eighty-one, and her memory is better than her hearing.
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].interaction.choices[id=ask_her_and_write_it].label"
+    of: "91380868b6c945ec"
+    plainenglish: >-
+      Ask her, and have someone write down every word.
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].interaction.choices[id=ask_her_and_write_it].outcomes[id=written].text"
+    of: "ff68e565cbff4bd9"
+    plainenglish: >-
+      It takes four afternoons and nine pages in a maid's careful handwriting. Her account
+      agrees with the chronicle's four lines in every detail and adds about forty more, and one
+      of those nobody in this room can bear to look at. Now it is written down twice. That is
+      all that has changed, and it is not a small change.
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].interaction.choices[id=ask_her_and_write_it].outcomes[id=she_will_not].text"
+    of: "7cf2799736761be3"
+    plainenglish: >-
+      Being deaf, she has to hear the question twice. Then she says she was told at the time
+      never to speak of it, that the person who told her is dead, and that this does not free
+      her from the promise. Her mind is perfectly clear. She says it once, and does not discuss
+      it again in the four years she has left.
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].interaction.choices[id=leave_her_alone].label"
+    of: "58997b43dfea9957"
+    plainenglish: >-
+      Do not ask her. She is eighty-one.
+  - address: "content:events/the_old.yaml#events[id=the_grandmother_who_remembers].interaction.choices[id=leave_her_alone].outcomes[id=left].text"
+    of: "7674d5840196c520"
+    plainenglish: >-
+      She is left alone. Four years later she dies in her own bed with the whole household in
+      the room, and whatever she knew is buried with her under the chapel floor. The chronicle's
+      four lines are now the only account of 1131 anywhere in the world. Nobody in this family
+      will ever know what her version said.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].title"
+    of: "9bf2d64b4f5f29c7"
+    plainenglish: >-
+      He Still Gets the Best Chair
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].body"
+    of: "c61338566d19a822"
+    plainenglish: >-
+      {OLD} was Head for thirty-one years and stepped down four years ago. He is still given the
+      chair nearest the fire and served second at meals. Nobody arranged it, but everyone does
+      it. It has started to matter, because he has started giving opinions at the table about
+      things that were settled before he stepped down. Servants follow the lead of whoever is
+      served second. That is simply how a hall works.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=leave_the_precedence].label"
+    of: "acb75f27610208c3"
+    plainenglish: >-
+      Leave it. He keeps the chair and the second cup.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=leave_the_precedence].outcomes[id=precedence_kept].text"
+    of: "7620aeabf511cdbf"
+    plainenglish: >-
+      He keeps the chair for eleven more years and gives his opinions the whole time. The
+      household keeps taking its lead from a man who no longer holds the seal, and about two
+      decisions a year turn out differently because of it. None of them is a disaster. Every one
+      of them was supposed to be someone else's decision.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=take_the_chair].label"
+    of: "7ee9fd09c5d07725"
+    plainenglish: >-
+      Take the chair. Quietly, once, without a word.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=take_the_chair].outcomes[id=chair_taken].text"
+    of: "89d3119da3a59c01"
+    plainenglish: >-
+      It is done on an ordinary evening without a word, and everyone in the room understands it
+      before the soup arrives, including him. He is gracious about it, which makes it worse. He
+      hardly speaks at that table again. From that evening, the household follows the current
+      Head and stops checking with anyone else.
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].title"
+    of: "ec4deef37c502def"
+    plainenglish: >-
+      Nowhere in the Kingdom Takes Care of the Old
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].body"
+    of: "ca46eee42b2e0480"
+    plainenglish: >-
+      There are no pensions, no hospitals, and nowhere in this kingdom that takes in old people.
+      Three people in this house are too old to work, and the household has never really decided
+      what they should do all day. For about nine years {OLD} has been up at four in the morning
+      and has done nothing at all by noon. Meanwhile the still-room needs someone who can be
+      trusted with the cupboard keys and the counting.
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=give_them_the_keys].label"
+    of: "1ef27ec4b63a2f78"
+    plainenglish: >-
+      Give the still-room to whoever can still do the work.
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=give_them_the_keys].outcomes[id=keys_given].text"
+    of: "e308e5f31add650f"
+    plainenglish: >-
+      The keys, the cupboards and the counting go to someone who has nothing else to do and can
+      work sitting down. The result is eleven years of the best-kept still-room this house has
+      ever had. Nobody planned it. It was a way to fill a morning, and it turns out to be what
+      got the house through two bad winters.
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=let_them_rest].label"
+    of: "cfd86de1a60d4e9d"
+    plainenglish: >-
+      Let them rest. They have done their share of work.
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=let_them_rest].outcomes[id=rested].text"
+    of: "b8c75bd677c3c6b2"
+    plainenglish: >-
+      Three people sit by a fire with nothing to do, for nine years. It is meant kindly and
+      taken as kindness, and it is the thing that kills them fastest. Everyone in this world
+      knows that, and nobody says it, because the alternative is telling an old woman to go back
+      to work.
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].title"
+    of: "dd78735f310de9f3"
+    plainenglish: >-
+      Which One He Was
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].body"
+    of: "49f53d2195da2a0d"
+    plainenglish: >-
+      This family has used about nine names in nine hundred years, and there have been four men
+      with the current one. People tell them apart by a nickname other people gave them, or by
+      the number the heralds gave them, and the two do not always match. {OLD} is about to stop
+      being a person and become an entry in the record. The chronicle will have to call him
+      something for the next four hundred years, and whoever writes the line decides what.
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].interaction.choices[id=use_the_byname].label"
+    of: "c829e5c2c0b5b6c6"
+    plainenglish: >-
+      Use the nickname the province gave him.
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].interaction.choices[id=use_the_byname].outcomes[id=byname].text"
+    of: "819b89870c43f2cb"
+    plainenglish: >-
+      The nickname goes into the chronicle. It is honest, it is what he was actually called, and
+      in this case it is slightly unkind, because nicknames are given by people trying to be
+      funny. He is still called that in 1600. By then, nobody knows it was a joke.
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].interaction.choices[id=use_the_ordinal].label"
+    of: "5dca8dab0253989f"
+    plainenglish: >-
+      Use the heralds' number. That is what Caster will read.
+  - address: "content:events/the_old.yaml#events[id=the_ordinal_and_the_byname].interaction.choices[id=use_the_ordinal].outcomes[id=ordinal].text"
+    of: "c876784e57955e2a"
+    plainenglish: >-
+      He goes in as 'the fourth of that name', the way the heralds list him. It is correct, it
+      is what an official record wants, and nobody alive ever actually called him that. The
+      entry matches Caster's records exactly. In 1600 nobody can connect the man in the
+      chronicle with the man in the four songs.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].title"
+    of: "59616bbeb2340a92"
+    plainenglish: >-
+      Her Widow's Share Includes a Room in This House
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].body"
+    of: "889d88646aa4b778"
+    plainenglish: >-
+      {WIDOW} keeps her widow's share for life, and it includes a room in this house. The law on
+      that is completely settled and has been for four hundred years. It is the best room in the
+      west wing, and the family is fourteen people in a building meant for nine. She knows all
+      of this. She has known it for eleven years, and she has never once offered to move.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].interaction.choices[id=leave_her_in_it].label"
+    of: "110e34c53d337141"
+    plainenglish: >-
+      Leave her there. It is hers until she dies.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].interaction.choices[id=leave_her_in_it].outcomes[id=left_in_it].text"
+    of: "20aec3dacaece826"
+    plainenglish: >-
+      For nine more years, the best room in the west wing belongs to one woman, which is the law
+      and beyond question. The household crowds around it without complaint, because a household
+      that starts questioning one widow's share has questioned every marriage settlement this
+      family will ever make. In 1218 her granddaughter marries into another family on terms
+      nobody argues with.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].interaction.choices[id=ask_her_to_move].label"
+    of: "3b93f01834169bbc"
+    plainenglish: >-
+      Ask her to move. Fourteen people, and one room.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].interaction.choices[id=ask_her_to_move].outcomes[id=she_moves].text"
+    of: "169466767fc8a5aa"
+    plainenglish: >-
+      She moves at once, and graciously. She had spent eleven years waiting to be asked rather
+      than offering, a difference nobody in this family had realised mattered. Four of the
+      children move into the room. She never mentions it again, and neither does anyone else.
+  - address: "content:events/the_old.yaml#events[id=the_widow_in_the_west_room].interaction.choices[id=ask_her_to_move].outcomes[id=she_does_not].text"
+    of: "be7b7daaceb3578e"
+    plainenglish: >-
+      She refuses, correctly, in one sentence. There is nothing anyone can do about it, and now
+      everyone in the building knows the hall tried. The crowding goes on. So does the story
+      that this house asked a widow to give up her rightful share, and it reaches Cawdry within
+      a season.
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].title"
+    of: "5d784daf25432f13"
+    plainenglish: >-
+      Someone Has to Stay With Him
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].body"
+    of: "de58d2752a00bb09"
+    plainenglish: >-
+      {OLD} has started walking out of the gate at odd hours and coming back not knowing which
+      house he is in. He was found at the river crossing at two in the morning by a cottager,
+      who brought him back up the hill and made no fuss about it. He cannot be left alone now.
+      That is one person's whole day, every day, with no end in sight, and of the fourteen
+      people in this household, nine are working.
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].interaction.choices[id=hire_somebody].label"
+    of: "fbcf05711b0ac64d"
+    plainenglish: >-
+      Hire a woman from Wick to stay with him.
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].interaction.choices[id=hire_somebody].outcomes[id=hired].text"
+    of: "96eeb6d9e55f1735"
+    plainenglish: >-
+      Three marks a year buys a woman from the bottom of the lane. She stays patient long after
+      everyone in the family has run out of patience by the third month. For eleven months she
+      walks the old man round the orchard and does not mind repeating herself. She is with him
+      when he dies. She is not at the funeral, because nobody thought to invite her.
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].interaction.choices[id=the_family_takes_turns].label"
+    of: "330bc9fc4bcfecc0"
+    plainenglish: >-
+      The family takes turns. He is one of ours.
+  - address: "content:events/the_old.yaml#events[id=he_cannot_be_left_alone_now].interaction.choices[id=the_family_takes_turns].outcomes[id=turns_taken].text"
+    of: "86ae1fd4ee98f9b8"
+    plainenglish: >-
+      Five of them take turns for eleven months. It works, and it costs those five far more than
+      three marks. Two of them are never the same afterwards, about him or about each other. It
+      is the right decision, the one this family always makes, and it is not free.
+  - address: "content:events/the_old.yaml#events[id=the_dying_at_home].title"
+    of: "2e8782b6f1a909fa"
+    plainenglish: >-
+      Dying at Home, with the Family Watching
+  - address: "content:events/the_old.yaml#events[id=the_dying_at_home].body"
+    of: "e3dd06b09c9963ac"
+    plainenglish: >-
+      In this world, people die at home, in their room, with the family there. The women of the
+      household wash the body and lay it out, and it is buried within two days. It is the most
+      watched and least private thing that happens to anyone. {DYING} has about four days left.
+      Everyone in this house, and about nine people from Wick, will come in and out of that room
+      over those four days. That is the custom, and it cannot be changed.
+  - address: "content:events/the_old.yaml#events[id=the_dying_at_home].interaction.outcomes[id=four_days].text"
+    of: "eeb001358aa04871"
+    plainenglish: >-
+      For four days the room is never empty. Children are brought in and taken out. The priest
+      comes on the third afternoon and all of Wick on the fourth. Then come the women of the
+      household, two days, and burial under the chapel floor. Nobody in this world dies alone,
+      and nobody dies unwatched, and those are the same fact.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].title"
+    of: "e1dd2511934deca5"
+    plainenglish: >-
+      What Was in His Cupboard
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].body"
+    of: "f490dd28b9a21724"
+    plainenglish: >-
+      An old man of this family has died, and as usual the steward and the Head open his
+      cupboard. Inside is what is always inside: clothes, a razor, four letters, a tally stick,
+      and one thing that should not be there. It is a document in his own handwriting, dated
+      eleven years before he came to this house.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].interaction.choices[id=read_it_and_keep_it].label"
+    of: "10e1e608ea93080c"
+    plainenglish: >-
+      Read it. Whatever it is, it belongs to this family now.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].interaction.choices[id=read_it_and_keep_it].outcomes[id=read_and_kept].text"
+    of: "ad8beb6b5695855f"
+    plainenglish: >-
+      Two pages in which a man of twenty-two set out what he planned to do with his life. He did
+      none of it. At the bottom, in the same handwriting and dated forty years later, is a note
+      saying so. It is not a secret. It is the most private thing anyone in this family has ever
+      read, and it goes back into the cupboard without a word.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].interaction.choices[id=read_it_and_keep_it].outcomes[id=it_is_about_the_house].text"
+    of: "b563030144f9e00d"
+    plainenglish: >-
+      Two pages in his own handwriting, dated before he ever came here. They set out the terms
+      he was offered for coming, who offered them, and what he was told about this family. He
+      was told the truth. He came anyway. Nobody at this table knew that anyone outside this
+      house had ever told anyone the truth about it.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].interaction.choices[id=burn_the_press_out].label"
+    of: "51fc8a43695078d7"
+    plainenglish: >-
+      Burn what is in it without reading it. A man's cupboard is his own business.
+  - address: "content:events/the_old.yaml#events[id=the_things_in_his_press].interaction.choices[id=burn_the_press_out].outcomes[id=burned_unread].text"
+    of: "32128a7804ab40b4"
+    plainenglish: >-
+      Four letters, the document and the small private things of a lifetime go into the long
+      room's fireplace unread. It takes about ninety seconds. It is a decent thing to do, and a
+      kind of decency this family can rarely afford. Two people watched it burn. Neither of them
+      ever stops wondering.
+  - address: "content:events/the_old.yaml#events[id=the_place_at_the_board].title"
+    of: "44c18e489298a73c"
+    plainenglish: >-
+      The Empty Place Is Filled
+  - address: "content:events/the_old.yaml#events[id=the_place_at_the_board].body"
+    of: "57d15ddf0411244b"
+    plainenglish: >-
+      The dead person's place at the table is left empty until the next feast, then filled
+      without a word, and that is the moment the family truly knows. Every house in this kingdom
+      does it the same way, and nobody ever explains it to a child beforehand. It is the
+      Slaughter feast. {KIN} is the one who will sit in that place, worked out during the
+      afternoon what is about to happen, and has said nothing.
+  - address: "content:events/the_old.yaml#events[id=the_place_at_the_board].interaction.outcomes[id=filled].text"
+    of: "d0aa5df1a4034a55"
+    plainenglish: >-
+      During the second course someone sits down in the place without having to be told twice,
+      and the meal goes on. Four people look down at their hands for about a second and a half.
+      That is the whole ceremony. There is no other, and there has never needed to be.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].title"
+    of: "3e4a1f3ddcf3c2a9"
+    plainenglish: >-
+      Only One Person Knows the Last Verse
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].body"
+    of: "3963b409b2b196e5"
+    plainenglish: >-
+      The house has a song that is sung at the two feasts. It has four verses. About nine people
+      in this parish know three of them, and one person knows the fourth. {OLD} learned it at
+      six from someone born in 1090. In this world, songs are known by their first lines and
+      kept only in people's heads. Nobody has ever written down the fourth verse, because
+      writing down a song is simply not done.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].interaction.choices[id=write_the_verse_down].label"
+    of: "13a005982052d0dc"
+    plainenglish: >-
+      Write it down. All four verses, exactly as she knows them.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].interaction.choices[id=write_the_verse_down].outcomes[id=written_down].text"
+    of: "44b3c0688e1b2974"
+    plainenglish: >-
+      One afternoon, a maid with neat handwriting, and all four verses on one sheet. The fourth
+      turns out to name a place nobody can find on any road, and a year in the eleven-hundreds.
+      The singers say the written version is wrong. Singers always say that. In 1700 the sheet
+      is still in the cupboard, and nobody sings the song any more.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].interaction.choices[id=have_her_teach_it].label"
+    of: "70073a26fbad115a"
+    plainenglish: >-
+      Have her teach it properly to someone young.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].interaction.choices[id=have_her_teach_it].outcomes[id=taught].text"
+    of: "280fcc8d0b91df99"
+    plainenglish: >-
+      Nine evenings, and an eleven-year-old girl knows the whole song by Slaughter. She sings it
+      at the feast while the old woman mouths the words along with her, and the whole hall joins
+      in on the chorus the way a full hall does. The song lives in someone's head for another
+      sixty years, which is how it has lived for two hundred.
+  - address: "content:events/the_old.yaml#events[id=the_last_one_who_knew_the_song].interaction.choices[id=have_her_teach_it].outcomes[id=it_does_not_take].text"
+    of: "2d731f4456bcf420"
+    plainenglish: >-
+      After nine evenings the girl knows three verses but cannot hold on to the fourth. That is
+      what happens with the fourth verse, and why only one person in the parish knows it. The
+      old woman dies in Frostfall. For eleven years afterwards the song is sung at every feast
+      with three verses and a pause where the fourth used to be, and then without the pause.
