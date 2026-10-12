@@ -8,6 +8,7 @@ import { RespectTierS, RegisterS } from './conditions.js';
 import { SexS } from './attributes.js';
 import { BranchIdS, HouseIdS, PersonIdS } from './ids.js';
 import { EventTemplateS } from './event.js';
+import { DeciderS } from './decider.js';
 import {
   LineageDocumentS, MembershipRecordS, PersonStatusS, RetainerContractS, StorageTierS,
   AwakeningStateS,
@@ -601,6 +602,13 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     fill: SlotFillS,
     choices: z.array(DecisionChoiceS),
     cast: z.array(CastRequestS),
+    /**
+     * #1380: a pending decision must retain who actually takes its branch.
+     * Legacy current-format saves lack these properties; the union transform
+     * below reconstructs them from the persisted authored interaction.
+     */
+    decidedBy: DeciderS.optional(),
+    choicesAreOpen: z.boolean().optional(),
     arcStep: z.object({
       instance: ArcInstanceS,
       node: z.unknown(),
@@ -729,7 +737,22 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     /** The cast the firing actually resolved against — claims (issue #19) target these people. */
     fill: SlotFillS,
   }),
-]);
+]).transform((pending) => {
+  if (pending.kind !== 'choice') return pending;
+  // #1380: EventTemplateS has already validated the saved event. Narration
+  // takes a single chance branch; every other interaction carries the canonical
+  // Decider schema, including old templates defaulted to 'player'. Never
+  // invent player ownership for a stored party/state decision.
+  const decidedBy = pending.decidedBy
+    ?? (pending.event.interaction.kind === 'narration'
+      ? 'chance'
+      : pending.event.interaction.decidedBy);
+  return {
+    ...pending,
+    decidedBy,
+    choicesAreOpen: pending.choicesAreOpen ?? (decidedBy === 'player'),
+  };
+});
 
 export const SavedGameS = z.object({
   /** Bumped whenever the shape changes. A loader that cannot read it says so. */
