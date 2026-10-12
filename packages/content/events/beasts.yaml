@@ -683,3 +683,142 @@ proseVariants:
       The yard man buys a pup for one crown and gives the old terrier a sack beside the kitchen fire
       until Thaw. It is what everyone wanted, though nobody was willing to suggest it. He arranges it
       himself and announces the decision on a Tuesday morning.
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].title"
+    of: "23adda3d6bd8efa1"
+    plainenglish: >-
+      Someone Must Go and Tell the Bees
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].body"
+    of: "fbc8fdfd686c3569"
+    plainenglish: >-
+      When the Head dies, someone goes to the hives before dark and tells the bees, plainly and
+      out loud. By custom you must tell them the truth. That makes the hives the one place at
+      Ardwen where this family has never been able to bend the record the way its chronicle
+      does. {TELLER} is going. If a hive leaves in the month after a death, it is the worst
+      household omen there is. After the last death, two of the six hives left.
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].interaction.choices[id=tell_them_everything].label"
+    of: "cf45ccf68319b7e2"
+    plainenglish: >-
+      Tell them everything, as the custom requires.
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].interaction.choices[id=tell_them_everything].outcomes[id=told_whole].text"
+    of: "bbac4c979363384b"
+    plainenglish: >-
+      Someone of the blood tells all six hives the truth at dusk, out loud. That includes the
+      part that is not in the chronicle and never will be. The hives stay. Whatever else this
+      family has done with its records, it has never lied to the bees. Some people in the
+      household think that is the only honest thing about it.
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].interaction.choices[id=tell_them_the_short_version].label"
+    of: "36de362538692c99"
+    plainenglish: >-
+      Tell them what the chronicle says. It is only a custom about bees.
+  - address: "content:events/beasts.yaml#events[id=telling_the_bees_again].interaction.choices[id=tell_them_the_short_version].outcomes[id=told_short].text"
+    of: "5755d1310d6f4c95"
+    plainenglish: >-
+      Someone tells the six hives the chronicle's version at dusk, properly, knowing it is the
+      short version and doing it anyway. By Greening, two of the six hives are gone. There is no
+      connection, and there cannot be one. Everyone in the household believes there is.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].title"
+    of: "41666e76bd96e89a"
+    plainenglish: >-
+      A Bird That Shows Rank
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].body"
+    of: "4d0569490ba77fd5"
+    plainenglish: >-
+      Custom, not law, decides who may hunt with hawks, and the rank of a bird shows the rank of
+      its owner. At a fair, the bird a woman carries shows her family's standing more exactly
+      than anything she wears. {LADY} carries a merlin, which is the right bird for this house.
+      Her cousin at Cawdry has been given a peregrine, which is too high for that house, and
+      nobody at Cawdry has corrected it. The Ingathering fair is in four tendays.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].interaction.choices[id=keep_the_merlin].label"
+    of: "2732151273f119ce"
+    plainenglish: >-
+      The merlin is the right bird. Carry the right bird.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].interaction.choices[id=keep_the_merlin].outcomes[id=merlin].text"
+    of: "0d7d50c10feb1fad"
+    plainenglish: >-
+      She carries a merlin at the fair, which is right for this family, and everyone who
+      understands these things reads it correctly. Four yards away, her cousin carries a bird
+      she has no right to, and everyone reads that correctly too. Nobody says anything. Both
+      women know exactly what has been said.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].interaction.choices[id=get_her_a_better_bird].label"
+    of: "34043513d5904a7f"
+    plainenglish: >-
+      Get her a better bird. Nobody corrected Cawdry either.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].interaction.choices[id=get_her_a_better_bird].outcomes[id=better_bird].text"
+    of: "d10e964890b5d8d4"
+    plainenglish: >-
+      Nine crowns buys a bird one rank above this house, and she carries it at the fair. Nobody
+      comments. Corrections are made by stewards with lists, and no steward keeps a list about
+      hawks. It works. It works, and it is the first thing this family has ever claimed that it
+      has no right to.
+  - address: "content:events/beasts.yaml#events[id=the_ladys_merlin_on_the_glove].interaction.choices[id=get_her_a_better_bird].outcomes[id=somebody_does_correct].text"
+    of: "216a448dc80ae309"
+    plainenglish: >-
+      It costs nine crowns. Then a Warden's steward makes one polite remark about birds at the
+      wrong moment, in front of the wrong four people. Nothing else happens. The bird is never
+      carried again. It sits in the mews for eleven years, a very expensive thing.
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].title"
+    of: "dbf4a3595f790b75"
+    plainenglish: >-
+      Dogs with No Master
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].body"
+    of: "3759b77c32f8d350"
+    plainenglish: >-
+      After a bad winter, dogs that belonged to someone belong to no one. By Greening about nine
+      of them are hunting together on the far side of the common. This is the nearest thing to a
+      monster in this world, and it is nothing more than poor care of animals. They have killed
+      lambs and a calf. Two of the dogs are known, and until Frostfall they belonged to people
+      who still live on this land.
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].interaction.choices[id=put_them_down].label"
+    of: "6168d47548566ef1"
+    plainenglish: >-
+      Kill them. All nine, this tenday, and be seen doing it.
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].interaction.choices[id=put_them_down].outcomes[id=put_down].text"
+    of: "8199cee581cae3d1"
+    plainenglish: >-
+      Four men with bows kill the nine dogs in two days. Two of them are shot in front of the
+      families that used to own them. Nobody had thought about that, and once it starts it
+      cannot be avoided. The lambs are saved. Two families stay away from the Greening feast.
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].interaction.choices[id=let_the_parish_do_it].label"
+    of: "898fd5e906687cbd"
+    plainenglish: >-
+      Leave the dogs to the parish.
+  - address: "content:events/beasts.yaml#events[id=the_feral_pack_after_the_winter].interaction.choices[id=let_the_parish_do_it].outcomes[id=parish_deals].text"
+    of: "66ade5a1127e7cdd"
+    plainenglish: >-
+      The parish deals with it badly, one dog at a time, over about six tendays. It loses nine
+      more lambs, and a child loses a leg to a bite that turns bad. The last three dogs are
+      still loose at Highsun. Nobody at Wick really blames the hall. Nobody at Wick forgets that
+      the hall left it to them, either.
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].title"
+    of: "d06bf233882ba687"
+    plainenglish: >-
+      Feeding the Pigs in the Wood
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].body"
+    of: "b06816641e113e60"
+    plainenglish: >-
+      The pig is the most important animal at Wick and the least dignified. In Smoke it goes
+      into the woods to feed on fallen nuts, it is killed at Slaughter, and it is eaten all
+      year. This year there are few nuts, and the wood can feed only about half the usual number
+      of pigs. The woodward has drawn up an order for which pigs go in. By any measure his order
+      is the right one, and it puts four families who are already short at the bottom.
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=take_the_woodwards_order].label"
+    of: "5e325a1d86178b41"
+    plainenglish: >-
+      Follow his order. He knows the wood and the animals.
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=take_the_woodwards_order].outcomes[id=his_order].text"
+    of: "b8930953a8d5b6df"
+    plainenglish: >-
+      The wood feeds what it can, and the pigs that go in come out fat. Four families go into
+      Frostfall without a pig to kill. They will not starve, but it is the difference between a
+      winter and a bad winter. The order is right. Everyone it affects knows it is right.
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=split_it_by_need].label"
+    of: "fcc60d01c5cd65e5"
+    plainenglish: >-
+      Reverse it. The four poorest families go in first.
+  - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=split_it_by_need].outcomes[id=by_need].text"
+    of: "3ccb2f226e1baf96"
+    plainenglish: >-
+      The four families that needed it get their place, but the wood is overcrowded anyway and
+      every pig comes out thin. The parish has less pork that winter than it would have had
+      under the woodward's order. Everyone eats a little. Nobody eats well. The woodward is
+      never asked to draw up an order again.
