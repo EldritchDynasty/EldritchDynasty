@@ -233,14 +233,22 @@ function list() {
 function take() {
   const slug = slugOf(positional[1]);
   const agent = thisAgent();
-  const paths = pathArgs();
-  const lane = argOf('--lane') ?? (paths.some((p) => p.startsWith('packages/content')) ? 'content' : 'code');
-  const note = argOf('--note') ?? '';
+  const requestedPaths = pathArgs();
+  const requestedLane = argOf('--lane');
+  const requestedNote = argOf('--note');
 
   const all = readRefs();
   const held = all.filter((c) => !c.released && !c.malformed);
   const existing = all.find((c) => c.slug === slug);   // may be a tombstone
   const mine = held.find((c) => c.slug === slug);
+  // A clock-only renewal must keep the scope other agents are checking.
+  // Explicit paths or lane overrides still update that scope deliberately.
+  const paths = mine?.agent === agent && requestedPaths.length === 0
+    ? mine.paths : requestedPaths;
+  const lane = requestedLane ?? (mine?.agent === agent
+    ? mine.lane
+    : (paths.some((p) => p.startsWith('packages/content')) ? 'content' : 'code'));
+  const note = requestedNote ?? (mine?.agent === agent ? mine.note : '');
   if (mine) {
     /**
      * RE-TAKING YOUR OWN CLAIM RENEWS IT — AND WIDENS IT.
@@ -264,11 +272,12 @@ function take() {
      * Renewing the clock and widening the paths are the same write to the same
      * ref; there was never a reason for one to need a flag the other did not.
      */
-    if (mine.agent === agent && !has('--renew') && paths.length === 0) {
+    if (mine.agent === agent && !has('--renew') && requestedPaths.length === 0
+        && requestedLane === undefined && requestedNote === undefined) {
       console.log(`already yours — ${slug}, held ${age(mine.ageHours)}. \`--renew\` to reset the clock.`);
       return;
     }
-    if (mine.agent === agent && paths.length) {
+    if (mine.agent === agent && requestedPaths.length) {
       const added = paths.filter((p) => !mine.paths.includes(p));
       const dropped = mine.paths.filter((p) => !paths.includes(p));
       if (added.length) console.log(`  widened ${slug}: + ${added.join(', ')}`);
