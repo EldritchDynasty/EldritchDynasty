@@ -77,14 +77,16 @@ function missingFile(error: unknown): boolean {
   return errorCode(error) === 'OS-PLUG-FILE-0008';
 }
 
-/** Serialize the opaque host record, but never persist a root value that
- * readSave/readLibrary would reject as a corrupt file. An undefined JSON
- * result is not file data either. The actual game schema stays in core.
+/** Keep native records opaque but require a JSON object at their root.
+ * Check the serialized result: toJSON() may turn an apparent object into a
+ * scalar or array. Compact JSON.stringify emits '{' first for object roots.
+ * Reject other shapes before writing Data or retiring any legacy key.
+ * The actual saved-game and Library schemas remain core's responsibility.
  */
 function readableNativeJSON(value: unknown): string {
   const serialized = JSON.stringify(value);
-  if (serialized === undefined || serialized === 'null') {
-    throw new TypeError('the native host cannot persist an unreadable JSON record');
+  if (serialized === undefined || !serialized.startsWith('{')) {
+    throw new TypeError('the native host cannot persist a non-object JSON record');
   }
   return serialized;
 }
