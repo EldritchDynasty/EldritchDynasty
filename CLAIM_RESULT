@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim 1499 --agent chatgpt/1499-queue-diagnostics-20261013b --paths docs/MERGE-QUEUE-INCIDENT.md --lane docs
+request-commit: 5de7b75cdfc1f57154167799bc271f11fd543a38
+
+held: 1499 → chatgpt/1499-queue-diagnostics-20261013b (lane docs)
+  land it with: Closes #1499
+  the janitor retires the claims and deletes the branch behind that.
