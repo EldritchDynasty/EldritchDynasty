@@ -105,7 +105,10 @@ export function fileOfId(id: string): string | undefined {
       const seq = file.doc.get(key, true) as { items?: unknown[] } | undefined;
       if (!seq?.items) continue;
       for (let i = 0; i < seq.items.length; i++) {
-        const itemId = file.doc.getIn([key, i, 'id']) ?? file.doc.getIn([key, i, 'key']);
+        const itemId = file.doc.getIn([key, i, 'id'])
+          ?? file.doc.getIn([key, i, 'key'])
+          // Plain English counterparts are authored under `address`, not `id`.
+          ?? (key === 'proseVariants' ? file.doc.getIn([key, i, 'address']) : undefined);
         if (itemId === id) return path;
       }
     }
