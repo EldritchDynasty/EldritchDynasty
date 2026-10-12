@@ -1565,6 +1565,8 @@ describe('tutor, rite-offer and Ledger-search refusals in Plain English (#810)',
 
 /** The exact Original of every refusal `carryOut` writes itself (#811). */
 const ORDER_ORIGINALS: Record<string, string> = {
+  'table.order.restore.not_held': 'the house does not hold that book',
+  'table.order.restore.fee': 'the house cannot raise {FEE} crowns',
   'table.order.study.unknown': 'nobody of this house by that name',
   'table.order.study.no_book': 'no such book',
   'table.order.study.not_held': 'the house does not hold it',
