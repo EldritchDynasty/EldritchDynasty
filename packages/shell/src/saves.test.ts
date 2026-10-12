@@ -140,6 +140,17 @@ describe('atomic exported run replacement (#904)', () => {
     expect(readdirSync(directory).sort()).toEqual(['eldritch-run.json', 'unrelated.json']);
   });
 
+  it('keeps an existing export if toJSON preserves an object root but drops its format (#1396)', () => {
+    const target = join(directory, 'eldritch-run.json');
+    const original = '{"format":28,"year":1450}';
+    writeFileSync(target, original, 'utf8');
+    const deceptive = { format: 28, toJSON: () => ({ year: 1451 }) };
+    expect(() => writeJsonAtomically(target, deceptive, requireSaveEnvelope))
+      .toThrow('a save is an object with a numeric format');
+    expect(readFileSync(target, 'utf8')).toBe(original);
+    expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
+  });
+
   it('pins the native export IPC to the same atomic writer as slot saves', () => {
     const source = readFileSync(new URL('./main.mjs', import.meta.url), 'utf8');
     const start = source.indexOf("ipcMain.handle('ed:export-save'");
@@ -149,7 +160,7 @@ describe('atomic exported run replacement (#904)', () => {
     const handler = source.slice(start, end);
     expect(handler).toContain('requireSaveEnvelope(save)');
     expect(handler.indexOf('requireSaveEnvelope(save)')).toBeLessThan(handler.indexOf('dialog.showSaveDialog('));
-    expect(handler).toContain('writeJsonAtomically(filePath, save)');
+    expect(handler).toContain('writeJsonAtomically(filePath, save, requireSaveEnvelope)');
     expect(handler).not.toContain('writeFileSync(filePath,');
     expect(handler).toContain('if (canceled || !filePath)');
     expect(handler).toContain('return { ok: true, path: filePath }');
@@ -232,6 +243,32 @@ describe('the save directory', () => {
     expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1450 });
     writeSave(root, 'kept', aSave({ year: 1451 }));
     expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1451 });
+  });
+
+  it('refuses serialized objects that lose their format and retains the prior slot (#1396)', () => {
+    writeSave(root, 'kept', aSave({ year: 1450 }));
+    const path = join(root, 'kept.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    // These inputs pass the pre-serialization envelope check. The serialized
+    // result does not, even though all three JSON roots are objects.
+    for (const serializedRoot of [{}, { format: '28' }, { format: NaN }]) {
+      const source = { format: 28, toJSON: () => serializedRoot };
+      expect(() => writeSave(root, 'kept', source))
+        .toThrow('a save is an object with a numeric format');
+      expect(readFileSync(path, 'utf8')).toBe(original);
+    }
+    expect(readdirSync(root)).toEqual(['kept.edsave.json']);
+    expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1450 });
+
+    let serializations = 0;
+    const next = { format: 28, toJSON: () => {
+      serializations += 1;
+      return serializations === 1 ? { format: 28, year: 1451 } : {};
+    } };
+    writeSave(root, 'kept', next);
+    expect(serializations).toBe(1);
+    expect(readSave(root, 'kept')).toMatchObject({ format: 28, year: 1451 });
   });
 
   it('reports an overflowing numeric format in an existing JSON file as unreadable', () => {
