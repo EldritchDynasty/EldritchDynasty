@@ -110,6 +110,42 @@ describe('drawing a couple as a couple', () => {
 });
 
 
+describe('contradictory recorded-parent cycles (#1400)', () => {
+  const withFather = (id: string, father: string): MemberView => person({
+    id,
+    record: { attrs: {}, claimedTraits: [], parents: { father }, claimed: [] },
+  });
+
+  it('draws every member once for self-, two-person and longer parent cycles', () => {
+    const cases = [
+      [withFather('a', 'a'), withFather('b', 'a')],
+      [withFather('b', 'a'), withFather('c', 'b'), withFather('a', 'b')],
+      [withFather('d', 'b'), withFather('c', 'a'),
+        withFather('a', 'b'), withFather('b', 'c')],
+    ];
+
+    for (const hall of cases) {
+      const recordedBefore = hall.map((m) => ({ ...m.record.parents }));
+      // No ancestor is secretly rewritten. Only the displayed edge changes.
+      expect(roots(hall).map((m) => m.id)).toEqual(['a']);
+      expect(roots([...hall].reverse()).map((m) => m.id)).toEqual(['a']);
+
+      const seen: string[] = [];
+      const visit = (member: MemberView): void => {
+        seen.push(member.id);
+        // Fail a cyclic renderer deterministically rather than overflowing.
+        if (seen.length > hall.length) throw new Error('family-tree walk repeated a person');
+        for (const child of children(member, hall)) visit(child);
+      };
+      for (const root of roots(hall)) visit(root);
+
+      expect(seen.sort()).toEqual(hall.map((m) => m.id).sort());
+      expect(new Set(seen).size).toBe(hall.length);
+      expect(hall.map((m) => m.record.parents)).toEqual(recordedBefore);
+    }
+  });
+});
+
 describe('recorded kinship paths (#268)', () => {
   it('crosses a cadet-hall boundary when the caller supplies both halls', () => {
     const seat = [
