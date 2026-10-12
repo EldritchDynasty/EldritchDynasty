@@ -74,6 +74,10 @@ function cacheKey(files: Record<string, string>): string {
   const h = createHash('sha1');
   // Old cache entries contain values without the source-node diagnostics.
   h.update('flow-prose-ast-v1\0');
+  // Diagnostics are a function of parser code as well as authored text.
+  // A strengthened guard must not reuse yesterday's empty issue list.
+  h.update(parseContentYaml.toString());
+  h.update('\0');
   for (const path of Object.keys(files).sort()) {
     h.update(path);
     h.update('\0');

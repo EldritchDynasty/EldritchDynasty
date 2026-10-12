@@ -27,8 +27,8 @@ export function parseContentYaml(source: string): ParsedContentYaml {
         // An omitted flow value is distinct from `note: null`, a quoted key,
         // a block mapping, or braces which merely occur inside a prose value.
         if (authored && node.flow && pair.value === null && isScalar(pair.key)
-          && pair.key.type === 'PLAIN' && typeof key === 'string') {
-          flowProseIssues.push({ key, line: lines.linePos(pair.key.range![0]).line });
+          && pair.key.type === 'PLAIN') {
+          flowProseIssues.push({ key: pair.key.source ?? String(key), line: lines.linePos(pair.key.range![0]).line });
         }
         visit(pair.value, authored || key === 'effects' || key === 'claims' || key === 'decidedBy');
       }
