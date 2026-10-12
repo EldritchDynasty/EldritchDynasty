@@ -12,7 +12,7 @@ import { canonical } from './save.js';
 import {
   CORE_MESSAGE_ADDRESS_PREFIX, contentInterpolationTokens, contentProseEntries, missingPlainEnglishAddresses, proseOriginalAt, ProseCatalogueS, proseOriginalHash,
 } from '@ed/schema';
-import type { EventTemplate, Outcome, ProseVariant } from '@ed/schema';
+import type { Choice, EventTemplate, Outcome, ProseVariant } from '@ed/schema';
 import {
   commitOutcome, loadGame, missingPlainEnglish, newGame, proseForTale, queueChoice, queueRecord, renderProse, resolveRecord, saveGame, setProseMode, setProseVariants, testRng, testWorld,
 } from '@ed/core';
@@ -405,6 +405,21 @@ describe('prospective prose selection', () => {
     expect(proseForEventTitle(ctx, event)).toBe(event.title);
     expect(proseForChoiceLabel(ctx, event, longChoice)).toBe(longChoice.label);
     expect(missingPlainEnglish(ctx)).toEqual([TITLE_ADDRESS, CHOICE_LABEL_ADDRESS].sort());
+  });
+
+  it('ignores absent display strings on partial internal event fixtures', () => {
+    const { bundle, event } = fixture();
+    if (event.interaction.kind !== 'choice') throw new Error('fixture must be a choice');
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+
+    // Authored events validate both fields, but engine tests sometimes use
+    // intentionally partial EventTemplate mocks. Missing is not prose.
+    const titleless = { ...event, title: undefined } as unknown as EventTemplate;
+    const labelless = { ...event.interaction.choices[0], label: undefined } as unknown as Choice;
+    expect(proseForEventTitle(ctx, titleless)).toBeUndefined();
+    expect(proseForChoiceLabel(ctx, event, labelless)).toBeUndefined();
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 
   it.each([false, true])('loads the authored catalogue without host-side injection (existing row: %s)', (hasExistingRow) => {
