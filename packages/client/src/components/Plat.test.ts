@@ -370,3 +370,53 @@ describe('land gifts are playable from the Plat (#1219)', () => {
     w.unmount();
   });
 });
+
+describe('stacked modal keyboard handling (#1346)', () => {
+  function open(close: () => void) {
+    return mount(Plat, {
+      attachTo: document.body,
+      props: { land: mockLand(), houseName: 'House', halls: [], actions: spyActions(), close },
+    });
+  }
+
+  it('Escape closes only the top dialog, then the uncovered dialog', () => {
+    const closeFirst = vi.fn();
+    const closeSecond = vi.fn();
+    const first = open(closeFirst);
+    const second = open(closeSecond);
+    let secondMounted = true;
+    try {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(closeSecond).toHaveBeenCalledTimes(1);
+      expect(closeFirst).not.toHaveBeenCalled();
+
+      second.unmount();
+      secondMounted = false;
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(closeFirst).toHaveBeenCalledTimes(1);
+      expect(closeSecond).toHaveBeenCalledTimes(1);
+    } finally {
+      if (secondMounted) second.unmount();
+      first.unmount();
+    }
+  });
+
+  it('Tab does not move focus into a covered dialog', () => {
+    const first = open(vi.fn());
+    const second = open(vi.fn());
+    try {
+      const background = first.get('button').element as HTMLButtonElement;
+      const foreground = second.get('button').element as HTMLButtonElement;
+      const focusBehind = vi.spyOn(background, 'focus');
+      foreground.focus();
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      expect(focusBehind).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(foreground);
+    } finally {
+      second.unmount();
+      first.unmount();
+      vi.restoreAllMocks();
+    }
+  });
+});
