@@ -554,7 +554,7 @@ describe('progressive surface reveal (#368)', () => {
   it('reveals broker commissions at the debt floor, not only for positive cash', () => {
     const primer = {
       book: 'primer', name: 'A working', affinity: 'life', fee: 25,
-      reserve: 100, saleYear: 1054, queued: false,
+      reserve: 100, saleYear: 1054, queued: false, canPay: true,
     };
     const bookOnly = {
       ...affordableTable()!,
@@ -565,7 +565,10 @@ describe('progressive surface reveal (#368)', () => {
     };
 
     for (const [treasury, affordable] of [[0, true], [-95, true], [-96, false]] as const) {
-      const table = { ...bookOnly, treasury };
+      const table = {
+        ...bookOnly, treasury,
+        missingPrimers: [{ ...primer, canPay: affordable }],
+      };
       expect(tableHasAffordableOrder(table)).toBe(affordable);
       expect(revealTransition(view(), table, new Set(), { showEverything: false }).shown.has('table'))
         .toBe(affordable);
