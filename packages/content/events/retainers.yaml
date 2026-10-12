@@ -502,3 +502,146 @@ proseVariants:
     plainenglish: >-
       A child of this house was born and named in the usual way. The family gathered around the
       bed, as it always has. Nothing happened in the room that needed to be recorded.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].title"
+    of: "75eb33223d356dbe"
+    plainenglish: >-
+      When the Whole Room Joins In
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].body"
+    of: "1e739b9e3690dce2"
+    plainenglish: >-
+      It is the Slaughter feast. The fires are full, and four Wayfolk sit at the low table
+      because it is cold and nobody turned them away. {SINGER} has held back the eleventh verse
+      all evening, the way he holds everything back. When he finally sings it, the whole hall
+      joins in on the chorus together: tenants, cousins, the reeve's wife, everyone. The Wayfolk
+      do not sing. They are listening to the words, because carrying songs is their trade, and
+      one of them taps her fingers on the table to keep count. Whatever leaves this room tonight
+      is what four counties will believe in eighty years. {HEAD} has until the end of the verse
+      to decide which version goes out the door. The chorus is coming round again.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].interaction.choices[id=the_old_words].label"
+    of: "2815e4467bac5daa"
+    plainenglish: >-
+      Let him sing it as it was written. It is not flattering, but it is ours.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].interaction.choices[id=the_old_words].outcomes[id=carried].text"
+    of: "53cae827e1b23d03"
+    plainenglish: >-
+      The song leaves the valley within three weeks. Thirty years later it comes back with two
+      new verses, both worse and neither untrue. Nobody can accuse you of changing a song you
+      never changed.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].interaction.choices[id=mend_the_verse].label"
+    of: "8e4b4ee24a910d76"
+    plainenglish: >-
+      Have him change the fourth verse. It names someone, and naming people is the one thing
+      that is never forgiven.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].interaction.choices[id=mend_the_verse].outcomes[id=mended].text"
+    of: "19e1b495d68a1639"
+    plainenglish: >-
+      The change is neat, and the room does not notice, because people singing a song they have
+      always sung are not listening to the words. The changed version is the one that travels.
+      It is sung in four counties for a hundred and ten years.
+  - address: "content:events/retainers.yaml#events[id=the_turn_of_the_stave].interaction.choices[id=mend_the_verse].outcomes[id=the_room_notices].text"
+    of: "4d52e11f0f10b083"
+    plainenglish: >-
+      A cousin from the smaller house sings the old fourth verse loudly over the new one. He is
+      drunk enough to think it is funny, and it is. Both versions leave with the Wayfolk. The
+      one people repeat is the one somebody tried to stop.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].title"
+    of: "21ed2055839e6ab9"
+    plainenglish: >-
+      The Handwriting the Warden's Clerk Trusts
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].body"
+    of: "45c9c162d0508946"
+    plainenglish: >-
+      The court sits at Cawdry in the spring. The house has been asked, politely but not really
+      as a request, for a copy of eleven years of its own book. {CHRONICLER} wrote those entries
+      in the same week each thing happened, in neat ruled lines with the dates in the margin.
+      That is why the Warden's clerk accepts his copies without checking them twice. It is also
+      why those eleven years include two weeks, in the autumn of the fourth year, that {HEAD}
+      wishes were shorter. The chronicler does not make a fuss about it. He puts the book on the
+      table, open at that page, and waits. His waiting says everything he thinks.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].interaction.choices[id=send_it_entire].label"
+    of: "1c77f7b396e26857"
+    plainenglish: >-
+      Send all of it. A book with a gap in it is worth less than two bad weeks.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].interaction.choices[id=send_it_entire].outcomes[id=entire].text"
+    of: "e7ead879e48c1ccd"
+    plainenglish: >-
+      Nobody at Cawdry comments on those two weeks. The clerk files the copy in the provincial
+      record, where it will stay, and stay true, for eight hundred years. The house has now put
+      its worst autumn somewhere it can never take it back from. That is what a record is for.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].interaction.choices[id=have_him_copy_short].label"
+    of: "1489d1ff18738d23"
+    plainenglish: >-
+      Have him leave it out. Eleven years, minus half of one.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].interaction.choices[id=have_him_copy_short].outcomes[id=copied_short].text"
+    of: "6d96cdf666f9b88a"
+    plainenglish: >-
+      He copies what he is told to copy, in the same neat hand, and says nothing from the first
+      page to the last. The dates in the margin run straight past the gap without a break,
+      because he ruled them first, as he always does. Somewhere in the house, the original book
+      is still lying open at that page.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].record.subject"
+    of: "b148a62f8c1b165b"
+    plainenglish: >-
+      the two weeks in the autumn
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].record.options.record.chronicle"
+    of: "9fb52d58389f37f4"
+    plainenglish: >-
+      The autumn of that fourth year is written in the book in full, in the chronicler's own
+      hand, and the copy at Cawdry says the same. Later Heads should know it is there, and know
+      it cannot be removed.
+  - address: "content:events/retainers.yaml#events[id=the_hand_the_warden_accepts].record.options.embellish.chronicle"
+    of: "bfd083f5376f2461"
+    plainenglish: >-
+      Eleven clean years, neatly copied and accepted by the court without a single question.
+      Most houses in this province could not show as much.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].title"
+    of: "5c2d13b320849a77"
+    plainenglish: >-
+      The Wage List in a Poor Year
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].body"
+    of: "5aacffcc557355d8"
+    plainenglish: >-
+      There are eleven names on the wage list, and the year has been a poor one. {HEAD} has gone
+      down the list twice with a ruler and got the same answer both times. The steward's post is
+      hereditary and cannot be taken away. The gatekeeper is needed to keep the gate. Five marks
+      a year pays for {ARCHIVIST}. She has sorted four hundred years of documents into eleven
+      bound sections and into her own memory, and in nineteen years she has never produced
+      anything the house could point to as a gain. She is the cheapest person on the list who
+      can actually be let go. That is the whole argument, and it is a good one. It has been made
+      in this hall, about this post, four times since the family got its seal. All four times it
+      was made well.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=keep_her_on].label"
+    of: "6f0fa2336b12f9ef"
+    plainenglish: >-
+      Keep her. Find the five marks somewhere less likely to matter later.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=keep_her_on].outcomes[id=kept].text"
+    of: "0cc2a54d427fbf09"
+    plainenglish: >-
+      Two tenants go short. One of them complains about it at length at the Greening fair, to
+      anyone near the archery targets. She stays. The index stays where it has always been: in
+      this house and in one woman's head. Those are the same place, and the house has never once
+      had to realise it.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=pension_her].label"
+    of: "8941be77090fe29b"
+    plainenglish: >-
+      Retire her on a pension. Half wages, the cottage by the ford, and thanks in front of the
+      hall.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=pension_her].outcomes[id=pensioned].text"
+    of: "2c61d4f847ce183c"
+    plainenglish: >-
+      She accepts, because she is sixty-one, it is a good cottage, and the only other choice is
+      Bramme. Half of five marks is not much against a list of eleven wages, so the year is not
+      saved, and the post is gone anyway. She lives a mile downhill for eleven more years. She
+      comes up for both feasts. Nobody asks her anything, she offers nothing, and she goes home.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=let_her_go].label"
+    of: "46abe2cbb3c77d5f"
+    plainenglish: >-
+      Let her go at the end of the quarter. That is what a wage list is for.
+  - address: "content:events/retainers.yaml#events[id=the_archive_and_the_wage_roll].interaction.choices[id=let_her_go].outcomes[id=released].text"
+    of: "073146fd0cf101f1"
+    plainenglish: >-
+      It is done properly at the end of the quarter. She is paid the quarter's wages and given a
+      written reference in the steward's hand. Nobody is rude to her, and nobody comes to the
+      gate to see her off. The house saves five marks a year, a fifth of what the roof cost last
+      autumn. It will be four generations before anyone works out what was lost on the other
+      side of the account.

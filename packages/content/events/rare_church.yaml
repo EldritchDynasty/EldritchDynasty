@@ -1109,3 +1109,252 @@ proseVariants:
     of: "bf9bd15eaa943a02"
     plainenglish: >-
       showed the archdeacon everything on the fourth shelf
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].title"
+    of: "4f214b189f6524ec"
+    plainenglish: >-
+      A Warning from Our Own Son
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].body"
+    of: "ef9ec55b8bf81adf"
+    plainenglish: >-
+      {PRIEST} has been at the chapter house long enough to know which archdeacon reads what,
+      and which questions are asked only because the rules require them. In Frostfall a letter
+      comes up the hill. It is not in the family's handwriting and it is not signed. It says
+      that someone has asked for a certain file. It says which file and who asked for it. It
+      says nothing about what the house should do, because a priest cannot inherit or marry, but
+      he can still be thrown out of the Church. Sending the letter at all cost him more than
+      anyone at Ardwen will ever be told.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].interaction.choices[id=act_on_it].label"
+    of: "fbce09ebbf66922f"
+    plainenglish: >-
+      Act on it. Move whatever needs moving before the file is read.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].interaction.choices[id=act_on_it].outcomes[id=acted].text"
+    of: "21795de325ca57af"
+    plainenglish: >-
+      It takes four tendays of quiet work. Two books leave the house and go into the second
+      cellar of a cadet hall, and a bookcase is rearranged so that nothing looks missing from
+      it. When the official request comes, the house answers it fully and honestly on everything
+      it asks. Nobody lies to anybody at any point. That is the expensive way to do this, and
+      the only way that holds up.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].interaction.choices[id=act_on_it].outcomes[id=acted_and_seen].text"
+    of: "3e4f5e2868bef3ac"
+    plainenglish: >-
+      It takes four tendays of quiet work, and a carter who moves two crated books four miles
+      talks about it. Tell a carter not to mention something and you have given him the only
+      interesting news of his year. The story reaches Bramme before the official request does.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].interaction.choices[id=burn_the_letter].label"
+    of: "f8a313281237b9cc"
+    plainenglish: >-
+      Burn it. He should never have sent it, and we should never have had it.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].interaction.choices[id=burn_the_letter].outcomes[id=burned].text"
+    of: "4db632bb050ed647"
+    plainenglish: >-
+      It burns in four seconds in the long room's fireplace, and the house does nothing. The
+      file is read in the spring and contains exactly what a file contains. Nothing comes of it
+      for nineteen years. Nobody writes to {PRIEST} or thanks him, and he never once asks
+      whether the letter arrived.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].record.subject"
+    of: "eb4dda7cf9b32658"
+    plainenglish: >-
+      the unsigned letter from the chapter house
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].record.options.record.chronicle"
+    of: "bedc37f642a9aec2"
+    plainenglish: >-
+      One of our family at the chapter house sent an unsigned warning that someone had asked for
+      our file, and said who. We acted on it, and he was never thanked.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].record.options.record.claims[0].text"
+    of: "9741a8b02078d09c"
+    plainenglish: >-
+      sent home an unsigned warning that someone had asked for the family's file
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].record.options.embellish.chronicle"
+    of: "1a4852c99197300d"
+    plainenglish: >-
+      A son of this house at the chapter house wrote home about ordinary family matters, and the
+      house wrote back in the same ordinary way.
+  - address: "content:events/rare_church.yaml#events[id=a_letter_from_the_chapter_house].record.options.embellish.claims[0].text"
+    of: "1fe9f32515513e41"
+    plainenglish: >-
+      wrote home about ordinary family matters
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].title"
+    of: "7aecefcae765d506"
+    plainenglish: >-
+      They Want the Original Register
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].body"
+    of: "b7839aa6eff1489a"
+    plainenglish: >-
+      The Church has kept count without a break since the year 180, and it does not lose
+      paperwork. Now it has ordered the parish register at Wick sent to Cawdry, to be checked
+      against the diocese's own register. Every birth, marriage and death in this parish for
+      four hundred years is written in that register, including every one in this family. The
+      house could pay someone to make an exact copy here in six tendays. Or the original could
+      go down to Cawdry in a bag on Tuesday.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].interaction.choices[id=send_the_original].label"
+    of: "885290d552a2e2b9"
+    plainenglish: >-
+      Send it. It is their register, and their priest wrote it.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].interaction.choices[id=send_the_original].outcomes[id=sent].text"
+    of: "a3f4212da5f85831"
+    plainenglish: >-
+      It goes down to Cawdry on a Tuesday and comes back eleven months later. In between, two
+      clerks read it line by line, and their whole job is noticing when the handwriting changes.
+      It comes back complete and correct. But four entries now have questions written in the
+      margin, in handwriting nobody at Wick recognises, and the questions are still there.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].interaction.choices[id=send_the_original].outcomes[id=sent_and_kept].text"
+    of: "310eb1af4ef38553"
+    plainenglish: >-
+      It goes down to Cawdry on a Tuesday. The diocese's register disagrees with it in nine
+      places, all before 1100, and all in this family's entries. The Church keeps the register
+      until the matter is resolved. 'Until the matter is resolved' has outlived every man who
+      ever wrote it.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].interaction.choices[id=send_a_fair_copy].label"
+    of: "111735a54d75b139"
+    plainenglish: >-
+      Send an exact copy made here, and keep the original at Wick.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].interaction.choices[id=send_a_fair_copy].outcomes[id=copied].text"
+    of: "038fc15496d0a860"
+    plainenglish: >-
+      It takes six tendays and four crowns to a copyist from Bramme. The copy is accurate in
+      every detail, because the house made sure of it, knowing it would be checked. Cawdry
+      accepts it and says nothing. But Cawdry also writes down that it was sent a copy. A copy
+      sent instead of the original reads differently in every century after the one it was sent
+      in.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].record.subject"
+    of: "b92712b61478de92"
+    plainenglish: >-
+      the register at Wick, and which version went to Cawdry
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].record.options.record.chronicle"
+    of: "6aa9cf218f8d2b6d"
+    plainenglish: >-
+      Cawdry ordered the Wick register sent down. We sent an exact copy and kept the original,
+      and Cawdry's records say that a copy is what they received.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].record.options.record.claims[0].text"
+    of: "3aaa048515b6b971"
+    plainenglish: >-
+      sent Cawdry an exact copy of the Wick register and kept the original
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].record.options.embellish.chronicle"
+    of: "328234d92e8a0b95"
+    plainenglish: >-
+      Cawdry ordered the Wick register sent down. The whole register went on the Tuesday and
+      came back eleven months later, checked and found correct in every entry.
+  - address: "content:events/rare_church.yaml#events[id=the_parish_roll_called_in].record.options.embellish.claims[0].text"
+    of: "152288b2993c53d6"
+    plainenglish: >-
+      sent the whole parish register to Cawdry and had every entry confirmed
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].title"
+    of: "a73253bbe7bd4bd7"
+    plainenglish: >-
+      Spoken Aloud in Court, on the Record
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].body"
+    of: "8219f7bb51c930ff"
+    plainenglish: >-
+      In this kingdom, blasphemy does not mean swearing. It means saying one of the nine names
+      out loud, out of order, at the wrong hour, and it is the one thing that empties a room.
+      {SPEAKER} says one in the Church court at Bramme, in the middle of an answer about a
+      boundary, and does not seem to notice. The court notices. The clerk writes it down,
+      because the clerk writes everything down. Then the archdeacon in charge does something
+      nobody expects and asks {SPEAKER} to say it again.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].interaction.choices[id=say_it_again].label"
+    of: "81b9fa0e644ee9da"
+    plainenglish: >-
+      Repeat it. The archdeacon asked you to.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].interaction.choices[id=say_it_again].outcomes[id=said_twice].text"
+    of: "6a94d07a5f56275e"
+    plainenglish: >-
+      It is said a second time in a room of nineteen people, and the room reacts the way rooms
+      do. The archdeacon writes something in his own hand instead of leaving it to the clerk,
+      which he has not done in that court for nine years. The court decides the boundary in the
+      house's favour. Nothing else said that day is about the boundary.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].interaction.choices[id=say_it_again].outcomes[id=said_and_nothing].text"
+    of: "f67dd6c9b972c50d"
+    plainenglish: >-
+      It is said a second time, and it is just four meaningless syllables. The archdeacon nods
+      and moves on to the next question, and the whole room breathes out. The clerk's note stays
+      in the record. In 1288 someone at Cawdry reads it and rides up here about it.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].interaction.choices[id=refuse_to_repeat].label"
+    of: "d831cffb59d1e82f"
+    plainenglish: >-
+      Refuse. Something said once by accident should not be said twice on purpose.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].interaction.choices[id=refuse_to_repeat].outcomes[id=refused_to_repeat].text"
+    of: "6e3a7f9ba1d301f7"
+    plainenglish: >-
+      Refusing is the right answer, and everyone in the room knows it, including the archdeacon.
+      It is recorded as a refusal, and that word means something different from anything else
+      that could have been written. The court rises. The word 'refusal' now sits in a chapter
+      house at Cawdry, four inches below this family's name.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].record.subject"
+    of: "3e82f215572d68b9"
+    plainenglish: >-
+      the words spoken in the Bramme court
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].record.options.record.chronicle"
+    of: "4756fbfb0ed98947"
+    plainenglish: >-
+      One of our family said one of the nine names out loud in the Church court at Bramme, in
+      the middle of an answer about a hedge. They were asked to say it again, and did.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].record.options.record.claims[0].text"
+    of: "a8155ec636a8a93a"
+    plainenglish: >-
+      said one of the nine names out loud in the Bramme court, and said it again when asked
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].record.options.embellish.chronicle"
+    of: "a2618ef7e9dd859b"
+    plainenglish: >-
+      The boundary case was heard in the court at Bramme and decided for this house on the first
+      day. The other side had nothing to show.
+  - address: "content:events/rare_church.yaml#events[id=a_name_said_in_court].record.options.embellish.claims[0].text"
+    of: "2db0be0adb4f28de"
+    plainenglish: >-
+      answered the court at Bramme about the boundary and won
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].title"
+    of: "d2f4e7eb141efb27"
+    plainenglish: >-
+      What Bramme Calls a Poor Year
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].body"
+    of: "e3c3db37b237e66b"
+    plainenglish: >-
+      A letter comes up from the chapter house at Bramme, in the same handwriting that recorded
+      the marriage permission eleven times a year without treating any of them differently. Now
+      it does treat one differently. The register remembers exactly what was paid and when. The
+      archdeacon has had time to compare what came of that marriage with what a family might
+      normally expect, and to notice that it falls short. Nothing in the letter says the
+      marriage was wrong. Everything in it is written so that {HEAD} will read it that way.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].interaction.choices[id=pay_for_the_blessing].label"
+    of: "cbbbd418ff6e38cc"
+    plainenglish: >-
+      Pay for the blessing. Let them come and declare the house healthy.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].interaction.choices[id=pay_for_the_blessing].outcomes[id=blessed].text"
+    of: "8f3280fb76ffa227"
+    plainenglish: >-
+      It costs twelve crowns and a morning of the archdeacon's Latin. The house is declared
+      healthy in writing, and a copy is kept for the register. It tells the house nothing it did
+      not already know, and it costs exactly what the house was told it would.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].interaction.choices[id=send_the_letter_back].label"
+    of: "14eec6c9ba815f15"
+    plainenglish: >-
+      Send the letter back without an answer. The house's accounts are its own business.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].interaction.choices[id=send_the_letter_back].outcomes[id=unanswered].text"
+    of: "7fa81fe848d64a44"
+    plainenglish: >-
+      No reply goes to Bramme. From that writer, that means the matter has been noted, not
+      closed. Nothing happens this year, or the next. The register can wait in a way that a
+      family counting its own children cannot, and the question is still open in a chapter house
+      that never loses paper.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].record.subject"
+    of: "75a25dd04651092c"
+    plainenglish: >-
+      Bramme's letter
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].record.options.record.chronicle"
+    of: "52b7afd035cd878c"
+    plainenglish: >-
+      The chapter house at Bramme wrote to ask why so little had come of a marriage it had
+      itself made lawful. The house answered exactly as it chose.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].record.options.record.claims[0].text"
+    of: "c4caf0c66f9b109a"
+    plainenglish: >-
+      gave Bramme an answer about what the marriage had produced
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].record.options.embellish.chronicle"
+    of: "27ff73e37968b60f"
+    plainenglish: >-
+      A polite letter came from Bramme about the parish accounts, and the house answered it
+      politely.
+  - address: "content:events/rare_church.yaml#events[id=what_bramme_calls_a_thin_year].record.options.embellish.claims[0].text"
+    of: "95098e0c2acca2d0"
+    plainenglish: >-
+      exchanged polite letters with the chapter house at Bramme about the parish accounts
