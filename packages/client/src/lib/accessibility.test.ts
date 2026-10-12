@@ -494,6 +494,7 @@ describe('progressive surface reveal (#368)', () => {
       posts: [],
       papers: [],
       pedigreePrices: [],
+      shelf: [],
       missingPrimers: [],
       ledgerSearch: { ready: false, fee: 0 },
       unmaking: { ready: false },
@@ -549,6 +550,20 @@ describe('progressive surface reveal (#368)', () => {
       new Set(),
       { showEverything: false },
     ).shown).toContain('abroad');
+  });
+
+  it('reveals the Table when restoration is the only affordable order (#1293)', () => {
+    const table = affordableTable()!;
+    table.canTutor = false;
+    table.shelf = [{
+      book: 'lesser_workings_of_life', name: 'Lesser Workings of Life', years: 4,
+      condition: 20, conditionLabel: 'ruined', readers: [],
+      restore: { fee: 15, years: 2, returns: 1044, canPay: false },
+    }];
+    expect(tableHasAffordableOrder(table)).toBe(false);
+    table.shelf[0]!.restore!.canPay = true;
+    expect(tableHasAffordableOrder(table)).toBe(true);
+    expect(revealTransition(view(1042), table, new Set(), { showEverything: false }).shown).toContain('table');
   });
 
   it('reveals broker commissions at the debt floor, not only for positive cash', () => {

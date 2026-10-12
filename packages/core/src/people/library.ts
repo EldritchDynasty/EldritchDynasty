@@ -135,6 +135,15 @@ export function tickRestorations(ctx: SimCtx): void {
     if (copy.restoresAt === undefined || copy.restoresAt > ctx.world.year) continue;
     copy.condition = 100;
     delete copy.restoresAt;
+    const def = spellbookDef(ctx, copy.id);
+    const file = ctx.content.sourceOf(copy.id);
+    const name = def && file && isContentProseField('name', def.name)
+      ? renderContentProse(ctx, file, `spellbooks[id=${encodeURIComponent(copy.id)}].name`, def.name)
+      : def?.name ?? copy.id;
+    ctx.world.chronicle.push({
+      year: ctx.world.year, weight: 'line', named: false,
+      text: msg(ctx, 'library.binder_returned', 'The binder returned {BOOK}, repaired and ready to read.', { BOOK: name }),
+    });
   }
 }
 
