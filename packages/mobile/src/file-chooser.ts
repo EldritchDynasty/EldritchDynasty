@@ -1,3 +1,5 @@
+import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
+
 /**
  * Open the native-backed file chooser for importing an opaque saved-game JSON.
  * The chooser belongs to the mobile host, not to the game or its save schema.
@@ -11,10 +13,10 @@ export function chooseSaveFile(input: HTMLInputElement): Promise<unknown | null>
     // only native picker completion and JSON reading.
     // Dismissing a native picker emits `cancel`, not `change`. Without
     // this listener, callers of importSave wait on a never-settled Promise.
-    input.addEventListener('cancel', () => resolve(null), { once: true });
+    input.addEventListener('cancel', () => resolve(BROWSER_IMPORT_CANCELLED), { once: true });
     input.onchange = () => {
       const file = input.files?.[0];
-      if (!file) { resolve(null); return; }
+      if (!file) { resolve(BROWSER_IMPORT_CANCELLED); return; }
 
       try {
         // A WebView may deny even constructing FileReader. This callback runs
