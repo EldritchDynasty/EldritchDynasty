@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
 import { chapterReplayDisposition } from '../lib/accessibility';
 import { useModal } from '../lib/modal';
@@ -29,7 +29,25 @@ const props = withDefaults(defineProps<{
  */
 const card = ref<HTMLElement | null>(null);
 const goOn = ref<HTMLButtonElement | null>(null);
-useModal(card, () => props.actions.dismissChapter());
+// Chapter remains mounted while App replaces the head of its queue. A burst of
+// button, backdrop and Escape events must not dismiss multiple unseen beats.
+let dismissingBeat: ChapterBeat | null = null;
+function dismissOnce(): void {
+  if (dismissingBeat !== null) return;
+  const beat = props.beat;
+  dismissingBeat = beat;
+  try {
+    props.actions.dismissChapter();
+  } finally {
+    // A refused/no-op dismissal can be retried after Vue updates. Only the
+    // dismissal which set this latch may clear it: a later beat may already
+    // have auto-skipped during the post-flush watcher.
+    void nextTick(() => {
+      if (dismissingBeat === beat) dismissingBeat = null;
+    });
+  }
+}
+useModal(card, dismissOnce);
 
 function readingStorage(): Storage | null {
   try {
@@ -58,15 +76,17 @@ function skipSeenOpening(beat: ChapterBeat): boolean {
 onMounted(() => {
   // The shared hook has already installed the keyboard trap, even if this
   // opening is skipped and the same instance later shows the next beat.
-  if (skipSeenOpening(props.beat)) props.actions.dismissChapter();
+  if (skipSeenOpening(props.beat)) dismissOnce();
 });
 
 // App keeps the same Chapter component mounted as the chapter queue shifts.
 // Checking only onMounted misses every subsequent Age opening: repeats cannot
 // be skipped and fresh wording never enters the reader's seen history.
 watch(() => props.beat, (beat) => {
+  // The successor has actually rendered; a new Age beat may now be dismissed.
+  dismissingBeat = null;
   if (skipSeenOpening(beat)) {
-    props.actions.dismissChapter();
+    dismissOnce();
     return;
   }
   // A closing and an unseen opening both keep the dialog active. After Vue
@@ -77,7 +97,7 @@ watch(() => props.beat, (beat) => {
 </script>
 
 <template>
-  <div class="scrim" @click="actions.dismissChapter()">
+  <div class="scrim" @click="dismissOnce()">
     <article
       ref="card"
       class="chapter"
@@ -88,7 +108,7 @@ watch(() => props.beat, (beat) => {
     >
       <template v-if="beat.kind === 'opening'">
         <p class="mood">{{ beat.opening.text }}</p>
-        <button ref="goOn" class="quiet small" @click="actions.dismissChapter()">Go on</button>
+        <button ref="goOn" class="quiet small" @click="dismissOnce()">Go on</button>
       </template>
 
       <template v-else>
@@ -101,7 +121,7 @@ watch(() => props.beat, (beat) => {
         <p v-if="beat.view.boundary" class="invitation">
           You can put it down here. The house's memory of these years is kept.
         </p>
-        <button ref="goOn" class="quiet small" @click="actions.dismissChapter()">
+        <button ref="goOn" class="quiet small" @click="dismissOnce()">
           {{ beat.view.boundary ? 'Put it down' : 'Read on' }}
         </button>
       </template>
