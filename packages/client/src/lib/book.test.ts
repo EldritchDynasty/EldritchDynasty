@@ -229,6 +229,8 @@ describe('the plate', () => {
   it('says what it is a plate of', () => {
     const two = [entry({ year: 1100 }), entry({ year: 1400 })];
     expect(plateSpan(two)).toBe('1100–1400');
+    expect(plateSubtitle([entry({ year: 1100 })], 'all'))
+      .toBe('1 entry · 1100–1100 · the whole book');
     expect(plateSubtitle(two, 'blank')).toContain('2 entries');
     expect(plateSubtitle(two, 'blank')).toContain('left blank');
     expect(plateSubtitle([], 'all')).toContain('nothing yet');
