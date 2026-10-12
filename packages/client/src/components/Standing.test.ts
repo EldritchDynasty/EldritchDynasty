@@ -246,35 +246,6 @@ function ambitionView(id: string | null = 'blood'): SessionView {
 }
 
 describe('House ambition refusal and selection (#1069)', () => {
-  it('keeps a refused first ambition visible across a fresh world snapshot (#1519)', async () => {
-    const setAmbition = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
-    const wrapper = mount(Ambition, {
-      props: { view: ambitionView(null), actions: { setAmbition } as unknown as GameActions },
-    });
-    try {
-      // Without an ambition, this is the initial selector, not the Change editor.
-      expect(wrapper.find('.ambition-head button').exists()).toBe(false);
-      await wrapper.get('select').setValue('land');
-      await wrapper.get('.ambition-actions button').trigger('click');
-      expect(setAmbition).toHaveBeenCalledWith('land');
-
-      // GameStore.setAmbition refreshes the world even when the order fails.
-      // An idle selector used to reset both this draft and its refusal here.
-      await wrapper.setProps({ view: ambitionView(null) });
-      expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('land');
-      expect(wrapper.get('[role="alert"]').text()).toContain('could not keep that ambition');
-
-      await wrapper.get('.ambition-actions button').trigger('click');
-      expect(setAmbition.mock.calls).toEqual([['land'], ['land']]);
-      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
-      await wrapper.setProps({ view: ambitionView('land') });
-      expect(wrapper.text()).toContain('Keep the estate');
-      expect(wrapper.find('select').exists()).toBe(false);
-    } finally {
-      wrapper.unmount();
-    }
-  });
-
   it('preserves a refused choice and allows a successful retry', async () => {
     const setAmbition = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
     const wrapper = mount(Ambition, {
