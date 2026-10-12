@@ -181,7 +181,7 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: discrepancy, op: bury, provableBy: [commons, the_church] }
-                - { kind: chronicle, text: An old woman of the village was given a room at the house, and kept in it, and buried from it. }
+                - { kind: chronicle, text: "An old woman of the village was given a room at the house, and kept in it, and buried from it." }
         - id: leave_her
           label: Leave her to the parish. She has said nothing in forty years.
           outcomes:
@@ -298,7 +298,7 @@ events:
                 - { kind: treasury, delta: -400 }
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: bury, provableBy: [the_church] }
-                - { kind: chronicle, text: The house endowed a chantry, and the name is said there twice a year. }
+                - { kind: chronicle, text: "The house endowed a chantry, and the name is said there twice a year." }
         - id: decline_politely
           label: Decline. A roof is a roof and the house has its own.
           outcomes:

@@ -303,7 +303,7 @@ events:
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 6 }
                 - { kind: attribute, target: { slot: ASCENDANT }, attr: mind, delta: 3 }
-                - { kind: chronicle, text: A greater work in the library was written over in the family's own hand, past the place where the book itself stops. }
+                - { kind: chronicle, text: "A greater work in the library was written over in the family's own hand, past the place where the book itself stops." }
         - id: cut_the_pages
           label: Cut the pages out. Burn them where he can see.
           outcomes:

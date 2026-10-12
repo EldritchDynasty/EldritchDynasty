@@ -395,3 +395,16 @@ proseVariants:
     plainenglish: >-
       After nine years of study at the Colleges, the family's son returned with his warrant and
       examination completed. His family welcomed him home at their own gate.
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=send_a_man].outcomes[id=sent].effects[1].cause"
+    of: "68acee58559f84f4"
+    plainenglish: >-
+      the Colleges in Corran
+  - address: "content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=write_again].outcomes[id=wrote].effects[1].cause"
+    of: "68acee58559f84f4"
+    plainenglish: >-
+      the Colleges in Corran
+  - address: "content:events/arc_corran.yaml#events[id=corran_what_came_back].record.options.record.claims[0].text"
+    of: "eac427b867d80f6c"
+    plainenglish: >-
+      returned from Bramme nine years later, qualified in Terra, but nobody could prove he was
+      the same man

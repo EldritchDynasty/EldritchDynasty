@@ -111,7 +111,7 @@ events:
               # and nobody in it thinks better of the hall for it.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -14 }
-                - { kind: chronicle, text: Four light marks out of the rents were sent to the magistrate at Bramme, and three households were questioned. }
+                - { kind: chronicle, text: "Four light marks out of the rents were sent to the magistrate at Bramme, and three households were questioned." }
 
   - id: the_pledge_in_the_box
     title: A Ring, Against Two Marks

@@ -604,3 +604,11 @@ proseVariants:
       gate open, then or in later years. People keep working for nineteen days without
       sleeping properly. When the household counts, the number of people left is bad.
       What the house remembers most is that nobody went away.
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_strong_one].outcomes[id=spent_badly].effects[1].cause"
+    of: "eb58c81e60260f8a"
+    plainenglish: >-
+      fever
+  - address: "content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_weak_one].outcomes[id=bought_days].effects[1].cause"
+    of: "eb58c81e60260f8a"
+    plainenglish: >-
+      fever

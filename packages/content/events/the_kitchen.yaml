@@ -823,3 +823,7 @@ proseVariants:
       what happened to him. The house buys fish at Bramme for nineteen years, until the
       drover's son takes over the route. The son does not know the family and charges them
       accordingly.
+  - address: "content:events/the_kitchen.yaml#events[id=what_hangs_in_smoke].interaction.decidedBy.state[0].because"
+    of: "4f52149e0183609a"
+    plainenglish: >-
+      there is no money to replace the missing meat

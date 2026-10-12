@@ -360,3 +360,12 @@ proseVariants:
     of: bfb1d10f70c32253
     plainenglish: >-
       Our house never wastes good land, and it never has.
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].record.options.record.claims[0].text"
+    of: "cd66270aec7ee8e6"
+    plainenglish: >-
+      inherited the drainage bills of two generations and had to decide whether to pay for a
+      third
+  - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].record.options.record.claims[0].text"
+    of: "0cd8f47a9714eeae"
+    plainenglish: >-
+      inherited Cradlemoor after the family's sixty years of drainage work finally succeeded
