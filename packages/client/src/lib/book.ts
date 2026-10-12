@@ -128,36 +128,42 @@ export type Measure = (text: string, font: string) => number;
  * An indivisible grapheme wider than max stays on its own row.
  */
 export function wrap(text: string, font: string, max: number, measure: Measure): string[] {
+  if (!text.trim() && !/[\r\n]/.test(text)) return [];
+
   const out: string[] = [];
-  let row = '';
   const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    const next = row ? `${row} ${word}` : word;
-    if (measure(next, font) <= max) {
-      row = next;
-      continue;
-    }
-    if (row) { out.push(row); row = ''; }
+  // Hard breaks are part of the Chronicle, not inter-word whitespace. Preserve
+  // even an empty paragraph as a blank plate row. Ordinary spaces still wrap
+  // greedily, and long words keep their grapheme-safe fallback.
+  for (const line of text.split(/\r\n|\r|\n/)) {
+    let row = '';
+    for (const word of line.split(/\s+/).filter(Boolean)) {
+      const next = row ? row + ' ' + word : word;
+      if (measure(next, font) <= max) {
+        row = next;
+        continue;
+      }
+      if (row) { out.push(row); row = ''; }
 
-    if (measure(word, font) <= max) {
-      row = word;
-      continue;
-    }
+      if (measure(word, font) <= max) {
+        row = word;
+        continue;
+      }
 
-    // Never split a surrogate pair, combining mark or joined emoji. Measure
-    // each candidate because glyph widths are not proportional to characters.
-    for (const { segment } of graphemes.segment(word)) {
-      const candidate = row + segment;
-      if (row && measure(candidate, font) > max) {
-        out.push(row);
-        row = segment;
-      } else {
-        row = candidate;
+      // Never split a surrogate pair, combining mark or joined emoji.
+      for (const { segment } of graphemes.segment(word)) {
+        const candidate = row + segment;
+        if (row && measure(candidate, font) > max) {
+          out.push(row);
+          row = segment;
+        } else {
+          row = candidate;
+        }
       }
     }
+    out.push(row);
   }
-  if (row) out.push(row);
   return out;
 }
 
