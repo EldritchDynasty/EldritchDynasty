@@ -737,22 +737,7 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     /** The cast the firing actually resolved against — claims (issue #19) target these people. */
     fill: SlotFillS,
   }),
-]).transform((pending) => {
-  if (pending.kind !== 'choice') return pending;
-  // #1380: EventTemplateS has already validated the saved event. Narration
-  // takes a single chance branch; every other interaction carries the canonical
-  // Decider schema, including old templates defaulted to 'player'. Never
-  // invent player ownership for a stored party/state decision.
-  const decidedBy = pending.decidedBy
-    ?? (pending.event.interaction.kind === 'narration'
-      ? 'chance'
-      : pending.event.interaction.decidedBy);
-  return {
-    ...pending,
-    decidedBy,
-    choicesAreOpen: pending.choicesAreOpen ?? (decidedBy === 'player'),
-  };
-});
+]);
 
 export const SavedGameS = z.object({
   /** Bumped whenever the shape changes. A loader that cannot read it says so. */
@@ -1065,7 +1050,21 @@ export const SavedGameS = z.object({
      */
     because: z.string().default('a child of the house'),
   })),
-  pendingDecisions: z.array(PendingDecisionS),
+  // Keep PendingDecisionS itself as a discriminated union: clients use its
+  // .options to inspect individual arms. Only the enclosing save parser owns
+  // the legacy current-format repair, after the embedded event was validated.
+  pendingDecisions: z.array(PendingDecisionS).transform((pending) => pending.map((decision) => {
+    if (decision.kind !== 'choice') return decision;
+    const decidedBy = decision.decidedBy
+      ?? (decision.event.interaction.kind === 'narration'
+        ? 'chance'
+        : decision.event.interaction.decidedBy);
+    return {
+      ...decision,
+      decidedBy,
+      choicesAreOpen: decision.choicesAreOpen ?? (decidedBy === 'player'),
+    };
+  })),
 
   counters: z.object({
     person: z.number(), mint: z.number(), arc: z.number(),
