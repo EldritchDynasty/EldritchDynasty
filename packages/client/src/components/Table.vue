@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 
 const props = defineProps<{
@@ -15,6 +16,8 @@ const props = defineProps<{
   refusal: { kind: string; reason: string } | null;
   /** What the last order cost, where it cost anything (issue #59). */
   receipt: string | null;
+  /** Reader-local text only; game actions and supplied prose stay unchanged. */
+  proseMode?: ProseMode;
 }>();
 
 function studyYears(book: TableView['shelf'][number]): number {
@@ -173,10 +176,15 @@ function idle(panel: string, hasWork: boolean): boolean {
 const broke = computed(() => props.table.treasury <= 0);
 
 /** The standing order on marriage, in the house's own words. */
+const plain = computed(() => props.proseMode === 'plainenglish');
+/** Reader-only wording: never rewrite authored text, engine reasons or action ids. */
+function local(original: string, simple: string): string {
+  return plain.value ? simple : original;
+}
 const MARRIAGE_ORDERS = [
-  { policy: 'in' as const, label: 'Keep it in the family' },
-  { policy: 'out' as const, label: 'Marry outward' },
-  { policy: 'as_it_falls' as const, label: 'As it falls' },
+  { policy: 'in' as const, label: 'Keep it in the family', simple: 'Marry within the family' },
+  { policy: 'out' as const, label: 'Marry outward', simple: 'Marry outside the family' },
+  { policy: 'as_it_falls' as const, label: 'As it falls', simple: 'No preference' },
 ];
 
 </script>
@@ -186,7 +194,7 @@ const MARRIAGE_ORDERS = [
     <div class="panel">
       <h3 class="label">The purse</h3>
       <p class="small">
-        {{ table.treasury }} crowns. A term of tutoring is {{ table.tutorFee }}.
+        {{ table.treasury }} {{ local('crowns. A term of tutoring is', 'crowns available. A tutoring term costs') }} {{ table.tutorFee }}.
       </p>
 
       <!-- WARDSHIP (issue #1206). The engine has taken the land income away
@@ -196,17 +204,17 @@ const MARRIAGE_ORDERS = [
       <section v-if="table.wardship" class="wardship" aria-label="Wardship">
         <p class="small" :class="table.wardship.boughtBack ? 'dim' : 'rubric'">
           <template v-if="table.wardship.boughtBack">
-            {{ table.wardship.wardName }} is still under age, but the wardship was bought back and the land is the house's again.
+            {{ table.wardship.wardName }} {{ local("is still under age, but the wardship was bought back and the land is the house's again.", "is still a minor. The house paid to end wardship and has its land income again.") }}
           </template>
           <template v-else>
-            {{ table.wardship.wardName }} is under age, and since {{ table.wardship.since }} the Warden has taken the harvest.
+            {{ table.wardship.wardName }} {{ local('is under age, and since', 'is a minor. Since') }} {{ table.wardship.since }} {{ local('the Warden has taken the harvest.', 'the Warden has received the harvest income.') }}
           </template>
         </p>
         <button
           v-if="!table.wardship.boughtBack && table.wardship.buyBackCost !== undefined"
           @click="actions.order({ kind: 'buyBackWardship' })"
         >
-          Buy the wardship back — {{ table.wardship.buyBackCost }} crowns
+          {{ local('Buy the wardship back', 'Pay to end wardship') }} — {{ table.wardship.buyBackCost }} crowns
         </button>
         <p v-if="refusedIn('buyBackWardship')" class="small rubric">{{ refusedIn('buyBackWardship') }}</p>
       </section>
@@ -220,16 +228,16 @@ const MARRIAGE_ORDERS = [
            money is gone the day it is spent and the auction is years out. -->
       <p class="small" :class="table.bidCeiling > 0 ? 'dim' : 'rubric'">
         <template v-if="table.bidCeiling > 0">
-          The house will go to {{ table.bidCeiling }} at the next sale.
+          {{ local('The house will go to', 'The house will bid up to') }} {{ table.bidCeiling }} {{ local('at the next sale.', 'crowns at the next auction.') }}
         </template>
-        <template v-else>The house has not said what it will spend, so it will not bid.</template>
+        <template v-else>{{ local('The house has not said what it will spend, so it will not bid.', 'No maximum bid has been set. The house will not bid at the auction.') }}</template>
       </p>
       <p v-if="table.auction" class="small dim">
-        A sale in {{ table.auction.year }} — {{ table.auction.lots }}
+        {{ local('A sale in', 'Next auction:') }} {{ table.auction.year }} — {{ table.auction.lots }}
         {{ table.auction.lots === 1 ? 'lot' : 'lots' }}, the cheapest reserved at
         {{ table.auction.lowestReserve }}.
       </p>
-      <p v-else class="small dim">Nothing has been announced.</p>
+      <p v-else class="small dim">{{ local('Nothing has been announced.', 'No auction has been announced yet.') }}</p>
 
       <div v-for="lot in table.auction?.items ?? []" :key="lot.id" class="line lot">
         <div class="small">
@@ -237,11 +245,11 @@ const MARRIAGE_ORDERS = [
           <span class="dim"> · {{ lot.seller }} · sold in {{ lot.saleYear }} · reserved at {{ lot.reserve }}</span>
         </div>
         <p v-if="lot.kind === 'chronicle_page'" class="small rubric blurb">
-          Whoever buys this page reads it. If a rival buys it, what it proves is proven.
+          {{ local('Whoever buys this page reads it. If a rival buys it, what it proves is proven.', 'The buyer can read this Chronicle page. A rival who buys it can use its evidence to prove a claim.') }}
         </p>
         <p v-if="lot.bid" class="small dim">
-          The house has bid
-          {{ lot.bid.currency === 'coin' ? `${lot.bid.amount} crowns` : lot.bid.name }} for it.
+          {{ local('The house has bid', 'Current bid:') }}
+          {{ lot.bid.currency === 'coin' ? `${lot.bid.amount} crowns` : lot.bid.name }} {{ local('for it.', 'for this lot.') }}
         </p>
         <div class="row">
           <input
@@ -287,8 +295,8 @@ const MARRIAGE_ORDERS = [
     </div>
 
     <div v-if="table.delegation.length" class="panel">
-      <h3 class="label">Standing preferences</h3>
-      <p class="small dim">Routine repeats may use these answers. Anything important still comes back to the table.</p>
+      <h3 class="label">{{ local('Standing preferences', 'Saved decisions') }}</h3>
+      <p class="small dim">{{ local('Routine repeats may use these answers. Anything important still comes back to the table.', 'The house can reuse these answers for routine decisions. Important decisions will still be shown to you.') }}</p>
       <div v-for="policy in table.delegation" :key="policy.kind + ':' + policy.event" class="row policy">
         <span class="small"><strong>{{ policy.title }}</strong> · {{ policy.answer.replace(/_/g, ' ') }}</span>
         <button
@@ -297,14 +305,14 @@ const MARRIAGE_ORDERS = [
             ? actions.delegateChoice(policy.event, null)
             : actions.delegateRecord(policy.event, null)"
         >
-          Ask me again
+          {{ local('Ask me again', 'Let me decide next time') }}
         </button>
       </div>
     </div>
 
     <div class="panel">
       <h3 class="label">The Great Work</h3>
-      <p class="small dim">The house can call a rite when its people can field it. Each call opens the authored choice and its cost.</p>
+      <p class="small dim">{{ local('The house can call a rite when its people can field it. Each call opens the authored choice and its cost.', 'You can begin a rite when enough eligible family members are available. You will see the choices and costs before proceeding.') }}</p>
       <div class="row">
         <button :disabled="!table.vesselRite.ready" @click="assemble('vesselRite')">Call the Vessel</button>
         <span v-if="!table.vesselRite.ready" class="small rubric">{{ table.vesselRite.reason }}</span>
@@ -313,25 +321,25 @@ const MARRIAGE_ORDERS = [
         <button :disabled="!table.greatRite.ready" @click="assemble('greatRite')">Call the Great Rite</button>
         <span v-if="!table.greatRite.ready" class="small rubric">{{ table.greatRite.reason }}</span>
       </div>
-      <p class="small dim">A two-rite elder can be unmade for an adult blood descendant. The elder is spent; the final working still needs the living family's eight affinities and the descendant's own strength.</p>
+      <p class="small dim">{{ local("A two-rite elder can be unmade for an adult blood descendant. The elder is spent; the final working still needs the living family's eight affinities and the descendant's own strength.", "An elder who has completed two rites can be sacrificed for an adult blood descendant. This uses up the elder. The final rite still requires all eight affinities among living family members and enough strength in the descendant.") }}</p>
       <button :disabled="!table.unmaking.ready" @click="assemble('unmaking')">Call the family to the Unmaking</button>
       <p v-if="!table.unmaking.ready" class="small rubric">{{ table.unmaking.reason }}</p>
 
       <!-- The confirmation itself is presentation-only; the button below is the old order verb. -->
       <section v-if="pendingRite && riteAssembly" class="rite-assembly" aria-label="Rite assembly">
-        <h4 class="label">{{ riteAssembly.title }} — before the house commits</h4>
+        <h4 class="label">{{ riteAssembly.title }} — {{ local('before the house commits', 'review before confirming') }}</h4>
         <p v-for="actor in riteAssembly.actors" :key="actor.slot" class="small">
           <strong>{{ actor.slot }}</strong> — {{ actor.name }}
         </p>
         <div v-for="risk in riteAssembly.atRisk" :key="risk.slot" class="small">
-          <strong>{{ risk.slot }}</strong> — choose on the docket from
+          <strong>{{ risk.slot }}</strong> — {{ local('choose on the docket from', 'choose from these candidates when prompted:') }}
           {{ risk.candidates.map((candidate) => candidate.name).join(', ') }}.
         </div>
         <p v-for="line in riteAssembly.preparations" :key="line" class="small dim">{{ line }}</p>
         <p v-for="line in riteAssembly.irreversible" :key="line" class="small rubric">{{ line }}</p>
-        <p class="small dim">This page names only facts already visible to the house. It does not reveal the outcome or its odds.</p>
+        <p class="small dim">{{ local('This page names only facts already visible to the house. It does not reveal the outcome or its odds.', 'This summary only shows information you already know. It does not reveal what will happen or how likely each outcome is.') }}</p>
         <div class="row">
-          <button class="primary" @click="confirmRite">Put this rite before the house</button>
+          <button class="primary" @click="confirmRite">{{ local('Put this rite before the house', 'Confirm and begin the rite') }}</button>
           <button class="quiet" @click="cancelRite">Not yet</button>
         </div>
       </section>
@@ -340,8 +348,7 @@ const MARRIAGE_ORDERS = [
       <p v-if="refusedIn('unmaking')" class="small rubric">{{ refusedIn('unmaking') }}</p>
       <div class="ledger-search">
         <p class="small dim">
-          Once the Unmaking has raised a Demigod, the house may pay its record-keepers to search
-          the old contracts for a clause the chronicle has not yet recovered.
+          {{ local('Once the Unmaking has raised a Demigod, the house may pay its record-keepers to search the old contracts for a clause the chronicle has not yet recovered.', 'After the Unmaking creates a Demigod, you can pay record-keepers to search old contracts for a missing Chronicle clause.') }}
         </p>
         <button
           :disabled="!table.ledgerSearch.ready"
