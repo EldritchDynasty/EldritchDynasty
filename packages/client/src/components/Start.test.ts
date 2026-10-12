@@ -331,6 +331,45 @@ describe('saved-run action failures (#1149)', () => {
     }
   });
 
+  it.each(['refused', 'rejected'] as const)(
+    'keeps the newest named-save refusal visible after an older load is %s (#1462)',
+    async (olderOutcome) => {
+      const actions = spyActions([
+        { slot: 'chapter-old', year: 1080 },
+        { slot: 'chapter-new', year: 1090 },
+      ]);
+      let resolveOld!: (value: boolean) => void;
+      let rejectOld!: (reason: Error) => void;
+      const oldLoad = new Promise<boolean>((resolve, reject) => {
+        resolveOld = resolve;
+        rejectOld = reject;
+      });
+      vi.mocked(actions.load).mockImplementation((slot) =>
+        slot === 'chapter-old' ? oldLoad : Promise.resolve(false));
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        const rows = w.findAll('section.saved li');
+        expect(rows).toHaveLength(2);
+        await rows[0]!.find('button').trigger('click');
+        await rows[1]!.find('button').trigger('click');
+        await flush();
+        expect(rows[1]!.get('.save-action-error').text()).toContain('could not be read');
+        expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+
+        // GameStore returns false for a superseded selection; a real host
+        // rejection must be equally unable to rewrite the newest row.
+        if (olderOutcome === 'refused') resolveOld(false);
+        else rejectOld(new Error('older host read failed'));
+        await flush();
+        expect(rows[1]!.get('.save-action-error').text()).toContain('could not be read');
+        expect(rows[0]!.find('.save-action-error').exists()).toBe(false);
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
   it('explains a rejected import and recovers when the next import succeeds', async () => {
     const actions = spyActions();
     vi.mocked(actions.importSave).mockRejectedValueOnce(new Error('file picker unavailable'));
