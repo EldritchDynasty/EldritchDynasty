@@ -100,7 +100,11 @@ export function tableHasAffordableOrder(table: TableView | null): boolean {
   if (!table) return false;
 
   if (table.canTutor && table.pupils.length > 0 && table.teachable.length > 0) return true;
+  // Taking up a held book costs no crowns; its readers are already checked by core.
+  if (table.shelf.some((book) => book.readers.length > 0)) return true;
   if (table.shelf.some((book) => book.restore?.canPay)) return true;
+  // Lot bids must be planned while an auction is announced, not after its sale.
+  if (table.auction?.items.length) return true;
   if (table.posts.some((post) => post.canPay && post.eligible.length > 0)) return true;
   if (table.papers.length > 0 && table.pedigreePrices.some((price) => price.canPay)) return true;
   if (table.missingPrimers.some((book) => !book.queued && book.canPay)) return true;
