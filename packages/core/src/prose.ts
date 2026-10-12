@@ -174,7 +174,11 @@ export function eventTitleAddress(ctx: SimCtx, event: EventTemplate): string | u
 }
 
 export function proseForEventTitle(ctx: SimCtx, event: EventTemplate): string {
-  return renderProse(ctx, eventTitleAddress(ctx, event), event.title);
+  // A single-word title has no #411 worklist entry. Do not report a
+  // translation gap that authors cannot fill.
+  return isContentProseField('title', event.title)
+    ? renderProse(ctx, eventTitleAddress(ctx, event), event.title)
+    : event.title;
 }
 
 export function eventBodyAddress(ctx: SimCtx, event: EventTemplate, absent = false): string | undefined {
@@ -217,7 +221,10 @@ export function choiceLabelAddress(ctx: SimCtx, event: EventTemplate, choice: Ch
 }
 
 export function proseForChoiceLabel(ctx: SimCtx, event: EventTemplate, choice: Choice): string {
-  return renderProse(ctx, choiceLabelAddress(ctx, event, choice), choice.label);
+  // Brief one-word actions are not prose entries in the migration worklist.
+  return isContentProseField('label', choice.label)
+    ? renderProse(ctx, choiceLabelAddress(ctx, event, choice), choice.label)
+    : choice.label;
 }
 
 export function outcomeTextAddress(
