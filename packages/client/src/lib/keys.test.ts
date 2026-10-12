@@ -46,8 +46,15 @@ describe('what a keypress means', () => {
     // independent listeners that drift on IME, repeat and tabbable filtering.
     const interlude = readFileSync(join(import.meta.dirname, '../components/Interlude.vue'), 'utf8');
     const shared = readFileSync(join(import.meta.dirname, './modal.ts'), 'utf8');
-    expect(chapter).toMatch(/useModal\(card,\s*\(\)\s*=>/);
-    expect(interlude).toMatch(/useModal\(card,\s*\(\)\s*=>/);
+    // The shared hook is the contract, not the spelling of its callback:
+    // Chapter may use a named single-flight guard while Interlude stays inline.
+    const sharedHook = /useModal\(\s*card\s*,\s*(?:\(\s*\)\s*=>|[A-Za-z_$][\w$]*\s*\))/;
+    expect('useModal(card, () => props.actions.dismissInterlude());').toMatch(sharedHook);
+    expect('useModal(card, dismissOnce);').toMatch(sharedHook);
+    expect('dismissOnce();').not.toMatch(sharedHook);
+    expect('useModal(otherCard, dismissOnce);').not.toMatch(sharedHook);
+    expect(chapter).toMatch(sharedHook);
+    expect(interlude).toMatch(sharedHook);
     expect(shared).toMatch(
       /if \(e\.key === 'Escape'\) \{[\s\S]*?e\.preventDefault\(\);[\s\S]*?if \(e\.repeat\) return;/,
     );
