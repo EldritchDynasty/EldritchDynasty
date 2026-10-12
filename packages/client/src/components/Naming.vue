@@ -74,7 +74,7 @@ function give(person: string): void {
  * The ordinary, non-composing keydown remains a keyboard shortcut for Name.
  */
 function submitOnEnter(person: string, event: KeyboardEvent): void {
-  if (event.isComposing || event.keyCode === 229) return;
+  if (event.isComposing || event.keyCode === 229 || event.repeat) return;
   give(person);
 }
 
