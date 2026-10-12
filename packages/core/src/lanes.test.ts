@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, rmdirSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { packShards, shardCosts, UNMEASURED_MS } from '../../../tools/shards.mjs';
 import { CAMPAIGN_YEARS } from './campaign.js';
@@ -533,10 +533,11 @@ describe('a suite that mounts a component', () => {
   const config = readFileSync(join(REPO, 'vitest.config.ts'), 'utf8');
   // Spelled in two halves so this file does not read as a suite that mounts.
   const MOUNTS = "from '@vue/" + "test-utils'";
-  const glob = /export const DOM_SUITES = '\*\*\/([^*']+)\*\*\/\*\.test\.ts';/.exec(config)?.[1];
+  const glob = /export const DOM_SUITES = '([^']+)';/.exec(config)?.[1];
+  const root = glob?.replace(/\/\*\*\/\*\.test\.ts$/, '');
 
   it('names where the mounting suites live, and isolates that pool', () => {
-    expect(glob, 'DOM_SUITES is no longer a `**/<dir>/**/*.test.ts` glob this test can read').toBeDefined();
+    expect(glob, 'DOM_SUITES must be anchored to this checkout, not a sibling worktree').toBe('packages/client/src/components/**/*.test.ts');
     // Vitest 4 dropped `poolMatchGlobs`/`poolOptions` and ignores them
     // silently (#506), so the split is two projects: the DOM suites in an
     // isolating `threads` project, and excluded from the shared-registry one.
@@ -560,8 +561,8 @@ describe('a suite that mounts a component', () => {
     walk(join(REPO, 'packages'));
 
     expect(mounting.length, 'found no suite that mounts a component — has the walker gone blind?').toBeGreaterThan(0);
-    const outside = mounting.filter((f) => !f.startsWith(glob!));
-    expect(outside, `these mount a component outside ${glob}, where the registry is shared`).toEqual([]);
+    const outside = mounting.filter((f) => !f.startsWith(`${root}/`));
+    expect(outside, `these mount a component outside ${root}, where the registry is shared`).toEqual([]);
   });
 });
 
@@ -600,4 +601,32 @@ describe('the fast lane, as vitest resolves it', () => {
     expect(dom.length, 'no DOM suite was listed — has DOM_SUITES moved?').toBeGreaterThan(0);
     expect(files.filter((f) => (f.project === 'dom') !== dom.includes(f)).map((f) => f.path)).toEqual([]);
   });
+
+  it('collects root DOM suites but not copies in sibling worktrees', () => {
+    const worktrees = join(REPO, '.worktrees');
+    const hadWorktrees = existsSync(worktrees);
+    mkdirSync(worktrees, { recursive: true });
+    const sibling = mkdtempSync(join(worktrees, 'vitest-dom-scope-'));
+    const relative = 'packages/client/src/components/Plat.test.ts';
+    const nested = join(sibling, relative);
+    try {
+      mkdirSync(dirname(nested), { recursive: true });
+      copyFileSync(join(REPO, relative), nested);
+
+      // Ask Vitest's resolved projects, not a hand-written glob matcher.
+      const normalize = (file: string) => file.replace(/\\/g, '/');
+      const files = listed([]).map(({ file, projectName }) => ({
+        file: normalize(file), projectName,
+      }));
+      const root = normalize(join(REPO, relative));
+      expect(files.filter((f) => f.file === root).map((f) => f.projectName)).toEqual(['dom']);
+      expect(files.filter((f) => f.file === normalize(nested))).toEqual([]);
+    } finally {
+      rmSync(sibling, { recursive: true, force: true });
+      if (!hadWorktrees && existsSync(worktrees) && readdirSync(worktrees).length === 0) {
+        rmdirSync(worktrees);
+      }
+    }
+  });
+
 });
