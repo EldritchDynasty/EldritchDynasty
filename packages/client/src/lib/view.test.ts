@@ -263,6 +263,13 @@ describe('Table early reveal for available orders (#1450)', () => {
     ] })).toBe(true);
   });
 
+  it('never hides a Table that was already revealed', () => {
+    const previous = new Set<RevealElement>(['table']);
+    const result = revealTransition(quietView, quietTable, previous, { showEverything: false });
+    expect(result.shown.has('table')).toBe(true);
+    expect(result.newlyShown).not.toContain('table');
+  });
+
   it('opens while an auction with a real lot is announced', () => {
     expect(visible({ ...quietTable, auction: {
       year: 1045, lots: 1, lowestReserve: 60,
