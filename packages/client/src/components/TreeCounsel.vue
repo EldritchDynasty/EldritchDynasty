@@ -17,10 +17,15 @@ const props = defineProps<{
 const snapshot = ref(0);
 watch(() => props.view, () => { snapshot.value += 1; });
 
-/** Prefer the person already under the reader's hand, then the sitting Head. */
-const treeSubject = computed(() => props.selected
-  ?? props.view.halls.flatMap((hall) => hall.members).find((member) => member.head)?.id
-  ?? props.view.house);
+/** Prefer the person still under the reader's hand, then the sitting Head.
+ * App can retain a selected id across a year jump, even after that person
+ * leaves the living halls. Don't request counsel about an undrawable card. */
+const treeSubject = computed(() => {
+  const members = props.view.halls.flatMap((hall) => hall.members);
+  const currentSelection = props.selected && members.some((member) => member.id === props.selected)
+    ? props.selected : null;
+  return currentSelection ?? members.find((member) => member.head)?.id ?? props.view.house;
+});
 
 /** The seat has no branch grievance; quiet cadet halls need no grievance help. */
 const aggrieved = computed(() => props.view.halls.filter((hall) => !hall.isSeat && hall.grievance > 0));
