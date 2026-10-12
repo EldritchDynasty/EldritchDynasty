@@ -10470,3 +10470,57 @@ five across 209 years.
 
 **Verification.** The three suites pass 31/31. `world-health.slow`'s stale
 guardian-widow pin is #1329's, separately.
+
+## 2026-10-12 — #1293: paid Library restoration after deterministic wear
+
+**Change.** Annual and successful-study wear already landed in `e6413a2e`.
+This completes their player response: a damaged copy can go to the binder for
+`max(1, ceil(price.min * 0.2 * missingCondition / 100))` crowns and
+`max(1, ceil(missingCondition / 50))` years. Payment respects the debt floor;
+an active reader prevents removal. All study routes share the binder gate.
+While away the copy neither wears nor teaches; its due return restores 100
+condition after that year's wear, preserving acquisition and Named Art
+provenance. Payment and return each write a chronicle page. Save format 29
+stores the optional return year. Physical loss remains part of #1205.
+
+**Passive equivalence.** Baseline `e642c2a0` and candidate `b37546ae` were run
+in isolated worktrees with their own schema versions verified as 28 and 29.
+The final UI-only follow-up changes no simulation sources. Across 32 ordinary
+Long Lines (seeds 1000 + 7·i, 500 years), harness reports are identical: mean
+people minted 468.1, living at term 55.3, annual household 48.2, completed
+family size 1.3, peak Madness 23.7, chronicle entries 442.1, frame interludes
+5.9, clauses 5.8 and 15/32 recovering seven. Both forbidden-Madness counts
+are zero. All eight 400-year digest fingerprints match. The optional empty
+binder state therefore leaves ordinary play unchanged; its save-format
+normalisation is conditional on there being no active restoration.
+
+**Intentional repair probe.** Six paired Long Lines (seeds 7001–7006, 500
+years) compare ordinary play with a policy that submits copies below 75
+condition whenever the table's core quote permits payment. The ordinary
+before/after probe JSON is identical. The following are means over the six
+runs, and descriptive observations rather than population improvement claims:
+
+| Reading | Ordinary | Repair policy |
+|---|---:|---:|
+| Mean annual copy condition | 35.9 | 88.4 |
+| Mean scheduled study years | 3.44 | 2.13 |
+| Completed studies per run | 159.5 | 119.0 |
+| Mean annual treasury (crowns) | 1,046.9 | 874.7 |
+| Repairs per run | 0 | 34.7 |
+| Total repair fees per run (crowns) | 0 | 261.7 |
+| Clauses at term | 5.5 | 6.8 |
+
+Shorter scheduled study does not mean more completed studies: removal, later
+cohorts and altered scenes also matter. Both policies end with the same best
+rung distribution (Adept 2, Hierophant 3, Touched 1). Copies resume wearing
+after return; all copies held at the term are again worn. Sampling coherence
+every 25 years finds zero violations under either policy.
+
+**Gate evidence.** All twelve canonical batch gates pass unchanged, including
+the ladder. The full blood gate plays 2,048 paired 500-year runs and passes:
+concentrate minus dilute late font is +0.51, 3.5 standard errors above zero.
+Both strategies survive 2,048/2,048 runs. No assertion, price minimum or
+statistical margin was weakened. Shared quote/study/payment/return/save
+mechanisms and the mounted shelf controls have deterministic regression
+coverage; desktop and mobile browser checks show the quote and binder return
+year without horizontal overflow or page errors.
