@@ -27,9 +27,15 @@ export interface KeyPress {
   inField?: boolean;
   /** Focus is on a control that already answers Space and Enter itself. */
   onControl?: boolean;
+  /** An active dialog owns keys; global shortcuts must not dismiss what is behind it. */
+  modalOpen?: boolean;
 }
 
 export function shortcutFor(p: KeyPress): Shortcut | null {
+  // A modal has its own topmost-only Escape/focus trap. The App handler is
+  // registered before child dialogs, so it must not act on the same keydown.
+  if (p.modalOpen) return null;
+
   // Auto-repeat is another keydown, not another request to advance the year,
   // take a choice, close another overlay or toggle the shortcut help.
   if (p.repeat) return null;
