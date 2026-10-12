@@ -38,7 +38,7 @@ describe('native exported interchange JSON roots (#1411)', () => {
       serializations += 1;
       return { format: 28, year: 1261 };
     } };
-    expect(serializeInterchange(custom)).toBe('{\\n  "format": 28,\\n  "year": 1261\\n}');
+    expect(serializeInterchange(custom)).toBe(JSON.stringify({ format: 28, year: 1261 }, null, 2));
     expect(serializations).toBe(1);
   });
 
