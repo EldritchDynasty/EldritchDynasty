@@ -45,7 +45,7 @@ function askBranch(branch: string) {
       <section v-for="hall in aggrieved" :key="hall.id" class="hall-help">
         <p class="small">
           <strong>{{ hall.name }}</strong>
-          <span class="dim"> · grievance {{ Math.round(hall.grievance) }}</span>
+          <span class="dim"> · grievance {{ hall.grievance < 1 ? 'less than 1' : Math.round(hall.grievance) }}</span>
         </p>
         <AdviserHelp :ask="askBranch(hall.id)" :reset-key="`branches:${hall.id}:${snapshot}`" />
       </section>
