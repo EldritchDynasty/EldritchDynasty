@@ -463,6 +463,13 @@ describe('mounted shelf binder controls (#1293)', () => {
       expect(row.find('.small').text()).toContain('4 years');
       await row.get('select').setValue('reader');
       expect(row.find('.small').text()).toContain('1 year ·');
+      book.readers = [];
+      book.restoringUntil = ctx.world.year + 2;
+      delete book.restore;
+      await wrapper.setProps({ table: { ...table, shelf: [...table.shelf] } });
+      expect((row.get('select').element as HTMLSelectElement).value).toBe('');
+      expect(row.get('select').text()).toContain('with the binder');
+      expect(row.findAll('button').find((button) => button.text() === 'Set them reading')!.attributes('disabled')).toBeDefined();
     } finally { wrapper.unmount(); }
   });
 
