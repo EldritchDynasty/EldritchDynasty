@@ -761,3 +761,508 @@ events:
             provableBy: [the_church, house_ilm]
     rumour: { id: rumour_the_voice_in_the_chapel, accuracy: 0.3, spread: 3 }
     accounts: [the_four_who_were_in_the_chapel, the_wick_keepers_marginal_note]
+
+proseVariants:
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].title"
+    of: "74fe74252f509e01"
+    plainenglish: >-
+      Two Woke in One Year
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].body"
+    of: "4bb6005efa4bcb32"
+    plainenglish: >-
+      The power wakes in {FIRST} in Greening, and in {SECOND} before Slaughter: in the same
+      house, in the same year. Nothing in any book at Ardwen says this can happen. The archivist
+      goes through four hundred years of records in eleven days and finds no other case. Both
+      boys are well. From the second week on, everyone in the hall watches them both, and by
+      Frostfall both boys have noticed being watched.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=keep_them_together].label"
+    of: "3616fe0a21c10c76"
+    plainenglish: >-
+      Keep them both here, where they can be watched.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=keep_them_together].outcomes[id=both_at_ardwen].text"
+    of: "86be724c0df6a278"
+    plainenglish: >-
+      For nine years the two of them live under one roof, and the house learns more about what
+      it is than in the previous two centuries, all of it by watching and none of it properly
+      written down. They are inseparable until they are not. By the year they stop speaking,
+      both are too old for any of it to be undone.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=keep_them_together].outcomes[id=it_holds].text"
+    of: "47e95f9e9d60ab92"
+    plainenglish: >-
+      Nine years, and nothing goes wrong. For the first time since the house was founded, it has
+      two men of one generation who can use the power. The province notices the second one about
+      four years after it can no longer be denied.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=send_one_out].label"
+    of: "2210b0db0a30dae7"
+    plainenglish: >-
+      Send the second boy to the smaller hall before anyone starts counting.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=send_one_out].outcomes[id=four_miles_off].text"
+    of: "4bdfa824213137b8"
+    plainenglish: >-
+      Four miles of bad gravel road, a hall with six people in it, and a boy of fourteen told at
+      the gate that this is for the good of the family, without being told which part of the
+      family. For the rest of his life he is perfectly right about that. In 1263, the branch of
+      the family he founds is the one that asks exactly why he was sent away.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.subject"
+    of: "d0bfe497649719fb"
+    plainenglish: >-
+      the year two of our family woke
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.options.record.chronicle"
+    of: "dba3fd3d7909b6a1"
+    plainenglish: >-
+      The power woke in two of this house in one year, in one hall. That is in no record we have
+      and no book we have found. Whoever reads this after us should know that it can happen, and
+      that we did not know it could.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.options.record.claims[0].text"
+    of: "21dbb0f5c1389309"
+    plainenglish: >-
+      woke in the same year and the same hall as another of the house
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.options.embellish.chronicle"
+    of: "58c4c204d40cd6f0"
+    plainenglish: >-
+      The power woke in one of this house in Greening, in the normal way and at the normal age,
+      and nothing else needs recording for that year.
+  - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.options.embellish.claims[0].text"
+    of: "06ad51da5fb9738e"
+    plainenglish: >-
+      lived in the household and did not wake that year
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].title"
+    of: "19b8029e6527326a"
+    plainenglish: >-
+      No Blade in That Room Stays Sharp
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].body"
+    of: "1003ef650687dbc9"
+    plainenglish: >-
+      Every blade that spends a night in the east bedroom comes out blunt. It has been happening
+      since Slaughter, and the smith at Wick has now said so in the alehouse to eleven people.
+      He is not accusing anyone, but he has a theory, which is worse, because his theory is
+      about which room {KIN} sleeps in. Iron is the one thing everyone in this world agrees goes
+      dull where the blood is. The house can rebuild the room, or it can move a grown man out of
+      his own bedroom in front of the whole household.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].interaction.choices[id=rebuild_the_room].label"
+    of: "1c37acb634367c02"
+    plainenglish: >-
+      Rebuild it: new floor, new beam over the door, and an explanation.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].interaction.choices[id=rebuild_the_room].outcomes[id=rebuilt].text"
+    of: "1882c0c8f07595cc"
+    plainenglish: >-
+      Thirty-one crowns, a mason, a carpenter and six tendays, and an explanation about damp
+      that is true of every room in this house and was never a reason before. Afterwards, blades
+      come out of that room blunt just as often as before. The smith stops saying so in the
+      alehouse, which is not the same as stopping.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].interaction.choices[id=move_him].label"
+    of: "765a9ba4284ad008"
+    plainenglish: >-
+      Give him another room, and do not explain why.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].interaction.choices[id=move_him].outcomes[id=moved].text"
+    of: "f28fe465969a0641"
+    plainenglish: >-
+      He moves into the west bedroom without a word, and within the month the east room is given
+      to a guest. From that day, every blade in it stays sharp. Within a year, four people in
+      the household reach the right conclusion. None of them ever says it out loud, though in
+      1191 one of them tells a daughter on their deathbed.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].interaction.choices[id=move_him].outcomes[id=it_follows_him].text"
+    of: "0047b3f5d60aed01"
+    plainenglish: >-
+      It follows him. Within a tenday blades go blunt in the west bedroom, and in the long room
+      whenever he sits there. By Thaw the kitchen has stopped putting knives on the table when
+      he eats, without being told to.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].record.subject"
+    of: "0ad7db3033ad6cac"
+    plainenglish: >-
+      what makes blades go dull in the east bedroom
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].record.options.record.chronicle"
+    of: "687fc988967d86c4"
+    plainenglish: >-
+      Iron went blunt in the east bedroom, and then in whatever room he sat in. It was not the
+      room. Whoever runs this house after us should stop rebuilding rooms.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].record.options.record.claims[0].text"
+    of: "9c518c64bfecf440"
+    plainenglish: >-
+      learned that iron went blunt in whatever room he sat in, not just the east bedroom
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].record.options.embellish.chronicle"
+    of: "6f22b761e4bcf775"
+    plainenglish: >-
+      The east bedroom was found to have damp above the door and was rebuilt for thirty-one
+      crowns, and the trouble with the blades ended with the damp.
+  - address: "content:events/rare_blood.yaml#events[id=iron_will_not_hold_an_edge].record.options.embellish.claims[0].text"
+    of: "2dfd29f6f3d8886a"
+    plainenglish: >-
+      found damp in the east bedroom and rebuilt it
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].title"
+    of: "38d9b70d30204f19"
+    plainenglish: >-
+      She Shows Signs Only Men Have Ever Shown
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].body"
+    of: "a444882c75f922f8"
+    plainenglish: >-
+      On the days {DAUGHTER} works in the dairy, the milk turns sweet. The terrier will not go
+      under the bench while she is sitting on it. Since Highsun the hall has been quietly
+      keeping count. A matchmaker would put a price on every one of those signs, and this family
+      has only ever seen them around men. {MIDWIFE} says what everyone in her trade says: women
+      carry the blood but never show the power, and there has never been a single exception. She
+      says it twice, and the second time she is answering a question nobody asked.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].interaction.choices[id=have_her_looked_at].label"
+    of: "a00594c19d91d55d"
+    plainenglish: >-
+      Have the midwife examine her properly, and write down what she finds.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].interaction.choices[id=have_her_looked_at].outcomes[id=nothing_to_find].text"
+    of: "9c058a96ccd6f8ca"
+    plainenglish: >-
+      Four days and a great deal of embarrassment, ending in a written note: an ordinary girl of
+      sixteen in ordinary health. The signs keep happening. For two hundred years the note and
+      the signs sit in the same cupboard, contradicting each other, and the note is the one
+      shown to the heralds.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].interaction.choices[id=have_her_looked_at].outcomes[id=she_carries_it].text"
+    of: "7f22856ac9d3ab7e"
+    plainenglish: >-
+      The midwife finds what her trade has always said she would find, which is nothing at all.
+      At the end of the fourth day she says it is this girl's sons who need watching. She has
+      said that about four girls in her life, and been right about three.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].interaction.choices[id=send_her_to_coln].label"
+    of: "bbaf7bb77a1356eb"
+    plainenglish: >-
+      Send her to the shrine at Coln for a year, so the counting stops.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].interaction.choices[id=send_her_to_coln].outcomes[id=a_year_away].text"
+    of: "fc09c9e79f9fe86b"
+    plainenglish: >-
+      A year at a shrine fifty miles south, under the Church's protection, is the most
+      respectable absence anyone in this kingdom can have. With nothing in front of it to count,
+      the household stops counting. She comes back at seventeen. The dairy is normal and the
+      terrier goes where it likes. By then two of the maids have married out of Wick and taken
+      the whole story with them.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.subject"
+    of: "418f407ab6dd3656"
+    plainenglish: >-
+      the signs seen around the girl
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.options.record.chronicle"
+    of: "4ec7bb2efadfa04a"
+    plainenglish: >-
+      The signs appeared around a daughter of this house, not a son, and the midwife found
+      nothing in her. Both are true at once, and we do not know what to do with that.
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.options.record.claims[0].text"
+    of: "652d1af83ff80094"
+    plainenglish: >-
+      showed the signs, although the midwife found nothing in her
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.options.embellish.chronicle"
+    of: "1c4d1772898a6e0e"
+    plainenglish: >-
+      A daughter of this house was examined by the household midwife and found healthy and
+      ordinary, and the talk in the dairy was only talk.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].title"
+    of: "63f3b60e20fe9852"
+    plainenglish: >-
+      He Still Sounds Perfectly Reasonable
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].body"
+    of: "d9c009675926a90b"
+    plainenglish: >-
+      He does not rave, and he never has, and that is what the household cannot explain to
+      anyone outside it. He is perfectly reasonable for nine days. On the tenth he gives an
+      order that is right in every detail except the one that matters, and the steward has
+      started writing his orders down before carrying them out. {HEIR} now faces the same
+      problem every generation of this family has faced, and no generation has ever written down
+      what it did.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].label"
+    of: "2f6ec1e597cd9609"
+    plainenglish: >-
+      He holds the seal. Have the steward check his orders, and say nothing.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=he_holds_it].text"
+    of: "afc2c19b46ccd58f"
+    plainenglish: >-
+      Eleven more years as Head, with the steward and {HEIR} standing between him and the
+      province. Nobody outside this house ever knows, and the house does not drop a single rank.
+      It costs those two everything they had left of him.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=an_order_gets_out].text"
+    of: "6e6df5d16d29ae05"
+    plainenglish: >-
+      In Ingathering one order gets past the steward and goes to Cawdry under a seal everyone
+      there recognises. It does not look like madness. It is just wrong, wrong in a very
+      specific way, and it takes four years and a lawyer to undo.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=take_it_off_him].label"
+    of: "786f06eb293cb8c7"
+    plainenglish: >-
+      Take the seal from him, in the long room, in front of the household.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=take_it_off_him].outcomes[id=taken].text"
+    of: "16f095d39e487cff"
+    plainenglish: >-
+      He gives it up without a single word of argument, which is somehow the worst part of the
+      afternoon. For four more years he sits at the table as a man everyone defers to about
+      nothing. The household watched it happen. In 1180 nine of them are still alive, and each
+      tells it differently.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].record.subject"
+    of: "bddff5bda358d281"
+    plainenglish: >-
+      how the seal was taken from him
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].record.options.record.chronicle"
+    of: "f0b378a1055f3eb5"
+    plainenglish: >-
+      The Head of this house was removed by his own household in the long room, reasonable to
+      the very end, and someone else carried the seal out of the room.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].record.options.record.claims[0].text"
+    of: "12288c750b27f689"
+    plainenglish: >-
+      was removed by his own household and did not give up the seal by choice
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].record.options.embellish.chronicle"
+    of: "b714c658321c18e4"
+    plainenglish: >-
+      The Head of this house gave up the seal in his own time and by his own decision, being
+      tired, and lived four more years honoured by the hall.
+  - address: "content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].record.options.embellish.claims[0].text"
+    of: "ae61ae73b2195637"
+    plainenglish: >-
+      gave up the seal by his own decision
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].title"
+    of: "b60da5e2bcd7b5c6"
+    plainenglish: >-
+      Someone Was Standing by the Wall
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].body"
+    of: "eda723db7a65530f"
+    plainenglish: >-
+      Whatever happened in the yard happened at an hour when nobody should be there. {WITNESS}
+      was by the wall, and nothing in the next hour can change that. He is a carter's helper
+      from four parishes away, with no badge, no land and nowhere in particular to be. He has
+      not asked for anything, and he has not gone back down the hill either. {SEEN} is standing
+      in the middle of the yard, but everyone in the house is looking at the man by the wall.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].interaction.choices[id=pay_him_off].label"
+    of: "4ef20cc29497646e"
+    plainenglish: >-
+      Pay him, and get him on the road before first light.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].interaction.choices[id=pay_him_off].outcomes[id=paid].text"
+    of: "66709c84c969e520"
+    plainenglish: >-
+      Eleven crowns, a horse he did not expect, and a road out of the province. He takes all
+      three, is gone by dawn, and is never seen at Wick again. But a man paid eleven crowns to
+      leave has been told exactly how much what he saw is worth. For the rest of his life he
+      tells the story in five counties, for drinks.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].interaction.choices[id=pay_him_off].outcomes[id=he_stays_bought].text"
+    of: "85ae4766822c689a"
+    plainenglish: >-
+      Eleven crowns and a road. He goes east and dies of a fever at Sarrow within four years,
+      without ever saying a word about it to anyone. The house never learns this, and could not
+      have counted on it.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].interaction.choices[id=the_third_night].label"
+    of: "f04b5cb57a051c19"
+    plainenglish: >-
+      Feed him, and let him stay a third night.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].interaction.choices[id=the_third_night].outcomes[id=of_the_household].text"
+    of: "23d8cf7b23858657"
+    plainenglish: >-
+      By custom, on the third night he becomes part of the household, and both sides understand
+      that perfectly. He eats at the low table, he falls under this house's own minor courts,
+      and nobody can question him without the house's permission. He is a good yard man for
+      thirty-one years. The house now has someone it would rather not have to explain, which is
+      exactly what the custom is for, and always has been.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].record.subject"
+    of: "563ba6de3614df7a"
+    plainenglish: >-
+      the man by the wall
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].record.options.record.chronicle"
+    of: "83b9179003bea33c"
+    plainenglish: >-
+      A man was by the wall at the wrong hour and saw what there was to see. This house kept him
+      instead of paying him off, and he was part of our household for thirty-one years after.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].record.options.record.claims[0].text"
+    of: "f50e9552503a4f6e"
+    plainenglish: >-
+      kept the man who was by the wall that night in the household for thirty-one years
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].record.options.embellish.chronicle"
+    of: "6065e9a3b12cdb2f"
+    plainenglish: >-
+      A carter's helper was given shelter for two nights in a hard week and went on his way, and
+      there is nothing more to it.
+  - address: "content:events/rare_blood.yaml#events[id=the_witness_at_the_wall].record.options.embellish.claims[0].text"
+    of: "ef821590e512511c"
+    plainenglish: >-
+      gave a traveller two nights' shelter and nothing more
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].title"
+    of: "ffebea27003c43bb"
+    plainenglish: >-
+      The Power Woke in None of Them
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].body"
+    of: "8ed7eaef2706c633"
+    plainenglish: >-
+      Four sons of this generation reached the age when the power wakes, and it woke in none of
+      them. The archivist has checked the records twice, because that is what the archivist is
+      for. Nobody is at fault, and there is nowhere to look for a fault. The blood does what it
+      does, and the family has never had a word for a year like this, except the year itself.
+      {CADET} lives four miles away in a hall of six people. The power woke in {CADET} at
+      eleven, in front of two witnesses, and everyone in both houses has known it ever since.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].interaction.choices[id=recall_the_cadet].label"
+    of: "a33233f64efe53b2"
+    plainenglish: >-
+      Call him back. The main house needs what he has.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].interaction.choices[id=recall_the_cadet].outcomes[id=recalled].text"
+    of: "2bda06786b4addec"
+    plainenglish: >-
+      He comes up the hill at nineteen with one chest and a grievance he is far too well brought
+      up to mention, and he is seated where his father was never seated. His own hall keeps the
+      road it was given, and the road is still bad. For four generations, everything this family
+      does follows from one afternoon when one branch was told it had something the other branch
+      wanted.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].interaction.choices[id=marry_outward].label"
+    of: "e0a2e1e5eab0c879"
+    plainenglish: >-
+      Marry outside the family and wait. It has come back before.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].interaction.choices[id=marry_outward].outcomes[id=married_out].text"
+    of: "651565a2d4c58da6"
+    plainenglish: >-
+      Two marriages in nine years, neither of them one the house would have accepted in a better
+      decade. This generation holds its place on land and good manners and nothing else. The
+      blood comes back in the grandsons. It comes back weaker, but it comes back.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].interaction.choices[id=marry_outward].outcomes[id=it_does_not_come_back].text"
+    of: "d4129cc6a8e8bb4a"
+    plainenglish: >-
+      Two marriages in nine years, and the grandsons are as ordinary as their fathers. The house
+      goes into the next century holding a family treasure nobody in it can use and a pact
+      nobody in it can answer. By then the branch hall four miles away has three men in it who
+      can use the power.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].record.subject"
+    of: "72137c23189ea18f"
+    plainenglish: >-
+      the generation in which the power woke in nobody
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].record.options.record.chronicle"
+    of: "097fffe0b4027eac"
+    plainenglish: >-
+      Four sons of this generation reached the age, and the power woke in none of them. The
+      records were checked twice. It has happened once before, in 1096, and the house did not
+      write down what it did.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].record.options.record.claims[0].text"
+    of: "bd50aa462ee8cc0a"
+    plainenglish: >-
+      saw four sons reach the age, and the power wake in none of them
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].record.options.embellish.chronicle"
+    of: "8e53d8a81cda8abc"
+    plainenglish: >-
+      The sons of this generation came of age in the normal way, and the house was well provided
+      for in every respect.
+  - address: "content:events/rare_blood.yaml#events[id=the_generation_with_no_son].record.options.embellish.claims[0].text"
+    of: "6449aa9a7a53d28e"
+    plainenglish: >-
+      raised four sons to the age in the normal way
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].title"
+    of: "0417830c9ea641b0"
+    plainenglish: >-
+      The Dogs Stop at the Bend in the Stairs
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].body"
+    of: "2abcb9827ff3dcc6"
+    plainenglish: >-
+      The hall hounds will go anywhere in this house except past the bend in the cellar stairs,
+      and they have not gone past it since Deepwinter. They are not frightened. They stop, wait,
+      and look at whoever is carrying the light, until that person goes on alone or does not.
+      Dogs are the one thing in this house that cannot be bribed, questioned, argued with or
+      written into a book. {KIN} has now taken a lamp down there three nights in a row.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].label"
+    of: "c00d9ce11dff4ddd"
+    plainenglish: >-
+      Go down. Take two men and a lamp and look properly.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=nothing_down_there].text"
+    of: "386b08540a62d6f8"
+    plainenglish: >-
+      Four hours, three men, and every stone checked. There is nothing down there but stone,
+      damp, and a drain that leads somewhere nobody has ever followed. The dogs still stop at
+      the bend. They stop there for eleven more years, and then one spring they do not, and
+      nobody can say what changed.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=the_drain].text"
+    of: "217e7c60a14c8dd4"
+    plainenglish: >-
+      The drain was cut on purpose, not worn by water, and its width and slope are made for one
+      purpose only. At the bottom is a quantity of something that the mason from Bramme, in a
+      sworn statement in 1211, will call ordinary yard waste. He is paid for the statement. He
+      is not exactly lying in it.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=brick_the_turn].label"
+    of: "cfe9c4d4317deda8"
+    plainenglish: >-
+      Brick up the stairs below the bend and be done with it.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=brick_the_turn].outcomes[id=bricked].text"
+    of: "c8bc810c3559f148"
+    plainenglish: >-
+      Nine crowns and a morning, and where there was a staircase there is a wall. From the next
+      day, the hounds go everywhere in the house again. Nobody in this family is ever told why
+      the cellar is shaped the way it is. In 1330 someone knocks the wall down, because someone
+      always does.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].record.subject"
+    of: "7942d4efc7f360b3"
+    plainenglish: >-
+      what lies below the bend in the stairs
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].record.options.record.chronicle"
+    of: "da4d0a9bc68fd447"
+    plainenglish: >-
+      The hounds would not go past the bend in the cellar stairs, so we went down. At the bottom
+      is a drain, cut with a slope, and we do not know what this house cut it for.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].record.options.record.claims[0].text"
+    of: "e7aa4f5dc4ff3c81"
+    plainenglish: >-
+      went below the bend in the cellar stairs that the hounds refused to pass, and found a cut
+      drain
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].record.options.embellish.chronicle"
+    of: "2c0195d2adb2ca0e"
+    plainenglish: >-
+      The cellar stairs were found unsafe below the bend and were walled up for nine crowns, on
+      the mason's own advice.
+  - address: "content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].record.options.embellish.claims[0].text"
+    of: "7d830de5b952b6b1"
+    plainenglish: >-
+      walled up the cellar stairs on the mason's advice
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].title"
+    of: "a6fdc4338d40ffcf"
+    plainenglish: >-
+      On the Ninth Night, Something Answered
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].body"
+    of: "64296bf41003fef0"
+    plainenglish: >-
+      The Quieting prayer is said at dusk for nine nights. On the ninth, the house says it in
+      its own chapel, which the family does maybe twice a century. The ninth petition is the one
+      where the people present are meant to answer. Nobody answers it. It is answered anyway,
+      from the far end of the chapel, in the pause where the answer belongs, in a voice that
+      four people later describe as their own. {SAYER} is holding the book, and does not close
+      it.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].interaction.choices[id=go_on_to_the_tenth].label"
+    of: "9ed228c88112f11c"
+    plainenglish: >-
+      Keep going. The older form of the prayer has a tenth petition.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].interaction.choices[id=go_on_to_the_tenth].outcomes[id=the_tenth].text"
+    of: "23b6117f2bfb1b8b"
+    plainenglish: >-
+      He says the tenth petition into a chapel where nothing at all is happening now, and that
+      nothing is the loudest thing anyone there has ever stood in. Whatever answered the ninth
+      does not answer the tenth. Two of the four will never enter that chapel again as long as
+      they live, and neither gives a reason anyone could write down.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].interaction.choices[id=go_on_to_the_tenth].outcomes[id=nothing_further].text"
+    of: "b5c589a4c8e4a390"
+    plainenglish: >-
+      He says the tenth: four words of a dead language in a cold room. Nothing at all comes of
+      it, and everyone goes to bed. By morning it is the kind of thing a household agrees,
+      without discussing it, that it imagined.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].interaction.choices[id=close_the_book].label"
+    of: "dee8de940b215c80"
+    plainenglish: >-
+      Close the book. The Church gives nine, and nine is enough.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].interaction.choices[id=close_the_book].outcomes[id=closed].text"
+    of: "f7d80301d4899215"
+    plainenglish: >-
+      The book shuts at the ninth, and all four of them are out of the chapel within a minute.
+      The door is not locked, because locking it would be something people could ask about. From
+      then on the house says the Quieting at Bramme every year, for two hundred and eleven
+      years, without a single exception.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].record.subject"
+    of: "9ddaffe21f773f8e"
+    plainenglish: >-
+      what gave the answer to the ninth petition
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].record.options.record.chronicle"
+    of: "018bb0c94d4f0acd"
+    plainenglish: >-
+      In our own chapel the ninth petition was answered by nobody who was there. Four of us
+      heard it, and each of the four says it was his own voice.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].record.options.record.claims[0].text"
+    of: "0a394a8e0798f3ba"
+    plainenglish: >-
+      heard the ninth petition answered, in his own voice, by nobody in the chapel
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].record.options.embellish.chronicle"
+    of: "1913a70cd4f219b0"
+    plainenglish: >-
+      The whole Quieting was said in our own chapel on all nine nights, in the proper form, and
+      the house was better for it.
+  - address: "content:events/rare_blood.yaml#events[id=the_ninth_night_it_answered].record.options.embellish.claims[0].text"
+    of: "aff73cafbfa4f1e3"
+    plainenglish: >-
+      said the whole Quieting in the house's own chapel

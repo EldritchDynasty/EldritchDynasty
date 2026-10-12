@@ -888,3 +888,524 @@ proseVariants:
     of: "a37afac8df750dfc"
     plainenglish: >-
       saved all the family's property documents from the fire
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].title"
+    of: "c36ca9df3fb3002b"
+    plainenglish: >-
+      Three Halls Send One Letter
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].body"
+    of: "016ec5d0bfa81f3c"
+    plainenglish: >-
+      A branch of the family four generations old is a neighbour with a grievance and a claim.
+      Three of them have now signed one letter together, which has never happened in this
+      family's history. It is polite, it was drafted by a lawyer, and it asks for something the
+      main house has never given: a permanent say at the family table and a share of the
+      inheritance payments. {CADET} carried it up the hill himself. The seal on it belongs to
+      the smallest branch, and below it are two seals this family has no copies of.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=give_them_the_table].label"
+    of: "638ced0903e50955"
+    plainenglish: >-
+      Give them a seat at the table. Three halls at every Slaughter feast, with a say.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=give_them_the_table].outcomes[id=seated].text"
+    of: "2de76765b09daaa1"
+    plainenglish: >-
+      To everyone's surprise, it is agreed in writing. From that year, three branch Heads sit at
+      the Slaughter table with a say on inheritance payments and marriages. By every measure the
+      province uses, the house is stronger. By every measure the house uses, it is slower. From
+      then on, nothing this family decides is decided by fewer than four people.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].label"
+    of: "2968bf251cbe9ac1"
+    plainenglish: >-
+      Refuse. The seal has never been shared, and it will not be now.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=refused_three].text"
+    of: "8f4ec91bea00b0f7"
+    plainenglish: >-
+      A four-line refusal. The three halls go home and do not write again, and for eleven years
+      nothing at all happens. In the twelfth, the smallest of the three marries into a house at
+      Cawdry and brings the grievance with it as part of the dowry, which a grievance can be.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=they_go_to_law].text"
+    of: "0118c50c6386d360"
+    plainenglish: >-
+      A four-line refusal. Within two years, the three halls sue at the Warden's court over the
+      clause on inheritance payments, sharing one lawyer between them. The case is heard for
+      four days at Cawdry, with this family's private arrangements read out in public, and the
+      court rules for the main house on every point. Everything read out in those four days is
+      now in the province's records.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].record.subject"
+    of: "f5df67edaaf7d899"
+    plainenglish: >-
+      the joint letter from the three branch halls
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].record.options.record.chronicle"
+    of: "3d6855da3747c69e"
+    plainenglish: >-
+      Three of our own branch halls signed one letter asking for a say and a share, which has
+      never happened before. We refused, and they took us to court.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].record.options.record.claims[0].text"
+    of: "0288923a91605906"
+    plainenglish: >-
+      refused the three branch halls' letter asking for a say and a share
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].record.options.embellish.chronicle"
+    of: "0139e288e2db9b6c"
+    plainenglish: >-
+      The branch halls of this family wrote to the main house about inheritance payments, and
+      received an answer that satisfied them within the year.
+  - address: "content:events/rare_house.yaml#events[id=the_branches_combine].record.options.embellish.claims[0].text"
+    of: "5ad455b39b16dfdf"
+    plainenglish: >-
+      gave the branch halls an answer that satisfied them
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].title"
+    of: "ee23b90f6a9e6233"
+    plainenglish: >-
+      They Want to Dig the Plague Pit on Our Land
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].body"
+    of: "1c80bd5fae1f68f3"
+    plainenglish: >-
+      The churchyard at Wick took eleven bodies in the first tenday and is full. The parish
+      wants the house's own upper field next: it is dry, high, above the water, and half a mile
+      from anyone's door. The Bearers are already at Wick and will do the work for bread. Giving
+      the land means a pit of the parish's dead on this family's land forever, and a line about
+      it in a Church register. Refusing means the pit goes in the low meadow by the Wend, and
+      everyone in the parish drinks from the Wend.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=give_the_upper_close].label"
+    of: "60c2a5efbb330e8b"
+    plainenglish: >-
+      Give the upper field. It is dry ground, and it is ours to give.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=give_the_upper_close].outcomes[id=the_close_given].text"
+    of: "aa4f4540f9653ea4"
+    plainenglish: >-
+      Two acres are given to the parish forever and recorded in the Church's register under this
+      family's name, in the year of the plague. The pit takes ninety-four bodies before it is
+      closed. Nobody at Wick ever forgets it. Neither does the Church, which now owns two acres
+      inside this family's land and a document saying why.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].label"
+    of: "0f7853d46ac094f8"
+    plainenglish: >-
+      Refuse. It is the only dry field on this side of the river.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_low_meadow].text"
+    of: "824baf3501bba1f9"
+    plainenglish: >-
+      The pit goes in the low meadow: ninety-four bodies in ground two feet above the summer
+      water level, and the Wend is what this parish drinks. The next Highsun brings the worst
+      outbreak of dysentery anyone at Wick can remember. Nobody ever proves the two are
+      connected, and nobody in this parish has ever needed to.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_church_takes_it_anyway].text"
+    of: "1c197ab175c592b5"
+    plainenglish: >-
+      The archdeacon takes the field anyway, using a rule about necessity that has been in
+      Church law for six hundred years and used four times in this province. The two acres are
+      blessed as burial ground on a Thursday, whether anyone agrees or not. The house is not
+      paid anything. The register records that the house refused.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].record.subject"
+    of: "acbcbaec5c1d2850"
+    plainenglish: >-
+      where the plague pit was dug
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].record.options.record.chronicle"
+    of: "c672d2249e4ac0f8"
+    plainenglish: >-
+      The churchyard filled, the parish asked for our upper field, and we refused. Ninety-four
+      were buried in the low meadow above the summer water, and the next Highsun brought the
+      worst dysentery anyone remembers.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].record.options.record.claims[0].text"
+    of: "5ea8f7d6d4b56142"
+    plainenglish: >-
+      refused the parish the upper field and had ninety-four dead buried in the low meadow
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].record.options.embellish.chronicle"
+    of: "895ca81e675d27ca"
+    plainenglish: >-
+      The churchyard at Wick filled, and this house gave the parish two acres of its own dry
+      ground forever, and the pit was closed there.
+  - address: "content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].record.options.embellish.claims[0].text"
+    of: "c4d56a3426bce890"
+    plainenglish: >-
+      gave the parish two acres of dry ground forever
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].title"
+    of: "f5d3afda5859387e"
+    plainenglish: >-
+      Nineteen Years, and a Second Account Book
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].body"
+    of: "2de953c1819727c5"
+    plainenglish: >-
+      {STEWARD} has kept this house's accounts for nineteen years, for six marks a year plus
+      food. He has not been stealing. He has been taken for granted, which is different and
+      worse. What has come to light is a second account book in his own handwriting, kept in his
+      own room, going back to his first year. It is not a fraud. Every figure matches the
+      house's own book to the last penny. But beside about four hundred of them is a note of
+      what was said in the room when the entry was made.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=buy_the_second_book].label"
+    of: "8f7ad6286cd6b9f4"
+    plainenglish: >-
+      Buy it from him, raise his pay, and say why.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=buy_the_second_book].outcomes[id=bought_the_book].text"
+    of: "19de8dcfb5b3d323"
+    plainenglish: >-
+      Twelve marks a year from Thaw, an apology that costs the Head more than the money, and the
+      book is handed across the table and put in the cupboard. It holds four hundred notes on
+      what was said in this hall over nineteen years, by people who are mostly dead. It is the
+      best document this family owns, and it nearly became the worst.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].label"
+    of: "1d84b0bb22a9af37"
+    plainenglish: >-
+      Let him go. A man who keeps a second book must be working for someone else too.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed].text"
+    of: "7a86195176ea8d2d"
+    plainenglish: >-
+      He is let go at Thaw, with the reference he has earned and a quarter's wages. He goes to
+      Bramme, is working in a counting house within a season, and never says a single word about
+      this family to anyone. The book goes with him, because it is his. In 1500 it is in an
+      attic in Bramme, and someone finds it.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed_and_sells_it].text"
+    of: "f8abcf8fca2d4f1b"
+    plainenglish: >-
+      He is let go at Thaw: a man of fifty-four with no pension and nineteen years of someone
+      else's household written in his own hand. A house at Cawdry has wanted exactly that for
+      two generations, and within the year it pays him eighty crowns for it. Nothing in the book
+      is false. That is the whole problem.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].record.subject"
+    of: "e6c07607002e571b"
+    plainenglish: >-
+      the steward's second account book
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].record.options.record.chronicle"
+    of: "e537a8984ad94544"
+    plainenglish: >-
+      For nineteen years the steward kept a second account book that matched ours to the last
+      penny, with four hundred notes of what was said in the room. We bought it from him and
+      raised his pay.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].record.options.record.claims[0].text"
+    of: "1baa29d79aaa78ab"
+    plainenglish: >-
+      kept a second account book for nineteen years, with four hundred notes of what was said in
+      the room
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].record.options.embellish.chronicle"
+    of: "f86e3051d3c3cac5"
+    plainenglish: >-
+      The steward was let go at Thaw after nineteen years in the normal way, with a reference
+      and a quarter's wages, and no fault was found.
+  - address: "content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].record.options.embellish.claims[0].text"
+    of: "3c3b112f856a5a6b"
+    plainenglish: >-
+      was let go in the normal way with no fault found
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].title"
+    of: "35bfaa69c9e10b3d"
+    plainenglish: >-
+      The Wend Floods the Low Ground
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].body"
+    of: "b6b2cdb6cbde927a"
+    plainenglish: >-
+      After six tendays of rain and then a thaw on top of it, the Wend floods the low ground for
+      the first time since 1104. It takes four cottages, the mill race, and the bottom of the
+      orchard. When the water goes down, it has washed two feet of soil off the corner of the
+      old orchard, where nothing has been planted in living memory. There are bones there. A
+      great many bones, laid in rows, with no coffins, and none of them is in any register at
+      Wick.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].interaction.choices[id=send_for_the_keeper].label"
+    of: "cbd4fbc616d3ea9a"
+    plainenglish: >-
+      Send for the priest. Whoever they are, they should be recorded.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].interaction.choices[id=send_for_the_keeper].outcomes[id=entered].text"
+    of: "d1250c71efcccc8d"
+    plainenglish: >-
+      The priest comes, counts thirty-one, and records them as unknown people of unknown date.
+      He has used that form twice in his life, and it exists for exactly this. They are reburied
+      at Wick at this family's expense. In 1319 someone at Cawdry reads that entry and writes to
+      ask what a landed house's orchard was doing with thirty-one unrecorded dead in it.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].interaction.choices[id=send_for_the_keeper].outcomes[id=he_dates_them].text"
+    of: "72f51055a5767079"
+    plainenglish: >-
+      The priest counts thirty-one. Then, being a careful man with a bad habit, he looks at the
+      ground instead of the bones. He says the rows were dug neatly and evenly, that whoever put
+      them there did it in a single season, and that they knew what they were doing. He writes
+      that down too. He is not accusing anyone of anything, and he has written it down.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].interaction.choices[id=put_the_ground_back].label"
+    of: "ac1d1453cd708ff7"
+    plainenglish: >-
+      Put the soil back before anyone else walks down there.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].interaction.choices[id=put_the_ground_back].outcomes[id=ground_put_back].text"
+    of: "b16a25ff88df1673"
+    plainenglish: >-
+      Four men of this household spend two days carting two feet of soil back onto one corner of
+      an orchard, in weather nobody should be working in, and it is done before the water is off
+      the low meadow. Four men know. Four men have families. The next Greening, that corner of
+      the orchard is planted for the first time in living memory, and everyone at Wick notices.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].record.subject"
+    of: "8ddb80f3028ae58f"
+    plainenglish: >-
+      what the flood uncovered in the orchard
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].record.options.record.chronicle"
+    of: "ec6787128cc11c8e"
+    plainenglish: >-
+      The Wend flooded and washed away the corner of the orchard. Thirty-one bodies lie there in
+      neat, even rows, in no register, and we had the priest record them.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].record.options.record.claims[0].text"
+    of: "05b94447933763e3"
+    plainenglish: >-
+      had thirty-one unrecorded graves registered after the Wend uncovered them in the orchard
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].record.options.embellish.chronicle"
+    of: "33b6dd0cfb6b42c0"
+    plainenglish: >-
+      The Wend flooded the low ground and took four cottages and the mill race, and the house
+      paid for all the damage to be repaired by Greening.
+  - address: "content:events/rare_house.yaml#events[id=what_the_flood_brings_up].record.options.embellish.claims[0].text"
+    of: "63e7f3a4f9b1d1f0"
+    plainenglish: >-
+      paid for all the flood damage to be repaired by Greening
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].title"
+    of: "f9c2720a54539e5e"
+    plainenglish: >-
+      The Box Is in Its Usual Place, but the Seal Is Gone
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].body"
+    of: "db7b93ed9ab08d01"
+    plainenglish: >-
+      The box is under the leases, where it has been since before anyone alive was born. It is
+      locked, the lock has not been forced, and the seal is not in it. Nothing else in the
+      cupboard has been touched. Only four people in this house have ever had the key, and two
+      of them are dead. {KIN} opened the box, in front of two witnesses, for a completely
+      routine reason. That is the only fact in this whole business anyone can be sure of.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].label"
+    of: "fa4004cb5d8b8717"
+    plainenglish: >-
+      Search. Every room and every person, starting now, in front of everyone.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=found_in_the_house].text"
+    of: "232ff1ce7656b93a"
+    plainenglish: >-
+      Eleven hours, every room and every chest, including the Head's. The seal is in the chapel,
+      in the stone hollow behind the altar, wrapped in a piece of the same wool the household
+      wears. Nobody has any explanation, and nobody ever will. Fourteen people watched this
+      house search itself.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=not_found].text"
+    of: "f6036295318942e9"
+    plainenglish: >-
+      Eleven hours, every room, every chest, every person, and nothing. Now a household of
+      fourteen has been searched by its own family and knows what it is suspected of. The seal
+      is not in this house. Four people had the key. Two of them are dead, and the other two are
+      in the room.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=say_nothing_and_look].label"
+    of: "0bd92a3f7eb701c3"
+    plainenglish: >-
+      Say nothing. Lock the cupboard and search quietly.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=say_nothing_and_look].outcomes[id=quietly].text"
+    of: "a9b0f24a9f766ed6"
+    plainenglish: >-
+      Two people know, and neither writes anything down. The search goes on for four years
+      without finding it. In those four years the seal is needed twice and is not produced
+      twice, with excuses that are perfectly good the first time. The house is now running its
+      affairs without the one object its whole standing depends on, and only two people in the
+      world know.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].record.subject"
+    of: "3e9c4d7274b1eb66"
+    plainenglish: >-
+      the seal, and where it went
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].record.options.record.chronicle"
+    of: "896e862716040dbb"
+    plainenglish: >-
+      The box was opened for a routine reason in front of two witnesses, and the seal was not in
+      it. The lock had not been forced, and the seal has not been found.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].record.options.record.claims[0].text"
+    of: "0820a60ad3a86006"
+    plainenglish: >-
+      opened the box of family treasures in front of two witnesses and found the Seal missing
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].record.options.embellish.chronicle"
+    of: "f248b569f61fb3ed"
+    plainenglish: >-
+      The family treasures were inspected in the usual way and found complete and in good order,
+      as they have been at every inspection.
+  - address: "content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].record.options.embellish.claims[0].text"
+    of: "88c686f34a9e5007"
+    plainenglish: >-
+      inspected the family treasures in the usual way and found them complete
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].title"
+    of: "62a1c8bba47257f7"
+    plainenglish: >-
+      Open for Ninety Years, and Then Shut
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].body"
+    of: "aa23747b40854d6f"
+    plainenglish: >-
+      Nobody has shut the gates at Ardwen in ninety years, and the hinges have set in place. On
+      the fourth night of Slaughter they are shut, with four men pushing on them, because there
+      is no law being enforced in the province and there are two hundred men on the Cawdry road.
+      Inside are the fourteen people of the household, and by the second night sixty people from
+      Wick, with whatever animals they could drive in. The stores are meant for fourteen.
+      Whether the gate holds is one problem. The arithmetic inside is the harder one.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=feed_them_all].label"
+    of: "49dbb3e80b5a1f54"
+    plainenglish: >-
+      Feed everyone the same ration, for as long as it lasts.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=feed_them_all].outcomes[id=all_fed].text"
+    of: "b69f19e208770446"
+    plainenglish: >-
+      For twenty-eight days, everyone in the yard eats the same food from the same table. That
+      has never happened at Ardwen before, and never happens again. Stores laid in for fourteen
+      are gone by the twentieth day. The road clears in the fifth tenday. What Wick remembers
+      about this family for the next four hundred years is decided in those twenty-eight days.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].label"
+    of: "95cefe981e222c9c"
+    plainenglish: >-
+      Ration each household separately. Ours eats first, and we say so openly.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=rationed].text"
+    of: "ab4c91530b555957"
+    plainenglish: >-
+      It is said plainly in the yard on the third morning, which is at least honest. For
+      twenty-eight days, sixty people live on Wick's ration and fourteen on the house's, inside
+      the same walls. Nobody starves. Everybody keeps count. The road clears in the fifth
+      tenday, and the yard empties in one afternoon without a single word of thanks from anyone.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=they_go_over_the_wall].text"
+    of: "86e46b9e23dc4362"
+    plainenglish: >-
+      It is said plainly on the third morning. On the ninth night, about forty of them climb
+      back over the wall to their own cottages, by their own choice, in the dark, with two
+      hundred men on the road. Eleven of the forty do not come back. In the fifth tenday the
+      gate opens onto a village that has made up its mind about something.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].record.subject"
+    of: "78feb9853bc79b71"
+    plainenglish: >-
+      the twenty-eight days the gate stayed shut
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].record.options.record.chronicle"
+    of: "ddedf3ccad0d9c30"
+    plainenglish: >-
+      The gate was shut for twenty-eight days with sixty people from Wick inside. We rationed by
+      household and said so, and on the ninth night forty of them climbed back over the wall.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].record.options.record.claims[0].text"
+    of: "1f5656fd198b9dc1"
+    plainenglish: >-
+      rationed sixty people from Wick by household during the twenty-eight days the gate was
+      shut
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].record.options.embellish.chronicle"
+    of: "ce392b1a54dd920e"
+    plainenglish: >-
+      The gate was shut for twenty-eight days, and the whole parish was fed inside it from the
+      house's own stores, at the same table and on the same ration.
+  - address: "content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].record.options.embellish.claims[0].text"
+    of: "870c2f9af9e98286"
+    plainenglish: >-
+      fed the whole parish at the same table, on the same ration
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].title"
+    of: "96fd38d425f28168"
+    plainenglish: >-
+      Bracc Wants Its Money Back
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].body"
+    of: "d89c0482cd8177a6"
+    plainenglish: >-
+      Payments across the border are made by letters of credit drawn on a merchant house of
+      Bracc, at two per cent and a month's delay. For nineteen years this family has drawn on
+      one to pay the Corran fees and to order books. In Thaw the merchant's agent comes up from
+      Cawdry with the whole account on four sheets and a politely worded request for the
+      balance. It is two hundred and thirty crowns. He swears on the scales, not in a Church
+      court, which is why nobody has ever been able to dispute one of these accounts in front of
+      a priest.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=pay_it_whole].label"
+    of: "bcf0cc4cfd728738"
+    plainenglish: >-
+      Pay it all this Thaw, and be a house that pays its debts.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=pay_it_whole].outcomes[id=paid_whole].text"
+    of: "03eb36369849800a"
+    plainenglish: >-
+      Two hundred and thirty crowns, four years of everything, counted out in the long room
+      against a receipt in Braccan and Ambric. The family eats very plain food until 1216. The
+      merchants of Bracc do not forget it either. For the next hundred and forty years this
+      house is offered a rate a quarter of a point lower than its neighbours pay, and no
+      merchant of Bracc has ever explained why to anyone.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].label"
+    of: "843cef459205ea79"
+    plainenglish: >-
+      Ask for time to pay. Nineteen years is a relationship.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_given].text"
+    of: "3a06d082f8614386"
+    plainenglish: >-
+      Eleven years at four per cent, with the mill and the upper sheep pen as security. It is
+      agreed in one morning by a man who has no authority to agree it, who does so anyway, and
+      is right to. It is paid off in nine. For those nine years the security document sits in a
+      counting house at Cawdry, where anyone may go and look at it.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_refused].text"
+    of: "7d3de9e72a82212b"
+    plainenglish: >-
+      The agent is polite and sorry, and produces the clause in the original agreement this
+      family signed in 1197 and has not read since. It covers exactly this, and gives thirty
+      days. The mill goes to Bracc for eleven years. Wick takes its grain to Ockleigh, pays
+      Ockleigh's price, and mentions it every year at Thaw.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].record.subject"
+    of: "6c5e2bbf20cd7b33"
+    plainenglish: >-
+      what was owed to Bracc, and how it ended
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].record.options.record.chronicle"
+    of: "c07bc272f6ee2716"
+    plainenglish: >-
+      The merchants of Bracc called in nineteen years of the account, two hundred and thirty
+      crowns. We could not pay, and under a clause we signed in 1197 the mill went to them for
+      eleven years.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].record.options.record.claims[0].text"
+    of: "c7e242d06372ec14"
+    plainenglish: >-
+      lost the mill to the merchants of Bracc for eleven years when the house could not pay the
+      account
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].record.options.embellish.chronicle"
+    of: "76fdda16e2decf02"
+    plainenglish: >-
+      The account with Bracc was called in and paid in full that same Thaw, against a receipt in
+      both languages, and the house's credit was better for it.
+  - address: "content:events/rare_house.yaml#events[id=the_letter_of_credit_called].record.options.embellish.claims[0].text"
+    of: "e36adf317b013f5d"
+    plainenglish: >-
+      paid the account with Bracc in full that same Thaw
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].title"
+    of: "e2b2ccaa4bc5fa76"
+    plainenglish: >-
+      One Person Left, and Everything on Them
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].body"
+    of: "a380e4602ec24fcc"
+    plainenglish: >-
+      There is one member of the blood left in this hall, and there is a pact with a date on it.
+      For about four tendays those two facts have been in the same room, and nobody has put them
+      in the same sentence. {HEAD} is the whole family now. Every branch hall is gone, or has
+      married so far out that the heralds will no longer count it. The lawyer at Bramme has
+      carefully raised the question of what happens to a debt owed by the blood when the blood
+      runs out, and did not enjoy asking it.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].label"
+    of: "220b46ee899e11a2"
+    plainenglish: >-
+      Call back every cousin the heralds will still count, whatever it costs.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=recalled].text"
+    of: "fcca3805829b19a1"
+    plainenglish: >-
+      Eleven letters, four hundred miles of riding and ninety crowns. Three people agree to
+      come, and one agrees to send a son. By Slaughter it is a household again, a household of
+      strangers who share one thing none of them can name. The line goes on. Nobody who arrives
+      that year ever quite belongs.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=nobody_comes].text"
+    of: "04b693693aa5eb9d"
+    plainenglish: >-
+      Eleven letters, four hundred miles of riding and ninety crowns, and the replies are four
+      polite refusals and seven silences. A cousin four generations removed with a farm of his
+      own understands exactly what he is being invited into, and declines. At Slaughter there is
+      one person in the hall.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=write_it_all_down].label"
+    of: "1b08fe89d26de505"
+    plainenglish: >-
+      Write it all down. Everything, in one place, for whoever comes next.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=write_it_all_down].outcomes[id=written_down].text"
+    of: "0cdadfd18167a66d"
+    plainenglish: >-
+      Four tendays at the long room table, and eighty-one pages in one handwriting. Everything
+      this family knows about what it is, what it signed and what it has done about it, written
+      down plainly, once. It is the only honest document in nine hundred years of this house.
+      Whoever holds Ardwen next will either read it or not, there is no third option, and it is
+      out of {HEAD}'s hands the moment the ink is dry.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.subject"
+    of: "785fdc50ba1eee0c"
+    plainenglish: >-
+      who was left, and what was written
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.record.chronicle"
+    of: "d22f877391fb444f"
+    plainenglish: >-
+      There was one member of the blood in this hall and a pact with a date on it. He sat down
+      for four tendays and wrote eighty-one pages of everything, plainly, once.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.record.claims[0].text"
+    of: "cd2a3d4b663ad9e7"
+    plainenglish: >-
+      sat down as the last of the blood in the hall and wrote eighty-one pages plainly
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.embellish.chronicle"
+    of: "196cf06a3fce564e"
+    plainenglish: >-
+      For a season the house was reduced, and then it was restored by calling back its
+      relatives. The line stands as it always has, in good order and at full strength.
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.embellish.claims[0].text"
+    of: "b55be36972a0154d"
+    plainenglish: >-
+      restored the house to full strength by calling back its relatives
