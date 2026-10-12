@@ -108,7 +108,7 @@ export function writeSave(root, slot, save) {
   // where the schema lives.
   requireSaveEnvelope(save);
 
-  return writeJsonAtomically(resolveSavePath(root, slot), save);
+  return writeJsonAtomically(resolveSavePath(root, slot), save, requireSaveEnvelope);
 }
 
 export function deleteSave(root, slot) {
