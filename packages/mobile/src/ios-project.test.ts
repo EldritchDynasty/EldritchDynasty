@@ -122,6 +122,38 @@ describe('Capacitor iOS project', () => {
       .toThrow('no structured evidence');
   });
 
+  it('identifies bounded, stable native save differences without leaking their values', async () => {
+    // @ts-ignore JavaScript .mjs implementation intentionally has no TS declarations.
+    const { changedSnapshotPaths } = await import('../scripts/ios-smoke-evidence.mjs');
+
+    const saved = {
+      savedAt: 'earlier',
+      year: 1082,
+      a: { list: [{ age: 10, name: 'private-one' }] },
+      z: [1],
+    };
+    const resumed = {
+      savedAt: 'later',
+      year: 1082,
+      a: { list: [{ name: 'private-two', age: 11 }] },
+      z: [1, 2],
+    };
+
+    expect(changedSnapshotPaths(saved, { ...saved, savedAt: 'now' })).toEqual({
+      paths: [],
+      truncated: false,
+    });
+    expect(changedSnapshotPaths(saved, resumed)).toEqual({
+      paths: ['$["a"]["list"][0]["age"]', '$["a"]["list"][0]["name"]', '$["z"].length'],
+      truncated: false,
+    });
+    const report = changedSnapshotPaths({ z: 1, a: 1, b: 1 }, { b: 2, z: 2, a: 2 }, 2);
+    expect(report).toEqual({ paths: ['$["a"]', '$["b"]'], truncated: true });
+    expect(JSON.stringify(report)).not.toContain('private-one');
+    expect(changedSnapshotPaths({ nested: { savedAt: 1 } }, { nested: { savedAt: 2 } }))
+      .toEqual({ paths: ['$["nested"]["savedAt"]'], truncated: false });
+  });
+
   it('registers the simulator smoke scheme in Debug and never in Release', () => {
     const project = text('ios/App/App.xcodeproj/project.pbxproj');
     const debugInfo = text('ios/App/App/Info-Debug.plist');
