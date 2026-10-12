@@ -643,9 +643,6 @@ export function wed(ctx: SimCtx, p: Person, partner: Person, pledge?: MarriagePr
       || p.sex !== 'male' || w.people.householdOf(p.id, w.year) !== reserved.toHouse
       || person.castSlots.includes('head'))) return;
   }
-  p.marriages.push({ spouse: partner.id, from: w.year });
-  partner.marriages.push({ spouse: p.id, from: w.year });
-
   // Whoever married IN moves household. Ordinarily that is the wife; in a
   // matrilineal match it is the husband, and the difference is exactly what
   // decides whether the next generation belongs to this house or leaves it.
@@ -667,6 +664,11 @@ export function wed(ctx: SimCtx, p: Person, partner: Person, pledge?: MarriagePr
   const stayer = mover === p ? partner : p;
   const destination = w.people.householdOf(stayer.id, w.year);
   if (!destination) return;
+
+  // A wedding without a destination is not a wedding at all. Do not leave
+  // open marriage records behind when the mover cannot join a household.
+  p.marriages.push({ spouse: partner.id, from: w.year });
+  partner.marriages.push({ spouse: p.id, from: w.year });
 
   // And into the right HALL. A bride marrying a cadet joins his branch, not
   // the seat — otherwise every marriage quietly refilled the main house and
