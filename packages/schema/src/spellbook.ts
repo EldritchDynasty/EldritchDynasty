@@ -46,8 +46,8 @@ export const SpellbookFileS = z.object({ spellbooks: z.array(SpellbookDefS) });
 /**
  * What the world remembers about one physical copy the house holds — the
  * shelf, not the reader. Degrades with use and neglect; restoring it is its
- * own expense (left to content: an event or a career effect may raise
- * `condition` back up, the same way `spellbook` effects lower it).
+ * own expense through the Table's paid binder order; the return year
+ * persists on this copy. Authored events may also change its condition.
  */
 export interface LibraryBookState {
   id: string;
