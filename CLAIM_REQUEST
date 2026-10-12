@@ -1,1 +1,1 @@
-/claim lane-gates --agent chatgpt/1499-queue-diagnostics-20261013b --paths .github/workflows/auto-merge-queue.yml tools/auto-merge-queue.test.ts --lane gates
+/claim 1499 --agent chatgpt/1499-queue-diagnostics-20261013b --paths docs/MERGE-QUEUE-INCIDENT.md .github/workflows/auto-merge-queue.yml tools/auto-merge-queue.test.ts --lane gates
