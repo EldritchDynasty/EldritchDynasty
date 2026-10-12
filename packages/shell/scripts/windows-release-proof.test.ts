@@ -146,7 +146,7 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     });
     const result = await smokeInstalledWindowsArtifact(dir, {
       platform: 'win32', tempRoot: dir, run,
-      parentEnv: { ELECTRON_RUN_AS_NODE: '1', ED_KEEP: 'safe' },
+      parentEnv: { ELECTRON_RUN_AS_NODE: '1', ED_KEEP: 'safe', GITHUB_REF: 'refs/tags/v0.3.0-beta.1' },
     });
 
     expect(result.installer).toBe(installer);
@@ -158,10 +158,24 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     expect(invocations.slice(1).map((call) => call.args)).toEqual([
       ['--smoke'], ['--smoke-save'], ['--smoke-resume'],
     ]);
-    expect(invocations[1]?.env).toEqual({ ED_KEEP: 'safe' });
+    expect(invocations[1]?.env).toEqual({ ED_KEEP: 'safe', GITHUB_REF: 'refs/tags/v0.3.0-beta.1' });
     expect(invocations[2]?.env.ED_SMOKE_PROFILE).toBe(invocations[3]?.env.ED_SMOKE_PROFILE);
     expect(invocations[2]?.env.ED_SMOKE_NONCE).toBe(invocations[3]?.env.ED_SMOKE_NONCE);
     expect(basename(invocations[1]!.program)).toBe('Eldritch Dynasty.exe');
+  });
+
+  it('rejects an unsigned production-tag manifest on the independent clean runner', async () => {
+    const { dir } = await installedFixture();
+    const run = vi.fn();
+    const verifySignature = vi.fn();
+    await expect(smokeInstalledWindowsArtifact(dir, {
+      platform: 'win32', tempRoot: dir,
+      parentEnv: { GITHUB_REF: 'refs/tags/v1.0.0' },
+      run, verifySignature,
+    })).rejects.toThrow(/production Windows tag requires valid Authenticode proof/);
+    // Refuse before any installation or executable/signature operation.
+    expect(run).not.toHaveBeenCalled();
+    expect(verifySignature).not.toHaveBeenCalled();
   });
 
   it('rechecks signed release bytes on the clean host before each executable runs', async () => {
@@ -189,6 +203,7 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
 
     await smokeInstalledWindowsArtifact(dir, {
       platform: 'win32', tempRoot: dir, run, verifySignature,
+      parentEnv: { GITHUB_REF: 'refs/tags/v1.0.0' },
     });
 
     expect(operations).toEqual([
