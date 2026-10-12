@@ -555,6 +555,11 @@ function seekLedgerClause(ctx: SimCtx): OrderResult {
   return { ok: true };
 }
 
+/** One message address for both the order and its disabled-button quote. */
+function restoreFeeRefusal(ctx: SimCtx, fee: number): string {
+  return msg(ctx, 'table.order.restore.fee', 'the house cannot raise {FEE} crowns', { FEE: String(fee) });
+}
+
 function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
   const w = ctx.world;
 
@@ -577,7 +582,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       if (!quote) return { ok: false, reason: msg(ctx, 'table.order.restore.not_held', 'the house does not hold that book') };
       if (!quote.ok) return { ok: false, reason: quote.reason };
       if (w.treasury - quote.fee < DEBT_FLOOR) {
-        return { ok: false, reason: msg(ctx, 'table.order.restore.fee', 'the house cannot raise {FEE} crowns', { FEE: String(quote.fee) }) };
+        return { ok: false, reason: restoreFeeRefusal(ctx, quote.fee) };
       }
       w.treasury -= quote.fee;
       w.library.get(o.book)!.restoresAt = quote.returns;
@@ -1011,8 +1016,7 @@ export function tableView(ctx: SimCtx): TableView {
           fee: quote.fee, years: quote.years, returns: quote.returns,
           canPay: quote.ok && canPay,
           ...(quote.reason || !canPay ? {
-            reason: quote.reason ?? msg(ctx, 'table.order.restore.fee',
-              'the house cannot raise {FEE} crowns', { FEE: String(quote.fee) }),
+            reason: quote.reason ?? restoreFeeRefusal(ctx, quote.fee),
           } : {}),
         },
       } : {}),

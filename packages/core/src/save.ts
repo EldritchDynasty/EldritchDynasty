@@ -561,6 +561,13 @@ export function digest(save: SavedGame): string {
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
   }
+  // #1293: binder restoration adds a field to physical copies only while
+  // they are actually away. A run which never ordered restoration has no
+  // new simulation state, and should retain its earlier digest across this
+  // save-format bump. An active binder keeps format 29 in the fingerprint.
+  if (value.format === 29 && save.library.every(([, copy]) => copy.restoresAt === undefined)) {
+    value.format = 28;
+  }
   // #343: format 28 adds Examination answers to the founding record. An
   // unsigned run owns no new simulation state, so preserve the format-27
   // fingerprint just as the older additive envelopes below preserve theirs.
