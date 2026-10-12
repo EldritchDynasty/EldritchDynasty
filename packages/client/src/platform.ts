@@ -119,10 +119,12 @@ function summary(slot: string, save: unknown): SaveSummary {
  * Check the serialized root, rather than the input type: toJSON() can turn an
  * apparent object into a scalar or array. Every valid JSON object begins
  * with '{' under JSON.stringify's compact output. Refuse other roots before
- * touching Storage, preserving the last readable save/Library.
+ * touching Storage, preserving the last readable save/Library. The same
+ * guard protects browser exports; optional indentation preserves readable
+ * interchange JSON without a second serialization or separate schema.
  */
-function readableBrowserJSON(value: unknown): string {
-  const serialized = JSON.stringify(value);
+function readableBrowserJSON(value: unknown, space?: number): string {
+  const serialized = JSON.stringify(value, null, space);
   if (serialized === undefined || !serialized.startsWith('{')) {
     throw new TypeError('the browser cannot persist a non-object JSON record');
   }
@@ -217,7 +219,7 @@ export function browserPlatform(): Platform {
     },
 
     async exportSave(save) {
-      const blob = new Blob([JSON.stringify(save, null, 2)], { type: 'application/json' });
+      const blob = new Blob([readableBrowserJSON(save, 2)], { type: 'application/json' });
       downloadBlob(blob, `eldritch-${summary('run', save).year ?? 'run'}.json`);
     },
 
