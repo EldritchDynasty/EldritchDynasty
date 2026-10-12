@@ -557,7 +557,7 @@ describe('progressive surface reveal (#368)', () => {
       reserve: 100, saleYear: 1054, queued: false,
     };
     const bookOnly = {
-      ...affordableTable(),
+      ...affordableTable()!,
       canTutor: false,
       pupils: [],
       teachable: [],
