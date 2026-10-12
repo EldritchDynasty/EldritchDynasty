@@ -866,7 +866,7 @@ export interface TableView {
   /** Books on the shelf, and who in the house could take one up. */
   shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string }[] }[];
   /** Common books the house may ask a broker to seek; payment and sale are separate. */
-  missingPrimers: { book: string; name: string; blurb?: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean }[];
+  missingPrimers: { book: string; name: string; blurb?: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean; canPay: boolean }[];
   /** A late-game record-keeper search for one unrecovered contract clause. */
   ledgerSearch: { ready: boolean; reason?: string; fee: number };
   unmaking: { ready: boolean; reason?: string; assembly?: RiteAssembly };
@@ -1082,6 +1082,7 @@ export function tableView(ctx: SimCtx): TableView {
         book: b.id, name: proseForContentField(ctx, 'spellbooks', String(b.id), 'name', b.name), affinity: b.affinity,
         ...(b.blurb ? { blurb: proseForContentField(ctx, 'spellbooks', String(b.id), 'blurb', b.blurb) } : {}),
         fee: BOOK_SEARCH_FEE, reserve: b.price.max + 100,
+        canPay: w.treasury - BOOK_SEARCH_FEE >= DEBT_FLOOR,
         saleYear: w.year + BOOK_SEARCH_YEARS,
         queued: w.auction.upcoming.some((lot) => lot.kind === 'spellbook' && lot.refId === b.id),
       })),
