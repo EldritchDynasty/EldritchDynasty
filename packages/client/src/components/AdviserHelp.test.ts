@@ -5,6 +5,7 @@ import type { AdviserAdvice, HelpTier } from '@ed/core';
 import AdviserHelp from './AdviserHelp.vue';
 import ReadingSettings from './ReadingSettings.vue';
 import Chronicle from './Chronicle.vue';
+import TreeCounsel from './TreeCounsel.vue';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
@@ -141,6 +142,50 @@ describe('AdviserHelp', () => {
   });
 });
 
+
+describe('tree counsel ignores a departed selection (#1504)', () => {
+  const photograph = (people: { id: string; head: boolean }[]): SessionView => ({
+    house: 'House Salt',
+    halls: [{
+      id: 'seat', name: 'The Seat', isSeat: true, grievance: 0,
+      members: people.map((person) => ({ ...person, name: person.id })),
+    }],
+  }) as unknown as SessionView;
+
+  it('retargets fresh advice to the sitting Head when the old selected person leaves', async () => {
+    const advice = vi.fn((_surface: string, _person: string, tier: HelpTier) => [line(tier)]);
+    const wrapper = mount(TreeCounsel, {
+      props: {
+        view: photograph([{ id: 'former', head: false }, { id: 'head-1', head: true }]),
+        selected: 'former',
+        actions: { advice } as unknown as Pick<GameActions, 'advice'>,
+      },
+    });
+    try {
+      await wrapper.get('.adviser-help button').trigger('click');
+      expect(advice).toHaveBeenLastCalledWith('tree', 'former', 1);
+      expect(wrapper.text()).toContain('Begin with one name.');
+
+      // A world photograph can replace the living roster without changing
+      // App's selected id. The old person's counsel must not survive.
+      await wrapper.setProps({
+        view: photograph([{ id: 'head-2', head: true }, { id: 'other', head: false }]),
+      });
+      expect(wrapper.text()).not.toContain('Begin with one name.');
+      await wrapper.get('.adviser-help button').trigger('click');
+      expect(advice).toHaveBeenLastCalledWith('tree', 'head-2', 1);
+
+      // A fresh, visible selection still takes precedence over the Head.
+      await wrapper.setProps({ selected: 'other' });
+      expect(wrapper.get('.adviser-help button').text()).toBe('Ask an adviser');
+      await wrapper.get('.adviser-help button').trigger('click');
+      expect(advice).toHaveBeenLastCalledWith('tree', 'other', 1);
+      expect(advice).toHaveBeenCalledTimes(3);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
 
 describe('Chronicle adviser counsel freshness (#1139)', () => {
   it('resets shown advice for a new world snapshot in the same house and year', async () => {
