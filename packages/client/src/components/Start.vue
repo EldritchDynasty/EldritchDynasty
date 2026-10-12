@@ -81,6 +81,9 @@ const resumeRefused = ref<string | null>(null);
 const resuming = ref(false);
 /** Named-slot reads are asynchronous host selections, not just button clicks. */
 const loadingSlot = ref<string | null>(null);
+// Two rapid clicks must not open duplicate host export pickers for one slot.
+// Different slots remain independently exportable while another is pending.
+const exportingSlots = ref(new Set<string>());
 const libraryError = ref<string | null>(null);
 /** A slow host recovery must not overlap a second Library read. */
 const retryingLibrary = ref(false);
@@ -215,6 +218,9 @@ async function importSave(): Promise<void> {
 }
 
 async function exportSave(slot: string): Promise<void> {
+  // The DOM disabled state can lag an event within a tick; guard the verb too.
+  if (exportingSlots.value.has(slot)) return;
+  exportingSlots.value.add(slot);
   const revision = ++saveActionRevision;
   saveActionError.value = null;
   try {
@@ -225,6 +231,8 @@ async function exportSave(slot: string): Promise<void> {
     if (revision === saveActionRevision) {
       saveActionError.value = { slot, message: 'That saved run could not be written out.' };
     }
+  } finally {
+    exportingSlots.value.delete(slot);
   }
 }
 
@@ -420,7 +428,11 @@ onMounted(() => { void refreshSaves(); });
             <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
             <span v-if="loadingSlot === save.slot" class="dim"> · Loading…</span>
           </button>
-          <button class="quiet small" @click="exportSave(save.slot)">{{ plain ? 'Export' : 'Copy out' }}</button>
+          <button
+            class="quiet small"
+            :disabled="exportingSlots.has(save.slot)"
+            @click="exportSave(save.slot)"
+          >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
             {{ displayError(saveActionError.message) }}
           </p>
