@@ -101,7 +101,8 @@ describe('held Enter in newborn naming (#1471)', () => {
       expect(wrapper.find('[role="alert"]').exists()).toBe(false);
 
       await input.trigger('keydown', { key: 'Enter', repeat: false });
-      expect(name).toHaveBeenCalledExactlyOnceWith('child-1', 'Alys');
+      expect(name).toHaveBeenCalledTimes(1);
+      expect(name).toHaveBeenCalledWith('child-1', 'Alys');
 
       // The old view can remain mounted for another tick after the name is
       // accepted; repeated keydown must neither resubmit nor show a refusal.
