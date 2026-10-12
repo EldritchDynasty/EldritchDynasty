@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { autoResolveAll, bootstrap, resolveChoice, resolveRecord, stepYear, testRng, viewOf } from '@ed/core';
 import type { SimCtx, TableView } from '@ed/core';
-import { revealTransition, type RevealElement } from './reveal';
+import { loadRevealed, revealStorageKey, revealTransition, saveRevealed, type RevealElement } from './reveal';
 
 const SRC = join(import.meta.dirname, '..');
 
@@ -279,5 +279,38 @@ describe('Table early reveal for available orders (#1450)', () => {
       }],
       heirlooms: [],
     } })).toBe(true);
+  });
+});
+
+
+/** Deterministic replay seeds are not unique run ids (#1543). */
+describe('progressive reveal namespaces for different houses (#1543)', () => {
+  const first = {
+    seed: 1042,
+    campaign: { id: 'short', startYear: 1042 },
+    houseName: 'House Ash',
+  } as unknown as Pick<import('@ed/core').SessionView, 'seed' | 'campaign' | 'houseName'>;
+
+  it('does not carry unlocked panels from a different house with the same seed', () => {
+    const records = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => records.get(key) ?? null,
+      setItem: (key: string, value: string) => { records.set(key, value); },
+    };
+    const firstKey = revealStorageKey(first);
+    const nextKey = revealStorageKey({ ...first, houseName: 'House Elm' });
+    expect(nextKey).not.toBe(firstKey);
+
+    saveRevealed(storage, firstKey, new Set<RevealElement>(['clock-long', 'table']));
+    expect(loadRevealed(storage, firstKey)).toEqual(new Set(['clock-long', 'table']));
+    expect(loadRevealed(storage, nextKey)).toEqual(new Set());
+  });
+
+  it('keeps the same namespace for a house across readings and separates campaigns', () => {
+    const key = revealStorageKey(first);
+    expect(revealStorageKey({ ...first })).toBe(key);
+    expect(revealStorageKey({ ...first, campaign: { ...first.campaign, startYear: 1050 } })).not.toBe(key);
+    expect(revealStorageKey({ ...first, seed: 1043 })).not.toBe(key);
+    expect(revealStorageKey({ ...first, houseName: 'House Ash: The Younger' })).not.toBe(key);
   });
 });
