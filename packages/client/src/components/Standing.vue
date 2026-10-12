@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 
@@ -10,12 +11,52 @@ const props = withDefaults(defineProps<{
   jump: StandingDelta | null;
   /** Whether the host has the latest turn (issue #67). */
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  proseMode?: ProseMode;
   /** #368 presentation gates; omitted callers retain the pre-#368 surface. */
   showAssize?: boolean;
   showLadder?: boolean;
 }>(), {
   showAssize: true,
   showLadder: true,
+  proseMode: 'original',
+});
+
+const plain = computed(() => props.proseMode === 'plainenglish');
+const copy = computed(() => plain.value ? {
+  world: {
+    resents: 'The wider world is putting pressure on the house.',
+    steadies: 'The wider world is helping the house recover.',
+    indifferent: 'The wider world is leaving the house alone.',
+  },
+  favour: 'a favour is owed to the house',
+  mercy: 'temporary help is in effect',
+  exaction: 'extra costs are being collected',
+  assize: 'The Assize is the wider world helping a struggling house or putting pressure on one that is far ahead.',
+} : {
+  world: {
+    resents: 'The world has noticed you.',
+    steadies: 'The world is being gentle with you.',
+    indifferent: 'The world is not thinking about you.',
+  },
+  favour: 'a favour is owed',
+  mercy: 'a mercy is running',
+  exaction: 'an exaction is being collected',
+  assize: 'The Assize is how the wider world answers a house that has fallen behind or pulled too far ahead.',
+});
+const namesake = computed(() => {
+  const against = props.view.assize.measuredAgainst;
+  if (!against) return null;
+  return plain.value
+    ? `Compared with the earlier ${against.name}.`
+    : `Measured against the ${against.name} who came before.`;
+});
+const guardian = computed(() => {
+  const watcher = props.view.guardian;
+  if (!watcher) return null;
+  if (!plain.value) return `${watcher.name} watches, and has since ${watcher.since ?? ''}.`;
+  return watcher.since === undefined
+    ? `${watcher.name} watches over the house.`
+    : `${watcher.name} has watched over the house since ${watcher.since}.`;
 });
 
 /**
@@ -49,12 +90,7 @@ const saveLabel = computed(() => {
  * hidden rubber band is a lie the player can feel and cannot name — so this is
  * drawn, and drawn in the same register the game says it in.
  */
-const world = computed(() => {
-  const a = props.view.assize;
-  if (a.arm === 'resents') return 'The world has noticed you.';
-  if (a.arm === 'steadies') return 'The world is being gentle with you.';
-  return 'The world is not thinking about you.';
-});
+const world = computed(() => copy.value.world[props.view.assize.arm]);
 
 /**
  * The Ages the house is living through, named only where the chronicle has
@@ -91,6 +127,7 @@ const needle = computed(() => needleAt(props.view.assize.pressure));
 const reading = computed(() => {
   const p = props.view.assize.pressure;
   const lean = p > 0 ? 'against the house' : p < 0 ? 'in its favour' : 'neither way';
+  if (plain.value) return `World pressure: ${lean} (${p.toFixed(2)} of 1).`;
   return `The Assize leans ${lean}: ${p.toFixed(2)} of 1.`;
 });
 
@@ -105,6 +142,9 @@ const reading = computed(() => {
 const reachedHigher = computed(() => {
   const a = props.view.ascension;
   if (a.best === a.rung) return null;
+  if (plain.value) return a.bestAt === undefined
+    ? `${a.bestTitle}, reached earlier.`
+    : `${a.bestTitle}, reached in ${a.bestAt}.`;
   return a.bestAt === undefined
     ? `${a.bestTitle}, once.`
     : `${a.bestTitle}, once, in ${a.bestAt}.`;
@@ -128,9 +168,9 @@ const moved = computed(() => props.jump);
 const favours = computed(() => {
   const a = props.view.assize;
   const out: string[] = [];
-  if (a.favour) out.push('a favour is owed');
-  if (a.mercy) out.push('a mercy is running');
-  if (a.exaction) out.push('an exaction is being collected');
+  if (a.favour) out.push(copy.value.favour);
+  if (a.mercy) out.push(copy.value.mercy);
+  if (a.exaction) out.push(copy.value.exaction);
   return out;
 });
 
@@ -144,6 +184,11 @@ const favours = computed(() => {
 const muster = computed(() => {
   const m = props.view.muster;
   if (!m) return null;
+  if (plain.value) {
+    const tide = m.tide >= 60 ? "in the house's favour" : m.tide <= 40 ? 'against the house' : 'evenly balanced for now';
+    const men = m.men === 1 ? '1 man is fighting' : `${m.men} men are fighting`;
+    return `${men}. The war is ${tide}.`;
+  }
   const tideWord = m.tide >= 60 ? 'in the house\'s favour' : m.tide <= 40 ? 'against the house' : 'holding, for now';
   const men = `${m.men} ${m.men === 1 ? 'man' : 'men'} in the field`;
   return `${men}, and the tide runs ${tideWord}.`;
@@ -288,14 +333,14 @@ const muster = computed(() => {
            name, and the bar the world grades the house on rose for it. Said
            in words beside the needle it moves: invariant 13 does not allow a
            reading the player can feel and cannot name. -->
-      <div v-if="view.assize.measuredAgainst" class="small namesake">
-        Measured against the {{ view.assize.measuredAgainst.name }} who came before.
+      <div v-if="namesake" class="small namesake">
+        {{ namesake }}
       </div>
       <!-- The magnitude the sentence throws away. Left is the world steadying
            a house it can see is failing; right is the world charging one it can
            see is ahead — the same order as the number (invariant 13). -->
       <div class="soft small assize-explainer">
-        The Assize is how the wider world answers a house that has fallen behind or pulled too far ahead.
+        {{ copy.assize }}
       </div>
       <div class="dim small gauge-reading">{{ reading }}</div>
       <div class="gauge" aria-hidden="true">
@@ -305,8 +350,8 @@ const muster = computed(() => {
       </template>
       <div v-if="favours.length" class="rubric small">{{ favours.join(' · ') }}</div>
       <div v-if="muster" class="rubric small">{{ muster }}</div>
-      <div v-if="view.guardian" class="dim small">
-        {{ view.guardian.name }} watches, and has since {{ view.guardian.since }}.
+      <div v-if="guardian" class="dim small">
+        {{ guardian }}
       </div>
     </div>
 
