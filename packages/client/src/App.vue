@@ -639,7 +639,7 @@ const yearAndBirths = computed(() => {
                commitment is standing — a panel for a war nobody sent men to
                would be furniture, and #90 measures a median gap of ~250
                years between them. -->
-          <Muster v-if="view.muster" :view="view" :actions="actions" :refusal="musterRefusal" />
+          <Muster v-if="view.muster" :view="view" :prose-mode="accessibility.proseMode" :actions="actions" :refusal="musterRefusal" />
           <GameTable
             :table="table"
             :prose-mode="accessibility.proseMode"
