@@ -10524,3 +10524,79 @@ statistical margin was weakened. Shared quote/study/payment/return/save
 mechanisms and the mounted shelf controls have deterministic regression
 coverage; desktop and mobile browser checks show the quote and binder return
 year without horizontal overflow or page errors.
+
+### 2026-10-13 — Auction granddaughter pledges (#1449, part of #1184)
+
+**The contract now collects.** A marriage bid records the sitting Head;
+succession does not substitute another signer. A winning bid is worth 125%
+of its lot's reserve and opens one outstanding pledge. The first living,
+unmarried granddaughter born after the winning year is reserved by claimed
+parentage, never by biological descent or font. Ordinary drafting, pairing
+and direct weddings cannot spend her. Collection uses `wed` with a creditor
+man as the receiving side, so she leaves the player's house while retaining
+her learned spells; physical books remain on the main shelf.
+
+**A turn to answer.** The year increments before its phases, and the Table
+shows marriageable people from seventeen. Collecting at seventeen gave the
+player no adult turn to withhold her. The creditor therefore gives notice at
+seventeen and collects at eighteen. Withholding, her duty as sitting Head,
+or fifty years without collection breaks the pledge once: one Respect tier
+and a severity-50 `all_blood` grudge from the creditor house to the player's
+house. Dead reservations may be replaced without renewing the deadline.
+House endpoints survive relationship upkeep, enter pressure and cast reads,
+and receive the existing generation echo linked to the original bill page.
+The save deliberately advances to format 30 with signer/reservation fields
+and a regenerated serializer fixture.
+
+**Ordinary control.** Before is `7112c304`, format 29; the completed engine
+is `055eb793`, rebased without simulation changes to `c1f8bf1f`, format 30.
+Sixteen paired Long Lines (seeds 7001 + 13·i, 500 years) have identical
+harness reports: mean people 479.9, living 56.9, annual household 48.5,
+completed family size 1.38, peak Madness 23.6, clauses 5.44, Chronicle
+entries 458.4 and frame entries 5.75. Both forbidden-Madness counts remain
+zero. All eight 400-year fingerprints (seeds 1000 + 7·i) match exactly.
+The new phase draws nothing while no pledge exists, and empty pledge state
+normalises the save envelope only when there is no recorded marriage bid.
+
+**Intentional play.** Twenty-four paired Long Lines per policy (seeds
+8001 + 13·i, 500 years) bid a pledge whenever no debt or registered pledge
+exists. Honor permits collection; Withhold uses the existing Table order
+at seventeen. These are descriptive measurements, not population floors.
+The old engine never collects or bills its debt, so its two policies are
+identical and remain limited to the first successful pledge.
+
+| Reading | Before, either policy | Honor | Withhold |
+|---|---:|---:|---:|
+| Successful pledges, total | 21 | 77 | 80 |
+| Granddaughters collected, total | 0 | 8 | 0 |
+| Broken pledges, total | 0 | 60 | 70 |
+| Deadline defaults, total | 0 | 60 | 57 |
+| Withholding defaults, total | 0 | 0 | 13 |
+| Outstanding at the term, total | 21 | 9 | 10 |
+| Births to the house per run | 263.5 | 268.5 | 272.7 |
+| Completed family size | 1.270 | 1.273 | 1.281 |
+| Blood living at home at the term | 36.1 | 36.5 | 36.2 |
+| Treasury at the term, crowns | 1,422.2 | 1,501.1 | 1,477.6 |
+| Mean carried font among that living blood | 0.739 | 0.580 | 0.588 |
+
+The oldest fulfilled pledge takes 45 years. Most promises fail because
+the signer has no qualifying future granddaughter in time; this policy
+does not choose a favorable pedigree before bidding. No protected-Head
+default occurs in this sample; deterministic witnesses cover that route.
+The collected girls happen to have learned no spells; a built-state witness
+verifies that a learned spell leaves with her and the shelf copy does not.
+Before, best rungs are Adept 10, Hierophant 8, None 3, Touched 2, Vessel 1.
+Both final policies read Adept 13, Hierophant 7, None 2, Touched 2. These
+changes include the new bid price, repeated contracts, lost marriages and
+later pressure; they are not attributed to one isolated dial. Coherence
+sampled every 25 years and at the term finds zero violations.
+
+**Gate evidence.** All twelve canonical batch gates pass on the completed
+engine, including the ladder. The full canonical blood gate plays 2,048
+paired 500-year runs and passes: concentrate minus dilute late font +0.53,
+3.7 standard errors above zero; both survive 2,048/2,048 runs. No assertion,
+seed population or statistical margin was weakened. Deterministic tests
+cover recorded descent, reservation, adult notice, ordinary/direct marriage
+guards, actual creditor-hall transfer, withholding, expiry, protected Head,
+one bill, persistent grudge pressure/echo, public lot provenance and saved
+continuation. Landing preflight is green with 4,401 fast tests on `c1f8bf1f`.
