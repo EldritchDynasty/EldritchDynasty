@@ -89,8 +89,8 @@ function wearHeldCopy(copy: LibraryBookState, amount: number): void {
  * A newly obtained copy is not charged for a year it was not on the shelf.
  * This has no RNG draw, new Person state or effect on absent books.
  *
- * This is the wear-only slice of #1293; the binder order and its in-progress
- * exemption belong to the subsequent restoration slice.
+ * #1293 also provides a paid binder order; an in-progress restoration
+ * exempts the physical copy from annual wear until its recorded return.
  */
 export function tickLibraryWear(ctx: SimCtx): void {
   for (const copy of ctx.world.library.values()) {
