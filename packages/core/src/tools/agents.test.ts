@@ -140,10 +140,52 @@ describe('the claim ref', () => {
     expect(agents(beta, 'list').out).not.toContain('INVALID claim/154');
   });
 
-  it('warns when a second agent enters the content lane, where branches interact', () => {
-    agents(join(root, 'alpha'), 'take', '103', '--agent', 'alpha', '--paths', 'packages/content/events');
-    const out = agents(join(root, 'beta'), 'take', '104', '--agent', 'beta', '--paths', 'packages/content/ages');
-    expect(out.out).toContain('CONTENT lane');
+  it('enforces exclusive content-lane ownership before writing issue claim refs', () => {
+    const alpha = join(root, 'alpha');
+    const beta = join(root, 'beta');
+
+    const withoutLane = agents(alpha, 'take', '103', '--agent', 'alpha',
+      '--paths', 'packages/content/events');
+    expect(withoutLane.code).toBe(1);
+    expect(withoutLane.out).toContain('DENIED');
+    expect(withoutLane.out).toContain('lane-content');
+
+    const lane = agents(alpha, 'take', 'lane-content', '--agent', 'alpha',
+      '--paths', 'packages/content/events', '--lane', 'content');
+    expect(lane.code).toBe(0);
+    expect(agents(alpha, 'take', '103', '--agent', 'alpha',
+      '--paths', 'packages/content/events').code).toBe(0);
+
+    // Disjoint YAML paths still consume one shared frequency pool. Explicitly
+    // lying with --lane code cannot bypass the path-based guard.
+    const another = agents(beta, 'take', '104', '--agent', 'beta',
+      '--paths', 'packages/content/ages');
+    expect(another.code).toBe(1);
+    expect(another.out).toContain('held by alpha');
+    const disguised = agents(beta, 'take', '107', '--agent', 'beta',
+      '--paths', 'packages/content/ages', '--lane', 'code');
+    expect(disguised.code).toBe(1);
+
+    expect(agents(alpha, 'release', '103', '--agent', 'alpha').code).toBe(0);
+    expect(agents(alpha, 'release', 'lane-content', '--agent', 'alpha').code).toBe(0);
+
+    // A claim created by an old tool without the named lane is still a
+    // contender. Refuse the NEW lane, rather than issuing an unsafe lock.
+    const legacy = git(beta, 'commit-tree', EMPTY_TREE, '-m',
+      ['claim 104', '', 'agent: beta', 'lane: content', 'path: packages/content/ages'].join('\n'));
+    git(beta, 'push', '-q', 'origin', legacy + ':refs/heads/claim/104');
+    const blocked = agents(alpha, 'take', 'lane-content', '--agent', 'alpha',
+      '--paths', 'packages/content/events');
+    expect(blocked.code).toBe(1);
+    expect(blocked.out).toContain('104 (beta)');
+
+    expect(agents(beta, 'release', '104', '--agent', 'beta').code).toBe(0);
+    expect(agents(beta, 'take', 'lane-content', '--agent', 'beta',
+      '--paths', 'packages/content/ages').code).toBe(0);
+    expect(agents(beta, 'take', '106', '--agent', 'beta',
+      '--paths', 'packages/content/ages').code).toBe(0);
+    expect(agents(beta, 'release', '106', '--agent', 'beta').code).toBe(0);
+    expect(agents(beta, 'release', 'lane-content', '--agent', 'beta').code).toBe(0);
   });
 
   it('releases by tombstone rather than by deleting the ref, and the next agent can take it', () => {
@@ -247,6 +289,9 @@ describe('the claim ref', () => {
     const origin = join(root, 'origin.git');
     const claimedPath = 'packages/content/events/renewal.yaml';
 
+    const lane = agents(alpha, 'take', 'lane-content', '--agent', 'renewing',
+      '--paths', claimedPath, '--lane', 'content');
+    expect(lane.code).toBe(0);
     const taken = agents(alpha, 'take', '155', '--agent', 'renewing',
       '--paths', claimedPath, '--lane', 'content', '--note', 'original scope');
     expect(taken.code).toBe(0);
@@ -265,8 +310,9 @@ describe('the claim ref', () => {
 
     const contender = agents(beta, 'take', '156', '--agent', 'contender',
       '--paths', claimedPath);
-    expect(contender.code).toBe(0);
-    expect(contender.out).toContain('overlapping paths on 155');
+    expect(contender.code).toBe(1);
+    expect(contender.out).toContain('DENIED');
+    expect(contender.out).toContain('lane-content');
 
     // No --renew and no explicit changes is still a no-op.
     expect(agents(alpha, 'take', '155', '--agent', 'renewing').code).toBe(0);
@@ -288,6 +334,8 @@ describe('the claim ref', () => {
     const laneOnlyMessage = git(origin, 'log', '-1', '--format=%B', 'refs/heads/claim/155');
     expect(laneOnlyMessage).toContain('path: packages/core/src/renewal.ts');
     expect(laneOnlyMessage).toContain('lane: content');
+    expect(agents(alpha, 'release', '155', '--agent', 'renewing').code).toBe(0);
+    expect(agents(alpha, 'release', 'lane-content', '--agent', 'renewing').code).toBe(0);
   });
 
   it('says how many paths an all-clear was clear over', () => {
