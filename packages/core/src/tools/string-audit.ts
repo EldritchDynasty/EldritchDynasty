@@ -249,7 +249,7 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
   function mark(node: ts.Node): void {
     // A callback can write player prose; logging the callback does not make
     // its body a diagnostic. Explicit msg() Originals are inventoried apart.
-    if (ts.isFunctionLike(node)) return;
+    if (ts.isFunctionLike(node) || ts.isCallExpression(node) || ts.isNewExpression(node)) return;
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)
       || ts.isTemplateExpression(node)) starts.add(node.getStart(tree));
     ts.forEachChild(node, mark);

@@ -293,16 +293,18 @@ describe('the string-source audit (issue #276)', () => {
     expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
   });
 
-  it('keeps explicit message Originals and callback prose inside diagnostic calls (#1443)', () => {
+  it('keeps keyed messages, unknown nested calls and callback prose inside diagnostics (#1443)', () => {
     const source = [
       "console.log(msg(ctx, 'audit.visible', 'The house kept the signed page.'));",
+      "console.log(writeChronicle('The creditor seized the signed page.'));",
       "console.log(() => { return 'The creditor read the signed page.'; });",
       "const line = 'Another page for the player.';",
     ].join('\n');
     expect(plainEnglishCoreWorkItems('example.ts', source).map((row) => [row.address, row.text])).toEqual([
       [coreMessageAddress('audit.visible'), 'The house kept the signed page.'],
-      ['core:example.ts#literal[3]', 'The creditor read the signed page.'],
-      ['core:example.ts#literal[4]', 'Another page for the player.'],
+      ['core:example.ts#literal[3]', 'The creditor seized the signed page.'],
+      ['core:example.ts#literal[4]', 'The creditor read the signed page.'],
+      ['core:example.ts#literal[5]', 'Another page for the player.'],
     ]);
   });
 
