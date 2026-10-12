@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { chooseSaveFile } from './file-chooser.js';
 import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
+
+// The bridge is bundled separately from the client; use a global symbol key.
+const PICKER_CANCELLED = Symbol.for(BROWSER_IMPORT_CANCELLED.description!);
 import { serializeInterchange } from './interchange.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -313,14 +316,14 @@ describe('mobile native save import picker', () => {
     expect(listeners.has('cancel')).toBe(true);
     listeners.get('cancel')!();
 
-    await expect(choice).resolves.toBe(BROWSER_IMPORT_CANCELLED);
+    await expect(choice).resolves.toBe(PICKER_CANCELLED);
   });
 
   it('treats a change event without a selected file as cancellation (#1416)', async () => {
     const { input } = fakeNativePicker();
     const choice = chooseSaveFile(input as unknown as HTMLInputElement);
     input.onchange?.();
-    await expect(choice).resolves.toBe(BROWSER_IMPORT_CANCELLED);
+    await expect(choice).resolves.toBe(PICKER_CANCELLED);
   });
 
   it('retains the original JSON import behavior for a selected file', async () => {
