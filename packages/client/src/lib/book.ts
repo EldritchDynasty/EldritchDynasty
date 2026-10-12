@@ -292,7 +292,7 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
 export function plateSubtitle(entries: readonly ChronicleEntry[], lens: Lens): string {
   const label = (LENSES.find((l) => l.id === lens) ?? LENSES[0]!).label.toLowerCase();
   if (!entries.length) return `nothing yet · ${label}`;
-  return `${entries.length} entries · ${plateSpan(entries)} · ${label}`;
+  return `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} · ${plateSpan(entries)} · ${label}`;
 }
 
 export function plateSpan(entries: readonly ChronicleEntry[]): string {
