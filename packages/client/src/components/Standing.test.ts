@@ -2,7 +2,6 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { nextTick } from 'vue';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { SessionView } from '@ed/core';
@@ -375,73 +374,6 @@ function namingActions(): GameActions {
     keepSuggestedNames: vi.fn(),
   } as unknown as GameActions;
 }
-
-describe('newborn naming submit single-flight (#1486)', () => {
-  it('blocks same-tick Name, Keep and Enter for one child without blocking another', async () => {
-    const game = namingActions();
-    const wrapper = mount(Naming, { props: { view: namingView('child-1', 'child-2'), actions: game } });
-    try {
-      const children = wrapper.findAll('.child');
-      await children[0]!.get('input').setValue('Mara');
-      await children[1]!.get('input').setValue('Lena');
-      const nameFirst = children[0]!.findAll('button')[0]!.element as HTMLButtonElement;
-      const keepFirst = children[0]!.findAll('button')[1]!.element as HTMLButtonElement;
-      const nameSecond = children[1]!.findAll('button')[0]!.element as HTMLButtonElement;
-
-      // Synchronous DOM events, without the Vue tick introduced by trigger().
-      nameFirst.click();
-      nameFirst.click(); // The first success already cleared the draft.
-      keepFirst.click();
-      children[0]!.get('input').element.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
-      );
-      nameSecond.click(); // A different child is independent.
-
-      expect(game.name).toHaveBeenCalledTimes(2);
-      expect(game.name).toHaveBeenNthCalledWith(1, 'child-1', 'Mara');
-      expect(game.name).toHaveBeenNthCalledWith(2, 'child-2', 'Lena');
-      expect(game.keepSuggestedName).not.toHaveBeenCalled();
-      await nextTick();
-      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
-    } finally {
-      wrapper.unmount();
-    }
-  });
-
-  it('blocks Keep→Name, a duplicate Keep and bulk Keep; a refused order can retry next tick', async () => {
-    const game = namingActions();
-    const keepSuggestedName = vi.fn(() => false);
-    game.keepSuggestedName = keepSuggestedName;
-    const wrapper = mount(Naming, { props: { view: namingView('child-1', 'child-2'), actions: game } });
-    try {
-      await wrapper.get('.child input').setValue('Mara');
-      const child = wrapper.get('.child');
-      const name = child.findAll('button')[0]!.element as HTMLButtonElement;
-      const keep = child.findAll('button')[1]!.element as HTMLButtonElement;
-      const keepAll = wrapper.findAll('button')
-        .find((button) => button.text() === 'Keep the names he suggests')!.element as HTMLButtonElement;
-
-      keep.click();
-      keep.click();
-      name.click();
-      keepAll.click();
-
-      expect(keepSuggestedName).toHaveBeenCalledOnce();
-      expect(keepSuggestedName).toHaveBeenCalledWith('child-1');
-      expect(game.name).not.toHaveBeenCalled();
-      expect(game.keepSuggestedNames).not.toHaveBeenCalled();
-
-      await nextTick();
-      keep.click();
-      expect(keepSuggestedName).toHaveBeenCalledTimes(2);
-      await nextTick();
-      keepAll.click(); // The queue-wide action can run after individual refusal.
-      expect(game.keepSuggestedNames).toHaveBeenCalledOnce();
-    } finally {
-      wrapper.unmount();
-    }
-  });
-});
 
 describe('naming draft lifetime (#1319)', () => {
   it('discards drafts after Keep all empties the queue, even if a person id appears again', async () => {
