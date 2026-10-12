@@ -59,6 +59,8 @@ const refused = ref<string | null>(null);
 /** A named-run refusal belongs beside that slot, not beneath the import picker. */
 const saveActionError = ref<{ slot: string; message: string } | null>(null);
 const resumeRefused = ref<string | null>(null);
+/** Only one host resume can run at a time; a slow response must not race a retry. */
+const resuming = ref(false);
 const libraryError = ref<string | null>(null);
 const confirmingClearLibrary = ref(false);
 /** A single completed house should never disappear on the first Remove click. */
@@ -120,6 +122,10 @@ async function refreshSaves(): Promise<void> {
 }
 
 async function continueLastSitting(): Promise<void> {
+  // A second click cannot start a competing host load or overwrite the result
+  // of a successful continuation with an older, slower refusal.
+  if (resuming.value) return;
+  resuming.value = true;
   // The rolling save may have become unreadable after the front door offered it.
   // Report this next to Continue, not down beside unrelated import/export actions.
   const explanation = 'The last sitting could not be resumed. Try a saved run or begin anew.';
@@ -128,6 +134,8 @@ async function continueLastSitting(): Promise<void> {
     if (!await props.actions.resume()) resumeRefused.value = explanation;
   } catch {
     resumeRefused.value = explanation;
+  } finally {
+    resuming.value = false;
   }
 }
 
@@ -253,7 +261,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" @click="continueLastSitting()">Continue the last sitting</button>
+      <button v-if="resumable" class="primary" :disabled="resuming" @click="continueLastSitting()">{{ resuming ? 'Continuing…' : 'Continue the last sitting' }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
