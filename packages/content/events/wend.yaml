@@ -499,3 +499,11 @@ proseVariants:
     plainenglish: >-
       We gave the chapter house a complete list of our cellars, just as we have done for the
       assessor for two hundred years.
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.record.claims[0].text"
+    of: "f680820a139b29e6"
+    plainenglish: >-
+      left the room under the east cellar off the list he gave the chapter house
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.embellish.claims[0].text"
+    of: "af970d010041c94d"
+    plainenglish: >-
+      gave the chapter house a full list of the cellars

@@ -779,3 +779,11 @@ proseVariants:
       enter winter well fed, which means the house may have less need to help them during a
       bad Frostfall. This grazing custom has never been written down. By respecting it again,
       the house keeps it alive.
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].outcomes[id=buried].effects[0].cause"
+    of: "1d11042191f141c5"
+    plainenglish: >-
+      a death during the Hollow Days
+  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].outcomes[id=waited].effects[0].cause"
+    of: "1d11042191f141c5"
+    plainenglish: >-
+      a death during the Hollow Days

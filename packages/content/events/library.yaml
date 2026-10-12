@@ -450,3 +450,35 @@ proseVariants:
     of: 4a321fef95b51b23
     plainenglish: >-
       At the next sale, another house buys the book for seventy crowns, pleased with the price. This house loses twenty crowns and passes on a danger whose cost has not yet come due. It keeps the notes explaining the errors. The notes also contain the buyer's name, written in the margin by {HEAD} without explanation. Somebody intended that name to be found.
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].title"
+    of: "4a4e2ba1f35046fd"
+    plainenglish: >-
+      The Unknown Handwriting in the Book
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].body"
+    of: "905e2eae6d6567aa"
+    plainenglish: >-
+      A clerk arrives from Bramme holding the fourth section of the Life book open under his
+      thumb. He has not come to accuse anyone. He asks whether anyone has tested the correction
+      written in an unknown hand. He says the chapter house kept a copy of that page, and the
+      man who wrote the note is dead. The clerk will take an answer back to Bramme. He does not
+      ask to take the book.
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].interaction.choices[id=acknowledge_the_correction].label"
+    of: "228f3c523678a766"
+    plainenglish: >-
+      Admit the correction works, and let Bramme keep its copy of the page.
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].interaction.choices[id=acknowledge_the_correction].outcomes[id=bramme_knows].text"
+    of: "91bf51b1c21e57ed"
+    plainenglish: >-
+      The clerk writes down the answer without looking up. Bramme now has the corrected page and
+      the house's admission that the spell works. The chapter house does not need the whole book
+      to know what kind of book it is.
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].interaction.choices[id=refuse_the_answer].label"
+    of: "d367d56751fb40c3"
+    plainenglish: >-
+      Say nothing about whether the spell works, and send the clerk away.
+  - address: "content:events/library.yaml#events[id=the_bramme_margin_returns].interaction.choices[id=refuse_the_answer].outcomes[id=silence_recorded].text"
+    of: "ad7c301b7e41d097"
+    plainenglish: >-
+      He writes down that the house refused. The chapter house keeps the corrected page, with a
+      dated note of the house's silence next to it. The family keeps its answer to itself, but
+      the price is being remembered as a house that would not give one.
