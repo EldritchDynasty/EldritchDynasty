@@ -155,17 +155,17 @@ async function continueLastSitting(): Promise<void> {
   }
 }
 
-/** Newer selections win in GameStore; stale host replies must not move the row error back. */
-let namedLoadRevision = 0;
+/** Named save actions share one error row; older host replies must not replace newer actions. */
+let saveActionRevision = 0;
 async function load(slot: string): Promise<void> {
-  const revision = ++namedLoadRevision;
+  const revision = ++saveActionRevision;
   saveActionError.value = null;
   try {
-    if (!await props.actions.load(slot) && revision === namedLoadRevision) {
+    if (!await props.actions.load(slot) && revision === saveActionRevision) {
       saveActionError.value = { slot, message: 'That saved run could not be read.' };
     }
   } catch {
-    if (revision === namedLoadRevision) {
+    if (revision === saveActionRevision) {
       saveActionError.value = { slot, message: 'That saved run could not be read.' };
     }
   }
@@ -182,11 +182,16 @@ async function importSave(): Promise<void> {
 }
 
 async function exportSave(slot: string): Promise<void> {
+  const revision = ++saveActionRevision;
   saveActionError.value = null;
   try {
-    if (!await props.actions.exportSave(slot)) saveActionError.value = { slot, message: 'That saved run could not be written out.' };
+    if (!await props.actions.exportSave(slot) && revision === saveActionRevision) {
+      saveActionError.value = { slot, message: 'That saved run could not be written out.' };
+    }
   } catch {
-    saveActionError.value = { slot, message: 'That saved run could not be written out.' };
+    if (revision === saveActionRevision) {
+      saveActionError.value = { slot, message: 'That saved run could not be written out.' };
+    }
   }
 }
 
