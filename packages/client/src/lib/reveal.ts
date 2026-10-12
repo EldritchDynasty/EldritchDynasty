@@ -1,4 +1,4 @@
-import { DEBT_FLOOR, type SessionView, type TableView } from '@ed/core';
+import type { SessionView, TableView } from '@ed/core';
 
 export const REVEAL_ELEMENTS = [
   'clock-five',
@@ -102,7 +102,7 @@ export function tableHasAffordableOrder(table: TableView | null): boolean {
   if (table.canTutor && table.pupils.length > 0 && table.teachable.length > 0) return true;
   if (table.posts.some((post) => post.canPay && post.eligible.length > 0)) return true;
   if (table.papers.length > 0 && table.pedigreePrices.some((price) => price.canPay)) return true;
-  if (table.missingPrimers.some((book) => !book.queued && table.treasury - book.fee >= DEBT_FLOOR)) return true;
+  if (table.missingPrimers.some((book) => !book.queued && book.canPay)) return true;
   if (table.ledgerSearch.ready || table.unmaking.ready || table.vesselRite.ready || table.greatRite.ready) return true;
 
   return false;
