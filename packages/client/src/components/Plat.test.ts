@@ -607,3 +607,43 @@ describe('reader-local Table guidance (#1441)', () => {
     }
   });
 });
+
+describe('debt-bond controls stay tied to bonded status (#1446)', () => {
+  it('never offers release to an unbonded servant, even when the advance input is blank, valid or invalid', async () => {
+    const { wrapper, action, ctx } = mountedShelf(40);
+    try {
+      const table = tableView(ctx);
+      table.servants = [
+        { person: 'free', name: 'Mara the Cook', role: 'cook', term: 'yearly', wage: 2, debt: 0, bonded: false, loyalty: 0 },
+        { person: 'bound', name: 'Orin the Porter', role: 'porter', term: 'yearly', wage: 0, debt: 5, bonded: true, loyalty: -1 },
+      ];
+      await wrapper.setProps({ table });
+      const rowFor = (name: string) => wrapper.findAll('.line').find((row) =>
+        row.find('strong').exists() && row.find('strong').text() === name)!;
+      const free = rowFor('Mara the Cook');
+      const bound = rowFor('Orin the Porter');
+      const releaseVisible = () => free.findAll('button').some((b) => b.text() === 'Tear it up');
+
+      // The formerly misplaced v-else drew release in this default state.
+      expect(releaseVisible()).toBe(false);
+      expect(free.findAll('button').some((b) => b.text() === 'Advance it against the years')).toBe(true);
+      expect(bound.findAll('button').map((b) => b.text())).toEqual(['Tear it up']);
+      expect(bound.find('input').exists()).toBe(false);
+
+      await free.get('input').setValue('0');
+      expect(free.find('[role="alert"]').exists()).toBe(true);
+      expect(releaseVisible()).toBe(false);
+      await free.get('input').setValue('1');
+      expect(free.find('[role="alert"]').exists()).toBe(false);
+      expect(releaseVisible()).toBe(false);
+
+      await free.findAll('button').find((b) => b.text() === 'Advance it against the years')!.trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'bond', person: 'free', op: 'bind', marks: 1 });
+      await bound.get('button').trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'bond', person: 'bound', op: 'free' });
+      expect(action).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
