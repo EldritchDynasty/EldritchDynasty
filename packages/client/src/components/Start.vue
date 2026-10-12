@@ -69,7 +69,11 @@ function newRunSeed(): number {
 const seed = ref(newRunSeed());
 const saves = ref<SaveSummary[]>([]);
 const saveListError = ref<string | null>(null);
+/** A delayed host listing must not race a second Retry and restore stale rows. */
+const listingSaves = ref(false);
 const refused = ref<string | null>(null);
+/** Do not open two host import pickers or let a late refusal follow a success. */
+const importingSave = ref(false);
 /** A named-run refusal belongs beside that slot, not beneath the import picker. */
 const saveActionError = ref<{ slot: string; message: string } | null>(null);
 const resumeRefused = ref<string | null>(null);
@@ -127,13 +131,18 @@ function survivingPage(run: LibraryRun): string | undefined {
 }
 
 async function refreshSaves(): Promise<void> {
-  saveListError.value = null;
+  // The retry button and a synthetic stale click must use the same guard.
+  if (listingSaves.value) return;
+  listingSaves.value = true;
   try {
     saves.value = await props.actions.listSaves();
+    saveListError.value = null;
   } catch {
     // A failed host read says nothing about whether earlier runs exist.
     // Keep any previously listed saves, and give the reader a way to retry.
     saveListError.value = 'Saved runs could not be listed. Try again.';
+  } finally {
+    listingSaves.value = false;
   }
 }
 
@@ -172,12 +181,16 @@ async function load(slot: string): Promise<void> {
 }
 
 async function importSave(): Promise<void> {
+  if (importingSave.value) return;
+  importingSave.value = true;
   refused.value = null;
   try {
     // Dismissing the browser picker is not a failed or invalid import.
     if (await props.actions.importSave() === false) refused.value = 'That file was not a run this version can read.';
   } catch {
     refused.value = 'That file was not a run this version can read.';
+  } finally {
+    importingSave.value = false;
   }
 }
 
@@ -396,11 +409,11 @@ onMounted(() => { void refreshSaves(); });
 
     <div v-if="saveListError" class="save-list-error" role="alert">
       <p class="rubric small">{{ displayError(saveListError) }}</p>
-      <button class="quiet small" @click="refreshSaves()">{{ plain ? 'Reload saved games' : 'Retry saved runs' }}</button>
+      <button class="quiet small" :disabled="listingSaves" @click="refreshSaves()">{{ listingSaves ? 'Retrying…' : (plain ? 'Reload saved games' : 'Retry saved runs') }}</button>
     </div>
 
     <div class="row">
-      <button class="quiet small" @click="importSave()">{{ plain ? 'Import a saved game' : 'Bring a run in' }}</button>
+      <button class="quiet small" :disabled="importingSave" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
       <p v-if="refused" class="rubric small" role="status">{{ displayError(refused) }}</p>
     </div>
 

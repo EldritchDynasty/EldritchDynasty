@@ -370,6 +370,47 @@ describe('saved-run action failures (#1149)', () => {
     },
   );
 
+  it('does not reopen a pending Import picker and recovers after dismissal or failure (#1477)', async () => {
+    const actions = spyActions();
+    let finishPicker!: (result: boolean | void) => void;
+    vi.mocked(actions.importSave)
+      .mockImplementationOnce(() => new Promise<boolean | void>((resolve) => {
+        finishPicker = resolve;
+      }))
+      .mockRejectedValueOnce(new Error('host picker unavailable'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const importButton = w.findAll('button').find((button) => button.text() === 'Bring a run in');
+      expect(importButton).toBeDefined();
+      await importButton!.trigger('click');
+      expect(actions.importSave).toHaveBeenCalledTimes(1);
+      expect(importButton!.attributes('disabled')).toBeDefined();
+      expect(importButton!.text()).toBe('Importing…');
+
+      // Even a synthetic click on a disabled control must not open another picker.
+      await importButton!.trigger('click');
+      expect(actions.importSave).toHaveBeenCalledTimes(1);
+      finishPicker(undefined); // Dismissal is not an invalid save.
+      await flush();
+      expect(importButton!.attributes('disabled')).toBeUndefined();
+      expect(w.find('[role="status"]').exists()).toBe(false);
+
+      await importButton!.trigger('click');
+      await flush();
+      expect(actions.importSave).toHaveBeenCalledTimes(2);
+      expect(w.get('[role="status"]').text()).toContain('That file was not a run this version can read.');
+      expect(importButton!.attributes('disabled')).toBeUndefined();
+
+      await importButton!.trigger('click');
+      await flush();
+      expect(actions.importSave).toHaveBeenCalledTimes(3);
+      expect(w.find('[role="status"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('explains a rejected import and recovers when the next import succeeds', async () => {
     const actions = spyActions();
     vi.mocked(actions.importSave).mockRejectedValueOnce(new Error('file picker unavailable'));
@@ -564,6 +605,42 @@ describe('named-save failures belong to their row (#1342)', () => {
 });
 
 describe('save list host failures (#1137)', () => {
+  it('keeps saved-game listing Retry single-flight and restores retry after failure (#1475)', async () => {
+    const actions = spyActions([{ slot: 'recovered-run', year: 1098 }]);
+    let rejectPending!: (error: Error) => void;
+    vi.mocked(actions.listSaves)
+      .mockRejectedValueOnce(new Error('host offline'))
+      .mockImplementationOnce(() => new Promise<SaveSummary[]>((_, reject) => {
+        rejectPending = reject;
+      }));
+    const w = mount(Start, { props: { actions, resumable: false, proseMode: 'plainenglish' } });
+    try {
+      await flush();
+      expect(w.get('.save-list-error[role="alert"]').text()).toContain('Could not list your saved games');
+      const retry = w.get('.save-list-error button');
+      await retry.trigger('click');
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+      expect(retry.attributes('disabled')).toBeDefined();
+      expect(retry.text()).toContain('Retrying');
+
+      // A manually dispatched stale click must not start another host read.
+      await retry.trigger('click');
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+      rejectPending(new Error('still offline'));
+      await flush();
+
+      expect(retry.attributes('disabled')).toBeUndefined();
+      expect(w.get('.save-list-error[role="alert"]').text()).toContain('Could not list your saved games');
+      await retry.trigger('click');
+      await flush();
+      expect(actions.listSaves).toHaveBeenCalledTimes(3);
+      expect(w.find('.save-list-error').exists()).toBe(false);
+      expect(w.get('section.saved').text()).toContain('recovered-run');
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('explains a rejected listing and restores the actual saves when Retry succeeds', async () => {
     const actions = spyActions([{ slot: 'chapter-1-1080', year: 1080 }]);
     vi.mocked(actions.listSaves).mockRejectedValueOnce(new Error('host unavailable'));
