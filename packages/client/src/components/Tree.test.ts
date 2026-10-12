@@ -7,7 +7,7 @@ import Tree from './Tree.vue';
 import Line from './Line.vue';
 import Chronicle from './Chronicle.vue';
 import Passage from './Passage.vue';
-import type { RememberedPassage } from '../lib/game';
+import type { GameActions, RememberedPassage } from '../lib/game';
 import type { MemberView } from '../lib/kin';
 
 type HallView = SessionView['halls'][number];
@@ -605,3 +605,38 @@ describe('shared modal Escape during input-method composition (#1288)', () => {
   });
 });
 
+
+
+/** The seal history is live UI prose. A reading preference changes the words,
+ * not the historical years or the Chronicle's separate persisted entries. */
+describe('Plain English seal history (#410)', () => {
+  it('switches guardian, death, succession and empty copy without changing their facts', async () => {
+    const line = [
+      { person: 'daveed', name: 'Daveed', from: 1042, to: 1080, born: 1009, died: 1080, guardian: true },
+      { person: 'maren', name: 'Maren', from: 1080, to: 1110, born: 1050,
+        claimedDeath: { year: 1110, cause: 'fever' } },
+      { person: 'aldric', name: 'Aldric', from: 1110, born: 1085 },
+    ] as unknown as ReturnType<GameActions['line']>;
+    const wrapper = mount(Line, { props: { line, close: vi.fn() } });
+    try {
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('who has held the seal');
+      expect(wrapper.text()).toContain('born 1009 · did not die');
+      expect(wrapper.text()).toContain('the book has him dying in 1110, of fever');
+      expect(wrapper.text()).toContain('1110 — and holds it still');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('History of the heads of the house');
+      expect(wrapper.text()).toContain('3 leaders since the house began.');
+      expect(wrapper.text()).toContain("Born in 1009. Became the family's guardian spirit in 1080.");
+      expect(wrapper.text()).toContain('The book says this leader died in 1110 from fever.');
+      expect(wrapper.text()).toContain('Led from 1080 to 1110 (30 years).');
+      expect(wrapper.text()).toContain('Leader since 1110 (still serving).');
+      expect(wrapper.text()).not.toContain('and holds it still');
+
+      await wrapper.setProps({ line: [] });
+      expect(wrapper.text()).toContain('No one has led the house since it began.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
