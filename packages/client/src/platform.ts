@@ -115,6 +115,19 @@ function summary(slot: string, save: unknown): SaveSummary {
   };
 }
 
+/** The host stores opaque JSON; a present root null (or an undefined JSON
+ * result) is unreadable by both readSave and readLibrary. Reject before
+ * touching Storage so a bad write cannot overwrite an earlier good record.
+ * The game's actual save/library schema still belongs to core.
+ */
+function readableBrowserJSON(value: unknown): string {
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined || serialized === 'null') {
+    throw new TypeError('the browser cannot persist an unreadable JSON record');
+  }
+  return serialized;
+}
+
 /** The full demo implementation: durable local saves and download/file import. */
 export function browserPlatform(): Platform {
   return {
@@ -165,7 +178,7 @@ export function browserPlatform(): Platform {
     async writeSave(slot, save) {
       const storage = browserStorage();
       if (!storage) throw new Error('this browser does not permit saved data');
-      storage.setItem(PREFIX + slot, JSON.stringify(save));
+      storage.setItem(PREFIX + slot, readableBrowserJSON(save));
     },
 
     async deleteSave(slot) {
@@ -191,7 +204,7 @@ export function browserPlatform(): Platform {
     async writeLibrary(library) {
       const storage = browserStorage();
       if (!storage) throw new Error('this browser does not permit saved data');
-      storage.setItem(LIBRARY_KEY, JSON.stringify(library));
+      storage.setItem(LIBRARY_KEY, readableBrowserJSON(library));
     },
 
     // Achievements are a platform/profile concern. The browser deliberately

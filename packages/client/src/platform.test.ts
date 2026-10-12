@@ -48,6 +48,52 @@ function memoryPlatform(): Platform & { saves: Map<string, unknown>; unlocks: st
   };
 }
 
+describe('browser host rejects unreadable root writes (#1372)', () => {
+  it('preserves previous save and Library bytes on null or unstringifiable roots', async () => {
+    const oldSave = { format: 28, year: 1220 };
+    const oldLibrary = { format: 1, runs: [] };
+    const bytes = new Map<string, string>([
+      ['ed:save:autosave', JSON.stringify(oldSave)],
+      ['ed:library', JSON.stringify(oldLibrary)],
+    ]);
+    const setItem = vi.fn((key: string, value: string) => { bytes.set(key, value); });
+    const storage = {
+      getItem: (key: string) => bytes.get(key) ?? null,
+      setItem,
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const host = browserPlatform();
+      // A root null is JSON, but each reader deliberately refuses that
+      // sentinel. Undefined roots would be coerced to "undefined" by Storage.
+      for (const unreadable of [null, undefined, () => 1, Symbol('missing'), { toJSON: () => null }]) {
+        await expect(host.writeSave('autosave', unreadable)).rejects.toThrow(TypeError);
+        await expect(host.writeLibrary(unreadable)).rejects.toThrow(TypeError);
+      }
+      expect(setItem).not.toHaveBeenCalled();
+      expect(bytes.get('ed:save:autosave')).toBe(JSON.stringify(oldSave));
+      expect(bytes.get('ed:library')).toBe(JSON.stringify(oldLibrary));
+      await expect(host.readSave('autosave')).resolves.toEqual(oldSave);
+      await expect(host.readLibrary()).resolves.toEqual(oldLibrary);
+
+      // The host is still opaque: a normal JSON object may be stored and read.
+      const nextSave = { format: 28, year: 1221 };
+      const nextLibrary = { format: 1, runs: [{ id: 'later' }] };
+      await expect(host.writeSave('autosave', nextSave)).resolves.toBeUndefined();
+      await expect(host.writeLibrary(nextLibrary)).resolves.toBeUndefined();
+      await expect(host.readSave('autosave')).resolves.toEqual(nextSave);
+      await expect(host.readLibrary()).resolves.toEqual(nextLibrary);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+});
+
 function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const path = join(dir, entry);
