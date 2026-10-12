@@ -689,3 +689,338 @@ proseVariants:
       empty cottage and provide a workbench. The carpenter moves his tools from Bramme
       before Ingathering. Wick can now have its gates repaired locally instead of sending
       them eleven miles away.
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].title"
+    of: "b356671125a3169d"
+    plainenglish: >-
+      The Smith Wants It Written Down
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].body"
+    of: "86ddeb6362367abf"
+    plainenglish: >-
+      The smith at Wick buys his charcoal from the colliers who work the house's own wood. The
+      deal rests on a handshake older than either of them. Now he wants it written down, at a
+      fixed rate, for twenty years. He has a reason, but he will not say what it is. A written
+      rate cannot be raised when charcoal is scarce, and charcoal has been scarce twice in this
+      Head's lifetime. Without a smith, this parish has no ploughs.
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=write_it].label"
+    of: "6b2b0dc0f200035c"
+    plainenglish: >-
+      Put it in writing: twenty years, a fixed rate, notarised at Bramme.
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=write_it].outcomes[id=written].text"
+    of: "85cb76b0c75b68b4"
+    plainenglish: >-
+      One mark goes to the notary, for a document both men are pleased with for completely
+      different reasons. In the eleventh year the price of charcoal doubles, and the house
+      absorbs the difference for nine years. The smith stays. For a generation, every plough in
+      this parish is mended by a man who trusts the hall.
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=keep_the_handshake].label"
+    of: "59b78c256b1706f1"
+    plainenglish: >-
+      Stick with the handshake. It has lasted forty years.
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=keep_the_handshake].outcomes[id=handshake].text"
+    of: "29ed5f2565085669"
+    plainenglish: >-
+      It has lasted forty years, and it lasts nine more. Then charcoal doubles and the rate goes
+      up. The smith says nothing about it at all, which is the loudest thing he has ever done.
+      His son is apprenticed at Bramme instead of here.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].title"
+    of: "3fcbb67f793252ab"
+    plainenglish: >-
+      What Every Village Says About Its Miller
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].body"
+    of: "d4f860fefeba9f3a"
+    plainenglish: >-
+      Every village in the Settled Lands says its miller has a heavy thumb, and about a third of
+      them are right. Wick has been saying it about this one for eleven years. The mill belongs
+      to the house, and the miller holds it from the house, so the accusation is really about
+      the hall, and everyone making it knows that. Four tenants have brought their own weights
+      up the hill. The weights do not match each other. That is the first thing the steward
+      notices and the last thing anyone wants to hear.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].interaction.choices[id=weigh_it_publicly].label"
+    of: "63d54566cb35bc02"
+    plainenglish: >-
+      Weigh it in the yard with the reeve, where everyone can see.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].interaction.choices[id=weigh_it_publicly].outcomes[id=the_miller_is_honest].text"
+    of: "e0440661c37020bd"
+    plainenglish: >-
+      Four sacks, four weights, and a set of weights belonging to the house, and the miller is
+      honest, give or take what a wet day does to grain. The Head takes care not to humiliate
+      the four tenants, so they are not humiliated. Nobody at Wick says the word thumb for
+      nineteen years.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].interaction.choices[id=weigh_it_publicly].outcomes[id=the_miller_is_not].text"
+    of: "37418a315306729d"
+    plainenglish: >-
+      He has been taking about a fortieth part, every time, for eleven years. That adds up to
+      more grain than his own holding grows. He is put out of the mill and off the land on the
+      same afternoon, and the parish watches all of it. The new miller stays honest for about
+      nine years.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].interaction.choices[id=leave_it_alone].label"
+    of: "53873c81a86df66d"
+    plainenglish: >-
+      Let it be. Every village says this of every miller.
+  - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].interaction.choices[id=leave_it_alone].outcomes[id=left].text"
+    of: "bb605eb90bf6cf75"
+    plainenglish: >-
+      Nothing is weighed and nothing is settled. The saying keeps going round and gains a verse,
+      and by about the fourth telling the verse has the hall in it somewhere. Thirty years on,
+      nobody at Wick can remember whether it was ever about the miller.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].title"
+    of: "ae8237143275c580"
+    plainenglish: >-
+      The Alewife Has Never Had a Licence
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].body"
+    of: "c35607096b2a354d"
+    plainenglish: >-
+      Brewing for sale needs a licence from the magistrate at Bramme. The alewife at Wick has
+      never had one, and neither did her mother. It has never mattered, because the low justice
+      on this land belongs to the house, and the house has never asked. Now a burgess of Bramme
+      has noticed, and put it in writing, because Bramme's brewers pay for their licences. The
+      letter is polite and quotes a statute correctly.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=buy_her_a_licence].label"
+    of: "a73efae62f28ae32"
+    plainenglish: >-
+      Pay for her licence. Four crowns, and the letter is dealt with.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=buy_her_a_licence].outcomes[id=licensed].text"
+    of: "d8634309a4b0b345"
+    plainenglish: >-
+      Four crowns to the magistrate buys a licence in her name. It is the first document that
+      woman has ever had with her name on it. She keeps it in a box and shows it to people for
+      the rest of her life. Bramme's burgesses are satisfied. Every alehouse in the province now
+      knows the hall pays.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].label"
+    of: "f057ab395d44b49d"
+    plainenglish: >-
+      Reply that the low justice here is ours, as it always has been.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].outcomes[id=asserted].text"
+    of: "1860c51eca49ac52"
+    plainenglish: >-
+      An advocate costs two marks a day for four days. His reply is correct in law, and Bramme
+      reads it as the hall telling the town where the boundary lies. The alewife keeps brewing.
+      The reply is filed, and in about ninety years a clerk with a grievance goes looking for
+      exactly that kind of file.
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].title"
+    of: "3d46d8545accfe60"
+    plainenglish: >-
+      The Hall's Own Letter Comes Back
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].body"
+    of: "faf84b593bf42c1d"
+    plainenglish: >-
+      The alehouse at Wick has never had a licence. The woman who runs it now is the old
+      alewife's great-granddaughter. A clerk of the bench at Bramme has been through the town's
+      files, found the hall's reply from ninety years ago, and found it useful. If the low
+      justice at Wick belongs to the house, he writes, then so does the fine for brewing without
+      the town's permission. The house will levy it, or the house will say in writing that it
+      will not. Someone at Bramme has waited a long time to send this.
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].interaction.choices[id=levy_it].label"
+    of: "6db57dabd47f585f"
+    plainenglish: >-
+      Levy the fine. It is our justice, so it is our fine.
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].interaction.choices[id=levy_it].outcomes[id=levied].text"
+    of: "5cd9e8cf9748b013"
+    plainenglish: >-
+      On a market day the reeve walks down, takes the fine off the counter in front of the whole
+      room, and sends every mite of it on to Bramme. The town is satisfied that the hall's
+      justice works. The alehouse goes quiet whenever anyone from the hall comes in, and it
+      stays quiet for a generation.
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].interaction.choices[id=refuse_in_writing].label"
+    of: "3a345ce865d381cc"
+    plainenglish: >-
+      Put in writing that the house will not, and seal it.
+  - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].interaction.choices[id=refuse_in_writing].outcomes[id=refused].text"
+    of: "c42515edfe4b5d71"
+    plainenglish: >-
+      One sentence, sealed, and filed at Bramme next to the first letter. She keeps brewing. The
+      town now holds two letters from the hall. Together they say that the hall keeps a justice
+      and will not use it. That is the kind of pair a clerk takes to Cawdry when he wants the
+      Warden to look into something.
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].title"
+    of: "77fd8990b41f3c74"
+    plainenglish: >-
+      A Thatcher From the Lag
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].body"
+    of: "b882177d03bd8d01"
+    plainenglish: >-
+      Four cottages on the lane need new thatch, and reed is reed, which means the Lag. That is
+      forty miles down the Wend, where the reed is cut, and where everyone in this province
+      believes the people are webbed. This thatcher charges half what anyone else does, he is
+      very good, and he will not stay in the village. He asks to sleep in the house's own barn.
+      The reeve has already refused that on the house's behalf, without being asked.
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].interaction.choices[id=give_him_the_barn].label"
+    of: "2029f5edae07e759"
+    plainenglish: >-
+      Let him have the barn, and say so in front of the reeve.
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].interaction.choices[id=give_him_the_barn].outcomes[id=the_barn].text"
+    of: "09c8b51d163b66c1"
+    plainenglish: >-
+      Four cottages are thatched in eleven days by a man who is better at it than anyone within
+      forty miles. He sleeps in the barn. The reeve has been corrected in public, in front of
+      his own parish, and will remember it for longer than the thatch lasts. The thatcher comes
+      back every seven years for thirty years.
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].interaction.choices[id=back_the_reeve].label"
+    of: "ea19b7b2b8e94d5e"
+    plainenglish: >-
+      Side with the reeve. He has to live here, and the Lag man does not.
+  - address: "content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].interaction.choices[id=back_the_reeve].outcomes[id=he_goes_home].text"
+    of: "e5111d98762fcbe4"
+    plainenglish: >-
+      He walks back to the Lag that same afternoon without a word of complaint, because he is
+      completely used to it. The four cottages are done by a man from Ockleigh at twice the
+      price and about half the quality. Two of them leak by the next Frostfall. The reeve does
+      not mention that either.
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].title"
+    of: "841143787e4ad044"
+    plainenglish: >-
+      Downwind, and Too Close
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].body"
+    of: "6ad55221a8b6e86d"
+    plainenglish: >-
+      A tanner has set up at the bottom of the lane, because a tanner has to set up somewhere.
+      On the usual wind, which blows nine days in ten, all of Wick is downwind of him. Nobody
+      questions his right to the holding. Everybody complains about the smell. Eleven households
+      have come up the hill about it in a single tenday, which has not happened over anything in
+      thirty years. The house needs leather as much as anyone does.
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].interaction.choices[id=move_him].label"
+    of: "d72495f65080dcf2"
+    plainenglish: >-
+      Move him. Give him the river close and pay for the move.
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].interaction.choices[id=move_him].outcomes[id=moved].text"
+    of: "7063078683ac4532"
+    plainenglish: >-
+      The house spends six crowns of its own money to move a man half a mile downstream onto
+      ground nobody was using. The eleven households get what they came for. The tanner learns
+      that the hall will spend money on him. The river close is where the parish draws water in
+      a dry summer. Nobody thinks of that for nine years.
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].interaction.choices[id=leave_him_where_he_is].label"
+    of: "d71490194aae8d2d"
+    plainenglish: >-
+      Let him stay. A tanner has to be somewhere, and there will do.
+  - address: "content:events/wick_trades.yaml#events[id=the_tanner_downwind].interaction.choices[id=leave_him_where_he_is].outcomes[id=left_there].text"
+    of: "5c7551a020051684"
+    plainenglish: >-
+      The eleven households are told, correctly, that the holding is his and the wind belongs to
+      nobody. They go back down the hill having learned what asking the hall for something is
+      worth. Wick smells of the tannery for forty years. The leather is good and cheap, and
+      nobody has ever thanked the house for either.
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].title"
+    of: "9917684e287e414a"
+    plainenglish: >-
+      The Dog Is Worth More Than the Shepherd
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].body"
+    of: "76d05323a84249a7"
+    plainenglish: >-
+      Everyone in the Nethering says the shepherd's bitch is worth more than the shepherd, and
+      here it is not a joke but plain arithmetic: she works two hundred head on ground three men
+      could not hold. She is nine and has one litter left in her. The shepherd wants four crowns
+      for a pup, and he knows exactly what he is asking. As he packs up, he also mentions that
+      she has stopped going into the upper fold, and he cannot get her past the beck.
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].interaction.choices[id=buy_the_pup].label"
+    of: "fb417c3deca9cff9"
+    plainenglish: >-
+      Buy the pup. Four crowns for the best bloodline in the province.
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].interaction.choices[id=buy_the_pup].outcomes[id=bought].text"
+    of: "5c8faea2424b87ce"
+    plainenglish: >-
+      Four crowns buys a dog that is working sheep at fourteen months old, and for eleven years
+      she is the best thing on four legs at Ardwen. Nobody follows up the shepherd's other
+      remark. In the ninth year she too stops at the beck, in the same place, on the same
+      ground, and by then nobody is left who remembers being told.
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].interaction.choices[id=ask_about_the_beck].label"
+    of: "35a998331855faa7"
+    plainenglish: >-
+      Forget the pup. Ask him about the beck.
+  - address: "content:events/wick_trades.yaml#events[id=the_shepherd_who_is_worth_more].interaction.choices[id=ask_about_the_beck].outcomes[id=he_explains].text"
+    of: "3cc75ae630d8c1da"
+    plainenglish: >-
+      He is a shepherd. He has no theory and offers none. Instead he gives four years of dates:
+      which spring she stopped, which ground she will not take, and which of the other dogs
+      followed her in it and which did not. It is the most exact account of anything anyone has
+      ever brought up this hill. He does not know why he remembers it.
+  - address: "content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].title"
+    of: "33baf7c6abdd1f82"
+    plainenglish: >-
+      Eleven Ploughs, One Smith
+  - address: "content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].body"
+    of: "ac1ad7d792de4a63"
+    plainenglish: >-
+      Every plough in this parish needs its share laid and sharpened before Seedmonth, and there
+      is one forge to do all eleven in four tendays. The order they go in has always been the
+      smith's business. This year the smith has been ill for a tenday and is three behind. Those
+      three are the three farthest from the village. That is not a coincidence, and it is not
+      malice either.
+  - address: "content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].interaction.outcomes[id=the_house_pays_bramme].text"
+    of: "a3f007bb34cfc3cf"
+    plainenglish: >-
+      The house pays a smith from Bramme to come out for three days, and the three farthest
+      ploughs go out on time. It costs five crowns. Nobody at Wick is told who paid, and that is
+      the only part of the arrangement the steward argues about.
+  - address: "content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].interaction.outcomes[id=they_sow_late].text"
+    of: "ad7f7d3957124435"
+    plainenglish: >-
+      The three holdings sow a tenday late, into ground that has already dried past its best. It
+      shows at Harvest on those three holdings and nowhere else. All three pay their rent short,
+      and none of them says why.
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].title"
+    of: "dd49a9d8257bb4b4"
+    plainenglish: >-
+      A Cottager Who Can Read
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].body"
+    of: "156f9e6be60eca07"
+    plainenglish: >-
+      Hardly anyone at the bottom of this world can read, but a cottager's daughter at Wick can.
+      She was taught by a keeper who died nineteen years ago and had time on his hands. She has
+      read the terms nailed to the church door, which nobody has ever done, and she has found
+      something in them. She is not making trouble. She has come up the hill to ask, politely,
+      about one clause, and she remembers its wording exactly.
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].interaction.choices[id=answer_her_properly].label"
+    of: "cdde427268c1a416"
+    plainenglish: >-
+      Give her a proper answer, and an honest one about the clause.
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].interaction.choices[id=answer_her_properly].outcomes[id=answered].text"
+    of: "8da69ac79beb5c83"
+    plainenglish: >-
+      Half an hour in the yard and an honest answer: the clause means what she thinks it means,
+      and it has not been enforced in sixty years. She thanks the Head, goes home, and tells
+      eleven households. Nothing changes. Everything about how that village reads the terms on
+      that door changes.
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].interaction.choices[id=send_her_to_the_steward].label"
+    of: "1b7653f8f3200e34"
+    plainenglish: >-
+      Send her to the steward. This is not the hall's business.
+  - address: "content:events/wick_trades.yaml#events[id=the_cottager_who_can_read].interaction.choices[id=send_her_to_the_steward].outcomes[id=sent_to_the_steward].text"
+    of: "5327cc3586585de9"
+    plainenglish: >-
+      The steward is polite, completely unhelpful, and very careful to be both. She goes home
+      understanding exactly what she has been told. She teaches her own children to read. In
+      1247, one of them is the reason a boundary case at Cawdry turns out the way it does.
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].title"
+    of: "7dc7f2e01c15bd1c"
+    plainenglish: >-
+      The One Warm Place in the Parish
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].body"
+    of: "0dd2f4f1f3ab19f5"
+    plainenglish: >-
+      In the worst tendays of Deepwinter, the forge is the only properly warm building in Wick.
+      By custom, nobody says anything about the dozen people who are in it at any hour with no
+      obvious business there. The smith burns about four crowns of extra charcoal each winter
+      for this, and he has never mentioned it to anyone. The steward has noticed, because the
+      charcoal comes out of the house's wood.
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].interaction.choices[id=say_nothing_and_pay_it].label"
+    of: "0e5f16a6811f4832"
+    plainenglish: >-
+      Say nothing. Let the house's wood cover it.
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].interaction.choices[id=say_nothing_and_pay_it].outcomes[id=covered].text"
+    of: "c167e40f0197092b"
+    plainenglish: >-
+      Four crowns of charcoal a winter that nobody accounts for and nobody thanks anyone for,
+      because thanking anyone would mean saying out loud what is going on, and that would end
+      it. It carries on for sixty years, across three Heads and two smiths. Nobody writes it
+      down.
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].interaction.choices[id=charge_it_to_him].label"
+    of: "c7810cd653e8479a"
+    plainenglish: >-
+      Make him pay for it. The wood belongs to the house.
+  - address: "content:events/wick_trades.yaml#events[id=the_forge_fire_in_deepwinter].interaction.choices[id=charge_it_to_him].outcomes[id=charged].text"
+    of: "d90084b220e18b4e"
+    plainenglish: >-
+      Four crowns are charged to the smith, and he pays without a word. From the next Frostfall,
+      the forge door is shut to anyone without business there. It is entirely correct. Wick
+      spends that winter in its own cottages and works out for itself which change came first.
