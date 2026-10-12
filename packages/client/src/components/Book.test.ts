@@ -12,7 +12,7 @@ import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
-import { plateName } from '../lib/book';
+import { afterimageName, plateName } from '../lib/book';
 
 // Export tests assert actual download calls without relying on jsdom blob URL support.
 vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
@@ -598,6 +598,70 @@ describe('house afterimage export failure (#1141)', () => {
     } finally {
       wrapper.unmount();
       canvas.mockRestore();
+    }
+  });
+});
+
+/** Keep the asynchronous naming regression in the measured export component suite. */
+describe('house afterimage filename snapshot (#1508)', () => {
+  it('names the encoded PNG for the house actually painted, even if view props change mid-export', async () => {
+    const painted: string[] = [];
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {},
+      fillText: (text: string) => { painted.push(text); },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const encodings: BlobCallback[] = [];
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { encodings.push(callback); });
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const w = mount(Ending, {
+      props: {
+        view: {
+          houseName: 'House Salt', seed: 123,
+          campaign: { name: 'A Long Line', startYear: 1042 },
+        } as never,
+        epilogue: {
+          year: 1542, title: 'The last account', summary: 'The house reached the table.',
+          opening: 'One final reading.', read: [], ring: [], closing: 'The book was shut.',
+          reckoning: {
+            pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+            clauses: 0, clausesTotal: 9, attested: 'none', livingBlood: 0,
+            rungsWithheld: 0,
+          },
+        } as never,
+        actions: { restart: vi.fn() } as unknown as GameActions,
+      },
+    });
+    try {
+      const save = w.get('.ending-actions button');
+      await save.trigger('click');
+      expect(painted).toContain('House Salt');
+      expect(encodings).toHaveLength(1);
+      expect(download).not.toHaveBeenCalled();
+
+      // The old PNG is still encoding when another house replaces the view.
+      await w.setProps({
+        view: {
+          houseName: 'House Ash', seed: 456,
+          campaign: { name: 'A Long Line', startYear: 1042 },
+        } as never,
+      });
+      encodings[0]!(new Blob(['House Salt image'], { type: 'image/png' }));
+      await flushPromises();
+
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(download).toHaveBeenCalledWith(expect.any(Blob), afterimageName('House Salt', 123, 1542));
+      expect(download).not.toHaveBeenCalledWith(expect.any(Blob), afterimageName('House Ash', 456, 1542));
+      expect(save.attributes('disabled')).toBeUndefined();
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      download.mockClear();
     }
   });
 });
