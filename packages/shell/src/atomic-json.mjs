@@ -9,7 +9,12 @@ import { renameSync, rmSync, writeFileSync } from 'node:fs';
  * Keep this shared between save slots and the installation Library of Houses.
  * Parsing and validation remain in the core/schema layers, not in the shell.
  */
-export function writeJsonAtomically(target, value) {
+/**
+ * @param {(serializedValue: unknown) => unknown} [validateSerialized]
+ * Optional transport-envelope check. Validate the ONE serialized snapshot
+ * before touching the destination; never invoke a stateful toJSON() twice.
+ */
+export function writeJsonAtomically(target, value, validateSerialized) {
   // The input can be an object even when its toJSON() turns the document
   // into null, an array or a scalar. Readers reject those roots; refusing
   // them before creating scratch preserves the previous readable file.
@@ -17,6 +22,7 @@ export function writeJsonAtomically(target, value) {
   if (typeof serialized !== 'string' || !serialized.startsWith('{')) {
     throw new TypeError('atomic JSON document must serialize to an object');
   }
+  if (validateSerialized) validateSerialized(JSON.parse(serialized));
 
   const scratch = `${target}.${randomUUID()}.writing`;
   try {
