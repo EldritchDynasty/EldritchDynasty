@@ -284,6 +284,18 @@ describe('searching the old contracts for a Ledger clause', () => {
 });
 
 describe('asking a broker for a missing affinity', () => {
+  it('publishes debt-floor broker affordability on the Table read model (#1404)', () => {
+    const ctx = testWorld(bundle, 1404);
+    const book = ctx.content.spellbook('lesser_workings_of_aero');
+    if (!book) throw new Error('missing common primer fixture');
+    ctx.world.library.delete(book.id);
+    for (const [treasury, canPay] of [[0, true], [-95, true], [-96, false]] as const) {
+      ctx.world.treasury = treasury;
+      const offer = tableView(ctx).missingPrimers.find((entry) => entry.book === book.id);
+      expect(offer?.canPay, `treasury ${treasury}`).toBe(canPay);
+    }
+  });
+
   it('pays a search fee now and schedules a named common book for a later sale', () => {
     const ctx = testWorld(bundle, 7109);
     const book = ctx.content.spellbooks.find((b) => b.id === 'lesser_workings_of_aero')!;
