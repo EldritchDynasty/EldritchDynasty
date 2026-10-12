@@ -117,6 +117,43 @@ describe('the volume', () => {
     }
   });
 
+  it('keeps a PNG filename tied to the drawn house during asynchronous encoding (#1495)', async () => {
+    const drawn: string[] = [];
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {}, fillText: (value: string) => { drawn.push(value); },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const callbacks: BlobCallback[] = [];
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { callbacks.push(callback); });
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      await save!.trigger('click');
+      expect(callbacks).toHaveLength(1);
+      expect(drawn).toContain('Gearithy');
+
+      // A parent may reuse the volume for another house while encoding awaits.
+      // The completed PNG is still the original page, not the current props.
+      await w.setProps({ houseName: 'A Different House' });
+      callbacks[0]!(new Blob(['page'], { type: 'image/png' }));
+      await flushPromises();
+      expect(download).toHaveBeenCalledExactlyOnceWith(
+        expect.any(Blob), 'gearithy-1042-1067.png',
+      );
+      expect(drawn).not.toContain('A Different House');
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      download.mockClear();
+    }
+  });
+
   it('starts only one plate export for two clicks before Vue disables the button (#1478)', async () => {
     const context = {
       measureText: (text: string) => ({ width: text.length * 7 }),
