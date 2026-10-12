@@ -3,7 +3,7 @@ import { assertNever, canBeTaught } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { attr } from './people/factory.js';
-import { beginStudy, canStudySpellbook, heldBooks, spellbookDef } from './people/library.js';
+import { beginStudy, canStudySpellbook, heldBooks, restorationQuote, spellbookDef } from './people/library.js';
 import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type PedigreeGrade } from './people/papers.js';
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
 import { DEBT_FLOOR } from './economy.js';
@@ -69,6 +69,8 @@ import { msg } from './messages.js';
 export type TableOrder =
   /** Put somebody on a book. Costs them years, and the house nothing. */
   | { kind: 'study'; person: string; book: string }
+  /** Pay once for a physical shelf copy to spend a fixed term with the binder. */
+  | { kind: 'restore'; book: string }
   /**
    * Special education, §13's price table: 40 crowns for a full term, and the
    * child comes out of it measurably better at one thing.
@@ -570,6 +572,18 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
         : { ok: false, reason: msg(ctx, 'table.order.study.already', 'he is already at it, or already has it') };
     }
 
+    case 'restore': {
+      const quote = restorationQuote(ctx, o.book);
+      if (!quote) return { ok: false, reason: msg(ctx, 'table.order.restore.not_held', 'the house does not hold that book') };
+      if (!quote.ok) return { ok: false, reason: quote.reason };
+      if (w.treasury - quote.fee < DEBT_FLOOR) {
+        return { ok: false, reason: msg(ctx, 'table.order.restore.fee', 'the house cannot raise {FEE} crowns', { FEE: String(quote.fee) }) };
+      }
+      w.treasury -= quote.fee;
+      w.library.get(o.book)!.restoresAt = quote.returns;
+      return { ok: true };
+    }
+
     case 'pedigree': {
       const p = ours(ctx, o.person);
       if (!p) return { ok: false, reason: msg(ctx, 'table.order.pedigree.unknown', 'nobody of this house by that name') };
@@ -864,7 +878,7 @@ export interface TableView {
     ward: string; wardName: string; since: Year; boughtBack: boolean; buyBackCost?: number;
   };
   /** Books on the shelf, and who in the house could take one up. */
-  shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string }[] }[];
+  shelf: { book: string; name: string; blurb?: string; years: number; readers: { person: string; name: string }[]; condition: number; conditionLabel: string; restoringUntil?: number; restore?: { fee: number; years: number; returns: number; canPay: boolean; reason?: string } }[];
   /** Common books the house may ask a broker to seek; payment and sale are separate. */
   missingPrimers: { book: string; name: string; blurb?: string; affinity: string; fee: number; reserve: number; saleYear: Year; queued: boolean; canPay: boolean }[];
   /** A late-game record-keeper search for one unrecovered contract clause. */
@@ -974,6 +988,8 @@ export function tableView(ctx: SimCtx): TableView {
 
   const shelf = heldBooks(ctx).map((state) => {
     const def = spellbookDef(ctx, state.id);
+    const quote = restorationQuote(ctx, state.id);
+    const canPay = quote !== undefined && w.treasury - quote.fee >= DEBT_FLOOR;
     const readers = def
       ? household
         .filter((p) => canStudySpellbook(ctx, p, def).ok
@@ -986,6 +1002,20 @@ export function tableView(ctx: SimCtx): TableView {
       name: def ? proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name) : state.id,
       ...(def?.blurb ? { blurb: proseForContentField(ctx, 'spellbooks', def.id, 'blurb', def.blurb) } : {}),
       years: def?.studyYears ?? 0,
+      condition: state.condition,
+      conditionLabel: state.condition === 100 ? 'pristine'
+        : state.condition >= 75 ? 'worn' : state.condition >= 25 ? 'frayed' : 'ruined',
+      ...(state.restoresAt !== undefined ? { restoringUntil: state.restoresAt } : {}),
+      ...(quote && state.condition < 100 && state.restoresAt === undefined ? {
+        restore: {
+          fee: quote.fee, years: quote.years, returns: quote.returns,
+          canPay: quote.ok && canPay,
+          ...(quote.reason || !canPay ? {
+            reason: quote.reason ?? msg(ctx, 'table.order.restore.fee',
+              'the house cannot raise {FEE} crowns', { FEE: String(quote.fee) }),
+          } : {}),
+        },
+      } : {}),
       readers,
     };
   });

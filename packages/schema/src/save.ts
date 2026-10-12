@@ -196,7 +196,7 @@ import { CommitmentS } from './muster.js';
  * ids; replay needs those bootstrap inputs, so the exact-current-format loader
  * refuses older shapes rather than inventing them.
  */
-export const SAVE_FORMAT = 28;
+export const SAVE_FORMAT = 29;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -396,6 +396,7 @@ export const LibraryBookStateS = z.object({
   id: z.string(),
   acquiredYear: z.number(),
   condition: z.number(),
+  restoresAt: z.number().int().optional(),
   namedFor: z.object({ person: z.string(), name: z.string(), year: z.number() }).optional(),
 });
 

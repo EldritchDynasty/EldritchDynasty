@@ -421,7 +421,14 @@ const MARRIAGE_ORDERS = [
       </h3>
       <p v-if="!table.shelf.length" class="small dim">The house holds no book anybody can read.</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
-        <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ book.years }} years</span></div>
+        <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ book.years }} years · {{ book.conditionLabel }} ({{ book.condition }}%)</span></div>
+        <p v-if="book.restoringUntil !== undefined" class="small dim">With the binder until {{ book.restoringUntil }}</p>
+        <div v-else-if="book.restore" class="row">
+          <button class="small" :disabled="!book.restore.canPay" @click="actions.order({ kind: 'restore', book: book.book })">
+            Restore — {{ book.restore.fee }} crowns, {{ book.restore.years }} years
+          </button>
+          <span v-if="book.restore.reason" class="small rubric">{{ book.restore.reason }}</span>
+        </div>
         <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
         <!-- A SELECT, like Places (issue #55). This was one button per reader
              per book — sixteen on turn one across two books, and it grew with
@@ -444,6 +451,7 @@ const MARRIAGE_ORDERS = [
         </div>
       </div>
       <p v-if="refusedIn('study')" class="small rubric">{{ refusedIn('study') }}</p>
+      <p v-if="refusedIn('restore')" class="small rubric">{{ refusedIn('restore') }}</p>
       <div v-if="table.studying.length" class="small dim reading">
         reading now: {{ table.studying.map((s) => s.name + ' until ' + s.completes).join(', ') }}
       </div>
