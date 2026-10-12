@@ -47,7 +47,7 @@ that flag through makes Electron behave as Node and fail before it can create a
 window. The launcher removes that one inherited host flag before starting the
 real Electron binary.
 
-Electron is currently declared at **^44.5.1**, a supported major at the
+Electron is currently declared at **^44.7.0**, a supported major at the
 time of the #522 upgrade. On Electron 42+, `npm ci` does not download the
 runtime binary in `postinstall`. The launcher keeps `require('electron')`:
 Electron 44's own entrypoint installs its binary lazily if it is missing,
