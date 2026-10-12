@@ -337,6 +337,74 @@ describe('Continue leads when a run can be resumed', () => {
   });
 });
 
+describe('named-save host selection is single-flight (#1502)', () => {
+  it('keeps a slow named load from racing Begin, Continue, Import or another slot', async () => {
+    const actions = spyActions([
+      { slot: 'house-one', year: 1081 },
+      { slot: 'house-two', year: 1112 },
+    ]);
+    let finish: ((success: boolean) => void) | undefined;
+    vi.mocked(actions.load).mockImplementationOnce(() =>
+      new Promise<boolean>((resolve) => { finish = resolve; }));
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      const saved = w.findAll('.saved li > button:first-child');
+      expect(saved).toHaveLength(2);
+      const buttons = w.findAll('.primary-row button');
+      const continueButton = buttons.find((b) => b.text() === 'Continue the last sitting')!;
+      const beginButton = buttons.find((b) => b.text() === 'Begin a new signing')!;
+      const importButton = w.findAll('button').find((b) => b.text() === 'Bring a run in')!;
+
+      await saved[0]!.trigger('click');
+      expect(actions.load).toHaveBeenCalledExactlyOnceWith('house-one');
+      expect(saved[0]!.text()).toContain('Loading');
+      for (const button of [saved[0]!, saved[1]!, continueButton, beginButton, importButton]) {
+        expect(button.attributes('disabled')).toBeDefined();
+        // Synthetic/stale clicks can still dispatch despite native disabled.
+        button.element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+      expect(actions.load).toHaveBeenCalledTimes(1);
+      expect(actions.begin).not.toHaveBeenCalled();
+      expect(actions.resume).not.toHaveBeenCalled();
+      expect(actions.importSave).not.toHaveBeenCalled();
+
+      finish!(false);
+      await flush();
+      expect(w.get('.save-action-error').text()).toContain('could not be read');
+      expect(saved[0]!.attributes('disabled')).toBeUndefined();
+      expect(saved[1]!.attributes('disabled')).toBeUndefined();
+      expect(continueButton.attributes('disabled')).toBeUndefined();
+      expect(beginButton.attributes('disabled')).toBeUndefined();
+      expect(importButton.attributes('disabled')).toBeUndefined();
+
+      await saved[1]!.trigger('click');
+      expect(actions.load).toHaveBeenLastCalledWith('house-two');
+      expect(actions.load).toHaveBeenCalledTimes(2);
+      expect(w.find('.save-action-error').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('releases the selection lock after a rejected host read', async () => {
+    const actions = spyActions([{ slot: 'unreadable', year: 1072 }]);
+    vi.mocked(actions.load).mockRejectedValueOnce(new Error('device unavailable'));
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      await w.get('.saved li > button:first-child').trigger('click');
+      await flush();
+      expect(w.get('.save-action-error').text()).toContain('could not be read');
+      expect(w.get('.saved li > button:first-child').attributes('disabled')).toBeUndefined();
+      await w.get('button.primary').trigger('click');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('named saves', () => {
   it('lists a written-down run and exports it on request', async () => {
     const saves: SaveSummary[] = [{ slot: 'chapter-1-1080', year: 1080 }];
