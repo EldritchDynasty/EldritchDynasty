@@ -389,3 +389,29 @@ describe('the codemap', () => {
     }
   });
 });
+
+
+/**
+ * The editor's Vite config imports a Node-side TypeScript source auditor from
+ * another workspace. Vite's default bundled config loader externalizes that
+ * source, leaving Node to resolve a .js specifier whose source is .ts. The
+ * module runner handles workspace TypeScript without shipping Node-only code
+ * to the editor renderer. Keep every CLI entry point on that same loader.
+ */
+describe('the editor Vite entry points', () => {
+  const pkg = JSON.parse(readFileSync(join(REPO, 'packages/editor/package.json'), 'utf8')) as {
+    scripts: Record<string, string>;
+  };
+  const commands = { dev: 'vite', build: 'vite build', preview: 'vite preview' };
+
+  for (const [name, command] of Object.entries(commands)) {
+    it(`${name} loads its workspace TypeScript config through the module runner`, () => {
+      const invocation = pkg.scripts[name] ?? '';
+      expect(invocation.split(/\\s+/).slice(0, command.split(' ').length).join(' ')).toBe(command);
+      expect(
+        invocation,
+        `Editor ${name} must pass --configLoader runner; default bundling cannot load core-message-audit.js from TypeScript sources`,
+      ).toMatch(/(?:^|\\s)--configLoader(?:\\s+|=)runner(?=\\s|$)/);
+    });
+  }
+});
