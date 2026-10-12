@@ -26,6 +26,7 @@ function spyActions(saves: SaveSummary[] = []) {
     exportSave: vi.fn(async () => true),
     deleteLibraryRun: vi.fn(async () => undefined),
     clearLibrary: vi.fn(async () => undefined),
+    retryLibrary: vi.fn(async () => undefined),
     setProseMode: vi.fn(),
   } as unknown as GameActions;
 }
@@ -471,6 +472,45 @@ describe('save list host failures (#1137)', () => {
   });
 });
 
+
+describe('Library recovery retries (#1363)', () => {
+  it('keeps the host read single-flight, then permits a retry after failure', async () => {
+    const actions = spyActions();
+    let rejectFirst: (() => void) | undefined;
+    vi.mocked(actions.retryLibrary).mockImplementationOnce(
+      () => new Promise<void>((_, reject) => {
+        rejectFirst = () => reject(new Error('host still unavailable'));
+      }),
+    );
+    const w = mount(Start, {
+      props: { actions, resumable: false, libraryReady: false, libraryReadError: true },
+    });
+    try {
+      await flush();
+      const retry = w.findAll('button').find((button) => button.text() === 'Retry reading the Library');
+      expect(retry).toBeTruthy();
+
+      await retry!.trigger('click');
+      expect(retry!.attributes('disabled')).toBeDefined();
+      expect(retry!.text()).toContain('Retrying');
+      // Ignore a second click even if it was already dispatched before the
+      // disabled control rendered. This must not start a competing read.
+      await retry!.trigger('click');
+      expect(actions.retryLibrary).toHaveBeenCalledTimes(1);
+
+      rejectFirst!();
+      await flush();
+      expect(retry!.attributes('disabled')).toBeUndefined();
+
+      await retry!.trigger('click');
+      await flush();
+      expect(actions.retryLibrary).toHaveBeenCalledTimes(2);
+      expect(retry!.attributes('disabled')).toBeUndefined();
+    } finally {
+      w.unmount();
+    }
+  });
+});
 
 describe('the Library of Houses', () => {
   it('shows a completed house, one surviving page, and removal controls', async () => {
