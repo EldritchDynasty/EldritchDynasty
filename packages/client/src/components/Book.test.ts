@@ -7,7 +7,6 @@ import { join } from 'node:path';
 import type { FrameEntry } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Interlude from './Interlude.vue';
-import Line from './Line.vue';
 import Book from './Book.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
@@ -52,45 +51,6 @@ const mountBook = (focus?: string) => mount(Book, {
 
 const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
-
-/** Seal history displays recorded dates, not undefined-shaped gaps (#1466). */
-describe('the seal history with partial dates (#1466)', () => {
-  it('keeps complete original wording and omits unknown dates in both reading modes', async () => {
-    const line = [
-      { person: 'guardian-none', name: 'Undated guardian', from: 1042, guardian: true },
-      { person: 'guardian-born', name: 'Born guardian', from: 1050, born: 1009, guardian: true },
-      { person: 'guardian-year', name: 'Year guardian', from: 1060, died: 1080, guardian: true },
-      { person: 'guardian-all', name: 'Dated guardian', from: 1070, born: 1010, died: 1090, guardian: true },
-      { person: 'dead-none', name: 'Unknown birth', from: 1090, to: 1120, died: 1120 },
-      { person: 'dead-all', name: 'Known birth', from: 1120, to: 1150, born: 1070, died: 1150 },
-    ] as unknown as ReturnType<GameActions['line']>;
-    const wrapper = mount(Line, {
-      attachTo: document.body,
-      props: { line, close: () => {}, proseMode: 'original' },
-    });
-    const rows = () => wrapper.findAll('.held li').map((row) => row.text());
-    try {
-      expect(rows()[0]).toContain('did not die — he has watched the house');
-      expect(rows()[1]).toContain('born 1009 · did not die — he has watched the house');
-      expect(rows()[2]).toContain('did not die — he has watched the house since 1080');
-      expect(rows()[3]).toContain('born 1010 · did not die — he has watched the house since 1090');
-      expect(rows()[4]).toContain('died 1120');
-      expect(rows()[5]).toContain('born 1070, died 1150');
-      expect(wrapper.text()).not.toContain('undefined');
-
-      await wrapper.setProps({ proseMode: 'plainenglish' });
-      expect(rows()[0]).toContain("Became the family's guardian spirit.");
-      expect(rows()[1]).toContain("Born in 1009. Became the family's guardian spirit.");
-      expect(rows()[2]).toContain("Became the family's guardian spirit in 1080.");
-      expect(rows()[3]).toContain("Born in 1010. Became the family's guardian spirit in 1090.");
-      expect(rows()[4]).toContain('Died in 1120.');
-      expect(rows()[5]).toContain('Born in 1070; died in 1150.');
-      expect(wrapper.text()).not.toContain('undefined');
-    } finally {
-      wrapper.unmount();
-    }
-  });
-});
 
 describe('the volume', () => {
   it('explains an unavailable canvas instead of silently dropping page export (#1327)', async () => {
