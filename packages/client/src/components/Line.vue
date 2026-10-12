@@ -17,10 +17,11 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   close: 'Close',
   count: (n: number) => `${n} ${n === 1 ? 'leader' : 'leaders'} since the house began.`,
   guardian: (born: number | undefined, year: number | undefined) =>
-    `Born in ${born}. Became the family's guardian spirit in ${year}.`,
+    `${born === undefined ? '' : `Born in ${born}. `}Became the family's guardian spirit${year === undefined ? '.' : ` in ${year}.`}`,
   claimedDeath: (year: number, cause: string) =>
     `The book says this leader died in ${year} from ${cause}.`,
-  death: (born: number | undefined, died: number) => `Born in ${born}; died in ${died}.`,
+  death: (born: number | undefined, died: number) =>
+    born === undefined ? `Died in ${died}.` : `Born in ${born}; died in ${died}.`,
   born: (year: number | undefined) => `Born in ${year}.`,
   empty: 'No one has led the house since it began.',
 } : {
@@ -29,10 +30,11 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   close: 'Close it',
   count: (n: number) => `${n} ${n === 1 ? 'head' : 'heads'} since the signing.`,
   guardian: (born: number | undefined, year: number | undefined) =>
-    `born ${born} · did not die — he has watched the house since ${year}`,
+    `${born === undefined ? '' : `born ${born} · `}did not die — he has watched the house${year === undefined ? '' : ` since ${year}`}`,
   claimedDeath: (year: number, cause: string) =>
     `the book has him dying in ${year}, of ${cause}`,
-  death: (born: number | undefined, died: number) => `born ${born}, died ${died}`,
+  death: (born: number | undefined, died: number) =>
+    born === undefined ? `died ${died}` : `born ${born}, died ${died}`,
   born: (year: number) => `born ${year}`,
   empty: 'Nobody has taken the seal since the signing.',
 });
