@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { SessionView } from '@ed/core';
 import Standing from './Standing.vue';
+import Muster from './Muster.vue';
 import Abroad from './Abroad.vue';
 import Naming from './Naming.vue';
 import Member from './Member.vue';
@@ -456,5 +457,98 @@ describe('counter-record prose selection and retelling grammar (#1430)', () => {
     } finally {
       wrapper.unmount();
     }
+  });
+});
+
+
+/** The Muster's view remains the same when the reader switches UI language.
+ * Reuse this measured jsdom component suite instead of adding an unmeasured file. */
+describe('war Muster reader-local Plain English (#1447)', () => {
+  function activeWar(tide = 64): SessionView {
+    return {
+      ...view(),
+      muster: {
+        began: 1126, men: 3, maxMen: 12, tide, credit: 4.5,
+        officers: [{ name: 'Maren', id: 'maren' }],
+        positionName: undefined,
+        positions: [
+          { id: 'held', name: 'Hold the pass', current: false, canBuy: true, price: 70 },
+          { id: 'none', name: 'No declared banner', current: true, canBuy: false },
+        ],
+      },
+    } as unknown as SessionView;
+  }
+
+  it('toggles Original → Plain English → Original while preserving war data, disabled states and orders', async () => {
+    const data = activeWar();
+    const before = structuredClone(data);
+    const muster = vi.fn();
+    const wrapper = mount(Muster, {
+      props: { view: data, refusal: null, actions: { muster } as unknown as GameActions },
+    });
+    try {
+      const original = wrapper.text();
+      const disabled = wrapper.findAll('button').map((button) => button.attributes('disabled') !== undefined);
+      expect(original).toContain('The muster');
+      expect(original).toContain('No banner bought. Word gets around; it is not in writing.');
+      expect(original).toContain("The tide runs in the house's favour.");
+      expect(original).toContain('Led by Maren.');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Troops and war commitments');
+      expect(wrapper.text()).toContain('War progress is favouring the house.');
+      expect(wrapper.text()).toContain('Commanding officers: Maren.');
+      expect(wrapper.text()).toContain('No formal war position has been purchased.');
+      expect(wrapper.text()).toContain('Purchase a war position');
+      expect(wrapper.findAll('button').map((button) => button.attributes('disabled') !== undefined)).toEqual(disabled);
+
+      await wrapper.get('input').setValue('2');
+      await wrapper.findAll('button').find((button) => button.text() === 'Send these troops')!.trigger('click');
+      expect(muster).toHaveBeenLastCalledWith({ op: 'reinforce', men: 2 });
+      await wrapper.findAll('button').find((button) => button.text().includes('Hold the pass'))!.trigger('click');
+      expect(muster).toHaveBeenLastCalledWith({ op: 'buy', position: 'held' });
+      await wrapper.findAll('button').find((button) => button.text() === 'Withdraw the troops')!.trigger('click');
+      expect(muster).toHaveBeenLastCalledWith({ op: 'withdraw' });
+
+      await wrapper.get('input').setValue('0');
+      expect(wrapper.text()).toContain('Enter a whole number of troops greater than zero.');
+      expect(wrapper.findAll('button').find((button) => button.text() === 'Send these troops')!.attributes('disabled')).toBeDefined();
+      expect(muster).toHaveBeenCalledTimes(3);
+
+      await wrapper.get('input').setValue('1');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(wrapper.findAll('button').map((button) => button.attributes('disabled') !== undefined)).toEqual(disabled);
+      expect(data).toEqual(before);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('shows other war tide values directly while retaining the same thresholds', async () => {
+    for (const [tide, original, direct] of [
+      [40, 'against the house', 'against the house'],
+      [50, 'holding, for now', 'even for now'],
+      [60, "in the house's favour", 'favouring the house'],
+    ] as const) {
+      const wrapper = mount(Muster, {
+        props: {
+          view: activeWar(tide), refusal: null,
+          actions: { muster: vi.fn() } as unknown as GameActions,
+        },
+      });
+      try {
+        expect(wrapper.text()).toContain('The tide runs ' + original);
+        await wrapper.setProps({ proseMode: 'plainenglish' });
+        expect(wrapper.text()).toContain('War progress is ' + direct);
+      } finally {
+        wrapper.unmount();
+      }
+    }
+  });
+
+  it('wires the active reading preference into the App Muster panel', () => {
+    const app = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
+    expect(app).toContain('<Muster v-if="view.muster" :view="view" :prose-mode="accessibility.proseMode"');
   });
 });

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 
 const props = defineProps<{
   /** No separate view type: the Muster's whole read model is `SessionView.muster`, absent when dormant. */
   view: SessionView;
+  /** UI-only reading choice; the war read model and action payloads never change. */
+  proseMode?: ProseMode;
   actions: GameActions;
   /** The last muster order refused, and why (issue #55's rule, kept for a second verb). */
   refusal: { op: string; reason: string } | null;
@@ -22,6 +25,10 @@ const props = defineProps<{
  * a choice and not an absence — against the house exactly as it stands.
  */
 const commitment = computed(() => props.view.muster);
+const plain = computed(() => props.proseMode === 'plainenglish');
+function local(original: string, direct: string): string {
+  return plain.value ? direct : original;
+}
 
 function refusedIn(op: string): string | null {
   return props.refusal?.op === op ? props.refusal.reason : null;
@@ -43,24 +50,25 @@ function reinforce(): void {
 const tideWord = computed(() => {
   const m = commitment.value;
   if (!m) return '';
+  if (plain.value) return m.tide >= 60 ? 'favouring the house' : m.tide <= 40 ? 'against the house' : 'even for now';
   return m.tide >= 60 ? "in the house's favour" : m.tide <= 40 ? 'against the house' : 'holding, for now';
 });
 </script>
 
 <template>
   <section v-if="commitment" class="muster panel">
-    <h3 class="label">The muster</h3>
+    <h3 class="label">{{ local('The muster', 'Troops and war commitments') }}</h3>
     <p class="small">
-      {{ commitment.men }} {{ commitment.men === 1 ? 'man' : 'men' }} in the field since {{ commitment.began }},
-      of a house that could field {{ commitment.maxMen }}.
+      {{ commitment.men }} {{ commitment.men === 1 ? 'man' : 'men' }} {{ local('in the field since', 'serving since') }} {{ commitment.began }},
+      {{ local('of a house that could field', 'out of a maximum of') }} {{ commitment.maxMen }}.
     </p>
-    <p class="small dim">The tide runs {{ tideWord }}. Credit earned so far: {{ commitment.credit.toFixed(1) }}.</p>
+    <p class="small dim">{{ local('The tide runs', 'War progress is') }} {{ tideWord }}. {{ local('Credit earned so far:', 'War credit earned so far:') }} {{ commitment.credit.toFixed(1) }}.</p>
 
-    <p v-if="commitment.positionName" class="small dim">Standing under {{ commitment.positionName }}.</p>
-    <p v-else class="small rubric">No banner bought. Word gets around; it is not in writing.</p>
+    <p v-if="commitment.positionName" class="small dim">{{ local('Standing under', 'Current war position:') }} {{ commitment.positionName }}.</p>
+    <p v-else class="small rubric">{{ local('No banner bought. Word gets around; it is not in writing.', 'No formal war position has been purchased. Other houses may hear about the contribution, but it is not recorded.') }}</p>
 
     <p v-if="commitment.officers.length" class="small dim">
-      Led by {{ commitment.officers.map((o) => o.name).join(', ') }}.
+      {{ local('Led by', 'Commanding officers:') }} {{ commitment.officers.map((o) => o.name).join(', ') }}.
     </p>
 
     <div class="row">
@@ -69,23 +77,23 @@ const tideWord = computed(() => {
         type="number"
         min="1"
         step="1"
-        aria-label="Number of additional men"
+        :aria-label="local('Number of additional men', 'Number of additional troops to send')"
         :aria-invalid="!canReinforce"
         :aria-describedby="!canReinforce ? 'reinforce-error' : undefined"
       />
       <button :disabled="!canReinforce" @click="reinforce()">
-        Send more men
+        {{ local('Send more men', 'Send these troops') }}
       </button>
     </div>
     <p v-if="!canReinforce" id="reinforce-error" class="small rubric" role="alert">
-      Enter a positive whole number of men.
+      {{ local('Enter a positive whole number of men.', 'Enter a whole number of troops greater than zero.') }}
     </p>
     <p v-if="refusedIn('reinforce')" class="small rubric">{{ refusedIn('reinforce') }}</p>
 
     <!-- WHAT THE HOUSE IS TO BE REMEMBERED FOR (#89's thesis). One purchase,
          separate from the men — `none` is a real button, not a default. -->
     <div class="positions">
-      <p class="small label">Buy a position</p>
+      <p class="small label">{{ local('Buy a position', 'Purchase a war position') }}</p>
       <div v-for="p in commitment.positions" :key="p.id" class="row position">
         <button :disabled="p.current || !p.canBuy" @click="actions.muster({ op: 'buy', position: p.id })">
           {{ p.current ? '✓ ' : '' }}{{ p.name }}<span v-if="p.price !== undefined"> — {{ p.price }} crowns</span>
@@ -99,7 +107,7 @@ const tideWord = computed(() => {
          the credit, and the world notices. -->
     <div class="row">
       <button @click="actions.muster({ op: 'withdraw' })">
-        Call them home
+        {{ local('Call them home', 'Withdraw the troops') }}
       </button>
     </div>
     <p v-if="refusedIn('withdraw')" class="small rubric">{{ refusedIn('withdraw') }}</p>
