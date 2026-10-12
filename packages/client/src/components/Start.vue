@@ -37,6 +37,20 @@ const emit = defineEmits<{
 
 const campaign = ref(CAMPAIGN_CHOICES[0].id);
 const selectedCampaign = computed(() => CAMPAIGN_CHOICES.find((c) => c.id === campaign.value) ?? CAMPAIGN_CHOICES[0]);
+/** Local interface wording only; never rewrite existing saves or Library pages. */
+const plain = computed(() => props.proseMode === 'plainenglish');
+const PLAIN_ERRORS: Record<string, string> = {
+  'Saved runs could not be listed. Try again.': 'Could not list your saved games. Try again.',
+  'The last sitting could not be resumed. Try a saved run or begin anew.': 'Could not continue your last game. Load a saved game or start a new one.',
+  'That saved run could not be read.': 'Could not load this saved game.',
+  'That file was not a run this version can read.': 'This file is not a saved game this version can open.',
+  'That saved run could not be written out.': 'Could not export this saved game.',
+  'The Library could not be cleared. Your saved houses are still here. Try again.': 'Could not clear the completed games. Nothing was removed. Try again.',
+  'That house could not be removed from the Library. Try again.': 'Could not remove this completed house. Try again.',
+};
+function displayError(original: string | null): string | null {
+  return original && plain.value ? (PLAIN_ERRORS[original] ?? original) : original;
+}
 /**
  * A start year belongs to the campaign; an RNG seed belongs to one playthrough.
  * They happened to be the same number (1042) for every ordinary new game.
@@ -240,51 +254,55 @@ onMounted(() => { void refreshSaves(); });
     <h1>Eldritch Dynasty</h1>
 
     <p class="frame">
-      In the year {{ selectedCampaign.startYear }} an ancestor signed something.
-      In {{ selectedCampaign.endYear }} the other party comes to collect.
+      <template v-if="plain">In {{ selectedCampaign.startYear }}, an ancestor made an agreement.
+        In {{ selectedCampaign.endYear }}, the other party comes to collect what is owed.</template>
+      <template v-else>In the year {{ selectedCampaign.startYear }} an ancestor signed something.
+        In {{ selectedCampaign.endYear }} the other party comes to collect.</template>
     </p>
     <p class="frame">
-      You are not any of the people in this house. You are the thing that goes on in it while
-      they are born, married and buried — the will that decides who marries whom, who is
-      spent, and what the book says about it afterwards.
+      <template v-if="plain">You guide this family across generations. You decide whom they marry,
+        what they sacrifice, and what their records say happened.</template>
+      <template v-else>You are not any of the people in this house. You are the thing that goes on in it while
+        they are born, married and buried — the will that decides who marries whom, who is
+        spent, and what the book says about it afterwards.</template>
     </p>
     <p class="frame dim small">
-      It begins on the last of the Hollow Days, at a table, with three things on it.
+      {{ plain ? 'The story begins during the Hollow Days, at a table with three objects.' : 'It begins on the last of the Hollow Days, at a table, with three things on it.' }}
     </p>
 
     <fieldset class="campaigns">
-      <legend class="label">The length of the line</legend>
+      <legend class="label">{{ plain ? 'Choose the length of your game' : 'The length of the line' }}</legend>
       <label v-for="choice in CAMPAIGN_CHOICES" :key="choice.id" class="campaign panel">
         <input v-model="campaign" type="radio" name="campaign" :value="choice.id" />
         <span>
           <strong>{{ choice.name }}</strong>
           <span class="dim small">
             {{ choice.years }} years
-            <template v-if="choice.id === 'short'"> — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.</template>
-            <template v-else> — the full nine-clause Ledger, the complete ladder including Apotheosis, and broader story reach.</template>
+            <template v-if="choice.id === 'short'">{{ plain ? ' — the default. Resolve three Ledger clauses, with four possible endings over 300 years.' : ' — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.' }}</template>
+            <template v-else>{{ plain ? ' — resolve all nine Ledger clauses, reach every ascension level including Apotheosis, and encounter more stories.' : ' — the full nine-clause Ledger, the complete ladder including Apotheosis, and broader story reach.' }}</template>
           </span>
         </span>
       </label>
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" :disabled="resuming" @click="continueLastSitting()">{{ resuming ? 'Continuing…' : 'Continue the last sitting' }}</button>
+      <button v-if="resumable" class="primary" :disabled="resuming" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
         @click="begin()"
       >
-        {{ !libraryIsReady ? 'Reading the library…' : resumable ? 'Begin a new signing' : 'Begin the signing' }}
+        {{ !libraryIsReady ? (plain ? 'Loading completed games…' : 'Reading the library…') : resumable ? (plain ? 'Start a new game' : 'Begin a new signing') : (plain ? 'Start playing' : 'Begin the signing') }}
       </button>
     </div>
-    <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ resumeRefused }}</p>
+    <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ displayError(resumeRefused) }}</p>
     <div v-if="!libraryIsReady && libraryReadError" class="save-list-error" role="alert">
-      <p class="rubric small">The Library of Houses could not be read. Its saved history has not been changed.</p>
-      <button class="quiet small" :disabled="retryingLibrary" @click="retryLibrary()">{{ retryingLibrary ? 'Retrying…' : 'Retry reading the Library' }}</button>
+      <p class="rubric small">{{ plain ? 'Could not load your completed games. Nothing has been changed.' : 'The Library of Houses could not be read. Its saved history has not been changed.' }}</p>
+      <button class="quiet small" :disabled="retryingLibrary" @click="retryLibrary()">{{ retryingLibrary ? 'Retrying…' : (plain ? 'Try loading completed games again' : 'Retry reading the Library') }}</button>
     </div>
 
     <section class="reading panel" aria-label="Reading settings">
-      <h2>Reading</h2>
+      <h2>{{ plain ? 'Reading settings' : 'Reading' }}</h2>
       <ReadingSettings
         :text-scale="textScale"
         :reading-font="readingFont"
@@ -302,22 +320,22 @@ onMounted(() => { void refreshSaves(); });
     <section v-if="completedHouses.length" class="library panel" aria-label="Library of Houses">
       <div class="library-head">
         <div>
-          <h2>The Library of Houses</h2>
-          <p class="dim small">Finished lines remain here. A new house may hear them repeated badly.</p>
+          <h2>{{ plain ? 'Completed houses' : 'The Library of Houses' }}</h2>
+          <p class="dim small">{{ plain ? 'Finished games are kept here. Their stories can appear in later games.' : 'Finished lines remain here. A new house may hear them repeated badly.' }}</p>
         </div>
         <button
           v-if="!confirmingClearLibrary"
           class="quiet small"
           :disabled="removingRun !== null || clearingLibrary"
           @click="requestClearLibrary()"
-        >{{ clearingLibrary ? 'Clearing…' : 'Clear' }}</button>
+        >{{ clearingLibrary ? (plain ? 'Removing…' : 'Clearing…') : (plain ? 'Remove all' : 'Clear') }}</button>
         <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
-          <p class="rubric small">Clear all {{ completedHouses.length }} completed houses? This cannot be undone.</p>
-          <button class="quiet small confirm-clear" :disabled="removingRun !== null || clearingLibrary" @click="clearLibrary()">Yes, clear all</button>
+          <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed houses? This cannot be undone.</p>
+          <button class="quiet small confirm-clear" :disabled="removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
           <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
         </div>
       </div>
-      <p v-if="libraryError" class="rubric small" role="alert">{{ libraryError }}</p>
+      <p v-if="libraryError" class="rubric small" role="alert">{{ displayError(libraryError) }}</p>
       <article v-for="run in completedHouses" :key="run.id" class="library-run">
         <div class="library-title">
           <strong>{{ run.house }}</strong>
@@ -339,7 +357,7 @@ onMounted(() => { void refreshSaves(); });
               class="quiet small confirm-remove"
               :disabled="removingRun !== null || clearingLibrary"
               @click="removeLibraryRun(run.id)"
-            >{{ removingRun === run.id ? 'Removing…' : 'Yes, remove' }}</button>
+            >{{ removingRun === run.id ? 'Removing…' : (plain ? 'Yes, remove this house' : 'Yes, remove') }}</button>
             <button class="quiet small" :disabled="removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
           </div>
         </div>
@@ -348,30 +366,30 @@ onMounted(() => { void refreshSaves(); });
     </section>
 
     <section v-if="namedSaves.length" class="saved panel" aria-label="Saved runs">
-      <h2>Runs written down</h2>
-      <p class="dim small">They remain here when the application closes.</p>
+      <h2>{{ plain ? 'Saved games' : 'Runs written down' }}</h2>
+      <p class="dim small">{{ plain ? 'These games remain saved after you close the app.' : 'They remain here when the application closes.' }}</p>
       <ul>
         <li v-for="save in namedSaves" :key="save.slot">
           <button class="quiet" @click="load(save.slot)">
-            {{ save.slot === 'autosave' ? 'The last sitting' : save.slot }}
-            <span class="dim">— {{ save.year ?? 'an unread year' }}</span>
+            {{ save.slot === 'autosave' ? (plain ? 'Most recent game' : 'The last sitting') : save.slot }}
+            <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
           </button>
-          <button class="quiet small" @click="exportSave(save.slot)">Copy out</button>
+          <button class="quiet small" @click="exportSave(save.slot)">{{ plain ? 'Export' : 'Copy out' }}</button>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
-            {{ saveActionError.message }}
+            {{ displayError(saveActionError.message) }}
           </p>
         </li>
       </ul>
     </section>
 
     <div v-if="saveListError" class="save-list-error" role="alert">
-      <p class="rubric small">{{ saveListError }}</p>
-      <button class="quiet small" @click="refreshSaves()">Retry saved runs</button>
+      <p class="rubric small">{{ displayError(saveListError) }}</p>
+      <button class="quiet small" @click="refreshSaves()">{{ plain ? 'Reload saved games' : 'Retry saved runs' }}</button>
     </div>
 
     <div class="row">
-      <button class="quiet small" @click="importSave()">Bring a run in</button>
-      <p v-if="refused" class="rubric small" role="status">{{ refused }}</p>
+      <button class="quiet small" @click="importSave()">{{ plain ? 'Import a saved game' : 'Bring a run in' }}</button>
+      <p v-if="refused" class="rubric small" role="status">{{ displayError(refused) }}</p>
     </div>
 
     <div class="advanced">
@@ -379,9 +397,9 @@ onMounted(() => { void refreshSaves(); });
         class="quiet small"
         :aria-expanded="showAdvanced"
         @click="showAdvanced = !showAdvanced"
-      >{{ showAdvanced ? 'Hide advanced' : 'Advanced' }}</button>
+      >{{ showAdvanced ? (plain ? 'Hide advanced options' : 'Hide advanced') : (plain ? 'Advanced options' : 'Advanced') }}</button>
       <div v-if="showAdvanced" class="row">
-        <label class="dim small" for="seed">seed</label>
+        <label class="dim small" for="seed">{{ plain ? 'Random seed' : 'seed' }}</label>
         <input
           id="seed"
           v-model.number="seed"
@@ -393,7 +411,7 @@ onMounted(() => { void refreshSaves(); });
           :aria-describedby="!validSeed ? 'seed-error' : undefined"
         />
         <p v-if="!validSeed" id="seed-error" class="rubric small" role="alert">
-          Use a whole number from 0 to 4294967295.
+          {{ plain ? 'Enter a whole number between 0 and 4294967295.' : 'Use a whole number from 0 to 4294967295.' }}
         </p>
       </div>
     </div>
