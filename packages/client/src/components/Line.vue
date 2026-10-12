@@ -16,25 +16,25 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   title: 'Family leaders',
   close: 'Close',
   count: (n: number) => `${n} ${n === 1 ? 'leader' : 'leaders'} since the house began.`,
-  guardian: (born: number, year: number) =>
+  guardian: (born: number | undefined, year: number | undefined) =>
     `Born in ${born}. Became the family's guardian spirit in ${year}.`,
   claimedDeath: (year: number, cause: string) =>
     `The book says this leader died in ${year} from ${cause}.`,
-  death: (born: number, died: number) => `Born in ${born}; died in ${died}.`,
-  born: (year: number) => `Born in ${year}.`,
+  death: (born: number | undefined, died: number) => `Born in ${born}; died in ${died}.`,
+  born: (year: number | undefined) => `Born in ${year}.`,
   empty: 'No one has led the house since it began.',
 } : {
   dialog: 'who has held the seal',
   title: 'The seal',
   close: 'Close it',
   count: (n: number) => `${n} ${n === 1 ? 'head' : 'heads'} since the signing.`,
-  guardian: (born: number, year: number) =>
+  guardian: (born: number | undefined, year: number | undefined) =>
     `born ${born} · did not die — he has watched the house since ${year}`,
   claimedDeath: (year: number, cause: string) =>
     `the book has him dying in ${year}, of ${cause}`,
-  death: (born: number, died: number) => `born ${born}, died ${died}`,
+  death: (born: number | undefined, died: number) => `born ${born}, died ${died}`,
   born: (year: number) => `born ${year}`,
-  empty: '{{ copy.empty }}',
+  empty: 'Nobody has taken the seal since the signing.',
 });
 
 /**
@@ -109,7 +109,7 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
         </li>
       </ol>
       <p v-if="!line.length" class="dim small empty">
-        Nobody has taken the seal since the signing.
+        {{ copy.empty }}
       </p>
     </article>
   </div>
