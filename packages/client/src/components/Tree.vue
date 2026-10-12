@@ -171,6 +171,16 @@ function pickMemberFilter(id: MemberFilter): void {
   clearFocus();
 }
 
+/** A hall may disappear between years while the tree stays mounted. The
+ * selected hall is then undrawable; with only the seat left the hall picker
+ * vanishes too, so the reader cannot manually get back to the family. */
+watch(() => props.view.halls, (halls) => {
+  if (hallFilter.value !== 'all' && !halls.some((hall) => hall.id === hallFilter.value)) {
+    hallFilter.value = 'all';
+    clearFocus();
+  }
+});
+
 function toggleDirectLine(): void {
   directLine.value = !directLine.value;
   if (directLine.value) {
