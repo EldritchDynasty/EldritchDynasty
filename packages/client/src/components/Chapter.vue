@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
-import { chapterReplayDisposition } from '../lib/accessibility';
+import { chapterReplayDisposition, hasSeenProse, seenProseKey } from '../lib/accessibility';
 import { useModal } from '../lib/modal';
 
 const props = withDefaults(defineProps<{
@@ -63,14 +63,25 @@ function readingStorage(): Storage | null {
  * history. Exact text is the identity on purpose: an edited variant is new
  * prose, even when it came from the same authored Age.
  */
+// Reader history is written when an opening is first presented, not when it
+// is dismissed. Cache whether the text was already read BEFORE that write:
+// switching Skip seen on mid-card must not hide an opening first read just now.
+let presentedBeat: ChapterBeat | null = null;
+let seenBeforePresentation = false;
 function skipSeenOpening(beat: ChapterBeat): boolean {
-  return chapterReplayDisposition(
-    readingStorage(),
-    props.skipSeenProse,
-    beat.kind === 'opening'
-      ? { kind: 'opening', text: beat.opening.text }
-      : { kind: 'closing' },
-  ) === 'skip';
+  if (presentedBeat !== beat) {
+    const storage = readingStorage();
+    seenBeforePresentation = beat.kind === 'opening'
+      && hasSeenProse(storage, seenProseKey('chapter-opening', beat.opening.text));
+    presentedBeat = beat;
+    // Still use the canonical replay transition to remember fresh openings.
+    // For preference-only updates the cached original classification wins.
+    chapterReplayDisposition(
+      storage, props.skipSeenProse,
+      beat.kind === 'opening' ? { kind: 'opening', text: beat.opening.text } : { kind: 'closing' },
+    );
+  }
+  return beat.kind === 'opening' && seenBeforePresentation && props.skipSeenProse;
 }
 
 onMounted(() => {
@@ -82,16 +93,17 @@ onMounted(() => {
 // App keeps the same Chapter component mounted as the chapter queue shifts.
 // Checking only onMounted misses every subsequent Age opening: repeats cannot
 // be skipped and fresh wording never enters the reader's seen history.
-watch(() => props.beat, (beat) => {
-  // The successor has actually rendered; a new Age beat may now be dismissed.
-  dismissingBeat = null;
+watch([() => props.beat, () => props.skipSeenProse], ([beat], [previousBeat]) => {
+  // Only a new queue beat resets the dismissal latch; a preference update
+  // must not reset an in-flight dismissal on the same Chapter card.
+  if (beat !== previousBeat) dismissingBeat = null;
   if (skipSeenOpening(beat)) {
     dismissOnce();
     return;
   }
-  // A closing and an unseen opening both keep the dialog active. After Vue
-  // swaps the card's button, restore keyboard focus inside the active overlay.
-  goOn.value?.focus();
+  // Only a changed beat replaces the button. Preference changes preserve
+  // the reader's existing focus inside the dialog.
+  if (beat !== previousBeat) goOn.value?.focus();
 }, { flush: 'post' });
 
 </script>
