@@ -280,6 +280,14 @@ describe('the claim ref', () => {
     expect(movedMessage).toContain('path: packages/core/src/renewal.ts');
     expect(movedMessage).toContain('lane: code');
     expect(movedMessage).not.toContain(`path: ${claimedPath}`);
+
+    // Changing only the lane must not silently erase the path list either.
+    const laneOnly = agents(alpha, 'take', '155', '--agent', 'renewing',
+      '--lane', 'content');
+    expect(laneOnly.code).toBe(0);
+    const laneOnlyMessage = git(origin, 'log', '-1', '--format=%B', 'refs/heads/claim/155');
+    expect(laneOnlyMessage).toContain('path: packages/core/src/renewal.ts');
+    expect(laneOnlyMessage).toContain('lane: content');
   });
 
   it('says how many paths an all-clear was clear over', () => {
