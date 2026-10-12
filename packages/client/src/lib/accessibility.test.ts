@@ -551,6 +551,33 @@ describe('progressive surface reveal (#368)', () => {
     ).shown).toContain('abroad');
   });
 
+  it('reveals broker commissions at the debt floor, not only for positive cash', () => {
+    const primer = {
+      book: 'primer', name: 'A working', affinity: 'life', fee: 25,
+      reserve: 100, saleYear: 1054, queued: false,
+    };
+    const bookOnly = {
+      ...affordableTable(),
+      canTutor: false,
+      pupils: [],
+      teachable: [],
+      missingPrimers: [primer],
+    };
+
+    for (const [treasury, affordable] of [[0, true], [-95, true], [-96, false]] as const) {
+      const table = { ...bookOnly, treasury };
+      expect(tableHasAffordableOrder(table)).toBe(affordable);
+      expect(revealTransition(view(), table, new Set(), { showEverything: false }).shown.has('table'))
+        .toBe(affordable);
+    }
+
+    // A pending commission is not an order the player can place again.
+    expect(tableHasAffordableOrder({
+      ...bookOnly, treasury: 0,
+      missingPrimers: [{ ...primer, queued: true }],
+    })).toBe(false);
+  });
+
   it('never hides a revealed surface and can reveal one a visible decision needs', () => {
     const prior = new Set(['abroad'] as const);
     const kept = revealTransition(view(), null, prior, { showEverything: false });
