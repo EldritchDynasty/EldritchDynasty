@@ -9,6 +9,7 @@ import {
   saveGame, seedLibraryMemories, setProseMode, setProseVariants, useHeirloom,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
+import { completeStudies, tickLibraryWear } from './people/library.js';
 import { canonical } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -114,6 +115,67 @@ describe('the Library content', () => {
       expect(s.studyYears).toBeGreaterThan(0);
       expect(s.price.max).toBeGreaterThanOrEqual(s.price.min);
     }
+  });
+});
+
+
+describe('deterministic physical-copy wear (first slice of #1293)', () => {
+  it('loses two tenths each elapsed year, skips an acquisition year, and never mints or over-wears a copy', () => {
+    const ctx = bootstrap(bundle, 1293, 1042);
+    const id = 'lesser_workings_of_fluid';
+    const copy = acquireLibraryCopy(ctx, id)!;
+    expect(copy.condition).toBe(100);
+
+    tickLibraryWear(ctx);
+    expect(copy.condition).toBe(100); // newly acquired this year
+
+    ctx.world.year += 1;
+    tickLibraryWear(ctx);
+    expect(copy.condition).toBe(99.8);
+
+    // Explicit tenths rounding matters across hundreds of ticks and saves.
+    for (let i = 0; i < 500; i++) {
+      ctx.world.year += 1;
+      tickLibraryWear(ctx);
+    }
+    expect(copy.condition).toBe(0);
+    expect(ctx.world.library.has('lesser_workings_of_death')).toBe(false);
+  });
+
+  it('wears five points per successful study, not per abandoned study', () => {
+    const ctx = bootstrap(bundle, 1294, 1042);
+    const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const copy = acquireLibraryCopy(ctx, def.id)!;
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    const lost = place(ctx, { sex: 'male', age: 30, awakened: true });
+    expect(beginStudy(ctx, reader, def)).toBe(true);
+    expect(beginStudy(ctx, lost, def)).toBe(true);
+    const due = Math.max(...ctx.world.studies.map((study) => study.completes));
+    ctx.world.people.kill(lost.id, ctx.world.year, 'test');
+    ctx.world.year = due;
+
+    const finished = completeStudies(ctx);
+    expect(finished).toHaveLength(1);
+    expect(finished[0]!.person).toBe(reader.id);
+    expect(copy.condition).toBe(95);
+    expect(completeStudies(ctx)).toEqual([]); // no second wear on repeat
+    expect(copy.condition).toBe(95);
+  });
+
+  it('persists fractional wear without changing its timing after a save/reload', () => {
+    const ctx = bootstrap(bundle, 1295, 1042);
+    const id = 'lesser_workings_of_fluid';
+    acquireLibraryCopy(ctx, id);
+    ctx.world.year += 1;
+    tickLibraryWear(ctx);
+    expect(ctx.world.library.get(id)?.condition).toBe(99.8);
+
+    const loaded = loadGame(saveGame(ctx), bundle);
+    expect(loaded.world.library.get(id)?.condition).toBe(99.8);
+    loaded.world.year += 1;
+    tickLibraryWear(loaded);
+    expect(loaded.world.library.get(id)?.condition).toBe(99.6);
+    expect(ctx.world.library.get(id)?.condition).toBe(99.8);
   });
 });
 

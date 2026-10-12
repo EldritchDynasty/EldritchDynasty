@@ -73,6 +73,33 @@ export function degradeLibraryCopy(ctx: SimCtx, id: string, amount?: number): Li
 }
 
 /**
+ * Normalise passive wear to tenths, so 0.2 each year cannot accumulate
+ * floating-point drift across a 500-year campaign or a save/reload.
+ * Authored one-off degradation retains its existing precision and semantics.
+ */
+const YEARLY_BOOK_WEAR = 0.2;
+const SUCCESSFUL_STUDY_WEAR = 5;
+
+function wearHeldCopy(copy: LibraryBookState, amount: number): void {
+  copy.condition = Math.round(Math.max(0, copy.condition - amount) * 10) / 10;
+}
+
+/**
+ * Each previously acquired physical copy wears in the Library year phase.
+ * A newly obtained copy is not charged for a year it was not on the shelf.
+ * This has no RNG draw, new Person state or effect on absent books.
+ *
+ * This is the wear-only slice of #1293; the binder order and its in-progress
+ * exemption belong to the subsequent restoration slice.
+ */
+export function tickLibraryWear(ctx: SimCtx): void {
+  for (const copy of ctx.world.library.values()) {
+    if (copy.acquiredYear >= ctx.world.year) continue;
+    wearHeldCopy(copy, YEARLY_BOOK_WEAR);
+  }
+}
+
+/**
  * Whether `p` may take up this book at all — canLearn (invariant 4) and the
  * affinity threshold (a Named Art's floor). Separated from `gainSpellbook` on
  * the same principle as `canUseHeirloom`: an option the player cannot take is
@@ -313,7 +340,13 @@ export function completeStudies(ctx: SimCtx): FinishedStudy[] {
     if (!p || p.status !== 'alive' || !def) continue;
     // Asked before the gain, so the reader is not their own precedent.
     const first = !anybodyHasRead(ctx, s.book);
-    if (gainSpellbook(ctx, p, def)) finished.push({ person: s.person, book: s.book, first });
+    if (gainSpellbook(ctx, p, def)) {
+      // Study wear is incurred only after learning really succeeds. Dead or
+      // newly ineligible readers drop out above without damaging the copy.
+      const copy = w.library.get(s.book);
+      if (copy) wearHeldCopy(copy, SUCCESSFUL_STUDY_WEAR);
+      finished.push({ person: s.person, book: s.book, first });
+    }
   }
   return finished;
 }
