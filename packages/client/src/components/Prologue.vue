@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
 import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
 import { initialProloguePresentation, initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
@@ -136,20 +136,30 @@ const wanted = computed(() => {
   return out;
 });
 
+// A successful founding replaces this view at the next render, not before
+// another synchronous click or Enter can reach this component. Guard both
+// submission routes until Vue has had a chance to apply that update.
+let signing = false;
 function sign(): void {
   // Keyboard submission must obey the same requirements as the disabled button.
-  if (wanted.value.length > 0) return;
-  const result = props.actions.found({
-    houseName: houseName.value,
-    heirloom: heirloom.value,
-    grudge: grudge.value,
-    friends: friends.value.filter((f) => f.name.trim()),
-    ...(props.prologue.namePrompt !== undefined ? { founderName: founderName.value } : {}),
-    ...(props.prologue.examination.length > 0 ? { answers: { ...answers.value } } : {}),
-  });
-  // The thesis takes the screen on its own. Landing the reader halfway down
-  // the page they were already reading would waste it.
-  if (result.ok) window.scrollTo({ top: 0 });
+  if (wanted.value.length > 0 || signing) return;
+  signing = true;
+  try {
+    const result = props.actions.found({
+      houseName: houseName.value,
+      heirloom: heirloom.value,
+      grudge: grudge.value,
+      friends: friends.value.filter((f) => f.name.trim()),
+      ...(props.prologue.namePrompt !== undefined ? { founderName: founderName.value } : {}),
+      ...(props.prologue.examination.length > 0 ? { answers: { ...answers.value } } : {}),
+    });
+    // The thesis takes the screen on its own. Landing the reader halfway down
+    // the page they were already reading would waste it.
+    if (result.ok) window.scrollTo({ top: 0 });
+  } finally {
+    // A refused founding must remain retryable on a subsequent deliberate act.
+    void nextTick(() => { signing = false; });
+  }
 }
 
 /**
