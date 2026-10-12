@@ -273,6 +273,100 @@ describe('a run survives being written down', () => {
     expect(after.world.year).toBe(year);
   });
 
+  it('preserves every queued choice decider and openness through schema parse and load (#1380)', () => {
+    const original = bootstrap(content, 1380, 1042);
+    const base = JSON.parse(JSON.stringify(saveGame(original)));
+    const authored = content.events.find((event) => event.interaction.kind === 'choice');
+    if (!authored || authored.interaction.kind !== 'choice') throw new Error('no authored choice template');
+
+    const deciders = [
+      'player',
+      'chance',
+      { party: { check: 'an_authored_check' } },
+      { state: [{ take: authored.interaction.choices[0]!.id }] },
+    ] as const;
+
+    for (const decidedBy of deciders) {
+      const saved = structuredClone(base);
+      const event = JSON.parse(JSON.stringify(authored));
+      event.interaction.decidedBy = decidedBy;
+      saved.pendingDecisions = [{
+        kind: 'choice',
+        id: 'dec_pending_save',
+        year: original.world.year,
+        event,
+        body: 'The question remains unanswered.',
+        fill: {},
+        choices: [],
+        cast: [],
+        decidedBy,
+        // Preserve the exact queued flag, even when it differs from the
+        // derived fallback for a historically missing field.
+        choicesAreOpen: false,
+      }];
+      const parsed = SavedGameS.parse(saved);
+      expect(parsed.pendingDecisions[0]).toMatchObject({
+        kind: 'choice', decidedBy, choicesAreOpen: false,
+      });
+      const loaded = loadGame(saved, content);
+      expect(loaded.world.pendingDecisions[0]).toMatchObject({
+        kind: 'choice', decidedBy, choicesAreOpen: false,
+      });
+      expect(saveGame(loaded).pendingDecisions[0]).toMatchObject({
+        kind: 'choice', decidedBy, choicesAreOpen: false,
+      });
+    }
+  });
+
+  it('recovers pre-#1380 choice fields from the saved event, never assuming party means player', () => {
+    const original = bootstrap(content, 1381, 1042);
+    const base = JSON.parse(JSON.stringify(saveGame(original)));
+    const authored = content.events.find((event) => event.interaction.kind === 'choice');
+    if (!authored || authored.interaction.kind !== 'choice') throw new Error('no authored choice template');
+
+    for (const [decidedBy, expectedOpen] of [
+      ['player', true],
+      ['chance', false],
+      [{ party: { check: 'an_authored_check' } }, false],
+      [{ state: [{ take: authored.interaction.choices[0]!.id }] }, false],
+    ] as const) {
+      const saved = structuredClone(base);
+      const event = JSON.parse(JSON.stringify(authored));
+      event.interaction.decidedBy = decidedBy;
+      saved.pendingDecisions = [{
+        kind: 'choice', id: 'dec_legacy', year: original.world.year, event,
+        body: 'An old unanswered question.', fill: {}, choices: [], cast: [],
+      }];
+      const parsed = SavedGameS.parse(saved).pendingDecisions[0];
+      expect(parsed).toMatchObject({ kind: 'choice', decidedBy, choicesAreOpen: expectedOpen });
+      const restored = loadGame(saved, content);
+      expect(restored.world.pendingDecisions[0]).toMatchObject({
+        kind: 'choice', decidedBy, choicesAreOpen: expectedOpen,
+      });
+    }
+
+    // A narration historically has only the chance branch.
+    const narration = content.events.find((event) => event.interaction.kind === 'narration');
+    if (!narration) throw new Error('no authored narration template');
+    const legacy = structuredClone(base);
+    legacy.pendingDecisions = [{
+      kind: 'choice', id: 'dec_narration', year: original.world.year,
+      event: structuredClone(narration), body: 'One result.',
+      fill: {}, choices: [], cast: [],
+    }];
+    expect(SavedGameS.parse(legacy).pendingDecisions[0]).toMatchObject({
+      kind: 'choice', decidedBy: 'chance', choicesAreOpen: false,
+    });
+    expect(loadGame(legacy, content).world.pendingDecisions[0]).toMatchObject({
+      kind: 'choice', decidedBy: 'chance', choicesAreOpen: false,
+    });
+
+    // Never guess a player decider from a malformed or unknown saved interaction.
+    legacy.pendingDecisions[0].event.interaction = { kind: 'missing_decider' };
+    expect(SavedGameS.safeParse(legacy).success).toBe(false);
+    expect(() => loadGame(legacy, content)).toThrow(SaveFormatError);
+  });
+
   it('validates against its own schema', () => {
     const ctx = bootstrap(content, 31, 1042);
     runYears(ctx, 150);

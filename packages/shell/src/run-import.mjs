@@ -7,7 +7,7 @@
  */
 export function parseImportedRun(text) {
   const save = JSON.parse(text);
-  if (save === null || typeof save !== 'object' || Array.isArray(save) || typeof save.format !== 'number') {
+  if (save === null || typeof save !== 'object' || Array.isArray(save) || !Number.isFinite(save.format)) {
     throw new TypeError('a save is an object with a numeric format');
   }
   return save;

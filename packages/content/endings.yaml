@@ -161,3 +161,168 @@ endings:
     closing: >-
       Everything after this was done by people who did not sign it. So was
       this.
+
+proseVariants:
+  - address: "content:endings.yaml#endings[id=apotheosis].opening"
+    of: "9da299b4b49b0150"
+    plainenglish: >-
+      The book was carried to the table by someone who had been told since childhood that they
+      would be the one to carry it. It was read from the first page to the last without a word
+      from either side of the table, and it took most of the night. Where the family had written
+      the truth, the truth was accepted without comment, which was worse than an argument. Where
+      the family had written nothing, the blank was read too, and took as long as a page.
+
+
+      When it was finished, the account was closed in the usual way, and then something wrote
+      underneath it. The handwriting is not human. It is the one page of the book that every
+      scholar allowed to see it agrees about. They agree that it is perfectly clear, that they
+      can read it, and that they wish they could not.
+  - address: "content:endings.yaml#endings[id=apotheosis].ring.owed"
+    of: "e2da657a8717ebae"
+    plainenglish: >-
+      THE TERM. It ran out at the set hour, and there turned out to be nothing on the other side
+      of it. There was no third part to settle. The third part was already at the table, and had
+      been for some years, and the hand that closed the book was not a hand.
+  - address: "content:endings.yaml#endings[id=apotheosis].closing"
+    of: "11ff1bf6ec3cb622"
+    plainenglish: >-
+      From now on, everything will be done by something that did sign it.
+  - address: "content:endings.yaml#endings[id=unmade].title"
+    of: "d6b9268adf064776"
+    plainenglish: >-
+      Undone
+  - address: "content:endings.yaml#endings[id=unmade].opening"
+    of: "5ce033fb957ca42f"
+    plainenglish: >-
+      It was done in the small hall, because the great hall had not been heated in two
+      generations. It failed at the last step, in front of eleven people who had spent their
+      whole lives being told what it would be like when it worked. What left the room left the
+      blood along with it. There was no sound. A woman who was there said afterwards that it was
+      like the moment after a bell rings, and then like the moment after that, and then like
+      nothing at all.
+
+
+      On the last night the book was read to a cousin from no particular branch, who had been
+      sent for because nobody else was left, and who kept apologising for not understanding it.
+      Nothing came to collect the account. The hall is cold now, the way a room gets when it was
+      built for four times the family living in it. Perhaps one holder in seven has a candle in
+      it, and a dog lies by the fire where it has slept every winter of its life.
+  - address: "content:endings.yaml#endings[id=unmade].ring.given"
+    of: "78b3718776b4afdb"
+    plainenglish: >-
+      THE THING IN THE BLOOD, taken back out of it, in a small hall, in front of eleven
+      witnesses who had been raised to expect the opposite. A cousin who can do nothing at all
+      sits in the founder's chair. The house is quiet exactly as it was quiet in 1042. It is the
+      same quiet, and it means something different.
+  - address: "content:endings.yaml#endings[id=unmade].closing"
+    of: "a1f96fc951fda145"
+    plainenglish: >-
+      Everything after this will be done by people who have never heard of it.
+  - address: "content:endings.yaml#endings[id=broken_line].title"
+    of: "9f84063990f12ca5"
+    plainenglish: >-
+      The Line Is Broken
+  - address: "content:endings.yaml#endings[id=broken_line].opening"
+    of: "32f520be4e7a306a"
+    plainenglish: >-
+      The last of them did not survive the winter, and the ones before had not survived the
+      winters before that. By the end of the term there was nobody in the house at all, except
+      two women from Wick who came up twice a week to check that the roof was holding. They were
+      not there on the night. Nobody was.
+
+
+      The book was read anyway, at the table, in an empty hall, from the first page to the last.
+      There is no account of it. The chronicle simply stops. What is known about the last night
+      is known because the candles were found burned all the way down, and the book was found
+      closed, when it had been left open.
+  - address: "content:endings.yaml#endings[id=broken_line].ring.owed"
+    of: "bd56a3e38763602f"
+    plainenglish: >-
+      THE SONS. All of them, and then their sisters, and then the cousins in the branch halls
+      who had been told for four generations that the trouble was not theirs. The gift and the
+      price were the same thing, and the house paid the whole price and kept none of the gift.
+  - address: "content:endings.yaml#endings[id=broken_line].closing"
+    of: "32a028d86aafdd94"
+    plainenglish: >-
+      After this, there was nobody left to do anything.
+  - address: "content:endings.yaml#endings[id=settled].title"
+    of: "ee7b7812e168d3fe"
+    plainenglish: >-
+      The Debt Paid
+  - address: "content:endings.yaml#endings[id=settled].opening"
+    of: "4e03742184907add"
+    plainenglish: >-
+      The book was brought to the table with three pages marked in the old handwriting, and
+      those were the pages the other party asked for first. Each one was where it should be.
+      Each one said what it had said when it was written. The rest of the chronicle was read
+      afterwards, because the family had kept it and because a book brought to a table gets
+      read. But the account had already changed while the candles were still tall.
+
+
+      Nothing was forgiven. Nothing was mistaken for strength. The thing on the other side of
+      the table simply reached the end of what this signing had promised, put one finger under
+      the last line, and closed the cover. In the morning the family still had its house, its
+      blood, and every problem that had not been part of the contract.
+  - address: "content:endings.yaml#endings[id=settled].ring.owed"
+    of: "756fed37741443eb"
+    plainenglish: >-
+      THE TERM. When it came, the shorter account was produced with every clause it needed. The
+      book was read, the three answers were found in it, and the hand across the table closed
+      the account instead of the house.
+  - address: "content:endings.yaml#endings[id=settled].closing"
+    of: "a54515335b01196f"
+    plainenglish: >-
+      Everything after this was done by people whose debt had been paid.
+  - address: "content:endings.yaml#endings[id=forgotten].title"
+    of: "cc7582b6d09aca92"
+    plainenglish: >-
+      Forgotten
+  - address: "content:endings.yaml#endings[id=forgotten].opening"
+    of: "b061dd86e5d20e22"
+    plainenglish: >-
+      The house wrote its page a year for five hundred years. It is by far the most complete
+      private record in the province. The Colleges at Corran have twice sent a reader to copy
+      parts of it, and both times the reader was mostly interested in the grain prices.
+
+
+      On the last night the account was read from the first page to the last, and the blank
+      years were read as carefully as the written ones, and at the end nothing was collected.
+      There is no record of anything being said. The candles burned down, the room went cold,
+      and some time in the early morning the family understood that they had been read, weighed,
+      and judged to be a private record in a country house with good grain prices.
+  - address: "content:endings.yaml#endings[id=forgotten].ring.owed"
+    of: "1bf83aa2cfafabb6"
+    plainenglish: >-
+      A PAGE A YEAR. The family kept it faithfully for five hundred years, and in the end it was
+      the only part of the account anyone completed. It was read on the last night from the
+      first page to the last. It was the only part that was read for its own sake.
+  - address: "content:endings.yaml#endings[id=forgotten].closing"
+    of: "6611dc1b45b4cfcf"
+    plainenglish: >-
+      Everything after this was done by people who never signed it. It turns out nobody needed
+      them to.
+  - address: "content:endings.yaml#endings[id=devoured].title"
+    of: "71e3f89ac74a0676"
+    plainenglish: >-
+      Eaten
+  - address: "content:endings.yaml#endings[id=devoured].opening"
+    of: "fb15fc956cd6ed09"
+    plainenglish: >-
+      The one at the head of the table was the most powerful thing this family had ever
+      produced, and had been for thirty years, and the whole province knew it. Three bishops had
+      written about it. Two houses had married into the family on purpose because of it. The
+      book was read with the head of the house present, which had never been done before, and
+      which the family had believed was a strength.
+
+
+      It was. That was the problem. What came for the account had walked a long way for
+      something worth the walk. It had not come to argue, and it did not.
+  - address: "content:endings.yaml#endings[id=devoured].ring.owed"
+    of: "7cbe5c1cb726ce18"
+    plainenglish: >-
+      THE TERM, and the one at the head of the table, who was interesting enough to be worth the
+      journey, and not, in the end, powerful enough to be worth an argument.
+  - address: "content:endings.yaml#endings[id=devoured].closing"
+    of: "f2d9277087a45834"
+    plainenglish: >-
+      Everything after this was done by people who never signed it. So was this.

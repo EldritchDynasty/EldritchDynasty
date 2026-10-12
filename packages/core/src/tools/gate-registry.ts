@@ -33,9 +33,6 @@ export function isBlockingGateId(value: string): value is BlockingGateId {
 export const GATE_BATCH_SEED_START = 5000;
 export const GATE_BATCH_SEED_STEP = 7;
 
-const CLAUSE_SEEDS = [
-  1001, 1003, 1004, 1008, 1013, 1016, 1019, 1020, 1024, 1025, 1026, 1031,
-] as const;
 const LIBRARY_NEUTRALITY_SEEDS = [811, 912, 1013, 1114] as const;
 const LADDER_SEEDS = [4000, 4013, 4026, 4039, 4052, 4065] as const;
 const LADDER_POLICIES = ['climb', 'spare', 'scion', 'pair', 'pair_climb'] as const;
@@ -59,11 +56,16 @@ const LAND_SEEDS = [
  * sampling cadence therefore changes the proof manifest and invalidates reuse.
  */
 export const BLOCKING_GATE_CONFIG = {
+  // #1351: a mean over a sequence, sized so the floor sits two standard
+  // errors under what the game does (360 runs on 3e57f9b1: mean 5.55, sd
+  // 2.36). The 12-seed median it replaces sat exactly on its floor.
   clauses: {
-    kind: 'explicit-seeds',
-    seeds: CLAUSE_SEEDS,
+    kind: 'seed-sequence',
+    runs: 80,
+    seedStart: GATE_BATCH_SEED_START,
+    seedStep: GATE_BATCH_SEED_STEP,
     years: CAMPAIGN_YEARS,
-    floor: 6,
+    floor: 5,
   },
   'library-neutrality': {
     kind: 'paired-explicit-seeds',

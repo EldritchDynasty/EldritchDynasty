@@ -267,3 +267,269 @@ parcels:
     provenance: Ground the common never quite needed and the house never quite asked for, until one year the boundary stone simply did not go back.
     foundingHolding: false
     marketable: false
+
+proseVariants:
+  - address: "content:parcels.yaml#parcels[id=hallowfield].place"
+    of: "aeb3608901dd74f5"
+    plainenglish: >-
+      the wet meadow below the mill
+  - address: "content:parcels.yaml#parcels[id=hallowfield].provenance"
+    of: "cff111f80ee3e264"
+    plainenglish: >-
+      The oldest farm on the roll. The same family has worked it for longer than anyone has
+      bothered to record.
+  - address: "content:parcels.yaml#parcels[id=nettlecombe].place"
+    of: "93fb5619d3ff924d"
+    plainenglish: >-
+      the hillside above the Wend
+  - address: "content:parcels.yaml#parcels[id=nettlecombe].provenance"
+    of: "4ec2eefcb7718450"
+    plainenglish: >-
+      Good land for barley, and the reeve's favourite place to walk when he wants to argue
+      quietly.
+  - address: "content:parcels.yaml#parcels[id=longmere].place"
+    of: "5c472488d10035b4"
+    plainenglish: >-
+      along the old lake, drained a hundred years ago
+  - address: "content:parcels.yaml#parcels[id=longmere].provenance"
+    of: "0ef200f4c476ef58"
+    plainenglish: >-
+      Everyone who works it still calls it the mere, though the water drained away two
+      generations ago.
+  - address: "content:parcels.yaml#parcels[id=ashcroft].place"
+    of: "fa33d7448fc04bf8"
+    plainenglish: >-
+      the near edge of Ardwen wood
+  - address: "content:parcels.yaml#parcels[id=ashcroft].provenance"
+    of: "7f67896b3de83d9f"
+    plainenglish: >-
+      The smallest farm on the roll, and it has never once paid its rent late.
+  - address: "content:parcels.yaml#parcels[id=redmoor].place"
+    of: "b2a86500014bd38c"
+    plainenglish: >-
+      the edge of the heath, toward Wick
+  - address: "content:parcels.yaml#parcels[id=redmoor].provenance"
+    of: "4d9b5907a3d38953"
+    plainenglish: >-
+      Poor soil, and a tenant family stubborn enough to make it pay anyway.
+  - address: "content:parcels.yaml#parcels[id=foxwell].place"
+    of: "46f52a07afdcbc93"
+    plainenglish: >-
+      the line of springs north of the hall
+  - address: "content:parcels.yaml#parcels[id=foxwell].provenance"
+    of: "b72e57143c17d160"
+    plainenglish: >-
+      Named after the well, which is named after what fell into it one bad winter.
+  - address: "content:parcels.yaml#parcels[id=stonegate].place"
+    of: "4a70980032e1583c"
+    plainenglish: >-
+      the ridge of gravel toward Bramme
+  - address: "content:parcels.yaml#parcels[id=stonegate].provenance"
+    of: "9345b80661d6c5c2"
+    plainenglish: >-
+      The gate is older than the farm. Nobody alive remembers what it used to keep out.
+  - address: "content:parcels.yaml#parcels[id=wetherby].place"
+    of: "8ff222f7a8f9ed3b"
+    plainenglish: >-
+      the low pasture next to the common
+  - address: "content:parcels.yaml#parcels[id=wetherby].provenance"
+    of: "99dc900ce11d6978"
+    plainenglish: >-
+      Sheep land. The wool pays the rent twice a year, every year, without fail.
+  - address: "content:parcels.yaml#parcels[id=barrowfield].place"
+    of: "b86a8753da1dae87"
+    plainenglish: >-
+      the high ground east of the hall
+  - address: "content:parcels.yaml#parcels[id=barrowfield].provenance"
+    of: "ad5ea9ea89d0c0fe"
+    plainenglish: >-
+      There is an old burial mound in one corner that nobody ploughs near, on the idea that it
+      is safer not to ask.
+  - address: "content:parcels.yaml#parcels[id=coldharbour].place"
+    of: "f4ce3dd361292c4f"
+    plainenglish: >-
+      the sheltered bend in the Wend
+  - address: "content:parcels.yaml#parcels[id=coldharbour].provenance"
+    of: "e3c492499d690975"
+    plainenglish: >-
+      Small, with a cold name, and the best hay field the house owns.
+  - address: "content:parcels.yaml#parcels[id=thornfield].place"
+    of: "7ed4192d4a0515a9"
+    plainenglish: >-
+      the hedged fields toward the smaller house
+  - address: "content:parcels.yaml#parcels[id=thornfield].provenance"
+    of: "29cc3f43f757acbf"
+    plainenglish: >-
+      A hedge separates it from the cadet hall's own land, and the two families have been
+      quietly arguing about where that hedge belongs for three generations.
+  - address: "content:parcels.yaml#parcels[id=the_wend_mill].name"
+    of: "6906c38ca6bcbcd0"
+    plainenglish: >-
+      The Mill on the Wend
+  - address: "content:parcels.yaml#parcels[id=the_wend_mill].place"
+    of: "d7af73a23abfde5e"
+    plainenglish: >-
+      the bend by the millpond on the Wend, below Ardwen
+  - address: "content:parcels.yaml#parcels[id=the_wend_mill].provenance"
+    of: "90c29d87fda7cf93"
+    plainenglish: >-
+      It takes a share of flour from every sack ground in the Nethering, which is most of them.
+  - address: "content:parcels.yaml#parcels[id=ardwen_wood].name"
+    of: "46b29b8dd1959219"
+    plainenglish: >-
+      The Wood at Ardwen
+  - address: "content:parcels.yaml#parcels[id=ardwen_wood].place"
+    of: "235ddedf8d5b27d3"
+    plainenglish: >-
+      the high ground behind the hall
+  - address: "content:parcels.yaml#parcels[id=ardwen_wood].provenance"
+    of: "f4edebe2e20555d6"
+    plainenglish: >-
+      Timber sells poorly this far from a decent road. Most years the village pays more to let
+      its pigs feed in the wood.
+  - address: "content:parcels.yaml#parcels[id=wick_common].name"
+    of: "992d9e70e7aee34c"
+    plainenglish: >-
+      The Common at Wick
+  - address: "content:parcels.yaml#parcels[id=wick_common].place"
+    of: "e4ca4d8d409c2d79"
+    plainenglish: >-
+      the land between the hall and the village
+  - address: "content:parcels.yaml#parcels[id=wick_common].provenance"
+    of: "d5b87865d0668791"
+    plainenglish: >-
+      The village has had grazing rights here since before anyone signed anything, and those
+      rights are the only reason Wick puts up with the house at all.
+  - address: "content:parcels.yaml#parcels[id=the_home_demesne].name"
+    of: "0d537014787c8710"
+    plainenglish: >-
+      The Home Farm
+  - address: "content:parcels.yaml#parcels[id=the_home_demesne].place"
+    of: "32b3beec4c628db0"
+    plainenglish: >-
+      the land the hall itself stands on
+  - address: "content:parcels.yaml#parcels[id=the_home_demesne].provenance"
+    of: "08d6f48db7aff551"
+    plainenglish: >-
+      Farmed directly to feed the house itself, and rented to nobody.
+  - address: "content:parcels.yaml#parcels[id=sowerhay].place"
+    of: "9e338537230e4bb3"
+    plainenglish: >-
+      on the other side of the Wend from Nettlecombe
+  - address: "content:parcels.yaml#parcels[id=sowerhay].provenance"
+    of: "6ccd4cdd46dd1471"
+    plainenglish: >-
+      The Colcocks have farmed it for three generations, and the eldest has no son who wants it.
+  - address: "content:parcels.yaml#parcels[id=cradlemoor].place"
+    of: "9f6ae1c1c9a6cb1d"
+    plainenglish: >-
+      the marshy ground toward Wick common
+  - address: "content:parcels.yaml#parcels[id=cradlemoor].provenance"
+    of: "4cfb7eb59826aa09"
+    plainenglish: >-
+      It needs draining more than any farm on the roll, which is why it keeps changing owners.
+  - address: "content:parcels.yaml#parcels[id=westerholt].place"
+    of: "7f0f0efba948d49f"
+    plainenglish: >-
+      the far edge of Ardwen wood
+  - address: "content:parcels.yaml#parcels[id=westerholt].provenance"
+    of: "0df6b52c09496a70"
+    plainenglish: >-
+      A younger son's share of land, sold off whenever the family that owns it needs money more
+      than land.
+  - address: "content:parcels.yaml#parcels[id=the_hanging_field].name"
+    of: "5afb8a4834360ab4"
+    plainenglish: >-
+      The Steep Field
+  - address: "content:parcels.yaml#parcels[id=the_hanging_field].place"
+    of: "c27a5e7d03dbf881"
+    plainenglish: >-
+      the steep land above Redmoor
+  - address: "content:parcels.yaml#parcels[id=the_hanging_field].provenance"
+    of: "dc2c935187845735"
+    plainenglish: >-
+      Named for how steep it is, not for anything that happened there. Every stranger still
+      asks.
+  - address: "content:parcels.yaml#parcels[id=hesk_slate_work].name"
+    of: "6d9aceb4d0db9558"
+    plainenglish: >-
+      A Share in the Slate Quarry at Hesk
+  - address: "content:parcels.yaml#parcels[id=hesk_slate_work].place"
+    of: "a053d3836a3ae11f"
+    plainenglish: >-
+      the slate quarry village at Hesk
+  - address: "content:parcels.yaml#parcels[id=hesk_slate_work].provenance"
+    of: "fda0264618751bba"
+    plainenglish: >-
+      Roofs are expensive after every hard winter, and the quarry sits idle when nobody can
+      afford one. Half the village shares the same six surnames.
+  - address: "content:parcels.yaml#parcels[id=sarrow_bottom].name"
+    of: "a4d5e8ea0f09cebe"
+    plainenglish: >-
+      A Share in a Ship at Sarrow
+  - address: "content:parcels.yaml#parcels[id=sarrow_bottom].place"
+    of: "e0470a2787c720eb"
+    plainenglish: >-
+      an office and a share of one ship at Sarrow
+  - address: "content:parcels.yaml#parcels[id=sarrow_bottom].provenance"
+    of: "5d334672e6e160fe"
+    plainenglish: >-
+      The Grey sinks ships without warning. The same sea route brings Anvarine books to shore,
+      which is why men keep paying to try it.
+  - address: "content:parcels.yaml#parcels[id=bramme_house].name"
+    of: "999a5a8da057c291"
+    plainenglish: >-
+      The Townhouse in Bramme
+  - address: "content:parcels.yaml#parcels[id=bramme_house].place"
+    of: "da82b49910950005"
+    plainenglish: >-
+      just inside the north gate of Bramme
+  - address: "content:parcels.yaml#parcels[id=bramme_house].provenance"
+    of: "9a86d78cf046f638"
+    plainenglish: >-
+      It brings in no rent. It gives the family a door close to the court and a respectable
+      place to be seen waiting.
+  - address: "content:parcels.yaml#parcels[id=lag_eels_and_peat].name"
+    of: "9d3a2d918b1d8645"
+    plainenglish: >-
+      Eel Fishing and Peat in the Lag
+  - address: "content:parcels.yaml#parcels[id=lag_eels_and_peat].place"
+    of: "6de686230da8f1cf"
+    plainenglish: >-
+      the Lag, past the Warden's last sure boundary marker
+  - address: "content:parcels.yaml#parcels[id=lag_eels_and_peat].provenance"
+    of: "f494300b0e76267f"
+    plainenglish: >-
+      Cheap land, if it is land at all, and not quite under the Warden either. The smell reaches
+      Bramme before the profit does.
+  - address: "content:parcels.yaml#parcels[id=pikeworth].place"
+    of: "d5e473ea6f0129de"
+    plainenglish: >-
+      a small farm on the Bramme road
+  - address: "content:parcels.yaml#parcels[id=pikeworth].provenance"
+    of: "62f21bc924f59165"
+    plainenglish: >-
+      Taken in payment of a debt the Pike family had no other way to pay, and there is no bill
+      of sale anywhere in the house's papers.
+  - address: "content:parcels.yaml#parcels[id=farrowmere].place"
+    of: "67845fb412a51d10"
+    plainenglish: >-
+      past Coldharbour, toward the Warden's road
+  - address: "content:parcels.yaml#parcels[id=farrowmere].provenance"
+    of: "13ea39ff99cf44bb"
+    plainenglish: >-
+      The Farrow family died out in one bad winter: three deaths and no sons. The Warden's clerk
+      wrote up the transfer before the ground had thawed.
+  - address: "content:parcels.yaml#parcels[id=the_farthing].name"
+    of: "8f15feaf3ed154f3"
+    plainenglish: >-
+      The Little Corner
+  - address: "content:parcels.yaml#parcels[id=the_farthing].place"
+    of: "7a31a6308f0159cc"
+    plainenglish: >-
+      the near corner of Wick Common, up against the boundary stone
+  - address: "content:parcels.yaml#parcels[id=the_farthing].provenance"
+    of: "43c5814cd4e8a688"
+    plainenglish: >-
+      Land the common never really needed and the house never really asked for, until one year
+      the boundary stone was simply never put back.

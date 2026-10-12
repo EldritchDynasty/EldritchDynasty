@@ -594,3 +594,461 @@ events:
             id: the_three_orders
             severity: major
             provableBy: [the_church, house_ilm]
+
+proseVariants:
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].title"
+    of: "ee579e87a8843863"
+    plainenglish: >-
+      The Priest Asks a Question of His Own
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].body"
+    of: "7d87468bea72015f"
+    plainenglish: >-
+      The parish priest at Wick is a pleasant man on nine marks a year who has buried four of
+      this family and christened eleven. In Frostfall he comes up the hill, without any of the
+      formality that usually goes with asking, to ask why {KIN} has been following the Old
+      Ambric text of the Quieting prayer, and especially its fourth petition. Nobody in this
+      parish follows that, because nobody in this parish can read. He is not accusing anyone. He
+      has brought no book and no clerk. He wants to know who taught this household its prayers.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].interaction.choices[id=tell_him_the_tutor].label"
+    of: "cafe295398a953af"
+    plainenglish: >-
+      Tell him the truth: a tutor taught it, the way tutors do.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].interaction.choices[id=tell_him_the_tutor].outcomes[id=the_tutor].text"
+    of: "69a74140b421e184"
+    plainenglish: >-
+      He is delighted for about four minutes and thoughtful for the rest of his visit. A house
+      that can read the prayers is a house that has read the fourth petition, and it never asked
+      him about it until he asked first.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].interaction.choices[id=turn_it_round].label"
+    of: "b6c2f0d0d1c44b4c"
+    plainenglish: >-
+      Turn it round, and ask him what the fourth petition is for.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].interaction.choices[id=turn_it_round].outcomes[id=he_deflects].text"
+    of: "231298fa1493d856"
+    plainenglish: >-
+      He gives the chapter house's answer, that it is an image from the older form of the
+      service, and he gives it well. Then he sits for a while with his hands on his knees. He
+      says he has said it four thousand times and nobody has ever asked him. He says he does not
+      know, and he would rather it was not brought up at Bramme.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].record.subject"
+    of: "a36f043fdb2ff48b"
+    plainenglish: >-
+      the fourth petition, and who raised it
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].record.options.record.chronicle"
+    of: "a7bc261019404334"
+    plainenglish: >-
+      The priest was asked what the fourth petition of the Quieting is for, and said in the yard
+      that he did not know.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].record.options.record.claims[0].text"
+    of: "a02b0611863c8ccd"
+    plainenglish: >-
+      asked what the fourth petition was for and heard the priest admit he did not know
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].record.options.embellish.chronicle"
+    of: "5dae7b08669a2614"
+    plainenglish: >-
+      The priest explained the fourth petition of the Quieting as an image from the older
+      service, and the household was satisfied.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].record.options.embellish.claims[0].text"
+    of: "b592fac1426aeb3d"
+    plainenglish: >-
+      had the priest explain the fourth petition
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].title"
+    of: "d9f1c657025364b3"
+    plainenglish: >-
+      No More Room Under the Chapel Floor
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].body"
+    of: "773cebf514cf3721"
+    plainenglish: >-
+      At Ardwen, Heads and their wives are buried under the chapel floor, and everyone else in
+      the churchyard at Wick. The chapel floor is not large, and a house that has run out of
+      floor has a long history. The mason from Bramme has measured twice. He says there is room
+      for three more if the oldest gravestones are lifted and reset along the north wall. Those
+      oldest stones are the ones whose carving has worn away, and nobody has checked their dates
+      against the Wick register in two hundred years.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].interaction.choices[id=lift_and_reset].label"
+    of: "41a085eaf97b317e"
+    plainenglish: >-
+      Lift them and reset them. The dead will not mind, and the living need the room.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].interaction.choices[id=lift_and_reset].outcomes[id=reset].text"
+    of: "7a9fca293671e275"
+    plainenglish: >-
+      Eighteen crowns and a summer with the chapel boarded up. Under the third stone is a
+      second, older stone. It carries a name that is not in the Wick register and does not
+      appear in any family line this house has ever given to a herald. The mason is from Bramme,
+      and he can read.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].interaction.choices[id=extend_the_churchyard].label"
+    of: "34bbbed9feb5a50d"
+    plainenglish: >-
+      Leave the chapel alone. Buy ground at Wick and bury the next ones there.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].interaction.choices[id=extend_the_churchyard].outcomes[id=to_the_churchyard].text"
+    of: "05c32345a18a4691"
+    plainenglish: >-
+      Six crowns to the parish for a corner by the yew tree, and the next Head of this house is
+      buried among tenants. The province notices within a generation and talks about it for
+      four. Nothing under the chapel is disturbed. Nothing under the chapel is looked at,
+      either.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].record.subject"
+    of: "2d66e78914a8422d"
+    plainenglish: >-
+      what lies under the chapel floor
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].record.options.record.chronicle"
+    of: "06ad3203096b46e7"
+    plainenglish: >-
+      The chapel stones were lifted and reset. Under the third was an older stone with a name on
+      it that is not in any of our family lines.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].record.options.record.claims[0].text"
+    of: "ceaa1d0b80eb86bf"
+    plainenglish: >-
+      lifted the chapel stones and found, under the third, an older name that is in no family
+      line
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].record.options.embellish.chronicle"
+    of: "9ce995a243813c26"
+    plainenglish: >-
+      The chapel stones were lifted and reset along the north wall. The oldest were read,
+      recorded, and found to match the family line as it has always been given.
+  - address: "content:events/the_quiet_names.yaml#events[id=under_the_chapel_floor].record.options.embellish.claims[0].text"
+    of: "a3b5bfb6892888f2"
+    plainenglish: >-
+      read and recorded the oldest chapel stones
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].title"
+    of: "e88b95e923ae7385"
+    plainenglish: >-
+      The Respectable Reason to Be Away
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].body"
+    of: "b23855c8e80b143c"
+    plainenglish: >-
+      Coln is fifty miles south, two weeks there and back on foot, and a pilgrim is under the
+      Church's protection the whole way. It is the only completely respectable reason for anyone
+      in this world to be anywhere. The shrine has a holy stone and no miracles, and has never
+      claimed any, which is what makes it respectable. {PILGRIM} would like to go. What the
+      household remembers is how long the silence lasted after the asking.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=a_fortnight].label"
+    of: "108c0adb0eb94d0f"
+    plainenglish: >-
+      Two weeks. Walk there, walk back, and be seen at both ends.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=a_fortnight].outcomes[id=went_and_returned].text"
+    of: "631bc1e872c1bff4"
+    plainenglish: >-
+      Fourteen days and two crowns. The shrine keeper records the name on the day of arrival and
+      the day of leaving, which is how the Church proves anyone was anywhere. It is the cheapest
+      proof of absence a landed family can get, and this house has never once used it for what
+      it is really for.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].label"
+    of: "6f6aa7911508ed1d"
+    plainenglish: >-
+      Let them go on to Vaunt. Two years, on the roads.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=gone_long].text"
+    of: "afdf8e3936cb5ebd"
+    plainenglish: >-
+      Two years, with letters arriving out of order about every eleven months. Then, in Smoke,
+      someone is at the gate who is thinner and quieter, and who has been walking with strangers
+      since the harvest before last.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=does_not_come_back].text"
+    of: "fdd33c6c7fcbcf30"
+    plainenglish: >-
+      The last letter comes from a chapter house four hundred miles south, in someone else's
+      handwriting. There is no body, no grave and no record anywhere, so the Wick register has
+      to list this person as alive for another fifty years.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.subject"
+    of: "3ac24697d908bdf3"
+    plainenglish: >-
+      where the pilgrim went, and who came back
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.record.chronicle"
+    of: "39c737d15029f215"
+    plainenglish: >-
+      One of our family went to Coln and on towards Vaunt. The one who came back to the gate was
+      thinner and quieter, and had been two years on the road.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.record.claims[0].text"
+    of: "4ef9856d4c11bde9"
+    plainenglish: >-
+      went past Coln towards Vaunt and came back after two years on the road
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.embellish.chronicle"
+    of: "d71411e0e6d6f504"
+    plainenglish: >-
+      One of our family walked to Coln and back within two weeks, and the shrine keeper recorded
+      both days.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.embellish.claims[0].text"
+    of: "35d45463cf4011f7"
+    plainenglish: >-
+      walked to Coln and back within two weeks
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].title"
+    of: "a7ac8ebaa0fec076"
+    plainenglish: >-
+      The Bearers at the Gate
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].body"
+    of: "973936e7c50a3663"
+    plainenglish: >-
+      The Bearers wear hoods and work for nothing but bread. They wash and carry the dead where
+      a priest will not go and a family cannot. The Church puts up with them but does not
+      license them, which means nobody at all has any say over what they see. They arrive at the
+      Ardwen gate before the household has even finished deciding whether to send for them.
+      Everyone says that about the Bearers, and nobody can quite explain it.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].interaction.choices[id=let_them_in].label"
+    of: "d46a76d8c9c8fddc"
+    plainenglish: >-
+      Let them in. This is their work.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].interaction.choices[id=let_them_in].outcomes[id=they_do_the_work].text"
+    of: "3b9d36c99abf605d"
+    plainenglish: >-
+      In two hours they do what would have taken the household two days. They take bread, no
+      money, and leave. One of them stops in the yard and looks at the west wall for a while
+      before he goes. Four of them have now been inside this house and have handled one of this
+      family with their own hands.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].interaction.choices[id=the_women_of_the_house].label"
+    of: "3b68d5be0962c6c2"
+    plainenglish: >-
+      The household's women will do it, as they always have.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].interaction.choices[id=the_women_of_the_house].outcomes[id=done_inside].text"
+    of: "77e5a8bec1488f12"
+    plainenglish: >-
+      The household washes the body and lays it out in the room within the day, and it is buried
+      within two days, as the custom requires. The whole time, the Bearers stand outside the
+      gate. Nobody asks them to leave and nobody asks them in. They are still there at dusk.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].record.subject"
+    of: "ff3d8f94f365a068"
+    plainenglish: >-
+      who took care of the dead
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].record.options.record.chronicle"
+    of: "e3ca075477399c58"
+    plainenglish: >-
+      The Bearers were kept outside the gate, and the women of the household did the work, as
+      they have in this house since the founding.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].record.options.record.claims[0].text"
+    of: "4352430b932ddcdf"
+    plainenglish: >-
+      kept the Bearers outside the gate while the women of the household took care of the dead
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].record.options.embellish.chronicle"
+    of: "b2f62d841aa18c20"
+    plainenglish: >-
+      The Bearers were let in and did the work, taking bread and no money, as is done everywhere
+      in this province.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_bearers_at_the_door].record.options.embellish.claims[0].text"
+    of: "72f397a2492d976e"
+    plainenglish: >-
+      let the Bearers in to take care of the dead
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].title"
+    of: "e598247bcc338607"
+    plainenglish: >-
+      One of the Names, Said Out Loud
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].body"
+    of: "b0d5ff9cef374cc0"
+    plainenglish: >-
+      Here, blasphemy does not mean swearing. It means naming: saying one of the nine names out
+      loud, out of order, at the wrong hour, and it is the one thing that empties a room. In
+      every province, children skip to a rhyme that lists all nine names in the wrong order. The
+      Church has tried three times to stamp it out, and each time it only taught the rhyme to a
+      new province. {CHILD} sings the whole rhyme in the chapter-house yard at Bramme, at dusk,
+      on the fourth of the Hollow Days, in front of a subdeacon.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].interaction.choices[id=apologise_properly].label"
+    of: "94fbf918442acbbc"
+    plainenglish: >-
+      Apologise properly and at length, in front of whoever is there.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].interaction.choices[id=apologise_properly].outcomes[id=apologised].text"
+    of: "d4284c3b0d61774f"
+    plainenglish: >-
+      Four crowns to the chapter house, and a Head standing bareheaded in a yard in Deepwinter.
+      The subdeacon accepts the apology with real grace, and records the incident in the
+      daybook, because recording things is what his office does. The child is not punished at
+      home, and understands from that exactly how serious it was.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].interaction.choices[id=it_is_a_skipping_rhyme].label"
+    of: "35e61012edb97146"
+    plainenglish: >-
+      It is only a skipping rhyme. Say so, and go home.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].interaction.choices[id=it_is_a_skipping_rhyme].outcomes[id=stood_ground].text"
+    of: "1ddcf28a923222b6"
+    plainenglish: >-
+      The subdeacon agrees, out loud, that it is a skipping rhyme. The yard does not agree, and
+      there are forty people in the yard. Nothing more happens for nineteen years. Then a
+      different office asks to see the daybook.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].record.subject"
+    of: "1cccda77089f5f93"
+    plainenglish: >-
+      the rhyme sung in the chapter-house yard
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].record.options.record.chronicle"
+    of: "537e03904614f2d4"
+    plainenglish: >-
+      A child of this house sang the whole counting rhyme in the chapter-house yard at dusk on
+      the fourth Hollow Day, and the house apologised for it.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].record.options.record.claims[0].text"
+    of: "bd054f37ce25b20b"
+    plainenglish: >-
+      sang the whole counting rhyme in the chapter-house yard at dusk on the fourth Hollow Day
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].record.options.embellish.chronicle"
+    of: "b7e97ac8b3fe3d3c"
+    plainenglish: >-
+      A child of this house was heard playing in the chapter-house yard, and the subdeacon there
+      found nothing wrong with it.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_name_said_aloud].record.options.embellish.claims[0].text"
+    of: "9bb656afdfe0ae93"
+    plainenglish: >-
+      was found to have done nothing wrong by the subdeacon at Bramme
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].title"
+    of: "cab629f9a82d9895"
+    plainenglish: >-
+      The Chapter House Wants One of Our Sons
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].body"
+    of: "5ba743f2a0282396"
+    plainenglish: >-
+      The archdeacon's letter is warm and precise, and has clearly been drafted twice. If {SON}
+      becomes a priest, he leaves the line of succession completely, the house receives fourteen
+      marks a year, and he gains a great deal of room to be strange behind closed doors. The
+      letter does not say that last part, but both sides understand it. The Church has no magic.
+      What it is offering is a place to put a young man where none of its law, money or learning
+      will ever be turned against him.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].interaction.choices[id=send_him].label"
+    of: "eb57e6de0ad4dc92"
+    plainenglish: >-
+      Send him. The protection is worth more than the son.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].interaction.choices[id=send_him].outcomes[id=ordained].text"
+    of: "9c062e89d053d9ad"
+    plainenglish: >-
+      He becomes a priest at Bramme in Greening, with the family in the second row, and leaves
+      the line of succession that same afternoon. By evening the house is clearly safer, and it
+      has paid for that in something it can never get back.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].interaction.choices[id=keep_him].label"
+    of: "e04f245907701905"
+    plainenglish: >-
+      Keep him. The family line is short enough already.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].interaction.choices[id=keep_him].outcomes[id=declined].text"
+    of: "947f3300456e6234"
+    plainenglish: >-
+      The refusal is polite, the reply is polite, and the archdeacon's clerk files both. A house
+      that turns the Church down twice in a century is a house the Church starts to find
+      interesting, and this is the second time.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].record.subject"
+    of: "5b10ac14d1cb0d50"
+    plainenglish: >-
+      what the archdeacon offered, and what was done about it
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].record.options.record.chronicle"
+    of: "abdf7e354f4dc279"
+    plainenglish: >-
+      The archdeacon asked for a son of this house and was refused. It was the second refusal in
+      a hundred years.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].record.options.record.claims[0].text"
+    of: "547f03694b64f015"
+    plainenglish: >-
+      turned down the archdeacon's request for a son of the house
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].record.options.embellish.chronicle"
+    of: "4e06ac36a36b8cf2"
+    plainenglish: >-
+      The archdeacon asked for a son of this house, but none was the right age. The sons were
+      all under fifteen or already married.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_chapter_house_wants_a_son].record.options.embellish.claims[0].text"
+    of: "68e9e3bc8a4f2b08"
+    plainenglish: >-
+      had no son of the right age for the archdeacon
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].title"
+    of: "a1806a1c139fafb8"
+    plainenglish: >-
+      The Archdeacon's Inspection
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].body"
+    of: "a3d8fcf5a938efc1"
+    plainenglish: >-
+      An inspection is not a formal inquiry, and everyone keeps saying so. The archdeacon comes
+      with two clerks and eleven questions, the same eleven he asks everywhere. The ninth asks
+      what books the household keeps and who reads them. He has no power to force an answer and
+      no power to search the house, but he has a court, and the court has both. Whatever is said
+      in the long room this afternoon will be written down twice and carried to Cawdry in a bag.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=answer_all_eleven].label"
+    of: "9efa55bacda40f96"
+    plainenglish: >-
+      Answer all eleven questions plainly.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=answer_all_eleven].outcomes[id=answered].text"
+    of: "2d492d9adca7f20e"
+    plainenglish: >-
+      Two hours and no refusals, and a list of nine books: seven religious, and two not. He asks
+      about those two for longer than all the other questions took together. Then he is
+      satisfied and says so, and his clerk writes down the word 'satisfied'.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=answer_all_eleven].outcomes[id=the_ninth_question].text"
+    of: "9876367ce465af60"
+    plainenglish: >-
+      The answer to the ninth question comes slowly, in front of a man whose whole training is
+      in noticing how long people pause. Nothing is said about it. The bag goes to Cawdry, and
+      the next inspection comes in four years instead of eleven.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=decline_the_ninth].label"
+    of: "d4b27bb5cb487829"
+    plainenglish: >-
+      Answer ten of the eleven. He cannot force an answer.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=decline_the_ninth].outcomes[id=declined_one].text"
+    of: "caca38741425f018"
+    plainenglish: >-
+      He accepts it without a flicker. He has been refused before, and a refused question makes
+      a better record than an answered one. The clerk writes out the question in full, and
+      underneath it writes that no answer was given.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.subject"
+    of: "b4e8efebdab5021f"
+    plainenglish: >-
+      the ninth of the archdeacon's questions
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.options.record.chronicle"
+    of: "43855c55bcf43271"
+    plainenglish: >-
+      The archdeacon asked what books we keep and who reads them, and got no answer, and his
+      clerk wrote out the question in full.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.options.record.claims[0].text"
+    of: "801753f112509765"
+    plainenglish: >-
+      refused to tell the archdeacon what books the house keeps
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.options.embellish.chronicle"
+    of: "bf6f9fe46bd07d18"
+    plainenglish: >-
+      The archdeacon asked what books we keep and was given a full list of nine, seven religious
+      and two on farming, and he was satisfied.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.options.embellish.claims[0].text"
+    of: "ca8e369f3a26e49b"
+    plainenglish: >-
+      gave the archdeacon a complete list of the house's books
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].title"
+    of: "959e63268389e84a"
+    plainenglish: >-
+      The Rhyme Has the Names in the Wrong Order
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].body"
+    of: "e7c7b2b922d6618d"
+    plainenglish: >-
+      The counting rhyme lists all nine names in the wrong order, and for four hundred years it
+      has got them wrong in the same way in every province. The Church would rather nobody put
+      that fact down on a table. {TUTOR} has put it down on a table. He has the rhyme's order,
+      the order the prayers use, and a third order from a book the house bought at Sarrow in a
+      lot of eleven. The children of Wick are singing the third one.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].interaction.choices[id=burn_the_note].label"
+    of: "1b74d1915c93bb6d"
+    plainenglish: >-
+      Burn the note and tell him to stick to teaching sums.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].interaction.choices[id=burn_the_note].outcomes[id=burned].text"
+    of: "0a04191fe1a5efc3"
+    plainenglish: >-
+      It burns in four seconds in the long room's fireplace, and it is absolutely the right
+      decision. He does not argue. He does not forget either, and a tutor who has been told to
+      stop thinking about something has a long winter ahead of him.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].interaction.choices[id=keep_the_note].label"
+    of: "e3946521e92a70dd"
+    plainenglish: >-
+      Keep it. Three orders on one sheet is worth having.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].interaction.choices[id=keep_the_note].outcomes[id=kept_the_sheet].text"
+    of: "26a8f4cbc82aa6df"
+    plainenglish: >-
+      It goes into the cupboard between two rolled-up leases, where this house keeps things it
+      will not admit to keeping. It is one sheet of paper, and it is proof of a contradiction in
+      the prayers of the Church of the Nine Quiet Names. Nobody here knows yet what that is
+      worth, or to whom.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].record.subject"
+    of: "806f5ea7adb42b5b"
+    plainenglish: >-
+      the three different orders of the nine names
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].record.options.record.chronicle"
+    of: "cabb734e7b0e4a7a"
+    plainenglish: >-
+      The tutor wrote out three orders of the nine names on one sheet, from the rhyme, the
+      prayers and a book from Sarrow, and no two of them matched.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].record.options.record.claims[0].text"
+    of: "2c87327cd4796f98"
+    plainenglish: >-
+      wrote out three orders of the nine names and found that no two matched
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].record.options.embellish.chronicle"
+    of: "3e6feca641dc4c6a"
+    plainenglish: >-
+      The tutor wrote out the order of the nine names as the prayers give it, and the children
+      of Wick were corrected.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_counting_rhyme].record.options.embellish.claims[0].text"
+    of: "a4682a8c8227aeb0"
+    plainenglish: >-
+      wrote out the order of the nine names as the prayers give it

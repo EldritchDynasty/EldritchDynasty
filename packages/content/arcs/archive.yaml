@@ -47,3 +47,9 @@ arcs:
         schedule: { minYears: 35, maxYears: 90 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/archive.yaml#arcs[id=arc_what_went_with_her].title"
+    of: "bdac3d26cb5f55f2"
+    plainenglish: >-
+      What She Took With Her

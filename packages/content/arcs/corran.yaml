@@ -44,3 +44,9 @@ arcs:
         schedule: { minYears: 4, maxYears: 14 }
         successors:
           - to: end
+
+proseVariants:
+  - address: "content:arcs/corran.yaml#arcs[id=arc_nine_years_at_corran].title"
+    of: "ad7721a1686c3355"
+    plainenglish: >-
+      Nine Years, Seven Hundred Miles

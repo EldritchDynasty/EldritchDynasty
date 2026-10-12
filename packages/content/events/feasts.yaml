@@ -178,6 +178,67 @@ events:
               effects:
                 - { kind: flag, flag: butts_at_wick_unkept, set: true }
                 - { kind: respect, delta: -1 }
+              # #334: the clause is read when a war comes, as this outcome
+              # promises. Chained rather than drawn, like the Crown readers: an
+              # ambient reader of a key one outcome writes mostly loses the draw.
+              # Due in nine years; the reader's own condition waits for a war.
+              next: { event: the_clause_about_the_butts, after: { minYears: 9, maxYears: 9 } }
+
+  # #334: the reader of butts_at_wick_unkept. Fires only inside The Wars, so
+  # "nine years, then a war" is the earliest it can come, not a promise that
+  # the war is due. No HEAD binding: the levy finds whoever holds the seal.
+  - id: the_clause_about_the_butts
+    title: The Clause About the Butts
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [levy, tenants, warden, war]
+    purposes: [change_standing, change_relationship, worldbuild_through_action]
+    conditions:
+      all:
+        - { flag: butts_at_wick_unkept, is: true }
+        - { ageActive: the_wars }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The Warden's serjeant comes up the lane in the rain with the levy list
+      wrapped in oilcloth. Wick is on it. Beside Wick, in a clerk's hand nine
+      years old, is one clause: the butts at Wick are not kept. The serjeant
+      reads it out to {HEAD} without being asked, the way a man reads out a
+      debt. The levy has no use for men who cannot draw. The Warden will take
+      thirty crowns for Wick's share instead, or he will take Wick's men as
+      they are and put them where he puts men who cannot shoot. Nobody has cut
+      the hawthorn.
+    interaction:
+      kind: choice
+      choices:
+        - id: pay_in_coin
+          label: Pay the thirty crowns, and put the butts right.
+          outcomes:
+            - id: paid_in_coin
+              weight: 100
+              text: >-
+                The serjeant counts thirty crowns into his saddlebag and rides
+                on. Wick sends nobody to the war. By the next tenth-day the
+                hawthorn is out, the banks are cut fresh, and eleven men are
+                shooting badly behind the alehouse. The next clerk writes that
+                the butts are kept.
+              effects:
+                - { kind: treasury, delta: -30 }
+                - { kind: flag, flag: butts_at_wick_unkept, set: false }
+        - id: send_them_as_they_are
+          label: Send Wick's men as they are.
+          outcomes:
+            - id: sent_as_they_are
+              weight: 100
+              text: >-
+                Nine men go with the serjeant. The levy captain puts them where
+                he puts men who cannot draw, out in front of the archers with
+                the stakes. Seven come home at Ingathering. The parish knows
+                what the four crowns bought.
+              effects:
+                - { kind: respect, delta: -1 }
+                - { kind: relationship, from: household, to: head, sentiment: -8 }
 
   - id: the_merlin_on_the_block
     title: A Lady's Merlin, and What It Is Worth
@@ -510,3 +571,367 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 4 }
+
+proseVariants:
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].title"
+    of: "8ba87444eedb6250"
+    plainenglish: >-
+      A Ball Game Across Three Fields and the River
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].body"
+    of: "5f6bf0d8e094b0dc"
+    plainenglish: >-
+      Wick plays Ockleigh across three fields and the river, with hardly any rules. The house is
+      expected to be seen watching and expected not to interfere. Bones get broken every year,
+      and by the second hour everyone knows whose turn it is. This year it is a cottager's son
+      of about fourteen. He is face down in the shallow water with sixty men going over him, and
+      the shout that goes up is not the shout of the game. {HEAD} is standing forty yards away
+      with the reeve.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=go_in].label"
+    of: "51aea7261d25ef8a"
+    plainenglish: >-
+      Wade in and drag him out.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=go_in].outcomes[id=pulled_out].text"
+    of: "88cd4790acd39874"
+    plainenglish: >-
+      Soaked to the chest in front of two villages, and the boy coughs up half the river and
+      lives. The game stops for a quarter of an hour, then starts again without him. Nobody at
+      Wick mentions it to the house directly. Everybody at Wick mentions it to everybody else
+      for thirty years.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=stand_and_watch].label"
+    of: "fb1329367fb0439a"
+    plainenglish: >-
+      Stand and watch. It is their game and their tradition.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=stand_and_watch].outcomes[id=watched].text"
+    of: "725cb66f00e8bf9b"
+    plainenglish: >-
+      Two men from the crowd get him onto the bank within a minute, and he is walking by dusk,
+      which would have happened either way. The tradition is kept exactly. The house is thanked
+      for nothing and blamed for nothing. That is the normal relationship between a hall and a
+      village, and it is worth something.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=stand_and_watch].outcomes[id=watched].effects[0].text"
+    of: "22c0443ddeecc1f9"
+    plainenglish: >-
+      The Thaw ball game was played on the Wend, and the house watched from the bank. The
+      tradition was kept.
+  - address: "content:events/feasts.yaml#events[id=the_thaw_ball].interaction.choices[id=stand_and_watch].outcomes[id=he_does_not_get_up].text"
+    of: "a304f2e7a5f7a86b"
+    plainenglish: >-
+      They get him out in their own time, and he does not get up. Eleven days later his name is
+      in the Wick register with the rest of the year's dead. The tradition is kept exactly.
+      Nobody says the house should have acted, except the priest, who says it once, at home, to
+      his wife.
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].title"
+    of: "3d715492f321767e"
+    plainenglish: >-
+      Who Gets the Seat of Honour
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].body"
+    of: "41d1d23f554c1bc3"
+    plainenglish: >-
+      The family comes up from the branch halls for Greening. The night before, the steward
+      plans the seating in pencil, with a great deal of rubbing out. The wool merchant has come
+      up from the south, and he is worth a hundred and forty crowns a year to this house.
+      {COUSIN} runs a hall four miles away, brings in nothing at all, and is of the blood. There
+      is only one chair at {HEAD}'s right hand.
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].interaction.choices[id=blood_above_money].label"
+    of: "6009e23d9cb721b9"
+    plainenglish: >-
+      Family gets the seat of honour. It always has.
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].interaction.choices[id=blood_above_money].outcomes[id=blood_seated].text"
+    of: "c386ada18a27d7f5"
+    plainenglish: >-
+      {COUSIN} takes the chair, and it takes him about four minutes to realise what has been
+      done for him. For the rest of the evening he is careful, the way a man is careful with
+      something he has just been handed. The merchant is seated two places down and is pleasant
+      about it. At Haying he prices the wool three-eighths of a mark below the county rate, and
+      gives no reason.
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].interaction.choices[id=money_above_blood].label"
+    of: "a3bf475ef335cd12"
+    plainenglish: >-
+      The merchant gets the seat. He sets the price of our wool.
+  - address: "content:events/feasts.yaml#events[id=precedence_at_greening].interaction.choices[id=money_above_blood].outcomes[id=factor_seated].text"
+    of: "2a7cc1244217ed30"
+    plainenglish: >-
+      The merchant is delighted, prices the wool fairly, and stays a third night. {COUSIN} is
+      seated below a man who buys wool. He says nothing at all about it, and leaves before the
+      dancing with a headache nobody believes in. A slight like that can be denied, lasts
+      forever and costs nothing, which is exactly what seating is for.
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].title"
+    of: "13ada18b54a117bf"
+    plainenglish: >-
+      The Archery Range Behind the Alehouse
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].body"
+    of: "a274fdb7b13c6003"
+    plainenglish: >-
+      Every village keeps an archery range, and the men practise after the tenth-day rest,
+      because the army call-up is what it has always been. Nobody has shot at Wick's targets
+      since the last Head died, and a hawthorn is growing out of the nearest one. In Highsun the
+      Warden's clerk rides through and writes down what he sees, and nobody needs to explain to
+      him what he is looking at. Four crowns and a tenday would fix it.
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].interaction.choices[id=put_them_right].label"
+    of: "6eeaf7622e08687e"
+    plainenglish: >-
+      Fix it, and be seen there on the first day.
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].interaction.choices[id=put_them_right].outcomes[id=shooting_again].text"
+    of: "5ebd1427528a4393"
+    plainenglish: >-
+      New earth banks and new targets, and eleven men shooting badly on the first practice day,
+      and a bit less badly by Harvest. The clerk writes that the range at Wick is kept. That one
+      line is worth much more than four crowns, and once it has been written the other way, no
+      amount of money can buy it back.
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].interaction.choices[id=leave_the_hawthorn].label"
+    of: "521eab3e30d1edea"
+    plainenglish: >-
+      Leave it. Nobody has called up an army in forty years.
+  - address: "content:events/feasts.yaml#events[id=the_butts_have_rotted].interaction.choices[id=leave_the_hawthorn].outcomes[id=noted].text"
+    of: "cb9b528ff0e98f33"
+    plainenglish: >-
+      The clerk passes in the second tenday of Highsun, slows down, and does not stop. What he
+      writes is one line in a survey of eleven parishes, and nobody reads it for nine years.
+      Then there is a war, and it is read.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].title"
+    of: "e7851cf5fa6f5371"
+    plainenglish: >-
+      The Line About the Archery Range
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].body"
+    of: "608b2edf290d6bb3"
+    plainenglish: >-
+      The Warden's officer rides up the lane in the rain with the army call-up list wrapped in
+      oilcloth. Wick is on it. Next to Wick's name is one line in a clerk's handwriting from nine
+      years ago: the archery range at Wick is not kept. The officer reads it out to {HEAD}
+      without being asked, the way a man reads out a debt. The army has no use for men who
+      cannot shoot. The Warden will accept thirty crowns instead of Wick's men, or he will take
+      the men as they are and put them where he puts men who cannot shoot. Nobody has cut down
+      the hawthorn.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=pay_in_coin].label"
+    of: "98703885adbc3bf1"
+    plainenglish: >-
+      Pay the thirty crowns, and fix the archery range.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=pay_in_coin].outcomes[id=paid_in_coin].text"
+    of: "7bf69aa204408cfe"
+    plainenglish: >-
+      The officer counts thirty crowns into his saddlebag and rides on. Wick sends nobody to the
+      war. By the next practice day the hawthorn is gone, the earth banks are rebuilt, and eleven
+      men are shooting badly behind the alehouse. The next clerk writes that the range is kept.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=send_them_as_they_are].label"
+    of: "74feb4e5f3daa0b9"
+    plainenglish: >-
+      Send Wick's men without training.
+  - address: "content:events/feasts.yaml#events[id=the_clause_about_the_butts].interaction.choices[id=send_them_as_they_are].outcomes[id=sent_as_they_are].text"
+    of: "5110f35d67662431"
+    plainenglish: >-
+      Nine men go with the officer. The army captain puts them where he puts men who cannot
+      shoot: in front of the archers, carrying the stakes. Seven come home at Ingathering. The
+      village knows what the four crowns saved really cost.
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].title"
+    of: "72497fab47b29a57"
+    plainenglish: >-
+      A Lady's Hawk, and What It Is Worth
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].body"
+    of: "ebf5f99b9edf6bdf"
+    plainenglish: >-
+      In terms of status, a merlin is worth more than the horse the lady rides, and nobody
+      outside this class can ever be made to understand that. At the Ingathering fair, {LADY}'s
+      bird flew up after a lark, went east, and never came back. The falconer at Cawdry has
+      another one and wants eleven crowns for her. There is also the fact that the bird flew
+      east, the direction this house does not like, and two of the falconer's men have already
+      mentioned it.
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=buy_the_bird].label"
+    of: "25c9218bbb5cacd7"
+    plainenglish: >-
+      Buy her the new bird. She rides to Bramme twice a year.
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=buy_the_bird].outcomes[id=bought].text"
+    of: "8b51bfa1e6cc8a7d"
+    plainenglish: >-
+      Eleven crowns, a new perch in the yard, and a bird that takes to her within two weeks. Two
+      houses in the province notice that the loss was replaced within the season, and that is
+      the whole point of a merlin.
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=no_bird].label"
+    of: "d9a91493ab74b4cf"
+    plainenglish: >-
+      No new bird. Eleven crowns is too much for something that flies away.
+  - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=no_bird].outcomes[id=no_bird_bought].text"
+    of: "3ecf237d52a9b4d1"
+    plainenglish: >-
+      It is completely sensible, and nobody understands it. {LADY} rides to the Greening fair
+      with an empty glove for two years, then stops wearing the glove. That is the year the
+      matter is really settled.
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].title"
+    of: "3ea87e2696ba1aba"
+    plainenglish: >-
+      Hiring Servants at the Bramme Fair
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].body"
+    of: "4de1ffb18177b885"
+    plainenglish: >-
+      Servants are hired at the Ingathering fair, in the street, where workers stand holding the
+      tools of their trade. The house wants a yard man and a maid. The reeve's second daughter
+      is standing there holding nothing at all, because everyone in Wick knows why she is there.
+      There is also a man from Lag asking two mites below the normal wage, in a way that
+      suggests he has been asking all day.
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].interaction.decidedBy.state[0].because"
+    of: "260f6152a1be3006"
+    plainenglish: >-
+      there is no money left to spend on goodwill
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].interaction.choices[id=take_the_reeves_daughter].label"
+    of: "3c71c5a880954724"
+    plainenglish: >-
+      Hire the reeve's daughter at the normal wage.
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].interaction.choices[id=take_the_reeves_daughter].outcomes[id=reeves_girl].text"
+    of: "fff195adc3122cc9"
+    plainenglish: >-
+      Three marks, plus food, a bed and clothing. The reeve is now tied to the household in the
+      way that matters most in a village. She is good at the work within a month. For the next
+      eleven years, every conversation about rent feels a little different from before.
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].interaction.choices[id=take_the_lag_man].label"
+    of: "6b04d3df8a39cb0b"
+    plainenglish: >-
+      Hire the man from Lag. Two mites cheaper is two mites cheaper.
+  - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].interaction.choices[id=take_the_lag_man].outcomes[id=lag_man].text"
+    of: "23fa469a3f1cf77e"
+    plainenglish: >-
+      He works harder than anyone in the yard, and for two years nobody there speaks to him,
+      because they say Lag folk have webbed feet, which they do not. The saving is eleven mites
+      a tenday. The reeve's daughter is hired at Ockleigh. The reeve mentions it exactly once,
+      at Thaw, while the rents are being counted.
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].title"
+    of: "8ca4d197cf3e02b3"
+    plainenglish: >-
+      A Game Everyone Plays for Pennies, and Only Fools Play for Land
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].body"
+    of: "1b130372bf8d7e16"
+    plainenglish: >-
+      The long game board and its pieces came out after the Slaughter feast, as usual, and were
+      still out at three in the morning, which is not usual. By then {PLAYER} had lost a year's
+      income from the mill to a townsman of Bramme. He had written it on the back of a tally
+      stick in his own hand and signed it. A tally is not a legal contract, and no notary has
+      seen it. At noon the townsman is at the gate with the tally. He is sober and polite, and
+      he knows both of those facts perfectly well.
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].interaction.choices[id=honour_it].label"
+    of: "79cf804af5b1c08e"
+    plainenglish: >-
+      Pay it. It is his handwriting, and the house stands behind its family's word.
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].interaction.choices[id=honour_it].outcomes[id=paid].text"
+    of: "d0bcdfef5cb95f03"
+    plainenglish: >-
+      Thirty-one crowns are counted out in the yard where anyone can see. The townsman goes down
+      the hill telling the story the way the house would want it told, because it is a better
+      story that way, and he is no fool. Nobody says a word to {PLAYER} about it, and that is
+      worse.
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].interaction.choices[id=refuse_it].label"
+    of: "7fe496b68579b59a"
+    plainenglish: >-
+      Refuse. Something written in the small hours is not a contract.
+  - address: "content:events/feasts.yaml#events[id=tables_for_a_farm].interaction.choices[id=refuse_it].outcomes[id=refused].text"
+    of: "09d26b28f0cd60c4"
+    plainenglish: >-
+      The townsman is told politely that there is no legal document and no notary's mark, and he
+      agrees politely, because both are true. Within a tenday, all forty of Bramme's leading
+      households have heard the whole story. Three of them send delegates to the Assembly, and
+      one of them never forgets anything.
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].title"
+    of: "743c0846018050c2"
+    plainenglish: >-
+      Dancing After the Meal
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].body"
+    of: "68e9608fb4cc394b"
+    plainenglish: >-
+      At Greening the tables are cleared and the circle dances start, with pipe and drum.
+      Tenants are at the low tables and family is down from the branch halls, and for about two
+      hours the hall is one room instead of a seating plan. {DAUGHTER} has danced three times
+      with the miller's eldest son, and the third time was after the music stopped. The steward
+      saw it. So did the woman from the west house, who is here to watch for exactly this kind
+      of thing, for exactly the kind of family that asks.
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].interaction.choices[id=stop_it_now].label"
+    of: "3347743a9369b156"
+    plainenglish: >-
+      End it now, in the room, before it becomes a story.
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].interaction.choices[id=stop_it_now].outcomes[id=ended].text"
+    of: "08e9b7f07347a31c"
+    plainenglish: >-
+      A word to the steward, and the music starts again with a different dance. {DAUGHTER} is on
+      {HEAD}'s arm for the next one, and the room understands. Within a minute the miller's son
+      is at the far end of the hall. He understands perfectly and is not humiliated, which took
+      some skill. Nobody says anything to anybody about any of it.
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].interaction.choices[id=let_them_dance].label"
+    of: "0ae689ceb8429e3a"
+    plainenglish: >-
+      Let them dance. It is Greening, and they are nineteen.
+  - address: "content:events/feasts.yaml#events[id=the_dance_after_the_board].interaction.choices[id=let_them_dance].outcomes[id=danced].text"
+    of: "de86663db6c9d451"
+    plainenglish: >-
+      They dance twice more and nothing at all happens. That is the true, dull end of it. The
+      woman from the west house gets home in four days, and the version she tells is not the
+      dull one. It reaches Cawdry by Harvest with a name attached, and the name is not the
+      miller's.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].title"
+    of: "bff0d22031dc648c"
+    plainenglish: >-
+      The Wrestling at the Bramme Fair
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].body"
+    of: "982639a10601e9fd"
+    plainenglish: >-
+      The wrestling at the Greening fair is a ring of trampled grass, a mark chalked on a post,
+      and about four hundred people who have been drinking since the gates opened. Gentlemen do
+      not take part. {SON} has entered under a false name, and the name has lasted about as long
+      as false names usually do. He is in the last four, up against a cattle drover who wrestles
+      in six towns a year.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=pull_him_out].label"
+    of: "09ee6156f8bc4cba"
+    plainenglish: >-
+      Take him out of the ring right now.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=pull_him_out].outcomes[id=pulled].text"
+    of: "f7c5159711d87b53"
+    plainenglish: >-
+      It is done quietly, but it is not quiet at all, because four hundred people watch a young
+      man being taken out of the ring by his own family. He is not hurt, and nobody speaks to
+      him on the ride home. The story that goes round Bramme is about the house, not about him.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=let_him_go_on].label"
+    of: "78e9b858091fdc04"
+    plainenglish: >-
+      Let him carry on. He chose to enter.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=let_him_go_on].outcomes[id=he_wins].text"
+    of: "3c66b7c4ed2fe848"
+    plainenglish: >-
+      He throws the drover twice, and by the second throw the crowd is already on its feet. Half
+      of Bramme now knows what the family's second son can do with his hands, and half of Bramme
+      is exactly the wrong number of people to know anything.
+  - address: "content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=let_him_go_on].outcomes[id=he_is_broken].text"
+    of: "4f4374d09ab8a3cc"
+    plainenglish: >-
+      The drover finishes it in about eleven seconds, and one of those seconds is the sound of a
+      collarbone breaking. He is carried out past his own tenants. The bonesetter from Wick sets
+      it on a table in the alehouse for two mites, and does it well.
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].title"
+    of: "0b3dc915839fb5c9"
+    plainenglish: >-
+      Nine Nights, and Who Is Seen There
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].body"
+    of: "9101e671d3428ff5"
+    plainenglish: >-
+      At the dark end of the year, the Quieting prayer is said at dusk for nine nights. Nobody
+      travels, nothing is decided, and no contracts are sealed. The house is expected at the
+      chapter house in Bramme at least once during the nine nights, and people notice when it
+      does not come. Eleven miles in Longnight weather means half a day's ride and a night at an
+      inn at the far end. The subdeacon does not keep a list. The subdeacon does not need to
+      keep a list.
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].interaction.choices[id=ride_to_bramme].label"
+    of: "15db0073ec6ef10f"
+    plainenglish: >-
+      Ride down for the seventh night. Be seen there.
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].interaction.choices[id=ride_to_bramme].outcomes[id=counted].text"
+    of: "22d7362e2893b80a"
+    plainenglish: >-
+      Eleven miles of frozen ruts each way, eight mites for the inn, and an hour standing at the
+      back of a cold chapter house saying nine words in a language nobody in the room could
+      translate. It gains nothing that can be written down. It stops something from being
+      written down, and in this province that is the same thing at half the price.
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].interaction.choices[id=say_it_at_ardwen].label"
+    of: "8c9662dc3557e610"
+    plainenglish: >-
+      Say the prayer here. The chapel is thirty feet from the door.
+  - address: "content:events/feasts.yaml#events[id=the_hollow_days_at_bramme].interaction.choices[id=say_it_at_ardwen].outcomes[id=said_at_home].text"
+    of: "a5f79aa0f3c53914"
+    plainenglish: >-
+      Nine nights in the family's own chapel. It is lawful, it is enough, and it is completely
+      proper, but the house has not done it in living memory, because the chapel is the one room
+      here nobody likes. On the fourth night the priest from Wick comes up without being asked
+      and says the prayer with them. He does not explain why he came.

@@ -633,13 +633,25 @@ describe('the gates fail when they should', () => {
 
   /**
    * Five years recovers no clauses at all, so a gate still counting them
-   * reports a median of 0 and fails. If this ever passes, the gate has stopped
+   * reports a mean of 0 and fails. If this ever passes, the gate has stopped
    * reading `clausesRecovered`.
    */
   it('gate 7 fails a run too short to recover anything', () => {
     const { ok, lines } = gateClauses(content, { seeds: [1000, 1007], years: 5 });
     expect(ok, lines.join('\n')).toBe(false);
-    expect(lines.join('\n')).toMatch(/median must be at least/);
+    expect(lines.join('\n')).toMatch(/mean must be at least/);
+  });
+
+  /**
+   * The merge batch fans out over workers (#1351). A worker that dropped,
+   * duplicated or reordered a run would change the batch it judges, so the
+   * pooled answer must equal the serial one, run for run.
+   */
+  it('gate 7 reads the same batch through workers as it does serially', () => {
+    const seeds = [5000, 5007, 5014, 5021];
+    const serial = gateClauses(content, { seeds, years: 40, workers: 1 });
+    const pooled = gateClauses(content, { seeds, years: 40, workers: 2 });
+    expect(pooled.lines).toEqual(serial.lines);
   });
 
   it('gate 4 fails a run too short for the content to fire, and says it tried both policies', () => {

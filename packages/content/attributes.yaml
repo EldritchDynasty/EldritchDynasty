@@ -175,3 +175,119 @@ attributes:
       Overflow of expressed power. A person can go mad if and only if they are
       capable of expressing Eldritch Power — which means never a woman, and
       never a mundane man.
+
+proseVariants:
+  - address: "content:attributes.yaml#attributes[id=strength].description"
+    of: "96ebaa3add09b7ce"
+    plainenglish: >-
+      Staying alive. Duels, war, plague, hard winters, giving birth.
+  - address: "content:attributes.yaml#attributes[id=fecundity].description"
+    of: "8361fe7b8cdf2057"
+    plainenglish: >-
+      What a body was born able to do, before age or illness has any say. It is inherited from
+      both parents like everything else, which is why the marriage market can want a fruitful
+      family line and smell a weak one. Nobody in the world has a number for it. They have a
+      grandmother who had seven children, and a cousin who had none. What actually happens to a
+      particular couple in a particular year is Fertility, below.
+  - address: "content:attributes.yaml#attributes[id=charm].description"
+    of: "6f850d03f78e7f37"
+    plainenglish: >-
+      How many options you get. It decides which suitor cards you are dealt, and the effect
+      builds over time.
+  - address: "content:attributes.yaml#attributes[id=agility].description"
+    of: "add57e2f7b1dd443"
+    plainenglish: >-
+      Getting away, precise work, carrying out rituals, and some of the Arts.
+  - address: "content:attributes.yaml#attributes[id=mind].description"
+    of: "c30294400f0e8ccc"
+    plainenglish: >-
+      How much Madness a person can hold, and the limit on it. How fast they study, and how many
+      books they can study at once. It only develops after Awakening, which is why a son of hot
+      blood who has not yet woken is the most fragile person in the house.
+  - address: "content:attributes.yaml#attributes[id=longevity].description"
+    of: "64317673eb0d7f8f"
+    plainenglish: >-
+      How long this body was built to last, before anything happens to it. The average is a
+      hundred years, and almost nobody reaches it: maxAge is the limit a life is measured
+      against, not a promise. Both age curves are measured as a share of it. A body built for a
+      hundred and thirty years is biologically thirty when it is thirty-nine, stays fertile
+      longer, goes grey later, and its risk of death starts climbing later. Everything in this
+      engine that reads an age reads it as a fraction of this number.
+  - address: "content:attributes.yaml#attributes[id=health].description"
+    of: "f16336ad7e494511"
+    plainenglish: >-
+      The state of the body this year. It starts from the toughness inherited through Strength,
+      then subtracts the weakness of infancy, what age has taken, any of the founder's curses
+      the person happened to inherit from both sides, and any Madness that has spilled over what
+      the Mind can hold. Events change it — plague, famine, a hard birth, a midwife worth her
+      wages — and those changes last through the winter, because they are stored in `acquired`
+      and not in the phenotype cache.
+  - address: "content:attributes.yaml#attributes[id=fertility].description"
+    of: "9f6236bab849dfde"
+    plainenglish: >-
+      Fecundity, adjusted for the body it belongs to: what age and sex allow, multiplied by what
+      health allows. A hundred is the benchmark: average stock, good health, at the best age. A
+      woman is most fertile in her early twenties and is finished by forty-five. A man's peak is
+      wider and lower and never quite ends. That is the same seventy-thirty imbalance the
+      marriage market already works on, reached from the other side. A couple's chance is the
+      two numbers multiplied, so if either of them is finished, both are.
+  - address: "content:attributes.yaml#attributes[id=max_age].name"
+    of: "e6e08d72fdf26c0e"
+    plainenglish: >-
+      Longest Possible Age
+  - address: "content:attributes.yaml#attributes[id=max_age].description"
+    of: "473905810d2d609d"
+    plainenglish: >-
+      Longevity turned into years, with a hundred as the middle. It is calculated, so nothing
+      writes to it directly. But the acquired layer feeds into it, which is how a dose of
+      agelessness bought at auction can add decades to one person without changing what their
+      children inherit.
+  - address: "content:attributes.yaml#attributes[id=fluid].description"
+    of: "5f41e8dbb86166df"
+    plainenglish: >-
+      The tide, and the tide that drowns.
+  - address: "content:attributes.yaml#attributes[id=thermal].description"
+    of: "28aca45111be164d"
+    plainenglish: >-
+      Fire, the forge, the slow burn.
+  - address: "content:attributes.yaml#attributes[id=aero].description"
+    of: "9f14dc587124962c"
+    plainenglish: >-
+      Wind, storms, ash carried far away.
+  - address: "content:attributes.yaml#attributes[id=terra].description"
+    of: "338555035cec8b17"
+    plainenglish: >-
+      Stone, foundations, burial and weight. The affinity of walls and of what lies under them,
+      which in this family is a big subject.
+  - address: "content:attributes.yaml#attributes[id=life].description"
+    of: "f7409630517c3f94"
+    plainenglish: >-
+      Birth, growth, breaking a plague.
+  - address: "content:attributes.yaml#attributes[id=death].description"
+    of: "5eacc5fba819d5f7"
+    plainenglish: >-
+      The dead who come back, the unburied, what stays in the ground.
+  - address: "content:attributes.yaml#attributes[id=light].description"
+    of: "631ac7f8e936b934"
+    plainenglish: >-
+      Sight, revealing things, seeing something clearly.
+  - address: "content:attributes.yaml#attributes[id=darkness].description"
+    of: "7d5febbfb8fede6b"
+    plainenglish: >-
+      Doorways, not seeing, doors. The affinity of not being seen, and so the family's answer to
+      the last two hundred years.
+  - address: "content:attributes.yaml#attributes[id=eldritch_power].name"
+    of: "b243dcd9ce97a0e5"
+    plainenglish: >-
+      Eldritch Power (the family gift)
+  - address: "content:attributes.yaml#attributes[id=eldritch_power].description"
+    of: "05cd8f76d259bf9a"
+    plainenglish: >-
+      Passed down on the X chromosome, and found only in this family. Men express it; women
+      carry it and never express it. It weakens when the family marries outside its blood, and
+      it can never be replaced from outside.
+  - address: "content:attributes.yaml#attributes[id=madness].description"
+    of: "85d7cb4a270de5be"
+    plainenglish: >-
+      What spills over when expressed power is too much. A person can go mad only if they can
+      express Eldritch Power, which means never a woman and never a man without the gift.

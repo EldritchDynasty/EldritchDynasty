@@ -175,6 +175,63 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: flag, flag: no_carpenter_at_wick, set: true }
+              next:
+                event: the_price_of_no_carpenter
+                after: { minYears: 40, maxYears: 50 }
+
+  # #1276 / #334: the four-crown saving promised a bill two generations later.
+  # This follows only that purchase, rather than competing for an ambient draw.
+  # No HEAD binding: the bill belongs to whoever holds the seal when it arrives.
+  - id: the_price_of_no_carpenter
+    title: The Price of Having Nobody
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [tenants, trade, upkeep, hardship]
+    purposes: [buy_patience, change_relationship, worldbuild_through_action]
+    conditions: { flag: no_carpenter_at_wick, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The Bramme cart creaks into the yard with rain dripping off its load.
+      The gates need replacing, the mill needs a cog, and a cottage has lost
+      part of its roof. The reeve puts the old account before {HEAD}, with
+      its four-crown entry for work bought outside the parish. That was two
+      generations ago. Today's bill is twenty-eight crowns, and no one at
+      Wick can mend what is on the cart. The Bramme carpenter would stay if
+      the house repaired a cottage for him and fitted a bench; with this
+      bill paid, the whole settlement would cost thirty-six crowns. Rain
+      runs off the uncovered tools.
+    interaction:
+      kind: choice
+      choices:
+        - id: pay_the_bill
+          label: Pay for the work. Twenty-eight crowns.
+          outcomes:
+            - id: paid
+              weight: 100
+              text: >-
+                The gates swing, the mill turns, and the cottage keeps the
+                rain out. Twenty-eight crowns go back to Bramme with the
+                cart. The reeve files the bill beside the four-crown entry.
+                There is still no bench at Wick.
+              effects:
+                - { kind: treasury, delta: -28 }
+        - id: bring_a_carpenter_to_wick
+          label: Give him a cottage and a bench. Thirty-six crowns, including the work.
+          outcomes:
+            - id: settled
+              weight: 100
+              text: >-
+                The repair bill is paid, and eight crowns more buys a roof
+                for the empty cottage and a bench under its window. He
+                brings his tools from Bramme before Ingathering. The reeve
+                sends the next broken gate down the lane instead of eleven
+                miles along the road. The shavings stay here.
+              effects:
+                - { kind: treasury, delta: -36 }
+                - { kind: relationship, from: household, to: head, sentiment: 8 }
+                - { kind: flag, flag: no_carpenter_at_wick, set: false }
 
   - id: the_alewife_and_the_licence
     title: The Alewife Has No Licence and Never Has
@@ -567,3 +624,68 @@ events:
                 - { kind: treasury, delta: 4 }
                 - { kind: relationship, from: household, to: head, sentiment: -11 }
                 - { kind: rumour, op: seed, id: rumour_the_forge_door_shut, accuracy: 0.6 }
+
+proseVariants:
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].title
+    of: e7abfc7ab283bcc6
+    plainenglish: Wick has only one carpenter
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].body
+    of: 61140114c6295de0
+    plainenglish: Wick's carpenter is 61, and his hands can no longer do the work. His sons
+      became soldiers, so he has no apprentice to replace him. Training someone takes
+      seven years. The parish relies on him for its carts, gates, roof beams and wooden
+      mill parts. Bramme has four carpenters, but none will travel eleven miles just to
+      repair a gate. The house could pay nine crowns to train a local apprentice, who
+      would become useful after seven years.
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].interaction.choices[id=apprentice_a_boy].label
+    of: 295e6fbc10f1a398
+    plainenglish: Pay nine crowns to train an apprentice over seven years.
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].interaction.choices[id=apprentice_a_boy].outcomes[id=apprenticed].text
+    of: 23b558e357ad9b07
+    plainenglish: The house pays nine crowns to train a cottager's second son. After seven
+      years he is skilled enough to take over when the old carpenter dies. Wick keeps
+      someone who can repair its gates and other wooden equipment. This small decision
+      proves useful to the whole parish.
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].interaction.choices[id=apprentice_a_boy].outcomes[id=the_boy_leaves].text
+    of: d499c38b3eceb82f
+    plainenglish: The house pays nine crowns, but after four years the apprentice moves to
+      Bramme for more work and a better social life. No agreement requires him to stay at
+      Wick, so he is free to leave. The old carpenter is still unable to work as before.
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].interaction.choices[id=pay_bramme_rates].label
+    of: 5258d10b661b1497
+    plainenglish: Hire carpenters from Bramme when needed. It costs less at first.
+  - address: content:events/wick_trades.yaml#events[id=the_carpenter_is_getting_old].interaction.choices[id=pay_bramme_rates].outcomes[id=bramme_rates].text
+    of: c3066fb6da44adba
+    plainenglish: Hiring from Bramme costs less for about eleven years. By then Wick has lost
+      its own carpentry trade. Every gate, cart and roof beam must come from eleven miles
+      away, at prices set by suppliers who face no local competition. The full cost
+      becomes clear two generations later.
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].title
+    of: 06bfed46bc19299a
+    plainenglish: The cost of losing Wick's carpenter
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].body
+    of: 7292e21fa4331d03
+    plainenglish: A cart from Bramme arrives in the rain. Wick needs new gates, a replacement
+      mill cog and repairs to a cottage roof. The reeve shows {HEAD} an account from two
+      generations ago, when the house paid four crowns for carpentry from outside the
+      parish. The current work costs twenty-eight crowns because no one at Wick can do it.
+      The Bramme carpenter offers to move to Wick if the house repairs a cottage for him
+      and provides a workbench. Paying for the repairs and helping him settle would cost
+      thirty-six crowns in total.
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].interaction.choices[id=pay_the_bill].label
+    of: d0a01879f752ec7d
+    plainenglish: Pay twenty-eight crowns for the repairs.
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].interaction.choices[id=pay_the_bill].outcomes[id=paid].text
+    of: 4683b3f5328a60f1
+    plainenglish: The gates, mill and cottage roof are repaired. The house pays twenty-eight
+      crowns, and the carpenter returns to Bramme. The reeve files the bill with the old
+      four-crown account. Wick still has no local carpenter.
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].interaction.choices[id=bring_a_carpenter_to_wick].label
+    of: 6d748856ffebff0a
+    plainenglish: Pay thirty-six crowns for the repairs and help the carpenter settle at Wick.
+  - address: content:events/wick_trades.yaml#events[id=the_price_of_no_carpenter].interaction.choices[id=bring_a_carpenter_to_wick].outcomes[id=settled].text
+    of: "2698501e13163052"
+    plainenglish: The house pays the repair bill and spends eight crowns more to repair an
+      empty cottage and provide a workbench. The carpenter moves his tools from Bramme
+      before Ingathering. Wick can now have its gates repaired locally instead of sending
+      them eleven miles away.

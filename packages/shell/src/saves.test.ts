@@ -10,6 +10,7 @@ import { deleteSave, listSaves, readSave, requireSaveEnvelope, saveRoot, writeSa
 import { readRunLibrary, writeRunLibrary } from './run-library.mjs';
 import { mobileStorage } from '../../mobile/src/storage.js';
 import { writeJsonAtomically } from './atomic-json.mjs';
+import { parseImportedRun } from './run-import.mjs';
 import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 
 /**
@@ -139,6 +140,17 @@ describe('atomic exported run replacement (#904)', () => {
     expect(readdirSync(directory).sort()).toEqual(['eldritch-run.json', 'unrelated.json']);
   });
 
+  it('keeps an existing export if toJSON preserves an object root but drops its format (#1396)', () => {
+    const target = join(directory, 'eldritch-run.json');
+    const original = '{"format":28,"year":1450}';
+    writeFileSync(target, original, 'utf8');
+    const deceptive = { format: 28, toJSON: () => ({ year: 1451 }) };
+    expect(() => writeJsonAtomically(target, deceptive, requireSaveEnvelope))
+      .toThrow('a save is an object with a numeric format');
+    expect(readFileSync(target, 'utf8')).toBe(original);
+    expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
+  });
+
   it('pins the native export IPC to the same atomic writer as slot saves', () => {
     const source = readFileSync(new URL('./main.mjs', import.meta.url), 'utf8');
     const start = source.indexOf("ipcMain.handle('ed:export-save'");
@@ -148,7 +160,7 @@ describe('atomic exported run replacement (#904)', () => {
     const handler = source.slice(start, end);
     expect(handler).toContain('requireSaveEnvelope(save)');
     expect(handler.indexOf('requireSaveEnvelope(save)')).toBeLessThan(handler.indexOf('dialog.showSaveDialog('));
-    expect(handler).toContain('writeJsonAtomically(filePath, save)');
+    expect(handler).toContain('writeJsonAtomically(filePath, save, requireSaveEnvelope)');
     expect(handler).not.toContain('writeFileSync(filePath,');
     expect(handler).toContain('if (canceled || !filePath)');
     expect(handler).toContain('return { ok: true, path: filePath }');
@@ -170,6 +182,21 @@ describe('a shared shell save envelope for writing and export (#1253)', () => {
   });
 });
 
+describe('the shell import and persistence format boundary (#1367)', () => {
+  it('rejects non-finite formats without rejecting other finite numeric envelopes', () => {
+    for (const format of [NaN, Infinity, -Infinity]) {
+      expect(() => requireSaveEnvelope({ format })).toThrow('a save is an object with a numeric format');
+    }
+    // JSON.parse permits overflowing exponents, even though a JSON writer
+    // would silently reserialize those same values as null.
+    for (const raw of ['{"format":1e999}', '{"format":-1e999}']) {
+      expect(() => parseImportedRun(raw)).toThrow('a save is an object with a numeric format');
+    }
+    expect(parseImportedRun('{"format":28,"year":1042}')).toEqual({ format: 28, year: 1042 });
+    expect(requireSaveEnvelope({ format: Number.MAX_VALUE })).toEqual({ format: Number.MAX_VALUE });
+  });
+});
+
 describe('the save directory', () => {
   let userData = '';
   let root = '';
@@ -181,6 +208,81 @@ describe('the save directory', () => {
   afterEach(() => rmSync(userData, { recursive: true, force: true }));
 
   const aSave = (over: Record<string, unknown> = {}) => ({ format: 6, year: 1442, savedAt: '2026-08-22T00:00:00.000Z', ...over });
+
+  it('refuses non-finite writes without corrupting an existing save slot (#1367)', () => {
+    writeSave(root, 'kept', aSave({ year: 1442 }));
+    const path = join(root, 'kept.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    for (const format of [NaN, Infinity, -Infinity]) {
+      expect(() => writeSave(root, 'kept', aSave({ format })))
+        .toThrow('a save is an object with a numeric format');
+      expect(readFileSync(path, 'utf8')).toBe(original);
+    }
+
+    expect(listSaves(root)).toHaveLength(1);
+    expect(readSave(root, 'kept')).toMatchObject({ year: 1442, format: 6 });
+    expect(readdirSync(root)).toEqual(['kept.edsave.json']);
+  });
+
+  it('keeps the existing save when custom serialization changes its JSON root (#1389)', () => {
+    writeSave(root, 'kept', aSave({ year: 1450 }));
+    const path = join(root, 'kept.edsave.json');
+    const previous = readFileSync(path, 'utf8');
+
+    // Input validation alone cannot detect an own toJSON hook replacing the
+    // document root. Refuse every root the corresponding read method rejects.
+    for (const serializedRoot of [null, [], 'not a save', 42, false, undefined]) {
+      const input = { format: 28, toJSON: () => serializedRoot };
+      expect(() => writeSave(root, 'kept', input))
+        .toThrow('atomic JSON document must serialize to an object');
+      expect(readFileSync(path, 'utf8')).toBe(previous);
+    }
+
+    expect(readdirSync(root)).toEqual(['kept.edsave.json']);
+    expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1450 });
+    writeSave(root, 'kept', aSave({ year: 1451 }));
+    expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1451 });
+  });
+
+  it('refuses serialized objects that lose their format and retains the prior slot (#1396)', () => {
+    writeSave(root, 'kept', aSave({ year: 1450 }));
+    const path = join(root, 'kept.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    // These inputs pass the pre-serialization envelope check. The serialized
+    // result does not, even though all three JSON roots are objects.
+    for (const serializedRoot of [{}, { format: '28' }, { format: NaN }]) {
+      const source = { format: 28, toJSON: () => serializedRoot };
+      expect(() => writeSave(root, 'kept', source))
+        .toThrow('a save is an object with a numeric format');
+      expect(readFileSync(path, 'utf8')).toBe(original);
+    }
+    expect(readdirSync(root)).toEqual(['kept.edsave.json']);
+    expect(readSave(root, 'kept')).toMatchObject({ format: 6, year: 1450 });
+
+    let serializations = 0;
+    const next = { format: 28, toJSON: () => {
+      serializations += 1;
+      return serializations === 1 ? { format: 28, year: 1451 } : {};
+    } };
+    writeSave(root, 'kept', next);
+    expect(serializations).toBe(1);
+    expect(readSave(root, 'kept')).toMatchObject({ format: 28, year: 1451 });
+  });
+
+  it('reports an overflowing numeric format in an existing JSON file as unreadable', () => {
+    const bytes = '{"format":1e999,"year":1442}';
+    const path = join(root, 'overflow.edsave.json');
+    writeFileSync(path, bytes, 'utf8');
+
+    expect(listSaves(root)[0]).toMatchObject({
+      slot: 'overflow',
+      unreadable: expect.stringContaining('a save is an object with a numeric format'),
+    });
+    expect(() => readSave(root, 'overflow')).toThrow('a save is an object with a numeric format');
+    expect(readFileSync(path, 'utf8')).toBe(bytes);
+  });
 
   it('writes, lists, reads back and deletes a slot', () => {
     writeSave(root, 'the autumn run', aSave());
@@ -436,6 +538,26 @@ describe('the installation library on disk', () => {
     const path = writeRunLibrary(userData, library);
     expect(path).toBe(join(userData, 'library.json'));
     expect(readRunLibrary(userData)).toEqual(library);
+  });
+
+  it('preserves a readable Library when a source object serializes to a non-object root (#1389)', () => {
+    const healthy = { format: 1, runs: [{ id: 'house-one' }] };
+    writeRunLibrary(userData, healthy);
+    const path = join(userData, 'library.json');
+    const previous = readFileSync(path, 'utf8');
+
+    for (const serializedRoot of [null, [], 'not a library', 42, false, undefined]) {
+      const input = { format: 1, toJSON: () => serializedRoot };
+      expect(() => writeRunLibrary(userData, input))
+        .toThrow('atomic JSON document must serialize to an object');
+      expect(readFileSync(path, 'utf8')).toBe(previous);
+    }
+
+    expect(readdirSync(userData)).toEqual(['library.json']);
+    expect(readRunLibrary(userData)).toEqual(healthy);
+    const updated = { format: 1, runs: [{ id: 'house-two' }] };
+    writeRunLibrary(userData, updated);
+    expect(readRunLibrary(userData)).toEqual(updated);
   });
 
   it('never follows a planted library.json.writing symlink outside the profile store', () => {

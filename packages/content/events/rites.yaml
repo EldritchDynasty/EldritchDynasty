@@ -1184,7 +1184,7 @@ events:
                 # the house is asked and in what words; `rites.ts` decides how
                 # much of a consumed relative arrives in the man who consumed
                 # them.
-                - { kind: rite, rite: vessel, ascendant: ASCENDANT, subject: VESSEL, cause: given to the second rite, and not spoken of again }
+                - { kind: rite, rite: vessel, ascendant: ASCENDANT, subject: VESSEL, cause: "given to the second rite, and not spoken of again" }
                 - { kind: respect, delta: -1 }
               # The widening is the other half of the same act, and it is
               # immediate for the reason the body gives: a man filled past his

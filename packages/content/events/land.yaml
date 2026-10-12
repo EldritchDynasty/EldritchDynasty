@@ -475,7 +475,7 @@ events:
               # #341: a faintly surprised clerk is not a point of Respect. The
               # refusal is a letter, and the letter is kept.
               effects:
-                - { kind: chronicle, text: The Warden offered Farrowmere when the last Farrow died, and the house wrote back that it had ground enough. }
+                - { kind: chronicle, text: "The Warden offered Farrowmere when the last Farrow died, and the house wrote back that it had ground enough." }
     rumour: { id: rumour_farrowmere_escheated, accuracy: 0.75, spread: 2 }
 
   - id: the_marker_stays_moved

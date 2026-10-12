@@ -8,6 +8,7 @@ import { RespectTierS, RegisterS } from './conditions.js';
 import { SexS } from './attributes.js';
 import { BranchIdS, HouseIdS, PersonIdS } from './ids.js';
 import { EventTemplateS } from './event.js';
+import { DeciderS } from './decider.js';
 import {
   LineageDocumentS, MembershipRecordS, PersonStatusS, RetainerContractS, StorageTierS,
   AwakeningStateS,
@@ -601,6 +602,13 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     fill: SlotFillS,
     choices: z.array(DecisionChoiceS),
     cast: z.array(CastRequestS),
+    /**
+     * #1380: a pending decision must retain who actually takes its branch.
+     * Legacy current-format saves lack these properties; the union transform
+     * below reconstructs them from the persisted authored interaction.
+     */
+    decidedBy: DeciderS.optional(),
+    choicesAreOpen: z.boolean().optional(),
     arcStep: z.object({
       instance: ArcInstanceS,
       node: z.unknown(),
@@ -1042,7 +1050,21 @@ export const SavedGameS = z.object({
      */
     because: z.string().default('a child of the house'),
   })),
-  pendingDecisions: z.array(PendingDecisionS),
+  // Keep PendingDecisionS itself as a discriminated union: clients use its
+  // .options to inspect individual arms. Only the enclosing save parser owns
+  // the legacy current-format repair, after the embedded event was validated.
+  pendingDecisions: z.array(PendingDecisionS).transform((pending) => pending.map((decision) => {
+    if (decision.kind !== 'choice') return decision;
+    const decidedBy = decision.decidedBy
+      ?? (decision.event.interaction.kind === 'narration'
+        ? 'chance'
+        : decision.event.interaction.decidedBy);
+    return {
+      ...decision,
+      decidedBy,
+      choicesAreOpen: decision.choicesAreOpen ?? (decidedBy === 'player'),
+    };
+  })),
 
   counters: z.object({
     person: z.number(), mint: z.number(), arc: z.number(),
