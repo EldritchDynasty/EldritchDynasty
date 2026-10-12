@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import type { PrologueView } from '@ed/core';
+import type { PrologueView, SessionView } from '@ed/core';
 import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
 import Prologue from './Prologue.vue';
+import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
 import Interlude from './Interlude.vue';
 import Line from './Line.vue';
@@ -72,6 +73,45 @@ function answerButton(wrapper: VueWrapper, question: number, answer = 1) {
 
 beforeEach(() => {
   window.localStorage.clear();
+});
+
+describe('held Enter in newborn naming (#1471)', () => {
+  it('ignores auto-repeated Enter without hiding a deliberate naming submission', async () => {
+    const name = vi.fn(() => true);
+    const wrapper = mount(Naming, {
+      props: {
+        view: {
+          namesWanted: [{
+            person: 'child-1',
+            born: 1060,
+            sex: 'female',
+            suggested: 'Mara',
+            because: 'Her kin asked for a name.',
+          }],
+        } as unknown as SessionView,
+        actions: { name } as unknown as GameActions,
+      },
+    });
+
+    try {
+      const input = wrapper.get('input');
+      await input.setValue('Alys');
+      await input.trigger('keydown', { key: 'Enter', repeat: true });
+      expect(name).not.toHaveBeenCalled();
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+
+      await input.trigger('keydown', { key: 'Enter', repeat: false });
+      expect(name).toHaveBeenCalledExactlyOnceWith('child-1', 'Alys');
+
+      // The old view can remain mounted for another tick after the name is
+      // accepted; repeated keydown must neither resubmit nor show a refusal.
+      await input.trigger('keydown', { key: 'Enter', repeat: true });
+      expect(name).toHaveBeenCalledTimes(1);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
 });
 
 describe('The Examination (#343)', () => {
