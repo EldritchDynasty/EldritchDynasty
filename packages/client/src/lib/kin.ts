@@ -17,9 +17,31 @@ export type MemberView = SessionView['halls'][number]['members'][number];
  * branch looks like from the inside.
  */
 export function recordedParent(m: MemberView, hall: MemberView[]): string | undefined {
-  const claimed = m.record.parents;
-  const here = (id: string | undefined) => (id && hall.some((x) => x.id === id) ? id : undefined);
-  return here(claimed.father) ?? here(claimed.mother);
+  const members = new Map(hall.map((person) => [person.id, person]));
+  const preferred = (person: MemberView): string | undefined => {
+    const { father, mother } = person.record.parents;
+    if (father && members.has(father)) return father;
+    return mother && members.has(mother) ? mother : undefined;
+  };
+  const parent = preferred(m);
+  if (!parent) return undefined;
+
+  // The record can contradict itself (especially after an invented ancestry).
+  // An ordinary roots/children walk would then hide an entire parent cycle:
+  // every person in it has a recorded parent, so none is ever a root.
+  // Break exactly one edge, at the smallest stable id in that cycle, in this
+  // projection ONLY. No real or recorded parentage is changed.
+  const chain = [m.id];
+  const seen = new Set(chain);
+  let next: string | undefined = parent;
+  while (next && !seen.has(next)) {
+    seen.add(next);
+    chain.push(next);
+    const ancestor = members.get(next);
+    next = ancestor ? preferred(ancestor) : undefined;
+  }
+  if (next === m.id && chain.every((id) => m.id <= id)) return undefined;
+  return parent;
 }
 
 /**
