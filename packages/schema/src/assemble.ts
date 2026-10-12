@@ -68,6 +68,40 @@ export const BUNDLE_KEYS = CONTENT_LAYOUT.map((c) => c.key);
 export type YamlParser = (text: string) => unknown;
 
 /**
+ * A comma in an unquoted YAML flow value creates a stray null-valued key.
+ * Zod removes that unknown key, leaving the player's prose silently truncated.
+ * Inspect the parsed document BEFORE its collection is passed through Zod.
+ * This lives here (not in either loader) so Node and the editor agree, and
+ * takes parsed YAML to keep @ed/schema independent of a YAML implementation.
+ */
+export function assertNoTruncatedFlowProse(file: string, source: string, document: unknown): void {
+  const lines = source.split(/\r?\n/);
+  const visit = (value: unknown, withinAuthoredFlow: boolean): void => {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item, withinAuthoredFlow);
+      return;
+    }
+    if (value === null || typeof value !== 'object') return;
+    for (const [key, child] of Object.entries(value)) {
+      if (withinAuthoredFlow && child === null && /\s/.test(key)) {
+        // The key must really occur after a comma in a flow mapping. Do not
+        // reject ordinary unknown/null fields in block YAML or quoted text.
+        const line = lines.findIndex((raw) => {
+          if (!raw.includes('{') || !raw.includes('}') || !raw.includes(',')) return false;
+          const comma = raw.indexOf(',');
+          return raw.indexOf(key, comma + 1) >= 0;
+        });
+        if (line >= 0) {
+          throw new Error(`content: ${file}:${line + 1} [yaml/flow-comma]: unquoted flow value has stray null key '${key}'; quote the full prose value`);
+        }
+      }
+      visit(child, withinAuthoredFlow || key === 'effects' || key === 'claims' || key === 'decidedBy');
+    }
+  };
+  visit(document, false);
+}
+
+/**
  * WHICH FILE AN ID CAME FROM.
  *
  * A validation issue names `event:the_drowning`, which is a token to grep for
@@ -120,6 +154,8 @@ export function assembleBundle(
   // WeakMap below is what lets a SavedGame remember the files its live content
   // references without putting filesystem metadata into ContentBundleS.
   const foundSources: ContentSources = new Map();
+  // The same YAML file may contribute to several CONTENT_LAYOUT collections.
+  const inspected = new Set<string>();
 
   for (const spec of CONTENT_LAYOUT) {
     let matching: string[];
@@ -138,6 +174,10 @@ export function assembleBundle(
     const out: unknown[] = [];
     for (const path of matching) {
       const doc = parse(files[path]!) as Record<string, unknown> | null;
+      if (!inspected.has(path)) {
+        assertNoTruncatedFlowProse(path, files[path]!, doc);
+        inspected.add(path);
+      }
       const value = doc?.[spec.key as string];
       if (!Array.isArray(value)) continue;
 
