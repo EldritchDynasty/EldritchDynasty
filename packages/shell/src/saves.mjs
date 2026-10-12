@@ -39,7 +39,7 @@ export function saveRoot(userData) {
  * missing slot in the preload. Core remains the save-schema authority.
  */
 export function requireSaveEnvelope(save) {
-  if (save === null || typeof save !== 'object' || Array.isArray(save) || typeof save.format !== 'number') {
+  if (save === null || typeof save !== 'object' || Array.isArray(save) || !Number.isFinite(save.format)) {
     throw new TypeError('a save is an object with a numeric format');
   }
   return save;
