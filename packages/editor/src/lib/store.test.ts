@@ -181,6 +181,75 @@ describe('the dirty set', () => {
   });
 });
 
+describe('per-file save serialization (#1384)', () => {
+  it('refuses a second item save in the same YAML file while its first write is pending', async () => {
+    const firstEvent = event(EVENT);
+    const secondEvent = event(SIBLING);
+    const originalFirst = firstEvent.title;
+    const originalSecond = secondEvent.title;
+    let pending: ReturnType<typeof saveEvent> | undefined;
+
+    try {
+      firstEvent.title = 'First Concurrent Save Snapshot';
+      markDirty('events', EVENT);
+      h.holdWrite.value = true;
+      pending = saveEvent(EVENT);
+      await vi.waitFor(() => expect(h.releaseWrite.current).toBeTypeOf('function'));
+
+      secondEvent.title = 'Second Concurrent Save Snapshot';
+      markDirty('events', SIBLING);
+      expect(await saveEvent(SIBLING)).toEqual({
+        ok: false,
+        error: `'${CRUSADE}' is already being saved. Try again when it finishes.`,
+      });
+      expect(h.writes, 'overlapping save must never reach disk').toHaveLength(0);
+      expect(store.saving.has(CRUSADE)).toBe(true);
+
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await pending).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Concurrent Save Snapshot');
+      expect(h.disk.get(CRUSADE)).not.toContain('Second Concurrent Save Snapshot');
+      expect(isDirty('events', SIBLING), 'the refused newer edit must remain dirty').toBe(true);
+
+      expect((await saveEvent(SIBLING)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Concurrent Save Snapshot');
+      expect(h.disk.get(CRUSADE)).toContain('Second Concurrent Save Snapshot');
+      expect(store.saving.has(CRUSADE)).toBe(false);
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      if (pending) await pending;
+      firstEvent.title = originalFirst;
+      secondEvent.title = originalSecond;
+      markDirty('events', EVENT);
+      markDirty('events', SIBLING);
+      await saveEvent(EVENT);
+      await saveEvent(SIBLING);
+    }
+  });
+
+  it('does not start a second core prose catalogue write while one is pending', async () => {
+    h.holdWrite.value = true;
+    const first = saveCoreProseCatalogue();
+    try {
+      expect(store.saving.has('messages.yaml')).toBe(true);
+      expect(await saveCoreProseCatalogue()).toEqual({
+        ok: false,
+        error: "'messages.yaml' is already being saved. Try again when it finishes.",
+      });
+      expect(h.writes.filter((write) => write.path === 'messages.yaml')).toHaveLength(0);
+      expect(store.saving.has('messages.yaml')).toBe(true);
+    } finally {
+      h.holdWrite.value = false;
+      h.releaseWrite.current?.();
+      expect((await first).ok).toBe(true);
+    }
+    expect(h.writes.filter((write) => write.path === 'messages.yaml')).toHaveLength(1);
+    expect(store.saving.has('messages.yaml')).toBe(false);
+  });
+});
+
 describe('editing during an in-flight save (#947)', () => {
   it('keeps the new version dirty after an earlier snapshot has been written', async () => {
     const target = event(EVENT);
