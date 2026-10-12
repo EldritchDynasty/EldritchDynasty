@@ -56,13 +56,17 @@ export function revealNotice(element: RevealElement): string {
  * A returning reader can choose to show everything on a new house without
  * making a later first-year house permanently expanded. Campaign + start year
  * keep future campaign variants from sharing an accidental namespace.
+ * A deterministic seed may deliberately be reused through Advanced, so a
+ * differently named house must not inherit the first house's unlocks.
+ * Identically named replays still lack a durable distinct run id.
  */
-export function revealStorageKey(view: Pick<SessionView, 'seed' | 'campaign'>): string {
+export function revealStorageKey(view: Pick<SessionView, 'seed' | 'campaign' | 'houseName'>): string {
   return [
     REVEAL_STORAGE_PREFIX,
     view.campaign.id,
     view.campaign.startYear,
     view.seed,
+    JSON.stringify(view.houseName),
   ].join(':');
 }
 
