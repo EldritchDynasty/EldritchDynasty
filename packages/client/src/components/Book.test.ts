@@ -11,6 +11,10 @@ import Book from './Book.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
 import Ending from './Ending.vue';
+import { downloadBlob } from '../lib/download';
+
+// Export tests assert actual download calls without relying on jsdom blob URL support.
+vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
 
 /**
  * FOLLOWING A LINK SELECTS THE PAGE IT NAMES (issue #269).
@@ -110,6 +114,63 @@ describe('the volume', () => {
       w.unmount();
       encoding.mockRestore();
       canvas.mockRestore();
+    }
+  });
+
+  it('starts only one plate export for two clicks before Vue disables the button (#1478)', async () => {
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {}, fillText: () => {}, beginPath: () => {},
+      moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const callbacks: BlobCallback[] = [];
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { callbacks.push(callback); });
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      expect(save).toBeDefined();
+      const button = save!.element as HTMLButtonElement;
+
+      // Both events run synchronously, before Vue patches :disabled.
+      button.click();
+      button.click();
+      expect(encoding).toHaveBeenCalledTimes(1);
+      await flushPromises();
+      expect(button.disabled).toBe(true);
+      expect(save!.text()).toContain('Setting the plate');
+      expect(download).not.toHaveBeenCalled();
+
+      callbacks[0]!(new Blob(['page'], { type: 'image/png' }));
+      await flushPromises();
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(button.disabled).toBe(false);
+
+      // The guard unlocks for a failed attempt, preserving the error.
+      button.click();
+      expect(encoding).toHaveBeenCalledTimes(2);
+      callbacks[1]!(null);
+      await flushPromises();
+      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+      expect(button.disabled).toBe(false);
+      expect(download).toHaveBeenCalledTimes(1);
+
+      // Retry also clears the old error and saves a single new page.
+      button.click();
+      expect(encoding).toHaveBeenCalledTimes(3);
+      callbacks[2]!(new Blob(['retry'], { type: 'image/png' }));
+      await flushPromises();
+      expect(download).toHaveBeenCalledTimes(2);
+      expect(button.disabled).toBe(false);
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      download.mockClear();
     }
   });
 
