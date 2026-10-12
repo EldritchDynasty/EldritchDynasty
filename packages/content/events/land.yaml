@@ -677,8 +677,8 @@ proseVariants:
     of: "3df04fb8f4de8d0c"
     plainenglish: "{HEAD} replies that the house already has enough land this year. The clerk seems mildly surprised. Before spring ends, another house adds Farrowmere to its holdings. The Farrow name still dies out."
   - address: content:events/land.yaml#events[id=the_farrow_line_ends].interaction.choices[id=decline_it].outcomes[id=farrowmere_declined].effects[0].text
-    of: "8168ff084d4a750c"
-    plainenglish: "After the last Farrow died, the Warden offered the house Farrowmere"
+    of: "4ca5379226426fb6"
+    plainenglish: "After the last Farrow died, the Warden offered the house Farrowmere, and the house wrote back that it already had enough land."
   - address: content:events/land.yaml#events[id=the_marker_stays_moved].title
     of: "fa2ee68f57312cdb"
     plainenglish: "The Boundary Marker Stays in Its New Position"
