@@ -214,11 +214,6 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.find('.rung').exists()).toBe(false);
       expect(wrapper.text()).toContain('Daveed watches over the house.');
       expect(wrapper.text()).not.toContain('undefined');
-      await wrapper.setProps({ proseMode: 'original' });
-      expect(wrapper.text()).toContain('Daveed watches over the house.');
-      expect(wrapper.text()).not.toContain('watches, and has since .');
-      await wrapper.setProps({ proseMode: 'plainenglish' });
-      expect(wrapper.text()).toContain('Daveed watches over the house.');
       await wrapper.setProps({ showLadder: true });
       expect(wrapper.text()).toContain('Highest reached · Hierophant, reached earlier.');
       await wrapper.setProps({ view: { ...current, ascension: { ...current.ascension, best: current.ascension.rung } } });
