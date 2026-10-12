@@ -641,6 +641,7 @@ const yearAndBirths = computed(() => {
           <Muster v-if="view.muster" :view="view" :actions="actions" :refusal="musterRefusal" />
           <GameTable
             :table="table"
+            :prose-mode="accessibility.proseMode"
             :land="land"
             :actions="actions"
             :refusal="refusal"
