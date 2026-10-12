@@ -136,6 +136,21 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       const top = survivingDialogs[survivingDialogs.length - 1];
       if (top && !top.contains(back)) return;
 
+      if (top) {
+        // A nested dialog may have disabled or hidden the control that opened
+        // it. Restore within the still-open parent, never behind its scrim.
+        const inside = modalFocusable(top);
+        const target = back && inside.includes(back) ? back : inside[0];
+        if (target) {
+          target.focus();
+          if (document.activeElement === target) return;
+        }
+        // A parent with no usable controls still owns keyboard focus.
+        if (!top.hasAttribute('tabindex')) top.tabIndex = -1;
+        top.focus();
+        return;
+      }
+
       if (back?.isConnected && !back.hasAttribute('disabled')) {
         back.focus();
         if (document.activeElement === back) return;
