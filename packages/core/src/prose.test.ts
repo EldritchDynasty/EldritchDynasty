@@ -210,7 +210,7 @@ describe('marriage promise and loose secret house names in selected prose mode (
     expect(ctx.world.houses.get(house.id)?.name).toBe(house.name);
 
     ctx.world.marriagePromises.push({
-      toHouse: house.id, year: ctx.world.year, lot: 'the_ring',
+      toHouse: house.id, year: ctx.world.year, lot: 'the_ring', pledgedBy: ctx.world.people.all()[0]!.id,
     });
     ctx.world.looseSecrets.push({
       secret: 'what_the_archive_holds', carrier: 'p_gone', carrierName: 'Ilsabet',
@@ -855,9 +855,9 @@ describe('prospective prose selection', () => {
     const heirloomAddress = `content:heirlooms.yaml#heirlooms[id=${encodeURIComponent(heirloom.id)}].name`;
     const session = newGame(bundle, { proseMode: 'plainenglish' });
     session.ctx.world.marriagePromises.push(
-      { toHouse: 'house_marrow', year: 1080, lot: book.id },
-      { toHouse: 'house_marrow', year: 1081, lot: heirloom.id },
-      { toHouse: 'house_marrow', year: 1082, lot: 'unknown_lot' },
+      { toHouse: 'house_marrow', year: 1080, lot: book.id, pledgedBy: session.ctx.world.people.all()[0]!.id },
+      { toHouse: 'house_marrow', year: 1081, lot: heirloom.id, pledgedBy: session.ctx.world.people.all()[0]!.id },
+      { toHouse: 'house_marrow', year: 1082, lot: 'unknown_lot', pledgedBy: session.ctx.world.people.all()[0]!.id },
     );
     const originalPromises = structuredClone(session.ctx.world.marriagePromises);
 

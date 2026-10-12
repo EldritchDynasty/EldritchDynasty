@@ -734,8 +734,8 @@ function matchWeight(ctx: SimCtx, p: Person): number {
  * candidates on household cards still use ordinary spouse eligibility.
  */
 function eligibleMatchSubject(ctx: SimCtx, p: Person): boolean {
-  return eligibleToMarry(ctx, p)
-    || (ctx.world.priorityMatch.includes(p.id) && priorityEligibleToMarry(ctx, p));
+  return onTheMarket(ctx, p) && (eligibleToMarry(ctx, p)
+    || (ctx.world.priorityMatch.includes(p.id) && priorityEligibleToMarry(ctx, p)));
 }
 
 /**
@@ -1006,7 +1006,7 @@ function cardBlock(ctx: SimCtx, subject: Person, card: MatchCard): string | unde
   if (card.kind !== 'household') return undefined;
   const who = ctx.world.people.get(card.person ?? '');
   if (!who) return msg(ctx, 'match.block.gone', '{NAME} is gone', { NAME: card.name });
-  if (!eligibleToMarry(ctx, who)) {
+  if (!eligibleToMarry(ctx, who) || !onTheMarket(ctx, who)) {
     return msg(ctx, 'match.block.spoken_for', '{NAME} has been spoken for', { NAME: card.name });
   }
   return undefined;

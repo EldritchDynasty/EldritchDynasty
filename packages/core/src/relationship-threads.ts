@@ -1,6 +1,7 @@
 import type { SimCtx } from './world.js';
 import { msg } from './messages.js';
 import { proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
+import { marriagePromiseLotName } from './auction.js';
 
 /**
  * EXTERNAL RELATIONSHIP THREADS (issue #217).
@@ -324,7 +325,7 @@ function currentAuctions(builders: Map<string, Builder>, ctx: SimCtx): void {
     addFact(builders, ctx, promise.toHouse, {
       kind: 'marriage_promise',
       year: promise.year,
-      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.promise', '{HOUSE} is owed the marriage pledged in {YEAR} for {LOT}.', { HOUSE: houseName(modeCtx, promise.toHouse), YEAR: String(promise.year), LOT: refName(modeCtx, promise.lot) })),
+      ...factLine(ctx, (modeCtx) => msg(modeCtx, 'threads.promise', '{HOUSE} is owed the marriage pledged in {YEAR} for {LOT}.', { HOUSE: houseName(modeCtx, promise.toHouse), YEAR: String(promise.year), LOT: marriagePromiseLotName(modeCtx, promise, refName(modeCtx, promise.lot)) })),
       ref: promise.lot,
       active: true,
       priority: 88,

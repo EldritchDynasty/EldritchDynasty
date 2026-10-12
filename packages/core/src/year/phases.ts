@@ -30,6 +30,7 @@ import { runStandingOrders } from '../table.js';
 import { tickCareers } from '../people/careers.js';
 import { tickRivals } from '../people/rivals.js';
 import { tickAuction } from '../auction.js';
+import { tickMarriagePledges } from '../people/pledges.js';
 import { selectEvents } from '../events/selection.js';
 import { presentFrame, selectFrame } from '../events/frame.js';
 import { dueArcSteps, type ArcStep } from '../events/arcs.js';
@@ -545,8 +546,15 @@ export const YEAR_PHASES: readonly Phase[] = [
   },
 
   {
-    name: 'arcs',
+    name: 'promises',
     after: ['births'],
+    why: 'Newborn granddaughters can be reserved before another year offers their marriages.',
+    run({ ctx, rng }) { tickMarriagePledges(ctx, rng); },
+  },
+
+  {
+    name: 'arcs',
+    after: ['promises'],
     why: 'A substory casts from the living, and this year\'s dead and born are settled.',
     run({ ctx, rng, report, autoResolve }) {
       for (const step of dueArcSteps(ctx, rng)) {
