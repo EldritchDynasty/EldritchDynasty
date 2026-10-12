@@ -21,6 +21,34 @@ const view = {
 } as unknown as SessionView;
 
 describe('tree and hall counsel', () => {
+  it('shows a positive subunit grievance without calling it zero (#1473)', async () => {
+    const advice = vi.fn((_surface: HelpSurface, _subject: string, _tier: HelpTier) => [line]);
+    const withGrievance = (grievance: number): SessionView => ({
+      ...view,
+      halls: view.halls.map((hall) => hall.isSeat ? hall : { ...hall, grievance }),
+    });
+    const wrapper = mount(TreeCounsel, {
+      props: { view: withGrievance(0.35), selected: null, actions: { advice } },
+    });
+
+    try {
+      expect(wrapper.text()).toContain('Elm Hall');
+      expect(wrapper.text()).toContain('grievance less than 1');
+      expect(wrapper.text()).not.toContain('grievance 0');
+
+      await wrapper.get('.branch-help .adviser-help button').trigger('click');
+      expect(advice).toHaveBeenCalledWith('branches', 'branch_elm', 1);
+
+      await wrapper.setProps({ view: withGrievance(1.6) });
+      expect(wrapper.text()).toContain('grievance 2');
+
+      await wrapper.setProps({ view: withGrievance(0) });
+      expect(wrapper.find('.branch-help').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('keeps both surfaces pull-only and sends their visible subject through the client seam', async () => {
     const advice = vi.fn((_surface: HelpSurface, _subject: string, _tier: HelpTier) => [line]);
     const wrapper = mount(TreeCounsel, {
