@@ -288,7 +288,7 @@ describe('a run survives being written down', () => {
 
     for (const decidedBy of deciders) {
       const saved = structuredClone(base);
-      const event = structuredClone(authored);
+      const event = JSON.parse(JSON.stringify(authored));
       event.interaction.decidedBy = decidedBy;
       saved.pendingDecisions = [{
         kind: 'choice',
@@ -331,7 +331,7 @@ describe('a run survives being written down', () => {
       [{ state: [{ take: authored.interaction.choices[0]!.id }] }, false],
     ] as const) {
       const saved = structuredClone(base);
-      const event = structuredClone(authored);
+      const event = JSON.parse(JSON.stringify(authored));
       event.interaction.decidedBy = decidedBy;
       saved.pendingDecisions = [{
         kind: 'choice', id: 'dec_legacy', year: original.world.year, event,
