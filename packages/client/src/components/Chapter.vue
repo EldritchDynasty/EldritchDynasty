@@ -47,7 +47,7 @@ function dismissOnce(): void {
     });
   }
 }
-useModal(card, dismissOnce);
+useModal(card, () => dismissOnce());
 
 function readingStorage(): Storage | null {
   try {
