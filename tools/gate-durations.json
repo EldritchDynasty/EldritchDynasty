@@ -1,11 +1,11 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-10-09",
+  "measured": "2026-10-12",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
-      "seconds": 420,
-      "evidence": "2026-10-08 hosted re-baseline after #439's all-witnessed outcome-reach fast path: successful exact-code native merge-group check run 37732468827 (49df486f, 12/12 batch gates) measured 6.4m in tools/gate-duration.mjs; successful main push check run 37733144405 (same SHA, 12/12 gates) measured 5.5m. Budget rounded to 7m (420s) to accommodate runner variance, maintaining maxFactor 1.25 = 8.75m guard. Before the fix, successful merge-group run 37728700844 on bb8d1d25 needed 22.42m for the batch job because an already-fully-witnessed outcome-reach gate still played an unnecessary 800 x 500-year batch; the former 26m budget described that regression, not today's gate work. Source logs: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37732468827 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37733144405. Sample size is two successful exact-code check runs; re-measure if later hosted data differs. Refs #573, #439, #451."
+      "seconds": 540,
+      "evidence": "2026-10-12 re-baseline for #1351, which widened gate 7 (clauses) from 12 serial runs to an 80-run mean fanned over the bounded gate workers. Hosted measurements of the exact change: PR check run 38188378911 (d57d4922, 12/12 batch gates) measured 8.4m in tools/gate-duration.mjs; native merge-group run 38190129301 (68d8e76f, 12/12 batch gates, otherwise green) measured 8.8m and was refused only by the 1.25x guard on the old 7.0m baseline. Batch jobs on the same lane immediately before the change took about 7.5m end to end (PR #1292 check run 38165659035; main merge-group run 38189632987), so the growth is attributable to gate 7, about +1.3m on hosted runners against +0.5m measured on a four-core container. Budget rounded to 9.0m (540s); maxFactor 1.25 = 11.25m guard. Previous baseline: 7.0m (420s) from 2026-10-08 runs 37732468827 and 37733144405 after #439. Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38188378911 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38190129301. Refs #1351, #334."
     },
     "blood": {
       "seconds": 2280,
