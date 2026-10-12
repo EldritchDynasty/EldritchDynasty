@@ -258,6 +258,22 @@ describe('full Chronicle plate export beyond canvas limits (#1062)', () => {
       .toBe('house-of-salt-1100-1319.svg');
   });
 
+  it('replaces lone surrogate halves without damaging Unicode or XML escaping (#1402)', () => {
+    const high = '\uD800';
+    const low = '\uDC00';
+    const emoji = '🕯️';
+    const rows = plateRows([
+      entry({ text: `The ${high} page ${low} had ${emoji} & ink.` }),
+    ], monospace);
+    const svg = plateSvg(rows, `House ${high}${emoji}${low}`, 'A <subtitle>');
+
+    expect(svg).not.toContain(high);
+    expect(svg).not.toContain(low);
+    expect(svg).toContain(`House \uFFFD${emoji}\uFFFD`);
+    expect(svg).toContain(`The \uFFFD page \uFFFD had ${emoji} &amp; ink.`);
+    expect(svg).toContain('A &lt;subtitle&gt;');
+  });
+
   it('preserves dated omissions and escapes untrusted Chronicle XML', () => {
     const rows = plateRows([
       entry({ year: 1204, text: null, title: 'The hidden page' }),

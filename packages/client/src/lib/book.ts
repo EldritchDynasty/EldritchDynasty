@@ -226,6 +226,10 @@ export const MAX_PLATE_CANVAS_HEIGHT = 4096;
 /** A Chronicle may contain a person's own words: escape XML text AND attributes. */
 function plateXml(text: string): string {
   return text
+    // JSON may carry lone UTF-16 surrogates, but XML cannot. Keep valid
+    // surrogate pairs (emoji and other astral characters) unchanged.
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g,
+      (sequence) => sequence.length === 2 ? sequence : '\uFFFD')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
