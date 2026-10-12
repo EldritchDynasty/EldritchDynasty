@@ -142,6 +142,24 @@ describe('wrapping', () => {
     expect(rows.join(' ')).toBe('one two three four five');
   });
 
+  it('keeps explicit line breaks and empty paragraphs in exported Chronicle plates (#1521)', () => {
+    expect(wrap('First line\nSecond line', 'x', 200, monospace))
+      .toEqual(['First line', 'Second line']);
+    expect(wrap('First\r\n\r\nSecond', 'x', 200, monospace))
+      .toEqual(['First', '', 'Second']);
+    expect(wrap('First\rSecond', 'x', 200, monospace))
+      .toEqual(['First', 'Second']);
+    expect(wrap('First\n', 'x', 200, monospace)).toEqual(['First', '']);
+
+    // The same rows drive both the PNG renderer and the SVG fallback.
+    const rows = plateRows([entry({ text: 'First\n\nSecond' })], monospace);
+    expect(rows.map((row) => row.text)).toEqual(['1200', 'First', '', 'Second']);
+    const svg = plateSvg(rows, 'House', 'A chronicle');
+    expect(svg).toContain('>First</text>');
+    expect(svg).toContain('>Second</text>');
+    expect(svg.indexOf('>First</text>')).toBeLessThan(svg.indexOf('>Second</text>'));
+  });
+
   it('splits oversized unbroken tokens so a Chronicle plate does not clip them (#1166)', () => {
     const word = 'supercalifragilistic';
     const rows = wrap(word, 'x', 12, monospace);
