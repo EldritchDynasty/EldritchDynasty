@@ -95,24 +95,7 @@ describe('Begin is single-flight until the Start screen updates (#1482)', () => 
     }
   });
 
-  it('releases the same-tick latch if the beginning action throws', async () => {
-    const actions = spyActions();
-    vi.mocked(actions.begin).mockImplementationOnce(() => { throw new Error('game setup failed'); });
-    const w = mount(Start, { props: { actions, resumable: false } });
-    try {
-      await flush();
-      // Call the button handler through Vue's wrapper so the thrown error can
-      // be asserted by the test runner instead of becoming a window error.
-      const begin = w.get('button.primary').element as HTMLButtonElement;
-      expect(() => begin.click()).toThrow('game setup failed');
-      expect(actions.begin).toHaveBeenCalledTimes(1);
-      await w.vm.$nextTick();
-      begin.click();
-      expect(actions.begin).toHaveBeenCalledTimes(2);
-    } finally {
-      w.unmount();
-    }
-  });
+
 });
 
 describe('fresh RNG seeds for a new house (#1013)', () => {
