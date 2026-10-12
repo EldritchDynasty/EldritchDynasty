@@ -115,15 +115,16 @@ function summary(slot: string, save: unknown): SaveSummary {
   };
 }
 
-/** The host stores opaque JSON; a present root null (or an undefined JSON
- * result) is unreadable by both readSave and readLibrary. Reject before
- * touching Storage so a bad write cannot overwrite an earlier good record.
- * The game's actual save/library schema still belongs to core.
+/** The host stores opaque JSON objects, not a duplicate game schema.
+ * Check the serialized root, rather than the input type: toJSON() can turn an
+ * apparent object into a scalar or array. Every valid JSON object begins
+ * with '{' under JSON.stringify's compact output. Refuse other roots before
+ * touching Storage, preserving the last readable save/Library.
  */
 function readableBrowserJSON(value: unknown): string {
   const serialized = JSON.stringify(value);
-  if (serialized === undefined || serialized === 'null') {
-    throw new TypeError('the browser cannot persist an unreadable JSON record');
+  if (serialized === undefined || !serialized.startsWith('{')) {
+    throw new TypeError('the browser cannot persist a non-object JSON record');
   }
   return serialized;
 }
