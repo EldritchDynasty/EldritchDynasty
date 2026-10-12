@@ -12,6 +12,7 @@ import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
+import { plateName } from '../lib/book';
 
 // Export tests assert actual download calls without relying on jsdom blob URL support.
 vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
@@ -114,6 +115,48 @@ describe('the volume', () => {
       w.unmount();
       encoding.mockRestore();
       canvas.mockRestore();
+    }
+  });
+
+  it('keeps the downloaded PNG named for the drawn house when props change during encoding (#1495)', async () => {
+    const painted: string[] = [];
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {},
+      fillText: (text: string) => { painted.push(text); },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const callbacks: BlobCallback[] = [];
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { callbacks.push(callback); });
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const w = mountBook();
+    try {
+      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+      expect(save).toBeDefined();
+      await save!.trigger('click');
+
+      // Canvas text was drawn before encoding completed, with the original name.
+      expect(painted).toContain('Gearithy');
+      expect(callbacks).toHaveLength(1);
+      expect(download).not.toHaveBeenCalled();
+
+      // A reused volume can display another house while the first PNG is pending.
+      await w.setProps({ houseName: 'Ash' });
+      callbacks[0]!(new Blob(['Gearithy page'], { type: 'image/png' }));
+      await flushPromises();
+
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(download).toHaveBeenCalledWith(expect.any(Blob), plateName('Gearithy', BOOK));
+      expect(download).not.toHaveBeenCalledWith(expect.any(Blob), plateName('Ash', BOOK));
+      expect(save!.attributes('disabled')).toBeUndefined();
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      download.mockClear();
     }
   });
 
