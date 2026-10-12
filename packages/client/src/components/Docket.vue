@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { CastRequest, MatchCard, MatchPanel, RecordOption, SessionView, SlotFill } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { futureOf, type GameActions } from '../lib/game';
 import { isControl, isField, shortcutFor } from '../lib/keys';
 import { replayDisposition } from '../lib/accessibility';
@@ -8,6 +9,8 @@ import { replayDisposition } from '../lib/accessibility';
 const props = defineProps<{
   decision: SessionView['docket'][number];
   actions: GameActions;
+  /** Reader-local UI labels only; authored decisions and saved pages remain unchanged. */
+  proseMode?: ProseMode;
   ageMatchPriorities?: import('@ed/core').AgeMatchPriority[];
   ageRecordPriorities?: import('@ed/core').AgeRecordPriority[];
   /** Campaign/founding year; when supplied, routine delegation waits fifty years. */
@@ -29,6 +32,9 @@ function readingStorage(): Storage | null {
     return null;
   }
 }
+
+/** A live reader preference, without rewriting event text or recorded decisions. */
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 /**
  * A repeated decision remains a decision. This is only the reader's marginal
@@ -308,11 +314,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <p class="body">{{ decision.body }}</p>
       <p v-if="metBefore" class="met-before dim small">
         <span aria-hidden="true">↺</span>
-        <span>met before</span>
+        <span>{{ plain ? 'You have seen this event before' : 'met before' }}</span>
       </p>
       <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
       <p v-if="decision.ambition" class="ambition-reading small">
-        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        <span class="rubric">{{ plain ? 'This choice could' : 'This decision can' }} {{ decision.ambition.effect }} {{ plain ? 'the house’s goal:' : 'the house’s ambition:' }}</span>
         {{ decision.ambition.reason }}
       </p>
 
@@ -324,11 +330,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <label class="dim small">
           {{ req.slot }}
           <span v-if="req.count"> ({{ req.count.min }}–{{ req.count.max }})</span>
-          <span v-else-if="req.optional"> (may stand empty)</span>
+          <span v-else-if="req.optional">{{ plain ? ' (optional)' : ' (may stand empty)' }}</span>
         </label>
 
         <fieldset v-if="req.count" class="party">
-          <legend class="dim small">{{ party(req.slot).length }} named</legend>
+          <legend class="dim small">{{ party(req.slot).length }} {{ plain ? 'selected' : 'named' }}</legend>
           <label v-for="c in req.candidates" :key="c.id" class="small">
             <input
               type="checkbox"
@@ -341,13 +347,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         </fieldset>
 
         <select v-else @change="fill(req.slot, $event)" :aria-label="'Choose ' + req.slot">
-          <option value="">— nobody —</option>
+          <option value="">{{ plain ? '— nobody selected —' : '— nobody —' }}</option>
           <option v-for="c in req.candidates" :key="c.id" :value="c.id">
             {{ c.name }}, {{ c.age }}
           </option>
         </select>
 
-        <span v-if="!req.candidates.length" class="dim small">nobody of the house can stand here</span>
+        <span v-if="!req.candidates.length" class="dim small">{{ plain ? 'No eligible person in the household' : 'nobody of the house can stand here' }}</span>
 
         <!-- WHAT IS OBSERVED OF THEIR LINE (issue #28 item 2) — her mother
              and sisters, named, with what the record credits to them. The
@@ -362,7 +368,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
               {{ row.borne === 1 ? 'child' : 'children' }}, {{ row.grown }} grown.
             </li>
           </ul>
-          <p v-else class="small dim">no line anybody here has watched</p>
+          <p v-else class="small dim">{{ plain ? 'Nobody here has observed this family line.' : 'no line anybody here has watched' }}</p>
         </template>
       </div>
 
@@ -385,22 +391,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
       <div v-else class="choices">
         <p class="dim small">
-          The branch is not yours to take. Name who goes, and what they are between them decides it.
+          {{ plain ? 'You choose who goes. Their combined abilities decide the result; you cannot choose the outcome.' : 'The branch is not yours to take. Name who goes, and what they are between them decides it.' }}
         </p>
         <button class="primary" :disabled="!ready(decision.cast)" @click="actions.send(decision.id, cast, 'Send them')">
-          Send them
+          {{ plain ? 'Send the selected people' : 'Send them' }}
         </button>
       </div>
     </template>
 
     <!-- ── THE MATCH (concept §5) — three cards and one marriage ─────────── -->
     <template v-else-if="decision.kind === 'match'">
-      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · a marriage for {{ decision.subject.name }}</h3>
+      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ plain ? 'Choose a spouse for' : 'a marriage for' }} {{ decision.subject.name }}</h3>
       <p class="body">
-        {{ decision.subject.name }} is {{ decision.subject.age }}. These are the cards the year dealt.
+        {{ decision.subject.name }} is {{ decision.subject.age }}. {{ plain ? 'Here are the possible matches.' : 'These are the cards the year dealt.' }}
       </p>
       <p v-if="decision.ambition" class="ambition-reading small">
-        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        <span class="rubric">{{ plain ? 'This choice could' : 'This decision can' }} {{ decision.ambition.effect }} {{ plain ? 'the house’s goal:' : 'the house’s ambition:' }}</span>
         {{ decision.ambition.reason }}
       </p>
 
@@ -437,7 +443,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
                  says nothing on its own: a word standing on four completed
                  lives and the same word standing on forty are not the same
                  claim, and that was the half kept in a tooltip. -->
-            <span>the line reads {{ card.line }}, on {{ card.lineSeen }} completed lives</span>
+            <span>{{ plain ? 'Family record:' : 'the line reads' }} {{ card.line }}{{ plain ? ', based on' : ', on' }} {{ card.lineSeen }} completed lives</span>
             · {{ card.dowry }} crowns
           </div>
 
@@ -448,10 +454,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
                inside is a public fact or somebody's claim — see
                `core/src/people/panel.ts` for why none of it is a stat. -->
           <details v-if="hasPanel(card.panel)" class="panel">
-            <summary class="small">What is known of her</summary>
+            <summary class="small">{{ plain ? 'What people know about this candidate' : 'What is known of her' }}</summary>
 
             <template v-if="card.panel.issue.length">
-              <p class="small dim heading">The line, in names</p>
+              <p class="small dim heading">{{ plain ? 'Family history' : 'The line, in names' }}</p>
               <ul class="small">
                 <li v-for="row in card.panel.issue" :key="row.name">
                   {{ row.name }}, {{ row.relation }} — {{ row.borne }}
@@ -461,7 +467,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             </template>
 
             <template v-if="card.panel.woken.length">
-              <p class="small dim heading">Wakings the world attended</p>
+              <p class="small dim heading">{{ plain ? 'Recorded awakenings' : 'Wakings the world attended' }}</p>
               <ul class="small">
                 <li v-for="row in card.panel.woken" :key="row.name + row.year">
                   {{ row.name }}, {{ row.relation }}, woke in {{ row.year }}<span
@@ -475,7 +481,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
                  between two accounts in its own voice, so the player weighs
                  the mouth the way they would weigh a person. -->
             <template v-if="card.panel.said.length">
-              <p class="small dim heading">What is said of the house</p>
+              <p class="small dim heading">{{ plain ? 'What people say about this house' : 'What is said of the house' }}</p>
               <blockquote v-for="row in card.panel.said" :key="row.tale" class="small said">
                 <p>{{ row.text }}</p>
                 <footer class="dim">{{ row.teller }} · {{ row.bias }}</footer>
@@ -483,18 +489,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             </template>
 
             <template v-if="card.panel.ourBook.length">
-              <p class="small dim heading">What our own book has said of them</p>
+              <p class="small dim heading">{{ plain ? 'Our written account of this house' : 'What our own book has said of them' }}</p>
               <ul class="small">
                 <li v-for="(row, j) in card.panel.ourBook" :key="row.year + '/' + j">
                   <span class="dim">{{ row.year }}</span> — {{ row.text }}
-                  <em v-if="row.embellished" class="lie">as we improved it</em>
+                  <em v-if="row.embellished" class="lie">{{ plain ? 'as we changed the account' : 'as we improved it' }}</em>
                 </li>
               </ul>
             </template>
           </details>
 
           <button :disabled="!card.available" @click="actions.match(decision.id, card.id, card.name)">
-            Take this one
+            {{ plain ? 'Choose this match' : 'Take this one' }}
           </button>
           <div v-if="!card.available" class="dim small">{{ card.blockedBy }}</div>
           <!-- A refusal the engine produced anyway, against the card that
@@ -529,14 +535,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <!-- Once, under the hand, rather than three times inside it: the
            sentence is the same for every card and the cards are already the
            densest thing on the board. -->
-      <p class="dim small note">Kinship is {{ KINSHIP_SAYS }}.</p>
+      <p class="dim small note">{{ plain ? 'Kinship estimates how closely related the child of this match would be, using the family’s own records.' : 'Kinship is ' + KINSHIP_SAYS + '.' }}</p>
 
       <!-- Declining is a real move: the house waits for a better year, and on
            a deck the player can swipe past all three cards without ever
            reaching this — so under the phone tier it is pinned rather than
            left to scroll off with them (issue #106). -->
       <div class="decline">
-        <button class="quiet" @click="actions.declineHand(decision.id)">Take none of them</button>
+        <button class="quiet" @click="actions.declineHand(decision.id)">{{ plain ? 'Choose none of these matches' : 'Take none of them' }}</button>
       </div>
     </template>
 
@@ -549,13 +555,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
          `assertNever`, so the exhaustiveness is spelled out here and
          `Docket.test.ts` reads the kinds off the schema to check it. -->
     <template v-else-if="decision.kind === 'record'">
-      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · what the book will say</h3>
+      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ plain ? 'Choose what to record' : 'what the book will say' }}</h3>
       <p class="body">
-        There is one line about <em>{{ decision.subject }}</em>, and this is it.
+        <template v-if="plain">Decide what the record says about <em>{{ decision.subject }}</em>.</template>
+        <template v-else>There is one line about <em>{{ decision.subject }}</em>, and this is it.</template>
       </p>
       <p v-if="decision.callback" class="small callback">{{ decision.callback }}</p>
       <p v-if="decision.ambition" class="ambition-reading small">
-        <span class="rubric">This decision can {{ decision.ambition.effect }} the house’s ambition:</span>
+        <span class="rubric">{{ plain ? 'This choice could' : 'This decision can' }} {{ decision.ambition.effect }} {{ plain ? 'the house’s goal:' : 'the house’s ambition:' }}</span>
         {{ decision.ambition.reason }}
       </p>
 
@@ -564,7 +571,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           <button @click="answerRecord(o.option, o.label)">
             <span class="dim key" aria-hidden="true">{{ i + 1 }}</span>
             <span>{{ o.label }}</span>
-            <small v-if="recordIsTempting(o.option)" class="dim temptation"> — these years make this tempting</small>
+            <small v-if="recordIsTempting(o.option)" class="dim temptation"> — {{ plain ? 'this matches the current priorities' : 'these years make this tempting' }}</small>
             <small class="dim entry">
               {{ decision.options.find((x) => x.option === o.option)?.chronicle ?? 'nothing at all' }}
             </small>
@@ -592,14 +599,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       class="remember small"
     >
       <input v-model="remember" type="checkbox">
-      Use the answer I choose for routine repeats of this event.
-      <span v-if="decision.kind === 'record'" class="dim">Only “Write it as it happened” can be delegated.</span>
+      {{ plain ? 'Remember my answer for routine repeats of this event.' : 'Use the answer I choose for routine repeats of this event.' }}
+      <span v-if="decision.kind === 'record'" class="dim">{{ plain ? 'Only the factual Record answer can become the usual choice.' : 'Only “Write it as it happened” can be delegated.' }}</span>
     </label>
 
     <!-- THE ESCAPE HATCH. Daveed is not neutral, and handing him the pen is a
          way of playing rather than a way of skipping. -->
     <footer>
-      <button class="quiet small" @click="actions.letHimDecide()">Let him decide</button>
+      <button class="quiet small" @click="actions.letHimDecide()">{{ plain ? 'Let Daveed decide' : 'Let him decide' }}</button>
     </footer>
   </section>
 </template>
