@@ -55,6 +55,18 @@ describe('what a keypress means', () => {
     expect(shared).toContain("if (e.key !== 'Tab') return;");
   });
 
+  it('does not act on any global shortcut behind an active modal (#1414)', () => {
+    for (const key of ['Escape', '?', ' ', 'Enter', '1', '9']) {
+      expect(shortcutFor({ key, modalOpen: true }), key).toBeNull();
+    }
+    expect(shortcutFor({ key: 'Enter', shift: true, modalOpen: true })).toBeNull();
+
+    // App registers its global window listener before child modal traps;
+    // passing the live modal state is necessary, not just a pure helper check.
+    const app = readFileSync(join(import.meta.dirname, '../App.vue'), 'utf8');
+    expect(app).toContain("modalOpen: Boolean(document.querySelector('[aria-modal=\"true\"]'))");
+  });
+
   it('takes the numbered choice, counting from what the eye sees', () => {
     expect(shortcutFor({ key: '1' })).toEqual({ kind: 'take', index: 0 });
     expect(shortcutFor({ key: '9' })).toEqual({ kind: 'take', index: 8 });

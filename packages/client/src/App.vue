@@ -318,6 +318,9 @@ function onKey(e: KeyboardEvent): void {
     modified: e.ctrlKey || e.metaKey || e.altKey,
     inField: isField(el),
     onControl: isControl(el),
+    // A child dialog's focus trap owns Escape and all other keys while open.
+    // App's window listener registers earlier, so it must defer explicitly.
+    modalOpen: Boolean(document.querySelector('[aria-modal="true"]')),
   });
   if (!press) return;
 
