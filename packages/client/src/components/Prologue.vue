@@ -51,10 +51,10 @@ const initial = initialProloguePresentation(
 );
 const shown = ref(initial.shown);
 
-// The reader can select Plain English while the signing is on-screen. A new
-// translation is a different reading identity: do not mark words that were
-// never displayed as seen, or continue halfway through a different triad.
-watch(replayText, (text) => {
+// A translation change is a new reading identity, and the reader can also
+// change Skip seen prose while this prologue is on-screen. Re-evaluate both:
+// neither should leave an outdated reveal state or silently mark unread words.
+watch([replayText, () => props.skipSeenProse], ([text]) => {
   if (!props.prologue.founded) {
     shown.value = initialPrologueShown(
       readingStorage(), props.skipSeenProse, text, props.prologue.triad.length,
