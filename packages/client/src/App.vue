@@ -427,7 +427,7 @@ const yearAndBirths = computed(() => {
   <template v-else-if="ended && epilogue">
     <Ending :view="view" :epilogue="epilogue" :actions="actions" @open="openBook()" />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
-    <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
+    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
   </template>
 
   <template v-else>
@@ -687,7 +687,7 @@ const yearAndBirths = computed(() => {
     />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Plat v-if="platOpen && land" :land="land" :halls="view.halls" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
-    <Line v-if="lineOpen" :line="lineOpen" :close="() => (lineOpen = null)" />
+    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
   </template>
 </template>
 
