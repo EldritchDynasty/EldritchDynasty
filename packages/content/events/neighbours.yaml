@@ -362,7 +362,7 @@ events:
                 - { kind: rumour, op: seed, id: rumour_the_winter_the_house_shut_its_gate, accuracy: 0.55 }
 
   - id: a_marriage_offer_from_below
-    title: A Draper's Daughter, and Two Hundred Crowns
+    title: A Draper's Daughter, and a Hundred and Ten Crowns
     tier: head
     frequency: common
     weight: 80
@@ -718,9 +718,9 @@ proseVariants:
       a horse. Killing is a matter for the Warden's assize, which sits in eleven weeks. Everyone
       at Wick knows what was offered, and that the house said no.
   - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].title"
-    of: "436a7a97bce6d573"
+    of: "a7ea5d1239e23b8e"
     plainenglish: >-
-      A Draper's Daughter and Two Hundred Crowns
+      A Draper's Daughter and 110 Crowns
   - address: "content:events/neighbours.yaml#events[id=a_marriage_offer_from_below].body"
     of: "e14f7a2371ea5d67"
     plainenglish: >-

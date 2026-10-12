@@ -72,7 +72,7 @@ events:
           weight: 100
           text: The ring goes in the box. The coat is too stiff with mud to fold.
           effects:
-            - { kind: status, target: { slot: OFFICER }, status: dead, cause: on the line, in a night march }
+            - { kind: status, target: { slot: OFFICER }, status: dead, cause: "on the line, in a night march" }
             - { kind: respect, delta: 1 }
 
   - id: leave_bought_in_winter
