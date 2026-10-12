@@ -144,6 +144,7 @@ function addFact(
 }
 
 function isOurPerson(ctx: SimCtx, id: string): boolean {
+  if (id === ctx.world.playerHouse) return true;
   const p = ctx.world.people.get(id);
   if (!p) return false;
   return String(p.houseOfOrigin) === ctx.world.playerHouse
@@ -237,14 +238,14 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
   for (const rel of w.relationships.values()) {
     const from = w.people.get(rel.from);
     const to = w.people.get(rel.to);
-    if (!from || !to) continue;
+    if ((!from && !w.houses.has(rel.from)) || (!to && !w.houses.has(rel.to))) continue;
 
     const fromUs = isOurPerson(ctx, rel.from);
     const toUs = isOurPerson(ctx, rel.to);
     if (fromUs === toUs) continue;
 
     const outsider = fromUs ? to : from;
-    const house = String(outsider.houseOfOrigin);
+    const house = String(outsider?.houseOfOrigin ?? (fromUs ? rel.to : rel.from));
     if (house === w.playerHouse) continue;
 
     for (const grudge of rel.grudges) {
@@ -255,8 +256,10 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
         ?? w.chronicle.find((c) =>
           c.year === grudge.originYear && c.eventId === grudge.originEvent);
       const namedOrigin = (modeCtx: SimCtx) => entry?.title ?? clip(entry?.text) ?? msg(modeCtx, 'threads.grudge.default', 'the quarrel');
-      const holder = (modeCtx: SimCtx) => from === outsider ? `${from.name} of ${houseName(modeCtx, house)}` : from.name;
-      const target = (modeCtx: SimCtx) => to === outsider ? `${to.name} of ${houseName(modeCtx, house)}` : to.name;
+      const holder = (modeCtx: SimCtx) => !from ? houseName(modeCtx, rel.from)
+        : from === outsider ? `${from.name} of ${houseName(modeCtx, house)}` : from.name;
+      const target = (modeCtx: SimCtx) => !to ? houseName(modeCtx, rel.to)
+        : to === outsider ? `${to.name} of ${houseName(modeCtx, house)}` : to.name;
       addFact(builders, ctx, house, {
         kind: 'grudge',
         year: grudge.originYear,
