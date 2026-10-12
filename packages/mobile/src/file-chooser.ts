@@ -1,5 +1,9 @@
 import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
 
+// The mobile bridge and Vue client are separately bundled. A module-local Symbol
+// would have different identities in those bundles; the registry makes it shared.
+const PICKER_CANCELLED = Symbol.for(BROWSER_IMPORT_CANCELLED.description!);
+
 /**
  * Open the native-backed file chooser for importing an opaque saved-game JSON.
  * The chooser belongs to the mobile host, not to the game or its save schema.
@@ -13,10 +17,10 @@ export function chooseSaveFile(input: HTMLInputElement): Promise<unknown | null>
     // only native picker completion and JSON reading.
     // Dismissing a native picker emits `cancel`, not `change`. Without
     // this listener, callers of importSave wait on a never-settled Promise.
-    input.addEventListener('cancel', () => resolve(BROWSER_IMPORT_CANCELLED), { once: true });
+    input.addEventListener('cancel', () => resolve(PICKER_CANCELLED), { once: true });
     input.onchange = () => {
       const file = input.files?.[0];
-      if (!file) { resolve(BROWSER_IMPORT_CANCELLED); return; }
+      if (!file) { resolve(PICKER_CANCELLED); return; }
 
       try {
         // A WebView may deny even constructing FileReader. This callback runs
