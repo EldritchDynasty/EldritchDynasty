@@ -196,6 +196,21 @@ describe('collapseContext', () => {
 
     expect(texts).toEqual(['line 5', 'CHANGED']);
   });
+  it('never hides an edit when the requested context is fractional or invalid (#1535)', () => {
+    const before = lines(20);
+    const after = before.split('\n').map((line, i) => (i === 10 ? 'EDIT' : line)).join('\n');
+    const full = diffLines(before, after);
+    const changesOnly = collapseContext(full, 0);
+
+    for (const context of [-1, 0.5, NaN, -Infinity]) {
+      expect(collapseContext(full, context), String(context)).toEqual(changesOnly);
+    }
+    expect(changesOnly.filter((line) => line.kind === 'del')).toHaveLength(1);
+    expect(changesOnly.filter((line) => line.kind === 'add')).toHaveLength(1);
+    expect(collapseContext(full, 1.8)).toEqual(collapseContext(full, 1));
+    expect(collapseContext(full, Infinity)).toEqual(full);
+  });
+
 });
 
 describe('fire-rate evidence input safety (#1311)', () => {
