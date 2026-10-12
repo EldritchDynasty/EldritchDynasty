@@ -391,26 +391,60 @@ describe('CI evidence inventory', () => {
         env: { ...process.env, GITHUB_STEP_SUMMARY: '' },
       },
     );
-    const moderate = audit({
-      vulnerabilities: {
-        'sprintf-js': { severity: 'moderate', via: [{ url: 'https://github.com/advisories/GHSA-hp3w-g68c-fv3c' }] },
-      },
-    });
+    // Match npm's v2 report envelope, including its independently reported
+    // totals. Both views must agree before a lockfile audit can be trusted.
+    const completeReport = (vulnerabilities: Record<string, { severity: string; via: { url: string }[] }>) => {
+      const counts = { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0 };
+      for (const row of Object.values(vulnerabilities)) {
+        counts[row.severity as keyof typeof counts]++;
+        counts.total++;
+      }
+      return { auditReportVersion: 2, vulnerabilities, metadata: { vulnerabilities: counts } };
+    };
+
+    const moderate = audit(completeReport({
+      'sprintf-js': { severity: 'moderate', via: [{ url: 'https://github.com/advisories/GHSA-hp3w-g68c-fv3c' }] },
+    }));
     expect(moderate.error).toBeUndefined();
     expect(moderate.status).toBe(0);
     expect(moderate.stdout).toContain('sprintf-js');
     expect(moderate.stdout).toContain('moderate');
 
-    const high = audit({ vulnerabilities: {
+    const high = audit(completeReport({
       electron: { severity: 'high', via: [{ url: 'https://github.com/advisories/GHSA-example' }] },
-    } });
+    }));
     expect(high.status).toBe(1);
     expect(high.stdout).toContain('electron: high');
     expect(high.stderr).toContain('high/critical vulnerable package');
 
     const missing = audit({ error: { code: 'ENOAUDIT' } });
     expect(missing.status).toBe(1);
-    expect(missing.stderr).toContain('valid vulnerabilities object');
+    expect(missing.stderr).toContain('complete v2 vulnerabilities report');
+
+    const missingMetadata = audit({ auditReportVersion: 2, vulnerabilities: {} });
+    expect(missingMetadata.status).toBe(1);
+    expect(missingMetadata.stderr).toContain('complete v2 vulnerabilities report');
+
+    const unsupportedVersion = audit({ ...completeReport({}), auditReportVersion: 1 });
+    expect(unsupportedVersion.status).toBe(1);
+    expect(unsupportedVersion.stderr).toContain('complete v2 vulnerabilities report');
+
+    // A truncated package list might still be valid JSON: npm metadata must
+    // prevent an omitted high advisory from being called a clean audit.
+    const truncated = completeReport({});
+    truncated.metadata.vulnerabilities.high = 1;
+    truncated.metadata.vulnerabilities.total = 1;
+    const omittedHigh = audit(truncated);
+    expect(omittedHigh.status).toBe(1);
+    expect(omittedHigh.stderr).toContain('totals do not match listed packages');
+
+    const wrongTotal = completeReport({
+      'sprintf-js': { severity: 'moderate', via: [] },
+    });
+    wrongTotal.metadata.vulnerabilities.total = 0;
+    const incompleteSummary = audit(wrongTotal);
+    expect(incompleteSummary.status).toBe(1);
+    expect(incompleteSummary.stderr).toContain('totals do not match listed packages');
   });
 
   it('surfaces persistent scheduled failures as deduplicated project work', () => {
