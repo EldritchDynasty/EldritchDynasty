@@ -164,6 +164,7 @@ describe('the volume', () => {
       callbacks[2]!(new Blob(['retry'], { type: 'image/png' }));
       await flushPromises();
       expect(download).toHaveBeenCalledTimes(2);
+      expect(download).toHaveBeenLastCalledWith(expect.any(Blob), expect.stringMatching(/\.png$/));
       expect(button.disabled).toBe(false);
       expect(w.find('[role="alert"]').exists()).toBe(false);
     } finally {
