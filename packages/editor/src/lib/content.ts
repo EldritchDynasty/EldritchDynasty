@@ -1,5 +1,6 @@
 import { parse, stringify } from 'yaml';
-import { assembleBundle, indexContent, type Content, type ContentBundle } from '@ed/schema';
+import { indexContent, type Content, type ContentBundle } from '@ed/schema';
+import { assembleYamlBundle } from '../../../content/src/yaml.js';
 
 /**
  * Browser-side content loader. Its whole job is to hand the files over as text
@@ -23,7 +24,7 @@ export const rawFiles: Record<string, string> = Object.fromEntries(
 const userContentPaths = new Set<string>();
 
 export function loadBundle(): ContentBundle {
-  return assembleBundle(rawFiles, parse);
+  return assembleYamlBundle(rawFiles);
 }
 
 /** The bundle with its indexes built. What the simulation actually wants. */

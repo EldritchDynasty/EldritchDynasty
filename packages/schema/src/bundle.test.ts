@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle, loadContent } from '@ed/content';
 import { assembleBundle, assertNoTruncatedFlowProse, ContentBundleS, CONTENT_LAYOUT, type ContentSources } from '@ed/schema';
 import { parse } from 'yaml';
+import { assembleYamlBundle, parseContentYaml } from '../../content/src/yaml.js';
 
 /**
  * The bundle used to be loaded twice by two different implementations —
@@ -134,6 +135,16 @@ describe('which file an id came from', () => {
 });
 
 describe('YAML flow prose guard (#1352)', () => {
+  const inspect = (file: string, source: string) =>
+    assertNoTruncatedFlowProse(file, parseContentYaml(source).flowProseIssues);
+  it.each([
+    'events:\n  - effects:\n      - { kind: chronicle, text: The house answered, no. }',
+    'events:\n  - effects:\n      - { kind: chronicle,\n          text: The house answered, and the debt stood.\n        }',
+  ])('rejects single-word and multiline truncation', (source) => {
+    expect(() => inspect('events/test.yaml', source))
+      .toThrow(/yaml\/flow-comma/);
+  });
+
   it('names the file and line when an unquoted comma cuts an effect text short', () => {
     const source = [
       'events:',
@@ -142,8 +153,7 @@ describe('YAML flow prose guard (#1352)', () => {
       '        - effects:',
       '            - { kind: chronicle, text: The wall was entered at Cawdry, and the line entered. }',
     ].join('\n');
-    const parsed = parse(source) as { events: unknown[] };
-    expect(() => assertNoTruncatedFlowProse('events/neighbours.yaml', source, parsed))
+    expect(() => inspect('events/neighbours.yaml', source))
       .toThrow(/events\/neighbours\.yaml:5 .*yaml\/flow-comma.*and the line entered/);
   });
 
@@ -153,7 +163,7 @@ describe('YAML flow prose guard (#1352)', () => {
       '  - effects:',
       '      - { kind: chronicle, text: "The wall was entered at Cawdry, and the line entered." }',
     ].join('\n');
-    expect(() => assertNoTruncatedFlowProse('events/neighbours.yaml', source, parse(source)))
+    expect(() => inspect('events/neighbours.yaml', source))
       .not.toThrow();
   });
 
@@ -165,7 +175,7 @@ describe('YAML flow prose guard (#1352)', () => {
       '        text: "One step, then another."',
       '        note: null',
     ].join('\n');
-    expect(() => assertNoTruncatedFlowProse('events/test.yaml', source, parse(source)))
+    expect(() => inspect('events/test.yaml', source))
       .not.toThrow();
   });
 
@@ -176,7 +186,36 @@ describe('YAML flow prose guard (#1352)', () => {
       '      claims:',
       '        - { kind: chronicle, because: The church said the house owed it, and the tithe was taken. }',
     ].join('\n');
-    expect(() => assertNoTruncatedFlowProse('events/claims.yaml', source, parse(source)))
+    expect(() => inspect('events/claims.yaml', source))
       .toThrow(/events\/claims\.yaml:4 .*yaml\/flow-comma/);
+  });
+
+  it('uses node locations rather than matching identical words elsewhere in the file', () => {
+    const source = 'description: "{ text: Something, and entered. }"\nevents:\n  - effects:\n      - { kind: chronicle, text: Actual text, and entered. }';
+    expect(() => inspect('events/test.yaml', source)).toThrow(/events\/test.yaml:4/);
+  });
+
+  it('preserves explicit null fields, quoted implicit keys and block-null keys', () => {
+    const source = 'events:\n  - effects:\n      - { kind: chronicle, text: "Answer, no.", note: null, "quoted key" }\n      - kind: chronicle\n        text: "{ anything, block note }"\n        block note: null';
+    expect(() => inspect('events/test.yaml', source)).not.toThrow();
+  });
+
+  it('catches nested deciders and CRLF files', () => {
+    const source = 'events:\r\n  - decidedBy:\r\n      branches:\r\n        - { because: The house owed it, paid. }';
+    expect(() => inspect('events/test.yaml', source)).toThrow(/events\/test.yaml:4 .*paid/);
+  });
+
+  it('follows aliased flow mappings into an authored effects block', () => {
+    const source = 'example: &effect { kind: chronicle, text: The house answered, no. }\nevents:\n  - effects: [*effect]';
+    expect(() => inspect('events/test.yaml', source)).toThrow(/events\/test.yaml:1 .*no/);
+  });
+
+  it('runs the guard before collection validation in the browser assembly path', () => {
+    const parser = parseContentYaml('events: []');
+    expect(parser.document).toEqual({ events: [] });
+    // A malformed source must fail even when its collection would be ignored
+    // or rejected later. This adapter is the editor and write-back store path.
+    expect(() => assembleYamlBundle({ 'attributes.yaml': 'effects: [{ text: A sentence, cut. }]\nattributes: []' }))
+      .toThrow(/attributes\.yaml:1 .*yaml\/flow-comma/);
   });
 });

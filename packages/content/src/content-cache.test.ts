@@ -27,6 +27,18 @@ function withCopiedContent<T>(fn: (root: string) => T): T {
 }
 
 describe('the content cache', () => {
+  it('rejects truncated prose with the cache warm, on repeat loads, and without the cache', () => {
+    withCopiedContent((root) => {
+      loadBundle(root);
+      const path = join(root, 'events', 'flow_guard.yaml');
+      writeFileSync(path, 'events:\n  - effects:\n      - { kind: chronicle, text: The debt stood, unpaid. }');
+      const reject = () => expect(() => loadBundle(root)).toThrow(/events\/flow_guard.yaml:3 .*yaml\/flow-comma.*unpaid/);
+      reject();
+      reject();
+      process.env.ED_CONTENT_CACHE = 'off';
+      try { reject(); } finally { delete process.env.ED_CONTENT_CACHE; }
+    });
+  });
   it('loads exactly what an uncached load would', () => {
     process.env.ED_CONTENT_CACHE = 'off';
     const plain = loadBundle();
