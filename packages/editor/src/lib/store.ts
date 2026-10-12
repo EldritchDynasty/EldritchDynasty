@@ -281,6 +281,12 @@ export async function saveItem(collectionKey: string, id: string): Promise<Write
   if (!isWritableContentPath(located.path)) {
     return { ok: false, error: `'${located.path}' is shipped content and is read-only in Mod Editor` };
   }
+  // SaveControls are per item, but multiple items can belong to the same YAML
+  // file. Refuse overlapping writes before either mutates the shared Document;
+  // a stale completion must never overwrite a later snapshot of this path.
+  if (store.saving.has(located.path)) {
+    return { ok: false, error: `'${located.path}' is already being saved. Try again when it finishes.` };
+  }
   const yamlKey = COLLECTION_YAML_KEY[collectionKey] ?? collectionKey;
   const items = itemsOf(collectionKey);
   const item = items?.find((x) => identityOf(collectionKey, x) === id);
@@ -492,6 +498,12 @@ export async function saveCoreProseCatalogue(): Promise<WriteResult> {
     return { ok: false, error: 'shipped messages.yaml is read-only in Mod Editor' };
   }
 
+  // This catalogue shares the same write transport and file-level lock.
+  // A second confirmation while its first write is pending must be explicit,
+  // rather than letting whichever completion is last replace the disk file.
+  if (store.saving.has(CORE_PROSE_FILE)) {
+    return { ok: false, error: `'${CORE_PROSE_FILE}' is already being saved. Try again when it finishes.` };
+  }
   const savedGeneration = dirtyGeneration.get(CORE_PROSE_FILE) ?? 0;
   const snapshot = file.doc.toString(STRINGIFY_OPTS);
   store.saving.add(CORE_PROSE_FILE);
