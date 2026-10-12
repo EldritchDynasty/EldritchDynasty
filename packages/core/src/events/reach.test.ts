@@ -1667,6 +1667,7 @@ describe('authored simple flag-gated outcome witnesses', () => {
       'the_inquest_that_sits_for_nine_days',
       'the_muster_is_called',
       'the_wayfolk_have_it_first',
+      'the_west_wing_roof',
     ]);
 
     const declared = cases.flatMap((event) => {
@@ -6525,5 +6526,68 @@ describe('#334 butts clause reader witnesses', () => {
     });
     expect(result.ok, result.reason).toBe(true);
     expect(ctx.world.arcs.size).toBe(0);
+  });
+});
+
+describe('#334 west wing roof witnesses', () => {
+  // Patching promises to hold "until the wind comes round to the north": its
+  // chained reader tests the patch. Slating is "a thing that stops happening":
+  // the roof scene reads west_wing_slated and does not recur.
+  const rootId = 'the_west_wing_roof';
+  const readerId = 'the_north_wind_finds_the_patch';
+
+  function patchIt(seed: number) {
+    const ctx = fixture(seed);
+    const year = ctx.world.year;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'patch_it_again', expectedOutcomeId: 'patched', rng: makeRng(seed + 1),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get('west_wing_patched_again')).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((entry) =>
+      content.arc(entry.arc)?.nodes.some((node) => node.event === readerId));
+    if (!instance) throw new Error('patching the roof did not schedule the north wind');
+    expect(instance.dueYear).toBeGreaterThanOrEqual(year + 3);
+    expect(instance.dueYear).toBeLessThanOrEqual(year + 8);
+    return { ctx, instance };
+  }
+
+  it.each([
+    { choice: 'slate_it_now', outcome: 'slated_at_last', cost: 110, patched: false, slated: true },
+    { choice: 'patch_it_once_more', outcome: 'patched_once_more', cost: 12, patched: true, slated: undefined },
+  ])('executes $choice as the due arc step', ({ choice, outcome, cost, patched, slated }) => {
+    const { ctx, instance } = patchIt(33480);
+    ctx.world.year = instance.dueYear!;
+    const step = dueArcSteps(ctx, makeRng(33482)).find((entry) => entry.instance.id === instance.id);
+    if (!step) throw new Error('the north wind never came');
+    const before = ctx.world.treasury;
+    const result = executeOutcomeWitness(ctx, content.mustEvent(readerId), {
+      choiceId: choice, expectedOutcomeId: outcome, rng: makeRng(33483), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(before - cost);
+    expect(ctx.world.flags.get('west_wing_patched_again')).toBe(patched);
+    expect(ctx.world.flags.get('west_wing_slated')).toBe(slated);
+    expect(instance.status).toBe('ended');
+  });
+
+  it('withholds the north wind from a roof slated in the meantime', () => {
+    const { ctx, instance } = patchIt(33490);
+    ctx.world.flags.set('west_wing_slated', true);
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, makeRng(33491))).toHaveLength(0);
+  });
+
+  it('stops the roof scene recurring once the west wing is slated', () => {
+    const ctx = fixture(33495);
+    const root = content.mustEvent(rootId);
+    expect(evalCondition(root.conditions, ctx)).toBe(true);
+    const result = executeOutcomeWitnessRaw(ctx, root, {
+      choiceId: 'hesk_properly', expectedOutcomeId: 'slated', rng: makeRng(33496),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get('west_wing_slated')).toBe(true);
+    expect(ctx.world.arcs.size).toBe(0);
+    expect(evalCondition(root.conditions, ctx)).toBe(false);
   });
 });

@@ -24,6 +24,9 @@ events:
     weight: 80
     tags: [hall, money, hesk, upkeep]
     purposes: [buy_patience, change_standing, worldbuild_through_action]
+    # #334: a slated roof is the thing that stops happening. The scene recurs
+    # only while the west wing has never been done properly.
+    conditions: { not: { flag: west_wing_slated, is: true } }
     slots:
       HEAD: { role: head }
     body: >-
@@ -51,6 +54,7 @@ events:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: west_wing_slated, set: true }
+                - { kind: flag, flag: west_wing_patched_again, set: false }
         - id: patch_it_again
           label: Patch it again. It has held before.
           outcomes:
@@ -64,6 +68,65 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: flag, flag: west_wing_patched_again, set: true }
+              # #334: "until the wind comes round to the north". Chained, so the
+              # patch is tested by the next hard winter rather than by the draw.
+              next: { event: the_north_wind_finds_the_patch, after: { minYears: 3, maxYears: 8 } }
+
+  # #334: the reader of west_wing_patched_again. It does not fire on a roof
+  # that has since been slated. No HEAD binding: the wind finds whoever holds
+  # the seal.
+  - id: the_north_wind_finds_the_patch
+    title: The North Wind Finds the Patch
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [hall, money, hesk, upkeep]
+    purposes: [buy_patience, change_standing, change_relationship]
+    conditions:
+      all:
+        - { flag: west_wing_patched_again, is: true }
+        - { not: { flag: west_wing_slated, is: true } }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The wind comes round to the north in Frostfall and stays there nine
+      days, and every shutter on that side of the house knocks the whole time.
+      On the fourth night the patch lifts like a page. The rain goes in behind
+      it. {HEAD} stands in the west passage with a candle and listens to it
+      drip onto the boards of two bedchambers and down the plaster of a third.
+      The slate-men of Hesk climb up in the morning, come down slower, and say
+      what they said the last time with a different number at the end of it.
+      The rot is in the battens. Doing it properly is a hundred and ten crowns
+      where it was ninety. The yard man has his ladder out already.
+    interaction:
+      kind: choice
+      choices:
+        - id: slate_it_now
+          label: A hundred and ten crowns to Hesk. Do it properly this time.
+          outcomes:
+            - id: slated_at_last
+              weight: 100
+              text: >-
+                Eighteen men again, and twelve weeks this time, because the
+                battens come off with the slates. The house eats plainly for
+                three years. The west wing is dry, and it stays dry.
+              effects:
+                - { kind: treasury, delta: -110 }
+                - { kind: respect, delta: 1 }
+                - { kind: flag, flag: west_wing_slated, set: true }
+                - { kind: flag, flag: west_wing_patched_again, set: false }
+        - id: patch_it_once_more
+          label: Patch it once more. Twelve crowns.
+          outcomes:
+            - id: patched_once_more
+              weight: 100
+              text: >-
+                Twelve crowns and the yard man up the ladder in the wind. The
+                two chambers stay shut until Thaw, and the family sleeps three
+                to a room in the east wing. It holds. Nobody expects it to.
+              effects:
+                - { kind: treasury, delta: -12 }
+                - { kind: relationship, from: household, to: head, sentiment: -6 }
 
   - id: three_grates_of_seven
     title: Three Grates of Seven
@@ -491,6 +554,41 @@ proseVariants:
       It costs twelve crowns and two weeks, with the yard man up a ladder in weather nobody
       should be up a ladder in. It holds. It holds the way it did last time, which means until
       the wind turns to the north.
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].title"
+    of: "728a139ed20e3c52"
+    plainenglish: >-
+      The North Wind Breaks the Patch
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].body"
+    of: "339efd38b9aab434"
+    plainenglish: >-
+      In Frostfall the wind turns to the north and blows for nine days, and every shutter on
+      that side of the house bangs the whole time. On the fourth night the patch lifts off the
+      roof. The rain gets in behind it. {HEAD} stands in the west passage with a candle and
+      listens to it drip onto the floors of two bedrooms and down the wall of a third. The
+      roofers from Hesk climb up in the morning and come down more slowly. They say what they
+      said last time, but with a different price. The roof timbers have rotted. Doing it
+      properly now costs a hundred and ten crowns instead of ninety. The yard man already has
+      his ladder out.
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].interaction.choices[id=slate_it_now].label"
+    of: "0f4d55b293561a2e"
+    plainenglish: >-
+      Pay Hesk a hundred and ten crowns. Do it properly this time.
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].interaction.choices[id=slate_it_now].outcomes[id=slated_at_last].text"
+    of: "b9a18f631b7161af"
+    plainenglish: >-
+      Eighteen men again, and twelve weeks this time, because the rotten timbers come off with
+      the slates. The household eats plain food for three years. The west wing is dry, and it
+      stays dry.
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].interaction.choices[id=patch_it_once_more].label"
+    of: "1ef6c0c96e8825b5"
+    plainenglish: >-
+      Patch it one more time. Twelve crowns.
+  - address: "content:events/the_hall.yaml#events[id=the_north_wind_finds_the_patch].interaction.choices[id=patch_it_once_more].outcomes[id=patched_once_more].text"
+    of: "42b2d05458da9e88"
+    plainenglish: >-
+      Twelve crowns, and the yard man up the ladder in the wind. The two bedrooms stay closed
+      until Thaw, and the family sleeps three to a room in the east wing. The patch holds.
+      Nobody expects it to last.
   - address: "content:events/the_hall.yaml#events[id=three_grates_of_seven].title"
     of: "9b9cd49f3bd7275b"
     plainenglish: >-

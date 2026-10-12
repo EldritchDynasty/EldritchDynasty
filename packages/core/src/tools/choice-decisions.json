@@ -314,18 +314,6 @@
       "reason": "The successful wait outcome otherwise has no lasting effect and explicitly says the marriage terms improve twice before year end. Preserve the flag for the follow-up match consequence rather than turning the 55% success branch into prose only."
     },
     {
-      "kind": "flag",
-      "key": "west_wing_patched_again",
-      "disposition": "read",
-      "reason": "Patching is explicitly temporary and lasts only until the north wind returns. Preserve the flag for a later roof recurrence that distinguishes another patch from the eighty-year slate repair."
-    },
-    {
-      "kind": "flag",
-      "key": "west_wing_slated",
-      "disposition": "read",
-      "reason": "Doing the roof properly explicitly makes the west wing dry for eighty years. Preserve the flag for later hall/upkeep logic so the expensive repair actually suppresses or changes future roof consequences."
-    },
-    {
       "kind": "knowledge",
       "key": "knows_about_the_west_passage",
       "disposition": "read",
