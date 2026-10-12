@@ -10,9 +10,17 @@ import { renameSync, rmSync, writeFileSync } from 'node:fs';
  * Parsing and validation remain in the core/schema layers, not in the shell.
  */
 export function writeJsonAtomically(target, value) {
+  // The input can be an object even when its toJSON() turns the document
+  // into null, an array or a scalar. Readers reject those roots; refusing
+  // them before creating scratch preserves the previous readable file.
+  const serialized = JSON.stringify(value);
+  if (typeof serialized !== 'string' || !serialized.startsWith('{')) {
+    throw new TypeError('atomic JSON document must serialize to an object');
+  }
+
   const scratch = `${target}.${randomUUID()}.writing`;
   try {
-    writeFileSync(scratch, JSON.stringify(value), { encoding: 'utf8', flag: 'wx' });
+    writeFileSync(scratch, serialized, { encoding: 'utf8', flag: 'wx' });
     renameSync(scratch, target);
   } finally {
     // A failed write or rename must not leave an unusable temporary file.
