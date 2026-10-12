@@ -687,7 +687,10 @@ export function createGame(
       const selection = ++runSelectionRevision;
       try {
         const imported = await platform.importSave();
-        if (imported === BROWSER_IMPORT_CANCELLED) return 'cancelled';
+        // The separately bundled mobile bridge sends the registry version of
+        // the browser's cancellation symbol; neither is an invalid save.
+        if (imported === BROWSER_IMPORT_CANCELLED
+          || imported === Symbol.for(BROWSER_IMPORT_CANCELLED.description!)) return 'cancelled';
         return selection === runSelectionRevision ? loadSave(imported) : false;
       } catch {
         return false;
