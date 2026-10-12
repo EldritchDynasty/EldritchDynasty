@@ -84,6 +84,16 @@ export async function smokeInstalledWindowsArtifact(
   const proof = checkedWindowsReleaseProof(
     JSON.parse(await readFile(join(artifactDir, PROOF_NAME), 'utf8')),
   );
+  // The producer requires Authenticode on non-prerelease tags. Enforce the
+  // same policy independently on this clean runner: an accidentally unsigned
+  // artifact must not pass its install smoke just because the manifest says
+  // both files were "not-checked". Match check.yml's hyphenated-tag split.
+  const releaseRef = parentEnv.GITHUB_REF;
+  if (typeof releaseRef === 'string' && releaseRef.startsWith('refs/tags/')
+    && !releaseRef.slice('refs/tags/'.length).includes('-')
+    && proof.installer.authenticode !== 'valid') {
+    throw new Error('production Windows tag requires valid Authenticode proof before installing');
+  }
   const installer = await findWindowsInstaller(artifactDir);
   if (basename(installer) !== proof.installer.file) {
     throw new Error('downloaded installer name does not match release proof');
