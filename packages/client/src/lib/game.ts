@@ -418,6 +418,8 @@ export function createGame(
   // because the front door needs to know it exists.
   let keptSave: unknown | null = null;
   let archivedRunId: string | null = null;
+  /** A delayed host read must not replace a newer Begin, Load, Leave or Restart. */
+  let runSelectionRevision = 0;
   /** Profile-wide unlocks confirmed by this host instance. */
   const deliveredAchievements = new Set<AchievementId>();
   /** Unlock calls currently in flight; repeated evaluation must not duplicate them. */
@@ -547,6 +549,7 @@ export function createGame(
   }
 
   function start(g: GameSession): void {
+    ++runSelectionRevision;
     session.value = g;
     archivedRunId = null;
     // A resumed run does not replay its own prologue.
@@ -581,6 +584,7 @@ export function createGame(
    * becoming destructive.
    */
   function clearLiveRun(): void {
+    ++runSelectionRevision;
     session.value = null;
     view.value = null;
     table.value = null;
@@ -653,12 +657,20 @@ export function createGame(
 
     /** Pick a run back up after a reload. Not a menu: one run, kept in the tab. */
     async resume() {
-      return loadSave(keptSave ?? await readKept(), true);
+      const selection = ++runSelectionRevision;
+      try {
+        const saved = keptSave ?? await readKept();
+        return selection === runSelectionRevision ? loadSave(saved, true) : false;
+      } catch {
+        return false;
+      }
     },
 
     async load(slot) {
+      const selection = ++runSelectionRevision;
       try {
-        return loadSave(await platform.readSave(slot));
+        const saved = await platform.readSave(slot);
+        return selection === runSelectionRevision ? loadSave(saved) : false;
       } catch {
         return false;
       }
@@ -672,10 +684,11 @@ export function createGame(
     },
 
     async importSave() {
+      const selection = ++runSelectionRevision;
       try {
         const imported = await platform.importSave();
         if (imported === BROWSER_IMPORT_CANCELLED) return 'cancelled';
-        return loadSave(imported);
+        return selection === runSelectionRevision ? loadSave(imported) : false;
       } catch {
         return false;
       }
