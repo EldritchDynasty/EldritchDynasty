@@ -1131,6 +1131,8 @@ describe('native queue recovery after green main CI (#1458)', () => {
     expect(recovered).toContain('enqueuePullRequest(input:{pullRequestId:$pullRequestId,expectedHeadOid:$expectedHeadOid})');
     expect(recovered).toContain('-F expectedHeadOid="$head"');
     expect(recovered).toContain('already in the queue');
+    expect(recovered).toContain(".data.enqueuePullRequest.mergeQueueEntry.id // empty");
+    expect(recovered).toContain('admission returned no queue entry:');
     expect(recovered).not.toContain('git push');
     expect(recovered).not.toContain('mergePullRequest');
     expect(recovered).not.toContain('gh pr merge');
