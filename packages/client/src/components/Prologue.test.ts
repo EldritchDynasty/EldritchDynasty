@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import type { PrologueView, SessionView } from '@ed/core';
 import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
@@ -109,6 +110,62 @@ describe('held Enter in newborn naming (#1471)', () => {
       await input.trigger('keydown', { key: 'Enter', repeat: true });
       expect(name).toHaveBeenCalledTimes(1);
       expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+describe('founding submit single-flight (#1484)', () => {
+  it('discards same-tick clicks and Enter, then permits a deliberate retry after refusal', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: prologueView(),
+        actions: game,
+        refused: null,
+        startYear: 1042,
+      },
+    });
+
+    try {
+      await revealChoices(wrapper);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      const house = wrapper.get('input[aria-label="Name the house"]');
+      await house.setValue('House Ash');
+      const sign = wrapper.get('button.sign');
+      expect(sign.attributes('disabled')).toBeUndefined();
+
+      // Real DOM events, deliberately not Vue Test Utils trigger(): trigger()
+      // yields a render tick, which would hide this event-burst race.
+      (sign.element as HTMLButtonElement).click();
+      (sign.element as HTMLButtonElement).click();
+      house.element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(game.found).toHaveBeenCalledTimes(1);
+      expect(game.found).toHaveBeenCalledWith({
+        houseName: 'House Ash',
+        heirloom: 'seal',
+        grudge: 'house_marrow',
+        friends: [],
+        founderName: '',
+        answers: {
+          question_1: 'answer_1_1',
+          question_2: 'answer_2_1',
+          question_3: 'answer_3_1',
+          question_4: 'answer_4_1',
+        },
+      });
+
+      // The mocked founding was refused, so the same rendered form remains.
+      // It must not permanently latch the button against a later retry.
+      await nextTick();
+      (sign.element as HTMLButtonElement).click();
+      expect(game.found).toHaveBeenCalledTimes(2);
     } finally {
       wrapper.unmount();
     }
