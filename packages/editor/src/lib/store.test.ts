@@ -181,6 +181,45 @@ describe('the dirty set', () => {
   });
 });
 
+describe('pre-existing unsaved sibling edits (#1387)', () => {
+  it('leaves a second edited event dirty after saving only the first event', async () => {
+    const firstEvent = event(EVENT);
+    const sibling = event(SIBLING);
+    const firstOriginal = firstEvent.title;
+    const siblingOriginal = sibling.title;
+
+    try {
+      // Both changes exist before either save. A file-only dirty generation
+      // previously cleared both indicators after writing just the first row.
+      firstEvent.title = 'First Preexisting Unsaved Title';
+      markDirty('events', EVENT);
+      sibling.title = 'Second Preexisting Unsaved Title';
+      markDirty('events', SIBLING);
+
+      expect(pendingText('events', EVENT)!.after).toContain('First Preexisting Unsaved Title');
+      expect(pendingText('events', EVENT)!.after).not.toContain('Second Preexisting Unsaved Title');
+
+      expect((await saveEvent(EVENT)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Preexisting Unsaved Title');
+      expect(h.disk.get(CRUSADE)).not.toContain('Second Preexisting Unsaved Title');
+      expect(isDirty('events', SIBLING), 'the unwritten sibling must still need a save').toBe(true);
+      expect(pendingText('events', SIBLING)!.after).toContain('Second Preexisting Unsaved Title');
+
+      expect((await saveEvent(SIBLING)).ok).toBe(true);
+      expect(h.disk.get(CRUSADE)).toContain('First Preexisting Unsaved Title');
+      expect(h.disk.get(CRUSADE)).toContain('Second Preexisting Unsaved Title');
+      expect(isDirty('events', SIBLING)).toBe(false);
+    } finally {
+      firstEvent.title = firstOriginal;
+      sibling.title = siblingOriginal;
+      markDirty('events', EVENT);
+      markDirty('events', SIBLING);
+      await saveEvent(EVENT);
+      await saveEvent(SIBLING);
+    }
+  });
+});
+
 describe('per-file save serialization (#1384)', () => {
   it('refuses a second item save in the same YAML file while its first write is pending', async () => {
     const firstEvent = event(EVENT);
