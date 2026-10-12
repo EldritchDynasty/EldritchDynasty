@@ -803,6 +803,44 @@ describe('core prose messages.yaml authoring (#1011)', () => {
     store.dirty.clear();
   }
 
+  it('refuses an external messages.yaml edit instead of overwriting it after review', async () => {
+    const loaded = h.disk.get(FILE)!;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      h.disk.set(FILE, loaded + '\n# Changed outside the editor\n');
+
+      const result = await saveCoreProseCatalogue();
+      expect(result.ok).toBe(false);
+      expect(result.error).toMatch(/changed on disk.*Reload/i);
+      expect(store.errors[FILE]).toBe(result.error);
+      expect(store.dirty.has(FILE)).toBe(true);
+      expect(h.writes).toHaveLength(0);
+      expect(h.disk.get(FILE)).toContain('Changed outside the editor');
+      expect(pendingCoreProseText()!.before).toBe(loaded);
+      expect(pendingCoreProseText()!.after).toContain(ADDRESS);
+    } finally {
+      h.disk.set(FILE, loaded);
+      await cleanUp();
+    }
+  });
+
+  it('fails closed when the current catalogue cannot be read', async () => {
+    const loaded = h.disk.get(FILE)!;
+    try {
+      expect(applyCoreProseEdits([EDIT]).ok).toBe(true);
+      h.disk.delete(FILE);
+
+      const result = await saveCoreProseCatalogue();
+      expect(result.ok).toBe(false);
+      expect(result.error).toMatch(/Cannot verify.*messages.yaml.*no such file/i);
+      expect(h.writes).toHaveLength(0);
+      expect(store.dirty.has(FILE)).toBe(true);
+    } finally {
+      h.disk.set(FILE, loaded);
+      await cleanUp();
+    }
+  });
+
   it('adds, previews and removes a core counterpart in its own YAML file, preserving header and siblings', async () => {
     const before = h.disk.get(FILE)!;
     expect(before).toContain('# Plain English counterparts for the engine');
