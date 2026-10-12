@@ -80,8 +80,14 @@ working branch first, then put one of these exact commands in an issue comment:
 ```
 
 The named `lane-content` and `lane-gates` locks use the **same**
-`/claim` transport as numbered issues. Claim the relevant exclusive lane
-**in addition to** the numbered issue before editing; release a lane with
+`/claim` transport as numbered issues. **For content YAML, claim `lane-content`
+first, then take the numbered content issue** with the same `--agent` branch.
+The claim tool refuses a numbered content claim without its exclusive lane,
+and refuses a new lane owner while another agent still holds an earlier content
+issue claim. This also applies to claims under `packages/content/` labelled as
+`code`: a label cannot bypass exclusivity. Existing conflicting claims remain
+visible to `/claim check` until their owners release them. Claim `lane-gates`
+in addition to any gate issue before editing; release a lane with
 `/claim release lane-content --agent <branch>` (or `lane-gates`).
 If either claim is denied, do not start that lane's work. Arbitrary named
 claim refs are not accepted by the remote grammar.
