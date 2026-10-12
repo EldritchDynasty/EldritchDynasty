@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
-import { modalFocusable } from './modal';
+import { describe, expect, it, vi } from 'vitest';
+import { createApp, defineComponent, h, ref } from 'vue';
+import { modalFocusable, useModal } from './modal';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -750,3 +751,58 @@ describe('modal native disclosure focus', () => {
   });
 });
 
+
+/**
+ * A dialog with no enabled, visible controls must still own keyboard focus.
+ * Without a card fallback, the element behind its scrim remains active and
+ * the empty Tab trap prevents any escape from that background element.
+ */
+describe('modal focus when controls cannot take focus (#1541)', () => {
+  it.each([
+    { label: 'disabled-only dialog', disabled: true, initialTabindex: undefined, expected: 'card', expectedTabindex: '-1' },
+    { label: 'explicitly focusable dialog', disabled: true, initialTabindex: 0, expected: 'card', expectedTabindex: '0' },
+    { label: 'dialog with an enabled control', disabled: false, initialTabindex: undefined, expected: 'button', expectedTabindex: null },
+  ] as const)('$label', ({ disabled, initialTabindex, expected, expectedTabindex }) => {
+    // A synchronous frame is intentional: the hook also supports one during
+    // teardown, without restoring focus into the closing dialog.
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    const behind = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(behind, host);
+    behind.focus();
+
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, () => {});
+        return () => h('section', {
+          ref: card,
+          'aria-modal': 'true',
+          ...(initialTabindex === undefined ? {} : { tabindex: initialTabindex }),
+        }, [h('button', { disabled }, 'Continue')]);
+      },
+    }));
+
+    try {
+      app.mount(host);
+      const card = host.querySelector('section')!;
+      const button = card.querySelector('button')!;
+      expect(document.activeElement).toBe(expected === 'card' ? card : button);
+      expect(card.getAttribute('tabindex')).toBe(expectedTabindex);
+      if (disabled) {
+        const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+        window.dispatchEvent(tab);
+        expect(tab.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(card);
+      }
+    } finally {
+      app.unmount();
+      host.remove();
+      behind.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
