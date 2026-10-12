@@ -32,6 +32,10 @@ function apply(): void {
     return;
   }
   if (!props.actions.setAmbition(selected.value)) {
+    // The store publishes a fresh view even on refusal. Keep editing so the
+    // view watcher cannot reset this first ambition's draft and error as if
+    // the player had merely opened the idle, no-ambition screen.
+    choosing.value = true;
     refusal.value = 'The house could not keep that ambition. Choose another plan or try again.';
     return;
   }
