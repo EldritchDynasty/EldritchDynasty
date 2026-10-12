@@ -134,6 +134,41 @@ describe('the family tree as a planning board (#268)', () => {
     wrapper.unmount();
   });
 
+  it('restores the seat after a selected cadet hall disappears between years (#1464)', async () => {
+    const view = largeView();
+    const wrapper = mount(Tree, { props: { view, selected: null } });
+    try {
+      // The reader is deliberately narrowed to a living cadet branch.
+      await wrapper.findAll('.halls button')[3]!.trigger('click'); // Cadet Hall 2
+      const cadetIds = view.halls[2]!.members.map((member) => member.id).sort();
+      expect(renderedIds(wrapper)).toEqual(cadetIds);
+
+      // Replacing the world photograph must NOT discard a still-valid selection.
+      const refreshed = {
+        ...view,
+        halls: view.halls.map((hall) => ({ ...hall, members: [...hall.members] })),
+      };
+      await wrapper.setProps({ view: refreshed });
+      expect(renderedIds(wrapper)).toEqual(cadetIds);
+      expect(wrapper.findAll('.hall')).toHaveLength(1);
+
+      // If that hall vanishes, the seat must reappear even when the single-hall
+      // picker is no longer rendered and cannot be used to recover manually.
+      await wrapper.get('.root').trigger('click');
+      expect(wrapper.find('.branch').exists()).toBe(true);
+      const seatOnly = { ...refreshed, halls: [refreshed.halls[0]!] };
+      await wrapper.setProps({ view: seatOnly });
+      expect(wrapper.find('.halls').exists()).toBe(false);
+      expect(wrapper.find('.branch').exists()).toBe(false);
+      expect(wrapper.find('.no-match').exists()).toBe(false);
+      expect(renderedIds(wrapper))
+        .toEqual(seatOnly.halls[0]!.members.map((member) => member.id).sort());
+      expect(wrapper.get('.hall h3').text()).toContain('The Seat');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('narrows every planning filter to exactly the visible fact it names', async () => {
     const view = largeView();
     const wrapper = mount(Tree, { props: { view, selected: null } });
