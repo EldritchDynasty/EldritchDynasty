@@ -501,3 +501,66 @@ describe('mounted shelf binder controls (#1293)', () => {
     expect(shelf.findAll('button').some((b) => b.text().startsWith('Restore'))).toBe(false);
   });
 });
+
+describe('reader-local Table guidance (#1441)', () => {
+  it('switches Original → Plain English → Original without changing data, enabled states or orders', async () => {
+    const { wrapper, action, ctx } = mountedShelf(40);
+    try {
+      const original = wrapper.text();
+      const disabled = wrapper.findAll('button').map((b) => b.attributes('disabled') !== undefined);
+      expect(original).toContain('A two-rite elder can be unmade');
+      expect(original).toContain('Three generations of maternal record, notarised.');
+      expect(original).toContain('When nobody asks you.');
+      expect(original).toContain('The house has not said what it will spend');
+      expect(original).toContain(String(tableView(ctx).tutorFee));
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      const translated = wrapper.text();
+      expect(translated).toContain('An elder who has completed two rites can be sacrificed');
+      expect(translated).toContain('all eight affinities');
+      expect(translated).toContain('notarised records for three generations through the mother');
+      expect(translated).toContain('Marrying outside the family loses the bloodline');
+      expect(translated).toContain('No maximum bid has been set.');
+      expect(translated).toContain('25 crowns now');
+      expect(translated).toContain('No auction has been announced yet.');
+      expect(translated).toContain(String(tableView(ctx).tutorFee));
+      expect(translated).not.toContain('When nobody asks you.');
+      expect(wrapper.findAll('button').map((b) => b.attributes('disabled') !== undefined)).toEqual(disabled);
+
+      const marryPlain = wrapper.findAll('button').find((b) => b.text() === 'Marry outside the family');
+      expect(marryPlain).toBeDefined();
+      await marryPlain!.trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'marriages', policy: 'out' });
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(wrapper.findAll('button').map((b) => b.attributes('disabled') !== undefined)).toEqual(disabled);
+      const marryOriginal = wrapper.findAll('button').find((b) => b.text() === 'Marry outward');
+      expect(marryOriginal).toBeDefined();
+      await marryOriginal!.trigger('click');
+      expect(action).toHaveBeenLastCalledWith({ kind: 'marriages', policy: 'out' });
+      expect(action).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps engine refusals untouched while translating rent consequences and financial guidance', async () => {
+    const { wrapper, ctx } = mountedShelf(40);
+    try {
+      const land = { ...landView(ctx), rentsPolicy: 'rack' as const };
+      const refusal = { kind: 'rents', reason: 'The tenants have refused these terms.' };
+      await wrapper.setProps({ land, refusal, proseMode: 'original' });
+      expect(wrapper.text()).toContain('Most now, and longest remembered.');
+      expect(wrapper.text()).toContain(refusal.reason);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Highest rent now, with lasting resentment.');
+      expect(wrapper.text()).toContain('A tutoring term costs');
+      expect(wrapper.text()).toContain(refusal.reason);
+      expect(wrapper.text()).not.toContain('Most now, and longest remembered.');
+      expect(wrapper.findAll('button').some((b) => b.attributes('aria-pressed') === 'true' && b.text() === 'Rack')).toBe(true);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
