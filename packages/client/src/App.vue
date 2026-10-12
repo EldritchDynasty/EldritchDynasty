@@ -657,6 +657,7 @@ const yearAndBirths = computed(() => {
           <Tree
             :view="view"
             :selected="selected"
+            :prose-mode="accessibility.proseMode"
             :reveal="treeReveal"
             :line="actions.line()"
             :mentions="mentionPages"
