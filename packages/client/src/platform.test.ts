@@ -97,7 +97,10 @@ describe('browser host rejects unreadable root writes (#1372, #1406)', () => {
       // The host is still opaque: a normal JSON object may be stored and read.
       const nextSave = { format: 28, year: 1221 };
       const nextLibrary = { format: 1, runs: [{ id: 'later' }] };
-      // A custom serializer that still emits a JSON *object* remains valid.
+      // Normal objects and custom serializers that still emit JSON objects
+      // remain valid. The host does not enforce the game's full schema.
+      await expect(host.writeSave('autosave', nextSave)).resolves.toBeUndefined();
+      await expect(host.writeLibrary(nextLibrary)).resolves.toBeUndefined();
       await expect(host.writeSave('autosave', { toJSON: () => nextSave })).resolves.toBeUndefined();
       await expect(host.writeLibrary({ toJSON: () => nextLibrary })).resolves.toBeUndefined();
       await expect(host.readSave('autosave')).resolves.toEqual(nextSave);
