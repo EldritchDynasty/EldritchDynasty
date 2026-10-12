@@ -407,11 +407,11 @@ describe('the editor Vite entry points', () => {
   for (const [name, command] of Object.entries(commands)) {
     it(`${name} loads its workspace TypeScript config through the module runner`, () => {
       const invocation = pkg.scripts[name] ?? '';
-      expect(invocation.split(/\\s+/).slice(0, command.split(' ').length).join(' ')).toBe(command);
+      expect(invocation.split(/\s+/).slice(0, command.split(' ').length).join(' ')).toBe(command);
       expect(
         invocation,
         `Editor ${name} must pass --configLoader runner; default bundling cannot load core-message-audit.js from TypeScript sources`,
-      ).toMatch(/(?:^|\\s)--configLoader(?:\\s+|=)runner(?=\\s|$)/);
+      ).toMatch(/(?:^|\s)--configLoader(?:\s+|=)runner(?=\s|$)/);
     });
   }
 });
