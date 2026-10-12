@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
@@ -121,6 +121,12 @@ function advance(person: string): void {
  * household — while Places solved the identical shape with a `select` 200px
  * further down. Two idioms for one interaction, on one screen. */
 const reading = ref<Record<string, string>>({});
+watch(() => props.table.shelf, (books) => {
+  for (const book of books) {
+    const selected = reading.value[book.book] ?? '';
+    reading.value[book.book] = book.readers.some((reader) => reader.person === selected) ? selected : '';
+  }
+}, { immediate: true });
 
 /**
  * ISSUE #218 — THE ASSEMBLY BEFORE THE ACT.
@@ -441,7 +447,7 @@ const MARRIAGE_ORDERS = [
         <div class="row">
           <select v-model="reading[book.book]" :disabled="!book.readers.length" :aria-label="'Choose a reader for ' + book.name">
             <option value="">
-              {{ book.readers.length ? '— put whom on it —' : '— nobody can take it up —' }}
+              {{ book.restoringUntil !== undefined ? '— with the binder —' : book.readers.length ? '— put whom on it —' : '— nobody can take it up —' }}
             </option>
             <option v-for="r in book.readers" :key="r.person" :value="r.person">{{ r.name }}</option>
           </select>
