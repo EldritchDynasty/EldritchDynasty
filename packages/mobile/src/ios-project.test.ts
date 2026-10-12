@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { chooseSaveFile } from './file-chooser.js';
+import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
 import { serializeInterchange } from './interchange.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -302,7 +303,7 @@ function fakeNativePicker() {
 }
 
 describe('mobile native save import picker', () => {
-  it('settles with null when the native picker is cancelled without any change', async () => {
+  it('treats native picker cancellation as a benign import dismissal (#1416)', async () => {
     const { input, listeners } = fakeNativePicker();
     const choice = chooseSaveFile(input as unknown as HTMLInputElement);
 
@@ -312,7 +313,14 @@ describe('mobile native save import picker', () => {
     expect(listeners.has('cancel')).toBe(true);
     listeners.get('cancel')!();
 
-    await expect(choice).resolves.toBeNull();
+    await expect(choice).resolves.toBe(BROWSER_IMPORT_CANCELLED);
+  });
+
+  it('treats a change event without a selected file as cancellation (#1416)', async () => {
+    const { input } = fakeNativePicker();
+    const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+    input.onchange?.();
+    await expect(choice).resolves.toBe(BROWSER_IMPORT_CANCELLED);
   });
 
   it('retains the original JSON import behavior for a selected file', async () => {
