@@ -293,6 +293,36 @@ function take() {
     }
   }
 
+  // A numbered issue locks that issue, not the content frequency pool
+  // shared by every YAML file. The lane ref is the exclusive mutex.
+  // Refuse an unsafe issue BEFORE writing its claim ref: checking for
+  // overlapping content claims at preflight is too late.
+  const touchesContent = (claimPaths) => claimPaths.some((p) =>
+    p === 'packages/content' || p.startsWith('packages/content/'));
+  if (slug !== 'lane-content' && (lane === 'content' || touchesContent(paths))) {
+    const owner = held.find((c) => c.slug === 'lane-content');
+    if (!owner || owner.agent !== agent) {
+      console.error(`DENIED — ${slug} edits content; take lane-content as ${agent} first${
+        owner ? ` (held by ${owner.agent})` : ' (no exclusive lane holder)'
+      }.`);
+      process.exit(1);
+    }
+  }
+
+  // Legacy agents may have taken content issues without lane-content. Do not
+  // hand the exclusive lane to a DIFFERENT agent until those claims clear.
+  // The current lane owner may still renew; check catches older collisions.
+  if (slug === 'lane-content' && mine?.agent !== agent) {
+    const foreign = held.filter((c) => c.slug !== 'lane-content'
+      && c.agent !== agent && (c.lane === 'content' || touchesContent(c.paths)));
+    if (foreign.length) {
+      console.error(`DENIED — lane-content conflicts with content issues held by another agent: ${
+        foreign.map((c) => `${c.slug} (${c.agent})`).join(', ')
+      }. Resolve those claims before taking the exclusive lane.`);
+      process.exit(1);
+    }
+  }
+
   const message = [
     `claim ${slug}`, '',
     `agent: ${agent}`,
