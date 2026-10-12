@@ -77,6 +77,18 @@ function missingFile(error: unknown): boolean {
   return errorCode(error) === 'OS-PLUG-FILE-0008';
 }
 
+/** Serialize the opaque host record, but never persist a root value that
+ * readSave/readLibrary would reject as a corrupt file. An undefined JSON
+ * result is not file data either. The actual game schema stays in core.
+ */
+function readableNativeJSON(value: unknown): string {
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined || serialized === 'null') {
+    throw new TypeError('the native host cannot persist an unreadable JSON record');
+  }
+  return serialized;
+}
+
 /**
  * Native saves are opaque JSON files in Capacitor's app-owned Data directory.
  *
@@ -130,7 +142,7 @@ export function mobileStorage(
   async function writeSave(slot: string, save: unknown): Promise<void> {
     await files.writeFile({
       path: savePath(slot),
-      data: JSON.stringify(save),
+      data: readableNativeJSON(save),
       directory: Directory.Data,
       encoding: Encoding.UTF8,
       recursive: true,
@@ -276,7 +288,7 @@ export function mobileStorage(
   async function writeLibrary(library: unknown): Promise<void> {
     await files.writeFile({
       path: LIBRARY_PATH,
-      data: JSON.stringify(library),
+      data: readableNativeJSON(library),
       directory: Directory.Data,
       encoding: Encoding.UTF8,
       recursive: true,
