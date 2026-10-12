@@ -68,6 +68,53 @@ describe('the front door hides the seed behind Advanced', () => {
   });
 });
 
+describe('Begin is single-flight until the Start screen updates (#1482)', () => {
+  it('ignores same-tick duplicate clicks but accepts a later intentional Begin', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      const begin = w.get('button.primary').element as HTMLButtonElement;
+      // Dispatch real DOM clicks without Vue Test Utils yielding a render tick.
+      begin.click();
+      begin.click();
+      begin.click();
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'short');
+
+      // In production the successful Begin replaces Start with the prologue;
+      // here the stub leaves it mounted so that a later deliberate retry works.
+      await w.vm.$nextTick();
+      begin.click();
+      expect(actions.begin).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(actions.begin).mock.calls[1]).toEqual(
+        vi.mocked(actions.begin).mock.calls[0],
+      );
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('releases the same-tick latch if the beginning action throws', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.begin).mockImplementationOnce(() => { throw new Error('game setup failed'); });
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flush();
+      // Call the button handler through Vue's wrapper so the thrown error can
+      // be asserted by the test runner instead of becoming a window error.
+      const begin = w.get('button.primary').element as HTMLButtonElement;
+      expect(() => begin.click()).toThrow('game setup failed');
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      await w.vm.$nextTick();
+      begin.click();
+      expect(actions.begin).toHaveBeenCalledTimes(2);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('fresh RNG seeds for a new house (#1013)', () => {
   it('draws a new seed for each start screen, without changing the campaign year', async () => {
     // Control entropy rather than making a probabilistic test that can rarely
