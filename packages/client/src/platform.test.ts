@@ -48,8 +48,8 @@ function memoryPlatform(): Platform & { saves: Map<string, unknown>; unlocks: st
   };
 }
 
-describe('browser host rejects unreadable root writes (#1372)', () => {
-  it('preserves previous save and Library bytes on null or unstringifiable roots', async () => {
+describe('browser host rejects unreadable root writes (#1372, #1406)', () => {
+  it('preserves previous save and Library bytes on non-object serialized roots', async () => {
     const oldSave = { format: 28, year: 1220 };
     const oldLibrary = { format: 1, runs: [] };
     const bytes = new Map<string, string>([
@@ -72,9 +72,19 @@ describe('browser host rejects unreadable root writes (#1372)', () => {
     });
     try {
       const host = browserPlatform();
-      // A root null is JSON, but each reader deliberately refuses that
-      // sentinel. Undefined roots would be coerced to "undefined" by Storage.
-      for (const unreadable of [null, undefined, () => 1, Symbol('missing'), { toJSON: () => null }]) {
+      // Even apparent objects can serialize as an array or scalar through
+      // toJSON(). None may overwrite durable, previously readable records.
+      const badRoots: unknown[] = [
+        null, undefined, () => 1, Symbol('missing'),
+        [], [1], 'text', 0, false,
+        { toJSON: () => null },
+        { toJSON: () => [] },
+        { toJSON: () => ['surprise'] },
+        { toJSON: () => 'text' },
+        { toJSON: () => 0 },
+        { toJSON: () => false },
+      ];
+      for (const unreadable of badRoots) {
         await expect(host.writeSave('autosave', unreadable)).rejects.toThrow(TypeError);
         await expect(host.writeLibrary(unreadable)).rejects.toThrow(TypeError);
       }
@@ -87,8 +97,9 @@ describe('browser host rejects unreadable root writes (#1372)', () => {
       // The host is still opaque: a normal JSON object may be stored and read.
       const nextSave = { format: 28, year: 1221 };
       const nextLibrary = { format: 1, runs: [{ id: 'later' }] };
-      await expect(host.writeSave('autosave', nextSave)).resolves.toBeUndefined();
-      await expect(host.writeLibrary(nextLibrary)).resolves.toBeUndefined();
+      // A custom serializer that still emits a JSON *object* remains valid.
+      await expect(host.writeSave('autosave', { toJSON: () => nextSave })).resolves.toBeUndefined();
+      await expect(host.writeLibrary({ toJSON: () => nextLibrary })).resolves.toBeUndefined();
       await expect(host.readSave('autosave')).resolves.toEqual(nextSave);
       await expect(host.readLibrary()).resolves.toEqual(nextLibrary);
     } finally {
