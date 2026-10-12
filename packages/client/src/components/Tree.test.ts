@@ -749,6 +749,58 @@ describe('Plain English family member cards (#410)', () => {
     }
   });
 
+  it('shows trait-only claims without contradicting the Chronicle in either reading mode (#1468)', async () => {
+    const traitOnly = person({
+      id: 'trait-only', name: 'Beren',
+      record: { attrs: {}, claimed: [], claimedTraits: ['steady'], parents: {} },
+    });
+    const undescribed = person({ id: 'undescribed', name: 'Mara' });
+    const attributeOnly = person({
+      id: 'attribute-only', name: 'Gavin',
+      attrs: { Resolve: 11 },
+      record: { attrs: { Resolve: 7 }, claimed: ['Resolve'], claimedTraits: [], parents: {} },
+    });
+    const view = {
+      ...largeView(),
+      attributes: [{ attr: 'Resolve', name: 'Resolve' }],
+      traits: [{ trait: 'steady', name: 'Steady' }],
+      halls: [{
+        id: 'seat', name: 'The Seat', isSeat: true, grievance: 0,
+        members: [traitOnly, undescribed, attributeOnly],
+      }],
+    } as unknown as SessionView;
+    const wrapper = mount(Tree, {
+      props: { view, selected: 'trait-only', proseMode: 'original' },
+    });
+    try {
+      for (const proseMode of ['original', 'plainenglish'] as const) {
+        const unknown = proseMode === 'original'
+          ? 'The book has never said a word about what they were like.'
+          : 'The book has not described this person.';
+        await wrapper.setProps({ proseMode, selected: 'trait-only' });
+        const traitCard = wrapper.get('#member-trait-only .detail');
+        expect(traitCard.text()).toContain(proseMode === 'original'
+          ? 'said to be Steady' : 'Recorded traits: Steady');
+        expect(traitCard.text()).not.toContain(unknown);
+        expect(traitCard.find('table.attrs').exists()).toBe(false);
+
+        await wrapper.setProps({ selected: 'undescribed' });
+        const blankCard = wrapper.get('#member-undescribed .detail');
+        expect(blankCard.text()).toContain(unknown);
+        expect(blankCard.find('table.attrs').exists()).toBe(false);
+
+        await wrapper.setProps({ selected: 'attribute-only' });
+        const attributeCard = wrapper.get('#member-attribute-only .detail');
+        expect(attributeCard.get('table.attrs').text()).toContain('Resolve');
+        expect(attributeCard.get('table.attrs').text()).toContain('7');
+        expect(attributeCard.get('table.attrs').text()).toContain('11');
+        expect(attributeCard.text()).not.toContain(unknown);
+      }
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('connects the saved reader preference through App into Tree', () => {
     const app = readFileSync('packages/client/src/App.vue', 'utf8');
     expect(app).toMatch(/<Tree\s+:view="view"\s+:selected="selected"\s+:prose-mode="accessibility\.proseMode"/);
