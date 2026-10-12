@@ -15,7 +15,7 @@ import { tickFamilyQuarrels, tickRelationships } from '../people/relationships.j
 import { tickSecrets } from '../people/secrets.js';
 import { tickPapers } from '../people/papers.js';
 import { serviceBonds } from '../people/bond.js';
-import { completeStudies } from '../people/library.js';
+import { completeStudies, tickLibraryWear } from '../people/library.js';
 import { tickAges } from '../ages/scheduler.js';
 import {
   tickLandImprovements, tickLandMarket, tickLandRisks, tickPlatIllumination,
@@ -346,6 +346,9 @@ export const YEAR_PHASES: readonly Phase[] = [
           named: false,
         });
       }
+      // Finish reading before wearing this year's copies: every successful
+      // study costs 5 condition, while acquisitions this year skip annual wear.
+      tickLibraryWear(ctx);
     },
   },
 
