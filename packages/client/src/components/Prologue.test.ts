@@ -310,6 +310,43 @@ describe('The Examination (#343)', () => {
 });
 
 
+describe('live prologue Skip seen preference (#1514)', () => {
+  it('reveals a previously read prologue when skipping is enabled in place, and restores the progressive reading when disabled', async () => {
+    const prologue = prologueView();
+    const text = prologueSeenText(prologue.opening, prologue.triad, prologue.thesis);
+    rememberSeenProse(window.localStorage, seenProseKey('prologue', text));
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue,
+        actions: game,
+        refused: null,
+        startYear: 1042,
+        skipSeenProse: false,
+      },
+    });
+    try {
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      expect(wrapper.get('button.on').text()).toBe('The first thing');
+
+      // The preference is changed without remounting or translating the text.
+      await wrapper.setProps({ skipSeenProse: true });
+      expect(wrapper.findAll('.triad li')).toHaveLength(3);
+      expect(wrapper.find('.examination').exists()).toBe(true);
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+      expect(game.found).not.toHaveBeenCalled();
+
+      await wrapper.setProps({ skipSeenProse: false });
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      expect(wrapper.get('button.on').text()).toBe('The first thing');
+      expect(wrapper.find('.examination').exists()).toBe(false);
+      expect(game.found).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('Plain English prologue replay identity (#410)', () => {
   it('restarts an unread translation and remembers the wording actually revealed', async () => {
     const original = prologueView();
