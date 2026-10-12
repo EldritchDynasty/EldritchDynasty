@@ -5,6 +5,7 @@ import type { Platform } from '../../client/src/platform.js';
 import { mobileStorage, saveSummary } from './storage.js';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 import { chooseSaveFile } from './file-chooser.js';
+import { serializeInterchange } from './interchange.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -14,7 +15,7 @@ const SMOKE_EXPORT = 'eldritch-smoke-export.json';
 async function writeInterchange(save: unknown, path = SMOKE_EXPORT): Promise<string> {
   await Filesystem.writeFile({
     path,
-    data: JSON.stringify(save, null, 2),
+    data: serializeInterchange(save),
     directory: Directory.Documents,
     encoding: Encoding.UTF8,
   });
