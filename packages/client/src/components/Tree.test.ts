@@ -165,6 +165,31 @@ describe('the family tree as a planning board (#268)', () => {
   });
 
 
+  it('changes the recursive branch focus label without changing the tree or its action (#1628)', async () => {
+    const current = largeView();
+    const saved = structuredClone(current);
+    const wrapper = mount(Tree, { props: { view: current, selected: null, proseMode: 'original' } });
+    try {
+      const originalIds = renderedIds(wrapper);
+      expect(wrapper.get('.root').text()).toBe('Only this branch ▸');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.root').text()).toBe('Show only this family branch ▸');
+      expect(renderedIds(wrapper)).toEqual(originalIds);
+
+      await wrapper.get('.root').trigger('click');
+      expect(wrapper.get('.branch').text()).toContain('Only this family branch is shown.');
+      expect(renderedIds(wrapper).length).toBeLessThan(originalIds.length);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.root').text()).toBe('Only this branch ▸');
+      expect(wrapper.get('.branch').text()).toContain('Showing one branch.');
+      expect(current).toEqual(saved);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('renders a 100-member, 6-hall house exactly once', () => {
     const view = largeView();
     const wrapper = mount(Tree, { props: { view, selected: null } });
