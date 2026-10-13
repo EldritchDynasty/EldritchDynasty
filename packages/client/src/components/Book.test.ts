@@ -59,6 +59,60 @@ const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
 
 describe('the volume', () => {
+  it('switches Chronicle controls to Plain English without changing saved pages or filters (#410)', async () => {
+    const saved = structuredClone(BOOK);
+    const w = mountBook();
+    try {
+      expect(w.get('[role="dialog"]').attributes('aria-label')).toBe('the chronicle, whole');
+      expect(w.text()).toContain('The whole book');
+      expect(w.text()).toContain('Save this as a page');
+      expect(w.text()).toContain('The market had not forgotten.');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="dialog"]').attributes('aria-label')).toBe('Full Chronicle');
+      expect(w.text()).toContain('All entries');
+      expect(w.text()).toContain('Blank entries');
+      expect(w.text()).toContain('Changed entries');
+      expect(w.text()).toContain('Highlighted entries');
+      expect(w.text()).toContain('Save an image');
+      expect(w.get('label[for="chronicle-book-search"]').text()).toBe('Search the Chronicle');
+      expect(w.get('input[type="search"]').attributes('placeholder')).toBe('Search by name or word');
+      expect(w.text()).toContain('The market had not forgotten.');
+
+      await w.get('input[type="search"]').setValue('no such page');
+      expect(w.text()).toContain('No Chronicle entries match.');
+      await w.get('input[type="search"]').setValue('market');
+      expect(w.text()).toContain('The market had not forgotten.');
+      expect(w.text()).not.toContain('A dry year.');
+      expect(BOOK).toEqual(saved);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.text()).toContain('The whole book');
+      expect(w.text()).toContain('Save this as a page');
+      expect(w.text()).toContain('The market had not forgotten.');
+      expect(BOOK).toEqual(saved);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('explains the same export failure in either mode without changing the error state (#410)', async () => {
+    const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const w = mountBook();
+    try {
+      await w.setProps({ proseMode: 'plainenglish' });
+      const save = w.findAll('button').find((button) => button.text() === 'Save an image');
+      expect(save).toBeDefined();
+      await save!.trigger('click');
+      expect(w.get('[role="alert"]').text()).toContain('Could not save the image.');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+    } finally {
+      w.unmount();
+      noCanvas.mockRestore();
+    }
+  });
+
   it('explains an unavailable canvas instead of silently dropping page export (#1327)', async () => {
     const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const w = mountBook();
