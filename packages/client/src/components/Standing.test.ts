@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { LandView, SessionView, TableView } from '@ed/core';
+import type { LandView, SessionView, StandingDelta, TableView } from '@ed/core';
 import Standing from './Standing.vue';
 import Muster from './Muster.vue';
 import GameTable from './Table.vue';
@@ -200,13 +200,89 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.get('.namesake').text()).toBe('Compared with the earlier Maren.');
       expect(wrapper.get('.assize-explainer').text()).toBe('The Assize is the wider world helping a struggling house or putting pressure on one that is far ahead.');
       expect(wrapper.get('.gauge-reading').text()).toBe('World pressure: against the house (0.40 of 1).');
-      expect(wrapper.text()).toContain('Highest reached · Hierophant, reached in 1114.');
+      expect(wrapper.text()).toContain('Highest level reached · Hierophant, reached in 1114.');
       expect(wrapper.text()).toContain('Daveed has watched over the house since 1063.');
       expect(wrapper.get('.house-ledger').text()).toContain('252 crowns');
-      expect(wrapper.get('.ladder-measure').text()).toContain('power 42 of 100 · 3 books');
+      expect(wrapper.get('.ladder-measure').text()).toContain('Power 42 out of 100 · 3 books');
       expect(JSON.stringify(current)).toBe(before);
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.text()).toBe(original);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('changes remaining ladder, Age and run controls without changing facts or visibility (#1622)', async () => {
+    const current = view();
+    current.ages = [{ age: 'long_peace', name: 'Long Peace', began: 1103, register: 'warm' }]
+      as unknown as SessionView['ages'];
+    const originalView = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'saved', proseMode: 'original' },
+    });
+    try {
+      const originalClosed = wrapper.text();
+      expect(originalClosed).toContain('generation 4');
+      expect(wrapper.get('.age .name').text()).toBe('Long Peace · since 1103');
+      expect(wrapper.get('.ladder-measure').text()).toBe('power 42 of 100 · 3 books');
+      expect(wrapper.get('.rung').text()).toContain('Maren — nothing stands in the way.');
+      expect(wrapper.get('.run-number button').text()).toBe('run number');
+      expect(wrapper.find('.seed').exists()).toBe(false);
+
+      await wrapper.get('.run-number button').trigger('click');
+      expect(wrapper.get('.seed').text()).toBe('seed #47');
+      expect(wrapper.get('.run-number button').attributes('aria-expanded')).toBe('true');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.year').text()).toContain('Generation 4');
+      expect(wrapper.get('.age .name').text()).toBe('Long Peace · started in 1103');
+      expect(wrapper.get('.ladder-measure').text()).toBe('Power 42 out of 100 · 3 books');
+      expect(wrapper.get('.rung').text()).toContain('Maren — can advance to the next level.');
+      expect(wrapper.get('.rung').text()).toContain('Highest level reached · Hierophant, reached in 1114.');
+      expect(wrapper.get('.run-number button').text()).toBe('Hide run number');
+      expect(wrapper.get('.seed').text()).toBe('Run seed #47');
+      expect(wrapper.get('.run-number button').attributes('aria-expanded')).toBe('true');
+      expect(current).toEqual(originalView);
+
+      await wrapper.get('.run-number button').trigger('click');
+      expect(wrapper.get('.run-number button').text()).toBe('Show run number');
+      expect(wrapper.find('.seed').exists()).toBe(false);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(originalClosed);
+      expect(current).toEqual(originalView);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('keeps diagnostic targets and change readings unchanged across prose modes (#1622)', async () => {
+    const baseline = view();
+    const current = {
+      ...baseline,
+      ascension: {
+        ...baseline.ascension,
+        diagnosis: { targetTitle: 'Seer', name: 'A difficult rite', blockers: [] },
+      },
+    } as unknown as SessionView;
+    const movement = { arm: true } as unknown as StandingDelta;
+    const originalView = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: movement, saveStatus: 'idle', proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('.next-rung').text()).toContain('Next rung · Seer');
+      expect(wrapper.get('.next-rung').text()).toContain('A difficult rite');
+      expect(wrapper.get('.world .delta').text()).toBe('That is new.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.next-rung').text()).toContain('Next level · Seer');
+      expect(wrapper.get('.next-rung').text()).toContain('A difficult rite');
+      expect(wrapper.get('.world .delta').text()).toBe('This changed this year.');
+      expect(current).toEqual(originalView);
+
+      const empty = {
+        ...current,
+        ascension: { ...current.ascension, diagnosis: undefined, foremost: undefined },
+      } as SessionView;
+      await wrapper.setProps({ view: empty });
+      expect(wrapper.get('.rung').text()).toContain('No family member is on the ladder.');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.rung').text()).toContain('nobody of the house is on the ladder');
+      expect(wrapper.get('.world .delta').text()).toBe('That is new.');
     } finally { wrapper.unmount(); }
   });
 
@@ -258,7 +334,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.text()).toContain('Daveed watches over the house.');
       expect(wrapper.text()).not.toContain('undefined');
       await wrapper.setProps({ showLadder: true });
-      expect(wrapper.text()).toContain('Highest reached · Hierophant, reached earlier.');
+      expect(wrapper.text()).toContain('Highest level reached · Hierophant, reached earlier.');
       await wrapper.setProps({ view: { ...current, ascension: { ...current.ascension, best: current.ascension.rung } } });
       expect(wrapper.text()).not.toContain('Highest reached');
     } finally { wrapper.unmount(); }
