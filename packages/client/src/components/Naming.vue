@@ -144,12 +144,12 @@ function keepAll(): void {
 <template>
   <section class="panel naming" aria-live="polite">
     <h3 class="label">
-      {{ waiting }} {{ waiting === 1 ? 'child' : 'children' }} {{ plain ? 'need' : 'waiting to be' }} named
+      {{ waiting }} {{ waiting === 1 ? 'child' : 'children' }} {{ plain ? (waiting === 1 ? 'needs a name' : 'need names') : 'waiting to be named' }}
     </h3>
     <div v-for="child in view.namesWanted" :key="child.person" class="child">
       <div class="small">
         <span class="dim">{{ child.born }} ·</span>
-        {{ child.sex === 'female' ? 'a daughter' : 'a son' }}{{ plain ? '' : ',' }}
+        {{ child.sex === 'female' ? 'a daughter' : 'a son' }}{{ plain ? ' —' : ',' }}
         <span class="dim">{{ plain ? 'suggested name:' : 'whom he would call' }} {{ child.suggested }}</span>
       </div>
       <!-- WHY THIS ONE (issue #62). Naming was 189 prompts a run because every
