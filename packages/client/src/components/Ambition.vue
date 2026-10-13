@@ -29,7 +29,7 @@ function beginChoosing(): void {
 // Changing and clearing an ambition share a single visible editor. Do not
 // dispatch competing orders while Vue still shows the prior world's buttons.
 let submitting = false;
-function dispatchAmbition(id: string | null): boolean | null {
+function dispatchAmbition(id: Parameters<GameActions['setAmbition']>[0]): boolean | null {
   if (submitting) return null;
   submitting = true;
   try {
