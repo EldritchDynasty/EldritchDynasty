@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
 import type { ChapterBeat, GameActions } from '../lib/game';
+import type { ProseMode } from '@ed/schema';
 import { chapterReplayDisposition, hasSeenProse, seenProseKey } from '../lib/accessibility';
 import { useModal } from '../lib/modal';
 
@@ -8,6 +9,7 @@ const props = withDefaults(defineProps<{
   beat: ChapterBeat;
   actions: GameActions;
   skipSeenProse?: boolean;
+  proseMode?: ProseMode;
 }>(), {
   skipSeenProse: false,
 });
@@ -115,26 +117,26 @@ watch([() => props.beat, () => props.skipSeenProse], ([beat], [previousBeat]) =>
       class="chapter"
       role="dialog"
       aria-modal="true"
-      :aria-label="beat.kind === 'opening' ? 'an Age begins' : 'an Age closes'"
+      :aria-label="beat.kind === 'opening' ? (proseMode === 'plainenglish' ? 'Beginning of a period' : 'an Age begins') : (proseMode === 'plainenglish' ? 'End of a period' : 'an Age closes')"
       @click.stop
     >
       <template v-if="beat.kind === 'opening'">
         <p class="mood">{{ beat.opening.text }}</p>
-        <button ref="goOn" class="quiet small" @click="dismissOnce()">Go on</button>
+        <button ref="goOn" class="quiet small" @click="dismissOnce()">{{ proseMode === 'plainenglish' ? 'Continue' : 'Go on' }}</button>
       </template>
 
       <template v-else>
         <!-- No name is a valid reading, not a gap in the data (§20 r1): the
              family lived through years it never found a word for. -->
-        <h2 class="name">{{ beat.view.name ?? 'These years' }}</h2>
+        <h2 class="name">{{ beat.view.name ?? (proseMode === 'plainenglish' ? 'This period' : 'These years') }}</h2>
         <ul class="verdict">
           <li v-for="(line, i) in beat.view.verdict" :key="i">{{ line.text }}</li>
         </ul>
         <p v-if="beat.view.boundary" class="invitation">
-          You can put it down here. The house's memory of these years is kept.
+          {{ proseMode === 'plainenglish' ? 'You can stop here. Your progress and the family record are saved.' : "You can put it down here. The house's memory of these years is kept." }}
         </p>
         <button ref="goOn" class="quiet small" @click="dismissOnce()">
-          {{ beat.view.boundary ? 'Put it down' : 'Read on' }}
+          {{ proseMode === 'plainenglish' ? (beat.view.boundary ? 'Stop here' : 'Continue') : (beat.view.boundary ? 'Put it down' : 'Read on') }}
         </button>
       </template>
     </article>
