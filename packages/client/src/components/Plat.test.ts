@@ -108,7 +108,8 @@ describe('the plat draws each state', () => {
       expect(w.get('button.endow').text()).toBe('Endow');
       expect((w.get('select').element as HTMLSelectElement).value).toBe('cadet_a');
       await w.get('button.endow').trigger('click');
-      expect(actions.order).toHaveBeenCalledExactlyOnceWith({
+      expect(actions.order).toHaveBeenCalledTimes(1);
+      expect(actions.order).toHaveBeenCalledWith({
         kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
       });
     } finally {
