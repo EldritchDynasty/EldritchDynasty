@@ -1854,6 +1854,7 @@ describe('five reader-control panels in Plain English (#1623)', () => {
       expect(wrapper.get('[role="alert"]').text()).toContain('Enter a name, or let him keep his suggestion.');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('[role="alert"]').text()).toBe('Enter a name or use the suggested name.');
+      expect(wrapper.text()).toContain('1 child needs a name');
       expect(wrapper.text()).toContain('suggested name: Corin');
       expect(name).not.toHaveBeenCalled();
       await wrapper.findAll('button').find((button) => button.text() === 'Use suggested name')!.trigger('click');
