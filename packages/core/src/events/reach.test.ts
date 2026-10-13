@@ -6602,3 +6602,98 @@ describe('#334 west wing roof witnesses', () => {
     expect(evalCondition(root.conditions, ctx)).toBe(false);
   });
 });
+
+describe('#334 timed-promise reader witnesses', () => {
+  // Each writer outcome names when its consequence comes due. Each reader is
+  // that outcome's chained beat, so it is witnessed the way it fires: the
+  // writer resolved through the real outcome path, the beat scheduled inside
+  // the promised window, shut without its key, and both answers executed as
+  // the due arc step with their exact treasury and flag effects.
+  const readers = [
+    {
+      writer: 'the_brewing_goes_wrong', choice: 'drink_the_water', outcome: 'nothing_happens', weighted: true,
+      reader: 'the_water_was_fine_last_time', flag: 'the_house_drank_the_water', min: 35, max: 45,
+      answers: [{ choice: 'buy_in_this_time', outcome: 'bought_in_this_time', cost: 14, kept: false },
+        { choice: 'drink_the_well_again', outcome: 'the_flux_this_time', cost: 0, kept: true }],
+    },
+    {
+      writer: 'a_man_who_drinks_standing', choice: 'let_him_stand', outcome: 'counted', weighted: false,
+      reader: 'said_at_the_wrong_assize', flag: 'the_man_who_drank_standing', min: 28, max: 32,
+      answers: [{ choice: 'answer_it', outcome: 'answered_at_the_assize', cost: 15, kept: false },
+        { choice: 'let_it_stand', outcome: 'it_stood', cost: 0, kept: true }],
+    },
+    {
+      writer: 'the_book_they_never_returned', choice: 'leave_it_on_their_shelf', outcome: 'left', weighted: false,
+      reader: 'a_letter_to_cawdry_about_a_book', flag: 'the_lent_book_left_alone', min: 85, max: 95,
+      answers: [{ choice: 'let_the_letter_go', outcome: 'the_letter_went', cost: 0, kept: false },
+        { choice: 'send_a_rider', outcome: 'recalled', cost: 2, kept: true }],
+    },
+    {
+      writer: 'the_relief_on_inheritance', choice: 'declare_short', outcome: 'short_return', weighted: false,
+      reader: 'both_books_open', flag: 'the_short_return', min: 25, max: 35,
+      answers: [{ choice: 'make_it_good', outcome: 'made_good', cost: 87, kept: false },
+        { choice: 'declare_short_again', outcome: 'short_again', cost: 44, kept: true }],
+    },
+    {
+      writer: 'the_visitation_of_the_archdeacon', choice: 'answer_all_eleven', outcome: 'the_ninth_question', weighted: true,
+      reader: 'the_archdeacon_comes_back_early', flag: 'the_visitation_comes_back_early', min: 4, max: 4,
+      answers: [{ choice: 'give_him_the_list', outcome: 'listed', cost: 0, kept: false },
+        { choice: 'say_they_were_lent', outcome: 'said_lent', cost: 0, kept: true }],
+    },
+    {
+      writer: 'the_name_said_aloud', choice: 'it_is_a_skipping_rhyme', outcome: 'stood_ground', weighted: false,
+      reader: 'a_different_office_asks', flag: 'the_rhyme_in_the_chapter_yard', min: 19, max: 19,
+      answers: [{ choice: 'send_an_account', outcome: 'accounted', cost: 6, kept: false },
+        { choice: 'let_the_entry_speak', outcome: 'entry_alone', cost: 0, kept: true }],
+    },
+    {
+      writer: 'the_long_argument', choice: 'let_it_run', outcome: 'ran', weighted: false,
+      reader: 'the_argument_nobody_told_him_about', flag: 'the_argument_went_underground', min: 20, max: 31,
+      answers: [{ choice: 'hear_it_out', outcome: 'heard_out', cost: 0, kept: false },
+        { choice: 'leave_it_buried', outcome: 'buried_again', cost: 0, kept: true }],
+    },
+  ] as const;
+
+  function scheduled(entry: (typeof readers)[number], seed: number) {
+    const ctx = fixture(seed);
+    const year = ctx.world.year;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(entry.writer), {
+      choiceId: entry.choice, expectedOutcomeId: entry.outcome,
+      ...(entry.weighted ? { targetWeightedOutcome: true } : {}), rng: makeRng(seed + 1),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get(entry.flag)).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((arc) =>
+      content.arc(arc.arc)?.nodes.some((node) => node.event === entry.reader));
+    if (!instance) throw new Error(`${entry.writer}/${entry.outcome} did not schedule ${entry.reader}`);
+    expect(instance.dueYear).toBeGreaterThanOrEqual(year + entry.min);
+    expect(instance.dueYear).toBeLessThanOrEqual(year + entry.max);
+    return { ctx, instance };
+  }
+
+  for (const [index, entry] of readers.entries()) {
+    it(`${entry.reader} is shut without ${entry.flag}`, () => {
+      const ctx = fixture(33600 + index);
+      expect(evalCondition(content.mustEvent(entry.reader).conditions, ctx)).toBe(false);
+      ctx.world.flags.set(entry.flag, true);
+      expect(evalCondition(content.mustEvent(entry.reader).conditions, ctx)).toBe(true);
+    });
+
+    for (const answer of entry.answers) {
+      it(`${entry.reader} executes ${answer.choice} as the due step of ${entry.writer}/${entry.outcome}`, () => {
+        const { ctx, instance } = scheduled(entry, 33620 + index * 10);
+        ctx.world.year = instance.dueYear!;
+        const step = dueArcSteps(ctx, makeRng(33700 + index)).find((due) => due.instance.id === instance.id);
+        if (!step) throw new Error(`${entry.reader} never came due`);
+        const before = ctx.world.treasury;
+        const result = executeOutcomeWitness(ctx, content.mustEvent(entry.reader), {
+          choiceId: answer.choice, expectedOutcomeId: answer.outcome, rng: makeRng(33710 + index), arcStep: step,
+        });
+        expect(result.ok, result.reason).toBe(true);
+        expect(ctx.world.treasury).toBe(before - answer.cost);
+        expect(ctx.world.flags.get(entry.flag)).toBe(answer.kept);
+        expect(instance.status).toBe('ended');
+      });
+    }
+  }
+});

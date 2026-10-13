@@ -355,6 +355,8 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: flag, flag: the_rhyme_in_the_chapter_yard, set: true }
+              # #334: "Nothing further happens for nineteen years, and then a different office asks for the day book."
+              next: { event: a_different_office_asks, after: { minYears: 19, maxYears: 19 } }
     record:
       subject: the rhyme in the chapter-house yard
       options:
@@ -375,6 +377,55 @@ events:
             id: the_rhyme_at_dusk
             severity: minor
             provableBy: [the_church]
+
+  # #334: the reader of the_rhyme_in_the_chapter_yard.
+  - id: a_different_office_asks
+    title: A Different Office Asks
+    tier: family
+    frequency: common
+    weight: 100
+    tags: [church, blasphemy, records, law]
+    purposes: [change_relationship, change_standing, force_record_choice]
+    conditions:
+      all:
+        - { flag: the_rhyme_in_the_chapter_yard, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      A clerk from the Prelate's court comes to Bramme with a warrant to copy
+      the chapter house day book, and he copies all of it. It takes him a
+      tenday in an unheated room, and he stops for nobody. On the fourth of
+      the Hollow Days, nineteen years back, in the subdeacon's neat hand, is
+      the entry: a child of this house, the counting rhyme entire, at dusk.
+      The child is grown now and has children of their own. The copy is going
+      to the cathedral city.
+    interaction:
+      kind: choice
+      choices:
+        - id: send_an_account
+          label: Send the court an account before it asks.
+          outcomes:
+            - id: accounted
+              weight: 100
+              text: >-
+                Six crowns to a notary for a careful account, stating that the
+                child was a child and the rhyme was a skipping rhyme. The court
+                files it beside the entry. Two papers are harder to read as a
+                charge than one.
+              effects:
+                - { kind: treasury, delta: -6 }
+                - { kind: flag, flag: the_rhyme_in_the_chapter_yard, set: false }
+        - id: let_the_entry_speak
+          label: Say nothing. It was a skipping rhyme.
+          outcomes:
+            - id: entry_alone
+              weight: 100
+              text: >-
+                The entry goes to the cathedral city by itself, with nothing
+                beside it. Nothing comes of it for a long time. The house is
+                entered in a second book as one where the names were said aloud.
+              effects:
+                - { kind: respect, delta: -1 }
 
   - id: the_chapter_house_wants_a_son
     title: The Chapter House Wants a Son
@@ -493,6 +544,8 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: flag, flag: the_visitation_comes_back_early, set: true }
+              # #334: "the visitation comes back in four years instead of eleven"
+              next: { event: the_archdeacon_comes_back_early, after: { minYears: 4, maxYears: 4 } }
         - id: decline_the_ninth
           label: Answer ten of the eleven. He has no power to compel.
           outcomes:
@@ -526,6 +579,55 @@ events:
             id: the_list_of_nine_books
             severity: major
             provableBy: [the_church, house_ilm, house_marrow]
+
+  # #334: the reader of the_visitation_comes_back_early.
+  - id: the_archdeacon_comes_back_early
+    title: Four Years, Not Eleven
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [church, inquest, library, records]
+    purposes: [change_standing, establish_magic_rule, test_magic_rule]
+    conditions:
+      all:
+        - { flag: the_visitation_comes_back_early, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      It is four years, not eleven. The archdeacon's horse comes up the lane
+      in sleet with the same two clerks behind it, and the list is still
+      eleven questions long. This time he asks the ninth one first. He asks it
+      standing, before his cloak is off, in a voice that would be gentle from
+      anybody else. The long room has been swept, and the two books that are
+      not devotional are not on the shelf. He looks at the gap where they
+      were.
+    interaction:
+      kind: choice
+      choices:
+        - id: give_him_the_list
+          label: Give him the full list, both books included.
+          outcomes:
+            - id: listed
+              weight: 100
+              text: >-
+                Nine books, read out by title, and he writes all nine down
+                himself. He asks about the two for an hour. Then he goes, and does
+                not come back for eleven years, which is the usual interval and
+                the only answer the house was ever going to get.
+              effects:
+                - { kind: respect, delta: 1 }
+                - { kind: flag, flag: the_visitation_comes_back_early, set: false }
+        - id: say_they_were_lent
+          label: Say the two were lent out.
+          outcomes:
+            - id: said_lent
+              weight: 100
+              text: >-
+                He accepts it, and asks to whom, and writes that down as well. The
+                court at Cawdry now has a house that owns books it cannot show,
+                and the name of a second house to ask about them.
+              effects:
+                - { kind: respect, delta: -2 }
 
   - id: the_counting_rhyme
     title: The Rhyme Gets the Order Wrong
@@ -1052,3 +1154,68 @@ proseVariants:
     of: "a4682a8c8227aeb0"
     plainenglish: >-
       wrote out the order of the nine names as the prayers give it
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].title"
+    of: "69df6e85ffc49729"
+    plainenglish: >-
+      The Archdeacon Returns After Four Years
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].body"
+    of: "3f24bf6a8d685456"
+    plainenglish: >-
+      It has been four years, not eleven. The archdeacon's horse comes up the lane in the sleet
+      with the same two clerks behind it, and his list still has eleven questions. This time he
+      asks the ninth one first. He asks it standing, before taking off his cloak, in a voice
+      that would sound gentle from anyone else. The long room has been swept, and the two books
+      that are not religious are no longer on the shelf. He looks at the gap where they were.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].interaction.choices[id=give_him_the_list].label"
+    of: "f11d1f4d2bf9d681"
+    plainenglish: >-
+      Give him the full list, including both books.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].interaction.choices[id=give_him_the_list].outcomes[id=listed].text"
+    of: "4ab1fdc0b03fa774"
+    plainenglish: >-
+      Nine books, read out by title, and he writes all nine down himself. He asks about the two
+      for an hour. Then he leaves, and does not come back for eleven years, which is the usual
+      gap and the only answer the house was ever going to get.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].interaction.choices[id=say_they_were_lent].label"
+    of: "daf5f1eb0a7a288f"
+    plainenglish: >-
+      Say the two books were lent out.
+  - address: "content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].interaction.choices[id=say_they_were_lent].outcomes[id=said_lent].text"
+    of: "a4fceca0f0d7da3c"
+    plainenglish: >-
+      He accepts that, asks who they were lent to, and writes that down too. The Church court at
+      Cawdry now has a house that owns books it cannot show, and the name of a second house to
+      ask about them.
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].title"
+    of: "575e228768cc9f9b"
+    plainenglish: >-
+      Another Church Office Asks
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].body"
+    of: "e1b26fe364454a37"
+    plainenglish: >-
+      A clerk from the Prelate's court comes to Bramme with a warrant to copy the chapter
+      house's daily record book, and he copies all of it. It takes him ten days in an unheated
+      room, and he stops for nobody. On the fourth of the Hollow Days, nineteen years ago, in
+      the subdeacon's neat handwriting, is the entry: a child of this house, the whole counting
+      rhyme, at dusk. The child is grown now and has children. The copy is going to the
+      cathedral city.
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].interaction.choices[id=send_an_account].label"
+    of: "64ab1df515926b09"
+    plainenglish: >-
+      Send the court an explanation before it asks.
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].interaction.choices[id=send_an_account].outcomes[id=accounted].text"
+    of: "85db52755757ac69"
+    plainenglish: >-
+      Six crowns pays a notary for a careful written explanation, stating that the child was
+      only a child and the rhyme was a skipping rhyme. The court files it next to the entry. Two
+      documents are harder to read as an accusation than one.
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].interaction.choices[id=let_the_entry_speak].label"
+    of: "741c2a7e810b3bd2"
+    plainenglish: >-
+      Say nothing. It was only a skipping rhyme.
+  - address: "content:events/the_quiet_names.yaml#events[id=a_different_office_asks].interaction.choices[id=let_the_entry_speak].outcomes[id=entry_alone].text"
+    of: "6ec0c7fcee447758"
+    plainenglish: >-
+      The entry goes to the cathedral city on its own, with nothing beside it. For a long time
+      nothing comes of it. The house is recorded in a second book as one where the sacred names
+      were spoken aloud.

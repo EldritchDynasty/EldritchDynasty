@@ -474,6 +474,61 @@ events:
                 within his rights.
               effects:
                 - { kind: flag, flag: the_lent_book_left_alone, set: true }
+              # #334: "read by somebody in about ninety years ... He will write to Cawdry about it."
+              next: { event: a_letter_to_cawdry_about_a_book, after: { minYears: 85, maxYears: 95 } }
+
+  # #334: the reader of the_lent_book_left_alone. No binding is kept: ninety years on, the rival is whoever holds that house now.
+  - id: a_letter_to_cawdry_about_a_book
+    title: A Letter to Cawdry About a Book
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [library, rival, records, law]
+    purposes: [change_relationship, change_standing, force_record_choice]
+    conditions:
+      all:
+        - { flag: the_lent_book_left_alone, is: true }
+    slots:
+      HEAD: { role: head }
+      RIVAL: { role: rival, filters: [{ status: [alive] }] }
+    body: >-
+      The archive room is cold enough to see your breath in, and the steward's
+      grandson has been working through it a press at a time. He has found the
+      entry for the lent book, with the year and the borrower's name, and
+      nothing under it to say the house ever gave it up. So he has written to
+      Cawdry. The letter is in the carrier's satchel by the time {HEAD} hears
+      of it. It is a good letter, and it is entirely within the house's
+      rights. It names the house {RIVAL} now holds, and that house has a seat
+      on the assize bench this year. The carrier leaves on Thursday.
+    interaction:
+      kind: choice
+      choices:
+        - id: let_the_letter_go
+          label: Let it go to Cawdry. The entry is true.
+          outcomes:
+            - id: the_letter_went
+              weight: 100
+              text: >-
+                The clerk at Cawdry enters it, and the other house answers with
+                the receipt from Sarrow it sent ninety years ago. Nothing is
+                decided. Both houses now have a grievance on file, and theirs sits
+                on the bench.
+              effects:
+                - { kind: respect, delta: 1 }
+                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -12 }
+                - { kind: flag, flag: the_lent_book_left_alone, set: false }
+        - id: send_a_rider
+          label: Send a rider after the carrier.
+          outcomes:
+            - id: recalled
+              weight: 100
+              text: >-
+                The rider catches him at the ford, and the letter comes back with
+                its seal whole. The steward's grandson is told why, and does not
+                like it. The entry stays in the archive for somebody else to find.
+              effects:
+                - { kind: treasury, delta: -2 }
+                - { kind: relationship, from: household, to: head, sentiment: -4 }
 
 proseVariants:
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].title"
@@ -791,3 +846,37 @@ proseVariants:
       The entry stays in the archive. In about ninety years someone will read it without knowing
       the book was given up on. He will write to Cawdry about it. He will do it in a far worse
       year than this one, and he will be completely within his rights.
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].title"
+    of: "8e8da7f44413e6f0"
+    plainenglish: >-
+      A Letter to Cawdry About a Lent Book
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].body"
+    of: "71b06d7bcc222e77"
+    plainenglish: >-
+      The archive room is so cold you can see your breath, and the steward's grandson has been
+      working through it one cupboard at a time. He has found the record of the book the house
+      lent out, with the year and the borrower's name, and nothing to say the house ever gave up
+      on getting it back. So he has written to Cawdry. By the time {HEAD} hears about it, the
+      letter is already in the carrier's bag. It is a good letter, and the house is fully within
+      its rights. It names the house {RIVAL} now leads, and that house has a seat among the
+      judges this year. The carrier leaves on Thursday.
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].interaction.choices[id=let_the_letter_go].label"
+    of: "18f1eeab5fd009d7"
+    plainenglish: >-
+      Let it go to Cawdry. The record is true.
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].interaction.choices[id=let_the_letter_go].outcomes[id=the_letter_went].text"
+    of: "35deef8d207313e9"
+    plainenglish: >-
+      The clerk at Cawdry records it, and the other house replies with the same receipt from
+      Sarrow it sent ninety years ago. Nothing is settled. Both houses now have a complaint on
+      file, and theirs sits among the judges.
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].interaction.choices[id=send_a_rider].label"
+    of: "ae07d6ed78595089"
+    plainenglish: >-
+      Send someone on horseback to stop the carrier.
+  - address: "content:events/neighbours.yaml#events[id=a_letter_to_cawdry_about_a_book].interaction.choices[id=send_a_rider].outcomes[id=recalled].text"
+    of: "95f17fac800927c0"
+    plainenglish: >-
+      The rider catches him at the ford, and the letter comes back with its seal unbroken. The
+      steward's grandson is told why, and he does not like it. The record stays in the archive
+      for someone else to find.

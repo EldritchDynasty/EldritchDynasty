@@ -555,6 +555,8 @@ events:
               effects:
                 - { kind: treasury, delta: -41 }
                 - { kind: flag, flag: the_short_return, set: true }
+              # #334: "assessed against this afternoon's number by somebody who has both books open"
+              next: { event: both_books_open, after: { minYears: 25, maxYears: 35 } }
     record:
       subject: what the house declared at the relief
       options:
@@ -574,6 +576,57 @@ events:
             id: the_return_written_short
             severity: major
             provableBy: [house_bracc, house_calder]
+
+  # #334: the reader of the_short_return.
+  - id: both_books_open
+    title: Both Books Open
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [succession, money, law, crown]
+    purposes: [buy_patience, change_standing, force_record_choice]
+    conditions:
+      all:
+        - { flag: the_short_return, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The seat has changed hands again, and the relief falls due before Thaw.
+      The clerk who rides out from Cawdry is not the clerk who came last time.
+      He has the old return in one hand and the new one in the other, and he
+      reads them at the board in the hall with the fire going, without taking
+      off his gloves. The fold has not had a murrain in thirty years, and he says so, mildly, laying the
+      old return on top of the new, and works out the true figure aloud: sixty-four crowns.
+      Then he asks about the last one.
+    interaction:
+      kind: choice
+      choices:
+        - id: make_it_good
+          label: Pay the true figure, and the difference owed on the last.
+          outcomes:
+            - id: made_good
+              weight: 100
+              text: >-
+                Eighty-seven crowns, counted out on the board while he watches. He
+                writes one line under the old return and initials it. After that
+                the house's returns are dull, and the clerk stops riding past the
+                fold.
+              effects:
+                - { kind: treasury, delta: -87 }
+                - { kind: respect, delta: 1 }
+                - { kind: flag, flag: the_short_return, set: false }
+        - id: declare_short_again
+          label: Declare short again. The fold had a bad year.
+          outcomes:
+            - id: short_again
+              weight: 100
+              text: >-
+                Forty-four crowns, and he accepts them, and he writes the house's
+                name on a different list from the one he came with. Nobody tells
+                the house what the list is for. Nobody has to.
+              effects:
+                - { kind: treasury, delta: -44 }
+                - { kind: respect, delta: -2 }
 
 proseVariants:
   - address: "content:events/papers.yaml#events[id=the_notarys_book].title"
@@ -1030,3 +1083,36 @@ proseVariants:
     of: "0342e09ea1f0e27a"
     plainenglish: >-
       made an honest statement for the inheritance tax
+  - address: "content:events/papers.yaml#events[id=both_books_open].title"
+    of: "7b24a7a003e13bd4"
+    plainenglish: >-
+      Both Account Books Open
+  - address: "content:events/papers.yaml#events[id=both_books_open].body"
+    of: "6cebb54548e76dc1"
+    plainenglish: >-
+      The house has a new Head again, and the inheritance tax is due before Thaw. The clerk who
+      rides out from Cawdry is not the one who came last time. He has the old tax return in one
+      hand and the new one in the other, and he reads them at the table in the hall by the fire,
+      without taking his gloves off. The sheep have had no disease in thirty years, and he says
+      so quietly, laying the old return on top of the new one and working out the true amount
+      aloud: sixty-four crowns. Then he asks about the last one.
+  - address: "content:events/papers.yaml#events[id=both_books_open].interaction.choices[id=make_it_good].label"
+    of: "1bfd54eac90bb3d6"
+    plainenglish: >-
+      Pay the true amount, plus what was owed last time.
+  - address: "content:events/papers.yaml#events[id=both_books_open].interaction.choices[id=make_it_good].outcomes[id=made_good].text"
+    of: "f578578906b30c6d"
+    plainenglish: >-
+      Eighty-seven crowns, counted out on the table while he watches. He writes one line under
+      the old return and signs it with his initials. After that the house's tax returns are
+      boring, and the clerk stops riding past its sheep.
+  - address: "content:events/papers.yaml#events[id=both_books_open].interaction.choices[id=declare_short_again].label"
+    of: "63bc5aff066a13c3"
+    plainenglish: >-
+      Declare less again. The sheep had a bad year.
+  - address: "content:events/papers.yaml#events[id=both_books_open].interaction.choices[id=declare_short_again].outcomes[id=short_again].text"
+    of: "2707af3e7b9b7892"
+    plainenglish: >-
+      Forty-four crowns, and he accepts them, and he writes the house's name on a different list
+      from the one he arrived with. Nobody tells the house what that list is for. Nobody needs
+      to.
