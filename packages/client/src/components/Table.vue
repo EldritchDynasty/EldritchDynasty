@@ -244,7 +244,7 @@ const MARRIAGE_ORDERS = [
 <template>
   <section class="table stack" aria-label="The house's standing orders">
     <div class="panel">
-      <h3 class="label">The purse</h3>
+      <h3 class="label">{{ local('The purse', 'Money and auctions') }}</h3>
       <p class="small">
         {{ table.treasury }} {{ local('crowns. A term of tutoring is', 'crowns available. A tutoring term costs') }} {{ table.tutorFee }}.
       </p>
@@ -286,7 +286,7 @@ const MARRIAGE_ORDERS = [
       </p>
       <p v-if="table.auction" class="small dim">
         {{ local('A sale in', 'Next auction:') }} {{ table.auction.year }} — {{ table.auction.lots }}
-        {{ table.auction.lots === 1 ? 'lot' : 'lots' }}, the cheapest reserved at
+        {{ table.auction.lots === 1 ? 'lot' : 'lots' }}, {{ local('the cheapest reserved at', 'lowest starting price') }}
         {{ table.auction.lowestReserve }}.
       </p>
       <p v-else class="small dim">{{ local('Nothing has been announced.', 'No auction has been announced yet.') }}</p>
@@ -294,7 +294,7 @@ const MARRIAGE_ORDERS = [
       <div v-for="lot in table.auction?.items ?? []" :key="lot.id" class="line lot">
         <div class="small">
           <strong>{{ lot.name }}</strong>
-          <span class="dim"> · {{ lot.seller }} · sold in {{ lot.saleYear }} · reserved at {{ lot.reserve }}</span>
+          <span class="dim"> · {{ lot.seller }} · {{ local('sold in', 'sale year') }} {{ lot.saleYear }} · {{ local('reserved at', 'starting price') }} {{ lot.reserve }}</span>
         </div>
         <p v-if="lot.kind === 'chronicle_page'" class="small rubric blurb">
           {{ local('Whoever buys this page reads it. If a rival buys it, what it proves is proven.', 'The buyer can read this Chronicle page. A rival who buys it can use its evidence to prove a claim.') }}
@@ -306,21 +306,21 @@ const MARRIAGE_ORDERS = [
         <div class="row">
           <input
             type="number" min="1" step="1" v-model.number="lotCoin[lot.id]"
-            :aria-label="`Bid in crowns for ${lot.name}`"
+            :aria-label="plain ? `Offer crowns for ${lot.name}` : `Bid in crowns for ${lot.name}`"
           />
-          <button :disabled="!validLotCoin(lotCoin[lot.id])" @click="bidCoin(lot.id)">Bid crowns</button>
+          <button :disabled="!validLotCoin(lotCoin[lot.id])" @click="bidCoin(lot.id)">{{ local('Bid crowns', 'Place money bid') }}</button>
           <template v-if="table.auction?.heirlooms.length">
-            <select v-model="lotHeirloom[lot.id]" :aria-label="`Heirloom to trade for ${lot.name}`">
-              <option value="">an heirloom…</option>
+            <select v-model="lotHeirloom[lot.id]" :aria-label="plain ? `Choose an heirloom to offer for ${lot.name}` : `Heirloom to trade for ${lot.name}`">
+              <option value="">{{ local('an heirloom…', 'Choose an heirloom…') }}</option>
               <option v-for="h in table.auction.heirlooms" :key="h.id" :value="h.id">{{ h.name }}</option>
             </select>
-            <button :disabled="!lotHeirloom[lot.id]" @click="bidHeirloom(lot.id)">Trade it</button>
+            <button :disabled="!lotHeirloom[lot.id]" @click="bidHeirloom(lot.id)">{{ local('Trade it', 'Offer heirloom') }}</button>
           </template>
           <button
             v-if="lot.bid" class="quiet small"
             @click="submitAuctionOrder({ kind: 'lotBid', lot: lot.id, bid: null })"
           >
-            Withdraw
+            {{ local('Withdraw', 'Withdraw bid') }}
           </button>
         </div>
       </div>
@@ -329,14 +329,14 @@ const MARRIAGE_ORDERS = [
       <div class="row">
         <input
           type="number" min="0" step="1" v-model.number="ceiling"
-          aria-label="Maximum auction bid in crowns"
+          :aria-label="local('Maximum auction bid in crowns', 'Maximum amount to bid at auction (crowns)')"
           :aria-invalid="!validCeiling(ceiling)"
           :aria-describedby="!validCeiling(ceiling) ? 'bid-ceiling-error' : undefined"
         />
-        <button :disabled="!validCeiling(ceiling)" @click="setBidCeiling">Set the ceiling</button>
+        <button :disabled="!validCeiling(ceiling)" @click="setBidCeiling">{{ local('Set the ceiling', 'Set maximum bid') }}</button>
       </div>
       <p v-if="!validCeiling(ceiling)" id="bid-ceiling-error" class="small rubric" role="alert">
-        Enter zero or a whole number of crowns within the safe counting range.
+        {{ local('Enter zero or a whole number of crowns within the safe counting range.', 'Enter zero or a positive whole number of crowns within the allowed range.') }}
       </p>
       <p v-if="refusedIn('bid')" class="small rubric">{{ refusedIn('bid') }}</p>
       <!-- THE RECEIPT (issue #59). §13 means these to hurt — the money is gone
