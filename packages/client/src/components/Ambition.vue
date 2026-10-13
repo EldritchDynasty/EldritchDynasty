@@ -1,12 +1,27 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 
-const props = defineProps<{ view: SessionView; actions: GameActions }>();
+const props = defineProps<{ view: SessionView; actions: GameActions; proseMode?: ProseMode }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
 const choosing = ref(false);
 const selected = ref(props.view.ambition?.id ?? props.view.ambitionOptions[0]?.id);
-const refusal = ref('');
+type AmbitionRefusal = '' | 'unavailable' | 'set' | 'clear';
+const refusal = ref<AmbitionRefusal>('');
+function refusalText(kind: AmbitionRefusal): string {
+  switch (kind) {
+    case 'unavailable':
+      return plain.value ? 'That plan is no longer available. Choose another.' : 'That ambition is no longer available. Choose another plan.';
+    case 'set':
+      return plain.value ? 'Could not select that plan. Choose another or try again.' : 'The house could not keep that ambition. Choose another plan or try again.';
+    case 'clear':
+      return plain.value ? 'Could not remove that plan. Try again.' : 'The house could not clear that ambition. Try again.';
+    default:
+      return '';
+  }
+}
 const available = computed(() => props.view.ambitionOptions.some((option) => option.id === selected.value));
 
 // A new sitting or an external ambition change must not leave an old selection
@@ -16,7 +31,7 @@ watch(() => props.view, () => {
     selected.value = props.view.ambition?.id ?? props.view.ambitionOptions[0]?.id;
     refusal.value = '';
   } else if (!available.value) {
-    refusal.value = 'That ambition is no longer available. Choose another plan.';
+    refusal.value = 'unavailable';
   }
 });
 
@@ -43,7 +58,7 @@ function dispatchAmbition(id: Parameters<GameActions['setAmbition']>[0]): boolea
 function apply(): void {
   if (submitting) return;
   if (!selected.value || !available.value) {
-    refusal.value = 'That ambition is no longer available. Choose another plan.';
+    refusal.value = 'unavailable';
     return;
   }
   const accepted = dispatchAmbition(selected.value);
@@ -53,7 +68,7 @@ function apply(): void {
     // view watcher cannot reset this first ambition's draft and error as if
     // the player had merely opened the idle, no-ambition screen.
     choosing.value = true;
-    refusal.value = 'The house could not keep that ambition. Choose another plan or try again.';
+    refusal.value = 'set';
     return;
   }
   refusal.value = '';
@@ -64,7 +79,7 @@ function clear(): void {
   const accepted = dispatchAmbition(null);
   if (accepted === null) return;
   if (!accepted) {
-    refusal.value = 'The house could not clear that ambition. Try again.';
+    refusal.value = 'clear';
     return;
   }
   refusal.value = '';
@@ -80,8 +95,8 @@ function cancel(): void {
 <template>
   <section class="panel ambition" aria-labelledby="ambition-heading">
     <div class="ambition-head">
-      <h3 id="ambition-heading" class="label">House ambition</h3>
-      <button v-if="view.ambition && !choosing" class="quiet small" @click="beginChoosing">Change</button>
+      <h3 id="ambition-heading" class="label">{{ plain ? 'Family goal' : 'House ambition' }}</h3>
+      <button v-if="view.ambition && !choosing" class="quiet small" @click="beginChoosing">{{ plain ? 'Change goal' : 'Change' }}</button>
     </div>
 
     <template v-if="view.ambition && !choosing">
@@ -89,13 +104,13 @@ function cancel(): void {
       <p class="small ambition-purpose">{{ view.ambition.purpose }}</p>
       <p class="small ambition-progress">{{ view.ambition.progress.label }}</p>
       <p class="dim small">{{ view.ambition.status }}</p>
-      <p class="small next"><span class="rubric">Next:</span> {{ view.ambition.next }}</p>
+      <p class="small next"><span class="rubric">{{ plain ? 'Next step:' : 'Next:' }}</span> {{ view.ambition.next }}</p>
     </template>
 
     <template v-else>
-      <p class="dim small">Choose one plan to keep in view. It changes no odds, rewards, or rules.</p>
+      <p class="dim small">{{ plain ? 'Choose a goal to track. It does not change the game rules or results.' : 'Choose one plan to keep in view. It changes no odds, rewards, or rules.' }}</p>
       <label class="small">
-        The house will try to
+        {{ plain ? 'Choose a goal' : 'The house will try to' }}
         <select v-model="selected" @change="refusal = ''">
           <option v-for="option in view.ambitionOptions" :key="option.id" :value="option.id">
             {{ option.name }}
@@ -105,11 +120,11 @@ function cancel(): void {
       <p v-if="selected" class="dim small option-purpose">
         {{ view.ambitionOptions.find((o) => o.id === selected)?.purpose }}
       </p>
-      <p v-if="refusal" class="small ambition-refusal" role="alert">{{ refusal }}</p>
+      <p v-if="refusal" class="small ambition-refusal" role="alert">{{ refusalText(refusal) }}</p>
       <div class="wrap ambition-actions">
-        <button :disabled="!available" @click="apply">Keep this in view</button>
-        <button v-if="view.ambition" class="quiet" @click="clear">Clear ambition</button>
-        <button v-if="view.ambition" class="quiet" @click="cancel">Keep current</button>
+        <button :disabled="!available" @click="apply">{{ plain ? 'Track this goal' : 'Keep this in view' }}</button>
+        <button v-if="view.ambition" class="quiet" @click="clear">{{ plain ? 'Remove goal' : 'Clear ambition' }}</button>
+        <button v-if="view.ambition" class="quiet" @click="cancel">{{ plain ? 'Keep current goal' : 'Keep current' }}</button>
       </div>
     </template>
   </section>
