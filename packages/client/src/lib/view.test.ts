@@ -128,7 +128,6 @@ function keysOf(o: unknown, depth = 0, out = new Set<string>()): Set<string> {
  */
 const NOT_DRAWN: Record<string, string> = {
   outcomeId: 'which branch of a template resolved. The player meets the prose; the id is for replay',
-  blocked: 'the precise gate string is for tooling/deep inspection; the header draws diagnosis text and hint instead',
   // Decided in issue #336. `applyRecord` sets it on every embellished page and
   // nowhere else, so it is present exactly when `record === 'embellish'`,
   // which `Entry.vue` already marks "as the house tells it". The id itself is
