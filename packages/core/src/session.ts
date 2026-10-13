@@ -398,7 +398,7 @@ export class GameSession {
   }
 
   get pending(): PendingDecision[] {
-    return [...this.ctx.world.pendingDecisions];
+    return this.ctx.world.pendingDecisions.map((decision) => structuredClone(decision));
   }
 
   /**
@@ -1460,14 +1460,14 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     // "the old view changed when the world did", and it stayed invisible for
     // as long as a sixty-year window rarely contained an interlude. More frame
     // content made it visible; it was always wrong.
-    frame: [...w.frame.entries],
+    frame: w.frame.entries.map((entry) => structuredClone(entry)),
     docket: w.pendingDecisions.map((decision) => {
       const ambition = ambitionRelevance(ctx, decision);
-      return {
+      return structuredClone({
         ...decision,
         advice: adviceForDecision(ctx, decision),
         ...(ambition ? { ambition } : {}),
-      };
+      });
     }),
     namesWanted: w.pendingNames.map((n) => ({
       person: n.person, suggested: n.suggested, sex: n.sex, born: n.born, because: n.because,
