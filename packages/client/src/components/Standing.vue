@@ -224,7 +224,7 @@ const muster = computed(() => {
   <header class="standing">
     <div class="year">
       <strong>{{ view.year }}</strong>
-      <span class="dim small">generation {{ view.generation }}</span>
+      <span class="dim small">{{ plain ? 'Generation' : 'generation' }} {{ view.generation }}</span>
       <!-- Keep the live region in the accessibility tree before the first save update.
            Inserting the region and its text together may not be announced. -->
       <span
@@ -298,7 +298,7 @@ const muster = computed(() => {
 
       <template v-if="view.ascension.diagnosis">
         <div class="rubric small next-rung">
-          Next rung · {{ view.ascension.diagnosis.targetTitle }}
+          {{ plain ? 'Next level' : 'Next rung' }} · {{ view.ascension.diagnosis.targetTitle }}
           <span v-if="view.ascension.diagnosis.name" class="dim">
             · {{ view.ascension.diagnosis.name }}
           </span>
@@ -314,15 +314,15 @@ const muster = computed(() => {
       </template>
 
       <div v-else-if="view.ascension.foremost" class="dim small">
-        {{ view.ascension.foremost.name }} — nothing stands in the way.
+        {{ view.ascension.foremost.name }} — {{ plain ? 'can advance to the next level.' : 'nothing stands in the way.' }}
       </div>
-      <div v-else class="dim small">nobody of the house is on the ladder</div>
+      <div v-else class="dim small">{{ plain ? 'No family member is on the ladder.' : 'nobody of the house is on the ladder' }}</div>
 
       <!-- THE READING (issue #50). Kept tertiary rather than promoted into a
            progress treatment: this is the existing exact inspection, while
            the diagnosis above is the primary answer to "what next?". -->
       <div v-if="view.ascension.foremost" class="dim small ladder-measure">
-        power {{ Math.round(view.ascension.foremost.power) }} of 100 ·
+        {{ plain ? 'Power' : 'power' }} {{ Math.round(view.ascension.foremost.power) }} {{ plain ? 'out of' : 'of' }} 100 ·
         {{ view.ascension.foremost.spells }}
         {{ view.ascension.foremost.spells === 1 ? 'book' : 'books' }}
       </div>
@@ -333,12 +333,12 @@ const muster = computed(() => {
            managed it. Shown only when it is not the current rung: when they
            agree the line above has already said it. -->
       <div v-if="reachedHigher" class="soft small">
-        Highest reached · {{ reachedHigher }}
+        {{ plain ? 'Highest level reached' : 'Highest reached' }} · {{ reachedHigher }}
       </div>
     </div>
     <div v-if="ages.length || ageMoods.length" class="age">
       <div v-for="age in ages" :key="age.age" class="name">
-        {{ age.name }}<span class="dim small"> · since {{ age.began }}</span>
+        {{ age.name }}<span class="dim small"> · {{ plain ? 'started in' : 'since' }} {{ age.began }}</span>
       </div>
       <p v-for="register in ageMoods" :key="register" class="age-mood dim small">
         {{ ageMood(register) }}
@@ -355,7 +355,7 @@ const muster = computed(() => {
            becomes a riddle after "the world is not thinking about you". Three
            arms, one mark, and the sentence above it carries the meaning. -->
       <div class="soft small">
-        {{ world }}<span v-if="moved?.arm" class="delta"> That is new.</span>
+        {{ world }}<span v-if="moved?.arm" class="delta"> {{ plain ? 'This changed this year.' : 'That is new.' }}</span>
       </div>
       <!-- WHAT THE NAME COSTS (issue #62). The player gave this Head a Head's
            name, and the bar the world grades the house on rose for it. Said
@@ -396,8 +396,8 @@ const muster = computed(() => {
         class="quiet small"
         :aria-expanded="showSeed"
         @click="showSeed = !showSeed"
-      >run number</button>
-      <span v-if="showSeed" class="dim seed">seed #{{ view.seed }}</span>
+      >{{ plain ? (showSeed ? 'Hide run number' : 'Show run number') : 'run number' }}</button>
+      <span v-if="showSeed" class="dim seed">{{ plain ? 'Run seed' : 'seed' }} #{{ view.seed }}</span>
     </div>
   </header>
 </template>
