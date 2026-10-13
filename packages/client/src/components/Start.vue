@@ -93,6 +93,10 @@ const confirmingRemoveRun = ref<string | null>(null);
 const removingRun = ref<string | null>(null);
 /** Keep clear-all and single-run deletion from racing the same host Library. */
 const clearingLibrary = ref(false);
+/** An in-progress Library read or write must settle before selecting a saved run. */
+const libraryBusy = computed(() => retryingLibrary.value || clearingLibrary.value || removingRun.value !== null);
+/** A saved-run selection can archive an ended run; it must not race Library edits. */
+const selectingRun = computed(() => resuming.value || loadingSlot.value !== null || importingSave.value);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -127,8 +131,7 @@ const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0
 /** A pending host restore owns the session until it settles. */
 /** Do not snapshot inherited houses while an asynchronous Library mutation is unsettled. */
 const mayBegin = computed(() => libraryIsReady.value && validSeed.value
-  && !resuming.value && loadingSlot.value === null && !importingSave.value
-  && !retryingLibrary.value && !clearingLibrary.value && removingRun.value === null);
+  && !selectingRun.value && !libraryBusy.value);
 /** A double click can arrive before Vue replaces the Start screen with the prologue. */
 let beginning = false;
 
@@ -167,7 +170,7 @@ async function refreshSaves(): Promise<void> {
 async function continueLastSitting(): Promise<void> {
   // A second click cannot start a competing host load or overwrite the result
   // of a successful continuation with an older, slower refusal.
-  if (resuming.value || beginning || loadingSlot.value !== null || importingSave.value) return;
+  if (selectingRun.value || beginning || libraryBusy.value) return;
   resuming.value = true;
   // The rolling save may have become unreadable after the front door offered it.
   // Report this next to Continue, not down beside unrelated import/export actions.
@@ -187,7 +190,7 @@ let saveActionRevision = 0;
 async function load(slot: string): Promise<void> {
   // One named host read owns the session until it resolves. Prevent both a
   // second slot and Begin/Continue/Import from superseding it mid-read.
-  if (loadingSlot.value !== null || resuming.value || importingSave.value || beginning) return;
+  if (selectingRun.value || beginning || libraryBusy.value) return;
   loadingSlot.value = slot;
   const revision = ++saveActionRevision;
   saveActionError.value = null;
@@ -206,7 +209,7 @@ async function load(slot: string): Promise<void> {
 }
 
 async function importSave(): Promise<void> {
-  if (importingSave.value || loadingSlot.value !== null || resuming.value || beginning) return;
+  if (selectingRun.value || beginning || libraryBusy.value) return;
   importingSave.value = true;
   refused.value = null;
   try {
@@ -241,7 +244,7 @@ async function exportSave(slot: string): Promise<void> {
 async function retryLibrary(): Promise<void> {
   // Two host recovery reads could complete out of order and restore stale
   // Library history. Refuse a second attempt until the first has settled.
-  if (retryingLibrary.value) return;
+  if (retryingLibrary.value || selectingRun.value || beginning || clearingLibrary.value || removingRun.value !== null) return;
   retryingLibrary.value = true;
   // The store keeps the Library unavailable on failure and exposes retry.
   // A rejected retry must not become an unhandled button-click Promise.
@@ -251,7 +254,7 @@ async function retryLibrary(): Promise<void> {
 
 function requestClearLibrary(): void {
   // Disabled controls alone do not protect against a stale dispatched click.
-  if (beginning || clearingLibrary.value || removingRun.value !== null) return;
+  if (beginning || selectingRun.value || clearingLibrary.value || removingRun.value !== null) return;
   confirmingRemoveRun.value = null;
   confirmingClearLibrary.value = true;
 }
@@ -259,7 +262,7 @@ function requestClearLibrary(): void {
 async function clearLibrary(): Promise<void> {
   // Clear and Remove share one host Library. Refuse stale/programmatic clicks
   // as well as disabling the controls while either write is in flight.
-  if (beginning || !confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
+  if (beginning || selectingRun.value || !confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
   clearingLibrary.value = true;
   confirmingClearLibrary.value = false;
   libraryError.value = null;
@@ -273,7 +276,7 @@ async function clearLibrary(): Promise<void> {
 }
 
 function requestRemoveLibraryRun(id: string): void {
-  if (beginning || removingRun.value !== null || clearingLibrary.value) return;
+  if (beginning || selectingRun.value || removingRun.value !== null || clearingLibrary.value) return;
   confirmingClearLibrary.value = false;
   confirmingRemoveRun.value = id;
   libraryError.value = null;
@@ -287,7 +290,7 @@ function cancelRemoveLibraryRun(): void {
 async function removeLibraryRun(id: string): Promise<void> {
   // A stale click, or a second click while the host is deleting, cannot
   // remove another house or issue the same irreversible command twice.
-  if (beginning || confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
+  if (beginning || selectingRun.value || confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
   removingRun.value = id;
   libraryError.value = null;
   try {
@@ -341,7 +344,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" :disabled="resuming || loadingSlot !== null || importingSave" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
+      <button v-if="resumable" class="primary" :disabled="selectingRun || libraryBusy" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
@@ -381,12 +384,12 @@ onMounted(() => { void refreshSaves(); });
         <button
           v-if="!confirmingClearLibrary"
           class="quiet small"
-          :disabled="removingRun !== null || clearingLibrary"
+          :disabled="selectingRun || removingRun !== null || clearingLibrary"
           @click="requestClearLibrary()"
         >{{ clearingLibrary ? (plain ? 'Removing…' : 'Clearing…') : (plain ? 'Remove all' : 'Clear') }}</button>
         <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
           <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed houses? This cannot be undone.</p>
-          <button class="quiet small confirm-clear" :disabled="removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
+          <button class="quiet small confirm-clear" :disabled="selectingRun || removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
           <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
         </div>
       </div>
@@ -398,7 +401,7 @@ onMounted(() => { void refreshSaves(); });
           <button
             v-if="confirmingRemoveRun !== run.id"
             class="quiet small"
-            :disabled="removingRun !== null || clearingLibrary"
+            :disabled="selectingRun || removingRun !== null || clearingLibrary"
             @click="requestRemoveLibraryRun(run.id)"
           >Remove</button>
           <div
@@ -410,10 +413,10 @@ onMounted(() => { void refreshSaves(); });
             <span class="rubric small">Remove {{ run.house }}? This cannot be undone.</span>
             <button
               class="quiet small confirm-remove"
-              :disabled="removingRun !== null || clearingLibrary"
+              :disabled="selectingRun || removingRun !== null || clearingLibrary"
               @click="removeLibraryRun(run.id)"
             >{{ removingRun === run.id ? 'Removing…' : (plain ? 'Yes, remove this house' : 'Yes, remove') }}</button>
-            <button class="quiet small" :disabled="removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
+            <button class="quiet small" :disabled="selectingRun || removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
           </div>
         </div>
         <p v-if="survivingPage(run)" class="small excerpt">“{{ survivingPage(run) }}”</p>
@@ -425,7 +428,7 @@ onMounted(() => { void refreshSaves(); });
       <p class="dim small">{{ plain ? 'These games remain saved after you close the app.' : 'They remain here when the application closes.' }}</p>
       <ul>
         <li v-for="save in namedSaves" :key="save.slot">
-          <button class="quiet" :disabled="loadingSlot !== null || resuming || importingSave" @click="load(save.slot)">
+          <button class="quiet" :disabled="selectingRun || libraryBusy" @click="load(save.slot)">
             {{ save.slot === 'autosave' ? (plain ? 'Most recent game' : 'The last sitting') : save.slot }}
             <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
             <span v-if="loadingSlot === save.slot" class="dim"> · Loading…</span>
@@ -448,7 +451,7 @@ onMounted(() => { void refreshSaves(); });
     </div>
 
     <div class="row">
-      <button class="quiet small" :disabled="importingSave || loadingSlot !== null || resuming" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
+      <button class="quiet small" :disabled="selectingRun || libraryBusy" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
       <p v-if="refused" class="rubric small" role="status">{{ displayError(refused) }}</p>
     </div>
 
