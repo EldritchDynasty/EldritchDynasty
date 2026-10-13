@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type { HelpTier, SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import AdviserHelp from './AdviserHelp.vue';
 
@@ -8,7 +9,9 @@ const props = defineProps<{
   view: SessionView;
   selected: string | null;
   actions: Pick<GameActions, 'advice'>;
+  proseMode?: ProseMode;
 }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 /** Advice is a reading of the current world photograph, not permanent lore.
  * Session verbs replace view() even for changes within the same year. Clear
@@ -42,17 +45,17 @@ function askBranch(branch: string) {
 <template>
   <!-- Counsel is a sibling of the tree because it reads the photographed
        surface but owns none of the tree's search, filter or selection state. -->
-  <aside class="tree-counsel" aria-label="Counsel about the family">
-    <AdviserHelp :ask="askTree" :reset-key="`tree:${treeSubject}:${snapshot}`" />
+  <aside class="tree-counsel" :aria-label="plain ? 'Advice about the family' : 'Counsel about the family'">
+    <AdviserHelp :ask="askTree" :prose-mode="proseMode" :reset-key="`tree:${treeSubject}:${snapshot}`" />
 
     <details v-if="aggrieved.length" class="branch-help">
-      <summary class="small">Ask about a hall's grievance</summary>
+      <summary class="small">{{ plain ? 'Ask why a household is unhappy' : "Ask about a hall's grievance" }}</summary>
       <section v-for="hall in aggrieved" :key="hall.id" class="hall-help">
         <p class="small">
           <strong>{{ hall.name }}</strong>
-          <span class="dim"> · grievance {{ hall.grievance < 1 ? 'less than 1' : Math.round(hall.grievance) }}</span>
+          <span class="dim"> · {{ plain ? 'grievance score' : 'grievance' }} {{ hall.grievance < 1 ? (plain ? 'under 1' : 'less than 1') : Math.round(hall.grievance) }}</span>
         </p>
-        <AdviserHelp :ask="askBranch(hall.id)" :reset-key="`branches:${hall.id}:${snapshot}`" />
+        <AdviserHelp :ask="askBranch(hall.id)" :prose-mode="proseMode" :reset-key="`branches:${hall.id}:${snapshot}`" />
       </section>
     </details>
   </aside>
