@@ -1230,6 +1230,138 @@ describe('Library write failures are visible and retryable (#1034)', () => {
   });
 });
 
+describe('Library writes cannot race a saved-game selection (#1563)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'lib_old', seed: 77, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+    }],
+  };
+  const saves: SaveSummary[] = [{ slot: 'chapter-old', year: 1335 }];
+
+  it.each(['clear', 'remove'] as const)(
+    'blocks Continue, named Load and Import while Library %s is in flight',
+    async (operation) => {
+      const actions = spyActions(saves);
+      let finish: (() => void) | undefined;
+      const pending = new Promise<void>((resolve) => { finish = resolve; });
+      if (operation === 'clear') {
+        vi.mocked(actions.clearLibrary).mockImplementationOnce(() => pending);
+      } else {
+        vi.mocked(actions.deleteLibraryRun).mockImplementationOnce(() => pending);
+      }
+      const w = mount(Start, { props: { actions, resumable: true, library } });
+      try {
+        await flush();
+        const continuing = w.findAll('button').find((b) => b.text() === 'Continue the last sitting')!;
+        const loading = w.get('.saved li button');
+        const importing = w.findAll('button').find((b) => b.text() === 'Bring a run in')!;
+        if (operation === 'clear') {
+          await w.get('.library-head button').trigger('click');
+          await w.get('button.confirm-clear').trigger('click');
+          expect(actions.clearLibrary).toHaveBeenCalledOnce();
+        } else {
+          await w.get('.library-title button').trigger('click');
+          await w.get('button.confirm-remove').trigger('click');
+          expect(actions.deleteLibraryRun).toHaveBeenCalledOnce();
+        }
+        // A real DOM click on a disabled button may be suppressed. Dispatch
+        // synthetically too: handlers must reject events from stale renderers.
+        for (const button of [continuing, loading, importing]) {
+          expect(button.attributes('disabled')).toBeDefined();
+          await button.trigger('click');
+        }
+        expect(actions.resume).not.toHaveBeenCalled();
+        expect(actions.load).not.toHaveBeenCalled();
+        expect(actions.importSave).not.toHaveBeenCalled();
+
+        finish!();
+        await flush();
+        for (const button of [continuing, loading, importing]) {
+          expect(button.attributes('disabled')).toBeUndefined();
+        }
+        await continuing.trigger('click');
+        await flush();
+        await loading.trigger('click');
+        await flush();
+        await importing.trigger('click');
+        expect(actions.resume).toHaveBeenCalledOnce();
+        expect(actions.load).toHaveBeenCalledWith('chapter-old');
+        expect(actions.importSave).toHaveBeenCalledOnce();
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('blocks both Clear and Remove while a slow Continue can re-archive a finished run', async () => {
+    const actions = spyActions(saves);
+    let finish: ((accepted: boolean) => void) | undefined;
+    vi.mocked(actions.resume).mockImplementationOnce(
+      () => new Promise<boolean>((resolve) => { finish = resolve; }),
+    );
+    const w = mount(Start, { props: { actions, resumable: true, library } });
+    try {
+      await flush();
+      // Preserve a pre-existing confirmation: even its stale click may not
+      // delete the Library while a saved run is being selected.
+      await w.get('.library-title button').trigger('click');
+      const confirmRemove = w.get('button.confirm-remove');
+      await w.findAll('button').find((b) => b.text() === 'Continue the last sitting')!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledOnce();
+      expect(confirmRemove.attributes('disabled')).toBeDefined();
+      await confirmRemove.trigger('click');
+      await w.get('.library-head button').trigger('click');
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+      expect(w.find('.library-clear-confirm').exists()).toBe(false);
+
+      finish!(true);
+      await flush();
+      expect(confirmRemove.attributes('disabled')).toBeUndefined();
+      await confirmRemove.trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('does not select a saved run while a Library recovery retry is active', async () => {
+    const actions = spyActions(saves);
+    let finish: (() => void) | undefined;
+    vi.mocked(actions.retryLibrary).mockImplementationOnce(
+      () => new Promise<void>((resolve) => { finish = resolve; }),
+    );
+    const w = mount(Start, {
+      props: { actions, resumable: true, libraryReady: false, libraryReadError: true },
+    });
+    try {
+      await flush();
+      await w.get('.save-list-error button').trigger('click');
+      const continuing = w.findAll('button').find((b) => b.text() === 'Continue the last sitting')!;
+      const loading = w.get('.saved li button');
+      const importing = w.findAll('button').find((b) => b.text() === 'Bring a run in')!;
+      for (const button of [continuing, loading, importing]) {
+        expect(button.attributes('disabled')).toBeDefined();
+        await button.trigger('click');
+      }
+      expect(actions.resume).not.toHaveBeenCalled();
+      expect(actions.load).not.toHaveBeenCalled();
+      expect(actions.importSave).not.toHaveBeenCalled();
+
+      finish!();
+      await w.setProps({ libraryReady: true, libraryReadError: false });
+      await flush();
+      expect(continuing.attributes('disabled')).toBeUndefined();
+      await continuing.trigger('click');
+      expect(actions.resume).toHaveBeenCalledOnce();
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('Start routes prose changes through its parent (#1340)', () => {
   it('emits the chosen mode once without dispatching directly to the game store', async () => {
     const actions = spyActions();
