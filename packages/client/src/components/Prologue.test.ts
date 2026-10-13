@@ -908,3 +908,86 @@ describe('seal-history partial dates (#1466)', () => {
     }
   });
 });
+
+
+describe('Prologue presentation controls in Plain English (#1623)', () => {
+  it('preserves authored words, draft values, signing choices and payload across register changes', async () => {
+    const prologue = { ...prologueView(), friendsWanted: 2 };
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: game, refused: null, startYear: 1042, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('button.on').text()).toBe('The first thing');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('button.on').text()).toBe('Read the first part');
+      expect(wrapper.text()).toContain('Opening.');
+      expect(wrapper.text()).not.toContain('The first thing');
+
+      await wrapper.setProps({ proseMode: 'original' });
+      await revealChoices(wrapper);
+      await wrapper.get('input[aria-label="Name the founder"]').setValue('Daveed');
+      const originalSign = wrapper.get('button.sign');
+      expect(originalSign.attributes('disabled')).toBeDefined();
+      expect(wrapper.get('.waiting').text()).toContain('It wants');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('The questions');
+      expect(wrapper.text()).toContain('Choose an heirloom');
+      expect(wrapper.text()).toContain('Up to five friends outside the family');
+      expect(wrapper.get('.waiting').text()).toContain('Before signing, provide');
+      expect(wrapper.get('input[aria-label="Enter the founder name"]').element.getAttribute('value')).toBeNull();
+      expect((wrapper.get('input[aria-label="Enter the founder name"]').element as HTMLInputElement).value).toBe('Daveed');
+
+      for (let q = 1; q <= 4; q += 1) await answerButton(wrapper, q).trigger('click');
+      await wrapper.findAll('button').find((b) => b.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('button').find((b) => b.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Enter the family name"]').setValue('House Ash');
+      await wrapper.get('.friend input').setValue('Lena');
+      await wrapper.findAll('.friend .sex button')[1]!.trigger('click'); // male
+      expect(wrapper.text()).toContain('First given.');
+      expect(wrapper.text()).toContain('Situation 1');
+      expect(wrapper.text()).toContain('Marrow paid.');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+      expect(game.found).not.toHaveBeenCalled();
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('button.sign').text()).toBe('Sign it');
+      expect((wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement).value).toBe('House Ash');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledTimes(1);
+      expect(game.found).toHaveBeenCalledWith({
+        houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow',
+        friends: [{ name: 'Lena', sex: 'male' }],
+        founderName: 'Daveed',
+        answers: {
+          question_1: 'answer_1_1', question_2: 'answer_2_1',
+          question_3: 'answer_3_1', question_4: 'answer_4_1',
+        },
+      });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('changes the finished signing button but never edits the provided thesis or start year', async () => {
+    const prologue = { ...prologueView(), founded: true } as PrologueView;
+    const enter = vi.fn();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: { enter } as unknown as GameActions, refused: null, startYear: 1042 },
+    });
+    try {
+      expect(wrapper.get('button').text()).toBe('1042');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('button').text()).toBe('Begin in 1042');
+      expect(wrapper.text()).toContain(prologue.thesis);
+      await wrapper.get('button').trigger('click');
+      expect(enter).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('button').text()).toBe('1042');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
