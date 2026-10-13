@@ -897,6 +897,73 @@ describe('reader-local Chronicle annotations (#1434)', () => {
     }
   });
 
+  it('explains intentionally blank Chronicle lines in both modes without rewriting a blank (#1631)', async () => {
+    const page = entry('deliberate-blank', 1178, null);
+    const saved = structuredClone(page);
+    const wrapper = mount(Entry, { props: { entry: page, proseMode: 'original' } });
+    try {
+      const original = wrapper.text();
+      expect(wrapper.get('.blank .said-not-shown').text())
+        .toBe('Somebody decided this year would not be written down.');
+      expect(wrapper.get('.mark').text()).toBe('left blank, on purpose');
+      expect(wrapper.get('.entry').classes()).toContain('omitted');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.blank .said-not-shown').text())
+        .toBe("The Chronicle deliberately leaves this year's entry blank.");
+      expect(wrapper.get('.mark').text()).toBe('deliberately left blank');
+      expect(wrapper.get('.entry').classes()).toContain('omitted');
+      expect(wrapper.get('.blank [aria-hidden="true"]').exists()).toBe(true);
+      expect(page).toEqual(saved);
+      await wrapper.setProps({ read: true });
+      expect(wrapper.get('.blank .said-not-shown').text())
+        .toBe("The Chronicle deliberately leaves this year's entry blank.");
+      expect(wrapper.find('.mark').exists()).toBe(false);
+      await wrapper.setProps({ read: false, proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(page).toEqual(saved);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('translates only local embellishment and person-provenance labels, retaining names and navigation (#1631)', async () => {
+    const page = {
+      ...entry('family-telling', 1179, 'This is the exact version the family wrote.'),
+      record: 'embellish' as const,
+    } as ChronicleEntry;
+    const saved = structuredClone(page);
+    const people = [
+      { id: 'p-present', name: 'Maren', available: true },
+      { id: 'p-departed', name: 'Elwyn', available: false },
+    ];
+    const wrapper = mount(Entry, {
+      props: { entry: page, people, proseMode: 'original' },
+    });
+    try {
+      const original = wrapper.text();
+      expect(wrapper.get('.people > .dim').text()).toBe('with');
+      expect(wrapper.get('[data-person-history="p-departed"]').text())
+        .toBe('Elwyn (not in a living hall)');
+      expect(wrapper.get('.mark').text()).toBe('as the house tells it');
+      expect(wrapper.get('.entry').classes()).toContain('embellished');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.people > .dim').text()).toBe('People involved:');
+      expect(wrapper.get('[data-person-history="p-departed"]').text())
+        .toBe('Elwyn (not in a current household)');
+      expect(wrapper.get('.mark').text()).toBe("the family's version of events");
+      expect(wrapper.text()).toContain(page.text!);
+      expect(wrapper.get('[data-person="p-present"]').text()).toBe('Maren');
+      await wrapper.get('[data-person="p-present"]').trigger('click');
+      expect(wrapper.emitted('person')).toEqual([['p-present']]);
+      expect(page).toEqual(saved);
+      await wrapper.setProps({ read: true });
+      expect(wrapper.find('.people').exists()).toBe(false);
+      expect(wrapper.find('.mark').exists()).toBe(false);
+      expect(wrapper.text()).toContain(page.text!);
+      await wrapper.setProps({ read: false, proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(page).toEqual(saved);
+    } finally { wrapper.unmount(); }
+  });
+
   it('switches only the explanation, keeping saved pages and deed claims intact', async () => {
     const page: ChronicleEntry = {
       id: 'chr_claim', year: 1174, weight: 'page',
