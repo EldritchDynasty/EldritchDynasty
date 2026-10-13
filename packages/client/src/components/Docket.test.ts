@@ -1789,6 +1789,105 @@ describe('five reader-control panels in Plain English (#1623)', () => {
     }
   });
 
+  it('leaves an empty cast hidden in both reading modes', async () => {
+    const wrapper = mount(Cast, {
+      props: { cast: [], selected: null, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.find('.cast').exists()).toBe(false);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.find('.cast').exists()).toBe(false);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.emitted('select')).toBeUndefined();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps a populated ambition reading and sends the same clear action', async () => {
+    const setAmbition = vi.fn(() => true);
+    const view = {
+      ambition: {
+        id: 'survive', name: 'Keep the line', purpose: 'Last one hundred years.',
+        progress: { label: '31 years remaining' }, status: 'Still possible',
+        next: 'Protect the living heir.',
+      },
+      ambitionOptions: [{ id: 'survive', name: 'Keep the line', purpose: 'Last one hundred years.' }],
+    } as unknown as SessionView;
+    const wrapper = mount(Ambition, {
+      props: { view, actions: { setAmbition } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.text()).toContain('House ambition');
+      expect(wrapper.text()).toContain('Next: Protect the living heir.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Family goal');
+      expect(wrapper.text()).toContain('Next step: Protect the living heir.');
+      expect(wrapper.text()).toContain('31 years remaining');
+      expect(wrapper.text()).toContain('Still possible');
+      await wrapper.get('.ambition-head button').trigger('click');
+      expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('survive');
+      await wrapper.findAll('.ambition-actions button')
+        .find((button) => button.text() === 'Remove goal')!.trigger('click');
+      expect(setAmbition).toHaveBeenCalledOnce();
+      expect(setAmbition).toHaveBeenCalledWith(null);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('House ambition');
+      expect(wrapper.text()).toContain('Last one hundred years.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('translates a blank-name refusal while leaving suggested-name acceptance intact', async () => {
+    const name = vi.fn(() => true);
+    const keepSuggestedName = vi.fn(() => true);
+    const view = { namesWanted: [{
+      person: 'child_ash', sex: 'male', born: 1173, suggested: 'Corin',
+      because: 'The house still wants a son named for its founder.',
+    }] } as unknown as SessionView;
+    const wrapper = mount(Naming, {
+      props: { view, actions: { name, keepSuggestedName } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      await wrapper.findAll('button')[0]!.trigger('click');
+      expect(wrapper.get('[role="alert"]').text()).toContain('Enter a name, or let him keep his suggestion.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="alert"]').text()).toBe('Enter a name or use the suggested name.');
+      expect(wrapper.text()).toContain('suggested name: Corin');
+      expect(name).not.toHaveBeenCalled();
+      await wrapper.findAll('button').find((button) => button.text() === 'Use suggested name')!.trigger('click');
+      expect(keepSuggestedName).toHaveBeenCalledWith('child_ash');
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('whom he would call Corin');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps a chapter opening in place when the reader changes mode', async () => {
+    const dismissChapter = vi.fn();
+    const beat = { kind: 'opening', opening: { text: 'The autumn came without a name.' } } as ChapterBeat;
+    const wrapper = mount(Chapter, {
+      attachTo: document.body,
+      props: { beat, actions: { dismissChapter } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('button').text()).toBe('Go on');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('Beginning of a period');
+      expect(wrapper.get('button').text()).toBe('Continue');
+      expect(wrapper.text()).toContain('The autumn came without a name.');
+      expect(dismissChapter).not.toHaveBeenCalled();
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('button').text()).toBe('Go on');
+      expect(dismissChapter).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('changes the cast heading without changing the supplied people or selection', async () => {
     const cast = [{
       person: 'p_ash', name: 'Mara Ash', age: 27, sex: 'female',
