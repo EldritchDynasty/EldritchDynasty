@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
@@ -42,9 +42,26 @@ const reinforceBy = ref(1);
  */
 const canReinforce = computed(() => Number.isSafeInteger(reinforceBy.value) && reinforceBy.value > 0);
 
+/**
+ * Keep one visible Muster from dispatching two war orders against the same
+ * stale view. Vue has not patched a new position/men count during the click,
+ * so an immediate second button activation is not a new deliberate order.
+ * The next render unlocks the buttons even if an action refuses or throws.
+ */
+let submitting = false;
+function sendOrder(order: Parameters<GameActions['muster']>[0]): void {
+  if (submitting) return;
+  submitting = true;
+  try {
+    props.actions.muster(order);
+  } finally {
+    void nextTick(() => { submitting = false; });
+  }
+}
+
 function reinforce(): void {
   if (!canReinforce.value) return;
-  props.actions.muster({ op: 'reinforce', men: reinforceBy.value });
+  sendOrder({ op: 'reinforce', men: reinforceBy.value });
 }
 
 const tideWord = computed(() => {
@@ -95,7 +112,7 @@ const tideWord = computed(() => {
     <div class="positions">
       <p class="small label">{{ local('Buy a position', 'Purchase a war position') }}</p>
       <div v-for="p in commitment.positions" :key="p.id" class="row position">
-        <button :disabled="p.current || !p.canBuy" @click="actions.muster({ op: 'buy', position: p.id })">
+        <button :disabled="p.current || !p.canBuy" @click="sendOrder({ op: 'buy', position: p.id })">
           {{ p.current ? '✓ ' : '' }}{{ p.name }}<span v-if="p.price !== undefined"> — {{ p.price }} crowns</span>
         </button>
         <span v-if="!p.current && p.reason" class="small rubric">{{ p.reason }}</span>
@@ -106,7 +123,7 @@ const tideWord = computed(() => {
     <!-- THE GOOD DECISION (#89), available every year. Keep the men, forfeit
          the credit, and the world notices. -->
     <div class="row">
-      <button @click="actions.muster({ op: 'withdraw' })">
+      <button @click="sendOrder({ op: 'withdraw' })">
         {{ local('Call them home', 'Withdraw the troops') }}
       </button>
     </div>
