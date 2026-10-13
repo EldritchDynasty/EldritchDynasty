@@ -766,6 +766,47 @@ describe('the epilogue rings the prologue', () => {
   });
 });
 
+describe('the epilogue returns a detached Chronicle snapshot (#1583)', () => {
+  it('cannot rewrite a saved page through text or nested references', () => {
+    const ctx = atTheTerm();
+    ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
+    const page = {
+      id: 'epilogue_snapshot',
+      year: ctx.world.year - 1,
+      weight: 'illuminated' as const,
+      named: true,
+      title: 'An attested page',
+      text: 'The original words remain written.',
+      people: ['p_1'],
+      cause: { year: ctx.world.year - 2, page: 'prior_page' },
+    };
+    ctx.world.chronicle.push(page);
+    const before = structuredClone(ctx.world.chronicle);
+    const first = epilogueOf(ctx)!;
+    const quoted = first.read.find((entry) => entry.id === page.id);
+    expect(quoted).toBeDefined();
+
+    // The UI may decorate a returned view. Neither top-level edits nor
+    // nested edits may change the Chronicle used by save and reckoning.
+    quoted!.text = 'Rewritten by the reader';
+    quoted!.people!.push('p_2');
+    quoted!.cause!.page = 'rewritten_cause';
+    expect(ctx.world.chronicle).toEqual(before);
+
+    const second = epilogueOf(ctx)!.read.find((entry) => entry.id === page.id);
+    expect(second).toMatchObject({
+      text: 'The original words remain written.',
+      people: ['p_1'],
+      cause: { year: page.cause.year, page: 'prior_page' },
+    });
+
+    // Later world changes cannot silently rewrite a view already handed out.
+    page.text = 'A later change to the book';
+    expect(quoted!.text).toBe('Rewritten by the reader');
+    expect(second!.text).toBe('The original words remain written.');
+  });
+});
+
 describe('all authored endings have live Plain English consumers (#410)', () => {
   it('renders every eligible worklist field in all six endings without changing the reckoning', () => {
     const entries = contentProseEntries('endings.yaml', { endings: content.endings });
