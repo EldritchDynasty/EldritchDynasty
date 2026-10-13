@@ -364,11 +364,17 @@ describe('Plain English tales reaching the player', () => {
     const head = game.ctx.world.people.household(game.ctx.world.playerHouse, game.year)
       .find((person) => person.castSlots.includes('head'))!;
     queueMatch(game.ctx, { subject: { id: head.id, name: head.name, sex: head.sex, age: 40 }, cards: [dealt] });
-    const promised = game.view().docket;
+    const promised = structuredClone(game.ctx.world.pendingDecisions);
+    const saved = JSON.parse(JSON.stringify(game.save()));
+    // Advice is rendered live in the reader's mode. The dealt cards are saved
+    // words, so compare the pending decisions without derived advice.
+    expect(game.view().docket.map(({ advice, ...decision }) => decision)).toEqual(promised);
     game.setProseMode('original');
-    expect(game.view().docket).toEqual(promised);
-    const resumed = resumeGame(JSON.parse(JSON.stringify(game.save())), game.ctx.content);
-    expect(resumed.view().docket).toEqual(promised);
+    expect(game.view().docket.map(({ advice, ...decision }) => decision)).toEqual(promised);
+    expect(JSON.parse(JSON.stringify(game.save()))).toEqual({ ...saved, savedAt: expect.any(String) });
+    const resumed = resumeGame(saved, game.ctx.content);
+    expect(resumed.view().docket.map(({ advice, ...decision }) => decision)).toEqual(promised);
+    expect(resumed.view().docket).toEqual(game.view().docket);
     expect(dealt.panel.said[0]).not.toHaveProperty('accuracy');
   });
 });

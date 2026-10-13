@@ -1474,6 +1474,8 @@ describe('localised Match futures (#986)', () => {
 
   it('falls back on missing, stale and invalid confidence translations (#992)', () => {
     const session = newGame(loadContent());
+    // Make the missing-catalogue case explicit as shipped coverage grows.
+    session.setProseVariants([]);
     const card = visibleCard({ kinship: 0.0625, line: 'fertile', lineSeen: 3 });
     session.setProseMode('plainenglish');
     expect(session.matchFuture(card).aside).toBe('mixed with continuity');
@@ -1503,6 +1505,7 @@ describe('localised Match futures (#986)', () => {
 
   it('uses Original fallback and records missing, stale and invalid-token translations', () => {
     const session = newGame(loadContent());
+    session.setProseVariants([]);
     const shown = visibleCard();
     const original = matchFuture(shown);
     session.setProseMode('plainenglish');
