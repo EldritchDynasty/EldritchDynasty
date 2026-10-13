@@ -7,9 +7,9 @@ import { coreMessageAddress, msg } from '../messages.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
 import { plainEnglishCoreWorkItems } from '../tools/string-audit.js';
 import { beget, marry, phase, place, testWorld } from '../testing.js';
-import { genomeOf } from '../people/factory.js';
+import { conceiveChild, genomeOf } from '../people/factory.js';
 import { beginStudy } from '../people/library.js';
-import { rollDeath } from '../people/demography.js';
+import { rollBirths, rollDeath } from '../people/demography.js';
 import { makeRng } from '../rng.js';
 import { digestOf, loadGame, saveGame } from '../save.js';
 import type { SimCtx } from '../world.js';
@@ -286,6 +286,32 @@ describe('a stillbirth, as a line', () => {
       }
       for (const mother of wives) expect(ctx.world.conceptionOrdinals[mother] ?? 0).toBe(conceived.get(mother) ?? 0);
       if (ownLosses.length && !resumedAfterLoss) {
+        const mother = ctx.world.people.get(ownLosses[0]!.mother)!;
+        const father = ctx.world.people.get(mother.marriages.find((marriage) => !marriage.to)!.spouse)!;
+        let laterChildLived = false;
+        for (let attempt = 0; attempt < 16 && !laterChildLived; attempt++) {
+          ctx.world.year++;
+          const ordinal = ctx.world.conceptionOrdinals[mother.id]! + 1;
+          const expected = conceiveChild(
+            structuredClone(mother), structuredClone(father), ordinal, ctx.world.year,
+            ctx.genetics, new Set(ctx.takenNames), undefined, ctx.world.playerHouse,
+            { counters: { ...ctx.world.counters } },
+          );
+          // Force the annual conception offer, keeping the real, independently
+          // seeded meiosis and loss checks. Commit every returned child.
+          const births = rollBirths(ctx, { ...makeRng(4425), bool: () => true });
+          const actual = births.find((birth) => birth.mother === mother.id)!.birth;
+          expect(actual.stillborn).toBe(expected.stillborn);
+          expect(actual.cause).toBe(expected.cause);
+          expect(actual.sex ?? actual.child?.sex).toBe(expected.sex ?? expected.child?.sex);
+          expect(ctx.world.conceptionOrdinals[mother.id]).toBe(ordinal);
+          if (actual.child && expected.child) {
+            expect(genomeOf(actual.child, ctx.genetics)).toEqual(genomeOf(expected.child, ctx.genetics));
+            laterChildLived = true;
+          }
+          for (const birth of births) if (birth.birth.child) ctx.world.people.add(birth.birth.child);
+        }
+        expect(laterChildLived, 'the old failed ordinal must not make every later pregnancy fail').toBe(true);
         const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
         ctx.world.year++;
         resumed.world.year++;
