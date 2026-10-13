@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import type { ChronicleEntry } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
-import { assertNever } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 
 /**
@@ -45,6 +44,12 @@ const emit = defineEmits<{
 
 const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause) : null));
 const answered = computed(() => answeredLabel(props.links?.answered ?? []));
+
+// Keep runtime schema imports behind the client seam while making new claim
+// variants a compiler error at this reader, just as they are in core.
+function assertNever(claim: never): never {
+  throw new Error(`Unhandled Chronicle claim: ${JSON.stringify(claim)}`);
+}
 
 /**
  * WHAT THE LINE ACTUALLY CLAIMS (issue #19).
