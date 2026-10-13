@@ -971,7 +971,7 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
   });
 
   it('changes the finished signing button but never edits the provided thesis or start year', async () => {
-    const prologue = { ...prologueView(), founded: true } as PrologueView;
+    const prologue: PrologueView = { ...prologueView(), founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 } };
     const enter = vi.fn();
     const wrapper = mount(Prologue, {
       props: { prologue, actions: { enter } as unknown as GameActions, refused: null, startYear: 1042 },
