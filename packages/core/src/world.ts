@@ -313,6 +313,9 @@ export interface WorldState {
   bidCeiling: number;
   withheld: Record<string, Year>;
 
+  /** Every conception by a mother, including children who did not live. */
+  conceptionOrdinals: Record<string, number>;
+
   /**
    * THE LAND MARKET (issue #91, Phase B — #94). `lots` names a `ParcelDef`
    * the house does not hold (`foundingHolding: false`), what it costs, and
@@ -728,6 +731,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
     tutoring: [],
     bidCeiling: 0,
     withheld: {},
+    conceptionOrdinals: {},
     landMarket: { lots: [] },
     landImprovements: [],
     rentsPolicy: 'customary',

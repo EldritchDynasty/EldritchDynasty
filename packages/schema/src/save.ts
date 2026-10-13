@@ -196,7 +196,7 @@ import { CommitmentS } from './muster.js';
  * ids; replay needs those bootstrap inputs, so the exact-current-format loader
  * refuses older shapes rather than inventing them.
  */
-export const SAVE_FORMAT = 30;
+export const SAVE_FORMAT = 31;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -815,6 +815,7 @@ export const SavedGameS = z.object({
   })).default([]),
   bidCeiling: z.number().default(0),
   withheld: z.record(z.string(), z.number()).default({}),
+  conceptionOrdinals: z.record(z.string(), z.number().int().nonnegative()),
   /** THE LAND MARKET (issue #94, Phase B). See `WorldState.landMarket`. */
   landMarket: z.object({
     lots: z.array(z.object({

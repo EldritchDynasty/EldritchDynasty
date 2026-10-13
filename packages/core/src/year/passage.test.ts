@@ -11,6 +11,7 @@ import { genomeOf } from '../people/factory.js';
 import { beginStudy } from '../people/library.js';
 import { rollDeath } from '../people/demography.js';
 import { makeRng } from '../rng.js';
+import { digestOf, loadGame, saveGame } from '../save.js';
 import type { SimCtx } from '../world.js';
 import { emptyReport, type YearReport } from './report.js';
 import { passageOf } from './passage.js';
@@ -217,13 +218,92 @@ describe('a stillbirth, as a line', () => {
     }
 
     const lost: YearReport['stillbirths'] = [];
+    const conceived = new Map<string, number>();
     for (let year = 0; year < 20; year++) {
-      lost.push(...phase('births', ctx).stillbirths);
+      const report = phase('births', ctx);
+      lost.push(...report.stillbirths);
+      for (const mother of [
+        ...report.births.map((child) => String(child.trueParents.mother)),
+        ...report.stillbirths.map((loss) => String(loss.mother)),
+      ]) {
+        if (wives.has(mother)) conceived.set(mother, (conceived.get(mother) ?? 0) + 1);
+      }
+      for (const mother of wives) {
+        expect(w.conceptionOrdinals[mother] ?? 0, 'a lost conception must advance the next genome').toBe(conceived.get(mother) ?? 0);
+      }
       w.year += 1;
     }
 
     expect(lost.length).toBeGreaterThan(0);
     expect(lost.every((s) => wives.has(String(s.mother)) && s.cause === 'close_blood')).toBe(true);
+  });
+
+  it('advances after overflow and resumes the same next conception independently of another world (#1581)', () => {
+    const ctx = testWorld(bundle, 4423);
+    const { table } = ctx.genetics;
+    const wives = new Set<string>();
+    for (let n = 0; n < 8; n++) {
+      const wife = place(ctx, { sex: 'female', age: 19, name: `HotWife${n}`, branch: `hot_hall_${n}` });
+      const husband = place(ctx, { sex: 'male', age: 21, name: `HotHusband${n}`, branch: `hot_hall_${n}` });
+      for (const parent of [wife, husband]) {
+        const genome = genomeOf(parent, ctx.genetics);
+        table.autosomal.forEach((locus, i) => {
+          if (locus.kind !== 'deleterious') return;
+          const benign = table.autosomalAlleles[i]!.findIndex((allele) => allele.tags.length === 0);
+          expect(benign).toBeGreaterThanOrEqual(0);
+          genome.autosomal[0][i] = benign;
+          genome.autosomal[1][i] = benign;
+        });
+        for (const i of table.channelIndices) {
+          const alleles = table.autosomalAlleles[i]!;
+          const least = alleles.reduce((best, allele, index) => allele.effect < alleles[best]!.effect ? index : best, 0);
+          genome.autosomal[0][i] = least;
+          genome.autosomal[1][i] = least;
+        }
+        for (const i of table.fontIndices) {
+          const alleles = table.xAlleles[i]!;
+          const most = alleles.reduce((best, allele, index) => allele.effect > alleles[best]!.effect ? index : best, 0);
+          genome.sex[0][i] = most;
+          if (genome.sex[1]) genome.sex[1][i] = most;
+        }
+      }
+      marry(ctx, wife, husband);
+      wives.add(String(wife.id));
+    }
+
+    const conceived = new Map<string, number>();
+    let resumedAfterLoss = false;
+    const losses: YearReport['stillbirths'] = [];
+    for (let year = 0; year < 20; year++) {
+      const report = phase('births', ctx);
+      const ownLosses = report.stillbirths.filter((loss) => wives.has(String(loss.mother)));
+      losses.push(...ownLosses);
+      for (const mother of [
+        ...report.births.map((child) => String(child.trueParents.mother)),
+        ...report.stillbirths.map((loss) => String(loss.mother)),
+      ]) {
+        if (wives.has(mother)) conceived.set(mother, (conceived.get(mother) ?? 0) + 1);
+      }
+      for (const mother of wives) expect(ctx.world.conceptionOrdinals[mother] ?? 0).toBe(conceived.get(mother) ?? 0);
+      if (ownLosses.length && !resumedAfterLoss) {
+        const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+        ctx.world.year++;
+        resumed.world.year++;
+        const next = phase('births', ctx);
+        phase('births', testWorld(bundle, 4424));
+        const reloadedNext = phase('births', resumed);
+        expect(reloadedNext.stillbirths).toEqual(next.stillbirths);
+        expect(reloadedNext.births.map((child) => child.id)).toEqual(next.births.map((child) => child.id));
+        expect(digestOf(resumed)).toBe(digestOf(ctx));
+        resumedAfterLoss = true;
+        // The continuation proves the next full birth phase; the accounting
+        // loop above has already exercised both outcomes up to that loss.
+        break;
+      }
+      ctx.world.year++;
+    }
+    expect(resumedAfterLoss, 'the deliberately overloaded couples must exercise a lost conception').toBe(true);
+    expect(losses.every((loss) => loss.cause === 'overflow' && loss.sex === 'male')).toBe(true);
   });
 });
 
