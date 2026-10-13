@@ -1,6 +1,6 @@
 {
   "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
-  "measured": "2026-10-12",
+  "measured": "2026-10-13",
   "maxFactor": 1.25,
   "lanes": {
     "batch": {
@@ -12,8 +12,8 @@
       "evidence": "#644 complete-sample measurement on GitHub-hosted ubuntu-latest / Node 22: successful job 113752914137 in run 37910095094 at 5823a46a played all 2,048 concentrate/dilute pairs x 500y with four workers and one aggregate verdict. Structured artifact widened-blood-measurement records blood.seconds=2275.964 (37m55.964s), ok=true; paired fontLate +0.32, PASS at 2.1 standard errors against the unchanged zero floor / two-SE requirement. Retains every original 1,024 pair and extends the same seed stride, following red main weekly run 37906699185 (+0.43, sd 7.06, 1.9 SE; prescribed ~1,304 pairs). Baseline rounded to 38m, keeping maxFactor 1.25 = 47.5m guard. The isolated measurement job passed; the surrounding exploratory workflow failed its CI inventory checks because of the temporary measurement-only job, which is removed from the final change. This is measured timing, not reusable trusted-main proof. Previous 1,024-pair baseline: PR #490 run 37256335551, 20m59.6s versus pre-worker 39m06.5s (#440). Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37910095094/job/113752914137 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37906699185."
     },
     "fire-rate": {
-      "seconds": 1260,
-      "evidence": "Isolated fire-rate lane on PR #364 run 36586278258: 20.7 min (1240s) with fire-rate, outcome-reach and vocabulary-reach all passing. Baseline rounded to 21m; 1.25x guard = 26.25m, so runner noise is not treated as a regression (#333)."
+      "seconds": 1530,
+      "evidence": "2026-10-13 measured hosted nightly evidence, unchanged 800 chronicler runs x 500y (fire-rate + vocabulary reach): 2026-10-11 run 38130485155 job 114443600843: 23.1m, 452 non-frame events, PASS; 2026-10-12 run 38238992858 job 114776656261: 25.7m, 455 non-frame events, PASS at 1.23x old budget; 2026-10-13 run 38384695888 job 115253504750: 27.1m, 462 non-frame events, gate 4 and gate 10 verdicts PASS, but duration guard failed at 1.29x against the old 21.0m baseline/26.25m limit. Recent three-run mean = 25.3m; deliberately rounded to 25.5m (1530s), preserving maxFactor=1.25 (31.875m guard). Growth includes a larger authored event pool (452 to 462 in this window), but run-to-run variability and engine/runner costs also contribute; the 10 extra events alone do not explain the full increase. This updates only the measured wall-clock reference, not samples, simulation assertions or thresholds. Old 21m baseline originated at PR #364 run 36586278258 (20.7m). Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38130485155 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38238992858 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38384695888. Previous evidence: Isolated fire-rate lane on PR #364 run 36586278258: 20.7 min (1240s) with fire-rate, outcome-reach and vocabulary-reach all passing. Baseline rounded to 21m; 1.25x guard = 26.25m, so runner noise is not treated as a regression (#333)."
     },
     "war": {
       "seconds": 1056,
