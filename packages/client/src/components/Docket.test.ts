@@ -791,6 +791,78 @@ describe('decision receipts (#374)', () => {
   });
 });
 
+describe('reader-local immediate outcome receipts (#1612)', () => {
+  it('keeps the accepted choice and authored outcome immutable across reading modes', async () => {
+    const outcome = {
+      said: 'Open the gate', text: 'The hinges gave once, and the yard filled before dusk.',
+      kind: 'choice' as const,
+    };
+    const originalValue = structuredClone(outcome);
+    const wrapper = mount(Outcome, { props: { outcome, proseMode: 'original' } });
+    try {
+      const original = wrapper.text();
+      expect(wrapper.get('.label').text()).toBe('What came of it');
+      expect(wrapper.get('.said').text()).toBe('You said: Open the gate');
+      expect(wrapper.get('.body').text()).toBe(outcome.text);
+      expect(wrapper.get('button').text()).toBe('Go on');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.label').text()).toBe('What happened next');
+      expect(wrapper.get('.said').text()).toBe('You chose: Open the gate');
+      expect(wrapper.get('.body').text()).toBe(outcome.text);
+      expect(wrapper.get('button').text()).toBe('Continue');
+      expect(wrapper.get('section.outcome').attributes('aria-live')).toBe('assertive');
+      await wrapper.get('button').trigger('click');
+      expect(wrapper.emitted('dismiss')).toEqual([[]]);
+      expect(outcome).toEqual(originalValue);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(outcome).toEqual(originalValue);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('keeps a deliberately blank Record distinct from a choice without immediate prose', async () => {
+    const cases = [
+      {
+        outcome: { said: 'Leave it out', text: null, kind: 'record' as const },
+        originalHeading: 'What came of it', translatedHeading: 'What happened next',
+        originalBody: 'The book carries a dated blank line where this would have been. Nothing was written down.',
+        translatedBody: 'The Chronicle has an empty dated entry for this event. Nothing was recorded.',
+      },
+      {
+        outcome: { said: 'Keep the gate shut', text: null, kind: 'choice' as const },
+        originalHeading: 'The choice is made', translatedHeading: 'Decision confirmed',
+        originalBody: 'The decision is made. Anything further will show itself as the years advance.',
+        translatedBody: 'Your choice was accepted. Any later effects will become clear as the years pass.',
+      },
+    ];
+    for (const row of cases) {
+      const originalValue = structuredClone(row.outcome);
+      const wrapper = mount(Outcome, { props: { outcome: row.outcome, proseMode: 'original' } });
+      try {
+        const originalText = wrapper.text();
+        expect(wrapper.get('.label').text()).toBe(row.originalHeading);
+        expect(wrapper.get('.body').text()).toBe(row.originalBody);
+        await wrapper.setProps({ proseMode: 'plainenglish' });
+        expect(wrapper.get('.label').text()).toBe(row.translatedHeading);
+        expect(wrapper.get('.body').text()).toBe(row.translatedBody);
+        expect(wrapper.get('.said').text()).toBe('You chose: ' + row.outcome.said);
+        expect(wrapper.get('button').text()).toBe('Continue');
+        await wrapper.get('button').trigger('click');
+        expect(wrapper.emitted('dismiss')).toEqual([[]]);
+        expect(row.outcome).toEqual(originalValue);
+        await wrapper.setProps({ proseMode: 'original' });
+        expect(wrapper.text()).toBe(originalText);
+      } finally { wrapper.unmount(); }
+    }
+  });
+
+  it('passes the existing preference from App without altering dismissal', () => {
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
+    expect(app).toContain('<Outcome v-if="outcome" :outcome="outcome" :prose-mode="accessibility.proseMode" @dismiss="actions.dismissOutcome()" />');
+  });
+});
+
 describe('Chronicle sidebar reader labels (#1608)', () => {
   it('switches only navigation labels with reading mode and keeps the same full-volume action', async () => {
     const frame = [{
