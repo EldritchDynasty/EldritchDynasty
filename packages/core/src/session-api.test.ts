@@ -200,6 +200,99 @@ describe('Chronicle read models are independent values (#1585)', () => {
   });
 });
 
+describe('pending, frame and docket reads are independent values (#1589)', () => {
+  it('does not let pending readers change the choice the world will resolve', () => {
+    const g = newGame(content, { seed: 1042 });
+    const jump = g.advance(100);
+    expect(g.ctx.world.pendingDecisions.length).toBeGreaterThan(0);
+
+    const original = structuredClone(g.ctx.world.pendingDecisions);
+    const pending = g.pending;
+    const exposed = pending[0]!;
+    expect(pending).toEqual(original);
+
+    // Exercise each kind's nested data, not just the surrounding array.
+    if (exposed.kind === 'choice') {
+      exposed.event.title = 'A forged title';
+      exposed.fill['forged_slot'] = 'p_forged';
+      exposed.choices[0]!.label = 'A forged answer';
+      if (exposed.cast[0]?.candidates[0]) exposed.cast[0].candidates[0].name = 'A forged candidate';
+    } else if (exposed.kind === 'record') {
+      exposed.event.title = 'A forged title';
+      exposed.fill['forged_slot'] = 'p_forged';
+      exposed.options[0]!.chronicle = 'A forged page';
+    } else {
+      expect(exposed.cards.length).toBeGreaterThan(0);
+      exposed.cards[0]!.id = 'card_forged';
+    }
+
+    expect(g.ctx.world.pendingDecisions).toEqual(original);
+    expect(g.pending).toEqual(original);
+    expect(jump.pending).toEqual(original);
+
+    // Legitimate engine changes are equally unable to rewrite an old read.
+    const oldSnapshot = structuredClone(pending);
+    g.ctx.world.pendingDecisions[0]!.id = 'dec_world_updated';
+    expect(pending).toEqual(oldSnapshot);
+    expect(g.pending[0]!.id).toBe('dec_world_updated');
+  });
+
+  it('returns detached docket decisions, including their nested offers', () => {
+    const g = newGame(content, { seed: 1042 });
+    g.advance(100);
+    const original = structuredClone(g.ctx.world.pendingDecisions);
+    expect(original.length).toBeGreaterThan(0);
+
+    const first = g.view().docket;
+    const offered = first[0]!;
+    const expected = structuredClone(first);
+    if (offered.kind === 'choice') {
+      offered.event.title = 'The false docket';
+      offered.choices[0]!.label = 'The false choice';
+      offered.fill['forged_slot'] = 'p_forged';
+    } else if (offered.kind === 'record') {
+      offered.event.title = 'The false docket';
+      offered.options[0]!.chronicle = 'The false record';
+      offered.fill['forged_slot'] = 'p_forged';
+    } else {
+      expect(offered.cards.length).toBeGreaterThan(0);
+      offered.cards[0]!.id = 'card_forged';
+    }
+    expect(g.ctx.world.pendingDecisions).toEqual(original);
+    expect(g.view().docket).toEqual(expected);
+
+    const mutatedSnapshot = structuredClone(first);
+    g.ctx.world.pendingDecisions[0]!.id = 'dec_world_updated';
+    expect(first).toEqual(mutatedSnapshot);
+    expect(g.view().docket[0]!.id).toBe('dec_world_updated');
+  });
+
+  it('does not let frame readers rewrite the past or follow later world changes', () => {
+    const g = newGame(content, { seed: 1042, decider: 'chronicler' });
+    const firstEntry = {
+      year: g.year,
+      eventId: 'frame_read_snapshot',
+      outcomeId: 'heard',
+      text: 'The original interlude',
+    };
+    g.ctx.world.frame.entries.push(firstEntry);
+    const first = g.view().frame;
+    expect(first).toEqual([firstEntry]);
+
+    first[0]!.text = 'The reader rewrote the frame';
+    expect(g.ctx.world.frame.entries[0]).toEqual(firstEntry);
+    expect(g.view().frame).toEqual([firstEntry]);
+
+    const oldSnapshot = structuredClone(first);
+    g.ctx.world.frame.entries[0]!.text = 'The world moved on';
+    g.ctx.world.frame.entries.push({
+      year: g.year + 1, eventId: 'frame_second', outcomeId: 'heard', text: 'A later interlude',
+    });
+    expect(first).toEqual(oldSnapshot);
+    expect(g.view().frame.map((entry) => entry.text)).toEqual(['The world moved on', 'A later interlude']);
+  });
+});
+
 describe('the account a jump comes back with', () => {
   it('adds up to the change it claims to describe', () => {
     const g = newGame(content, { seed: 1042, decider: 'chronicler' });
