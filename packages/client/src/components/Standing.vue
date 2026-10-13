@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
-import { assertNever, type ProseMode } from '@ed/schema';
+import type { ProseMode } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 
@@ -127,7 +127,8 @@ function ageMood(register: SessionView['ages'][number]['register']): string {
     case 'institutional':
       return plain.value ? 'Institutions shape these years.' : 'These are years of offices and seals.';
   }
-  return assertNever(register, 'age register');
+  const unreachable: never = register;
+  throw new Error(`Unexpected age register: ${String(unreachable)}`);
 }
 
 /**
