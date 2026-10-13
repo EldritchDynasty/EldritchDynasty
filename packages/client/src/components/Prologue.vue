@@ -227,7 +227,7 @@ function signOnEnter(event: KeyboardEvent): void {
       </li>
     </ol>
 
-    <button v-if="shown < prologue.triad.length" class="on" @click="on()">
+    <button v-if="!prologue.founded && shown < prologue.triad.length" class="on" @click="on()">
       {{ plain ? (shown === 0 ? 'Read the first part' : shown === 1 ? 'Read the second part' : 'Read the third part') : (shown === 0 ? 'The first thing' : shown === 1 ? 'The second thing' : 'The third thing') }}
     </button>
 
