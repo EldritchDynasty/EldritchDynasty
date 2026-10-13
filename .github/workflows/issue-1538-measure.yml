@@ -1,0 +1,68 @@
+name: temporary duration regeneration for issue 1538
+
+# This workflow exists only on the claimed work branch. Remove it after the
+# official full-suite cost command has committed measured output.
+on:
+  push:
+    branches:
+      - chatgpt/1538-ci-duration-full-measure-20261013
+    # The generator commits only measured outputs; don't restart the full run on its own commit.
+    paths:
+      - .github/workflows/issue-1538-measure.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: full-duration-regeneration-1538
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Regenerate official measured full-suite costs
+        run: npm run cost -- --full --write
+      - name: Verify freshly generated duration catalogue
+        run: |
+          node --input-type=module -e '
+          import { readFileSync } from "node:fs";
+          const d = JSON.parse(readFileSync("tools/test-durations.json", "utf8"));
+          const today = new Date().toISOString().slice(0, 10);
+          if (d.measured !== today) throw new Error("durations not measured today");
+          for (const file of [
+            "packages/client/src/components/Prologue.test.ts",
+            "packages/editor/src/lib/content-hydration.test.ts",
+            "packages/core/src/narrator-name.test.ts",
+            "packages/core/src/tools/gate-proof.test.ts",
+            "packages/core/src/tools/outcome-reach-verdict.test.ts",
+            "packages/core/src/tools/signing-gate.test.ts",
+            "packages/core/src/tools/string-audit-cli.test.ts",
+            "packages/mobile/src/smoke.test.ts",
+            "packages/schema/src/prose-variants.test.ts"
+          ]) if (!Number.isFinite(d.files[file])) throw new Error("missing measured duration: " + file);
+          console.log(Object.keys(d.files).length + " files measured");
+          '
+      - name: Verify fast lane and compile
+        run: |
+          npm run test:fast
+          npm run typecheck
+          npm run validate
+      - name: Commit only generator outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AGENTS.md tools/test-durations.json
+          git diff --cached --quiet && { echo "No measured output changed"; exit 1; }
+          git commit -m "fix(ci): regenerate measured test durations (Closes #1538)"
+          git push origin HEAD:refs/heads/chatgpt/1538-ci-duration-full-measure-20261013
