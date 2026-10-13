@@ -425,8 +425,8 @@ const yearAndBirths = computed(() => {
   />
 
   <template v-else-if="ended && epilogue">
-    <Ending :view="view" :epilogue="epilogue" :actions="actions" @open="openBook()" />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
+    <Ending :view="view" :epilogue="epilogue" :actions="actions" :prose-mode="accessibility.proseMode" @open="openBook()" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
   </template>
 
@@ -676,6 +676,7 @@ const yearAndBirths = computed(() => {
           :view="view"
           :frame="frame"
           :actions="actions"
+          :prose-mode="accessibility.proseMode"
           @open="openBook"
           @person="look"
         />
@@ -689,7 +690,7 @@ const yearAndBirths = computed(() => {
       :actions="actions"
       :skip-seen-prose="accessibility.skipSeenProse"
     />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :focus="bookFocus" :close="() => (bookOpen = null)" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Plat v-if="platOpen && land" :land="land" :halls="view.halls" :house-name="view.houseName" :actions="actions" :close="() => (platOpen = false)" />
     <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
   </template>

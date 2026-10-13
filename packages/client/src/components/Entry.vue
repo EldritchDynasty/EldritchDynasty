@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ChronicleEntry } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 
 /**
@@ -24,6 +25,8 @@ import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
  */
 const props = defineProps<{
   entry: ChronicleEntry;
+  /** Only fresh UI explanations follow the current reader; saved prose stays fixed. */
+  proseMode?: ProseMode;
   /** The epilogue reads the book aloud in a plainer hand than the panel keeps. */
   read?: boolean;
   /** What this page answers and what answers it (issue #269). */
@@ -57,7 +60,14 @@ const answered = computed(() => answeredLabel(props.links?.answered ?? []));
  * `causeOfDeath`.
  */
 const claims = computed(() => (props.entry.claims ?? []).map((c) => {
+  // The deed is authored Chronicle evidence, not UI framing; never rewrite it.
   if (c.kind === 'deed') return c.text;
+  if (props.proseMode === 'plainenglish') {
+    if (c.kind === 'death') return `The record says they died in ${c.year} from ${c.cause}.`;
+    if (c.kind === 'trait') return c.has
+      ? `The record says they were ${c.trait}.` : `The record says they were not ${c.trait}.`;
+    return `The record says their ${c.attr.replace(/_/g, ' ')} was ${c.value}.`;
+  }
   if (c.kind === 'death') return `that they died in ${c.year}, ${c.cause}`;
   if (c.kind === 'trait') return c.has ? `that they were ${c.trait}` : `that they were not ${c.trait}`;
   return `that their ${c.attr.replace(/_/g, ' ')} stood at ${c.value}`;
@@ -68,6 +78,11 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
   .filter(Boolean)
   .map((policy) => {
     const [kind, value] = policy.split(':', 2);
+    if (props.proseMode === 'plainenglish') {
+      if (kind === 'record' && value === 'record') return 'usual choice: write down what happened';
+      if (kind === 'choice' && value) return `usual choice: ${value.replace(/_/g, ' ')}`;
+      return 'answered using the usual choice';
+    }
     if (kind === 'record' && value === 'record') return 'standing preference: write it as it happened';
     if (kind === 'choice' && value) return `standing preference: ${value.replace(/_/g, ' ')}`;
     return 'answered by standing preference';

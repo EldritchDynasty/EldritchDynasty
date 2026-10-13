@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
-import type { FrameEntry } from '@ed/schema';
+import type { FrameEntry, ProseMode } from '@ed/schema';
 import type { HelpTier, SessionView } from '@ed/core';
 import { findEntry, linksFor } from '../lib/causes';
 import type { GameActions } from '../lib/game';
@@ -10,6 +10,8 @@ import AdviserHelp from './AdviserHelp.vue';
 const props = defineProps<{
   view: SessionView;
   frame: FrameEntry[];
+  /** Fresh Chronicle UI notes follow the reader's current prose preference. */
+  proseMode?: ProseMode;
   /** Only the two reads behind a page's way back (issue #269). */
   actions: Pick<GameActions, 'causeOf' | 'answeredBy' | 'advice'>;
 }>();
@@ -113,6 +115,7 @@ async function follow(id: string): Promise<void> {
       v-for="(entry, i) in entries"
       :key="entry.id ?? entry.year + ':' + i"
       :entry="entry"
+      :prose-mode="proseMode"
       :links="entry.id ? links.get(entry.id) : undefined"
       :marked="!!entry.id && marked === entry.id"
       :people="peopleFor(entry)"
