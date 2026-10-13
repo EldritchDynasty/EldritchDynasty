@@ -672,6 +672,34 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
     } finally { wrapper.unmount(); }
   });
 
+  it('rejects invalid bond marks without consuming the per-servant latch (#1571)', async () => {
+    const table = { ...wardshipTable(), servants: [
+      { person: 'ren', name: 'Ren', role: 'keeper', wage: 5, bonded: false, loyalty: 'steady' },
+    ] } as unknown as TableView;
+    const order = vi.fn().mockReturnValue({ ok: true });
+    const wrapper = mount(GameTable, {
+      props: { table, land: emptyLand, actions: { order } as unknown as GameActions, refusal: null, receipt: null },
+    });
+    try {
+      const marks = wrapper.get('input[aria-label^="Marks to advance"]');
+      const advance = wrapper.findAll('button').find((button) => button.text() === 'Advance it against the years')!;
+      for (const invalid of ['0', '1.5', '21']) {
+        await marks.setValue(invalid);
+        expect(marks.attributes('aria-invalid')).toBe('true');
+        expect(advance.attributes('disabled')).toBeDefined();
+        (advance.element as HTMLButtonElement).click();
+        expect(order).not.toHaveBeenCalled();
+      }
+      await marks.setValue('5');
+      expect(advance.attributes('disabled')).toBeUndefined();
+      const button = advance.element as HTMLButtonElement;
+      button.click();
+      button.click();
+      expect(order).toHaveBeenCalledOnce();
+      expect(order).toHaveBeenCalledWith({ kind: 'bond', person: 'ren', op: 'bind', marks: 5 });
+    } finally { wrapper.unmount(); }
+  });
+
   it('submits one bond per servant in a render without blocking another servant (#1571)', async () => {
     const table = { ...wardshipTable(), servants: [
       { person: 'ren', name: 'Ren', role: 'keeper', wage: 5, bonded: false, loyalty: 'steady' },
