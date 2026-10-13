@@ -445,6 +445,42 @@ describe('land gifts are playable from the Plat (#1219)', () => {
     }
   });
 
+  it('a refusal for one parcel does not block another parcel or its own later retry (#1611)', async () => {
+    const actions = spyActions();
+    const order = vi.mocked(actions.order);
+    order.mockReturnValueOnce({ ok: false, reason: 'The household refused' })
+      .mockReturnValue({ ok: true });
+    const w = mount(Plat, { props: {
+      land: mockLand({ held: [
+        baseHeld({ parcel: 'longmere' }),
+        baseHeld({ parcel: 'westmere', name: 'Westmere' }),
+      ] }),
+      halls: halls(), houseName: 'House', actions, close: () => {},
+    } });
+    try {
+      const selects = w.findAll('select');
+      await selects[0]!.setValue('cadet_a');
+      await selects[1]!.setValue('cadet_a');
+      const buttons = w.findAll('button.endow');
+      const first = buttons[0]!.element as HTMLButtonElement;
+      const second = buttons[1]!.element as HTMLButtonElement;
+      first.click(); // Refused by the simulation.
+      second.click(); // A different parcel must still be submitted.
+      expect(order).toHaveBeenCalledTimes(2);
+      expect(order).toHaveBeenNthCalledWith(2, {
+        kind: 'endow', parcel: 'westmere', branch: 'cadet_a',
+      });
+      await w.vm.$nextTick();
+      first.click(); // The rejected parcel is retryable after repaint.
+      expect(order).toHaveBeenCalledTimes(3);
+      expect(order).toHaveBeenLastCalledWith({
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('offers a living cadet rather than the seat and requires a selected hall', async () => {
     const { w, actions } = open();
     expect(w.get('button.endow').attributes('disabled')).toBeDefined();
