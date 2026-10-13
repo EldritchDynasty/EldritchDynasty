@@ -1678,3 +1678,87 @@ describe('Begin waits for profile Library operations (#1545)', () => {
     }
   });
 });
+
+describe('Begin wins the same-render Library mutation race (#1553)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'shelved', seed: 77, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+    }],
+  };
+
+  it('ignores an already-visible Clear confirmation after Begin and permits a later deliberate Clear', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head button').trigger('click');
+      const confirm = w.get('button.confirm-clear').element as HTMLButtonElement;
+      const begin = w.get('button.primary').element as HTMLButtonElement;
+
+      // Both DOM events arrive before Vue replaces the Start screen.
+      begin.click();
+      confirm.click();
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+
+      // The test host leaves Start mounted. Once the render latch releases,
+      // the player can still deliberately clear their Library.
+      await flush();
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('ignores an already-visible single-house Remove confirmation after Begin', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-run button').trigger('click');
+      const confirm = w.get('button.confirm-remove').element as HTMLButtonElement;
+      const begin = w.get('button.primary').element as HTMLButtonElement;
+
+      begin.click();
+      confirm.click();
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await flush();
+      await w.get('button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('shelved');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('does not open new Clear or Remove confirmations from stale controls after Begin', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      const clear = w.get('.library-head button').element as HTMLButtonElement;
+      const remove = w.get('.library-run button').element as HTMLButtonElement;
+
+      w.get('button.primary').element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      clear.click();
+      remove.click();
+
+      await flush();
+      expect(actions.begin).toHaveBeenCalledTimes(1);
+      expect(w.find('button.confirm-clear').exists()).toBe(false);
+      expect(w.find('button.confirm-remove').exists()).toBe(false);
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.get('.library-run button').trigger('click');
+      expect(w.find('button.confirm-remove').exists()).toBe(true);
+    } finally {
+      w.unmount();
+    }
+  });
+});
