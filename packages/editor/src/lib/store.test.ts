@@ -973,3 +973,60 @@ describe('core prose messages.yaml authoring (#1011)', () => {
     }
   });
 });
+
+
+/**
+ * Use the real pure registration helper while the rest of this suite's editor
+ * transport stays mocked. Keep these regression tests in a measured file until
+ * the P0 duration catalogue regeneration (#1538) can be completed.
+ */
+const { registerUserContent } = await vi.importActual<typeof import('./content.js')>('./content.js');
+
+/**
+ * A Mod Editor bundle must never contain one accepted user file from a
+ * rejected batch. The global editor map and writable-path list are both
+ * mutated by hydration, so testing only the thrown error would miss the bug.
+ */
+describe('Mod Editor content hydration (#1528)', () => {
+  it('rejects a late shipped-file collision without accepting earlier files', () => {
+    const shipped = {
+      'events/shipped.yaml': 'shipped event',
+      'characters/base.yaml': 'shipped character',
+    };
+    const allFiles: Record<string, string> = { ...shipped };
+    const writable = new Set<string>(['events/previous-user.yaml']);
+    // Sorting puts the otherwise valid arcs/ path before events/shipped.yaml.
+    const incoming = {
+      'arcs/new-user.yaml': 'new arc',
+      'events/shipped.yaml': 'attempt to replace shipped event',
+    };
+
+    expect(() => registerUserContent(allFiles, writable, incoming))
+      .toThrow("user content 'events/shipped.yaml' shadows a shipped file");
+    expect(allFiles).toEqual(shipped);
+    expect(writable).toEqual(new Set(['events/previous-user.yaml']));
+    expect(allFiles).not.toHaveProperty('arcs/new-user.yaml');
+
+    // Reattempting a valid batch after a failed one must work in-process.
+    registerUserContent(allFiles, writable, { 'arcs/new-user.yaml': 'new arc' });
+    expect(allFiles).toEqual({ ...shipped, 'arcs/new-user.yaml': 'new arc' });
+    expect(writable).toEqual(new Set(['events/previous-user.yaml', 'arcs/new-user.yaml']));
+  });
+
+  it('registers all new paths and their text together when validation succeeds', () => {
+    const allFiles: Record<string, string> = { 'events/shipped.yaml': 'shipped event' };
+    const writable = new Set<string>();
+    registerUserContent(allFiles, writable, {
+      'events/user-b.yaml': 'second',
+      'arcs/user-a.yaml': 'first',
+    });
+
+    expect(allFiles).toEqual({
+      'events/shipped.yaml': 'shipped event',
+      'arcs/user-a.yaml': 'first',
+      'events/user-b.yaml': 'second',
+    });
+    expect(writable).toEqual(new Set(['arcs/user-a.yaml', 'events/user-b.yaml']));
+    expect(() => registerUserContent(allFiles, writable, {})).not.toThrow();
+  });
+});
