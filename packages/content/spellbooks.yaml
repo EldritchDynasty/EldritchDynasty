@@ -352,3 +352,87 @@ proseVariants:
       Named for the first woman in this house to calculate the Lag's tides correctly. It is no
       use to someone who has never stood in that water. Later writers only correct earlier
       corrections.
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_fluid].name"
+    of: "5197b53a390ae886"
+    plainenglish: >-
+      Lesser Workings of Fluid (basic water magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_thermal].name"
+    of: "0bd7e0a924eaead5"
+    plainenglish: >-
+      Lesser Workings of Thermal (basic heat magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_aero].name"
+    of: "28f865ff8c4f47d3"
+    plainenglish: >-
+      Lesser Workings of Aero (basic air magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_terra].name"
+    of: "c1439be4bd9bee70"
+    plainenglish: >-
+      Lesser Workings of Terra (basic earth magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_life].name"
+    of: "b7f7d1e0c96e328c"
+    plainenglish: >-
+      Lesser Workings of Life (basic life magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_death].name"
+    of: "9fda04b8f4b1d5bc"
+    plainenglish: >-
+      Lesser Workings of Death (basic death magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_light].name"
+    of: "d6f7c72e9816bb12"
+    plainenglish: >-
+      Lesser Workings of Light (basic light magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=lesser_workings_of_darkness].name"
+    of: "e3bf66cdcf8b2439"
+    plainenglish: >-
+      Lesser Workings of Darkness (basic darkness magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=the_marrow_codex].name"
+    of: "a08dda27583477fb"
+    plainenglish: >-
+      The Marrow Codex (House Marrow's death magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=the_ilm_lightbook].name"
+    of: "b4d6f405025b4159"
+    plainenglish: >-
+      The Ilm Lightbook (House Ilm's light magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=the_first_working].name"
+    of: "4388b39521cb4511"
+    plainenglish: >-
+      The First Working (a life working first written by this house)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_fluid].name"
+    of: "1cd7342c6ea30028"
+    plainenglish: >-
+      Greater Workings of Fluid (advanced water magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_thermal].name"
+    of: "49f30f732c9de07f"
+    plainenglish: >-
+      Greater Workings of Thermal (advanced heat magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_aero].name"
+    of: "47ea0ce9dcc8f0ed"
+    plainenglish: >-
+      Greater Workings of Aero (advanced air magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_terra].name"
+    of: "c269adb255ab54ee"
+    plainenglish: >-
+      Greater Workings of Terra (advanced earth magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_life].name"
+    of: "a407240696405b52"
+    plainenglish: >-
+      Greater Workings of Life (advanced life magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_death].name"
+    of: "9624769e4261d742"
+    plainenglish: >-
+      Greater Workings of Death (advanced death magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_light].name"
+    of: "391581e04d14c3b4"
+    plainenglish: >-
+      Greater Workings of Light (advanced light magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=greater_workings_of_darkness].name"
+    of: "8d7e9acbac5043c7"
+    plainenglish: >-
+      Greater Workings of Darkness (advanced darkness magic)
+  - address: "content:spellbooks.yaml#spellbooks[id=the_braccish_weight_book].name"
+    of: "94a26a22666f72d6"
+    plainenglish: >-
+      The Braccish Weight Book (earth magic from a Braccish counting house)
+  - address: "content:spellbooks.yaml#spellbooks[id=the_drowned_calendar].name"
+    of: "817adf57cc4e8aab"
+    plainenglish: >-
+      The Drowned Calendar (a water working about the Lag's tides)

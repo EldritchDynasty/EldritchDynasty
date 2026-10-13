@@ -1888,3 +1888,11 @@ proseVariants:
     of: "4d8039219cec38b5"
     plainenglish: >-
       The house raised a second of the blood, and the cousin who died that year died of a fever.
+  - address: "content:events/rites.yaml#events[id=the_great_rite].title"
+    of: "1e66df09c50edc25"
+    plainenglish: >-
+      The Great Rite (the rite that widens a man's capacity)
+  - address: "content:events/rites.yaml#events[id=the_unmaking].title"
+    of: "0472776efde3bf8a"
+    plainenglish: >-
+      The Unmaking (the rite that takes an elder apart to raise a descendant)

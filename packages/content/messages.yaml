@@ -158,3 +158,3228 @@ proseVariants:
     of: "85fc2733e8191f97"
     plainenglish: >-
       A son was born.
+  - address: "core:messages#adviser.cares.mother"
+    of: "82b6b7b65b3e6e9a"
+    plainenglish: >-
+      her child will have to live with this agreement
+  - address: "core:messages#adviser.cares.midwife"
+    of: "2a4a61c0d6b0f84c"
+    plainenglish: >-
+      {SUBJECT} has seen this house count births, deaths and children who grew up
+  - address: "core:messages#adviser.cares.former_head"
+    of: "8f1cdf0bdab35647"
+    plainenglish: >-
+      {SUBJECT} has been Head before
+  - address: "core:messages#adviser.cares.regent"
+    of: "51066feb9c4637cf"
+    plainenglish: >-
+      she is Head because the house has no awakened son who can lead it
+  - address: "core:messages#adviser.cares.head_widow"
+    of: "e179619c92cf1d88"
+    plainenglish: >-
+      her husband was Head, and she saw what that cost the household
+  - address: "core:messages#adviser.cares.priest"
+    of: "6d1b90eaaa47fee6"
+    plainenglish: >-
+      {SUBJECT} serves the Church
+  - address: "core:messages#adviser.cares.broker"
+    of: "f37379d269c308a6"
+    plainenglish: >-
+      {POSSESSIVE} job depends on agreements, reputation and other houses
+  - address: "core:messages#adviser.cares.steward"
+    of: "b3d47679fc68f02d"
+    plainenglish: >-
+      {SUBJECT} manages the house and its accounts
+  - address: "core:messages#adviser.cares.soldier"
+    of: "7eb9b58c674d37f8"
+    plainenglish: >-
+      {POSSESSIVE} work measures risk in lives
+  - address: "core:messages#adviser.cares.reader"
+    of: "712f63a150ce3a1d"
+    plainenglish: >-
+      {SUBJECT} depends on what can be read, remembered and proved
+  - address: "core:messages#adviser.cares.kin"
+    of: "1b3dc9041c9ed700"
+    plainenglish: >-
+      this is {POSSESSIVE} own living family
+  - address: "core:messages#adviser.match.none"
+    of: "a790ae39d1725dcd"
+    plainenglish: >-
+      The house can no longer make any of these marriages.
+  - address: "core:messages#adviser.match.dowry"
+    of: "36de5676035cdef2"
+    plainenglish: >-
+      I would choose {NAME}. The account book can prove the dowry's value today.
+  - address: "core:messages#adviser.match.record"
+    of: "3a120b7189cb77a5"
+    plainenglish: >-
+      I would choose {NAME}. That line has more written records and witnesses than the others.
+  - address: "core:messages#adviser.match.distance"
+    of: "940bd39aa4a7d2e6"
+    plainenglish: >-
+      I would choose {NAME}. The family papers say these two lines are the least closely related of the
+      matches offered.
+  - address: "core:messages#adviser.match.witnesses"
+    of: "07bd5d9f222a6803"
+    plainenglish: >-
+      I would choose {NAME}. I trust the evidence of the lives we have actually observed in that line.
+  - address: "core:messages#adviser.match.age"
+    of: "ed6729fd2cb1d479"
+    plainenglish: >-
+      I would choose {NAME}. That person is closest to my child's age. I am thinking about their years
+      together after the agreement.
+  - address: "core:messages#adviser.match.births"
+    of: "c9bebcc26b431d1e"
+    plainenglish: >-
+      I would choose {NAME}. That line has the strongest birth history we have witnessed. I trust the
+      lives we have counted more than a marriage broker's description.
+  - address: "core:messages#adviser.match.kin"
+    of: "5e122eed3f567e99"
+    plainenglish: >-
+      I would choose {NAME}. The papers show that line is closest to our blood. I admit that affects my
+      advice.
+  - address: "core:messages#adviser.record.honest"
+    of: "5bb65a600ed53d2c"
+    plainenglish: >-
+      Write what happened. I value a page we can trust later more than one that looks better now.
+  - address: "core:messages#adviser.record.embellish"
+    of: "ce050aba6c5e3d9e"
+    plainenglish: >-
+      Make it sound better. Other houses act on our reputation, not the private truth behind it.
+  - address: "core:messages#adviser.record.omit"
+    of: "d960fd9c86270ad0"
+    plainenglish: >-
+      Leave it out. Another institution may read this book one day. It need not contain every true thing.
+  - address: "core:messages#adviser.record.plain"
+    of: "25f9d8ed7d741d69"
+    plainenglish: >-
+      Write it clearly. I want the house to remember the choice it made.
+  - address: "core:messages#adviser.record.fallback"
+    of: "144d821e53ebe11a"
+    plainenglish: >-
+      Choose the chronicler's least boastful account.
+  - address: "core:messages#adviser.choice.none"
+    of: "0496c63c19e92380"
+    plainenglish: >-
+      I see no option on this page that the house can take.
+  - address: "core:messages#adviser.rite.priest"
+    of: "51ac5a2775057993"
+    plainenglish: >-
+      I would choose “{LABEL}”. Being careful with a rite does not mean we know nothing. Caution is the
+      only part we control.
+  - address: "core:messages#adviser.rite.reader"
+    of: "76c898e713c2b47b"
+    plainenglish: >-
+      I would choose “{LABEL}”. I am considering the words and earlier examples we have, not guessing what
+      the rite secretly does.
+  - address: "core:messages#adviser.choice.steward"
+    of: "39dfda16da5cef6a"
+    plainenglish: >-
+      I prefer “{LABEL}”. I can defend that choice using what we know now.
+  - address: "core:messages#adviser.choice.reader"
+    of: "4b6d9bb39a5cf6e7"
+    plainenglish: >-
+      I prefer “{LABEL}”. Its written argument is the one I would want kept in the book.
+  - address: "core:messages#adviser.choice.interest"
+    of: "233c443037e741fc"
+    plainenglish: >-
+      I prefer “{LABEL}”. That serves my own interests. I know only what this page tells us.
+  - address: "core:messages#adviser.help.reader.chronicle"
+    of: "6ae9c5f9bce04205"
+    plainenglish: >-
+      I would read a page together with the pages around it. One sentence alone tells little of the
+      history.
+  - address: "core:messages#adviser.help.reader.tree"
+    of: "753acda01326ff14"
+    plainenglish: >-
+      I would start with one person. Read the family tree one branch at a time.
+  - address: "core:messages#adviser.help.reader.grievance"
+    of: "10a6106f9c9de82b"
+    plainenglish: >-
+      I would look at who lives in this hall before reading its grievance. People are behind the quarrel.
+  - address: "core:messages#adviser.help.reader.quiet"
+    of: "9cc2a58ad23f28ce"
+    plainenglish: >-
+      I would start with the people who live in this hall. A quiet branch still matters.
+  - address: "core:messages#adviser.help.head.chronicle"
+    of: "576392a723f0006b"
+    plainenglish: >-
+      Start with the page about the act you care about. Then read what happened in response.
+  - address: "core:messages#adviser.help.head.tree"
+    of: "9dd59409f8609ae5"
+    plainenglish: >-
+      Find the person most relevant to your question. You can read the rest of the line later.
+  - address: "core:messages#adviser.help.head.grievance"
+    of: "e28eeee460df9e78"
+    plainenglish: >-
+      This hall has an unsettled quarrel. I would look at who is involved before reading its grievance.
+  - address: "core:messages#adviser.help.head.quiet"
+    of: "8af31caf254ce3eb"
+    plainenglish: >-
+      This hall is quiet for now. I would still learn who lives there.
+  - address: "core:messages#adviser.help.kin.tree"
+    of: "443c38d878084204"
+    plainenglish: >-
+      Start with one of the family. Follow their relatives instead of reading the whole hall at once.
+  - address: "core:messages#adviser.help.kin.chronicle"
+    of: "14b9fda2d6fb362e"
+    plainenglish: >-
+      Start with the page closest to the person you care about. Then read the pages before and after it.
+  - address: "core:messages#adviser.help.kin.grievance"
+    of: "cd780fe54c0f4e91"
+    plainenglish: >-
+      This hall has an unresolved matter. Read about its family before reading the grievance.
+  - address: "core:messages#adviser.help.kin.quiet"
+    of: "8e9b462dba402a19"
+    plainenglish: >-
+      Start with the family in this hall. There is more to the branch than its grievance.
+  - address: "core:messages#adviser.help.steward.grievance"
+    of: "95838721bdd769d5"
+    plainenglish: >-
+      I would look at who lives in this hall before reading its grievance. The account is easier to
+      understand alongside the household.
+  - address: "core:messages#adviser.help.steward.quiet"
+    of: "17cd33f2f250344e"
+    plainenglish: >-
+      I would start with the people living here. No recorded grievance does not mean nobody lives in the
+      hall.
+  - address: "core:messages#adviser.help.steward.chronicle"
+    of: "defb9a15ea163b51"
+    plainenglish: >-
+      Read the page together with what happened next. A record matters when someone later acts on it.
+  - address: "core:messages#adviser.help.steward.tree"
+    of: "2b46047df3e076a9"
+    plainenglish: >-
+      Start with one person and one hall. The whole house is too much to assess at once.
+  - address: "core:messages#adviser.help.priest.chronicle"
+    of: "fc90e708c2460464"
+    plainenglish: >-
+      Read one page at a time. Remember that a person wrote it, just as people wrote the rest of the book.
+  - address: "core:messages#adviser.help.priest.tree"
+    of: "841091eeba19a4ca"
+    plainenglish: >-
+      Start with one person and follow their relatives before judging the whole house.
+  - address: "core:messages#adviser.help.priest.grievance"
+    of: "e3359dfb1dfba6f7"
+    plainenglish: >-
+      Read about the people in this hall first. A grievance tells little without knowing who is involved.
+  - address: "core:messages#adviser.help.priest.quiet"
+    of: "902e5e9c99fd23b0"
+    plainenglish: >-
+      First look at who lives here. The hall matters even when it has no active quarrel.
+  - address: "core:messages#adviser.help.rule.tree"
+    of: "29ff3daf99a62af3"
+    plainenglish: >-
+      The tree shows living family members as the house records them. Read about the dead in the Chronicle
+      and former Heads in the seal's line.
+  - address: "core:messages#adviser.help.rule.chronicle"
+    of: "6ca0173d761029c9"
+    plainenglish: >-
+      The Chronicle contains what this house chose to record. It is not an independent account. Mistakes
+      and boasts can remain on its pages.
+  - address: "core:messages#adviser.help.rule.branches"
+    of: "3637a6da5cc56406"
+    plainenglish: >-
+      A cadet hall is part of this house. Its grievance is recorded separately because it affects that
+      branch, not all halls equally.
+  - address: "core:messages#adviser.help.control.tree"
+    of: "0cb53ba71c981fd3"
+    plainenglish: >-
+      Use Find somebody by name, select a hall, or choose Only this branch. Open the seal's line to see
+      former Heads.
+  - address: "core:messages#adviser.help.control.chronicle"
+    of: "b0e62b739b2723a7"
+    plainenglish: >-
+      Select Read it whole. Follow a page's links to earlier or later pages before judging its account.
+  - address: "core:messages#adviser.help.control.branches"
+    of: "50023605580fae39"
+    plainenglish: >-
+      Open the Table to respond to a quarrel. Endow gives land to a cadet hall. Scion changes whom the
+      house focuses its effort on.
+  - address: "core:messages#age.missed_clause"
+    of: "654578593c5f60fd"
+    plainenglish: >-
+      The Age ended. The book recorded nothing further it may have revealed about the debt.
+  - address: "core:messages#age_strategy.the_long_peace.0"
+    of: "caa6be1c8a1fbb60"
+    plainenglish: >-
+      large families with well-supported records make valuable marriage partners
+  - address: "core:messages#age_strategy.the_long_peace.1"
+    of: "5b93261983c80cd5"
+    plainenglish: >-
+      the house can obtain commercial posts more cheaply
+  - address: "core:messages#age_strategy.the_wars.0"
+    of: "497a5df2f6f42e4e"
+    plainenglish: >-
+      surviving lines with proven records matter more than keeping blood concentrated
+  - address: "core:messages#age_strategy.the_wars.1"
+    of: "56052b48d9ba7904"
+    plainenglish: >-
+      the house can buy military commissions more cheaply
+  - address: "core:messages#age_strategy.the_crusade.0"
+    of: "89674573bc9f0d17"
+    plainenglish: >-
+      marrying a house already known to the institutions is safer
+  - address: "core:messages#age_strategy.the_crusade.1"
+    of: "36788029c7c96c9d"
+    plainenglish: >-
+      the chronicler is more likely to omit dangerous truths
+  - address: "core:messages#age_strategy.the_insurrection.0"
+    of: "4c28be8bcbab47bf"
+    plainenglish: >-
+      alliances and public reputation matter more when choosing marriages
+  - address: "core:messages#age_strategy.the_insurrection.1"
+    of: "f87831a4edb10cf8"
+    plainenglish: >-
+      advocate posts cost less while old claims are being challenged
+  - address: "core:messages#age_strategy.the_withering.0"
+    of: "5ea8cf3c40887778"
+    plainenglish: >-
+      known bloodlines matter more as the gift becomes less common
+  - address: "core:messages#age_strategy.the_withering.1"
+    of: "e3ca0c050932f6b9"
+    plainenglish: >-
+      scholars are especially valuable as books and knowledge are lost
+  - address: "core:messages#age_strategy.the_quickening.0"
+    of: "bf51902ca59015f0"
+    plainenglish: >-
+      deep blood is especially attractive when choosing marriages
+  - address: "core:messages#age_strategy.the_quickening.1"
+    of: "79fb7d1300c8a307"
+    plainenglish: >-
+      the chronicler is more likely to exaggerate a sudden rise
+  - address: "core:messages#age_strategy.the_plague.0"
+    of: "328aa8e5c453d3e9"
+    plainenglish: >-
+      fertile lines with children who have grown up are especially attractive
+  - address: "core:messages#age_strategy.the_plague.1"
+    of: "35b0ce8f1309ccbb"
+    plainenglish: >-
+      ordination costs less while deaths threaten the household
+  - address: "core:messages#ambition.name.deepen_blood"
+    of: "48a1caeb632eb017"
+    plainenglish: >-
+      Strengthen the bloodline
+  - address: "core:messages#ambition.purpose.deepen_blood"
+    of: "9ef012af7a1b0ea3"
+    plainenglish: >-
+      Keep the living bloodline broad so it does not die out.
+  - address: "core:messages#ambition.name.raise_ascendant"
+    of: "747afe673e443333"
+    plainenglish: >-
+      Prepare for Ascension
+  - address: "core:messages#ambition.purpose.raise_ascendant"
+    of: "bda83301d8a74055"
+    plainenglish: >-
+      Prepare a named line for the next major Ascension rung.
+  - address: "core:messages#ambition.name.restore_ledger"
+    of: "dba7b6534719d86f"
+    plainenglish: >-
+      Recover the Ledger
+  - address: "core:messages#ambition.purpose.restore_ledger"
+    of: "587423e7b04fd42b"
+    plainenglish: >-
+      Recover the clauses still available in this campaign.
+  - address: "core:messages#ambition.name.secure_branches"
+    of: "9aa0e525c9795ab9"
+    plainenglish: >-
+      Protect the branches
+  - address: "core:messages#ambition.purpose.secure_branches"
+    of: "c56d5b5aefecf04e"
+    plainenglish: >-
+      Keep family halls alive and viable beyond the main hall.
+  - address: "core:messages#ambition.match.thin_line"
+    of: "15115c0d6b17a9d9"
+    plainenglish: >-
+      The observed history of {NAME}'s line is thin. An outside marriage does not automatically make the
+      bloodline more resilient.
+  - address: "core:messages#ambition.match.outward_one"
+    of: "f5b5bd5b52e71887"
+    plainenglish: >-
+      {NAME} offers an outside line. Its assessment rests on {COUNT} completed life.
+  - address: "core:messages#ambition.match.outward_many"
+    of: "3a9c824ec6d29412"
+    plainenglish: >-
+      {NAME} offers an outside line. Its assessment rests on {COUNT} completed lives.
+  - address: "core:messages#ambition.match.close_kin"
+    of: "f4aa7fa4790f87d8"
+    plainenglish: >-
+      Every available card offers close kin. None would broaden the living bloodline.
+  - address: "core:messages#ambition.match.cadet_outward"
+    of: "860ce913ca46e0ff"
+    plainenglish: >-
+      An outside spouse can join this cadet hall instead of taking another useful relative away from it.
+  - address: "core:messages#ambition.match.cadet_draw_away"
+    of: "8bbd57cbf70912e7"
+    plainenglish: >-
+      {NAME} helps sustain a cadet hall. Marrying her into the main hall would take a living member away
+      from that branch.
+  - address: "core:messages#ambition.match.cadet_new_household"
+    of: "496a9aeeba2a35aa"
+    plainenglish: >-
+      {NAME} belongs to a cadet hall. This marriage can create another household within that branch.
+  - address: "core:messages#ambition.match.programme_kin"
+    of: "2d18ab21cb0f84dd"
+    plainenglish: >-
+      {NAME} is part of the programme. The papers show that this hand includes blood already related to
+      the family.
+  - address: "core:messages#ambition.match.programme_outward"
+    of: "348f21c9d1a8ca7d"
+    plainenglish: >-
+      {NAME} is part of the programme. The papers show that every available line in this hand is outside
+      the family.
+  - address: "core:messages#ambition.record.clause"
+    of: "f436643aab80c996"
+    plainenglish: >-
+      This page concerns an event intended to advance a missing Ledger clause.
+  - address: "core:messages#ambition.record.discrepancy"
+    of: "d6efc41a0f1e2d8e"
+    plainenglish: >-
+      This page concerns a named dispute in the family record that the Ledger already contains.
+  - address: "core:messages#ambition.record.programme"
+    of: "ea0b94a54927cc69"
+    plainenglish: >-
+      This page includes the Scion, his heir, or the man currently seen highest on the ladder.
+  - address: "core:messages#ambition.branch.clause"
+    of: "309a6c7ab5c13776"
+    plainenglish: >-
+      This option can recover a missing Ledger clause.
+  - address: "core:messages#ambition.branch.discrepancy_create"
+    of: "70d08a44623d0760"
+    plainenglish: >-
+      This option can create a disputed page in the Ledger.
+  - address: "core:messages#ambition.branch.discrepancy_answer"
+    of: "aaf21c91041e07a5"
+    plainenglish: >-
+      This option can answer a dispute already recorded in the Ledger.
+  - address: "core:messages#ambition.branch.branch_slight"
+    of: "5f8e720cf645e820"
+    plainenglish: >-
+      This option would add a grievance to a cadet hall.
+  - address: "core:messages#ambition.branch.branch_answer"
+    of: "f00072f5670cfba9"
+    plainenglish: >-
+      This option would respond to a cadet hall rather than leaving the matter with the main hall.
+  - address: "core:messages#ambition.branch.cadet_status"
+    of: "de752e1361c82d07"
+    plainenglish: >-
+      This option changes the status of someone who helps sustain a cadet hall.
+  - address: "core:messages#ambition.branch.cadet_marriage"
+    of: "423b0183762e0987"
+    plainenglish: >-
+      This option creates a marriage opportunity for a cadet hall.
+  - address: "core:messages#ambition.branch.priority_match"
+    of: "54735034cf2175b8"
+    plainenglish: >-
+      This option sends a living family member to the marriage market next.
+  - address: "core:messages#ambition.branch.marriage"
+    of: "a237dcfbd8bd8907"
+    plainenglish: >-
+      This option makes marriage possible again after a union that cannot continue the line.
+  - address: "core:messages#ambition.branch.blood_status"
+    of: "b3391436dcb95dd2"
+    plainenglish: >-
+      This option removes someone from the living bloodline this ambition aims to keep broad.
+  - address: "core:messages#ambition.branch.blood_rite"
+    of: "b3b6e6eb4a5bb32f"
+    plainenglish: >-
+      This option sacrifices a living blood relative in the rite.
+  - address: "core:messages#ambition.branch.ladder_rite"
+    of: "0d067e67861bae5b"
+    plainenglish: >-
+      This option performs an act required by the upper Ascension rungs.
+  - address: "core:messages#ambition.branch.spellbook_lose"
+    of: "6c7acc2636d86b82"
+    plainenglish: >-
+      This option removes usable learning from an Ascension candidate.
+  - address: "core:messages#ambition.branch.spellbook_gain"
+    of: "f4fb2cdfdb55b88b"
+    plainenglish: >-
+      This option makes another working available to an Ascension candidate.
+  - address: "core:messages#ambition.branch.tutor_cancel"
+    of: "16e9a7a3f2bfdf8f"
+    plainenglish: >-
+      This option ends an Ascension candidate's current preparation early.
+  - address: "core:messages#ambition.branch.tutor_begin"
+    of: "8fbfc42d86aa5e21"
+    plainenglish: >-
+      This option starts planned preparation for an Ascension candidate.
+  - address: "core:messages#ambition.branch.madness_up"
+    of: "a0e6485b5e4d364f"
+    plainenglish: >-
+      This option adds Madness to a man already being prepared for Ascension.
+  - address: "core:messages#ambition.branch.madness_down"
+    of: "10da832ae8ca8936"
+    plainenglish: >-
+      This option gives an Ascension candidate more capacity to bear the climb.
+  - address: "core:messages#ambition.branch.attribute_up"
+    of: "4281cc021e7f390e"
+    plainenglish: >-
+      This option strengthens a man already visible on the Ascension ladder.
+  - address: "core:messages#ambition.branch.attribute_down"
+    of: "5a7495e7eeba994b"
+    plainenglish: >-
+      This option weakens a man already visible on the Ascension ladder.
+  - address: "core:messages#ambition.branch.ladder_status"
+    of: "f4698dea91b6face"
+    plainenglish: >-
+      This option changes the status of a man being prepared for Ascension.
+  - address: "core:messages#ambition.view.ledger_progress"
+    of: "46a166ddded94a71"
+    plainenglish: >-
+      Recovered {CURRENT} of {TARGET} clauses
+  - address: "core:messages#ambition.view.ledger_whole"
+    of: "d2046020ce918f44"
+    plainenglish: >-
+      All clauses recoverable in this campaign have been found.
+  - address: "core:messages#ambition.view.ledger_missing_one"
+    of: "4a0c05e39180a0c7"
+    plainenglish: >-
+      Still missing {COUNT} clause.
+  - address: "core:messages#ambition.view.ledger_missing_many"
+    of: "bfbf592e10b91e7a"
+    plainenglish: >-
+      Still missing {COUNT} clauses.
+  - address: "core:messages#ambition.view.ledger_next"
+    of: "7c4aa52129b83b5d"
+    plainenglish: >-
+      Choose actions that uncover, protect or truthfully record evidence about the Ledger.
+  - address: "core:messages#ambition.view.branches_progress"
+    of: "bf8b1ddabadec31e"
+    plainenglish: >-
+      Viable cadet halls: {CURRENT} of {TARGET}
+  - address: "core:messages#ambition.view.branches_secure"
+    of: "a07593a6bb19c682"
+    plainenglish: >-
+      The bloodline can continue in another hall.
+  - address: "core:messages#ambition.view.branches_thin"
+    of: "c5420808229d3a24"
+    plainenglish: >-
+      Too much of the family depends on the main hall alone.
+  - address: "core:messages#ambition.view.branches_next"
+    of: "a8ab2a2943dbc8c5"
+    plainenglish: >-
+      Protect cadet households. Keep useful marriages available to branches as well as the main hall.
+  - address: "core:messages#ambition.view.blood_progress"
+    of: "13e2581d341c3769"
+    plainenglish: >-
+      Living blood relatives: {CURRENT}; a resilient line needs {TARGET}
+  - address: "core:messages#ambition.view.blood_broad"
+    of: "6454172875880fdc"
+    plainenglish: >-
+      The bloodline is broad enough to withstand a bad generation.
+  - address: "core:messages#ambition.view.blood_narrow"
+    of: "7f68fc7bb36e0217"
+    plainenglish: >-
+      The living bloodline is still small enough for one loss to matter.
+  - address: "core:messages#ambition.view.blood_next"
+    of: "5be28b41b7927415"
+    plainenglish: >-
+      Use marriages and standing orders to retain useful blood in the family across more than one
+      household.
+  - address: "core:messages#ambition.view.ascent_progress"
+    of: "b8af21d3f8426e57"
+    plainenglish: >-
+      Current rung: {HELD}; campaign horizon: {HORIZON}
+  - address: "core:messages#ambition.view.ascent_progress_fallen"
+    of: "84860702d62e5796"
+    plainenglish: >-
+      Current rung: {HELD}; previous best: {BEST}; campaign horizon: {HORIZON}
+  - address: "core:messages#ambition.view.ascent_foremost"
+    of: "24872edd5c875029"
+    plainenglish: >-
+      {NAME} is the leading candidate.
+  - address: "core:messages#ambition.view.ascent_none"
+    of: "32385fb8cda0058c"
+    plainenglish: >-
+      No living candidate is pursuing Ascension.
+  - address: "core:messages#ambition.view.ascent_next"
+    of: "d8cd42c346f0928f"
+    plainenglish: >-
+      Keep {NAME} alive, educated and supplied. Address the obstacles shown on the ladder.
+  - address: "core:messages#ambition.view.ascent_next_none"
+    of: "e153b78909c19db5"
+    plainenglish: >-
+      Choose and prepare a Scion or heir instead of leaving the programme to choose for itself.
+  - address: "core:messages#ascension.ledger_wait_title"
+    of: "813b9749d641fda5"
+    plainenglish: >-
+      The Ledger Remained Unfinished
+  - address: "core:messages#ascension.ledger_wait"
+    of: "725d37fadad70f06"
+    plainenglish: >-
+      {PERSON} stopped ageing before the Ledger was complete. The book stayed open on the table, and the
+      house waited.
+  - address: "core:messages#ascension.rung.none"
+    of: "80c6398e3bcb6eea"
+    plainenglish: >-
+      not awakened
+  - address: "core:messages#ascension.rung.touched"
+    of: "8330fcf9bed34f5d"
+    plainenglish: >-
+      Touched (Ascension rung)
+  - address: "core:messages#ascension.rung.adept"
+    of: "2bd33a93d985ab57"
+    plainenglish: >-
+      Adept (Ascension rung)
+  - address: "core:messages#ascension.rung.hierophant"
+    of: "0a3021d71302315b"
+    plainenglish: >-
+      Hierophant (Ascension rung)
+  - address: "core:messages#ascension.rung.vessel"
+    of: "df90a76e5de86432"
+    plainenglish: >-
+      the Vessel (Ascension rung)
+  - address: "core:messages#ascension.rung.demigod"
+    of: "51d0e54a51dc2e36"
+    plainenglish: >-
+      Demigod (Ascension rung)
+  - address: "core:messages#ascension.rung.god"
+    of: "aaa6369d606508d1"
+    plainenglish: >-
+      God (Ascension rung)
+  - address: "core:messages#ascension.diagnosis.power_text"
+    of: "9768f5fcbbfcd040"
+    plainenglish: >-
+      He expresses the blood's power, but it is not strong enough for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.power_hint"
+    of: "70b8bac1b25bba65"
+    plainenglish: >-
+      Seek Matches that could strengthen the font. No child's inheritance is guaranteed.
+  - address: "core:messages#ascension.diagnosis.books_household_text"
+    of: "0c50a12a7c2d14c6"
+    plainenglish: >-
+      The living family has not studied enough books for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.books_own_text"
+    of: "dc20974166a71845"
+    plainenglish: >-
+      He has not studied enough books for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.books_household_hint"
+    of: "864160355e491bb9"
+    plainenglish: >-
+      Give living family readers more useful books to study.
+  - address: "core:messages#ascension.diagnosis.books_own_hint"
+    of: "78f303fea091ebba"
+    plainenglish: >-
+      Set him to study another spellbook.
+  - address: "core:messages#ascension.diagnosis.arts_household_text"
+    of: "97c09525f09dae09"
+    plainenglish: >-
+      The living family has not learned enough different arts for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.arts_own_text"
+    of: "19a658e1fa4c82b5"
+    plainenglish: >-
+      He has not studied enough different arts for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.arts_household_hint"
+    of: "6a260ed843279b94"
+    plainenglish: >-
+      Have living family readers learn the missing arts.
+  - address: "core:messages#ascension.diagnosis.arts_own_hint"
+    of: "02c3286cf70256c8"
+    plainenglish: >-
+      Choose a spellbook for an affinity he has not yet learned.
+  - address: "core:messages#ascension.diagnosis.respect_text"
+    of: "6f2f61f299a5ee06"
+    plainenglish: >-
+      The house's reputation is not high enough for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.respect_hint"
+    of: "fdd66cee1ce089c2"
+    plainenglish: >-
+      Raise the house's Respect before asking others to accept this step.
+  - address: "core:messages#ascension.diagnosis.cost_text"
+    of: "8937063a26f98fae"
+    plainenglish: >-
+      The blood has not changed him deeply enough for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.cost_hint"
+    of: "a4efe09d8590e7d9"
+    plainenglish: >-
+      Reaching the upper rungs requires costly Awakenings and rites. Study alone cannot do it.
+  - address: "core:messages#ascension.diagnosis.overborne_text"
+    of: "37a60a088fcdc4d4"
+    plainenglish: >-
+      His mind cannot safely bear the changes the blood has already made in him.
+  - address: "core:messages#ascension.diagnosis.overborne_hint"
+    of: "bbd38feed242d5ca"
+    plainenglish: >-
+      Do not push him higher until the bloodline can provide more Mind.
+  - address: "core:messages#ascension.diagnosis.awakening_text"
+    of: "011a1dbcc3962890"
+    plainenglish: >-
+      He carries the blood, but it has not awakened in him.
+  - address: "core:messages#ascension.diagnosis.awakening_hint"
+    of: "5f44016b05d3b2d7"
+    plainenglish: >-
+      Watch him for an Awakening. Study cannot replace it.
+  - address: "core:messages#ascension.diagnosis.vessel_mind_text"
+    of: "8d1ece12c2d5a7b6"
+    plainenglish: >-
+      His mind cannot yet hold what the Vessel would give him.
+  - address: "core:messages#ascension.diagnosis.vessel_mind_hint"
+    of: "81d3c748ef91aa4c"
+    plainenglish: >-
+      Strengthen Mind in the bloodline before taking this step with him.
+  - address: "core:messages#ascension.diagnosis.vessel_rite_text"
+    of: "62e8093a029e6a66"
+    plainenglish: >-
+      The price of becoming the Vessel remains unpaid.
+  - address: "core:messages#ascension.diagnosis.vessel_rite_hint"
+    of: "97a4f86559d69fd9"
+    plainenglish: >-
+      Call the Vessel rite when the house is ready to sacrifice a willing blood relative.
+  - address: "core:messages#ascension.diagnosis.regalia_text"
+    of: "af50c27cb05e9418"
+    plainenglish: >-
+      The Regalia have not all been brought together.
+  - address: "core:messages#ascension.diagnosis.regalia_hint"
+    of: "7b739fc5f3aeeeb1"
+    plainenglish: >-
+      Recover the missing Regalia before trying the next rite.
+  - address: "core:messages#ascension.diagnosis.great_rite_text"
+    of: "c70fa344a7441dd0"
+    plainenglish: >-
+      He must complete the Great Rite before reaching {TARGET}.
+  - address: "core:messages#ascension.diagnosis.great_rite_hint"
+    of: "13f0b7ae66d04662"
+    plainenglish: >-
+      Call the Great Rite, with sanction or in defiance, when its other costs can be met.
+  - address: "core:messages#ascension.diagnosis.circle_books_text"
+    of: "34179c112881f3e5"
+    plainenglish: >-
+      The living family has not studied enough library books for the final circle.
+  - address: "core:messages#ascension.diagnosis.circle_books_hint"
+    of: "81723a8033718144"
+    plainenglish: >-
+      Give living family readers more books to study.
+  - address: "core:messages#ascension.diagnosis.circle_pairs_text"
+    of: "c76e1755904e7de1"
+    plainenglish: >-
+      The living family cannot yet supply every opposed affinity pair for the final circle.
+  - address: "core:messages#ascension.diagnosis.circle_pairs_hint"
+    of: "55ae4b8b4185f727"
+    plainenglish: >-
+      Have living family readers learn the missing affinities.
+  - address: "core:messages#ascension.diagnosis.god_floor_text"
+    of: "4ce7af7b75e66b5f"
+    plainenglish: >-
+      The blood has not brought him near enough to ruin for {TARGET}.
+  - address: "core:messages#ascension.diagnosis.god_floor_hint"
+    of: "a4efe09d8590e7d9"
+    plainenglish: >-
+      Reaching the upper rungs requires costly Awakenings and rites. Study alone cannot do it.
+  - address: "core:messages#ascension.diagnosis.god_overflow_text"
+    of: "117dbe0d85d78469"
+    plainenglish: >-
+      His mind cannot safely bear the demands of the final working.
+  - address: "core:messages#ascension.diagnosis.god_overflow_hint"
+    of: "769df27a5b08ae16"
+    plainenglish: >-
+      Wait until Mind can bear what the blood has done before attempting the final step.
+  - address: "core:messages#ascension.diagnosis.clauses_text"
+    of: "6350130c2073ca58"
+    plainenglish: >-
+      Too much of the Ledger is still missing for the last working.
+  - address: "core:messages#ascension.diagnosis.clauses_hint"
+    of: "8135496ea845989a"
+    plainenglish: >-
+      Find more Ledger clauses before attempting the final step.
+  - address: "core:messages#ascension.diagnosis.elder_text"
+    of: "91ce66ade5bdacc1"
+    plainenglish: >-
+      The final circle still needs an elder to sacrifice.
+  - address: "core:messages#ascension.diagnosis.elder_hint"
+    of: "1fd4538fe58f9553"
+    plainenglish: >-
+      Prepare a separate elder who has completed both rites, then call the Unmaking for this ascendant.
+  - address: "core:messages#ascension.diagnosis.no_expresser_text"
+    of: "32ebfc55acc8db91"
+    plainenglish: >-
+      He cannot express the blood's power.
+  - address: "core:messages#ascension.diagnosis.no_expresser_hint"
+    of: "d71dec17748076f3"
+    plainenglish: >-
+      Find another living man of the bloodline.
+  - address: "core:messages#ascension.diagnosis.house_no_expresser_text"
+    of: "8b2631245784deb8"
+    plainenglish: >-
+      No living man in the house can express the blood's power.
+  - address: "core:messages#ascension.diagnosis.house_no_expresser_hint"
+    of: "b84903114107701d"
+    plainenglish: >-
+      Seek a Match that could restore the font to the line. No child's inheritance is guaranteed.
+  - address: "core:messages#ascension.rung_reached_title_vessel"
+    of: "d86d9ecec92ecdd2"
+    plainenglish: >-
+      The Vessel (Ascension rung)
+  - address: "core:messages#ascension.rung_reached"
+    of: "3e6d2f367a437e92"
+    plainenglish: >-
+      {PERSON} reached farther into the blood's power than anyone in the line before him. The book named
+      his rung {RUNG}.
+  - address: "core:messages#ascension.rung_reached_somebody"
+    of: "11efe30d6f41ca69"
+    plainenglish: >-
+      Someone from the house
+  - address: "core:messages#auction.refuse.search_not_minor"
+    of: "167e4acc3c703af0"
+    plainenglish: >-
+      the broker can only search for a common working
+  - address: "core:messages#auction.refuse.search_shelved"
+    of: "dde3ddadfb629341"
+    plainenglish: >-
+      the house already owns this book
+  - address: "core:messages#auction.refuse.search_due"
+    of: "1c6608e306ee6477"
+    plainenglish: >-
+      a copy is already scheduled for auction
+  - address: "core:messages#auction.refuse.search_fee"
+    of: "36ebc03539ab8ed1"
+    plainenglish: >-
+      the broker needs {FEE} crowns before setting out
+  - address: "core:messages#auction.book_search"
+    of: "298ad6ff89c8dc7b"
+    plainenglish: >-
+      The house paid a broker from Sarrow {FEE} crowns to find {BOOK}. He promised it would be sold in
+      {YEAR}, with a reserve price of {RESERVE}.
+  - address: "core:messages#auction.announced_title"
+    of: "c28340b2d25dfc8e"
+    plainenglish: >-
+      An Auction Is Announced
+  - address: "core:messages#auction.announced"
+    of: "72d0a745124b0a71"
+    plainenglish: >-
+      News arrived of an auction in {YEAR} that would be worth the family's attention.
+  - address: "core:messages#auction.refuse.bid_no_lot"
+    of: "783406b2c449092e"
+    plainenglish: >-
+      that lot does not exist
+  - address: "core:messages#auction.refuse.bid_closed"
+    of: "1ba70eee37bef81a"
+    plainenglish: >-
+      the sale has already taken place
+  - address: "core:messages#auction.refuse.bid_amount"
+    of: "cfc26b604c74ef84"
+    plainenglish: >-
+      the bid amount is invalid
+  - address: "core:messages#auction.refuse.bid_purse"
+    of: "4f683d5bdad29e17"
+    plainenglish: >-
+      the house cannot afford {AMOUNT} crowns
+  - address: "core:messages#auction.refuse.bid_favours"
+    of: "64b61bbaa05ae246"
+    plainenglish: >-
+      the house is owed fewer favours than this bid needs
+  - address: "core:messages#auction.refuse.pledge_head"
+    of: "a118d780b9ac605c"
+    plainenglish: >-
+      the current Head must sign the pledge
+  - address: "core:messages#auction.refuse.pledge_outstanding"
+    of: "c0c8d282ee32ffa6"
+    plainenglish: >-
+      the house has already pledged a granddaughter
+  - address: "core:messages#auction.refuse.bid_no_heirloom"
+    of: "2888044be8615f4f"
+    plainenglish: >-
+      the house does not own that heirloom
+  - address: "core:messages#auction.refuse.bid_heirloom_spent"
+    of: "babca5fb204e153f"
+    plainenglish: >-
+      that heirloom has already been spent
+  - address: "core:messages#auction.refuse.bid_heirloom_burden"
+    of: "3e748c2cfa103820"
+    plainenglish: >-
+      a Burden cannot be traded
+  - address: "core:messages#auction.refuse.bid_heirloom_pledged"
+    of: "caf73417dd92d253"
+    plainenglish: >-
+      that heirloom is already pledged for a different lot
+  - address: "core:messages#auction.refuse.withdraw_no_lot"
+    of: "783406b2c449092e"
+    plainenglish: >-
+      that lot does not exist
+  - address: "core:messages#auction.lot.page"
+    of: "b7e5a149b9a96e0d"
+    plainenglish: >-
+      a page naming the family
+  - address: "core:messages#auction.bought_book"
+    of: "ebe04257be026b4b"
+    plainenglish: >-
+      At auction, the house bought a copy of {BOOK}.
+  - address: "core:messages#auction.bought_heirloom"
+    of: "4740a8d4e4671e68"
+    plainenglish: >-
+      At auction, the house bought {HEIRLOOM}.
+  - address: "core:messages#auction.buried_title"
+    of: "bbd61a88109af0ac"
+    plainenglish: >-
+      A Page Bought and Hidden
+  - address: "core:messages#auction.buried"
+    of: "8171289b8c5c8f97"
+    plainenglish: >-
+      A page naming the family directly was offered for sale. The house bought it before anyone else
+      could. Nobody else read it, and nobody else ever will.
+  - address: "core:messages#auction.pledge_signed"
+    of: "6d608734c416cde0"
+    plainenglish: >-
+      In exchange for {LOT}, {HEAD} pledged a future granddaughter to {HOUSE}. The auctioneer accepted.
+  - address: "core:messages#auction.bid_void"
+    of: "36f45847b4a453eb"
+    plainenglish: >-
+      The house no longer had what it offered for {LOT}. The auctioneer cancelled its bid.
+  - address: "core:messages#auction.read_elsewhere_title"
+    of: "55f85a73b513eb5f"
+    plainenglish: >-
+      Another House Reads the Page
+  - address: "core:messages#auction.read_elsewhere"
+    of: "f22da0299e11a2ed"
+    plainenglish: >-
+      {SELLER} bid more than the house for a page naming the family directly, then took it home to read.
+      What it proved could not be undone.
+  - address: "core:messages#auction.outbid"
+    of: "a2a28269887e1dbd"
+    plainenglish: >-
+      {SELLER} offered more for the lot than the house and took it home.
+  - address: "core:messages#bearing.echo.wrote_it_larger.0"
+    of: "ae0cfbb0d64c255c"
+    plainenglish: >-
+      A copy held elsewhere still named {ABOUT}, but its account differed from the house's.
+  - address: "core:messages#bearing.echo.wrote_it_larger.1"
+    of: "f090382926738a15"
+    plainenglish: >-
+      A clerk from another house asked about {ABOUT} and recorded a different answer from the house's.
+  - address: "core:messages#bearing.echo.wrote_it_larger.2"
+    of: "ca39af0bf7788517"
+    plainenglish: >-
+      At another table, someone read {ABOUT_CAP} aloud from a different copy.
+  - address: "core:messages#bearing.echo.refused_a_hand.0"
+    of: "4d492b3f4736165b"
+    plainenglish: >-
+      A matchmaker remembered {ABOUT} and told the next house that asked.
+  - address: "core:messages#bearing.echo.refused_a_hand.1"
+    of: "c8222b55a2a424e1"
+    plainenglish: >-
+      People in the market towns still told the story of {ABOUT_CAP}, though they had not been there.
+  - address: "core:messages#bearing.echo.refused_a_hand.2"
+    of: "2b2faf29815de64d"
+    plainenglish: >-
+      An old broker's book still contained an entry against {ABOUT}.
+  - address: "core:messages#bearing.echo.took_the_cousin.0"
+    of: "14dbcda701de5263"
+    plainenglish: >-
+      People still talked about {ABOUT}. The house had been offered an outside match and had chosen its
+      own blood.
+  - address: "core:messages#bearing.echo.took_the_cousin.1"
+    of: "c7aa5df033c2ec2c"
+    plainenglish: >-
+      At a wedding in another hall, someone's aunt mentioned {ABOUT}. Nobody changed the subject.
+  - address: "core:messages#bearing.echo.took_the_cousin.2"
+    of: "1a25ba6c92d3e398"
+    plainenglish: >-
+      A generation later, a priest used {ABOUT_CAP} as his example when a family asked about marrying
+      cousins.
+  - address: "core:messages#bearing.echo.bit_the_common.0"
+    of: "856761ed3b36e819"
+    plainenglish: >-
+      The villagers still pointed out old boundary stones at {ABOUT}, though the house's map no longer
+      followed them.
+  - address: "core:messages#bearing.echo.bit_the_common.1"
+    of: "d4a4a6db24bd881f"
+    plainenglish: >-
+      At {ABOUT}, children still followed the old boundary on feast days, as their grandparents had done.
+  - address: "core:messages#bearing.echo.bit_the_common.2"
+    of: "d8bff58d42575d51"
+    plainenglish: >-
+      A tenant's widow at {ABOUT} still used the field's old name from before the house took it.
+  - address: "core:messages#bearing.echo.kept_her_back.0"
+    of: "e8befdefd9fb9bfb"
+    plainenglish: >-
+      The market still remembered {ABOUT}, kept at home when a marriage could still have been arranged.
+  - address: "core:messages#bearing.echo.kept_her_back.1"
+    of: "6c00b49c9c9f2fb8"
+    plainenglish: >-
+      A generation later, a broker asked about {ABOUT} as though the marriage offer might still be open.
+  - address: "core:messages#bearing.echo.kept_her_back.2"
+    of: "f7c0baaf2d0298d3"
+    plainenglish: >-
+      A letter from another house mentioned {ABOUT_CAP} as the daughter this house had kept at home.
+  - address: "core:messages#bearing.about_year"
+    of: "fb35ac3762abb0db"
+    plainenglish: >-
+      the house's actions in {YEAR}
+  - address: "core:messages#cast.label.head"
+    of: "f340f12d03a825e1"
+    plainenglish: >-
+      the Head
+  - address: "core:messages#cast.label.heir"
+    of: "098163a41ab2f6d0"
+    plainenglish: >-
+      next heir
+  - address: "core:messages#cast.label.at_risk"
+    of: "9849e05baeaec6af"
+    plainenglish: >-
+      in danger
+  - address: "core:messages#cast.label.carrier"
+    of: "772f63fc5e3490a8"
+    plainenglish: >-
+      blood carrier
+  - address: "core:messages#cast.label.aggrieved"
+    of: "8e2330bfa17b82b3"
+    plainenglish: >-
+      grievance
+  - address: "core:messages#cast.label.married_in"
+    of: "fe3450eeedbbdda2"
+    plainenglish: >-
+      joined by marriage
+  - address: "core:messages#cast.label.foremost"
+    of: "7d29f88f83280b13"
+    plainenglish: >-
+      highest on the ladder
+  - address: "core:messages#cast.label.sole_expresser"
+    of: "e3df29326f08e1a6"
+    plainenglish: >-
+      sole expresser
+  - address: "core:messages#cast.label.unwed"
+    of: "3fd0c6b646e9ed1a"
+    plainenglish: >-
+      unmarried
+  - address: "core:messages#cast.label.long_post"
+    of: "9fb73c4c681a3000"
+    plainenglish: >-
+      holding a post
+  - address: "core:messages#cast.label.eldest"
+    of: "474c0cf32fad2f6f"
+    plainenglish: >-
+      oldest member
+  - address: "core:messages#cast.label.bonded"
+    of: "092c73ad04e0d0f9"
+    plainenglish: >-
+      bound by debt
+  - address: "core:messages#cast.label.scholar"
+    of: "580c6e981cf7135c"
+    plainenglish: >-
+      library reader
+  - address: "core:messages#cast.label.widow"
+    of: "550cb3d826b57be4"
+    plainenglish: >-
+      spouse has died
+  - address: "core:messages#cast.label.papers"
+    of: "df4d645f7b53d8eb"
+    plainenglish: >-
+      lineage papers
+  - address: "core:messages#cast.head.holds"
+    of: "480964d402bc5f50"
+    plainenglish: >-
+      is Head, responsible for the house's {N} living members.
+  - address: "core:messages#cast.head.long_reign"
+    of: "6a3847b896bf4cc4"
+    plainenglish: >-
+      has been Head for {REIGN} years. Nearly everyone who saw him take office has died.
+  - address: "core:messages#cast.head.new_reign"
+    of: "c90774fa5a31852e"
+    plainenglish: >-
+      became Head in {SINCE}. Nobody has yet obeyed a difficult order from him.
+  - address: "core:messages#cast.head.halls"
+    of: "ab56e579da8a239d"
+    plainenglish: >-
+      has been Head since {SINCE}, responsible for {N} living members across {HALLS} halls.
+  - address: "core:messages#cast.head.since"
+    of: "d9f6590711ac5ac3"
+    plainenglish: >-
+      has been Head since {SINCE}, responsible for the house's {N} living members.
+  - address: "core:messages#cast.heir.ward_bought.she"
+    of: "d22885566bbed212"
+    plainenglish: >-
+      is {AGE}. The Warden holds the estate until she is sixteen. It has been bought back, but the seat
+      still waits.
+  - address: "core:messages#cast.heir.ward_bought.he"
+    of: "51c4ad990f5bd64d"
+    plainenglish: >-
+      is {AGE}. The Warden holds the estate until he is sixteen. It has been bought back, but the seat
+      still waits.
+  - address: "core:messages#cast.heir.ward.she"
+    of: "45a964b89b049c5c"
+    plainenglish: >-
+      is {AGE}. The Warden holds the estate until she is sixteen.
+  - address: "core:messages#cast.heir.ward.he"
+    of: "71443e1b75eaf0b7"
+    plainenglish: >-
+      is {AGE}. The Warden holds the estate until he is sixteen.
+  - address: "core:messages#cast.heir.regency_soon"
+    of: "5b470f2087b5c804"
+    plainenglish: >-
+      is the house's remaining heir. The current Head is {HEAD_AGE}. Her succession will begin a Regency.
+  - address: "core:messages#cast.heir.other_hall"
+    of: "8daa65a97d8d9b55"
+    plainenglish: >-
+      waits to inherit the seat while living in {HALL}, away from the hall that holds the seal.
+  - address: "core:messages#cast.heir.older"
+    of: "a74baff1a4ca73ed"
+    plainenglish: >-
+      is {AGE}, waiting to inherit from a man ten years younger than himself.
+  - address: "core:messages#cast.heir.mundane"
+    of: "70e154a1fd45fa95"
+    plainenglish: >-
+      will become Head when the seat is vacant, but cannot express the blood's power.
+  - address: "core:messages#cast.heir.not_his"
+    of: "9d96e2e39dd97ba7"
+    plainenglish: >-
+      will become Head when the seat is vacant, though he is not the current Head's child.
+  - address: "core:messages#cast.heir.regency"
+    of: "79216f3c6dd95d68"
+    plainenglish: >-
+      is the house's remaining heir, so the next succession will begin a Regency.
+  - address: "core:messages#cast.heir.next"
+    of: "728a7f80cc1cd114"
+    plainenglish: >-
+      will become Head when the seat is vacant.
+  - address: "core:messages#cast.at_risk.straining"
+    of: "65ae082877b4c1c4"
+    plainenglish: >-
+      has {MADNESS} Madness against {MIND} Mind, with little capacity left.
+  - address: "core:messages#cast.at_risk.carrying"
+    of: "b020a66c038905b8"
+    plainenglish: >-
+      has {MADNESS} Madness against {MIND} Mind.
+  - address: "core:messages#cast.at_risk.unwoken"
+    of: "14f13d49c42137b5"
+    plainenglish: >-
+      carries the blood but has not awakened, at age {AGE}.
+  - address: "core:messages#cast.carrier.only_unspent"
+    of: "a36c39555e35e121"
+    plainenglish: >-
+      carries the house's only remaining font and has not yet been married.
+  - address: "core:messages#cast.carrier.only_married"
+    of: "417fb37e621ef102"
+    plainenglish: >-
+      carries the house's only remaining font and is already married.
+  - address: "core:messages#cast.carrier.most_unspent_at"
+    of: "b0445a958b632b21"
+    plainenglish: >-
+      carries more of the blood than any other living woman in the house. She is {AGE} and unmarried.
+  - address: "core:messages#cast.carrier.half_again"
+    of: "64b8f7a992fe1735"
+    plainenglish: >-
+      carries one and a half times as much as the next woman in this house.
+  - address: "core:messages#cast.carrier.most_unspent"
+    of: "9a875b9146aa3f55"
+    plainenglish: >-
+      carries more of the blood than any other living woman in the house and has not yet been married.
+  - address: "core:messages#cast.carrier.most_married"
+    of: "82267370e8537cfc"
+    plainenglish: >-
+      carries more of the blood than any other living woman in the house and is already married.
+  - address: "core:messages#cast.aggrieved.held"
+    of: "7ea831ae008154ba"
+    plainenglish: >-
+      represents {HALL}. It has not held the seal since {SINCE} and is owed {OWED} for that.
+  - address: "core:messages#cast.aggrieved.impatient"
+    of: "c5c77359040b169d"
+    plainenglish: >-
+      represents {HALL}. It has never held the seal and no longer asks politely for it.
+  - address: "core:messages#cast.aggrieved.owed"
+    of: "0bb2d49dca604219"
+    plainenglish: >-
+      represents {HALL}. It has never held the seal and is owed {OWED} for that.
+  - address: "core:messages#cast.married_in.grudge"
+    of: "03969a5fa6ff64eb"
+    plainenglish: >-
+      joined by marriage from {HOUSE}. Someone there still holds a grudge over it.
+  - address: "core:messages#cast.married_in.barren"
+    of: "9500aeecffea8698"
+    plainenglish: >-
+      joined by marriage from {HOUSE} {YEARS} years ago. She is {AGE} and has had no children for the
+      house.
+  - address: "core:messages#cast.married_in.share"
+    of: "57e55ed167633e85"
+    plainenglish: >-
+      joined by marriage from {HOUSE}. Her children account for {KIDS} of the house's {LIVING} living
+      members.
+  - address: "core:messages#cast.married_in.font"
+    of: "143a1a2334e80c4f"
+    plainenglish: >-
+      joined by marriage from {HOUSE}, bringing a font from outside this house's breeding.
+  - address: "core:messages#cast.married_in.kids"
+    of: "2cfacfe95f2e6c0d"
+    plainenglish: >-
+      joined by marriage from {HOUSE}. {KIDS} of the house's living members are her children.
+  - address: "core:messages#cast.married_in.none_yet"
+    of: "63bfdd9ac5cbc19e"
+    plainenglish: >-
+      joined by marriage from {HOUSE} and has not yet had children for the house.
+  - address: "core:messages#cast.foremost.blocked"
+    of: "e99243d469191870"
+    plainenglish: >-
+      is highest on the ladder in the house, and {BLOCKED}
+  - address: "core:messages#cast.foremost.clear"
+    of: "41e2eb5f885741ab"
+    plainenglish: >-
+      is highest on the ladder in the house, with no obstacles remaining.
+  - address: "core:messages#cast.sole_expresser.old"
+    of: "4417c4e054b8051c"
+    plainenglish: >-
+      is the house's only living man who can express the blood's power. He is {AGE}.
+  - address: "core:messages#cast.sole_expresser.only"
+    of: "b05a151ffdffae1b"
+    plainenglish: >-
+      is the house's only living man who can express the blood's power.
+  - address: "core:messages#cast.unwed.never_asked"
+    of: "de5fd18ccf1ac088"
+    plainenglish: >-
+      is {AGE}, carries a font, and has never received a marriage request.
+  - address: "core:messages#cast.unwed.never_married"
+    of: "b49dff9263c16bd6"
+    plainenglish: >-
+      is {AGE} and has never married. The record gives no reason.
+  - address: "core:messages#cast.unwed.unspent"
+    of: "ee9c2d7993bfc7d5"
+    plainenglish: >-
+      is {AGE}, carries a font, and has not been married by the house.
+  - address: "core:messages#cast.unwed.years"
+    of: "077031b2156feb96"
+    plainenglish: >-
+      is {AGE} and unmarried. The house has had {YEARS} years to arrange a marriage.
+  - address: "core:messages#cast.long_post"
+    of: "76fc49b88064b834"
+    plainenglish: >-
+      has held his {POST} post since age {AT}, for {YEARS} years.
+  - address: "core:messages#cast.eldest"
+    of: "5af39ab007296cc4"
+    plainenglish: >-
+      is {AGE}, older than the house's next oldest member by {GAP} years.
+  - address: "core:messages#cast.bonded.owed"
+    of: "da13d0c00b9e8a74"
+    plainenglish: >-
+      has served as the house's {ROLE} and kept {SECRETS} of its secrets. The house owes better pay than
+      it has given.
+  - address: "core:messages#cast.bonded.unpaid"
+    of: "05bc9d795fa0d075"
+    plainenglish: >-
+      serves as {ROLE} under {TERM} terms and no longer expects the house to pay.
+  - address: "core:messages#cast.bonded.debt"
+    of: "34aaf75e58f81bba"
+    plainenglish: >-
+      owes this house {DEBT} marks and cannot leave while bonded by that debt.
+  - address: "core:messages#cast.bonded.knows"
+    of: "86a1e23bf9a4675f"
+    plainenglish: >-
+      serves as {ROLE} and knows {SECRETS} things absent from the book.
+  - address: "core:messages#cast.bonded.wage"
+    of: "753e0d1a2396240e"
+    plainenglish: >-
+      serves as {ROLE} under {TERM} terms, earning {WAGE} marks each year.
+  - address: "core:messages#cast.scholar.threshold"
+    of: "bacaadc746f9c9eb"
+    plainenglish: >-
+      has read {N} books in this house. She may study only four of the eight affinities.
+  - address: "core:messages#cast.scholar.most"
+    of: "d1bb59524edf06de"
+    plainenglish: >-
+      has read {N} books in this house, more than anyone else here.
+  - address: "core:messages#cast.widow.child"
+    of: "84c63569bacc0b7d"
+    plainenglish: >-
+      lost a spouse in {YEAR} and still has {KIDS} child under sixteen to raise.
+  - address: "core:messages#cast.widow.children"
+    of: "9084fbd8e4f02274"
+    plainenglish: >-
+      lost a spouse in {YEAR} and still has {KIDS} children under sixteen to raise.
+  - address: "core:messages#cast.papers.exposed"
+    of: "ee17fede013b7082"
+    plainenglish: >-
+      has papers that someone compared with the parish roll in {YEAR}. The records did not match.
+  - address: "core:messages#cast.papers.forged"
+    of: "3f677f807aa3e28c"
+    plainenglish: >-
+      has {GENERATIONS} generations of maternal records that {NOTARY} was paid to write.
+  - address: "core:messages#cast.hall.seat"
+    of: "db40cb65eba80019"
+    plainenglish: >-
+      main hall
+  - address: "core:messages#chapter.seal"
+    of: "27781a13a2b53a8f"
+    plainenglish: >-
+      {PERSON} became Head.
+  - address: "core:messages#chapter.death"
+    of: "534b6d3a8488079e"
+    plainenglish: >-
+      {PERSON} has died.
+  - address: "core:messages#chapter.birth"
+    of: "aac0975a1901dc8e"
+    plainenglish: >-
+      The house had {COUNT} new child.
+  - address: "core:messages#chapter.births"
+    of: "4dc968dfe5695713"
+    plainenglish: >-
+      The house had {COUNT} new children.
+  - address: "core:messages#chapter.standing"
+    of: "2d01b4db466bcc6f"
+    plainenglish: >-
+      At the turn of the years, the house's standing was {RESPECT}.
+  - address: "core:messages#chapter.living"
+    of: "e31ec38d9dfb2959"
+    plainenglish: >-
+      At the end, {COUNT} blood relatives were alive.
+  - address: "core:messages#chapter.treasury"
+    of: "d92449cedc064712"
+    plainenglish: >-
+      The treasury contained {CROWNS} crowns.
+  - address: "core:messages#respect.slip_title"
+    of: "db1a763d29a826c9"
+    plainenglish: >-
+      People Spoke of the House Differently
+  - address: "core:messages#respect.slip.madness"
+    of: "9cc6c6ef47488033"
+    plainenglish: >-
+      The house had been {TIER}, but lost that standing because people began talking about the son in the
+      east rooms. Nobody announced the change. By the next spring it had happened.
+  - address: "core:messages#respect.slip.quiet"
+    of: "e52953c95361aa1d"
+    plainenglish: >-
+      The house had been {TIER}, but lost that standing after thirty years with nothing worth telling
+      others about. Nobody announced the change. By the next spring it had happened.
+  - address: "core:messages#respect.slip.broke"
+    of: "816bc3a29da7555e"
+    plainenglish: >-
+      The house had been {TIER}, but lost that standing because everyone could see it had no money. Nobody
+      announced the change. By the next spring it had happened.
+  - address: "core:messages#ending.term_title"
+    of: "c35a2cae3f95a80a"
+    plainenglish: >-
+      The End of the Term
+  - address: "core:messages#ending.term"
+    of: "5ec15bdca4d8e670"
+    plainenglish: >-
+      Every page of the book was read, from beginning to end. The blank pages were read too.
+  - address: "core:messages#ending.withheld_title"
+    of: "809fc3bd56102d11"
+    plainenglish: >-
+      What the House Could Not Prove
+  - address: "core:messages#ending.withheld"
+    of: "250f6b7c00729ab0"
+    plainenglish: >-
+      The house's book claimed {ATTESTED}, but the reading supported only {SUBSTANTIATED}. The reader
+      questioned {LIES} pages. The family had no evidence beyond those pages themselves.
+  - address: "core:messages#ending.ledger.complete"
+    of: "d5decb8c4ff466a0"
+    plainenglish: >-
+      All {TOTAL} clauses were recovered. The Ledger was complete.
+  - address: "core:messages#ending.ledger.unresolved"
+    of: "831bd7c61652dc2a"
+    plainenglish: >-
+      Only {CLAUSES} of {TOTAL} clauses were recovered. The Ledger remained unresolved.
+  - address: "core:messages#ending.summary.apotheosis"
+    of: "c130cb86c5cb54ca"
+    plainenglish: >-
+      A god was made. The book has a page showing {RUNG}.
+  - address: "core:messages#ending.summary.unmade"
+    of: "d4c66ed509f02eb9"
+    plainenglish: >-
+      The rite failed at its final step. The blood lost what it had held.
+  - address: "core:messages#ending.summary.broken_line"
+    of: "999099593ef7029d"
+    plainenglish: >-
+      The table was empty. The creditor read the Chronicle alone.
+  - address: "core:messages#ending.summary.settled"
+    of: "c5009d6196ff1b35"
+    plainenglish: >-
+      The house recovered all {TOTAL} clauses in its shorter contract. The creditor read the account,
+      found the debt answered, and closed it.
+  - address: "core:messages#ending.summary.forgotten_withheld"
+    of: "4a5d9fe967c5dd35"
+    plainenglish: >-
+      The book claimed {RUNG} but could not prove it. The creditor came and read it, believed none of the
+      important claims, and collected nothing.
+  - address: "core:messages#ending.summary.forgotten"
+    of: "673ed1fed1194962"
+    plainenglish: >-
+      The house survived until the term ended but never rose beyond {RUNG}. The creditor came, read the
+      account, and collected nothing.
+  - address: "core:messages#ending.summary.devoured"
+    of: "cf1e5a8711ef2993"
+    plainenglish: >-
+      The book claimed {RUNG}. That made the house worth visiting, but left it too weak to argue.
+  - address: "core:messages#choice.blocked.uncast"
+    of: "98b1f57f79f172d3"
+    plainenglish: >-
+      no person is cast as {SLOT}
+  - address: "core:messages#choice.blocked.attribute"
+    of: "05a5eae37906f31f"
+    plainenglish: >-
+      {PERSON} has {VALUE} {ATTRIBUTE}
+  - address: "core:messages#deciders.narration"
+    of: "9fbae37f96bb0873"
+    plainenglish: >-
+      narration — there is no decision
+  - address: "core:messages#deciders.player"
+    of: "09cd4181a0b6d415"
+    plainenglish: >-
+      the player decides for the house
+  - address: "core:messages#deciders.chance"
+    of: "a153c26f42f34143"
+    plainenglish: >-
+      decided by chance
+  - address: "core:messages#deciders.state.condition"
+    of: "c93e6e23dfe04927"
+    plainenglish: >-
+      decided by the house's condition: {LABEL}
+  - address: "core:messages#deciders.state.none"
+    of: "afea5abdf2fc4881"
+    plainenglish: >-
+      none of the ladder's conditions held
+  - address: "core:messages#deciders.party.cast"
+    of: "f2a35ed3d8878c87"
+    plainenglish: >-
+      the house chooses who goes; their combined abilities decide what follows
+  - address: "core:messages#deciders.party.missing"
+    of: "ecbed164931c8fb8"
+    plainenglish: >-
+      no check called '{CHECK}' is declared
+  - address: "core:messages#deciders.party.unavailable"
+    of: "8844d2801d0bb604"
+    plainenglish: >-
+      the check selected '{CHOICE}', but that option is unavailable
+  - address: "core:messages#deciders.party.unknown"
+    of: "b29a0e5209443696"
+    plainenglish: >-
+      the check selected '{CHOICE}', but no such option exists
+  - address: "core:messages#deciders.party.roll"
+    of: "8072932a53fa279e"
+    plainenglish: >-
+      roll {ROLL}, difficulty {DIFFICULTY} — {LABEL}
+  - address: "core:messages#decision.choice.missing"
+    of: "b221fa05c50513f1"
+    plainenglish: >-
+      that decision does not exist
+  - address: "core:messages#decision.choice.narration"
+    of: "359ce793422e006f"
+    plainenglish: >-
+      narration has no choice to make
+  - address: "core:messages#decision.cast.at_most"
+    of: "e5164341f415d355"
+    plainenglish: >-
+      {SLOT} allows no more than {MAX}
+  - address: "core:messages#decision.cast.at_least"
+    of: "41a5ae9dd6457db1"
+    plainenglish: >-
+      {SLOT} needs no fewer than {MIN}
+  - address: "core:messages#decision.cast.missing"
+    of: "0ef1a7296905710d"
+    plainenglish: >-
+      no person has been cast as {SLOT}
+  - address: "core:messages#decision.choice.player_required"
+    of: "b128cb22f1967a8e"
+    plainenglish: >-
+      the house must make this decision
+  - address: "core:messages#decision.choice.unknown"
+    of: "7fb7a96e7ab61c8a"
+    plainenglish: >-
+      there is no option called '{CHOICE}'
+  - address: "core:messages#decision.match.missing"
+    of: "5b2d87083b67fcfc"
+    plainenglish: >-
+      that match does not exist
+  - address: "core:messages#decision.match.unknown_card"
+    of: "f6662279388110cd"
+    plainenglish: >-
+      that card does not exist
+  - address: "core:messages#match.bearing.took_the_cousin"
+    of: "e3b860e17cf38895"
+    plainenglish: >-
+      the marriage of {SUBJECT} to {SPOUSE}
+  - address: "core:messages#match.line.married_dowry"
+    of: "43307d48393848e4"
+    plainenglish: >-
+      {SUBJECT} married {SPOUSE}. The house paid {DOWRY} crowns.
+  - address: "core:messages#match.line.married"
+    of: "e75c9b78cf128ef4"
+    plainenglish: >-
+      {SUBJECT} and {SPOUSE} were married.
+  - address: "core:messages#match.bearing.refused_a_hand"
+    of: "3b3d4735be6d43e1"
+    plainenglish: >-
+      the marriage offer made to {SUBJECT}
+  - address: "core:messages#record.bearing.page_title"
+    of: "1b1c33727aee8f66"
+    plainenglish: >-
+      the page titled "{TITLE}"
+  - address: "core:messages#record.bearing.page_year"
+    of: "a2310207f8f37ddb"
+    plainenglish: >-
+      the page for {YEAR}
+  - address: "core:messages#rites.vessel.self"
+    of: "a4b1bf82a54e9d56"
+    plainenglish: >-
+      a man cannot serve as his own Vessel
+  - address: "core:messages#rites.vessel.repeat"
+    of: "67c9daeab8cef5d6"
+    plainenglish: >-
+      he has already completed the Vessel rite
+  - address: "core:messages#rites.vessel.notLiving"
+    of: "4167c658a8cec3c4"
+    plainenglish: >-
+      the Vessel is no longer alive
+  - address: "core:messages#rites.vessel.notBlood"
+    of: "936088a3a24e527f"
+    plainenglish: >-
+      the Vessel is not a blood relative
+  - address: "core:messages#rites.vessel.cause"
+    of: "7fe892457e1b4001"
+    plainenglish: >-
+      sacrificed in the rite and never mentioned again
+  - address: "core:messages#rites.ascendant.notLiving"
+    of: "15b93231d0dd1c5d"
+    plainenglish: >-
+      the ascendant is no longer alive
+  - address: "core:messages#rites.great.repeat"
+    of: "4086c2bfe3e5b2f3"
+    plainenglish: >-
+      his capacity has already been widened as far as it can be
+  - address: "core:messages#rites.great.noPower"
+    of: "ef1ddceb0719775f"
+    plainenglish: >-
+      he has no power for the rite to widen
+  - address: "core:messages#rites.unmaking.self"
+    of: "d9ee5934c555fd10"
+    plainenglish: >-
+      a man cannot perform the Unmaking on himself
+  - address: "core:messages#rites.unmaking.ascendantNotLiving"
+    of: "15b93231d0dd1c5d"
+    plainenglish: >-
+      the ascendant is no longer alive
+  - address: "core:messages#rites.unmaking.elderNotLiving"
+    of: "069566b2dac79466"
+    plainenglish: >-
+      the elder is no longer alive
+  - address: "core:messages#rites.unmaking.elderNotBlood"
+    of: "6cb8289dae2c4681"
+    plainenglish: >-
+      the elder is not a blood relative
+  - address: "core:messages#rites.unmaking.noGift"
+    of: "02e8b32078a1c744"
+    plainenglish: >-
+      the elder has never acquired anything this rite can take
+  - address: "core:messages#rites.unmaking.cause"
+    of: "700a26ff376e37fb"
+    plainenglish: >-
+      taken apart in the small hall before witnesses
+  - address: "core:messages#rites.vessel.missing"
+    of: "4966458d35c9e201"
+    plainenglish: >-
+      the Vessel rite needs a named relative who is alive
+  - address: "core:messages#rites.unmaking.missing"
+    of: "2d62b53501691869"
+    plainenglish: >-
+      the Unmaking needs a named elder who is alive
+  - address: "core:messages#generation.question.unstable_heir"
+    of: "e792d9ea9ad9b25e"
+    plainenglish: >-
+      {HEIR} is next in line to become Head, and the strain already shows. Do we risk the bloodline on
+      him?
+  - address: "core:messages#generation.question.thin_line"
+    of: "a9d6526151bb5455"
+    plainenglish: >-
+      Only {COUNT} blood relatives are alive. Can {HEAD} leave a stronger line than the one inherited?
+  - address: "core:messages#generation.question.record"
+    of: "c6bc320f459688eb"
+    plainenglish: >-
+      The Chronicle has {COUNT} unresolved contradictions. Will {HEAD} protect the legend or leave a
+      record the house can prove?
+  - address: "core:messages#generation.question.ledger_one"
+    of: "62c11b22d31e83be"
+    plainenglish: >-
+      One clause remains before the Ledger is complete. Will {HEAD} fund its recovery or the household
+      that must survive it?
+  - address: "core:messages#generation.question.ledger"
+    of: "c3c4a8f8c2f10f2c"
+    plainenglish: >-
+      The Ledger still needs {COUNT} clauses. Will {HEAD} fund their recovery or the household that must
+      survive it?
+  - address: "core:messages#generation.question.branch"
+    of: "8109a2752e3cdb81"
+    plainenglish: >-
+      {BRANCH} is near breaking away from the main hall. Can {HEAD} keep it in the family?
+  - address: "core:messages#generation.question.match"
+    of: "7156f173eff386ff"
+    plainenglish: >-
+      {DAUGHTER} is old enough for the Match. Will her blood stay close to the family, or will an outside
+      marriage meet the house's immediate needs?
+  - address: "core:messages#generation.question.ascension"
+    of: "c13cd6c0d4de5ebc"
+    plainenglish: >-
+      {HEAD} inherits a house at {RUNG}. Can this generation preserve its progress without sacrificing the
+      bloodline that supports it?
+  - address: "core:messages#generation.answer.heir_died"
+    of: "6bd333f34ea89e27"
+    plainenglish: >-
+      {HEIR} died before becoming Head.
+  - address: "core:messages#generation.answer.heir_died_unnamed"
+    of: "79c9fe78139f7ef4"
+    plainenglish: >-
+      The heir died before becoming Head.
+  - address: "core:messages#generation.answer.heir_sealed"
+    of: "cf4d0c60926530d4"
+    plainenglish: >-
+      {HEIR} became Head. His Madness is now {MADNESS}, compared with {BASELINE} when this question arose.
+  - address: "core:messages#generation.answer.heir_passed_over"
+    of: "5f55ba74d4f60c58"
+    plainenglish: >-
+      {HEIR} survived the generation but did not become Head. His Madness is now {MADNESS}.
+  - address: "core:messages#generation.answer.blood_grew"
+    of: "01f6db889009070c"
+    plainenglish: >-
+      The living bloodline grew from {BASELINE} members at the generation's start to {NOW} at its end.
+  - address: "core:messages#generation.answer.blood_thinned"
+    of: "ace14d0569a44ba1"
+    plainenglish: >-
+      The living bloodline shrank from {BASELINE} members at the generation's start to {NOW} at its end.
+  - address: "core:messages#generation.answer.blood_held"
+    of: "c535614e6c3c8712"
+    plainenglish: >-
+      The living bloodline stayed at {BASELINE} members at the generation's start and {NOW} at its end.
+  - address: "core:messages#generation.answer.record"
+    of: "78cb8f826348baf6"
+    plainenglish: >-
+      The generation ended with {NOW} unresolved contradictions in the book. By then, {PROVED} had been
+      proven.
+  - address: "core:messages#generation.answer.ledger_one"
+    of: "99224f455e88ab41"
+    plainenglish: >-
+      During the generation, the house recovered {GAINED} Ledger clause. It now has {NOW}.
+  - address: "core:messages#generation.answer.ledger"
+    of: "98b7080266d8d0c6"
+    plainenglish: >-
+      During the generation, the house recovered {GAINED} Ledger clauses. It now has {NOW}.
+  - address: "core:messages#generation.answer.branch_gone"
+    of: "80e2c37a8be90986"
+    plainenglish: >-
+      {BRANCH} no longer stood as a cadet hall.
+  - address: "core:messages#generation.answer.branch_gone_unnamed"
+    of: "771b2c1791465fcb"
+    plainenglish: >-
+      The troubled branch no longer stood as a cadet hall.
+  - address: "core:messages#generation.answer.branch"
+    of: "1088071ddfc96cd9"
+    plainenglish: >-
+      {BRANCH}'s grievance is now {GRIEVANCE}, compared with {BASELINE} at the generation's start.
+  - address: "core:messages#generation.answer.daughter_died"
+    of: "f63168c783a5110b"
+    plainenglish: >-
+      {DAUGHTER} died before making that marriage.
+  - address: "core:messages#generation.answer.daughter_died_unnamed"
+    of: "2eaefce22c92a9de"
+    plainenglish: >-
+      The daughter died before making that marriage.
+  - address: "core:messages#generation.answer.unmarried"
+    of: "b72b1296aacf620a"
+    plainenglish: >-
+      At the generation's end, {DAUGHTER} was still unmarried.
+  - address: "core:messages#generation.answer.married_out"
+    of: "661ebb5b81cdf79f"
+    plainenglish: >-
+      {DAUGHTER} married outside the family, into {HOUSE}.
+  - address: "core:messages#generation.answer.married_in"
+    of: "de30ba8d42d1ded1"
+    plainenglish: >-
+      {DAUGHTER} married someone of the house's own bloodline.
+  - address: "core:messages#generation.answer.ascension"
+    of: "57866969ed5a204d"
+    plainenglish: >-
+      The generation ends with the house at {RUNG}. Its highest rung ever reached is {BEST}.
+  - address: "core:messages#land.refuse.buy_not_listed"
+    of: "260c230b407e1f9f"
+    plainenglish: >-
+      no parcel with that name is for sale
+  - address: "core:messages#land.refuse.buy_unknown"
+    of: "bbd3379ab176e3e6"
+    plainenglish: >-
+      that parcel does not exist
+  - address: "core:messages#land.refuse.buy_cost"
+    of: "6fc0545a78212fae"
+    plainenglish: >-
+      the house cannot afford {PRICE} crowns
+  - address: "core:messages#land.bought"
+    of: "502c47105d3c923c"
+    plainenglish: >-
+      The house bought {PARCEL} outright for {PRICE} crowns.
+  - address: "core:messages#land.loss.nobody"
+    of: "8f075cb7ea1ecfab"
+    plainenglish: >-
+      nobody remains to tell it
+  - address: "core:messages#land.refuse.sell_unknown"
+    of: "bbd3379ab176e3e6"
+    plainenglish: >-
+      that parcel does not exist
+  - address: "core:messages#land.refuse.sell_demesne"
+    of: "6add228f57ce3a03"
+    plainenglish: >-
+      the house's home ground cannot be sold
+  - address: "core:messages#land.refuse.sell_not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own this parcel
+  - address: "core:messages#land.refuse.sell_endowed"
+    of: "3474485cef4eff40"
+    plainenglish: >-
+      recall this parcel from its cadet hall before selling it
+  - address: "core:messages#land.sold"
+    of: "baa510a1bb2335b5"
+    plainenglish: >-
+      The house sold {PARCEL} for {PRICE} crowns.
+  - address: "core:messages#land.refuse.improve_unknown"
+    of: "bbd3379ab176e3e6"
+    plainenglish: >-
+      that parcel does not exist
+  - address: "core:messages#land.refuse.improve_town_house"
+    of: "4474d628d17519c4"
+    plainenglish: >-
+      a town house represents the house's presence, not productive land
+  - address: "core:messages#land.refuse.improve_not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own this parcel
+  - address: "core:messages#land.refuse.improve_underway"
+    of: "11a65c4c041a52a8"
+    plainenglish: >-
+      work to improve it has already started
+  - address: "core:messages#land.refuse.improve_cost"
+    of: "6fc0545a78212fae"
+    plainenglish: >-
+      the house cannot afford {PRICE} crowns
+  - address: "core:messages#land.drained"
+    of: "13946106a21da542"
+    plainenglish: >-
+      Drainage work at {PARCEL} is complete. The land now produces more.
+  - address: "core:messages#land.drained_unnamed"
+    of: "9a6ed56fc7bbfa73"
+    plainenglish: >-
+      Drainage work at the holding is complete. The land now produces more.
+  - address: "core:messages#land.blight"
+    of: "5b1edb9d5e831939"
+    plainenglish: >-
+      Blight struck {PARCEL} this year. The timber failed to provide the money it should have earned.
+  - address: "core:messages#land.sarrow_sank"
+    of: "1cbdbb8ecb1815d2"
+    plainenglish: >-
+      {PARCEL} sank in dark water off Sarrow. Its cargo and all the crowns invested in it were lost.
+  - address: "core:messages#land.refuse.endow_not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own this parcel
+  - address: "core:messages#land.refuse.endow_caput"
+    of: "ffa282de579b9a2a"
+    plainenglish: >-
+      {PARCEL} belongs to the main seat and cannot be given to a cadet hall
+  - address: "core:messages#land.refuse.endow_no_hall"
+    of: "b43fb5b01200e3b4"
+    plainenglish: >-
+      no such hall exists to receive it
+  - address: "core:messages#land.refuse.endow_recall_first"
+    of: "5d8956012851cce5"
+    plainenglish: >-
+      recall the parcel before endowing it to a different hall
+  - address: "core:messages#land.endowed"
+    of: "0abc35ccd0d63ce8"
+    plainenglish: >-
+      The house endowed {BRANCH} with {PARCEL}.
+  - address: "core:messages#land.refuse.recall_not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own this parcel
+  - address: "core:messages#land.recalled_from"
+    of: "67d4f23060e4d07c"
+    plainenglish: >-
+      The main hall took {PARCEL} back from {BRANCH}.
+  - address: "core:messages#land.recalled"
+    of: "c7f63b04d9ce1fa8"
+    plainenglish: >-
+      The main hall took {PARCEL} back.
+  - address: "core:messages#land.refuse.rename_not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own this parcel
+  - address: "core:messages#land.refuse.rename_empty"
+    of: "aa1e0f7acf187446"
+    plainenglish: >-
+      enter a name
+  - address: "core:messages#land.renamed_same"
+    of: "046c600ca39e8ee0"
+    plainenglish: >-
+      {PARCEL} was given the same name again.
+  - address: "core:messages#land.renamed"
+    of: "6af10b0dba56f2e1"
+    plainenglish: >-
+      The house renamed {WAS} as {PARCEL}.
+  - address: "core:messages#land.terrier_title"
+    of: "9d6fa61c01ff6a88"
+    plainenglish: >-
+      The House Has Added Land
+  - address: "core:messages#land.terrier"
+    of: "5b529d3c6efc5dd0"
+    plainenglish: >-
+      The land register was redrawn. It no longer fits on the page first used for it.
+  - address: "core:messages#land.view.made_place"
+    of: "9e8eab78aff42834"
+    plainenglish: >-
+      land cleared by the house itself
+  - address: "core:messages#land.view.made_provenance"
+    of: "d42e21836540e4cf"
+    plainenglish: >-
+      cleared by the house rather than bought; only the house's word supports the title
+  - address: "core:messages#muster.war_line.favour_lost"
+    of: "111f2b0172c766b5"
+    plainenglish: >-
+      The war continues in the house's favour. {MEN} of its men are still in the field, after {LOST} were
+      lost this year.
+  - address: "core:messages#muster.war_line.against_lost"
+    of: "5a19dd9cc2ac7258"
+    plainenglish: >-
+      The war continues against the house. {MEN} of its men are still in the field, after {LOST} were lost
+      this year.
+  - address: "core:messages#muster.war_line.holding_lost"
+    of: "461f90627275219e"
+    plainenglish: >-
+      The war continues with neither side gaining for now. {MEN} of the house's men are still in the
+      field, after {LOST} were lost this year.
+  - address: "core:messages#muster.war_line.favour"
+    of: "ea7d663255eea25e"
+    plainenglish: >-
+      The war continues in the house's favour, with {MEN} of its men still in the field.
+  - address: "core:messages#muster.war_line.against"
+    of: "83d499df3ee646e3"
+    plainenglish: >-
+      The war continues against the house, with {MEN} of its men still in the field.
+  - address: "core:messages#muster.war_line.holding"
+    of: "ac604c034387f0e7"
+    plainenglish: >-
+      The war continues with neither side gaining for now, and {MEN} of the house's men still in the
+      field.
+  - address: "core:messages#muster.refuse.buy_no_commitment"
+    of: "813a7e1f0c919f43"
+    plainenglish: >-
+      there is no active commitment
+  - address: "core:messages#muster.refuse.buy_no_position"
+    of: "c0fd6dbc23c313b8"
+    plainenglish: >-
+      that position does not exist
+  - address: "core:messages#muster.refuse.respect"
+    of: "f287403503d22129"
+    plainenglish: >-
+      the house has not yet reached enough {RESPECT} standing
+  - address: "core:messages#muster.refuse.officer_age"
+    of: "2aeeb5ed83068b59"
+    plainenglish: >-
+      an officer must be at least {AGE} years old
+  - address: "core:messages#muster.refuse.cost"
+    of: "6fc0545a78212fae"
+    plainenglish: >-
+      the house cannot afford {PRICE} crowns
+  - address: "core:messages#muster.refuse.reinforce_no_commitment"
+    of: "813a7e1f0c919f43"
+    plainenglish: >-
+      there is no active commitment
+  - address: "core:messages#muster.refuse.reinforce_no_men"
+    of: "bc3f5b4ff93b05bb"
+    plainenglish: >-
+      enter a valid number of men
+  - address: "core:messages#muster.refuse.reinforce_lost_commitment"
+    of: "813a7e1f0c919f43"
+    plainenglish: >-
+      there is no active commitment
+  - address: "core:messages#muster.refuse.withdraw_no_commitment"
+    of: "ec7a396bddef9f2f"
+    plainenglish: >-
+      there is no active commitment to withdraw
+  - address: "core:messages#bond.advanced"
+    of: "8feb7c2e18992e22"
+    plainenglish: >-
+      {PERSON} borrowed {MARKS} marks from the house and owed years of service in return.
+  - address: "core:messages#bond.freed_title"
+    of: "9eaaa58d464ddf49"
+    plainenglish: >-
+      The Service Debt
+  - address: "core:messages#bond.forgiven_with_resentment"
+    of: "e01fa63853cf9bc4"
+    plainenglish: >-
+      The house publicly cancelled the {MARKS} marks {PERSON} still owed. Some who heard the announcement
+      resented it.
+  - address: "core:messages#bond.forgiven"
+    of: "896a849219399ef6"
+    plainenglish: >-
+      The house publicly cancelled the {MARKS} marks {PERSON} still owed.
+  - address: "core:messages#bond.ended_empty"
+    of: "98b664b64a182c3a"
+    plainenglish: >-
+      The house ended {PERSON}'s bond. Too little remained to be worth recording.
+  - address: "core:messages#bond.discharged"
+    of: "215df1e71132599b"
+    plainenglish: >-
+      {PERSON} repaid what {PERSON} had borrowed from the house and stayed to work for wages.
+  - address: "core:messages#branches.name"
+    of: "454b6da831ba5994"
+    plainenglish: >-
+      {FOUNDER}'s family branch
+  - address: "core:messages#branches.founded.title"
+    of: "2012eb5e30ba5f42"
+    plainenglish: >-
+      A Second Family Hall
+  - address: "core:messages#branches.founded.text"
+    of: "fe847352acbf876e"
+    plainenglish: >-
+      {FOUNDER} first took the east rooms, then a house of his own. The family called the move generous
+      and sensible. It was both. He kept the family name, but did not take the seal.
+  - address: "core:messages#branches.extinct"
+    of: "99d036c146e33105"
+    plainenglish: >-
+      {BRANCH} died out {YEARS} years after it was founded.
+  - address: "core:messages#branches.recalled.title"
+    of: "bf4a3678d5e7b5fc"
+    plainenglish: >-
+      The Cousin Was Called Back
+  - address: "core:messages#branches.recalled.text"
+    of: "c24dc77d9a957581"
+    plainenglish: >-
+      {PERSON} was born in the smaller house and never expected to enter the seal room. The main hall
+      called for him in winter, when the road was bad. Nobody in the main line had thought of him for
+      thirty years. By spring, they all knew his name.
+  - address: "core:messages#career.refuse.woman"
+    of: "26ced7d03b23d1ac"
+    plainenglish: >-
+      women cannot hold posts in Aubren
+  - address: "core:messages#condition.lean_years_title"
+    of: "6cafe8ba42f61fde"
+    plainenglish: >-
+      Years of Shortage
+  - address: "core:messages#condition.lean_years"
+    of: "d5a83dd016abcf74"
+    plainenglish: >-
+      The kitchen fires were kept low. By spring, the children no longer asked why.
+  - address: "core:messages#demography.cause.violence"
+    of: "c9f0e165b7e915c1"
+    plainenglish: >-
+      killed by violence
+  - address: "core:messages#demography.cause.old_age"
+    of: "9bafc9696840e8ad"
+    plainenglish: >-
+      from old age
+  - address: "core:messages#demography.cause.ordinary"
+    of: "eabd7ba2b7613416"
+    plainenglish: >-
+      from ordinary causes
+  - address: "core:messages#demography.cause.madness"
+    of: "0552497abea0e45e"
+    plainenglish: >-
+      the blood's power overwhelmed him
+  - address: "core:messages#friends.refuse.too_long"
+    of: "79c8896a020de5ee"
+    plainenglish: >-
+      '{NAME}' is too long for a name
+  - address: "core:messages#friends.refuse.sex"
+    of: "e6f95d3d853b5b79"
+    plainenglish: >-
+      choose male or female for {NAME}
+  - address: "core:messages#friends.refuse.duplicate"
+    of: "2f0f00846b97edb8"
+    plainenglish: >-
+      the name {NAME} is used twice
+  - address: "core:messages#friends.refuse.too_many"
+    of: "e10fdffd01e50e51"
+    plainenglish: >-
+      enter five names rather than {COUNT}
+  - address: "core:messages#heirloom.refuse.unknown"
+    of: "bec115aa9a7c69de"
+    plainenglish: >-
+      that heirloom does not exist
+  - address: "core:messages#heirloom.refuse.not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own that heirloom
+  - address: "core:messages#heirloom.refuse.spent"
+    of: "632159e09f9a3b7c"
+    plainenglish: >-
+      it has already been used up
+  - address: "core:messages#heirloom.refuse.no_uses_left"
+    of: "632159e09f9a3b7c"
+    plainenglish: >-
+      it has already been used up
+  - address: "core:messages#heirloom.refuse.dead"
+    of: "d57cd41ca7dba1c0"
+    plainenglish: >-
+      a dead person cannot use it
+  - address: "core:messages#heirloom.refuse.wrong_bearer"
+    of: "bb46ab4ce53ab878"
+    plainenglish: >-
+      this person is not an eligible bearer
+  - address: "core:messages#heirloom.refuse.not_ready"
+    of: "daec52122231fbfe"
+    plainenglish: >-
+      it is not ready to use
+  - address: "core:messages#library.restore.in_progress"
+    of: "1c9721da89d42c0e"
+    plainenglish: >-
+      the binder is already repairing this copy
+  - address: "core:messages#library.restore.pristine"
+    of: "faa2a198d3aa9d5c"
+    plainenglish: >-
+      this copy does not need repairs
+  - address: "core:messages#library.restore.reading"
+    of: "ffbe28168ab1c472"
+    plainenglish: >-
+      a reader is still using this copy
+  - address: "core:messages#library.binder_returned"
+    of: "e8308a9b649a046f"
+    plainenglish: >-
+      The binder brought {BOOK} back, repaired and available to read.
+  - address: "core:messages#library.refuse.binder"
+    of: "5eb11f6aeea02ac6"
+    plainenglish: >-
+      the binder has this copy
+  - address: "core:messages#library.refuse.not_woken"
+    of: "9698888aa214b67e"
+    plainenglish: >-
+      has not awakened
+  - address: "core:messages#library.refuse.not_hers"
+    of: "b8c45b613f6a9795"
+    plainenglish: >-
+      women cannot learn this affinity
+  - address: "core:messages#library.refuse.affinity_short"
+    of: "ef9f55a996b74205"
+    plainenglish: >-
+      the reader's affinity is not strong enough yet
+  - address: "core:messages#library.named_art_record"
+    of: "90c48e54078d7f48"
+    plainenglish: >-
+      {PERSON} first wrote the working down. Since then, the family has called it {BOOK}, the working of
+      {PERSON}.
+  - address: "core:messages#match.blurb.at_table"
+    of: "0d674dbc00b3dd40"
+    plainenglish: >-
+      She already belongs to this household and eats here. The marriage takes nothing out of the house and
+      brings nothing new in.
+  - address: "core:messages#match.blurb.near"
+    of: "2263e876be0c3d02"
+    plainenglish: >-
+      The house knows this person, who lives close enough to send for.
+  - address: "core:messages#match.block.gone"
+    of: "9cd23eeb2f0ee93f"
+    plainenglish: >-
+      {NAME} is no longer available
+  - address: "core:messages#match.block.spoken_for"
+    of: "221773ff75ee60c3"
+    plainenglish: >-
+      {NAME} is already promised in marriage
+  - address: "core:messages#match.refuse.subject_gone"
+    of: "83b13bc3fc6c8bd7"
+    plainenglish: >-
+      the person being matched is no longer available
+  - address: "core:messages#match.refuse.cannot_marry"
+    of: "821969d29afe57f6"
+    plainenglish: >-
+      {NAME} is unable to marry
+  - address: "core:messages#match.block.purse"
+    of: "20c5ea0c4008e500"
+    plainenglish: >-
+      the house cannot afford {DOWRY} crowns
+  - address: "core:messages#match.block.papers"
+    of: "15abb83642c3c6fa"
+    plainenglish: >-
+      they require {ASKED} generations of maternal records; the house can provide {SHOWN}
+  - address: "core:messages#match.words.twice_over"
+    of: "be0c662cf8381738"
+    plainenglish: >-
+      very closely related blood
+  - address: "core:messages#match.words.close_kin"
+    of: "0e13b8b992d74865"
+    plainenglish: >-
+      close relatives
+  - address: "core:messages#match.words.distant_kin"
+    of: "88234d1acdbd7e06"
+    plainenglish: >-
+      distant relatives
+  - address: "core:messages#match.words.deep_blood"
+    of: "e709297f8a9ee40b"
+    plainenglish: >-
+      said to have strong old blood
+  - address: "core:messages#match.words.drop"
+    of: "02136bd2aedc3c56"
+    plainenglish: >-
+      said to carry a little of the blood
+  - address: "core:messages#match.words.full_line"
+    of: "836ec70122df1cd5"
+    plainenglish: >-
+      a line with many children
+  - address: "core:messages#match.words.thin_line"
+    of: "10c897a7e32889db"
+    plainenglish: >-
+      a line with few children
+  - address: "core:messages#match.words.ordinary_line"
+    of: "abc458a2ec49201e"
+    plainenglish: >-
+      a line with an ordinary number of children
+  - address: "core:messages#match.words.unwatched_line"
+    of: "829b66d246108a86"
+    plainenglish: >-
+      a line nobody here has observed
+  - address: "core:messages#match.words.one_woman"
+    of: "20c1342422cd60f0"
+    plainenglish: >-
+      based on only one woman
+  - address: "core:messages#match.words.bought_grandmother"
+    of: "d4fdafba88bc6d76"
+    plainenglish: >-
+      a paid-for maternal pedigree
+  - address: "core:messages#match.refuse.card_closed"
+    of: "59d21452560c84e6"
+    plainenglish: >-
+      that card is no longer open
+  - address: "core:messages#match.refuse.no_longer_possible"
+    of: "3c5c159e05c61472"
+    plainenglish: >-
+      that marriage cannot be made now
+  - address: "core:messages#match.refuse.no_recipe"
+    of: "933f32a368bf04d7"
+    plainenglish: >-
+      the card does not offer a person
+  - address: "core:messages#match.refuse.recipe_gone"
+    of: "966eeaab7d65e4f7"
+    plainenglish: >-
+      the content no longer includes that character recipe
+  - address: "core:messages#naming.worth.first_cadet_child"
+    of: "c4b44177015ea3eb"
+    plainenglish: >-
+      a new cadet branch's first child
+  - address: "core:messages#naming.worth.heads_first_son"
+    of: "cb6bc9ef5218d2d3"
+    plainenglish: >-
+      the Head's first son has been born
+  - address: "core:messages#naming.worth.blood_returns"
+    of: "0c0f5acd6c93a599"
+    plainenglish: >-
+      the first child in three generations to carry the blood
+  - address: "core:messages#naming.worth.daughter_after_sons"
+    of: "803b20443056c068"
+    plainenglish: >-
+      a first daughter following {COUNT} sons
+  - address: "core:messages#naming.worth.son_after_daughters"
+    of: "c7f5148a97eda4ce"
+    plainenglish: >-
+      a first son following {COUNT} daughters
+  - address: "core:messages#naming.worth.born_to_new_head"
+    of: "09d116b98b055f1d"
+    plainenglish: >-
+      born in the year the new Head took the seal
+  - address: "core:messages#naming.worth.throwback"
+    of: "d32fe2bf9f59d413"
+    plainenglish: >-
+      {ATTRIBUTE} far beyond anything previously seen in the line
+  - address: "core:messages#panel.kin.his.mother"
+    of: "9be8a7f68aafe22a"
+    plainenglish: >-
+      his own mother
+  - address: "core:messages#panel.kin.her.mother"
+    of: "e5b0fbd7684db7e3"
+    plainenglish: >-
+      her own mother
+  - address: "core:messages#panel.kin.his.father"
+    of: "0238f26786b612b3"
+    plainenglish: >-
+      his own father
+  - address: "core:messages#panel.kin.her.father"
+    of: "2470818a6686aace"
+    plainenglish: >-
+      her own father
+  - address: "core:messages#panel.kin.his.sister"
+    of: "827279ed6c30afb1"
+    plainenglish: >-
+      his own sister
+  - address: "core:messages#panel.kin.her.sister"
+    of: "b0967e40019d0a3c"
+    plainenglish: >-
+      her own sister
+  - address: "core:messages#panel.kin.his.brother"
+    of: "c67805e1c2b21155"
+    plainenglish: >-
+      his own brother
+  - address: "core:messages#panel.kin.her.brother"
+    of: "ae5836b25caadd0e"
+    plainenglish: >-
+      her own brother
+  - address: "core:messages#panel.kin.his.grandmother"
+    of: "e1a427beaf076732"
+    plainenglish: >-
+      his own grandmother
+  - address: "core:messages#panel.kin.her.grandmother"
+    of: "38ae7645e7292121"
+    plainenglish: >-
+      her own grandmother
+  - address: "core:messages#panel.kin.his.grandfather"
+    of: "062d482f076d09db"
+    plainenglish: >-
+      his own grandfather
+  - address: "core:messages#panel.kin.her.grandfather"
+    of: "a19bd4c877b3c79c"
+    plainenglish: >-
+      her own grandfather
+  - address: "core:messages#panel.kin.his.aunt"
+    of: "1ace7db5b28da6d1"
+    plainenglish: >-
+      his own aunt
+  - address: "core:messages#panel.kin.her.aunt"
+    of: "a984358c6f22c4e0"
+    plainenglish: >-
+      her own aunt
+  - address: "core:messages#panel.kin.his.uncle"
+    of: "f1bc3ce461d77f00"
+    plainenglish: >-
+      his own uncle
+  - address: "core:messages#panel.kin.her.uncle"
+    of: "3896160ffbca0a83"
+    plainenglish: >-
+      her own uncle
+  - address: "core:messages#panel.kin.his.cousin"
+    of: "fc8523e858c02794"
+    plainenglish: >-
+      his own cousin
+  - address: "core:messages#panel.kin.her.cousin"
+    of: "3bdd6669fd76c69d"
+    plainenglish: >-
+      her own cousin
+  - address: "core:messages#panel.kin.his.house"
+    of: "40bd81fc044d4d78"
+    plainenglish: >-
+      from his house
+  - address: "core:messages#panel.kin.her.house"
+    of: "17383fdbb0cfbb7f"
+    plainenglish: >-
+      from her house
+  - address: "core:messages#panel.our_book.greyed_page"
+    of: "0c067b132d639c17"
+    plainenglish: >-
+      a page the house refuses to read aloud
+  - address: "core:messages#panel.our_book.blank_page"
+    of: "a6c620fadc922186"
+    plainenglish: >-
+      a page the house left blank
+  - address: "core:messages#papers.notary.caster"
+    of: "b32aa2f151fd5865"
+    plainenglish: >-
+      a herald based at Caster
+  - address: "core:messages#papers.notary.bramme"
+    of: "2b56260694947712"
+    plainenglish: >-
+      a notary based at Bramme
+  - address: "core:messages#papers.exposed_title"
+    of: "19515a4db3ded4c1"
+    plainenglish: >-
+      The Questioned Seal
+  - address: "core:messages#papers.exposed"
+    of: "c1ce631698eeea32"
+    plainenglish: >-
+      Someone compared {PERSON}'s pedigree with the parish roll and asked whose seal it bore. Nobody could
+      find {NOTARY} anymore. Nothing was proved. People can repeat a claim without proof.
+  - address: "core:messages#auction.pledge_broken"
+    of: "e36f3da0d5ba794c"
+    plainenglish: >-
+      {HOUSE} demanded the granddaughter {HEAD} had pledged for {LOT} in {YEAR}. {REASON} The house lost
+      one Respect tier. The creditor counted the debt against its bloodline. The pledge was broken.
+  - address: "core:messages#auction.pledge_expired"
+    of: "f50ae5eb7b1cbb3f"
+    plainenglish: >-
+      The marriage had not happened after fifty years.
+  - address: "core:messages#auction.pledge_reserved"
+    of: "661910fc62c82430"
+    plainenglish: >-
+      {HOUSE} chose {GIRL} as the granddaughter {HEAD} pledged for {LOT} in {YEAR}. Her marriage was
+      reserved for that promise.
+  - address: "core:messages#auction.pledge_notice"
+    of: "674282cba4e45f4f"
+    plainenglish: >-
+      {HOUSE} asked for {GIRL} to be sent for the promised marriage next year. A Table order could still
+      keep her home.
+  - address: "core:messages#auction.pledge_head_kept"
+    of: "bff6da0700b97883"
+    plainenglish: >-
+      {GIRL} was Head and could not leave the main hall.
+  - address: "core:messages#auction.pledge_withheld"
+    of: "9e777bda6c7c6a7e"
+    plainenglish: >-
+      The house prevented {GIRL} from going to the marriage.
+  - address: "core:messages#auction.pledge_paid"
+    of: "5626cfc48bb529d0"
+    plainenglish: >-
+      {GIRL} married {GROOM} and moved to {HOUSE}. That fulfilled the granddaughter pledge {HEAD} made for
+      {LOT} in {YEAR}. She took her learning with her. The pledge was paid.
+  - address: "core:messages#grudge.echo.not_let_go"
+    of: "4a1309af18f4b91b"
+    plainenglish: >-
+      {HOUSE} still held on to the grievance over {ABOUT}.
+  - address: "core:messages#grudge.echo.told_against"
+    of: "a873bbf6347f87a2"
+    plainenglish: >-
+      {HOUSE} continued to tell its own account of {ABOUT}, using it against this house.
+  - address: "core:messages#grudge.echo.never_mentioned"
+    of: "e73f992cbec12ff0"
+    plainenglish: >-
+      A guest from {HOUSE} behaved politely at the table and avoided mentioning {ABOUT} at all. Everyone
+      understood why.
+  - address: "core:messages#grudge.about_event"
+    of: "181def3b7bb0ff4f"
+    plainenglish: >-
+      the events of "{TITLE}"
+  - address: "core:messages#grudge.about_year"
+    of: "fb35ac3762abb0db"
+    plainenglish: >-
+      the house's actions in {YEAR}
+  - address: "core:messages#grudge.hall_quarrel"
+    of: "a864d97828ee1ee4"
+    plainenglish: >-
+      {SPEAKER} stopped writing to the main hall and explained why to his own hall. They remembered the
+      reason longer than he did.
+  - address: "core:messages#relevance.heir"
+    of: "6f9e366602e16292"
+    plainenglish: >-
+      next in line to be Head
+  - address: "core:messages#relevance.possible_heir"
+    of: "996350d916d26cc5"
+    plainenglish: >-
+      a possible future Head
+  - address: "core:messages#relevance.hall_grievance"
+    of: "3d26383b2f2f115f"
+    plainenglish: >-
+      their hall has an unresolved grievance
+  - address: "core:messages#relevance.ascent_candidate"
+    of: "d2ced2d15d8ce7dd"
+    plainenglish: >-
+      the leading Ascension candidate
+  - address: "core:messages#relevance.unmarried_blood"
+    of: "9ede92840b639200"
+    plainenglish: >-
+      an unmarried blood relative
+  - address: "core:messages#relevance.thin_hall"
+    of: "a2afa72e1c252f4a"
+    plainenglish: >-
+      helps a small cadet hall survive
+  - address: "core:messages#relevance.ledger_reader"
+    of: "18139282cd92a0a6"
+    plainenglish: >-
+      the person reading the Ledger for the house
+  - address: "core:messages#secrets.walked"
+    of: "46c3fbf783f474a3"
+    plainenglish: >-
+      Within the year, {CARRIER} found work elsewhere and took the remaining secrets along.
+  - address: "core:messages#secrets.told"
+    of: "cc1a709eaa893aa2"
+    plainenglish: >-
+      By spring, {HOUSE} knew something this house had never recorded. The information had passed through
+      {CARRIER}. Nobody there was rude about it. They simply knew.
+  - address: "core:messages#succession.namesake.title"
+    of: "426c70941af07ab8"
+    plainenglish: >-
+      Another {NAME}
+  - address: "core:messages#succession.regency.title"
+    of: "be833f21ce5f344d"
+    plainenglish: >-
+      A Regent Takes Over
+  - address: "core:messages#succession.majority.title"
+    of: "6ad81ccd0fcd3541"
+    plainenglish: >-
+      Reaching Adulthood
+  - address: "core:messages#wardship.refuse.none"
+    of: "ff5390a9500db4c5"
+    plainenglish: >-
+      the estate is not in wardship
+  - address: "core:messages#succession.buyback.title"
+    of: "ec098d9211b0bfa6"
+    plainenglish: >-
+      The House Buys Back Wardship
+  - address: "core:messages#service.dismissed"
+    of: "a4d8953130ae8975"
+    plainenglish: >-
+      The house dismissed {PERSON}.
+  - address: "core:messages#founding.refuse.no_prologue"
+    of: "4b65fca36789f25f"
+    plainenglish: >-
+      there is no prologue in this content bundle
+  - address: "core:messages#founding.refuse.founded"
+    of: "1ecfdb3b448e62ff"
+    plainenglish: >-
+      this house is already founded
+  - address: "core:messages#founding.refuse.no_name"
+    of: "801dfba56d8cd2c9"
+    plainenglish: >-
+      enter a name for the house
+  - address: "core:messages#founding.refuse.long_name"
+    of: "3abeab643bf36300"
+    plainenglish: >-
+      the name is too long
+  - address: "core:messages#founding.refuse.heirloom"
+    of: "cb34cc7565016a11"
+    plainenglish: >-
+      that was not what he requested
+  - address: "core:messages#founding.refuse.grudge"
+    of: "c0bb50fa885bc5c6"
+    plainenglish: >-
+      no wrong was done to that party
+  - address: "core:messages#founding.refuse.content_gone"
+    of: "0c3a66903669eee4"
+    plainenglish: >-
+      that item is no longer in the content
+  - address: "core:messages#founding.refuse.answer"
+    of: "f89c797e86762652"
+    plainenglish: >-
+      the Examination answer could not be understood
+  - address: "core:messages#founding.refuse.signing_retainer"
+    of: "7f2b081fce2ebe2b"
+    plainenglish: >-
+      retainer '{RETAINER}' named in the signing is unavailable
+  - address: "core:messages#founding.refuse.signing_house"
+    of: "2db5d461940a0b15"
+    plainenglish: >-
+      house '{HOUSE}' named in the signing is missing
+  - address: "core:messages#founding.readback_title"
+    of: "24d4186d8e91fe69"
+    plainenglish: >-
+      What Was Requested
+  - address: "core:messages#founding.readback_with_examination"
+    of: "1cffe1e101ffcf6d"
+    plainenglish: >-
+      He asked for {OBJECT} by name, and received it. {HOUSE} paid for part of that night and has never
+      been repaid. This house has always known that. {EXAMINATION}
+  - address: "core:messages#founding.readback"
+    of: "ff30e3b4ada65c68"
+    plainenglish: >-
+      He asked for {OBJECT} by name, and received it. {HOUSE} paid for part of that night and has never
+      been repaid. This house has always known that.
+  - address: "core:messages#threads.family.current"
+    of: "bd905797b5459c63"
+    plainenglish: >-
+      {NAME} from {HOUSE} married into the family in {YEAR}. That connection is still alive.
+  - address: "core:messages#threads.contact.current"
+    of: "3b384c64417eef78"
+    plainenglish: >-
+      In {YEAR}, {NAME} from {HOUSE} dealt with the family in “{TITLE}”.
+  - address: "core:messages#threads.courtship.current"
+    of: "f1b45e978123c65b"
+    plainenglish: >-
+      {NAME} from {HOUSE} appeared in the Match in {YEAR} and is still unmarried there.
+  - address: "core:messages#threads.grudge.default"
+    of: "d581725c0e615690"
+    plainenglish: >-
+      the unresolved quarrel
+  - address: "core:messages#threads.grudge"
+    of: "4ba1256639fa282a"
+    plainenglish: >-
+      {HOLDER} still resents {TARGET} because of {ORIGIN} in {YEAR}.
+  - address: "core:messages#threads.record.named.current"
+    of: "17af576cbecf2270"
+    plainenglish: >-
+      the entry titled “{TITLE}” from {YEAR}
+  - address: "core:messages#threads.record.text"
+    of: "5edbc541bc576b25"
+    plainenglish: >-
+      the entry “{TEXT}” from {YEAR}
+  - address: "core:messages#threads.record.disputed.current"
+    of: "ceab8e630bc9ed0f"
+    plainenglish: >-
+      a contested entry from {YEAR}
+  - address: "core:messages#threads.record.prove"
+    of: "c399e18fa9dbe5a3"
+    plainenglish: >-
+      {HOUSE} has the means to prove {CLAIM}.
+  - address: "core:messages#threads.secret.current"
+    of: "4736cd25f96f19b9"
+    plainenglish: >-
+      {NAME} took a household secret to {HOUSE} in {YEAR}. It has not yet been told.
+  - address: "core:messages#threads.auction.upcoming"
+    of: "1bd9606e30b7b03a"
+    plainenglish: >-
+      {HOUSE} will offer {LOT} at auction in {YEAR}.
+  - address: "core:messages#threads.promise"
+    of: "26009090c92823a4"
+    plainenglish: >-
+      The marriage pledged for {LOT} in {YEAR} is owed to {HOUSE}.
+  - address: "core:messages#threads.family.history"
+    of: "b42e0ec83c0133b4"
+    plainenglish: >-
+      In {YEAR}, {NAME} from {HOUSE} married into the family.
+  - address: "core:messages#threads.contact.history"
+    of: "3b384c64417eef78"
+    plainenglish: >-
+      In {YEAR}, {NAME} from {HOUSE} dealt with the family in “{TITLE}”.
+  - address: "core:messages#threads.courtship.history"
+    of: "7c81f9489773297c"
+    plainenglish: >-
+      In {YEAR}, {NAME} from {HOUSE} appeared in the Match.
+  - address: "core:messages#threads.record.named.history"
+    of: "17af576cbecf2270"
+    plainenglish: >-
+      the entry titled “{TITLE}” from {YEAR}
+  - address: "core:messages#threads.record.disputed.history"
+    of: "ceab8e630bc9ed0f"
+    plainenglish: >-
+      a contested entry from {YEAR}
+  - address: "core:messages#threads.record.history"
+    of: "06ed2f2db719a6f9"
+    plainenglish: >-
+      {HOUSE} was connected to the evidence supporting {CLAIM}.
+  - address: "core:messages#threads.secret.history"
+    of: "e629e576d038651a"
+    plainenglish: >-
+      {NAME} took a household secret to {HOUSE} in {SINCE}. It was told in {YEAR}.
+  - address: "core:messages#threads.auction.offered"
+    of: "e1ea5031d07f2a35"
+    plainenglish: >-
+      At the auction in {YEAR}, {HOUSE} offered {LOT}.
+  - address: "core:messages#threads.auction.won"
+    of: "b38e0ec73c02100b"
+    plainenglish: >-
+      At the auction in {YEAR}, {HOUSE} acquired {LOT}.
+  - address: "core:messages#library.subject_unknown"
+    of: "f9d8a2e67d7a89ba"
+    plainenglish: >-
+      the person named in that account
+  - address: "core:messages#library.song.teller"
+    of: "4213bbd3b8de4dc7"
+    plainenglish: >-
+      the singers employed by {RIVAL}
+  - address: "core:messages#library.song.bias"
+    of: "ba8be65b735ba607"
+    plainenglish: >-
+      preserving the account {RIVAL} prefers to remember
+  - address: "core:messages#library.song.kept"
+    of: "69f5e8f614413d1a"
+    plainenglish: >-
+      “{SAID}” That is the account sung at {RIVAL}. Their refrain preserves all the old words. Nobody
+      remembers the first singer's name.
+  - address: "core:messages#library.song.attr"
+    of: "9d34b1488693682c"
+    plainenglish: >-
+      “{SAID}” That is the account sung at {RIVAL}. Their refrain records {VALUE} for {PERSON}'s
+      {QUALITY}. Nobody remembers the first singer's name.
+  - address: "core:messages#library.song.trait_with"
+    of: "fa059b80cbc8218c"
+    plainenglish: >-
+      “{SAID}” That is the account sung at {RIVAL}. Their refrain describes {PERSON} as having {TRAIT}.
+      Nobody remembers the first singer's name.
+  - address: "core:messages#library.song.trait_without"
+    of: "4eff30e27e4382ce"
+    plainenglish: >-
+      “{SAID}” That is the account sung at {RIVAL}. Their refrain describes {PERSON} as not having
+      {TRAIT}. Nobody remembers the first singer's name.
+  - address: "core:messages#library.song.death"
+    of: "18a8da164a44feea"
+    plainenglish: >-
+      “{SAID}” That is the account sung at {RIVAL}. Their refrain dates the death of {PERSON} to {YEAR}.
+      Nobody remembers the first singer's name.
+  - address: "core:messages#library.doctrine.teller"
+    of: "57e0f9f7c4235c13"
+    plainenglish: >-
+      the chaplain responsible for {RIVAL}'s old books
+  - address: "core:messages#library.doctrine.bias"
+    of: "b2434ce75e9e0363"
+    plainenglish: >-
+      fitting the inherited account to {RIVAL}'s doctrine
+  - address: "core:messages#library.doctrine.kept"
+    of: "51f8108df91f1679"
+    plainenglish: >-
+      “{SAID}” The copy at {RIVAL} offers no argument. Its chaplain has added a correction in small
+      writing: all the old words are preserved. No earlier writer is named.
+  - address: "core:messages#library.doctrine.attr"
+    of: "2c8dae9dbe3e89c9"
+    plainenglish: >-
+      “{SAID}” The copy at {RIVAL} offers no argument. Its chaplain has added a correction in small
+      writing: {PERSON}'s {QUALITY} is recorded as {VALUE}. No earlier writer is named.
+  - address: "core:messages#library.doctrine.trait_with"
+    of: "a52ca8e5c2f8b409"
+    plainenglish: >-
+      “{SAID}” The copy at {RIVAL} offers no argument. Its chaplain has added a correction in small
+      writing: {PERSON} is recorded as having {TRAIT}. No earlier writer is named.
+  - address: "core:messages#library.doctrine.trait_without"
+    of: "4e89ca1143692bf5"
+    plainenglish: >-
+      “{SAID}” The copy at {RIVAL} offers no argument. Its chaplain has added a correction in small
+      writing: {PERSON} is recorded as not having {TRAIT}. No earlier writer is named.
+  - address: "core:messages#library.doctrine.death"
+    of: "dc9556cdb4b15a39"
+    plainenglish: >-
+      “{SAID}” The copy at {RIVAL} offers no argument. Its chaplain has added a correction in small
+      writing: {PERSON}'s death is dated to {YEAR}. No earlier writer is named.
+  - address: "core:messages#library.rival_chronicle.teller"
+    of: "2efd5f60dfc5882c"
+    plainenglish: >-
+      {RIVAL}'s archivist
+  - address: "core:messages#library.rival_chronicle.bias"
+    of: "f2cedb80fd144e2c"
+    plainenglish: >-
+      preserving {RIVAL}'s inherited account of the earlier house
+  - address: "core:messages#library.rival_chronicle.kept"
+    of: "d22b8e7a46a389fe"
+    plainenglish: >-
+      “{SAID}” That is what the earlier house's own page says. {RIVAL}'s archivist copies it under a
+      different heading, preserving all the old words. The disagreement remains, with no apology.
+  - address: "core:messages#library.rival_chronicle.attr"
+    of: "0bab6aaac947980e"
+    plainenglish: >-
+      “{SAID}” That is what the earlier house's own page says. {RIVAL}'s archivist copies it under a
+      different heading, recording {VALUE} for {PERSON}'s {QUALITY}. The disagreement remains, with no
+      apology.
+  - address: "core:messages#library.rival_chronicle.trait_with"
+    of: "aed099820455d75e"
+    plainenglish: >-
+      “{SAID}” That is what the earlier house's own page says. {RIVAL}'s archivist copies it under a
+      different heading, recording {PERSON} as having {TRAIT}. The disagreement remains, with no apology.
+  - address: "core:messages#library.rival_chronicle.trait_without"
+    of: "5c39714ea51fd41a"
+    plainenglish: >-
+      “{SAID}” That is what the earlier house's own page says. {RIVAL}'s archivist copies it under a
+      different heading, recording {PERSON} as not having {TRAIT}. The disagreement remains, with no
+      apology.
+  - address: "core:messages#library.rival_chronicle.death"
+    of: "3139f93aa798110e"
+    plainenglish: >-
+      “{SAID}” That is what the earlier house's own page says. {RIVAL}'s archivist copies it under a
+      different heading, dating {PERSON}'s death to {YEAR}. The disagreement remains, with no apology.
+  - address: "core:messages#library.rhyme.teller"
+    of: "f62a91c81f13fe4c"
+    plainenglish: >-
+      the children in {RIVAL}'s lower hall
+  - address: "core:messages#library.rhyme.bias"
+    of: "26ee4b9406db3f30"
+    plainenglish: >-
+      preserving only what {RIVAL}'s children can remember from one winter to the next
+  - address: "core:messages#library.rhyme.kept"
+    of: "68d5699f843fdab3"
+    plainenglish: >-
+      “{SAID}” The children below {RIVAL}'s hall shorten the account, making it easier to remember. All
+      the old words are preserved. They do not know whose book taught them the story.
+  - address: "core:messages#library.rhyme.attr"
+    of: "dc95f78795b0c6fb"
+    plainenglish: >-
+      “{SAID}” The children below {RIVAL}'s hall shorten the account, making it easier to remember. They
+      give {PERSON}'s {QUALITY} as {VALUE}. They do not know whose book taught them the story.
+  - address: "core:messages#library.rhyme.trait_with"
+    of: "5f7306534294be3f"
+    plainenglish: >-
+      “{SAID}” The children below {RIVAL}'s hall shorten the account, making it easier to remember. They
+      describe {PERSON} as having {TRAIT}. They do not know whose book taught them the story.
+  - address: "core:messages#library.rhyme.trait_without"
+    of: "3b14836f5bb993eb"
+    plainenglish: >-
+      “{SAID}” The children below {RIVAL}'s hall shorten the account, making it easier to remember. They
+      describe {PERSON} as not having {TRAIT}. They do not know whose book taught them the story.
+  - address: "core:messages#library.rhyme.death"
+    of: "cbafa18f76159383"
+    plainenglish: >-
+      “{SAID}” The children below {RIVAL}'s hall shorten the account, making it easier to remember. They
+      date {PERSON}'s death to {YEAR}. They do not know whose book taught them the story.
+  - address: "core:messages#library.play.teller"
+    of: "c63edd95678d20d1"
+    plainenglish: >-
+      the actors hired for {RIVAL}'s winter feast
+  - address: "core:messages#library.play.bias"
+    of: "429f5cb4f67398c0"
+    plainenglish: >-
+      retelling an old house's dignity in a way {RIVAL} will applaud
+  - address: "core:messages#library.play.kept"
+    of: "4cc1cd8aaedc186e"
+    plainenglish: >-
+      “{SAID}” At {RIVAL}'s winter feast, an actor speaks the line before the candles flicker low. A
+      second actor replies that all the old words are preserved. The audience laughs at a quarrel older
+      than the script.
+  - address: "core:messages#library.play.attr"
+    of: "95756ac2a8542226"
+    plainenglish: >-
+      “{SAID}” At {RIVAL}'s winter feast, an actor speaks the line before the candles flicker low. A
+      second actor replies that {PERSON}'s {QUALITY} is recorded as {VALUE}. The audience laughs at a
+      quarrel older than the script.
+  - address: "core:messages#library.play.trait_with"
+    of: "5537820e66c6fc2a"
+    plainenglish: >-
+      “{SAID}” At {RIVAL}'s winter feast, an actor speaks the line before the candles flicker low. A
+      second actor replies that {PERSON} is recorded as having {TRAIT}. The audience laughs at a quarrel
+      older than the script.
+  - address: "core:messages#library.play.trait_without"
+    of: "c75bfcfab5d2c436"
+    plainenglish: >-
+      “{SAID}” At {RIVAL}'s winter feast, an actor speaks the line before the candles flicker low. A
+      second actor replies that {PERSON} is recorded as not having {TRAIT}. The audience laughs at a
+      quarrel older than the script.
+  - address: "core:messages#library.play.death"
+    of: "de39bd3a27c6defe"
+    plainenglish: >-
+      “{SAID}” At {RIVAL}'s winter feast, an actor speaks the line before the candles flicker low. A
+      second actor replies that {PERSON}'s death is dated to {YEAR}. The audience laughs at a quarrel
+      older than the script.
+  - address: "core:messages#library.footnote.teller"
+    of: "df58584aa40c837e"
+    plainenglish: >-
+      an unnamed writer of notes in {RIVAL}'s library
+  - address: "core:messages#library.footnote.bias"
+    of: "2884c8c77e59b08b"
+    plainenglish: >-
+      correcting the earlier house in the safety of {RIVAL}'s margins
+  - address: "core:messages#library.footnote.kept"
+    of: "09c36d2e7792d962"
+    plainenglish: >-
+      “{SAID}” An unnamed person has added just one note beside this in {RIVAL}'s copy: all the old words
+      are preserved. The ink is newer than the page but older than any living witness.
+  - address: "core:messages#library.footnote.attr"
+    of: "3dce82d830ff196c"
+    plainenglish: >-
+      “{SAID}” An unnamed person has added just one note beside this in {RIVAL}'s copy: {PERSON}'s
+      {QUALITY} is recorded as {VALUE}. The ink is newer than the page but older than any living witness.
+  - address: "core:messages#library.footnote.trait_with"
+    of: "328439ccb5785d48"
+    plainenglish: >-
+      “{SAID}” An unnamed person has added just one note beside this in {RIVAL}'s copy: {PERSON} is
+      recorded as having {TRAIT}. The ink is newer than the page but older than any living witness.
+  - address: "core:messages#library.footnote.trait_without"
+    of: "8063e1d6a25060e2"
+    plainenglish: >-
+      “{SAID}” An unnamed person has added just one note beside this in {RIVAL}'s copy: {PERSON} is
+      recorded as not having {TRAIT}. The ink is newer than the page but older than any living witness.
+  - address: "core:messages#library.footnote.death"
+    of: "96ea3fa613d6a72a"
+    plainenglish: >-
+      “{SAID}” An unnamed person has added just one note beside this in {RIVAL}'s copy: {PERSON}'s death
+      is dated to {YEAR}. The ink is newer than the page but older than any living witness.
+  - address: "core:messages#library.charm.teller"
+    of: "d3b5e19af640ee8e"
+    plainenglish: >-
+      {RIVAL}'s nurses, passing the words between nurseries
+  - address: "core:messages#library.charm.bias"
+    of: "985e84bde6791c91"
+    plainenglish: >-
+      preserving the inherited warning for the use of {RIVAL}'s children
+  - address: "core:messages#library.charm.kept"
+    of: "ff1f7353281a4c07"
+    plainenglish: >-
+      “{SAID}” The nurses at {RIVAL} say these words before a child sleeps. They always end by saying that
+      all the old words are preserved. None remembers when the charm gained its last line.
+  - address: "core:messages#library.charm.attr"
+    of: "62c525390d08195d"
+    plainenglish: >-
+      “{SAID}” The nurses at {RIVAL} say these words before a child sleeps. They always end by saying that
+      {PERSON}'s {QUALITY} is recorded as {VALUE}. None remembers when the charm gained its last line.
+  - address: "core:messages#library.charm.trait_with"
+    of: "7e9fe7418016e1ad"
+    plainenglish: >-
+      “{SAID}” The nurses at {RIVAL} say these words before a child sleeps. They always end by saying that
+      {PERSON} is recorded as having {TRAIT}. None remembers when the charm gained its last line.
+  - address: "core:messages#library.charm.trait_without"
+    of: "e70b1ff7916346f3"
+    plainenglish: >-
+      “{SAID}” The nurses at {RIVAL} say these words before a child sleeps. They always end by saying that
+      {PERSON} is recorded as not having {TRAIT}. None remembers when the charm gained its last line.
+  - address: "core:messages#library.charm.death"
+    of: "2d696373d4cd7287"
+    plainenglish: >-
+      “{SAID}” The nurses at {RIVAL} say these words before a child sleeps. They always end by saying that
+      {PERSON}'s death is dated to {YEAR}. None remembers when the charm gained its last line.
+  - address: "core:messages#library.rival_unknown"
+    of: "712a49045d37d5f8"
+    plainenglish: >-
+      another rival house
+  - address: "core:messages#match.future.label.blood"
+    of: "bfe92fa7361713d3"
+    plainenglish: >-
+      Bloodline
+  - address: "core:messages#match.future.label.standing"
+    of: "5a062a154ce9e251"
+    plainenglish: >-
+      Reputation
+  - address: "core:messages#match.future.label.continuity"
+    of: "a71619ff51f949a3"
+    plainenglish: >-
+      Continuing the line
+  - address: "core:messages#match.future.label.mystery"
+    of: "b85a5cd6e94213da"
+    plainenglish: >-
+      Uncertainty
+  - address: "core:messages#match.future.reason.blood.close-kin"
+    of: "f29e6065e1daaf21"
+    plainenglish: >-
+      the family papers show that this match is close kin
+  - address: "core:messages#match.future.reason.blood.related"
+    of: "0173b9c9a62d364d"
+    plainenglish: >-
+      the family papers show that these lines are related
+  - address: "core:messages#match.future.reason.blood.deep"
+    of: "e6effcd110f12dad"
+    plainenglish: >-
+      people describe {houseName} as having deep blood
+  - address: "core:messages#match.future.reason.blood.drop"
+    of: "e5b050867501c9a2"
+    plainenglish: >-
+      people say {houseName} carries a little of the old blood
+  - address: "core:messages#match.future.reason.blood.waking.one"
+    of: "9ffdda618033ac7d"
+    plainenglish: >-
+      the visible line has {n} known awakening
+  - address: "core:messages#match.future.reason.blood.waking.many"
+    of: "c673d53e97a9a082"
+    plainenglish: >-
+      the visible line has {n} known awakenings
+  - address: "core:messages#match.future.reason.standing.account.one"
+    of: "7c1f3733a800f5af"
+    plainenglish: >-
+      {houseName} appears in {n} account already circulating
+  - address: "core:messages#match.future.reason.standing.account.many"
+    of: "a523f9c055830954"
+    plainenglish: >-
+      {houseName} appears in {n} accounts already circulating
+  - address: "core:messages#match.future.reason.standing.our-book"
+    of: "3ea706f8b1f9a3cc"
+    plainenglish: >-
+      our book already contains pages about {houseName}
+  - address: "core:messages#match.future.reason.continuity.full.one"
+    of: "cdb2e026c0a1773a"
+    plainenglish: >-
+      the line is called fertile based on {n} completed life
+  - address: "core:messages#match.future.reason.continuity.full.many"
+    of: "586957ffb961965b"
+    plainenglish: >-
+      the line is called fertile based on {n} completed lives
+  - address: "core:messages#match.future.reason.continuity.ordinary.one"
+    of: "d3c62978777637d4"
+    plainenglish: >-
+      the observed line has an ordinary birth history across {n} completed life
+  - address: "core:messages#match.future.reason.continuity.ordinary.many"
+    of: "9ec4ce81834769b5"
+    plainenglish: >-
+      the observed line has an ordinary birth history across {n} completed lives
+  - address: "core:messages#match.future.reason.continuity.children"
+    of: "b2f83a67932abefb"
+    plainenglish: >-
+      of {borne} children in the named line, {grown} reached adulthood
+  - address: "core:messages#match.future.reason.continuity.unrelated"
+    of: "6fdc3505e0399639"
+    plainenglish: >-
+      the family papers show no relation between the lines
+  - address: "core:messages#match.future.reason.mystery.unknown"
+    of: "7a96a96793c09c23"
+    plainenglish: >-
+      nobody here has observed a completed life in the line
+  - address: "core:messages#match.future.reason.mystery.empty-panel"
+    of: "d5f526c6ff712e32"
+    plainenglish: >-
+      the panel offers no children, awakenings, tales or earlier pages as evidence
+  - address: "core:messages#match.future.reason.mystery.no-case"
+    of: "ec73eb5ef9fb4a6a"
+    plainenglish: >-
+      nothing visible makes a clear case for the match
+  - address: "core:messages#match.future.reason.priority.blood"
+    of: "c89c8676872a41a2"
+    plainenglish: >-
+      bloodlines matter especially in these years
+  - address: "core:messages#match.future.reason.priority.standing"
+    of: "55dcb4fe3d330caa"
+    plainenglish: >-
+      reputation matters especially in these years
+  - address: "core:messages#match.future.reason.priority.continuity"
+    of: "d6c9e51892e3a68c"
+    plainenglish: >-
+      continuing the line matters especially in these years
+  - address: "core:messages#match.future.reason.priority.mystery"
+    of: "0eb7b947f4309fdb"
+    plainenglish: >-
+      uncertainty matters especially in these years
+  - address: "core:messages#match.future.competing.blood"
+    of: "edeead07dbd28573"
+    plainenglish: >-
+      bloodline
+  - address: "core:messages#match.future.competing.standing"
+    of: "5dba68f5d4b7db71"
+    plainenglish: >-
+      reputation
+  - address: "core:messages#match.future.competing.continuity"
+    of: "ba1cb7dfea460cc3"
+    plainenglish: >-
+      continuing the line
+  - address: "core:messages#match.future.competing.mystery"
+    of: "31b98836ed71c37a"
+    plainenglish: >-
+      uncertainty
+  - address: "core:messages#match.future.confidence.mixed"
+    of: "18011cd4f2675468"
+    plainenglish: >-
+      also involves {competing}
+  - address: "core:messages#match.future.confidence.uncertain"
+    of: "886b1c4791cae5d3"
+    plainenglish: >-
+      little supporting evidence
+  - address: "core:messages#founding.refuse.examination_restart"
+    of: "55cc0621829bdead"
+    plainenglish: >-
+      start a new run to answer the Examination
+  - address: "core:messages#founding.refuse.examination_late"
+    of: "83a3460fc1427a53"
+    plainenglish: >-
+      answer the Examination before the first year or decision
+  - address: "core:messages#session.hall.main"
+    of: "ab27c388f55c5f54"
+    plainenglish: >-
+      the family seat
+  - address: "core:messages#session.campaign.short"
+    of: "5c99a398cda224c4"
+    plainenglish: >-
+      A Short Line (shorter campaign)
+  - address: "core:messages#session.campaign.long"
+    of: "1c367c7c21fa9920"
+    plainenglish: >-
+      A Long Line (longer campaign)
+  - address: "core:messages#session.campaign.demo"
+    of: "446890e7622d496b"
+    plainenglish: >-
+      A Demonstration (demo campaign)
+  - address: "core:messages#founding.debt_title"
+    of: "1fc8a27c3b362520"
+    plainenglish: >-
+      A Debt in Three Parts
+  - address: "core:messages#founding.debt"
+    of: "91af52603762edac"
+    plainenglish: >-
+      {FOUNDER} signed something in 1042. The house has been paying for it ever since.
+  - address: "core:messages#founding.debt_unnamed"
+    of: "971495f4e2755260"
+    plainenglish: >-
+      The head of the house signed something in 1042. The house has been paying for it ever since.
+  - address: "core:messages#naming.named"
+    of: "e3a2ea4665a68bea"
+    plainenglish: >-
+      The newborn was named {NAME}.
+  - address: "core:messages#table.tutor.no_subject"
+    of: "a82b89c52cb17cb9"
+    plainenglish: >-
+      no such subject can be taught
+  - address: "core:messages#table.tutor.unteachable"
+    of: "662fe795970e63e1"
+    plainenglish: >-
+      a tutor cannot teach {ATTRIBUTE}
+  - address: "core:messages#table.tutor.too_old"
+    of: "252ee5b52f40e5f1"
+    plainenglish: >-
+      past the age for tutoring
+  - address: "core:messages#table.tutor.in_term"
+    of: "2f8cba11fcc12ba5"
+    plainenglish: >-
+      already taking a course of tutoring
+  - address: "core:messages#table.tutor.fee"
+    of: "f01b450fc28dccf3"
+    plainenglish: >-
+      the house cannot afford {FEE} crowns
+  - address: "core:messages#table.rite.closed"
+    of: "16878eb3bc9c55c7"
+    plainenglish: >-
+      the Ledger is already closed
+  - address: "core:messages#table.rite.pending"
+    of: "db56efa52546d789"
+    plainenglish: >-
+      the house is already considering this rite
+  - address: "core:messages#table.rite.standing"
+    of: "1df786863d3167ca"
+    plainenglish: >-
+      the house's standing is too low for this rite
+  - address: "core:messages#table.rite.unfielded_slot"
+    of: "eabae389bde1c11d"
+    plainenglish: >-
+      the house cannot supply {SLOT}
+  - address: "core:messages#table.rite.unfielded"
+    of: "696eaaeec67726e2"
+    plainenglish: >-
+      the house cannot assemble the rite
+  - address: "core:messages#table.rite.no_candidate"
+    of: "141bdb589f1cd85c"
+    plainenglish: >-
+      no person is eligible for {SLOT}
+  - address: "core:messages#table.rite.repeat"
+    of: "6f18dd8b83bc39af"
+    plainenglish: >-
+      he has already completed this rite
+  - address: "core:messages#table.assembly.known_vessel"
+    of: "78329d3b1d9ded1f"
+    plainenglish: >-
+      the Vessel rite
+  - address: "core:messages#table.assembly.known_great_rite"
+    of: "8c320ae945d43cc5"
+    plainenglish: >-
+      the Great Rite (widening)
+  - address: "core:messages#table.assembly.known_unmaking"
+    of: "c13892ab5c938957"
+    plainenglish: >-
+      the Unmaking rite
+  - address: "core:messages#table.assembly.books"
+    of: "468259c002709374"
+    plainenglish: >-
+      {PERSON} has studied {BOOKS}.
+  - address: "core:messages#table.assembly.rite_list"
+    of: "3a545d3d947a8f69"
+    plainenglish: >-
+      {BEFORE} as well as {RITE}
+  - address: "core:messages#table.assembly.rites"
+    of: "feb0df34cde55fb0"
+    plainenglish: >-
+      {PERSON} has already completed {RITES}.
+  - address: "core:messages#table.assembly.cost_vessel"
+    of: "6a3f626933937615"
+    plainenglish: >-
+      The named Vessel is sacrificed. They cannot return to the living household.
+  - address: "core:messages#table.assembly.cost_great_rite"
+    of: "bb1a7b1eb66b982a"
+    plainenglish: >-
+      The ascendant's capacity is widened only once. He keeps the Madness added by the rite.
+  - address: "core:messages#table.assembly.cost_unmaking"
+    of: "320440137ced9e3f"
+    plainenglish: >-
+      The elder is sacrificed whether the transfer works or fails. Failure at the final step can lose the
+      run.
+  - address: "core:messages#table.ledger.closed"
+    of: "16878eb3bc9c55c7"
+    plainenglish: >-
+      the Ledger is already closed
+  - address: "core:messages#table.ledger.enough"
+    of: "4c71ddce10d2c9b2"
+    plainenglish: >-
+      the book already contains enough clauses for the final working
+  - address: "core:messages#table.ledger.no_demigod"
+    of: "c02c58597d90137d"
+    plainenglish: >-
+      no recipient of the Unmaking has reached Demigod yet
+  - address: "core:messages#table.ledger.no_keeper"
+    of: "d2bb838076e7d684"
+    plainenglish: >-
+      no living person in the house can search the old contracts
+  - address: "core:messages#table.ledger.searched"
+    of: "ff572fa7914ea63b"
+    plainenglish: >-
+      the house has searched the Ledger already this year
+  - address: "core:messages#table.ledger.fee"
+    of: "d8c3a655a2dcf6d9"
+    plainenglish: >-
+      the house cannot afford the search fee of {FEE} crowns
+  - address: "core:messages#table.ledger.exhausted"
+    of: "c65feca8a6848934"
+    plainenglish: >-
+      there is nothing more to discover in the old contracts
+  - address: "core:messages#table.ledger.exhausted_fallback"
+    of: "c65feca8a6848934"
+    plainenglish: >-
+      there is nothing more to discover in the old contracts
+  - address: "core:messages#table.ledger_search"
+    of: "b7438a34460f2468"
+    plainenglish: >-
+      The house paid its record-keepers to compare the old contracts with its own copy.
+  - address: "core:messages#table.order.restore.fee"
+    of: "f01b450fc28dccf3"
+    plainenglish: >-
+      the house cannot afford {FEE} crowns
+  - address: "core:messages#table.order.study.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.study.no_book"
+    of: "a19be11a5b01d506"
+    plainenglish: >-
+      that book does not exist
+  - address: "core:messages#table.order.study.not_held"
+    of: "1bfb2dc230cb30ce"
+    plainenglish: >-
+      the house does not own that copy
+  - address: "core:messages#table.order.study.already"
+    of: "90d0ec7a96a25abe"
+    plainenglish: >-
+      he is already studying it or already knows it
+  - address: "core:messages#table.order.restore.not_held"
+    of: "565d5e3f2d1deb8b"
+    plainenglish: >-
+      the house does not own a copy of that book
+  - address: "core:messages#library.binder_paid"
+    of: "4371e92f8364ab1b"
+    plainenglish: >-
+      The house paid the binder {FEE} crowns to repair {BOOK}. It will come back in {YEAR}.
+  - address: "core:messages#table.order.pedigree.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.pedigree.fee"
+    of: "6fc0545a78212fae"
+    plainenglish: >-
+      the house cannot afford {PRICE} crowns
+  - address: "core:messages#table.order.pedigree.covered"
+    of: "b31ec28de9577301"
+    plainenglish: >-
+      the record already covers that many generations
+  - address: "core:messages#table.pedigree_filed"
+    of: "d2e520282394317c"
+    plainenglish: >-
+      For {PRICE} crowns, {NOTARY} wrote and sealed a clean copy of {GENERATIONS} generations of
+      {PERSON}'s maternal line.
+  - address: "core:messages#table.order.bond.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.bond.not_in_service"
+    of: "42be14ddbde55349"
+    plainenglish: >-
+      this person does not work for the house
+  - address: "core:messages#table.order.bond.none_to_free"
+    of: "75ae208226c86dde"
+    plainenglish: >-
+      this person has no bond to cancel
+  - address: "core:messages#table.order.bond.already"
+    of: "c398d4bb2b6bc8ff"
+    plainenglish: >-
+      this person is already bonded
+  - address: "core:messages#table.order.bond.range"
+    of: "1b15a54309db0a17"
+    plainenglish: >-
+      a bond must be between 1 and {MAX} marks
+  - address: "core:messages#table.order.bond.fee"
+    of: "be3cfbab520b263f"
+    plainenglish: >-
+      the house cannot lend {MARKS} marks
+  - address: "core:messages#table.order.bond.unwritable"
+    of: "550d3b8a5277f94e"
+    plainenglish: >-
+      this bond cannot be created
+  - address: "core:messages#table.order.tutor.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.career.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.career.no_post"
+    of: "88473471cec5efad"
+    plainenglish: >-
+      that post does not exist
+  - address: "core:messages#table.order.career.held"
+    of: "5c98f33d519080d9"
+    plainenglish: >-
+      he already holds that post
+  - address: "core:messages#table.order.career.too_young"
+    of: "f9cdac65d9b6d241"
+    plainenglish: >-
+      not old enough to hold a post
+  - address: "core:messages#table.order.career.fee"
+    of: "6e7c96f867504eec"
+    plainenglish: >-
+      the house cannot afford {FEE} crowns for the post
+  - address: "core:messages#table.order.bid.not_a_figure"
+    of: "35b78037e761ecb3"
+    plainenglish: >-
+      enter a number
+  - address: "core:messages#table.rite.fallback"
+    of: "556dc0420c8a67fe"
+    plainenglish: >-
+      the family cannot assemble the rite
+  - address: "core:messages#table.order.scion.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.scionHeir.self"
+    of: "c3e2883ca5334bf8"
+    plainenglish: >-
+      the Scion cannot also be his own heir
+  - address: "core:messages#table.order.scionHeir.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.withhold.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.assembly.title_unmaking"
+    of: "0472776efde3bf8a"
+    plainenglish: >-
+      The Unmaking (sacrificing an elder to raise a descendant)
+  - address: "core:messages#table.assembly.title_vessel"
+    of: "d86d9ecec92ecdd2"
+    plainenglish: >-
+      The Vessel (sacrificing a blood relative)
+  - address: "core:messages#table.assembly.title_great_rite"
+    of: "1e66df09c50edc25"
+    plainenglish: >-
+      The Great Rite (widening the ascendant)
+  - address: "core:messages#table.heir_vacant_beside"
+    of: "80dbb7a82e79aafc"
+    plainenglish: >-
+      Nobody has replaced {WAS} beside {BESIDE}. The house has named no successor.
+  - address: "core:messages#table.heir_vacant_beside_unnamed"
+    of: "7110b5b80320596c"
+    plainenglish: >-
+      Nobody has replaced the second person beside {BESIDE}. The house has named no successor.
+  - address: "core:messages#table.heir_vacant"
+    of: "d23051fcab1fe708"
+    plainenglish: >-
+      Nobody has replaced {WAS}. The house has named no successor.
+  - address: "core:messages#table.heir_vacant_unnamed"
+    of: "931068bcb5ae2c98"
+    plainenglish: >-
+      Nobody has replaced the named heir. The house has named no successor.
+  - address: "core:messages#table.scion_vacant"
+    of: "d23051fcab1fe708"
+    plainenglish: >-
+      Nobody has replaced {WAS}. The house has named no successor.
+  - address: "core:messages#table.scion_vacant_unnamed"
+    of: "d5d68ee896d9b7bc"
+    plainenglish: >-
+      Nobody has replaced the person the house named. No successor has been chosen.
+  - address: "core:messages#table.tutor_finished"
+    of: "8a3efe142a190ef8"
+    plainenglish: >-
+      {PERSON} completed the tutoring term, doing better at {ATTR} than the house could reasonably have
+      expected.
+  - address: "core:messages#passage.study.finished"
+    of: "5686fa11bb22f3ed"
+    plainenglish: >-
+      {NAME} completed the study of {BOOK}.
+  - address: "core:messages#passage.awakening.expressing"
+    of: "af15116ccc5624a0"
+    plainenglish: >-
+      The gift awakened in {NAME}.
+  - address: "core:messages#passage.awakening.unexpressed"
+    of: "49c4dea00e5460bc"
+    plainenglish: >-
+      The gift awakened in {NAME}, but cannot be expressed.
+  - address: "core:messages#passage.death.cause"
+    of: "5b2c14df034eb5ab"
+    plainenglish: >-
+      {NAME} died aged {AGE}: {CAUSE}.
+  - address: "core:messages#passage.death.plain"
+    of: "04166ad624949c62"
+    plainenglish: >-
+      {NAME} died aged {AGE}.
+  - address: "core:messages#passage.stillbirth.cause.overflow"
+    of: "97f4d1e10f227695"
+    plainenglish: >-
+      more pressure than a body could hold
+  - address: "core:messages#passage.stillbirth.cause.close_blood"
+    of: "9ee18f4b452a368f"
+    plainenglish: >-
+      the parents' bloodlines were too closely related
+  - address: "core:messages#passage.stillbirth.daughter"
+    of: "403e642c2e01e200"
+    plainenglish: >-
+      {MOTHER} gave birth to a daughter who did not survive: {CAUSE}.
+  - address: "core:messages#passage.stillbirth.son"
+    of: "03b0ae8c20999130"
+    plainenglish: >-
+      {MOTHER} gave birth to a son who did not survive: {CAUSE}.
+  - address: "core:messages#age.named_fallback"
+    of: "f452a2d9e9c0460d"
+    plainenglish: >-
+      People started calling these years {AGE}.
+  - address: "core:messages#guardian.crossed_title"
+    of: "e759e569be50752d"
+    plainenglish: >-
+      The House Is Not Left Empty
+  - address: "core:messages#guardian.crossed"
+    of: "68ab1a7f40143ba3"
+    plainenglish: >-
+      They buried {NARRATOR} in spring. Everyone noticed that the house did not feel emptier, but nobody
+      said it. Fires were prepared before anyone did the work. The accounts balanced all year without
+      anyone balancing them. He had not left. They simply no longer had to feed him.
+  - address: "core:messages#library.first_reading"
+    of: "064ac4c545026729"
+    plainenglish: >-
+      {PERSON} completed {BOOK}, becoming the first person in the house to read it.
