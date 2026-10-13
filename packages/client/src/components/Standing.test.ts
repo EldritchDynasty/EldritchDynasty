@@ -547,6 +547,43 @@ describe('war Muster reader-local Plain English (#1447)', () => {
     }
   });
 
+  it('dispatches reinforcement only once per rendered view, then allows a later retry (#1547)', async () => {
+    const muster = vi.fn().mockReturnValue({ ok: false, reason: 'Not enough men' });
+    const wrapper = mount(Muster, {
+      props: { view: activeWar(), refusal: null, actions: { muster } as unknown as GameActions },
+    });
+    try {
+      await wrapper.get('input').setValue('2');
+      const send = wrapper.findAll('button').find((button) => button.text() === 'Send more men')!;
+      // Both clicks land before Vue has drawn the result of the first order.
+      await Promise.all([send.trigger('click'), send.trigger('click')]);
+      expect(muster).toHaveBeenCalledTimes(1);
+      expect(muster).toHaveBeenLastCalledWith({ op: 'reinforce', men: 2 });
+
+      // An unsuccessful action must not keep the controls locked after render.
+      await send.trigger('click');
+      expect(muster).toHaveBeenCalledTimes(2);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('does not dispatch a competing war order on the same stale view (#1547)', async () => {
+    const muster = vi.fn();
+    const wrapper = mount(Muster, {
+      props: { view: activeWar(), refusal: null, actions: { muster } as unknown as GameActions },
+    });
+    try {
+      const buy = wrapper.findAll('button').find((button) => button.text().includes('Hold the pass'))!;
+      const withdraw = wrapper.findAll('button').find((button) => button.text() === 'Call them home')!;
+      await Promise.all([buy.trigger('click'), withdraw.trigger('click')]);
+      expect(muster).toHaveBeenCalledTimes(1);
+      expect(muster).toHaveBeenCalledWith({ op: 'buy', position: 'held' });
+
+      await withdraw.trigger('click');
+      expect(muster).toHaveBeenCalledTimes(2);
+      expect(muster).toHaveBeenLastCalledWith({ op: 'withdraw' });
+    } finally { wrapper.unmount(); }
+  });
+
   it('wires the active reading preference into the App Muster panel', () => {
     const app = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
     expect(app).toContain('<Muster v-if="view.muster" :view="view" :prose-mode="accessibility.proseMode"');
