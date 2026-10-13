@@ -8,6 +8,7 @@ import type { FrameEntry } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Interlude from './Interlude.vue';
 import Book from './Book.vue';
+import Entry from './Entry.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
 import Ending from './Ending.vue';
@@ -750,4 +751,85 @@ describe('Abroad counter-record in the reader\'s prose mode (#1313)', () => {
     const source = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
     expect(source).toContain('<Abroad v-else-if="middle === \'abroad\'" :view="view" :prose-mode="accessibility.proseMode" />');
   });
+});
+
+
+describe('reader-local Chronicle annotations (#1434)', () => {
+  it('switches only the explanation, keeping saved pages and deed claims intact', async () => {
+    const page = {
+      id: 'chr_claim', year: 1174, weight: 'page',
+      title: 'A fixed title', text: 'These are the words written in the book.',
+      delegated: 'record:record|choice:keep_the_book|unexpected',
+      claims: [
+        { kind: 'death', year: 1173, cause: 'the winter fever' },
+        { kind: 'trait', trait: 'steadfast', has: false },
+        { kind: 'attribute', attr: 'physical_strength', value: 52 },
+        { kind: 'deed', text: 'She held the gate until dawn.' },
+      ],
+    } as unknown as ChronicleEntry;
+    const wrapper = mount(Entry, { props: { entry: page, proseMode: 'original' } });
+    try {
+      expect(wrapper.text()).toContain('that they died in 1173, the winter fever');
+      expect(wrapper.text()).toContain('that their physical strength stood at 52');
+      expect(wrapper.text()).toContain('standing preference: write it as it happened');
+      expect(wrapper.text()).toContain('answered by standing preference');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('The record says they died in 1173 from the winter fever.');
+      expect(wrapper.text()).toContain('The record says they were not steadfast.');
+      expect(wrapper.text()).toContain('The record says their physical strength was 52.');
+      expect(wrapper.text()).toContain('usual choice: write down what happened');
+      expect(wrapper.text()).toContain('usual choice: keep the book');
+      expect(wrapper.text()).toContain('answered using the usual choice');
+      expect(wrapper.text()).not.toContain('stood at 52');
+      expect(wrapper.text()).toContain('These are the words written in the book.');
+      expect(wrapper.text()).toContain('She held the gate until dawn.');
+      expect(page.text).toBe('These are the words written in the book.');
+      expect(page.claims?.[3]).toEqual({ kind: 'deed', text: 'She held the gate until dawn.' });
+
+      // Epilogue uses the same entry component but hides the delegated badges.
+      await wrapper.setProps({ read: true });
+      expect(wrapper.text()).toContain('The record says they died in 1173 from the winter fever.');
+      expect(wrapper.text()).not.toContain('usual choice:');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('that they died in 1173, the winter fever');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('passes the mode through the existing volume, keeping the book page unchanged', async () => {
+    const page = {
+      id: 'chr_claim', year: 1174, weight: 'page', text: 'This page stays as written.',
+      claims: [{ kind: 'trait', trait: 'loyal', has: true }],
+    } as unknown as ChronicleEntry;
+    const wrapper = mount(Book, {
+      props: {
+        book: [page], ages: [], houseName: 'Gearithy', close: vi.fn(),
+        actions: readsOver([page]), proseMode: 'original',
+      },
+    });
+    try {
+      expect(wrapper.text()).toContain('that they were loyal');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('The record says they were loyal.');
+      expect(wrapper.text()).toContain('This page stays as written.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+  it('connects all four Chronicle reader mounts to the active preference', () => {
+    const source = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
+    for (const name of ['Ending', 'Chronicle']) {
+      const mounts = [...source.matchAll(new RegExp('<' + name + '\\b[^>]*>', 'g'))];
+      expect(mounts).toHaveLength(1);
+      expect(mounts[0]?.[0]).toContain(':prose-mode="accessibility.proseMode"');
+    }
+    const bookMounts = [...source.matchAll(/<Book\b[^>]*>/g)];
+    expect(bookMounts).toHaveLength(2);
+    for (const mount of bookMounts) {
+      expect(mount[0]).toContain(':prose-mode="accessibility.proseMode"');
+    }
+  });
+
 });

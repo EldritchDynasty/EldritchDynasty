@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { EpilogueView, SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
@@ -8,7 +9,7 @@ import {
   PLATE, afterimageLayout, afterimageModel, afterimageName, type Measure,
 } from '../lib/book';
 
-const props = defineProps<{ view: SessionView; epilogue: EpilogueView; actions: GameActions }>();
+const props = defineProps<{ view: SessionView; epilogue: EpilogueView; actions: GameActions; proseMode?: ProseMode }>();
 defineEmits<{ (e: 'open'): void }>();
 
 /**
@@ -206,6 +207,7 @@ async function saveAfterimage(): Promise<void> {
         v-for="(entry, i) in epilogue.read"
         :key="entry.id ?? entry.year + ':' + i"
         :entry="entry"
+        :prose-mode="proseMode"
         read
       />
     </section>

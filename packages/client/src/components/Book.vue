@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ChronicleEntry, SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { useModal } from '../lib/modal';
 import { findEntry, linksFor } from '../lib/causes';
 import type { GameActions } from '../lib/game';
@@ -13,6 +14,8 @@ import {
 
 const props = defineProps<{
   book: ChronicleEntry[];
+  /** Only the surrounding UI, never a previously saved page, changes modes. */
+  proseMode?: ProseMode;
   /**
    * The Ages the house has been through, running ones included (issue #81).
    * Every one of them draws a rule at the year it began, and only the ones
@@ -376,6 +379,7 @@ const counts = computed(() => ({
           </div>
           <Entry
             :entry="entry"
+            :prose-mode="proseMode"
             :links="entry.id ? links.get(entry.id) : undefined"
             :marked="!!entry.id && marked === entry.id"
             @follow="follow"
