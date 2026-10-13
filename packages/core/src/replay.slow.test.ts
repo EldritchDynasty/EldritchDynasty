@@ -4,7 +4,7 @@ import {
   applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, foundHouse, heldHeirlooms, place, present,
   replay, ReplayMismatchError, runYears, testRng, testWorld,
 } from '@ed/core';
-import { CAMPAIGN_YEARS } from './campaign.js';
+import { CAMPAIGNS, CAMPAIGN_YEARS } from './campaign.js';
 
 const bundle = loadContent();
 // 1042, 909 and 5150 replaced: under the corrected blood-membership count
@@ -46,6 +46,23 @@ describe('replay reconstructs a run from its decision log', () => {
       causalPages += causes.filter((entry) => entry.cause !== undefined).length;
     }
     expect(causalPages, 'the replay corpus never exercised a causal Chronicle page').toBeGreaterThan(0);
+  });
+
+  it('replays Short Line and Demo logs with the campaign that produced them', () => {
+    for (const campaign of ['short', 'demo'] as const) {
+      // Use the complete Demo term and a bounded Short Line witness. Both
+      // differ from the Long Line envelope before gameplay diverges.
+      const years = campaign === 'demo' ? CAMPAIGNS.demo.years : 80;
+      const seed = 910;
+      const original = bootstrap(bundle, seed, 1042, campaign);
+      runYears(original, years);
+
+      const rebuilt = replay(bundle, original.world.decisionLog, seed, 1042, years, campaign);
+      expect(rebuilt.world.campaign, `${campaign}: wrong campaign`).toBe(campaign);
+      expect(rebuilt.world.year, `${campaign}: wrong year`).toBe(original.world.year);
+      expect(CAMPAIGNS[rebuilt.world.campaign].endYear).toBe(CAMPAIGNS[campaign].endYear);
+      expect(digestOf(rebuilt), `${campaign}: replay drifted`).toBe(digestOf(original));
+    }
   });
 
   it('replays the founding answer before the first year, including the five-name roster', () => {

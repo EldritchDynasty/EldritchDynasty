@@ -1,4 +1,4 @@
-import type { Content, ContentBundle, LoggedDecision } from '@ed/schema';
+import type { CampaignId, Content, ContentBundle, LoggedDecision } from '@ed/schema';
 import { assertNever } from '@ed/schema';
 import { bootstrap } from './sim.js';
 import { runYears } from './year/step.js';
@@ -42,6 +42,8 @@ export function replay(
   seed: number,
   startYear: number,
   years: number,
+  /** Replay the campaign that wrote the log; old five-argument callers are Long Lines. */
+  campaign: CampaignId = 'long',
 ): SimCtx {
   const signing = log.filter((d) => d.kind === 'signing');
   if (signing.length > 1) {
@@ -60,7 +62,7 @@ export function replay(
     source,
     seed,
     startYear,
-    'long',
+    campaign,
     [],
     signed ? { answers: signed.answers, founderName: signed.founderName } : undefined,
   );
