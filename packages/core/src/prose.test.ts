@@ -923,6 +923,22 @@ describe('prospective prose selection', () => {
 });
 
 describe('keyed core-message interpolation (#706)', () => {
+  it('keeps literal and substituted Originals unchanged while avoiding false migration misses (#1641)', () => {
+    const ctx = testWorld(loadBundle());
+    const literal = 'The ledger stays closed.';
+    const named = 'The heir is {NAME}.';
+    expect(msg(ctx, 'test.literal_fast_path', literal)).toBe(literal);
+    expect(msg(ctx, 'test.named_fast_path', named, { NAME: 'Mara' })).toBe('The heir is Mara.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    // Still report genuinely untranslated words when the reader asks for them.
+    setProseMode(ctx, 'plainenglish');
+    expect(msg(ctx, 'test.literal_fast_path', literal)).toBe(literal);
+    expect(msg(ctx, 'test.named_fast_path', named, { NAME: 'Mara' })).toBe('The heir is Mara.');
+    expect(missingPlainEnglish(ctx)).toContain(coreMessageAddress('test.literal_fast_path'));
+    expect(missingPlainEnglish(ctx)).toContain(coreMessageAddress('test.named_fast_path'));
+  });
+
   it('substitutes upper, lower, mixed-case and repeated placeholders', () => {
     const ctx = testWorld(loadBundle());
     const original = '{HEAD} served {years} years, until {endYear}; {HEAD} remembers {_LEGACY}.';
