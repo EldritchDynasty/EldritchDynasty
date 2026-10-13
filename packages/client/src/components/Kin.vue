@@ -55,7 +55,7 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
            behind it: a button on a leaf would offer to root the tree at
            itself. -->
       <button v-if="kids.length" class="quiet small root" @click="$emit('root', member.id)">
-        Only this branch ▸
+        {{ proseMode === 'plainenglish' ? 'Show only this family branch ▸' : 'Only this branch ▸' }}
       </button>
     </div>
     <ul v-if="kids.length">
