@@ -112,6 +112,58 @@ describe('browser host rejects unreadable root writes (#1372, #1406)', () => {
   });
 });
 
+describe('browser host reads reject invalid JSON roots (#1567)', () => {
+  it('distinguishes missing records, invalid present roots, and valid opaque objects', async () => {
+    const bytes = new Map<string, string>();
+    const storage: Storage = {
+      get length() { return bytes.size; },
+      key: (i: number) => [...bytes.keys()][i] ?? null,
+      getItem: (key: string) => bytes.get(key) ?? null,
+      setItem: (key: string, value: string) => { bytes.set(key, value); },
+      removeItem: (key: string) => { bytes.delete(key); },
+      clear: () => { bytes.clear(); },
+    };
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const host = browserPlatform();
+      await expect(host.readSave('autosave')).resolves.toBeNull();
+      await expect(host.readLibrary()).resolves.toBeNull();
+
+      // A storage key containing valid JSON is not necessarily a valid object
+      // record. Neither path may return these roots as if they were readable.
+      for (const root of ['null', '[]', '[1]', 'false', '42', '"text"']) {
+        bytes.set('ed:save:autosave', root);
+        bytes.set('ed:library', root);
+        await expect(host.readSave('autosave')).rejects.toThrow(
+          'the browser save record is invalid',
+        );
+        await expect(host.readLibrary()).rejects.toThrow(
+          'the browser Library of Houses record is invalid',
+        );
+      }
+
+      bytes.set('ed:save:autosave', '{bad json');
+      bytes.set('ed:library', '{bad json');
+      await expect(host.readSave('autosave')).rejects.toThrow(SyntaxError);
+      await expect(host.readLibrary()).rejects.toThrow(SyntaxError);
+
+      // The host only rejects impossible roots. The engine still owns schema
+      // validation of nested fields, even when the object is incomplete.
+      bytes.set('ed:save:autosave', JSON.stringify({ format: 30, nested: [] }));
+      bytes.set('ed:library', JSON.stringify({ format: 1, runs: [] }));
+      await expect(host.readSave('autosave')).resolves.toEqual({ format: 30, nested: [] });
+      await expect(host.readLibrary()).resolves.toEqual({ format: 1, runs: [] });
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+});
+
 function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const path = join(dir, entry);

@@ -131,6 +131,17 @@ function readableBrowserJSON(value: unknown, space?: number): string {
   return serialized;
 }
 
+/**
+ * Storage must distinguish an absent record from a present JSON value that
+ * cannot be a saved game or Library. Leave nested validation to core.
+ */
+function readableBrowserRecord(value: unknown, name: string): unknown {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new TypeError(`the browser ${name} record is invalid`);
+  }
+  return value;
+}
+
 /** The full demo implementation: durable local saves and download/file import. */
 export function browserPlatform(): Platform {
   return {
@@ -173,9 +184,7 @@ export function browserPlatform(): Platform {
       // reject rather than masquerade as an absent run (#1252). In particular,
       // JSON.parse('null') succeeds but cannot represent a saved game.
       if (text === null) return null;
-      const save: unknown = JSON.parse(text);
-      if (save === null) throw new TypeError('the browser save record is invalid');
-      return save;
+      return readableBrowserRecord(JSON.parse(text), 'save');
     },
 
     async writeSave(slot, save) {
@@ -199,9 +208,7 @@ export function browserPlatform(): Platform {
       if (text === null) return null;
       // A present but unreadable record must reject. Treating corrupt JSON
       // (including an empty string or literal null) as absence risks erasure.
-      const library: unknown = JSON.parse(text);
-      if (library === null) throw new TypeError('the browser Library of Houses record is invalid');
-      return library;
+      return readableBrowserRecord(JSON.parse(text), 'Library of Houses');
     },
 
     async writeLibrary(library) {
