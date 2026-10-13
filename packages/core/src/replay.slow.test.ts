@@ -86,6 +86,7 @@ describe('replay reconstructs a run from its decision log', () => {
         claims: [{ kind: 'attr', person: 'old_iona', attr: 'mind', value: 65 }],
       }],
     });
+    const priorRunSnapshot = structuredClone(previous);
     const seed = 912;
     const years = 40;
     const original = bootstrap(bundle, seed, 1042, 'short', [previous]);
@@ -104,6 +105,7 @@ describe('replay reconstructs a run from its decision log', () => {
     expect(rebuilt.world.libraryMemories[0]?.id).toBe(initialMemory[0]?.id);
     expect(rebuilt.world.libraryMemories[0]?.sourceText).toBe(initialMemory[0]?.sourceText);
     expect(digestOf(rebuilt)).toBe(digestOf(original));
+    expect(previous, 'bootstrap/replay mutated its historical Library input').toEqual(priorRunSnapshot);
 
     // Six-argument callers without an inherited Library still work: no
     // synthetic memory, no changed RNG streams, and an identical digest.
