@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import { CONTENT_MODULE, contentFiles, readContentDocs, readProseDocs, readStartupDocs } from '../../build/content-plugin.js';
 import { installPlainEnglishCatalogue, loadBundle as clientBundle, unpackProseDocs } from './content.js';
-import type { Platform, SmokeCommand, SmokeResult } from '../platform.js';
+import type { Platform, SaveSummary, SmokeCommand, SmokeResult } from '../platform.js';
 import { createGame } from './game.js';
 
 const CLIENT = join(import.meta.dirname, '../..');
@@ -436,5 +436,53 @@ describe('native cold-process smoke export', () => {
     });
     expect(writeSave).not.toHaveBeenCalled();
     expect(writeSmokeInterchange).toHaveBeenCalledWith(persisted);
+  });
+});
+
+/**
+ * The host may return an older saved-slot catalogue after a newer one has
+ * finished. A slow background refresh must not make a newly written game
+ * disappear from the front door (#1569).
+ */
+describe('save-list host response ordering (#1569)', () => {
+  it('keeps the newest listing when older explicit and initial reads settle last', async () => {
+    const resolveListings: Array<(saves: SaveSummary[]) => void> = [];
+    const platform: Platform = {
+      listSaves: () => new Promise<SaveSummary[]>((resolve) => { resolveListings.push(resolve); }),
+      async readSave() { return null; },
+      async writeSave() {},
+      async deleteSave() {},
+      async readLibrary() { return null; },
+      async writeLibrary() {},
+      async readUserContent() { return {}; },
+      async exportSave() {},
+      async importSave() { return null; },
+      onPause() { return () => undefined; },
+      onBack() { return () => undefined; },
+    };
+
+    const store = createGame(loadContent(), platform);
+    // Composition starts a background refresh; two user reads follow it.
+    expect(resolveListings).toHaveLength(1);
+    const older = store.actions.listSaves();
+    const latest = store.actions.listSaves();
+    expect(resolveListings).toHaveLength(3);
+
+    resolveListings[2]!([
+      { slot: 'chapter-1300', year: 1300 },
+      { slot: 'demo-autosave', year: 1075 },
+    ]);
+    await expect(latest).resolves.toEqual([{ slot: 'chapter-1300', year: 1300 }]);
+    expect(store.saves.value).toEqual([{ slot: 'chapter-1300', year: 1300 }]);
+
+    // The older explicit request observed an obsolete saved slot.
+    resolveListings[1]!([{ slot: 'chapter-1050', year: 1050 }]);
+    await older;
+    expect(store.saves.value).toEqual([{ slot: 'chapter-1300', year: 1300 }]);
+
+    // Even a background read from before both requests must not erase it.
+    resolveListings[0]!([]);
+    await Promise.resolve();
+    expect(store.saves.value).toEqual([{ slot: 'chapter-1300', year: 1300 }]);
   });
 });
