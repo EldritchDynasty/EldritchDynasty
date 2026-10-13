@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import type { ProseMode } from '@ed/schema';
 import type { Outcome } from '../lib/game';
 
 /**
@@ -21,7 +22,8 @@ import type { Outcome } from '../lib/game';
  * sentence, quoted, and the only words this component adds are the ones naming
  * what the player said.
  */
-defineProps<{ outcome: Outcome }>();
+const props = defineProps<{ outcome: Outcome; proseMode?: ProseMode }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
 defineEmits<{ (e: 'dismiss'): void }>();
 
 /**
@@ -38,9 +40,11 @@ onMounted(() => go.value?.focus());
        because the answer was invisible, and waiting for a gap to say so would
        reproduce the bug for exactly the players who can least afford it. -->
   <section class="panel outcome" aria-live="assertive">
-    <h3 class="label">{{ outcome.text || outcome.kind === 'record' ? 'What came of it' : 'The choice is made' }}</h3>
+    <h3 class="label">{{ outcome.text || outcome.kind === 'record'
+      ? (plain ? 'What happened next' : 'What came of it')
+      : (plain ? 'Decision confirmed' : 'The choice is made') }}</h3>
 
-    <p v-if="outcome.said" class="dim small said">You said: {{ outcome.said }}</p>
+    <p v-if="outcome.said" class="dim small said">{{ plain ? 'You chose:' : 'You said:' }} {{ outcome.said }}</p>
 
     <p v-if="outcome.text" class="body">{{ outcome.text }}</p>
 
@@ -49,7 +53,7 @@ onMounted(() => go.value?.focus());
          event should have been. Said in words, because a panel that showed
          nothing here would be the bug this component was built to fix. -->
     <p v-else-if="outcome.kind === 'record'" class="body blank">
-      The book carries a dated blank line where this would have been. Nothing was written down.
+      {{ plain ? 'The Chronicle has an empty dated entry for this event. Nothing was recorded.' : 'The book carries a dated blank line where this would have been. Nothing was written down.' }}
     </p>
 
     <!-- Some accepted choices have no immediate authored outcome sentence.
@@ -57,10 +61,10 @@ onMounted(() => go.value?.focus());
          or future event timing. The years and the Chronicle remain the only
          honest place for later consequences to become knowable. -->
     <p v-else class="body pending">
-      The decision is made. Anything further will show itself as the years advance.
+      {{ plain ? 'Your choice was accepted. Any later effects will become clear as the years pass.' : 'The decision is made. Anything further will show itself as the years advance.' }}
     </p>
 
-    <button ref="go" class="primary" @click="$emit('dismiss')">Go on</button>
+    <button ref="go" class="primary" @click="$emit('dismiss')">{{ plain ? 'Continue' : 'Go on' }}</button>
   </section>
 </template>
 
