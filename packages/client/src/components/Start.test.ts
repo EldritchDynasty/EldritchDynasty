@@ -928,6 +928,81 @@ describe('save list host failures (#1137)', () => {
 });
 
 
+describe('initial Library read guards saved-run actions (#1633)', () => {
+  it('blocks selection and deletion before readiness, including stale confirmation controls', async () => {
+    const saves: SaveSummary[] = [{ slot: 'chapter-old', year: 1140 }];
+    const library = {
+      format: 1,
+      runs: [{
+        id: 'lib_old', seed: 17, campaign: 'short', endedYear: 1342,
+        house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+      }],
+    } as unknown as RunLibrary;
+    const actions = spyActions(saves);
+    const w = mount(Start, {
+      props: {
+        actions, resumable: true, library, libraryReady: false, libraryReadError: false,
+      },
+    });
+    try {
+      await flush();
+      const continuing = w.findAll('button').find((el) => el.text() === 'Continue the last sitting')!;
+      const loading = w.get('.saved li button');
+      const importing = w.findAll('button').find((el) => el.text() === 'Bring a run in')!;
+      const remove = w.get('.library-title button');
+      const clear = w.get('.library-head button');
+      const begin = w.findAll('button').find((el) => el.text() === 'Reading the library…')!;
+      for (const button of [continuing, loading, importing, remove, clear, begin]) {
+        expect(button.attributes('disabled')).toBeDefined();
+        await button.trigger('click');
+      }
+      expect(actions.resume).not.toHaveBeenCalled();
+      expect(actions.load).not.toHaveBeenCalled();
+      expect(actions.importSave).not.toHaveBeenCalled();
+      expect(actions.begin).not.toHaveBeenCalled();
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+      expect(w.find('.library-clear-confirm').exists()).toBe(false);
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+
+      await w.setProps({ libraryReady: true });
+      for (const button of [continuing, loading, importing, remove, clear, begin]) {
+        expect(button.attributes('disabled')).toBeUndefined();
+      }
+      // The first confirmation is already visible when a profile refresh
+      // starts. Its stale action must not delete during a new pending read.
+      await remove.trigger('click');
+      const confirmedRemove = w.get('button.confirm-remove');
+      await w.setProps({ libraryReady: false });
+      expect(confirmedRemove.attributes('disabled')).toBeDefined();
+      await confirmedRemove.trigger('click');
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.setProps({ libraryReady: true });
+      await confirmedRemove.trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('lib_old');
+      await clear.trigger('click');
+      const confirmedClear = w.get('button.confirm-clear');
+      await w.setProps({ libraryReady: false });
+      expect(confirmedClear.attributes('disabled')).toBeDefined();
+      await confirmedClear.trigger('click');
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+      await w.setProps({ libraryReady: true });
+      await confirmedClear.trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledOnce();
+
+      await continuing.trigger('click');
+      await flush();
+      await loading.trigger('click');
+      await flush();
+      await importing.trigger('click');
+      expect(actions.resume).toHaveBeenCalledOnce();
+      expect(actions.load).toHaveBeenCalledWith('chapter-old');
+      expect(actions.importSave).toHaveBeenCalledOnce();
+    } finally { w.unmount(); }
+  });
+});
+
 describe('Library recovery retries (#1363)', () => {
   it('keeps the host read single-flight, then permits a retry after failure', async () => {
     const actions = spyActions();
