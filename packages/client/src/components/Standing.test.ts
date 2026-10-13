@@ -139,6 +139,47 @@ describe('Standing legibility (#356)', () => {
 });
 
 describe('Standing reader-local Plain English (#1439)', () => {
+  it('explains the same resource quantities using direct labels and glossary copy (#1616)', async () => {
+    const current = view();
+    const snapshot = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'saved', proseMode: 'original' },
+    });
+    try {
+      const labels = () => wrapper.findAll('.house-ledger dt').map((row) => row.text());
+      const values = () => wrapper.findAll('.house-ledger dd').map((row) => row.text());
+      const original = wrapper.text();
+      const originalValues = values();
+      expect(labels()).toEqual(['Treasury', 'Standing', 'Discontent', 'Ledger']);
+      expect(wrapper.get('.house-key summary').text()).toBe('What these readings mean');
+      expect(wrapper.get('.house-key').text()).toContain('crowns the house can spend.');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(labels()).toEqual(['Money available', 'Reputation', 'Unrest', 'Recovered clauses']);
+      expect(wrapper.get('.house-key summary').text()).toBe('What these numbers mean');
+      expect(wrapper.findAll('.house-key dt').map((row) => row.text())).toEqual(labels());
+      const explanations = wrapper.findAll('.house-key dd').map((row) => row.text());
+      expect(explanations).toEqual([
+        'Money the family can spend, measured in crowns.',
+        'How the wider world regards this family.',
+        'How much unrest is building inside the family and on its land.',
+        'How many parts of the old bargain the family has found.',
+      ]);
+      expect(values()).toEqual(originalValues);
+      expect(wrapper.get('.save[role="status"]').text()).toBe('saved');
+      expect(current).toEqual(snapshot);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(labels()).toEqual(['Treasury', 'Standing', 'Discontent', 'Ledger']);
+      expect(wrapper.get('.house-key summary').text()).toBe('What these readings mean');
+      expect(wrapper.text()).toBe(original);
+      expect(current).toEqual(snapshot);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+
   it('switches current explanations while retaining Original and the supplied world data', async () => {
     const current = view();
     current.assize = { ...current.assize, favour: true, mercy: true, exaction: true,
