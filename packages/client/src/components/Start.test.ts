@@ -1894,3 +1894,107 @@ describe('Begin wins the same-render Library mutation race (#1553)', () => {
     }
   });
 });
+
+
+/**
+ * Reader mode must name the SAME action to a screen reader as it names to a
+ * sighted reader. A visual translation with an old aria-label leaves two
+ * incompatible descriptions of a destructive Library action (#410).
+ * Stored ending titles and Chronicle pages remain the words that were saved.
+ */
+describe('front-door Library and save accessibility in both registers (#410)', () => {
+  function completed(count: number): RunLibrary {
+    return {
+      format: 1,
+      runs: Array.from({ length: count }, (_, i) => ({
+        id: 'house_' + i,
+        seed: 100 + i,
+        campaign: 'short' as const,
+        endedYear: 1342,
+        house: 'House ' + (i ? 'Ash' : 'Salt'),
+        ending: { id: 'forgotten', title: 'The remembered ending' },
+        entries: [{
+          id: 'old_page_' + i,
+          year: 1222,
+          said: 'The old account stays exactly as it was recorded.',
+          people: {},
+          claims: [],
+        }],
+      })),
+    };
+  }
+
+  it('updates accessible section names and clear confirmation live without rewriting saved words', async () => {
+    const library = completed(1);
+    const originalBytes = JSON.stringify(library);
+    const actions = spyActions([{ slot: 'chapter-1200', year: 1200 }]);
+    const w = mount(Start, { props: { actions, resumable: false, library, proseMode: 'original' } });
+    try {
+      await flush();
+      expect(w.get('.reading').attributes('aria-label')).toBe('Reading');
+      expect(w.get('.library').attributes('aria-label')).toBe('Library of Houses');
+      expect(w.get('.saved').attributes('aria-label')).toBe('Saved runs');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('.reading').attributes('aria-label')).toBe('Reading settings');
+      expect(w.get('.library').attributes('aria-label')).toBe('Completed houses');
+      expect(w.get('.saved').attributes('aria-label')).toBe('Saved games');
+
+      await w.get('.library-head > button').trigger('click');
+      expect(w.get('.library-clear-confirm').attributes('aria-label'))
+        .toBe('Confirm removing all completed houses');
+      expect(w.get('.library-clear-confirm').text())
+        .toContain('Remove all 1 completed house? This cannot be undone.');
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+
+      // A reader can change the mode with confirmation already open.
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.library-clear-confirm').attributes('aria-label'))
+        .toBe('Confirm clearing the Library of Houses');
+      expect(w.get('.library-clear-confirm').text())
+        .toContain('Clear all 1 completed house? This cannot be undone.');
+      await w.get('.library-clear-confirm button:last-child').trigger('click');
+      expect(actions.clearLibrary).not.toHaveBeenCalled();
+
+      expect(w.text()).toContain('The remembered ending');
+      expect(w.text()).toContain('The old account stays exactly as it was recorded.');
+      expect(JSON.stringify(library)).toBe(originalBytes);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps plural clear and per-house removal accessible through both mode changes', async () => {
+    const library = completed(2);
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library, proseMode: 'plainenglish' } });
+    try {
+      await flush();
+      const remove = w.findAll('.library-run button').find((b) => b.text() === 'Remove');
+      expect(remove).toBeDefined();
+      await remove!.trigger('click');
+      expect(w.get('.library-remove-confirm').attributes('aria-label'))
+        .toBe('Confirm removing House Ash from completed games');
+      expect(w.get('.library-remove-confirm').text())
+        .toContain('Remove House Ash from completed games? You cannot undo this.');
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.library-remove-confirm').attributes('aria-label'))
+        .toBe('Confirm removing House Ash');
+      expect(w.get('.library-remove-confirm').text())
+        .toContain('Remove House Ash? This cannot be undone.');
+      await w.setProps({ proseMode: 'plainenglish' });
+      await w.get('.library-remove-confirm button:last-child').trigger('click');
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+
+      await w.get('.library-head > button').trigger('click');
+      expect(w.get('.library-clear-confirm').text())
+        .toContain('Remove all 2 completed houses? This cannot be undone.');
+      await w.get('button.confirm-clear').trigger('click');
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+});
