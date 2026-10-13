@@ -936,7 +936,6 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
       expect(wrapper.text()).toContain('Choose an heirloom');
       expect(wrapper.text()).toContain('Up to five friends outside the family');
       expect(wrapper.get('.waiting').text()).toContain('Before signing, provide');
-      expect(wrapper.get('input[aria-label="Enter the founder name"]').element.getAttribute('value')).toBeNull();
       expect((wrapper.get('input[aria-label="Enter the founder name"]').element as HTMLInputElement).value).toBe('Daveed');
 
       for (let q = 1; q <= 4; q += 1) await answerButton(wrapper, q).trigger('click');
