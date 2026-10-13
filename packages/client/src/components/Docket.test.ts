@@ -18,6 +18,8 @@ import Docket from './Docket.vue';
 import Interlude from './Interlude.vue';
 import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
+import Cast from './Cast.vue';
+import Ambition from './Ambition.vue';
 import Outcome from './Outcome.vue';
 import Standing from './Standing.vue';
 import Table from './Table.vue';
@@ -1765,6 +1767,122 @@ describe('reader-local docket instructions in Plain English (#410)', () => {
       expect(wrapper.text()).toContain('what the book will say');
       expect(wrapper.text()).toContain('Use the answer I choose for routine repeats');
       expect(decision).toEqual(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+
+/**
+ * Reader-local framing belongs in the mounted components, not in the world
+ * snapshot or a second translation of core-authored text. Switching registers
+ * must leave every selected id and pending action intact (#1623).
+ */
+describe('five reader-control panels in Plain English (#1623)', () => {
+  it('changes the cast heading without changing the supplied people or selection', async () => {
+    const cast = [{
+      person: 'p_ash', name: 'Mara Ash', age: 27, sex: 'female',
+      hall: 'South Hall', label: 'the keeper', because: 'She holds the archive key.',
+    }] as unknown as SessionView['cast'];
+    const wrapper = mount(Cast, { props: { cast, selected: null, proseMode: 'original' } });
+    try {
+      expect(wrapper.text()).toContain('Who this generation is about');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('People important to this generation');
+      expect(wrapper.text()).toContain('She holds the archive key.');
+      expect(wrapper.text()).toContain('the keeper');
+      await wrapper.get('li button').trigger('click');
+      expect(wrapper.emitted('select')?.[0]).toEqual(['p_ash']);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('Who this generation is about');
+      expect(cast[0]?.person).toBe('p_ash');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('translates a live naming refusal without losing the draft or sending another action', async () => {
+    const name = vi.fn(() => false);
+    const keepSuggestedName = vi.fn(() => true);
+    const view = { namesWanted: [{
+      person: 'child_ash', sex: 'female', born: 1172, suggested: 'Mara',
+      because: 'Her grandmother requested it.',
+    }] } as unknown as SessionView;
+    const wrapper = mount(Naming, {
+      props: { view, actions: { name, keepSuggestedName } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      await wrapper.get('input').setValue('Alys');
+      await wrapper.findAll('button')[0]!.trigger('click');
+      expect(name).toHaveBeenCalledWith('child_ash', 'Alys');
+      expect(wrapper.get('[role="alert"]').text()).toContain('That name could not be accepted.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="alert"]').text()).toContain('That name was not accepted.');
+      expect(wrapper.get('input').element.value).toBe('Alys');
+      expect(wrapper.text()).toContain('suggested name: Mara');
+      expect(wrapper.text()).toContain('Her grandmother requested it.');
+      expect(name).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('[role="alert"]').text()).toContain('That name could not be accepted.');
+      expect(wrapper.get('input').element.value).toBe('Alys');
+      expect(keepSuggestedName).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps a refused ambition draft through language switches and dispatches the same goal id', async () => {
+    const setAmbition = vi.fn(() => false);
+    const view = {
+      ambition: null,
+      ambitionOptions: [{ id: 'survive', name: 'Keep the line', purpose: 'Last one hundred years.' }],
+    } as unknown as SessionView;
+    const wrapper = mount(Ambition, {
+      props: { view, actions: { setAmbition } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.text()).toContain('House ambition');
+      await wrapper.get('.ambition-actions button').trigger('click');
+      expect(setAmbition).toHaveBeenCalledWith('survive');
+      expect(wrapper.get('[role="alert"]').text()).toContain('The house could not keep that ambition.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Family goal');
+      expect(wrapper.text()).toContain('Last one hundred years.');
+      expect(wrapper.get('[role="alert"]').text()).toContain('Could not select that plan.');
+      expect(wrapper.get('select').element.value).toBe('survive');
+      expect(setAmbition).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('[role="alert"]').text()).toContain('The house could not keep that ambition.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('switches chapter labels without changing a saved verdict or dismissing a card', async () => {
+    const dismissChapter = vi.fn();
+    const beat = {
+      kind: 'closing', view: { name: null, verdict: [{ text: 'The doors stayed shut.' }], boundary: true },
+    } as unknown as ChapterBeat;
+    const wrapper = mount(Chapter, {
+      attachTo: document.body,
+      props: { beat, actions: { dismissChapter } as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.text()).toContain('These years');
+      expect(wrapper.text()).toContain('Put it down');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('End of a period');
+      expect(wrapper.text()).toContain('This period');
+      expect(wrapper.text()).toContain('Stop here');
+      expect(wrapper.text()).toContain('The doors stayed shut.');
+      expect(dismissChapter).not.toHaveBeenCalled();
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain('These years');
+      expect(wrapper.text()).toContain('Put it down');
+      expect(dismissChapter).not.toHaveBeenCalled();
+      await wrapper.get('button').trigger('click');
+      expect(dismissChapter).toHaveBeenCalledTimes(1);
     } finally {
       wrapper.unmount();
     }
