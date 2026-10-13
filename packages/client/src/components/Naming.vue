@@ -2,12 +2,36 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { FOUNDER_NAME_MAX as PERSON_NAME_MAX } from '../lib/game';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 
-const props = defineProps<{ view: SessionView; actions: GameActions }>();
+const props = defineProps<{ view: SessionView; actions: GameActions; proseMode?: ProseMode }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 const drafts = ref<Record<string, string>>({});
-const refusals = ref<Record<string, string>>({});
+type NamingRefusal = 'empty' | 'length' | 'name' | 'suggestion';
+const refusals = ref<Record<string, NamingRefusal>>({});
+
+/** Store an error's meaning, not its wording, so the current refusal follows
+ * reader preference changes without losing a name draft or dispatching again. */
+function refusalText(kind: NamingRefusal | undefined): string {
+  switch (kind) {
+    case 'empty':
+      return plain.value ? 'Enter a name or use the suggested name.' : 'Enter a name, or let him keep his suggestion.';
+    case 'length':
+      return plain.value
+        ? `Names must be no longer than ${PERSON_NAME_MAX} characters. Try a shorter name.`
+        : `A name must be at most ${PERSON_NAME_MAX} characters. Shorten it and try again.`;
+    case 'name':
+      return plain.value ? 'That name was not accepted. Try another name.' : 'That name could not be accepted. Try a different name.';
+    case 'suggestion':
+      return plain.value
+        ? 'The suggested name was not accepted. Enter a different name.'
+        : 'His suggested name could not be accepted. Try naming this child yourself.';
+    default:
+      return '';
+  }
+}
 
 // A declined name belongs to one child. Never carry a refusal into a later
 // naming offer if that child has left the queue.
@@ -28,7 +52,7 @@ function clearRefusal(person: string): void {
 // A child must receive one naming order per render, even if Enter and both
 // buttons are activated before the parent has refreshed namesWanted.
 const submitting = new Set<string>();
-function submitOnce(person: string, order: () => boolean, rejection: string): void {
+function submitOnce(person: string, order: () => boolean, rejection: NamingRefusal): void {
   if (submitting.has(person)) return;
   submitting.add(person);
   try {
@@ -68,15 +92,15 @@ function give(person: string): void {
   if (submitting.has(person)) return;
   const chosen = (drafts.value[person] ?? '').trim();
   if (!chosen) {
-    refusals.value[person] = 'Enter a name, or let him keep his suggestion.';
+    refusals.value[person] = 'empty';
     return;
   }
   if (chosen.length > PERSON_NAME_MAX) {
-    refusals.value[person] = `A name must be at most ${PERSON_NAME_MAX} characters. Shorten it and try again.`;
+    refusals.value[person] = 'length';
     return;
   }
   submitOnce(person, () => props.actions.name(person, chosen),
-    'That name could not be accepted. Try a different name.');
+    'name');
 }
 
 /**
@@ -99,7 +123,7 @@ function submitOnEnter(person: string, event: KeyboardEvent): void {
 
 function keep(person: string): void {
   submitOnce(person, () => props.actions.keepSuggestedName(person),
-    'His suggested name could not be accepted. Try naming this child yourself.');
+    'suggestion');
 }
 
 function keepAll(): void {
@@ -120,13 +144,13 @@ function keepAll(): void {
 <template>
   <section class="panel naming" aria-live="polite">
     <h3 class="label">
-      {{ waiting }} {{ waiting === 1 ? 'child' : 'children' }} waiting to be named
+      {{ waiting }} {{ waiting === 1 ? 'child' : 'children' }} {{ plain ? 'need' : 'waiting to be' }} named
     </h3>
     <div v-for="child in view.namesWanted" :key="child.person" class="child">
       <div class="small">
         <span class="dim">{{ child.born }} ·</span>
-        {{ child.sex === 'female' ? 'a daughter' : 'a son' }},
-        <span class="dim">whom he would call {{ child.suggested }}</span>
+        {{ child.sex === 'female' ? 'a daughter' : 'a son' }}{{ plain ? '' : ',' }}
+        <span class="dim">{{ plain ? 'suggested name:' : 'whom he would call' }} {{ child.suggested }}</span>
       </div>
       <!-- WHY THIS ONE (issue #62). Naming was 189 prompts a run because every
            child of the seat raised one; it is now raised only where the child
@@ -138,18 +162,18 @@ function keepAll(): void {
         <input
           v-model="drafts[child.person]"
           :placeholder="child.suggested"
-          :aria-label="'Name the ' + (child.sex === 'female' ? 'daughter' : 'son') + ' born in ' + child.born"
+          :aria-label="(plain ? 'Enter a name for the ' : 'Name the ') + (child.sex === 'female' ? 'daughter' : 'son') + ' born in ' + child.born"
           :aria-invalid="Boolean(refusals[child.person])"
           :aria-describedby="refusals[child.person] ? 'naming-refusal-' + child.person : undefined"
           @input="clearRefusal(child.person)"
           @keydown.enter="submitOnEnter(child.person, $event)"
         />
-        <button @click="give(child.person)">Name</button>
+        <button @click="give(child.person)">{{ plain ? 'Use this name' : 'Name' }}</button>
         <!-- Per child, because the daughter and the four sons are not one
              decision. This was all-or-nothing, which made the accept-everything
              button the one a player pressed to get their clock back. -->
         <button class="quiet small" @click="keep(child.person)">
-          Let him name this one
+          {{ plain ? 'Use suggested name' : 'Let him name this one' }}
         </button>
       </div>
       <p
@@ -157,10 +181,10 @@ function keepAll(): void {
         :id="'naming-refusal-' + child.person"
         class="small rubric"
         role="alert"
-      >{{ refusals[child.person] }}</p>
+      >{{ refusalText(refusals[child.person]) }}</p>
     </div>
     <button v-if="waiting > 1" class="quiet small" @click="keepAll()">
-      Keep the names he suggests
+      {{ plain ? 'Use all suggested names' : 'Keep the names he suggests' }}
     </button>
   </section>
 </template>
