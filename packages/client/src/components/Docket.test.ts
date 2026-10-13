@@ -300,6 +300,61 @@ describe('the docket draws what it is handed', () => {
    * do: it proves `choose` is MENTIONED in the store and in a template, not
    * that pressing the branch calls it with the branch that was pressed.
    */
+  it('accepts at most one competing same-render choice, then a later refused retry (#1549)', async () => {
+    const decision = choiceDecision();
+    if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+    try {
+      const buttons = w.findAll('.choices button');
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
+      await Promise.all([buttons[0]!.trigger('click'), buttons[1]!.trigger('click')]);
+      expect(actions.choose).toHaveBeenCalledTimes(1);
+      expect(actions.choose).toHaveBeenLastCalledWith(
+        decision.id, decision.choices[0]!.id, {}, decision.choices[0]!.label,
+      );
+
+      // Vue has now finished patching; a refused answer is never a permanent lock.
+      actions.choose.mockReturnValue(false);
+      await buttons[1]!.trigger('click');
+      expect(actions.choose).toHaveBeenCalledTimes(2);
+      expect(actions.choose.mock.calls[1]![1]).toBe(decision.choices[1]!.id);
+    } finally { w.unmount(); }
+  });
+
+  it('blocks a competing same-render Record answer but permits the next one (#1549)', async () => {
+    const actions = spyActions();
+    const w = mount(Docket, {
+      props: { decision: recordDecision(), actions: actions as unknown as GameActions },
+    });
+    try {
+      const buttons = w.findAll('.choices button');
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
+      await Promise.all([buttons[0]!.trigger('click'), buttons[1]!.trigger('click')]);
+      expect(actions.record).toHaveBeenCalledTimes(1);
+      await buttons[1]!.trigger('click');
+      expect(actions.record).toHaveBeenCalledTimes(2);
+    } finally { w.unmount(); }
+  });
+
+  it('serializes taking and declining a Match hand against one view (#1549)', async () => {
+    const actions = spyActions();
+    const w = mount(Docket, {
+      props: { decision: matchDecision(), actions: actions as unknown as GameActions },
+    });
+    try {
+      const take = w.findAll('button').find((button) => button.text() === 'Take this one');
+      const decline = w.findAll('button').find((button) => button.text() === 'Take none of them');
+      expect(take).toBeDefined();
+      expect(decline).toBeDefined();
+      await Promise.all([take!.trigger('click'), decline!.trigger('click')]);
+      expect(actions.match).toHaveBeenCalledTimes(1);
+      expect(actions.declineHand).not.toHaveBeenCalled();
+      await decline!.trigger('click');
+      expect(actions.declineHand).toHaveBeenCalledTimes(1);
+    } finally { w.unmount(); }
+  });
+
   it('and pressing a branch calls choose with that branch', async () => {
     const decision = choiceDecision();
     if (decision.kind !== 'choice') throw new Error('fixture is the wrong kind');
@@ -1349,6 +1404,9 @@ describe('modal overlays guard the docket keyboard shortcuts (#1170)', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
       pressOne();
       expect(actions.choose).toHaveBeenCalledTimes(1);
+      // The submission guard blocks competing answers in the same render.
+      // The modal restoration check exercises an intentional later answer.
+      await w.vm.$nextTick();
 
       document.body.appendChild(modal);
       close.focus();
