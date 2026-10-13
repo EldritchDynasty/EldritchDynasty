@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
+import { LibraryRunS } from '@ed/schema';
 import {
   applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, foundHouse, heldHeirlooms, place, present,
   replay, ReplayMismatchError, runYears, testRng, testWorld,
@@ -63,6 +64,55 @@ describe('replay reconstructs a run from its decision log', () => {
       expect(CAMPAIGNS[rebuilt.world.campaign].endYear).toBe(CAMPAIGNS[campaign].endYear);
       expect(digestOf(rebuilt), `${campaign}: replay drifted`).toBe(digestOf(original));
     }
+  });
+
+  it('replays inherited Library memories using the original prior-run input (#1601)', () => {
+    // The installation's Library is external bootstrap input, not a decision
+    // reconstructed from the current run. One witnessed historical page is
+    // enough to prove the input affects narrative state and its world digest.
+    const previous = LibraryRunS.parse({
+      id: 'lib_replay_previous_house',
+      seed: 431,
+      campaign: 'short',
+      endedYear: CAMPAIGNS.short.endYear,
+      house: 'The House Before',
+      ending: { id: 'forgotten', title: 'Forgotten' },
+      entries: [{
+        id: 'page_before',
+        said: 'Iona kept a record of the years the old house survived.',
+        year: 1100,
+        record: 'record',
+        people: { old_iona: 'Iona' },
+        claims: [{ kind: 'attr', person: 'old_iona', attr: 'mind', value: 65 }],
+      }],
+    });
+    const seed = 912;
+    const years = 40;
+    const original = bootstrap(bundle, seed, 1042, 'short', [previous]);
+    const initialMemory = structuredClone(original.world.libraryMemories);
+    expect(initialMemory).toHaveLength(1);
+    expect(initialMemory[0]).toMatchObject({
+      sourceRun: previous.id,
+      sourceHouse: previous.house,
+      sourceText: previous.entries[0]!.said,
+      about: `library:${previous.id}:${previous.entries[0]!.id}`,
+    });
+
+    runYears(original, years);
+    const rebuilt = replay(bundle, original.world.decisionLog, seed, 1042, years, 'short', [previous]);
+    expect(rebuilt.world.libraryMemories).toEqual(original.world.libraryMemories);
+    expect(rebuilt.world.libraryMemories[0]?.id).toBe(initialMemory[0]?.id);
+    expect(rebuilt.world.libraryMemories[0]?.sourceText).toBe(initialMemory[0]?.sourceText);
+    expect(digestOf(rebuilt)).toBe(digestOf(original));
+
+    // Six-argument callers without an inherited Library still work: no
+    // synthetic memory, no changed RNG streams, and an identical digest.
+    const withoutLibrary = bootstrap(bundle, seed, 1042, 'short');
+    runYears(withoutLibrary, years);
+    const compatible = replay(bundle, withoutLibrary.world.decisionLog, seed, 1042, years, 'short');
+    expect(compatible.world.libraryMemories).toEqual([]);
+    expect(digestOf(compatible)).toBe(digestOf(withoutLibrary));
+    expect(digestOf(compatible)).not.toBe(digestOf(original));
   });
 
   it('replays the founding answer before the first year, including the five-name roster', () => {
