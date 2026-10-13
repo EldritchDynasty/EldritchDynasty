@@ -1780,6 +1780,15 @@ describe('reader-local docket instructions in Plain English (#410)', () => {
  * must leave every selected id and pending action intact (#1623).
  */
 describe('five reader-control panels in Plain English (#1623)', () => {
+  it('threads the reader preference into every App mount (#1623)', () => {
+    const app = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
+    for (const panel of ['Prologue', 'Naming', 'Cast', 'Chapter', 'Ambition']) {
+      const tag = app.match(new RegExp('<' + panel + '\\b[\\s\\S]*?\\/>'))?.[0];
+      expect(tag, `${panel} is mounted`).toBeDefined();
+      expect(tag, `${panel} receives reader mode`).toContain(':prose-mode="accessibility.proseMode"');
+    }
+  });
+
   it('changes the cast heading without changing the supplied people or selection', async () => {
     const cast = [{
       person: 'p_ash', name: 'Mara Ash', age: 27, sex: 'female',
