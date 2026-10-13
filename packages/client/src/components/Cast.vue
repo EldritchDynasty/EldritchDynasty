@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 
-defineProps<{ cast: SessionView['cast']; selected: string | null }>();
+defineProps<{ cast: SessionView['cast']; selected: string | null; proseMode?: ProseMode }>();
 defineEmits<{ (e: 'select', id: string): void }>();
 
 /**
@@ -25,7 +26,7 @@ defineEmits<{ (e: 'select', id: string): void }>();
 
 <template>
   <section v-if="cast.length" class="panel cast" aria-labelledby="cast-heading">
-    <h3 id="cast-heading" class="label">Who this generation is about</h3>
+    <h3 id="cast-heading" class="label">{{ proseMode === 'plainenglish' ? 'People important to this generation' : 'Who this generation is about' }}</h3>
     <ul>
       <li v-for="member in cast" :key="member.person" :class="{ on: selected === member.person }">
         <button class="row" :aria-pressed="selected === member.person" @click="$emit('select', member.person)">
