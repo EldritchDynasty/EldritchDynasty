@@ -121,6 +121,50 @@ function allMembers(view: SessionView): { hall: HallView; member: MemberView }[]
 }
 
 describe('the family tree as a planning board (#268)', () => {
+  it('switches tree navigation to Plain English without resetting search, filters or people (#1618)', async () => {
+    const current = largeView();
+    const saved = structuredClone(current);
+    const wrapper = mount(Tree, { props: { view: current, selected: null, proseMode: 'original' } });
+    try {
+      const originalIds = renderedIds(wrapper);
+      expect(wrapper.get('.tree').attributes('aria-label')).toBe('The living family tree');
+      expect(wrapper.get('.find input').attributes('placeholder')).toBe('find somebody by name');
+      expect(wrapper.get('.filters [data-filter="succession"]').text()).toBe('Heir / possible');
+      expect(wrapper.get('.planning-label').text()).toBe('Read the house by');
+      expect(wrapper.get('.halls button').text()).toBe('All halls');
+      expect(originalIds).toHaveLength(100);
+
+      await wrapper.get('.filters [data-filter="head"]').trigger('click');
+      const filteredIds = renderedIds(wrapper);
+      expect(wrapper.get('.filters [data-filter="head"]').attributes('aria-pressed')).toBe('true');
+      await wrapper.get('.find input').setValue('does not exist');
+      expect(wrapper.text()).toContain('Nobody of the house answers to that.');
+      const originalFiltered = wrapper.text();
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.tree').attributes('aria-label')).toBe('Living family tree');
+      expect(wrapper.get('.find input').attributes('placeholder')).toBe('Find a family member');
+      expect(wrapper.get('.planning-label').text()).toBe('Show family members by');
+      expect(wrapper.get('.filters [data-filter="head"]').text()).toBe('House leader');
+      expect(wrapper.get('.filters [data-filter="succession"]').text()).toBe('Next in line or possible successor');
+      expect(wrapper.get('.filters [data-filter="head"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.get('.halls button').text()).toBe('All households');
+      expect(wrapper.get('[data-direct-line]').text()).toBe('Main family line');
+      expect(wrapper.text()).toContain('No family member matches that name.');
+      expect((wrapper.get('.find input').element as HTMLInputElement).value).toBe('does not exist');
+      expect(renderedIds(wrapper)).toEqual(filteredIds);
+      expect(current).toEqual(saved);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(originalFiltered);
+      expect(renderedIds(wrapper)).toEqual(filteredIds);
+      expect(current).toEqual(saved);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+
   it('renders a 100-member, 6-hall house exactly once', () => {
     const view = largeView();
     const wrapper = mount(Tree, { props: { view, selected: null } });
