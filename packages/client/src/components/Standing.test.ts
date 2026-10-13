@@ -212,8 +212,8 @@ describe('Standing reader-local Plain English (#1439)', () => {
 
   it('changes remaining ladder, Age and run controls without changing facts or visibility (#1622)', async () => {
     const current = view();
-    current.ages = [{ age: 'long_peace', name: 'Long Peace', began: 1103, register: 'warm' }]
-      as unknown as SessionView['ages'];
+    current.ages = ([{ age: 'long_peace', name: 'Long Peace', began: 1103, register: 'warm' }]
+      as unknown as SessionView['ages']);
     const originalView = structuredClone(current);
     const wrapper = mount(Standing, {
       props: { view: current, jump: null, saveStatus: 'saved', proseMode: 'original' },
