@@ -1614,6 +1614,63 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
 });
 
 describe('mobile durable storage', () => {
+  it('rejects non-object native and legacy JSON roots without erasing recoverable bytes (#1593)', async () => {
+    const badRoots = ['[]', '[1]', 'false', '42', '"text"', 'null'];
+
+    for (const root of badRoots) {
+      const goodSave = { format: 30, year: 1220 };
+      const previousSave = JSON.stringify({ format: 29, year: 1120 });
+      const previousLibrary = JSON.stringify({ format: 1, runs: [{ seed: 7 }] });
+      const files = mobileFileStore({
+        'eldritch/saves/bad.json': root,
+        'eldritch/saves/good.json': JSON.stringify(goodSave),
+        'eldritch/library.json': root,
+      });
+      const preferences = mobilePreferenceStore({
+        'ed:save:bad': previousSave,
+        'ed:library': previousLibrary,
+      });
+      const store = mobileStorage(files, preferences);
+
+      // A newer Data file owns its slot even when damaged. A legacy backup
+      // must not overwrite it, and no scalar is handed to the game as a save.
+      await expect(store.readSave('bad')).rejects.toThrow('native save file is unreadable');
+      await expect(store.readLibrary()).rejects.toThrow('native Library of Houses file is unreadable');
+      await expect(store.readSave('good')).resolves.toEqual(goodSave);
+      const listed = await store.listSaves();
+      expect(listed).toHaveLength(2);
+      expect(listed).toEqual(expect.arrayContaining([
+        { slot: 'bad' },
+        expect.objectContaining({ slot: 'good', year: 1220 }),
+      ]));
+      expect(files.data.get('eldritch/saves/bad.json')).toBe(root);
+      expect(files.data.get('eldritch/library.json')).toBe(root);
+      expect(preferences.data.get('ed:save:bad')).toBe(previousSave);
+      expect(preferences.data.get('ed:library')).toBe(previousLibrary);
+      expect(files.writes).toHaveLength(0);
+
+      // Legacy scalar/array roots are also present but unreadable. They may
+      // be listed for recovery, but not migrated into new native files.
+      const legacyFiles = mobileFileStore();
+      const legacyPrefs = mobilePreferenceStore({
+        'ed:save:bad': root,
+        'ed:library': root,
+        'ed:save:healthy': JSON.stringify(goodSave),
+      });
+      const legacyStore = mobileStorage(legacyFiles, legacyPrefs);
+      await expect(legacyStore.readSave('bad')).rejects.toThrow('legacy save file is unreadable');
+      await expect(legacyStore.readLibrary()).rejects.toThrow('legacy Library of Houses file is unreadable');
+      await expect(legacyStore.listSaves()).resolves.toEqual(expect.arrayContaining([
+        { slot: 'bad' },
+        expect.objectContaining({ slot: 'healthy', year: 1220 }),
+      ]));
+      expect(legacyPrefs.data.get('ed:save:bad')).toBe(root);
+      expect(legacyPrefs.data.get('ed:library')).toBe(root);
+      expect(legacyFiles.data.has('eldritch/saves/bad.json')).toBe(false);
+      expect(legacyFiles.data.has('eldritch/library.json')).toBe(false);
+    }
+  });
+
   it('stores opaque saves and the Library in the app-owned Data directory', async () => {
     const files = mobileFileStore();
     const preferences = mobilePreferenceStore();
