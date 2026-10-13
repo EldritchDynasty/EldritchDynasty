@@ -114,17 +114,17 @@ const cadetHalls = computed(() => props.halls.filter((h) => !h.isSeat && h.membe
 const selectedHall = ref<Record<string, string>>({});
 const giftError = ref<{ parcel: string; reason: string } | null>(null);
 
-// An Endow/Recall button retains its old parcel state until Vue repaints.
-// One visible state must emit at most one land transfer order.
-let giftSubmitting = false;
-function dispatchGift(order: Parameters<GameActions['order']>[0]): ReturnType<GameActions['order']> | null {
-  if (giftSubmitting) return null;
-  giftSubmitting = true;
+// The old Endow/Recall button stays clickable until Vue repaints. Suppress
+// repeated orders for that parcel, not for independent parcels in the same Plat.
+const giftSubmitting = new Set<string>();
+function dispatchGift(order: Extract<Parameters<GameActions['order']>[0], { kind: 'endow' }>): ReturnType<GameActions['order']> | null {
+  if (giftSubmitting.has(order.parcel)) return null;
+  giftSubmitting.add(order.parcel);
   try {
     return props.actions.order(order);
   } finally {
-    // Failed transfers must be retryable from the next rendered state.
-    void nextTick(() => { giftSubmitting = false; });
+    // Even refused/thrown orders can retry after the next rendered state.
+    void nextTick(() => { giftSubmitting.delete(order.parcel); });
   }
 }
 
