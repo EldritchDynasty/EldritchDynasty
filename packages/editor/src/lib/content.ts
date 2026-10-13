@@ -60,19 +60,36 @@ export function shell(): ShellBridge | undefined {
   return (globalThis as { ed?: ShellBridge }).ed;
 }
 
+/**
+ * Treat one Mod Editor hydration as an all-or-nothing batch. A later shipped
+ * path collision must not leave earlier new YAML inside the live editor bundle
+ * after the import is refused. Validate every path before changing either
+ * the content map or the set of writable user paths.
+ */
+export function registerUserContent(
+  allFiles: Record<string, string>,
+  writablePaths: Set<string>,
+  files: Record<string, string>,
+): void {
+  const entries = Object.entries(files).sort(([a], [b]) => a.localeCompare(b));
+  for (const [path] of entries) {
+    if (path in allFiles) {
+      throw new Error(`user content '${path}' shadows a shipped file; v1 supports new files and ids only`);
+    }
+  }
+  for (const [path, text] of entries) {
+    allFiles[path] = text;
+    writablePaths.add(path);
+  }
+}
+
 export async function hydrateUserContent(): Promise<void> {
   const bridge = shell();
   if (bridge?.mode !== 'mod-editor') return;
 
   const res = await bridge.readUserContent();
   if (!res.ok) throw new Error(res.error ?? 'the host refused user content');
-  for (const [path, text] of Object.entries(res.files ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
-    if (path in rawFiles) {
-      throw new Error(`user content '${path}' shadows a shipped file; v1 supports new files and ids only`);
-    }
-    rawFiles[path] = text;
-    userContentPaths.add(path);
-  }
+  registerUserContent(rawFiles, userContentPaths, res.files ?? {});
 }
 
 export function isWritableContentPath(path: string): boolean {
