@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { mount } from '@vue/test-utils';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import type { AdviserAdvice, HelpSurface, HelpTier, SessionView } from '@ed/core';
 import TreeCounsel from './TreeCounsel.vue';
@@ -24,6 +25,70 @@ const view = {
 } as unknown as SessionView;
 
 describe('tree and hall counsel', () => {
+  it('passes the current reading preference through the App tree counsel mount (#1630)', () => {
+    const appSource = readFileSync('packages/client/src/App.vue', 'utf8');
+    expect(appSource).toContain('<TreeCounsel :view="view" :selected="selected" :actions="actions" :prose-mode="accessibility.proseMode" />');
+  });
+
+
+  it('translates family and household advice without changing tiers, evidence or subjects (#1630)', async () => {
+    const advice = vi.fn((_surface: HelpSurface, _subject: string, _tier: HelpTier) => [line]);
+    const current: SessionView = {
+      ...view,
+      halls: view.halls.map((hall) => hall.isSeat ? hall : { ...hall, grievance: 0.35 }),
+    };
+    const originalView = structuredClone(current);
+    const wrapper = mount(TreeCounsel, {
+      props: { view: current, selected: 'daughter', actions: { advice }, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('.tree-counsel').attributes('aria-label')).toBe('Counsel about the family');
+      expect(wrapper.get('.branch-help summary').text()).toBe("Ask about a hall's grievance");
+      expect(wrapper.get('.hall-help p').text()).toContain('Elm Hall · grievance less than 1');
+      expect(wrapper.findAll('.adviser-help button').map((button) => button.text()))
+        .toEqual(['Ask an adviser', 'Ask an adviser']);
+      expect(advice).not.toHaveBeenCalled();
+
+      await wrapper.get('.tree-counsel > .adviser-help button').trigger('click');
+      await wrapper.get('.hall-help .adviser-help button').trigger('click');
+      expect(advice.mock.calls).toEqual([
+        ['tree', 'daughter', 1], ['branches', 'branch_elm', 1],
+      ]);
+      const savedLines = wrapper.findAll('blockquote').map((block) => block.text());
+      expect(savedLines).toHaveLength(2);
+      expect(savedLines[0]).toContain('Begin with one name.');
+      expect(savedLines[1]).toContain('Mara');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.tree-counsel').attributes('aria-label')).toBe('Advice about the family');
+      expect(wrapper.get('.branch-help summary').text()).toBe('Ask why a household is unhappy');
+      expect(wrapper.get('.hall-help p').text()).toContain('Elm Hall · grievance score under 1');
+      expect(wrapper.findAll('.adviser-help').map((el) => el.attributes('aria-label')))
+        .toEqual(['Advice from family advisers', 'Advice from family advisers']);
+      expect(wrapper.findAll('.adviser-help button').map((button) => button.text()))
+        .toEqual(['Ask what the family knows', 'Ask what the family knows']);
+      expect(wrapper.findAll('blockquote').map((block) => block.text())).toEqual(savedLines);
+      expect(advice).toHaveBeenCalledTimes(2);
+      expect(current).toEqual(originalView);
+
+      await wrapper.get('.hall-help .adviser-help button').trigger('click');
+      expect(advice).toHaveBeenLastCalledWith('branches', 'branch_elm', 2);
+      expect(wrapper.findAll('blockquote')).toHaveLength(3);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.tree-counsel').attributes('aria-label')).toBe('Counsel about the family');
+      expect(wrapper.get('.branch-help summary').text()).toBe("Ask about a hall's grievance");
+      expect(wrapper.get('.hall-help p').text()).toContain('Elm Hall · grievance less than 1');
+      expect(wrapper.findAll('.adviser-help button').map((button) => button.text()))
+        .toEqual(['Ask what the house knows', 'Ask what can be done']);
+      expect(wrapper.findAll('blockquote').slice(0, 2).map((block) => block.text()))
+        .toEqual(savedLines);
+      expect(advice).toHaveBeenCalledTimes(3);
+      expect(current).toEqual(originalView);
+    } finally {
+      wrapper.unmount();
+    }
+  });
   it('shows a positive subunit grievance without calling it zero (#1473)', async () => {
     const advice = vi.fn((_surface: HelpSurface, _subject: string, _tier: HelpTier) => [line]);
     const withGrievance = (grievance: number): SessionView => ({

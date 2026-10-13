@@ -656,7 +656,7 @@ const yearAndBirths = computed(() => {
                is true of them and of nobody else. The tree is still under it;
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" @select="selectFromCast" />
-          <TreeCounsel :view="view" :selected="selected" :actions="actions" />
+          <TreeCounsel :view="view" :selected="selected" :actions="actions" :prose-mode="accessibility.proseMode" />
           <Tree
             :view="view"
             :selected="selected"
