@@ -502,6 +502,65 @@ describe('mounted shelf binder controls (#1293)', () => {
   });
 });
 
+describe('same-render auction order guard (#1551)', () => {
+  it('does not submit a conflicting coin bid and heirloom trade before the lot view updates', async () => {
+    const { wrapper, action, ctx } = mountedShelf(40);
+    try {
+      const table = tableView(ctx);
+      table.auction = {
+        year: 1299, lots: 1, lowestReserve: 70,
+        heirlooms: [{ id: 'ring', name: 'The Family Ring' }],
+        items: [{
+          id: 'lot-a', kind: 'spellbook', name: 'The Codex',
+          seller: 'House Marrow', saleYear: 1299, reserve: 70,
+        }],
+      };
+      await wrapper.setProps({ table });
+      await wrapper.get('input[aria-label="Bid in crowns for The Codex"]').setValue('120');
+      await wrapper.get('select[aria-label="Heirloom to trade for The Codex"]').setValue('ring');
+      const coin = wrapper.findAll('button').find((b) => b.text() === 'Bid crowns')!;
+      const trade = wrapper.findAll('button').find((b) => b.text() === 'Trade it')!;
+      await Promise.all([coin.trigger('click'), trade.trigger('click')]);
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledWith({
+        kind: 'lotBid', lot: 'lot-a', bid: { currency: 'coin', amount: 120 },
+      });
+
+      // A fresh render restores controls even if the previous order was refused.
+      await trade.trigger('click');
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(action).toHaveBeenLastCalledWith({
+        kind: 'lotBid', lot: 'lot-a', bid: { currency: 'heirloom', heirloom: 'ring' },
+      });
+    } finally { wrapper.unmount(); }
+  });
+
+  it('does not race a standing bid withdrawal against a ceiling change', async () => {
+    const { wrapper, action, ctx } = mountedShelf(40);
+    try {
+      const table = tableView(ctx);
+      table.auction = {
+        year: 1299, lots: 1, lowestReserve: 70, heirlooms: [],
+        items: [{
+          id: 'lot-b', kind: 'chronicle_page', name: 'The Witness Page',
+          seller: 'House Marrow', saleYear: 1299, reserve: 70,
+          bid: { currency: 'coin', amount: 75 },
+        }],
+      };
+      await wrapper.setProps({ table });
+      await wrapper.get('input[aria-label="Maximum auction bid in crowns"]').setValue('110');
+      const withdraw = wrapper.findAll('button').find((b) => b.text() === 'Withdraw')!;
+      const ceiling = wrapper.findAll('button').find((b) => b.text() === 'Set the ceiling')!;
+      await Promise.all([withdraw.trigger('click'), ceiling.trigger('click')]);
+      expect(action).toHaveBeenCalledTimes(1);
+      expect(action).toHaveBeenCalledWith({ kind: 'lotBid', lot: 'lot-b', bid: null });
+      await ceiling.trigger('click');
+      expect(action).toHaveBeenCalledTimes(2);
+      expect(action).toHaveBeenLastCalledWith({ kind: 'bid', ceiling: 110 });
+    } finally { wrapper.unmount(); }
+  });
+});
+
 describe('reader-local Table guidance (#1441)', () => {
   it('switches Original → Plain English → Original without changing data, enabled states or orders', async () => {
     const { wrapper, action, ctx } = mountedShelf(40);
