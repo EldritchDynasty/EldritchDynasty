@@ -240,7 +240,7 @@ const muster = computed(() => {
       </div>
       <dl class="house-ledger small">
         <div>
-          <dt>Treasury</dt>
+          <dt>{{ plain ? 'Money available' : 'Treasury' }}</dt>
           <dd>
             {{ view.treasury }} crowns<span
               v-if="moved && moved.treasury !== 0"
@@ -249,7 +249,7 @@ const muster = computed(() => {
           </dd>
         </div>
         <div>
-          <dt>Standing</dt>
+          <dt>{{ plain ? 'Reputation' : 'Standing' }}</dt>
           <dd>
             <span :class="{ delta: moved?.respect }">{{ view.respect }}</span><span
               v-if="moved?.respect"
@@ -258,7 +258,7 @@ const muster = computed(() => {
           </dd>
         </div>
         <div>
-          <dt>Discontent</dt>
+          <dt>{{ plain ? 'Unrest' : 'Discontent' }}</dt>
           <dd>
             {{ view.discontent }}<span
               v-if="moved && moved.discontent !== 0"
@@ -267,7 +267,7 @@ const muster = computed(() => {
           </dd>
         </div>
         <div>
-          <dt>Ledger</dt>
+          <dt>{{ plain ? 'Recovered clauses' : 'Ledger' }}</dt>
           <dd>
             <span :class="{ delta: moved && moved.clauses > 0 }">
               {{ view.clausesRecovered }}/{{ view.clausesTotal }} clauses recovered</span><span
@@ -278,12 +278,12 @@ const muster = computed(() => {
         </div>
       </dl>
       <details class="house-key small">
-        <summary>What these readings mean</summary>
+        <summary>{{ plain ? 'What these numbers mean' : 'What these readings mean' }}</summary>
         <dl>
-          <div><dt>Treasury</dt><dd>crowns the house can spend.</dd></div>
-          <div><dt>Standing</dt><dd>the regard the wider world gives the house.</dd></div>
-          <div><dt>Discontent</dt><dd>how much strain is building inside the house and its holdings.</dd></div>
-          <div><dt>Ledger</dt><dd>how much of the old bargain the family has recovered.</dd></div>
+          <div><dt>{{ plain ? 'Money available' : 'Treasury' }}</dt><dd>{{ plain ? 'Money the family can spend, measured in crowns.' : 'crowns the house can spend.' }}</dd></div>
+          <div><dt>{{ plain ? 'Reputation' : 'Standing' }}</dt><dd>{{ plain ? 'How the wider world regards this family.' : 'the regard the wider world gives the house.' }}</dd></div>
+          <div><dt>{{ plain ? 'Unrest' : 'Discontent' }}</dt><dd>{{ plain ? 'How much unrest is building inside the family and on its land.' : 'how much strain is building inside the house and its holdings.' }}</dd></div>
+          <div><dt>{{ plain ? 'Recovered clauses' : 'Ledger' }}</dt><dd>{{ plain ? 'How many parts of the old bargain the family has found.' : 'how much of the old bargain the family has recovered.' }}</dd></div>
         </dl>
       </details>
     </div>
