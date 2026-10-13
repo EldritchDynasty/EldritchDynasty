@@ -338,7 +338,7 @@ const muster = computed(() => {
     </div>
     <div v-if="ages.length || ageMoods.length" class="age">
       <div v-for="age in ages" :key="age.age" class="name">
-        {{ age.name }}<span class="dim small"> · {{ plain ? 'started in' : 'since' }} {{ age.began }}</span>
+        {{ age.name }}<span class="dim small"> · since {{ age.began }}</span>
       </div>
       <p v-for="register in ageMoods" :key="register" class="age-mood dim small">
         {{ ageMood(register) }}
