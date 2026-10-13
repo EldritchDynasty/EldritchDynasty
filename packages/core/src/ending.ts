@@ -534,9 +534,13 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     return { given: beat.given, owed: beat.owed };
   });
 
+  // A reader gets values, never writable aliases into the saved Chronicle.
+  // Entries include nested claims, people and cause data, so spreading only
+  // the array or its entries would still let a view rewrite the book.
   const read = w.chronicle
     .filter((e) => e.text === null || e.record === 'embellish' || e.weight === 'illuminated')
-    .slice(-EPILOGUE_PAGES);
+    .slice(-EPILOGUE_PAGES)
+    .map((entry) => structuredClone(entry));
 
   const reckoning = readTheChronicle(ctx);
   const ledger = reckoning.clauses === reckoning.clausesTotal
