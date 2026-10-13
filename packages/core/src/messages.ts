@@ -18,14 +18,20 @@ export function msg(
   let template = renderProse(ctx, address, original);
   // Host-supplied core variants have no YAML validation boundary. An invalid
   // token set must not erase a name or add information the caller never gave.
-  const tokens = (text: string) => contentInterpolationTokens(text).sort().join('\n');
-  if (tokens(template) !== tokens(original)) {
-    ctx.prose.missing.add(address);
-    template = original;
+  // No token comparison is needed when renderProse returns these exact Original
+  // words. Skipping two full token scans on that overwhelmingly common path
+  // matters when gate 4 plays 400,000 simulated years (#1641).
+  if (template !== original) {
+    const tokens = (text: string) => contentInterpolationTokens(text).sort().join('\n');
+    if (tokens(template) !== tokens(original)) {
+      ctx.prose.missing.add(address);
+      template = original;
+    }
   }
   // Match the lower/mixed-case placeholders recognised by contentInterpolationTokens
   // as well as legacy leading-underscore uppercase names. Otherwise {years}
   // would pass validation but reach the player literally, without substitution.
+  if (!template.includes('{')) return template;
   return template.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (token, name: string) => {
     // Values must be supplied by the caller, not inherited from Object.prototype.
     // Otherwise {constructor} and {toString} silently render function source.
