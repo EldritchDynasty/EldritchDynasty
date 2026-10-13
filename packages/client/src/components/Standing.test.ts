@@ -744,6 +744,90 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
 
   const emptyLand = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
 
+  it('keeps auction bids and validation unchanged while its controls switch register (#1635)', async () => {
+    const table = {
+      ...wardshipTable(),
+      auction: {
+        year: 1140,
+        lots: 1,
+        lowestReserve: 20,
+        items: [{
+          id: 'book-lot', kind: 'heirloom', name: 'Silver Cup',
+          seller: 'House Ash', saleYear: 1140, reserve: 20,
+          bid: { currency: 'coin', amount: 25 },
+        }],
+        heirlooms: [{ id: 'ring', name: 'Old Ring' }],
+      },
+    } as unknown as TableView;
+    const before = structuredClone(table);
+    const order = vi.fn(() => ({ ok: true }));
+    const wrapper = mount(GameTable, {
+      props: {
+        table, land: emptyLand, actions: { order } as unknown as GameActions,
+        refusal: null, receipt: null, proseMode: 'original',
+      },
+    });
+    try {
+      const ceiling = wrapper.get('input[aria-label="Maximum auction bid in crowns"]');
+      expect(wrapper.get('.panel h3').text()).toBe('The purse');
+      expect(wrapper.get('.lot').text()).toContain('sold in 1140 · reserved at 20');
+      expect(wrapper.get('.lot input').attributes('aria-label')).toBe('Bid in crowns for Silver Cup');
+      expect(wrapper.get('.lot select').attributes('aria-label')).toBe('Heirloom to trade for Silver Cup');
+      expect(wrapper.get('.lot select option[value=""]').text()).toBe('an heirloom…');
+      expect(wrapper.get('.lot').text()).toContain('Bid crowns');
+      expect(wrapper.get('.lot').text()).toContain('Trade it');
+      expect(wrapper.get('.lot').text()).toContain('Withdraw');
+
+      await ceiling.setValue('1.5');
+      expect(ceiling.attributes('aria-invalid')).toBe('true');
+      expect(wrapper.get('#bid-ceiling-error').text())
+        .toBe('Enter zero or a whole number of crowns within the safe counting range.');
+      const setMaximum = wrapper.findAll('button').find((button) => button.text() === 'Set the ceiling')!;
+      expect(setMaximum.attributes('disabled')).toBeDefined();
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.panel h3').text()).toBe('Money and auctions');
+      expect(ceiling.attributes('aria-label')).toBe('Maximum amount to bid at auction (crowns)');
+      expect((ceiling.element as HTMLInputElement).value).toBe('1.5');
+      expect(wrapper.get('#bid-ceiling-error').text())
+        .toBe('Enter zero or a positive whole number of crowns within the allowed range.');
+      expect(wrapper.get('.lot').text()).toContain('sale year 1140 · starting price 20');
+      expect(wrapper.get('.lot input').attributes('aria-label')).toBe('Offer crowns for Silver Cup');
+      expect(wrapper.get('.lot select').attributes('aria-label')).toBe('Choose an heirloom to offer for Silver Cup');
+      expect(wrapper.get('.lot select option[value=""]').text()).toBe('Choose an heirloom…');
+      expect(wrapper.get('.lot').text()).toContain('Place money bid');
+      expect(wrapper.get('.lot').text()).toContain('Offer heirloom');
+      expect(wrapper.get('.lot').text()).toContain('Withdraw bid');
+
+      await ceiling.setValue('45');
+      expect(ceiling.attributes('aria-invalid')).toBe('false');
+      const maximum = wrapper.findAll('button').find((button) => button.text() === 'Set maximum bid')!;
+      await maximum.trigger('click');
+      expect(order).toHaveBeenLastCalledWith({ kind: 'bid', ceiling: 45 });
+      await wrapper.get('.lot input').setValue('32');
+      const cash = wrapper.findAll('.lot button').find((button) => button.text() === 'Place money bid')!;
+      await cash.trigger('click');
+      expect(order).toHaveBeenLastCalledWith({
+        kind: 'lotBid', lot: 'book-lot', bid: { currency: 'coin', amount: 32 },
+      });
+      await wrapper.get('.lot select').setValue('ring');
+      const heirloom = wrapper.findAll('.lot button').find((button) => button.text() === 'Offer heirloom')!;
+      await heirloom.trigger('click');
+      expect(order).toHaveBeenLastCalledWith({
+        kind: 'lotBid', lot: 'book-lot', bid: { currency: 'heirloom', heirloom: 'ring' },
+      });
+      expect(table).toEqual(before);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.panel h3').text()).toBe('The purse');
+      expect(wrapper.get('.lot').text()).toContain('sold in 1140 · reserved at 20');
+      expect(wrapper.get('.lot input').attributes('aria-label')).toBe('Bid in crowns for Silver Cup');
+      expect((ceiling.element as HTMLInputElement).value).toBe('45');
+      expect((wrapper.get('.lot select').element as HTMLSelectElement).value).toBe('ring');
+      expect(table).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+
   it('dispatches only one buy-back order before the successful purchase is repainted', async () => {
     const order = vi.fn().mockReturnValue({ ok: true, spent: 20, left: 80 });
     const wrapper = mount(GameTable, {
