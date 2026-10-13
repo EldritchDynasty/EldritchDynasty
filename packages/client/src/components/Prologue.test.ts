@@ -116,6 +116,45 @@ describe('held Enter in newborn naming (#1471)', () => {
   });
 });
 
+describe('Prologue beat pacing (#1561)', () => {
+  it('ignores burst clicks against a stale advance button without marking unseen prose as read', async () => {
+    const prologue = prologueView();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: actions(), refused: null, startYear: 1042 },
+    });
+    const historyKey = seenProseKey('prologue', prologueSeenText(
+      prologue.opening, prologue.triad, prologue.thesis,
+    ));
+    try {
+      // Two native clicks land before Vue paints a changed button label.
+      const first = wrapper.get('button.on').element as HTMLButtonElement;
+      first.click();
+      first.click();
+      await nextTick();
+      expect(wrapper.get('.triad').text()).toContain('First given.');
+      expect(wrapper.get('.triad').text()).not.toContain('Second given.');
+      expect(wrapper.get('button.on').text()).toBe('The second thing');
+
+      // The second button must not consume the third (unread) beat either.
+      const second = wrapper.get('button.on').element as HTMLButtonElement;
+      second.click();
+      second.click();
+      await nextTick();
+      expect(wrapper.get('.triad').text()).toContain('Second given.');
+      expect(wrapper.get('.triad').text()).not.toContain('Third given.');
+      expect(wrapper.get('button.on').text()).toBe('The third thing');
+      expect(hasSeenProse(window.localStorage, historyKey)).toBe(false);
+
+      // A later intentional click completes the triad and records it as read.
+      await wrapper.get('button.on').trigger('click');
+      expect(wrapper.get('.triad').text()).toContain('Third given.');
+      expect(hasSeenProse(window.localStorage, historyKey)).toBe(true);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('founding submit single-flight (#1484)', () => {
   it('discards same-tick clicks and Enter, then permits a deliberate retry after refusal', async () => {
     const game = actions();

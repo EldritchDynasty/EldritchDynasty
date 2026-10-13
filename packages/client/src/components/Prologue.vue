@@ -100,13 +100,25 @@ const friends = ref(
   Array.from({ length: props.prologue.friendsWanted }, () => ({ name: '', sex: 'female' as 'male' | 'female' })),
 );
 
+// The DOM still carries the previous beat's advance button until Vue patches
+// it. A second click on that stale button must not consume another reveal (or
+// mark the whole Prologue as read before its final beat was displayed).
+let revealing = false;
 function on(): void {
-  shown.value = revealPrologueBeat(
-    readingStorage(),
-    replayText.value,
-    shown.value,
-    props.prologue.triad.length,
-  );
+  if (revealing || shown.value >= props.prologue.triad.length) return;
+  revealing = true;
+  try {
+    shown.value = revealPrologueBeat(
+      readingStorage(),
+      replayText.value,
+      shown.value,
+      props.prologue.triad.length,
+    );
+  } finally {
+    // Successive deliberate reveals remain possible after the new beat is
+    // actually displayed. Match the other single-flight controls in this view.
+    void nextTick(() => { revealing = false; });
+  }
 }
 
 /**
