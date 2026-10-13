@@ -570,6 +570,66 @@ describe('the platform seam', () => {
     }
   });
 
+  it('rejects total browser key enumeration failures without losing saved runs (#1595)', async () => {
+    const values = new Map([
+      ['ed:save:chapter-1-1080', JSON.stringify({ format: 28, year: 1080 })],
+      ['ed:save:unreadable', '{bad JSON'],
+    ]);
+    let keyFailure: 'none' | 'first' | 'all' | 'missing' = 'none';
+    const storage = {
+      get length() { return values.size; },
+      key(index: number) {
+        if (keyFailure === 'all' || (keyFailure === 'first' && index === 0)) {
+          throw new Error('transient key lookup failure');
+        }
+        if (keyFailure === 'missing') return null;
+        return [...values.keys()][index] ?? null;
+      },
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+      clear: () => values.clear(),
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const platform = browserPlatform();
+      const known = [
+        { slot: 'chapter-1-1080', year: 1080, format: 28, savedAt: undefined },
+        { slot: 'unreadable' },
+      ];
+      await expect(platform.listSaves()).resolves.toEqual(known);
+
+      // A single broken index does not hide other healthy or unreadable slots.
+      keyFailure = 'first';
+      await expect(platform.listSaves()).resolves.toEqual([{ slot: 'unreadable' }]);
+
+      // With no successful key lookup, [] would falsely erase the visible list.
+      keyFailure = 'all';
+      await expect(platform.listSaves()).rejects.toThrow('save key enumeration unavailable');
+      expect(values.size).toBe(2);
+
+      keyFailure = 'none';
+      await expect(platform.listSaves()).resolves.toEqual(known);
+
+      // A successful null lookup is different from a thrown lookup: indexes
+      // may become stale if another tab deletes saves during enumeration.
+      keyFailure = 'missing';
+      await expect(platform.listSaves()).resolves.toEqual([]);
+
+      // A genuinely empty profile is still a successful empty listing.
+      values.clear();
+      keyFailure = 'all';
+      await expect(platform.listSaves()).resolves.toEqual([]);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('takes an injected host whole, rather than detecting one below composition', async () => {
     const injected = bridge();
     const platform = platformForWindow({ edPlatform: injected } as Window);

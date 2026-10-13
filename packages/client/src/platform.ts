@@ -153,10 +153,14 @@ export function browserPlatform(): Platform {
       // callers report Retry (or retain an earlier list) rather than claiming
       // an empty library on a transient Storage.length error.
       const count = storage.length;
+      let readableKeys = 0;
       for (let i = 0; i < count; i++) {
         let key: string | null;
         try {
           key = storage.key(i);
+          // Even a null key is a successful lookup: the store may have
+          // changed during enumeration. Only exceptions prove an outage.
+          readableKeys++;
         } catch {
           // One failing key lookup says nothing about other saved slots.
           continue;
@@ -172,6 +176,12 @@ export function browserPlatform(): Platform {
           // without taking any of the other, healthy runs away.
           saves.push({ slot });
         }
+      }
+      // A nonempty store where EVERY key lookup threw is not an empty set of
+      // saved runs. Reject so the client retains its last known list and offers
+      // Retry; partial enumeration continues to expose healthy slots.
+      if (count > 0 && readableKeys === 0) {
+        throw new Error('save key enumeration unavailable');
       }
       return saves.sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')) || a.slot.localeCompare(b.slot));
     },
