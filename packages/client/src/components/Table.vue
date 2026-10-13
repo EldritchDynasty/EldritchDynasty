@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
@@ -63,9 +63,25 @@ const ceiling = ref<number | string>(props.table.bidCeiling);
 function validCeiling(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
+/**
+ * Auction orders all read the same displayed lot/ceiling state. Do not send
+ * competing offers or a withdrawal before Vue has refreshed that state.
+ * This lock is scoped to auction orders, not unrelated work on the Table.
+ */
+let auctionSubmitting = false;
+function submitAuctionOrder(order: Parameters<GameActions['order']>[0]): void {
+  if (auctionSubmitting) return;
+  auctionSubmitting = true;
+  try {
+    props.actions.order(order);
+  } finally {
+    void nextTick(() => { auctionSubmitting = false; });
+  }
+}
+
 function setBidCeiling(): void {
   if (!validCeiling(ceiling.value)) return;
-  props.actions.order({ kind: 'bid', ceiling: ceiling.value });
+  submitAuctionOrder({ kind: 'bid', ceiling: ceiling.value });
 }
 
 /**
@@ -83,12 +99,12 @@ function validLotCoin(value: unknown): value is number {
 function bidCoin(lot: string): void {
   const amount = lotCoin.value[lot];
   if (!validLotCoin(amount)) return;
-  props.actions.order({ kind: 'lotBid', lot, bid: { currency: 'coin', amount } });
+  submitAuctionOrder({ kind: 'lotBid', lot, bid: { currency: 'coin', amount } });
 }
 function bidHeirloom(lot: string): void {
   const heirloom = lotHeirloom.value[lot];
   if (!heirloom) return;
-  props.actions.order({ kind: 'lotBid', lot, bid: { currency: 'heirloom', heirloom } });
+  submitAuctionOrder({ kind: 'lotBid', lot, bid: { currency: 'heirloom', heirloom } });
 }
 
 const pupil = ref('');
@@ -266,7 +282,7 @@ const MARRIAGE_ORDERS = [
           </template>
           <button
             v-if="lot.bid" class="quiet small"
-            @click="actions.order({ kind: 'lotBid', lot: lot.id, bid: null })"
+            @click="submitAuctionOrder({ kind: 'lotBid', lot: lot.id, bid: null })"
           >
             Withdraw
           </button>
