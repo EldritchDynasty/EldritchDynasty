@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import * as ts from 'typescript';
 import { loadContent } from '@ed/content';
 import { autoResolveAll, bootstrap, resolveChoice, resolveRecord, stepYear, testRng, viewOf } from '@ed/core';
 import type { SimCtx, TableView } from '@ed/core';
@@ -40,12 +41,60 @@ function templates(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-/** Ignore documentation: mentioning a field in a Vue comment does not draw it. */
+/**
+ * Leave actual script strings and template expressions intact; only comment
+ * tokens are documentation. A line-based regex cannot distinguish an inline
+ * " // blocked" from the two slashes inside a URL or quoted text (#1606).
+ */
+function withoutScriptComments(source: string): string {
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.Standard, source);
+  const templateBraces: number[] = [];
+  let result = '';
+  let last = 0;
+  for (let kind = scanner.scan(); kind !== ts.SyntaxKind.EndOfFileToken; kind = scanner.scan()) {
+    // Scanners do not automatically re-scan the closing } of \${expression}
+    // as a template tail. Preserve strings and nested interpolations instead
+    // of mistaking their literal // for a comment.
+    if (kind === ts.SyntaxKind.TemplateHead) templateBraces.push(0);
+    else if (kind === ts.SyntaxKind.OpenBraceToken && templateBraces.length) {
+      templateBraces[templateBraces.length - 1]!++;
+    } else if (kind === ts.SyntaxKind.CloseBraceToken && templateBraces.length) {
+      const depth = templateBraces.length - 1;
+      if (templateBraces[depth] === 0) {
+        kind = scanner.reScanTemplateToken(false);
+        if (kind === ts.SyntaxKind.TemplateTail) templateBraces.pop();
+      } else {
+        templateBraces[depth]!--;
+      }
+    }
+    if (kind !== ts.SyntaxKind.SingleLineCommentTrivia
+      && kind !== ts.SyntaxKind.MultiLineCommentTrivia) continue;
+    result += source.slice(last, scanner.getTokenPos());
+    result += source.slice(scanner.getTokenPos(), scanner.getTextPos()).replace(/[^\r\n]/g, ' ');
+    last = scanner.getTextPos();
+  }
+  return result + source.slice(last);
+}
+
+/** Ignore Vue/JS/CSS documentation without losing executable field references. */
 function withoutVueComments(source: string): string {
-  return source
+  const stripMarkupComments = (markup: string) => markup
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^[ \t]*\/\/[^\r\n]*/gm, '');
+
+  let output = '';
+  let last = 0;
+  for (const script of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)) {
+    const start = script.index!;
+    const whole = script[0];
+    const body = script[1]!;
+    const bodyStart = whole.indexOf('>') + 1;
+    output += stripMarkupComments(source.slice(last, start));
+    output += whole.slice(0, bodyStart) + withoutScriptComments(body) + whole.slice(bodyStart + body.length);
+    last = start + whole.length;
+  }
+  return output + stripMarkupComments(source.slice(last));
 }
 
 const drawn = templates(SRC).map((p) => withoutVueComments(readFileSync(p, 'utf8'))).join('\n');
@@ -170,6 +219,29 @@ describe('Vue source reachability comment filtering (#1573)', () => {
       '// blocked appears in a comment, not code',
     ].join('\n');
     expect(withoutVueComments(notes)).not.toMatch(/\bblocked\b/);
+    expect(withoutVueComments('<p>{{ view.blocked }}</p>')).toMatch(/\bblocked\b/);
+  });
+});
+
+describe('Vue trailing-comment reachability (#1606)', () => {
+  it('ignores inline JS comments without swallowing URLs, template strings or actual view fields', () => {
+    const source = [
+      '<script setup lang="ts">',
+      'const url = "https://example.test/safe";',
+      'const quoted = "a // harmless string";',
+      'const interpolated = `https://example.test/${view.guardian}`;',
+      'const wrapped = `hello ${ { person: view.guardian } }`;',
+      'const count = 1; // blocked is tooling-only, not a drawn field',
+      'const other = 2; /* blocked remains only in documentation */',
+      '</script>',
+      '<template><p>{{ view.guardian }}</p></template>',
+    ].join('\n');
+    const result = withoutVueComments(source);
+    expect(result).not.toMatch(/\bblocked\b/);
+    expect(result).toContain('https://example.test/safe');
+    expect(result).toContain('a // harmless string');
+    expect(result).toContain('`https://example.test/${view.guardian}`');
+    expect(result).toMatch(/\bguardian\b/);
     expect(withoutVueComments('<p>{{ view.blocked }}</p>')).toMatch(/\bblocked\b/);
   });
 });
