@@ -50,6 +50,58 @@ describe('AdviserHelp', () => {
     expect(ask).toHaveBeenCalledTimes(3);
   });
 
+  it('switches only adviser-control wording without consuming tiers or changing attributed lines (#1625)', async () => {
+    const ask = vi.fn((tier: HelpTier) => [line(tier)]);
+    const wrapper = mount(AdviserHelp, {
+      props: { ask, proseMode: 'original', resetKey: 'same-subject' },
+    });
+    try {
+      expect(wrapper.get('.adviser-help').attributes('aria-label')).toBe('Counsel from the household');
+      expect(wrapper.get('button').text()).toBe('Ask an adviser');
+      await wrapper.get('button').trigger('click');
+      expect(ask.mock.calls.map(([tier]) => tier)).toEqual([1]);
+      const authoredLine = wrapper.get('blockquote').text();
+      expect(authoredLine).toContain('Begin with one name.');
+      expect(authoredLine).toContain('Mara');
+      expect(authoredLine).toContain('she keeps the house book');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.adviser-help').attributes('aria-label')).toBe('Advice from family advisers');
+      expect(wrapper.get('button').text()).toBe('Ask what the family knows');
+      expect(wrapper.get('blockquote').text()).toBe(authoredLine);
+      expect(ask).toHaveBeenCalledTimes(1);
+      await wrapper.get('button').trigger('click');
+      expect(ask.mock.calls.map(([tier]) => tier)).toEqual([1, 2]);
+      expect(wrapper.get('button').text()).toBe('Ask what to do next');
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.adviser-help').attributes('aria-label')).toBe('Counsel from the household');
+      expect(wrapper.get('button').text()).toBe('Ask what can be done');
+      expect(wrapper.get('blockquote').text()).toBe(authoredLine);
+      expect(ask).toHaveBeenCalledTimes(2);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('translates unanswered advice without changing retry/reset behaviour (#1625)', async () => {
+    const ask = vi.fn((): AdviserAdvice[] => []);
+    const wrapper = mount(AdviserHelp, { props: { ask, proseMode: 'original', resetKey: 'first' } });
+    try {
+      await wrapper.get('button').trigger('click');
+      expect(wrapper.get('[role="status"]').text()).toBe('Nobody at the table answers.');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="status"]').text()).toBe('No adviser has an answer.');
+      expect(wrapper.find('button').exists()).toBe(false);
+      expect(ask).toHaveBeenCalledTimes(1);
+
+      await wrapper.setProps({ resetKey: 'second' });
+      expect(wrapper.get('button').text()).toBe('Ask for advice');
+      await wrapper.get('button').trigger('click');
+      expect(ask).toHaveBeenCalledTimes(2);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('[role="status"]').text()).toBe('Nobody at the table answers.');
+    } finally { wrapper.unmount(); }
+  });
+
   it('requires a newly rendered button before revealing another advice tier (#1480)', async () => {
     const ask = vi.fn((tier: HelpTier) => [line(tier)]);
     const wrapper = mount(AdviserHelp, { props: { ask } });
@@ -222,6 +274,34 @@ describe('Chronicle adviser counsel freshness (#1139)', () => {
     } finally {
       wrapper.unmount();
     }
+  });
+});
+
+describe('Chronicle adviser control reading mode (#1625)', () => {
+  it('forwards the preference without resetting advice or altering the Chronicle', async () => {
+    const current = {
+      house: 'House Salt', year: 1080, chronicle: [], chroniclePeople: [], halls: [],
+    } as unknown as SessionView;
+    const advice = vi.fn((_surface: string, _person: string, tier: HelpTier) => [line(tier)]);
+    const actions = {
+      advice, causeOf: vi.fn(() => []), answeredBy: vi.fn(() => []),
+    } as unknown as Pick<GameActions, 'advice' | 'causeOf' | 'answeredBy'>;
+    const wrapper = mount(Chronicle, {
+      props: { view: current, frame: [], actions, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('.adviser-help button').text()).toBe('Ask an adviser');
+      await wrapper.get('.adviser-help button').trigger('click');
+      expect(advice).toHaveBeenCalledWith('chronicle', 'chronicle', 1);
+      const authoredLine = wrapper.get('.adviser-help blockquote').text();
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.adviser-help button').text()).toBe('Ask what the family knows');
+      expect(wrapper.get('.adviser-help blockquote').text()).toBe(authoredLine);
+      expect(advice).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.adviser-help button').text()).toBe('Ask what the house knows');
+      expect(wrapper.get('.adviser-help blockquote').text()).toBe(authoredLine);
+    } finally { wrapper.unmount(); }
   });
 });
 
