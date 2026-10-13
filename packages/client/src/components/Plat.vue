@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import type { LandView, SessionView } from '@ed/core';
 import { useModal } from '../lib/modal';
 import type { GameActions } from '../lib/game';
@@ -93,19 +93,35 @@ const cadetHalls = computed(() => props.halls.filter((h) => !h.isSeat && h.membe
 const selectedHall = ref<Record<string, string>>({});
 const giftError = ref<{ parcel: string; reason: string } | null>(null);
 
+// An Endow/Recall button retains its old parcel state until Vue repaints.
+// One visible state must emit at most one land transfer order.
+let giftSubmitting = false;
+function dispatchGift(order: Parameters<GameActions['order']>[0]): ReturnType<GameActions['order']> | null {
+  if (giftSubmitting) return null;
+  giftSubmitting = true;
+  try {
+    return props.actions.order(order);
+  } finally {
+    // Failed transfers must be retryable from the next rendered state.
+    void nextTick(() => { giftSubmitting = false; });
+  }
+}
+
 function giveLand(item: PlatItem): void {
   const parcel = item.parcel;
   if (!parcel || item.caput || item.holder) return;
   const branch = selectedHall.value[parcel];
   if (!branch || !cadetHalls.value.some((hall) => hall.id === branch)) return;
-  const result = props.actions.order({ kind: 'endow', parcel, branch });
+  const result = dispatchGift({ kind: 'endow', parcel, branch });
+  if (!result) return;
   giftError.value = result.ok ? null : { parcel, reason: result.reason ?? 'The land could not be endowed.' };
 }
 
 function recallLand(item: PlatItem): void {
   const parcel = item.parcel;
   if (!parcel || !item.holder) return;
-  const result = props.actions.order({ kind: 'endow', parcel, branch: null });
+  const result = dispatchGift({ kind: 'endow', parcel, branch: null });
+  if (!result) return;
   giftError.value = result.ok ? null : { parcel, reason: result.reason ?? 'The land could not be recalled.' };
 }
 
