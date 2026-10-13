@@ -1,4 +1,4 @@
-import type { Content, ContentBundle, LoggedDecision } from '@ed/schema';
+import type { CampaignId, Content, ContentBundle, LibraryRun, LoggedDecision } from '@ed/schema';
 import { assertNever } from '@ed/schema';
 import { bootstrap } from './sim.js';
 import { runYears } from './year/step.js';
@@ -11,9 +11,9 @@ import type { SimCtx } from './world.js';
  *
  * A save is a snapshot — `loadGame` puts a run back exactly where it stood,
  * but says nothing about the path that got it there. Every run in this
- * codebase is ALREADY fully reproducible from `(content, seed, startYear)`
- * alone, because nothing in `core` reaches for `Math.random()` (invariant 8)
- * and no decision here is answered by anything the seed cannot derive —
+ * codebase is reproducible from its complete bootstrap inputs: content,
+ * seed, start year, campaign, prior Library runs and the recorded decisions.
+ * Nothing in `core` reaches for `Math.random()` (invariant 8), and
  * `choose`/`record`/`name` all draw from streams keyed by the decision's own
  * id or the current year, never from "how many draws happened before", so
  * replaying the exact same external answers at the exact same points always
@@ -42,6 +42,10 @@ export function replay(
   seed: number,
   startYear: number,
   years: number,
+  /** Replay the campaign that wrote the log; old five-argument callers are Long Lines. */
+  campaign: CampaignId = 'long',
+  /** Exactly the prior-run Library inputs from the original bootstrap (issue #1601). */
+  libraryRuns: readonly LibraryRun[] = [],
 ): SimCtx {
   const signing = log.filter((d) => d.kind === 'signing');
   if (signing.length > 1) {
@@ -60,8 +64,8 @@ export function replay(
     source,
     seed,
     startYear,
-    'long',
-    [],
+    campaign,
+    libraryRuns,
     signed ? { answers: signed.answers, founderName: signed.founderName } : undefined,
   );
 

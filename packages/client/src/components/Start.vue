@@ -359,7 +359,7 @@ onMounted(() => { void refreshSaves(); });
       <button class="quiet small" :disabled="retryingLibrary" @click="retryLibrary()">{{ retryingLibrary ? 'Retrying…' : (plain ? 'Try loading completed games again' : 'Retry reading the Library') }}</button>
     </div>
 
-    <section class="reading panel" aria-label="Reading settings">
+    <section class="reading panel" :aria-label="plain ? 'Reading settings' : 'Reading'">
       <h2>{{ plain ? 'Reading settings' : 'Reading' }}</h2>
       <ReadingSettings
         :text-scale="textScale"
@@ -375,7 +375,7 @@ onMounted(() => { void refreshSaves(); });
       />
     </section>
 
-    <section v-if="completedHouses.length" class="library panel" aria-label="Library of Houses">
+    <section v-if="completedHouses.length" class="library panel" :aria-label="plain ? 'Completed houses' : 'Library of Houses'">
       <div class="library-head">
         <div>
           <h2>{{ plain ? 'Completed houses' : 'The Library of Houses' }}</h2>
@@ -387,8 +387,8 @@ onMounted(() => { void refreshSaves(); });
           :disabled="selectingRun || removingRun !== null || clearingLibrary"
           @click="requestClearLibrary()"
         >{{ clearingLibrary ? (plain ? 'Removing…' : 'Clearing…') : (plain ? 'Remove all' : 'Clear') }}</button>
-        <div v-else class="library-clear-confirm" role="group" aria-label="Confirm clearing the Library of Houses">
-          <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed houses? This cannot be undone.</p>
+        <div v-else class="library-clear-confirm" role="group" :aria-label="plain ? 'Confirm removing all completed houses' : 'Confirm clearing the Library of Houses'">
+          <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed {{ completedHouses.length === 1 ? 'house' : 'houses' }}? This cannot be undone.</p>
           <button class="quiet small confirm-clear" :disabled="selectingRun || removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
           <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
         </div>
@@ -408,9 +408,9 @@ onMounted(() => { void refreshSaves(); });
             v-else
             class="library-remove-confirm"
             role="group"
-            :aria-label="`Confirm removing ${run.house}`"
+            :aria-label="plain ? `Confirm removing ${run.house} from completed games` : `Confirm removing ${run.house}`"
           >
-            <span class="rubric small">Remove {{ run.house }}? This cannot be undone.</span>
+            <span class="rubric small">{{ plain ? `Remove ${run.house} from completed games? You cannot undo this.` : `Remove ${run.house}? This cannot be undone.` }}</span>
             <button
               class="quiet small confirm-remove"
               :disabled="selectingRun || removingRun !== null || clearingLibrary"
@@ -423,7 +423,7 @@ onMounted(() => { void refreshSaves(); });
       </article>
     </section>
 
-    <section v-if="namedSaves.length" class="saved panel" aria-label="Saved runs">
+    <section v-if="namedSaves.length" class="saved panel" :aria-label="plain ? 'Saved games' : 'Saved runs'">
       <h2>{{ plain ? 'Saved games' : 'Runs written down' }}</h2>
       <p class="dim small">{{ plain ? 'These games remain saved after you close the app.' : 'They remain here when the application closes.' }}</p>
       <ul>

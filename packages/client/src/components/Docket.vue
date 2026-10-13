@@ -66,24 +66,46 @@ const remember = ref(false);
 const delegationReady = computed(() =>
   props.foundedYear === undefined || props.decision.year >= props.foundedYear + 50);
 
+/**
+ * One mounted docket may only answer the decision once before Vue refreshes
+ * its read model. This covers buttons and numbered shortcuts across all
+ * decision kinds; an unsuccessful or throwing action must not trap the panel.
+ */
+let submitting = false;
+function oncePerRender(send: () => void): void {
+  if (submitting) return;
+  submitting = true;
+  try {
+    send();
+  } finally {
+    void nextTick(() => { submitting = false; });
+  }
+}
+
 function answerChoice(choiceId: string, label: string): void {
   if (props.decision.kind !== 'choice') return;
+  const decision = props.decision;
   // Learn only an answer the normal resolver actually accepted. A stale client
   // or refused cast must not leave behind a standing policy for an act that
   // never happened.
-  const accepted = props.actions.choose(props.decision.id, choiceId, cast.value, label);
-  if (accepted && remember.value) props.actions.delegateChoice(props.decision.event.id, choiceId);
+  oncePerRender(() => {
+    const accepted = props.actions.choose(decision.id, choiceId, cast.value, label);
+    if (accepted && remember.value) props.actions.delegateChoice(decision.event.id, choiceId);
+  });
 }
 
 function answerRecord(option: RecordOption, label: string): void {
   if (props.decision.kind !== 'record') return;
-  const accepted = props.actions.record(props.decision.id, option, label);
-  // Only the honest Record answer is delegatable. Explicit withdrawal lives
-  // on the Table's "Ask me again" control; an exceptional surfaced page should
-  // not revoke a standing policy merely because its local checkbox is clear.
-  if (accepted && remember.value && option === 'record') {
-    props.actions.delegateRecord(props.decision.event.id, option);
-  }
+  const decision = props.decision;
+  oncePerRender(() => {
+    const accepted = props.actions.record(decision.id, option, label);
+    // Only the honest Record answer is delegatable. Explicit withdrawal lives
+    // on the Table's "Ask me again" control; an exceptional surfaced page should
+    // not revoke a standing policy merely because its local checkbox is clear.
+    if (accepted && remember.value && option === 'record') {
+      props.actions.delegateRecord(decision.event.id, option);
+    }
+  });
 }
 
 function fill(slot: string, event: Event): void {
@@ -245,7 +267,7 @@ function take(index: number): void {
   if (d.kind === 'match') {
     const card = d.cards[index];
     if (!card || !card.available) return;
-    props.actions.match(d.id, card.id, card.name);
+    oncePerRender(() => { props.actions.match(d.id, card.id, card.name); });
     return;
   }
   const option = recordOptions.value[index];
@@ -393,7 +415,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <p class="dim small">
           {{ plain ? 'You choose who goes. Their combined abilities decide the result; you cannot choose the outcome.' : 'The branch is not yours to take. Name who goes, and what they are between them decides it.' }}
         </p>
-        <button class="primary" :disabled="!ready(decision.cast)" @click="actions.send(decision.id, cast, 'Send them')">
+        <button class="primary" :disabled="!ready(decision.cast)" @click="oncePerRender(() => actions.send(decision.id, cast, 'Send them'))">
           {{ plain ? 'Send the selected people' : 'Send them' }}
         </button>
       </div>
@@ -499,7 +521,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             </template>
           </details>
 
-          <button :disabled="!card.available" @click="actions.match(decision.id, card.id, card.name)">
+          <button :disabled="!card.available" @click="oncePerRender(() => actions.match(decision.id, card.id, card.name))">
             {{ plain ? 'Choose this match' : 'Take this one' }}
           </button>
           <div v-if="!card.available" class="dim small">{{ card.blockedBy }}</div>
@@ -542,7 +564,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
            reaching this — so under the phone tier it is pinned rather than
            left to scroll off with them (issue #106). -->
       <div class="decline">
-        <button class="quiet" @click="actions.declineHand(decision.id)">{{ plain ? 'Choose none of these matches' : 'Take none of them' }}</button>
+        <button class="quiet" @click="oncePerRender(() => actions.declineHand(decision.id))">{{ plain ? 'Choose none of these matches' : 'Take none of them' }}</button>
       </div>
     </template>
 
@@ -606,7 +628,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     <!-- THE ESCAPE HATCH. Daveed is not neutral, and handing him the pen is a
          way of playing rather than a way of skipping. -->
     <footer>
-      <button class="quiet small" @click="actions.letHimDecide()">{{ plain ? 'Let Daveed decide' : 'Let him decide' }}</button>
+      <button class="quiet small" @click="oncePerRender(() => actions.letHimDecide())">{{ plain ? 'Let Daveed decide' : 'Let him decide' }}</button>
     </footer>
   </section>
 </template>

@@ -478,7 +478,11 @@ export function rollBirths(ctx: SimCtx, rng: Rng): Conception[] {
 
       if (!rng.bool(conceptionChance(mother, father, ctx) * pressure)) continue;
 
-      const ordinal = borne + 1;
+      // INVARIANT 8: a new conception needs a new per-world ordinal even
+      // when the previous child never entered PersonStore (#1581). Counting
+      // only live births replayed a stillbirth's genome and death roll forever.
+      const ordinal = Math.max(borne, w.conceptionOrdinals[mother.id] ?? 0) + 1;
+      w.conceptionOrdinals[mother.id] = ordinal;
       const household = w.people.householdOf(mother.id, w.year) ?? w.playerHouse;
       // Children of the house are named dynastically; everyone else gets a
       // byname. Built once per year rather than once per birth.

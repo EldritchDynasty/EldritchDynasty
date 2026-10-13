@@ -408,6 +408,8 @@ export function createGame(
   const resumable = ref(false);
   const saveStatus = ref<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const saves = ref<SaveSummary[]>([]);
+  /** Only the latest host listing may replace the visible save catalogue. */
+  let saveListRevision = 0;
   const library = ref<RunLibrary>(emptyRunLibrary());
   const libraryReady = ref(false);
   const libraryReadError = ref(false);
@@ -1096,10 +1098,15 @@ export function createGame(
   }
 
   async function refreshSaves(throwOnFailure = false): Promise<void> {
+    // An earlier host read can settle after a newer one (including the
+    // composition-time background read). Never let stale rows erase a newly
+    // listed saved run or restore an older catalogue.
+    const revision = ++saveListRevision;
     try {
       // Until Track C exposes an explicit demo entry point, its private
       // namespace must not leak into the normal "Runs written down" list.
-      saves.value = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
+      const listed = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
+      if (revision === saveListRevision) saves.value = listed;
     } catch (error) {
       // A failed background read says nothing about the saves already found.
       // Keep those known runs visible; explicit reads still reject so Start

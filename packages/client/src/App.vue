@@ -465,7 +465,7 @@ const yearAndBirths = computed(() => {
         <!-- ONE QUESTION, ONE ANSWER (issue #213). This is framing, not a
              docket item: it never stops the clock and promises no outcome. -->
         <section v-if="view.generationArc" class="panel generation-arc">
-          <p class="label">This generation</p>
+          <p class="label">This generation <span class="dim small">· since {{ view.generationArc.opened }}</span></p>
           <p class="generation-question">{{ view.generationArc.question }}</p>
           <details v-if="view.generationArc.previous">
             <summary class="dim small">What became of the last question</summary>
