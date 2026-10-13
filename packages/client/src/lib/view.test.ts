@@ -40,7 +40,15 @@ function templates(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const drawn = templates(SRC).map((p) => readFileSync(p, 'utf8')).join('\n');
+/** Ignore documentation: mentioning a field in a Vue comment does not draw it. */
+function withoutVueComments(source: string): string {
+  return source
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^[ \t]*\/\/[^\r\n]*/gm, '');
+}
+
+const drawn = templates(SRC).map((p) => withoutVueComments(readFileSync(p, 'utf8'))).join('\n');
 
 /**
  * Views taken off runs old enough to have filled their optional fields — a
@@ -128,6 +136,7 @@ function keysOf(o: unknown, depth = 0, out = new Set<string>()): Set<string> {
  */
 const NOT_DRAWN: Record<string, string> = {
   outcomeId: 'which branch of a template resolved. The player meets the prose; the id is for replay',
+  blocked: 'the precise gate string is for tooling/deep inspection; the header draws diagnosis text and hint instead',
   // Decided in issue #336. `applyRecord` sets it on every embellished page and
   // nowhere else, so it is present exactly when `record === 'embellish'`,
   // which `Entry.vue` already marks "as the house tells it". The id itself is
@@ -152,6 +161,18 @@ const REACHED = [
   'guardian', 'ascension', 'assize', 'chronicle', 'halls',
   'outcomeId', 'discrepancyId', 'claims', 'record',
 ];
+
+describe('Vue source reachability comment filtering (#1573)', () => {
+  it('does not count JSDoc, HTML, or line comments as rendered fields', () => {
+    const notes = [
+      '/** Independent servants must not be blocked. */',
+      '<!-- blocked is only documented here -->',
+      '// blocked appears in a comment, not code',
+    ].join('\n');
+    expect(withoutVueComments(notes)).not.toMatch(/\bblocked\b/);
+    expect(withoutVueComments('<p>{{ view.blocked }}</p>')).toMatch(/\bblocked\b/);
+  });
+});
 
 describe('the walk itself (issue #336)', () => {
   it('finds a key that only a later element of an array carries', () => {
