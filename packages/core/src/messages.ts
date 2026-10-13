@@ -14,18 +14,21 @@ export function msg(
   original: string,
   values: Readonly<Record<string, string>> = {},
 ): string {
-  const address = coreMessageAddress(key);
-  let template = renderProse(ctx, address, original);
-  // Host-supplied core variants have no YAML validation boundary. An invalid
-  // token set must not erase a name or add information the caller never gave.
-  // No token comparison is needed when renderProse returns these exact Original
-  // words. Skipping two full token scans on that overwhelmingly common path
-  // matters when gate 4 plays 400,000 simulated years (#1641).
-  if (template !== original) {
-    const tokens = (text: string) => contentInterpolationTokens(text).sort().join('\n');
-    if (tokens(template) !== tokens(original)) {
-      ctx.prose.missing.add(address);
-      template = original;
+  // Original is the common hot path in unattended long-play simulations.
+  // There is no variant address to resolve or validate in this mode; per-year
+  // passages can therefore avoid key encoding and both token scans (#1641).
+  let template = original;
+  if (ctx.prose.mode !== 'original') {
+    const address = coreMessageAddress(key);
+    template = renderProse(ctx, address, original);
+    // Host-supplied core variants have no YAML validation boundary. An invalid
+    // token set must not erase a name or add information the caller never gave.
+    if (template !== original) {
+      const tokens = (text: string) => contentInterpolationTokens(text).sort().join('\n');
+      if (tokens(template) !== tokens(original)) {
+        ctx.prose.missing.add(address);
+        template = original;
+      }
     }
   }
   // Match the lower/mixed-case placeholders recognised by contentInterpolationTokens
