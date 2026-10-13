@@ -671,4 +671,56 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
       expect(order).toHaveBeenLastCalledWith({ kind: 'buyBackWardship' });
     } finally { wrapper.unmount(); }
   });
+
+  it('submits one bond per servant in a render without blocking another servant (#1571)', async () => {
+    const table = { ...wardshipTable(), servants: [
+      { person: 'ren', name: 'Ren', role: 'keeper', wage: 5, bonded: false, loyalty: 'steady' },
+      { person: 'hal', name: 'Hal', role: 'scribe', wage: 6, bonded: false, loyalty: 'doubtful' },
+    ] } as unknown as TableView;
+    const order = vi.fn().mockReturnValue({ ok: true });
+    const wrapper = mount(GameTable, {
+      props: { table, land: emptyLand, actions: { order } as unknown as GameActions, refusal: null, receipt: null },
+    });
+    try {
+      const marks = wrapper.findAll('input[aria-label^="Marks to advance"]');
+      expect(marks).toHaveLength(2);
+      await marks[0]!.setValue('5');
+      await marks[1]!.setValue('6');
+      const buttons = wrapper.findAll('button').filter((button) => button.text() === 'Advance it against the years');
+      expect(buttons).toHaveLength(2);
+      const ren = buttons[0]!.element as HTMLButtonElement;
+      const hal = buttons[1]!.element as HTMLButtonElement;
+      ren.click();
+      ren.click(); // Old button is still clickable until Vue repaints.
+      hal.click(); // Another servant remains independent.
+      expect(order).toHaveBeenCalledTimes(2);
+      expect(order).toHaveBeenNthCalledWith(1, { kind: 'bond', person: 'ren', op: 'bind', marks: 5 });
+      expect(order).toHaveBeenNthCalledWith(2, { kind: 'bond', person: 'hal', op: 'bind', marks: 6 });
+      await wrapper.vm.$nextTick();
+      ren.click();
+      expect(order).toHaveBeenCalledTimes(3);
+      expect(order).toHaveBeenLastCalledWith({ kind: 'bond', person: 'ren', op: 'bind', marks: 5 });
+    } finally { wrapper.unmount(); }
+  });
+
+  it('ignores a duplicate release before repaint and permits a later retry (#1571)', async () => {
+    const table = { ...wardshipTable(), servants: [
+      { person: 'ren', name: 'Ren', role: 'keeper', wage: 0, bonded: true, debt: 8, loyalty: 'wary' },
+    ] } as unknown as TableView;
+    const order = vi.fn().mockReturnValue({ ok: false, reason: 'not released' });
+    const wrapper = mount(GameTable, {
+      props: { table, land: emptyLand, actions: { order } as unknown as GameActions, refusal: null, receipt: null },
+    });
+    try {
+      const release = wrapper.findAll('button').find((button) => button.text() === 'Tear it up')!.element as HTMLButtonElement;
+      release.click();
+      release.click();
+      expect(order).toHaveBeenCalledOnce();
+      expect(order).toHaveBeenCalledWith({ kind: 'bond', person: 'ren', op: 'free' });
+      await wrapper.vm.$nextTick();
+      release.click();
+      expect(order).toHaveBeenCalledTimes(2);
+    } finally { wrapper.unmount(); }
+  });
+
 });
