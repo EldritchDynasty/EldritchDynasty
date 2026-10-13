@@ -42,6 +42,9 @@ const emit = defineEmits<{
   (e: 'person', id: string): void;
 }>();
 
+/** Presentation-only wording; saved Chronicle entries stay unchanged. */
+const plain = computed(() => props.proseMode === 'plainenglish');
+
 const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause) : null));
 const answered = computed(() => answeredLabel(props.links?.answered ?? []));
 
@@ -120,7 +123,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          said; the page still shows the gap, and the visible mark below carries
          the same fact for sighted readers. -->
     <p v-else class="blank">
-      <span class="said-not-shown">Somebody decided this year would not be written down.</span>
+      <span class="said-not-shown">{{ plain ? "The Chronicle deliberately leaves this year's entry blank." : "Somebody decided this year would not be written down." }}</span>
       <span aria-hidden="true">&nbsp;</span>
     </p>
     <!-- PERSON PROVENANCE (#268), not name parsing. applyOutcome recorded the
@@ -128,7 +131,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          living halls, the page still names them without offering a dead-end
          navigation control. -->
     <div v-if="entry.text !== null && people?.length && !read" class="people small">
-      <span class="dim">with</span>
+      <span class="dim">{{ plain ? 'People involved:' : 'with' }}</span>
       <template v-for="person in people" :key="person.id">
         <button
           v-if="person.available !== false"
@@ -138,7 +141,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
           @click="emit('person', person.id)"
         >{{ person.name }}</button>
         <span v-else class="dim" :data-person-history="person.id">
-          {{ person.name }} (not in a living hall)
+          {{ person.name }} ({{ plain ? 'not in a current household' : 'not in a living hall' }})
         </span>
       </template>
     </div>
@@ -147,8 +150,8 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          possible thing for the most interesting artefact the game produces.
          The blank is not tidied away; it is initialled, the way the house
          initials a line it improved. -->
-    <span v-if="entry.text === null && !read" class="dim small mark">left blank, on purpose</span>
-    <span v-if="entry.record === 'embellish' && !read" class="dim small mark">as the house tells it</span>
+    <span v-if="entry.text === null && !read" class="dim small mark">{{ plain ? 'deliberately left blank' : 'left blank, on purpose' }}</span>
+    <span v-if="entry.record === 'embellish' && !read" class="dim small mark">{{ plain ? "the family's version of events" : 'as the house tells it' }}</span>
         <template v-if="!read">
       <span
         v-for="(policy, i) in delegatedPolicies"
