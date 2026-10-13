@@ -4,9 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { SessionView } from '@ed/core';
+import type { LandView, SessionView, TableView } from '@ed/core';
 import Standing from './Standing.vue';
 import Muster from './Muster.vue';
+import GameTable from './Table.vue';
 import Abroad from './Abroad.vue';
 import Naming from './Naming.vue';
 import Member from './Member.vue';
@@ -587,5 +588,86 @@ describe('war Muster reader-local Plain English (#1447)', () => {
   it('wires the active reading preference into the App Muster panel', () => {
     const app = readFileSync(join(process.cwd(), 'packages/client/src/App.vue'), 'utf8');
     expect(app).toContain('<Muster v-if="view.muster" :view="view" :prose-mode="accessibility.proseMode"');
+  });
+});
+
+describe('Table wardship buy-back single-flight (#1559)', () => {
+  function wardshipTable(boughtBack = false): TableView {
+    return {
+      treasury: 100,
+      bidCeiling: 0,
+      tutorFee: 10,
+      wardship: { wardName: 'Edren', since: 1109, boughtBack, buyBackCost: 20 },
+      auction: null,
+      delegation: [],
+      vesselRite: { ready: false, reason: 'Not ready' },
+      greatRite: { ready: false, reason: 'Not ready' },
+      unmaking: { ready: false, reason: 'Not ready' },
+      ledgerSearch: { ready: false, reason: 'Not ready' },
+      shelf: [],
+      studying: [],
+      missingPrimers: [],
+      pupils: [],
+      teachable: [],
+      canTutor: false,
+      tutoring: [],
+      posts: [],
+      marriagePolicy: 'in',
+      programmeCandidates: [],
+      scion: null,
+      scionHeir: null,
+      scionVacant: false,
+      scionHeirVacant: false,
+      market: [],
+      papers: [],
+      pedigreePrices: [],
+      servants: [],
+      maxBond: 20,
+    } as unknown as TableView;
+  }
+
+  const emptyLand = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
+
+  it('dispatches only one buy-back order before the successful purchase is repainted', async () => {
+    const order = vi.fn().mockReturnValue({ ok: true, spent: 20, left: 80 });
+    const wrapper = mount(GameTable, {
+      props: {
+        table: wardshipTable(), land: emptyLand,
+        actions: { order } as unknown as GameActions,
+        refusal: null, receipt: null,
+      },
+    });
+    try {
+      const buy = wrapper.get('.wardship button').element as HTMLButtonElement;
+      buy.click();
+      buy.click(); // The old DOM is still clickable despite the synchronous purchase.
+      expect(order).toHaveBeenCalledExactlyOnceWith({ kind: 'buyBackWardship' });
+
+      // The host refresh removes the buy-back button once the state is changed.
+      await wrapper.setProps({ table: wardshipTable(true) });
+      expect(wrapper.find('.wardship button').exists()).toBe(false);
+      expect(order).toHaveBeenCalledTimes(1);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('unlocks a refused buy-back on the next render for a deliberate retry', async () => {
+    const order = vi.fn().mockReturnValue({ ok: false, reason: 'Host refused' });
+    const wrapper = mount(GameTable, {
+      props: {
+        table: wardshipTable(), land: emptyLand,
+        actions: { order } as unknown as GameActions,
+        refusal: null, receipt: null,
+      },
+    });
+    try {
+      const buy = wrapper.get('.wardship button').element as HTMLButtonElement;
+      buy.click();
+      buy.click();
+      expect(order).toHaveBeenCalledTimes(1);
+      await wrapper.vm.$nextTick();
+      buy.click();
+      expect(order).toHaveBeenCalledTimes(2);
+      expect(order).toHaveBeenLastCalledWith({ kind: 'buyBackWardship' });
+    } finally { wrapper.unmount(); }
   });
 });
