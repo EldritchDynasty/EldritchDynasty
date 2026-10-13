@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { SessionView } from '@ed/core';
 import Tree from './Tree.vue';
+import Standing from './Standing.vue';
 import Line from './Line.vue';
 import Chronicle from './Chronicle.vue';
 import Passage from './Passage.vue';
@@ -804,5 +805,128 @@ describe('Plain English family member cards (#410)', () => {
   it('connects the saved reader preference through App into Tree', () => {
     const app = readFileSync('packages/client/src/App.vue', 'utf8');
     expect(app).toMatch(/<Tree\s+:view="view"\s+:selected="selected"\s+:prose-mode="accessibility\.proseMode"/);
+  });
+});
+
+
+/**
+ * The same family read model feeds the Tree and the header. The Age's
+ * register is an in-world sensation, but its name and start year may be
+ * withheld until the household has a name for it (#1580).
+ *
+ * Kept in this existing measured DOM test file while the Table's own
+ * in-flight claim owns Standing.test.ts; no source or test path overlaps.
+ */
+describe('known Age mood and generation-question onset (#1580)', () => {
+  function household(ages: SessionView['ages']): SessionView {
+    return {
+      year: 1127,
+      campaign: { id: 'long', name: 'A Long Line', startYear: 1042, endYear: 1542 },
+      generation: 4,
+      house: 'house_ash',
+      houseName: 'House Ash',
+      seed: 47,
+      treasury: 252,
+      respect: 'regarded',
+      discontent: 7,
+      clausesRecovered: 3,
+      clausesTotal: 9,
+      ages,
+      agePressures: [],
+      ageMatchPriorities: [],
+      ageRecordPriorities: [],
+      halls: [],
+      chronicle: [],
+      frame: [],
+      docket: [],
+      namesWanted: [],
+      looseSecrets: [],
+      tales: [],
+      marriagePromises: [],
+      cast: [],
+      attributes: [],
+      traits: [],
+      ambitionOptions: [],
+      ascension: {
+        rung: 'adept', best: 'adept', title: 'Adept', bestTitle: 'Adept',
+        foremost: null,
+      },
+      assize: {
+        pressure: 0, arm: 'indifferent', favour: false, mercy: false,
+        exaction: false,
+      },
+    } as unknown as SessionView;
+  }
+
+  it('reads active register even when the Age name is hidden, without leaking counts or dates', async () => {
+    const current = household([
+      { age: 'unrevealed-a', began: 1093, register: 'cold' },
+      { age: 'unrevealed-b', began: 1111, register: 'cold' },
+      { age: 'named', name: 'The Painted Years', began: 1104, register: 'warm' },
+      { age: 'finished', name: 'The Former Age', began: 1055, ended: 1063, register: 'institutional' },
+    ]);
+    const originalBytes = JSON.stringify(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'idle' },
+    });
+    try {
+      const header = wrapper.get('.age');
+      expect(header.get('.name').text()).toContain('The Painted Years · since 1104');
+      expect(header.findAll('.age-mood').map((row) => row.text())).toEqual([
+        'A coldness settles over the years.',
+        'There is warmth in the years.',
+      ]);
+      expect(header.text()).not.toContain('unrevealed');
+      expect(header.text()).not.toContain('The Former Age');
+      expect(header.text()).not.toContain('1055');
+      expect(header.text()).not.toContain('1093');
+      expect(header.text()).not.toContain('1111');
+      expect(header.text()).not.toContain('institutional');
+      expect(header.text()).not.toContain('2 cold');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.findAll('.age-mood').map((row) => row.text())).toEqual([
+        'These years feel cold and uncertain.',
+        'These years feel warm and open.',
+      ]);
+      expect(wrapper.get('.name').text()).toBe('The Painted Years · since 1104');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.findAll('.age-mood').map((row) => row.text())).toEqual([
+        'A coldness settles over the years.',
+        'There is warmth in the years.',
+      ]);
+      expect(JSON.stringify(current)).toBe(originalBytes);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('does not reveal an ended mood and gives unnamed active Ages a reader-facing sentence', () => {
+    const wrapper = mount(Standing, {
+      props: {
+        view: household([
+          { age: 'ended', name: 'Never Show', began: 1088, ended: 1101, register: 'cold' },
+          { age: 'unrevealed', began: 1119, register: 'institutional' },
+        ]),
+        jump: null,
+        saveStatus: 'idle',
+        proseMode: 'plainenglish',
+      },
+    });
+    try {
+      expect(wrapper.find('.age .name').exists()).toBe(false);
+      expect(wrapper.findAll('.age-mood').map((row) => row.text())).toEqual([
+        'Institutions shape these years.',
+      ]);
+      expect(wrapper.get('.age').text()).not.toContain('Never Show');
+      expect(wrapper.get('.age').text()).not.toContain('1119');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('renders the public opening year on the generation question without a new engine lookup', () => {
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
+    expect(app).toMatch(/v-if="view\.generationArc"[\s\S]*?since \{\{ view\.generationArc\.opened \}\}/);
+    expect(app).toContain('{{ view.generationArc.question }}');
   });
 });
