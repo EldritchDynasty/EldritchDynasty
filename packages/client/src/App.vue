@@ -422,6 +422,7 @@ const yearAndBirths = computed(() => {
     :refused="refused"
     :start-year="view.campaign.startYear"
     :skip-seen-prose="accessibility.skipSeenProse"
+    :prose-mode="accessibility.proseMode"
   />
 
   <template v-else-if="ended && epilogue">
@@ -499,7 +500,7 @@ const yearAndBirths = computed(() => {
           :refused-card="refusedCard"
         />
 
-        <Naming v-else-if="view.namesWanted.length" :view="view" :actions="actions" />
+        <Naming v-else-if="view.namesWanted.length" :view="view" :actions="actions" :prose-mode="accessibility.proseMode" />
 
         <!-- THE CLOCK IS FURNITURE (issue #53). Always drawn, same place, same
              size, whatever else is on the board. It used to be the third arm of
@@ -512,7 +513,7 @@ const yearAndBirths = computed(() => {
              already extends to a choice nobody can take: "an unavailable choice
              is itself information (concept §16), so it is shown greyed with the
              reason rather than filtered away." -->
-        <Ambition :view="view" :actions="actions" />
+        <Ambition :view="view" :actions="actions" :prose-mode="accessibility.proseMode" />
 
         <div class="panel clock">
           <h3 class="label">The clock</h3>
@@ -655,7 +656,7 @@ const yearAndBirths = computed(() => {
           <!-- Five or six people out of seventy, each with the one thing that
                is true of them and of nobody else. The tree is still under it;
                this is the way in. -->
-          <Cast :cast="view.cast" :selected="selected" @select="selectFromCast" />
+          <Cast :cast="view.cast" :selected="selected" :prose-mode="accessibility.proseMode" @select="selectFromCast" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" :prose-mode="accessibility.proseMode" />
           <Tree
             :view="view"
@@ -688,6 +689,7 @@ const yearAndBirths = computed(() => {
       v-if="chapter"
       :beat="chapter"
       :actions="actions"
+      :prose-mode="accessibility.proseMode"
       :skip-seen-prose="accessibility.skipSeenProse"
     />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
