@@ -888,7 +888,7 @@ describe('known Age mood and generation-question onset (#1580)', () => {
         'These years feel cold and uncertain.',
         'These years feel warm and open.',
       ]);
-      expect(wrapper.get('.name').text()).toBe('The Painted Years · since 1104');
+      expect(header.get('.name').text()).toBe('The Painted Years · since 1104');
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.findAll('.age-mood').map((row) => row.text())).toEqual([
         'A coldness settles over the years.',
