@@ -833,9 +833,6 @@ describe('reader-local Chronicle annotations (#1434)', () => {
     try {
       const original = wrapper.text();
       expect(original).toContain('that their physical strength stood at 52');
-      expect(wrapper.get('.read .top button').text()).toBe('Read it whole');
-      expect(wrapper.get('.tally h3').text()).toBe('The reckoning');
-      expect(wrapper.get('.ring h3').text()).toBe('A debt of three parts');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.text()).toContain('The record says their physical strength was 52.');
       expect(wrapper.text()).toContain('usual choice: write down what happened');
@@ -872,6 +869,9 @@ describe('reader-local Chronicle annotations (#1434)', () => {
     try {
       const original = wrapper.text();
       expect(original).toContain('that their physical strength stood at 52');
+      expect(wrapper.get('.read .top button').text()).toBe('Read it whole');
+      expect(wrapper.get('.tally h3').text()).toBe('The reckoning');
+      expect(wrapper.get('.ring h3').text()).toBe('A debt of three parts');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('.read').text()).toContain('The record says their physical strength was 52.');
       expect(wrapper.get('.read').text()).toContain(retainedPage.title);
