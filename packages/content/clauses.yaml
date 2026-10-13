@@ -183,3 +183,35 @@ proseVariants:
     plainenglish: >-
       When the term ends, the whole debt must be read aloud, and someone must answer.
       Saying nothing counts as an answer and is recorded as refusal.
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_term].name"
+    of: "c35a2cae3f95a80a"
+    plainenglish: >-
+      The Term (how long the contract lasts)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_kept_thing].name"
+    of: "ca0a06c8d6efe334"
+    plainenglish: >-
+      The Kept Thing (what was given must be kept)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_blood_entire].name"
+    of: "fbe4fd1980e9c04d"
+    plainenglish: >-
+      The Blood Entire (the whole bloodline owes the debt)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_ninth_name].name"
+    of: "34f5528c4875dec0"
+    plainenglish: >-
+      The Ninth Name (nine names, one party)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_broken_line].name"
+    of: "9f84063990f12ca5"
+    plainenglish: >-
+      The Broken Line (if the bloodline ends)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_made_thing].name"
+    of: "5edd8b615fa69615"
+    plainenglish: >-
+      The Made Thing (still bound, even if no longer a person)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_witness].name"
+    of: "28c573d780858b93"
+    plainenglish: >-
+      The Witness (only a witness's writing counts)
+  - address: "content:clauses.yaml#clauses[id=clause_of_the_final_accounting].name"
+    of: "2b870a8da43a15e9"
+    plainenglish: >-
+      The Final Accounting (the debt read aloud at the end)

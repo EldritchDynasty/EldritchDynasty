@@ -218,3 +218,21 @@ characters:
     membership: blood
     bias: { strength: 0.7 }
     note: Cheap, willing, and carrying nothing at all. Marrying him out is free.
+
+proseVariants:
+  - address: "content:characters/founding.yaml#characters[key=founder].name"
+    of: "7742fff33b5e3bdf"
+    plainenglish: >-
+      Daveed Gearithy (the founder)
+  - address: "content:characters/founding.yaml#characters[key=marrow_head].name"
+    of: "a01fb6c76de14ceb"
+    plainenglish: >-
+      Lorcan of Marrow (Head of House Marrow)
+  - address: "content:characters/founding.yaml#characters[key=marrow_daughter].name"
+    of: "0218a3ddd8545971"
+    plainenglish: >-
+      Sable of Marrow (a daughter of House Marrow)
+  - address: "content:characters/founding.yaml#characters[key=calder_son].name"
+    of: "005804854aacf041"
+    plainenglish: >-
+      Doran of Calder (a son of House Calder)

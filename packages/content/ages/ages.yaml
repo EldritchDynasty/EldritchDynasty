@@ -153,3 +153,31 @@ proseVariants:
       It did not care about bloodlines, affinities, or which houses had been careful. In one
       season, the people who had built their lives on being strong learned what the people who
       had built theirs on being clever already knew.
+  - address: "content:ages/ages.yaml#ages[id=the_long_peace].name"
+    of: "5d801928eace5dec"
+    plainenglish: >-
+      The Long Peace (good harvests, few burials)
+  - address: "content:ages/ages.yaml#ages[id=the_wars].name"
+    of: "24842e07d4bd1103"
+    plainenglish: >-
+      The Wars (the levy keeps calling for sons)
+  - address: "content:ages/ages.yaml#ages[id=the_crusade].name"
+    of: "5d720193dea37bd7"
+    plainenglish: >-
+      The Crusade (a clerk starts watching the family)
+  - address: "content:ages/ages.yaml#ages[id=the_insurrection].name"
+    of: "d20c52115a816a75"
+    plainenglish: >-
+      The Insurrection (old houses begin to fall)
+  - address: "content:ages/ages.yaml#ages[id=the_withering].name"
+    of: "59527efda9326e01"
+    plainenglish: >-
+      The Withering (fewer children wake to the gift)
+  - address: "content:ages/ages.yaml#ages[id=the_quickening].name"
+    of: "b3ac3fac435a3d48"
+    plainenglish: >-
+      The Quickening (the gift comes early, and to many)
+  - address: "content:ages/ages.yaml#ages[id=the_plague].name"
+    of: "66d3eaaa05cf27ee"
+    plainenglish: >-
+      The Plague (a sickness that spares nobody)
