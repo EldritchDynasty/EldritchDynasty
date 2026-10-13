@@ -10655,7 +10655,34 @@ dilute late font +0.63, 4.5 standard errors; both survive 2,048/2,048. All
 twelve batch gates pass. New reader content landed after these runs, so the
 final landing base receives another blood/batch run before admission.
 
-**Disposition.** #1581 owns the independently shippable conception repair.
-#1189's population/pressure decision remains open until that repair lands
-and its corrected funnel is evaluated; repeated deterministic losses cannot
-serve as evidence for choosing a new stillbirth probability.
+**Complete exposure funnel on the reader-content base.** The post-rebase
+repair at `b6221c8e` was played again on seeds 11–26. Failed overflow
+conceptions were reconstructed through the engine's seeded meiosis and
+conception primitives, checking their sex and overflow against the observed
+loss before including their risk. Close-blood losses are excluded from this
+sum because they end before the overflow check. This removes the surviving
+sons' censoring from the observation without changing a simulation draw.
+
+| Policy | Played years | Live sons / daughters | Live capable sons | Live exposed sons | Overflow losses | Risk sum over all reached overflow screens |
+|---|---:|---:|---:|---:|---:|---:|
+| ordinary | 7,179 | 2,643 / 2,568 | 374 | 44 | 1 | 3.265 |
+| ascendant | 6,642 | 2,319 / 2,366 | 587 | 37 | 7 | 5.159 |
+
+There are zero female overflow losses and zero sampled coherence violations.
+The sums include the failed conceptions; the corresponding live-only sums
+are 3.187 and 3.293. A small batch is evidence of the mechanism and funnel,
+not a new campaign-rate threshold. The ascendant's ordinary genetic risk
+remains distinct from Madness and blood acquired through personal rites.
+
+**Decision under the session's delegated design judgment.** Retain the
+existing genetic risk as a rare campaign tail, with conditional son-loss
+pressure in genetically overloaded lines. The brief already distinguishes
+involuntary inherited overflow from purchased ascension Madness, and §22
+explicitly prevents the Vessel's acquired blood from passing to children.
+The universal timing claim about Regency exactly when a house is closest to
+ascending conflated those systems. Clarify that sentence in the Madness
+section rather than introducing an ascension-driven prenatal loss rule or
+retuning the gene distribution. Both genetic gates and both risk curves stay
+as implemented. #1581 owns the independently shippable conception repair;
+this decision/measurement lands after it. Repeated deterministic losses
+cannot serve as evidence for choosing a new stillbirth probability.
