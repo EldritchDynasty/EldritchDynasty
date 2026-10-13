@@ -67,19 +67,72 @@ function signingBundle() {
  * not care what happens, only that asking produces an answer.
  */
 
-/** Turn years until the docket has something of `kind` on it, or give up. */
+/**
+ * Walk the public docket to the requested kind. An unrelated decision blocks
+ * the clock until the reader answers it; defer those through the session's
+ * public verb instead of repeatedly trying to advance one frozen year.
+ * The bound counts both clock turns and docket resolutions.
+ */
 function advanceUntil(g: GameSession, kind: 'choice' | 'record' | 'match', limit = 400) {
-  for (let i = 0; i < limit; i++) {
+  for (let steps = 0; steps < limit; steps++) {
     const found = g.pending.find((p) => p.kind === kind);
     if (found) return found;
+    if (g.pending.length) {
+      g.letHimDecide();
+      continue;
+    }
     const before = g.year;
     g.advance(1);
-    // A docket that stops the clock means `advance` returned without turning
-    // the year. Answer nothing here — the caller decides what to do with it.
+    // No requested decision and no way to move the clock any further.
     if (g.year === before && !g.pending.length) return undefined;
   }
   return undefined;
 }
+
+describe('decision-kind search for the public API (#1592)', () => {
+  it('defers a wrong-kind docket before advancing to the desired kind', () => {
+    const unrelated = { id: 'unrelated', kind: 'record' } as unknown as GameSession['pending'][number];
+    const wanted = { id: 'wanted', kind: 'choice' } as unknown as GameSession['pending'][number];
+    let year = 1042;
+    let pending: GameSession['pending'] = [unrelated];
+    let resolutions = 0;
+    let advances = 0;
+    const session = {
+      get year() { return year; },
+      get pending() { return pending; },
+      letHimDecide() { resolutions++; pending = []; },
+      advance() {
+        advances++;
+        if (pending.length) return; // The clock must refuse unresolved decisions.
+        year++;
+        pending = [wanted];
+      },
+    } as unknown as GameSession;
+
+    expect(advanceUntil(session, 'choice', 3)).toBe(wanted);
+    expect(resolutions).toBe(1);
+    expect(advances).toBe(1);
+    expect(year).toBe(1043);
+  });
+
+  it('stops after its total action budget when the requested kind never arrives', () => {
+    const unrelated = { id: 'unrelated', kind: 'record' } as unknown as GameSession['pending'][number];
+    let pending: GameSession['pending'] = [unrelated];
+    let resolutions = 0;
+    let advances = 0;
+    const session = {
+      get year() { return 1042 + advances; },
+      get pending() { return pending; },
+      letHimDecide() { resolutions++; pending = []; },
+      advance() { advances++; pending = [unrelated]; },
+    } as unknown as GameSession;
+
+    expect(advanceUntil(session, 'choice', 5)).toBeUndefined();
+    expect(resolutions + advances).toBe(5);
+    expect(resolutions).toBe(3);
+    expect(advances).toBe(2);
+  });
+});
 
 /**
  * WHAT THE JUMP DID, AND WHO IS ALLOWED TO WORK IT OUT (issue #54).
@@ -387,7 +440,8 @@ describe('a game runs through the public API', () => {
   it('choose answers a choice standing on the docket', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'choice');
-    if (!decision || decision.kind !== 'choice') return; // seed did not reach one; not this test's business
+    expect(decision?.kind, 'the seeded public session must reach a choice decision').toBe('choice');
+    if (!decision || decision.kind !== 'choice') throw new Error('the choice docket was not reached');
 
     const open = decision.choices.find((c) => c.available);
     expect(open, 'a decision on the docket has at least one answerable branch').toBeDefined();
@@ -402,7 +456,8 @@ describe('a game runs through the public API', () => {
   it('record answers a Record block, and the chronicle grows by it', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'record');
-    if (!decision || decision.kind !== 'record') return;
+    expect(decision?.kind, 'the seeded public session must reach a record decision').toBe('record');
+    if (!decision || decision.kind !== 'record') throw new Error('the record docket was not reached');
 
     expect(decision.options.length).toBeGreaterThan(0);
     expect(g.record(decision.id, 'record')).toBe(true);
@@ -417,7 +472,8 @@ describe('a game runs through the public API', () => {
   it('declineHand takes none of the cards, and clears the decision', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'match');
-    if (!decision || decision.kind !== 'match') return;
+    expect(decision?.kind, 'the seeded public session must reach a match decision').toBe('match');
+    if (!decision || decision.kind !== 'match') throw new Error('the match docket was not reached');
 
     const before = g.pending.length;
     expect(g.declineHand(decision.id)).toBe(true);
@@ -430,7 +486,8 @@ describe('a game runs through the public API', () => {
   it('match takes one of the cards it was dealt', () => {
     const g = newGame(content, { seed: 7007 });
     const decision = advanceUntil(g, 'match');
-    if (!decision || decision.kind !== 'match') return;
+    expect(decision?.kind, 'the seeded public session must reach a match decision').toBe('match');
+    if (!decision || decision.kind !== 'match') throw new Error('the match docket was not reached');
 
     expect(decision.cards.length).toBeGreaterThan(0);
     const res = g.match(decision.id, decision.cards[0]!.id);
