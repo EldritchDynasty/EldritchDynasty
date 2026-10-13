@@ -109,7 +109,7 @@ async function follow(id: string): Promise<void> {
       <span>{{ plain ? 'Recent Chronicle entries' : 'The chronicle' }}</span>
       <button class="quiet small" @click="emit('open')">{{ plain ? 'Read full Chronicle' : 'Read it whole' }}</button>
     </h3>
-    <AdviserHelp :ask="askAdviser" :reset-key="`chronicle:${view.house}:${snapshot}`" />
+    <AdviserHelp :ask="askAdviser" :prose-mode="proseMode" :reset-key="`chronicle:${view.house}:${snapshot}`" />
 
     <!-- FREQUENCY IS FELT HERE, as typography, and `Entry.vue` is where that
          lives now — one component for the panel, the reading pane and the
