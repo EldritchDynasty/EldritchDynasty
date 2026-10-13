@@ -818,7 +818,7 @@ describe('Chronicle sidebar reader labels (#1608)', () => {
       expect(wrapper.get('.frame-label').text()).toBe('Interludes');
       expect(wrapper.text()).toContain('The private telling stays exactly as recorded.');
       await wrapper.get('.top button').trigger('click');
-      expect(wrapper.emitted('open')).toEqual([[undefined]]);
+      expect(wrapper.emitted('open')).toEqual([[]]);
 
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.get('.top span').text()).toBe('The chronicle');
