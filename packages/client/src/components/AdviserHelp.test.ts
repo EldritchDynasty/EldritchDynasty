@@ -361,4 +361,54 @@ describe('first house ambition refusal after view refresh (#1519)', () => {
       wrapper.unmount();
     }
   });
+  it('dispatches only the first ambition order from competing same-render controls (#1555)', async () => {
+    const setAmbition = vi.fn(() => true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView('blood'), actions: { setAmbition } as unknown as GameActions },
+    });
+    try {
+      await wrapper.get('.ambition-head button').trigger('click');
+      await wrapper.get('select').setValue('land');
+      const buttons = wrapper.findAll('.ambition-actions button');
+      expect(buttons).toHaveLength(3);
+      // Keep and Clear are both on the old DOM until Vue processes the result.
+      const keep = buttons[0]!.element as HTMLButtonElement;
+      const clear = buttons[1]!.element as HTMLButtonElement;
+      keep.click();
+      clear.click();
+      keep.click();
+      expect(setAmbition.mock.calls).toEqual([['land']]);
+
+      // A new rendering allows a fresh, deliberately requested Clear.
+      await wrapper.vm.$nextTick();
+      await wrapper.get('.ambition-head button').trigger('click');
+      await wrapper.findAll('.ambition-actions button')[1]!.trigger('click');
+      expect(setAmbition.mock.calls).toEqual([['land'], [null]]);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('re-enables a refused ambition order on the next render without taking a stale Clear (#1555)', async () => {
+    const setAmbition = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const wrapper = mount(Ambition, {
+      props: { view: ambitionView('blood'), actions: { setAmbition } as unknown as GameActions },
+    });
+    try {
+      await wrapper.get('.ambition-head button').trigger('click');
+      const buttons = wrapper.findAll('.ambition-actions button');
+      (buttons[0]!.element as HTMLButtonElement).click();
+      (buttons[1]!.element as HTMLButtonElement).click();
+      expect(setAmbition.mock.calls).toEqual([['blood']]);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get('[role="alert"]').text()).toContain('could not keep that ambition');
+
+      await wrapper.get('.ambition-actions button').trigger('click');
+      expect(setAmbition.mock.calls).toEqual([['blood'], ['blood']]);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
 });
