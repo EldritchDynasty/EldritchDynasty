@@ -61,7 +61,7 @@ function withoutScriptComments(source: string): string {
     } else if (kind === ts.SyntaxKind.CloseBraceToken && templateBraces.length) {
       const depth = templateBraces.length - 1;
       if (templateBraces[depth] === 0) {
-        kind = scanner.reScanTemplateToken();
+        kind = scanner.reScanTemplateToken(false);
         if (kind === ts.SyntaxKind.TemplateTail) templateBraces.pop();
       } else {
         templateBraces[depth]!--;
