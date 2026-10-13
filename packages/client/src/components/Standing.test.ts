@@ -231,7 +231,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.get('.run-number button').attributes('aria-expanded')).toBe('true');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('.year').text()).toContain('Generation 4');
-      expect(wrapper.get('.age .name').text()).toBe('Long Peace · started in 1103');
+      expect(wrapper.get('.age .name').text()).toBe('Long Peace · since 1103');
       expect(wrapper.get('.ladder-measure').text()).toBe('Power 42 out of 100 · 3 books');
       expect(wrapper.get('.rung').text()).toContain('Maren — can advance to the next level.');
       expect(wrapper.get('.rung').text()).toContain('Highest level reached · Hierophant, reached in 1114.');
