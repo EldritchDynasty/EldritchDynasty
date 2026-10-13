@@ -999,9 +999,9 @@ proseVariants:
     plainenglish: >-
       The ring goes into the box. The coat is too stiff with mud to fold.
   - address: "content:events/career_lives.yaml#events[id=the_ring_from_the_line].interaction.outcomes[id=came_back].effects[0].cause"
-    of: eea88d6b596d633f
+    of: "050e1c12073feec6"
     plainenglish: >-
-      while serving in the army
+      during a night march while serving on the line
   - address: "content:events/career_lives.yaml#events[id=leave_bought_in_winter].title"
     of: f88499109f81804c
     plainenglish: >-

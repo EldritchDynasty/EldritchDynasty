@@ -359,3 +359,7 @@ proseVariants:
       and somewhere else for half of every year. They hold their grazing land by a custom older
       than the province and have never shown a single document for it. They are half the
       province's witnesses to anything that happened on a hill.
+  - address: "content:houses.yaml#houses[id=the_church].name"
+    of: "92bf616957d8a59d"
+    plainenglish: >-
+      The Church of the Nine Quiet Names (the Church)
