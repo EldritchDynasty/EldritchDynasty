@@ -170,7 +170,7 @@ async function refreshSaves(): Promise<void> {
 async function continueLastSitting(): Promise<void> {
   // A second click cannot start a competing host load or overwrite the result
   // of a successful continuation with an older, slower refusal.
-  if (selectingRun.value || beginning || libraryBusy.value) return;
+  if (!libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value) return;
   resuming.value = true;
   // The rolling save may have become unreadable after the front door offered it.
   // Report this next to Continue, not down beside unrelated import/export actions.
@@ -190,7 +190,7 @@ let saveActionRevision = 0;
 async function load(slot: string): Promise<void> {
   // One named host read owns the session until it resolves. Prevent both a
   // second slot and Begin/Continue/Import from superseding it mid-read.
-  if (selectingRun.value || beginning || libraryBusy.value) return;
+  if (!libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value) return;
   loadingSlot.value = slot;
   const revision = ++saveActionRevision;
   saveActionError.value = null;
@@ -209,7 +209,7 @@ async function load(slot: string): Promise<void> {
 }
 
 async function importSave(): Promise<void> {
-  if (selectingRun.value || beginning || libraryBusy.value) return;
+  if (!libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value) return;
   importingSave.value = true;
   refused.value = null;
   try {
@@ -254,7 +254,7 @@ async function retryLibrary(): Promise<void> {
 
 function requestClearLibrary(): void {
   // Disabled controls alone do not protect against a stale dispatched click.
-  if (beginning || selectingRun.value || clearingLibrary.value || removingRun.value !== null) return;
+  if (!libraryIsReady.value || beginning || selectingRun.value || clearingLibrary.value || removingRun.value !== null) return;
   confirmingRemoveRun.value = null;
   confirmingClearLibrary.value = true;
 }
@@ -262,7 +262,7 @@ function requestClearLibrary(): void {
 async function clearLibrary(): Promise<void> {
   // Clear and Remove share one host Library. Refuse stale/programmatic clicks
   // as well as disabling the controls while either write is in flight.
-  if (beginning || selectingRun.value || !confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
+  if (!libraryIsReady.value || beginning || selectingRun.value || !confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
   clearingLibrary.value = true;
   confirmingClearLibrary.value = false;
   libraryError.value = null;
@@ -276,7 +276,7 @@ async function clearLibrary(): Promise<void> {
 }
 
 function requestRemoveLibraryRun(id: string): void {
-  if (beginning || selectingRun.value || removingRun.value !== null || clearingLibrary.value) return;
+  if (!libraryIsReady.value || beginning || selectingRun.value || removingRun.value !== null || clearingLibrary.value) return;
   confirmingClearLibrary.value = false;
   confirmingRemoveRun.value = id;
   libraryError.value = null;
@@ -290,7 +290,7 @@ function cancelRemoveLibraryRun(): void {
 async function removeLibraryRun(id: string): Promise<void> {
   // A stale click, or a second click while the host is deleting, cannot
   // remove another house or issue the same irreversible command twice.
-  if (beginning || selectingRun.value || confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
+  if (!libraryIsReady.value || beginning || selectingRun.value || confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
   removingRun.value = id;
   libraryError.value = null;
   try {
@@ -344,7 +344,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" :disabled="selectingRun || libraryBusy" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
+      <button v-if="resumable" class="primary" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
@@ -384,12 +384,12 @@ onMounted(() => { void refreshSaves(); });
         <button
           v-if="!confirmingClearLibrary"
           class="quiet small"
-          :disabled="selectingRun || removingRun !== null || clearingLibrary"
+          :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary"
           @click="requestClearLibrary()"
         >{{ clearingLibrary ? (plain ? 'Removing…' : 'Clearing…') : (plain ? 'Remove all' : 'Clear') }}</button>
         <div v-else class="library-clear-confirm" role="group" :aria-label="plain ? 'Confirm removing all completed houses' : 'Confirm clearing the Library of Houses'">
           <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed {{ completedHouses.length === 1 ? 'house' : 'houses' }}? This cannot be undone.</p>
-          <button class="quiet small confirm-clear" :disabled="selectingRun || removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
+          <button class="quiet small confirm-clear" :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
           <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
         </div>
       </div>
@@ -401,7 +401,7 @@ onMounted(() => { void refreshSaves(); });
           <button
             v-if="confirmingRemoveRun !== run.id"
             class="quiet small"
-            :disabled="selectingRun || removingRun !== null || clearingLibrary"
+            :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary"
             @click="requestRemoveLibraryRun(run.id)"
           >Remove</button>
           <div
@@ -413,10 +413,10 @@ onMounted(() => { void refreshSaves(); });
             <span class="rubric small">{{ plain ? `Remove ${run.house} from completed games? You cannot undo this.` : `Remove ${run.house}? This cannot be undone.` }}</span>
             <button
               class="quiet small confirm-remove"
-              :disabled="selectingRun || removingRun !== null || clearingLibrary"
+              :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary"
               @click="removeLibraryRun(run.id)"
             >{{ removingRun === run.id ? 'Removing…' : (plain ? 'Yes, remove this house' : 'Yes, remove') }}</button>
-            <button class="quiet small" :disabled="selectingRun || removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
+            <button class="quiet small" :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary" @click="cancelRemoveLibraryRun()">Cancel</button>
           </div>
         </div>
         <p v-if="survivingPage(run)" class="small excerpt">“{{ survivingPage(run) }}”</p>
@@ -428,7 +428,7 @@ onMounted(() => { void refreshSaves(); });
       <p class="dim small">{{ plain ? 'These games remain saved after you close the app.' : 'They remain here when the application closes.' }}</p>
       <ul>
         <li v-for="save in namedSaves" :key="save.slot">
-          <button class="quiet" :disabled="selectingRun || libraryBusy" @click="load(save.slot)">
+          <button class="quiet" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="load(save.slot)">
             {{ save.slot === 'autosave' ? (plain ? 'Most recent game' : 'The last sitting') : save.slot }}
             <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
             <span v-if="loadingSlot === save.slot" class="dim"> · Loading…</span>
@@ -451,7 +451,7 @@ onMounted(() => { void refreshSaves(); });
     </div>
 
     <div class="row">
-      <button class="quiet small" :disabled="selectingRun || libraryBusy" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
+      <button class="quiet small" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="importSave()">{{ importingSave ? 'Importing…' : (plain ? 'Import a saved game' : 'Bring a run in') }}</button>
       <p v-if="refused" class="rubric small" role="status">{{ displayError(refused) }}</p>
     </div>
 
