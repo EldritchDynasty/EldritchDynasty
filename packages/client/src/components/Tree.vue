@@ -22,6 +22,8 @@ const props = defineProps<{
   line?: readonly LineEntry[];
   mentions?: (person: string) => MentionPage[];
 }>();
+/** A fresh reading of the same tree; changing prose mode never resets its filters. */
+const plain = computed(() => props.proseMode === 'plainenglish');
 const emit = defineEmits<{
   (e: 'select', id: string): void;
   (e: 'line'): void;
@@ -44,6 +46,18 @@ const hallFilter = ref<string>('all');
 
 type HallView = SessionView['halls'][number];
 type MemberFilter = 'all' | 'head' | 'succession' | 'married' | 'unmarried' | 'post' | 'cadet' | 'awakened';
+
+/** Only navigation words change; every filter still uses the same stable ID. */
+const PLAIN_FILTER_LABELS: Record<MemberFilter, string> = {
+  all: 'Everyone',
+  head: 'House leader',
+  succession: 'Next in line or possible successor',
+  married: 'Married',
+  unmarried: 'Not married',
+  post: 'Has a position',
+  cadet: 'Other households',
+  awakened: 'Awakened',
+};
 
 const MEMBER_FILTERS: { id: MemberFilter; label: string }[] = [
   { id: 'all', label: 'Everyone' },
@@ -292,10 +306,10 @@ watch(() => props.reveal?.token, () => {
 </script>
 
 <template>
-  <section class="tree" aria-label="The living family tree">
+  <section class="tree" :aria-label="plain ? 'Living family tree' : 'The living family tree'">
     <label class="row find">
-      <span class="said-not-shown">Find somebody by name</span>
-      <input v-model="query" type="search" placeholder="find somebody by name" />
+      <span class="said-not-shown">{{ plain ? 'Find a family member by name' : 'Find somebody by name' }}</span>
+      <input v-model="query" type="search" :placeholder="plain ? 'Find a family member' : 'find somebody by name'" />
     </label>
     <ul v-if="matches.length" class="matches">
       <li v-for="m in matches" :key="m.id">
@@ -304,14 +318,14 @@ watch(() => props.reveal?.token, () => {
         </button>
       </li>
     </ul>
-    <p v-else-if="query.trim().length >= 2" class="dim small">Nobody of the house answers to that.</p>
+    <p v-else-if="query.trim().length >= 2" class="dim small">{{ plain ? 'No family member matches that name.' : 'Nobody of the house answers to that.' }}</p>
 
     <!-- A PLANNING INDEX, NOT ANOTHER STAT SHEET (#268). These filters only
          name facts already present in SessionView. "Heir / possible" is the
          engine's known-succession answer; it never reads unwoken Power here. -->
-    <div class="planning" aria-label="Plan with the family tree">
-      <span class="dim small planning-label">Read the house by</span>
-      <div class="wrap filters" role="group" aria-label="Family tree filters">
+    <div class="planning" :aria-label="plain ? 'Plan using the family tree' : 'Plan with the family tree'">
+      <span class="dim small planning-label">{{ plain ? 'Show family members by' : 'Read the house by' }}</span>
+      <div class="wrap filters" role="group" :aria-label="plain ? 'Choose which family members to show' : 'Family tree filters'">
         <button
           v-for="filter in MEMBER_FILTERS"
           :key="filter.id"
@@ -321,7 +335,7 @@ watch(() => props.reveal?.token, () => {
           :aria-pressed="memberFilter === filter.id"
           :data-filter="filter.id"
           @click="pickMemberFilter(filter.id)"
-        >{{ filter.label }}</button>
+        >{{ plain ? PLAIN_FILTER_LABELS[filter.id] : filter.label }}</button>
       </div>
       <button
         type="button"
@@ -330,7 +344,7 @@ watch(() => props.reveal?.token, () => {
         :aria-pressed="directLine"
         data-direct-line
         @click="toggleDirectLine"
-      >Direct line</button>
+      >{{ plain ? 'Main family line' : 'Direct line' }}</button>
       <button
         type="button"
         class="quiet small relevance-toggle"
@@ -338,7 +352,7 @@ watch(() => props.reveal?.token, () => {
         :aria-pressed="showRelevance"
         data-relevance-toggle
         @click="showRelevance = !showRelevance"
-      >Relevant to the plan</button>
+      >{{ plain ? 'Important for the family plan' : 'Relevant to the plan' }}</button>
     </div>
 
     <!-- HOW ARE THESE TWO RELATED? The path is a reading of the same recorded
@@ -346,7 +360,7 @@ watch(() => props.reveal?.token, () => {
          path is a way back into that person's card. -->
     <div v-if="relationAnchor" class="relationship small" aria-live="polite">
       <template v-if="relationshipTo">
-        <span class="dim">Recorded relationship:</span>
+        <span class="dim">{{ plain ? 'Family records show:' : 'Recorded relationship:' }}</span>
         <button class="quiet small" :data-relation-person="relationAnchor.id" @click="jumpToId(relationAnchor.id)">{{ relationAnchor.name }}</button>
         <template v-if="relationship">
           <template v-for="step in relationship" :key="step.person.id + ':' + step.relation">
@@ -354,12 +368,12 @@ watch(() => props.reveal?.token, () => {
             <button class="quiet small" :data-relation-person="step.person.id" @click="jumpToId(step.person.id)">{{ step.person.name }}</button>
           </template>
         </template>
-        <span v-else class="dim">— the book records no path between them.</span>
+        <span v-else class="dim">{{ plain ? '— the family records do not show how they are related.' : '— the book records no path between them.' }}</span>
       </template>
       <span v-else class="dim">
-        Tracing from {{ relationAnchor.name }}. Open another person and ask for their relationship.
+        {{ plain ? 'Showing family ties from ' : 'Tracing from ' }}{{ relationAnchor.name }}{{ plain ? '. Select another family member to see their relationship.' : '. Open another person and ask for their relationship.' }}
       </span>
-      <button class="quiet small clear-relation" @click="clearRelationship()">clear</button>
+      <button class="quiet small clear-relation" @click="clearRelationship()">{{ plain ? 'Clear' : 'clear' }}</button>
     </div>
 
     <!-- THE HALL PICKER. A HALL IS NOT A HOUSE (invariant 15): cadet branches
@@ -372,7 +386,7 @@ watch(() => props.reveal?.token, () => {
         :class="{ on: hallFilter === 'all' }"
         :aria-pressed="hallFilter === 'all'"
         @click="pickHall('all')"
-      >All halls</button>
+      >{{ plain ? 'All households' : 'All halls' }}</button>
       <button
         v-for="hall in view.halls"
         :key="hall.id"
@@ -390,15 +404,15 @@ watch(() => props.reveal?.token, () => {
     <section v-for="hall in shownHalls" :key="hall.id" class="hall" :aria-labelledby="'hall-' + hall.id">
       <h3 :id="'hall-' + hall.id" class="label">
         {{ hall.name }}
-        <span v-if="hall.isSeat" class="rubric">· the seat</span>
-        <span class="dim"> · {{ membersOf(hall).length }} shown</span>
+        <span v-if="hall.isSeat" class="rubric">· {{ plain ? 'main household' : 'the seat' }}</span>
+        <span class="dim"> · {{ membersOf(hall).length }} {{ plain ? 'people shown' : 'shown' }}</span>
         <span v-if="hall.grievance > 0" class="dim"> · grievance {{ Math.round(hall.grievance) }}</span>
       </h3>
 
       <!-- THE BREADCRUMB OUT OF A FOCUSED BRANCH. Only where this hall is the
            one the focus belongs to — the picker may be showing several. -->
       <p v-if="focus && membersOf(hall).some((m) => m.id === focus)" class="dim small branch">
-        Showing one branch. <button class="quiet small" @click="clearFocus()">Show the whole hall</button>
+        {{ plain ? 'Only this family branch is shown.' : 'Showing one branch.' }} <button class="quiet small" @click="clearFocus()">{{ plain ? 'Show everyone in this household' : 'Show the whole hall' }}</button>
       </p>
 
       <ul v-if="membersOf(hall).length">
@@ -421,9 +435,9 @@ watch(() => props.reveal?.token, () => {
           @root="onRoot(hall.id, $event)"
         />
       </ul>
-      <p v-else class="dim small">Nobody in this hall matches that reading.</p>
+      <p v-else class="dim small">{{ plain ? 'No one in this household matches the filters.' : 'Nobody in this hall matches that reading.' }}</p>
     </section>
-    <p v-if="!shownHalls.length" class="dim small no-match">Nobody in the living house matches that reading.</p>
+    <p v-if="!shownHalls.length" class="dim small no-match">{{ plain ? 'No living family members match the filters.' : 'Nobody in the living house matches that reading.' }}</p>
   </section>
 </template>
 
