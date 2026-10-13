@@ -26,6 +26,8 @@ defineEmits<{ (e: 'open'): void }>();
  * the drop is the effect.
  */
 const reckoning = computed(() => props.epilogue.reckoning);
+/** The framing controls change language; authored epilogue and export never do. */
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 const afterimage = computed(() => afterimageModel({
   houseName: props.view.houseName,
@@ -195,10 +197,10 @@ async function saveAfterimage(): Promise<void> {
     <!-- WHAT WAS READ OUT. The blanks are read too, and take as long as a page. -->
     <section v-if="epilogue.read.length" class="read">
       <h3 class="label row top">
-        <span>What the book said</span>
+        <span>{{ plain ? 'Chronicle excerpts' : 'What the book said' }}</span>
         <!-- The creditor read the whole thing. So can the house that wrote it
              (issue #48). -->
-        <button class="quiet small" @click="$emit('open')">Read it whole</button>
+        <button class="quiet small" @click="$emit('open')">{{ plain ? 'Read full Chronicle' : 'Read it whole' }}</button>
       </h3>
       <!-- One component, so the blank here and the blank in the panel are the
            same artefact drawn the same way — including the sentence a screen
@@ -213,7 +215,7 @@ async function saveAfterimage(): Promise<void> {
     </section>
 
     <section class="tally">
-      <h3 class="label">The reckoning</h3>
+      <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
         <div><dt>The house</dt><dd>{{ view.houseName }}</dd></div>
         <!-- The run's number, for replaying it or reporting it (#59). The
@@ -265,7 +267,7 @@ async function saveAfterimage(): Promise<void> {
     <!-- THE RING. Three beats, one substitution, and the substitution is what
          the five centuries cost. -->
     <section class="ring">
-      <h3 class="label">A debt of three parts</h3>
+      <h3 class="label">{{ plain ? 'Three promises' : 'A debt of three parts' }}</h3>
       <ol>
         <li v-for="(beat, i) in epilogue.ring" :key="i" :class="{ changed: beat.changed }">
           <p class="given" :class="{ mark: beat.changed === 'given' }">{{ beat.given }}</p>
@@ -278,11 +280,11 @@ async function saveAfterimage(): Promise<void> {
 
     <div class="row ending-actions">
       <button class="quiet" :disabled="savingAfterimage" @click="saveAfterimage()">
-        {{ savingAfterimage ? 'Setting the afterimage…' : 'Save the house afterimage' }}
+        {{ savingAfterimage ? (plain ? 'Saving image…' : 'Setting the afterimage…') : (plain ? 'Save ending image' : 'Save the house afterimage') }}
       </button>
-      <button class="quiet" @click="actions.restart()">Another house</button>
+      <button class="quiet" @click="actions.restart()">{{ plain ? 'Start another house' : 'Another house' }}</button>
     </div>
-    <p v-if="afterimageError" class="afterimage-error rubric small" role="alert">{{ afterimageError }}</p>
+    <p v-if="afterimageError" class="afterimage-error rubric small" role="alert">{{ plain ? 'Could not save the ending image. Try again.' : afterimageError }}</p>
   </main>
 </template>
 
