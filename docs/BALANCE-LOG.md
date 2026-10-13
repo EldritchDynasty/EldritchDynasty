@@ -10600,3 +10600,62 @@ cover recorded descent, reservation, adult notice, ordinary/direct marriage
 guards, actual creditor-hall transfer, withholding, expiry, protected Head,
 one bill, persistent grudge pressure/echo, public lot provenance and saved
 continuation. Landing preflight is green with 4,401 fast tests on `c1f8bf1f`.
+
+## 2026-10-13 — Womb-pressure funnel and repeated conception streams (#1189, #1581)
+
+**Question.** §11 describes son-loss in genetically hot lines. Re-measure
+ordinary play and the existing canonical ascendant policy before changing
+the genetic ceiling or stillbirth curve. Sixteen same-seed Long Lines per
+policy (seeds 11–26), capped at 500 years and stopped at the actual ending,
+were played on `49f233f6`. Ordinary uses the shipped automatic resolution;
+ascendant uses `configureAscendant`, `prepareAscendantYear` and
+`resolveAscendantYear`, without a second description of that policy.
+
+The observation counts yearly report births and stillbirths across the
+player's household, reads each live son's genome-only profile, and samples
+world coherence every 25 years and at the end. Adult Madness, education and
+rite gifts are not used as a proxy for prenatal overflow. The live-born
+exposure column excludes children who did not live; its risk sum is not an
+estimate of the risk summed over every conception.
+
+| Policy / version | Played years | Live sons | Live daughters | Live sons exposed to overflow | Overflow losses | Close-blood losses | Female Head-years |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| ordinary / before | 7,256 | 2,523 | 2,477 | 45 | 3 | 128 | 1,359 |
+| ascendant / before | 6,660 | 2,291 | 2,334 | 40 | 13 | 75 | 1,002 |
+| ordinary / counter repair | 7,179 | 2,606 | 2,594 | 44 | 1 | 38 | 1,133 |
+| ascendant / counter repair | 6,642 | 2,336 | 2,396 | 38 | 7 | 38 | 599 |
+
+**A structural finding precedes the balance decision.** `rollBirths` used
+the mother's live-child count as the conception ordinal. A stillborn child
+never entered `PersonStore`, so the same parents retried the same genotype,
+sex and loss roll. In ascendant seeds 12, 18 and 21, all 24 reconstructed
+losses repeat at the same ordinal in a later year; 18 become live children
+at the next ordinal. Seed 12 repeats mother `p_n` / father `p_11`'s ordinal
+4 in 1077, 1079, 1087 and 1089. Seed 21 repeats `p_1m` / `p_23`'s ordinal
+3 in 1132, 1135, 1136 and 1145. Changing the year only changes mutation
+annotations, not those draws. This affects both causes of stillbirth.
+
+The working #1581 repair persists per-mother conception ordinals and
+advances on every actual attempt. The after column changes that mechanism
+on the same simulation/content base; the risk curves, genetic gates,
+conception chance and completed-family cap are unchanged. Code subsequently
+committed as `26a2605d`; later edits strengthen save fingerprint compatibility
+and deterministic tests, without changing these simulation rules. Both
+columns have zero forbidden female overflow losses and zero sampled
+coherence violations. These are descriptive batches, not population floors
+or a causal attribution of each changed Head-year to son-loss.
+
+**Mechanism evidence.** Real overloaded couples receive the next seeded
+genome after a loss and can subsequently have a live child; a save made
+after a loss resumes with the same next result even when a third world is
+interleaved. An isolated mutant which stores the counter but still seeds
+from the live-child count fails that witness. The first full canonical blood
+batch on this repair passes 2,048 paired 500-year runs: concentrate minus
+dilute late font +0.63, 4.5 standard errors; both survive 2,048/2,048. All
+twelve batch gates pass. New reader content landed after these runs, so the
+final landing base receives another blood/batch run before admission.
+
+**Disposition.** #1581 owns the independently shippable conception repair.
+#1189's population/pressure decision remains open until that repair lands
+and its corrected funnel is evaluated; repeated deterministic losses cannot
+serve as evidence for choosing a new stillbirth probability.
