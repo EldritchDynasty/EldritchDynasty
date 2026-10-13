@@ -161,6 +161,45 @@ describe('reading the book, not the window', () => {
   });
 });
 
+describe('Chronicle read models are independent values (#1585)', () => {
+  it('does not let full-book or window readers rewrite saved pages, including nested fields', () => {
+    const g = newGame(content, { seed: 1042, decider: 'chronicler' });
+    const page: ChronicleEntry = {
+      id: 'chr_read_snapshot',
+      year: g.year,
+      weight: 'illuminated',
+      title: 'A written page',
+      text: 'The original account',
+      named: true,
+      people: ['p_1'],
+      cause: { year: g.year - 1, page: 'chr_prior' },
+    };
+    g.ctx.world.chronicle.push(page);
+    const saved = structuredClone(g.ctx.world.chronicle);
+
+    const book = g.book({ from: g.year, to: g.year });
+    const window = g.view().chronicle;
+    const fromBook = book.find((entry) => entry.id === page.id)!;
+    const fromWindow = window.find((entry) => entry.id === page.id)!;
+    expect(fromBook).toEqual(page);
+    expect(fromWindow).toEqual(page);
+
+    fromBook.text = 'A forged version in the book panel';
+    fromBook.people!.push('p_2');
+    fromWindow.text = 'A forged version in the session panel';
+    fromWindow.cause!.page = 'changed_cause';
+
+    expect(g.ctx.world.chronicle).toEqual(saved);
+    expect(g.book({ from: g.year, to: g.year }).find((entry) => entry.id === page.id)).toEqual(page);
+    expect(g.view().chronicle.find((entry) => entry.id === page.id)).toEqual(page);
+
+    // The snapshots must stay fixed even if the simulation later updates a page.
+    page.text = 'A subsequent update to the original';
+    expect(fromBook.text).toBe('A forged version in the book panel');
+    expect(fromWindow.text).toBe('A forged version in the session panel');
+  });
+});
+
 describe('the account a jump comes back with', () => {
   it('adds up to the change it claims to describe', () => {
     const g = newGame(content, { seed: 1042, decider: 'chronicler' });
