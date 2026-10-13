@@ -485,7 +485,7 @@ const yearAndBirths = computed(() => {
              decision stood, and the next decision waits behind it. Answering
              and being handed the next dilemma with nothing in between is the
              loop with its middle beat missing. -->
-        <Outcome v-if="outcome" :outcome="outcome" @dismiss="actions.dismissOutcome()" />
+        <Outcome v-if="outcome" :outcome="outcome" :prose-mode="accessibility.proseMode" @dismiss="actions.dismissOutcome()" />
 
         <Docket
           v-else-if="docket.length"
