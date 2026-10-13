@@ -107,6 +107,24 @@ function bidHeirloom(lot: string): void {
   submitAuctionOrder({ kind: 'lotBid', lot, bid: { currency: 'heirloom', heirloom } });
 }
 
+/**
+ * Buying back wardship changes its availability immediately, but the stale
+ * button remains clickable until Vue repaints the Table. A second order would
+ * be refused and overwrite the first purchase's successful receipt.
+ */
+let buyingBackWardship = false;
+function buyBackWardship(): void {
+  if (buyingBackWardship || !props.table.wardship
+    || props.table.wardship.boughtBack || props.table.wardship.buyBackCost === undefined) return;
+  buyingBackWardship = true;
+  try {
+    props.actions.order({ kind: 'buyBackWardship' });
+  } finally {
+    // A refused order must remain retryable on the next rendered turn.
+    void nextTick(() => { buyingBackWardship = false; });
+  }
+}
+
 const pupil = ref('');
 const subject = ref('');
 
@@ -228,7 +246,7 @@ const MARRIAGE_ORDERS = [
         </p>
         <button
           v-if="!table.wardship.boughtBack && table.wardship.buyBackCost !== undefined"
-          @click="actions.order({ kind: 'buyBackWardship' })"
+          @click="buyBackWardship"
         >
           {{ local('Buy the wardship back', 'Pay to end wardship') }} — {{ table.wardship.buyBackCost }} crowns
         </button>
