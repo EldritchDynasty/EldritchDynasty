@@ -45,6 +45,15 @@ const props = defineProps<{
  * explain, because there is no narrator who knows the truth — there is only
  * Daveed, and he is not neutral.
  */
+const plain = computed(() => props.proseMode === 'plainenglish');
+/** The lenses select the same entries in either reading mode. Only their labels change. */
+const PLAIN_LENS_LABELS: Record<Lens, string> = {
+  all: 'All entries',
+  blank: 'Blank entries',
+  improved: 'Changed entries',
+  illuminated: 'Highlighted entries',
+};
+
 const card = ref<HTMLElement | null>(null);
 useModal(card, () => props.close());
 
@@ -304,25 +313,25 @@ const counts = computed(() => ({
          name in one app is a rule that lands on the wrong element the first
          time somebody writes an unscoped selector. The panel is a window on
          the last sixty lines; this is the volume. -->
-    <article ref="card" class="volume" role="dialog" aria-modal="true" aria-label="the chronicle, whole" @click.stop>
+    <article ref="card" class="volume" role="dialog" aria-modal="true" :aria-label="plain ? 'Full Chronicle' : 'the chronicle, whole'" @click.stop>
       <header>
         <div class="row top">
-          <h3 class="label">The book</h3>
+          <h3 class="label">{{ plain ? 'Chronicle' : 'The book' }}</h3>
           <div class="row">
             <!-- The point of the whole screen: a page somebody would post. It
                  plates WHAT IS ON SCREEN, filters and all — a player who has
                  lensed the book down to their forty blanks wants the blanks. -->
             <button class="quiet small" :disabled="plating || !shown.length" @click="plate()">
-              {{ plating ? 'Setting the plate…' : 'Save this as a page' }}
+              {{ plating ? (plain ? 'Saving…' : 'Setting the plate…') : (plain ? 'Save an image' : 'Save this as a page') }}
             </button>
-            <button class="quiet small" @click="close()">Close it</button>
+            <button class="quiet small" @click="close()">{{ plain ? 'Close' : 'Close it' }}</button>
           </div>
         </div>
         <p class="dim small">
-          {{ counts.all }} entries · {{ counts.blank }} left blank ·
-          {{ counts.improved }} improved · {{ counts.illuminated }} illuminated
+          {{ counts.all }} entries · {{ counts.blank }} {{ plain ? 'blank' : 'left blank' }} ·
+          {{ counts.improved }} {{ plain ? 'changed' : 'improved' }} · {{ counts.illuminated }} {{ plain ? 'highlighted' : 'illuminated' }}
         </p>
-        <p v-if="plateError" role="alert" class="note">{{ plateError }}</p>
+        <p v-if="plateError" role="alert" class="note">{{ plain ? 'Could not save the image. Try fewer entries or another browser.' : plateError }}</p>
 
         <div class="wrap lenses">
           <button
@@ -332,28 +341,28 @@ const counts = computed(() => ({
             :class="{ on: lens === l.id }"
             :aria-pressed="lens === l.id"
             @click="lens = l.id"
-          >{{ l.label }}</button>
+          >{{ plain ? PLAIN_LENS_LABELS[l.id] : l.label }}</button>
         </div>
 
         <div class="row find">
-          <label class="said-not-shown" for="chronicle-book-search">Search the book</label>
+          <label class="said-not-shown" for="chronicle-book-search">{{ plain ? 'Search the Chronicle' : 'Search the book' }}</label>
           <input
             id="chronicle-book-search"
             v-model="find"
             type="search"
-            placeholder="a name, a word, a thing that happened"
+            :placeholder="plain ? 'Search by name or word' : 'a name, a word, a thing that happened'"
           />
-          <button v-if="find" class="quiet small" @click="find = ''">clear</button>
+          <button v-if="find" class="quiet small" @click="find = ''">{{ plain ? 'Clear search' : 'clear' }}</button>
         </div>
 
         <div v-if="centuries.length > 1" class="wrap jump">
-          <span class="dim small">from</span>
+          <span class="dim small">{{ plain ? 'From' : 'from' }}</span>
           <button
             class="quiet small"
             :class="{ on: from === null }"
             :aria-pressed="from === null"
             @click="from = null"
-          >the beginning</button>
+          >{{ plain ? 'Start' : 'the beginning' }}</button>
           <button
             v-for="c in centuries"
             :key="c"
@@ -375,7 +384,7 @@ const counts = computed(() => ({
           <div v-for="age in boundaries.get(i) ?? []" :key="age.began" class="boundary">
             <span class="dim small year">{{ age.began }}</span>
             <span v-if="age.name" class="age">{{ age.name }}</span>
-            <span v-else class="dim small unnamed">these years, which the house never named</span>
+            <span v-else class="dim small unnamed">{{ plain ? 'This Age has no name in the Chronicle' : 'these years, which the house never named' }}</span>
           </div>
           <Entry
             :entry="entry"
@@ -386,12 +395,12 @@ const counts = computed(() => ({
           />
         </template>
         <p v-if="!shown.length" class="dim small">
-          Nothing in the book answers to that.
+          {{ plain ? 'No Chronicle entries match.' : 'Nothing in the book answers to that.' }}
         </p>
         <!-- Reached by scrolling; the button is for a keyboard, which does not
              scroll a container it has not focused. -->
         <button v-if="more" class="quiet small" @click="drawn += 120">
-          {{ more }} more
+          {{ plain ? `Show ${more} more entries` : `${more} more` }}
         </button>
       </div>
     </article>
