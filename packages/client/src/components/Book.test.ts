@@ -912,7 +912,7 @@ describe('reader-local Chronicle annotations (#1434)', () => {
         .toBe("The Chronicle deliberately leaves this year's entry blank.");
       expect(wrapper.get('.mark').text()).toBe('deliberately left blank');
       expect(wrapper.get('.entry').classes()).toContain('omitted');
-      expect(wrapper.get('.blank [aria-hidden="true"]').exists()).toBe(true);
+      expect(wrapper.find('.blank [aria-hidden="true"]').exists()).toBe(true);
       expect(page).toEqual(saved);
       await wrapper.setProps({ read: true });
       expect(wrapper.get('.blank .said-not-shown').text())
