@@ -1819,13 +1819,13 @@ describe('five reader-control panels in Plain English (#1623)', () => {
       expect(wrapper.get('[role="alert"]').text()).toContain('That name could not be accepted.');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('[role="alert"]').text()).toContain('That name was not accepted.');
-      expect(wrapper.get('input').element.value).toBe('Alys');
+      expect((wrapper.get('input').element as HTMLInputElement).value).toBe('Alys');
       expect(wrapper.text()).toContain('suggested name: Mara');
       expect(wrapper.text()).toContain('Her grandmother requested it.');
       expect(name).toHaveBeenCalledTimes(1);
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.get('[role="alert"]').text()).toContain('That name could not be accepted.');
-      expect(wrapper.get('input').element.value).toBe('Alys');
+      expect((wrapper.get('input').element as HTMLInputElement).value).toBe('Alys');
       expect(keepSuggestedName).not.toHaveBeenCalled();
     } finally {
       wrapper.unmount();
@@ -1850,7 +1850,7 @@ describe('five reader-control panels in Plain English (#1623)', () => {
       expect(wrapper.text()).toContain('Family goal');
       expect(wrapper.text()).toContain('Last one hundred years.');
       expect(wrapper.get('[role="alert"]').text()).toContain('Could not select that plan.');
-      expect(wrapper.get('select').element.value).toBe('survive');
+      expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('survive');
       expect(setAmbition).toHaveBeenCalledTimes(1);
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.get('[role="alert"]').text()).toContain('The house could not keep that ambition.');
