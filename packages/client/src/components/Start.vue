@@ -251,7 +251,7 @@ async function retryLibrary(): Promise<void> {
 
 function requestClearLibrary(): void {
   // Disabled controls alone do not protect against a stale dispatched click.
-  if (clearingLibrary.value || removingRun.value !== null) return;
+  if (beginning || clearingLibrary.value || removingRun.value !== null) return;
   confirmingRemoveRun.value = null;
   confirmingClearLibrary.value = true;
 }
@@ -259,7 +259,7 @@ function requestClearLibrary(): void {
 async function clearLibrary(): Promise<void> {
   // Clear and Remove share one host Library. Refuse stale/programmatic clicks
   // as well as disabling the controls while either write is in flight.
-  if (!confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
+  if (beginning || !confirmingClearLibrary.value || clearingLibrary.value || removingRun.value !== null) return;
   clearingLibrary.value = true;
   confirmingClearLibrary.value = false;
   libraryError.value = null;
@@ -273,7 +273,7 @@ async function clearLibrary(): Promise<void> {
 }
 
 function requestRemoveLibraryRun(id: string): void {
-  if (removingRun.value !== null || clearingLibrary.value) return;
+  if (beginning || removingRun.value !== null || clearingLibrary.value) return;
   confirmingClearLibrary.value = false;
   confirmingRemoveRun.value = id;
   libraryError.value = null;
@@ -287,7 +287,7 @@ function cancelRemoveLibraryRun(): void {
 async function removeLibraryRun(id: string): Promise<void> {
   // A stale click, or a second click while the host is deleting, cannot
   // remove another house or issue the same irreversible command twice.
-  if (confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
+  if (beginning || confirmingRemoveRun.value !== id || removingRun.value !== null || clearingLibrary.value) return;
   removingRun.value = id;
   libraryError.value = null;
   try {
