@@ -335,7 +335,7 @@ describe('the plat is reachable only from the Table pane', () => {
   });
 
   it('passes the active reading preference to the Plat modal (#410)', () => {
-    expect(appSource).toMatch(/<Plat\\b[^>]*:prose-mode="accessibility.proseMode"/);
+    expect(appSource).toMatch(/<Plat\b[^>]*:prose-mode="accessibility.proseMode"/);
   });
 
   it('Plat is opened by its own flag, never by the pane switcher', () => {
