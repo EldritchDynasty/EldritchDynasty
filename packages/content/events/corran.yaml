@@ -104,7 +104,7 @@ proseVariants:
   - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].label"
     of: f46be2c46c58ef98
     plainenglish: >-
-      Keep him here. Ninety crowns could repair the west wing, and the house needs him.
+      Keep him here. Spend ninety crowns to repair the west wing's roof; the house needs him.
   - address: "content:events/corran.yaml#events[id=seven_hundred_miles].interaction.choices[id=keep_him].outcomes[id=kept].text"
     of: 204fbabf92eedb23
     plainenglish: >-
