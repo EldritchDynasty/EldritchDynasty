@@ -791,6 +791,46 @@ describe('decision receipts (#374)', () => {
   });
 });
 
+describe('Chronicle sidebar reader labels (#1608)', () => {
+  it('switches only navigation labels with reading mode and keeps the same full-volume action', async () => {
+    const frame = [{
+      eventId: 'unchanged_frame',
+      year: 1200,
+      text: 'The private telling stays exactly as recorded.',
+    }] as FrameEntry[];
+    const wrapper = mount(Chronicle, {
+      props: {
+        view: { chronicle: [], chroniclePeople: [], halls: [], house: 'house_test' } as unknown as SessionView,
+        frame,
+        actions: spyActions() as unknown as GameActions,
+        proseMode: 'original',
+      },
+    });
+    try {
+      expect(wrapper.get('.top span').text()).toBe('The chronicle');
+      expect(wrapper.get('.top button').text()).toBe('Read it whole');
+      expect(wrapper.get('.frame-label').text()).toBe('The frame');
+      expect(wrapper.text()).toContain('The private telling stays exactly as recorded.');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.top span').text()).toBe('Recent Chronicle entries');
+      expect(wrapper.get('.top button').text()).toBe('Read full Chronicle');
+      expect(wrapper.get('.frame-label').text()).toBe('Interludes');
+      expect(wrapper.text()).toContain('The private telling stays exactly as recorded.');
+      await wrapper.get('.top button').trigger('click');
+      expect(wrapper.emitted('open')).toEqual([[undefined]]);
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.top span').text()).toBe('The chronicle');
+      expect(wrapper.get('.top button').text()).toBe('Read it whole');
+      expect(wrapper.get('.frame-label').text()).toBe('The frame');
+      expect(frame[0]!.text).toBe('The private telling stays exactly as recorded.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('pseudo-localisation stress (#276)', () => {
   it('renders choice, Match, Record, Chronicle and Table copy at the largest reading scale', () => {
     applyAccessibility(document.documentElement, {
