@@ -44,6 +44,78 @@ function spyActions() {
 }
 
 describe('the plat draws each state', () => {
+  it('shows Plain English descriptions without changing land facts or recorded provenance (#410)', async () => {
+    const land = mockLand({
+      held: [
+        baseHeld({ titleProved: false }),
+        baseHeld({ parcel: 'westmere', name: 'Westmere', contestedBy: 'the man from Bramme' }),
+        baseHeld({ parcel: 'southfield', name: 'Southfield' }),
+      ],
+      lost: [{ defId: 'oldfield', name: 'Oldfield', place: 'below the gate', year: 1310, by: 'Mara' }],
+    });
+    const saved = structuredClone(land);
+    const w = mount(Plat, { props: {
+      land, houseName: 'The House of Gearithy', halls: [], actions: spyActions(), close: () => {},
+      proseMode: 'original',
+    } });
+    try {
+      expect(w.get('[role="dialog"]').attributes('aria-label')).toBe("the plat of the house's ground");
+      expect(w.text()).toContain('The plat');
+      expect(w.text()).toContain('title not proved');
+      expect(w.text()).toContain("no notary's book behind it");
+      expect(w.text()).toContain('and claimed at the same time by the man from Bramme');
+      expect(w.text()).toContain('Lost in 1310, let go by Mara');
+      expect(w.text()).toContain('bought 1204 from Aldous Renn');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="dialog"]').attributes('aria-label')).toBe('Land held or lost by the house');
+      expect(w.text()).toContain('Land records');
+      expect(w.text()).toContain('Each box represents one parcel, not its actual size.');
+      expect(w.text()).toContain('ownership not proved');
+      expect(w.text()).toContain('claimed by two sides');
+      expect(w.text()).toContain('no official record proving the title');
+      expect(w.text()).toContain('but the man from Bramme also claims it');
+      expect(w.text()).toContain('Lost in 1310. Mara gave it up.');
+      expect(w.text()).toContain('bought 1204 from Aldous Renn');
+      expect(w.get('th:nth-child(4)').text()).toBe('Details');
+      expect(land).toEqual(saved);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.text()).toContain('A record, drawn to scale of nothing but itself.');
+      expect(w.text()).toContain('title not proved');
+      expect(w.text()).toContain('Lost in 1310, let go by Mara');
+      expect(land).toEqual(saved);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('switches land-transfer controls without altering their order or selected hall (#410)', async () => {
+    const actions = spyActions();
+    const halls = [
+      { id: 'main', name: 'Main Hall', isSeat: true, grievance: 0, members: [] },
+      { id: 'cadet_a', name: 'Younger Hall', isSeat: false, grievance: 0, members: [{}] },
+    ] as unknown as SessionView['halls'];
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', halls, actions, close: () => {},
+      proseMode: 'plainenglish',
+    } });
+    try {
+      expect(w.get('button.endow').text()).toBe('Give land');
+      expect(w.get('select option').text()).toBe('Choose a family hall');
+      await w.get('select').setValue('cadet_a');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('button.endow').text()).toBe('Endow');
+      expect((w.get('select').element as HTMLSelectElement).value).toBe('cadet_a');
+      await w.get('button.endow').trigger('click');
+      expect(actions.order).toHaveBeenCalledExactlyOnceWith({
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('a held parcel: solid, and its provenance is in the table', () => {
     const w = mount(Plat, { props: {
       land: mockLand(), houseName: 'The House of Gearithy', halls: [], actions: spyActions(), close: () => {},
@@ -259,6 +331,10 @@ describe('the plat is reachable only from the Table pane', () => {
   it('App.vue never gates on a fifth pane value', () => {
     expect(appSource).toMatch(/'house' \| 'table' \| 'abroad' \| 'chronicle'/);
     expect(appSource).not.toMatch(/pane\s*(===|=)\s*['"]plat['"]/);
+  });
+
+  it('passes the active reading preference to the Plat modal (#410)', () => {
+    expect(appSource).toMatch(/<Plat\\b[^>]*:prose-mode="accessibility.proseMode"/);
   });
 
   it('Plat is opened by its own flag, never by the pane switcher', () => {
