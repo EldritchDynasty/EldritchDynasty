@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
 import { initialProloguePresentation, initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
@@ -10,6 +11,7 @@ const props = withDefaults(defineProps<{
   refused: string | null;
   startYear: number;
   skipSeenProse?: boolean;
+  proseMode?: ProseMode;
 }>(), {
   skipSeenProse: false,
 });
@@ -21,6 +23,8 @@ function readingStorage(): Storage | null {
     return null;
   }
 }
+
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 const replayText = computed(() => prologueSeenText(
   props.prologue.opening,
@@ -148,6 +152,19 @@ const wanted = computed(() => {
   return out;
 });
 
+/** Keep the same validation prerequisites and action payload in both registers.
+ * Only the reader-facing explanation of missing inputs is translated. */
+function waitingText(): string {
+  if (!plain.value) return `It wants ${wanted.value.join(', and ')}.`;
+  const labels: Record<string, string> = {
+    'an answer to each Examination question': 'an answer to every question',
+    'the thing he asked for by name': 'a selected heirloom',
+    'who paid for the rest of it': 'a selected rival house',
+    'what the family will be called': 'a family name',
+  };
+  return `Before signing, provide ${wanted.value.map((item) => labels[item] ?? item).join(', and ')}.`;
+}
+
 // A successful founding replaces this view at the next render, not before
 // another synchronous click or Enter can reach this component. Guard both
 // submission routes until Vue has had a chance to apply that update.
@@ -196,7 +213,7 @@ function signOnEnter(event: KeyboardEvent): void {
     <aside
       v-if="!prologue.founded && initial.inheritedVisible && prologue.inherited"
       class="inherited"
-      aria-label="An inherited account"
+      :aria-label="plain ? 'A story passed down by the family' : 'An inherited account'"
     >
       <p class="inherited-line">{{ prologue.inherited.line }}</p>
       <blockquote>{{ prologue.inherited.text }}</blockquote>
@@ -211,18 +228,18 @@ function signOnEnter(event: KeyboardEvent): void {
     </ol>
 
     <button v-if="shown < prologue.triad.length" class="on" @click="on()">
-      {{ shown === 0 ? 'The first thing' : shown === 1 ? 'The second thing' : 'The third thing' }}
+      {{ plain ? (shown === 0 ? 'Read the first part' : shown === 1 ? 'Read the second part' : 'Read the third part') : (shown === 0 ? 'The first thing' : shown === 1 ? 'The second thing' : 'The third thing') }}
     </button>
 
     <template v-else-if="!prologue.founded">
       <section v-if="prologue.namePrompt" class="choice founder-name">
-        <h3 class="label">The name</h3>
+        <h3 class="label">{{ plain ? 'Your name' : 'The name' }}</h3>
         <p class="prompt">{{ prologue.namePrompt }}</p>
         <input
           v-model="founderName"
           :maxlength="FOUNDER_NAME_MAX"
-          placeholder="what are you called?"
-          aria-label="Name the founder"
+          :placeholder="plain ? 'Your name' : 'what are you called?'"
+          :aria-label="plain ? 'Enter the founder name' : 'Name the founder'"
         />
       </section>
 
@@ -231,7 +248,7 @@ function signOnEnter(event: KeyboardEvent): void {
         class="choice examination"
         aria-labelledby="examination-heading"
       >
-        <h3 id="examination-heading" class="label">The Examination</h3>
+        <h3 id="examination-heading" class="label">{{ plain ? 'The questions' : 'The Examination' }}</h3>
         <fieldset v-for="question in prologue.examination" :key="question.id" class="question">
           <legend class="prompt">{{ question.situation }}</legend>
           <button
@@ -259,7 +276,7 @@ function signOnEnter(event: KeyboardEvent): void {
            the house's hands and the grudge into the world, and at the term the ending
            names which of them the selected line changed. -->
       <section class="choice">
-        <h3 class="label">He asked for one thing by name</h3>
+        <h3 class="label">{{ plain ? 'Choose an heirloom' : 'He asked for one thing by name' }}</h3>
         <button
           v-for="option in prologue.heirlooms"
           :key="option.heirloom"
@@ -275,7 +292,7 @@ function signOnEnter(event: KeyboardEvent): void {
       </section>
 
       <section class="choice">
-        <h3 class="label">And somebody paid for the rest of it</h3>
+        <h3 class="label">{{ plain ? 'Choose the house that paid the price' : 'And somebody paid for the rest of it' }}</h3>
         <button
           v-for="option in prologue.grudges"
           :key="option.house"
@@ -293,14 +310,14 @@ function signOnEnter(event: KeyboardEvent): void {
            one place the game reaches outside itself, so it is asked in the
            frame's own voice and never explained. -->
       <section class="choice friends">
-        <h3 class="label">And five who were not of his blood</h3>
+        <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of his blood' }}</h3>
         <p class="prompt">{{ prologue.friendsPrompt }}</p>
         <div v-for="(friend, i) in friends" :key="i" class="friend">
           <input
             v-model="friend.name"
             maxlength="32"
-            :placeholder="`the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
-            :aria-label="`Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
+            :placeholder="plain ? `Friend ${i + 1}` : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
+            :aria-label="plain ? `Name friend ${i + 1}` : `Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
           />
           <div class="sex">
             <button
@@ -308,25 +325,25 @@ function signOnEnter(event: KeyboardEvent): void {
               :class="{ on: friend.sex === 'female' }"
               :aria-pressed="friend.sex === 'female'"
               @click="friend.sex = 'female'"
-            >She</button>
+            >{{ plain ? 'Female' : 'She' }}</button>
             <button
               class="which"
               :class="{ on: friend.sex === 'male' }"
               :aria-pressed="friend.sex === 'male'"
               @click="friend.sex = 'male'"
-            >He</button>
+            >{{ plain ? 'Male' : 'He' }}</button>
           </div>
         </div>
       </section>
 
       <section class="choice">
-        <h3 class="label">The house</h3>
+        <h3 class="label">{{ plain ? 'Family name' : 'The house' }}</h3>
         <p class="prompt">{{ prologue.housePrompt }}</p>
         <input
           v-model="houseName"
           maxlength="48"
-          placeholder="what the family will be called"
-          aria-label="Name the house"
+          :placeholder="plain ? 'Enter the family name' : 'what the family will be called'"
+          :aria-label="plain ? 'Enter the family name' : 'Name the house'"
           @keydown.enter="signOnEnter($event)"
         />
       </section>
@@ -334,10 +351,10 @@ function signOnEnter(event: KeyboardEvent): void {
       <p v-if="refused" class="rubric small">{{ refused }}</p>
 
       <button class="primary sign" :disabled="wanted.length > 0" @click="sign()">
-        Sign it
+        {{ plain ? 'Sign the agreement' : 'Sign it' }}
       </button>
       <p v-if="wanted.length" class="dim small waiting">
-        It wants {{ wanted.join(', and ') }}.
+        {{ waitingText() }}
       </p>
 
     </template>
@@ -348,7 +365,7 @@ function signOnEnter(event: KeyboardEvent): void {
          does not survive being printed above a family tree. -->
     <template v-else>
       <p class="thesis">{{ prologue.thesis }}</p>
-      <button class="primary" @click="actions.enter()">{{ startYear }}</button>
+      <button class="primary" @click="actions.enter()">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
     </template>
   </main>
 </template>
