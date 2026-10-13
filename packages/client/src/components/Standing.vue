@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
-import type { ProseMode } from '@ed/schema';
+import { assertNever, type ProseMode } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 
@@ -107,6 +107,28 @@ const world = computed(() => copy.value.world[props.view.assize.arm]);
  */
 const ages = computed(() =>
   props.view.ages.filter((a) => a.ended === undefined && a.name !== undefined));
+
+/**
+ * A family feels an Age's register before it has a name for the Age. Convey
+ * that already-public atmosphere without exposing an unnamed Age's identity,
+ * start date or even the number of coincident Ages. Repeated registers are one
+ * reading, not a count of hidden processes (#1580).
+ */
+const ageMoods = computed(() => [...new Set(
+  props.view.ages.filter((age) => age.ended === undefined).map((age) => age.register),
+)]);
+
+function ageMood(register: SessionView['ages'][number]['register']): string {
+  switch (register) {
+    case 'warm':
+      return plain.value ? 'These years feel warm and open.' : 'There is warmth in the years.';
+    case 'cold':
+      return plain.value ? 'These years feel cold and uncertain.' : 'A coldness settles over the years.';
+    case 'institutional':
+      return plain.value ? 'Institutions shape these years.' : 'These are years of offices and seals.';
+  }
+  return assertNever(register, 'age register');
+}
 
 /**
  * HOW MUCH, as distinct from which way (issue #51).
@@ -313,10 +335,13 @@ const muster = computed(() => {
         Highest reached · {{ reachedHigher }}
       </div>
     </div>
-    <div v-if="ages.length" class="age">
+    <div v-if="ages.length || ageMoods.length" class="age">
       <div v-for="age in ages" :key="age.age" class="name">
         {{ age.name }}<span class="dim small"> · since {{ age.began }}</span>
       </div>
+      <p v-for="register in ageMoods" :key="register" class="age-mood dim small">
+        {{ ageMood(register) }}
+      </p>
     </div>
 
     <div v-if="showAssize || favours.length || muster || view.guardian" class="world">
@@ -420,6 +445,7 @@ const muster = computed(() => {
 .ladder-blocker .soft { margin-top: 2px; }
 .ladder-measure { margin-top: 2px; }
 .age .name { font-size: var(--t-body); color: var(--rubric); }
+.age-mood { margin: 2px 0 0; }
 .world { margin-left: auto; text-align: right; max-width: 34ch; }
 /* What the last turn of the clock did. Ink against the dimmed levels it sits
    in, because the change is the news and the level is the context. */
