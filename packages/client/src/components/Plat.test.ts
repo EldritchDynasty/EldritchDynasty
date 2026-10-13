@@ -404,6 +404,47 @@ describe('land gifts are playable from the Plat (#1219)', () => {
     return { w, actions };
   }
 
+  it('lets two independent parcels be given in one render, while guarding each duplicate (#1611)', async () => {
+    const actions = spyActions();
+    const land = mockLand({ held: [
+      baseHeld({ parcel: 'longmere', name: 'Longmere' }),
+      baseHeld({ parcel: 'westmere', name: 'Westmere' }),
+    ] });
+    const w = mount(Plat, { props: {
+      land, halls: halls(), houseName: 'House', actions, close: () => {},
+    } });
+    try {
+      const selects = w.findAll('select');
+      expect(selects).toHaveLength(2);
+      await selects[0]!.setValue('cadet_a');
+      await selects[1]!.setValue('cadet_a');
+      const buttons = w.findAll('button.endow');
+      expect(buttons).toHaveLength(2);
+      const first = buttons[0]!.element as HTMLButtonElement;
+      const second = buttons[1]!.element as HTMLButtonElement;
+      first.click();
+      first.click(); // Same parcel, same render: never send a duplicate.
+      second.click(); // Another parcel is independent, not silently dropped.
+      second.click();
+      const order = vi.mocked(actions.order);
+      expect(order).toHaveBeenCalledTimes(2);
+      expect(order).toHaveBeenNthCalledWith(1, {
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+      expect(order).toHaveBeenNthCalledWith(2, {
+        kind: 'endow', parcel: 'westmere', branch: 'cadet_a',
+      });
+      await w.vm.$nextTick();
+      first.click(); // Both latches release at the render boundary.
+      expect(order).toHaveBeenCalledTimes(3);
+      expect(order).toHaveBeenLastCalledWith({
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('offers a living cadet rather than the seat and requires a selected hall', async () => {
     const { w, actions } = open();
     expect(w.get('button.endow').attributes('disabled')).toBeDefined();
