@@ -10655,6 +10655,11 @@ dilute late font +0.63, 4.5 standard errors; both survive 2,048/2,048. All
 twelve batch gates pass. New reader content landed after these runs, so the
 final landing base receives another blood/batch run before admission.
 
+That repeat on `b6221c8e`, after the seven natural readers landed, also
+passes: 2,048 pairs × 500 years, late font +0.64 at 4.6 standard errors,
+both surviving 2,048/2,048; all twelve batch gates pass. The rebased local
+preflight passes typecheck, validation and 4,512 fast tests in 169 suites.
+
 **Complete exposure funnel on the reader-content base.** The post-rebase
 repair at `b6221c8e` was played again on seeds 11–26. Failed overflow
 conceptions were reconstructed through the engine's seeded meiosis and
