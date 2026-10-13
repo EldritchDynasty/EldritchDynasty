@@ -348,6 +348,45 @@ describe('land gifts are playable from the Plat (#1219)', () => {
     w.unmount();
   });
 
+  it('blocks a duplicate Endow click against the same visible land state (#1557)', async () => {
+    const { w, actions } = open();
+    const order = vi.mocked(actions.order);
+    // Without the guard, the duplicate rejection would overwrite a successful gift.
+    order.mockReturnValueOnce({ ok: true })
+      .mockReturnValueOnce({ ok: false, reason: 'The land has already been given' });
+    try {
+      await w.get('select').setValue('cadet_a');
+      const button = w.get('button.endow').element as HTMLButtonElement;
+      button.click();
+      button.click();
+      expect(order.mock.calls).toEqual([[{ kind: 'endow', parcel: 'longmere', branch: 'cadet_a' }]]);
+      await w.vm.$nextTick();
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('blocks duplicate Recall until the next render, then permits another deliberate action (#1557)', async () => {
+    const { w, actions } = open({ holder: 'cadet_a', holderName: 'Younger Hall', sellable: false });
+    const order = vi.mocked(actions.order);
+    try {
+      const button = w.get('button.recall-land').element as HTMLButtonElement;
+      button.click();
+      button.click();
+      expect(order.mock.calls).toEqual([[{ kind: 'endow', parcel: 'longmere', branch: null }]]);
+
+      await w.vm.$nextTick();
+      button.click();
+      expect(order.mock.calls).toEqual([
+        [{ kind: 'endow', parcel: 'longmere', branch: null }],
+        [{ kind: 'endow', parcel: 'longmere', branch: null }],
+      ]);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('offers neither the caput nor a parcel with no living cadet halls', () => {
     const { w } = open({ caput: true });
     expect(w.find('button.endow').exists()).toBe(false);
