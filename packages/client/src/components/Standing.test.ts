@@ -641,7 +641,8 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
       const buy = wrapper.get('.wardship button').element as HTMLButtonElement;
       buy.click();
       buy.click(); // The old DOM is still clickable despite the synchronous purchase.
-      expect(order).toHaveBeenCalledExactlyOnceWith({ kind: 'buyBackWardship' });
+      expect(order).toHaveBeenCalledTimes(1);
+      expect(order).toHaveBeenCalledWith({ kind: 'buyBackWardship' });
 
       // The host refresh removes the buy-back button once the state is changed.
       await wrapper.setProps({ table: wardshipTable(true) });
