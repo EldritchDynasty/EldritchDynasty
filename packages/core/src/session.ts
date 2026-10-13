@@ -666,7 +666,7 @@ export class GameSession {
     const { from, to } = opts;
     return this.ctx.world.chronicle.filter(
       (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
-    );
+    ).map((entry) => structuredClone(entry));
   }
 
   /** The earlier act a Chronicle page answers, when one is recoverable. */
@@ -1358,7 +1358,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   // Provenance survives a person's death, but the hall view deliberately
   // contains living members only. Resolve the displayed pages' references
   // here, without sending the whole person store (or hidden facts) to Vue.
-  const chronicle = w.chronicle.slice(-chronicleLines);
+  // Chronicle views must not expose writable references into the saved book.
+  // Deep copies matter: a page's people, claims and cause are nested values.
+  const chronicle = w.chronicle.slice(-chronicleLines).map((entry) => structuredClone(entry));
   const chroniclePeople = [...new Set(chronicle.flatMap((entry) => entry.people ?? []))]
     .flatMap((id) => {
       const person = w.people.get(id);
