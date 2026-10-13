@@ -431,6 +431,60 @@ events:
               effects:
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: -12 }
                 - { kind: flag, flag: the_argument_went_underground, set: true }
+              # #334: "The next Head inherits the argument without ever having heard it, and re-opens it"
+              next: { event: the_argument_nobody_told_him_about, after: next_generation }
+
+  # #334: the reader of the_argument_went_underground.
+  - id: the_argument_nobody_told_him_about
+    title: The Argument Nobody Mentioned
+    tier: family
+    frequency: common
+    weight: 100
+    tags: [kin, winter, quarrel, household]
+    purposes: [change_relationship, force_record_choice, worldbuild_through_action]
+    conditions:
+      all:
+        - { flag: the_argument_went_underground, is: true }
+    slots:
+      HEAD: { role: head }
+      KIN:
+        role: family_member
+        filters: [{ status: [alive] }, { age: { op: gte, value: 40 } }, { relation: not, of: HEAD }]
+    body: >-
+      The wind has been in the chimneys since the dark end of Frostfall, and the
+      house is shut in with itself again. {HEAD} says something at the board
+      about the west wing, an ordinary thing, the kind of thing a Head says
+      about a roof. {KIN} puts down a spoon. Nobody ever told {HEAD} about the
+      argument that went underground a generation ago, and nobody needs to,
+      because it is all there in the way the room goes quiet and the cook stops
+      in the doorway with the dish. There are eight tendays of winter left.
+    interaction:
+      kind: choice
+      choices:
+        - id: hear_it_out
+          label: Ask what the argument was. Hear all of it.
+          outcomes:
+            - id: heard_out
+              weight: 100
+              text: >-
+                It takes the whole evening and most of a candle. It turns out to
+                have been about the west wing for a fortnight, forty years ago,
+                and about something else ever since. By Longnight it has all been
+                said, and nobody at the board has to pretend any more.
+              effects:
+                - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 10 }
+                - { kind: flag, flag: the_argument_went_underground, set: false }
+        - id: leave_it_buried
+          label: Change the subject. Pass the dish.
+          outcomes:
+            - id: buried_again
+              weight: 100
+              text: >-
+                The dish goes round, and the spoon is picked up again. The
+                argument goes back where it came from, a generation deeper. The
+                household learns that this Head will not ask either.
+              effects:
+                - { kind: relationship, from: household, to: head, sentiment: -5 }
 
   - id: the_second_hay
     title: A Second Cut
@@ -787,3 +841,36 @@ proseVariants:
     of: "1d11042191f141c5"
     plainenglish: >-
       a death during the Hollow Days
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].title"
+    of: "4f792fb917d028a5"
+    plainenglish: >-
+      The Old Argument Nobody Mentioned
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].body"
+    of: "4cf8cda9de3ece3d"
+    plainenglish: >-
+      The wind has been in the chimneys since the end of Frostfall, and the household is stuck
+      indoors together again. {HEAD} says something at the table about the west wing, an
+      ordinary comment, the sort of thing a Head says about a roof. {KIN} puts down a spoon.
+      Nobody ever told {HEAD} about the argument that went quiet a generation ago, and nobody
+      needs to, because it shows in how the room falls silent and the cook stops in the doorway
+      holding the dish. There are eight more weeks of winter.
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].interaction.choices[id=hear_it_out].label"
+    of: "a190773ad7d183a6"
+    plainenglish: >-
+      Ask what the argument was about, and listen to all of it.
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].interaction.choices[id=hear_it_out].outcomes[id=heard_out].text"
+    of: "bd05d968143ca114"
+    plainenglish: >-
+      It takes the whole evening and most of a candle. It was about the west wing for two weeks,
+      forty years ago, and about something else ever since. By Longnight everything has been
+      said, and nobody at the table has to pretend any more.
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].interaction.choices[id=leave_it_buried].label"
+    of: "02b166d8a63e15b4"
+    plainenglish: >-
+      Change the subject. Pass the dish along.
+  - address: "content:events/the_turning_year.yaml#events[id=the_argument_nobody_told_him_about].interaction.choices[id=leave_it_buried].outcomes[id=buried_again].text"
+    of: "e60625de596c6ea2"
+    plainenglish: >-
+      The dish is passed round, and the spoon is picked up again. The argument goes back into
+      hiding, a generation deeper. The household learns that this Head will not ask about it
+      either.
