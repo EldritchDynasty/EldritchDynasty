@@ -147,10 +147,28 @@ function validAdvance(value: unknown): value is number {
     && value <= props.table.maxBond;
 }
 
+/**
+ * Binding or freeing a servant changes their status synchronously, but Vue
+ * leaves the old Bond button clickable until the next render. Keep one order
+ * per servant in that render so a stale second click cannot replace a
+ * successful receipt with an "already bonded" or "nothing to free" refusal.
+ * Independent servants are never blocked by each other.
+ */
+const bondSubmitting = new Set<string>();
+function sendBondOrder(order: Extract<Parameters<GameActions['order']>[0], { kind: 'bond' }>): void {
+  if (bondSubmitting.has(order.person)) return;
+  bondSubmitting.add(order.person);
+  try {
+    props.actions.order(order);
+  } finally {
+    void nextTick(() => { bondSubmitting.delete(order.person); });
+  }
+}
+
 function advance(person: string): void {
   const marks = advancing.value[person];
   if (!validAdvance(marks)) return;
-  props.actions.order({ kind: 'bond', person, op: 'bind', marks });
+  sendBondOrder({ kind: 'bond', person, op: 'bind', marks });
 }
 
 /** Who the player is about to put on each book. The shelf used to be a button
@@ -788,7 +806,7 @@ const MARRIAGE_ORDERS = [
           <button
             v-if="s.bonded"
             class="small"
-            @click="actions.order({ kind: 'bond', person: s.person, op: 'free' })"
+            @click="sendBondOrder({ kind: 'bond', person: s.person, op: 'free' })"
           >
             Tear it up
           </button>
