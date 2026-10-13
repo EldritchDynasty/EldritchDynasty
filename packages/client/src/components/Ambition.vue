@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 
@@ -26,12 +26,29 @@ function beginChoosing(): void {
   choosing.value = true;
 }
 
+// Changing and clearing an ambition share a single visible editor. Do not
+// dispatch competing orders while Vue still shows the prior world's buttons.
+let submitting = false;
+function dispatchAmbition(id: string | null): boolean | null {
+  if (submitting) return null;
+  submitting = true;
+  try {
+    return props.actions.setAmbition(id);
+  } finally {
+    // A refused or throwing order must not lock out a deliberate later retry.
+    void nextTick(() => { submitting = false; });
+  }
+}
+
 function apply(): void {
+  if (submitting) return;
   if (!selected.value || !available.value) {
     refusal.value = 'That ambition is no longer available. Choose another plan.';
     return;
   }
-  if (!props.actions.setAmbition(selected.value)) {
+  const accepted = dispatchAmbition(selected.value);
+  if (accepted === null) return;
+  if (!accepted) {
     // The store publishes a fresh view even on refusal. Keep editing so the
     // view watcher cannot reset this first ambition's draft and error as if
     // the player had merely opened the idle, no-ambition screen.
@@ -44,7 +61,9 @@ function apply(): void {
 }
 
 function clear(): void {
-  if (!props.actions.setAmbition(null)) {
+  const accepted = dispatchAmbition(null);
+  if (accepted === null) return;
+  if (!accepted) {
     refusal.value = 'The house could not clear that ambition. Try again.';
     return;
   }
