@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import type { AdviserAdvice, HelpTier } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 
 const props = defineProps<{
   ask: (tier: HelpTier) => AdviserAdvice[];
   resetKey?: string;
+  proseMode?: ProseMode;
 }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
 
 interface ShownTier {
   tier: HelpTier;
@@ -23,9 +26,9 @@ const nextTier = computed<HelpTier | null>(() => {
 
 const buttonLabel = computed(() => {
   switch (nextTier.value) {
-    case 1: return 'Ask an adviser';
-    case 2: return 'Ask what the house knows';
-    case 3: return 'Ask what can be done';
+    case 1: return plain.value ? 'Ask for advice' : 'Ask an adviser';
+    case 2: return plain.value ? 'Ask what the family knows' : 'Ask what the house knows';
+    case 3: return plain.value ? 'Ask what to do next' : 'Ask what can be done';
     default: return '';
   }
 });
@@ -59,7 +62,7 @@ watch(() => props.resetKey, () => {
 </script>
 
 <template>
-  <section class="adviser-help" aria-label="Counsel from the household">
+  <section class="adviser-help" :aria-label="plain ? 'Advice from family advisers' : 'Counsel from the household'">
     <div v-if="shown.length" class="counsel" aria-live="polite">
       <template v-for="step in shown" :key="step.tier">
         <blockquote
@@ -76,7 +79,7 @@ watch(() => props.resetKey, () => {
     </div>
 
     <p v-if="unanswered" class="unanswered" role="status">
-      Nobody at the table answers.
+      {{ plain ? 'No adviser has an answer.' : 'Nobody at the table answers.' }}
     </p>
 
     <button
