@@ -460,7 +460,7 @@ describe('a game runs through the public API', () => {
     if (!decision || decision.kind !== 'record') throw new Error('the record docket was not reached');
 
     expect(decision.options.length).toBeGreaterThan(0);
-    expect(g.record(decision.id, 'record')).toBe(true);
+    expect(g.record(decision.id, 'record').ok).toBe(true);
     expect(g.view().chronicle.length).toBeGreaterThan(0);
   });
 
