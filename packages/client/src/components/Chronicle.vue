@@ -21,6 +21,9 @@ const emit = defineEmits<{
   (e: 'person', id: string): void;
 }>();
 
+/** Reader-facing labels follow the existing preference; saved Chronicle and frame prose do not change. */
+const plain = computed(() => props.proseMode === 'plainenglish');
+
 const entries = computed(() => [...props.view.chronicle].reverse());
 
 // Adviser counsel belongs to this world snapshot, not just this house.
@@ -103,8 +106,8 @@ async function follow(id: string): Promise<void> {
          on the last sixty entries; everything before it was unreachable from
          any client, in a game that is about what gets written down. -->
     <h3 class="label row top">
-      <span>The chronicle</span>
-      <button class="quiet small" @click="emit('open')">Read it whole</button>
+      <span>{{ plain ? 'Recent Chronicle entries' : 'The chronicle' }}</span>
+      <button class="quiet small" @click="emit('open')">{{ plain ? 'Read full Chronicle' : 'Read it whole' }}</button>
     </h3>
     <AdviserHelp :ask="askAdviser" :reset-key="`chronicle:${view.house}:${snapshot}`" />
 
@@ -127,7 +130,7 @@ async function follow(id: string): Promise<void> {
          the family wrote its own, and it is kept apart from the chronicle
          because it is not the same book. -->
     <template v-if="frame.length">
-      <h3 class="label frame-label">The frame</h3>
+      <h3 class="label frame-label">{{ plain ? 'Interludes' : 'The frame' }}</h3>
       <article v-for="entry in frame" :key="entry.eventId + entry.year" class="entry frame">
         <span class="small dim frame-year">{{ entry.year }}</span>
         <p>{{ entry.text }}</p>
