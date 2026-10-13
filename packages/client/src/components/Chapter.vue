@@ -133,7 +133,7 @@ watch([() => props.beat, () => props.skipSeenProse], ([beat], [previousBeat]) =>
           <li v-for="(line, i) in beat.view.verdict" :key="i">{{ line.text }}</li>
         </ul>
         <p v-if="beat.view.boundary" class="invitation">
-          {{ proseMode === 'plainenglish' ? 'You can stop here. Your progress and the family record are saved.' : "You can put it down here. The house's memory of these years is kept." }}
+          {{ proseMode === 'plainenglish' ? 'You can stop reading here. This part of the family record is complete.' : "You can put it down here. The house's memory of these years is kept." }}
         </p>
         <button ref="goOn" class="quiet small" @click="dismissOnce()">
           {{ proseMode === 'plainenglish' ? (beat.view.boundary ? 'Stop here' : 'Continue') : (beat.view.boundary ? 'Put it down' : 'Read on') }}
