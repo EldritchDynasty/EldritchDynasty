@@ -66,6 +66,58 @@ events:
                 about forty years.
               effects:
                 - { kind: flag, flag: the_house_drank_the_water, set: true }
+              # #334: "a wrong lesson it will act on again in about forty years"
+              next: { event: the_water_was_fine_last_time, after: { minYears: 35, maxYears: 45 } }
+
+  # #334: the reader of the_house_drank_the_water. The household book remembers the dry fortnight and forgets the weather.
+  - id: the_water_was_fine_last_time
+    title: The Water Was Fine Last Time
+    tier: family
+    frequency: common
+    weight: 100
+    tags: [food, servants, money, household]
+    purposes: [buy_patience, change_standing, worldbuild_through_action]
+    conditions:
+      all:
+        - { flag: the_house_drank_the_water, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      It has rained on the yard for eleven days, and three barrels have gone
+      sour in the cellar under it. Somebody finds the answer in the household
+      book. Forty years ago the house drank the well for a fortnight and
+      nothing happened, and it is written down in a clear hand with the nine
+      crowns it saved. Nobody wrote down that the fortnight was dry. This one
+      is not. The beck has run brown since Thaw, and the well sits forty yards
+      below it. The alewife at Wick wants fourteen crowns.
+    interaction:
+      kind: choice
+      choices:
+        - id: buy_in_this_time
+          label: Buy in from Wick. Fourteen crowns.
+          outcomes:
+            - id: bought_in_this_time
+              weight: 100
+              text: >-
+                Fourteen crowns and a fortnight of the alewife's beer, which is
+                better than the house's and everybody says so. The next brewing
+                takes. Somebody draws a line through the old entry in the
+                household book and writes the rain beside it.
+              effects:
+                - { kind: treasury, delta: -14 }
+                - { kind: flag, flag: the_house_drank_the_water, set: false }
+        - id: drink_the_well_again
+          label: Drink the water. It was fine last time.
+          outcomes:
+            - id: the_flux_this_time
+              weight: 100
+              text: >-
+                Nine days in, six of the household have the flux, and one of them
+                is the cook. It passes, slowly. The entry in the household book
+                stays exactly as it was, because nobody who reads it now wants to
+                be the one who corrects it.
+              effects:
+                - { kind: attribute, target: household, attr: health, delta: -3 }
 
   - id: the_cook_and_the_second_kitchen
     title: The Cook Has an Opinion About the Bread
@@ -827,3 +879,36 @@ proseVariants:
     of: "4f52149e0183609a"
     plainenglish: >-
       there is no money to replace the missing meat
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].title"
+    of: "4803be178bff357b"
+    plainenglish: >-
+      Last Time, the Water Was Fine
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].body"
+    of: "b2672b2b3f5d7aef"
+    plainenglish: >-
+      It has rained for eleven days, and three barrels of beer have gone sour in the cellar.
+      Someone finds an answer in the household book. Forty years ago the household drank well
+      water for two weeks and nothing went wrong, and the book records it clearly, along with
+      the nine crowns it saved. Nobody wrote down that those two weeks were dry. These are not.
+      The stream has been muddy since Thaw, and the well is forty yards downhill from it. The
+      alewife at Wick wants fourteen crowns.
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].interaction.choices[id=buy_in_this_time].label"
+    of: "a93f546044375284"
+    plainenglish: >-
+      Buy beer from Wick. Fourteen crowns.
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].interaction.choices[id=buy_in_this_time].outcomes[id=bought_in_this_time].text"
+    of: "4f2221a2acb3c426"
+    plainenglish: >-
+      Fourteen crowns buys two weeks of the alewife's beer, which everyone agrees is better than
+      the house's own. The next brewing works. Someone crosses out the old entry in the
+      household book and writes about the rain next to it.
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].interaction.choices[id=drink_the_well_again].label"
+    of: "72cfd2aa77cfea6e"
+    plainenglish: >-
+      Drink the well water. It was fine last time.
+  - address: "content:events/the_kitchen.yaml#events[id=the_water_was_fine_last_time].interaction.choices[id=drink_the_well_again].outcomes[id=the_flux_this_time].text"
+    of: "202598ab2cca857f"
+    plainenglish: >-
+      Nine days later, six people in the household have dysentery, including the cook. It passes
+      slowly. The entry in the household book stays exactly as it was, because nobody who reads
+      it now wants to be the one to correct it.

@@ -398,7 +398,7 @@ export class GameSession {
   }
 
   get pending(): PendingDecision[] {
-    return [...this.ctx.world.pendingDecisions];
+    return this.ctx.world.pendingDecisions.map((decision) => structuredClone(decision));
   }
 
   /**
@@ -666,7 +666,7 @@ export class GameSession {
     const { from, to } = opts;
     return this.ctx.world.chronicle.filter(
       (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
-    );
+    ).map((entry) => structuredClone(entry));
   }
 
   /** The earlier act a Chronicle page answers, when one is recoverable. */
@@ -1358,7 +1358,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   // Provenance survives a person's death, but the hall view deliberately
   // contains living members only. Resolve the displayed pages' references
   // here, without sending the whole person store (or hidden facts) to Vue.
-  const chronicle = w.chronicle.slice(-chronicleLines);
+  // Chronicle views must not expose writable references into the saved book.
+  // Deep copies matter: a page's people, claims and cause are nested values.
+  const chronicle = w.chronicle.slice(-chronicleLines).map((entry) => structuredClone(entry));
   const chroniclePeople = [...new Set(chronicle.flatMap((entry) => entry.people ?? []))]
     .flatMap((id) => {
       const person = w.people.get(id);
@@ -1458,14 +1460,14 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     // "the old view changed when the world did", and it stayed invisible for
     // as long as a sixty-year window rarely contained an interlude. More frame
     // content made it visible; it was always wrong.
-    frame: [...w.frame.entries],
+    frame: w.frame.entries.map((entry) => structuredClone(entry)),
     docket: w.pendingDecisions.map((decision) => {
       const ambition = ambitionRelevance(ctx, decision);
-      return {
+      return structuredClone({
         ...decision,
         advice: adviceForDecision(ctx, decision),
         ...(ambition ? { ambition } : {}),
-      };
+      });
     }),
     namesWanted: w.pendingNames.map((n) => ({
       person: n.person, suggested: n.suggested, sex: n.sex, born: n.born, because: n.because,

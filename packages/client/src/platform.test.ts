@@ -570,6 +570,66 @@ describe('the platform seam', () => {
     }
   });
 
+  it('rejects total browser key enumeration failures without losing saved runs (#1595)', async () => {
+    const values = new Map([
+      ['ed:save:chapter-1-1080', JSON.stringify({ format: 28, year: 1080 })],
+      ['ed:save:unreadable', '{bad JSON'],
+    ]);
+    let keyFailure: 'none' | 'first' | 'all' | 'missing' = 'none';
+    const storage = {
+      get length() { return values.size; },
+      key(index: number) {
+        if (keyFailure === 'all' || (keyFailure === 'first' && index === 0)) {
+          throw new Error('transient key lookup failure');
+        }
+        if (keyFailure === 'missing') return null;
+        return [...values.keys()][index] ?? null;
+      },
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); },
+      clear: () => values.clear(),
+    } as Storage;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { localStorage: storage },
+    });
+    try {
+      const platform = browserPlatform();
+      const known = [
+        { slot: 'chapter-1-1080', year: 1080, format: 28, savedAt: undefined },
+        { slot: 'unreadable' },
+      ];
+      await expect(platform.listSaves()).resolves.toEqual(known);
+
+      // A single broken index does not hide other healthy or unreadable slots.
+      keyFailure = 'first';
+      await expect(platform.listSaves()).resolves.toEqual([{ slot: 'unreadable' }]);
+
+      // With no successful key lookup, [] would falsely erase the visible list.
+      keyFailure = 'all';
+      await expect(platform.listSaves()).rejects.toThrow('save key enumeration unavailable');
+      expect(values.size).toBe(2);
+
+      keyFailure = 'none';
+      await expect(platform.listSaves()).resolves.toEqual(known);
+
+      // A successful null lookup is different from a thrown lookup: indexes
+      // may become stale if another tab deletes saves during enumeration.
+      keyFailure = 'missing';
+      await expect(platform.listSaves()).resolves.toEqual([]);
+
+      // A genuinely empty profile is still a successful empty listing.
+      values.clear();
+      keyFailure = 'all';
+      await expect(platform.listSaves()).resolves.toEqual([]);
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('takes an injected host whole, rather than detecting one below composition', async () => {
     const injected = bridge();
     const platform = platformForWindow({ edPlatform: injected } as Window);
@@ -1614,6 +1674,63 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
 });
 
 describe('mobile durable storage', () => {
+  it('rejects non-object native and legacy JSON roots without erasing recoverable bytes (#1593)', async () => {
+    const badRoots = ['[]', '[1]', 'false', '42', '"text"', 'null'];
+
+    for (const root of badRoots) {
+      const goodSave = { format: 30, year: 1220 };
+      const previousSave = JSON.stringify({ format: 29, year: 1120 });
+      const previousLibrary = JSON.stringify({ format: 1, runs: [{ seed: 7 }] });
+      const files = mobileFileStore({
+        'eldritch/saves/bad.json': root,
+        'eldritch/saves/good.json': JSON.stringify(goodSave),
+        'eldritch/library.json': root,
+      });
+      const preferences = mobilePreferenceStore({
+        'ed:save:bad': previousSave,
+        'ed:library': previousLibrary,
+      });
+      const store = mobileStorage(files, preferences);
+
+      // A newer Data file owns its slot even when damaged. A legacy backup
+      // must not overwrite it, and no scalar is handed to the game as a save.
+      await expect(store.readSave('bad')).rejects.toThrow('native save file is unreadable');
+      await expect(store.readLibrary()).rejects.toThrow('native Library of Houses file is unreadable');
+      await expect(store.readSave('good')).resolves.toEqual(goodSave);
+      const listed = await store.listSaves();
+      expect(listed).toHaveLength(2);
+      expect(listed).toEqual(expect.arrayContaining([
+        { slot: 'bad' },
+        expect.objectContaining({ slot: 'good', year: 1220 }),
+      ]));
+      expect(files.data.get('eldritch/saves/bad.json')).toBe(root);
+      expect(files.data.get('eldritch/library.json')).toBe(root);
+      expect(preferences.data.get('ed:save:bad')).toBe(previousSave);
+      expect(preferences.data.get('ed:library')).toBe(previousLibrary);
+      expect(files.writes).toHaveLength(0);
+
+      // Legacy scalar/array roots are also present but unreadable. They may
+      // be listed for recovery, but not migrated into new native files.
+      const legacyFiles = mobileFileStore();
+      const legacyPrefs = mobilePreferenceStore({
+        'ed:save:bad': root,
+        'ed:library': root,
+        'ed:save:healthy': JSON.stringify(goodSave),
+      });
+      const legacyStore = mobileStorage(legacyFiles, legacyPrefs);
+      await expect(legacyStore.readSave('bad')).rejects.toThrow('legacy save file is unreadable');
+      await expect(legacyStore.readLibrary()).rejects.toThrow('legacy Library of Houses file is unreadable');
+      await expect(legacyStore.listSaves()).resolves.toEqual(expect.arrayContaining([
+        { slot: 'bad' },
+        expect.objectContaining({ slot: 'healthy', year: 1220 }),
+      ]));
+      expect(legacyPrefs.data.get('ed:save:bad')).toBe(root);
+      expect(legacyPrefs.data.get('ed:library')).toBe(root);
+      expect(legacyFiles.data.has('eldritch/saves/bad.json')).toBe(false);
+      expect(legacyFiles.data.has('eldritch/library.json')).toBe(false);
+    }
+  });
+
   it('stores opaque saves and the Library in the app-owned Data directory', async () => {
     const files = mobileFileStore();
     const preferences = mobilePreferenceStore();

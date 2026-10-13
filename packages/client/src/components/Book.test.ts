@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import type { ChronicleCause, ChronicleEntry, SessionView } from '@ed/core';
+import type { ChronicleCause, ChronicleEntry, EpilogueView, SessionView } from '@ed/core';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FrameEntry } from '@ed/schema';
@@ -755,18 +755,88 @@ describe('Abroad counter-record in the reader\'s prose mode (#1313)', () => {
 
 
 describe('reader-local Chronicle annotations (#1434)', () => {
+  const retainedPage: ChronicleEntry = {
+    id: 'chr_retained', year: 1174, weight: 'page', named: true,
+    title: 'The words once written', text: 'The gate stood open through the winter.',
+    claims: [{ kind: 'attr', person: 'p_claim', attr: 'physical_strength', value: 52 }],
+    delegated: 'record:record',
+  };
+
+  it('changes annotations in the Chronicle panel without changing its saved page or frame', async () => {
+    const page = structuredClone(retainedPage);
+    const saved = structuredClone(page);
+    const wrapper = mount(Chronicle, {
+      props: {
+        view: { chronicle: [page], campaign: { endYear: 1542 } } as SessionView,
+        frame: [{ eventId: 'the_first_whisper', year: 1180, text: 'The first account was heard.' }] as FrameEntry[],
+        actions: readsOver([page]),
+      },
+    });
+    try {
+      const original = wrapper.text();
+      expect(original).toContain('that their physical strength stood at 52');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('The record says their physical strength was 52.');
+      expect(wrapper.text()).toContain('usual choice: write down what happened');
+      expect(wrapper.text()).toContain(page.title);
+      expect(wrapper.text()).toContain(page.text);
+      expect(wrapper.text()).toContain('The first account was heard.');
+      expect(page).toEqual(saved);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('uses the current reader mode for the last-night reading without rewriting the epilogue', async () => {
+    const epilogue: EpilogueView = {
+      id: 'broken_line', year: 1542, title: 'The last account', summary: 'The house reached the table.',
+      opening: 'One final reading.', read: [structuredClone(retainedPage)], ring: [],
+      thesis: 'The record remains.', closing: 'The book was shut.',
+      reckoning: {
+        pages: 1, blanks: 0, recorded: 1, embellished: 0, standingLies: 0, provenLies: 0,
+        clauses: 0, clausesTotal: 9, attested: 'none', attestedTitle: 'None', livingBlood: 0,
+        unsupportable: 0, rungsWithheld: 0, substantiated: 'none', substantiatedTitle: 'None',
+      },
+    };
+    const saved = structuredClone(epilogue);
+    const wrapper = mount(Ending, {
+      props: {
+        view: { houseName: 'House Salt', seed: 123, campaign: { name: 'A Long Line', startYear: 1042 } } as SessionView,
+        epilogue, actions: { restart: vi.fn() } as unknown as GameActions,
+      },
+    });
+    try {
+      const original = wrapper.text();
+      expect(original).toContain('that their physical strength stood at 52');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.read').text()).toContain('The record says their physical strength was 52.');
+      expect(wrapper.get('.read').text()).toContain(retainedPage.title);
+      expect(wrapper.get('.read').text()).toContain(retainedPage.text);
+      expect(wrapper.text()).not.toContain('usual choice:');
+      expect(epilogue).toEqual(saved);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('switches only the explanation, keeping saved pages and deed claims intact', async () => {
-    const page = {
+    const page: ChronicleEntry = {
       id: 'chr_claim', year: 1174, weight: 'page',
+      named: true,
       title: 'A fixed title', text: 'These are the words written in the book.',
       delegated: 'record:record|choice:keep_the_book|unexpected',
       claims: [
-        { kind: 'death', year: 1173, cause: 'the winter fever' },
-        { kind: 'trait', trait: 'steadfast', has: false },
-        { kind: 'attribute', attr: 'physical_strength', value: 52 },
-        { kind: 'deed', text: 'She held the gate until dawn.' },
+        { kind: 'death', person: 'p_claim', year: 1173, cause: 'the winter fever' },
+        { kind: 'trait', person: 'p_claim', trait: 'steadfast', has: false },
+        { kind: 'attr', person: 'p_claim', attr: 'physical_strength', value: 52 },
+        { kind: 'deed', person: 'p_claim', text: 'She held the gate until dawn.' },
       ],
-    } as unknown as ChronicleEntry;
+    };
+    const saved = structuredClone(page);
     const wrapper = mount(Entry, { props: { entry: page, proseMode: 'original' } });
     try {
       expect(wrapper.text()).toContain('that they died in 1173, the winter fever');
@@ -785,7 +855,7 @@ describe('reader-local Chronicle annotations (#1434)', () => {
       expect(wrapper.text()).toContain('These are the words written in the book.');
       expect(wrapper.text()).toContain('She held the gate until dawn.');
       expect(page.text).toBe('These are the words written in the book.');
-      expect(page.claims?.[3]).toEqual({ kind: 'deed', text: 'She held the gate until dawn.' });
+      expect(page).toEqual(saved);
 
       // Epilogue uses the same entry component but hides the delegated badges.
       await wrapper.setProps({ read: true });
@@ -799,10 +869,10 @@ describe('reader-local Chronicle annotations (#1434)', () => {
   });
 
   it('passes the mode through the existing volume, keeping the book page unchanged', async () => {
-    const page = {
+    const page: ChronicleEntry = {
       id: 'chr_claim', year: 1174, weight: 'page', text: 'This page stays as written.',
-      claims: [{ kind: 'trait', trait: 'loyal', has: true }],
-    } as unknown as ChronicleEntry;
+      named: true, claims: [{ kind: 'trait', person: 'p_claim', trait: 'loyal', has: true }],
+    };
     const wrapper = mount(Book, {
       props: {
         book: [page], ages: [], houseName: 'Gearithy', close: vi.fn(),

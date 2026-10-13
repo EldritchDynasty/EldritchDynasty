@@ -67,19 +67,72 @@ function signingBundle() {
  * not care what happens, only that asking produces an answer.
  */
 
-/** Turn years until the docket has something of `kind` on it, or give up. */
+/**
+ * Walk the public docket to the requested kind. An unrelated decision blocks
+ * the clock until the reader answers it; defer those through the session's
+ * public verb instead of repeatedly trying to advance one frozen year.
+ * The bound counts both clock turns and docket resolutions.
+ */
 function advanceUntil(g: GameSession, kind: 'choice' | 'record' | 'match', limit = 400) {
-  for (let i = 0; i < limit; i++) {
+  for (let steps = 0; steps < limit; steps++) {
     const found = g.pending.find((p) => p.kind === kind);
     if (found) return found;
+    if (g.pending.length) {
+      g.letHimDecide();
+      continue;
+    }
     const before = g.year;
     g.advance(1);
-    // A docket that stops the clock means `advance` returned without turning
-    // the year. Answer nothing here — the caller decides what to do with it.
+    // No requested decision and no way to move the clock any further.
     if (g.year === before && !g.pending.length) return undefined;
   }
   return undefined;
 }
+
+describe('decision-kind search for the public API (#1592)', () => {
+  it('defers a wrong-kind docket before advancing to the desired kind', () => {
+    const unrelated = { id: 'unrelated', kind: 'record' } as unknown as GameSession['pending'][number];
+    const wanted = { id: 'wanted', kind: 'choice' } as unknown as GameSession['pending'][number];
+    let year = 1042;
+    let pending: GameSession['pending'] = [unrelated];
+    let resolutions = 0;
+    let advances = 0;
+    const session = {
+      get year() { return year; },
+      get pending() { return pending; },
+      letHimDecide() { resolutions++; pending = []; },
+      advance() {
+        advances++;
+        if (pending.length) return; // The clock must refuse unresolved decisions.
+        year++;
+        pending = [wanted];
+      },
+    } as unknown as GameSession;
+
+    expect(advanceUntil(session, 'choice', 3)).toBe(wanted);
+    expect(resolutions).toBe(1);
+    expect(advances).toBe(1);
+    expect(year).toBe(1043);
+  });
+
+  it('stops after its total action budget when the requested kind never arrives', () => {
+    const unrelated = { id: 'unrelated', kind: 'record' } as unknown as GameSession['pending'][number];
+    let pending: GameSession['pending'] = [unrelated];
+    let resolutions = 0;
+    let advances = 0;
+    const session = {
+      get year() { return 1042 + advances; },
+      get pending() { return pending; },
+      letHimDecide() { resolutions++; pending = []; },
+      advance() { advances++; pending = [unrelated]; },
+    } as unknown as GameSession;
+
+    expect(advanceUntil(session, 'choice', 5)).toBeUndefined();
+    expect(resolutions + advances).toBe(5);
+    expect(resolutions).toBe(3);
+    expect(advances).toBe(2);
+  });
+});
 
 /**
  * WHAT THE JUMP DID, AND WHO IS ALLOWED TO WORK IT OUT (issue #54).
@@ -158,6 +211,138 @@ describe('reading the book, not the window', () => {
     // Asserting the read does not quietly drop a null-texted entry if there is
     // one, which is the shape a "tidy the empties" refactor would take.
     expect(g.book().every((e) => e.text === null || typeof e.text === 'string')).toBe(true);
+  });
+});
+
+describe('Chronicle read models are independent values (#1585)', () => {
+  it('does not let full-book or window readers rewrite saved pages, including nested fields', () => {
+    const g = newGame(content, { seed: 1042, decider: 'chronicler' });
+    const page: ChronicleEntry = {
+      id: 'chr_read_snapshot',
+      year: g.year,
+      weight: 'illuminated',
+      title: 'A written page',
+      text: 'The original account',
+      named: true,
+      people: ['p_1'],
+      cause: { year: g.year - 1, page: 'chr_prior' },
+    };
+    g.ctx.world.chronicle.push(page);
+    const saved = structuredClone(g.ctx.world.chronicle);
+
+    const book = g.book({ from: g.year, to: g.year });
+    const window = g.view().chronicle;
+    const fromBook = book.find((entry) => entry.id === page.id)!;
+    const fromWindow = window.find((entry) => entry.id === page.id)!;
+    expect(fromBook).toEqual(page);
+    expect(fromWindow).toEqual(page);
+
+    fromBook.text = 'A forged version in the book panel';
+    fromBook.people!.push('p_2');
+    fromWindow.text = 'A forged version in the session panel';
+    fromWindow.cause!.page = 'changed_cause';
+
+    expect(g.ctx.world.chronicle).toEqual(saved);
+    expect(g.book({ from: g.year, to: g.year }).find((entry) => entry.id === page.id)).toEqual(page);
+    expect(g.view().chronicle.find((entry) => entry.id === page.id)).toEqual(page);
+
+    // The snapshots must stay fixed even if the simulation later updates a page.
+    page.text = 'A subsequent update to the original';
+    expect(fromBook.text).toBe('A forged version in the book panel');
+    expect(fromWindow.text).toBe('A forged version in the session panel');
+  });
+});
+
+describe('pending, frame and docket reads are independent values (#1589)', () => {
+  it('does not let pending readers change the choice the world will resolve', () => {
+    const g = newGame(content, { seed: 1042 });
+    const jump = g.advance(100);
+    expect(g.ctx.world.pendingDecisions.length).toBeGreaterThan(0);
+
+    const original = structuredClone(g.ctx.world.pendingDecisions);
+    const pending = g.pending;
+    const exposed = pending[0]!;
+    expect(pending).toEqual(original);
+
+    // Exercise each kind's nested data, not just the surrounding array.
+    if (exposed.kind === 'choice') {
+      exposed.event.title = 'A forged title';
+      exposed.fill['forged_slot'] = 'p_forged';
+      exposed.choices[0]!.label = 'A forged answer';
+      if (exposed.cast[0]?.candidates[0]) exposed.cast[0].candidates[0].name = 'A forged candidate';
+    } else if (exposed.kind === 'record') {
+      exposed.event.title = 'A forged title';
+      exposed.fill['forged_slot'] = 'p_forged';
+      exposed.options[0]!.chronicle = 'A forged page';
+    } else {
+      expect(exposed.cards.length).toBeGreaterThan(0);
+      exposed.cards[0]!.id = 'card_forged';
+    }
+
+    expect(g.ctx.world.pendingDecisions).toEqual(original);
+    expect(g.pending).toEqual(original);
+    expect(jump.pending).toEqual(original);
+
+    // Legitimate engine changes are equally unable to rewrite an old read.
+    const oldSnapshot = structuredClone(pending);
+    g.ctx.world.pendingDecisions[0]!.id = 'dec_world_updated';
+    expect(pending).toEqual(oldSnapshot);
+    expect(g.pending[0]!.id).toBe('dec_world_updated');
+  });
+
+  it('returns detached docket decisions, including their nested offers', () => {
+    const g = newGame(content, { seed: 1042 });
+    g.advance(100);
+    const original = structuredClone(g.ctx.world.pendingDecisions);
+    expect(original.length).toBeGreaterThan(0);
+
+    const first = g.view().docket;
+    const offered = first[0]!;
+    const expected = structuredClone(first);
+    if (offered.kind === 'choice') {
+      offered.event.title = 'The false docket';
+      offered.choices[0]!.label = 'The false choice';
+      offered.fill['forged_slot'] = 'p_forged';
+    } else if (offered.kind === 'record') {
+      offered.event.title = 'The false docket';
+      offered.options[0]!.chronicle = 'The false record';
+      offered.fill['forged_slot'] = 'p_forged';
+    } else {
+      expect(offered.cards.length).toBeGreaterThan(0);
+      offered.cards[0]!.id = 'card_forged';
+    }
+    expect(g.ctx.world.pendingDecisions).toEqual(original);
+    expect(g.view().docket).toEqual(expected);
+
+    const mutatedSnapshot = structuredClone(first);
+    g.ctx.world.pendingDecisions[0]!.id = 'dec_world_updated';
+    expect(first).toEqual(mutatedSnapshot);
+    expect(g.view().docket[0]!.id).toBe('dec_world_updated');
+  });
+
+  it('does not let frame readers rewrite the past or follow later world changes', () => {
+    const g = newGame(content, { seed: 1042, decider: 'chronicler' });
+    const firstEntry = {
+      year: g.year,
+      eventId: 'frame_read_snapshot',
+      outcomeId: 'heard',
+      text: 'The original interlude',
+    };
+    g.ctx.world.frame.entries.push(firstEntry);
+    const first = g.view().frame;
+    expect(first).toEqual([firstEntry]);
+
+    first[0]!.text = 'The reader rewrote the frame';
+    expect(g.ctx.world.frame.entries[0]).toEqual(firstEntry);
+    expect(g.view().frame).toEqual([firstEntry]);
+
+    const oldSnapshot = structuredClone(first);
+    g.ctx.world.frame.entries[0]!.text = 'The world moved on';
+    g.ctx.world.frame.entries.push({
+      year: g.year + 1, eventId: 'frame_second', outcomeId: 'heard', text: 'A later interlude',
+    });
+    expect(first).toEqual(oldSnapshot);
+    expect(g.view().frame.map((entry) => entry.text)).toEqual(['The world moved on', 'A later interlude']);
   });
 });
 
@@ -255,7 +440,8 @@ describe('a game runs through the public API', () => {
   it('choose answers a choice standing on the docket', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'choice');
-    if (!decision || decision.kind !== 'choice') return; // seed did not reach one; not this test's business
+    expect(decision?.kind, 'the seeded public session must reach a choice decision').toBe('choice');
+    if (!decision || decision.kind !== 'choice') throw new Error('the choice docket was not reached');
 
     const open = decision.choices.find((c) => c.available);
     expect(open, 'a decision on the docket has at least one answerable branch').toBeDefined();
@@ -270,10 +456,11 @@ describe('a game runs through the public API', () => {
   it('record answers a Record block, and the chronicle grows by it', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'record');
-    if (!decision || decision.kind !== 'record') return;
+    expect(decision?.kind, 'the seeded public session must reach a record decision').toBe('record');
+    if (!decision || decision.kind !== 'record') throw new Error('the record docket was not reached');
 
     expect(decision.options.length).toBeGreaterThan(0);
-    expect(g.record(decision.id, 'record')).toBe(true);
+    expect(g.record(decision.id, 'record').ok).toBe(true);
     expect(g.view().chronicle.length).toBeGreaterThan(0);
   });
 
@@ -285,7 +472,8 @@ describe('a game runs through the public API', () => {
   it('declineHand takes none of the cards, and clears the decision', () => {
     const g = newGame(content, { seed: 1042 });
     const decision = advanceUntil(g, 'match');
-    if (!decision || decision.kind !== 'match') return;
+    expect(decision?.kind, 'the seeded public session must reach a match decision').toBe('match');
+    if (!decision || decision.kind !== 'match') throw new Error('the match docket was not reached');
 
     const before = g.pending.length;
     expect(g.declineHand(decision.id)).toBe(true);
@@ -298,7 +486,8 @@ describe('a game runs through the public API', () => {
   it('match takes one of the cards it was dealt', () => {
     const g = newGame(content, { seed: 7007 });
     const decision = advanceUntil(g, 'match');
-    if (!decision || decision.kind !== 'match') return;
+    expect(decision?.kind, 'the seeded public session must reach a match decision').toBe('match');
+    if (!decision || decision.kind !== 'match') throw new Error('the match docket was not reached');
 
     expect(decision.cards.length).toBeGreaterThan(0);
     const res = g.match(decision.id, decision.cards[0]!.id);

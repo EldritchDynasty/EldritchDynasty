@@ -141,12 +141,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_argument_went_underground",
-      "disposition": "read",
-      "reason": "The outcome explicitly says the next Head inherits and reopens the argument in a bad year."
-    },
-    {
-      "kind": "flag",
       "key": "the_burgesses_have_a_grievance",
       "disposition": "read",
       "reason": "Going over Bramme's forty households creates a dated grievance held by the town's Assembly delegates, and the prose explicitly says a dated grievance lasts about four times as long. Preserve it for a later town/Assembly callback."
@@ -195,27 +189,9 @@
     },
     {
       "kind": "flag",
-      "key": "the_house_drank_the_water",
-      "disposition": "read",
-      "reason": "The harmless water outcome explicitly says the house learns a wrong lesson it will act on again in about forty years. Preserve the flag for that promised later well/household callback."
-    },
-    {
-      "kind": "flag",
-      "key": "the_lent_book_left_alone",
-      "disposition": "read",
-      "reason": "Leaving the lent book alone explicitly promises that roughly ninety years later someone will find it and write to Cawdry in a worse year. Preserve the flag for that concrete future book/Cawdry callback."
-    },
-    {
-      "kind": "flag",
       "key": "the_letter_that_was_never_answered",
       "disposition": "read",
       "reason": "Letting the matter close otherwise has no lasting effect, and the outcome explicitly promises a 1290 discovery of a Sarrow letter addressed to the house. Preserve the flag for that concrete later letter/record callback."
-    },
-    {
-      "kind": "flag",
-      "key": "the_man_who_drank_standing",
-      "disposition": "read",
-      "reason": "The outcome explicitly promises that somebody repeats the standing insult at exactly the wrong assize thirty years later. Preserve the flag for that authored future callback."
     },
     {
       "kind": "flag",
@@ -243,12 +219,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_rhyme_in_the_chapter_yard",
-      "disposition": "read",
-      "reason": "Standing ground explicitly promises that another Church office asks for the day book nineteen years later."
-    },
-    {
-      "kind": "flag",
       "key": "the_second_cellar_shelf",
       "disposition": "read",
       "reason": "The hidden Death and Darkness books are moved to a specific damp second cellar and degraded there. Preserve the location marker for a later Church/library discovery rather than losing the physical secret the choice creates."
@@ -261,12 +231,6 @@
     },
     {
       "kind": "flag",
-      "key": "the_short_return",
-      "disposition": "read",
-      "reason": "The short relief return explicitly says the next relief, about thirty years later, will be assessed against this number by someone with both books open. Preserve the flag for that concrete future assessment callback."
-    },
-    {
-      "kind": "flag",
       "key": "the_stair_below_the_turn_bricked",
       "disposition": "read",
       "reason": "Bricking the cellar stair changes the house physically, and the outcome explicitly says somebody unbricks it in 1330. Preserve the flag for that later house/mystery callback rather than losing the only durable marker of the wall."
@@ -276,12 +240,6 @@
       "key": "the_steward_had_nobody_behind_him",
       "disposition": "read",
       "reason": "Refusing a successor is explicitly promised to cost four years and about ninety crowns when the steward dies. Preserve the flag for that authored succession/household callback so the future cost can become real."
-    },
-    {
-      "kind": "flag",
-      "key": "the_visitation_comes_back_early",
-      "disposition": "read",
-      "reason": "The ninth-question hesitation explicitly makes the visitation return in four years instead of eleven."
     },
     {
       "kind": "flag",

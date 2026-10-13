@@ -58,10 +58,18 @@ function slotFromFile(name: string): string | null {
   }
 }
 
+/** Only a JSON object is a readable native save or Library record (#1593).
+ * Corrupt/scalar roots still count as present bytes: they must not be treated
+ * as absent and must never trigger migration over a newer native file.
+ * Full game and Library schema validation belongs to core.
+ */
 function parsed(text: string | Blob): unknown | null {
   if (typeof text !== 'string') return null;
   try {
-    return JSON.parse(text);
+    const value: unknown = JSON.parse(text);
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+      ? value
+      : null;
   } catch {
     return null;
   }

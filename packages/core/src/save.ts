@@ -70,6 +70,7 @@ export function saveGame(ctx: SimCtx): SavedGame {
     tutoring: w.tutoring.map((t) => ({ ...t })),
     bidCeiling: w.bidCeiling,
     withheld: { ...w.withheld },
+    conceptionOrdinals: { ...w.conceptionOrdinals },
     landMarket: { lots: w.landMarket.lots.map((l) => ({ ...l })) },
     landImprovements: w.landImprovements.map((i) => ({ ...i })),
     rentsPolicy: w.rentsPolicy,
@@ -288,6 +289,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   world.tutoring = s.tutoring.map((t) => ({ ...t }));
   world.bidCeiling = s.bidCeiling;
   world.withheld = { ...s.withheld };
+  world.conceptionOrdinals = { ...s.conceptionOrdinals };
   world.landMarket = { lots: s.landMarket.lots.map((l) => ({ ...l })) };
   world.landImprovements = s.landImprovements.map((i) => ({ ...i }));
   world.rentsPolicy = s.rentsPolicy;
@@ -560,6 +562,19 @@ export function digest(save: SavedGame): string {
     // format-22 saves had no field and therefore mean Long; omit the explicit
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
+  }
+  // #1581: when every attempt lived, the counter is exactly the true-child
+  // count which seeded earlier formats. Only a lost conception adds state
+  // that changes the next genome; retain it in that world's fingerprint.
+  const bornByMother = new Map<string, number>();
+  for (const person of save.people) {
+    const mother = person.trueParents.mother;
+    if (mother) bornByMother.set(mother, (bornByMother.get(mother) ?? 0) + 1);
+  }
+  if (Object.entries(save.conceptionOrdinals)
+    .every(([mother, ordinal]) => ordinal <= (bornByMother.get(mother) ?? 0))) {
+    delete value.conceptionOrdinals;
+    if (value.format === 31) value.format = 30;
   }
   // #1449: a run without marriage bids or debts owns no pledge state.
   if (value.format === 30 && save.marriagePromises.length === 0

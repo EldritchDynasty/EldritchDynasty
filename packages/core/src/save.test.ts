@@ -7,7 +7,7 @@ import { createProseRuntime } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
-  CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
+  CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf,
 } from '@ed/core';
 
@@ -39,6 +39,42 @@ describe('a run survives being written down', () => {
     const before = bootstrap(content, 1042, 1042);
     const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), content);
     expect(digestOf(after)).toBe(digestOf(before));
+  });
+
+  it('keeps conception ordinals after a loss and isolates their saved copies (#1581)', () => {
+    const before = bootstrap(content, 1581, 1042);
+    const mother = place(before, { sex: 'female', age: 25, name: 'Mother of the lost child' });
+    before.world.conceptionOrdinals[mother.id] = 3;
+    const saved = saveGame(before);
+    const after = loadGame(JSON.parse(JSON.stringify(saved)), content);
+    expect(after.world.conceptionOrdinals[mother.id]).toBe(3);
+    expect(digestOf(after)).toBe(digestOf(before));
+
+    after.world.conceptionOrdinals[mother.id] = 4;
+    expect(before.world.conceptionOrdinals[mother.id]).toBe(3);
+    expect(saved.conceptionOrdinals[mother.id]).toBe(3);
+    expect(digestOf(after)).not.toBe(digestOf(before));
+    saved.conceptionOrdinals[mother.id] = 5;
+    expect(before.world.conceptionOrdinals[mother.id]).toBe(3);
+    expect(after.world.conceptionOrdinals[mother.id]).toBe(4);
+
+    const missing = JSON.parse(JSON.stringify(saved));
+    delete missing.conceptionOrdinals;
+    expect(() => loadGame(missing, content)).toThrow(/conceptionOrdinals/);
+  });
+
+  it('keeps a counter derived entirely from living children out of the fingerprint (#1581)', () => {
+    const ctx = bootstrap(content, 1582, 1042);
+    const mother = place(ctx, { sex: 'female', age: 25 });
+    beget(ctx, place(ctx, { sex: 'female', age: 2 }), mother);
+    beget(ctx, place(ctx, { sex: 'male', age: 1 }), mother);
+    const original = digestOf(ctx);
+    for (const alreadyRepresented of [0, 1, 2]) {
+      ctx.world.conceptionOrdinals[mother.id] = alreadyRepresented;
+      expect(digestOf(ctx)).toBe(original);
+    }
+    ctx.world.conceptionOrdinals[mother.id] = 3;
+    expect(digestOf(ctx)).not.toBe(original);
   });
 
   it('repairs a pre-#391 founded save with the founding decision needed for replay', () => {

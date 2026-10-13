@@ -126,6 +126,58 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: relationship, from: { slot: GUEST }, to: head, sentiment: -20 }
                 - { kind: flag, flag: the_man_who_drank_standing, set: true }
+              # #334: "Nobody says a word about it for thirty years, and then somebody says it at exactly the wrong assize."
+              next: { event: said_at_the_wrong_assize, after: { minYears: 28, maxYears: 32 } }
+
+  # #334: the reader of the_man_who_drank_standing.
+  - id: said_at_the_wrong_assize
+    title: Said at the Wrong Assize
+    tier: head
+    frequency: common
+    weight: 100
+    tags: [assize, precedence, insult, law]
+    purposes: [buy_patience, change_standing, plant_rumour]
+    conditions:
+      all:
+        - { flag: the_man_who_drank_standing, is: true }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The assize hall at Cawdry smells of wet wool and tallow, and the house
+      has a boundary case on the second day. It should be dull. Counsel for
+      the other side is a young man with a good memory and a grandfather who
+      was at a Greening feast thirty years ago. He does not argue the
+      boundary. He tells the bench, pleasantly, that in this family's own hall
+      a tenant once drank his beer standing and nobody made him sit. Three of the justices laugh, and one of them writes something down while the others are
+      still laughing. The house's advocate leans across.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_it
+          label: Answer it. Pay the advocate to make the bench forget it.
+          outcomes:
+            - id: answered_at_the_assize
+              weight: 100
+              text: >-
+                Fifteen crowns and a long afternoon. The advocate turns it into a
+                story about an old man's knees, and the bench laughs at that
+                instead. The boundary goes the house's way. Nobody tells the first
+                story again.
+              effects:
+                - { kind: treasury, delta: -15 }
+                - { kind: flag, flag: the_man_who_drank_standing, set: false }
+        - id: let_it_stand
+          label: Let it stand. The boundary is what matters.
+          outcomes:
+            - id: it_stood
+              weight: 100
+              text: >-
+                The boundary goes the house's way. The story goes everywhere else.
+                By Ingathering they are telling it at Bramme with the cup getting
+                larger each time, and fewer men sit down in this hall when they
+                are told to.
+              effects:
+                - { kind: respect, delta: -2 }
 
   - id: the_third_night
     title: The Third Night
@@ -623,3 +675,37 @@ proseVariants:
       The bread goes back to the table. Later it is fed to the dogs with the scraps. That evening, the
       yard dog refuses to come to the door. Nobody connects the two events because they are unrelated.
       Most evenings, a dog behaves like any other dog.
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].title"
+    of: "59ce794c491ddd28"
+    plainenglish: >-
+      Said at the Wrong Court Session
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].body"
+    of: "9ce37d5af3702346"
+    plainenglish: >-
+      The court hall at Cawdry smells of wet wool and candle fat, and the house has a boundary
+      case on the second day. It should be dull. The lawyer for the other side is a young man
+      with a good memory, whose grandfather was at a Greening feast thirty years ago. He does
+      not argue about the boundary. Instead he tells the judges, pleasantly, that a tenant once
+      drank his beer standing up in this family's own hall and nobody made him sit down. Three
+      of the judges laugh, and one of them writes something down while the others are still
+      laughing. The house's lawyer leans over.
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].interaction.choices[id=answer_it].label"
+    of: "bb1bcb688dd17c94"
+    plainenglish: >-
+      Answer it. Pay the lawyer to make the judges forget it.
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].interaction.choices[id=answer_it].outcomes[id=answered_at_the_assize].text"
+    of: "359a1ffcded37560"
+    plainenglish: >-
+      Fifteen crowns and a long afternoon. The lawyer turns it into a story about an old man's
+      bad knees, and the judges laugh at that instead. The boundary case goes the house's way.
+      Nobody tells the first story again.
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].interaction.choices[id=let_it_stand].label"
+    of: "df8eebbc689bd110"
+    plainenglish: >-
+      Let it go. The boundary is what matters.
+  - address: "content:events/customs.yaml#events[id=said_at_the_wrong_assize].interaction.choices[id=let_it_stand].outcomes[id=it_stood].text"
+    of: "6b412e05c4f06de1"
+    plainenglish: >-
+      The boundary case goes the house's way. The story spreads everywhere else. By Ingathering
+      people are telling it at Bramme, with the cup getting bigger each time, and fewer men sit
+      down in this hall when they are told to.
