@@ -629,6 +629,10 @@ describe('house afterimage export failure (#1141)', () => {
       await save.trigger('click');
       await flushPromises();
       expect(wrapper.get('.afterimage-error[role="alert"]').text()).toContain('could not be saved');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.afterimage-error[role="alert"]').text()).toBe('Could not save the ending image. Try again.');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.afterimage-error[role="alert"]').text()).toContain('could not be saved');
       expect(save.attributes('disabled')).toBeUndefined();
       await save.trigger('click');
       await flushPromises();
@@ -829,6 +833,9 @@ describe('reader-local Chronicle annotations (#1434)', () => {
     try {
       const original = wrapper.text();
       expect(original).toContain('that their physical strength stood at 52');
+      expect(wrapper.get('.read .top button').text()).toBe('Read it whole');
+      expect(wrapper.get('.tally h3').text()).toBe('The reckoning');
+      expect(wrapper.get('.ring h3').text()).toBe('A debt of three parts');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.text()).toContain('The record says their physical strength was 52.');
       expect(wrapper.text()).toContain('usual choice: write down what happened');
@@ -855,10 +862,11 @@ describe('reader-local Chronicle annotations (#1434)', () => {
       },
     };
     const saved = structuredClone(epilogue);
+    const restart = vi.fn();
     const wrapper = mount(Ending, {
       props: {
         view: { houseName: 'House Salt', seed: 123, campaign: { name: 'A Long Line', startYear: 1042 } } as SessionView,
-        epilogue, actions: { restart: vi.fn() } as unknown as GameActions,
+        epilogue, actions: { restart } as unknown as GameActions,
       },
     });
     try {
@@ -869,6 +877,18 @@ describe('reader-local Chronicle annotations (#1434)', () => {
       expect(wrapper.get('.read').text()).toContain(retainedPage.title);
       expect(wrapper.get('.read').text()).toContain(retainedPage.text);
       expect(wrapper.text()).not.toContain('usual choice:');
+      expect(wrapper.get('.read .top span').text()).toBe('Chronicle excerpts');
+      expect(wrapper.get('.read .top button').text()).toBe('Read full Chronicle');
+      expect(wrapper.get('.tally h3').text()).toBe('Ending summary');
+      expect(wrapper.get('.ring h3').text()).toBe('Three promises');
+      expect(wrapper.findAll('.ending-actions button')[0]!.text()).toBe('Save ending image');
+      expect(wrapper.findAll('.ending-actions button')[1]!.text()).toBe('Start another house');
+      expect(wrapper.text()).toContain('The house reached the table.');
+      expect(wrapper.text()).toContain('The book was shut.');
+      await wrapper.get('.read .top button').trigger('click');
+      expect(wrapper.emitted('open')).toEqual([[]]);
+      await wrapper.findAll('.ending-actions button')[1]!.trigger('click');
+      expect(restart).toHaveBeenCalledOnce();
       expect(epilogue).toEqual(saved);
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.text()).toBe(original);
