@@ -77,10 +77,13 @@ const guardian = computed(() => {
 const showSeed = ref(false);
 
 const saveLabel = computed(() => {
+  const direct = plain.value;
   switch (props.saveStatus) {
-    case 'saving': return 'saving…';
-    case 'saved': return 'saved';
-    case 'error': return 'not saved — could not save this run';
+    case 'saving': return direct ? 'Saving this game…' : 'saving…';
+    case 'saved': return direct ? 'Game saved.' : 'saved';
+    case 'error': return direct
+      ? 'Game not saved. The latest changes could not be saved.'
+      : 'not saved — could not save this run';
     default: return null;
   }
 });
