@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 import type { RememberedPassage } from '../lib/game';
 
 /**
@@ -23,6 +24,7 @@ import type { RememberedPassage } from '../lib/game';
 const props = defineProps<{
   passages: RememberedPassage[];
   halls: SessionView['halls'];
+  proseMode?: ProseMode;
 }>();
 defineEmits<{ (e: 'select', id: string): void }>();
 
@@ -35,8 +37,8 @@ const onTree = computed(() => new Set(
 </script>
 
 <template>
-  <section v-if="passages.length" class="panel passage">
-    <h3 class="label">What the years did</h3>
+  <section v-if="passages.length" class="panel passage" :aria-label="proseMode === 'plainenglish' ? 'Events during the years advanced' : 'What the years did'">
+    <h3 class="label">{{ proseMode === 'plainenglish' ? 'What happened during those years' : 'What the years did' }}</h3>
 
     <div v-for="year in passages" :key="year.year" class="year">
       <span class="dim small when">{{ year.year }}</span>
