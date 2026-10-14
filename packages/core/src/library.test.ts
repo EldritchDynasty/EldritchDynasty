@@ -122,6 +122,8 @@ describe('the Library content', () => {
 describe('forced physical-copy sale below the debt floor (#1205)', () => {
   it('sells the cheapest held volume only when below the floor and records a legible cost', () => {
     const ctx = bootstrap(bundle, 1205, 1042);
+    // Bootstrap starts with inherited house books; isolate the physical shelf.
+    ctx.world.library.clear();
     const books = [
       ctx.content.mustSpellbook('lesser_workings_of_fluid'),
       ctx.content.mustSpellbook('lesser_workings_of_death'),
@@ -152,6 +154,8 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
 
   it('keeps copies with the binder and cancels unfinished readings when a physical book is lost', () => {
     const ctx = bootstrap(bundle, 1206, 1042);
+    // Bootstrap starts with inherited house books; isolate the physical shelf.
+    ctx.world.library.clear();
     const away = ctx.content.mustSpellbook('lesser_workings_of_fluid');
     const held = ctx.content.mustSpellbook('lesser_workings_of_death');
     const awayCopy = acquireLibraryCopy(ctx, away.id)!;
@@ -174,6 +178,8 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
 
   it('does nothing when the house has no saleable copy', () => {
     const ctx = bootstrap(bundle, 1207, 1042);
+    // Bootstrap starts with inherited house books; isolate the physical shelf.
+    ctx.world.library.clear();
     ctx.world.treasury = DEBT_FLOOR - 20;
     const chronicleLength = ctx.world.chronicle.length;
     tickDistressedBookSale(ctx);
