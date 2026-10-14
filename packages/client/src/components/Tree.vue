@@ -406,7 +406,7 @@ watch(() => props.reveal?.token, () => {
         {{ hall.name }}
         <span v-if="hall.isSeat" class="rubric">· {{ plain ? 'main household' : 'the seat' }}</span>
         <span class="dim"> · {{ membersOf(hall).length }} {{ plain ? 'people shown' : 'shown' }}</span>
-        <span v-if="hall.grievance > 0" class="dim"> · grievance {{ Math.round(hall.grievance) }}</span>
+        <span v-if="hall.grievance > 0" class="dim"> · {{ plain ? 'unresolved complaints:' : 'grievance' }} {{ Math.round(hall.grievance) }}</span>
       </h3>
 
       <!-- THE BREADCRUMB OUT OF A FOCUSED BRANCH. Only where this hall is the
