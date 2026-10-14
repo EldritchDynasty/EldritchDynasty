@@ -8,7 +8,7 @@ import { applyEffect } from '../events/effects.js';
 import { marriagePromiseLotName, sellerName } from '../auction.js';
 import { msg } from '../messages.js';
 
-export const PLEDGE_TERM = 50;
+export const PLEDGE_TERM = 40;
 // stepYear increments before running phases. The Table first shows her at
 // seventeen, so collection at eighteen leaves one turn to withhold her.
 export const PLEDGE_COLLECTION_AGE = 18;
@@ -22,7 +22,10 @@ function claimedGranddaughter(ctx: SimCtx, girl: Person, promise: MarriagePromis
   if (girl.sex !== 'female' || girl.status !== 'alive' || girl.born <= promise.year
     || girl.marriages.some((m) => m.to === undefined)
     || girl.houseOfOrigin !== ctx.world.playerHouse
-    || ctx.world.people.householdOf(girl.id, ctx.world.year) !== ctx.world.playerHouse) return false;
+    || ctx.world.people.householdOf(girl.id, ctx.world.year) !== ctx.world.playerHouse
+    // A seated woman is the Regent; the seal and a creditor marriage cannot
+    // leave the main hall together. Try the next granddaughter instead.
+    || girl.castSlots.includes('head')) return false;
   // The contract reads the same documents as the Match. Biological descent
   // and carried font have no part in deciding whom the creditor may collect.
   return Object.values(girl.claimedParents).some((parentId) => {
@@ -74,12 +77,12 @@ export function tickMarriagePledges(ctx: SimCtx, rng: Rng): void {
   if (!w.marriagePromises.length) return;
   for (const promise of [...w.marriagePromises]) {
     if (w.year >= promise.year + PLEDGE_TERM) {
-      breakPledge(ctx, promise, msg(ctx, 'auction.pledge_expired', 'Fifty years had passed without the marriage.'));
+      breakPledge(ctx, promise, msg(ctx, 'auction.pledge_expired', 'Forty years had passed without the marriage.'));
       w.marriagePromises = w.marriagePromises.filter((p) => p !== promise);
       continue;
     }
     let girl = promise.girl ? w.people.get(promise.girl) : undefined;
-    if (!girl || girl.status !== 'alive') {
+    if (!girl || !claimedGranddaughter(ctx, girl, promise)) {
       delete promise.girl;
       girl = w.people.living().filter((p) => claimedGranddaughter(ctx, p, promise))
         .sort((a, b) => a.born - b.born || a.id.localeCompare(b.id))[0];
@@ -104,11 +107,9 @@ export function tickMarriagePledges(ctx: SimCtx, rng: Rng): void {
       });
       continue;
     }
-    const reason = girl.castSlots.includes('head')
-      ? msg(ctx, 'auction.pledge_head_kept', '{GIRL} held the seal and could not leave the main hall.', { GIRL: girl.name })
-      : w.withheld[girl.id] !== undefined
-        ? msg(ctx, 'auction.pledge_withheld', 'The house kept {GIRL} back from the marriage.', { GIRL: girl.name })
-        : undefined;
+    const reason = w.withheld[girl.id] !== undefined
+      ? msg(ctx, 'auction.pledge_withheld', 'The house kept {GIRL} back from the marriage.', { GIRL: girl.name })
+      : undefined;
     if (reason) {
       breakPledge(ctx, promise, reason);
       w.marriagePromises = w.marriagePromises.filter((p) => p !== promise);
