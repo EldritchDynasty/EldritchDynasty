@@ -477,6 +477,53 @@ describe('the docket draws what it is handed', () => {
     expect(w.text()).toContain('1 grown');
   });
 
+  it('names adviser and single-/multi-person casting controls in the selected register (#1659)', async () => {
+    const decision = decisionWithObservedLine();
+    decision.advice = [{
+      adviser: { id: 'reader', name: 'Tomas' },
+      lens: 'reader',
+      cares: 'he maintains the book',
+      position: 'Choose Dala.',
+    }];
+    const actions = spyActions();
+    const w = mount(Docket, {
+      props: { decision, actions: actions as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(w.get('.advice').attributes('aria-label')).toBe('Counsel from the household');
+      expect(w.get('.cast select').attributes('aria-label')).toBe('Choose WHO');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('.advice').attributes('aria-label')).toBe('Advice from family members');
+      expect(w.get('.cast select').attributes('aria-label')).toBe('Select a person for WHO');
+      expect(w.get('.advice').text()).toContain('Choose Dala.');
+      await w.get('.cast select').setValue('p_1');
+      expect(w.text()).toContain('Cesse');
+      expect((w.get('.cast select').element as HTMLSelectElement).value).toBe('p_1');
+      await w.setProps({ proseMode: 'original' });
+      expect((w.get('.cast select').element as HTMLSelectElement).value).toBe('p_1');
+      expect(w.get('.cast select').attributes('aria-label')).toBe('Choose WHO');
+      expect(actions.choose).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+
+    const counted = decisionWithObservedLine();
+    Object.assign(counted.cast[0]!, { count: { min: 1, max: 2 } });
+    const multi = mount(Docket, {
+      props: { decision: counted, actions: spyActions() as unknown as GameActions, proseMode: 'original' },
+    });
+    try {
+      expect(multi.get('.party').attributes('aria-label')).toBe('Name people for WHO');
+      expect(multi.get('.party input[type="checkbox"]').exists()).toBe(true);
+      await multi.setProps({ proseMode: 'plainenglish' });
+      expect(multi.get('.party').attributes('aria-label')).toBe('Select people for WHO');
+      expect(multi.get('.party input[type="checkbox"]').exists()).toBe(true);
+      expect(multi.get('.cast legend').text()).toBe('0 selected');
+    } finally {
+      multi.unmount();
+    }
+  });
+
   it('keeps adviser logic outside hidden genetics, Bearing and future RNG', () => {
     const source = readFileSync(join(import.meta.dirname, '../../../core/src/advisers.ts'), 'utf8');
     for (const forbidden of ['phenotypeOf', '.genome', 'bearing', 'streamFor', 'Math.random', 'overflowMadness']) {
