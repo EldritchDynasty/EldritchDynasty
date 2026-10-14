@@ -631,7 +631,7 @@ const yearAndBirths = computed(() => {
              to "what just happened" while a decision is standing on top of
              it. It is also the one panel here that survives all three states
              of the column. -->
-        <PassageLog :passages="passages" :halls="view.halls" @select="look" />
+        <PassageLog :passages="passages" :halls="view.halls" @select="look" :prose-mode="accessibility.proseMode" />
       </div>
 
       <div class="middle">
