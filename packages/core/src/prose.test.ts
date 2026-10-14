@@ -429,26 +429,42 @@ describe('prospective prose selection', () => {
 
   it('does not invent one-word Record subject or chronicle gaps (#1666)', () => {
     const { bundle, event } = fixture();
-    if (!event.record) throw new Error('fixture has no Record block');
+    // The base fixture has no Record block; attach one using the same shape
+    // as the pending-Record tests below, so this tests actual eligible prose.
+    const recorded: EventTemplate = {
+      ...event,
+      record: {
+        subject: 'What should the book say?',
+        options: {
+          record: { chronicle: 'The original record wording.', effects: [], claims: [] },
+          omit: { chronicle: null, effects: [] },
+          embellish: {
+            chronicle: 'The original embellished wording.',
+            effects: [], claims: [],
+            discrepancy: { id: 'fixture_short_record_lie', severity: 'minor', provableBy: ['archive'] },
+          },
+        },
+      },
+    };
     const ctx = testWorld(bundle);
     setProseMode(ctx, 'plainenglish');
 
-    expect(recordSubjectAddress(ctx, event)).toBe(RECORD_SUBJECT_ADDRESS);
-    expect(recordChronicleAddress(ctx, event, 'record')).toBe(RECORD_ADDRESS);
-    expect(proseForRecordSubject(ctx, event, 'Write')).toBe('Write');
-    expect(proseForRecordChronicle(ctx, event, 'record', 'Done')).toBe('Done');
+    expect(recordSubjectAddress(ctx, recorded)).toBe(RECORD_SUBJECT_ADDRESS);
+    expect(recordChronicleAddress(ctx, recorded, 'record')).toBe(RECORD_ADDRESS);
+    expect(proseForRecordSubject(ctx, recorded, 'Write')).toBe('Write');
+    expect(proseForRecordChronicle(ctx, recorded, 'record', 'Done')).toBe('Done');
     expect(missingPlainEnglish(ctx)).toEqual([]);
 
-    const subject = event.record.subject;
-    const chronicle = event.record.options.record.chronicle;
+    const subject = recorded.record!.subject;
+    const chronicle = recorded.record!.options.record.chronicle;
     const subjectPlain = 'Plain: ' + subject;
     const chroniclePlain = 'Plain: ' + chronicle;
     setProseVariants(ctx, [
       { address: RECORD_SUBJECT_ADDRESS, of: proseOriginalHash(subject), plainenglish: subjectPlain },
       { address: RECORD_ADDRESS, of: proseOriginalHash(chronicle), plainenglish: chroniclePlain },
     ]);
-    expect(proseForRecordSubject(ctx, event, subject)).toBe(subjectPlain);
-    expect(proseForRecordChronicle(ctx, event, 'record', chronicle)).toBe(chroniclePlain);
+    expect(proseForRecordSubject(ctx, recorded, subject)).toBe(subjectPlain);
+    expect(proseForRecordChronicle(ctx, recorded, 'record', chronicle)).toBe(chroniclePlain);
     expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 
