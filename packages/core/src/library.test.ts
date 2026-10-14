@@ -158,7 +158,9 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
     acquireLibraryCopy(ctx, held.id);
     awayCopy.restoresAt = ctx.world.year + 2;
     const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
-    expect(beginStudy(ctx, reader, held)).toBe(true);
+    // Model a reader already part-way through the lost physical copy without
+    // making this storage invariant test depend on their affinity threshold.
+    ctx.world.studies.push({ person: reader.id, book: held.id, completes: ctx.world.year + 2 });
     expect(ctx.world.studies.some((study) => study.book === held.id)).toBe(true);
 
     ctx.world.treasury = DEBT_FLOOR - 1;
