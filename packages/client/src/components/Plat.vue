@@ -314,7 +314,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
             <td>
               {{ item.detail }}
               <template v-if="item.parcel && item.holder">
-                <p class="small dim">Held by {{ item.holderName ?? item.holder }}.</p>
+                <p class="small dim">{{ plain ? 'Currently held by' : 'Held by' }} {{ item.holderName ?? item.holder }}.</p>
                 <button class="small recall-land" type="button" @click="recallLand(item)">{{ plain ? 'Take land back' : 'Recall this land' }}</button>
               </template>
               <div v-else-if="item.parcel && !item.caput && cadetHalls.length" class="gift-controls">
@@ -322,7 +322,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
                 <select
                   :id="`endow-${item.parcel}`"
                   v-model="selectedHall[item.parcel ?? '']"
-                  :aria-label="`Hall to receive ${item.name}`"
+                  :aria-label="(plain ? 'Family household to receive ' : 'Hall to receive ') + item.name"
                   @change="giftError = null"
                 >
                   <option value="">{{ plain ? 'Choose a family hall' : 'Choose a hall' }}</option>
