@@ -317,7 +317,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
          neutral strategy layer. Their reason for caring is drawn beside the
          advice so disagreement reads as character rather than as conflicting
          tooltips. The engine has already enforced the knowledge boundary. -->
-    <aside v-if="decision.advice?.length" class="advice stack" aria-label="Counsel from the household">
+    <aside v-if="decision.advice?.length" class="advice stack" :aria-label="plain ? 'Advice from family members' : 'Counsel from the household'">
       <blockquote v-for="a in decision.advice" :key="a.adviser.id" class="small">
         <p>“{{ a.position }}”</p>
         <footer>
@@ -355,7 +355,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           <span v-else-if="req.optional">{{ plain ? ' (optional)' : ' (may stand empty)' }}</span>
         </label>
 
-        <fieldset v-if="req.count" class="party">
+        <fieldset v-if="req.count" class="party" :aria-label="plain ? 'Select people for ' + req.slot : 'Name people for ' + req.slot">
           <legend class="dim small">{{ party(req.slot).length }} {{ plain ? 'selected' : 'named' }}</legend>
           <label v-for="c in req.candidates" :key="c.id" class="small">
             <input
@@ -368,7 +368,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           </label>
         </fieldset>
 
-        <select v-else @change="fill(req.slot, $event)" :aria-label="'Choose ' + req.slot">
+        <select v-else @change="fill(req.slot, $event)" :aria-label="(plain ? 'Select a person for ' : 'Choose ') + req.slot">
           <option value="">{{ plain ? '— nobody selected —' : '— nobody —' }}</option>
           <option v-for="c in req.candidates" :key="c.id" :value="c.id">
             {{ c.name }}, {{ c.age }}
