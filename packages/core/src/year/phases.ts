@@ -15,7 +15,7 @@ import { tickFamilyQuarrels, tickRelationships } from '../people/relationships.j
 import { tickSecrets } from '../people/secrets.js';
 import { tickPapers } from '../people/papers.js';
 import { serviceBonds } from '../people/bond.js';
-import { completeStudies, tickLibraryWear, tickRestorations } from '../people/library.js';
+import { completeStudies, tickDistressedBookSale, tickLibraryWear, tickRestorations } from '../people/library.js';
 import { tickAges } from '../ages/scheduler.js';
 import {
   tickLandImprovements, tickLandMarket, tickLandRisks, tickPlatIllumination,
@@ -351,6 +351,8 @@ export const YEAR_PHASES: readonly Phase[] = [
       // study costs 5 condition, while acquisitions this year skip annual wear.
       tickLibraryWear(ctx);
       tickRestorations(ctx);
+      // A debt acquired since last year's economy settlement can now cost a copy.
+      tickDistressedBookSale(ctx);
     },
   },
 
