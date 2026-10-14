@@ -9,7 +9,7 @@ import {
   saveGame, seedLibraryMemories, setProseMode, setProseVariants, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
-import { completeStudies, restorationQuote, tickLibraryWear, tickRestorations } from './people/library.js';
+import { completeStudies, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
 import { canonical } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -118,6 +118,67 @@ describe('the Library content', () => {
   });
 });
 
+
+describe('forced physical-copy sale below the debt floor (#1205)', () => {
+  it('sells the cheapest held volume only when below the floor and records a legible cost', () => {
+    const ctx = bootstrap(bundle, 1205, 1042);
+    const books = [
+      ctx.content.mustSpellbook('lesser_workings_of_fluid'),
+      ctx.content.mustSpellbook('lesser_workings_of_death'),
+    ];
+    for (const book of books) acquireLibraryCopy(ctx, book.id);
+    const cheapest = [...books].sort((a, b) => a.price.min - b.price.min || a.id.localeCompare(b.id))[0]!;
+    const other = books.find((book) => book.id !== cheapest.id)!;
+    const originalChronicleCount = ctx.world.chronicle.length;
+    ctx.world.treasury = DEBT_FLOOR;
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.library.size).toBe(2);
+    expect(ctx.world.chronicle).toHaveLength(originalChronicleCount);
+
+    ctx.world.treasury = DEBT_FLOOR - 1;
+    tickDistressedBookSale(ctx);
+    const proceeds = Math.max(1, Math.floor(cheapest.price.min * 0.75));
+    expect(ctx.world.library.has(cheapest.id)).toBe(false);
+    expect(ctx.world.library.has(other.id)).toBe(true);
+    expect(ctx.world.treasury).toBe(DEBT_FLOOR - 1 + proceeds);
+    expect(ctx.world.chronicle.at(-1)?.text).toContain(cheapest.name);
+    expect(ctx.world.chronicle.at(-1)?.text).toContain(String(proceeds));
+
+    const reloaded = loadGame(saveGame(ctx), bundle);
+    expect(canonical(saveGame(reloaded))).toBe(canonical(saveGame(ctx)));
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.library.has(other.id)).toBe(true);
+  });
+
+  it('keeps copies with the binder and cancels unfinished readings when a physical book is lost', () => {
+    const ctx = bootstrap(bundle, 1206, 1042);
+    const away = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const held = ctx.content.mustSpellbook('lesser_workings_of_death');
+    const awayCopy = acquireLibraryCopy(ctx, away.id)!;
+    acquireLibraryCopy(ctx, held.id);
+    awayCopy.restoresAt = ctx.world.year + 2;
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    expect(beginStudy(ctx, reader, held)).toBe(true);
+    expect(ctx.world.studies.some((study) => study.book === held.id)).toBe(true);
+
+    ctx.world.treasury = DEBT_FLOOR - 1;
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.library.has(away.id)).toBe(true);
+    expect(ctx.world.library.has(held.id)).toBe(false);
+    expect(ctx.world.studies.some((study) => study.book === held.id)).toBe(false);
+    expect(reader.spellsKnown).not.toContain(held.id);
+    expect(ctx.world.library.get(away.id)?.restoresAt).toBe(ctx.world.year + 2);
+  });
+
+  it('does nothing when the house has no saleable copy', () => {
+    const ctx = bootstrap(bundle, 1207, 1042);
+    ctx.world.treasury = DEBT_FLOOR - 20;
+    const chronicleLength = ctx.world.chronicle.length;
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.treasury).toBe(DEBT_FLOOR - 20);
+    expect(ctx.world.chronicle).toHaveLength(chronicleLength);
+  });
+});
 
 describe('deterministic physical-copy wear (first slice of #1293)', () => {
   it('loses two tenths each elapsed year, skips an acquisition year, and never mints or over-wears a copy', () => {
