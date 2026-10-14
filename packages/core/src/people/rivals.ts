@@ -89,8 +89,8 @@ function livingRival(p: RivalPerson): boolean {
 }
 
 /** A dead or departed partner cannot continue to bar a rival from marriage. */
-function hasLivingSpouse(people: readonly RivalPerson[], p: RivalPerson): boolean {
-  return p.spouse !== undefined && people.some((partner) => partner.id === p.spouse && livingRival(partner));
+function hasLivingSpouse(livingIds: ReadonlySet<string>, p: RivalPerson): boolean {
+  return p.spouse !== undefined && livingIds.has(p.spouse);
 }
 
 /**
@@ -124,12 +124,16 @@ export function growRivalLineage(ctx: SimCtx, houseId: string): void {
   }
 
   const survivors = living.filter((p) => p.died === undefined);
+  // Reuse this year's survivors instead of scanning the entire ancestral
+  // history for every spouse. Rebuild after mortality so a death this year
+  // opens the same marriage before any remarriage draw (#1641).
+  const survivingIds = new Set(survivors.map((p) => p.id));
 
   // A death ends the surviving partner's active marriage. Keep the deceased
   // person's link as history, but allow the widow(er) to marry or be offered
   // by the Match again. An intact marriage stays untouched.
   for (const p of survivors) {
-    if (p.spouse && !hasLivingSpouse(lineage.people, p)) delete p.spouse;
+    if (p.spouse && !hasLivingSpouse(survivingIds, p)) delete p.spouse;
   }
 
   // MARRIAGE. Cousins first, in effect: an unmarried man and woman already IN
@@ -224,8 +228,11 @@ export function pickRivalCandidate(
   const lineage = ctx.world.rivalLineages.get(houseId);
   if (!lineage) return undefined;
   const w = ctx.world;
+  // A loaded or externally changed lineage can still have a stale spouse
+  // link before its next yearly tick. Read current liveness once per hand.
+  const livingIds = new Set(lineage.people.filter(livingRival).map((p) => p.id));
   const candidates = lineage.people.filter((p) => {
-    if (p.sex !== sex || hasLivingSpouse(lineage.people, p) || !livingRival(p)) return false;
+    if (p.sex !== sex || hasLivingSpouse(livingIds, p) || !livingRival(p)) return false;
     const age = w.year - p.born;
     return age >= Math.max(MARRY_FROM, ageRange.min) && age <= ageRange.max;
   });
