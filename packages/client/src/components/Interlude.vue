@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { FrameEntry } from '@ed/schema';
+import type { FrameEntry, ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import { useModal } from '../lib/modal';
 
-const props = defineProps<{ entry: FrameEntry; actions: GameActions }>();
+const props = defineProps<{ entry: FrameEntry; actions: GameActions; proseMode?: ProseMode }>();
 
 /**
  * Every full-screen dialog shares one focus/keyboard policy. Interlude used
@@ -30,11 +30,11 @@ useModal(card, () => props.actions.dismissInterlude());
       class="interlude"
       role="dialog"
       aria-modal="true"
-      aria-label="an interlude"
+      :aria-label="proseMode === 'plainenglish' ? 'Story interlude' : 'an interlude'"
       @click.stop
     >
       <p>{{ entry.text }}</p>
-      <button class="quiet small" @click="actions.dismissInterlude()">Go on</button>
+      <button class="quiet small" @click="actions.dismissInterlude()">{{ proseMode === 'plainenglish' ? 'Continue' : 'Go on' }}</button>
     </article>
   </div>
 </template>
