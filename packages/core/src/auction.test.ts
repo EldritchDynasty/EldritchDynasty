@@ -229,13 +229,12 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     phase('promises', ctx);
     expect(promise.girl).toBe(first.id);
     const { girl: second } = granddaughter(ctx, head, 'Second');
-    const groom = place(ctx, { sex: 'male', age: 25, name: 'Second creditor groom', house: promise.toHouse });
-
     // A seated woman is the Regent. She cannot be transferred away or billed
     // for taking the main seal. The outstanding pledge moves to the next girl.
     head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
     first.castSlots.push('head');
     ctx.world.year = second.born + 18;
+    const groom = place(ctx, { sex: 'male', age: 25, name: 'Second creditor groom', house: promise.toHouse });
     ctx.world.respect = 'regarded';
     phase('promises', ctx);
     expect(ctx.world.people.householdOf(first.id, ctx.world.year)).toBe(ctx.world.playerHouse);
@@ -246,6 +245,28 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(ctx.world.respect).toBe('regarded');
     expect(grudgeAgainstUs(ctx.world)).toBe(0);
     expectHealthyWorld(ctx);
+  });
+
+  it('defaults exactly forty years after signing if no eligible granddaughter can be collected', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head, 'Next Regent');
+    phase('promises', ctx);
+    head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
+    girl.castSlots.push('head');
+    ctx.world.year = promise.year + 39;
+    ctx.world.respect = 'regarded';
+    phase('promises', ctx);
+    expect(ctx.world.marriagePromises).toHaveLength(1);
+    expect(ctx.world.people.householdOf(girl.id, ctx.world.year)).toBe(ctx.world.playerHouse);
+    ctx.world.year += 1;
+    phase('promises', ctx);
+    expect(ctx.world.marriagePromises).toEqual([]);
+    expect(ctx.world.respect).toBe('known');
+    expect(ctx.world.chronicle.some((e) => e.text?.includes('Forty years had passed'))).toBe(true);
+    const before = ctx.world.chronicle.length;
+    phase('promises', ctx);
+    expect(ctx.world.chronicle).toHaveLength(before);
   });
 
   it('replaces a dead reservation without renewing the deadline, then bills an unfulfilled pledge once', () => {
