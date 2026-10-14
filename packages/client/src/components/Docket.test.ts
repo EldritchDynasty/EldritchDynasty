@@ -478,7 +478,8 @@ describe('the docket draws what it is handed', () => {
   });
 
   it('names adviser and single-/multi-person casting controls in the selected register (#1659)', async () => {
-    const decision = decisionWithObservedLine();
+    const decision = decisionWithObservedLine() as PendingDecisionView;
+    if (decision.kind !== 'choice') throw new Error('expected castable choice');
     decision.advice = [{
       adviser: { id: 'reader', name: 'Tomas' },
       lens: 'reader',
@@ -508,13 +509,14 @@ describe('the docket draws what it is handed', () => {
     }
 
     const counted = decisionWithObservedLine();
+    if (counted.kind !== 'choice') throw new Error('expected castable choice');
     Object.assign(counted.cast[0]!, { count: { min: 1, max: 2 } });
     const multi = mount(Docket, {
       props: { decision: counted, actions: spyActions() as unknown as GameActions, proseMode: 'original' },
     });
     try {
       expect(multi.get('.party').attributes('aria-label')).toBe('Name people for WHO');
-      expect(multi.get('.party input[type="checkbox"]').exists()).toBe(true);
+      expect(multi.find('.party input[type="checkbox"]').exists()).toBe(true);
       await multi.setProps({ proseMode: 'plainenglish' });
       expect(multi.get('.party').attributes('aria-label')).toBe('Select people for WHO');
       expect(multi.get('.party input[type="checkbox"]').exists()).toBe(true);
