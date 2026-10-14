@@ -553,6 +553,40 @@ describe('Age opening replay on a reused Chapter dialog (#410)', () => {
  * This mounted regression proves the IME/repeat behavior survived the move,
  * rather than trusting a source-level import alone.
  */
+describe('interlude reader-local language (#1650)', () => {
+  it('switches control and accessible title without rewriting the frame or dismissing it', async () => {
+    const entry = { eventId: 'a_frame', year: 1092, text: 'A voice outside the record.' } as FrameEntry;
+    const snapshot = structuredClone(entry);
+    const dismissInterlude = vi.fn();
+    const game = { dismissInterlude } as unknown as GameActions;
+    const wrapper = mount(Interlude, {
+      attachTo: document.body,
+      props: { entry, actions: game, proseMode: 'original' },
+    });
+    try {
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('an interlude');
+      expect(wrapper.get('.interlude p').text()).toBe(entry.text);
+      expect(wrapper.get('.interlude button').text()).toBe('Go on');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('Story interlude');
+      expect(wrapper.get('.interlude button').text()).toBe('Continue');
+      expect(wrapper.get('.interlude p').text()).toBe(entry.text);
+      expect(dismissInterlude).not.toHaveBeenCalled();
+      expect(entry).toEqual(snapshot);
+
+      await wrapper.get('.interlude button').trigger('click');
+      expect(dismissInterlude).toHaveBeenCalledTimes(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('[role="dialog"]').attributes('aria-label')).toBe('an interlude');
+      expect(wrapper.get('.interlude button').text()).toBe('Go on');
+      expect(entry).toEqual(snapshot);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('standalone dialog Escape while composing an IME candidate (#1290)', () => {
   function escapeKey(composing = false, legacyKeyCode?: number, repeat = false): KeyboardEvent {
     const event = new KeyboardEvent('keydown', {
