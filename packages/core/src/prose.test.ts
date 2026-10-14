@@ -6,7 +6,7 @@ import { ASSIZE_RESPONSES } from './assize.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { coreMessageAddress, msg } from './messages.js';
 import { marry, place } from './testing.js';
-import { choiceLabelAddress, eventBodyAddress, eventTitleAddress, outcomeChronicleEffectAddress, outcomeTextAddress, proseForChoiceLabel, proseForEventTitle, proseForOutcome, recordChronicleAddress, recordSubjectAddress } from './prose.js';
+import { choiceLabelAddress, eventBodyAddress, eventTitleAddress, outcomeChronicleEffectAddress, outcomeTextAddress, proseForChoiceLabel, proseForEventBody, proseForEventTitle, proseForOutcome, proseForRecordChronicle, proseForRecordSubject, recordChronicleAddress, recordSubjectAddress } from './prose.js';
 import { loadBundle, loadContent } from '@ed/content';
 import { canonical } from './save.js';
 import {
@@ -405,6 +405,78 @@ describe('prospective prose selection', () => {
     expect(proseForEventTitle(ctx, event)).toBe(event.title);
     expect(proseForChoiceLabel(ctx, event, longChoice)).toBe(longChoice.label);
     expect(missingPlainEnglish(ctx)).toEqual([TITLE_ADDRESS, CHOICE_LABEL_ADDRESS].sort());
+  });
+
+  it('does not invent a migration gap for a one-word outcome (#1665)', () => {
+    const { bundle, event, outcome } = fixture();
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+
+    // This exact branch identity exists, but the worklist does not include one-word text.
+    expect(outcomeTextAddress(ctx, event, outcome, 'ask_him')).toBe(ADDRESS);
+    const original = outcome.text!;
+    outcome.text = 'Agreed';
+    expect(proseForOutcome(ctx, event, outcome, 'ask_him')).toBe('Agreed');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    // An eligible outcome still receives its branch-specific reviewed text.
+    outcome.text = original;
+    const plainenglish = 'The task was completed before dusk.';
+    setProseVariants(ctx, [{ address: ADDRESS, of: proseOriginalHash(original), plainenglish }]);
+    expect(proseForOutcome(ctx, event, outcome, 'ask_him')).toBe(plainenglish);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('does not invent one-word Record subject or chronicle gaps (#1666)', () => {
+    const { bundle, event } = fixture();
+    if (!event.record) throw new Error('fixture has no Record block');
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+
+    expect(recordSubjectAddress(ctx, event)).toBe(RECORD_SUBJECT_ADDRESS);
+    expect(recordChronicleAddress(ctx, event, 'record')).toBe(RECORD_ADDRESS);
+    expect(proseForRecordSubject(ctx, event, 'Write')).toBe('Write');
+    expect(proseForRecordChronicle(ctx, event, 'record', 'Done')).toBe('Done');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    const subject = event.record.subject;
+    const chronicle = event.record.options.record.chronicle;
+    const subjectPlain = 'Plain: ' + subject;
+    const chroniclePlain = 'Plain: ' + chronicle;
+    setProseVariants(ctx, [
+      { address: RECORD_SUBJECT_ADDRESS, of: proseOriginalHash(subject), plainenglish: subjectPlain },
+      { address: RECORD_ADDRESS, of: proseOriginalHash(chronicle), plainenglish: chroniclePlain },
+    ]);
+    expect(proseForRecordSubject(ctx, event, subject)).toBe(subjectPlain);
+    expect(proseForRecordChronicle(ctx, event, 'record', chronicle)).toBe(chroniclePlain);
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+
+  it('does not invent one-word body or absent-body gaps (#1667)', () => {
+    const { bundle, event } = fixture();
+    const ctx = testWorld(bundle);
+    setProseMode(ctx, 'plainenglish');
+
+    const shortEvent: EventTemplate = { ...event, body: 'Wait', absentBody: 'Gone' };
+    expect(eventBodyAddress(ctx, shortEvent)).toBeDefined();
+    expect(eventBodyAddress(ctx, shortEvent, true)).toBeDefined();
+    expect(proseForEventBody(ctx, shortEvent, 'Wait')).toBe('Wait');
+    expect(proseForEventBody(ctx, shortEvent, 'Gone')).toBe('Gone');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
+
+    const longEvent: EventTemplate = {
+      ...event, body: 'The old account remains in the book.',
+      absentBody: 'Nobody was present when the news arrived.',
+    };
+    const bodyAddress = eventBodyAddress(ctx, longEvent)!;
+    const absentAddress = eventBodyAddress(ctx, longEvent, true)!;
+    setProseVariants(ctx, [
+      { address: bodyAddress, of: proseOriginalHash(longEvent.body), plainenglish: 'The account is still in the book.' },
+      { address: absentAddress, of: proseOriginalHash(longEvent.absentBody!), plainenglish: 'No one was there when the news came.' },
+    ]);
+    expect(proseForEventBody(ctx, longEvent, longEvent.body)).toBe('The account is still in the book.');
+    expect(proseForEventBody(ctx, longEvent, longEvent.absentBody!)).toBe('No one was there when the news came.');
+    expect(missingPlainEnglish(ctx)).toEqual([]);
   });
 
   it('ignores absent display strings on partial internal event fixtures', () => {
