@@ -3,6 +3,7 @@ import { asId, canLearn, isContentProseField } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { attr } from './factory.js';
 import { ageCareerFactor } from '../ages/strategy.js';
+import { DEBT_FLOOR } from '../economy.js';
 import { msg } from '../messages.js';
 import { renderContentProse } from '../prose.js';
 
@@ -45,9 +46,50 @@ export function acquireLibraryCopy(ctx: SimCtx, id: string): LibraryBookState | 
   return state;
 }
 
-/** The physical copy leaves the house — burned, stolen, sold, given as tribute. */
+/**
+ * The physical copy leaves the house — burned, stolen, sold, given as tribute.
+ * A reader cannot finish a study against a copy that has been taken away.
+ * Already learned spells live on the person and are not erased.
+ */
 export function loseLibraryCopy(ctx: SimCtx, id: string): boolean {
-  return ctx.world.library.delete(id);
+  if (!ctx.world.library.delete(id)) return false;
+  ctx.world.studies = ctx.world.studies.filter((study) => study.book !== id);
+  return true;
+}
+
+/**
+ * Distress sale under the debt floor (#1205). Sell at most one copy in a year:
+ * the cheapest available book by its authored minimum price, breaking equal
+ * prices by stable id rather than Map insertion order. Copies with a binder
+ * are not physically on the shelf to sell. The sale is deterministic and
+ * belongs to the library phase, not a second economy calculation.
+ */
+export function tickDistressedBookSale(ctx: SimCtx): void {
+  const w = ctx.world;
+  if (w.treasury >= DEBT_FLOOR) return;
+  const candidates = [...w.library.values()]
+    .filter((copy) => copy.restoresAt === undefined)
+    .map((copy) => ({ copy, def: spellbookDef(ctx, copy.id) }))
+    .filter((item): item is { copy: LibraryBookState; def: SpellbookDef } => item.def !== undefined)
+    .sort((a, b) => a.def.price.min - b.def.price.min || a.copy.id.localeCompare(b.copy.id));
+  const cheapest = candidates[0];
+  if (!cheapest) return;
+
+  // Like a parcel sold under pressure, a book brings less than its list cost.
+  const proceeds = Math.max(1, Math.floor(cheapest.def.price.min * 0.75));
+  if (!loseLibraryCopy(ctx, cheapest.copy.id)) return;
+  w.treasury += proceeds;
+
+  const file = ctx.content.sourceOf(cheapest.copy.id);
+  const name = file && isContentProseField('name', cheapest.def.name)
+    ? renderContentProse(ctx, file, `spellbooks[id=${encodeURIComponent(cheapest.copy.id)}].name`, cheapest.def.name)
+    : cheapest.def.name;
+  w.chronicle.push({
+    year: w.year, weight: 'line', named: false,
+    text: msg(ctx, 'library.distress_sale',
+      'To answer its debts, the house sold {BOOK} for {PRICE} crowns.',
+      { BOOK: name, PRICE: String(proceeds) }),
+  });
 }
 
 /**
