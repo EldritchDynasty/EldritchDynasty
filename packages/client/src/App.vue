@@ -684,7 +684,7 @@ const yearAndBirths = computed(() => {
       </div>
     </div>
 
-    <Interlude v-if="interlude" :entry="interlude" :actions="actions" />
+    <Interlude v-if="interlude" :entry="interlude" :actions="actions" :prose-mode="accessibility.proseMode" />
     <Chapter
       v-if="chapter"
       :beat="chapter"
