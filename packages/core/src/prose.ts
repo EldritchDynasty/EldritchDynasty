@@ -203,7 +203,9 @@ export function proseForRecordChronicle(
   option: 'record' | 'embellish',
   original: string,
 ): string {
-  return renderProse(ctx, recordChronicleAddress(ctx, event, option), original);
+  return isContentProseField('chronicle', original)
+    ? renderProse(ctx, recordChronicleAddress(ctx, event, option), original)
+    : original;
 }
 
 export function recordSubjectAddress(ctx: SimCtx, event: EventTemplate): string | undefined {
@@ -212,7 +214,9 @@ export function recordSubjectAddress(ctx: SimCtx, event: EventTemplate): string 
 }
 
 export function proseForRecordSubject(ctx: SimCtx, event: EventTemplate, original: string): string {
-  return renderProse(ctx, recordSubjectAddress(ctx, event), original);
+  return isContentProseField('subject', original)
+    ? renderProse(ctx, recordSubjectAddress(ctx, event), original)
+    : original;
 }
 
 export function choiceLabelAddress(ctx: SimCtx, event: EventTemplate, choice: Choice): string | undefined {
@@ -279,14 +283,26 @@ export function proseForOutcome(
   outcome: Outcome,
   choiceId?: string,
 ): string {
-  if (outcome.text) return renderProse(ctx, outcomeTextAddress(ctx, event, outcome, choiceId), outcome.text);
-  return renderProse(ctx, eventBodyAddress(ctx, event), event.body);
+  if (outcome.text) {
+    return isContentProseField('text', outcome.text)
+      ? renderProse(ctx, outcomeTextAddress(ctx, event, outcome, choiceId), outcome.text)
+      : outcome.text;
+  }
+  return isContentProseField('body', event.body)
+    ? renderProse(ctx, eventBodyAddress(ctx, event), event.body)
+    : event.body;
 }
 
 export function proseForEventBody(ctx: SimCtx, event: EventTemplate, body: string): string {
-  if (body === event.body) return renderProse(ctx, eventBodyAddress(ctx, event), body);
+  if (body === event.body) {
+    return isContentProseField('body', body)
+      ? renderProse(ctx, eventBodyAddress(ctx, event), body)
+      : body;
+  }
   if (event.absentBody !== undefined && body === event.absentBody) {
-    return renderProse(ctx, eventBodyAddress(ctx, event, true), body);
+    return isContentProseField('absentBody', body)
+      ? renderProse(ctx, eventBodyAddress(ctx, event, true), body)
+      : body;
   }
   return body;
 }
