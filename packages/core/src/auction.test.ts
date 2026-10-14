@@ -182,18 +182,14 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(ctx.world.chronicle.some((entry) => entry.text?.endsWith('The pledge was broken.'))).toBe(true);
   });
 
-  it.each(['withhold', 'head'] as const)('bills %s once and preserves the girl and main seal', (route) => {
+  it('bills withholding once and preserves the girl and main seal', () => {
     const { ctx, head, promise } = wonPledge();
     ctx.world.year += 1;
     const { girl } = granddaughter(ctx, head);
     phase('promises', ctx);
     ctx.world.year = girl.born + 18;
     ctx.world.respect = 'regarded';
-    if (route === 'withhold') expect(order(ctx, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
-    else {
-      head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
-      girl.castSlots.push('head');
-    }
+    expect(order(ctx, { kind: 'withhold', person: girl.id, hold: true }).ok).toBe(true);
     phase('promises', ctx);
     expect(ctx.world.respect).toBe('known');
     expect(ctx.world.people.householdOf(girl.id, ctx.world.year)).toBe(ctx.world.playerHouse);
@@ -226,6 +222,32 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(grudgeAgainstUs(ctx.world)).toBeGreaterThan(49);
   });
 
+  it('skips a pledged Head/Regent and collects the next eligible granddaughter instead', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl: first } = granddaughter(ctx, head, 'First');
+    phase('promises', ctx);
+    expect(promise.girl).toBe(first.id);
+    const { girl: second } = granddaughter(ctx, head, 'Second');
+    const groom = place(ctx, { sex: 'male', age: 25, name: 'Second creditor groom', house: promise.toHouse });
+
+    // A seated woman is the Regent. She cannot be transferred away or billed
+    // for taking the main seal. The outstanding pledge moves to the next girl.
+    head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
+    first.castSlots.push('head');
+    ctx.world.year = second.born + 18;
+    ctx.world.respect = 'regarded';
+    phase('promises', ctx);
+    expect(ctx.world.people.householdOf(first.id, ctx.world.year)).toBe(ctx.world.playerHouse);
+    expect(first.marriages).toEqual([]);
+    expect(ctx.world.people.householdOf(second.id, ctx.world.year)).toBe(promise.toHouse);
+    expect(second.marriages).toEqual([{ spouse: groom.id, from: ctx.world.year }]);
+    expect(ctx.world.marriagePromises).toEqual([]);
+    expect(ctx.world.respect).toBe('regarded');
+    expect(grudgeAgainstUs(ctx.world)).toBe(0);
+    expectHealthyWorld(ctx);
+  });
+
   it('replaces a dead reservation without renewing the deadline, then bills an unfulfilled pledge once', () => {
     const { ctx, head, promise } = wonPledge();
     ctx.world.year += 1;
@@ -237,7 +259,7 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(promise.girl).toBe(replacement.id);
     expect(promise.year).toBe(1045);
     ctx.world.people.kill(replacement.id, ctx.world.year, 'test');
-    ctx.world.year = promise.year + 50;
+    ctx.world.year = promise.year + 40;
     ctx.world.respect = 'regarded';
     phase('promises', ctx);
     expect(ctx.world.respect).toBe('known');
