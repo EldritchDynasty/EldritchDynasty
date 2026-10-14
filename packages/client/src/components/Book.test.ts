@@ -5,8 +5,9 @@ import type { ChronicleCause, ChronicleEntry, EpilogueView, SessionView } from '
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FrameEntry } from '@ed/schema';
-import type { GameActions } from '../lib/game';
+import type { GameActions, RememberedPassage } from '../lib/game';
 import Interlude from './Interlude.vue';
+import Passage from './Passage.vue';
 import Book from './Book.vue';
 import Entry from './Entry.vue';
 import Abroad from './Abroad.vue';
@@ -57,6 +58,48 @@ const mountBook = (focus?: string) => mount(Book, {
 
 const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
+
+describe('Passage panel reader vocabulary (#1658)', () => {
+  it('switches the factual log heading without rewriting events or changing who can be opened', async () => {
+    const passages = [{
+      year: 1100,
+      lines: [
+        { kind: 'birth', person: 'living', text: 'A child was born.' },
+        { kind: 'death', person: 'departed', text: 'An elder died.',
+          remembered: { label: 'the last heir', because: 'they carried the seal' } },
+      ],
+    }] as unknown as RememberedPassage[];
+    const halls = [{ members: [{ id: 'living' }] }] as unknown as SessionView['halls'];
+    const saved = structuredClone(passages);
+    const w = mount(Passage, { props: { passages, halls, proseMode: 'original' } });
+    try {
+      expect(w.get('.passage').attributes('aria-label')).toBe('What the years did');
+      expect(w.get('.passage h3').text()).toBe('What the years did');
+      expect(w.text()).toContain('An elder died.');
+      expect(w.text()).toContain('they carried the seal');
+      expect(w.findAll('.year button')).toHaveLength(1);
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('.passage').attributes('aria-label')).toBe('Events during the years advanced');
+      expect(w.get('.passage h3').text()).toBe('What happened during those years');
+      expect(w.text()).toContain('A child was born.');
+      expect(w.text()).toContain('An elder died.');
+      expect(w.text()).toContain('the last heir');
+      expect(w.findAll('.year button')).toHaveLength(1);
+      await w.get('.year button').trigger('click');
+      expect(w.emitted('select')).toEqual([['living']]);
+      expect(passages).toEqual(saved);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.passage h3').text()).toBe('What the years did');
+      expect(passages).toEqual(saved);
+      const app = readFileSync('packages/client/src/App.vue', 'utf8');
+      expect(app).toContain('<PassageLog :passages="passages" :halls="view.halls" @select="look" :prose-mode="accessibility.proseMode" />');
+    } finally {
+      w.unmount();
+    }
+  });
+});
 
 describe('the volume', () => {
   it('switches Chronicle controls to Plain English without changing saved pages or filters (#410)', async () => {
