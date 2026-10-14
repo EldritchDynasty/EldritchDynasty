@@ -43,6 +43,59 @@ function spyActions() {
   return actions as unknown as GameActions;
 }
 
+describe('land holder and gift reader vocabulary (#1660)', () => {
+  it('switches the holder description without turning a loan to a hall into ownership', async () => {
+    const land = mockLand({ held: [baseHeld({
+      holder: 'cadet_a', holderName: 'Younger Hall', sellable: false,
+    })] });
+    const snapshot = structuredClone(land);
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls: [], actions: spyActions(), close: () => {},
+      proseMode: 'original',
+    } });
+    try {
+      expect(w.text()).toContain('Held by Younger Hall.');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.text()).toContain('Currently held by Younger Hall.');
+      expect(land).toEqual(snapshot);
+      await w.setProps({ proseMode: 'original' });
+      expect(w.text()).toContain('Held by Younger Hall.');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('names the receiving family household without losing a selected gift target or changing the order', async () => {
+    const land = mockLand();
+    const snapshot = structuredClone(land);
+    const halls = [
+      { id: 'main', name: 'Main Hall', isSeat: true, grievance: 0, members: [] },
+      { id: 'cadet_a', name: 'Younger Hall', isSeat: false, grievance: 0, members: [{}] },
+    ] as unknown as SessionView['halls'];
+    const actions = spyActions();
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls, actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      expect(w.get('select').attributes('aria-label')).toBe('Hall to receive Longmere');
+      await w.get('select').setValue('cadet_a');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('select').attributes('aria-label')).toBe('Family household to receive Longmere');
+      expect((w.get('select').element as HTMLSelectElement).value).toBe('cadet_a');
+      expect(w.get('button.endow').text()).toBe('Give land');
+      await w.get('button.endow').trigger('click');
+      expect(actions.order).toHaveBeenCalledWith({
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+      expect(land).toEqual(snapshot);
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('select').attributes('aria-label')).toBe('Hall to receive Longmere');
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('the plat draws each state', () => {
   it('shows Plain English descriptions without changing land facts or recorded provenance (#410)', async () => {
     const land = mockLand({
