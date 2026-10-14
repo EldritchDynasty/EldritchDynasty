@@ -2381,9 +2381,9 @@ proseVariants:
       {HOUSE} demanded the granddaughter {HEAD} had pledged for {LOT} in {YEAR}. {REASON} The house lost
       one Respect tier. The creditor counted the debt against its bloodline. The pledge was broken.
   - address: "core:messages#auction.pledge_expired"
-    of: "f50ae5eb7b1cbb3f"
+    of: "b1257ccdd3c37a21"
     plainenglish: >-
-      The marriage had not happened after fifty years.
+      Forty years passed, and the promised marriage did not happen.
   - address: "core:messages#auction.pledge_reserved"
     of: "661910fc62c82430"
     plainenglish: >-
@@ -2394,10 +2394,6 @@ proseVariants:
     plainenglish: >-
       {HOUSE} asked for {GIRL} to be sent for the promised marriage next year. A Table order could still
       keep her home.
-  - address: "core:messages#auction.pledge_head_kept"
-    of: "bff6da0700b97883"
-    plainenglish: >-
-      {GIRL} was Head and could not leave the main hall.
   - address: "core:messages#auction.pledge_withheld"
     of: "9e777bda6c7c6a7e"
     plainenglish: >-
