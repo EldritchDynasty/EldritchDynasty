@@ -3379,3 +3379,7 @@ proseVariants:
     of: "064ac4c545026729"
     plainenglish: >-
       {PERSON} completed {BOOK}, becoming the first person in the house to read it.
+  - address: "core:messages#library.distress_sale"
+    of: "cb2064583850f574"
+    plainenglish: >-
+      The house sold {BOOK} for {PRICE} crowns to pay its debts.
