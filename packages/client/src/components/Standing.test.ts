@@ -138,6 +138,37 @@ describe('Standing legibility (#356)', () => {
   });
 });
 
+describe('save status in reader-local Plain English (#1651)', () => {
+  it('announces saving, saved and failure correctly without changing the world or status', async () => {
+    const current = view();
+    const savedWorld = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'idle', proseMode: 'original' },
+    });
+    try {
+      const status = () => wrapper.get('.save[role="status"]');
+      expect(status().text()).toBe('');
+      await wrapper.setProps({ saveStatus: 'saving' });
+      expect(status().text()).toBe('saving…');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(status().text()).toBe('Saving this game…');
+      await wrapper.setProps({ saveStatus: 'saved' });
+      expect(status().text()).toBe('Game saved.');
+      await wrapper.setProps({ saveStatus: 'error' });
+      expect(status().text()).toBe('Game not saved. The latest changes could not be saved.');
+      expect(status().classes()).toContain('warn');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(status().text()).toBe('not saved — could not save this run');
+      await wrapper.setProps({ saveStatus: 'idle', proseMode: 'plainenglish' });
+      expect(status().text()).toBe('');
+      expect(current).toEqual(savedWorld);
+      expect(wrapper.props('saveStatus')).toBe('idle');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('Standing reader-local Plain English (#1439)', () => {
   it('explains the same resource quantities using direct labels and glossary copy (#1616)', async () => {
     const current = view();
@@ -166,7 +197,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
         'How many parts of the old bargain the family has found.',
       ]);
       expect(values()).toEqual(originalValues);
-      expect(wrapper.get('.save[role="status"]').text()).toBe('saved');
+      expect(wrapper.get('.save[role="status"]').text()).toBe('Game saved.');
       expect(current).toEqual(snapshot);
 
       await wrapper.setProps({ proseMode: 'original' });
