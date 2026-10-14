@@ -642,6 +642,26 @@ describe('war Muster reader-local Plain English (#1447)', () => {
     }
   });
 
+  it.each([1, 3] as const)('keeps Original troop counts but uses direct war nouns for %i troops', async (men) => {
+    const data = activeWar();
+    data.muster!.men = men;
+    const muster = vi.fn();
+    const wrapper = mount(Muster, {
+      props: { view: data, refusal: null, actions: { muster } as unknown as GameActions },
+    });
+    try {
+      expect(wrapper.text()).toContain(`${men} ${men === 1 ? 'man' : 'men'} in the field since 1126`);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain(`${men} ${men === 1 ? 'troop' : 'troops'} serving since 1126`);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toContain(`${men} ${men === 1 ? 'man' : 'men'} in the field since 1126`);
+      expect(data.muster!.men).toBe(men);
+      expect(muster).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('shows other war tide values directly while retaining the same thresholds', async () => {
     for (const [tide, original, direct] of [
       [40, 'against the house', 'against the house'],
