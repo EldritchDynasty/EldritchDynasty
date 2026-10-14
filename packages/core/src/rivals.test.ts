@@ -77,7 +77,7 @@ describe('a rival house grows its own shadow lineage', () => {
     }
   });
 
-  it('reopens a surviving spouse for the Match and for shadow-house remarriage', () => {
+  it.each(['died', 'left'] as const)('reopens a spouse for the Match and remarriage when their partner is marked %s', (absence) => {
     const ctx = testWorld(bundle, 419, 1042);
     growRivalLineage(ctx, 'house_hesk');
     const lineage = ctx.world.rivalLineages.get('house_hesk')!;
@@ -86,9 +86,9 @@ describe('a rival house grows its own shadow lineage', () => {
     const otherWife = lineage.people.find((p) => p.sex === 'female' && p.id !== wife.id)!;
     const otherHusbandId = otherWife.spouse;
 
-    // The partner's death must make the survivor eligible without waiting for
+    // The partner's absence must make the survivor eligible without waiting for
     // another tick to repair the stale pointer (for example, after loading).
-    husband.died = ctx.world.year;
+    husband[absence] = ctx.world.year;
     expect(pickRivalCandidate(
       ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('widow-match'),
     )).toBe(wife);
@@ -117,6 +117,46 @@ describe('a rival house grows its own shadow lineage', () => {
       ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('intact-not-on-match'),
     )).not.toBe(otherWife);
   });
+
+  it.each(['yearly update', 'Match selection'] as const)(
+    'reads a long ancestral history only a bounded number of times during %s (#1641)',
+    (operation) => {
+      const ctx = testWorld(bundle, 419, 1042);
+      growRivalLineage(ctx, 'house_hesk');
+      const lineage = ctx.world.rivalLineages.get('house_hesk')!;
+      const genome = lineage.people[0]!.genome;
+      const femaleGenome = lineage.people.find((p) => p.sex === 'female')!.genome;
+      const history: RivalPerson[] = Array.from({ length: 512 }, (_, i) => ({
+        id: `ancestor_${i}`, house: 'house_hesk', sex: 'male',
+        born: 900, died: 1000, genome,
+      }));
+      // Forty young, married survivors: no deaths or growth can obscure the
+      // spouse lookup. Put them after the ancestors, as a real lineage does.
+      const living: RivalPerson[] = Array.from({ length: 40 }, (_, i) => ({
+        id: `living_${i}`, house: 'house_hesk', sex: i % 2 ? 'female' : 'male',
+        born: ctx.world.year - 20, spouse: `living_${i ^ 1}`,
+        genome: i % 2 ? femaleGenome : genome,
+      }));
+      const people = [...history, ...living];
+      let reads = 0;
+      lineage.people = new Proxy(people, {
+        get(target, key, receiver) {
+          if (typeof key === 'string' && /^\d+$/.test(key)) reads += 1;
+          return Reflect.get(target, key, receiver);
+        },
+      });
+
+      if (operation === 'yearly update') growRivalLineage(ctx, 'house_hesk');
+      else expect(pickRivalCandidate(
+        ctx, 'house_hesk', 'female', { min: 17, max: 45 }, testRng('married-history'),
+      )).toBeUndefined();
+
+      // Count work rather than timing a busy runner. Any linear lookup can
+      // fit this allowance; a history scan for each spouse cannot.
+      expect(reads).toBeLessThanOrEqual(people.length * 4);
+      expect(living.map((p) => p.spouse)).toEqual(living.map((_, i) => `living_${i ^ 1}`));
+    },
+  );
 
   it('grows every configured house through named ancestry', () => {
     const ctx = testWorld(bundle, 909, 1042);

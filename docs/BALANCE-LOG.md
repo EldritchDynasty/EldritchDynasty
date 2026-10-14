@@ -10691,3 +10691,104 @@ retuning the gene distribution. Both genetic gates and both risk curves stay
 as implemented. #1581 owns the independently shippable conception repair;
 this decision/measurement lands after it. Repeated deterministic losses
 cannot serve as evidence for choosing a new stillbirth probability.
+
+## 2026-10-14 — #1641: fixed-runner attribution of rival-history scans
+
+**Method.** Separate fresh processes on one AMD EPYC 9V74 Linux container,
+Node 24.19.0, with a two-CPU cgroup quota. All snapshots use the same installed
+dependency set and the gate's unchanged seeds, `5000 + 7*i`, for 500 requested
+years. The historical diagnostics use 20 runs; these are measurements, not
+replacements for the nightly's 800-run assertions. Content loading/validation
+finishes before the batch clock starts. No other simulation or test job runs
+alongside a measurement.
+
+The diagnostic calls the actual `playGateBatch(content, runs, 500)` from
+`packages/core/src/tools/gate-batch.ts`, records `performance.now()` and
+`process.cpuUsage()` around that call, and hashes sorted entries of
+`templateRuns`, `reach.runs` and `reach.firings`. No gate implementation,
+threshold, sample default or timing baseline changes.
+
+### Historical snapshots (20 runs, no CPU profiler)
+
+| Snapshot | Batch wall seconds | CPU seconds | Load seconds | Non-frame events | Character templates | Compiled arcs |
+|---|---:|---:|---:|---:|---:|---:|
+| Oct 9 `1e8519e4` | 27.305 | 30.083 | 0.963 | 449 | 38 | 21 |
+| Oct 11 `b9596ea0` | 29.714 | 32.492 | 1.065 | 452 | 38 | 25 |
+| Oct 13 `7b881ab5` | 42.747 | 46.188 | 1.277 | 462 | 38 | 35 |
+
+The fixed-runner Oct 9 to Oct 11 increase is about 9%, rather than the hosted
+nightly's 103%. Oct 13 is still materially slower locally. The source-text
+growth alone is not a count of new scenes: event count rises 3%, character
+template count stays fixed, and some growth is Plain English counterparts.
+Load time is explicitly separate from the measured simulation cost. These
+numbers establish a real runtime component without attributing the whole
+hosted increase to it or declaring runner variance proven.
+
+A direct Oct 11-code/Oct 9-content transplant was rejected by schema validation:
+the older corpus contains two choice-level `next` fields no longer accepted by
+the newer choice schema. No timing from that invalid combination is used; the
+validation boundary was not weakened to manufacture a comparison.
+
+### A single-commit comparison with unchanged content
+
+`79f0e6e1` (the widowhood repair for #786) changes only
+`packages/core/src/people/rivals.ts`. Its parent `ce354b45` therefore supplies
+an exact adjacent-commit comparison without a content transplant:
+
+| Code | Batch wall seconds | CPU seconds |
+|---|---:|---:|
+| Before the widowhood repair, `ce354b45` | 26.722 | 29.460 |
+| After the repair, `79f0e6e1` | 29.254 | 32.109 |
+| `79f0e6e1` with this PR's rival lookup optimization | 24.981 | 27.760 |
+
+The repair asks whether every survivor's spouse is alive by scanning the entire
+ancestral history, and repeats that scan for each Match candidate. That adds
+work proportional to living spouses times all historical people. Reusing a
+set of this year's surviving ids removes the repeated history scans while
+retaining widowhood and departure eligibility. The set is rebuilt after
+mortality, and Match selection independently reads current liveness, including
+loaded stale spouse links. No ids, simulation state, draws or caches are added.
+
+On the repaired historical snapshot this saves 14.6% wall time and 13.5% CPU.
+The sorted template/outcome/firing hash is identical before and after the
+optimization: `c892a044ef2a45e60c17d841838678de033f84dc40154940358bb05347ecb710`.
+This identifies a contributor, not the whole nightly regression. The earlier
+Original-mode `msg()` optimization remains in the same PR and is assessed
+with the rival lookup in the current-head comparison.
+
+The new deterministic work-budget tests fail on unoptimized main: a fixture of
+512 ancestors and 40 married survivors causes 21,852 history reads during a
+yearly update and 11,192 during Match selection. Both fit a four-pass linear
+allowance after the change. This guards work growth without a runner-dependent
+wall-clock assertion. Existing widowhood coverage also exercises a departed
+partner and verifies that intact marriages remain intact.
+
+**Remaining acceptance.** Child #1646 owns the independently landable measured
+optimization in PR #1642. Parent #1641 remains open for the rest of the hosted/local
+gap and the next three nightly 800-by-500 timings. The `lane-gates` claim held
+by #1538 is respected; this change does not re-baseline or relax the guard.
+
+### Current-main comparison (100 runs)
+
+Both processes use Node's CPU profiler with identical settings, current content
+from `7412a5ae`, and the unchanged 100-seed prefix of the official gate batch.
+The profiler is enabled on both sides; these local measurements are not a
+replacement for hosted nightly timings.
+
+| Code | Batch wall seconds | CPU seconds |
+|---|---:|---:|
+| Main `7412a5ae` | 202.323 | 216.055 |
+| Main plus the combined PR #1642 optimizations | 172.677 | 185.393 |
+
+That is a 14.7% wall-time and 14.2% CPU reduction. The full 100-run
+template/outcome/firing hash matches:
+`ba4a7a02d854ebca437c2c7d8209a473db628e9d7c92066f74a90a7db452f100`.
+Sampled self time attributed to `packages/core/src/people/rivals.ts` falls
+from 28.485s to 8.361s; profiling attribution can include inlined callers, so
+the adjacent-commit experiment above remains the causal evidence. Selection's
+sampled self time is essentially unchanged. The combined change is a useful
+measured reduction, rather than evidence that every part of #1641 is resolved.
+
+`npm run digest -- 8 400` also matches on main and the optimized branch for all
+eight seeds (`1000 + 7*i`), including saved Chronicle words and RNG state. This
+checks the entire saved world rather than only the gate's aggregate counts.
