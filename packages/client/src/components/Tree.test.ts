@@ -190,6 +190,33 @@ describe('the family tree as a planning board (#268)', () => {
     }
   });
 
+  it('explains a hall grievance under Plain English without changing scores or tree navigation (#1652)', async () => {
+    const current = largeView();
+    const before = structuredClone(current);
+    const wrapper = mount(Tree, {
+      props: { view: current, selected: null, proseMode: 'original' },
+    });
+    try {
+      const originalIds = renderedIds(wrapper);
+      const hall = () => wrapper.findAll('.hall').find((node) => node.get('h3').text().includes('Cadet Hall 2'))!;
+      expect(hall().get('h3').text()).toContain('grievance 3');
+      expect(hall().get('h3').text()).not.toContain('unresolved complaints');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(hall().get('h3').text()).toContain('unresolved complaints: 3');
+      expect(renderedIds(wrapper)).toEqual(originalIds);
+      expect(current.halls[2]!.grievance).toBe(3);
+      await wrapper.findAll('.halls button')[3]!.trigger('click');
+      expect(renderedIds(wrapper)).toEqual(current.halls[2]!.members.map((member) => member.id).sort());
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.hall h3').text()).toContain('grievance 3');
+      expect(current).toEqual(before);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('renders a 100-member, 6-hall house exactly once', () => {
     const view = largeView();
     const wrapper = mount(Tree, { props: { view, selected: null } });
