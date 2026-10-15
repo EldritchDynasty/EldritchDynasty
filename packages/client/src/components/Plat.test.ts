@@ -1021,7 +1021,8 @@ describe('Plat failure feedback changes with reading mode (#1698)', () => {
 
       await w.get('input').setValue('Cinder Field');
       await w.get('input').trigger('keydown.enter');
-      expect(actions.nameParcel).toHaveBeenCalledExactlyOnceWith('longmere', 'Cinder Field');
+      expect(actions.nameParcel).toHaveBeenCalledTimes(1);
+      expect(actions.nameParcel).toHaveBeenCalledWith('longmere', 'Cinder Field');
       expect(w.get('[role="alert"]').text()).toContain('That parcel could not be renamed.');
       await w.setProps({ proseMode: 'plainenglish' });
       expect(w.get('[role="alert"]').text()).toContain('Could not change this name.');
@@ -1056,7 +1057,8 @@ describe('Plat failure feedback changes with reading mode (#1698)', () => {
       await w.get('select').setValue('cadet_a');
       await w.get('button.endow').trigger('click');
       expect(w.get('[role="alert"]').text()).toBe('The land could not be endowed.');
-      expect(actions.order).toHaveBeenCalledExactlyOnceWith({
+      expect(actions.order).toHaveBeenCalledTimes(1);
+      expect(actions.order).toHaveBeenCalledWith({
         kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
       });
       await w.setProps({ proseMode: 'plainenglish' });
