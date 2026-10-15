@@ -98,6 +98,7 @@ const PAGE = 120;
 const drawn = ref(PAGE);
 const page = computed(() => shown.value.slice(0, drawn.value));
 const more = computed(() => shown.value.length - page.value.length);
+const nextPageSize = computed(() => Math.min(PAGE, more.value));
 
 // Any change of what is being looked FOR starts the reading again. `follow`
 // waits a tick after widening the reading, so this has run before it sets the
@@ -323,7 +324,7 @@ const counts = computed(() => ({
           </div>
         </div>
         <p class="dim small">
-          {{ counts.all }} entries · {{ counts.blank }} {{ plain ? 'blank' : 'left blank' }} ·
+          {{ counts.all }} {{ counts.all === 1 ? 'entry' : 'entries' }} · {{ counts.blank }} {{ plain ? 'blank' : 'left blank' }} ·
           {{ counts.improved }} {{ plain ? 'changed' : 'improved' }} · {{ counts.illuminated }} {{ plain ? 'highlighted' : 'illuminated' }}
         </p>
         <p v-if="plateError" role="alert" class="note">{{ plain ? 'Could not save the image. Try fewer entries or another browser.' : plateError }}</p>
@@ -394,8 +395,8 @@ const counts = computed(() => ({
         </p>
         <!-- Reached by scrolling; the button is for a keyboard, which does not
              scroll a container it has not focused. -->
-        <button v-if="more" class="quiet small" @click="drawn += 120">
-          {{ plain ? `Show ${more} more entries` : `${more} more` }}
+        <button v-if="more" class="quiet small" @click="drawn += nextPageSize">
+          {{ plain ? `Show ${nextPageSize} more ${nextPageSize === 1 ? 'entry' : 'entries'}` : `${more} more` }}
         </button>
       </div>
     </article>

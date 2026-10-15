@@ -97,6 +97,47 @@ describe('land holder and gift reader vocabulary (#1660)', () => {
 });
 
 describe('the plat draws each state', () => {
+  it.each([0, 0.5, 1, 2])('makes %s acres available outside the SVG without inventing lost acreage (#1726)', async (acres) => {
+    const land = mockLand({
+      held: [baseHeld({ acres, contestedBy: 'House Rival' })],
+      lost: [{ defId: 'oldfield', name: 'Oldfield', place: 'below the gate', year: 1310, by: 'Mara' }],
+    });
+    const snapshot = structuredClone(land);
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls: [], actions: spyActions(), close: () => {}, proseMode: 'original',
+    } });
+    try {
+      const expected = `${acres} ${acres === 1 ? 'acre' : 'acres'}`;
+      const acreage = () => w.findAll('tbody tr').map((row) => row.get('[data-acreage]').text());
+      expect(w.get('th[data-acreage]').text()).toBe('Acreage');
+      expect(acreage()).toEqual([expected, 'Not recorded']);
+      expect(w.get('.cell-acres').text()).toBe(expected);
+      await w.get('button.rename').trigger('click');
+      await w.get('input').setValue('My draft name');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('th[data-acreage]').text()).toBe('Area');
+      expect(acreage()).toEqual([expected, 'Not recorded']);
+      expect((w.get('input').element as HTMLInputElement).value).toBe('My draft name');
+      expect(w.text()).toContain('House Rival');
+      expect(w.text()).toContain('Lost in 1310. Mara gave it up.');
+      await w.setProps({ proseMode: 'original' });
+      expect(acreage()).toEqual([expected, 'Not recorded']);
+      expect((w.get('input').element as HTMLInputElement).value).toBe('My draft name');
+      expect(land).toEqual(snapshot);
+    } finally { w.unmount(); }
+  });
+
+  it('uses a singular parcel in the accessible drawing summary (#1726)', async () => {
+    const w = mount(Plat, { props: {
+      land: mockLand(), houseName: 'House', halls: [], actions: spyActions(), close: () => {},
+    } });
+    try {
+      expect(w.get('svg').attributes('aria-label')).toMatch(/^1 parcel drawn:/);
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('svg').attributes('aria-label')).toMatch(/^1 parcel:/);
+    } finally { w.unmount(); }
+  });
+
   it('shows Plain English descriptions without changing land facts or recorded provenance (#410)', async () => {
     const land = mockLand({
       held: [
@@ -1122,12 +1163,12 @@ describe('reader-local land captions (#1705)', () => {
       const columnLabels = () => wrapper.findAll('.terrier thead th').map((th) => th.text());
       expect(caption()).toContain('House Ash — 2 held, 1 lost.');
       expect(wrapper.get('.cell-claim').text()).toBe('claimed by Elm Hall');
-      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars']);
+      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars', 'Acreage']);
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(caption()).toContain('House Ash — 2 parcels held, 1 parcel lost.');
       expect(wrapper.get('.cell-claim').text()).toBe('Also claimed by Elm Hall');
-      expect(columnLabels()).toEqual(['Parcel name', 'Status', 'Location', 'Details']);
+      expect(columnLabels()).toEqual(['Parcel name', 'Status', 'Location', 'Details', 'Area']);
       expect(wrapper.text()).toContain('Westmere');
       expect(wrapper.text()).toContain('Old Field');
       expect(wrapper.text()).toContain('Elm Hall');
@@ -1138,7 +1179,7 @@ describe('reader-local land captions (#1705)', () => {
       await wrapper.setProps({ proseMode: 'original' });
       expect(caption()).toContain('House Ash — 2 held, 1 lost.');
       expect(wrapper.get('.cell-claim').text()).toBe('claimed by Elm Hall');
-      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars']);
+      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars', 'Acreage']);
       expect(land).toEqual(before);
     } finally { wrapper.unmount(); }
   });

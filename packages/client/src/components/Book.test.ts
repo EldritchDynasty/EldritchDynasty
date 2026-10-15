@@ -104,6 +104,51 @@ describe('Passage panel reader vocabulary (#1658)', () => {
 });
 
 describe('the volume', () => {
+  it('promises only the next batch and retains the current window across reading modes (#1725)', async () => {
+    const book = Array.from({ length: 361 }, (_, i) => entry(`page-${i}`, 1042 + i, `Kept page ${i}.`));
+    const snapshot = structuredClone(book);
+    const w = mount(Book, { props: {
+      book, ages: [], houseName: 'House', close: () => {}, actions: readsOver(book), proseMode: 'plainenglish',
+    } });
+    const moreButton = () => w.get('.pages > button');
+    try {
+      await w.get('input[type="search"]').setValue('Kept');
+      expect(w.findAll('[data-entry]')).toHaveLength(120);
+      expect(moreButton().text()).toBe('Show 120 more entries');
+      await w.setProps({ proseMode: 'original' });
+      expect(moreButton().text()).toBe('241 more');
+      expect((w.get('input[type="search"]').element as HTMLInputElement).value).toBe('Kept');
+      await w.setProps({ proseMode: 'plainenglish' });
+      await moreButton().trigger('click');
+      expect(w.findAll('[data-entry]')).toHaveLength(240);
+      expect(moreButton().text()).toBe('Show 120 more entries');
+      await moreButton().trigger('click');
+      expect(w.findAll('[data-entry]')).toHaveLength(360);
+      expect(moreButton().text()).toBe('Show 1 more entry');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.findAll('[data-entry]')).toHaveLength(360);
+      expect(moreButton().text()).toBe('1 more');
+      await w.setProps({ proseMode: 'plainenglish' });
+      await moreButton().trigger('click');
+      expect(w.findAll('[data-entry]').map((row) => row.attributes('data-entry'))).toEqual(book.map((page) => page.id));
+      expect(w.find('.pages > button').exists()).toBe(false);
+      expect(book).toEqual(snapshot);
+    } finally { w.unmount(); }
+  });
+
+  it.each([0, 1, 2])('uses the correct entry count for %i pages in both modes (#1725)', async (count) => {
+    const book = BOOK.slice(0, count);
+    const w = mount(Book, { props: {
+      book, ages: [], houseName: 'House', close: () => {}, actions: readsOver(book),
+    } });
+    try {
+      const expected = `${count} ${count === 1 ? 'entry' : 'entries'} ·`;
+      expect(w.get('header > p').text()).toContain(expected);
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('header > p').text()).toContain(expected);
+    } finally { w.unmount(); }
+  });
+
   it('switches Chronicle controls to Plain English without changing saved pages or filters (#410)', async () => {
     const saved = structuredClone(BOOK);
     const w = mountBook();

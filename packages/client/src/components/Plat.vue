@@ -62,6 +62,10 @@ function stateWord(state: PlatState): string {
   return (plain.value ? PLAIN_STATE_WORD : STATE_WORD)[state];
 }
 
+function acreage(acres: number): string {
+  return `${acres} ${acres === 1 ? 'acre' : 'acres'}`;
+}
+
 interface PlatItem {
   key: string;
   parcel?: string;
@@ -267,7 +271,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
         :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
         :width="svgWidth" :height="svgHeight"
         role="img"
-        :aria-label="plain ? `${cells.length} parcels: ${land.held.length} held, ${land.lost.length} lost. Details are in the table below.` : `${cells.length} parcels drawn: ${land.held.length} held, ${land.lost.length} lost. The table below names each one.`"
+        :aria-label="plain ? `${cells.length} ${cells.length === 1 ? 'parcel' : 'parcels'}: ${land.held.length} held, ${land.lost.length} lost. Details are in the table below.` : `${cells.length} ${cells.length === 1 ? 'parcel' : 'parcels'} drawn: ${land.held.length} held, ${land.lost.length} lost. The table below names each one.`"
         class="drawing"
       >
         <g v-for="cell in cells" :key="cell.key" :transform="`translate(${cell.x}, ${cell.y})`">
@@ -288,7 +292,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
             x1="6" y1="6" :x2="CELL_W - 6" :y2="CELL_H - 6" class="strike"
           />
           <text x="10" y="20" class="cell-name">{{ cell.name }}</text>
-          <text v-if="cell.acres !== undefined" x="10" y="38" class="cell-acres">{{ cell.acres }} acres</text>
+          <text v-if="cell.acres !== undefined" x="10" y="38" class="cell-acres">{{ acreage(cell.acres) }}</text>
           <text x="10" :y="CELL_H - 10" class="cell-state">{{ stateWord(cell.state) }}</text>
           <text v-if="cell.contestedBy" x="10" y="56" class="cell-claim">{{ plain ? 'Also claimed by' : 'claimed by' }} {{ cell.contestedBy }}</text>
         </g>
@@ -306,6 +310,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
             <th scope="col">{{ plain ? 'Status' : 'State' }}</th>
             <th scope="col">{{ plain ? 'Location' : 'Place' }}</th>
             <th scope="col">{{ plain ? 'Details' : 'Particulars' }}</th>
+            <th scope="col" data-acreage>{{ plain ? 'Area' : 'Acreage' }}</th>
           </tr>
         </thead>
         <tbody>
@@ -357,6 +362,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
               </div>
               <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftErrorText(giftError) }}</p>
             </td>
+            <td data-acreage>{{ item.acres === undefined ? 'Not recorded' : acreage(item.acres) }}</td>
           </tr>
         </tbody>
       </table>
