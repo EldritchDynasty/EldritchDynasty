@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
-import { MARKS, type Mark, madnessMark } from '../lib/marks';
+import { MARKS, type Mark, madnessMark, markSays } from '../lib/marks';
 
 type MemberView = SessionView['halls'][number]['members'][number];
 
@@ -166,7 +166,7 @@ const mentionPages = computed(() =>
           v-for="mark in marks"
           :key="mark.kind"
           :class="mark.kind"
-          :aria-label="mark.says"
+          :aria-label="markSays(mark.kind, proseMode, mark.kind === 'madness' ? member.madness : undefined)"
           role="img"
         >{{ mark.glyph }}</span>
       </span>
