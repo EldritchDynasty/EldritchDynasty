@@ -58,7 +58,6 @@ events:
                 Nothing else in the volume is in Old Ambric. That page is.
               effects:
                 - { kind: treasury, delta: -8 }
-                - { kind: knowledge, op: grant, flag: knows_the_older_register }
                 - { kind: madness, target: { slot: READER }, delta: 0 }
         - id: burn_the_leaf
           label: Take out the leaf and burn it. The rest is husbandry.
@@ -314,7 +313,6 @@ events:
                 - { kind: spellbook, op: gain, target: { slot: WARRANTED }, book: lesser_workings_of_terra }
                 - { kind: respect, delta: 2 }
                 - { kind: treasury, delta: 11 }
-                - { kind: flag, flag: a_warrant_hangs_in_the_hall, set: true }
         - id: keep_it_in_the_press
           label: Keep it in the press. This family does not want visitors.
           outcomes:

@@ -194,7 +194,6 @@ events:
                 says; it is what the book is for.
               effects:
                 - { kind: respect, delta: 0 }
-                - { kind: flag, flag: the_witness_went_to_the_parish, set: true }
 
   - id: a_second_hand_that_agrees
     title: A Second Hand That Agrees
@@ -311,7 +310,6 @@ events:
               # #341: a refusal the house's own book can see, beside the flag a
               # later Church scene may read (#334 keeps that key reserved).
               effects:
-                - { kind: flag, flag: the_chantry_was_declined, set: true }
                 - { kind: chronicle, text: The Deacon came about a chantry and the house sent him to roof it elsewhere. }
 
 proseVariants:
@@ -474,7 +472,7 @@ proseVariants:
       The Deacon accepts the refusal and finds another family to pay for the roof within a
       year. That family has less to hide. He does not raise the other matter, but it remains
       unresolved.
-  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=decline_politely].outcomes[id=he_takes_it_well].effects[1].text"
+  - address: "content:events/burying.yaml#events[id=something_the_church_wants_more].interaction.choices[id=decline_politely].outcomes[id=he_takes_it_well].effects[0].text"
     of: "23f677572d1bf393"
     plainenglish: >-
       The Deacon asked the house to support a chantry. The house refused and sent him to seek

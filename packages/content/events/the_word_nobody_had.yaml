@@ -71,8 +71,6 @@ events:
             asking for their copies of the family's own pages, by year, and has
             been asking for four years. The house has that afternoon and the
             next ten years to decide what to do about it.
-          effects:
-            - { kind: knowledge, op: grant, flag: knows_they_are_reading_us }
           next: { event: the_letter_comes_and_is_expected, after: { minYears: 8, maxYears: 22 }, keep: [HEAD] }
         - id: she_thinks_better_of_it
           weight: 50

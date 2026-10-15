@@ -46,7 +46,6 @@ events:
                 not told anybody. She has now told the Head, which is a
                 different fact about this household than it was an hour ago.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_about_the_west_passage }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
             - id: she_says_nothing
               weight: 45
@@ -225,7 +224,6 @@ events:
                 about ninety crowns to find out what it had lost.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -8 }
-                - { kind: flag, flag: the_steward_had_nobody_behind_him, set: true }
 
   - id: the_half_day_at_wick
     title: What Goes Down the Hill on a Half-Day

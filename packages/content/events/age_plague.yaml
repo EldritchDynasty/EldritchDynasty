@@ -67,7 +67,6 @@ events:
               effects:
                 - { kind: treasury, delta: -32 }
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: opened_the_gate_to_wick, set: true }
 
   - id: the_physician_from_bramme
     title: Fourteen Crowns for a Lens
@@ -276,8 +275,6 @@ events:
             The places are laid for the number that is left, which is the first
             practical decision anybody has made in a month, and it is made by
             the kitchen rather than by anyone at the table.
-          effects:
-            - { kind: flag, flag: the_hall_was_counted, set: true }
     record:
       subject: the year the hall emptied
       options:

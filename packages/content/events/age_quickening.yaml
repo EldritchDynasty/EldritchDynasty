@@ -49,8 +49,6 @@ events:
                 The dogs are kept out of the long room and the milk is dealt
                 with in the kitchen, and inside a fortnight it is a thing the
                 house does rather than a thing the house noticed.
-              effects:
-                - { kind: flag, flag: kept_an_early_waking_quiet, set: true }
         - id: mark_it
           label: Mark it. An early waking is worth something at a betrothal.
           outcomes:
@@ -68,7 +66,6 @@ events:
       options:
         record:
           chronicle: A child of this house woke at nine years, and the iron and the milk both turned, in that order.
-          grantsKnowledge: knows_an_early_waking
           effects: []
           claims:
             - { kind: deed, target: { slot: CHILD }, text: "woke at nine, when the iron and the milk both turned" }

@@ -152,8 +152,6 @@ events:
           text: >-
             The child lives, and the midwife asks — carefully, not looking up —
             whether anyone has noticed the iron in that room going dull.
-          effects:
-            - { kind: flag, flag: signs_noticed, set: true }
 
   - id: the_rival_at_court
     title: A Remark at Court

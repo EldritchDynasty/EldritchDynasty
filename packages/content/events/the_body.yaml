@@ -242,7 +242,6 @@ events:
                 keep it to herself. Nobody thinks to. She marries a Bramme
                 carter in 1216.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_who_has_heard_the_rent_book }
                 - { kind: rumour, op: seed, id: rumour_who_reads_the_book_aloud, accuracy: 0.35 }
 
   - id: the_old_wound_in_frostfall
@@ -314,7 +313,6 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: attribute, target: { slot: SICK }, attr: health, delta: 3 }
-                - { kind: knowledge, op: grant, flag: knows_what_a_warranted_trade_looks_like }
             - id: within_the_warrant
               weight: 38
               text: >-
@@ -325,7 +323,6 @@ events:
                 licensed trade actually is: a boundary somebody keeps.
               effects:
                 - { kind: treasury, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_what_a_warranted_trade_looks_like }
         - id: the_physician_is_cheaper
           label: The physician is three and has known this family twenty years.
           outcomes:
@@ -422,7 +419,6 @@ events:
                 those nine days. Four people hear it and one of them is
                 nineteen and will live until 1247.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_was_said_in_the_room }
                 - { kind: rumour, op: seed, id: rumour_who_was_kept_out_of_the_room, accuracy: 0.5 }
         - id: keep_the_custom
           label: Keep the custom. The whole household, as it has always been.

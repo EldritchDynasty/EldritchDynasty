@@ -361,7 +361,6 @@ events:
                 years of that roll and it is still there.
               effects:
                 - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
-                - { kind: knowledge, op: grant, flag: knows_the_wrong_date_on_the_roll }
                 - { kind: rumour, op: seed, id: rumour_the_burial_in_the_hollow_days, accuracy: 0.4 }
         - id: wait_for_the_keeper
           label: Wait until the first of Thaw, and it is done properly.
