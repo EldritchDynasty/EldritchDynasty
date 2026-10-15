@@ -646,6 +646,53 @@ describe('progressive surface reveal (#368)', () => {
 
 
 describe('modal keyboard Tab targets (#1004)', () => {
+  it.each(['removed', 'concealed', 'usable'] as const)('restores usable board focus when the opener is %s (#1727)', (openerState) => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const board = document.createElement('div');
+    board.className = 'board';
+    board.innerHTML = `
+      <div hidden><button>Hidden</button></div>
+      <div inert><button>Inert</button></div>
+      <fieldset disabled><button>Disabled</button></fieldset>
+      <div style="display:none"><button>Concealed</button></div>
+      <div style="visibility:hidden"><button>Invisible</button></div>
+      <details><summary>Details</summary><button>Closed disclosure</button></details>
+      <button tabindex="-1">Not tabbable</button>
+      <button id="refuses-focus">Focus fails</button>
+      <button id="usable-board">Usable</button>
+    `;
+    const opener = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(board, opener, host);
+    opener.focus();
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [h('button', 'Close')]);
+      },
+    }));
+    const failedFocus = vi.spyOn(board.querySelector<HTMLButtonElement>('#refuses-focus')!, 'focus').mockImplementation(() => {});
+    try {
+      app.mount(host);
+      if (openerState === 'removed') opener.remove();
+      if (openerState === 'concealed') opener.hidden = true;
+      app.unmount();
+      callbacks.shift()!(0);
+      expect(document.activeElement).toBe(openerState === 'usable' ? opener : board.querySelector('#usable-board'));
+    } finally {
+      failedFocus.mockRestore();
+      board.remove();
+      opener.remove();
+      host.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('skips disabled controls, hidden inputs, and negative tab indexes', () => {
     const card = document.createElement('section');
     card.innerHTML = `

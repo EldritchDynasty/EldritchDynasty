@@ -58,17 +58,20 @@ function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
   return false;
 }
 
+function usableFocusTarget(element: HTMLElement, root: HTMLElement): boolean {
+  return element.tabIndex >= 0
+    && !element.matches(':disabled')
+    && !element.closest('[hidden], [inert]')
+    && !behindClosedDetails(element, root)
+    && !(element instanceof HTMLInputElement && element.type === 'hidden')
+    && !cssConcealed(element, root);
+}
+
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
   return [...card.querySelectorAll<HTMLElement>(
     'button, summary, [href], input, select, textarea, [tabindex]',
-  )].filter((element) =>
-    element.tabIndex >= 0
-    && !element.matches(':disabled')
-    && !element.closest('[hidden], [inert]')
-    && !behindClosedDetails(element, card)
-    && !(element instanceof HTMLInputElement && element.type === 'hidden')
-    && !cssConcealed(element, card));
+  )].filter((element) => usableFocusTarget(element, card));
 }
 
 export function useModal(card: Ref<HTMLElement | null>, close: () => void): void {
@@ -163,13 +166,17 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
         return;
       }
 
-      if (back?.isConnected && !back.hasAttribute('disabled')) {
+      if (back?.isConnected && usableFocusTarget(back, document.body)) {
         back.focus();
         if (document.activeElement === back) return;
       }
-      document.querySelector<HTMLElement>(
-        '.clock button:not([disabled]), .board button:not([disabled])',
-      )?.focus();
+      // A pane may have folded or become inert while the dialog was open.
+      // Share the trap's visibility rules and keep looking if focus fails.
+      for (const target of document.querySelectorAll<HTMLElement>('.clock button, .board button')) {
+        if (!usableFocusTarget(target, document.body)) continue;
+        target.focus();
+        if (document.activeElement === target) return;
+      }
     });
   });
 }
