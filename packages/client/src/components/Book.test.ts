@@ -12,6 +12,7 @@ import Book from './Book.vue';
 import Entry from './Entry.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
+import Tree from './Tree.vue';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
 import { afterimageName, plateName } from '../lib/book';
@@ -1115,6 +1116,52 @@ describe('recent Chronicle landmark (#1680)', () => {
       expect(w.emitted('open')).toEqual([[]]);
       await w.get('[data-entry="chr_echo"] button.link').trigger('click');
       expect(w.get('[data-entry="chr_act"]').classes()).toContain('marked');
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
+
+describe('household picker group (#1681)', () => {
+  it('keeps the same selected household and filter across reading modes', async () => {
+    const member = {
+      sex: 'female', age: 30, status: 'alive', head: false, awakened: true,
+      expresses: false, madness: 0, attrs: {}, parents: {}, drift: false,
+      record: { attrs: {}, claimedTraits: [], parents: {}, claimed: [] },
+    };
+    const current = {
+      attributes: [], traits: [],
+      halls: [
+        { id: 'seat', name: 'The Seat', isSeat: true, grievance: 0,
+          members: [{ ...member, id: 'seat-person', name: 'Mara' }] },
+        { id: 'cadet', name: 'The North Hall', isSeat: false, grievance: 0,
+          members: [{ ...member, id: 'cadet-person', name: 'Nora' }] },
+      ],
+    } as unknown as SessionView;
+    const saved = JSON.stringify(current);
+    const w = mount(Tree, { props: { view: current, selected: null, proseMode: 'original' } });
+    try {
+      await w.findAll('.halls button')[2]!.trigger('click');
+      await w.get('[data-filter="awakened"]').trigger('click');
+      for (const proseMode of ['original', 'plainenglish', 'original'] as const) {
+        await w.setProps({ proseMode });
+        const group = w.get('.halls[role="group"]');
+        expect(group.attributes('aria-label')).toBe(
+          proseMode === 'plainenglish' ? 'Choose a household' : 'Hall selection');
+        expect(group.findAll('button')[2]!.attributes('aria-pressed')).toBe('true');
+        expect(w.get('[data-filter="awakened"]').attributes('aria-pressed')).toBe('true');
+        expect(w.findAll('.member').map((person) => person.attributes('id')))
+          .toEqual(['member-cadet-person']);
+        expect(w.emitted('select')).toBeUndefined();
+        expect(JSON.stringify(current)).toBe(saved);
+      }
+      await w.setProps({ proseMode: 'plainenglish' });
+      await w.get('.find input').setValue('Nora');
+      await w.get('.matches button').trigger('click');
+      expect(w.emitted('select')).toEqual([['cadet-person']]);
+      await w.setProps({ view: { ...current, halls: [current.halls[0]!] } });
+      expect(w.find('.halls').exists()).toBe(false);
     } finally {
       w.unmount();
     }
