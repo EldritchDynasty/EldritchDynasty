@@ -61,7 +61,7 @@ const showEverythingModel = computed<boolean>({
 </script>
 
 <template>
-  <div class="reading-settings stack">
+  <div class="reading-settings stack" role="group" :aria-label="plainEnglish ? 'Choose how to read' : 'Reading preferences'">
     <label class="small">
       {{ plainEnglish ? 'How big the text is' : 'Text size' }}
       <select v-model="textScaleModel">

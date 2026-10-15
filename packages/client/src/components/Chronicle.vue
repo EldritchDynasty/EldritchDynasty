@@ -101,7 +101,7 @@ async function follow(id: string): Promise<void> {
 </script>
 
 <template>
-  <section ref="panel" class="chronicle">
+  <section ref="panel" class="chronicle" :aria-label="plain ? 'Recent Chronicle entries' : 'The chronicle'">
     <!-- The way in to the volume (issue #48). This panel is a rolling window
          on the last sixty entries; everything before it was unreachable from
          any client, in a game that is about what gets written down. -->
