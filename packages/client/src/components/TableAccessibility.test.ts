@@ -83,6 +83,59 @@ describe('Table marriage and paper labels in Plain English (#1735)', () => {
   });
 });
 
+describe('Table marriage pledge controls (#1184)', () => {
+  it('explains each lot, respects eligibility, and preserves pledge and withdrawal orders across modes', async () => {
+    const table = { ...fixture(), auction: {
+      year: 1100, lots: 2, lowestReserve: 400, heirlooms: [],
+      items: [
+        { id: 'book-lot', kind: 'spellbook', name: 'Ash Grammar', seller: 'House Marrow',
+          saleYear: 1100, reserve: 400, bid: { currency: 'marriage_promise' },
+          marriagePromise: { available: true, signer: 'Daveed', term: 40 } },
+        { id: 'ring-lot', kind: 'heirloom', name: 'The Iron Ring', seller: 'House Wick',
+          saleYear: 1100, reserve: 500,
+          marriagePromise: { available: false, reason: 'the house has already promised a granddaughter', term: 40 } },
+      ],
+    } } as unknown as TableView;
+    const snapshot = structuredClone(table);
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table, land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    try {
+      const lots = w.findAll('.lot');
+      const original = () => w.get('button[aria-label="Pledge a granddaughter for Ash Grammar from House Marrow"]');
+      expect(original().text()).toBe('Pledge a granddaughter');
+      expect(original().attributes('aria-describedby')).toBe('pledge-terms-book-lot');
+      expect(w.get('#pledge-terms-book-lot').text()).toContain('Daveed may pledge a future granddaughter to House Marrow.');
+      expect(w.get('#pledge-terms-book-lot').text()).toContain('40 years of the sale.');
+      expect(lots[0]!.text()).toContain('the hand of a future granddaughter');
+      expect(w.text()).toContain('The house has set no ceiling; its named bids below still stand.');
+      expect(lots[1]!.get('button[aria-label*="Pledge a granddaughter"]').attributes('disabled')).toBeDefined();
+      await lots[1]!.get('button[aria-label*="Pledge a granddaughter"]').trigger('click');
+      expect(order).not.toHaveBeenCalled();
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      const pledge = w.get('button[aria-label="Offer a future granddaughter in marriage for Ash Grammar from House Marrow"]');
+      expect(pledge.text()).toBe('Offer a future granddaughter in marriage');
+      expect(w.get('#pledge-terms-book-lot').text()).toContain('40 years of the auction.');
+      expect(w.get('#pledge-terms-book-lot').text()).toContain('one reputation level');
+      expect(lots[0]!.text()).toContain('a future granddaughter in marriage');
+      expect(w.text()).toContain('Your bids for individual lots still apply.');
+      expect(lots[1]!.get('button[aria-label*="Offer a future granddaughter"]').attributes('disabled')).toBeDefined();
+      await pledge.trigger('click');
+      expect(order).toHaveBeenCalledExactlyOnceWith({ kind: 'lotBid', lot: 'book-lot', bid: { currency: 'marriage_promise' } });
+
+      await w.setProps({ proseMode: 'original' });
+      expect(original().text()).toBe('Pledge a granddaughter');
+      await lots[0]!.findAll('button').find((b) => b.text() === 'Withdraw')!.trigger('click');
+      expect(order.mock.calls[1]).toEqual([{ kind: 'lotBid', lot: 'book-lot', bid: null }]);
+      expect(table).toEqual(snapshot);
+    } finally { w.unmount(); }
+  });
+});
+
 describe('Table accessible region names (#1670)', () => {
   it.each([false, true])('switches names for wardship boughtBack=%s without mutating or ordering', async (boughtBack) => {
     const table = fixture(boughtBack);
