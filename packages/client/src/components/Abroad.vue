@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
-import type { ProseMode } from '@ed/schema';
+import type { ProseMode, TaleForm } from '@ed/schema';
 import { accountsOf } from '../lib/tales';
 
 const props = withDefaults(defineProps<{ view: SessionView; proseMode?: ProseMode }>(), {
   proseMode: 'original',
 });
+
+const PLAIN_TALE_FORMS: Record<TaleForm, string> = {
+  song: 'song',
+  doctrine: 'teachings',
+  rival_chronicle: "rival house's Chronicle",
+  rhyme: 'rhyme',
+  play: 'play',
+  footnote: 'footnote',
+  charm: 'charm',
+};
 
 /**
  * The core already selects the authored tale text. This counter-record's
@@ -17,8 +27,8 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   noTales: 'Nobody has shared a story about this family yet.',
   contested: 'Two accounts describe the same event. Neither is the official record.',
   retold: (count: number) => 'retold ' + count + (count === 1 ? ' time' : ' times') + '; the story has changed',
-  attribution: (form: string, teller: string, since: number) =>
-    'Type: ' + form + ' · Told by: ' + teller + ' · First shared in ' + since,
+  attribution: (form: TaleForm, teller: string, since: number) =>
+    'Type: ' + (PLAIN_TALE_FORMS[form] ?? form) + ' · Told by: ' + teller + ' · First shared in ' + since,
   secretsHeading: 'Secrets outside the house',
   noSecrets: 'No secrets are known to have left the house.',
   secretMove: (year: number, house: string) => 'took this secret to ' + house + ' in ' + year + '.',

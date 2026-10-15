@@ -121,6 +121,43 @@ function allMembers(view: SessionView): { hall: HallView; member: MemberView }[]
 }
 
 describe('the family tree as a planning board (#268)', () => {
+  it.each([0, 0.2, 0.99, 1, 3.6])('reports grievance %s honestly without resetting the tree (#1722)', async (grievance) => {
+    const current = largeView();
+    current.halls[1]!.grievance = grievance;
+    // One person matches the selected hall and filter; a second remains in the data.
+    current.halls[1]!.members = [person({ id: 'candidate', name: 'Candidate', head: true }),
+      person({ id: 'other', name: 'Other' })];
+    const snapshot = structuredClone(current);
+    const wrapper = mount(Tree, { props: { view: current, selected: 'candidate' } });
+    try {
+      await wrapper.get('.filters [data-filter="head"]').trigger('click');
+      await wrapper.findAll('.halls button')[2]!.trigger('click');
+      expect(renderedIds(wrapper)).toEqual(['candidate']);
+      const heading = () => wrapper.get('.hall h3').text();
+      const value = grievance < 1 ? 'less than 1' : String(Math.round(grievance));
+      if (grievance > 0) expect(heading()).toContain('grievance ' + value);
+      else expect(heading()).not.toContain('grievance');
+      const original = wrapper.text();
+      const emitted = JSON.stringify(wrapper.emitted());
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(heading()).toContain('1 person shown');
+      if (grievance > 0) {
+        expect(heading()).toContain('unresolved complaints: ' + (grievance < 1 ? 'under 1' : value));
+      } else expect(heading()).not.toContain('unresolved complaints:');
+      expect(renderedIds(wrapper)).toEqual(['candidate']);
+      expect(wrapper.get('[data-filter="head"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.findAll('.halls button')[2]!.attributes('aria-pressed')).toBe('true');
+      expect(wrapper.get('#member-candidate').classes()).toContain('open');
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(current).toEqual(snapshot);
+      expect(JSON.stringify(wrapper.emitted())).toBe(emitted);
+      await wrapper.get('[data-filter="all"]').trigger('click');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(heading()).toContain('2 people shown');
+    } finally { wrapper.unmount(); }
+  });
+
   it('switches tree navigation to Plain English without resetting search, filters or people (#1618)', async () => {
     const current = largeView();
     const saved = structuredClone(current);
