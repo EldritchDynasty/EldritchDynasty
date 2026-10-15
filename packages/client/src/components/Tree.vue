@@ -380,7 +380,7 @@ watch(() => props.reveal?.token, () => {
          are households inside the player's house, and crowding is per hall —
          so "show me one of them" is a real question and not an arbitrary
          slice. -->
-    <div v-if="view.halls.length > 1" class="wrap halls">
+    <div v-if="view.halls.length > 1" class="wrap halls" role="group" :aria-label="plain ? 'Choose a household' : 'Hall selection'">
       <button
         class="small"
         :class="{ on: hallFilter === 'all' }"

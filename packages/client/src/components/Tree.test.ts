@@ -1026,3 +1026,37 @@ describe('known Age mood and generation-question onset (#1580)', () => {
     expect(app).toContain('{{ view.generationArc.question }}');
   });
 });
+
+
+describe('household picker group (#1681)', () => {
+  it('keeps the same selected household and filter across reading modes', async () => {
+    const current = largeView();
+    const saved = structuredClone(current);
+    const wrapper = mount(Tree, { props: { view: current, selected: null, proseMode: 'original' } });
+    try {
+      await wrapper.findAll('.halls button')[2]!.trigger('click');
+      await wrapper.get('[data-filter="awakened"]').trigger('click');
+      const selectedIds = renderedIds(wrapper);
+      expect(selectedIds.length).toBeGreaterThan(0);
+      for (const proseMode of ['original', 'plainenglish', 'original'] as const) {
+        await wrapper.setProps({ proseMode });
+        const group = wrapper.get('.halls[role="group"]');
+        expect(group.attributes('aria-label')).toBe(
+          proseMode === 'plainenglish' ? 'Choose a household' : 'Hall selection');
+        expect(group.findAll('button')[2]!.attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('[data-filter="awakened"]').attributes('aria-pressed')).toBe('true');
+        expect(renderedIds(wrapper)).toEqual(selectedIds);
+        expect(wrapper.emitted('select')).toBeUndefined();
+        expect(current).toEqual(saved);
+      }
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      await wrapper.get('.find input').setValue('Member 018');
+      await wrapper.get('.matches button').trigger('click');
+      expect(wrapper.emitted('select')).toEqual([['p018']]);
+      await wrapper.setProps({ view: { ...current, halls: [current.halls[0]!] } });
+      expect(wrapper.find('.halls').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});

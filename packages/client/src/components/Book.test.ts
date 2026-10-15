@@ -1087,3 +1087,36 @@ describe('reader-local Chronicle annotations (#1434)', () => {
   });
 
 });
+
+
+describe('recent Chronicle landmark (#1680)', () => {
+  it('renames the region live while preserving saved pages, interludes and volume navigation', async () => {
+    const frame = [{ eventId: 'whisper', year: 1108, text: 'The first account was heard.' }] as FrameEntry[];
+    const view = { chronicle: BOOK, campaign: { endYear: 1542 } } as unknown as SessionView;
+    const saved = JSON.stringify({ view, frame });
+    const w = mount(Chronicle, {
+      props: { view, frame, actions: readsOver(BOOK), proseMode: 'original' },
+    });
+    try {
+      for (const proseMode of ['original', 'plainenglish', 'original'] as const) {
+        await w.setProps({ proseMode });
+        const title = proseMode === 'plainenglish' ? 'Recent Chronicle entries' : 'The chronicle';
+        expect(w.get('section.chronicle').attributes('aria-label')).toBe(title);
+        expect(w.get('.top > span').text()).toBe(title);
+        expect(w.findAll('[data-entry]').map((page) => page.attributes('data-entry')))
+          .toEqual(['chr_echo', 'chr_other', 'chr_act']);
+        expect(w.text()).toContain('The market had not forgotten.');
+        expect(w.get('.entry.frame p').text()).toBe(frame[0]!.text);
+        expect(w.get('.frame-year').text()).toBe('1108');
+        expect(w.emitted('open')).toBeUndefined();
+        expect(JSON.stringify({ view, frame })).toBe(saved);
+      }
+      await w.get('.top button').trigger('click');
+      expect(w.emitted('open')).toEqual([[]]);
+      await w.get('[data-entry="chr_echo"] button.link').trigger('click');
+      expect(w.get('[data-entry="chr_act"]').classes()).toContain('marked');
+    } finally {
+      w.unmount();
+    }
+  });
+});
