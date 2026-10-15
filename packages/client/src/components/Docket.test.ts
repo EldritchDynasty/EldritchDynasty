@@ -522,7 +522,7 @@ describe('the docket draws what it is handed', () => {
       await multi.get('.party input[type="checkbox"]').setValue(true);
       expect(multi.get('.cast legend').text()).toBe('1 named');
       await multi.setProps({ proseMode: 'plainenglish' });
-      expect(multi.get('.party').attributes('aria-label')).toBe('Select people for WHO');
+      expect(multi.get('.party').attributes('aria-label')).toBe('Select people for who');
       expect((multi.get('.party input[type="checkbox"]').element as HTMLInputElement).checked).toBe(true);
       expect(multi.get('.cast legend').text()).toBe('1 selected');
       expect(multi.get('.choices button').attributes('disabled')).toBeUndefined();
