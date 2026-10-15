@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { createGame, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import { createProseModeSelector } from './lib/prose-selection';
+import { appShellCopy, clockBlockers } from './lib/app-shell-copy';
 import Start from './components/Start.vue';
 import Prologue from './components/Prologue.vue';
 import Standing from './components/Standing.vue';
@@ -66,6 +67,7 @@ const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 
 /** Reading choices are local to this device and must not alter a saved world. */
 const accessibility = ref(loadAccessibility(readingStorage()));
+const shellCopy = computed(() => appShellCopy(accessibility.value.proseMode));
 // Presentation mode lives with the reader, not the saved world. Restoring
 // the preference must fetch the optional catalogue just like a live toggle.
 // Merely setting the mode leaves a restarted Plain English reader seeing
@@ -374,14 +376,11 @@ const waiting = computed(() => docket.value.length > 0 || (view.value?.namesWant
  * arriving in 1045 is what a naming queue looks like from the outside when
  * nothing says how many are in it.
  */
-const blocking = computed(() => {
-  const decisions = docket.value.length;
-  const children = view.value?.namesWanted.length ?? 0;
-  const parts: string[] = [];
-  if (decisions) parts.push(`${decisions} decision${decisions === 1 ? '' : 's'}`);
-  if (children) parts.push(`${children} ${children === 1 ? 'child' : 'children'} waiting`);
-  return parts.join(' · ');
-});
+const blocking = computed(() => clockBlockers(
+  accessibility.value.proseMode,
+  docket.value.length,
+  view.value?.namesWanted.length ?? 0,
+));
 
 /** The two changes that otherwise happen outside a screen reader's cursor. */
 const yearAndBirths = computed(() => {
@@ -444,7 +443,7 @@ const yearAndBirths = computed(() => {
     <div v-if="revealNotices.length" class="reveal-notices" aria-live="polite">
       <p v-for="notice in revealNotices" :key="notice.id" class="panel small reveal-note">
         <span>{{ notice.text }}</span>
-        <button class="quiet small" @click="dismissReveal(notice.id)">Dismiss</button>
+        <button class="quiet small" @click="dismissReveal(notice.id)">{{ shellCopy.noticeDismiss }}</button>
       </p>
     </div>
 
@@ -454,8 +453,8 @@ const yearAndBirths = computed(() => {
 
     <!-- WHAT THESE YEARS MAKE VALUABLE (#216). No Age name or onset date:
          this is the household's actionable reading from inside the years. -->
-    <aside v-if="view.agePressures.length" class="age-pressures panel" aria-label="What matters in these years">
-      <h3 class="label">In these years</h3>
+    <aside v-if="view.agePressures.length" class="age-pressures panel" :aria-label="shellCopy.ageRegion">
+      <h3 class="label">{{ shellCopy.ageHeading }}</h3>
       <ul class="small">
         <li v-for="pressure in view.agePressures" :key="pressure">{{ pressure }}</li>
       </ul>
@@ -466,10 +465,10 @@ const yearAndBirths = computed(() => {
         <!-- ONE QUESTION, ONE ANSWER (issue #213). This is framing, not a
              docket item: it never stops the clock and promises no outcome. -->
         <section v-if="view.generationArc" class="panel generation-arc">
-          <p class="label">This generation <span class="dim small">· since {{ view.generationArc.opened }}</span></p>
+          <p class="label">{{ shellCopy.generationHeading }} <span class="dim small">· {{ shellCopy.generationSince }} {{ view.generationArc.opened }}</span></p>
           <p class="generation-question">{{ view.generationArc.question }}</p>
           <details v-if="view.generationArc.previous">
-            <summary class="dim small">What became of the last question</summary>
+            <summary class="dim small">{{ shellCopy.previousQuestion }}</summary>
             <p class="small">{{ view.generationArc.previous.answer }}</p>
           </details>
         </section>
@@ -516,29 +515,29 @@ const yearAndBirths = computed(() => {
         <Ambition :view="view" :actions="actions" :prose-mode="accessibility.proseMode" />
 
         <div class="panel clock">
-          <h3 class="label">The clock</h3>
+          <h3 class="label">{{ shellCopy.clockHeading }}</h3>
           <div class="wrap">
-            <button :disabled="waiting" @click="actions.advance(1)">A year</button>
+            <button :disabled="waiting" @click="actions.advance(1)">{{ shellCopy.advanceOne }}</button>
             <button
               v-if="isRevealed('clock-five')"
               :disabled="waiting"
               :title="blocking"
               @click="actions.advance(5)"
-            >Five</button>
+            >{{ shellCopy.advanceFive }}</button>
             <button
               v-if="isRevealed('clock-long')"
               :disabled="waiting"
               :title="blocking"
               @click="actions.advance(25)"
-            >A generation</button>
+            >{{ shellCopy.advanceGeneration }}</button>
             <button
               v-if="isRevealed('clock-long')"
               :disabled="waiting"
               @click="actions.advance(view.campaign.endYear - view.year)"
-            >On, to {{ view.campaign.endYear }}</button>
+            >{{ shellCopy.advanceToYear }} {{ view.campaign.endYear }}</button>
           </div>
           <p v-if="waiting" class="dim small why">
-            {{ blocking }} — the year does not turn until it is answered.
+            {{ blocking }} — {{ shellCopy.waitingSuffix }}
           </p>
         </div>
 
@@ -551,12 +550,12 @@ const yearAndBirths = computed(() => {
           class="quiet small legend"
           :aria-expanded="helpOpen"
           @click="helpOpen = !helpOpen"
-        >{{ helpOpen ? 'Hide reading help' : 'Reading, marks and keys' }}</button>
+        >{{ helpOpen ? shellCopy.helpToggleClose : shellCopy.helpToggleOpen }}</button>
 
         <button
           class="quiet small legend"
           @click="leaveToStart"
-        >Saves &amp; new game</button>
+        >{{ shellCopy.startLink }}</button>
 
         <!-- Not a modal: it has no focus to trap and nothing to answer, and a
              second dialog in a client that just got its first one would be two
@@ -564,7 +563,7 @@ const yearAndBirths = computed(() => {
         <section v-if="helpOpen" class="panel keys">
           <!-- Reading controls first, then the legend a non-visual reader
                needs before meeting the same marks throughout the tree. -->
-          <h3 class="label">Reading</h3>
+          <h3 class="label">{{ shellCopy.helpReading }}</h3>
           <ReadingSettings
             v-model:text-scale="accessibility.textScale"
             v-model:reading-font="accessibility.readingFont"
@@ -575,14 +574,14 @@ const yearAndBirths = computed(() => {
             @update:prose-mode="void selectProseMode($event)"
             :show-progressive-reveal-option="true"
           />
-          <h3 class="label">Marks</h3>
+          <h3 class="label">{{ shellCopy.helpMarks }}</h3>
           <dl class="legend-list">
             <template v-for="m in LEGEND" :key="m.kind">
               <dt :class="m.kind" aria-hidden="true">{{ m.glyph }}</dt>
               <dd class="dim small">{{ m.says }}</dd>
             </template>
           </dl>
-          <h3 class="label">Keys</h3>
+          <h3 class="label">{{ shellCopy.helpKeys }}</h3>
           <dl>
             <template v-for="k in SHORTCUTS" :key="k.keys">
               <dt><kbd>{{ k.keys }}</kbd></dt>
@@ -600,21 +599,21 @@ const yearAndBirths = computed(() => {
             :class="{ on: middle === 'house' && pane !== 'chronicle' }"
             :aria-pressed="middle === 'house' && pane !== 'chronicle'"
             @click="pane = 'house'"
-          >The house</button>
+          >{{ shellCopy.navHouse }}</button>
           <button
             v-if="isRevealed('table')"
             class="quiet small"
             :class="{ on: pane === 'table' }"
             :aria-pressed="pane === 'table'"
             @click="pane = 'table'"
-          >The table</button>
+          >{{ shellCopy.navTable }}</button>
           <button
             v-if="isRevealed('abroad')"
             class="quiet small"
             :class="{ on: pane === 'abroad' }"
             :aria-pressed="pane === 'abroad'"
             @click="pane = 'abroad'"
-          >Abroad</button>
+          >{{ shellCopy.navAbroad }}</button>
           <!-- Only where the columns have stacked. Above the breakpoint the
                chronicle is always on screen and a tab for it would be a
                control that does nothing. -->
@@ -623,7 +622,7 @@ const yearAndBirths = computed(() => {
             :class="{ on: pane === 'chronicle' }"
             :aria-pressed="pane === 'chronicle'"
             @click="pane = 'chronicle'"
-          >The chronicle</button>
+          >{{ shellCopy.navChronicle }}</button>
         </div>
 
         <!-- BELOW THE PANE SWITCHER, not above it, and outside the docket's
