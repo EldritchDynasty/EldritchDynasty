@@ -362,6 +362,7 @@ const counts = computed(() => ({
           <button
             v-for="c in centuries"
             :key="c"
+            :aria-label="plain ? `Show Chronicle entries from ${c}` : `Read the book from ${c}`"
             class="quiet small"
             :class="{ on: from === c }"
             :aria-pressed="from === c"
