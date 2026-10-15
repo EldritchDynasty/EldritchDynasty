@@ -36,6 +36,16 @@ function readingStorage(): Storage | null {
 /** A live reader preference, without rewriting event text or recorded decisions. */
 const plain = computed(() => props.proseMode === 'plainenglish');
 
+/** Display wording only; slot keys remain the exact authored identifiers in `cast`. */
+function readerSlot(slot: string): string {
+  return plain.value ? slot.toLowerCase().replace(/_/g, ' ') : slot;
+}
+
+/** Story metadata is an ID, not prose. Keep it for actions and Original copy. */
+function readerArc(arc: string): string {
+  return plain.value ? arc.replace(/^arc_/, '').replace(/_/g, ' ') : arc;
+}
+
 /**
  * A repeated decision remains a decision. This is only the reader's marginal
  * mark that the authored scene has appeared before; filled names are not part
@@ -346,17 +356,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       </p>
 
       <div v-if="decision.arcStep" class="dim small arc">
-        {{ plain ? 'Part of the story:' : 'part of' }} {{ decision.arcStep.instance.arc }}<span v-if="decision.arcStep.absent">{{ plain ? ' — one person is absent' : ' — and one of them is gone' }}</span>
+        {{ plain ? 'Part of the story:' : 'part of' }} {{ readerArc(decision.arcStep.instance.arc) }}<span v-if="decision.arcStep.absent">{{ plain ? ' — one person is absent' : ' — and one of them is gone' }}</span>
       </div>
 
       <div v-for="req in decision.cast" :key="req.slot" class="cast row">
         <label class="dim small">
-          {{ req.slot }}
+          {{ readerSlot(req.slot) }}
           <span v-if="req.count"> ({{ req.count.min }}–{{ req.count.max }})</span>
           <span v-else-if="req.optional">{{ plain ? ' (optional)' : ' (may stand empty)' }}</span>
         </label>
 
-        <fieldset v-if="req.count" class="party" :aria-label="plain ? 'Select people for ' + req.slot : 'Name people for ' + req.slot">
+        <fieldset v-if="req.count" class="party" :aria-label="plain ? 'Select people for ' + readerSlot(req.slot) : 'Name people for ' + req.slot">
           <legend class="dim small">{{ party(req.slot).length }} {{ plain ? 'selected' : 'named' }}</legend>
           <label v-for="c in req.candidates" :key="c.id" class="small">
             <input
@@ -369,7 +379,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           </label>
         </fieldset>
 
-        <select v-else @change="fill(req.slot, $event)" :aria-label="(plain ? 'Select a person for ' : 'Choose ') + req.slot">
+        <select v-else @change="fill(req.slot, $event)" :aria-label="plain ? 'Select a person for ' + readerSlot(req.slot) : 'Choose ' + req.slot">
           <option value="">{{ plain ? '— nobody selected —' : '— nobody —' }}</option>
           <option v-for="c in req.candidates" :key="c.id" :value="c.id">
             {{ c.name }}, {{ c.age }}
