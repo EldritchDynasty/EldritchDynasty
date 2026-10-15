@@ -290,7 +290,6 @@ events:
                 on his way through the yard that he had no reason to think of
                 and every reason to remember the answer to.
               effects:
-                - { kind: flag, flag: the_clerk_asked_again, set: true }
                 - { kind: respect, delta: 1 }
         - id: walk_him_down
           label: Take him down and show him the whole of it.

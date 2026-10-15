@@ -484,7 +484,6 @@ events:
                 account of anything anybody has ever brought up this hill. He
                 does not know why he remembers it.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_dogs_and_the_beck }
                 - { kind: relationship, from: household, to: head, sentiment: 4 }
 
   - id: the_ploughs_go_out_late
@@ -559,7 +558,6 @@ events:
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
-                - { kind: knowledge, op: grant, flag: knows_someone_at_wick_reads }
         - id: send_her_to_the_steward
           label: Send her to the steward. This is not a matter for the hall.
           outcomes:
@@ -573,7 +571,6 @@ events:
                 goes the way it goes.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -6 }
-                - { kind: flag, flag: they_taught_their_children_to_read, set: true }
 
   - id: the_forge_fire_in_deepwinter
     title: The Only Warm Building in the Parish

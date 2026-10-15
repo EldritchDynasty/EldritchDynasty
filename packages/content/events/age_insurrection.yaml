@@ -96,7 +96,6 @@ events:
                 use for it later.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: high_justice_at_the_gate, set: true }
             - id: overreached
               weight: 38
               text: >-
@@ -160,7 +159,6 @@ events:
               effects:
                 - { kind: treasury, delta: -16 }
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: sheltered_the_wrong_man, set: true }
         - id: send_him_on
           label: Send them on to Bramme with food and a lantern.
           outcomes:
@@ -228,7 +226,6 @@ events:
                 twice more before the year is out, and by the third copy nobody
                 remembers that anyone was ever asked.
               effects:
-                - { kind: flag, flag: on_the_caster_list, set: true }
                 - { kind: respect, delta: 1 }
         - id: correct_it
           label: Correct it. Nine days is nine days.
@@ -239,8 +236,6 @@ events:
                 The correction arrives, is filed, and is not read by anyone who
                 matters until it matters, at which point it turns out to have
                 been exactly the right nine days to have spent.
-              effects:
-                - { kind: flag, flag: corrected_the_list, set: true }
             - id: too_late
               weight: 45
               text: >-

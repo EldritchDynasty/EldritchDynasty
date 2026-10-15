@@ -233,7 +233,6 @@ events:
                 Nethering. In 1288 a man at Corran pays four crowns for a copy
                 of it and does not say why.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_count_of_the_nine_nights }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 8 }
         - id: bring_him_in
           label: Bring him in. A boy on a wall for nine nights is a story.

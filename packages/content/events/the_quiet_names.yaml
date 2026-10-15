@@ -65,7 +65,6 @@ events:
                 that he does not know, and that he would rather it were not
                 raised at Bramme.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_keeper_does_not_know }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 10 }
     record:
       subject: the fourth petition, and who asked about it
@@ -121,7 +120,6 @@ events:
                 reads.
               effects:
                 - { kind: treasury, delta: -18 }
-                - { kind: knowledge, op: grant, flag: knows_the_second_stone }
         - id: extend_the_churchyard
           label: Leave the chapel. Buy ground at Wick and put the next ones there.
           outcomes:
@@ -480,7 +478,6 @@ events:
                 interesting, and this is the second time.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: declined_the_chapter_house, set: true }
     rumour: { id: rumour_what_the_church_offered, accuracy: 0.4, spread: 2 }
     record:
       subject: what the archdeacon offered and what was done with it
@@ -673,7 +670,6 @@ events:
                 of the Church of the Nine Quiet Names, and nobody here yet
                 knows what that is worth or to whom.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_three_orders }
                 - { kind: relationship, from: { slot: TUTOR }, to: head, sentiment: 12 }
     record:
       subject: the three orders of the nine names

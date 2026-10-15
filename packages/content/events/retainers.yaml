@@ -97,7 +97,6 @@ events:
               effects:
                 - { kind: relationship, from: { slot: MATRIARCH }, to: head, sentiment: -16 }
                 - { kind: attribute, target: { slot: PHYSICIAN }, attr: charm, delta: -3 }
-                - { kind: flag, flag: the_physician_was_in_the_room, set: true }
         - id: open_the_door
           label: Open the door. She is family and the physician is staff.
           outcomes:
@@ -125,7 +124,6 @@ events:
                 eleven years, and the house learns to hear it.
               effects:
                 - { kind: relationship, from: { slot: PHYSICIAN }, to: head, sentiment: -22 }
-                - { kind: flag, flag: opened_the_sickroom, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_dull_iron, accuracy: 0.25 }
     # A Record block on an UNCOMMON template, which the tier allows and almost
     # nothing in this repo uses. The rare tier is capped at 22 a run and
@@ -265,7 +263,6 @@ events:
                 record is for.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: knowledge, op: grant, flag: knows_the_book_went_entire }
         - id: have_him_copy_short
           label: Have him copy it short. Eleven years, ten and a half of them.
           outcomes:
@@ -280,7 +277,6 @@ events:
                 at the place.
               effects:
                 - { kind: relationship, from: { slot: CHRONICLER }, to: head, sentiment: -26 }
-                - { kind: flag, flag: the_short_copy, set: true }
                 # THE DISCREPANCY IS THE TWO DOCUMENTS, not the boast about
                 # them. The copy that goes to Cawdry is short and the original
                 # is still open at the place in this house, and that is true

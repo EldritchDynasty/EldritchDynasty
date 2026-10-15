@@ -379,7 +379,6 @@ events:
               text: It is over quickly.
               effects:
                 - { kind: status, target: { slot: HEAD }, status: dead, cause: the question of the Seal }
-                - { kind: flag, flag: succession_crisis, set: true }
                 - { kind: arc, op: start, arc: arc_the_given_seal }
         - id: concede
           label: Give up the Seal.

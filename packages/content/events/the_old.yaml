@@ -47,7 +47,6 @@ events:
                 this room can look at. It is now written down twice. That is
                 the whole of what has changed and it is not a small change.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_she_remembers_of_1131 }
                 - { kind: relationship, from: { slot: OLD }, to: head, sentiment: 14 }
             - id: she_will_not
               weight: 38
@@ -58,7 +57,6 @@ events:
                 her. She is entirely lucid. She says it once and does not
                 discuss it again in the four years she has left.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_she_was_told_not_to_speak_of_it }
                 - { kind: relationship, from: { slot: OLD }, to: head, sentiment: -6 }
         - id: leave_her_alone
           label: Leave her alone. She is eighty-one.
@@ -71,8 +69,6 @@ events:
                 the chapel floor with her. The four lines in the chronicle are
                 now the only account of 1131 that exists anywhere in the world.
                 Nobody in this family will ever know what the other one said.
-              effects:
-                - { kind: flag, flag: the_1131_account_died_with_her, set: true }
 
   - id: the_old_man_at_the_board
     title: He Is Still Given the Chair
@@ -209,8 +205,6 @@ events:
                 case, faintly unkind, because bynames are given by people who
                 were being funny. It is what he is called in 1600. Nobody by
                 then knows it was a joke.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_the_byname_stuck }
         - id: use_the_ordinal
           label: Use the herald's ordinal. It is what Caster will read.
           outcomes:
@@ -402,8 +396,6 @@ events:
                 bottom in the same hand dated forty years later saying so. It
                 is not a secret. It is the most private thing anybody in this
                 family has ever read and it goes back in the press unmentioned.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_what_was_in_his_press }
             - id: it_is_about_the_house
               weight: 38
               text: >-
@@ -413,7 +405,6 @@ events:
                 came anyway. Nobody at this table knew that anybody outside
                 this house had ever told anybody the truth about it.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_he_was_told_before_he_came }
                 - { kind: rumour, op: seed, id: rumour_what_was_in_the_dead_mans_press, accuracy: 0.35 }
         - id: burn_the_press_out
           label: Burn what is in it unread. A man's press is a man's press.
@@ -428,7 +419,6 @@ events:
                 them ever stops wondering.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
-                - { kind: flag, flag: the_press_was_burned_unread, set: true }
 
   - id: the_place_at_the_board
     title: Filled Without Comment
@@ -499,7 +489,6 @@ events:
                 always say that. It is in the press in 1700 and the singing is
                 not.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_fourth_verse }
                 - { kind: relationship, from: { slot: OLD }, to: head, sentiment: 10 }
         - id: have_her_teach_it
           label: Have her teach it to somebody young, properly.

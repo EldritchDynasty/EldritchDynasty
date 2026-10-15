@@ -9,12 +9,6 @@
     },
     {
       "kind": "flag",
-      "key": "a_warrant_hangs_in_the_hall",
-      "disposition": "read",
-      "reason": "The public-warrant outcome explicitly says licensed practice becomes the cheapest cover the house has ever been offered. Preserve the flag for the later standing/visitor/magic-cover consequence that authored prose promises."
-    },
-    {
-      "kind": "flag",
       "key": "church_holds_a_copy",
       "disposition": "read",
       "reason": "The held inquest outcome explicitly sends the ledger away with the Church. That is durable external evidence with a natural later inquest/record reader, and the branch otherwise has no lasting effect."
@@ -24,30 +18,6 @@
       "key": "church_hostile",
       "disposition": "read",
       "reason": "Defying either widening explicitly makes the Church permanently hostile, a state the Great Rite design says the house carries into later ascension."
-    },
-    {
-      "kind": "flag",
-      "key": "corrected_the_list",
-      "disposition": "read",
-      "reason": "The successful correction outcome explicitly promises that the filed correction becomes 'exactly the right nine days' when it later matters. A future institutional reader must pay off that authored promise."
-    },
-    {
-      "kind": "flag",
-      "key": "declined_the_chapter_house",
-      "disposition": "read",
-      "reason": "The refusal is the second Church refusal in a century and explicitly makes the Church begin to find the house interesting."
-    },
-    {
-      "kind": "flag",
-      "key": "high_justice_at_the_gate",
-      "disposition": "read",
-      "reason": "The outcome explicitly says a Warden will later use the legal word for what the house did. Reserve this flag for that later institutional consequence rather than deleting an authored payoff promise."
-    },
-    {
-      "kind": "flag",
-      "key": "kept_an_early_waking_quiet",
-      "disposition": "read",
-      "reason": "The quiet branch intentionally hides an early waking; a later callback should distinguish concealment from the publicly marked branch so this secrecy has a durable non-money consequence."
     },
     {
       "kind": "flag",
@@ -63,30 +33,6 @@
     },
     {
       "kind": "flag",
-      "key": "never_said_the_quieting_at_home_again",
-      "disposition": "read",
-      "reason": "The close-the-book outcome explicitly says the house says the Quieting at Bramme every year for 211 years without exception. Preserve the flag for the long-lived Church/chapel rule the prose promises."
-    },
-    {
-      "kind": "flag",
-      "key": "on_the_caster_list",
-      "disposition": "read",
-      "reason": "Letting Caster's unsolicited loyalty list stand is a durable political choice and the outcome says the list is copied until consent is forgotten. Reserve the flag for a later institutional consequence that distinguishes being counted."
-    },
-    {
-      "kind": "flag",
-      "key": "opened_the_gate_to_wick",
-      "disposition": "read",
-      "reason": "This flag is the only durable distinction between opening to Wick and being spared versus opening and the hall taking the fever; reserve it for a later household/village reader so the weighted outcome remains meaningfully distinct."
-    },
-    {
-      "kind": "flag",
-      "key": "opened_the_sickroom",
-      "disposition": "read",
-      "reason": "Opening the sickroom creates a witnessed dull-iron incident, a Wick rumour, and eleven years of the physician's silence. Preserve the flag for a later physician/rumour callback that distinguishes this specific exposure."
-    },
-    {
-      "kind": "flag",
       "key": "paid_bracc_whole",
       "disposition": "read",
       "reason": "The paid-whole outcome explicitly promises that Bracc offers this house a quarter-point better rate for the next 140 years. Preserve the flag for the later trade/credit reader needed to make that authored long-term consequence real."
@@ -99,39 +45,9 @@
     },
     {
       "kind": "flag",
-      "key": "sent_the_church_a_copy",
-      "disposition": "read",
-      "reason": "The registrar accepts and leaves with a newly made copy of selected house-book material. That creates durable evidence outside the house and is a natural later Church/record reader, distinct from the local Respect cost."
-    },
-    {
-      "kind": "flag",
-      "key": "sheltered_the_wrong_man",
-      "disposition": "read",
-      "reason": "The losing shelter outcome explicitly leaves the house named in a Cawdry file for two generations. Reserve the flag for a later institutional callback that makes that durable record matter."
-    },
-    {
-      "kind": "flag",
-      "key": "signs_noticed",
-      "disposition": "read",
-      "reason": "The midwife notices dulling iron in the birthing room, a concrete early blood-sign clue with a natural later reader."
-    },
-    {
-      "kind": "flag",
       "key": "steward_left_bitter",
       "disposition": "read",
       "reason": "The leaving steward takes eleven years of knowledge about which rooms are never opened. That is a concrete former-insider exposure risk and a natural later household/secret callback, not merely flavour."
-    },
-    {
-      "kind": "flag",
-      "key": "succession_crisis",
-      "disposition": "read",
-      "reason": "Losing the Head in the Seal challenge creates a distinct succession crisis on top of the given-seal arc."
-    },
-    {
-      "kind": "flag",
-      "key": "the_1131_account_died_with_her",
-      "disposition": "read",
-      "reason": "Leaving the grandmother alone makes the four Chronicle lines the only surviving account of 1131 forever."
     },
     {
       "kind": "flag",
@@ -147,27 +63,9 @@
     },
     {
       "kind": "flag",
-      "key": "the_chantry_was_declined",
-      "disposition": "read",
-      "reason": "This key comes from #341 ranked event something_the_church_wants_more. The decline branch otherwise carries only this memory, and a later Church callback can make refusing the chantry a durable non-money consequence rather than collapsing the choice into prose."
-    },
-    {
-      "kind": "flag",
-      "key": "the_chapel_stayed_shut",
-      "disposition": "read",
-      "reason": "Keeping the anomalous chapel shut is a durable institutional/myth-layer choice. A later Church or house callback should distinguish the family that concealed it rather than letting the flag remain dead."
-    },
-    {
-      "kind": "flag",
       "key": "the_church_sanctioned_the_rite",
       "disposition": "read",
       "reason": "Church sanction is durable institutional permission for the Great Rite and the intended political opposite of defiance."
-    },
-    {
-      "kind": "flag",
-      "key": "the_clerk_asked_again",
-      "disposition": "read",
-      "reason": "This key comes from #341 ranked event what_he_did_with_the_key. The clerk asking again after receiving the short list is a natural later records/Crown callback and gives #341 a remembered institutional consequence without adding another money price."
     },
     {
       "kind": "flag",
@@ -183,39 +81,9 @@
     },
     {
       "kind": "flag",
-      "key": "the_hall_was_counted",
-      "disposition": "read",
-      "reason": "The post-fever hall count is a strong cross-generation human-scale callback: a later household/feast scene can contrast a full or changed hall with the six cold grates, preserving the loss rather than leaving this automatic memory dead."
-    },
-    {
-      "kind": "flag",
-      "key": "the_letter_that_was_never_answered",
-      "disposition": "read",
-      "reason": "Letting the matter close otherwise has no lasting effect, and the outcome explicitly promises a 1290 discovery of a Sarrow letter addressed to the house. Preserve the flag for that concrete later letter/record callback."
-    },
-    {
-      "kind": "flag",
-      "key": "the_match_answered",
-      "disposition": "read",
-      "reason": "The rare counter-offer success is the first opening in a 110-year sequence of impossible Match letters and the house talks about it for a decade. Preserve it for the natural next Match/courtship callback rather than making the 20% branch consequence-free."
-    },
-    {
-      "kind": "flag",
       "key": "the_nine_libraries_burned",
       "disposition": "read",
       "reason": "The mythic burning changes the world's book economy for four hundred years; preserve the world-state marker for later library consequences."
-    },
-    {
-      "kind": "flag",
-      "key": "the_physician_was_in_the_room",
-      "disposition": "read",
-      "reason": "Backing the physician leaves a paid outsider as one of only two people who knows what the third jug did. Preserve that concrete exposure fact for a later physician/house-secret callback rather than reducing the branch to relationship arithmetic."
-    },
-    {
-      "kind": "flag",
-      "key": "the_press_was_burned_unread",
-      "disposition": "read",
-      "reason": "Burning the dead man's papers destroys unique evidence unread; preserve that deliberate loss for later family-record content."
     },
     {
       "kind": "flag",
@@ -225,111 +93,9 @@
     },
     {
       "kind": "flag",
-      "key": "the_short_copy",
-      "disposition": "read",
-      "reason": "The outcome explicitly creates two divergent documents: a short copy at Cawdry and the original still open in the house. Preserve the flag for the later discrepancy/records callback that physical contradiction supports."
-    },
-    {
-      "kind": "flag",
       "key": "the_stair_below_the_turn_bricked",
       "disposition": "read",
       "reason": "Bricking the cellar stair changes the house physically, and the outcome explicitly says somebody unbricks it in 1330. Preserve the flag for that later house/mystery callback rather than losing the only durable marker of the wall."
-    },
-    {
-      "kind": "flag",
-      "key": "the_steward_had_nobody_behind_him",
-      "disposition": "read",
-      "reason": "Refusing a successor is explicitly promised to cost four years and about ninety crowns when the steward dies. Preserve the flag for that authored succession/household callback so the future cost can become real."
-    },
-    {
-      "kind": "flag",
-      "key": "the_witness_went_to_the_parish",
-      "disposition": "read",
-      "reason": "Leaving the last witness to the parish puts her final statements in a curate's written record outside the house. Preserve this as durable external evidence for a later discrepancy/Church reader."
-    },
-    {
-      "kind": "flag",
-      "key": "the_yssene_question_unanswered",
-      "disposition": "read",
-      "reason": "The unanswered descent question is explicitly entered in Yssene's own house record and leaves their reckoning at five generations. Preserve it for the later external-record/descent callback that this outcome creates."
-    },
-    {
-      "kind": "flag",
-      "key": "they_taught_their_children_to_read",
-      "disposition": "read",
-      "reason": "Sending her to the steward explicitly promises that her children learn to read and that one decides a Cawdry boundary case in 1247. Preserve the flag for that concrete future legal callback."
-    },
-    {
-      "kind": "flag",
-      "key": "took_a_deer_across_the_boundary",
-      "disposition": "read",
-      "reason": "Taking the Warden's deer creates an unresolved boundary/legal breach and a rumour with a natural later assize reader."
-    },
-    {
-      "kind": "flag",
-      "key": "waited_out_the_insurrection",
-      "disposition": "read",
-      "reason": "The successful wait outcome otherwise has no lasting effect and explicitly says the marriage terms improve twice before year end. Preserve the flag for the follow-up match consequence rather than turning the 55% success branch into prose only."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_about_the_west_passage",
-      "disposition": "read",
-      "reason": "The maid identifies a specific cold between the fourth and fifth step and has now told the Head. Preserve that concrete house-sign discovery for a later passage/sign investigation rather than collapsing it into relationship alone."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_an_early_waking",
-      "disposition": "read",
-      "reason": "A recorded waking at nine directly concerns the blood and the setting's magic rules. Reserve it for a later generational callback so the family's knowledge of an unusually early waking changes how a later sign is interpreted."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_it_cannot_be_called",
-      "disposition": "read",
-      "reason": "Three failed nights establish a core magic rule: expression cannot be summoned on a schedule."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_she_was_told_not_to_speak_of_it",
-      "disposition": "read",
-      "reason": "The grandmother's refusal reveals a specific unresolved 1131 secret and an earlier generation's imposed silence."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_someone_at_wick_reads",
-      "disposition": "read",
-      "reason": "The literate cottager changes how eleven Wick households understand the posted terms, a durable tenant/legal fact."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_someone_was_asking",
-      "disposition": "read",
-      "reason": "A Braccish-looking stranger paid for information about this family and then stopped asking; preserve the unresolved external inquiry."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_book_went_entire",
-      "disposition": "read",
-      "reason": "The complete copy becomes an irreversible Cawdry record for eight hundred years and is the truthful counterpart to the short-copy discrepancy."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_brokers_list",
-      "disposition": "read",
-      "reason": "The broker's sheets contain thirty years of marriages, grandmothers, and signs, with another copy at Cawdry; preserve this rare evidence corpus."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_byname_stuck",
-      "disposition": "read",
-      "reason": "The byname determines what the man is called centuries later while songs and heraldic ordinals diverge."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_chapel_stone",
-      "disposition": "read",
-      "reason": "The Crusade scene explicitly establishes a myth-layer magic-rule fact: an altar stone older than the chapel that the house did not set there. Reserve it for a later cross-generation reader that narrows this mystery rather than deleting the memory."
     },
     {
       "kind": "knowledge",
@@ -345,129 +111,15 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_count_of_the_nine_nights",
-      "disposition": "read",
-      "reason": "The comet tally is the only Nethering record and explicitly gets bought by a Corran man in 1288."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_dogs_and_the_beck",
-      "disposition": "read",
-      "reason": "The shepherd supplies four years of precise dates about dogs refusing one piece of ground with no explanation."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_drovers_are_worth_asking",
-      "disposition": "read",
-      "reason": "The successful price call explicitly establishes an eleven-year information relationship with the drover."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_edge_follows_the_man",
-      "disposition": "read",
-      "reason": "Moving the expresser proves the dulling iron follows the man rather than the room; the Record tells future heads to remember it."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_fourth_item_is_missing",
-      "disposition": "read",
-      "reason": "The inventory leaves one unexplained wrapping missing with no record of what it held, a concrete physical mystery."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_fourth_verse",
-      "disposition": "read",
-      "reason": "The preserved fourth verse names a place and year nobody can identify and survives after the sung verse disappears."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_keeper_did_not_ask",
-      "disposition": "read",
-      "reason": "The keeper pointedly walks under the birthing-room iron without asking, and the prose calls that omission the part worth noticing."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_keeper_does_not_know",
-      "disposition": "read",
-      "reason": "The keeper admits he has said the fourth petition four thousand times without knowing what it means and asks that it not reach Bramme."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_ninth_was_answered",
-      "disposition": "read",
-      "reason": "Recording that the ninth petition was answered by nobody in the chapel creates a specific supernatural fact in the family's Chronicle, with Church witnesses and a total discrepancy. That is a natural later liturgy/blood reader, not generic Record boilerplate."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_older_register",
-      "disposition": "read",
-      "reason": "The rare-books outcome identifies an Old Ambric heading from an older, unnamed register and the advocate refuses to identify it. That is a concrete unresolved library fact with a natural later research/Church reader, not redundant bookkeeping."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_quire_was_kept",
       "disposition": "read",
       "reason": "The found quire contains four generations of a genealogy that contradicts the heralds while matching the male line exactly. That is a major lineage mystery with an obvious later descent/library reader and should not be deleted as dead bookkeeping."
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_rhyme_from_wick",
-      "disposition": "read",
-      "reason": "The child brings the wrong-order Quiet Names rhyme from Wick, linking village folklore directly to the house's liturgy mysteries."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_rings_in_the_cellar",
-      "disposition": "read",
-      "reason": "Opening the repeatedly bricked cellar reveals a bench, cut drain, and four man-height iron rings, a concrete hidden-house discovery."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_roll_has_seen_them",
-      "disposition": "read",
-      "reason": "Showing all three regalia creates the oldest independent surviving minute of the objects, durable external evidence."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_the_seal_is_gone",
       "disposition": "read",
       "reason": "The quiet-search outcome says the house conducts its affairs for four years without the instrument its standing rests on and only two people know it. That is a concrete ongoing secret with a natural regalia/succession reader, not redundant Record bookkeeping."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_second_stone",
-      "disposition": "read",
-      "reason": "The chapel floor reveals an older stone bearing a name absent from every roll and descent, a concrete lineage mystery."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_signs_are_not_expression",
-      "disposition": "read",
-      "reason": "The daughter produces blood signs while examination finds no expression, leaving contradictory evidence in the press for two centuries."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_signs_disagree",
-      "disposition": "read",
-      "reason": "Buying all three broker readings creates direct proof that common sign theories contradict one another."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_silk_has_no_provenance",
-      "disposition": "read",
-      "reason": "The uncut Yssene silk remains through 1500 as the house's oldest object with no written origin."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_stave_reached_coln",
-      "disposition": "read",
-      "reason": "The licensed beggar proves a house story travelled forty miles to Coln through Wayfolk song."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_tenth_petition",
-      "disposition": "read",
-      "reason": "Proceeding after the answered ninth establishes that an older tenth petition exists and produces no second answer."
     },
     {
       "kind": "knowledge",
@@ -483,75 +135,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_the_wrong_date_on_the_roll",
-      "disposition": "read",
-      "reason": "The Hollow Days burial creates the only wrong date in eleven hundred years of the Wick roll."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_the_yssene_descent",
-      "disposition": "read",
-      "reason": "Answering Yssanne sends the fullest written account of the family line abroad, where the receiving house keeps paper permanently."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_they_are_reading_us",
-      "disposition": "read",
-      "reason": "The archivist warns that the chapter house has requested family pages for four years and schedules the expected-letter follow-up."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_three_orders",
-      "disposition": "read",
-      "reason": "The tutor's sheet proves three orders of the Nine Names disagree, and the prose says nobody yet knows what it is worth or to whom."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_to_copy_the_first_letter_in",
-      "disposition": "read",
-      "reason": "The second-letter technique is explicitly used by the house for four hundred years."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_two_can_wake_together",
-      "disposition": "read",
-      "reason": "The rare event proves two of the blood can wake in one year and explicitly tells future readers this is possible."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_we_read_our_own_paper",
-      "disposition": "read",
-      "reason": "Training an in-house advocate changes who can read the family's contracts and starts thirty years of attention to one clause."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_a_warranted_trade_looks_like",
-      "disposition": "read",
-      "reason": "The healer demonstrates a licensed magic trade's published rate and, crucially, a boundary the practitioner refuses to cross."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_he_was_told_before_he_came",
-      "disposition": "read",
-      "reason": "The dead man's papers reveal outsiders accurately described the family before he joined it, a concrete unresolved exposure fact."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_she_remembers_of_1131",
-      "disposition": "read",
-      "reason": "Writing the grandmother's account adds roughly forty facts beyond the Chronicle, including one the family cannot face."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_the_case_book_holds",
       "disposition": "read",
       "reason": "The physician's case-book contains forty family entries including three truths the house recorded nowhere, and can even be acquired."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_the_drain_is_for",
-      "disposition": "read",
-      "reason": "The cut cellar drain and paid 1211 deposition are concrete physical evidence with an unresolved purpose."
     },
     {
       "kind": "knowledge",
@@ -561,45 +147,9 @@
     },
     {
       "kind": "knowledge",
-      "key": "knows_what_was_in_his_press",
-      "disposition": "read",
-      "reason": "Reading the dead man's private paper preserves a unique personal account that otherwise burns unread and cannot be reconstructed."
-    },
-    {
-      "kind": "knowledge",
       "key": "knows_what_was_never_said",
       "disposition": "read",
       "reason": "The Marrow day-book supplies dated external evidence of the family's unheard conversations, exactly the trace this late-game event exists to reveal."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_was_said_in_the_room",
-      "disposition": "read",
-      "reason": "Keeping the sickroom clear leaves four witnesses to nine days of fever speech, including one who lives until 1247."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_what_wick_says_first",
-      "disposition": "read",
-      "reason": "Thanking the reeve creates a thirty-year unwritten arrangement under which the hall hears Wick's rumours first."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_which_receipts_work",
-      "disposition": "read",
-      "reason": "The physician classifies the still-room book into useful, harmless, and dangerous receipts, durable household medical knowledge beyond the immediate health effect."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_who_has_heard_the_rent_book",
-      "disposition": "read",
-      "reason": "The maid hears every rent figure for nine years before marrying a Bramme carter in 1216, a concrete information-leak state."
-    },
-    {
-      "kind": "knowledge",
-      "key": "knows_who_took_the_doves",
-      "disposition": "read",
-      "reason": "Catching the cottager's boy explicitly hands the matter to the house's low justice with the whole yard watching. Preserve this branch marker for the natural justice/household follow-up the authored outcome points to."
     }
   ]
 }

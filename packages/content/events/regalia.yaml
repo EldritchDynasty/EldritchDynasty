@@ -47,7 +47,6 @@ events:
                 oldest independent account of these objects that exists.
               effects:
                 - { kind: heirloom, op: use, heirloom: the_ninefold_seal, to: HEAD }
-                - { kind: knowledge, op: grant, flag: knows_the_roll_has_seen_them }
         - id: show_the_seal_only
           label: The seal, and a good lunch. The other two are not the Assembly's business.
           outcomes:

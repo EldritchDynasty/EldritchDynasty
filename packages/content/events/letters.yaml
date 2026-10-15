@@ -199,7 +199,6 @@ events:
                 establishes which.
               effects:
                 - { kind: treasury, delta: -9 }
-                - { kind: knowledge, op: grant, flag: knows_to_copy_the_first_letter_in }
         - id: let_it_close
           label: Let it close. Two years of silence is an answer.
           outcomes:
@@ -211,8 +210,6 @@ events:
                 the reply that was or was not written. In 1290 a bundle of
                 letters is found at Sarrow in a factor's effects. One of them
                 is addressed here.
-              effects:
-                - { kind: flag, flag: the_letter_that_was_never_answered, set: true }
 
   - id: news_of_a_death_arrives_late
     title: He Has Been Dead Four Months
@@ -404,7 +401,6 @@ events:
                 everything he hears for the next eleven years.
               effects:
                 - { kind: treasury, delta: 22 }
-                - { kind: knowledge, op: grant, flag: knows_the_drovers_are_worth_asking }
             - id: he_was_wrong
               weight: 32
               text: >-
@@ -505,7 +501,6 @@ events:
                 decade and it happens because a reeve was uncertain and came up
                 a hill anyway.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_wick_says_first }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
         - id: tell_him_it_is_not_his_business
           label: Tell him, kindly, that the hall's business is the hall's.

@@ -221,8 +221,6 @@ events:
                 answer, which is that nobody knows. It is still there in 1500.
                 It is the oldest object in this house whose origin is not
                 written anywhere.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_the_silk_has_no_provenance }
 
   - id: the_tailor_comes_up_from_bramme
     title: He Measures Everybody
@@ -442,7 +440,6 @@ events:
                 a hand nobody recognises as a wrapping, and there is no note
                 anywhere of what it wrapped.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_fourth_item_is_missing }
                 - { kind: relationship, from: { slot: LADY }, to: head, sentiment: 6 }
         - id: write_a_fresh_one
           label: Write a fresh inventory of what is actually there.

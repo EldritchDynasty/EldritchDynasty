@@ -251,7 +251,6 @@ events:
                 that anybody in the Nethering owns.
               effects:
                 - { kind: treasury, delta: -2 }
-                - { kind: knowledge, op: grant, flag: knows_the_signs_disagree }
 
   - id: it_does_not_come_when_called
     title: It Does Not Come When Called
@@ -286,7 +285,6 @@ events:
             - { kind: treasury, delta: -3 }
             - { kind: attribute, target: { slot: TRIER }, attr: health, delta: -4 }
             - { kind: madness, target: { slot: TRIER }, delta: 3 }
-            - { kind: knowledge, op: grant, flag: knows_it_cannot_be_called }
 
   - id: the_smith_and_the_dull_edge
     title: The Smith's Theory

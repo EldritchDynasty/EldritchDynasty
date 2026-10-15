@@ -51,7 +51,6 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: 1 }
-                - { kind: knowledge, op: grant, flag: knows_the_yssene_descent }
         - id: let_it_lie
           label: Let it lie. He will be dead before an answer lands.
           outcomes:
@@ -63,8 +62,6 @@ events:
                 generation. The Yssene house records that the question was put
                 and not answered, because that is what their law does with
                 silence. In their reckoning the descent stands at five.
-              effects:
-                - { kind: flag, flag: the_yssene_question_unanswered, set: true }
 
   - id: a_slight_at_a_door
     title: Who Goes Through First

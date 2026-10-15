@@ -159,8 +159,6 @@ events:
               text: >-
                 A reply comes, and it is two lines long, and it is not a no.
                 It is not a yes either. The house talks about it for a decade.
-              effects:
-                - { kind: flag, flag: the_match_answered, set: true }
 
   - id: a_son_who_carries_nothing
     title: A Son Who Carries Nothing

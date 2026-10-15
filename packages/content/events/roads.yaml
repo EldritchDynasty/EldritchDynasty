@@ -247,7 +247,6 @@ events:
                 Nobody remembers his face and three men remember the weights.
               effects:
                 - { kind: treasury, delta: -4 }
-                - { kind: knowledge, op: grant, flag: knows_someone_was_asking }
             - id: nothing_comes_back
               weight: 40
               text: >-
@@ -357,7 +356,6 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 8 }
-                - { kind: knowledge, op: grant, flag: knows_the_stave_reached_coln }
         - id: the_stocks
           label: Hand him to the reeve. Out of parish is out of parish.
           outcomes:

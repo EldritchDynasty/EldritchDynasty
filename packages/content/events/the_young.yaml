@@ -62,8 +62,6 @@ events:
                 goes. What he does not do is ask, in a house where he has
                 asked about everything else for nineteen years. That is the
                 part worth noticing and nobody in the passage notices it.
-              effects:
-                - { kind: knowledge, op: grant, flag: knows_the_keeper_did_not_ask }
 
   - id: two_in_three_reach_five
     title: The Third of Three
@@ -360,7 +358,6 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 7 }
-                - { kind: knowledge, op: grant, flag: knows_the_rhyme_from_wick }
 
   - id: the_first_boar
     title: The Warden's Deer Are the Warden's
@@ -424,7 +421,6 @@ events:
                 thinks the position is.
               effects:
                 - { kind: treasury, delta: 2 }
-                - { kind: flag, flag: took_a_deer_across_the_boundary, set: true }
                 - { kind: rumour, op: seed, id: rumour_whose_ground_the_boy_shot_on, accuracy: 0.45 }
 
   - id: the_lessons_stop_at_twelve

@@ -132,7 +132,6 @@ events:
                 justice and the low justice is the house's, and everybody in
                 the yard is watching to see which kind of house this is.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_who_took_the_doves }
                 - { kind: relationship, from: household, to: head, sentiment: -4 }
         - id: net_the_cote
           label: Net the cote and stop asking.

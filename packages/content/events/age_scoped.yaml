@@ -210,8 +210,6 @@ events:
             - id: waited
               weight: 55
               text: It does deepen. The terms improve twice more before the year is out.
-              effects:
-                - { kind: flag, flag: waited_out_the_insurrection, set: true }
             - id: lost
               weight: 45
               text: House Marrow was not waiting.

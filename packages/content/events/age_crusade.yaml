@@ -193,14 +193,12 @@ events:
                 roof has been the reason for so long that two of the children
                 believe it.
               effects:
-                - { kind: flag, flag: the_chapel_stayed_shut, set: true }
                 - { kind: respect, delta: -1 }
     record:
       subject: the stone in the chapel
       options:
         record:
           chronicle: The chapel was opened for the third night. The stone in it is older than the chapel and this house did not set it there.
-          grantsKnowledge: knows_the_chapel_stone
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: 'keeps an altar stone older than the chapel, which this house did not set there' }
@@ -285,7 +283,6 @@ events:
                 has said the price.
               effects:
                 - { kind: respect, delta: -1 }
-                - { kind: flag, flag: sent_the_church_a_copy, set: true }
     record:
       subject: what the Church was given
       options:

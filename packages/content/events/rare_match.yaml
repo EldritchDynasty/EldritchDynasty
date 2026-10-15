@@ -134,7 +134,6 @@ events:
                 somebody who was asking a different question.
               effects:
                 - { kind: treasury, delta: -40 }
-                - { kind: knowledge, op: grant, flag: knows_the_brokers_list }
                 - { kind: respect, delta: 1 }
             - id: she_keeps_a_copy
               weight: 45
@@ -147,7 +146,6 @@ events:
                 name on it.
               effects:
                 - { kind: treasury, delta: -40 }
-                - { kind: knowledge, op: grant, flag: knows_the_brokers_list }
         - id: send_her_away
           label: Send her away. This family is not a subject of study.
           outcomes:
@@ -170,7 +168,6 @@ events:
             A broker out of Cawdry offered us thirty years of her own working
             papers, and she called seven of nine before the weddings, and we
             sent her away with them.
-          grantsKnowledge: knows_the_brokers_list
           effects: []
           claims:
             - { kind: deed, target: { slot: BROKER }, text: offered thirty years of working papers that called seven marriages in nine }

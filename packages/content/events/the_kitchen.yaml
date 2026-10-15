@@ -203,7 +203,6 @@ events:
                 picture of what this household treats and how often.
               effects:
                 - { kind: treasury, delta: -3 }
-                - { kind: knowledge, op: grant, flag: knows_which_receipts_work }
                 - { kind: attribute, target: household, attr: health, delta: 1 }
         - id: keep_it_in_the_press
           label: Keep it in the press. It has done for four generations.

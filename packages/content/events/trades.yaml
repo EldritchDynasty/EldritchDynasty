@@ -475,7 +475,6 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: career, target: { slot: KIN }, op: assign, career: advocate }
-                - { kind: knowledge, op: grant, flag: knows_we_read_our_own_paper }
         - id: keep_hiring
           label: Keep hiring. A stranger who is paid is a stranger who leaves.
           outcomes:

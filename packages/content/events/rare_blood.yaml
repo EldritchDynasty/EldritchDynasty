@@ -67,7 +67,6 @@ events:
               effects:
                 - { kind: madness, target: { slot: FIRST }, delta: 9 }
                 - { kind: madness, target: { slot: SECOND }, delta: 9 }
-                - { kind: knowledge, op: grant, flag: knows_two_can_wake_together }
                 - { kind: relationship, from: { slot: SECOND }, to: { slot: FIRST }, sentiment: -18 }
             - id: it_holds
               weight: 38
@@ -79,7 +78,6 @@ events:
               effects:
                 - { kind: madness, target: { slot: SECOND }, delta: 6 }
                 - { kind: respect, delta: 2 }
-                - { kind: knowledge, op: grant, flag: knows_two_can_wake_together }
         - id: send_one_out
           label: Send the second to the smaller house before anyone counts.
           outcomes:
@@ -105,7 +103,6 @@ events:
             entry we hold and in no book we have found. Whoever reads this
             after us should know that it is possible and that we did not know
             it was.
-          grantsKnowledge: knows_two_can_wake_together
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -177,7 +174,6 @@ events:
                 loud, then or ever, and one of them tells a daughter on a
                 deathbed in 1191.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_edge_follows_the_man }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: -12 }
             - id: it_follows_him
               weight: 38
@@ -187,7 +183,6 @@ events:
                 kitchen has stopped putting knives on the board when he eats
                 and has not been told to.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_edge_follows_the_man }
                 - { kind: madness, target: { slot: KIN }, delta: 8 }
                 - { kind: rumour, op: seed, id: rumour_the_knives_off_the_board, accuracy: 0.7 }
     record:
@@ -198,7 +193,6 @@ events:
             Iron went soft in the east chamber and then in whatever room he
             sat in, and it was not the room. Whoever holds this house after us
             should stop rebuilding rooms.
-          grantsKnowledge: knows_the_edge_follows_the_man
           effects:
             - { kind: respect, delta: -1 }
           claims:
@@ -255,7 +249,6 @@ events:
                 press for two hundred years disagreeing with each other, and
                 the note is the one the heralds are shown.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_the_signs_are_not_expression }
                 - { kind: relationship, from: { slot: DAUGHTER }, to: head, sentiment: -14 }
             - id: she_carries_it
               weight: 34
@@ -267,7 +260,6 @@ events:
                 and been right about three.
               effects:
                 - { kind: trait, target: { slot: DAUGHTER }, trait: sign_of_the_blood, op: add }
-                - { kind: knowledge, op: grant, flag: knows_the_signs_are_not_expression }
                 - { kind: respect, delta: 1 }
         - id: send_her_to_coln
           label: Send her to Coln for a year. Let the counting stop.
@@ -294,7 +286,6 @@ events:
             The signs were on a daughter of this house and not a son, and the
             midwife found nothing in her, and both of those are true at once
             and we do not know what to do with that.
-          grantsKnowledge: knows_the_signs_are_not_expression
           effects: []
           claims:
             - { kind: deed, target: { slot: DAUGHTER }, text: showed the signs while the midwife found nothing in her }
@@ -627,7 +618,6 @@ events:
                 deposition in 1211 as ordinary yard waste. He is paid for the
                 deposition. He is not lying in it, exactly.
               effects:
-                - { kind: knowledge, op: grant, flag: knows_what_the_drain_is_for }
                 - { kind: treasury, delta: -6 }
                 - { kind: rumour, op: seed, id: rumour_the_drain_below_the_stair, accuracy: 0.5 }
         - id: brick_the_turn
@@ -653,7 +643,6 @@ events:
             The hounds would not pass the turn in the cellar stair, so we went
             down, and there is a cut drain at the bottom of it with a fall to
             it, and we do not know what this house cut it for.
-          grantsKnowledge: knows_what_the_drain_is_for
           effects: []
           claims:
             - { kind: deed, target: { slot: HEAD }, text: went below the cellar turn the hounds refused and found a cut drain there }
@@ -708,7 +697,6 @@ events:
                 anybody can write down.
               effects:
                 - { kind: madness, target: { slot: SAYER }, delta: 16 }
-                - { kind: knowledge, op: grant, flag: knows_the_tenth_petition }
             - id: nothing_further
               weight: 45
               text: >-
@@ -718,7 +706,6 @@ events:
                 household agrees without discussion to have imagined.
               effects:
                 - { kind: madness, target: { slot: SAYER }, delta: 6 }
-                - { kind: knowledge, op: grant, flag: knows_the_tenth_petition }
         - id: close_the_book
           label: Close the book. Nine is what the Church gives and nine is enough.
           outcomes:
@@ -732,7 +719,6 @@ events:
                 two hundred and eleven years, without one exception.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: flag, flag: never_said_the_quieting_at_home_again, set: true }
                 - { kind: rumour, op: seed, id: rumour_why_they_go_down_to_bramme, accuracy: 0.35 }
     record:
       subject: what answered the ninth petition
@@ -742,7 +728,6 @@ events:
             The ninth petition was answered in our own chapel by nobody who
             was in it, and four of us heard it, and each of the four says it
             was his own voice.
-          grantsKnowledge: knows_the_ninth_was_answered
           effects:
             - { kind: respect, delta: -1 }
           claims:
