@@ -403,6 +403,7 @@ onMounted(() => { void refreshSaves(); });
             class="quiet small"
             :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary"
             @click="requestRemoveLibraryRun(run.id)"
+          :aria-label="plain ? `Remove ${run.house} from completed games` : `Remove ${run.house}`"
           >Remove</button>
           <div
             v-else
