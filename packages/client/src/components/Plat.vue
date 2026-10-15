@@ -306,7 +306,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
               </template>
               <template v-else>
                 {{ item.name }}
-                <button v-if="item.parcel" class="quiet rename" @click="startNaming(item)">{{ plain ? 'change name' : 'rename' }}</button>
+                <button v-if="item.parcel" class="quiet rename" :aria-label="(plain ? 'Change name of ' : 'Rename ') + item.name" @click="startNaming(item)">{{ plain ? 'change name' : 'rename' }}</button>
               </template>
             </td>
             <td>{{ stateWord(item.state) }}</td>
