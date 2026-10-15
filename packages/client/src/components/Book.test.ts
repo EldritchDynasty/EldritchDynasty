@@ -1294,6 +1294,9 @@ describe('Chronicle century jump accessible names (#1733)', () => {
       expect(jump()[1]!.attributes('aria-label')).toBe('Read the book from 1100');
       expect(jump()[1]!.attributes('aria-pressed')).toBe('true');
       expect(jump().map((b) => b.text())).toEqual(['1000', '1100', '1200']);
+      await w.findAll('.jump button')[0]!.trigger('click');
+      expect(w.find('[data-entry="old"]').exists()).toBe(true);
+      expect(jump()[1]!.attributes('aria-pressed')).toBe('false');
     } finally {
       w.unmount();
     }
