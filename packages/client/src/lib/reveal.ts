@@ -1,4 +1,5 @@
 import type { SessionView, TableView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 
 export const REVEAL_ELEMENTS = [
   'clock-five',
@@ -42,12 +43,22 @@ const LABELS: Record<RevealElement, string> = {
   'clock-long': 'The longer clock is open: a generation, or on to the term.',
 };
 
+/** Only the reader's temporary reveal notices change language, never run state. */
+const PLAIN_LABELS: Record<RevealElement, string> = {
+  'clock-five': 'You can now move forward five years at once.',
+  table: 'Family orders are now available. Use the Table to manage resources and make plans.',
+  assize: 'You can now see how the wider world is responding to your family.',
+  ladder: 'You can now see the family\'s progress toward greater power.',
+  abroad: 'You can now read stories and rumours about the family from outside the house.',
+  'clock-long': 'You can now move forward a generation or to the end of the game.',
+};
+
 function validElement(value: unknown): value is RevealElement {
   return typeof value === 'string' && (REVEAL_ELEMENTS as readonly string[]).includes(value);
 }
 
-export function revealNotice(element: RevealElement): string {
-  return LABELS[element];
+export function revealNotice(element: RevealElement, mode: ProseMode = 'original'): string {
+  return (mode === 'plainenglish' ? PLAIN_LABELS : LABELS)[element];
 }
 
 /**
