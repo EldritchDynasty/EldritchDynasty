@@ -167,7 +167,7 @@ describe('Table reader-local action labels (#1683–#1685)', () => {
       ]);
       await w.setProps({ proseMode: 'original' });
       expect(w.text()).toContain('The shelf');
-      expect(w.get('select[aria-label="Choose a reader for Ash Grammar"]').element.value).toBe('child-1');
+      expect((w.get('select[aria-label="Choose a reader for Ash Grammar"]').element as HTMLSelectElement).value).toBe('child-1');
       expect(button('Set them reading')).toBeDefined();
       expect(button('Pay the 10')).toBeDefined();
     } finally { w.unmount(); }
