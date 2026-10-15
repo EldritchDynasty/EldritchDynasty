@@ -254,7 +254,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
         <button class="quiet small" @click="close()">{{ plain ? 'Close' : 'Close it' }}</button>
       </header>
       <p class="dim small">
-        {{ houseName }} — {{ land.held.length }} held, {{ land.lost.length }} lost.
+        {{ houseName }} — {{ land.held.length }} {{ plain ? (land.held.length === 1 ? 'parcel held' : 'parcels held') : 'held' }}, {{ land.lost.length }} {{ plain ? (land.lost.length === 1 ? 'parcel lost' : 'parcels lost') : 'lost' }}.
         {{ plain ? 'Each box represents one parcel, not its actual size.' : 'A record, drawn to scale of nothing but itself.' }}
       </p>
 
@@ -290,7 +290,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
           <text x="10" y="20" class="cell-name">{{ cell.name }}</text>
           <text v-if="cell.acres !== undefined" x="10" y="38" class="cell-acres">{{ cell.acres }} acres</text>
           <text x="10" :y="CELL_H - 10" class="cell-state">{{ stateWord(cell.state) }}</text>
-          <text v-if="cell.contestedBy" x="10" y="56" class="cell-claim">claimed by {{ cell.contestedBy }}</text>
+          <text v-if="cell.contestedBy" x="10" y="56" class="cell-claim">{{ plain ? 'Also claimed by' : 'claimed by' }} {{ cell.contestedBy }}</text>
         </g>
       </svg>
       <p v-else class="small dim">{{ plain ? 'The house has no land recorded here.' : 'The house holds no ground at all.' }}</p>
@@ -302,9 +302,9 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
         <caption class="said-not-shown">{{ plain ? 'Details of all land the house holds or has lost.' : 'Every parcel the house holds or has lost, in the same order as the drawing.' }}</caption>
         <thead>
           <tr>
-            <th scope="col">Name</th>
+            <th scope="col">{{ plain ? 'Parcel name' : 'Name' }}</th>
             <th scope="col">{{ plain ? 'Status' : 'State' }}</th>
-            <th scope="col">Place</th>
+            <th scope="col">{{ plain ? 'Location' : 'Place' }}</th>
             <th scope="col">{{ plain ? 'Details' : 'Particulars' }}</th>
           </tr>
         </thead>
