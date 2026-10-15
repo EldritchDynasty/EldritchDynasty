@@ -14,6 +14,7 @@ import Member from './Member.vue';
 import { LEGEND, MARKS, markSays } from '../lib/marks';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
+import { RespectTierS, TaleFormS, type RespectTier, type TaleForm } from '@ed/schema';
 
 function view(): SessionView {
   return {
@@ -171,6 +172,55 @@ describe('save status in reader-local Plain English (#1651)', () => {
 });
 
 describe('Standing reader-local Plain English (#1439)', () => {
+  it('explains every current and previous reputation rank without changing their values (#1720)', async () => {
+    const labels: Record<RespectTier, string> = {
+      unknown: 'Not known', known: 'Known', regarded: 'Well regarded',
+      eminent: 'Highly respected', exalted: 'Held in the highest esteem',
+    };
+    for (const [index, tier] of RespectTierS.options.entries()) {
+      const previous = RespectTierS.options[(index + 1) % RespectTierS.options.length]!;
+      const current = { ...view(), respect: tier };
+      const jump: StandingDelta = { treasury: 0, discontent: 0, clauses: 0,
+        respect: { from: previous, to: tier } };
+      const snapshot = structuredClone({ current, jump });
+      const wrapper = mount(Standing, { props: { view: current, jump, saveStatus: 'idle' } });
+      try {
+        const rank = () => wrapper.findAll('.house-ledger dd')[1]!.text();
+        const original = wrapper.text();
+        expect(rank()).toBe(`${tier} (was ${previous})`);
+        await wrapper.setProps({ proseMode: 'plainenglish' });
+        expect(rank()).toBe(`${labels[tier]} (was ${labels[previous]})`);
+        await wrapper.setProps({ proseMode: 'original' });
+        expect(wrapper.text()).toBe(original);
+        expect({ current, jump }).toEqual(snapshot);
+        expect(wrapper.emitted()).toEqual({});
+      } finally { wrapper.unmount(); }
+    }
+  });
+
+  it.each([0, 1, 3])('identifies %i learned spells without claiming physical books (#1721)', async (spells) => {
+    const current = view();
+    current.ascension.foremost = { ...current.ascension.foremost!, spells, power: 42.4 };
+    const snapshot = structuredClone(current);
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle' } });
+    try {
+      const original = `power 42 of 100 · ${spells} ${spells === 1 ? 'book' : 'books'}`;
+      expect(wrapper.get('.ladder-measure').text()).toBe(original);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.ladder-measure').text()).toBe(
+        `Power 42 out of 100 · ${spells} learned ${spells === 1 ? 'spell' : 'spells'}`,
+      );
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.get('.ladder-measure').text()).toBe(original);
+      await wrapper.setProps({ proseMode: 'plainenglish', showLadder: false });
+      expect(wrapper.find('.ladder-measure').exists()).toBe(false);
+      await wrapper.setProps({ showLadder: true,
+        view: { ...current, ascension: { ...current.ascension, foremost: undefined } } });
+      expect(wrapper.find('.ladder-measure').exists()).toBe(false);
+      expect(current).toEqual(snapshot);
+    } finally { wrapper.unmount(); }
+  });
+
   it('explains the same resource quantities using direct labels and glossary copy (#1616)', async () => {
     const current = view();
     const snapshot = structuredClone(current);
@@ -197,7 +247,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
         'How much unrest is building inside the family and on its land.',
         'How many parts of the old bargain the family has found.',
       ]);
-      expect(values()).toEqual(originalValues);
+      expect(values()).toEqual([originalValues[0], 'Well regarded', ...originalValues.slice(2)]);
       expect(wrapper.get('.save[role="status"]').text()).toBe('Game saved.');
       expect(current).toEqual(snapshot);
 
@@ -235,7 +285,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.text()).toContain('Highest level reached · Hierophant, reached in 1114.');
       expect(wrapper.text()).toContain('Daveed has watched over the house since 1063.');
       expect(wrapper.get('.house-ledger').text()).toContain('252 crowns');
-      expect(wrapper.get('.ladder-measure').text()).toContain('Power 42 out of 100 · 3 books');
+      expect(wrapper.get('.ladder-measure').text()).toContain('Power 42 out of 100 · 3 learned spells');
       expect(JSON.stringify(current)).toBe(before);
       await wrapper.setProps({ proseMode: 'original' });
       expect(wrapper.text()).toBe(original);
@@ -264,7 +314,7 @@ describe('Standing reader-local Plain English (#1439)', () => {
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('.year').text()).toContain('Generation 4');
       expect(wrapper.get('.age .name').text()).toBe('Long Peace · since 1103');
-      expect(wrapper.get('.ladder-measure').text()).toBe('Power 42 out of 100 · 3 books');
+      expect(wrapper.get('.ladder-measure').text()).toBe('Power 42 out of 100 · 3 learned spells');
       expect(wrapper.get('.rung').text()).toContain('Maren — can advance to the next level.');
       expect(wrapper.get('.rung').text()).toContain('Highest level reached · Hierophant, reached in 1114.');
       expect(wrapper.get('.run-number button').text()).toBe('Hide run number');
@@ -572,6 +622,45 @@ describe('naming draft lifetime (#1319)', () => {
 /** A retelling count is reader-facing, not a new interpretation of a tale.
  * Keep these mounted assertions in the existing measured client test suite. */
 describe('counter-record prose selection and retelling grammar (#1430)', () => {
+  it('labels every tale form while preserving contradictory accounts in both modes (#1719)', async () => {
+    const labels: Record<TaleForm, string> = {
+      song: 'song', doctrine: 'teachings', rival_chronicle: "rival house's Chronicle",
+      rhyme: 'rhyme', play: 'play', footnote: 'footnote', charm: 'charm',
+    };
+    const current = { ...view(), tales: TaleFormS.options.map((form, index) => ({
+      id: 'tale-' + form, about: 'one-event', form, teller: 'Teller ' + index,
+      text: index % 2 ? 'The northern road was open.' : 'The northern road was closed.',
+      bias: 'Account ' + index, since: 1100 + index, mutations: index,
+    })) };
+    const snapshot = structuredClone(current);
+    const wrapper = mount(Abroad, { props: { view: current, proseMode: 'original' } });
+    try {
+      const evidence = () => wrapper.findAll('.tale').map((tale) =>
+        [tale.get('.text').text(), tale.get('.bias').text()]);
+      const original = wrapper.text();
+      const originalEvidence = evidence();
+      expect(wrapper.findAll('.account')).toHaveLength(1);
+      expect(wrapper.get('.contested').text()).toBe('Two accounts of the same thing. Neither of them is the record.');
+      for (const tale of current.tales) {
+        expect(original).toContain(`${tale.form} · told by ${tale.teller} · since ${tale.since}`);
+      }
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      for (const tale of current.tales) {
+        expect(wrapper.text()).toContain(`Type: ${labels[tale.form]} · Told by: ${tale.teller} · First shared in ${tale.since}`);
+      }
+      expect(wrapper.text()).not.toContain('rival_chronicle');
+      expect(wrapper.text()).toContain('retold 1 time; the story has changed');
+      expect(wrapper.text()).toContain('retold 6 times; the story has changed');
+      expect(wrapper.get('.contested').text()).toBe('Two accounts describe the same event. Neither is the official record.');
+      expect(evidence()).toEqual(originalEvidence);
+      expect(wrapper.findAll('.account')).toHaveLength(1);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(current).toEqual(snapshot);
+      expect(wrapper.emitted()).toEqual({});
+    } finally { wrapper.unmount(); }
+  });
+
   it('formats one and many retellings in both modes and leaves tale evidence untouched', async () => {
     const tales = [
       { id: 'letter', about: 'north_road', form: 'letter',

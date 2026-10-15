@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
-import type { ProseMode } from '@ed/schema';
+import type { ProseMode, RespectTier } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 
@@ -22,6 +22,16 @@ const props = withDefaults(defineProps<{
 });
 
 const plain = computed(() => props.proseMode === 'plainenglish');
+const PLAIN_RESPECT: Record<RespectTier, string> = {
+  unknown: 'Not known',
+  known: 'Known',
+  regarded: 'Well regarded',
+  eminent: 'Highly respected',
+  exalted: 'Held in the highest esteem',
+};
+function respectLabel(tier: RespectTier): string {
+  return plain.value ? PLAIN_RESPECT[tier] : tier;
+}
 const copy = computed(() => plain.value ? {
   world: {
     resents: 'The wider world is putting pressure on the house.',
@@ -254,10 +264,10 @@ const muster = computed(() => {
         <div>
           <dt>{{ plain ? 'Reputation' : 'Standing' }}</dt>
           <dd>
-            <span :class="{ delta: moved?.respect }">{{ view.respect }}</span><span
+            <span :class="{ delta: moved?.respect }">{{ respectLabel(view.respect) }}</span><span
               v-if="moved?.respect"
               class="delta"
-            > (was {{ moved.respect.from }})</span>
+            > (was {{ respectLabel(moved.respect.from) }})</span>
           </dd>
         </div>
         <div>
@@ -327,7 +337,9 @@ const muster = computed(() => {
       <div v-if="view.ascension.foremost" class="dim small ladder-measure">
         {{ plain ? 'Power' : 'power' }} {{ Math.round(view.ascension.foremost.power) }} {{ plain ? 'out of' : 'of' }} 100 ·
         {{ view.ascension.foremost.spells }}
-        {{ view.ascension.foremost.spells === 1 ? 'book' : 'books' }}
+        {{ plain
+          ? (view.ascension.foremost.spells === 1 ? 'learned spell' : 'learned spells')
+          : (view.ascension.foremost.spells === 1 ? 'book' : 'books') }}
       </div>
       <!-- THE HIGH-WATER MARK. Invariant 14 keeps exactly one number across a
            Long Line — "a family that made a Hierophant once made one" —
