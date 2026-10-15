@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ChronicleEntry } from '@ed/core';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
