@@ -329,7 +329,7 @@ function verifiedDuplicateOriginalStarts(src: string, file?: string): Set<number
             // A checked Original is solely a drift assertion only if this case,
             // the keyed renderer and its template agree. No fuzzy text matching.
             if (ts.isStringLiteral(key) && ts.isStringLiteral(original)
-              && ts.isCaseClause(enclosing) && ts.isStringLiteral(enclosing.expression)
+              && enclosing !== undefined && ts.isCaseClause(enclosing) && ts.isStringLiteral(enclosing.expression)
               && enclosing.expression.text === key.text
               && original.text === expected.text
               && messages.get(key.text) === expected.text) {
