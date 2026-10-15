@@ -910,12 +910,13 @@ describe('reader-local Table guidance (#1441)', () => {
       await wrapper.setProps({ land, refusal, proseMode: 'original' });
       expect(wrapper.text()).toContain('Most now, and longest remembered.');
       expect(wrapper.text()).toContain(refusal.reason);
+      expect(wrapper.findAll('button').some((b) => b.attributes('aria-pressed') === 'true' && b.text() === 'Rack')).toBe(true);
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.text()).toContain('Highest rent now, with lasting resentment.');
       expect(wrapper.text()).toContain('A tutoring term costs');
       expect(wrapper.text()).toContain(refusal.reason);
       expect(wrapper.text()).not.toContain('Most now, and longest remembered.');
-      expect(wrapper.findAll('button').some((b) => b.attributes('aria-pressed') === 'true' && b.text() === 'Rack')).toBe(true);
+      expect(wrapper.findAll('button').some((b) => b.attributes('aria-pressed') === 'true' && b.text() === 'Highest rent')).toBe(true);
     } finally {
       wrapper.unmount();
     }
