@@ -119,7 +119,8 @@ interface GiftError {
   operation: 'give' | 'recall';
 }
 const giftError = ref<GiftError | null>(null);
-function giftErrorText(error: GiftError): string {
+function giftErrorText(error: GiftError | null): string {
+  if (!error) return '';
   if (error.reason) return error.reason;
   if (error.operation === 'give') {
     return plain.value ? 'Could not give this land to the hall.' : 'The land could not be endowed.';
