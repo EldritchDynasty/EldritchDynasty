@@ -2102,3 +2102,37 @@ describe('front-door Library and save accessibility in both registers (#410)', (
   });
 
 });
+
+
+describe('named exports announce their saved-game slot (#1732)', () => {
+  it('distinguishes two exports across reading modes without changing export payloads', async () => {
+    const actions = spyActions([
+      { slot: 'oak-house', year: 1080 },
+      { slot: 'ash-house', year: 1112 },
+    ]);
+    const w = mount(Start, { props: { actions, resumable: false, proseMode: 'original' } });
+    const exports = () => w.findAll('.saved li > button:last-of-type');
+    try {
+      await flush();
+      expect(exports().map((button) => button.text())).toEqual(['Copy out', 'Copy out']);
+      expect(exports().map((button) => button.attributes('aria-label')))
+        .toEqual(['Copy out saved run oak-house', 'Copy out saved run ash-house']);
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(exports().map((button) => button.text())).toEqual(['Export', 'Export']);
+      expect(exports().map((button) => button.attributes('aria-label')))
+        .toEqual(['Export saved game oak-house', 'Export saved game ash-house']);
+      await exports()[0]!.trigger('click');
+      await flush();
+      await exports()[1]!.trigger('click');
+      expect(actions.exportSave).toHaveBeenNthCalledWith(1, 'oak-house');
+      expect(actions.exportSave).toHaveBeenNthCalledWith(2, 'ash-house');
+
+      await w.setProps({ proseMode: 'original' });
+      expect(exports().map((button) => button.attributes('aria-label')))
+        .toEqual(['Copy out saved run oak-house', 'Copy out saved run ash-house']);
+    } finally {
+      w.unmount();
+    }
+  });
+});
