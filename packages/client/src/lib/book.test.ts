@@ -236,6 +236,36 @@ describe('the plate', () => {
     expect(plateSubtitle([], 'all')).toContain('nothing yet');
   });
 
+  it('uses the same Plain English lens names in image subtitles as in the reader controls (#1706)', () => {
+    const items = [entry({ year: 1100 }), entry({ year: 1400 })];
+    const labels = {
+      all: 'all entries',
+      blank: 'blank entries',
+      improved: 'changed entries',
+      illuminated: 'highlighted entries',
+    } as const;
+    for (const lens of Object.keys(labels) as Array<keyof typeof labels>) {
+      const plain = plateSubtitle(items, lens, 'plainenglish');
+      expect(plain).toBe(`2 entries · 1100–1400 · ${labels[lens]}`);
+      expect(plateSubtitle(items, lens, 'original'))
+        .toBe(plateSubtitle(items, lens));
+      const svg = plateSvg(plateRows(items, monospace), 'House', plain);
+      expect(svg).toContain(plain);
+    }
+    expect(plateSubtitle([], 'all', 'plainenglish')).toBe('no entries yet · all entries');
+    expect(plateSubtitle([], 'all')).toBe('nothing yet · the whole book');
+    expect(plateName('House', items)).toBe('house-1100-1400.png');
+  });
+
+  it('passes one snapshot of the current image caption to PNG and SVG export paths (#1706)', () => {
+    const source = readFileSync(join(import.meta.dirname, '../components/Book.vue'), 'utf8');
+    expect(source).toContain('const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);');
+    expect(source).toContain('plateSvg(rows, houseName, plateCaption)');
+    expect(source).toContain('c.fillText(plateCaption, PLATE.pad, 88)');
+    expect(source).not.toContain('plateSubtitle(entries, lens.value)');
+    expect(source).toContain('PLAIN_LENS_LABELS[l.id]');
+  });
+
   it('names the file after the house and the years', () => {
     expect(plateName('The House of Salt', [entry({ year: 1042 }), entry({ year: 1542 })]))
       .toBe('the-house-of-salt-1042-1542.png');
