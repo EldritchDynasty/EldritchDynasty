@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { MARKS, type Mark, madnessMark, markSays } from '../lib/marks';
+import { ageLabel } from '../lib/age';
 
 type MemberView = SessionView['halls'][number]['members'][number];
 
@@ -161,7 +162,7 @@ const mentionPages = computed(() =>
            and the whole table is printed in the visible Marks legend that a
            thumb can open. -->
       <span class="marks">
-        <span class="dim"><span aria-hidden="true">{{ member.sex === 'female' ? '♀' : '♂' }}</span><span class="said-not-shown">{{ member.sex === 'female' ? 'woman' : 'man' }}, </span> {{ member.age }}</span>
+        <span class="dim"><span aria-hidden="true">{{ member.sex === 'female' ? '♀' : '♂' }}</span><span class="said-not-shown">{{ member.sex === 'female' ? 'woman' : 'man' }}, </span> <span aria-hidden="true">{{ member.age }}</span><span class="said-not-shown">{{ ageLabel(member.age) }}</span></span>
         <span
           v-for="mark in marks"
           :key="mark.kind"

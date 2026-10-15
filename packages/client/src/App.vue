@@ -26,7 +26,7 @@ import Book from './components/Book.vue';
 import Plat from './components/Plat.vue';
 import Line from './components/Line.vue';
 import ReadingSettings from './components/ReadingSettings.vue';
-import { SHORTCUTS, isControl, isField, shortcutFor } from './lib/keys';
+import { shortcutHelp, isControl, isField, shortcutFor } from './lib/keys';
 import { LEGEND, markSays } from './lib/marks';
 import {
   applyAccessibility,
@@ -68,6 +68,7 @@ const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 /** Reading choices are local to this device and must not alter a saved world. */
 const accessibility = ref(loadAccessibility(readingStorage()));
 const shellCopy = computed(() => appShellCopy(accessibility.value.proseMode));
+const readerShortcuts = computed(() => shortcutHelp(accessibility.value.proseMode));
 // Presentation mode lives with the reader, not the saved world. Restoring
 // the preference must fetch the optional catalogue just like a live toggle.
 // Merely setting the mode leaves a restarted Plain English reader seeing
@@ -584,7 +585,7 @@ const yearAndBirths = computed(() => {
           </dl>
           <h3 class="label">{{ shellCopy.helpKeys }}</h3>
           <dl>
-            <template v-for="k in SHORTCUTS" :key="k.keys">
+            <template v-for="k in readerShortcuts" :key="k.keys">
               <dt><kbd>{{ k.keys }}</kbd></dt>
               <dd class="dim small">{{ k.does }}</dd>
             </template>
