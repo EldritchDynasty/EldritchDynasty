@@ -16,6 +16,8 @@
  * `touch.test.ts` fails the build on a `title` whose text has no other route
  * to the player, so a seventh mark cannot arrive the way the first six did.
  */
+import type { ProseMode } from '@ed/schema';
+
 export type MarkKind = 'seal' | 'expresses' | 'carries' | 'madness' | 'drift' | 'given';
 
 export interface Mark {
@@ -39,6 +41,25 @@ export const MARKS: Readonly<Record<MarkKind, Mark>> = {
   drift: { kind: 'drift', glyph: '✎', says: 'the record and the person do not agree' },
   given: { kind: 'given', glyph: '⊘', says: 'given to the rite' },
 };
+
+/** Plain English reader copy only. Glyphs, meaning and game state never change. */
+const PLAIN_SAYS: Readonly<Record<MarkKind, string>> = {
+  seal: 'Leads the family',
+  expresses: 'Awakened: this person can use the Power',
+  carries: 'Awakened: this person carries the Power but cannot use it',
+  madness: 'How strongly the Power has affected this person',
+  drift: 'The written record differs from this person',
+  given: 'Was sacrificed in a rite',
+};
+
+/** One identity and one rendering path for both the card's accessible mark and help legend. */
+export function markSays(kind: MarkKind, mode: ProseMode = 'original', madness?: number): string {
+  if (kind === 'madness' && madness !== undefined) {
+    const amount = Math.round(madness);
+    return mode === 'plainenglish' ? `Power's effects: ${amount}` : `madness ${amount}`;
+  }
+  return mode === 'plainenglish' ? PLAIN_SAYS[kind] : MARKS[kind].says;
+}
 
 /** The legend, in the order they are worth learning in. */
 export const LEGEND: readonly Mark[] = [
