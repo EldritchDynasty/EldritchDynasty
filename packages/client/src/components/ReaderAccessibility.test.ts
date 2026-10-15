@@ -5,10 +5,10 @@ import { computed, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import type { ProseMode } from '@ed/schema';
 import type { SessionView } from '@ed/core';
-import Member from './components/Member.vue';
-import Cast from './components/Cast.vue';
-import { ageLabel } from './lib/age';
-import { SHORTCUTS, shortcutFor, shortcutHelp } from './lib/keys';
+import Member from './Member.vue';
+import Cast from './Cast.vue';
+import { ageLabel } from '../lib/age';
+import { SHORTCUTS, shortcutFor, shortcutHelp } from '../lib/keys';
 
 describe('reader shortcut explanations (#1708)', () => {
   it('preserves every displayed key and Original explanation', () => {
@@ -42,7 +42,7 @@ describe('reader shortcut explanations (#1708)', () => {
   });
 
   it('binds shortcuts to the live reading mode while preserving the marks legend from #1704', () => {
-    const app = readFileSync(new URL('./App.vue', import.meta.url), 'utf8');
+    const app = readFileSync('packages/client/src/App.vue', 'utf8');
     expect(app).toContain('shortcutHelp(accessibility.value.proseMode)');
     expect(app).toContain('v-for="k in readerShortcuts"');
     expect(app).toContain('v-for="m in LEGEND"');
