@@ -86,8 +86,10 @@ function playSample(
 /**
  * Scheduled/manual paired-seed measurement.
  *
- * 48 seeds means 576 Short-Line answer-runs for the current four-by-three
- * Examination. Registration in scheduled CI belongs to #451's checked
+ * 96 seeds means 1,152 Short-Line answer-runs for the current four-by-three
+ * Examination. The original 48-seed prefix is retained; #1741 widens the
+ * evidence rather than relaxing the paired equivalence bounds.
+ * Registration in scheduled CI belongs to #451's checked
  * evidence inventory; keeping that wiring out of this PR avoids two owners
  * editing the same cadence registry at once.
  */
@@ -105,7 +107,7 @@ export function gateSigning(
     return { ok: false, lines: ['gate signing: FAIL: shipped prologue has no Examination'] };
   }
 
-  const seeds = opts.seeds ?? Array.from({ length: 48 }, (_, index) => 20_000 + index * 17);
+  const seeds = opts.seeds ?? Array.from({ length: 96 }, (_, index) => 20_000 + index * 17);
   const years = opts.years ?? campaignDef('short').years;
   const samples: SigningSample[] = [];
 
