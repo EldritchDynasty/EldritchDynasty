@@ -54,7 +54,9 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
            phone or a desk monitor either. Drawn only where there is a branch
            behind it: a button on a leaf would offer to root the tree at
            itself. -->
-      <button v-if="kids.length" class="quiet small root" @click="$emit('root', member.id)">
+      <button v-if="kids.length" class="quiet small root"
+        :aria-label="proseMode === 'plainenglish' ? `Show only ${member.name}'s family branch` : `Only the branch from ${member.name}`"
+        @click="$emit('root', member.id)">
         {{ proseMode === 'plainenglish' ? 'Show only this family branch ▸' : 'Only this branch ▸' }}
       </button>
     </div>
