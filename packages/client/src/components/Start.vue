@@ -438,6 +438,7 @@ onMounted(() => { void refreshSaves(); });
             class="quiet small"
             :disabled="exportingSlots.has(save.slot)"
             @click="exportSave(save.slot)"
+            :aria-label="plain ? `Export saved game ${save.slot}` : `Copy out saved run ${save.slot}`"
           >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
             {{ displayError(saveActionError.message) }}
