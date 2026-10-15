@@ -87,7 +87,7 @@ function setBidCeiling(): void {
 /**
  * A BID ON ONE LOT (issue #1183). The ceiling above is what the house will
  * spend on a sale it has not looked at; these are the lots, named, and the
- * house's own offer on each — crowns, or an heirloom traded for it. The
+ * house's own offer on each — crowns, an heirloom, or a marriage pledge. The
  * engine refuses what the house cannot honour and voids, at the sale, what it
  * no longer can.
  */
@@ -282,6 +282,9 @@ const MARRIAGE_ORDERS = [
         <template v-if="table.bidCeiling > 0">
           {{ local('The house will go to', 'The house will bid up to') }} {{ table.bidCeiling }} {{ local('at the next sale.', 'crowns at the next auction.') }}
         </template>
+        <template v-else-if="table.auction?.items.some((lot) => lot.bid)">
+          {{ local('The house has set no ceiling; its named bids below still stand.', 'No automatic maximum has been set. Your bids for individual lots still apply.') }}
+        </template>
         <template v-else>{{ local('The house has not said what it will spend, so it will not bid.', 'No maximum bid has been set. The house will not bid at the auction.') }}</template>
       </p>
       <p v-if="table.auction" class="small dim">
@@ -301,7 +304,7 @@ const MARRIAGE_ORDERS = [
         </p>
         <p v-if="lot.bid" class="small dim">
           {{ local('The house has bid', 'Current bid:') }}
-          {{ lot.bid.currency === 'coin' ? `${lot.bid.amount} crowns` : lot.bid.name }} {{ local('for it.', 'for this lot.') }}
+          {{ lot.bid.currency === 'coin' ? `${lot.bid.amount} crowns` : lot.bid.currency === 'heirloom' ? lot.bid.name : local('the hand of a future granddaughter', 'a future granddaughter in marriage') }} {{ local('for it.', 'for this lot.') }}
         </p>
         <div class="row">
           <input
@@ -322,6 +325,24 @@ const MARRIAGE_ORDERS = [
           >
             {{ local('Withdraw', 'Withdraw bid') }}
           </button>
+        </div>
+        <div v-if="lot.marriagePromise" class="pledge">
+          <p :id="`pledge-terms-${lot.id}`" class="small dim blurb">
+            <template v-if="lot.marriagePromise.available">
+              {{ lot.marriagePromise.signer }} {{ local('may pledge a future granddaughter to', 'can promise a future granddaughter to') }} {{ lot.seller }}.
+              {{ local('If the bid wins, a granddaughter born after the sale must marry into that house within', 'If you win, a granddaughter born after this auction must marry into that family within') }}
+              {{ lot.marriagePromise.term }} {{ local('years of the sale.', 'years of the auction.') }}
+              {{ local('Keeping her back or letting the pledge expire costs a tier of Respect and an inherited grudge.', 'Withholding her or missing the deadline loses one reputation level and creates a grudge against your family and its descendants.') }}
+            </template>
+            <template v-else>{{ lot.marriagePromise.reason }}</template>
+          </p>
+          <button
+            class="small"
+            :disabled="!lot.marriagePromise.available"
+            :aria-label="plain ? `Offer a future granddaughter in marriage for ${lot.name} from ${lot.seller}` : `Pledge a granddaughter for ${lot.name} from ${lot.seller}`"
+            :aria-describedby="`pledge-terms-${lot.id}`"
+            @click="submitAuctionOrder({ kind: 'lotBid', lot: lot.id, bid: { currency: 'marriage_promise' } })"
+          >{{ local('Pledge a granddaughter', 'Offer a future granddaughter in marriage') }}</button>
         </div>
       </div>
       <p v-if="refusedIn('lotBid')" class="small rubric">{{ refusedIn('lotBid') }}</p>
