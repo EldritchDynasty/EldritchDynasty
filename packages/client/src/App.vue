@@ -27,7 +27,7 @@ import Plat from './components/Plat.vue';
 import Line from './components/Line.vue';
 import ReadingSettings from './components/ReadingSettings.vue';
 import { SHORTCUTS, isControl, isField, shortcutFor } from './lib/keys';
-import { LEGEND } from './lib/marks';
+import { LEGEND, markSays } from './lib/marks';
 import {
   applyAccessibility,
   loadAccessibility,
@@ -579,7 +579,7 @@ const yearAndBirths = computed(() => {
           <dl class="legend-list">
             <template v-for="m in LEGEND" :key="m.kind">
               <dt :class="m.kind" aria-hidden="true">{{ m.glyph }}</dt>
-              <dd class="dim small">{{ m.says }}</dd>
+              <dd class="dim small">{{ markSays(m.kind, accessibility.proseMode) }}</dd>
             </template>
           </dl>
           <h3 class="label">{{ shellCopy.helpKeys }}</h3>
