@@ -77,7 +77,7 @@ const tideWord = computed(() => {
     <h3 class="label">{{ local('The muster', 'Troops and war commitments') }}</h3>
     <p class="small">
       {{ commitment.men }} {{ plain ? (commitment.men === 1 ? 'troop' : 'troops') : (commitment.men === 1 ? 'man' : 'men') }} {{ local('in the field since', 'serving since') }} {{ commitment.began }},
-      {{ local('of a house that could field', 'out of a maximum of') }} {{ commitment.maxMen }}.
+      {{ local('of a house that could field', 'compared with the family\'s standard levy of') }} {{ commitment.maxMen }}.
     </p>
     <p class="small dim">{{ local('The tide runs', 'War progress is') }} {{ tideWord }}. {{ local('Credit earned so far:', 'War credit earned so far:') }} {{ commitment.credit.toFixed(1) }}.</p>
 
