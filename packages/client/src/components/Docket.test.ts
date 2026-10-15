@@ -511,16 +511,30 @@ describe('the docket draws what it is handed', () => {
     const counted = decisionWithObservedLine();
     if (counted.kind !== 'choice') throw new Error('expected castable choice');
     Object.assign(counted.cast[0]!, { count: { min: 1, max: 2 } });
+    const multiActions = spyActions();
     const multi = mount(Docket, {
-      props: { decision: counted, actions: spyActions() as unknown as GameActions, proseMode: 'original' },
+      props: { decision: counted, actions: multiActions as unknown as GameActions, proseMode: 'original' },
     });
     try {
       expect(multi.get('.party').attributes('aria-label')).toBe('Name people for WHO');
-      expect(multi.find('.party input[type="checkbox"]').exists()).toBe(true);
+      expect(multi.get('.cast legend').text()).toBe('0 named');
+      expect(multi.get('.choices button').attributes('disabled')).toBeDefined();
+      await multi.get('.party input[type="checkbox"]').setValue(true);
+      expect(multi.get('.cast legend').text()).toBe('1 named');
       await multi.setProps({ proseMode: 'plainenglish' });
       expect(multi.get('.party').attributes('aria-label')).toBe('Select people for WHO');
-      expect(multi.get('.party input[type="checkbox"]').exists()).toBe(true);
-      expect(multi.get('.cast legend').text()).toBe('0 selected');
+      expect((multi.get('.party input[type="checkbox"]').element as HTMLInputElement).checked).toBe(true);
+      expect(multi.get('.cast legend').text()).toBe('1 selected');
+      expect(multi.get('.choices button').attributes('disabled')).toBeUndefined();
+      await multi.setProps({ proseMode: 'original' });
+      expect(multi.get('.party').attributes('aria-label')).toBe('Name people for WHO');
+      expect((multi.get('.party input[type="checkbox"]').element as HTMLInputElement).checked).toBe(true);
+      expect(multi.get('.cast legend').text()).toBe('1 named');
+      expect(multiActions.choose).not.toHaveBeenCalled();
+      await multi.get('.choices button').trigger('click');
+      expect(multiActions.choose).toHaveBeenCalledExactlyOnceWith(
+        counted.id, counted.choices[0]!.id, { WHO: ['p_1'] }, counted.choices[0]!.label,
+      );
     } finally {
       multi.unmount();
     }
