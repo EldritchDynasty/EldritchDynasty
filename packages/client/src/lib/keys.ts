@@ -1,3 +1,5 @@
+import type { ProseMode } from '@ed/schema';
+
 /**
  * THE KEYBOARD (issue #58).
  *
@@ -84,11 +86,28 @@ export function isControl(el: Element | null): boolean {
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
-export const SHORTCUTS: { keys: string; does: string }[] = [
+export const SHORTCUTS = [
   { keys: 'Space', does: 'turn a year' },
   { keys: 'Enter', does: 'turn a year' },
   { keys: 'Shift + Enter', does: 'turn five' },
   { keys: '1 – 9', does: 'take that choice, or that card' },
   { keys: 'Esc', does: 'leave the interlude, shut the card, close this' },
   { keys: '?', does: 'this list' },
-];
+] as const satisfies readonly { keys: string; does: string }[];
+
+/** Help copy only. The real key dispatch lives exclusively in shortcutFor. */
+const PLAIN_SHORTCUTS: Readonly<Record<(typeof SHORTCUTS)[number]['keys'], string>> = {
+  Space: 'Advance one year',
+  Enter: 'Advance one year',
+  'Shift + Enter': 'Advance five years',
+  '1 – 9': 'Choose a numbered option or match',
+  Esc: 'Close the current panel or dialog',
+  '?': 'Show or hide this help',
+};
+
+export function shortcutHelp(mode: ProseMode = 'original'): readonly { keys: string; does: string }[] {
+  return mode === 'plainenglish'
+    ? SHORTCUTS.map(({ keys }) => ({ keys, does: PLAIN_SHORTCUTS[keys] }))
+    : SHORTCUTS;
+}
+

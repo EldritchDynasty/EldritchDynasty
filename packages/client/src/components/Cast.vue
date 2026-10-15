@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
+import { ageLabel } from '../lib/age';
 
 defineProps<{ cast: SessionView['cast']; selected: string | null; proseMode?: ProseMode }>();
 defineEmits<{ (e: 'select', id: string): void }>();
@@ -32,7 +33,7 @@ defineEmits<{ (e: 'select', id: string): void }>();
         <button class="row" :aria-pressed="selected === member.person" @click="$emit('select', member.person)">
           <span class="who">
             <span class="name">{{ member.name }}</span>
-            <span class="dim small"><span aria-hidden="true">{{ member.sex === 'female' ? '♀' : '♂' }}</span><span class="said-not-shown">{{ member.sex === 'female' ? 'woman' : 'man' }}, </span> {{ member.age }} · {{ member.hall }}</span>
+            <span class="dim small"><span aria-hidden="true">{{ member.sex === 'female' ? '♀' : '♂' }}</span><span class="said-not-shown">{{ member.sex === 'female' ? 'woman' : 'man' }}, </span> <span aria-hidden="true">{{ member.age }}</span><span class="said-not-shown">{{ ageLabel(member.age) }}</span> · {{ member.hall }}</span>
           </span>
           <span class="role rubric small">{{ member.label }}</span>
         </button>
