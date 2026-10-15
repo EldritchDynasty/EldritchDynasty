@@ -40,16 +40,16 @@ describe('reader-only decision identifiers (#1736, #1737)', () => {
       props: { decision, proseMode: 'original', actions: { choose } as unknown as GameActions },
     });
     try {
-      expect(wrapper.get('select[aria-label="Choose WHO"]').exists()).toBe(true);
-      expect(wrapper.get('fieldset[aria-label="Name people for ESCORT_GROUP"]').exists()).toBe(true);
+      expect(wrapper.find('select[aria-label="Choose WHO"]').exists()).toBe(true);
+      expect(wrapper.find('fieldset[aria-label="Name people for ESCORT_GROUP"]').exists()).toBe(true);
       expect(wrapper.text()).toContain('WHO');
       expect(wrapper.text()).toContain('ESCORT_GROUP');
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
       const single = wrapper.get('select[aria-label="Select a person for who"]');
       const party = wrapper.get('fieldset[aria-label="Select people for escort group"]');
-      expect(single.exists()).toBe(true);
-      expect(party.exists()).toBe(true);
+      expect(single.element).toBeTruthy();
+      expect(party.element).toBeTruthy();
       expect(wrapper.text()).not.toContain('ESCORT_GROUP');
       await single.setValue('person-1');
       await party.get('input[type="checkbox"]').setValue(true);
@@ -60,8 +60,8 @@ describe('reader-only decision identifiers (#1736, #1737)', () => {
       }, 'Accept the offer');
 
       await wrapper.setProps({ proseMode: 'original' });
-      expect(wrapper.get('select[aria-label="Choose WHO"]').exists()).toBe(true);
-      expect(wrapper.get('fieldset[aria-label="Name people for ESCORT_GROUP"]').exists()).toBe(true);
+      expect(wrapper.find('select[aria-label="Choose WHO"]').exists()).toBe(true);
+      expect(wrapper.find('fieldset[aria-label="Name people for ESCORT_GROUP"]').exists()).toBe(true);
       expect(decision).toEqual(snapshot);
     } finally { wrapper.unmount(); }
   });
