@@ -173,3 +173,129 @@ describe('Table reader-local action labels (#1683–#1685)', () => {
     } finally { w.unmount(); }
   });
 });
+
+
+describe('Table career, programme and bond controls in Plain English (#1689–#1691)', () => {
+  const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
+  function mounted(table: TableView) {
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table, land, actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    return { w, order };
+  }
+
+  it('preserves the selected career and exact appointment order across reading modes (#1689)', async () => {
+    const table = { ...fixture(), posts: [
+      { career: 'herald', name: 'Royal Herald', fee: 12, respectYield: 3,
+        eligible: [{ person: 'ada', name: 'Ada', age: 27 }],
+        holders: [], canPay: true },
+      { career: 'scribe', name: 'Court Scribe', fee: 99, respectYield: 1,
+        eligible: [{ person: 'ada', name: 'Ada', age: 27 }],
+        holders: [], canPay: false },
+    ] } as unknown as TableView;
+    const before = structuredClone(table);
+    const { w, order } = mounted(table);
+    try {
+      const posts = () => w.findAll('.panel').find((p) => p.find('select[aria-label*="Royal Herald"]').exists())!;
+      expect(posts().get('.fold').text()).toBe('Places');
+      expect(posts().text()).toContain('standing 3');
+      expect(posts().text()).toContain('the house cannot raise 99');
+      const selection = w.get('select[aria-label="Choose someone for Royal Herald"]');
+      await selection.setValue('ada');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(posts().get('.fold').text()).toBe('Career positions');
+      expect(posts().text()).toContain('reputation gained 3');
+      expect(posts().text()).toContain('Not enough money to pay 99');
+      expect((w.get('select[aria-label="Choose a family member for Royal Herald"]').element as HTMLSelectElement).value).toBe('ada');
+      expect(w.findAll('button').some((button) => button.text() === 'Buy this position')).toBe(true);
+      await w.get('select[aria-label="Choose a family member for Royal Herald"]').element.closest('.row')!.querySelector('button')!.click();
+      expect(order).toHaveBeenCalledWith({ kind: 'career', person: 'ada', career: 'herald' });
+      await w.setProps({ proseMode: 'original' });
+      expect(posts().get('.fold').text()).toBe('Places');
+      expect((w.get('select[aria-label="Choose someone for Royal Herald"]').element as HTMLSelectElement).value).toBe('ada');
+      expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+
+  it('keeps main and supporting candidate selections, restrictions and exact orders (#1690)', async () => {
+    const table = { ...fixture(),
+      programmeCandidates: [
+        { person: 'ada', name: 'Ada', age: 31 },
+        { person: 'ben', name: 'Ben', age: 29 },
+        { person: 'cor', name: 'Cor', age: 25 },
+      ],
+      scion: { person: 'ada', name: 'Ada' },
+      scionHeir: { person: 'ben', name: 'Ben' },
+    } as unknown as TableView;
+    const before = structuredClone(table);
+    const { w, order } = mounted(table);
+    try {
+      const programme = () => w.findAll('.panel').find((p) => p.find('select[aria-label*="Scion"]').exists()
+        || p.find('select[aria-label="Choose main candidate"]').exists())!;
+      expect(programme().get('.fold').text()).toBe('The programme');
+      expect(programme().text()).toContain('Heir to the programme');
+      await w.get('select[aria-label="Choose the Scion"]').setValue('cor');
+      await w.get('select[aria-label="Choose the heir to the programme"]').setValue('ben');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(programme().get('.fold').text()).toBe('Family advancement plan');
+      expect(programme().text()).toContain('Main candidate');
+      expect(programme().text()).toContain('Supporting candidate');
+      expect((w.get('select[aria-label="Choose main candidate"]').element as HTMLSelectElement).value).toBe('cor');
+      expect((w.get('select[aria-label="Choose supporting candidate"]').element as HTMLSelectElement).value).toBe('ben');
+      expect(w.get('select[aria-label="Choose supporting candidate"] option[value="ada"]').attributes('disabled')).toBeDefined();
+      const buttons = () => programme().findAll('button');
+      await buttons().find((btn) => btn.text() === 'Set main candidate')!.trigger('click');
+      await buttons().find((btn) => btn.text() === 'Set supporting candidate')!.trigger('click');
+      await buttons().filter((btn) => btn.text() === 'Clear this position')[0]!.trigger('click');
+      await buttons().filter((btn) => btn.text() === 'Clear this position')[1]!.trigger('click');
+      expect(order.mock.calls.map(([payload]) => payload)).toEqual([
+        { kind: 'scion', person: 'cor' },
+        { kind: 'scionHeir', person: 'ben' },
+        { kind: 'scion', person: null },
+        { kind: 'scionHeir', person: null },
+      ]);
+      await w.setProps({ proseMode: 'original' });
+      expect(programme().get('.fold').text()).toBe('The programme');
+      expect((w.get('select[aria-label="Choose the Scion"]').element as HTMLSelectElement).value).toBe('cor');
+      expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+
+  it('retains a debt amount, validation feedback and exact bind/free orders (#1691)', async () => {
+    const table = { ...fixture(), maxBond: 20, servants: [
+      { person: 'ada', name: 'Ada', role: 'housekeeper', wage: 3, bonded: false, debt: 0, loyalty: 'carefully' },
+      { person: 'ben', name: 'Ben', role: 'gardener', wage: 2, bonded: true, debt: 8, loyalty: 'uneasily' },
+    ] } as unknown as TableView;
+    const before = structuredClone(table);
+    const { w, order } = mounted(table);
+    try {
+      const servants = () => w.findAll('.panel').find((p) => p.find('input[aria-label*="Ada"]').exists())!;
+      expect(servants().get('.fold').text()).toBe("The house's people");
+      expect(servants().text()).toContain('owes 8');
+      expect(servants().text()).toContain('they think of you');
+      await w.get('input[aria-label="Marks to advance to Ada"]').setValue('21');
+      expect(w.get('[role="alert"]').text()).toBe('Enter a whole number of marks from 1 to 20.');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(servants().get('.fold').text()).toBe('Servants and debt contracts');
+      expect(servants().text()).toContain('debt: 8');
+      expect(servants().text()).toContain('loyalty:');
+      expect(w.get('input[aria-label="Debt advance in marks for Ada"]').attributes('placeholder')).toBe('Enter 1 to 20 marks');
+      expect((w.get('input[aria-label="Debt advance in marks for Ada"]').element as HTMLInputElement).value).toBe('21');
+      expect(w.get('[role="alert"]').text()).toBe('Enter a whole-number advance between 1 and 20 marks.');
+      await w.get('input[aria-label="Debt advance in marks for Ada"]').setValue('7');
+      await servants().findAll('button').find((btn) => btn.text() === 'Give a debt advance')!.trigger('click');
+      await servants().findAll('button').find((btn) => btn.text() === 'Cancel debt bond')!.trigger('click');
+      expect(order.mock.calls.map(([payload]) => payload)).toEqual([
+        { kind: 'bond', person: 'ada', op: 'bind', marks: 7 },
+        { kind: 'bond', person: 'ben', op: 'free' },
+      ]);
+      await w.setProps({ proseMode: 'original' });
+      expect(servants().get('.fold').text()).toBe("The house's people");
+      expect((w.get('input[aria-label="Marks to advance to Ada"]').element as HTMLInputElement).value).toBe('7');
+      expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+});
