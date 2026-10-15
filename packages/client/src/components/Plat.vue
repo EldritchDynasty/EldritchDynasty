@@ -112,7 +112,20 @@ const items = computed<PlatItem[]>(() => {
 // Only living cadet halls appear. The simulation's Table order owns validation.
 const cadetHalls = computed(() => props.halls.filter((h) => !h.isSeat && h.members.length > 0));
 const selectedHall = ref<Record<string, string>>({});
-const giftError = ref<{ parcel: string; reason: string } | null>(null);
+interface GiftError {
+  parcel: string;
+  /** A core-supplied refusal is data; only local fallback copy changes mode. */
+  reason?: string;
+  operation: 'give' | 'recall';
+}
+const giftError = ref<GiftError | null>(null);
+function giftErrorText(error: GiftError): string {
+  if (error.reason) return error.reason;
+  if (error.operation === 'give') {
+    return plain.value ? 'Could not give this land to the hall.' : 'The land could not be endowed.';
+  }
+  return plain.value ? 'Could not take this land back.' : 'The land could not be recalled.';
+}
 
 // The old Endow/Recall button stays clickable until Vue repaints. Suppress
 // repeated orders for that parcel, not for independent parcels in the same Plat.
@@ -135,7 +148,7 @@ function giveLand(item: PlatItem): void {
   if (!branch || !cadetHalls.value.some((hall) => hall.id === branch)) return;
   const result = dispatchGift({ kind: 'endow', parcel, branch });
   if (!result) return;
-  giftError.value = result.ok ? null : { parcel, reason: result.reason ?? (plain.value ? 'Could not give this land to the hall.' : 'The land could not be endowed.') };
+  giftError.value = result.ok ? null : { parcel, reason: result.reason, operation: 'give' };
 }
 
 function recallLand(item: PlatItem): void {
@@ -143,7 +156,7 @@ function recallLand(item: PlatItem): void {
   if (!parcel || !item.holder) return;
   const result = dispatchGift({ kind: 'endow', parcel, branch: null });
   if (!result) return;
-  giftError.value = result.ok ? null : { parcel, reason: result.reason ?? (plain.value ? 'Could not take this land back.' : 'The land could not be recalled.') };
+  giftError.value = result.ok ? null : { parcel, reason: result.reason, operation: 'recall' };
 }
 
 // ── The drawing ──────────────────────────────────────────────────────────
@@ -180,7 +193,18 @@ function dash(state: PlatState): string | undefined {
 
 const naming = ref<string | null>(null);
 const draftName = ref('');
-const renameError = ref<string | null>(null);
+type RenameError = 'empty' | 'rejected';
+const renameError = ref<RenameError | null>(null);
+const renameErrorText = computed(() => {
+  switch (renameError.value) {
+    case 'empty':
+      return plain.value ? 'Enter a name, or use the previous name.' : 'Enter a parcel name, or restore its previous name.';
+    case 'rejected':
+      return plain.value ? 'Could not change this name. The house may no longer hold this land.' : 'That parcel could not be renamed. It may no longer be held by the house.';
+    default:
+      return '';
+  }
+});
 
 function startNaming(item: PlatItem): void {
   if (!item.parcel) return;
@@ -197,13 +221,13 @@ function confirmNaming(item: PlatItem): void {
   if (!trimmed) {
     // Empty drafts are not a cancellation: keep the input and explain why
     // nothing changed, whether submission came from Enter or blur.
-    renameError.value = plain.value ? 'Enter a name, or use the previous name.' : 'Enter a parcel name, or restore its previous name.';
+    renameError.value = 'empty';
     return;
   }
   if (trimmed !== item.name && !props.actions.nameParcel(item.parcel, trimmed)) {
     // The parcel may have left the house since the editor opened. Do not
     // discard a name the player tried to give it when the engine refuses.
-    renameError.value = plain.value ? 'Could not change this name. The house may no longer hold this land.' : 'That parcel could not be renamed. It may no longer be held by the house.';
+    renameError.value = 'rejected';
     return;
   }
   renameError.value = null;
@@ -302,7 +326,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
                   :id="'parcel-rename-error-' + item.parcel"
                   class="rubric small"
                   role="alert"
-                >{{ renameError }}</p>
+                >{{ renameErrorText }}</p>
               </template>
               <template v-else>
                 {{ item.name }}
@@ -330,7 +354,7 @@ function submitOnEnter(item: PlatItem, event: KeyboardEvent): void {
                 </select>
                 <button class="small endow" type="button" :disabled="!selectedHall[item.parcel ?? '']" @click="giveLand(item)">{{ plain ? 'Give land' : 'Endow' }}</button>
               </div>
-              <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftError?.reason }}</p>
+              <p v-if="giftError?.parcel === item.parcel" class="small rubric" role="alert">{{ giftErrorText(giftError) }}</p>
             </td>
           </tr>
         </tbody>
