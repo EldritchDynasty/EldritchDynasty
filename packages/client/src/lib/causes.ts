@@ -1,4 +1,5 @@
 import type { ChronicleCause, ChronicleEntry } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 
 /**
  * THE WAY BACK TO WHAT CAUSED IT (issue #269).
@@ -33,17 +34,26 @@ export type CauseLink =
   | { kind: 'unwritten'; label: string };
 
 /** How an entry's cause reads under it. */
-export function causeLink(cause: ChronicleCause): CauseLink {
+export function causeLink(cause: ChronicleCause, mode: ProseMode = 'original'): CauseLink {
+  if (mode === 'plainenglish') {
+    return cause.page
+      ? { kind: 'see', page: cause.page, label: `See the Chronicle entry from ${cause.year}` }
+      : { kind: 'unwritten', label: `No Chronicle entry was written for ${cause.year}.` };
+  }
   return cause.page
     ? { kind: 'see', page: cause.page, label: `see ${cause.year}` }
     : { kind: 'unwritten', label: `${cause.year}; the book has no page for it` };
 }
 
 /** "answered in 1067", "answered in 1067 and 1092", "answered in 1067, 1080 and 1092". */
-export function answeredLabel(years: number[]): string | null {
+export function answeredLabel(years: number[], mode: ProseMode = 'original'): string | null {
   if (!years.length) return null;
-  if (years.length === 1) return `answered in ${years[0]}`;
-  return `answered in ${years.slice(0, -1).join(', ')} and ${years[years.length - 1]}`;
+  const listedYears = years.length === 1
+    ? String(years[0])
+    : `${years.slice(0, -1).join(', ')} and ${years[years.length - 1]}`;
+  return mode === 'plainenglish'
+    ? `Later responses were recorded in ${listedYears}.`
+    : `answered in ${listedYears}`;
 }
 
 /**
