@@ -109,7 +109,7 @@ const tideWord = computed(() => {
 
     <!-- WHAT THE HOUSE IS TO BE REMEMBERED FOR (#89's thesis). One purchase,
          separate from the men — `none` is a real button, not a default. -->
-    <div class="positions">
+    <div class="positions" role="group" :aria-label="local('Buy a position', 'Choose a war position to purchase')">
       <p class="small label">{{ local('Buy a position', 'Purchase a war position') }}</p>
       <div v-for="p in commitment.positions" :key="p.id" class="row position">
         <button :disabled="p.current || !p.canBuy" @click="sendOrder({ op: 'buy', position: p.id })">
