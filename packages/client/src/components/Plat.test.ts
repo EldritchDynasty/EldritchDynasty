@@ -1104,3 +1104,42 @@ describe('Plat failure feedback changes with reading mode (#1698)', () => {
     } finally { w.unmount(); }
   });
 });
+
+
+describe('reader-local land captions (#1705)', () => {
+  it('rewords counts, contested map caption and table headings without changing parcels or actions', async () => {
+    const land = mockLand({ held: [
+      baseHeld({ contestedBy: 'Elm Hall' }),
+      baseHeld({ parcel: 'westmere', name: 'Westmere' }),
+    ], lost: [{ defId: 'old', name: 'Old Field', place: 'south', year: 1220, by: 'Mara' }] });
+    const before = structuredClone(land);
+    const actions = spyActions();
+    const wrapper = mount(Plat, { props: {
+      land, halls: [], houseName: 'House Ash', actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      const caption = () => wrapper.get('.plat > p.dim.small').text();
+      const columnLabels = () => wrapper.findAll('.terrier thead th').map((th) => th.text());
+      expect(caption()).toContain('House Ash — 2 held, 1 lost.');
+      expect(wrapper.get('.cell-claim').text()).toBe('claimed by Elm Hall');
+      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars']);
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(caption()).toContain('House Ash — 2 parcels held, 1 parcel lost.');
+      expect(wrapper.get('.cell-claim').text()).toBe('Also claimed by Elm Hall');
+      expect(columnLabels()).toEqual(['Parcel name', 'Status', 'Location', 'Details']);
+      expect(wrapper.text()).toContain('Westmere');
+      expect(wrapper.text()).toContain('Old Field');
+      expect(wrapper.text()).toContain('Elm Hall');
+      expect(land).toEqual(before);
+      expect(actions.order).not.toHaveBeenCalled();
+      expect(actions.nameParcel).not.toHaveBeenCalled();
+
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(caption()).toContain('House Ash — 2 held, 1 lost.');
+      expect(wrapper.get('.cell-claim').text()).toBe('claimed by Elm Hall');
+      expect(columnLabels()).toEqual(['Name', 'State', 'Place', 'Particulars']);
+      expect(land).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+});
