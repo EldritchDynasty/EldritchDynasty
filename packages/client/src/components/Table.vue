@@ -363,22 +363,22 @@ const MARRIAGE_ORDERS = [
     </div>
 
     <div class="panel">
-      <h3 class="label">The Great Work</h3>
+      <h3 class="label">{{ local('The Great Work', 'Major rites') }}</h3>
       <p class="small dim">{{ local('The house can call a rite when its people can field it. Each call opens the authored choice and its cost.', 'You can begin a rite when enough eligible family members are available. You will see the choices and costs before proceeding.') }}</p>
       <div class="row">
-        <button :disabled="!table.vesselRite.ready" @click="assemble('vesselRite')">Call the Vessel</button>
+        <button :disabled="!table.vesselRite.ready" @click="assemble('vesselRite')">{{ local('Call the Vessel', 'Begin the Vessel rite') }}</button>
         <span v-if="!table.vesselRite.ready" class="small rubric">{{ table.vesselRite.reason }}</span>
       </div>
       <div class="row">
-        <button :disabled="!table.greatRite.ready" @click="assemble('greatRite')">Call the Great Rite</button>
+        <button :disabled="!table.greatRite.ready" @click="assemble('greatRite')">{{ local('Call the Great Rite', 'Begin the Great Rite') }}</button>
         <span v-if="!table.greatRite.ready" class="small rubric">{{ table.greatRite.reason }}</span>
       </div>
       <p class="small dim">{{ local("A two-rite elder can be unmade for an adult blood descendant. The elder is spent; the final working still needs the living family's eight affinities and the descendant's own strength.", "An elder who has completed two rites can be sacrificed for an adult blood descendant. This uses up the elder. The final rite still requires all eight affinities among living family members and enough strength in the descendant.") }}</p>
-      <button :disabled="!table.unmaking.ready" @click="assemble('unmaking')">Call the family to the Unmaking</button>
+      <button :disabled="!table.unmaking.ready" @click="assemble('unmaking')">{{ local('Call the family to the Unmaking', 'Begin the Unmaking rite') }}</button>
       <p v-if="!table.unmaking.ready" class="small rubric">{{ table.unmaking.reason }}</p>
 
       <!-- The confirmation itself is presentation-only; the button below is the old order verb. -->
-      <section v-if="pendingRite && riteAssembly" class="rite-assembly" aria-label="Rite assembly">
+      <section v-if="pendingRite && riteAssembly" class="rite-assembly" :aria-label="local('Rite assembly', 'Review the rite')">
         <h4 class="label">{{ riteAssembly.title }} — {{ local('before the house commits', 'review before confirming') }}</h4>
         <p v-for="actor in riteAssembly.actors" :key="actor.slot" class="small">
           <strong>{{ actor.slot }}</strong> — {{ actor.name }}
@@ -392,7 +392,7 @@ const MARRIAGE_ORDERS = [
         <p class="small dim">{{ local('This page names only facts already visible to the house. It does not reveal the outcome or its odds.', 'This summary only shows information you already know. It does not reveal what will happen or how likely each outcome is.') }}</p>
         <div class="row">
           <button class="primary" @click="confirmRite">{{ local('Put this rite before the house', 'Confirm and begin the rite') }}</button>
-          <button class="quiet" @click="cancelRite">Not yet</button>
+          <button class="quiet" @click="cancelRite">{{ local('Not yet', 'Cancel') }}</button>
         </div>
       </section>
       <p v-if="refusedIn('vesselRite')" class="small rubric">{{ refusedIn('vesselRite') }}</p>
@@ -406,7 +406,7 @@ const MARRIAGE_ORDERS = [
           :disabled="!table.ledgerSearch.ready"
           @click="actions.order({ kind: 'seekClause' })"
         >
-          Search the old papers — {{ table.ledgerSearch.fee }} crowns
+          {{ local('Search the old papers', 'Search old records') }} — {{ table.ledgerSearch.fee }} crowns
         </button>
         <p v-if="!table.ledgerSearch.ready" class="small rubric">{{ table.ledgerSearch.reason }}</p>
         <p v-if="refusedIn('seekClause')" class="small rubric">{{ refusedIn('seekClause') }}</p>
@@ -420,8 +420,8 @@ const MARRIAGE_ORDERS = [
          failed the whole point of building this. -->
     <div class="panel" :class="{ idle: idle('land', land.market.length > 0) }">
       <h3 class="label row">
-        <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">The land</button>
-        <button class="quiet small plat-link" @click="emit('open-plat')">See the plat</button>
+        <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">{{ local('The land', 'Land holdings') }}</button>
+        <button class="quiet small plat-link" @click="emit('open-plat')">{{ local('See the plat', 'View land map') }}</button>
       </h3>
       <p v-if="!land.market.length" class="small dim">{{ local('Nothing is on the market this year.', 'No land is available to buy this year.') }}</p>
       <div v-for="lot in land.market" :key="lot.parcel" class="line">
@@ -434,15 +434,15 @@ const MARRIAGE_ORDERS = [
         </div>
         <div class="row">
           <button :disabled="!lot.canBuy" @click="actions.order({ kind: 'buy', parcel: lot.parcel })">
-            Buy it
+            {{ local('Buy it', 'Buy this land') }}
           </button>
-          <span v-if="!lot.canBuy" class="small rubric">the house cannot raise {{ lot.price }}</span>
+          <span v-if="!lot.canBuy" class="small rubric">{{ local('the house cannot raise', 'The family cannot afford') }} {{ lot.price }}</span>
         </div>
       </div>
       <p v-if="refusedIn('buy')" class="small rubric">{{ refusedIn('buy') }}</p>
 
       <div class="wrap">
-        <span class="small dim">Rents:</span>
+        <span class="small dim">{{ local('Rents:', 'Rent policy:') }}</span>
         <button
           v-for="policy in (['customary', 'hard', 'rack'] as const)"
           :key="policy"
@@ -451,7 +451,7 @@ const MARRIAGE_ORDERS = [
           :aria-pressed="land.rentsPolicy === policy"
           @click="actions.order({ kind: 'rents', policy })"
         >
-          {{ policy === 'rack' ? 'Rack' : policy === 'hard' ? 'Hard' : 'Customary' }}
+          {{ policy === 'rack' ? local('Rack', 'Highest rent') : policy === 'hard' ? local('Hard', 'Higher rent') : local('Customary', 'Usual rent') }}
         </button>
       </div>
       <p v-if="land.rentsPolicy !== 'customary'" class="small rubric">
@@ -467,14 +467,14 @@ const MARRIAGE_ORDERS = [
         <div class="row">
           <button v-if="p.sellable" :disabled="p.improving !== undefined" class="small"
             @click="actions.order({ kind: 'sell', parcel: p.parcel })">
-            Sell it — {{ p.sellPrice }} crowns
+            {{ local('Sell it', 'Sell this land') }} — {{ p.sellPrice }} crowns
           </button>
           <template v-if="p.improving !== undefined">
-            <span class="small dim">draining until {{ p.improving }}</span>
+            <span class="small dim">{{ local('draining until', 'Drainage work until') }} {{ p.improving }}</span>
           </template>
           <button v-else class="small" :disabled="!p.canImprove"
             @click="actions.order({ kind: 'improve', parcel: p.parcel })">
-            Improve it — {{ p.improveCost }} crowns
+            {{ local('Improve it', 'Improve this land') }} — {{ p.improveCost }} crowns
           </button>
         </div>
       </div>
@@ -486,15 +486,15 @@ const MARRIAGE_ORDERS = [
          eight. Nobody reads one unless somebody is put on it. -->
     <div class="panel" :class="{ idle: idle('shelf', table.shelf.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('shelf', table.shelf.length > 0)" @click="shut['shelf'] = !shut['shelf']">The shelf</button>
+        <button class="fold" :aria-expanded="!idle('shelf', table.shelf.length > 0)" @click="shut['shelf'] = !shut['shelf']">{{ local('The shelf', 'Family library') }}</button>
       </h3>
       <p v-if="!table.shelf.length" class="small dim">{{ local('The house holds no book anybody can read.', 'The house has no readable books.') }}</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
         <div class="small"><strong>{{ book.name }}</strong> <span class="dim">· {{ studyYears(book) }} {{ studyYears(book) === 1 ? 'year' : 'years' }} · {{ book.conditionLabel }} ({{ book.condition }}%)</span></div>
         <p v-if="book.restoringUntil !== undefined" class="small dim">{{ local('With the binder until', 'Being repaired until') }} {{ book.restoringUntil }}</p>
         <div v-else-if="book.restore" class="row">
-          <button class="small" :disabled="!book.restore.canPay" :aria-label="'Restore ' + book.name" @click="actions.order({ kind: 'restore', book: book.book })">
-            Restore — {{ book.restore.fee }} crowns, {{ book.restore.years }} {{ book.restore.years === 1 ? 'year' : 'years' }}
+          <button class="small" :disabled="!book.restore.canPay" :aria-label="local('Restore', 'Repair') + ' ' + book.name" @click="actions.order({ kind: 'restore', book: book.book })">
+            {{ local('Restore', 'Repair book') }} — {{ book.restore.fee }} crowns, {{ book.restore.years }} {{ book.restore.years === 1 ? 'year' : 'years' }}
           </button>
           <span v-if="book.restore.reason" class="small rubric">{{ book.restore.reason }}</span>
         </div>
@@ -504,9 +504,9 @@ const MARRIAGE_ORDERS = [
              the household — while the identical interaction was solved with a
              dropdown two hundred pixels below. -->
         <div class="row">
-          <select v-model="reading[book.book]" :disabled="!book.readers.length" :aria-label="'Choose a reader for ' + book.name">
+          <select v-model="reading[book.book]" :disabled="!book.readers.length" :aria-label="local('Choose a reader for', 'Choose who reads') + ' ' + book.name">
             <option value="">
-              {{ book.restoringUntil !== undefined ? '— with the binder —' : book.readers.length ? '— put whom on it —' : '— nobody can take it up —' }}
+              {{ book.restoringUntil !== undefined ? local('— with the binder —', '— being repaired —') : book.readers.length ? local('— put whom on it —', '— choose reader —') : local('— nobody can take it up —', '— no eligible reader —') }}
             </option>
             <option v-for="r in book.readers" :key="r.person" :value="r.person">{{ r.name }}</option>
           </select>
@@ -515,7 +515,7 @@ const MARRIAGE_ORDERS = [
             :disabled="!reading[book.book] || !book.readers.length"
             @click="actions.order({ kind: 'study', person: reading[book.book] ?? '', book: book.book })"
           >
-            Set them reading
+            {{ local('Set them reading', 'Start reading') }}
           </button>
         </div>
       </div>
@@ -530,7 +530,7 @@ const MARRIAGE_ORDERS = [
           <div class="row">
             <span class="small"><strong>{{ book.affinity }}</strong> · {{ book.name }} · {{ book.reserve }} crown reserve in {{ book.saleYear }}</span>
             <button class="small" :disabled="book.queued" @click="actions.order({ kind: 'seekBook', book: book.book })">
-              {{ book.queued ? 'Broker sent' : 'Seek this book' }}
+              {{ book.queued ? local('Broker sent', 'Broker already requested') : local('Seek this book', 'Ask broker for this book') }}
             </button>
           </div>
           <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
@@ -542,21 +542,21 @@ const MARRIAGE_ORDERS = [
     <!-- §13's price table. The money is gone the day it is spent, and the
          auction is in eleven years. -->
     <div class="panel">
-      <h3 class="label">A term of tutoring</h3>
+      <h3 class="label">{{ local('A term of tutoring', 'Tutoring') }}</h3>
       <div class="row">
-        <select v-model="pupil" aria-label="Child to tutor">
-          <option value="">— which child —</option>
+        <select v-model="pupil" :aria-label="local('Child to tutor', 'Choose a child for tutoring')">
+          <option value="">{{ local('— which child —', '— choose child —') }}</option>
           <option v-for="p in table.pupils" :key="p.person" :value="p.person">{{ p.name }}, {{ p.age }}</option>
         </select>
-        <select v-model="subject" aria-label="Subject to tutor">
-          <option value="">— in what —</option>
+        <select v-model="subject" :aria-label="local('Subject to tutor', 'Choose tutoring subject')">
+          <option value="">{{ local('— in what —', '— choose subject —') }}</option>
           <option v-for="t in table.teachable" :key="t.attr" :value="t.attr">{{ t.name }}</option>
         </select>
         <button
           :disabled="!pupil || !subject || !table.canTutor"
           @click="actions.order({ kind: 'tutor', person: pupil, attr: subject })"
         >
-          Pay the {{ table.tutorFee }}
+          {{ local('Pay the', 'Pay tutoring fee') }} {{ table.tutorFee }}
         </button>
       </div>
       <p v-if="!table.canTutor" class="small rubric">{{ local('The house cannot raise the', 'The house cannot afford the tutoring fee of') }} {{ table.tutorFee }}.</p>
