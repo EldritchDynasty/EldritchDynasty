@@ -217,30 +217,30 @@ async function saveAfterimage(): Promise<void> {
     <section class="tally">
       <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
-        <div><dt>The house</dt><dd>{{ view.houseName }}</dd></div>
+        <div><dt>{{ plain ? 'Family name' : 'The house' }}</dt><dd>{{ view.houseName }}</dd></div>
         <!-- The run's number, for replaying it or reporting it (#59). The
              running game keeps it behind a control (#356); here it is part of
              the permanent record of what was played. -->
-        <div><dt>The line</dt><dd>seed #{{ view.seed }}</dd></div>
+        <div><dt>{{ plain ? 'Game seed' : 'The line' }}</dt><dd>seed #{{ view.seed }}</dd></div>
         <div v-if="epilogue.founding">
-          <dt>Asked for, in {{ view.campaign.startYear }}</dt><dd>{{ epilogue.founding.heirloomName }}</dd>
+          <dt>{{ plain ? 'Requested in' : 'Asked for, in' }} {{ view.campaign.startYear }}</dt><dd>{{ epilogue.founding.heirloomName }}</dd>
         </div>
         <div v-if="epilogue.founding">
-          <dt>And never paid back</dt><dd>{{ epilogue.founding.grudgeName }}</dd>
+          <dt>{{ plain ? 'Debt never repaid' : 'And never paid back' }}</dt><dd>{{ epilogue.founding.grudgeName }}</dd>
         </div>
-        <div><dt>Pages written</dt><dd>{{ reckoning.pages }}</dd></div>
-        <div><dt>Left blank</dt><dd>{{ reckoning.blanks }}</dd></div>
-        <div><dt>Improved</dt><dd>{{ reckoning.embellished }}</dd></div>
+        <div><dt>{{ plain ? 'Pages recorded' : 'Pages written' }}</dt><dd>{{ reckoning.pages }}</dd></div>
+        <div><dt>{{ plain ? 'Pages left blank' : 'Left blank' }}</dt><dd>{{ reckoning.blanks }}</dd></div>
+        <div><dt>{{ plain ? 'Entries embellished' : 'Improved' }}</dt><dd>{{ reckoning.embellished }}</dd></div>
         <div>
-          <dt>Lies still standing</dt>
-          <dd>{{ reckoning.standingLies }} <span class="dim">({{ reckoning.provenLies }} caught)</span></dd>
+          <dt>{{ plain ? 'Lies not yet exposed' : 'Lies still standing' }}</dt>
+          <dd>{{ reckoning.standingLies }} <span class="dim">({{ reckoning.provenLies }} {{ plain ? 'exposed' : 'caught' }})</span></dd>
         </div>
         <div>
-          <dt>The contract, recovered</dt>
+          <dt>{{ plain ? 'Contract clauses recovered' : 'The contract, recovered' }}</dt>
           <dd>{{ reckoning.clauses }} of {{ reckoning.clausesTotal }} clauses</dd>
         </div>
         <div>
-          <dt>What the book attests</dt>
+          <dt>{{ plain ? 'Highest level claimed in the Chronicle' : 'What the book attests' }}</dt>
           <dd>
             {{ reckoning.attested === 'none' ? 'nothing at all' : reckoning.attestedTitle }}
             <span v-if="reckoning.attestedYear" class="dim">since {{ reckoning.attestedYear }}</span>
@@ -252,15 +252,15 @@ async function saveAfterimage(): Promise<void> {
              not, this is the whole of what the last night did to it, and
              §29.3's guard rail says the cost has to be findable. -->
         <div v-if="reckoning.rungsWithheld > 0">
-          <dt>And could show</dt>
+          <dt>{{ plain ? 'Highest level supported by evidence' : 'And could show' }}</dt>
           <dd>
             {{ reckoning.substantiated === 'none' ? 'nothing at all' : reckoning.substantiatedTitle }}
             <span class="dim">
-              — {{ reckoning.standingLies }} pages were asked after, and answered with themselves
+              {{ plain ? '— ' + reckoning.standingLies + ' claims were challenged but supported only by their own pages' : '— ' + reckoning.standingLies + ' pages were asked after, and answered with themselves' }}
             </span>
           </dd>
         </div>
-        <div><dt>At the table</dt><dd>{{ reckoning.livingBlood }}</dd></div>
+        <div><dt>{{ plain ? 'Living blood relatives at the final hearing' : 'At the table' }}</dt><dd>{{ reckoning.livingBlood }}</dd></div>
       </dl>
     </section>
 
