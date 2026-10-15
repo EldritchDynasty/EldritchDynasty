@@ -962,3 +962,34 @@ describe('debt-bond controls stay tied to bonded status (#1446)', () => {
     }
   });
 });
+
+
+describe('parcel-specific rename accessibility (#1694)', () => {
+  it('names distinct parcels in both reading modes and renames only the selected parcel', async () => {
+    const land = mockLand({ held: [
+      baseHeld(), baseHeld({ parcel: 'westmere', name: 'Westmere' }),
+    ] });
+    const original = structuredClone(land);
+    const actions = spyActions();
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls: [], actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      const renames = () => w.findAll('button.rename');
+      expect(renames().map((b) => b.text())).toEqual(['rename', 'rename']);
+      expect(renames().map((b) => b.attributes('aria-label'))).toEqual(['Rename Longmere', 'Rename Westmere']);
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(renames().map((b) => b.text())).toEqual(['change name', 'change name']);
+      expect(renames().map((b) => b.attributes('aria-label'))).toEqual(['Change name of Longmere', 'Change name of Westmere']);
+      await renames()[1]!.trigger('click');
+      expect(w.get('input').attributes('aria-label')).toBe('Change name of Westmere');
+      await w.get('input').setValue('Green Meadow');
+      await w.get('input').trigger('keydown', { key: 'Enter', isComposing: false });
+      expect(actions.nameParcel).toHaveBeenCalledOnce();
+      expect(actions.nameParcel).toHaveBeenCalledWith('westmere', 'Green Meadow');
+      await w.setProps({ proseMode: 'original' });
+      expect(renames().map((b) => b.attributes('aria-label'))).toEqual(['Rename Longmere', 'Rename Westmere']);
+      expect(land).toEqual(original);
+    } finally { w.unmount(); }
+  });
+});
