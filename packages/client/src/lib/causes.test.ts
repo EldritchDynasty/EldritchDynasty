@@ -37,6 +37,24 @@ describe('a link back to the act', () => {
     expect(answeredLabel([1067, 1080, 1092])).toBe('answered in 1067, 1080 and 1092');
   });
 
+  it('renders Plain English backlink labels without exposing any non-year numbers (#1701)', () => {
+    const written = { year: 1042, page: 'chr_7', blank: true };
+    expect(causeLink(written, 'plainenglish')).toEqual({
+      kind: 'see', page: 'chr_7', label: 'See the Chronicle entry from 1042',
+    });
+    const unwritten = { year: 1103, blank: false };
+    expect(causeLink(unwritten, 'plainenglish')).toEqual({
+      kind: 'unwritten', label: 'No Chronicle entry was written for 1103.',
+    });
+    expect(answeredLabel([], 'plainenglish')).toBeNull();
+    expect(answeredLabel([1067], 'plainenglish')).toBe('Later responses were recorded in 1067.');
+    expect(answeredLabel([1067, 1092], 'plainenglish')).toBe('Later responses were recorded in 1067 and 1092.');
+    expect(answeredLabel([1067, 1080, 1092], 'plainenglish')).toBe('Later responses were recorded in 1067, 1080 and 1092.');
+    expect(digitsAreYears(causeLink(written, 'plainenglish').label, [1042])).toBe(true);
+    expect(digitsAreYears(causeLink(unwritten, 'plainenglish').label, [1103])).toBe(true);
+    expect(digitsAreYears(answeredLabel([1067, 1092], 'plainenglish')!, [1067, 1092])).toBe(true);
+  });
+
   it('carries no digit in any label but a year', () => {
     const causes: ChronicleCause[] = [
       { year: 1042, page: 'chr_12', blank: false },
