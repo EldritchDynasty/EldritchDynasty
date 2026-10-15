@@ -260,7 +260,7 @@ async function saveAfterimage(): Promise<void> {
             </span>
           </dd>
         </div>
-        <div><dt>{{ plain ? 'Living blood relatives at the final hearing' : 'At the table' }}</dt><dd>{{ reckoning.livingBlood }}</dd></div>
+        <div><dt>{{ plain ? 'Living blood relatives' : 'At the table' }}</dt><dd>{{ reckoning.livingBlood }}</dd></div>
       </dl>
     </section>
 
