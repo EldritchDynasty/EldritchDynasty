@@ -45,8 +45,8 @@ const emit = defineEmits<{
 /** Presentation-only wording; saved Chronicle entries stay unchanged. */
 const plain = computed(() => props.proseMode === 'plainenglish');
 
-const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause) : null));
-const answered = computed(() => answeredLabel(props.links?.answered ?? []));
+const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause, props.proseMode) : null));
+const answered = computed(() => answeredLabel(props.links?.answered ?? [], props.proseMode));
 
 // Keep runtime schema imports behind the client seam while making new claim
 // variants a compiler error at this reader, just as they are in core.
