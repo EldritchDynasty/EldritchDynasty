@@ -282,6 +282,95 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
   return starts;
 }
 
+/**
+ * Originals retained only to VERIFY a live keyed rendering are not separate
+ * translation requests. This is deliberately narrower than matching wording:
+ * an equal sentence returned by another caller may still reach the player.
+ *
+ * The Match scorer must keep its Original templates for pure scoring; session's
+ * checked(expected, msg(...)) verifies that its keyed rendering never drifts.
+ * The ambition catalogue similarly stores the Original options, but its
+ * ambitionOptions() view replaces BOTH display fields with ambitionProse().
+ * Only the exact, source-specific pairs below are exempt (#1714).
+ */
+function verifiedDuplicateOriginalStarts(src: string, file?: string): Set<number> {
+  const path = file?.replace(/\\/g, '/');
+  if (path !== 'session.ts' && path !== 'ambition.ts') return new Set();
+
+  const tree = ts.createSourceFile('audit.ts', src, ts.ScriptTarget.Latest, true);
+  const starts = new Set<number>();
+  const messages = new Map<string, string>();
+  function collectMessages(node: ts.Node): void {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)
+      && node.expression.text === 'msg' && node.arguments.length >= 3) {
+      const key = node.arguments[1]!;
+      const original = node.arguments[2]!;
+      if (ts.isStringLiteral(key) && ts.isStringLiteral(original)) messages.set(key.text, original.text);
+    }
+    ts.forEachChild(node, collectMessages);
+  }
+  collectMessages(tree);
+
+  function visit(node: ts.Node): void {
+    if (path === 'session.ts' && ts.isFunctionDeclaration(node)
+      && node.name?.text === 'matchFutureMessage') {
+      const verify = (current: ts.Node): void => {
+        if (ts.isCallExpression(current) && ts.isIdentifier(current.expression)
+          && current.expression.text === 'checked' && current.arguments.length === 2) {
+          const expected = current.arguments[0]!;
+          const result = current.arguments[1]!;
+          if (ts.isStringLiteral(expected) && ts.isCallExpression(result)
+            && ts.isIdentifier(result.expression) && result.expression.text === 'msg'
+            && result.arguments.length >= 3) {
+            const key = result.arguments[1]!;
+            const original = result.arguments[2]!;
+            let enclosing: ts.Node | undefined = current.parent;
+            while (enclosing && !ts.isCaseClause(enclosing)) enclosing = enclosing.parent;
+            // A checked Original is solely a drift assertion only if this case,
+            // the keyed renderer and its template agree. No fuzzy text matching.
+            if (ts.isStringLiteral(key) && ts.isStringLiteral(original)
+              && ts.isCaseClause(enclosing) && ts.isStringLiteral(enclosing.expression)
+              && enclosing.expression.text === key.text
+              && original.text === expected.text
+              && messages.get(key.text) === expected.text) {
+              starts.add(expected.getStart(tree));
+            }
+          }
+        }
+        ts.forEachChild(current, verify);
+      };
+      if (node.body) verify(node.body);
+      return;
+    }
+
+    if (path === 'ambition.ts' && ts.isVariableDeclaration(node)
+      && ts.isIdentifier(node.name) && node.name.text === 'HOUSE_AMBITIONS'
+      && node.initializer && ts.isArrayLiteralExpression(node.initializer)) {
+      for (const element of node.initializer.elements) {
+        if (!ts.isObjectLiteralExpression(element)) continue;
+        const fields = new Map<string, ts.Expression>();
+        for (const prop of element.properties) {
+          if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+            fields.set(prop.name.text, prop.initializer);
+          }
+        }
+        const id = fields.get('id');
+        if (!id || !ts.isStringLiteral(id)) continue;
+        for (const field of ['name', 'purpose'] as const) {
+          const literal = fields.get(field);
+          if (literal && ts.isStringLiteral(literal)
+            && messages.get(`ambition.${field}.${id.text}`) === literal.text) {
+            starts.add(literal.getStart(tree));
+          }
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(tree);
+  return starts;
+}
+
 interface IndexedLiteral {
   literal: Literal;
   /** 1-based position among every source literal, before prose filtering. */
@@ -298,12 +387,13 @@ interface IndexedLiteral {
  */
 function sentenceLiteralEntries(src: string, file?: string): IndexedLiteral[] {
   const developerStarts = developerLiteralStarts(src, file);
+  const duplicateStarts = verifiedDuplicateOriginalStarts(src, file);
   return literals(src)
     .map((literal, index) => ({ literal, ordinal: index + 1 }))
     .filter(({ literal }) => /[a-z]/.test(literal.text) && words(literal.text) >= 3)
     .filter(({ literal }) => !/\b(?:import|from|require)\s*\(?\s*$/.test(literal.before))
     .filter(({ literal }) => !DEVELOPER_CALL.test(literal.before))
-    .filter(({ literal }) => !developerStarts.has(literal.start));
+    .filter(({ literal }) => !developerStarts.has(literal.start) && !duplicateStarts.has(literal.start));
 }
 
 function sentenceLiteralDetails(src: string): Literal[] {
