@@ -242,7 +242,7 @@ const MARRIAGE_ORDERS = [
 </script>
 
 <template>
-  <section class="table stack" aria-label="The house's standing orders">
+  <section class="table stack" :aria-label="local(\"The house's standing orders\", 'Family orders and resources')">
     <div class="panel">
       <h3 class="label">{{ local('The purse', 'Money and auctions') }}</h3>
       <p class="small">
@@ -253,7 +253,7 @@ const MARRIAGE_ORDERS = [
            for as long as this stands and offered the customary buy-back since
            #91, and no client drew either: the purse shrank for sixteen years
            with nothing on the screen to say why, or what could be done. -->
-      <section v-if="table.wardship" class="wardship" aria-label="Wardship">
+      <section v-if="table.wardship" class="wardship" :aria-label="local('Wardship', 'Guardianship and land income')">
         <p class="small" :class="table.wardship.boughtBack ? 'dim' : 'rubric'">
           <template v-if="table.wardship.boughtBack">
             {{ table.wardship.wardName }} {{ local("is still under age, but the wardship was bought back and the land is the house's again.", "is still a minor. The house paid to end wardship and has its land income again.") }}
