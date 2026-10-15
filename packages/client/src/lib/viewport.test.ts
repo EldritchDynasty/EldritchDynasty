@@ -162,7 +162,11 @@ describe('the Match does not collapse into an unreadable column', () => {
   });
 
   it('gives every card a comparison strip carrying all three numbers', () => {
-    expect(docket).toMatch(/kinship.*<\/th><th>the line<\/th><th>dowry/);
+    // Compare data cells, not the header copy: Plain English changes the labels.
+    expect(docket).toMatch(/<table class="strip small" aria-hidden="true">/);
+    expect(docket).toMatch(/<td>{{ card.kinship.toFixed\(4\) }}<\/td>/);
+    expect(docket).toMatch(/<td>{{ card.line }}<\/td>/);
+    expect(docket).toMatch(/<td>{{ card.dowry }}<\/td>/);
     expect(narrow).toMatch(/\.strip \{ display: table;/);
   });
 
