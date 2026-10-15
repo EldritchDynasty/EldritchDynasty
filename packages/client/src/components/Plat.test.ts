@@ -993,3 +993,112 @@ describe('parcel-specific rename accessibility (#1694)', () => {
     } finally { w.unmount(); }
   });
 });
+
+
+describe('Plat failure feedback changes with reading mode (#1698)', () => {
+  it('keeps blank and rejected rename drafts while changing local error wording both ways', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.nameParcel).mockReturnValue(false);
+    const land = mockLand();
+    const snapshot = structuredClone(land);
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls: [], actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      await w.get('button.rename').trigger('click');
+      await w.get('input').setValue('   ');
+      await w.get('input').trigger('keydown.enter');
+      expect(w.get('[role="alert"]').text()).toContain('Enter a parcel name');
+      expect(w.get('input').attributes('aria-invalid')).toBe('true');
+      expect(w.get('input').attributes('aria-describedby')).toBe(w.get('[role="alert"]').attributes('id'));
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toBe('Enter a name, or use the previous name.');
+      expect((w.get('input').element as HTMLInputElement).value).toBe('   ');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('[role="alert"]').text()).toContain('Enter a parcel name');
+      expect(actions.nameParcel).not.toHaveBeenCalled();
+
+      await w.get('input').setValue('Cinder Field');
+      await w.get('input').trigger('keydown.enter');
+      expect(actions.nameParcel).toHaveBeenCalledExactlyOnceWith('longmere', 'Cinder Field');
+      expect(w.get('[role="alert"]').text()).toContain('That parcel could not be renamed.');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toContain('Could not change this name.');
+      expect((w.get('input').element as HTMLInputElement).value).toBe('Cinder Field');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('[role="alert"]').text()).toContain('That parcel could not be renamed.');
+      expect(w.get('input').attributes('aria-describedby')).toBe(w.get('[role="alert"]').attributes('id'));
+
+      vi.mocked(actions.nameParcel).mockReturnValue(true);
+      await w.get('input').setValue('Cinder Field Two');
+      await w.get('input').trigger('keydown.enter');
+      expect(actions.nameParcel).toHaveBeenCalledTimes(2);
+      expect(w.find('input').exists()).toBe(false);
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+      expect(land).toEqual(snapshot);
+    } finally { w.unmount(); }
+  });
+
+  it('rewords a local gift failure without resending the order or losing the selected hall', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.order).mockReturnValue({ ok: false });
+    const land = mockLand();
+    const snapshot = structuredClone(land);
+    const halls = [
+      { id: 'main', name: 'Main Hall', isSeat: true, grievance: 0, members: [] },
+      { id: 'cadet_a', name: 'Younger Hall', isSeat: false, grievance: 0, members: [{}] },
+    ] as unknown as SessionView['halls'];
+    const w = mount(Plat, { props: {
+      land, houseName: 'House', halls, actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      await w.get('select').setValue('cadet_a');
+      await w.get('button.endow').trigger('click');
+      expect(w.get('[role="alert"]').text()).toBe('The land could not be endowed.');
+      expect(actions.order).toHaveBeenCalledExactlyOnceWith({
+        kind: 'endow', parcel: 'longmere', branch: 'cadet_a',
+      });
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toBe('Could not give this land to the hall.');
+      expect((w.get('select').element as HTMLSelectElement).value).toBe('cadet_a');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('[role="alert"]').text()).toBe('The land could not be endowed.');
+      expect(actions.order).toHaveBeenCalledTimes(1);
+
+      vi.mocked(actions.order).mockReturnValue({ ok: false, reason: 'The household refused' });
+      await w.get('button.endow').trigger('click');
+      expect(w.get('[role="alert"]').text()).toBe('The household refused');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toBe('The household refused');
+      expect(actions.order).toHaveBeenCalledTimes(2);
+
+      vi.mocked(actions.order).mockReturnValue({ ok: true });
+      await w.get('button.endow').trigger('click');
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+      expect(actions.order).toHaveBeenCalledTimes(3);
+      expect(land).toEqual(snapshot);
+    } finally { w.unmount(); }
+  });
+
+  it('rewords a recall fallback but preserves the actual recall order', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.order).mockReturnValue({ ok: false });
+    const w = mount(Plat, { props: {
+      land: mockLand({ held: [baseHeld({ holder: 'cadet_a', holderName: 'Younger Hall' })] }),
+      houseName: 'House', halls: [], actions, close: () => {}, proseMode: 'original',
+    } });
+    try {
+      await w.get('button.recall-land').trigger('click');
+      expect(w.get('[role="alert"]').text()).toBe('The land could not be recalled.');
+      expect(actions.order).toHaveBeenCalledExactlyOnceWith({
+        kind: 'endow', parcel: 'longmere', branch: null,
+      });
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toBe('Could not take this land back.');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('[role="alert"]').text()).toBe('The land could not be recalled.');
+      expect(actions.order).toHaveBeenCalledTimes(1);
+    } finally { w.unmount(); }
+  });
+});
