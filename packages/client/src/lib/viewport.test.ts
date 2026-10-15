@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { appShellCopy } from './app-shell-copy';
 
 const SRC = join(import.meta.dirname, '..');
 const read = (rel: string): string => readFileSync(join(SRC, rel), 'utf8');
@@ -217,9 +218,19 @@ describe('both input models, from one build', () => {
     expect([...kinds].sort()).toEqual(['advance', 'dismiss', 'help', 'take']);
   });
 
-  it('keeps every pane reachable by a visible control', () => {
-    for (const label of ['The house', 'The table', 'Abroad', 'The chronicle']) {
-      expect(app).toContain(`>${label}<`);
+  it('keeps every pane reachable through a mode-aware visible control', () => {
+    const original = appShellCopy('original');
+    const plain = appShellCopy('plainenglish');
+    for (const [pane, key, label] of [
+      ['house', 'navHouse', 'The house'],
+      ['table', 'navTable', 'The table'],
+      ['abroad', 'navAbroad', 'Abroad'],
+      ['chronicle', 'navChronicle', 'The chronicle'],
+    ] as const) {
+      expect(original[key]).toBe(label);
+      expect(plain[key]).not.toBe('');
+      expect(app).toContain(`{{ shellCopy.${key} }}`);
+      expect(app).toContain(`@click="pane = '${pane}'"`);
     }
   });
 });
