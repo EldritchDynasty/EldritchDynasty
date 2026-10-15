@@ -1,4 +1,5 @@
 import type { ChronicleEntry } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
 
 /**
  * READING THE BOOK (issue #69), as functions rather than as a component.
@@ -23,6 +24,14 @@ export const LENSES: { id: Lens; label: string }[] = [
   { id: 'improved', label: 'Improved' },
   { id: 'illuminated', label: 'Illuminated' },
 ];
+
+/** A single source for on-screen lens labels and exported plate framing. */
+export const PLAIN_LENS_LABELS: Readonly<Record<Lens, string>> = {
+  all: 'All entries',
+  blank: 'Blank entries',
+  improved: 'Changed entries',
+  illuminated: 'Highlighted entries',
+};
 
 export interface Reading {
   lens: Lens;
@@ -289,9 +298,11 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
 
 
 /** What the plate says under the house's name. */
-export function plateSubtitle(entries: readonly ChronicleEntry[], lens: Lens): string {
-  const label = (LENSES.find((l) => l.id === lens) ?? LENSES[0]!).label.toLowerCase();
-  if (!entries.length) return `nothing yet · ${label}`;
+export function plateSubtitle(entries: readonly ChronicleEntry[], lens: Lens, mode: ProseMode = 'original'): string {
+  const label = (mode === 'plainenglish'
+    ? PLAIN_LENS_LABELS[lens]
+    : (LENSES.find((l) => l.id === lens) ?? LENSES[0]!).label).toLowerCase();
+  if (!entries.length) return `${mode === 'plainenglish' ? 'no entries yet' : 'nothing yet'} · ${label}`;
   return `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} · ${plateSpan(entries)} · ${label}`;
 }
 
