@@ -345,7 +345,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       </p>
 
       <div v-if="decision.arcStep" class="dim small arc">
-        part of {{ decision.arcStep.instance.arc }}<span v-if="decision.arcStep.absent"> — and one of them is gone</span>
+        {{ plain ? 'Part of the story:' : 'part of' }} {{ decision.arcStep.instance.arc }}<span v-if="decision.arcStep.absent">{{ plain ? ' — one person is absent' : ' — and one of them is gone' }}</span>
       </div>
 
       <div v-for="req in decision.cast" :key="req.slot" class="cast row">
@@ -459,7 +459,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
           <p class="small words">{{ card.words }}</p>
           <div class="dim small">
-            <span>kinship {{ card.kinship.toFixed(4) }}</span>
+            <span>{{ plain ? 'Estimated family relatedness' : 'kinship' }} {{ card.kinship.toFixed(4) }}</span>
             ·
             <!-- The count is drawn rather than hovered. "The line reads fair"
                  says nothing on its own: a word standing on four completed
@@ -542,7 +542,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
            already put the numbers next to each other. -->
       <table class="strip small" aria-hidden="true">
         <thead>
-          <tr class="dim"><th>who</th><th>kinship</th><th>the line</th><th>dowry</th></tr>
+          <tr class="dim"><th>{{ plain ? 'Candidate' : 'who' }}</th><th>{{ plain ? 'Family relatedness' : 'kinship' }}</th><th>{{ plain ? 'Family history' : 'the line' }}</th><th>{{ plain ? 'Dowry' : 'dowry' }}</th></tr>
         </thead>
         <tbody>
           <tr v-for="card in decision.cards" :key="card.id">
