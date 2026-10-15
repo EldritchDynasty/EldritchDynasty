@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, proseOriginalHash, type AuctionLot } from '@ed/schema';
+import { asId, BidCurrencyS, proseOriginalHash, type AuctionLot } from '@ed/schema';
 import {
   announceAuction, auctionCandidateWeight, bidAtAuction, bootstrap, commissionBook, DEBT_FLOOR, grantHeirloom, grantParcel,
   order, resolveDueLots, setProseMode, setProseVariants, tableView, testRng, tickAuction,
@@ -25,7 +25,7 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
       announcedYear: 1042, saleYear: 1045, reserveCoin: 800,
     };
     ctx.world.auction.upcoming = [lot];
-    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0)).toEqual({ ok: true });
+    expect(order(ctx, { kind: 'lotBid', lot: lot.id, bid: { currency: 'marriage_promise' } })).toEqual({ ok: true });
     ctx.world.year = lot.saleYear;
     resolveDueLots(ctx, false);
     expect(ctx.world.auction.history[0]!.winner).toBe('player');
@@ -1100,6 +1100,7 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     const reasons = [
       bidAtAuction(ctx, closed.id, 'coin', 10),
       bidAtAuction(ctx, lot.id, 'coin', ctx.world.treasury - DEBT_FLOOR + 1),
+      // @ts-expect-error retired currency is not a supported new bid
       bidAtAuction(ctx, lot.id, 'favour', 1),
       bidAtAuction(ctx, lot.id, 'heirloom', 0, 'portion_of_agelessness'),
       bidAtAuction(ctx, lot.id, 'heirloom', 0, 'portion_of_fertility'),
@@ -1116,6 +1117,54 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     expect(JSON.stringify({ auction: ctx.world.auction, treasury: ctx.world.treasury, chronicle: ctx.world.chronicle })).toBe(before);
     // Re-offering the same heirloom on the lot it is already pledged to is a change of mind, not a second pledge.
     expect(bidAtAuction(ctx, other.id, 'heirloom', 0, 'portion_of_fertility').ok).toBe(true);
+  });
+
+  it('offers a signed marriage bid at the Table and keeps eligibility consistent across lots (#1184)', () => {
+    const ctx = bootstrap(bundle, 1184, 1042);
+    const first = heirloomLot(ctx, 'promise_at_table');
+    const second = { ...first, id: 'other_promise_at_table' };
+    ctx.world.auction.upcoming = [first, second];
+    const signer = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => p.castSlots.includes('head'))!;
+    const item = (id: string) => tableView(ctx).auction!.items.find((l) => l.id === id)!;
+    expect(item(first.id).marriagePromise).toMatchObject({ available: true, signer: signer.name, term: 40 });
+    expect(order(ctx, { kind: 'lotBid', lot: first.id, bid: { currency: 'marriage_promise' } })).toEqual({ ok: true });
+    expect(first.playerBid).toEqual({ house: ctx.world.playerHouse, currency: 'marriage_promise', amount: 0, pledgedBy: signer.id });
+    expect(item(first.id).bid).toEqual({ currency: 'marriage_promise' });
+    expect(item(first.id).marriagePromise!.available).toBe(true);
+    const blocked = item(second.id).marriagePromise!;
+    expect(blocked.available).toBe(false);
+    expect(order(ctx, { kind: 'lotBid', lot: second.id, bid: { currency: 'marriage_promise' } }))
+      .toEqual({ ok: false, reason: blocked.reason });
+    expect(order(ctx, { kind: 'lotBid', lot: first.id, bid: null })).toEqual({ ok: true });
+    expect(item(second.id).marriagePromise!.available).toBe(true);
+  });
+
+  it('refuses new favour bids and voids a saved one without spending its legacy balance (#1184)', () => {
+    const ctx = bootstrap(bundle, 1184, 1042);
+    const lot = heirloomLot(ctx, 'retired_favour_bid');
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.auction.favours = 10_000;
+    expect(BidCurrencyS.options).not.toContain('favour');
+    for (const amount of [0, 1, 10_000]) {
+      // @ts-expect-error exercise old or untyped callers at the runtime boundary
+      expect(bidAtAuction(ctx, lot.id, 'favour', amount).ok).toBe(false);
+      expect(lot.playerBid).toBeUndefined();
+    }
+
+    // Stored bids and history keep their schema, so existing saves still load.
+    lot.playerBid = { house: ctx.world.playerHouse, currency: 'favour', amount: 10_000 };
+    const saved = saveGame(ctx);
+    const loaded = loadGame(saved, bundle);
+    expect(digestOf(loaded)).toBe(digestOf(ctx));
+    expect(loaded.world.auction.upcoming[0]!.playerBid?.currency).toBe('favour');
+    const treasury = loaded.world.treasury;
+    loaded.world.bidCeiling = 0;
+    loaded.world.year = lot.saleYear;
+    resolveDueLots(loaded, false);
+    expect(loaded.world.auction.history[0]!.winner).not.toBe('player');
+    expect(loaded.world.auction.favours).toBe(10_000);
+    expect(loaded.world.treasury).toBe(treasury);
   });
 
   it('only real heirloom bids reserve a portion across lots (#1269)', () => {

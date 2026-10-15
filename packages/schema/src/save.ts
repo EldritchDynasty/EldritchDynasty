@@ -22,7 +22,7 @@ import type { BranchState } from './branch.js';
 import type { HeirloomState } from './heirloom.js';
 import type { LibraryBookState } from './spellbook.js';
 import type { AuctionState, MarriagePromise } from './auction.js';
-import { BidCurrencyS, AuctionLotKindS } from './auction.js';
+import { StoredBidCurrencyS, AuctionLotKindS } from './auction.js';
 import { ResolvedClaimS } from './claim.js';
 import type { Relationship } from './house.js';
 import type { FrequencyLedger } from './frequency.js';
@@ -403,7 +403,7 @@ export const LibraryBookStateS = z.object({
 /** The auction (issue #17). See `schema/src/auction.ts`. */
 export const AuctionBidS = z.object({
   house: z.string(),
-  currency: BidCurrencyS,
+  currency: StoredBidCurrencyS,
   amount: z.number(),
   heirloomOffered: z.string().optional(),
   pledgedBy: z.string().optional(),

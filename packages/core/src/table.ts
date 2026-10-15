@@ -7,7 +7,8 @@ import { beginStudy, canStudySpellbook, conditionDrag, effectiveStudyYears, held
 import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type PedigreeGrade } from './people/papers.js';
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
 import { DEBT_FLOOR } from './economy.js';
-import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, bidAtAuction, commissionBook, lotName, sellerName, tradeableHeirlooms, withdrawBid } from './auction.js';
+import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, bidAtAuction, commissionBook, lotName, marriageBidOffer, sellerName, tradeableHeirlooms, withdrawBid } from './auction.js';
+import { PLEDGE_TERM } from './people/pledges.js';
 import { evalCondition } from './events/conditions.js';
 import { queueChoice } from './events/decisions.js';
 import { candidatesFor, resolveSlots, type SlotResolution } from './events/slots.js';
@@ -81,13 +82,11 @@ export type TableOrder =
   /** How high the house will go at the next auction, in crowns. */
   | { kind: 'bid'; ceiling: number }
   /**
-   * THE HOUSE'S OWN BID ON ONE LOT (issue #1183) — coin, or an heirloom traded
-   * for it, and `null` to withdraw. It outranks the ceiling and the steward
-   * for that lot. §14's marriage promise and favours are not offered here
-   * until something collects a promise and something grants a favour (#1184):
-   * a pledge nothing ever calls in would be the cheapest bid in the game.
+   * THE HOUSE'S OWN BID ON ONE LOT — coin, an heirloom, or a collected marriage
+   * promise (#1184), and `null` to withdraw. It outranks the ceiling and the
+   * steward for that lot. Favours remain retired until they have a source.
    */
-  | { kind: 'lotBid'; lot: string; bid: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string } | null }
+  | { kind: 'lotBid'; lot: string; bid: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string } | { currency: 'marriage_promise' } | null }
   /** Pay a broker to bring a missing common affinity book to a sale in twelve years. */
   | { kind: 'seekBook'; book: string }
   /**
@@ -692,9 +691,12 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
 
     case 'lotBid': {
       if (o.bid === null) return withdrawBid(ctx, o.lot);
-      return o.bid.currency === 'coin'
-        ? bidAtAuction(ctx, o.lot, 'coin', o.bid.amount)
-        : bidAtAuction(ctx, o.lot, 'heirloom', 0, o.bid.heirloom);
+      switch (o.bid.currency) {
+        case 'coin': return bidAtAuction(ctx, o.lot, 'coin', o.bid.amount);
+        case 'heirloom': return bidAtAuction(ctx, o.lot, 'heirloom', 0, o.bid.heirloom);
+        case 'marriage_promise': return bidAtAuction(ctx, o.lot, 'marriage_promise', 0);
+        default: return assertNever(o.bid);
+      }
     }
 
     case 'seekBook':
@@ -826,7 +828,9 @@ export interface TableLot {
   saleYear: Year;
   reserve: number;
   /** The house's own standing bid on this lot, if it has placed one. */
-  bid?: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string; name: string };
+  bid?: { currency: 'coin'; amount: number } | { currency: 'heirloom'; heirloom: string; name: string } | { currency: 'marriage_promise' };
+  /** The engine owns eligibility and the term; the reader only presents them. */
+  marriagePromise?: { available: boolean; signer?: string; reason?: string; term: number };
 }
 
 /** What the table can currently be told to do. A client draws this. */
@@ -1084,15 +1088,18 @@ export function tableView(ctx: SimCtx): TableView {
           items: [...coming]
             .sort((a, b) => a.saleYear - b.saleYear || a.id.localeCompare(b.id))
             .map((l): TableLot => {
+              const pledge = marriageBidOffer(ctx, l.id);
               const item: TableLot = {
                 id: l.id, kind: l.kind, name: lotName(ctx, l), seller: sellerName(ctx, l.house),
                 saleYear: l.saleYear, reserve: l.reserveCoin,
+                marriagePromise: { available: !!pledge.signer, signer: pledge.signer?.name, reason: pledge.reason, term: PLEDGE_TERM },
               };
               const b = l.playerBid;
               if (b?.currency === 'coin') item.bid = { currency: 'coin', amount: b.amount };
               else if (b?.currency === 'heirloom' && b.heirloomOffered !== undefined) {
                 item.bid = { currency: 'heirloom', heirloom: b.heirloomOffered, name: proseForPromiseLot(ctx, b.heirloomOffered) };
               }
+              else if (b?.currency === 'marriage_promise') item.bid = { currency: 'marriage_promise' };
               return item;
             }),
           heirlooms: tradeableHeirlooms(ctx).map((id) => ({ id, name: proseForPromiseLot(ctx, id) })),
