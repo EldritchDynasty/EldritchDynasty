@@ -16,7 +16,10 @@ import { z } from 'zod';
  * already built. A second, parallel per-house chronicle document would be a
  * second source of truth for the same fact.
  */
-export const BidCurrencyS = z.enum(['coin', 'favour', 'heirloom', 'marriage_promise']);
+/** Retain the retired currency when loading historical bids and sale records. */
+export const StoredBidCurrencyS = z.enum(['coin', 'favour', 'heirloom', 'marriage_promise']);
+/** A new bid may spend only currencies that the game actually supplies. */
+export const BidCurrencyS = StoredBidCurrencyS.exclude(['favour']);
 export type BidCurrency = z.infer<typeof BidCurrencyS>;
 
 export const AuctionLotKindS = z.enum(['spellbook', 'heirloom', 'chronicle_page']);
@@ -24,8 +27,8 @@ export type AuctionLotKind = z.infer<typeof AuctionLotKindS>;
 
 export interface AuctionBid {
   house: string;
-  currency: BidCurrency;
-  /** Coin or favour points. Ignored for `heirloom` and `marriage_promise`. */
+  currency: z.infer<typeof StoredBidCurrencyS>;
+  /** Coins, or the original amount on a legacy favour bid. Ignored for other currencies. */
   amount: number;
   /** The heirloom traded away, when `currency` is `heirloom`. */
   heirloomOffered?: string;
@@ -61,7 +64,7 @@ export interface AuctionState {
   upcoming: AuctionLot[];
   history: AuctionHistoryEntry[];
   nextAnnounceYear: number;
-  /** Favours owed, as a bid currency. Negative = the house owes; positive = it is owed. */
+  /** Legacy save data; favours have no earning source and cannot fund new bids. */
   favours: number;
 }
 

@@ -1,4 +1,5 @@
 import type { AuctionBid, AuctionLot, BidCurrency, HeirloomState, HouseDef, MarriagePromise } from '@ed/schema';
+import { BidCurrencyS } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { DEBT_FLOOR } from './economy.js';
@@ -244,6 +245,20 @@ export interface BidResult {
   reason?: string;
 }
 
+/** The Table and bid registration read the same pledge eligibility. */
+export function marriageBidOffer(ctx: SimCtx, lotId: string): { signer?: { id: string; name: string }; reason?: string } {
+  const w = ctx.world;
+  const signer = w.people.household(w.playerHouse, w.year).find((p) => p.castSlots.includes('head'));
+  if (!signer || signer.status !== 'alive') {
+    return { reason: msg(ctx, 'auction.refuse.pledge_head', 'the sitting Head must sign the pledge') };
+  }
+  if (w.marriagePromises.length || w.auction.upcoming.some((l) => l.id !== lotId
+    && l.playerBid?.currency === 'marriage_promise')) {
+    return { reason: msg(ctx, 'auction.refuse.pledge_outstanding', 'the house has already promised a granddaughter') };
+  }
+  return { signer: { id: signer.id, name: signer.name } };
+}
+
 /**
  * THE PLAYER'S OWN BID (issue #1183), and the one place one is registered.
  *
@@ -264,7 +279,13 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   if (!lot) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_lot', 'no such lot') };
   if (lot.saleYear <= w.year) return { ok: false, reason: msg(ctx, 'auction.refuse.bid_closed', 'that sale has been held') };
 
-  // Amount is a count of coins/favours, and is still serialized for the
+  // Old saves can contain favour bids. They remain readable, but an untyped
+  // caller cannot revive a currency that has no earning source (#1184).
+  if (!BidCurrencyS.safeParse(currency).success) {
+    return { ok: false, reason: msg(ctx, 'auction.refuse.bid_favours', 'the house is not owed that many favours') };
+  }
+
+  // Amount is a count of coins, and is still serialized for the
   // currencies whose value is fixed. Refuse NaN, fractions and unsafe numbers
   // before a malformed bid can enter the auction ledger.
   if (!Number.isSafeInteger(amount) || amount < 0) {
@@ -277,21 +298,8 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
       reason: msg(ctx, 'auction.refuse.bid_purse', 'the house cannot raise {AMOUNT} crowns', { AMOUNT: String(amount) }),
     };
   }
-  if (currency === 'favour' && amount > w.auction.favours) {
-    return { ok: false, reason: msg(ctx, 'auction.refuse.bid_favours', 'the house is not owed that many favours') };
-  }
-  const pledger = currency === 'marriage_promise'
-    ? w.people.household(w.playerHouse, w.year).find((p) => p.castSlots.includes('head'))
-    : undefined;
-  if (currency === 'marriage_promise') {
-    if (!pledger || pledger.status !== 'alive') {
-      return { ok: false, reason: msg(ctx, 'auction.refuse.pledge_head', 'the sitting Head must sign the pledge') };
-    }
-    if (w.marriagePromises.length || w.auction.upcoming.some((l) => l.id !== lot.id
-      && l.playerBid?.currency === 'marriage_promise')) {
-      return { ok: false, reason: msg(ctx, 'auction.refuse.pledge_outstanding', 'the house has already promised a granddaughter') };
-    }
-  }
+  const pledge = currency === 'marriage_promise' ? marriageBidOffer(ctx, lot.id) : undefined;
+  if (pledge?.reason) return { ok: false, reason: pledge.reason };
   if (currency === 'heirloom') {
     if (!heirloomOffered || !w.heirlooms.has(heirloomOffered)) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
@@ -310,7 +318,7 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   }
 
   const bid: AuctionBid = { house: w.playerHouse, currency, amount };
-  if (pledger) bid.pledgedBy = pledger.id;
+  if (pledge?.signer) bid.pledgedBy = pledge.signer.id;
   // Only an heirloom-currency bid commits collateral; extra input on a coin
   // or favour bid must not falsely pledge it against another lot.
   if (currency === 'heirloom' && heirloomOffered) bid.heirloomOffered = heirloomOffered;
@@ -349,7 +357,7 @@ function honourable(ctx: SimCtx, bid: AuctionBid): boolean {
   const w = ctx.world;
   switch (bid.currency) {
     case 'coin': return bid.amount <= w.treasury - DEBT_FLOOR;
-    case 'favour': return bid.amount <= w.auction.favours;
+    case 'favour': return false;
     case 'heirloom': {
       const held = bid.heirloomOffered === undefined ? undefined : w.heirlooms.get(bid.heirloomOffered);
       return held !== undefined && !spentHeirloom(held);
@@ -391,8 +399,8 @@ export function sellerName(ctx: SimCtx, houseId: string): string {
 function bidValue(bid: AuctionBid, lot: AuctionLot): number {
   switch (bid.currency) {
     case 'coin':
-    case 'favour':
       return bid.amount;
+    case 'favour': return -1;
     // An heirloom has a flat trade value. A granddaughter meets the reserve
     // at a premium, but can still lose to a rival who values the lot more.
     case 'heirloom': return 450;
@@ -584,7 +592,7 @@ function grantLot(ctx: SimCtx, lot: AuctionLot): void {
 function chargeBid(ctx: SimCtx, bid: AuctionBid, lot: AuctionLot): void {
   const w = ctx.world;
   if (bid.currency === 'coin') { w.treasury -= bid.amount; return; }
-  if (bid.currency === 'favour') { w.auction.favours -= bid.amount; return; }
+  if (bid.currency === 'favour') return; // A legacy bid is never honourable.
   if (bid.currency === 'heirloom' && bid.heirloomOffered) { transferHeirloom(ctx, bid.heirloomOffered); return; }
   if (bid.currency === 'marriage_promise') {
     // WHAT SHE WAS PROMISED FOR. `lot` was written empty here, which made
