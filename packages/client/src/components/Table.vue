@@ -242,7 +242,7 @@ const MARRIAGE_ORDERS = [
 </script>
 
 <template>
-<section class="table stack" :aria-label="plain ? 'Family orders and resources' : 'The house' + String.fromCharCode(39) + 's standing orders'">
+<section class="table stack" :aria-label="plain ? 'Family orders and resources' : `The house's standing orders`">
     <div class="panel">
       <h3 class="label">{{ local('The purse', 'Money and auctions') }}</h3>
       <p class="small">
