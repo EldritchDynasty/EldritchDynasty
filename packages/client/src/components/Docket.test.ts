@@ -495,7 +495,7 @@ describe('the docket draws what it is handed', () => {
       expect(w.get('.cast select').attributes('aria-label')).toBe('Choose WHO');
       await w.setProps({ proseMode: 'plainenglish' });
       expect(w.get('.advice').attributes('aria-label')).toBe('Advice from family members');
-      expect(w.get('.cast select').attributes('aria-label')).toBe('Select a person for WHO');
+      expect(w.get('.cast select').attributes('aria-label')).toBe('Select a person for who');
       expect(w.get('.advice').text()).toContain('Choose Dala.');
       await w.get('.cast select').setValue('p_1');
       expect(w.text()).toContain('Cesse');
@@ -2189,7 +2189,7 @@ describe('reader-local arc and comparison wording (#1692)', () => {
     try {
       expect(w.get('.arc').text()).toBe('part of family_compact — and one of them is gone');
       await w.setProps({ proseMode: 'plainenglish' });
-      expect(w.get('.arc').text()).toBe('Part of the story: family_compact — one person is absent');
+      expect(w.get('.arc').text()).toBe('Part of the story: family compact — one person is absent');
       expect(w.text()).toContain('The body of the thing, as the player reads it.');
       await w.setProps({ proseMode: 'original' });
       expect(w.get('.arc').text()).toBe('part of family_compact — and one of them is gone');
