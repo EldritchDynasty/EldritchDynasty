@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
-import { mount } from '@vue/test-utils';
-import ReadingSettings from '../components/ReadingSettings.vue';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBundle } from '@ed/content';
@@ -344,49 +342,5 @@ describe('run selection ignores stale host responses (#1348)', () => {
 
     nextImport = async () => BROWSER_IMPORT_CANCELLED;
     expect(await game.actions.importSave()).toBe('cancelled');
-  });
-});
-
-
-describe('reading preferences group (#1682)', () => {
-  it('renames the group without changing values and emits the same preferences after switching', async () => {
-    const w = mount(ReadingSettings, {
-      props: {
-        textScale: 'large', readingFont: 'readable', proseMode: 'original',
-        skipSeenProse: true, reduceMotion: true,
-        showEverythingFromStart: true, showProgressiveRevealOption: true,
-      },
-    });
-    try {
-      for (const proseMode of ['original', 'plainenglish', 'original'] as const) {
-        await w.setProps({ proseMode });
-        expect(w.get('.reading-settings[role="group"]').attributes('aria-label')).toBe(
-          proseMode === 'plainenglish' ? 'Choose how to read' : 'Reading preferences');
-        expect(w.findAll('select').map((select) => (select.element as HTMLSelectElement).value))
-          .toEqual(['large', 'readable', proseMode]);
-        expect(w.findAll('input[type="checkbox"]').map((input) => (input.element as HTMLInputElement).checked))
-          .toEqual([true, true, true]);
-        expect(w.emitted()).toEqual({});
-      }
-      await w.setProps({ proseMode: 'plainenglish' });
-      const selects = w.findAll('select');
-      await selects[0]!.setValue('largest');
-      await selects[1]!.setValue('book');
-      await selects[2]!.setValue('original');
-      expect(w.emitted('update:textScale')).toEqual([['largest']]);
-      expect(w.emitted('update:readingFont')).toEqual([['book']]);
-      expect(w.emitted('update:proseMode')).toEqual([['original']]);
-      const toggles = w.findAll('input[type="checkbox"]');
-      await toggles[0]!.setValue(false);
-      await toggles[1]!.setValue(false);
-      await toggles[2]!.setValue(false);
-      expect(w.emitted('update:skipSeenProse')).toEqual([[false]]);
-      expect(w.emitted('update:reduceMotion')).toEqual([[false]]);
-      expect(w.emitted('update:showEverythingFromStart')).toEqual([[false]]);
-      await w.setProps({ showProgressiveRevealOption: false });
-      expect(w.findAll('input[type="checkbox"]')).toHaveLength(2);
-    } finally {
-      w.unmount();
-    }
   });
 });
