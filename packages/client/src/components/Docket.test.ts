@@ -2060,3 +2060,55 @@ describe('five reader-control panels in Plain English (#1623)', () => {
     }
   });
 });
+
+
+describe('reader-local arc and comparison wording (#1692)', () => {
+  it('switches arc context without altering an authored decision or issuing an answer', async () => {
+    const decision = {
+      ...choiceDecision(),
+      arcStep: { instance: { arc: 'family_compact' }, absent: true },
+    } as unknown as PendingDecisionView;
+    const actions = spyActions();
+    const w = mount(Docket, { props: {
+      decision, actions: actions as unknown as GameActions, proseMode: 'original',
+    } });
+    try {
+      expect(w.get('.arc').text()).toBe('part of family_compact — and one of them is gone');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('.arc').text()).toBe('Part of the story: family_compact — one person is absent');
+      expect(w.text()).toContain('The body of the thing, as the player reads it.');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.arc').text()).toBe('part of family_compact — and one of them is gone');
+      expect(actions.choose).not.toHaveBeenCalled();
+      expect(actions.send).not.toHaveBeenCalled();
+    } finally { w.unmount(); }
+  });
+
+  it('switches match comparison headings but preserves figures and the chosen card', async () => {
+    const decision = matchDecision();
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const w = mount(Docket, { props: {
+      decision, actions: actions as unknown as GameActions, proseMode: 'original',
+    } });
+    try {
+      expect(w.get('.strip').text()).toContain('who');
+      expect(w.get('.strip').text()).toContain('the line');
+      expect(w.text()).toContain('kinship 0.0625');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('.strip').text()).toContain('Candidate');
+      expect(w.get('.strip').text()).toContain('Family relatedness');
+      expect(w.get('.strip').text()).toContain('Family history');
+      expect(w.text()).toContain('Estimated family relatedness 0.0625');
+      expect(w.text()).toContain('70 crowns');
+      const selected = w.findAll('.cards .card button').find((b) => b.text() === 'Choose this match');
+      expect(selected).toBeDefined();
+      await selected!.trigger('click');
+      expect(actions.match).toHaveBeenCalledWith('dec_match', 'blood', 'Corin');
+      await w.setProps({ proseMode: 'original' });
+      expect(w.get('.strip').text()).toContain('the line');
+      expect(w.text()).toContain('kinship 0.0625');
+      expect(decision).toEqual(original);
+    } finally { w.unmount(); }
+  });
+});
