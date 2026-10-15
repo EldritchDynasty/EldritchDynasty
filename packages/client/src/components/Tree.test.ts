@@ -1022,7 +1022,7 @@ describe('known Age mood and generation-question onset (#1580)', () => {
 
   it('renders the public opening year on the generation question without a new engine lookup', () => {
     const app = readFileSync('packages/client/src/App.vue', 'utf8');
-    expect(app).toMatch(/v-if="view\.generationArc"[\s\S]*?since \{\{ view\.generationArc\.opened \}\}/);
+    expect(app).toMatch(/v-if="view\.generationArc"[\s\S]*?\{\{ shellCopy\.generationSince \}\} \{\{ view\.generationArc\.opened \}\}/);
     expect(app).toContain('{{ view.generationArc.question }}');
   });
 });
