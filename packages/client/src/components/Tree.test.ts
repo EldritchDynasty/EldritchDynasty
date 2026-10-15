@@ -1069,38 +1069,39 @@ describe('known Age mood and generation-question onset (#1580)', () => {
 describe('person-specific branch focus accessible names (#1731)', () => {
   it('distinguishes the ancestors in both reading modes and preserves root event ids', async () => {
     const anwen = person({ id: 'anwen', name: 'Anwen' });
-    const bryn = person({ id: 'bryn', name: 'Bryn' });
+    const bryn = person({ id: 'bryn', name: 'Bryn',
+      record: { attrs: {}, claimedTraits: [], parents: { mother: 'anwen' }, claimed: [] },
+    });
     const hall = [
       anwen, bryn,
-      person({ id: 'anwen-child', name: 'Anwen child', parents: { mother: 'anwen' } }),
-      person({ id: 'bryn-child', name: 'Bryn child', parents: { mother: 'bryn' } }),
+      person({ id: 'bryn-child', name: 'Bryn child',
+        record: { attrs: {}, claimedTraits: [], parents: { mother: 'bryn' }, claimed: [] },
+      }),
     ];
     const base = { hall, names: [], traitNames: [], selected: null, proseMode: 'original' as const };
     const first = mount(Kin, { props: { ...base, member: anwen } });
-    const second = mount(Kin, { props: { ...base, member: bryn } });
+    const buttons = () => first.findAll('button.root');
     try {
       expect(first.get('button.root').text()).toBe('Only this branch ▸');
-      expect(second.get('button.root').text()).toBe('Only this branch ▸');
+      expect(buttons().map((b) => b.text())).toEqual(['Only this branch ▸', 'Only this branch ▸']);
       expect(first.get('button.root').attributes('aria-label')).toBe('Only the branch from Anwen');
-      expect(second.get('button.root').attributes('aria-label')).toBe('Only the branch from Bryn');
+      expect(buttons()[1]!.attributes('aria-label')).toBe('Only the branch from Bryn');
 
       await first.setProps({ proseMode: 'plainenglish' });
-      await second.setProps({ proseMode: 'plainenglish' });
       expect(first.get('button.root').text()).toBe('Show only this family branch ▸');
       expect(first.get('button.root').attributes('aria-label')).toBe("Show only Anwen's family branch");
-      expect(second.get('button.root').attributes('aria-label')).toBe("Show only Bryn's family branch");
+      expect(buttons()[1]!.text()).toBe('Show only this family branch ▸');
+      expect(buttons()[1]!.attributes('aria-label')).toBe("Show only Bryn's family branch");
       await first.get('button.root').trigger('click');
-      await second.get('button.root').trigger('click');
-      expect(first.emitted('root')).toEqual([['anwen']]);
-      expect(second.emitted('root')).toEqual([['bryn']]);
+      await buttons()[1]!.trigger('click');
+      expect(first.emitted('root')).toEqual([['anwen'], ['bryn']]);
 
       await first.setProps({ proseMode: 'original' });
-      await second.setProps({ proseMode: 'original' });
       expect(first.get('button.root').attributes('aria-label')).toBe('Only the branch from Anwen');
-      expect(second.get('button.root').attributes('aria-label')).toBe('Only the branch from Bryn');
+      expect(buttons()[1]!.attributes('aria-label')).toBe('Only the branch from Bryn');
+      expect(buttons().map((b) => b.text())).toEqual(['Only this branch ▸', 'Only this branch ▸']);
     } finally {
       first.unmount();
-      second.unmount();
     }
   });
 });
