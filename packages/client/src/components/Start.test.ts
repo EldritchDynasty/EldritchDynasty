@@ -2072,4 +2072,33 @@ describe('front-door Library and save accessibility in both registers (#410)', (
       w.unmount();
     }
   });
+
+  it('names each completed-house removal button and targets the selected id (#1693)', async () => {
+    const library = completed(2);
+    const actions = spyActions();
+    const w = mount(Start, { props: { actions, resumable: false, library, proseMode: 'original' } });
+    try {
+      await flush();
+      const removeButtons = () => w.findAll('.library-run > .library-title > button');
+      expect(removeButtons().map((b) => b.text())).toEqual(['Remove', 'Remove']);
+      expect(removeButtons().map((b) => b.attributes('aria-label'))
+        ).toEqual(['Remove House Salt', 'Remove House Ash']);
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(removeButtons().map((b) => b.attributes('aria-label'))
+        ).toEqual(['Remove House Salt from completed games', 'Remove House Ash from completed games']);
+      await w.setProps({ proseMode: 'original' });
+      expect(removeButtons().map((b) => b.attributes('aria-label'))
+        ).toEqual(['Remove House Salt', 'Remove House Ash']);
+
+      await removeButtons()[1]!.trigger('click');
+      expect(w.get('.library-remove-confirm').text()).toContain('Remove House Ash?');
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+      await w.get('.library-remove-confirm button.confirm-remove').trigger('click');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledOnce();
+      expect(actions.deleteLibraryRun).toHaveBeenCalledWith('house_1');
+      expect(library.runs).toHaveLength(2);
+    } finally { w.unmount(); }
+  });
+
 });
