@@ -149,7 +149,7 @@ describe('Table reader-local action labels (#1683–#1685)', () => {
     const button = (label: string) => w.findAll('button').find((b) => b.text().includes(label));
     try {
       expect(w.text()).toContain('The shelf');
-      expect(w.get('select[aria-label="Choose a reader for Ash Grammar"]').exists()).toBe(true);
+      expect(w.find('select[aria-label="Choose a reader for Ash Grammar"]').exists()).toBe(true);
       await w.setProps({ proseMode: 'plainenglish' });
       expect(w.text()).toContain('Family library');
       expect(w.text()).toContain('Tutoring');
