@@ -118,7 +118,8 @@ function readingStorage(): Storage | null {
 
 const revealStorage = readingStorage();
 const revealed = ref<Set<RevealElement>>(new Set());
-const revealNotices = ref<{ id: RevealElement; text: string }[]>([]);
+/** Store stable identities, so the current reader mode always owns the visible words. */
+const revealNotices = ref<RevealElement[]>([]);
 let revealRunKey: string | null = null;
 
 function isRevealed(element: RevealElement): boolean {
@@ -126,7 +127,7 @@ function isRevealed(element: RevealElement): boolean {
 }
 
 function dismissReveal(element: RevealElement): void {
-  revealNotices.value = revealNotices.value.filter((notice) => notice.id !== element);
+  revealNotices.value = revealNotices.value.filter((notice) => notice !== element);
 }
 
 /**
@@ -163,7 +164,7 @@ watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEveryth
   if (!showEverything) {
     revealNotices.value = [
       ...revealNotices.value,
-      ...transition.newlyShown.map((id) => ({ id, text: revealNotice(id) })),
+      ...transition.newlyShown,
     ];
   }
 }, { immediate: true });
@@ -441,9 +442,9 @@ const yearAndBirths = computed(() => {
     />
 
     <div v-if="revealNotices.length" class="reveal-notices" aria-live="polite">
-      <p v-for="notice in revealNotices" :key="notice.id" class="panel small reveal-note">
-        <span>{{ notice.text }}</span>
-        <button class="quiet small" @click="dismissReveal(notice.id)">{{ shellCopy.noticeDismiss }}</button>
+      <p v-for="notice in revealNotices" :key="notice" class="panel small reveal-note">
+        <span>{{ revealNotice(notice, accessibility.proseMode) }}</span>
+        <button class="quiet small" @click="dismissReveal(notice)">{{ shellCopy.noticeDismiss }}</button>
       </p>
     </div>
 
