@@ -1256,3 +1256,46 @@ describe('reading preferences group (#1682)', () => {
     }
   });
 });
+
+
+describe('Chronicle century jump accessible names (#1733)', () => {
+  it('names century actions in both modes without changing years, filter or pressed state', async () => {
+    const pages = [
+      entry('old', 1042, 'The first entry.'),
+      entry('middle', 1150, 'The second entry.'),
+      entry('new', 1230, 'The third entry.'),
+    ];
+    const w = mount(Book, {
+      props: {
+        book: pages, ages: [], houseName: 'Gearithy',
+        close: () => {}, actions: readsOver(pages), proseMode: 'original',
+      },
+      attachTo: document.body,
+    });
+    const jump = () => w.findAll('.jump button').filter((b) => /^\d{4}$/.test(b.text()));
+    try {
+      expect(jump().map((b) => b.text())).toEqual(['1000', '1100', '1200']);
+      expect(jump().map((b) => b.attributes('aria-label')))
+        .toEqual(['Read the book from 1000', 'Read the book from 1100', 'Read the book from 1200']);
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(jump().map((b) => b.attributes('aria-label')))
+        .toEqual([
+          'Show Chronicle entries from 1000',
+          'Show Chronicle entries from 1100',
+          'Show Chronicle entries from 1200',
+        ]);
+      await jump()[1]!.trigger('click');
+      expect(jump()[1]!.attributes('aria-pressed')).toBe('true');
+      expect(w.find('[data-entry="old"]').exists()).toBe(false);
+      expect(w.find('[data-entry="middle"]').exists()).toBe(true);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(jump()[1]!.attributes('aria-label')).toBe('Read the book from 1100');
+      expect(jump()[1]!.attributes('aria-pressed')).toBe('true');
+      expect(jump().map((b) => b.text())).toEqual(['1000', '1100', '1200']);
+    } finally {
+      w.unmount();
+    }
+  });
+});
