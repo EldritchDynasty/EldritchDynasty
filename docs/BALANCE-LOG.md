@@ -10792,3 +10792,133 @@ measured reduction, rather than evidence that every part of #1641 is resolved.
 `npm run digest -- 8 400` also matches on main and the optimized branch for all
 eight seeds (`1000 + 7*i`), including saved Chronicle words and RNG state. This
 checks the entire saved world rather than only the gate's aggregate counts.
+
+## 2026-10-15 — #1641/#1679 fire-rate workload attribution
+
+The timing-metadata lane is free after #1538. The fire-rate evidence now cites
+the measured causes below as well as the historical hosted timings. Its
+1,530-second baseline, 1.25 factor, 800-run sample, requested 500-year term,
+and simulation assertions retain their existing values.
+
+### Longer-lived runs after the retainer-membership repair
+
+These are the fixed-runner measurements first reported in #1641 on October 14:
+Node v24.19.0 on the same AMD EPYC 9V74 container, with a two-CPU quota,
+official seeds `5000 + 7*i`, and 20 Long Lines requesting 500 years each.
+The adjacent commits change only code. `2ddf11b6` (#1218) closes a released
+retainer's household membership, so they stop consuming household resources.
+
+| Code | Actual played years | Living-person years | Household-person years | Batch wall seconds | CPU seconds |
+|---|---:|---:|---:|---:|---:|
+| Before repair, `4c71456a` | 6,618 | 364,666 | 359,882 | 29.296 | 32.428 |
+| After repair, `2ddf11b6` | 8,431 | 508,327 | 485,871 | 38.106 | 41.682 |
+
+Played years count only calls in which `stepYear` advances the year; a broken
+line stops early. Person-year counts sum end-of-year observations, not the
+requested term. Timing comes from a separate, uninstrumented call to the
+official `playGateBatch(content, 20, 500)`, excluding content load. Its sorted
+template/outcome/firing hash matches the instrumented run on each side:
+`f2ec9d6ac5cb74a67aae0307f0b162a0315676ac0253ed3d0b1f4d390cf93116`
+before, and
+`447e545e2315598253ab03c51eee670c0f8f182da1305a7d46fdaea522f86ae0`
+after. The different hashes reflect the intended population correction.
+
+Played years grow 27.4%, living-person years 39.4%, and wall time 30.1%.
+CPU per actual played year grows only 0.9%. This is primarily more work from
+longer surviving family lines, and the repair must be preserved. By
+pre-optimization `7412a5ae`, the same cohort plays 8,821 years and accumulates
+533,757 living-person years. Neither the adjacent guardian-marriage repair
+`49094c40` nor the conception-stream repair `3ac03924` changes played years
+in this cohort. These checks do not claim those repairs have zero other cost.
+
+### A separate avoidable cost, and the remaining uncertainty
+
+The October 14 section identifies the repeated rival-spouse history scans
+introduced by `79f0e6e1` (#786). PR #1642, merged as `f5df1e56`, removes those
+scans and speeds the combined current-content 100-run comparison by 14.7%
+wall time and 14.2% CPU. Aggregate gate counts and all eight 400-year saved-world
+digests match before and after that optimization.
+
+Local Oct 9 to Oct 11 wall time grows about 9% in the 20-run prefix, against
+103% in the historical hosted nightlies. The early hosted jump remains partly
+unexplained; runner variance is not established. Local Node 24 attribution is not a substitute
+for hosted Node 22 timing evidence or grounds to change a baseline. Parent
+#1641 remains open for that gap and its next three scheduled nightly results.
+
+### Expanded early-window comparison
+
+A fresh unprofiled comparison on the same container enlarges the official
+seed prefix from 20 to 100 runs, still requesting 500 years. Only one local
+simulation process runs at a time. Each snapshot uses its own valid content;
+content loading (0.968s and 0.990s) is outside the batch clock.
+
+| Snapshot | Batch wall seconds | CPU seconds |
+|---|---:|---:|
+| Oct 9 `1e8519e4` | 146.976 | 152.923 |
+| Oct 11 `b9596ea0` | 177.585 | 184.035 |
+
+The expanded cohort grows 20.8% in wall time and 20.3% in CPU, more than the
+20-run prefix but still below the hosted 103% increase. It strengthens the
+evidence for a real runtime component without attributing the remaining gap.
+Sorted template/outcome/firing hashes are
+`cab53f31c35f987bf5b44c18ff9f979f432979ab9ad4e75e696640f9a549a31a`
+and `f2261fa9a2cb62323bba67782241111790957dc9b870d251246d8b5df82288cc`.
+
+Source review also checks the scheduled wrapper: `gateFireRateNightly` passes
+the same source, run count and years to fire-rate and vocabulary reach, and
+both read the same memoized `playGateBatch`. That wrapper and batch cache
+are unchanged across this early window. The climbing-policy acquittal pass
+is separate work; the single-batch timings above do not include it.
+
+The [Oct 9 hosted log](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/37918549600/job/113780637094)
+and [Oct 11 hosted log](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38130485155/job/114443600843)
+both identify Actions runner `2.337.0`, image `ubuntu-24.04` version
+`20261004.327.1`, Node `v22.23.3`, and npm `10.9.9`. Both execute the same
+`fire-rate --timings-json` command and report 800 runs by 500 years. The
+11.4-minute and 23.1-minute measurements therefore do not coincide with a
+logged image or Node-version change. These headers do not identify CPU
+performance or host contention, so they cannot establish or exclude runner
+variance.
+
+The complete `gateFireRateNightly(source, { runs: 100, years: 500 })`
+diagnostic, including its default twelve climbing-policy acquittal runs,
+also stays well below the hosted growth:
+
+| Snapshot | Wrapper wall seconds | CPU seconds |
+|---|---:|---:|
+| Oct 9 `1e8519e4` | 165.846 | 172.663 |
+| Oct 11 `b9596ea0` | 187.374 | 194.167 |
+
+That is 13.0% more wall time and 12.5% more CPU. Each wrapper leaves the same
+aggregate batch hash as its standalone 100-run comparison. Both diagnostics
+report fire-rate misses at the reduced sample; these are timing observations,
+not successful 800-run acceptance verdicts. The hosted measurement below
+retains the full 800-run sample and its existing assertions.
+
+### Full hosted post-optimization measurement
+
+The main-only manual [nightly run 38679274547](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38679274547)
+at `b862af4f1b15111c22c48bf3819d2952d17d99af` succeeded. Its
+[fire-rate job 116239890722](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38679274547/job/116239890722)
+completed on October 15 at 04:25 UTC: **800 chronicler runs by 500 requested
+years, 462 non-frame events, fire-rate PASS, and all 29 authored Effect kinds
+reached**. The existing `recast` authorship debt remains pinned.
+
+Artifact `nightly-gate-fire-rate`, id `11948126871`, records version 1,
+`totalSeconds: 1398.314`, and the fire-rate gate at `1398.313` seconds with
+`ok: true`. The enclosing shell timing includes startup and reports
+**23.4 minutes, 0.92x the 25.5-minute baseline, against the unchanged
+1.25x / 31.875-minute guard**. The whole workflow, including slow tests,
+war, endings and iOS, passed.
+
+This job logs Node `v22.23.3`, npm `10.9.9`, Actions runner `2.337.0`, and
+`ubuntu-24.04` image `20261012.334.1`. The pre-optimization Oct 14 nightly
+on `7412a5ae` reported 26.7 minutes on image `20261004.327.1`, with the same
+Node version. Main also gained pledge collection and physical-book sale
+changes between those measurements. The lower time is a useful hosted
+observation, not a controlled attribution of every difference to #1642.
+The paired local comparison above remains the evidence for that optimization.
+
+This is a manual workflow dispatch, not one of #1641's next three scheduled
+nightlies. Their timings and the unexplained portion of the early hosted
+jump remain outstanding. No baseline, sample, guard or gate assertion changes.
