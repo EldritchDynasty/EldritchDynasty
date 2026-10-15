@@ -22,6 +22,67 @@ function fixture(boughtBack = false): TableView {
   } as unknown as TableView;
 }
 
+describe('Table marriage and paper labels in Plain English (#1735)', () => {
+  it('preserves marriage policy, paper view, eligibility and exact orders across reading modes', async () => {
+    const table = { ...fixture(),
+      market: [{ person: 'anwen', name: 'Anwen', age: 23, held: false }],
+      papers: [{ person: 'anwen', name: 'Anwen', shows: 1, forged: 1, exposed: 1 }],
+      pedigreePrices: [
+        { grade: 'caster', price: 20, covers: 2, canPay: true },
+        { grade: 'bramme', price: 150, covers: 3, canPay: false },
+      ],
+    } as unknown as TableView;
+    const before = structuredClone(table);
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table, land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    const button = (label: string) => w.findAll('button').find((b) => b.text() === label)!;
+    const paper = () => w.findAll('.panel').find((p) => p.text().includes('Caster — 20 crowns, 2 generations'))!;
+    const selected = () => w.findAll('button[aria-pressed="true"]').map((b) => b.text());
+    try {
+      expect(w.text()).toContain('Who the house marries');
+      expect(button('The market').attributes('aria-expanded')).toBe('true');
+      expect(paper().text()).toContain('1 bought');
+      expect(paper().text()).toContain('1 questioned');
+      expect(paper().text()).toContain('the house cannot raise 150');
+      const originalPolicy = selected();
+      expect(button('The papers').attributes('aria-expanded')).toBe('true');
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.text()).toContain('Marriage preferences');
+      expect(button('Marriage market').attributes('aria-expanded')).toBe('true');
+      expect(button('Marriage papers').attributes('aria-expanded')).toBe('true');
+      expect(selected()).toContain('Marry within the family');
+      expect(paper().text()).toContain('1 purchased generations');
+      expect(paper().text()).toContain('1 disputed generations');
+      expect(paper().text()).toContain('The family cannot afford 150');
+      expect(button('Bramme — 150 crowns, 3 generations').attributes('disabled')).toBeDefined();
+      expect(button('Caster — 20 crowns, 2 generations').attributes('disabled')).toBeUndefined();
+      await button('Marry within the family').trigger('click');
+      await button('Anwen, 23 — available for marriage').trigger('click');
+      await button('Caster — 20 crowns, 2 generations').trigger('click');
+      expect(order.mock.calls.map(([payload]) => payload)).toEqual([
+        { kind: 'marriages', policy: 'in' },
+        { kind: 'withhold', person: 'anwen', hold: true },
+        { kind: 'pedigree', person: 'anwen', grade: 'caster' },
+      ]);
+
+      await w.setProps({ proseMode: 'original' });
+      expect(w.text()).toContain('Who the house marries');
+      expect(button('The market').attributes('aria-expanded')).toBe('true');
+      expect(button('The papers').attributes('aria-expanded')).toBe('true');
+      expect(selected()).toEqual(originalPolicy);
+      expect(paper().text()).toContain('1 bought');
+      expect(paper().text()).toContain('1 questioned');
+      expect(paper().text()).toContain('the house cannot raise 150');
+      expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+});
+
 describe('Table accessible region names (#1670)', () => {
   it.each([false, true])('switches names for wardship boughtBack=%s without mutating or ordering', async (boughtBack) => {
     const table = fixture(boughtBack);

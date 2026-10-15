@@ -609,7 +609,7 @@ const MARRIAGE_ORDERS = [
          five hundred other marriages in a run, and this is the only thing the
          player can say about them. Neither answer is the safe one. -->
     <div class="panel">
-      <h3 class="label">Who the house marries</h3>
+      <h3 class="label">{{ local('Who the house marries', 'Marriage preferences') }}</h3>
       <p class="small dim blurb">
         {{ local('When nobody asks you. The blood runs out of a family that marries outward and thins in one that will not.', 'This policy controls routine marriages that you do not choose yourself. Marrying outside the family loses the bloodline; marrying only within the family can weaken it.') }}
       </p>
@@ -704,7 +704,7 @@ const MARRIAGE_ORDERS = [
          and there was no way to decline to spend her. -->
     <div class="panel" :class="{ idle: idle('market', table.market.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('market', table.market.length > 0)" @click="shut['market'] = !shut['market']">The market</button>
+        <button class="fold" :aria-expanded="!idle('market', table.market.length > 0)" @click="shut['market'] = !shut['market']">{{ local('The market', 'Marriage market') }}</button>
       </h3>
       <p v-if="!table.market.length" class="small dim">
         {{ local('Nobody of the house is of an age to be spent this year.', 'No family member is eligible for the marriage market this year.') }}
@@ -730,7 +730,7 @@ const MARRIAGE_ORDERS = [
          something about that before the refusal rather than after. -->
     <div class="panel" :class="{ idle: idle('papers', table.papers.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('papers', table.papers.length > 0)" @click="shut['papers'] = !shut['papers']">The papers</button>
+        <button class="fold" :aria-expanded="!idle('papers', table.papers.length > 0)" @click="shut['papers'] = !shut['papers']">{{ local('The papers', 'Marriage papers') }}</button>
       </h3>
       <p v-if="!table.papers.length" class="small dim">{{ local('Nobody of the house has a match to make.', 'No family member needs marriage papers right now.') }}</p>
       <p class="small dim blurb">
@@ -740,8 +740,8 @@ const MARRIAGE_ORDERS = [
         <div class="small">
           <strong>{{ row.name }}</strong>
           <span class="dim"> · {{ local('the record shows', 'recorded generations:') }} {{ row.shows }} {{ local('of 3', 'out of 3') }}</span>
-          <span v-if="row.forged" class="dim"> · {{ row.forged }} bought</span>
-          <span v-if="row.exposed" class="rubric"> · {{ row.exposed }} questioned</span>
+          <span v-if="row.forged" class="dim"> · {{ row.forged }} {{ local('bought', 'purchased generations') }}</span>
+          <span v-if="row.exposed" class="rubric"> · {{ row.exposed }} {{ local('questioned', 'disputed generations') }}</span>
         </div>
         <div class="row">
           <button
@@ -755,7 +755,7 @@ const MARRIAGE_ORDERS = [
           </button>
         </div>
         <div v-if="table.pedigreePrices.some((g) => !g.canPay)" class="small rubric">
-          the house cannot raise
+          {{ local('the house cannot raise', 'The family cannot afford') }}
           {{ table.pedigreePrices.filter((g) => !g.canPay).map((g) => g.price).join(' or ') }}
         </div>
       </div>
