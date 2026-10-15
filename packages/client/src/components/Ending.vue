@@ -26,7 +26,7 @@ defineEmits<{ (e: 'open'): void }>();
  * the drop is the effect.
  */
 const reckoning = computed(() => props.epilogue.reckoning);
-/** The framing controls change language; authored epilogue and export never do. */
+/** Reader-local framing follows the mode; recorded epilogue and quotes keep their words. */
 const plain = computed(() => props.proseMode === 'plainenglish');
 
 const afterimage = computed(() => afterimageModel({
@@ -45,12 +45,12 @@ const afterimage = computed(() => afterimageModel({
     clauses: props.epilogue.reckoning.clauses,
     clausesTotal: props.epilogue.reckoning.clausesTotal,
     attestedTitle: props.epilogue.reckoning.attested === 'none'
-      ? 'nothing at all'
+      ? null
       : props.epilogue.reckoning.attestedTitle,
     livingBlood: props.epilogue.reckoning.livingBlood,
   },
   read: props.epilogue.read,
-}));
+}, props.proseMode));
 
 const savingAfterimage = ref(false);
 const afterimageError = ref<string | null>(null);
@@ -160,7 +160,7 @@ async function saveAfterimage(): Promise<void> {
       ink.fillStyle = PLATE.faint;
       ink.font = `12px ${PLATE.serif}`;
       const title = model.quote.title ? ` · ${model.quote.title}` : '';
-      ink.fillText(`FROM THE CHRONICLE · ${model.quote.year}${title}`, PLATE.pad, y);
+      ink.fillText(`${model.quoteHeading} · ${model.quote.year}${title}`, PLATE.pad, y);
       y += 34;
 
       ink.fillStyle = PLATE.ink;
@@ -173,7 +173,7 @@ async function saveAfterimage(): Promise<void> {
 
     ink.fillStyle = PLATE.faint;
     ink.font = `12px ${PLATE.serif}`;
-    ink.fillText('Eldritch Dynasty · House Afterimage', PLATE.pad, canvas.height - 28);
+    ink.fillText(model.footer, PLATE.pad, canvas.height - 28);
 
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('PNG export unavailable');

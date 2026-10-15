@@ -1753,6 +1753,120 @@ describe('Interlude shared focus trap (#1321)', () => {
   });
 });
 
+describe('Record option captions follow the reading mode (#1715)', () => {
+  it('switches all captions both ways while preserving previews, delegation and click payloads', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is not a Record');
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+    try {
+      const labels = () => w.findAll('.choices button > span:not(.key)').map((s) => s.text());
+      const originalLabels = ['Write it as it happened', 'Leave it out', 'Improve it'];
+      expect(labels()).toEqual(originalLabels);
+      expect(w.findAll('.choices .entry').map((s) => s.text())).toEqual([
+        'It happened, and it is written down.', 'nothing at all', 'It happened rather better than that.',
+      ]);
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(labels()).toEqual(['Record what happened', 'Do not record this event', 'Record a more favourable account']);
+      expect(w.findAll('.choices .entry').map((s) => s.text())).toEqual([
+        'It happened, and it is written down.', 'No text will be recorded.', 'It happened rather better than that.',
+      ]);
+      await w.get('.remember input').setValue(true);
+      for (const [index, option] of ['record', 'omit', 'embellish'].entries()) {
+        await w.findAll('.choices button')[index]!.trigger('click');
+        expect(actions.record).toHaveBeenLastCalledWith(decision.id, option, originalLabels[index]);
+      }
+      expect(actions.delegateRecord).toHaveBeenCalledExactlyOnceWith(decision.event.id, 'record');
+      await w.setProps({ proseMode: 'original' });
+      expect(labels()).toEqual(originalLabels);
+      expect(w.findAll('.choices .entry')[1]!.text()).toBe('nothing at all');
+      expect(decision).toEqual(original);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('uses the displayed option order for shortcuts after filtering and Age prioritisation', async () => {
+    const decision = recordDecision();
+    if (decision.kind !== 'record') throw new Error('fixture is not a Record');
+    decision.options = decision.options.filter((o) => o.option !== 'omit');
+    const actions = spyActions();
+    const w = mount(Docket, {
+      attachTo: document.body,
+      props: { decision, actions: actions as unknown as GameActions, ageRecordPriorities: ['embellish'] },
+    });
+    try {
+      for (const proseMode of ['plainenglish', 'original'] as const) {
+        await w.setProps({ proseMode });
+        expect(w.findAll('.choices button')).toHaveLength(2);
+        expect(w.findAll('.choices button')[0]!.text()).toContain(
+          proseMode === 'plainenglish' ? 'Record a more favourable account' : 'Improve it',
+        );
+        for (const [key, option, label] of [
+          ['1', 'embellish', 'Improve it'], ['2', 'record', 'Write it as it happened'],
+        ]) {
+          window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+          await w.vm.$nextTick();
+          expect(actions.record).toHaveBeenLastCalledWith(decision.id, option, label);
+        }
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }));
+      }
+      expect(actions.record).toHaveBeenCalledTimes(4);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
+describe('Match family-evidence captions follow the reading mode (#1716)', () => {
+  it('changes captions both ways with open evidence, exact facts and Match actions preserved', async () => {
+    const decision = matchDecision();
+    if (decision.kind !== 'match') throw new Error('fixture is not a Match');
+    const card = decision.cards[1]!;
+    card.panel.issue = [
+      { name: 'Cesse', relation: 'her mother', borne: 5, grown: 4 },
+      { name: 'Anne', relation: 'her sister', borne: 1, grown: 0 },
+      { name: 'Maud', relation: 'of her house', borne: 0, grown: 0 },
+    ];
+    card.panel.woken = [
+      { name: 'Corin', relation: 'her brother', year: 1144, sex: 'male', expressed: true },
+      { name: 'Ysolde', relation: 'her sister', year: 1145, sex: 'female', expressed: false },
+    ];
+    card.panel.ourBook = [{ year: 1150, text: 'A recorded sentence.', embellished: true }];
+    const original = structuredClone(decision);
+    const actions = spyActions();
+    const w = mount(Docket, { props: { decision, actions: actions as unknown as GameActions } });
+    try {
+      const article = w.findAll('.cards > article')[1]!;
+      const fold = article.get('details');
+      (fold.element as HTMLDetailsElement).open = true;
+      const originalText = article.text();
+      expect(originalText).toContain('3 completed lives');
+      expect(originalText).toContain('5 children, 4 grown.');
+      expect(originalText).toContain('woke in 1144, and the house has seen what it cost him');
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(article.text()).toContain('3 people whose childbearing years are complete');
+      expect(article.text()).toContain('Cesse, her mother — 5 children born, 4 reached adulthood.');
+      expect(article.text()).toContain('Anne, her sister — 1 child born, 0 reached adulthood.');
+      expect(article.text()).toContain('Maud, of her house — 0 children born, 0 reached adulthood.');
+      expect(article.text()).toContain('Corin, her brother, had an awakening in 1144, and the family has seen how it affected him.');
+      expect(article.text()).toContain('Ysolde, her sister, had an awakening in 1145.');
+      expect(article.text().match(/the family has seen how it affected him/g)).toHaveLength(1);
+      expect(article.text()).toContain('A recorded sentence.');
+      expect((fold.element as HTMLDetailsElement).open).toBe(true);
+      await article.get('button').trigger('click');
+      expect(actions.match).toHaveBeenCalledExactlyOnceWith(decision.id, card.id, card.name);
+      await w.setProps({ proseMode: 'original' });
+      expect(article.text()).toBe(originalText);
+      expect((fold.element as HTMLDetailsElement).open).toBe(true);
+      expect(decision).toEqual(original);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('reader-local docket instructions in Plain English (#410)', () => {
   it('changes player UI copy live, without rewriting the authored choice or delegated action', async () => {
     const decision = choiceDecision(false);

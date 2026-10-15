@@ -349,7 +349,7 @@ export interface AfterimageInput {
     provenLies: number;
     clauses: number;
     clausesTotal: number;
-    attestedTitle: string;
+    attestedTitle: string | null;
     livingBlood: number;
   };
   read: readonly ChronicleEntry[];
@@ -361,6 +361,8 @@ export interface AfterimageModel {
   endingTitle: string;
   summary: string;
   facts: { label: string; value: string }[];
+  quoteHeading: string;
+  footer: string;
   quote?: { year: number; title?: string; text: string };
 }
 
@@ -386,26 +388,29 @@ export function afterimageQuote(
 }
 
 /** The factual small page: no grade, no rank, no "best" ending. */
-export function afterimageModel(input: AfterimageInput): AfterimageModel {
+export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'original'): AfterimageModel {
   const r = input.reckoning;
   const quote = afterimageQuote(input.read);
+  const plain = mode === 'plainenglish';
   return {
     houseName: input.houseName,
     strap: `${input.campaignName} · ${input.year} · seed ${input.seed}`,
     endingTitle: input.endingTitle,
     summary: input.endingSummary,
     facts: [
-      { label: 'Pages written', value: String(r.pages) },
-      { label: 'Left blank', value: String(r.blanks) },
-      { label: 'Improved', value: String(r.embellished) },
+      { label: plain ? 'Pages recorded' : 'Pages written', value: String(r.pages) },
+      { label: plain ? 'Pages left blank' : 'Left blank', value: String(r.blanks) },
+      { label: plain ? 'Entries embellished' : 'Improved', value: String(r.embellished) },
       {
-        label: 'Lies still standing',
-        value: r.provenLies > 0 ? `${r.standingLies} · ${r.provenLies} caught` : String(r.standingLies),
+        label: plain ? 'Lies not yet exposed' : 'Lies still standing',
+        value: r.provenLies > 0 ? `${r.standingLies} · ${r.provenLies} ${plain ? 'exposed' : 'caught'}` : String(r.standingLies),
       },
-      { label: 'The contract, recovered', value: `${r.clauses} of ${r.clausesTotal} clauses` },
-      { label: 'What the book attests', value: r.attestedTitle },
-      { label: 'Of the blood, living', value: String(r.livingBlood) },
+      { label: plain ? 'Contract clauses recovered' : 'The contract, recovered', value: `${r.clauses} of ${r.clausesTotal} clauses` },
+      { label: plain ? 'Highest level claimed in the Chronicle' : 'What the book attests', value: r.attestedTitle ?? (plain ? 'No level claimed' : 'nothing at all') },
+      { label: plain ? 'Living blood relatives' : 'Of the blood, living', value: String(r.livingBlood) },
     ],
+    quoteHeading: plain ? 'CHRONICLE EXCERPT' : 'FROM THE CHRONICLE',
+    footer: plain ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage',
     ...(quote ? { quote } : {}),
   };
 }

@@ -393,6 +393,44 @@ describe('the house afterimage (#260)', () => {
     });
   });
 
+  it('selects reader-local image captions without changing any recorded prose or fact (#1717)', () => {
+    const before = structuredClone(source);
+    const original = afterimageModel(source);
+    expect(afterimageModel(source, 'original')).toEqual(original);
+    expect(original.facts.map((f) => f.label)).toEqual([
+      'Pages written', 'Left blank', 'Improved', 'Lies still standing',
+      'The contract, recovered', 'What the book attests', 'Of the blood, living',
+    ]);
+    const plain = afterimageModel(source, 'plainenglish');
+    expect(plain.facts).toEqual([
+      { label: 'Pages recorded', value: '71' },
+      { label: 'Pages left blank', value: '8' },
+      { label: 'Entries embellished', value: '11' },
+      { label: 'Lies not yet exposed', value: '4 · 2 exposed' },
+      { label: 'Contract clauses recovered', value: '7 of 9 clauses' },
+      { label: 'Highest level claimed in the Chronicle', value: 'the Fourth Rung' },
+      { label: 'Living blood relatives', value: '13' },
+    ]);
+    expect(plain.quoteHeading).toBe('CHRONICLE EXCERPT');
+    expect(plain.footer).toBe('Eldritch Dynasty · Ending image');
+    expect(original.quoteHeading).toBe('FROM THE CHRONICLE');
+    expect(original.footer).toBe('Eldritch Dynasty · House Afterimage');
+    for (const key of ['houseName', 'strap', 'endingTitle', 'summary', 'quote'] as const) {
+      expect(plain[key]).toEqual(original[key]);
+    }
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const empty = afterimageModel({
+        ...source,
+        reckoning: { ...source.reckoning, attestedTitle: null, provenLies: 0 },
+      }, mode);
+      expect(empty.facts[5]!.value).toBe(mode === 'plainenglish' ? 'No level claimed' : 'nothing at all');
+      expect(empty.facts[3]!.value).toBe('4');
+      expect(afterimageLayout(empty, monospace).height).toBe(afterimageLayout(original, monospace).height);
+    }
+    expect(afterimageModel(source, 'original')).toEqual(original);
+    expect(source).toEqual(before);
+  });
+
   it('falls back to the newest written line and never reconstructs a blank', () => {
     expect(afterimageQuote([
       entry({ year: 1400, text: 'Earlier.' }),
