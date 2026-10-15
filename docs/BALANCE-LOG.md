@@ -10922,3 +10922,36 @@ The paired local comparison above remains the evidence for that optimization.
 This is a manual workflow dispatch, not one of #1641's next three scheduled
 nightlies. Their timings and the unexplained portion of the early hosted
 jump remain outstanding. No baseline, sample, guard or gate assertion changes.
+
+## 2026-10-15 — Examination paired-sample precision (#1741, refs #321)
+
+The first pre-release's founding-balance gate reported insufficient precision
+for `the_two_letters / for_the_dowry - what_her_mother_bore`. Re-measured on
+Node v24.19.0 with the simulation/content sources at landed main
+`82a9b3eb32aae8c66b2dd50eca2486574a5c1510` (the executing `dd37fa93` checkout
+adds only client labels/tests). Both cohorts use `20000 + 17*i`, so the
+96-seed cohort retains the entire original 48-seed prefix. Every answer plays
+the existing 300-year Short Line under the chronicler policy.
+
+| Seeds per answer | Total answer-runs | Paired best-rung mean, dowry minus maternal blood | Existing verdict |
+|---|---:|---:|---|
+| 48 | 576 | -0.188 | FAIL: inside +/-0.5, but below the two-standard-error margin; about 58 seeds prescribed |
+| 96 | 1,152 | -0.073 | PASS: all 36 paired metric comparisons pass |
+
+The canonical sample becomes 96 seeds per answer. The practical equivalence
+bands remain +/-0.15 for reaching the term, +/-0.5 for best rung, and +/-0.75
+for recovered clauses, with the same two-standard-error requirement. Ending
+identity remains report-only. Seed order/stride, founding inputs, campaign
+length, gameplay and CI cadence are unchanged. The canonical workload grows
+from 576 to 1,152 answer-runs.
+
+`signing-gate.test.ts` now also constructs two cohorts with the same -0.25-rung
+paired mean: 48 seeds fail the precision requirement and 96 pass it. Together
+with the existing deliberately lopsided fixture, this protects both the
+practical bound and its statistical margin. All 11 tests in that suite pass.
+The measured larger cohort calls `gateSigning` with the exact new default
+seed array; `npm run gates -- signing` uses that array after this change.
+
+These are local statistical results. Retained tagged installer/AAB proof and
+production signing remain release acceptance on #321/#322; #1741's hosted
+head and native merge-group checks are still required before landing.

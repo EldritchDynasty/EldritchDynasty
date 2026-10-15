@@ -34,6 +34,25 @@ describe('signing balance verdict (#343)', () => {
     expect(verdict.ok).toBe(false);
     expect(verdict.lines.join('\n')).toMatch(/FAIL:.*(term reach|best rung|clauses)/);
   });
+
+  it('requires enough paired evidence even when the mean is inside the equivalence band (#1741)', () => {
+    const paired = (count: number): SigningSample[] => Array.from({ length: count }, (_, seed) => {
+      const common = { seed, question: 'precision', reachedTerm: 1, clauses: 3 };
+      return [
+        { ...common, answer: 'a', bestRung: 3 },
+        { ...common, answer: 'b', bestRung: seed % 8 < 3 ? 2 : 4 },
+      ];
+    }).flat();
+    // Both cohorts have the same -0.25-rung paired mean. Only the larger
+    // cohort can support the unchanged ±0.5 bound by two standard errors.
+    const small = verdictOver(paired(48));
+    expect(small.ok).toBe(false);
+    expect(small.lines.join('\n')).toContain('under 2');
+    expect(small.lines.join('\n')).toContain('paired mean -0.250');
+    const larger = verdictOver(paired(96));
+    expect(larger.ok, larger.lines.join('\n')).toBe(true);
+    expect(larger.lines.join('\n')).toContain('paired mean -0.250');
+  });
 });
 
 // Android host release signing/provenance is independent of the gameplay signing verdict.
