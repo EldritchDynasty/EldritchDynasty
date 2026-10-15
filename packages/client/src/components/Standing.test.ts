@@ -11,6 +11,7 @@ import GameTable from './Table.vue';
 import Abroad from './Abroad.vue';
 import Naming from './Naming.vue';
 import Member from './Member.vue';
+import { LEGEND, MARKS, markSays } from '../lib/marks';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
 
@@ -1002,4 +1003,75 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
     } finally { wrapper.unmount(); }
   });
 
+});
+
+
+describe('Plain English family-tree mark explanations (#1704)', () => {
+  it('keeps the six Original meanings and glyphs while supplying reader-local plain labels', () => {
+    const ids = LEGEND.map((mark) => mark.kind);
+    expect(ids).toEqual(['seal', 'expresses', 'carries', 'madness', 'drift', 'given']);
+    expect(LEGEND.map((mark) => markSays(mark.kind, 'original')))
+      .toEqual(LEGEND.map((mark) => mark.says));
+    expect(LEGEND.map((mark) => markSays(mark.kind, 'plainenglish'))).toEqual([
+      'Leads the family',
+      'Awakened: this person can use the Power',
+      'Awakened: this person carries the Power but cannot use it',
+      'How strongly the Power has affected this person',
+      'The written record differs from this person',
+      'Was sacrificed in a rite',
+    ]);
+    expect(markSays('madness', 'original', 26.7)).toBe('madness 27');
+    expect(markSays('madness', 'plainenglish', 26.7)).toBe("Power's effects: 27");
+    expect(MARKS.madness.says).toBe('how far the Power has taken them');
+    expect(LEGEND.map((mark) => mark.glyph)).toEqual(['✦', '◈', '◇', '☾', '✎', '⊘']);
+  });
+
+  it('switches card accessible names both ways and keeps the same person and marks', async () => {
+    const member = {
+      id: 'cerin', name: 'Cerin', sex: 'female', age: 48,
+      status: 'vessel_consumed', head: true,
+      awakened: true, expresses: false, madness: 26.7, drift: true,
+      parents: {}, attrs: {},
+      record: { parents: {}, attrs: {}, claimed: [], claimedTraits: [] },
+    } as unknown as SessionView['halls'][number]['members'][number];
+    const original = structuredClone(member);
+    const wrapper = mount(Member, { props: {
+      member, names: [], traitNames: [], open: false, proseMode: 'original',
+    } });
+    try {
+      const glyphs = () => wrapper.findAll('[role="img"]')
+        .map((mark) => ({ glyph: mark.text(), label: mark.attributes('aria-label') }));
+      const before = glyphs();
+      expect(before.map((mark) => mark.label)).toEqual([
+        'holds the seal',
+        'awakened — they carry it and will not express it',
+        'madness 27',
+        'the record and the person do not agree',
+        'given to the rite',
+      ]);
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      const plain = glyphs();
+      expect(plain.map((mark) => mark.glyph)).toEqual(before.map((mark) => mark.glyph));
+      expect(plain.map((mark) => mark.label)).toEqual([
+        'Leads the family',
+        'Awakened: this person carries the Power but cannot use it',
+        "Power's effects: 27",
+        'The written record differs from this person',
+        'Was sacrificed in a rite',
+      ]);
+      expect(member).toEqual(original);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(glyphs()).toEqual(before);
+      expect(member).toEqual(original);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('has the Help legend use the very same mode-aware lookup as the card', () => {
+    const source = readFileSync(join(import.meta.dirname, '../App.vue'), 'utf8');
+    expect(source).toContain('markSays(m.kind, accessibility.proseMode)');
+    expect(source).not.toContain('{{ m.says }}');
+    const memberSource = readFileSync(join(import.meta.dirname, './Member.vue'), 'utf8');
+    expect(memberSource).toContain("markSays(mark.kind, proseMode, mark.kind === 'madness' ? member.madness : undefined)");
+  });
 });
