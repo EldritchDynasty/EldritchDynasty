@@ -8,7 +8,7 @@ import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  LENSES, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
+  LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
   type Lens, type Measure,
 } from '../lib/book';
 
@@ -47,12 +47,6 @@ const props = defineProps<{
  */
 const plain = computed(() => props.proseMode === 'plainenglish');
 /** The lenses select the same entries in either reading mode. Only their labels change. */
-const PLAIN_LENS_LABELS: Record<Lens, string> = {
-  all: 'All entries',
-  blank: 'Blank entries',
-  improved: 'Changed entries',
-  illuminated: 'Highlighted entries',
-};
 
 const card = ref<HTMLElement | null>(null);
 useModal(card, () => props.close());
@@ -216,6 +210,7 @@ async function plate(): Promise<void> {
     const entries = shown.value;
     // An export is one snapshot: props may change while PNG encoding awaits toBlob.
     const houseName = props.houseName;
+    const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);
     const gauge = document.createElement('canvas').getContext('2d');
     if (!gauge) { plateError.value = PLATE_ERROR; return; }
     const measure: Measure = (text, font) => {
@@ -229,7 +224,7 @@ async function plate(): Promise<void> {
     // Chronicle line (and the ruled omissions) in a vector download instead
     // of silently dropping the entire image when getContext/toBlob fails.
     if (height > MAX_PLATE_CANVAS_HEIGHT) {
-      const svg = plateSvg(rows, houseName, plateSubtitle(entries, lens.value));
+      const svg = plateSvg(rows, houseName, plateCaption);
       downloadBlob(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
@@ -251,7 +246,7 @@ async function plate(): Promise<void> {
     c.fillText(houseName, PLATE.pad, 64);
     c.fillStyle = PLATE.faint;
     c.font = `13px ${PLATE.serif}`;
-    c.fillText(plateSubtitle(entries, lens.value), PLATE.pad, 88);
+    c.fillText(plateCaption, PLATE.pad, 88);
     c.strokeStyle = PLATE.rule;
     c.beginPath();
     c.moveTo(PLATE.pad, 106);
