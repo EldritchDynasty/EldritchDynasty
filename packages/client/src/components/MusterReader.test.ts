@@ -26,7 +26,7 @@ describe('Muster reinforcement wording (#1730)', () => {
         refusal: null,
       },
     });
-    const strength = () => wrapper.get('section.muster > p.small').text();
+    const strength = () => wrapper.get('section.muster > p.small').text().replace(/\s+/g, ' ').trim();
     const button = (label: string) => wrapper.findAll('button').find((candidate) => candidate.text() === label);
     try {
       expect(strength()).toContain('80 men in the field since 1107, of a house that could field 8.');
@@ -38,7 +38,8 @@ describe('Muster reinforcement wording (#1730)', () => {
       expect(button('Send these troops')).toBeDefined();
       await wrapper.get('input[type="number"]').setValue('3');
       await button('Send these troops')!.trigger('click');
-      expect(muster).toHaveBeenCalledExactlyOnceWith({ op: 'reinforce', men: 3 });
+      expect(muster).toHaveBeenCalledTimes(1);
+      expect(muster).toHaveBeenCalledWith({ op: 'reinforce', men: 3 });
 
       await wrapper.setProps({ proseMode: 'original' });
       expect(strength()).toContain('80 men in the field since 1107, of a house that could field 8.');
