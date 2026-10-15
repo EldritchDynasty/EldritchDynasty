@@ -181,6 +181,80 @@ describe('the string-source audit (issue #276)', () => {
     );
   });
 
+  it('omits Match drift-check Originals only when case, msg key and wording agree (#1714)', () => {
+    const source = [
+      'function matchFutureMessage(ctx: any, key: string, original: string) {',
+      '  switch (key) {',
+      "    case 'match.future.reason.matched':",
+      "      return checked('The family papers preserve this choice.', msg(ctx, 'match.future.reason.matched', 'The family papers preserve this choice.'));",
+      "    case 'match.future.reason.drifted':",
+      "      return checked('The house spoke these older words.', msg(ctx, 'match.future.reason.drifted', 'The house spoke these newer words.'));",
+      "    case 'match.future.reason.other':",
+      "      return checked('The family read the first version.', msg(ctx, 'match.future.reason.wrong', 'The family read the first version.'));",
+      '  }',
+      '}',
+      "const genuine = 'The family wrote a separate page.';",
+      "checked('A real standalone notice to keep.', msg(ctx, 'other.standalone', 'A real standalone notice to keep.'));",
+    ].join('\n');
+    const rows = plainEnglishCoreWorkItems('session.ts', source);
+    const legacy = rows.filter((row) => row.address.includes('#literal['));
+    expect(legacy.map((row) => row.text)).toEqual([
+      'The house spoke these older words.',
+      'The family read the first version.',
+      'The family wrote a separate page.',
+      'A real standalone notice to keep.',
+    ]);
+    expect(rows.filter((row) => row.address.startsWith('core:messages#'))).toHaveLength(4);
+    // The original literal positions are retained even though one disappeared.
+    const unrelated = plainEnglishCoreWorkItems('other.ts', source)
+      .find((row) => row.text === 'The family wrote a separate page.');
+    expect(legacy.find((row) => row.text === unrelated?.text)?.address.split('#')[1])
+      .toBe(unrelated?.address.split('#')[1]);
+  });
+
+  it('omits only ambition catalogue fields with a matching keyed view counterpart (#1714)', () => {
+    const source = [
+      'const HOUSE_AMBITIONS = [',
+      "  { id: 'deepen_blood', name: 'Deepen the blood', purpose: 'Keep a broad living bloodline safe.' },",
+      "  { id: 'secure_branches', name: 'Secure the branches', purpose: 'Keep the whole house alive.' },",
+      '];',
+      'function ambitionProse(ctx: any) {',
+      "  msg(ctx, 'ambition.name.deepen_blood', 'Deepen the blood');",
+      "  msg(ctx, 'ambition.purpose.deepen_blood', 'Keep a broad living bloodline safe.');",
+      "  msg(ctx, 'ambition.name.secure_branches', 'Secure the branches');",
+      "  msg(ctx, 'ambition.purpose.secure_branches', 'The branches have a different purpose.');",
+      '}',
+      "const genuine = 'The family asked an entirely separate question.';",
+    ].join('\n');
+    const rows = plainEnglishCoreWorkItems('ambition.ts', source);
+    expect(rows.filter((row) => row.address.includes('#literal[')).map((row) => row.text))
+      .toEqual(['Keep the whole house alive.', 'The family asked an entirely separate question.']);
+    expect(rows.filter((row) => row.address.startsWith('core:messages#'))).toHaveLength(4);
+    // Similar-looking files must not gain a broad suppression rule.
+    expect(plainEnglishCoreWorkItems('another.ts', source)
+      .filter((row) => row.address.includes('#literal['))).toHaveLength(5);
+  });
+
+  it('does not inventory production Match verification or translated ambition catalogue twice (#1714)', () => {
+    const session = readFileSync(join(REPO, 'packages/core/src/session.ts'), 'utf8');
+    const match = plainEnglishCoreWorkItems('session.ts', session);
+    expect(match).toContainEqual(expect.objectContaining({
+      address: coreMessageAddress('match.future.reason.blood.close-kin'),
+      text: 'the family papers put this match among close kin',
+    }));
+    expect(match.some((row) => row.address.includes('#literal[')
+      && row.text === 'the family papers put this match among close kin')).toBe(false);
+
+    const ambition = readFileSync(join(REPO, 'packages/core/src/ambition.ts'), 'utf8');
+    const rows = plainEnglishCoreWorkItems('ambition.ts', ambition);
+    expect(rows).toContainEqual(expect.objectContaining({
+      address: coreMessageAddress('ambition.purpose.deepen_blood'),
+      text: 'Keep a broad living bloodline from thinning away.',
+    }));
+    expect(rows.some((row) => row.address.includes('#literal[')
+      && row.text === 'Keep a broad living bloodline from thinning away.')).toBe(false);
+  });
+
   it('rejects duplicate keys and dynamic identities or Originals before they can masquerade as stable messages', () => {
     expect(() => plainEnglishCoreWorkItems('advisers.ts', [
       "msg(ctx, 'adviser.duplicate', 'First message.');",
