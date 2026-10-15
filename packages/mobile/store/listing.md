@@ -94,26 +94,50 @@ analytics or a feedback network service to the app.
   same house mark and page palette, with the game's title and the thesis line
   "What you write outlives what you did." No screenshots or character art are
   composited into it.
-- **Phone screenshots (2–8):** `screenshot-chronicle-placeholder.png` in this
-  directory is the first one — see its note below. The others should show
-  the family tree/table view and the docket (a live decision), since those
-  are the two other things this game visibly is.
+- **Phone screenshots:** [screenshot-chronicle.png](screenshot-chronicle.png)
+  shows the full Chronicle; [screenshot-household.png](screenshot-household.png)
+  shows the living family tree. Both are 1080×1920, opaque 24-bit RGB PNGs
+  captured from the production-built game client. They replace the former
+  Chronicle placeholder and provide two phone screenshots for the listing.
 
-## Screenshot status
+## Screenshot provenance — 2026-10-15
 
-`screenshot-chronicle-placeholder.png` was captured 2026-09-20 from an
-**automated playthrough** driving the actual client UI (not a hand-played
-session, not a raw `npm run harness` batch run) — a scripted browser session
-signed the prologue as "The House of Salt," answered the docket with "Let
-him decide" throughout, and opened the in-game Book. Every name and every
-line of prose on it is genuine simulation output, not placeholder text; the
-house name is the only thing about it that was chosen by the automation
-rather than a person.
+These are unmodified captures of the actual client reading a real played Short
+Line, under the owner's #324/#335 waiver recorded on #322. No text was invented
+for the images. The save was imported through **Bring a run in** and validated
+by core; every displayed name and Chronicle entry comes from that run.
 
-Use this automated page for engineering/store-layout work only. The later owner
-waiver recorded on #322 (#324 / #335) removed the project requirement for a
-human-acceptance playtest screenshot: before store submission, replace this
-placeholder with a Chronicle page from a **real played run** (for example an
-owner-played or harness-produced Short Line), and record that run's **seed and
-landed SHA here** so the store image is reproducible. Google's closed-test
-tester requirement is separate release evidence and is not waived.
+- **Landed source:** `68a94d3e8f9bf992c0c0829b694ef02e76c56e4d`.
+- **Campaign / seed:** Short Line, `7001`.
+- **Played policy / term:** chronicler, 80 years, from 1042 to **1122**;
+  **91 Chronicle entries** at capture.
+- **House:** House Gearithy; the default founder, Daveed Gearithy.
+- **Heirloom / first grudge:** `portion_of_agelessness` / `house_marrow`.
+- **Examination:** `the_ford=own_back`,
+  `the_two_letters=what_her_mother_bore`, `the_hard_winter=the_teacher`,
+  `the_moved_stone=assize_at_cawdry`.
+- **Imported-snapshot world digest:** `e5922d129f613eb0:280776`, from
+  `digestOf(session.ctx)` before the capture-only UI steps below.
+- **Generation:** Node v24.19.0, `newGame(content, { seed: 7001,
+  campaign: 'short', decider: 'chronicler' })`, `found` with the inputs above,
+  `advance(80)`, then `saveGame(session.ctx)`.
+- **Renderer:** `npm run build:client`, served by Vite preview; Chromium
+  153.0.8010.12 through Playwright, Original reading mode, touch/mobile
+  viewport **540×960 CSS pixels at device scale 2**.
+- **UI steps:** accept the nine suggested child names with **Keep the names he
+  suggests**, dismiss the introductory hints, and open the household's main
+  hall with the **Everyone** filter. For the Chronicle, choose **The chronicle
+  → Read it whole**, keep **The whole book**, leave search empty, and select
+  **1100**. No further years are advanced for either screenshot.
+- **Capture checks:** no page errors or horizontal overflow; image headers
+  verify 1080×1920, 8 bits per RGB channel, and no alpha channel. Both images
+  were visually reviewed at their captured size.
+
+| Image | SHA-256 |
+|---|---|
+| `screenshot-chronicle.png` | `91c94e9343bf600521775adc21968cd8c7bb575e9e3f5352154262e4f5d60fef` |
+| `screenshot-household.png` | `a5f79790a039df6901ed0338c0e2c2a635b7a8283d27d068bef055d0aecb081b` |
+
+The Play account, release artifact, closed-test approval, 12 opted-in testers
+for 14 continuous days, and production access remain separate acceptance on
+#322. These images do not establish those release checkpoints.
