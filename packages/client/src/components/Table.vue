@@ -569,7 +569,7 @@ const MARRIAGE_ORDERS = [
     <!-- Respect is bought with descendants. A commission is bought with money. -->
     <div class="panel" :class="{ idle: idle('posts', table.posts.some((p) => p.eligible.length > 0)) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('posts', table.posts.some((p) => p.eligible.length > 0))" @click="shut['posts'] = !shut['posts']">Places</button>
+        <button class="fold" :aria-expanded="!idle('posts', table.posts.some((p) => p.eligible.length > 0))" @click="shut['posts'] = !shut['posts']">{{ local('Places', 'Career positions') }}</button>
       </h3>
       <p
         v-if="!table.posts.some((p) => p.eligible.length)"
@@ -580,26 +580,26 @@ const MARRIAGE_ORDERS = [
           <strong>{{ post.name }}</strong>
           <span class="dim"> · {{ post.fee }} crowns</span>
           <span v-if="post.usualFee" class="rubric"> · {{ local('usually', 'normal price:') }} {{ post.usualFee }}; {{ local('these years make this place cheaper', 'the current discount lowers the cost') }}</span>
-          <span class="dim"> · standing {{ post.respectYield }}</span>
+          <span class="dim"> · {{ local('standing', 'reputation gained') }} {{ post.respectYield }}</span>
         </div>
         <div v-if="post.blurb" class="small dim blurb">{{ post.blurb }}</div>
         <div v-if="post.holders.length" class="small dim">
           {{ local('held by', 'Current holders:') }} {{ post.holders.map((h) => h.name).join(', ') }}
         </div>
         <div class="row">
-          <select v-model="placing[post.career]" :aria-label="'Choose someone for ' + post.name">
-            <option value="">— place whom —</option>
+          <select v-model="placing[post.career]" :aria-label="(plain ? 'Choose a family member for ' : 'Choose someone for ') + post.name">
+            <option value="">{{ local('— place whom —', '— choose a family member —') }}</option>
             <option v-for="e in post.eligible" :key="e.person" :value="e.person">{{ e.name }}, {{ e.age }}</option>
           </select>
           <button
             :disabled="!post.canPay || !placing[post.career]"
             @click="actions.order({ kind: 'career', person: placing[post.career] ?? '', career: post.career })"
           >
-            Buy it
+            {{ local('Buy it', 'Buy this position') }}
           </button>
           <!-- Priced against the purse, in words. A greyed button says the
                house cannot, and never which of the two reasons it is. -->
-          <span v-if="!post.canPay" class="small rubric">the house cannot raise {{ post.fee }}</span>
+          <span v-if="!post.canPay" class="small rubric">{{ local('the house cannot raise', 'Not enough money to pay') }} {{ post.fee }}</span>
         </div>
       </div>
       <p v-if="refusedIn('career')" class="small rubric">{{ refusedIn('career') }}</p>
@@ -637,7 +637,7 @@ const MARRIAGE_ORDERS = [
           class="fold"
           :aria-expanded="!idle('programme', table.programmeCandidates.length > 0 || !!table.scion || !!table.scionHeir || !!table.scionVacant || !!table.scionHeirVacant)"
           @click="shut['programme'] = !shut['programme']"
-        >The programme</button>
+        >{{ local('The programme', 'Family advancement plan') }}</button>
       </h3>
       <p class="small dim blurb">
         {{ local('Name the one the house will put first in its books, tutoring and marriages, and the one it will build beside him. These places do not pass by themselves.', 'Choose the main candidate for family books, tutoring and marriages, and a second candidate to support him. The positions do not transfer automatically when someone leaves.') }}
@@ -652,21 +652,21 @@ const MARRIAGE_ORDERS = [
 
       <div class="line">
         <div class="small">
-          <strong>Scion</strong>
-          <span class="dim"> · {{ table.scion ? table.scion.name : 'nobody named' }}</span>
+          <strong>{{ local('Scion', 'Main candidate') }}</strong>
+          <span class="dim"> · {{ table.scion ? table.scion.name : local('nobody named', 'No one selected') }}</span>
         </div>
         <div class="row">
-          <select v-model="scionChoice" aria-label="Choose the Scion">
-            <option value="">— name whom —</option>
+          <select v-model="scionChoice" :aria-label="local('Choose the Scion', 'Choose main candidate')">
+            <option value="">{{ local('— name whom —', '— choose a candidate —') }}</option>
             <option v-for="p in table.programmeCandidates" :key="p.person" :value="p.person">
               {{ p.name }}, {{ p.age }}
             </option>
           </select>
           <button class="small" :disabled="!scionChoice" @click="actions.order({ kind: 'scion', person: scionChoice })">
-            Name the Scion
+            {{ local('Name the Scion', 'Set main candidate') }}
           </button>
           <button v-if="table.scion || table.scionVacant" class="small" @click="actions.order({ kind: 'scion', person: null })">
-            Leave the place empty
+            {{ local('Leave the place empty', 'Clear this position') }}
           </button>
         </div>
         <p v-if="refusedIn('scion')" class="small rubric">{{ refusedIn('scion') }}</p>
@@ -674,12 +674,12 @@ const MARRIAGE_ORDERS = [
 
       <div class="line">
         <div class="small">
-          <strong>Heir to the programme</strong>
-          <span class="dim"> · {{ table.scionHeir ? table.scionHeir.name : 'nobody named' }}</span>
+          <strong>{{ local('Heir to the programme', 'Supporting candidate') }}</strong>
+          <span class="dim"> · {{ table.scionHeir ? table.scionHeir.name : local('nobody named', 'No one selected') }}</span>
         </div>
         <div class="row">
-          <select v-model="scionHeirChoice" aria-label="Choose the heir to the programme">
-            <option value="">— name whom —</option>
+          <select v-model="scionHeirChoice" :aria-label="local('Choose the heir to the programme', 'Choose supporting candidate')">
+            <option value="">{{ local('— name whom —', '— choose a candidate —') }}</option>
             <option
               v-for="p in table.programmeCandidates"
               :key="p.person"
@@ -690,10 +690,10 @@ const MARRIAGE_ORDERS = [
             </option>
           </select>
           <button class="small" :disabled="!scionHeirChoice || scionHeirChoice === table.scion?.person" @click="actions.order({ kind: 'scionHeir', person: scionHeirChoice })">
-            Name the heir
+            {{ local('Name the heir', 'Set supporting candidate') }}
           </button>
           <button v-if="table.scionHeir || table.scionHeirVacant" class="small" @click="actions.order({ kind: 'scionHeir', person: null })">
-            Leave the place empty
+            {{ local('Leave the place empty', 'Clear this position') }}
           </button>
         </div>
         <p v-if="refusedIn('scionHeir')" class="small rubric">{{ refusedIn('scionHeir') }}</p>
@@ -767,23 +767,23 @@ const MARRIAGE_ORDERS = [
          else to go, which is sufficient." Both halves of that are decisions. -->
     <div class="panel" :class="{ idle: idle('servants', table.servants.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('servants', table.servants.length > 0)" @click="shut['servants'] = !shut['servants']">The house's people</button>
+        <button class="fold" :aria-expanded="!idle('servants', table.servants.length > 0)" @click="shut['servants'] = !shut['servants']">{{ local("The house's people", 'Servants and debt contracts') }}</button>
       </h3>
       <p v-if="!table.servants.length" class="small dim">{{ local("Nobody is in the house's service.", 'The house has no servants.') }}</p>
       <div v-for="s in table.servants" :key="s.person" class="line">
         <div class="small">
           <strong>{{ s.name }}</strong>
           <span class="dim"> · {{ s.role }} · {{ s.wage }} marks</span>
-          <span v-if="s.bonded" class="rubric"> · owes {{ s.debt }}</span>
-          <span class="dim"> · they think of you {{ s.loyalty }}</span>
+          <span v-if="s.bonded" class="rubric"> · {{ local('owes', 'debt:') }} {{ s.debt }}</span>
+          <span class="dim"> · {{ local('they think of you', 'loyalty:') }} {{ s.loyalty }}</span>
         </div>
         <div class="row">
           <input
             v-if="!s.bonded"
             type="number" min="1" step="1" :max="table.maxBond"
             v-model.number="advancing[s.person]"
-            :placeholder="'marks, up to ' + table.maxBond"
-            :aria-label="'Marks to advance to ' + s.name"
+            :placeholder="plain ? 'Enter 1 to ' + table.maxBond + ' marks' : 'marks, up to ' + table.maxBond"
+            :aria-label="(plain ? 'Debt advance in marks for ' : 'Marks to advance to ') + s.name"
             :aria-invalid="advancing[s.person] !== undefined && !validAdvance(advancing[s.person])"
             :aria-describedby="advancing[s.person] !== undefined && !validAdvance(advancing[s.person]) ? 'bond-marks-error-' + s.person : undefined"
           />
@@ -793,7 +793,7 @@ const MARRIAGE_ORDERS = [
             :disabled="!validAdvance(advancing[s.person])"
             @click="advance(s.person)"
           >
-            Advance it against the years
+            {{ local('Advance it against the years', 'Give a debt advance') }}
           </button>
           <p
             v-if="!s.bonded && advancing[s.person] !== undefined && !validAdvance(advancing[s.person])"
@@ -801,14 +801,14 @@ const MARRIAGE_ORDERS = [
             class="small rubric"
             role="alert"
           >
-            Enter a whole number of marks from 1 to {{ table.maxBond }}.
+            {{ local('Enter a whole number of marks from 1 to', 'Enter a whole-number advance between 1 and') }} {{ table.maxBond }}{{ plain ? ' marks.' : '.' }}
           </p>
           <button
             v-if="s.bonded"
             class="small"
             @click="sendBondOrder({ kind: 'bond', person: s.person, op: 'free' })"
           >
-            Tear it up
+            {{ local('Tear it up', 'Cancel debt bond') }}
           </button>
         </div>
       </div>
