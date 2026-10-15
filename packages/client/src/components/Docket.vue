@@ -213,10 +213,11 @@ function futureAside(card: MatchCard): string | undefined {
   return undefined;
 }
 
-const RECORD_OPTIONS: { option: RecordOption; label: string }[] = [
-  { option: 'record', label: 'Write it as it happened' },
-  { option: 'omit', label: 'Leave it out' },
-  { option: 'embellish', label: 'Improve it' },
+// `label` is existing action metadata; only `plainLabel` changes the reader's controls.
+const RECORD_OPTIONS: { option: RecordOption; label: string; plainLabel: string }[] = [
+  { option: 'record', label: 'Write it as it happened', plainLabel: 'Record what happened' },
+  { option: 'omit', label: 'Leave it out', plainLabel: 'Do not record this event' },
+  { option: 'embellish', label: 'Improve it', plainLabel: 'Record a more favourable account' },
 ];
 
 /**
@@ -465,7 +466,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
                  says nothing on its own: a word standing on four completed
                  lives and the same word standing on forty are not the same
                  claim, and that was the half kept in a tooltip. -->
-            <span>{{ plain ? 'Family record:' : 'the line reads' }} {{ card.line }}{{ plain ? ', based on' : ', on' }} {{ card.lineSeen }} completed lives</span>
+            <span>{{ plain ? 'Family record:' : 'the line reads' }} {{ card.line }}{{ plain ? ', based on' : ', on' }} {{ card.lineSeen }} {{ plain ? 'people whose childbearing years are complete' : 'completed lives' }}</span>
             · {{ card.dowry }} crowns
           </div>
 
@@ -483,7 +484,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
               <ul class="small">
                 <li v-for="row in card.panel.issue" :key="row.name">
                   {{ row.name }}, {{ row.relation }} — {{ row.borne }}
-                  {{ row.borne === 1 ? 'child' : 'children' }}, {{ row.grown }} grown.
+                  {{ row.borne === 1 ? 'child' : 'children' }}{{ plain ? ' born' : '' }}, {{ row.grown }} {{ plain ? 'reached adulthood' : 'grown' }}.
                 </li>
               </ul>
             </template>
@@ -492,9 +493,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
               <p class="small dim heading">{{ plain ? 'Recorded awakenings' : 'Wakings the world attended' }}</p>
               <ul class="small">
                 <li v-for="row in card.panel.woken" :key="row.name + row.year">
-                  {{ row.name }}, {{ row.relation }}, woke in {{ row.year }}<span
+                  {{ row.name }}, {{ row.relation }}, {{ plain ? 'had an awakening in' : 'woke in' }} {{ row.year }}<span
                     v-if="row.expressed"
-                  >, and the house has seen what it cost him</span>.
+                  >{{ plain ? ', and the family has seen how it affected him' : ', and the house has seen what it cost him' }}</span>.
                 </li>
               </ul>
             </template>
@@ -592,10 +593,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <template v-for="(o, i) in recordOptions" :key="o.option">
           <button @click="answerRecord(o.option, o.label)">
             <span class="dim key" aria-hidden="true">{{ i + 1 }}</span>
-            <span>{{ o.label }}</span>
+            <span>{{ plain ? o.plainLabel : o.label }}</span>
             <small v-if="recordIsTempting(o.option)" class="dim temptation"> — {{ plain ? 'this matches the current priorities' : 'these years make this tempting' }}</small>
             <small class="dim entry">
-              {{ decision.options.find((x) => x.option === o.option)?.chronicle ?? 'nothing at all' }}
+              {{ decision.options.find((x) => x.option === o.option)?.chronicle ?? (plain ? 'No text will be recorded.' : 'nothing at all') }}
             </small>
           </button>
         </template>

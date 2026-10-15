@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import type { EpilogueView, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
+import { downloadBlob } from '../lib/download';
+
+vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
 
 describe('ending reckoning uses reader-local Plain English (#1669)', () => {
   it('changes explanatory labels without changing the recorded facts or authored ending', async () => {
@@ -68,6 +71,72 @@ describe('ending reckoning uses reader-local Plain English (#1669)', () => {
       expect(values()).toEqual(originalValues);
     } finally {
       w.unmount();
+    }
+  });
+});
+
+describe('ending image uses the selected reader mode (#1717)', () => {
+  it('paints each mode from one snapshot while preserving facts, quote and filename across async encoding', async () => {
+    const painted: string[] = [];
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {}, fillText: (text: string) => { painted.push(text); },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const encodings: BlobCallback[] = [];
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { encodings.push(callback); });
+    const view = {
+      houseName: 'House Ash', seed: 47,
+      campaign: { id: 'long', name: 'A Long Line', startYear: 1042, endYear: 1542 },
+    } as SessionView;
+    const epilogue = {
+      year: 1542, title: 'The old reckoning', summary: 'The account is unsettled.',
+      opening: 'An original opening.', closing: 'An original closing.', ring: [],
+      read: [{ year: 1500, weight: 'illuminated', text: 'A saved Chronicle sentence.', title: 'The remembered night' }],
+      reckoning: {
+        pages: 10, blanks: 2, embellished: 3, standingLies: 4, provenLies: 1,
+        clauses: 7, clausesTotal: 9, attested: 'none', livingBlood: 12, rungsWithheld: 0,
+      },
+    } as unknown as EpilogueView;
+    const before = structuredClone(epilogue);
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn() } as unknown as GameActions } });
+    try {
+      const dimensions: number[][] = [];
+      for (const [index, mode] of (['original', 'plainenglish', 'original'] as const).entries()) {
+        await w.setProps({ proseMode: mode });
+        painted.length = 0;
+        await w.get('.ending-actions button').trigger('click');
+        expect(painted).toContain(mode === 'plainenglish' ? 'Entries embellished' : 'Improved');
+        expect(painted).toContain(mode === 'plainenglish' ? '4 · 1 exposed' : '4 · 1 caught');
+        expect(painted).toContain(mode === 'plainenglish' ? 'No level claimed' : 'nothing at all');
+        expect(painted).toContain(mode === 'plainenglish'
+          ? 'CHRONICLE EXCERPT · 1500 · The remembered night'
+          : 'FROM THE CHRONICLE · 1500 · The remembered night');
+        expect(painted).toContain(mode === 'plainenglish' ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage');
+        for (const text of ['House Ash', 'A Long Line · 1542 · seed 47', 'The old reckoning',
+          'The account is unsettled.', 'A saved Chronicle sentence.', '7 of 9 clauses', '12']) {
+          expect(painted).toContain(text);
+        }
+        const image = encoding.mock.instances[index]! as HTMLCanvasElement;
+        dimensions.push([image.width, image.height]);
+        const snapshot = [...painted];
+        await w.setProps({ proseMode: mode === 'original' ? 'plainenglish' : 'original' });
+        expect(downloadBlob).toHaveBeenCalledTimes(index);
+        encodings[index]!(new Blob(['image'], { type: 'image/png' }));
+        await flushPromises();
+        expect(painted).toEqual(snapshot);
+        expect(downloadBlob).toHaveBeenLastCalledWith(expect.any(Blob), 'house-ash-1542-seed-47-afterimage.png');
+      }
+      expect(dimensions[1]).toEqual(dimensions[0]);
+      expect(dimensions[2]).toEqual(dimensions[0]);
+      expect(epilogue).toEqual(before);
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      vi.mocked(downloadBlob).mockClear();
     }
   });
 });
