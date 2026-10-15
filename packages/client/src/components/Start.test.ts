@@ -2082,16 +2082,16 @@ describe('front-door Library and save accessibility in both registers (#410)', (
       const removeButtons = () => w.findAll('.library-run > .library-title > button');
       expect(removeButtons().map((b) => b.text())).toEqual(['Remove', 'Remove']);
       expect(removeButtons().map((b) => b.attributes('aria-label'))
-        ).toEqual(['Remove House Salt', 'Remove House Ash']);
+        ).toEqual(['Remove House Ash', 'Remove House Salt']);
 
       await w.setProps({ proseMode: 'plainenglish' });
       expect(removeButtons().map((b) => b.attributes('aria-label'))
-        ).toEqual(['Remove House Salt from completed games', 'Remove House Ash from completed games']);
+        ).toEqual(['Remove House Ash from completed games', 'Remove House Salt from completed games']);
       await w.setProps({ proseMode: 'original' });
       expect(removeButtons().map((b) => b.attributes('aria-label'))
-        ).toEqual(['Remove House Salt', 'Remove House Ash']);
+        ).toEqual(['Remove House Ash', 'Remove House Salt']);
 
-      await removeButtons()[1]!.trigger('click');
+      await removeButtons()[0]!.trigger('click');
       expect(w.get('.library-remove-confirm').text()).toContain('Remove House Ash?');
       expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
       await w.get('.library-remove-confirm button.confirm-remove').trigger('click');
