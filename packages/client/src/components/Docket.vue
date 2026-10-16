@@ -619,10 +619,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
          panel drawn as though it were right. This codebase fails by doing
          nothing, and a blank card is the same failure as a wrong one. -->
     <template v-else>
-      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ (decision as { year: number }).year }} · unhandled</h3>
+      <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ (decision as { year: number }).year }} · {{ plain ? 'Decision unavailable' : 'unhandled' }}</h3>
       <p class="body">
-        This docket is of a kind the panel does not know how to draw. Nothing is
-        lost — the clock is waiting, not broken — but it cannot be answered here.
+        {{ plain
+          ? 'This decision cannot be shown or answered here. The game is waiting for an answer, and your current progress is unchanged.'
+          : 'This docket is of a kind the panel does not know how to draw. Nothing is lost — the clock is waiting, not broken — but it cannot be answered here.' }}
       </p>
     </template>
 
