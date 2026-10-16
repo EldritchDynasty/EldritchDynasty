@@ -151,7 +151,7 @@ const mentionPages = computed(() =>
     <button
       class="face"
       :aria-expanded="open"
-      :aria-controls="'detail-' + member.id"
+      :aria-controls="open ? 'detail-' + member.id : undefined"
       @click="$emit('select', member.id)"
     >
       <span class="name">
