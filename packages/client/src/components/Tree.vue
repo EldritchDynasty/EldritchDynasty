@@ -272,9 +272,18 @@ async function makeVisible(m: { id: string; hallId: string }): Promise<void> {
   document.getElementById('member-' + m.id)?.scrollIntoView({ block: 'center' });
 }
 
+let searchFocusRequest = 0;
 async function jumpTo(m: { id: string; hallId: string }): Promise<void> {
+  const request = ++searchFocusRequest;
   emit('select', m.id);
   await makeVisible(m);
+  if (request !== searchFocusRequest) return;
+  // Selecting a search result removes that button from the DOM. Hand keyboard
+  // focus to the actual person button instead of leaving focus on <body>.
+  // Keep passive external reveal() scroll-only; it is not an activated result.
+  document.getElementById('member-' + m.id)
+    ?.querySelector<HTMLButtonElement>('button.face')
+    ?.focus({ preventScroll: true });
 }
 
 function hallFor(id: string): HallView | undefined {
