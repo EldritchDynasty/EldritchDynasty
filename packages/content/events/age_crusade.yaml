@@ -107,6 +107,11 @@ events:
                 the kind of house that can be inspected without an argument.
               effects:
                 - { kind: respect, delta: 1 }
+                - { kind: spellbook, op: remove_copy, target: head, book: lesser_workings_of_death }
+                - { kind: spellbook, op: remove_copy, target: head, book: lesser_workings_of_darkness }
+                - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_death }
+                - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_darkness }
+                - { kind: spellbook, op: remove_copy, target: head, book: the_marrow_codex }
         - id: hide_them
           label: The second cellar. It has held worse.
           outcomes:
@@ -132,6 +137,11 @@ events:
               effects:
                 - { kind: treasury, delta: 110 }
                 - { kind: respect, delta: -1 }
+                - { kind: spellbook, op: remove_copy, target: head, book: lesser_workings_of_death }
+                - { kind: spellbook, op: remove_copy, target: head, book: lesser_workings_of_darkness }
+                - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_death }
+                - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_darkness }
+                - { kind: spellbook, op: remove_copy, target: head, book: the_marrow_codex }
 
   - id: what_the_chapel_is_for
     title: The Stone in the Chapel
