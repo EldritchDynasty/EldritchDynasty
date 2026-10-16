@@ -190,6 +190,7 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
 
 describe('authored physical-copy exits (#1748)', () => {
   it.each([
+    ['the_book_comes_down', 'sell_it'],
     ['the_book_that_is_wrong', 'burn_it'],
     ['the_book_that_is_wrong', 'sell_it_on'],
     ['the_shelf_that_has_to_go', 'burn_them'],
@@ -197,12 +198,14 @@ describe('authored physical-copy exits (#1748)', () => {
   ])('%s / %s removes its books, not the knowledge people already learned', (eventId, choiceId) => {
     const ctx = bootstrap(bundle, 1748, 1042);
     ctx.world.library.clear();
-    const lost = eventId === 'the_book_that_is_wrong'
+    const lost = eventId === 'the_book_comes_down'
+      ? [ctx.content.mustSpellbook('lesser_workings_of_life')]
+      : eventId === 'the_book_that_is_wrong'
       ? [ctx.content.mustSpellbook('lesser_workings_of_thermal')]
       : ctx.content.spellbooks.filter((book) => book.affinity === 'death' || book.affinity === 'darkness');
     expect(lost.length).toBeGreaterThan(0);
     for (const book of lost) acquireLibraryCopy(ctx, book.id);
-    const retained = ctx.content.mustSpellbook('lesser_workings_of_life');
+    const retained = ctx.content.mustSpellbook('lesser_workings_of_fluid');
     acquireLibraryCopy(ctx, retained.id);
     const learned = place(ctx, { sex: 'male', age: 30, awakened: true });
     learned.acquired[lost[0]!.affinity] = 100;
