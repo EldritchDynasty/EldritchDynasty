@@ -1306,9 +1306,9 @@ proseVariants:
     plainenglish: >-
       joined by marriage from {HOUSE} and has not yet had children for the house.
   - address: "core:messages#cast.foremost.blocked"
-    of: "e99243d469191870"
+    of: "e228a4f7664ec4a3"
     plainenglish: >-
-      is highest on the ladder in the house, and {BLOCKED}
+      is highest on the ladder in the house. {BLOCKED}
   - address: "core:messages#cast.foremost.clear"
     of: "41e2eb5f885741ab"
     plainenglish: >-

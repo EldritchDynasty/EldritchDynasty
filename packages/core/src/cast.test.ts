@@ -9,8 +9,57 @@ import { beget, marry, place, testWorld } from './testing.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 import type { SimCtx } from './world.js';
+import { measureAscension, standingOf } from './ascension.js';
+import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
+import { phenotypeOf } from './people/factory.js';
+import { relevantPeople } from './people/relevance.js';
+import { saveGame } from './save.js';
 
 const bundle = loadContent();
+
+describe('Ascension explanations outside the Standing screen (#1764)', () => {
+  it.each(['original', 'plainenglish'] as const)('uses the player diagnosis in %s cast and relevance hints', (mode) => {
+    const ctx = testWorld(bundle, 8801);
+    const bearer = ctx.world.people.all().find((person) =>
+      phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress)!;
+    expect(bearer).toBeDefined();
+    const candidate = place(ctx, { sex: 'male', age: 40, name: 'The Foremost Reader', awakened: true });
+    // Build a Vessel whose next obstacle is the missing Regalia, rather than
+    // relying on a seed eventually producing a particular ladder standing.
+    candidate.genome = structuredClone(bearer.genome);
+    candidate.acquired[ELDRITCH_GIFT] = 400;
+    candidate.acquired[ELDRITCH_REACH] = 400;
+    candidate.acquired.mind = 400;
+    candidate.madness = 65;
+    candidate.spellsKnown = bundle.spellbooks.map((book) => book.id);
+    candidate.rites.push('vessel');
+    candidate.phenotype = undefined;
+    ctx.world.respect = 'exalted';
+    ctx.world.heirlooms.clear();
+    ctx.world.houseAmbition = 'raise_ascendant';
+    setProseVariants(ctx, bundle.bundle.proseVariants ?? []);
+    setProseMode(ctx, mode);
+
+    const foremost = measureAscension(ctx).foremost!;
+    expect(foremost.person).toBe(candidate.id);
+    expect(foremost.standing.blocker).toBe('regalia');
+    expect(foremost.standing.blocked).toMatch(/\d+ of \d+ held/);
+    const saved = saveGame(ctx);
+    const explanation = mode === 'original'
+      ? 'The Regalia are still divided.'
+      : 'The Regalia have not all been brought together.';
+    const cast = castOf(ctx).find((member) => member.role === 'foremost');
+    expect(cast?.person).toBe(candidate.id);
+    expect.soft(cast?.because).toBe(mode === 'original'
+      ? `stands highest of anyone. ${explanation}`
+      : `is highest on the ladder in the house. ${explanation}`);
+    const relevance = relevantPeople(ctx).get(candidate.id);
+    expect.soft(relevance).toContain(explanation);
+    expect(JSON.stringify({ cast, relevance })).not.toContain(foremost.standing.blocked);
+    expect(standingOf(ctx, candidate)).toEqual(foremost.standing);
+    expect({ ...saveGame(ctx), savedAt: '' }).toEqual({ ...saved, savedAt: '' });
+  });
+});
 
 /**
  * WHO THIS GENERATION IS ABOUT (issue #44), AND WHY IT IS NOT A ROTA (#86).
@@ -470,7 +519,7 @@ describe('the cast speaks the reader\'s setting (#915)', () => {
     'cast.married_in.none_yet':
       'married in from {HOUSE}, and has given the house nobody yet.',
     'cast.foremost.blocked':
-      'stands highest of anyone, and {BLOCKED}',
+      'stands highest of anyone. {BLOCKED}',
     'cast.foremost.clear':
       'stands highest of anyone the house has, with nothing left in the way.',
     'cast.sole_expresser.old':

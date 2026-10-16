@@ -534,10 +534,13 @@ function foremost(ctx: SimCtx, r: Read): Candidate | undefined {
   void r;
   const rung = Math.max(0, RUNG_ORDER.indexOf(best.standing.rung));
   const salience = Math.min(60, 16 + rung * 11 + (best.standing.blocked ? 6 : 0));
+  // `blocked` is the exact tooling predicate; the diagnosis is the same
+  // localized, threshold-free explanation shown on the Standing screen.
+  const blocker = best.standing.diagnosis?.blockers[0]?.text;
   return {
     person: p,
-    because: () => best.standing.blocked
-      ? msg(ctx, 'cast.foremost.blocked', 'stands highest of anyone, and {BLOCKED}', { BLOCKED: best.standing.blocked })
+    because: () => blocker
+      ? msg(ctx, 'cast.foremost.blocked', 'stands highest of anyone. {BLOCKED}', { BLOCKED: blocker })
       : msg(ctx, 'cast.foremost.clear', 'stands highest of anyone the house has, with nothing left in the way.'),
     salience,
   };

@@ -55,7 +55,8 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       const foremost = measureAscension(ctx).foremost;
       if (foremost) {
         add(out, foremost.person as PersonId,
-          foremost.standing.blocked ?? msg(ctx, 'relevance.ascent_candidate', 'foremost candidate for the ascent'));
+          foremost.standing.diagnosis?.blockers[0]?.text
+            ?? msg(ctx, 'relevance.ascent_candidate', 'foremost candidate for the ascent'));
       }
       break;
     }
