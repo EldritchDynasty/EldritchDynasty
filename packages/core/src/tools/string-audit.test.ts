@@ -403,6 +403,52 @@ describe('the string-source audit (issue #276)', () => {
     ]);
   });
 
+  it('classifies only directly returned witness failure reasons in the verified helper context (#1765)', () => {
+    for (const name of ['executeOutcomeWitness', 'executeFrameOutcomeWitness']) {
+      const source = [
+        `export function ${name}() {`,
+        "  const notice = 'The creditor has read the page.';",
+        "  const unused = { ok: false, reason: 'The house keeps this private page.' };",
+        "  const callback = () => { return { ok: false, reason: 'The creditor keeps the signed page.' }; };",
+        "  if (a) return { ok: false, reason: 'The witness cannot fill this slot.' };",
+        "  if (b) return { ok: false, reason: available ?? `The witness has no choice ${id}.` };",
+        "  if (c) return { ok: true, reason: 'The family has completed this page.' };",
+        "  if (d) return { ok: false, reason: writeChronicle('The family paid the creditor.') };",
+        "  return { ok: false, reason: msg(ctx, 'witness.visible', 'The family read the signed page.') };",
+        '}',
+        "function anotherHelper() { return { ok: false, reason: 'The family burned the signed page.' }; }",
+      ].join('\n');
+      const all = plainEnglishCoreWorkItems('events/reach.ts', source.replace(name, 'playerOutcome'));
+      const found = plainEnglishCoreWorkItems('events/reach.ts', source);
+      expect(found).toEqual(all.filter((row) => !row.text.startsWith('The witness')));
+      expect(found.some((row) => row.address === coreMessageAddress('witness.visible'))).toBe(true);
+      expect(plainEnglishCoreWorkItems('events\\reach.ts', source)).toEqual(found.map((row) => ({
+        ...row, file: 'events\\reach.ts', address: row.address.replace('events/reach.ts', 'events\\reach.ts'),
+      })));
+      expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+    }
+  });
+
+  it('classifies the verified CLI report accumulator while preserving other prose and ordinals (#1765)', () => {
+    const source = [
+      'export function renderAchievementRates() {',
+      "  const before = 'The family kept the signed page.';",
+      "  const out = ['Achievement diagnostic report heading.', ...(ready ? ['The diagnostic batch is ready.'] : [])];",
+      "  out.push(`The diagnostic sample contains ${runs} runs.`);",
+      "  out.push(writeChronicle('The creditor took the signed page.'));",
+      "  out.push(() => 'The creditor read the signed page.');",
+      "  out.push(msg(ctx, 'report.visible', 'The family read the signed page.'));",
+      "  return out.join('\\n');",
+      '}',
+      "function playerReport() { const out = ['The family lost the signed page.']; out.push('The house rewrote the old page.'); }",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('achievement-rates.ts', source.replace('renderAchievementRates', 'playerRates'));
+    const found = plainEnglishCoreWorkItems('achievement-rates.ts', source);
+    expect(found).toEqual(all.filter((row) => !row.text.includes('diagnostic')));
+    expect(found.some((row) => row.address === coreMessageAddress('report.visible'))).toBe(true);
+    expect(plainEnglishCoreWorkItems('another-report.ts', source)).toHaveLength(all.length);
+  });
+
   it('reads a component three ways and skips bound attributes and mustaches', () => {
     const rows = auditVueFile('components/Thing.vue', [
       '<template>',
