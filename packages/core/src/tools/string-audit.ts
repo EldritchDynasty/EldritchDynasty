@@ -257,7 +257,8 @@ const DEVELOPER_CALL = /(?:\bError|\bassert\w*|\bconsole\.\w+|\bdescribe|\bit|\b
 function developerLiteralStarts(src: string, file?: string): Set<number> {
   const tree = ts.createSourceFile('audit.ts', src, ts.ScriptTarget.Latest, true);
   const starts = new Set<number>();
-  const phaseFile = file?.replace(/\\/g, '/') === 'year/phases.ts';
+  const sourceFile = file?.replace(/\\/g, '/');
+  const phaseFile = sourceFile === 'year/phases.ts';
   function mark(node: ts.Node): void {
     // A callback can write player prose; logging the callback does not make
     // its body a diagnostic. Explicit msg() Originals are inventoried apart.
@@ -278,6 +279,36 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
       && ts.isIdentifier(array.parent.name) && array.parent.name.text === 'YEAR_PHASES'
       && array.parent.initializer === array;
   }
+  function ownerName(node: ts.Node): string | undefined {
+    let parent = node.parent;
+    while (parent && !ts.isFunctionLike(parent)) parent = parent.parent;
+    return parent && ts.isFunctionDeclaration(parent) ? parent.name?.text : undefined;
+  }
+  // #1765 consumer audit: these helpers return execution-witness diagnostics
+  // to tests, not the game/editor. Only an explicit false-result reason is
+  // classified; other fields, callbacks and nested calls keep their prose.
+  function witnessReason(node: ts.PropertyAssignment): boolean {
+    if (sourceFile !== 'events/reach.ts'
+      || !(ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))
+      || node.name.text !== 'reason' || !ts.isObjectLiteralExpression(node.parent)
+      || !ts.isReturnStatement(node.parent.parent)) return false;
+    const owner = ownerName(node);
+    return (owner === 'executeOutcomeWitness' || owner === 'executeFrameOutcomeWitness')
+      && node.parent.properties.some((property) => ts.isPropertyAssignment(property)
+        && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+        && property.name.text === 'ok' && property.initializer.kind === ts.SyntaxKind.FalseKeyword);
+  }
+  // renderAchievementRates is consumed only by tools/achievement-report.ts's
+  // stdout writer. Classify its known output accumulator, not the whole file
+  // or function: unknown call arguments and nested callbacks remain visible.
+  function reportOutput(node: ts.Node): void {
+    if (sourceFile !== 'achievement-rates.ts' || ownerName(node) !== 'renderAchievementRates') return;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'out'
+      && node.initializer && ts.isArrayLiteralExpression(node.initializer)) mark(node.initializer);
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
+      && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === 'out'
+      && node.expression.name.text === 'push') node.arguments.forEach(mark);
+  }
   function visit(node: ts.Node): void {
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       const callee = node.expression;
@@ -287,7 +318,8 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
           && callee.expression.text === 'console';
       if (diagnostic) node.arguments?.forEach(mark);
     }
-    if (ts.isPropertyAssignment(node) && phaseNote(node)) mark(node.initializer);
+    if (ts.isPropertyAssignment(node) && (phaseNote(node) || witnessReason(node))) mark(node.initializer);
+    reportOutput(node);
     ts.forEachChild(node, visit);
   }
   visit(tree);
