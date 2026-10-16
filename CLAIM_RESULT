@@ -1,9 +1,12 @@
 verdict: ok
 exit: 0
-request: /claim lane-gates --agent codex/plainenglish-consumers --paths packages/core/src/tools/string-audit.ts packages/core/src/tools/string-audit.test.ts packages/core/src/tools/string-audit-cli.test.ts --lane gates
-request-commit: 641145cb825ead8b5d2245bc22fb18fc01613b0c
+request: /claim lane-content --agent codex/plainenglish-consumers --paths packages/content/messages.yaml --lane content
+request-commit: 442042051ebfe4d2d27bfad637ce00ededee327b
 
-held: lane-gates → codex/plainenglish-consumers (lane gates)
+widened lane-content: + packages/content/messages.yaml
+  narrowed lane-content: − packages/content/core-prose.yaml
+held: lane-content → codex/plainenglish-consumers (lane content)
   land it with: Closes #415
   the janitor retires the claims and deletes the branch behind that.
-  ⚠ codex/plainenglish-consumers declared overlapping paths on 415: packages/core/src, packages/client/src, packages/content/core-prose.yaml
+  ⚠ codex/plainenglish-consumers is also in the CONTENT lane (415). Two content branches that each
+    pass the gates can merge into a main that does not — see docs/PARALLEL.md.
