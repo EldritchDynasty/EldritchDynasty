@@ -309,6 +309,64 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
       && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === 'out'
       && node.expression.name.text === 'push') node.arguments.forEach(mark);
   }
+  let hollowIdentity: ts.StringLiteral | undefined;
+  let readsHollowIdentity = false;
+  function diagnosticContract(node: ts.Node): void {
+    // #1769: the precise predicate is separate from the keyed player diagnosis.
+    // Its consumers were migrated in #1767; never classify text/hint arguments.
+    if (sourceFile === 'ascension.ts') {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+        const name = node.expression.text;
+        const index = name === 'gateBlocker' ? 2
+          : ['respectBlocker', 'costBlocker', 'overborneBlocker'].includes(name) ? 1 : undefined;
+        const argument = index === undefined ? undefined : node.arguments[index];
+        if (argument) mark(argument);
+      }
+      if (ts.isReturnStatement(node) && node.expression
+        && ['powerShortfall', 'bookShortfall', 'affinityShortfall'].includes(ownerName(node) ?? '')) {
+        mark(node.expression);
+      }
+      if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name) && node.name.text === 'blocked'
+        && ownerName(node) === 'standingOf' && ts.isObjectLiteralExpression(node.parent)
+        && ts.isReturnStatement(node.parent.parent)) mark(node.initializer);
+    }
+    // These replay diagnostics/report lines have no game/editor consumer.
+    if (sourceFile === 'replay.ts') {
+      if (ts.isNewExpression(node) && ts.isIdentifier(node.expression)
+        && node.expression.text === 'ReplayMismatchError' && ownerName(node) === 'replay') {
+        node.arguments?.forEach(mark);
+      }
+      if (ts.isReturnStatement(node) && node.expression && ownerName(node) === 'describeDecision') {
+        mark(node.expression);
+      }
+    }
+    // The client catches these and shows Start.vue's localized load/import
+    // refusal instead; preserve the detailed exception contract for tooling.
+    if (sourceFile === 'save.ts' && ts.isNewExpression(node) && ts.isIdentifier(node.expression)
+      && node.expression.text === 'SaveFormatError' && ownerName(node) === 'loadGame') node.arguments?.forEach(mark);
+    // Content-index helpers' second argument labels a missing reference in an
+    // exception. Restrict this to the two reviewed production call contexts.
+    const method = sourceFile === 'events/arcs.ts' ? 'mustArc'
+      : sourceFile === 'year/phases.ts' ? 'mustEvent' : undefined;
+    if (method && ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
+      && node.expression.name.text === method && ts.isPropertyAccessExpression(node.expression.expression)
+      && node.expression.expression.name.text === 'content'
+      && ts.isIdentifier(node.expression.expression.expression)
+      && node.expression.expression.expression.text === 'ctx' && node.arguments[1]) mark(node.arguments[1]);
+
+    // This is an exact genetics lookup identity, not a display label (#410).
+    // Require both its declaration and its mechanical reader, not just wording.
+    if (sourceFile === 'people/demography.ts') {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'HOLLOW_YEAR'
+        && node.initializer && ts.isStringLiteral(node.initializer)
+        && node.initializer.text === 'the hollow year') hollowIdentity = node.initializer;
+      if (ts.isCallExpression(node) && ownerName(node) === 'isHollowYearHomozygote'
+        && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'includes'
+        && ts.isPropertyAccessExpression(node.expression.expression) && node.expression.expression.name.text === 'names'
+        && node.arguments.length === 1 && ts.isIdentifier(node.arguments[0]!)
+        && node.arguments[0]!.text === 'HOLLOW_YEAR') readsHollowIdentity = true;
+    }
+  }
   function visit(node: ts.Node): void {
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       const callee = node.expression;
@@ -320,9 +378,11 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
     }
     if (ts.isPropertyAssignment(node) && (phaseNote(node) || witnessReason(node))) mark(node.initializer);
     reportOutput(node);
+    diagnosticContract(node);
     ts.forEachChild(node, visit);
   }
   visit(tree);
+  if (readsHollowIdentity && hollowIdentity) mark(hollowIdentity);
   return starts;
 }
 
