@@ -276,6 +276,138 @@ describe('the string-source audit (issue #276)', () => {
       && row.text === 'Keep a broad living bloodline from thinning away.')).toBe(false);
   });
 
+  it('classifies only achievement calibration fields, keeping display copy and neighboring contexts (#1774)', () => {
+    const source = [
+      'const ACHIEVEMENT_CATALOG = { example: {',
+      "  title: 'The Last Page', description: 'Finish the whole campaign.',",
+      "  calibration: 'Calibration evidence for the launch.',",
+      "  other: 'Keep this neighboring player text.',",
+      "  nested: { calibration: 'Keep this nested player text.' },",
+      '} } as const satisfies Catalogue;',
+      "const another = { example: { calibration: 'Keep this other catalogue text.' } };",
+      "const ACHIEVEMENT_CATALOGUE = { example: { calibration: 'Keep this similarly named text.' } };",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('other.ts', source);
+    const found = plainEnglishCoreWorkItems('achievements.ts', source);
+    expect(found).toEqual(all.filter((row) => !row.text.startsWith('Calibration'))
+      .map((row) => ({ ...row, file: 'achievements.ts', address: row.address.replace('other.ts', 'achievements.ts') })));
+  });
+
+  it('classifies Match renderer templates only in the verified scorer, preserving keyed and unknown calls (#1774)', () => {
+    const source = [
+      'function matchFuture() {',
+      "  reason('blood.example', 'Compatibility evidence from the scorer.');",
+      "  renderText('match.future.confidence.mixed', 'Compatibility qualifier from the scorer.');",
+      "  reason('blood.callback', () => 'Keep this callback player text.');",
+      "  reason('blood.unknown', writePage('Keep this unknown call text.'));",
+      "  reason('blood.keyed', msg(ctx, 'match.visible', 'Keep this keyed player text.'));",
+      "  other('unknown', 'Keep this other call text.');",
+      "  const visible = 'Keep this neighboring player text.';",
+      '}',
+      "function otherReader() { reason('blood.example', 'Keep this other function text.'); }",
+    ].join('\n');
+    for (const file of ['people/match.ts', 'people\\match.ts']) {
+      const all = plainEnglishCoreWorkItems(file, source.replace('function matchFuture()', 'function otherScorer()'));
+      const found = plainEnglishCoreWorkItems(file, source);
+      expect(found).toEqual(all.filter((row) => !row.text.startsWith('Compatibility')));
+    }
+    expect(plainEnglishCoreWorkItems('other.ts', source)).toHaveLength(8);
+  });
+
+  it('keeps every production scorer Original backed by the checked keyed renderer (#1774)', () => {
+    const source = readFileSync(join(REPO, 'packages/core/src/people/match.ts'), 'utf8');
+    const all = plainEnglishCoreWorkItems('other.ts', source);
+    const found = plainEnglishCoreWorkItems('people/match.ts', source);
+    const retained = new Set(found.map((row) => row.text));
+    const removed = all.filter((row) => !retained.has(row.text));
+    const session = plainEnglishCoreWorkItems('session.ts', readFileSync(join(REPO, 'packages/core/src/session.ts'), 'utf8'));
+    const originals = new Set(session.filter((row) => row.address.startsWith('core:messages#match.future.')).map((row) => row.text));
+    expect(removed).toHaveLength(20);
+    for (const row of removed) {
+      if (row.text === 'these years make ${lower} unusually important') {
+        for (const kind of ['blood', 'standing', 'continuity', 'mystery']) {
+          expect(originals.has(`these years make ${kind} unusually important`)).toBe(true);
+        }
+      } else expect(originals.has(row.text), row.text).toBe(true);
+    }
+  });
+
+  it('keeps official campaign names classified only in the reviewed catalogue fields (#1774)', () => {
+    const source = [
+      "const CAMPAIGNS = { short: { name: 'A Short Line' }, long: { name: 'A Long Line' },",
+      "  future: { name: 'A Future Line' }, changed: { name: 'A Changed Line' } };",
+      "const other = { short: { name: 'A Short Line' } };",
+      "msg(ctx, 'campaign.visible', 'A Long Line');",
+    ].join('\n');
+    const found = plainEnglishCoreWorkItems('campaign.ts', source);
+    expect(found.map((row) => row.text)).toEqual(['A Future Line', 'A Changed Line', 'A Short Line', 'A Long Line']);
+    expect(plainEnglishCoreWorkItems('other.ts', source)).toHaveLength(6);
+    expect(plainEnglishCoreWorkItems('campaign.ts', source.replace("name: 'A Short Line'", "name: 'The Short Campaign'")))
+      .toContainEqual(expect.objectContaining({ text: 'The Short Campaign' }));
+  });
+
+  it('classifies reviewed proper-name formats without dropping narrative, keyed text or unrelated helpers (#1774)', () => {
+    const cases = [
+      ['people/names.ts', 'uniqueName', '`${base} the ${ordinalSuffix(n)}`'],
+      ['people/names.ts', 'uniqueName', '`${stem} the ${ordinalSuffix(n)}`'],
+      ['people/minting.ts', 'rollRecipe', '`${name} of ${place}`'],
+      ['events/slots.ts', 'nameList', "`${names.slice(0, -1).join(', ')} and ${names[names.length - 1]!}`"],
+    ];
+    for (const [file, owner, template] of cases) {
+      const source = [
+        `function ${owner}() { return ${template}; }`,
+        `function otherReader() { return ${template}; }`,
+        "const narrative = 'The family kept its old names.';",
+        "msg(ctx, 'names.visible', 'The family kept its old names.');",
+      ].join('\n');
+      const all = plainEnglishCoreWorkItems(file!, source.replace(`function ${owner}()`, 'function otherOwner()'));
+      const found = plainEnglishCoreWorkItems(file!, source);
+      expect(found).toEqual(all.slice(1));
+      expect(plainEnglishCoreWorkItems(file!.replaceAll('/', '\\'), source).map((row) => row.text))
+        .toEqual(found.map((row) => row.text));
+      expect(plainEnglishCoreWorkItems('other.ts', source)).toHaveLength(all.length);
+    }
+    const source = [
+      'function currentGrudges() {',
+      ' const holder = (modeCtx) => !from ? houseName(modeCtx, rel.from)',
+      '   : from === outsider ? `${from.name} of ${houseName(modeCtx, house)}` : from.name;',
+      ' const target = (modeCtx) => !to ? houseName(modeCtx, rel.to)',
+      '   : to === outsider ? `${to.name} of ${houseName(modeCtx, house)}` : to.name;',
+      " const prose = 'The creditor remembered that name.';",
+      '}',
+      'function anotherReader() { return `${from.name} of ${houseName(modeCtx, house)}`; }',
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('relationship-threads.ts', source.replace('function currentGrudges()', 'function otherReader()'));
+    expect(plainEnglishCoreWorkItems('relationship-threads.ts', source)).toEqual(all.slice(2));
+  });
+
+  it('classifies only unused stored lineage claims at their two document-writing boundaries (#1774)', () => {
+    const cases = [
+      ['people/papers.ts', [
+        'function filePedigree() {',
+        " const doc: LineageDocument = { claims: 'Stored document coverage and seals.', other: 'Keep this nearby player prose.' };",
+        " const other: OtherDocument = { claims: 'Keep this other document prose.' };",
+        " const nested: LineageDocument = { claims: writePage('Keep this unknown call prose.') };",
+        " const callback: LineageDocument = { claims: () => 'Keep this callback prose.' };",
+        '}',
+      ].join('\n')],
+      ['events/effects.ts', [
+        'function applyEffect() {',
+        " p.lineageDocuments.push({ claims: 'Stored document ancestry and coverage.', other: 'Keep this nearby player prose.' });",
+        " p.otherDocuments.push({ claims: 'Keep this other document prose.' });",
+        " p.lineageDocuments.push({ claims: msg(ctx, 'paper.visible', 'Keep this keyed player prose.') });",
+        '}',
+      ].join('\n')],
+    ];
+    for (const [file, source] of cases) {
+      const all = plainEnglishCoreWorkItems('other.ts', source!);
+      const found = plainEnglishCoreWorkItems(file!, source!);
+      expect(found.map((row) => row.text)).toEqual(all.filter((row) => !row.text.startsWith('Stored')).map((row) => row.text));
+      expect(plainEnglishCoreWorkItems(file!.replace('/', '\\'), source!).map((row) => row.text))
+        .toEqual(found.map((row) => row.text));
+    }
+  });
+
   it('rejects duplicate keys and dynamic identities or Originals before they can masquerade as stable messages', () => {
     expect(() => plainEnglishCoreWorkItems('advisers.ts', [
       "msg(ctx, 'adviser.duplicate', 'First message.');",

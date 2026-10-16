@@ -570,7 +570,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       if (!def) return { ok: false, reason: msg(ctx, 'table.order.study.no_book', 'no such book') };
       if (!w.library.has(o.book)) return { ok: false, reason: msg(ctx, 'table.order.study.not_held', 'the house does not hold it') };
       const can = canStudySpellbook(ctx, p, def);
-      if (!can.ok) return { ok: false, reason: can.reason ?? 'not theirs to learn' };
+      if (!can.ok) return { ok: false, reason: can.reason ?? msg(ctx, 'table.order.study.ineligible', 'not theirs to learn') };
       return beginStudy(ctx, p, def)
         ? { ok: true }
         : { ok: false, reason: msg(ctx, 'table.order.study.already', 'he is already at it, or already has it') };

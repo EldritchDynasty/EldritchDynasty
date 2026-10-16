@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,7 @@ import {
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
 import { plainEnglishWorklist } from './tools/string-audit.js';
+import * as library from './people/library.js';
 
 const bundle = loadContent();
 
@@ -1571,6 +1572,7 @@ const ORDER_ORIGINALS: Record<string, string> = {
   'table.order.study.no_book': 'no such book',
   'table.order.study.not_held': 'the house does not hold it',
   'table.order.study.already': 'he is already at it, or already has it',
+  'table.order.study.ineligible': 'not theirs to learn',
   'table.order.pedigree.unknown': 'nobody of this house by that name',
   'table.order.pedigree.fee': 'the house cannot raise {PRICE} crowns',
   'table.order.pedigree.covered': 'the record already shows that much',
@@ -1595,6 +1597,26 @@ const ORDER_ORIGINALS: Record<string, string> = {
 };
 
 describe('table order refusals in Plain English (#811)', () => {
+  it('localizes a reasonless study refusal while preserving supplied reasons and the save (#1774)', () => {
+    const ctx = testWorld(bundle, 1774, 1400);
+    const reader = place(ctx, { sex: 'male', age: 30, name: 'The Reader' });
+    const book = ctx.content.spellbooks[0]!;
+    ctx.world.library.set(book.id, { id: book.id, acquiredYear: ctx.world.year, condition: 100 });
+    const before = saveGame(ctx);
+    const permission = vi.spyOn(library, 'canStudySpellbook').mockReturnValue({ ok: false });
+    try {
+      const study: TableOrder = { kind: 'study', person: reader.id, book: book.id };
+      expect(order(ctx, study)).toEqual({ ok: false, reason: 'not theirs to learn' });
+      setProseVariants(ctx, bundle.proseVariants);
+      setProseMode(ctx, 'plainenglish');
+      expect(order(ctx, study)).toEqual({ ok: false, reason: 'They cannot learn this book.' });
+      permission.mockReturnValue({ ok: false, reason: 'A specific refusal from the learning gate.' });
+      expect(order(ctx, study)).toEqual({ ok: false, reason: 'A specific refusal from the learning gate.' });
+      expect(saveGame(ctx)).toEqual({ ...before, savedAt: expect.any(String) });
+      expect(missingPlainEnglish(ctx)).toEqual([]);
+    } finally { permission.mockRestore(); }
+  });
+
   it('pins every keyed Original at its own call site', () => {
     const found = keyed(['table.order.']);
     expect(Object.fromEntries(found)).toEqual(ORDER_ORIGINALS);
