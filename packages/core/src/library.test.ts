@@ -195,6 +195,7 @@ describe('authored physical-copy exits (#1748)', () => {
     ['the_book_that_is_wrong', 'sell_it_on'],
     ['the_shelf_that_has_to_go', 'burn_them'],
     ['the_shelf_that_has_to_go', 'sell_them'],
+    ['the_shelf_that_has_to_go', 'offer_them_as_tribute'],
   ])('%s / %s removes its books, not the knowledge people already learned', (eventId, choiceId) => {
     const ctx = bootstrap(bundle, 1748, 1042);
     ctx.world.library.clear();
@@ -228,6 +229,24 @@ describe('authored physical-copy exits (#1748)', () => {
     const saved = saveGame(ctx);
     expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
   });
+  it('Crusade tribute has a distinct price and respect trade-off without replacing other choices', () => {
+    const event = bundle.mustEvent('the_shelf_that_has_to_go');
+    if (event.interaction.kind === 'narration') throw new Error('expected a book-loss choice');
+    expect(event.interaction.choices.map((choice) => choice.id)).toEqual([
+      'burn_them', 'hide_them', 'sell_them', 'offer_them_as_tribute',
+    ]);
+    const tribute = event.interaction.choices.find((choice) => choice.id === 'offer_them_as_tribute')!;
+    expect(tribute.outcomes).toHaveLength(1);
+    expect(tribute.outcomes[0]!.effects).toEqual([
+      { kind: 'treasury', delta: -20 },
+      { kind: 'respect', delta: 2 },
+      ...[
+        'lesser_workings_of_death', 'lesser_workings_of_darkness',
+        'greater_workings_of_death', 'greater_workings_of_darkness', 'the_marrow_codex',
+      ].map((book) => ({ kind: 'spellbook', op: 'remove_copy', target: 'head', book })),
+    ]);
+  });
+
 });
 
 describe('deterministic physical-copy wear (first slice of #1293)', () => {
