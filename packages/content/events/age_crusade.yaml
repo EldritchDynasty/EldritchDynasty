@@ -149,10 +149,9 @@ events:
             - id: offered_to_bramme
               weight: 100
               text: >-
-                The chapter house sends a cart and a clerk. Five books go under the Church's seal, and
+                The chapter house sends a cart and a clerk. The second row goes under the Church's seal, and
                 the steward pays twenty crowns for the road and the receipt. The paper calls it an
-                offering made freely. It does not call it a surrender. The north room has a space that
-                no family member is permitted to fill.
+                offering made freely. It does not call it a surrender. That row is gone.
               effects:
                 - { kind: treasury, delta: -20 }
                 - { kind: respect, delta: 2 }
@@ -547,8 +546,8 @@ proseVariants:
       Give the Death and Darkness books to the Church at Bramme. Pay for delivery and keep the
       receipt.
   - address: "content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=offer_them_as_tribute].outcomes[id=offered_to_bramme].text"
-    of: "f38d8b548eb1cb28"
+    of: "00461b5fc6f15b33"
     plainenglish: >-
-      The Church sends a cart and a clerk to collect the five books. The steward pays twenty crowns
-      for transport and a receipt. The Church records the books as a gift given freely, not a
-      surrender. Those books are no longer on the house's shelves.
+      The Church sends a cart and a clerk to collect the Death and Darkness books under its seal.
+      The steward pays twenty crowns for transport and a receipt. The Church records the books
+      as a gift given freely, not a surrender. Those copies are no longer on the shelves.
