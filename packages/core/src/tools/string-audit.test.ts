@@ -449,6 +449,105 @@ describe('the string-source audit (issue #276)', () => {
     expect(plainEnglishCoreWorkItems('another-report.ts', source)).toHaveLength(all.length);
   });
 
+  it('keeps Ascension player text while classifying exact predicate contracts (#1769)', () => {
+    const source = [
+      "function powerShortfall() { return `Diagnostic power ${power} below ${need}.`; }",
+      "function bookShortfall() { return 'Diagnostic books are missing.'; }",
+      "function affinityShortfall() { return 'Diagnostic arts are missing.'; }",
+      "function standingOf() { return { blocked: 'Diagnostic expression is missing.', text: 'The blood does not answer him.' }; }",
+      "const other = { blocked: 'The creditor has closed the gate.' };",
+      'function gateFor() {',
+      "  gateBlocker('power', 'power', 'Diagnostic exact predicate failed.', 'The family needs stronger blood.', 'Seek a different Match.');",
+      "  respectBlocker(ctx, 'Diagnostic respect predicate failed.', target);",
+      "  costBlocker(ctx, 'Diagnostic cost predicate failed.', target);",
+      "  overborneBlocker(ctx, 'Diagnostic mind predicate failed.');",
+      "  gateBlocker('power', 'power', writeChronicle('The family opened its book.'), text, hint);",
+      "  gateBlocker('power', 'power', () => 'The creditor opened the book.', text, hint);",
+      "  gateBlocker('power', 'power', msg(ctx, 'diagnosis.visible', 'The family paid its debt.'), text, hint);",
+      '}',
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('ascension.ts', source.replace(
+      /\b(?:powerShortfall|bookShortfall|affinityShortfall|standingOf|gateBlocker|respectBlocker|costBlocker|overborneBlocker)\b/g,
+      'otherFunction',
+    ));
+    const found = plainEnglishCoreWorkItems('ascension.ts', source);
+    expect(found).toEqual(all.filter((row) => !row.text.startsWith('Diagnostic')));
+    expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+  });
+
+  it('classifies only replay mismatch arguments and direct report returns (#1769)', () => {
+    const source = [
+      "function replay() { throw new ReplayMismatchError('Diagnostic replay inputs differ.'); }",
+      'function describeDecision() {',
+      "  if (a) return `Diagnostic decision ${id} was recorded.`;",
+      "  if (b) return writeChronicle('The family recorded its answer.');",
+      "  if (c) return () => 'The creditor recorded the answer.';",
+      "  return msg(ctx, 'replay.visible', 'The family kept its answer.');",
+      '}',
+      "const other = new ReplayMismatchError('The family refused its answer.');",
+      "function anotherReport() { return 'The creditor took the answer.'; }",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('replay.ts', source
+      .replace('function replay()', 'function otherReplay()')
+      .replace('function describeDecision()', 'function otherDescribeDecision()'));
+    const found = plainEnglishCoreWorkItems('replay.ts', source);
+    expect(found).toEqual(all.filter((row) => !row.text.startsWith('Diagnostic')));
+    expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+  });
+
+  it('classifies only loadGame format diagnostics, preserving other exception and player text (#1769)', () => {
+    const source = [
+      'function loadGame() {',
+      "  if (a) throw new SaveFormatError(`Diagnostic unreadable save ${format}.`);",
+      "  if (b) throw new SaveFormatError(writeChronicle('The family saved the page.'));",
+      "  if (c) throw new SaveFormatError(() => 'The creditor saved the page.');",
+      "  throw new SaveFormatError(msg(ctx, 'save.visible', 'The family kept the page.'));",
+      '}',
+      "const other = new SaveFormatError('The family refused the page.');",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('save.ts', source.replace('function loadGame()', 'function playerNotice()'));
+    const found = plainEnglishCoreWorkItems('save.ts', source);
+    expect(found).toEqual(all.filter((row) => !row.text.startsWith('Diagnostic')));
+    expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+  });
+
+  it('classifies only verified content-index error-context arguments, on either path separator (#1769)', () => {
+    for (const [file, method] of [['events/arcs.ts', 'mustArc'], ['year/phases.ts', 'mustEvent']] as const) {
+      const source = [
+        `ctx.content.${method}('The first argument stays.', 'Diagnostic missing content context.');`,
+        `other.content.${method}('another_id', 'The family preserved this page.');`,
+        `ctx.content.${method}('an_id', writeChronicle('The family signed this page.'));`,
+        `ctx.content.${method}('an_id', () => 'The creditor read this page.');`,
+        `ctx.content.${method}('an_id', msg(ctx, 'content.visible', 'The family read this page.'));`,
+      ].join('\n');
+      const all = plainEnglishCoreWorkItems(file, source.replaceAll('ctx.content.', 'unknown.content.'));
+      const found = plainEnglishCoreWorkItems(file, source);
+      expect(found).toEqual(all.filter((row) => !row.text.startsWith('Diagnostic')));
+      expect(plainEnglishCoreWorkItems(file.replace('/', '\\'), source)).toEqual(found.map((row) => ({
+        ...row, file: file.replace('/', '\\'), address: row.address.replace(file, file.replace('/', '\\')),
+      })));
+      expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+    }
+  });
+
+  it('classifies the hollow-year lookup identity only when its mechanical reader is present (#1769)', () => {
+    const definition = "const HOLLOW_YEAR = 'the hollow year';";
+    const source = [
+      definition,
+      'function isHollowYearHomozygote() { return load.names.includes(HOLLOW_YEAR); }',
+      "const visible = 'the hollow year';",
+      "msg(ctx, 'hollow.visible', 'the hollow year');",
+    ].join('\n');
+    const all = plainEnglishCoreWorkItems('people/demography.ts', source.replace('isHollowYearHomozygote', 'anotherReader'));
+    const found = plainEnglishCoreWorkItems('people/demography.ts', source);
+    expect(found).toEqual(all.slice(1));
+    expect(plainEnglishCoreWorkItems('people/demography.ts', definition)).toHaveLength(1);
+    expect(plainEnglishCoreWorkItems('story.ts', source)).toHaveLength(all.length);
+    expect(plainEnglishCoreWorkItems('people\\demography.ts', source)).toEqual(found.map((row) => ({
+      ...row, file: 'people\\demography.ts', address: row.address.replace('people/demography.ts', 'people\\demography.ts'),
+    })));
+  });
+
   it('reads a component three ways and skips bound attributes and mustaches', () => {
     const rows = auditVueFile('components/Thing.vue', [
       '<template>',
