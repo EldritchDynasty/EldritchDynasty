@@ -241,13 +241,19 @@ function rootsOf(hall: HallView): MemberView[] {
  */
 const query = ref('');
 
+/** Find recorded names without making the player type accents. This only
+ * folds search comparisons: displayed and saved names remain verbatim. */
+function searchName(text: string): string {
+  return text.normalize('NFD').replace(/\\p{M}/gu, '').toLowerCase();
+}
+
 const matches = computed(() => {
-  const q = query.value.trim().toLowerCase();
+  const q = searchName(query.value.trim());
   if (q.length < 2) return [];
   const out: { id: string; name: string; hallId: string; hallName: string }[] = [];
   for (const hall of props.view.halls) {
     for (const m of hall.members) {
-      if (!m.name.toLowerCase().includes(q)) continue;
+      if (!searchName(m.name).includes(q)) continue;
       out.push({ id: m.id, name: m.name, hallId: hall.id, hallName: hall.name });
       if (out.length >= 8) return out;
     }
