@@ -284,6 +284,42 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
     while (parent && !ts.isFunctionLike(parent)) parent = parent.parent;
     return parent && ts.isFunctionDeclaration(parent) ? parent.name?.text : undefined;
   }
+  function catalogueName(node: ts.Node): string | undefined {
+    while (ts.isAsExpression(node.parent) || ts.isSatisfiesExpression(node.parent)
+      || ts.isParenthesizedExpression(node.parent)) node = node.parent;
+    return ts.isVariableDeclaration(node.parent) && ts.isIdentifier(node.parent.name)
+      && node.parent.initializer === node ? node.parent.name.text : undefined;
+  }
+  function entryField(node: ts.PropertyAssignment, catalogue: string): boolean {
+    return ts.isObjectLiteralExpression(node.parent)
+      && ts.isPropertyAssignment(node.parent.parent)
+      && ts.isObjectLiteralExpression(node.parent.parent.parent)
+      && catalogueName(node.parent.parent.parent) === catalogue;
+  }
+  function identityFormat(node: ts.Node): void {
+    if (!ts.isTemplateExpression(node)) return;
+    const owner = ownerName(node);
+    const template = node.getText(tree);
+    // These produce reserved, saved proper names, not narrative sentences.
+    if (sourceFile === 'people/names.ts' && owner === 'uniqueName'
+      && ['`${base} the ${ordinalSuffix(n)}`', '`${stem} the ${ordinalSuffix(n)}`'].includes(template)) mark(node);
+    if (sourceFile === 'people/minting.ts' && owner === 'rollRecipe'
+      && template === '`${name} of ${place}`') mark(node);
+    // Basic name-list/name-of-house formatting is already Plain English.
+    // Keep all surrounding narrative and every msg() Original inventoried.
+    if (sourceFile === 'events/slots.ts' && owner === 'nameList'
+      && ts.isReturnStatement(node.parent)
+      && template === "`${names.slice(0, -1).join(', ')} and ${names[names.length - 1]!}`") mark(node);
+    if (sourceFile === 'relationship-threads.ts'
+      && ['`${from.name} of ${houseName(modeCtx, house)}`', '`${to.name} of ${houseName(modeCtx, house)}`'].includes(template)
+      && ts.isConditionalExpression(node.parent) && ts.isConditionalExpression(node.parent.parent)
+      && ts.isArrowFunction(node.parent.parent.parent)
+      && ts.isVariableDeclaration(node.parent.parent.parent.parent)) {
+      const declaration = node.parent.parent.parent.parent;
+      if (ts.isIdentifier(declaration.name) && ['holder', 'target'].includes(declaration.name.text)
+        && ownerName(declaration) === 'currentGrudges') mark(node);
+    }
+  }
   // #1765 consumer audit: these helpers return execution-witness diagnostics
   // to tests, not the game/editor. Only an explicit false-result reason is
   // classified; other fields, callbacks and nested calls keep their prose.
@@ -312,6 +348,44 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
   let hollowIdentity: ts.StringLiteral | undefined;
   let readsHollowIdentity = false;
   function diagnosticContract(node: ts.Node): void {
+    // Launch-rate notes are calibration evidence, while title/description
+    // remain intended player/store copy. Only the catalogue's direct field
+    // is metadata; similarly named fields elsewhere may be player prose.
+    if (sourceFile === 'achievements.ts' && ts.isPropertyAssignment(node)
+      && ts.isIdentifier(node.name) && node.name.text === 'calibration'
+      && entryField(node, 'ACHIEVEMENT_CATALOG')) mark(node.initializer);
+    // Official campaign identities are retained in both prose modes. The
+    // Start screen adds the shorter/longer clarification; viewOf keys them.
+    if (sourceFile === 'campaign.ts' && ts.isPropertyAssignment(node)
+      && ts.isIdentifier(node.name) && node.name.text === 'name'
+      && ts.isStringLiteral(node.initializer) && entryField(node, 'CAMPAIGNS')) {
+      const entry = node.parent.parent as ts.PropertyAssignment;
+      const expected = ts.isIdentifier(entry.name)
+        ? { short: 'A Short Line', long: 'A Long Line' }[entry.name.text as 'short' | 'long'] : undefined;
+      if (expected === node.initializer.text) mark(node.initializer);
+    }
+    // These saved document claims currently have no display consumer: papers,
+    // cast and Table read coverage/notary/exposure, never this stored field.
+    if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name) && node.name.text === 'claims'
+      && ts.isObjectLiteralExpression(node.parent)) {
+      const object = node.parent;
+      if (sourceFile === 'people/papers.ts' && ownerName(node) === 'filePedigree'
+        && ts.isVariableDeclaration(object.parent) && ts.isIdentifier(object.parent.name)
+        && object.parent.name.text === 'doc' && object.parent.type?.getText(tree) === 'LineageDocument') mark(node.initializer);
+      if (sourceFile === 'events/effects.ts' && ownerName(node) === 'applyEffect'
+        && ts.isCallExpression(object.parent) && ts.isPropertyAccessExpression(object.parent.expression)
+        && object.parent.expression.getText(tree) === 'p.lineageDocuments.push') mark(node.initializer);
+    }
+    // The pure Match scorer supplies Originals to its presentation callback.
+    // Every game consumer uses GameSession's checked, keyed renderer (#986).
+    // Preserve the Original-only API and inventory unknown calls/callbacks.
+    if (sourceFile === 'people/match.ts' && ownerName(node) === 'matchFuture'
+      && ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+      const callee = node.expression.text;
+      if ((callee === 'reason' || callee === 'renderText') && node.arguments[1]) {
+        mark(node.arguments[1]);
+      }
+    }
     // #1769: the precise predicate is separate from the keyed player diagnosis.
     // Its consumers were migrated in #1767; never classify text/hint arguments.
     if (sourceFile === 'ascension.ts') {
@@ -378,6 +452,7 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
     }
     if (ts.isPropertyAssignment(node) && (phaseNote(node) || witnessReason(node))) mark(node.initializer);
     reportOutput(node);
+    identityFormat(node);
     diagnosticContract(node);
     ts.forEachChild(node, visit);
   }

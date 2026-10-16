@@ -14,6 +14,9 @@
 # and consequence; make only the sentences simpler.
 
 proseVariants:
+  - address: "core:messages#table.order.study.ineligible"
+    of: "091a008e4080425a"
+    plainenglish: "They cannot learn this book."
   - address: "core:messages#assize.the_assessors_call"
     of: "d6f23d20745bd8c4"
     plainenglish: >-
