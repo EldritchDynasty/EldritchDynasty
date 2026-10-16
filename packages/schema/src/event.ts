@@ -232,7 +232,9 @@ export const EffectS = z.discriminatedUnion('kind', [
    * in a night is a `gain`; a man sitting down with a book is a `study`, and
    * the difference between them is most of what a Library is for.
    */
-  z.object({ kind: z.literal('spellbook'), op: z.enum(['gain', 'study', 'lose', 'degrade']), target: TargetS, book: z.string() }),
+  // `lose` forgets learned spells. `remove_copy` removes the physical book
+  // and unfinished readings; like physical degradation, it ignores target.
+  z.object({ kind: z.literal('spellbook'), op: z.enum(['gain', 'study', 'lose', 'degrade', 'remove_copy']), target: TargetS, book: z.string() }),
   /**
    * Writes `Person.career`. `leave` clears the post without naming one (the
    * `career` field is ignored); `assign` requires it. Income, Respect accrual
