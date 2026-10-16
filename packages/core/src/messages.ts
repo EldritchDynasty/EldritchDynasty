@@ -7,6 +7,16 @@ export function coreMessageAddress(key: string): string {
   return `${CORE_MESSAGE_ADDRESS_PREFIX}${encodeURIComponent(key)}`;
 }
 
+/** Static catalogue copy has the same stable identities as inline msg() calls. */
+export interface MessageDefinition {
+  readonly key: string;
+  readonly original: string;
+}
+
+export function defineMessage(key: string, original: string): MessageDefinition {
+  return { key, original };
+}
+
 /** Select a template before inserting names or other already-visible values. */
 export function msg(
   ctx: SimCtx,

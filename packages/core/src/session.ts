@@ -1,6 +1,6 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant,
+  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
 } from '@ed/schema';
 import { MAIN_BRANCH, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
@@ -37,6 +37,7 @@ import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoic
 import { msg } from './messages.js';
 import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
+import { achievementView, earnedAchievements, type AchievementView } from './achievements.js';
 import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './chapter.js';
 import { streamFor } from './rng.js';
 import { campaignDef } from './campaign.js';
@@ -736,6 +737,12 @@ export class GameSession {
 
   epilogue(): EpilogueView | undefined {
     return epilogueOf(this.ctx);
+  }
+
+  /** Finished-run awards, read in the current mode without persisting their wording. */
+  achievements(library?: RunLibrary): AchievementView[] {
+    if (!this.ctx.world.ending) return [];
+    return earnedAchievements(saveGame(this.ctx), library).map((id) => achievementView(this.ctx, id));
   }
 
   /** What this finished house may leave in the installation-level library. */

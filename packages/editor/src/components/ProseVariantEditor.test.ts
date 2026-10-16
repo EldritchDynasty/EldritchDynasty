@@ -151,6 +151,12 @@ describe('actual generated core catalogue (#1011)', () => {
     expect(assessor?.file).toMatch(/^packages\/core\/src\/.*assize\.ts$/);
     expect(assessor?.text.length).toBeGreaterThan(20);
     expect(assessor?.interpolations).toEqual(contentInterpolationTokens(assessor!.text));
+    const achievementRows = rows.filter((row) => row.address.startsWith('core:messages#achievement.'));
+    expect(achievementRows).toHaveLength(60);
+    expect(achievementRows.find((row) => row.address === 'core:messages#achievement.ending_settled.title'))
+      .toMatchObject({ file: 'packages/core/src/achievements.ts', text: 'Account Settled', interpolations: [] });
+    expect(achievementRows.find((row) => row.address === 'core:messages#achievement.ending_settled.description'))
+      .toMatchObject({ file: 'packages/core/src/achievements.ts', text: 'Reach the Settled ending.', interpolations: [] });
   });
 });
 

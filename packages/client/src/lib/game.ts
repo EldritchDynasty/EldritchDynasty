@@ -7,7 +7,7 @@ import {
   CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type AdviserAdvice, type HelpSurface, type HelpTier,
-  type AchievementId, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
+  type AchievementId, type AchievementView, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
   type LandView, type MatchCard, type MatchFutureReading, type MatchResolution, type MusterOrder, type MusterOrderResult,
   type OrderResult, type Passage, type PendingDecision,
   type PrologueView, type RecordOption, type SessionView, type SlotFill, type StandingDelta,
@@ -147,6 +147,8 @@ export interface GameStore {
   openingSeen: Ref<boolean>;
   /** The last night (concept §23). Null until the run has reached the term. */
   epilogue: Ref<EpilogueView | null>;
+  /** Earned facts in reader-local wording, independent of platform delivery. */
+  achievements: ComputedRef<AchievementView[]>;
   /**
    * WHAT THE YEARS DID, newest first (issue #49).
    *
@@ -528,6 +530,9 @@ export function createGame(
   // show — a client deciding for itself that the displayed collection year means over would be a second
   // opinion about the one thing the whole game is pointed at.
   const ended = computed(() => view.value?.ending !== undefined);
+  const achievements = computed(() => view.value?.ending
+    ? session.value?.achievements(library.value) ?? []
+    : []);
 
   /** Read-only bridge for family-tree → Chronicle navigation (#268). */
   function mentions(person: string): string[] {
@@ -1275,7 +1280,7 @@ export function createGame(
   platform.onSmokeCommand?.(runSmokeCommand);
 
   return {
-    view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
+    view, table, land, prologue, openingSeen, epilogue, achievements, docket, passages, jump, interlude, chapter, frame, ended,
     refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, libraryReadError, mentions, actions,
   };
 }
