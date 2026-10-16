@@ -1,5 +1,4 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
-import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
@@ -15,6 +14,7 @@ import { readUserContent, resolveModEditorContentPath, userContentRoot } from '.
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
 import { handleExternalPopup } from './external-links.mjs';
 import { inspectSeedDisclosure } from './seed-disclosure.mjs';
+import { nativeSnapshotSha256 } from './native-snapshot.mjs';
 
 /**
  * THE SHELL.
@@ -421,7 +421,7 @@ function nativeSmokeTest(win) {
       finish(false, 'client supplied no valid persisted run snapshot and year');
       return;
     }
-    const sha256 = createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
+    const sha256 = nativeSnapshotSha256(snapshot);
     finish(true, `${NATIVE_SMOKE} ${year} ${sha256}`, {
       command: NATIVE_SMOKE, ok: true, nonce: process.env.ED_SMOKE_NONCE, year, sha256,
     });

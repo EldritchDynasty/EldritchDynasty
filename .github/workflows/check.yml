@@ -901,6 +901,12 @@ jobs:
       - run: npm ci
       - name: build the offline client
         run: npm run build:client
+      - name: sync the offline client, mobile bridge and Android plugins
+        working-directory: packages/mobile
+        run: |
+          npx --no-install esbuild src/platform-bridge.ts --bundle --format=iife --outfile=../client/dist/ed-platform.js
+          node scripts/inject-bridge.mjs
+          npx --no-install cap sync android
       # Production tags must have every upload-key secret. A SemVer pre-release
       # may intentionally produce an unsigned AAB for pipeline verification;
       # partial secret sets never silently downgrade to unsigned.
@@ -915,6 +921,12 @@ jobs:
       - name: build release bundle and Gradle version metadata
         working-directory: packages/mobile/android
         run: ./gradlew writeReleaseProofMetadata
+      - name: require the bundled offline client and mobile bridge
+        run: |
+          set -euo pipefail
+          unzip -Z1 packages/mobile/android/app/build/outputs/bundle/release/app-release.aab > "$RUNNER_TEMP/android-bundle-files.txt"
+          grep -Fx 'base/assets/public/index.html' "$RUNNER_TEMP/android-bundle-files.txt"
+          grep -Fx 'base/assets/public/ed-platform.js' "$RUNNER_TEMP/android-bundle-files.txt"
       - name: verify upload-key AAB signature
         if: steps.android-signing.outputs.signed == 'true'
         run: |

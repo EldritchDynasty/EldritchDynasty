@@ -8,6 +8,7 @@ import { basename, join } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
+import { nativeSnapshotSha256 } from '../src/native-snapshot.mjs';
 import {
   findWindowsInstaller,
   verifyAuthenticode,
@@ -338,8 +339,18 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     expect(main).toContain("ipcMain.on('ed:smoke-result'");
     expect(main).toContain("kind: 'save', seed: 882, years: 12");
     expect(main).toContain("kind: 'resume'");
-    expect(main).toContain("createHash('sha256')");
+    expect(main).toContain('nativeSnapshotSha256(snapshot)');
     expect(main).toContain("writeFileSync(join(app.getPath('userData'), 'smoke-evidence.json'");
+  });
+
+  it('hashes equivalent persisted JSON while detecting every game-field or array change', () => {
+    const saved = { savedAt: 'first', year: 1054, people: [{ name: 'Ada', id: 'p1' }], nested: { savedAt: 'state' } };
+    const resumed = { nested: { savedAt: 'state' }, people: [{ id: 'p1', name: 'Ada' }], year: 1054, savedAt: 'later' };
+    expect(nativeSnapshotSha256(saved)).toBe(nativeSnapshotSha256(resumed));
+    expect(nativeSnapshotSha256({ ...resumed, year: 1055 })).not.toBe(nativeSnapshotSha256(saved));
+    expect(nativeSnapshotSha256({ ...resumed, nested: { savedAt: 'changed state' } })).not.toBe(nativeSnapshotSha256(saved));
+    expect(nativeSnapshotSha256({ people: ['a', 'b'] })).not.toBe(nativeSnapshotSha256({ people: ['b', 'a'] }));
+    expect(saved.savedAt).toBe('first');
   });
 
   async function rendererBridge(nativeSmoke: 'save' | 'resume' | null, modEditor = false) {

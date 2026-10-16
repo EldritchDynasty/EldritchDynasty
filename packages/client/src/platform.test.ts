@@ -17,6 +17,7 @@ import {
 import { mobileStorage } from '../../mobile/src/storage.js';
 import { chooseSaveFile } from '../../mobile/src/file-chooser.js';
 import { readSave as readDesktopSave, saveRoot, writeSave as writeDesktopSave } from '../../shell/src/saves.mjs';
+import { nativeSnapshotSha256 } from '../../shell/src/native-snapshot.mjs';
 
 function bridge(): Platform {
   return {
@@ -1513,6 +1514,7 @@ describe('native runtime smoke seam', () => {
     expect(smoke).toBeTypeOf('function');
     const resumed = await smoke!({ kind: 'resume' });
     expect(resumed.snapshot).toMatchObject({ year: 1082, campaign: 'short' });
+    expect(nativeSnapshotSha256(resumed.snapshot)).toBe(nativeSnapshotSha256(saved.snapshot));
 
     const exported = await smoke!({ kind: 'export' });
     expect(exported.path).toBe('eldritch-smoke-export.json');

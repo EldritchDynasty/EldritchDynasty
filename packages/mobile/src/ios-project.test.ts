@@ -4,6 +4,7 @@ import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
 import { serializeInterchange } from './interchange.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse } from 'yaml';
 
 // The bridge is bundled separately from the client; use a global symbol key.
 const PICKER_CANCELLED = Symbol.for(BROWSER_IMPORT_CANCELLED.description!);
@@ -282,6 +283,26 @@ describe('Android release versionCode', () => {
 
   it('guards the Android/Play versionCode ceiling', () => {
     expect(source).toContain('computedVersionCode > 2100000000L');
+  });
+});
+
+describe('Android tagged offline payload', () => {
+  it('syncs the built game and native bridge before Gradle, then checks the actual AAB entries', () => {
+    const workflow = parse(readFileSync(join(MOBILE, '../../.github/workflows/check.yml'), 'utf8'));
+    const steps = workflow.jobs.android.steps as { run?: string; 'working-directory'?: string }[];
+    const build = steps.findIndex((step) => step.run?.includes('npm run build:client'));
+    const sync = steps.findIndex((step) => step.run?.includes('cap sync android'));
+    const gradle = steps.findIndex((step) => step.run?.includes('./gradlew writeReleaseProofMetadata'));
+    const payload = steps.findIndex((step) => step.run?.includes('unzip -Z1'));
+    expect(build).toBeGreaterThanOrEqual(0);
+    expect(sync).toBeGreaterThan(build);
+    expect(steps[sync]?.['working-directory']).toBe('packages/mobile');
+    expect(steps[sync]?.run).toContain('esbuild src/platform-bridge.ts');
+    expect(steps[sync]?.run).toContain('node scripts/inject-bridge.mjs');
+    expect(gradle).toBeGreaterThan(sync);
+    expect(payload).toBeGreaterThan(gradle);
+    expect(steps[payload]?.run).toContain('base/assets/public/index.html');
+    expect(steps[payload]?.run).toContain('base/assets/public/ed-platform.js');
   });
 });
 
