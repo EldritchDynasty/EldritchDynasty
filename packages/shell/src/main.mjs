@@ -115,6 +115,12 @@ function createWindow() {
     title: MOD_EDITOR ? 'Eldritch Dynasty — Mod Editor' : 'Eldritch Dynasty',
     webPreferences: {
       preload: join(HERE, 'preload.cjs'),
+      // Sandboxed preload argv does not inherit the main process's modes.
+      // Forward only the explicit modes that its narrow bridge understands.
+      additionalArguments: [
+        ...(MOD_EDITOR ? ['--mod-editor'] : []),
+        ...(NATIVE_SMOKE ? [`--smoke-${NATIVE_SMOKE}`] : []),
+      ],
       // Non-negotiable. The renderer is a web page that loads YAML written by
       // whoever is authoring content; it does not get node.
       contextIsolation: true,
