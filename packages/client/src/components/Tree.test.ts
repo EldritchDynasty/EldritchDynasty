@@ -122,6 +122,42 @@ function allMembers(view: SessionView): { hall: HallView; member: MemberView }[]
 }
 
 describe('the family tree as a planning board (#268)', () => {
+
+  it('restores keyboard focus after selecting a search result that is removed from the DOM (#1753)', async () => {
+    const current = largeView();
+    const original = structuredClone(current);
+    const wrapper = mount(Tree, {
+      props: { view: current, selected: null, proseMode: 'original' },
+      attachTo: document.body,
+    });
+    try {
+      const search = wrapper.get('.find input');
+      await search.setValue('Member 001');
+      const result = wrapper.get('.matches button');
+      result.element.focus();
+      expect(document.activeElement).toBe(result.element);
+
+      await result.trigger('click');
+      await wrapper.vm.$nextTick();
+      expect(wrapper.emitted('select')).toEqual([['p001']]);
+      expect(wrapper.find('.matches button').exists()).toBe(false);
+      expect((search.element as HTMLInputElement).value).toBe('');
+      const face = wrapper.get('#member-p001 button.face');
+      expect(document.activeElement).toBe(face.element);
+
+      // The parent owns selection; when it opens the person, the focus stays
+      // on their real disclosure button in either reader register.
+      await wrapper.setProps({ selected: 'p001', proseMode: 'plainenglish' });
+      expect(wrapper.get('#member-p001').classes()).toContain('open');
+      expect(document.activeElement).toBe(wrapper.get('#member-p001 button.face').element);
+      expect(current).toEqual(original);
+      expect(wrapper.emitted('select')).toEqual([['p001']]);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+
   it.each([0, 0.2, 0.99, 1, 3.6])('reports grievance %s honestly without resetting the tree (#1722)', async (grievance) => {
     const current = largeView();
     current.halls[1]!.grievance = grievance;
