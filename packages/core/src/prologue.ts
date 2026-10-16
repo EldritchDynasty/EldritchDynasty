@@ -11,6 +11,11 @@ import { selectedSigningTerms } from './sim.js';
 import { proseForContentField, renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 
+/** One reviewed fallback for both founding validation and candidate rebuilds. */
+export function examinationAnswerFallback(ctx: SimCtx): string {
+  return msg(ctx, 'founding.refuse.answer', 'the Examination answer was not understood');
+}
+
 /**
  * THE SIGNING (concept §3, issue #38).
  *
@@ -312,7 +317,7 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
       ok: false,
       reason: error instanceof Error
         ? error.message
-        : msg(ctx, 'founding.refuse.answer', 'the Examination answer was not understood'),
+        : examinationAnswerFallback(ctx),
     };
   }
   const signingRetainers = new Map<string, NonNullable<ReturnType<typeof seedPerson>>>();

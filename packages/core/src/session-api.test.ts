@@ -5,7 +5,7 @@ import {
   applyEffect, beget, branchReport, consumeVessel, describeDecision, digestOf, frequencyReport, hallOf, heldBooks, hashSeed,
   loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
-  type ChronicleEntry, type GameSession,
+  GameSession, type ChronicleEntry,
 } from '@ed/core';
 import {
   buildPair, earlyComesFirst, parseArgs, renderAnswerKey, renderReaderSheet, stripClockTells,
@@ -589,6 +589,37 @@ describe('the library read model', () => {
  * this world has a number for.
  */
 describe('the two ends of the run, through the façade', () => {
+  describe.each(['original', 'plainenglish'] as const)('unexpected founding failures in %s (#1768)', (mode) => {
+    it.each([
+      { kind: 'non-Error', thrown: 'opaque failure' },
+      { kind: 'Error', thrown: new Error('specific founding failure') },
+    ])('keeps the live save unchanged after a $kind failure', ({ thrown }) => {
+      const initial = newGame(signingBundle(), { seed: 34_298 });
+      const ctx = initial.ctx;
+      const g = new GameSession(ctx, 'ask', {
+        startYear: ctx.world.year,
+        build() { throw thrown; },
+      });
+      g.setProseVariants(content.bundle.proseVariants ?? []);
+      g.setProseMode(mode);
+      const prologue = g.prologue()!;
+      const before = g.save();
+      const result = g.found({
+        houseName: 'The House of Salt', heirloom: prologue.heirlooms[0]!.heirloom,
+        grudge: prologue.grudges[0]!.house, founderName: 'Arlen Gearithy',
+        answers: { public_question: 'chosen' },
+      });
+      expect(result).toEqual({
+        ok: false,
+        reason: thrown instanceof Error ? thrown.message : mode === 'original'
+          ? 'the Examination answer was not understood'
+          : 'the Examination answer could not be understood',
+      });
+      expect(g.ctx).toBe(ctx);
+      expect({ ...g.save(), savedAt: '' }).toEqual({ ...before, savedAt: '' });
+    });
+  });
+
   it('offers the prologue, takes an answer, and never offers it twice', () => {
     const g = newGame(content, { seed: 1042 });
 
