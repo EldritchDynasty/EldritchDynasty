@@ -1999,9 +1999,10 @@ describe('front-door Library and save accessibility in both registers (#410)', (
     };
   }
 
-  it('updates accessible section names and clear confirmation live without rewriting saved words', async () => {
+  it('updates section and campaign names live without changing the selected profile or saved words', async () => {
     const library = completed(1);
     const originalBytes = JSON.stringify(library);
+    const campaignBytes = JSON.stringify(CAMPAIGN_CHOICES);
     const actions = spyActions([{ slot: 'chapter-1200', year: 1200 }]);
     const w = mount(Start, { props: { actions, resumable: false, library, proseMode: 'original' } });
     try {
@@ -2009,11 +2010,17 @@ describe('front-door Library and save accessibility in both registers (#410)', (
       expect(w.get('.reading').attributes('aria-label')).toBe('Reading');
       expect(w.get('.library').attributes('aria-label')).toBe('Library of Houses');
       expect(w.get('.saved').attributes('aria-label')).toBe('Saved runs');
+      expect(w.findAll('.campaign strong').map((label) => label.text()))
+        .toEqual(['A Short Line', 'A Long Line']);
+      await w.get('input[value="long"]').setValue(true);
 
       await w.setProps({ proseMode: 'plainenglish' });
       expect(w.get('.reading').attributes('aria-label')).toBe('Reading settings');
       expect(w.get('.library').attributes('aria-label')).toBe('Completed houses');
       expect(w.get('.saved').attributes('aria-label')).toBe('Saved games');
+      expect(w.findAll('.campaign strong').map((label) => label.text()))
+        .toEqual(['A Short Line (shorter campaign)', 'A Long Line (longer campaign)']);
+      expect((w.get('input[value="long"]').element as HTMLInputElement).checked).toBe(true);
 
       await w.get('.library-head > button').trigger('click');
       expect(w.get('.library-clear-confirm').attributes('aria-label'))
@@ -2024,6 +2031,9 @@ describe('front-door Library and save accessibility in both registers (#410)', (
 
       // A reader can change the mode with confirmation already open.
       await w.setProps({ proseMode: 'original' });
+      expect(w.findAll('.campaign strong').map((label) => label.text()))
+        .toEqual(['A Short Line', 'A Long Line']);
+      expect((w.get('input[value="long"]').element as HTMLInputElement).checked).toBe(true);
       expect(w.get('.library-clear-confirm').attributes('aria-label'))
         .toBe('Confirm clearing the Library of Houses');
       expect(w.get('.library-clear-confirm').text())
@@ -2034,6 +2044,7 @@ describe('front-door Library and save accessibility in both registers (#410)', (
       expect(w.text()).toContain('The remembered ending');
       expect(w.text()).toContain('The old account stays exactly as it was recorded.');
       expect(JSON.stringify(library)).toBe(originalBytes);
+      expect(JSON.stringify(CAMPAIGN_CHOICES)).toBe(campaignBytes);
     } finally {
       w.unmount();
     }
