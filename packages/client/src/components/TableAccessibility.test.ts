@@ -22,6 +22,34 @@ function fixture(boughtBack = false): TableView {
   } as unknown as TableView;
 }
 
+describe('Plain English treasury debt reading (#1755)', () => {
+  it.each([-40, 0, 100])('describes a signed treasury balance of %i without claiming debt is spendable', async (treasury) => {
+    const table = { ...fixture(), treasury } as TableView;
+    const original = structuredClone(table);
+    const order = vi.fn();
+    const wrapper = mount(GameTable, { props: {
+      table,
+      land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    try {
+      const summary = () => wrapper.get('.panel > p.small').text();
+      expect(summary()).toBe(`${treasury} crowns. A term of tutoring is 10.`);
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(summary()).toBe(
+        `Money balance: ${treasury} crowns${treasury < 0 ? ` (the house owes ${-treasury} crowns)` : ''}. A tutoring term costs 10.`,
+      );
+      expect(summary()).not.toContain('crowns available');
+      expect(table).toEqual(original);
+      expect(order).not.toHaveBeenCalled();
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(summary()).toBe(`${treasury} crowns. A term of tutoring is 10.`);
+      expect(table).toEqual(original);
+    } finally { wrapper.unmount(); }
+  });
+});
+
 describe('Table marriage and paper labels in Plain English (#1735)', () => {
   it('preserves marriage policy, paper view, eligibility and exact orders across reading modes', async () => {
     const table = { ...fixture(),
