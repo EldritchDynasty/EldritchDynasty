@@ -253,7 +253,7 @@ const muster = computed(() => {
       </div>
       <dl class="house-ledger small">
         <div>
-          <dt>{{ plain ? 'Money available' : 'Treasury' }}</dt>
+          <dt>{{ plain ? 'Money balance' : 'Treasury' }}</dt>
           <dd>
             {{ view.treasury }} crowns<span
               v-if="moved && moved.treasury !== 0"
@@ -293,7 +293,7 @@ const muster = computed(() => {
       <details class="house-key small">
         <summary>{{ plain ? 'What these numbers mean' : 'What these readings mean' }}</summary>
         <dl>
-          <div><dt>{{ plain ? 'Money available' : 'Treasury' }}</dt><dd>{{ plain ? 'Money the family can spend, measured in crowns.' : 'crowns the house can spend.' }}</dd></div>
+          <div><dt>{{ plain ? 'Money balance' : 'Treasury' }}</dt><dd>{{ plain ? 'The family’s money in crowns. A negative balance means the family owes money.' : 'crowns the house can spend.' }}</dd></div>
           <div><dt>{{ plain ? 'Reputation' : 'Standing' }}</dt><dd>{{ plain ? 'How the wider world regards this family.' : 'the regard the wider world gives the house.' }}</dd></div>
           <div><dt>{{ plain ? 'Unrest' : 'Discontent' }}</dt><dd>{{ plain ? 'How much unrest is building inside the family and on its land.' : 'how much strain is building inside the house and its holdings.' }}</dd></div>
           <div><dt>{{ plain ? 'Recovered clauses' : 'Ledger' }}</dt><dd>{{ plain ? 'How many parts of the old bargain the family has found.' : 'how much of the old bargain the family has recovered.' }}</dd></div>
