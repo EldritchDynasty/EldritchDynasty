@@ -5,6 +5,9 @@ import { inspectSeedDisclosure } from '../src/seed-disclosure.mjs';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
+import { EventEmitter } from 'node:events';
+import { runInNewContext } from 'node:vm';
+import ts from 'typescript';
 import {
   findWindowsInstaller,
   verifyAuthenticode,
@@ -337,6 +340,72 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     expect(main).toContain("kind: 'resume'");
     expect(main).toContain("createHash('sha256')");
     expect(main).toContain("writeFileSync(join(app.getPath('userData'), 'smoke-evidence.json'");
+  });
+
+  async function rendererBridge(nativeSmoke: 'save' | 'resume' | null, modEditor = false) {
+    const [main, preload] = await Promise.all([
+      readFile(new URL('../src/main.mjs', import.meta.url), 'utf8'),
+      readFile(new URL('../src/preload.cjs', import.meta.url), 'utf8'),
+    ]);
+    const source = ts.createSourceFile('main.mjs', main, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    const createWindow = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === 'createWindow');
+    if (!createWindow) throw new Error('missing production window factory');
+    let preferences: Record<string, unknown> = {};
+    class Window {
+      webContents = { setWindowOpenHandler: vi.fn() };
+      constructor(options: { webPreferences: Record<string, unknown> }) { preferences = options.webPreferences; }
+      loadFile() {}
+      loadURL() {}
+      removeMenu() {}
+    }
+    // Execute the actual production factory: a manually reconstructed argv
+    // fixture missed the missing main-to-renderer handoff on the first tag.
+    runInNewContext(`(${createWindow.getText(source)})()`, {
+      BrowserWindow: Window, DEV_SERVER: null, MOD_EDITOR: modEditor, NATIVE_SMOKE: nativeSmoke,
+      join, HERE: '/shell', REPO: '/repo', app: { isPackaged: true },
+      process: { resourcesPath: '/resources' }, rendererEntry: () => '/renderer/index.html',
+    });
+    type Bridge = {
+      mode?: string;
+      onSmokeCommand?: (listener: (command: unknown) => Promise<unknown>) => () => void;
+    };
+    const bridges = new Map<string, Bridge>();
+    const ipc = Object.assign(new EventEmitter(), { send: vi.fn(), invoke: vi.fn() });
+    runInNewContext(preload, {
+      require: (name: string) => {
+        expect(name).toBe('electron');
+        return { contextBridge: { exposeInMainWorld: (key: string, value: Bridge) => bridges.set(key, value) }, ipcRenderer: ipc };
+      },
+      process: { argv: ['electron', ...((preferences.additionalArguments as string[] | undefined) ?? [])], env: {} },
+    });
+    expect(preferences).toMatchObject({ contextIsolation: true, nodeIntegration: false, sandbox: true });
+    return { preferences, bridges, ipc };
+  }
+
+  it.each(['save', 'resume'] as const)('delivers the native %s command through the production window and sandboxed preload', async (command) => {
+    const { bridges, ipc } = await rendererBridge(command);
+    const platform = bridges.get('edPlatform');
+    if (!platform?.onSmokeCommand) throw new Error('native smoke transport was not enabled by the window arguments');
+    const snapshot = { snapshot: { year: 1054 }, year: 1054 };
+    const listener = vi.fn(async () => snapshot);
+    const unsubscribe = platform.onSmokeCommand(listener);
+    expect(ipc.send).toHaveBeenCalledWith('ed:smoke-ready');
+    ipc.emit('ed:smoke-command', {}, { kind: command });
+    await vi.waitFor(() => expect(ipc.send).toHaveBeenCalledWith('ed:smoke-result', {
+      command, ok: true, snapshot,
+    }));
+    expect(listener).toHaveBeenCalledWith({ kind: command });
+    unsubscribe();
+    expect(ipc.listenerCount('ed:smoke-command')).toBe(0);
+  });
+
+  it('keeps the native command transport out of ordinary windows and forwards the explicit editor mode', async () => {
+    const normal = await rendererBridge(null);
+    expect(normal.bridges.get('edPlatform')).not.toHaveProperty('onSmokeCommand');
+    expect(normal.bridges.get('ed')?.mode).toBe('game');
+    const editor = await rendererBridge(null, true);
+    expect(editor.bridges.get('ed')?.mode).toBe('mod-editor');
+    expect(editor.bridges.get('edPlatform')).not.toHaveProperty('onSmokeCommand');
   });
 
   it('refuses to execute an installer whose bytes differ from the retained artifact proof', async () => {
