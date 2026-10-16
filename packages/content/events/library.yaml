@@ -63,6 +63,7 @@ events:
                 would have preferred.
               effects:
                 - { kind: treasury, delta: 70 }
+                - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_life }
                 - { kind: relationship, from: { slot: READER }, to: head, sentiment: -18 }
 
   - id: the_fair_copy
