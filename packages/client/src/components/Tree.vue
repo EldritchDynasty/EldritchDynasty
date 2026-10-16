@@ -244,7 +244,7 @@ const query = ref('');
 /** Find recorded names without making the player type accents. This only
  * folds search comparisons: displayed and saved names remain verbatim. */
 function searchName(text: string): string {
-  return text.normalize('NFD').replace(/\\p{M}/gu, '').toLowerCase();
+  return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 
 const matches = computed(() => {
