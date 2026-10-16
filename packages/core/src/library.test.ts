@@ -5,8 +5,8 @@ import { canLearn, contentProseEntries, proseOriginalHash, validateBundle } from
 import { coreMessageAddress } from './messages.js';
 import {
   acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, canTakePost, degradeLibraryCopy,
-  canStudySpellbook, effectiveStudyYears, gainSpellbook, grantHeirloom, libraryRunOf, loadGame, newGame, phenotypeOf, place,
-  saveGame, seedLibraryMemories, setProseMode, setProseVariants, useHeirloom, order, tableView, DEBT_FLOOR,
+  canStudySpellbook, commitOutcome, effectiveStudyYears, gainSpellbook, grantHeirloom, libraryRunOf, loadGame, newGame, phenotypeOf, place,
+  saveGame, seedLibraryMemories, setProseMode, setProseVariants, testRng, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
 import { completeStudies, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
@@ -185,6 +185,45 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
     tickDistressedBookSale(ctx);
     expect(ctx.world.treasury).toBe(DEBT_FLOOR - 20);
     expect(ctx.world.chronicle).toHaveLength(chronicleLength);
+  });
+});
+
+describe('authored physical-copy exits (#1748)', () => {
+  it.each([
+    ['the_book_that_is_wrong', 'burn_it'],
+    ['the_book_that_is_wrong', 'sell_it_on'],
+    ['the_shelf_that_has_to_go', 'burn_them'],
+    ['the_shelf_that_has_to_go', 'sell_them'],
+  ])('%s / %s removes its books, not the knowledge people already learned', (eventId, choiceId) => {
+    const ctx = bootstrap(bundle, 1748, 1042);
+    ctx.world.library.clear();
+    const lost = eventId === 'the_book_that_is_wrong'
+      ? [ctx.content.mustSpellbook('lesser_workings_of_thermal')]
+      : ctx.content.spellbooks.filter((book) => book.affinity === 'death' || book.affinity === 'darkness');
+    expect(lost.length).toBeGreaterThan(0);
+    for (const book of lost) acquireLibraryCopy(ctx, book.id);
+    const retained = ctx.content.mustSpellbook('lesser_workings_of_life');
+    acquireLibraryCopy(ctx, retained.id);
+    const learned = place(ctx, { sex: 'male', age: 30, awakened: true });
+    learned.acquired[lost[0]!.affinity] = 100;
+    expect(gainSpellbook(ctx, learned, lost[0]!)).toBe(true);
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    reader.acquired[lost[0]!.affinity] = 100;
+    expect(beginStudy(ctx, reader, lost[0]!)).toBe(true);
+    const learnedSpells = [...learned.spellsKnown];
+    const event = ctx.content.mustEvent(eventId);
+    if (event.interaction.kind === 'narration') throw new Error('expected a book-loss choice');
+    const choice = event.interaction.choices.find((candidate) => candidate.id === choiceId)!;
+    const outcome = choice.outcomes[0]!;
+    commitOutcome(ctx, event, outcome, { HEAD: learned.id, READER: learned.id }, choiceId, testRng('physical-book-exit'));
+
+    for (const book of lost) expect(ctx.world.library.has(book.id), book.id).toBe(false);
+    expect(ctx.world.library.has(retained.id)).toBe(true);
+    expect(ctx.world.studies.some((study) => lost.some((book) => book.id === study.book))).toBe(false);
+    expect(learned.spellsKnown).toEqual(learnedSpells);
+    expect(ctx.world.chronicle.at(-1)?.eventId).toBe(event.id);
+    const saved = saveGame(ctx);
+    expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
   });
 });
 
@@ -530,6 +569,37 @@ describe('applying a spellbook is generic', () => {
 
     expect(p.spellsKnown.map(String)).not.toContain('lesser_workings_of_fluid');
     expect(ctx.world.library.has('lesser_workings_of_fluid')).toBe(true);
+  });
+
+  it('remove_copy cancels only that volume\'s readings and preserves learned spells across a reload', () => {
+    const ctx = bootstrap(bundle, 1748, 1042);
+    const book = ctx.content.mustSpellbook('lesser_workings_of_life');
+    const other = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const learned = place(ctx, { sex: 'female', age: 30, awakened: true });
+    expect(gainSpellbook(ctx, learned, book)).toBe(true);
+    acquireLibraryCopy(ctx, other.id);
+    const first = place(ctx, { sex: 'male', age: 30, awakened: true });
+    const second = place(ctx, { sex: 'female', age: 30, awakened: true });
+    const unrelated = place(ctx, { sex: 'male', age: 30, awakened: true });
+    expect(beginStudy(ctx, first, book)).toBe(true);
+    expect(beginStudy(ctx, second, book)).toBe(true);
+    expect(beginStudy(ctx, unrelated, other)).toBe(true);
+    const retainedStudies = ctx.world.studies.filter((study) => study.book === other.id);
+    const learnedSpells = [...learned.spellsKnown];
+
+    // This is the physical shelf: no living or filled person target is needed.
+    const effect = { kind: 'spellbook', op: 'remove_copy', target: { slot: 'ABSENT' }, book: book.id } as const;
+    applyEffect(effect, ctx, {});
+    expect(ctx.world.library.has(book.id)).toBe(false);
+    expect(ctx.world.library.has(other.id)).toBe(true);
+    expect(ctx.world.studies).toEqual(retainedStudies);
+    expect(learned.spellsKnown).toEqual(learnedSpells);
+    const saved = saveGame(ctx);
+    const restored = loadGame(saved, bundle);
+    expect(canonical(saveGame(restored))).toBe(canonical(saved));
+
+    applyEffect(effect, ctx, {});
+    expect(canonical(saveGame(ctx))).toBe(canonical(saved));
   });
 
   it('freezes the selected Named Art Chronicle text under a stable message key (#725)', () => {

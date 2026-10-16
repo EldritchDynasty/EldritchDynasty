@@ -41,6 +41,12 @@ describe('the obvious cases go the obvious way', () => {
     expect(valenceOf(eff({ kind: 'clause', reveal: 'the_third_part' }))).toBe('boon');
   });
 
+  it('losing the physical book is a blow, just as losing learned knowledge is', () => {
+    for (const op of ['lose', 'remove_copy'] as const) {
+      expect(valenceOf(eff({ kind: 'spellbook', op, target: 'head', book: 'the_book' }))).toBe('blow');
+    }
+  });
+
   it('a grudge is a blow even where the sentiment is not given', () => {
     expect(valenceOf(eff({
       kind: 'relationship',

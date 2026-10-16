@@ -99,8 +99,20 @@ function scoreOf(e: Effect): number {
     case 'heirloom':
       return e.op === 'grant' ? WEIGHT.ordinary : 0;
 
-    case 'spellbook':
-      return e.op === 'lose' || e.op === 'degrade' ? -WEIGHT.book : WEIGHT.book;
+    case 'spellbook': {
+      const op = e.op;
+      switch (op) {
+        case 'gain':
+        case 'study':
+          return WEIGHT.book;
+        case 'lose':
+        case 'degrade':
+        case 'remove_copy':
+          return -WEIGHT.book;
+        default:
+          return assertNever(op, 'spellbook op');
+      }
+    }
 
     case 'career':
       return e.op === 'assign' ? WEIGHT.ordinary : -WEIGHT.ordinary;

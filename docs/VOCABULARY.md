@@ -22,7 +22,7 @@ compile error until it is handled.
 | `madness` | `target: Target` `delta: number` |
 | `awakening` | `target: Target` |
 | `heirloom` | `op: grant\|use\|transfer = "grant"` `heirloom: string` `to: string?` |
-| `spellbook` | `op: gain\|study\|lose\|degrade` `target: Target` `book: string` |
+| `spellbook` | `op: gain\|study\|lose\|degrade\|remove_copy` `target: Target` `book: string` |
 | `career` | `target: Target` `op: assign\|leave = "assign"` `career: string?` |
 | `bond` | `target: Target` `op: bind\|free` `marks: number = 100` |
 | `marriage` | `op: "end"` `target: Target` |

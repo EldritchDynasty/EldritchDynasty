@@ -5,7 +5,7 @@ import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
 import { forceAwakening, phenotypeOf } from '../people/factory.js';
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
-import { beginStudy, degradeLibraryCopy, gainSpellbook, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
+import { beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
 import { bindService, freeBond } from '../people/bond.js';
 import { branchOf } from '../people/branches.js';
 import { addGrudge, relate } from '../people/relationships.js';
@@ -295,17 +295,20 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       if (eff.op === 'transfer') { transferHeirloom(ctx, eff.heirloom); break; }
       assertNever(eff.op, 'heirloom op');
     }
-    // The Library (§12, issue #15). `degrade` acts on the shelf copy directly —
-    // wear is a property of the physical book, not of any one reader — so it
-    // ignores `target`; `gain`/`lose` act on `Person.spellsKnown`.
+    // The Library (§12). Physical wear/removal ignore the person target;
+    // `lose` alone erases learned knowledge and leaves the copy on its shelf.
     case 'spellbook': {
       if (eff.op === 'degrade') { degradeLibraryCopy(ctx, eff.book); break; }
+      if (eff.op === 'remove_copy') { loseLibraryCopy(ctx, eff.book); break; }
       const def = spellbookDef(ctx, eff.book);
       if (!def) break;
       for (const p of resolveTargets(eff.target, ctx, fill)) {
-        if (eff.op === 'gain') gainSpellbook(ctx, p, def);
-        else if (eff.op === 'study') beginStudy(ctx, p, def);
-        else loseSpellbookKnowledge(ctx, p, eff.book);
+        switch (eff.op) {
+          case 'gain': gainSpellbook(ctx, p, def); break;
+          case 'study': beginStudy(ctx, p, def); break;
+          case 'lose': loseSpellbookKnowledge(ctx, p, eff.book); break;
+          default: assertNever(eff.op, 'spellbook op');
+        }
       }
       break;
     }
