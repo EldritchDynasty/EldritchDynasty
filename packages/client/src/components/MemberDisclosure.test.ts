@@ -33,7 +33,7 @@ describe('family-card disclosure relationships (#1751)', () => {
       await wrapper.setProps({ open: true });
       expect(face().attributes('aria-expanded')).toBe('true');
       expect(face().attributes('aria-controls')).toBe('detail-p1');
-      expect(wrapper.get('#detail-p1').exists()).toBe(true);
+      expect(wrapper.find('#detail-p1').exists()).toBe(true);
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(face().attributes('aria-controls')).toBe('detail-p1');
