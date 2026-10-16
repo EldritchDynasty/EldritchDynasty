@@ -151,6 +151,7 @@ const mentionPages = computed(() =>
     <button
       class="face"
       :aria-expanded="open"
+      <!-- Closed cards omit their detail subtree: do not reference a missing ARIA target. -->
       :aria-controls="open ? 'detail-' + member.id : undefined"
       @click="$emit('select', member.id)"
     >
