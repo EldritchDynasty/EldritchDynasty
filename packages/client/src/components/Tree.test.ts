@@ -134,7 +134,7 @@ describe('the family tree as a planning board (#268)', () => {
       const search = wrapper.get('.find input');
       await search.setValue('Member 001');
       const result = wrapper.get('.matches button');
-      result.element.focus();
+      (result.element as HTMLButtonElement).focus();
       expect(document.activeElement).toBe(result.element);
 
       await result.trigger('click');
