@@ -248,7 +248,7 @@ describe('authored physical-copy exits (#1748)', () => {
     const tribute = event.interaction.choices.find((choice) => choice.id === 'offer_them_as_tribute')!;
     expect(tribute.outcomes).toHaveLength(1);
     const outcome = tribute.outcomes[0]!;
-    commitOutcome(ctx, event, outcome, { HEAD: ctx.world.narrator }, tribute.id, testRng('partial-book-tribute'));
+    commitOutcome(ctx, event, outcome, { HEAD: ctx.world.narrator! }, tribute.id, testRng('partial-book-tribute'));
     expect(ctx.world.library.has(donated.id)).toBe(false);
     expect(ctx.world.library.has(retained.id)).toBe(true);
     expect(ctx.world.treasury).toBe(80);
