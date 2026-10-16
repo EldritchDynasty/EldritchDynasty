@@ -33,7 +33,7 @@ import {
 } from './muster.js';
 import { diagnoseHouseAscension, measureAscension, rungTitle, type AscensionBlockerKind } from './ascension.js';
 import { castOf, type CastMember } from './cast.js';
-import { foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
+import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
 import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
@@ -629,7 +629,8 @@ export class GameSession {
     } catch (error) {
       return {
         ok: false,
-        reason: error instanceof Error ? error.message : 'the Examination answer was not understood',
+        reason: error instanceof Error ? error.message
+          : examinationAnswerFallback(this.ctx),
       };
     }
     const result = foundHouse(candidate, choice);
