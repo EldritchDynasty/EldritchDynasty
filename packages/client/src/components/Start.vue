@@ -333,7 +333,7 @@ onMounted(() => { void refreshSaves(); });
       <label v-for="choice in CAMPAIGN_CHOICES" :key="choice.id" class="campaign panel">
         <input v-model="campaign" type="radio" name="campaign" :value="choice.id" />
         <span>
-          <strong>{{ choice.name }}</strong>
+          <strong>{{ choice.name }}{{ plain ? (choice.id === 'short' ? ' (shorter campaign)' : ' (longer campaign)') : '' }}</strong>
           <span class="dim small">
             {{ choice.years }} years
             <template v-if="choice.id === 'short'">{{ plain ? ' — the default. Resolve three Ledger clauses, with four possible endings over 300 years.' : ' — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.' }}</template>
