@@ -10955,3 +10955,108 @@ seed array; `npm run gates -- signing` uses that array after this change.
 These are local statistical results. Retained tagged installer/AAB proof and
 production signing remain release acceptance on #321/#322; #1741's hosted
 head and native merge-group checks are still required before landing.
+
+
+## 2026-10-16 — authored physical-copy loss (#1748, part of #1205)
+
+The debt-sale mechanism already ships. This slice gives authored burning and
+sale the separate `spellbook/remove_copy` operation through `loseLibraryCopy`:
+it removes the shelf entry and cancels that copy's unfinished studies, while
+learned spells remain on their people. The existing `lose` operation still
+forgets a person's knowledge without removing the copy. The wrong Thermal
+book's burn/sale and the Crusade's Death/Darkness burn/sale now use physical
+removal. The latter covers all five currently authored Death/Darkness volumes.
+No event prose, templates, conditions, frequency weights, sale thresholds or
+statistical acceptance bounds change.
+
+Before: `ce29596f3c53975f409515daba22b950c0b39331`. After: this change on
+`0ee9910ebcaf970c7349be7853e6c9c282b7ee67`. Intervening core changes are audit
+instrumentation and deletion of unread memory, not simulation rules. Both
+measurements used Node v24.19.0 and the commands below with shipped content:
+
+- `npm run gate:ladder`: canonical six seeds 4000, 4013, 4026, 4039, 4052,
+  4065; 500 requested years for each of climb, spare, scion, pair, pair_climb.
+  Both before and after exit 0. The climbing column remains at 60.0 deepest
+  Madness, 28% of ladder-years past the floor and 73.2 best power. The scion
+  column's offered bargains move 9.2 to 8.8 and its channel readings change
+  slightly, as printed below.
+- `npm run gate:blood -- 8 500`: seeds 4000 through 4091 in steps of 13;
+  concentrate, dilute and chronicler, 24 played columns in total. Every
+  printed metric is identical before and after; the shared full report is
+  retained below. This small descriptive batch does not establish population
+  equivalence or justify any new threshold. No threshold is set from it.
+
+The four actual authored outcomes fail the new physical-loss regressions
+before wiring and pass afterwards, along with preservation of learned spells,
+cancellation of unfinished studies, absence/no-mint behavior and save/reload.
+The parent retains any further authored theft/tribute coverage and release
+balance review.
+
+### Ladder before
+
+```text
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  60.0  ladder-years past the floor  28%  bargains offered  17.5  best power  73.2  late power  33.1  books  1.8
+  spare  deepest Madness on a man ON THE LADDER  28.5  ladder-years past the floor   9%  bargains offered  11.3  best power  67.7  late power  35.9  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  31.2  ladder-years past the floor   8%  bargains offered   9.2  best power  67.7  late power  26.4  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  32.0  ladder-years past the floor   8%  bargains offered   9.5  best power  64.7  late power  29.2  books  1.7
+  pair_climb deepest Madness on a man ON THE LADDER  83.7  ladder-years past the floor  44%  bargains offered  16.7  best power  67.3  late power  28.3  books  2.8
+  climb      genetic channel — household 17.11  expressers 18.04  rite-takers 15.80 (3)  vessel 15.80 (3)  great 13.80 (1)
+  climb  best rung reached: hierophant 2  adept 4
+  spare      genetic channel — household 16.78  expressers 16.88  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.89  expressers 17.39  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.74  expressers 17.21  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 2  adept 4
+  pair_climb genetic channel — household 16.42  expressers 17.70  rite-takers 18.58 (10)  vessel 19.20 (8)  great 17.92 (5)
+  pair_climb best rung reached: vessel 1  hierophant 4  adept 1
+  scion  best power from year 300 on: 26.4 vs spare's 35.9 (not asserted — see the comment above this line)
+  pair   second man's best power: 62.2 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 61.6 vs climb's 63.3  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 3 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 3/3
+  what stops the climbing column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | the blood comes through him at 67; the next step asks 70
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70
+```
+
+### Ladder after
+
+```text
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  60.0  ladder-years past the floor  28%  bargains offered  17.5  best power  73.2  late power  33.1  books  1.8
+  spare  deepest Madness on a man ON THE LADDER  28.5  ladder-years past the floor   9%  bargains offered  11.3  best power  67.7  late power  35.9  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  31.2  ladder-years past the floor   8%  bargains offered   8.8  best power  67.7  late power  26.4  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  32.0  ladder-years past the floor   8%  bargains offered   9.5  best power  64.7  late power  29.2  books  1.7
+  pair_climb deepest Madness on a man ON THE LADDER  83.7  ladder-years past the floor  44%  bargains offered  16.7  best power  67.3  late power  28.3  books  2.8
+  climb      genetic channel — household 17.11  expressers 18.04  rite-takers 15.80 (3)  vessel 15.80 (3)  great 13.80 (1)
+  climb  best rung reached: hierophant 2  adept 4
+  spare      genetic channel — household 16.78  expressers 16.88  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.94  expressers 17.51  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.74  expressers 17.21  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 2  adept 4
+  pair_climb genetic channel — household 16.42  expressers 17.70  rite-takers 18.58 (10)  vessel 19.20 (8)  great 17.92 (5)
+  pair_climb best rung reached: vessel 1  hierophant 4  adept 1
+  scion  best power from year 300 on: 26.4 vs spare's 35.9 (not asserted — see the comment above this line)
+  pair   second man's best power: 62.2 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 61.6 vs climb's 63.3  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 3 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 3/3
+  what stops the climbing column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | the blood comes through him at 67; the next step asks 70
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70
+```
+
+### Blood — identical before and after
+
+```text
+8 runs x 500 years, concentrate / dilute / chronicler
+
+── cM=18* del=0.08* drive=0.8* books=2* ──
+             font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
+-----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5
+dilute       6.0       1.0        15.7      16.4       23.9       15.1       8.6      27.4  4.6        3.5    34        6.5        0.492  0.12    hierophant 4/8  4/8         8/8      26     0    38:9       2:6
+chronicler   3.6       1.2        16.4      16.5       25.8       16.4       10.3     27.4  9.9        4.0    31        6.5        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
+```

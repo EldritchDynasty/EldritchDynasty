@@ -263,7 +263,7 @@ events:
                 wrong, which is now the most useful thing in the north room and
                 the only volume in it that no other house on earth owns.
               effects:
-                - { kind: spellbook, op: lose, target: { slot: READER }, book: lesser_workings_of_thermal }
+                - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_thermal }
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: attribute, target: { slot: READER }, attr: mind, delta: 4 }
         - id: sell_it_on
@@ -280,7 +280,7 @@ events:
                 it. Somebody meant that name to be found.
               effects:
                 - { kind: treasury, delta: 70 }
-                - { kind: spellbook, op: lose, target: { slot: READER }, book: lesser_workings_of_thermal }
+                - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_thermal }
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: respect, delta: -1 }
 
