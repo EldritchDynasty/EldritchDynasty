@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CORE_MESSAGE_VARIANTS_FILE, contentProseEntries, proseOriginalHash, setContentProseText } from '@ed/schema';
 import { coreMessageAddress } from '../messages.js';
+import { coreMessageEntries } from './core-message-audit.js';
 import { pendingPlainEnglishWorklist } from './string-audit-cli.js';
 import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
@@ -286,11 +287,47 @@ describe('the string-source audit (issue #276)', () => {
       '} } as const satisfies Catalogue;',
       "const another = { example: { calibration: 'Keep this other catalogue text.' } };",
       "const ACHIEVEMENT_CATALOGUE = { example: { calibration: 'Keep this similarly named text.' } };",
+      'const ACHIEVEMENT_COPY = { example: {',
+      "  title: defineMessage('achievement.example.title', 'New display title'),",
+      "  calibration: 'Calibration evidence for the static catalogue.',",
+      '} };',
     ].join('\n');
     const all = plainEnglishCoreWorkItems('other.ts', source);
     const found = plainEnglishCoreWorkItems('achievements.ts', source);
     expect(found).toEqual(all.filter((row) => !row.text.startsWith('Calibration'))
       .map((row) => ({ ...row, file: 'achievements.ts', address: row.address.replace('other.ts', 'achievements.ts') })));
+  });
+
+  it('inventories static catalogue definitions and inline messages under their explicit keys (#1779)', () => {
+    const source = [
+      "const title = defineMessage('achievement.example.title', 'Done');",
+      "const description = defineMessage('achievement.example.description', 'Finish the whole campaign.');",
+      "msg(ctx, 'example.inline', 'A separate inline message.');",
+      "otherMessage('unknown.key', 'Keep this neighboring prose.');",
+    ].join('\n');
+    const rows = plainEnglishCoreWorkItems('achievements.ts', source);
+    expect(rows).toContainEqual(expect.objectContaining({
+      address: coreMessageAddress('achievement.example.title'), text: 'Done',
+    }));
+    expect(rows).toContainEqual(expect.objectContaining({
+      address: coreMessageAddress('achievement.example.description'), text: 'Finish the whole campaign.',
+    }));
+    expect(rows).toContainEqual(expect.objectContaining({
+      address: coreMessageAddress('example.inline'), text: 'A separate inline message.',
+    }));
+    expect(rows.filter((row) => row.address.includes('#literal[')).map((row) => row.text))
+      .toEqual(['Keep this neighboring prose.']);
+  });
+
+  it('rejects dynamic catalogue identities and collisions with inline messages (#1779)', () => {
+    for (const source of [
+      "defineMessage(key, 'A fixed Original.');",
+      "defineMessage('fixed.key', original);",
+    ]) expect(() => coreMessageEntries(source)).toThrow(/literal key.*Original/);
+    expect(() => coreMessageEntries([
+      "defineMessage('same.key', 'A fixed Original.');",
+      "msg(ctx, 'same.key', 'A second Original.');",
+    ].join('\n'))).toThrow('Duplicate core message key: same.key');
   });
 
   it('classifies Match renderer templates only in the verified scorer, preserving keyed and unknown calls (#1774)', () => {
@@ -891,4 +928,15 @@ describe('the string-source audit (issue #276)', () => {
     expect(plainEnglishCoverage(REPO)).toEqual(coverage);
   });
 
+});
+
+/** The migration has reached zero; new or changed player copy must stay reviewed. */
+describe('shipped Plain English coverage (#1779)', () => {
+  it('ships a current counterpart for every inventoried player-facing item', () => {
+    const coverage = plainEnglishCoverage(REPO);
+    expect({ missing: coverage.missing, stale: coverage.stale, invalid: coverage.invalid })
+      .toEqual({ missing: 0, stale: 0, invalid: 0 });
+    expect(coverage.remaining).toEqual([]);
+    expect(coverage.current).toBe(coverage.total);
+  });
 });

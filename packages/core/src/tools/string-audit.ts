@@ -353,7 +353,7 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
     // is metadata; similarly named fields elsewhere may be player prose.
     if (sourceFile === 'achievements.ts' && ts.isPropertyAssignment(node)
       && ts.isIdentifier(node.name) && node.name.text === 'calibration'
-      && entryField(node, 'ACHIEVEMENT_CATALOG')) mark(node.initializer);
+      && (entryField(node, 'ACHIEVEMENT_CATALOG') || entryField(node, 'ACHIEVEMENT_COPY'))) mark(node.initializer);
     // Official campaign identities are retained in both prose modes. The
     // Start screen adds the shorter/longer clarification; viewOf keys them.
     if (sourceFile === 'campaign.ts' && ts.isPropertyAssignment(node)

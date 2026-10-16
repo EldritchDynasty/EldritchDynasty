@@ -1,12 +1,13 @@
 import { assertNever, type RunLibrary, type SavedGame } from '@ed/schema';
+import { coreMessageAddress, defineMessage, type MessageDefinition } from './messages.js';
+import { renderProse } from './prose.js';
+import type { SimCtx } from './world.js';
 
 /**
  * Stable backend ids for Steam achievements (#323 / #73 Track B).
  *
- * These are deliberately NOT player-facing titles yet. #73 requires the earn
- * rates to be measured at both shipped campaign terms before titles/rarity are
- * committed to a store backend. Keeping ids here lets the evaluator, client
- * seam and batch instrumentation agree without turning calibration into prose.
+ * These ids are shared by the evaluator, client delivery and Steam backend.
+ * Reader-mode wording must never change an id or an achievement condition.
  */
 export const ACHIEVEMENT_IDS = [
   'ending_apotheosis',
@@ -56,134 +57,165 @@ export interface AchievementCatalogEntry {
  * Keep backend ids stable. Titles/descriptions may be localized later without
  * changing the evaluator or the Steam-facing id.
  */
-export const ACHIEVEMENT_CATALOG = {
+const ACHIEVEMENT_COPY = {
   ending_apotheosis: {
-    title: 'Apotheosis',
-    description: 'Reach the Apotheosis ending.',
+    title: defineMessage('achievement.ending_apotheosis.title', 'Apotheosis'),
+    description: defineMessage('achievement.ending_apotheosis.description', 'Reach the Apotheosis ending.'),
     calibration: 'rare: 0/100 Long ascendant runs in the #540 launch calibration',
   },
   ending_unmade: {
-    title: 'Unmade',
-    description: 'Reach the Unmade ending.',
+    title: defineMessage('achievement.ending_unmade.title', 'Unmade'),
+    description: defineMessage('achievement.ending_unmade.description', 'Reach the Unmade ending.'),
   },
   ending_broken_line: {
-    title: 'The Broken Line',
-    description: 'Reach the Broken Line ending.',
+    title: defineMessage('achievement.ending_broken_line.title', 'The Broken Line'),
+    description: defineMessage('achievement.ending_broken_line.description', 'Reach the Broken Line ending.'),
   },
   ending_forgotten: {
-    title: 'Forgotten',
-    description: 'Reach the Forgotten ending.',
+    title: defineMessage('achievement.ending_forgotten.title', 'Forgotten'),
+    description: defineMessage('achievement.ending_forgotten.description', 'Reach the Forgotten ending.'),
   },
   ending_devoured: {
-    title: 'Devoured',
-    description: 'Reach the Devoured ending.',
+    title: defineMessage('achievement.ending_devoured.title', 'Devoured'),
+    description: defineMessage('achievement.ending_devoured.description', 'Reach the Devoured ending.'),
   },
   ending_settled: {
-    title: 'Account Settled',
-    description: 'Reach the Settled ending.',
+    title: defineMessage('achievement.ending_settled.title', 'Account Settled'),
+    description: defineMessage('achievement.ending_settled.description', 'Reach the Settled ending.'),
   },
   ending_all_long: {
-    title: 'Every Long Ending',
-    description: 'Record all five Long Line endings in the Library of Houses.',
+    title: defineMessage('achievement.ending_all_long.title', 'Every Long Ending'),
+    description: defineMessage('achievement.ending_all_long.description', 'Record all five Long Line endings in the Library of Houses.'),
   },
   ladder_touched: {
-    title: 'First Rung',
-    description: 'Reach the Touched rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_touched.title', 'First Rung'),
+    description: defineMessage('achievement.ladder_touched.description', 'Reach the Touched rung of the ascension ladder.'),
     calibration: 'common: 92/100 Long ascendant runs in the #540 launch calibration',
   },
   ladder_adept: {
-    title: 'Adept',
-    description: 'Reach the Adept rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_adept.title', 'Adept'),
+    description: defineMessage('achievement.ladder_adept.description', 'Reach the Adept rung of the ascension ladder.'),
   },
   ladder_hierophant: {
-    title: 'Hierophant',
-    description: 'Reach the Hierophant rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_hierophant.title', 'Hierophant'),
+    description: defineMessage('achievement.ladder_hierophant.description', 'Reach the Hierophant rung of the ascension ladder.'),
   },
   ladder_vessel: {
-    title: 'Vessel',
-    description: 'Reach the Vessel rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_vessel.title', 'Vessel'),
+    description: defineMessage('achievement.ladder_vessel.description', 'Reach the Vessel rung of the ascension ladder.'),
   },
   ladder_demigod: {
-    title: 'Demigod',
-    description: 'Reach the Demigod rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_demigod.title', 'Demigod'),
+    description: defineMessage('achievement.ladder_demigod.description', 'Reach the Demigod rung of the ascension ladder.'),
   },
   ladder_god: {
-    title: 'The God Rung',
-    description: 'Reach the God rung of the ascension ladder.',
+    title: defineMessage('achievement.ladder_god.title', 'The God Rung'),
+    description: defineMessage('achievement.ladder_god.description', 'Reach the God rung of the ascension ladder.'),
     calibration: 'rare: 0/100 Short and 0/100 Long ascendant runs in the #540 launch calibration',
   },
   clauses_3: {
-    title: 'Three Clauses',
-    description: 'Recover at least three Ledger clauses in one run.',
+    title: defineMessage('achievement.clauses_3.title', 'Three Clauses'),
+    description: defineMessage('achievement.clauses_3.description', 'Recover at least three Ledger clauses in one run.'),
   },
   clauses_5: {
-    title: 'Five Clauses',
-    description: 'Recover at least five Ledger clauses in one run.',
+    title: defineMessage('achievement.clauses_5.title', 'Five Clauses'),
+    description: defineMessage('achievement.clauses_5.description', 'Recover at least five Ledger clauses in one run.'),
   },
   clauses_7: {
-    title: 'Seven Clauses',
-    description: 'Recover at least seven Ledger clauses in one run.',
+    title: defineMessage('achievement.clauses_7.title', 'Seven Clauses'),
+    description: defineMessage('achievement.clauses_7.description', 'Recover at least seven Ledger clauses in one run.'),
   },
   clauses_9: {
-    title: 'Nine Clauses',
-    description: 'Recover all nine Ledger clauses in one run.',
+    title: defineMessage('achievement.clauses_9.title', 'Nine Clauses'),
+    description: defineMessage('achievement.clauses_9.description', 'Recover all nine Ledger clauses in one run.'),
   },
   record_never_embellished: {
-    title: 'Nothing Embellished',
-    description: 'Finish a run with Record choices and never choose Embellish.',
+    title: defineMessage('achievement.record_never_embellished.title', 'Nothing Embellished'),
+    description: defineMessage('achievement.record_never_embellished.description', 'Finish a run with Record choices and never choose Embellish.'),
   },
   record_never_truthful: {
-    title: 'Nothing Recorded Plainly',
-    description: 'Finish a run with Record choices and never choose the plain Record option.',
+    title: defineMessage('achievement.record_never_truthful.title', 'Nothing Recorded Plainly'),
+    description: defineMessage('achievement.record_never_truthful.description', 'Finish a run with Record choices and never choose the plain Record option.'),
   },
   record_never_omitted: {
-    title: 'Nothing Omitted',
-    description: 'Finish a run with Record choices and never choose Omit.',
+    title: defineMessage('achievement.record_never_omitted.title', 'Nothing Omitted'),
+    description: defineMessage('achievement.record_never_omitted.description', 'Finish a run with Record choices and never choose Omit.'),
   },
   record_all_truthful: {
-    title: 'Every Page Recorded',
-    description: 'Choose Record every time a Record block appears in a finished run.',
+    title: defineMessage('achievement.record_all_truthful.title', 'Every Page Recorded'),
+    description: defineMessage('achievement.record_all_truthful.description', 'Choose Record every time a Record block appears in a finished run.'),
   },
   record_all_embellished: {
-    title: 'Every Page Embellished',
-    description: 'Choose Embellish every time a Record block appears in a finished run.',
+    title: defineMessage('achievement.record_all_embellished.title', 'Every Page Embellished'),
+    description: defineMessage('achievement.record_all_embellished.description', 'Choose Embellish every time a Record block appears in a finished run.'),
   },
   record_all_omitted: {
-    title: 'Every Page Omitted',
-    description: 'Choose Omit every time a Record block appears in a finished run.',
+    title: defineMessage('achievement.record_all_omitted.title', 'Every Page Omitted'),
+    description: defineMessage('achievement.record_all_omitted.description', 'Choose Omit every time a Record block appears in a finished run.'),
   },
   discrepancy_unproven_at_term: {
-    title: 'Still in Dispute',
-    description: 'Finish with at least one discrepancy still open.',
+    title: defineMessage('achievement.discrepancy_unproven_at_term.title', 'Still in Dispute'),
+    description: defineMessage('achievement.discrepancy_unproven_at_term.description', 'Finish with at least one discrepancy still open.'),
   },
   regency_survived: {
-    title: 'Regency Survived',
-    description: 'See a regency end and the line continue.',
+    title: defineMessage('achievement.regency_survived.title', 'Regency Survived'),
+    description: defineMessage('achievement.regency_survived.description', 'See a regency end and the line continue.'),
   },
   cadet_took_seal: {
-    title: 'A Cadet Holds the Seal',
-    description: 'See a cadet branch take the seal.',
+    title: defineMessage('achievement.cadet_took_seal.title', 'A Cadet Holds the Seal'),
+    description: defineMessage('achievement.cadet_took_seal.description', 'See a cadet branch take the seal.'),
     calibration: 'common: 91/100 Long ascendant runs in the #540 launch calibration',
   },
   muster_settled_under_banner: {
-    title: 'Under the Banner',
-    description: 'Settle a Muster commitment after taking a position.',
+    title: defineMessage('achievement.muster_settled_under_banner.title', 'Under the Banner'),
+    description: defineMessage('achievement.muster_settled_under_banner.description', 'Settle a Muster commitment after taking a position.'),
   },
   muster_withdrew_every_time: {
-    title: 'Every Muster Withdrawn',
-    description: 'Withdraw from every Muster commitment in a finished run.',
+    title: defineMessage('achievement.muster_withdrew_every_time.title', 'Every Muster Withdrawn'),
+    description: defineMessage('achievement.muster_withdrew_every_time.description', 'Withdraw from every Muster commitment in a finished run.'),
   },
   match_never_refused: {
-    title: 'Every Hand Answered',
-    description: 'Answer at least one Match without ever refusing a hand.',
+    title: defineMessage('achievement.match_never_refused.title', 'Every Hand Answered'),
+    description: defineMessage('achievement.match_never_refused.description', 'Answer at least one Match without ever refusing a hand.'),
     calibration: 'common: 100/100 Short and 100/100 Long ascendant runs in the #540 launch calibration',
   },
   five_names_returned: {
-    title: 'Five Names Returned',
-    description: 'Use all five returned names during a finished run.',
+    title: defineMessage('achievement.five_names_returned.title', 'Five Names Returned'),
+    description: defineMessage('achievement.five_names_returned.description', 'Use all five returned names during a finished run.'),
     calibration: 'rare: 0/100 Short and 0/100 Long ascendant runs in the #540 launch calibration',
   },
-} as const satisfies Record<AchievementId, AchievementCatalogEntry>;
+} as const satisfies Record<AchievementId, {
+  title: MessageDefinition;
+  description: MessageDefinition;
+  calibration?: string;
+}>;
+
+/** Original v1 copy remains available to store tooling and compatibility readers. */
+export const ACHIEVEMENT_CATALOG = Object.fromEntries(ACHIEVEMENT_IDS.map((id) => {
+  const entry = ACHIEVEMENT_COPY[id];
+  return [id, {
+    title: entry.title.original,
+    description: entry.description.original,
+    ...('calibration' in entry ? { calibration: entry.calibration } : {}),
+  }];
+})) as Readonly<Record<AchievementId, Readonly<AchievementCatalogEntry>>>;
+
+export interface AchievementView {
+  id: AchievementId;
+  title: string;
+  description: string;
+}
+
+/** Reader-local copy; backend ids, calibration evidence and earned facts stay separate. */
+export function achievementView(ctx: SimCtx, id: AchievementId): AchievementView {
+  const entry = ACHIEVEMENT_COPY[id];
+  return {
+    id,
+    title: renderProse(ctx, coreMessageAddress(entry.title.key), entry.title.original),
+    description: renderProse(ctx, coreMessageAddress(entry.description.key), entry.description.original),
+  };
+}
+
 
 const LONG_ENDINGS = ['apotheosis', 'unmade', 'broken_line', 'forgotten', 'devoured'] as const;
 const RUNGS = ['none', 'touched', 'adept', 'hierophant', 'vessel', 'demigod', 'god'] as const;

@@ -10,18 +10,20 @@ export interface CoreMessageEntry {
   start: number;
 }
 
-/** Discover the same explicit keys used by msg(), including short templates. */
+/** Discover inline msg() and static defineMessage() keys, including short templates. */
 export function coreMessageEntries(source: string): CoreMessageEntry[] {
   const file = ts.createSourceFile('messages.ts', source, ts.ScriptTarget.Latest, true);
   const entries: CoreMessageEntry[] = [];
   const seen = new Set<string>();
   function visit(node: ts.Node): void {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'msg') {
-      const key = node.arguments[1];
-      const original = node.arguments[2];
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)
+      && (node.expression.text === 'msg' || node.expression.text === 'defineMessage')) {
+      const keyIndex = node.expression.text === 'msg' ? 1 : 0;
+      const key = node.arguments[keyIndex];
+      const original = node.arguments[keyIndex + 1];
       if (!key || !ts.isStringLiteral(key) || !original
         || !(ts.isStringLiteral(original) || ts.isNoSubstitutionTemplateLiteral(original))) {
-        throw new Error('Core msg() calls need a literal key and an uninterpolated Original template');
+        throw new Error(`Core ${node.expression.text}() calls need a literal key and an uninterpolated Original template`);
       }
       const address = coreMessageAddress(key.text);
       if (seen.has(address)) throw new Error(`Duplicate core message key: ${key.text}`);

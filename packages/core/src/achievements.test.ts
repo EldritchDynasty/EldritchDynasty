@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { bearingWordsIn, type RunLibrary, type SavedGame } from '@ed/schema';
-import { newGame } from './session.js';
-import { ACHIEVEMENT_CATALOG, ACHIEVEMENT_IDS, earnedAchievements } from './achievements.js';
+import { bearingWordsIn, proseOriginalHash, type RunLibrary, type SavedGame } from '@ed/schema';
+import { newGame, resumeGame } from './session.js';
+import { coreMessageAddress } from './messages.js';
+import { ACHIEVEMENT_CATALOG, ACHIEVEMENT_IDS, achievementView, earnedAchievements } from './achievements.js';
 import { ACHIEVEMENT_RATE_JUDGEABLE_RUNS, achievementRates, renderAchievementRates, type AchievementSample } from './achievement-rates.js';
 
 const content = loadContent();
@@ -14,6 +15,62 @@ function finished(): SavedGame {
 }
 
 describe('achievements (issue #323)', () => {
+  it('renders all 60 shipped catalogue counterparts through the reader path (#1779)', () => {
+    const original = newGame(content, { seed: 1779 });
+    const plain = newGame(content, { seed: 1779, proseMode: 'plainenglish' });
+    const variants = new Map(content.proseVariants.map((variant) => [variant.address, variant]));
+    for (const id of ACHIEVEMENT_IDS) {
+      const originalView = achievementView(original.ctx, id);
+      const plainView = achievementView(plain.ctx, id);
+      expect(originalView.id).toBe(id);
+      expect(plainView.id).toBe(id);
+      for (const field of ['title', 'description'] as const) {
+        const counterpart = variants.get(coreMessageAddress(`achievement.${id}.${field}`));
+        expect(counterpart, `${id}.${field}`).toBeDefined();
+        expect(originalView[field]).toBe(ACHIEVEMENT_CATALOG[id][field]);
+        expect(plainView[field]).toBe(counterpart!.plainenglish);
+        expect(plainView[field]).not.toBe(originalView[field]);
+      }
+    }
+    expect([...plain.ctx.prose.missing]).toEqual([]);
+  });
+
+  it('reads earned achievement copy in the selected mode without changing saved facts (#1779)', () => {
+    expect(newGame(content, { seed: 1779 }).achievements()).toEqual([]);
+    const saved = finished();
+    const inputSnapshot = structuredClone(saved);
+    const original = ACHIEVEMENT_CATALOG.ending_settled;
+    const game = resumeGame(saved, content, { proseVariants: [
+      { address: coreMessageAddress('achievement.ending_settled.title'), of: proseOriginalHash(original.title), plainenglish: 'Debt Settled' },
+      { address: coreMessageAddress('achievement.ending_settled.description'), of: proseOriginalHash(original.description), plainenglish: 'Finish with the Settled ending.' },
+    ] });
+    const { savedAt: _beforeTime, ...before } = game.save();
+    const originalCopy = game.achievements();
+    expect(originalCopy).toContainEqual({ id: 'ending_settled', title: original.title, description: original.description });
+    game.setProseMode('plainenglish');
+    expect(game.achievements()).toContainEqual({ id: 'ending_settled', title: 'Debt Settled', description: 'Finish with the Settled ending.' });
+    expect(game.achievements().map((entry) => entry.id)).toEqual(earnedAchievements(saved));
+    game.setProseMode('original');
+    expect(game.achievements()).toEqual(originalCopy);
+    const { savedAt: _afterTime, ...after } = game.save();
+    expect(after).toEqual(before);
+    expect(saved).toEqual(inputSnapshot);
+  });
+
+  it.each(['missing', 'stale', 'invalid tokens'] as const)('falls back safely for %s achievement copy (#1779)', (kind) => {
+    const original = ACHIEVEMENT_CATALOG.ending_settled;
+    const game = resumeGame(finished(), content, {
+      proseMode: 'plainenglish',
+      proseVariants: kind === 'missing' ? [] : [{
+        address: coreMessageAddress('achievement.ending_settled.description'),
+        of: proseOriginalHash(kind === 'stale' ? 'Old achievement requirement.' : original.description),
+        plainenglish: kind === 'invalid tokens' ? 'Finish with {UNKNOWN}.' : 'Finish with an outdated requirement.',
+      }],
+    });
+    expect(game.achievements()).toContainEqual({ id: 'ending_settled', title: original.title, description: original.description });
+    expect(game.ctx.prose.missing.has(coreMessageAddress('achievement.ending_settled.description'))).toBe(true);
+  });
+
   it('has one stable, duplicate-free catalogue of roughly thirty backend ids', () => {
     expect(ACHIEVEMENT_IDS).toHaveLength(30);
     expect(new Set(ACHIEVEMENT_IDS).size).toBe(ACHIEVEMENT_IDS.length);
@@ -143,6 +200,7 @@ describe('achievements (issue #323)', () => {
     };
 
     expect(earnedAchievements(save, library)).toContain('ending_all_long');
+    expect(resumeGame(save, content).achievements(library).map((entry) => entry.id)).toContain('ending_all_long');
   });
 
   it('does not let Short-Line Library runs fill the all-Long-endings achievement', () => {
@@ -165,6 +223,7 @@ describe('achievements (issue #323)', () => {
     };
 
     expect(earnedAchievements(save, library)).not.toContain('ending_all_long');
+    expect(resumeGame(save, content).achievements(library).map((entry) => entry.id)).not.toContain('ending_all_long');
 
     // The current Long run may supply the fifth ending before it has been
     // appended to the Library.

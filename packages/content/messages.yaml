@@ -3386,3 +3386,245 @@ proseVariants:
     of: "cb2064583850f574"
     plainenglish: >-
       The house sold {BOOK} for {PRICE} crowns to pay its debts.
+
+  # Achievement catalogue (#1779).
+  - address: "core:messages#achievement.ending_apotheosis.title"
+    of: "333a2fbeb3e1ad02"
+    plainenglish: >-
+      Apotheosis ending
+  - address: "core:messages#achievement.ending_apotheosis.description"
+    of: "3cadfa6169f8c41d"
+    plainenglish: >-
+      Finish a run with the Apotheosis ending.
+  - address: "core:messages#achievement.ending_unmade.title"
+    of: "1dd36b177d8bc263"
+    plainenglish: >-
+      Unmade ending
+  - address: "core:messages#achievement.ending_unmade.description"
+    of: "a01841f4ef72afc8"
+    plainenglish: >-
+      Finish a run with the Unmade ending.
+  - address: "core:messages#achievement.ending_broken_line.title"
+    of: "9f84063990f12ca5"
+    plainenglish: >-
+      Broken Line ending
+  - address: "core:messages#achievement.ending_broken_line.description"
+    of: "a7f34cb566f5aa89"
+    plainenglish: >-
+      Finish a run with the Broken Line ending.
+  - address: "core:messages#achievement.ending_forgotten.title"
+    of: "a1490d2d59226be9"
+    plainenglish: >-
+      Forgotten ending
+  - address: "core:messages#achievement.ending_forgotten.description"
+    of: "f6531f1a8c4a1ebe"
+    plainenglish: >-
+      Finish a run with the Forgotten ending.
+  - address: "core:messages#achievement.ending_devoured.title"
+    of: "6d477e83447f6c0f"
+    plainenglish: >-
+      Devoured ending
+  - address: "core:messages#achievement.ending_devoured.description"
+    of: "0c6fcdf06aa06764"
+    plainenglish: >-
+      Finish a run with the Devoured ending.
+  - address: "core:messages#achievement.ending_settled.title"
+    of: "a9009e8d08041099"
+    plainenglish: >-
+      Settled ending
+  - address: "core:messages#achievement.ending_settled.description"
+    of: "956a33e553f94829"
+    plainenglish: >-
+      Finish a run with the Settled ending.
+  - address: "core:messages#achievement.ending_all_long.title"
+    of: "93727efd42b23449"
+    plainenglish: >-
+      All five Long Line endings
+  - address: "core:messages#achievement.ending_all_long.description"
+    of: "75cfe6c856cd90e4"
+    plainenglish: >-
+      Add all five Long Line endings to the Library of Houses.
+  - address: "core:messages#achievement.ladder_touched.title"
+    of: "edb18329689e7275"
+    plainenglish: >-
+      Touched rung
+  - address: "core:messages#achievement.ladder_touched.description"
+    of: "00f3c32c699de228"
+    plainenglish: >-
+      Reach Touched on the ascension ladder.
+  - address: "core:messages#achievement.ladder_adept.title"
+    of: "2bd33a93d985ab57"
+    plainenglish: >-
+      Adept rung
+  - address: "core:messages#achievement.ladder_adept.description"
+    of: "d62f8d02c46a649e"
+    plainenglish: >-
+      Reach Adept on the ascension ladder.
+  - address: "core:messages#achievement.ladder_hierophant.title"
+    of: "0a3021d71302315b"
+    plainenglish: >-
+      Hierophant rung
+  - address: "core:messages#achievement.ladder_hierophant.description"
+    of: "4958900613b04912"
+    plainenglish: >-
+      Reach Hierophant on the ascension ladder.
+  - address: "core:messages#achievement.ladder_vessel.title"
+    of: "be46175bd78a72ff"
+    plainenglish: >-
+      Vessel rung
+  - address: "core:messages#achievement.ladder_vessel.description"
+    of: "e168b33aba0b0f56"
+    plainenglish: >-
+      Reach Vessel on the ascension ladder.
+  - address: "core:messages#achievement.ladder_demigod.title"
+    of: "51d0e54a51dc2e36"
+    plainenglish: >-
+      Demigod rung
+  - address: "core:messages#achievement.ladder_demigod.description"
+    of: "ff1c7f2b4b0bab1f"
+    plainenglish: >-
+      Reach Demigod on the ascension ladder.
+  - address: "core:messages#achievement.ladder_god.title"
+    of: "8faa14c856e0baac"
+    plainenglish: >-
+      God rung
+  - address: "core:messages#achievement.ladder_god.description"
+    of: "55e59f00f0f1f83c"
+    plainenglish: >-
+      Reach God on the ascension ladder.
+  - address: "core:messages#achievement.clauses_3.title"
+    of: "893c5465c1ac9f21"
+    plainenglish: >-
+      Three Ledger clauses
+  - address: "core:messages#achievement.clauses_3.description"
+    of: "2ec5f09096f5a3ac"
+    plainenglish: >-
+      Recover three or more Ledger clauses during one run.
+  - address: "core:messages#achievement.clauses_5.title"
+    of: "d628f42b4513abff"
+    plainenglish: >-
+      Five Ledger clauses
+  - address: "core:messages#achievement.clauses_5.description"
+    of: "2e42b592d678f9f6"
+    plainenglish: >-
+      Recover five or more Ledger clauses during one run.
+  - address: "core:messages#achievement.clauses_7.title"
+    of: "a967c5ccde1a56f0"
+    plainenglish: >-
+      Seven Ledger clauses
+  - address: "core:messages#achievement.clauses_7.description"
+    of: "1f5467fb913e56bf"
+    plainenglish: >-
+      Recover seven or more Ledger clauses during one run.
+  - address: "core:messages#achievement.clauses_9.title"
+    of: "b7d3f16b275fdadf"
+    plainenglish: >-
+      Nine Ledger clauses
+  - address: "core:messages#achievement.clauses_9.description"
+    of: "33316be3105883bf"
+    plainenglish: >-
+      Recover all nine Ledger clauses during one run.
+  - address: "core:messages#achievement.record_never_embellished.title"
+    of: "d7cd42164e6c7272"
+    plainenglish: >-
+      Never choose Embellish
+  - address: "core:messages#achievement.record_never_embellished.description"
+    of: "e846d3e0caef3054"
+    plainenglish: >-
+      Finish a run with at least one Record choice, without ever choosing Embellish.
+  - address: "core:messages#achievement.record_never_truthful.title"
+    of: "a45d96510f19f86d"
+    plainenglish: >-
+      Never choose Record
+  - address: "core:messages#achievement.record_never_truthful.description"
+    of: "e261413c037215d0"
+    plainenglish: >-
+      Finish a run with at least one Record choice, without ever choosing the plain Record option.
+  - address: "core:messages#achievement.record_never_omitted.title"
+    of: "7f3483f08a4281c4"
+    plainenglish: >-
+      Never choose Omit
+  - address: "core:messages#achievement.record_never_omitted.description"
+    of: "d2a25bc616f3bff2"
+    plainenglish: >-
+      Finish a run with at least one Record choice, without ever choosing Omit.
+  - address: "core:messages#achievement.record_all_truthful.title"
+    of: "0bd930bdd3bdfed9"
+    plainenglish: >-
+      Always choose Record
+  - address: "core:messages#achievement.record_all_truthful.description"
+    of: "d2ed2c75811d7ec9"
+    plainenglish: >-
+      Choose Record for every Record block in a run you finish.
+  - address: "core:messages#achievement.record_all_embellished.title"
+    of: "ec5d385f6b514443"
+    plainenglish: >-
+      Always choose Embellish
+  - address: "core:messages#achievement.record_all_embellished.description"
+    of: "8aa4e385234bed71"
+    plainenglish: >-
+      Choose Embellish for every Record block in a run you finish.
+  - address: "core:messages#achievement.record_all_omitted.title"
+    of: "c39c69593c260205"
+    plainenglish: >-
+      Always choose Omit
+  - address: "core:messages#achievement.record_all_omitted.description"
+    of: "27339a0ddbb8eee1"
+    plainenglish: >-
+      Choose Omit for every Record block in a run you finish.
+  - address: "core:messages#achievement.discrepancy_unproven_at_term.title"
+    of: "05883a28954a73bc"
+    plainenglish: >-
+      An unresolved discrepancy
+  - address: "core:messages#achievement.discrepancy_unproven_at_term.description"
+    of: "686e060d4d03ac19"
+    plainenglish: >-
+      Finish a run with one or more discrepancies still open.
+  - address: "core:messages#achievement.regency_survived.title"
+    of: "315d602c8e8ea598"
+    plainenglish: >-
+      Survive a regency
+  - address: "core:messages#achievement.regency_survived.description"
+    of: "62ec42c8088073e4"
+    plainenglish: >-
+      Have a regency end while the family line continues.
+  - address: "core:messages#achievement.cadet_took_seal.title"
+    of: "09ac0ba91ad1700d"
+    plainenglish: >-
+      Cadet branch takes the seal
+  - address: "core:messages#achievement.cadet_took_seal.description"
+    of: "e84bed13d0c87117"
+    plainenglish: >-
+      Have a cadet branch take the family seal.
+  - address: "core:messages#achievement.muster_settled_under_banner.title"
+    of: "339f43d4d2fcd8a0"
+    plainenglish: >-
+      Muster commitment settled
+  - address: "core:messages#achievement.muster_settled_under_banner.description"
+    of: "7a13255841776024"
+    plainenglish: >-
+      Take a position in a Muster, then settle that commitment.
+  - address: "core:messages#achievement.muster_withdrew_every_time.title"
+    of: "d1b40982949ce196"
+    plainenglish: >-
+      Withdraw from every Muster
+  - address: "core:messages#achievement.muster_withdrew_every_time.description"
+    of: "b1060890de85e194"
+    plainenglish: >-
+      Finish a run after withdrawing from every Muster commitment.
+  - address: "core:messages#achievement.match_never_refused.title"
+    of: "d6996da86572fcd4"
+    plainenglish: >-
+      Never refuse a hand
+  - address: "core:messages#achievement.match_never_refused.description"
+    of: "bb8721d9a48fda35"
+    plainenglish: >-
+      Answer at least one Match and never refuse a hand.
+  - address: "core:messages#achievement.five_names_returned.title"
+    of: "59678f0c0da17648"
+    plainenglish: >-
+      All five returned names
+  - address: "core:messages#achievement.five_names_returned.description"
+    of: "c1ea82052ae511f1"
+    plainenglish: >-
+      Use each of the five returned names in a run you finish.

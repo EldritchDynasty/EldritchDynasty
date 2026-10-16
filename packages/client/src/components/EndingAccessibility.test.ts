@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import type { EpilogueView, SessionView } from '@ed/core';
+import type { AchievementView, EpilogueView, SessionView } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
@@ -34,10 +34,12 @@ describe('ending reckoning uses reader-local Plain English (#1669)', () => {
       },
     } as unknown as EpilogueView;
     const originalSnapshot = structuredClone(epilogue);
+    const achievements: AchievementView[] = [{ id: 'ending_settled', title: 'Account Settled', description: 'Reach the Settled ending.' }];
     const w = mount(Ending, {
       props: {
         view,
         epilogue,
+        achievements,
         actions: { restart: vi.fn() } as unknown as GameActions,
         proseMode: 'original',
       },
@@ -49,8 +51,17 @@ describe('ending reckoning uses reader-local Plain English (#1669)', () => {
       expect(labels()).toContain('And could show');
       expect(labels()).toContain('What the book attests');
       expect(w.get('.tally').text()).toContain('4 pages were asked after, and answered with themselves');
+      expect(w.get('.achievements summary').text()).toBe('Achievements earned (1)');
+      expect(w.get('.achievements strong').text()).toBe('Account Settled');
+      expect(w.get('.achievements p').text()).toBe('Reach the Settled ending.');
 
-      await w.setProps({ proseMode: 'plainenglish' });
+      await w.get('select').setValue('plainenglish');
+      expect(w.emitted('update:proseMode')?.at(-1)).toEqual(['plainenglish']);
+      await w.setProps({ proseMode: 'plainenglish', achievements: [{
+        id: 'ending_settled', title: 'Debt Settled', description: 'Finish with the Settled ending.',
+      }] });
+      expect(w.get('.achievements strong').text()).toBe('Debt Settled');
+      expect(w.get('.achievements p').text()).toBe('Finish with the Settled ending.');
       expect(labels()).toContain('Highest level supported by evidence');
       expect(labels()).toContain('Highest level claimed in the Chronicle');
       expect(labels()).toContain('Contract clauses recovered');
@@ -66,7 +77,10 @@ describe('ending reckoning uses reader-local Plain English (#1669)', () => {
       expect(w.get('.closing').text()).toBe('An original closing.');
       expect(epilogue).toEqual(originalSnapshot);
 
-      await w.setProps({ proseMode: 'original' });
+      await w.get('select').setValue('original');
+      expect(w.emitted('update:proseMode')?.at(-1)).toEqual(['original']);
+      await w.setProps({ proseMode: 'original', achievements });
+      expect(w.get('.achievements strong').text()).toBe('Account Settled');
       expect(labels()).toContain('And could show');
       expect(values()).toEqual(originalValues);
     } finally {

@@ -53,7 +53,7 @@ import {
  */
 const game = createGame(loadBundle());
 const {
-  view, table, land, prologue, openingSeen, epilogue, docket, passages, jump, interlude, chapter, frame, ended,
+  view, table, land, prologue, openingSeen, epilogue, achievements, docket, passages, jump, interlude, chapter, frame, ended,
   refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, mentions, actions,
 } = game;
 
@@ -427,7 +427,7 @@ const yearAndBirths = computed(() => {
   />
 
   <template v-else-if="ended && epilogue">
-    <Ending :view="view" :epilogue="epilogue" :actions="actions" :prose-mode="accessibility.proseMode" @open="openBook()" />
+    <Ending :view="view" :epilogue="epilogue" :achievements="achievements" :actions="actions" :prose-mode="accessibility.proseMode" @update:prose-mode="void selectProseMode($event)" @open="openBook()" />
     <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
   </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { EpilogueView, SessionView } from '@ed/core';
+import type { AchievementView, EpilogueView, SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
@@ -9,8 +9,13 @@ import {
   PLATE, afterimageLayout, afterimageModel, afterimageName, type Measure,
 } from '../lib/book';
 
-const props = defineProps<{ view: SessionView; epilogue: EpilogueView; actions: GameActions; proseMode?: ProseMode }>();
-defineEmits<{ (e: 'open'): void }>();
+const props = defineProps<{ view: SessionView; epilogue: EpilogueView; achievements?: readonly AchievementView[]; actions: GameActions; proseMode?: ProseMode }>();
+const emit = defineEmits<{ (e: 'open'): void; (e: 'update:proseMode', mode: ProseMode): void }>();
+
+function selectProseMode(event: Event): void {
+  const mode = (event.target as HTMLSelectElement).value;
+  if (mode === 'original' || mode === 'plainenglish') emit('update:proseMode', mode);
+}
 
 /**
  * THE LAST NIGHT (concept §23, issue #39).
@@ -285,11 +290,33 @@ async function saveAfterimage(): Promise<void> {
       <button class="quiet" @click="actions.restart()">{{ plain ? 'Start another house' : 'Another house' }}</button>
     </div>
     <p v-if="afterimageError" class="afterimage-error rubric small" role="alert">{{ plain ? 'Could not save the ending image. Try again.' : afterimageError }}</p>
+    <label class="ending-settings">
+      Prose version
+      <select :value="proseMode ?? 'original'" @change="selectProseMode">
+        <option value="original">Original</option>
+        <option value="plainenglish">Plain English</option>
+      </select>
+    </label>
+    <details v-if="achievements?.length" class="achievements">
+      <summary>Achievements earned ({{ achievements.length }})</summary>
+      <ul>
+        <li v-for="achievement in achievements" :key="achievement.id">
+          <strong>{{ achievement.title }}</strong>
+          <p>{{ achievement.description }}</p>
+        </li>
+      </ul>
+    </details>
   </main>
 </template>
 
 <style scoped>
 .ending { max-width: 64ch; margin: 0 auto; padding: 80px 26px 90px; }
+.ending-settings { display: flex; align-items: center; gap: 12px; margin-top: 18px; color: var(--ink-faint); font-size: var(--t-fine); }
+.achievements { margin-top: 28px; color: var(--ink-soft); }
+.achievements summary { cursor: pointer; }
+.achievements ul { padding-left: 22px; }
+.achievements li { margin-top: 16px; }
+.achievements p { margin: 4px 0 0; font-size: var(--t-fine); }
 .year { font-size: var(--t-display); margin: 0; letter-spacing: .08em; color: var(--ink-faint); }
 h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--rubric); }
 .summary { margin: 0 0 28px; font-size: var(--t-fine); color: var(--ink-faint); }

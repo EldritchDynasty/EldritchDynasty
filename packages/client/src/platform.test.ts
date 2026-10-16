@@ -3,7 +3,9 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadBundle, loadContent } from '@ed/content';
-import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
+import { ACHIEVEMENT_CATALOG, bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
+import { proseOriginalHash } from '@ed/schema';
+import { coreMessageAddress } from '../../core/src/messages.js';
 import { Directory, Encoding } from '@capacitor/filesystem';
 import { createGame } from './lib/game.js';
 import {
@@ -1393,6 +1395,45 @@ describe('the platform seam', () => {
     await game.actions.load('finished-retry');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(forgottenAttempts()).toHaveLength(2);
+  });
+
+  it('reads earned achievement wording offline and toggles without saving or delivering (#1779)', async () => {
+    const host = memoryPlatform();
+    delete host.unlockAchievement;
+    const source = loadContent();
+    const ctx = bootstrap(source, 1779, 1042, 'short');
+    ctx.world.founding = {
+      houseName: 'House Awards', heirloom: 'portion_of_agelessness', grudge: 'house_marrow', answers: {}, year: 1042,
+    };
+    ctx.world.ending = { id: 'settled', year: 1342 };
+    host.saves.set('finished-awards', saveGame(ctx));
+    const original = ACHIEVEMENT_CATALOG.ending_settled;
+    const variants = [
+      { address: coreMessageAddress('achievement.ending_settled.title'), of: proseOriginalHash(original.title), plainenglish: 'Debt Settled' },
+      { address: coreMessageAddress('achievement.ending_settled.description'), of: proseOriginalHash(original.description), plainenglish: 'Finish with the Settled ending.' },
+    ];
+    const game = createGame(source, host, { proseVariants: [] });
+    expect(game.achievements.value).toEqual([]);
+    expect(await game.actions.load('finished-awards')).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const originalCopy = game.achievements.value;
+    expect(originalCopy).toContainEqual({ id: 'ending_settled', title: original.title, description: original.description });
+    const saved = JSON.stringify(host.saves.get('autosave'));
+    const archived = JSON.stringify(game.library.value);
+    const writes = vi.spyOn(host, 'writeSave');
+    game.actions.setProseMode('plainenglish');
+    expect(game.achievements.value).toEqual(originalCopy);
+    game.actions.setProseVariants(variants);
+    expect(game.achievements.value).toContainEqual({ id: 'ending_settled', title: 'Debt Settled', description: 'Finish with the Settled ending.' });
+    expect(game.achievements.value.map((entry) => entry.id)).toEqual(originalCopy.map((entry) => entry.id));
+    expect(writes).not.toHaveBeenCalled();
+    expect(JSON.stringify(host.saves.get('autosave'))).toBe(saved);
+    expect(JSON.stringify(game.library.value)).toBe(archived);
+    expect(host.unlocks).toEqual([]);
+    game.actions.setProseMode('original');
+    expect(game.achievements.value).toEqual(originalCopy);
+    game.actions.leave();
+    expect(game.achievements.value).toEqual([]);
   });
 
   it('retries an achievement after the host throws synchronously', async () => {
