@@ -237,12 +237,12 @@ describe('Standing reader-local Plain English (#1439)', () => {
       expect(wrapper.get('.house-key').text()).toContain('crowns the house can spend.');
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
-      expect(labels()).toEqual(['Money available', 'Reputation', 'Unrest', 'Recovered clauses']);
+      expect(labels()).toEqual(['Money balance', 'Reputation', 'Unrest', 'Recovered clauses']);
       expect(wrapper.get('.house-key summary').text()).toBe('What these numbers mean');
       expect(wrapper.findAll('.house-key dt').map((row) => row.text())).toEqual(labels());
       const explanations = wrapper.findAll('.house-key dd').map((row) => row.text());
       expect(explanations).toEqual([
-        'Money the family can spend, measured in crowns.',
+        'The family’s money in crowns. A negative balance means the family owes money.',
         'How the wider world regards this family.',
         'How much unrest is building inside the family and on its land.',
         'How many parts of the old bargain the family has found.',
@@ -1162,5 +1162,47 @@ describe('Plain English family-tree mark explanations (#1704)', () => {
     expect(source).not.toContain('{{ m.says }}');
     const memberSource = readFileSync(join(import.meta.dirname, './Member.vue'), 'utf8');
     expect(memberSource).toContain("markSays(mark.kind, proseMode, mark.kind === 'madness' ? member.madness : undefined)");
+  });
+});
+
+
+describe('Standing debt-safe Plain English (#1749)', () => {
+  it('describes negative treasury as a balance rather than spendable money, without changing numeric facts', async () => {
+    const current = view();
+    current.treasury = -40;
+    const snapshot = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'idle', proseMode: 'original' },
+    });
+    try {
+      const balance = () => wrapper.get('.house-ledger > div');
+      const heading = () => balance().get('dt').text();
+      const amount = () => balance().get('dd').text();
+      const explanation = () => wrapper.get('.house-key dd').text();
+
+      const original = wrapper.text();
+      expect(heading()).toBe('Treasury');
+      expect(amount()).toBe('-40 crowns');
+      expect(explanation()).toBe('crowns the house can spend.');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(heading()).toBe('Money balance');
+      expect(amount()).toBe('-40 crowns');
+      expect(explanation()).toBe('The family’s money in crowns. A negative balance means the family owes money.');
+      expect(wrapper.get('.house-key dt').text()).toBe('Money balance');
+
+      const positive = { ...current, treasury: 252 };
+      await wrapper.setProps({ view: positive });
+      expect(heading()).toBe('Money balance');
+      expect(amount()).toBe('252 crowns');
+      expect(explanation()).toContain('A negative balance means the family owes money.');
+
+      await wrapper.setProps({ view: current, proseMode: 'original' });
+      expect(wrapper.text()).toBe(original);
+      expect(current).toEqual(snapshot);
+      expect(wrapper.emitted()).toEqual({});
+    } finally {
+      wrapper.unmount();
+    }
   });
 });
