@@ -229,22 +229,43 @@ describe('authored physical-copy exits (#1748)', () => {
     const saved = saveGame(ctx);
     expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
   });
-  it('Crusade tribute has a distinct price and respect trade-off without replacing other choices', () => {
-    const event = bundle.mustEvent('the_shelf_that_has_to_go');
+  it.each(['original', 'plainenglish'] as const)('Crusade tribute charges and records a partial shelf in %s', (mode) => {
+    const ctx = bootstrap(bundle, 1777, 1042);
+    ctx.world.library.clear();
+    const donated = ctx.content.mustSpellbook('lesser_workings_of_death');
+    const retained = ctx.content.mustSpellbook('lesser_workings_of_life');
+    acquireLibraryCopy(ctx, donated.id);
+    acquireLibraryCopy(ctx, retained.id);
+    ctx.world.treasury = 100;
+    ctx.world.respect = 'known';
+    setProseVariants(ctx, bundle.proseVariants);
+    setProseMode(ctx, mode);
+    const event = ctx.content.mustEvent('the_shelf_that_has_to_go');
     if (event.interaction.kind === 'narration') throw new Error('expected a book-loss choice');
     expect(event.interaction.choices.map((choice) => choice.id)).toEqual([
       'burn_them', 'hide_them', 'sell_them', 'offer_them_as_tribute',
     ]);
     const tribute = event.interaction.choices.find((choice) => choice.id === 'offer_them_as_tribute')!;
     expect(tribute.outcomes).toHaveLength(1);
-    expect(tribute.outcomes[0]!.effects).toEqual([
-      { kind: 'treasury', delta: -20 },
-      { kind: 'respect', delta: 2 },
-      ...[
-        'lesser_workings_of_death', 'lesser_workings_of_darkness',
-        'greater_workings_of_death', 'greater_workings_of_darkness', 'the_marrow_codex',
-      ].map((book) => ({ kind: 'spellbook', op: 'remove_copy', target: 'head', book })),
-    ]);
+    const outcome = tribute.outcomes[0]!;
+    commitOutcome(ctx, event, outcome, { HEAD: ctx.world.narrator }, tribute.id, testRng('partial-book-tribute'));
+    expect(ctx.world.library.has(donated.id)).toBe(false);
+    expect(ctx.world.library.has(retained.id)).toBe(true);
+    expect(ctx.world.treasury).toBe(80);
+    expect(ctx.world.respect).toBe('eminent');
+    const page = ctx.world.chronicle.at(-1)!;
+    const address = `content:events/age_crusade.yaml#events[id=${event.id}].interaction.choices[id=${tribute.id}].outcomes[id=${outcome.id}].text`;
+    const counterpart = bundle.proseVariants.find((variant) => variant.address === address)!;
+    expect(counterpart).toBeDefined();
+    const text = mode === 'plainenglish' ? counterpart.plainenglish : outcome.text;
+    expect(page.text).toBe(text);
+    expect(page.text).not.toMatch(/\bfive\b|\bpermitted to fill\b/i);
+    const saved = saveGame(ctx);
+    setProseMode(ctx, mode === 'original' ? 'plainenglish' : 'original');
+    expect(ctx.world.chronicle.at(-1)!.text).toBe(text);
+    const resumed = loadGame(saved, bundle);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saved));
+    expect(resumed.world.chronicle.at(-1)!.text).toBe(text);
   });
 
 });
