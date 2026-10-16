@@ -122,6 +122,33 @@ function allMembers(view: SessionView): { hall: HallView; member: MemberView }[]
 }
 
 describe('the family tree as a planning board (#268)', () => {
+  it('finds accented names from ASCII and decomposed queries without changing the recorded names (#1759)', async () => {
+    const current = largeView();
+    current.halls[0]!.members[1]!.name = 'Élodie';
+    current.halls[0]!.members[2]!.name = 'Renée';
+    const original = structuredClone(current);
+    const wrapper = mount(Tree, { props: {
+      view: current, selected: null, proseMode: 'original',
+    } });
+    try {
+      const search = wrapper.get('.find input');
+      await search.setValue('elodie');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Élodie · The Seat']);
+      await wrapper.get('.matches button').trigger('click');
+      expect(wrapper.emitted('select')?.[0]).toEqual(['p001']);
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      await search.setValue('RENEE');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Renée · The Seat']);
+
+      // Query decomposed into E + combining accent; stored name is precomposed.
+      await search.setValue('E\\u0301lo');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Élodie · The Seat']);
+      expect(current).toEqual(original);
+    } finally { wrapper.unmount(); }
+  });
+
+
 
   it('restores keyboard focus after selecting a search result that is removed from the DOM (#1753)', async () => {
     const current = largeView();
