@@ -1,0 +1,1 @@
+/claim lane-gates --agent codex/plainenglish-consumers --paths packages/core/src/tools/string-audit.ts packages/core/src/tools/string-audit.test.ts packages/core/src/tools/string-audit-cli.test.ts --lane gates
