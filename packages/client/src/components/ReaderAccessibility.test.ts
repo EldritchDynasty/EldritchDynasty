@@ -97,7 +97,7 @@ describe('family-card disclosure relationships (#1751)', () => {
       head: false, awakened: false, expresses: false, madness: 0, drift: false,
       attrs: {}, parents: {},
       record: { attrs: {}, claimedTraits: [], parents: {}, claimed: [] },
-    } as unknown as MemberView;
+    } as unknown as SessionView['halls'][number]['members'][number];
     const snapshot = structuredClone(member);
     const wrapper = mount(Member, {
       props: { member, names: [], traitNames: [], open: false, proseMode: 'original' },
