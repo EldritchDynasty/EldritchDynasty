@@ -142,7 +142,7 @@ describe('the family tree as a planning board (#268)', () => {
       expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Renée · The Seat']);
 
       // Query decomposed into E + combining accent; stored name is precomposed.
-      await search.setValue('E\\u0301lo');
+      await search.setValue('E\u0301lo');
       expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Élodie · The Seat']);
       expect(current).toEqual(original);
     } finally { wrapper.unmount(); }
