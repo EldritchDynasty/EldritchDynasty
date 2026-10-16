@@ -246,7 +246,12 @@ const MARRIAGE_ORDERS = [
     <div class="panel">
       <h3 class="label">{{ local('The purse', 'Money and auctions') }}</h3>
       <p class="small">
-        {{ table.treasury }} {{ local('crowns. A term of tutoring is', 'crowns available. A tutoring term costs') }} {{ table.tutorFee }}.
+        <template v-if="plain">
+          Money balance: {{ table.treasury }} crowns<span v-if="table.treasury < 0"> (the house owes {{ -table.treasury }} crowns)</span>. A tutoring term costs {{ table.tutorFee }}.
+        </template>
+        <template v-else>
+          {{ table.treasury }} crowns. A term of tutoring is {{ table.tutorFee }}.
+        </template>
       </p>
 
       <!-- WARDSHIP (issue #1206). The engine has taken the land income away
