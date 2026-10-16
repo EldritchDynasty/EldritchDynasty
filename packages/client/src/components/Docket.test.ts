@@ -1104,6 +1104,30 @@ describe('every docket kind has a shape in the template', () => {
     const tail = template.slice(template.lastIndexOf('v-else'));
     expect(tail).toMatch(/unhandled|does not know how to draw/);
   });
+
+  it('reads an unsupported decision in either mode without changing or dispatching it (#1781)', async () => {
+    // The explicit fallback guards a future kind this client cannot render.
+    const decision = { kind: 'future-decision', id: 'unhandled-decision', year: 1100 } as unknown as SessionView['docket'][number];
+    const snapshot = structuredClone(decision);
+    const actions = spyActions();
+    const wrapper = mount(Docket, { props: { decision, actions: actions as unknown as GameActions, proseMode: 'original' } });
+    try {
+      const heading = () => wrapper.get('#docket-heading').text();
+      const body = () => wrapper.get('.body').text();
+      expect(heading()).toBe('1100 · unhandled');
+      const original = body();
+      expect(original).toContain('cannot be answered here');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(heading()).toBe('1100 · Decision unavailable');
+      expect(body()).toContain('waiting for an answer');
+      expect(body()).not.toBe(original);
+      await wrapper.setProps({ proseMode: 'original' });
+      expect(heading()).toBe('1100 · unhandled');
+      expect(body()).toBe(original);
+      expect(decision).toEqual(snapshot);
+      for (const action of Object.values(actions)) expect(action).not.toHaveBeenCalled();
+    } finally { wrapper.unmount(); }
+  });
 });
 
 
