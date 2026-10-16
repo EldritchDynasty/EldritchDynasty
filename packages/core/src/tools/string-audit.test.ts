@@ -10,7 +10,7 @@ import {
   VOICES, auditContentFile, auditRepository, auditVueFile, contentVoice,
   plainEnglishCoverage, plainEnglishCoverageFor,
   plainEnglishContentWorkItems, plainEnglishCoreWorkItems, plainEnglishWorklist, report,
-  sentenceLiterals, unclassifiedContentKeys,
+  literals, sentenceLiterals, unclassifiedContentKeys,
 } from './string-audit.js';
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -118,6 +118,27 @@ describe('the string-source audit (issue #276)', () => {
       'content:characters/founding.yaml#characters[key=founder].name',
       'content:characters/founding.yaml#characters[key=wife].name',
     ]);
+  });
+
+  it('does not treat quoted braces as interpolation boundaries (#1757)', () => {
+    const examples = [
+      ["const line = \`The clerk said ${mark === '}' ? 'yes' : 'no'} before dawn.\`;",
+        "${mark === '}' ? 'yes' : 'no'}"],
+      ["const line = \`The clerk said ${mark === '{' ? 'yes' : 'no'} before dawn.\`;",
+        "${mark === '{' ? 'yes' : 'no'}"],
+      ["const line = \`The clerk said ${mark === '\\'}' ? 'yes' : 'no'} before dawn.\`;",
+        "${mark === '\\'}' ? 'yes' : 'no'}"],
+    ] as const;
+    for (const [source, token] of examples) {
+      const found = literals(source);
+      expect(found).toHaveLength(1);
+      expect(found[0]!.interpolations).toEqual([token]);
+      expect(found[0]!.sourceText).toBe(`The clerk said ${token} before dawn.`);
+      const worklist = plainEnglishCoreWorkItems('year/example.ts', source);
+      expect(worklist).toHaveLength(1);
+      expect(worklist[0]!.text).toBe(`The clerk said ${token} before dawn.`);
+      expect(worklist[0]!.interpolations).toEqual([token]);
+    }
   });
 
   it('gives generated narrative prose a wording-independent source ordinal and keeps template tokens', () => {
