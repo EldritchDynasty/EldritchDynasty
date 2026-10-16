@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { asId, proseOriginalHash } from '@ed/schema';
+import { asId, isLadderRole, proseOriginalHash } from '@ed/schema';
 import { CAST_MAX, CAST_ROLES, castLabel, castOf, type CastRole } from './cast.js';
 import { contentProseAddress, missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { heirApparent } from './people/succession.js';
@@ -48,7 +48,7 @@ describe('Ascension explanations outside the Standing screen (#1764)', () => {
     const explanation = mode === 'original'
       ? 'The Regalia are still divided.'
       : 'The Regalia have not all been brought together.';
-    const cast = castOf(ctx).find((member) => member.role === 'foremost');
+    const cast = castOf(ctx).find((member) => isLadderRole(member.role));
     expect(cast?.person).toBe(candidate.id);
     expect.soft(cast?.because).toBe(mode === 'original'
       ? `stands highest of anyone. ${explanation}`
