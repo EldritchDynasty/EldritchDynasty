@@ -208,8 +208,20 @@ export function literals(src: string): Literal[] {
           let depth = 1;
           i += 2;
           while (i < n && depth > 0) {
-            if (src[i] === '{') depth++;
-            else if (src[i] === '}') depth--;
+            // Braces in strings are characters, not the closing } of the
+            // interpolation. A quoted '}' used to truncate the source token.
+            const current = src[i]!;
+            if (current === "'" || current === '"' || current === '`') {
+              const quote = current;
+              i++;
+              while (i < n) {
+                if (src[i] === '\\') { i += 2; continue; }
+                if (src[i++] === quote) break;
+              }
+              continue;
+            }
+            if (current === '{') depth++;
+            else if (current === '}') depth--;
             i++;
           }
           const interpolation = src.slice(interpolationStart, i);
