@@ -212,6 +212,7 @@ describe('a stillbirth, as a line', () => {
       for (const parent of [wife, husband]) {
         const g = genomeOf(parent, ctx.genetics);
         for (const [i, a] of lethal) { g.autosomal[0][i] = a; g.autosomal[1][i] = a; }
+        parent.phenotype = undefined;
       }
       marry(ctx, wife, husband);
       wives.add(String(wife.id));
@@ -266,6 +267,7 @@ describe('a stillbirth, as a line', () => {
           genome.sex[0][i] = most;
           if (genome.sex[1]) genome.sex[1][i] = most;
         }
+        parent.phenotype = undefined;
       }
       marry(ctx, wife, husband);
       wives.add(String(wife.id));

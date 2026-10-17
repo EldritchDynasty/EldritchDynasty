@@ -261,7 +261,7 @@ export function phaseFounders(ctx: SimCtx, bundle: ContentBundle): void {
         hap[drag] = carries ? strong : (none >= 0 ? none : 0);
       }
     }
-    if (p.phenotype) p.phenotype.dirty = true;
+    p.phenotype = undefined;
   }
 }
 

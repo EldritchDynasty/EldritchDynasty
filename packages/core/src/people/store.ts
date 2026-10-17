@@ -102,7 +102,13 @@ export class PersonStore {
   }
 
   blood(houseId: string): Person[] {
-    return this.all().filter((p) => p.membership.some((m) => m.house === houseId && m.kind === 'blood'));
+    // Walked in place rather than through `all()`: this is asked several times
+    // a year of everyone who has ever lived, and the copy was most of its cost.
+    const out: Person[] = [];
+    for (const p of this.people.values()) {
+      if (p.membership.some((m) => m.house === houseId && m.kind === 'blood')) out.push(p);
+    }
+    return out;
   }
 
   /** Editor previews only. The simulation never removes a person. */

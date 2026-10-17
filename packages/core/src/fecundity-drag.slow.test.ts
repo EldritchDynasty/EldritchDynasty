@@ -102,7 +102,7 @@ describe('fecundity drag (issue #26)', () => {
       g!.sex[0][idx] = strong;
       g!.sex[1]![idx] = strong;
     }
-    person.phenotype!.dirty = true;
+    person.phenotype = undefined;
 
     const after = attr(person, 'fecundity', ctx.genetics, ctx.world.year);
     expect(after, 'maxing out her drag genome moved fecundity even though the coupling is zero').toBe(before);
