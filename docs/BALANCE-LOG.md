@@ -11293,3 +11293,352 @@ concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4
 dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5
 chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
 ```
+
+
+## 2026-10-17 — remaining commercial-pass engineering (#277, #334, #323, #1205)
+
+Measured starting point: `92a34692b28710531c25880477bc3db9eb164073`.
+The current worklist had **25 write-only keys / 29 writes and 14 prose-only
+choices**, rather than the older tracker checkpoint's 22 prose-only choices.
+The completed audit has **0 write-only keys, 0 prose-only choices and 0
+unclassified keys**. The two consequence findings are now validation errors;
+negative rule tests still demonstrate that a new unread key or unclassified
+no-effect choice is rejected.
+
+### Reserved memories and their readers
+
+The 25 reservations now have named, conditional later accounts in
+`events/remembered_accounts.yaml`: Church copies/permission/refusal/hostility;
+birth and descent records; Bracc credit, regalia, tenancy and the burgesses'
+grievance; the former steward, refused archivist, ward and hidden rooms; the
+looted books, eastern Codex and post-fire inventory; the kept quire, medical
+case-book, Yssene terms and Marrow day-book. Existing writes schedule a review
+for the following year. The same conditions admit historical keys from existing
+saves through the ambient pool. The stair and Yssene readers retain their 1330
+and 1291 lower calendar bounds, including on the scheduled path. These are
+eligibility bounds, not a claim that an old save must draw a scene on an exact
+date. Seven accounts carry a Record block; eighteen are ordinary common scenes.
+
+Eight deliberate status-quo/interpretive choices explicitly declare
+`self_expression`: keeping the early Awakening quiet, walking past the looted
+library, the four career continuations, the folded silk and the byname. Their
+existing words remain. Telling the commissioned son the price now changes his
+relationship with the Head; leaving the inherited quarrel increases that
+cadet's grievance; silence about the Yssene descent creates a provable disputed
+account. The other three formerly prose-only choices acquire their consequence
+through the implemented reserved readers.
+
+Physical acquisition is `spellbook / acquire_copy`, separate from `gain`.
+Binding the looted lot supplies three physical Lesser Workings; recovering the
+Marrow Codex supplies a physical Codex. Neither teaches a person a spell.
+Repeated acquisition preserves an existing copy's condition and acquisition
+year. Execution/save regressions cover this distinction. Existing physical-loss
+operations continue to preserve learned knowledge and cancel interrupted study.
+
+On the #334 gameplay snapshot `e3a5f2155ba5c8429a8a745d815d5e82f5ee7e49`, the
+canonical fire-rate invocation passed at **800 x 500 requested years**:
+
+```text
+gate 4 (fire rate): 800 runs x 500y — rarest of 487 non-frame events:
+    the_codex_in_the_eastern_invoice   0.75%
+    the_hall_is_answered               0.875%
+    waking_early                       1.125%
+    eight_days_and_then_it_did         1.25%
+    the_hall_stops_writing             1.25%
+gate 10 (vocabulary reach): 30 Effect kinds — 29 authored, 29 reached in 800 runs x 500y
+  owed, and pinned: recast — declared and handled, authored by no content, so no run has ever executed them (invariant 11)
+```
+
+The rarest reader is 6/800 (0.75%) in this cohort, above the unchanged 0.5%
+floor. This is the measured cohort, not a claim of population equivalence or
+spare statistical margin. No sample, frequency profile, balance threshold,
+timing baseline or timing factor was changed.
+
+### The demonstration's complete loop
+
+The shared `CampaignDef` has optional opening-Age and opening-arc data. The
+Demonstration selects the **existing front-loaded Insurrection** (8-year
+minimum), gives its opening a 12-year maximum, and starts `arc_the_first_account`
+with the actual founding Narrator bound. The scheduler names that opening
+before permitting its termination, and ends it by 1054 even when all natural
+termination rolls refuse. No new Age row is authored.
+
+The three dated arc appointments run in 1043/1044/1045: the founder is routed
+through the existing death gate to guardian; the next page forces a Record
+answer; the frame appointment reads that page, including an omitted dated blank.
+Arc frame appointments use the frame phase, frame caster, frame ledger and frame
+outcome path, then advance the same arc. They cannot be selected early from the
+ambient frame pool. Ordinary campaign collection supplies the verdict by the
+1075 term or on an earlier broken line. An introduction requiring a Narrator
+refuses a modified founding cast without one instead of killing another family
+member.
+
+The runtime seed cohort is the fixed first **64 seeds `5000 + 7*i`**, played
+through the complete 33-year demonstration in **both prose modes** (128 runs).
+Every run has the signing page, complete named opening Age, actual Record
+answer, scheduled interlude, guardian Narrator and allowed verdict. Each reloads
+after year two while the arc is still live, and finishes with healthy-world
+assertions. A separate deterministic fixture exercises **Record, Omit and
+Embellish**, proving that the docket and the frame ledger are the real paths.
+
+Explicit `campaigns` scope is enforced in ambient selection, scheduled
+selection, arc steps and the frame. Only explicitly miniature-scoped content is
+excluded from the 300/500-year population reports. The deterministic manifest
+still covers **all** content: **1,092/1,092 outcomes, zero still sampled**.
+Shared structural validation and casting checks still include the miniature.
+
+The demo changes preserve all eight full-campaign digest rows at 8 x 400 years
+before/after (`e3a5f215` -> `e8260a53` gameplay snapshots):
+
+```text
+    1000  d11fb41b23a8b151:1478349
+    1007  3a4f8ba48028554e:359972
+    1014  a33911b3beda18a1:1595751
+    1021  3c00e2361f457190:368838
+    1028  8b27a3d9bd094b87:1530703
+    1035  8ab9f1d2dc9da524:1595588
+    1042  4eae23e797485ca1:1586371
+    1049  e905e336482348b0:1549699
+```
+
+Validation: **0 errors**, the same three existing frequency advisory warnings;
+all core/editor/client typechecks and the production client build passed.
+The coverage audit has **5,492 current Plain English counterparts, 0 missing,
+0 stale, 0 invalid**. The execution witness suite passed 242 tests; the complete
+demo/replay suite passed 18 tests. Landing preflight and hosted integration
+results belong to the PR; these local results do not assert a hosted landing.
+
+### Physical-copy lifecycle: explicit pre/post-theft and combined evidence
+
+The missing labelled theft pair is now measured against the actual adjacent
+source boundaries of PR #1782:
+
+- Before: `4ad082908db8b378870b072ca7c0d1692aa5c9c1` (the PR base, before its first theft commit).
+- After: `12feb2854fd1438e3afb1745c6f3f58758f7ef97` (the complete landed theft slice, including partial-shelf/frozen-prose regressions).
+- Each side runs `gate:ladder -- 6 500` (**6 seeds x 5 policies x 500 years**) and
+  `gate:blood -- 8 500` (**8 seeds x 3 policies x 500 years**).
+
+All four commands exited successfully. Their printed ladder and blood metrics
+are identical across this theft pair. That does not establish population
+identity, prove that every rare theft occurred in these cohorts, or replace the
+actual-outcome, absent/partial-shelf and save/reload regressions. The existing
+library suite covers annual/study wear, paid binder restoration, debt sale,
+authored burn/sale, tribute and Bramme-road theft; it passes with the new
+physical-acquisition coverage too. Current source/client verification is not a
+new tagged installer or a signed release claim. Deferred owner release work
+remains recorded in `issuesneedingowneraction`.
+
+The additional before/after #334 pair below records the combined library and
+choice-consequence changes. Both ladder/blood commands pass on each side. Their
+numbers do move: for example, climb deepest Madness is 60.3 before and 55.8
+after, while the blood cohorts have the full changes printed below. The full
+outputs, rather than a claim that all cohorts are interchangeable, are the
+balance review. Thresholds and cohorts remain fixed.
+
+#### Pre-theft: 4ad082908db8b378870b072ca7c0d1692aa5c9c1
+
+`npm run gate:ladder -- 6 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:ladder
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-gate.ts 6 500
+
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  60.3  ladder-years past the floor  27%  bargains offered  18.7  best power  73.5  late power  32.0  books  2.2
+  spare  deepest Madness on a man ON THE LADDER  28.5  ladder-years past the floor   9%  bargains offered  11.3  best power  67.7  late power  35.9  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  31.2  ladder-years past the floor   8%  bargains offered   8.8  best power  67.7  late power  26.4  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  32.0  ladder-years past the floor   8%  bargains offered   9.5  best power  64.7  late power  29.2  books  1.7
+  pair_climb deepest Madness on a man ON THE LADDER  83.7  ladder-years past the floor  44%  bargains offered  16.7  best power  67.3  late power  28.3  books  2.8
+  climb      genetic channel — household 16.99  expressers 18.09  rite-takers 17.30 (2)  vessel 17.30 (2)  great 15.60 (1)
+  climb  best rung reached: hierophant 2  adept 4
+  spare      genetic channel — household 16.78  expressers 16.88  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.94  expressers 17.51  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.74  expressers 17.21  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 2  adept 4
+  pair_climb genetic channel — household 16.43  expressers 17.64  rite-takers 18.58 (10)  vessel 19.20 (8)  great 17.92 (5)
+  pair_climb best rung reached: vessel 1  hierophant 4  adept 1
+  scion  best power from year 300 on: 26.4 vs spare's 35.9 (not asserted — see the comment above this line)
+  pair   second man's best power: 62.2 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 61.6 vs climb's 63.1  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 3 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 3/3
+  what stops the climbing column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | the blood comes through him at 69; the next step asks 70
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70
+```
+
+`npm run gate:blood -- 8 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:blood
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/blood-gate.ts 8 500
+
+8 runs x 500 years, concentrate / dilute / chronicler
+
+── cM=18* del=0.08* drive=0.8* books=2* ──
+             font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
+-----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
+```
+
+#### Post-theft: 12feb2854fd1438e3afb1745c6f3f58758f7ef97
+
+`npm run gate:ladder -- 6 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:ladder
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-gate.ts 6 500
+
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  60.3  ladder-years past the floor  27%  bargains offered  18.7  best power  73.5  late power  32.0  books  2.2
+  spare  deepest Madness on a man ON THE LADDER  28.5  ladder-years past the floor   9%  bargains offered  11.3  best power  67.7  late power  35.9  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  31.2  ladder-years past the floor   8%  bargains offered   8.8  best power  67.7  late power  26.4  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  32.0  ladder-years past the floor   8%  bargains offered   9.5  best power  64.7  late power  29.2  books  1.7
+  pair_climb deepest Madness on a man ON THE LADDER  83.7  ladder-years past the floor  44%  bargains offered  16.7  best power  67.3  late power  28.3  books  2.8
+  climb      genetic channel — household 16.99  expressers 18.09  rite-takers 17.30 (2)  vessel 17.30 (2)  great 15.60 (1)
+  climb  best rung reached: hierophant 2  adept 4
+  spare      genetic channel — household 16.78  expressers 16.88  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.94  expressers 17.51  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.74  expressers 17.21  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 2  adept 4
+  pair_climb genetic channel — household 16.43  expressers 17.64  rite-takers 18.58 (10)  vessel 19.20 (8)  great 17.92 (5)
+  pair_climb best rung reached: vessel 1  hierophant 4  adept 1
+  scion  best power from year 300 on: 26.4 vs spare's 35.9 (not asserted — see the comment above this line)
+  pair   second man's best power: 62.2 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 61.6 vs climb's 63.1  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 3 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 3/3
+  what stops the climbing column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | the blood comes through him at 69; the next step asks 70
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70
+```
+
+`npm run gate:blood -- 8 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:blood
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/blood-gate.ts 8 500
+
+8 runs x 500 years, concentrate / dilute / chronicler
+
+── cM=18* del=0.08* drive=0.8* books=2* ──
+             font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
+-----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
+```
+
+#### Before the reserved readers: 92a34692b28710531c25880477bc3db9eb164073
+
+`npm run gate:ladder -- 6 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:ladder
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-gate.ts 6 500
+
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  60.3  ladder-years past the floor  27%  bargains offered  18.7  best power  73.5  late power  32.0  books  2.2
+  spare  deepest Madness on a man ON THE LADDER  28.5  ladder-years past the floor   9%  bargains offered  11.3  best power  67.7  late power  35.9  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  31.2  ladder-years past the floor   8%  bargains offered   8.8  best power  67.7  late power  26.4  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  32.0  ladder-years past the floor   8%  bargains offered   9.5  best power  64.7  late power  29.2  books  1.7
+  pair_climb deepest Madness on a man ON THE LADDER  83.7  ladder-years past the floor  44%  bargains offered  16.7  best power  67.3  late power  28.3  books  2.8
+  climb      genetic channel — household 16.99  expressers 18.09  rite-takers 17.30 (2)  vessel 17.30 (2)  great 15.60 (1)
+  climb  best rung reached: hierophant 2  adept 4
+  spare      genetic channel — household 16.78  expressers 16.88  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.94  expressers 17.51  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.74  expressers 17.21  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 2  adept 4
+  pair_climb genetic channel — household 16.43  expressers 17.64  rite-takers 18.58 (10)  vessel 19.20 (8)  great 17.92 (5)
+  pair_climb best rung reached: vessel 1  hierophant 4  adept 1
+  scion  best power from year 300 on: 26.4 vs spare's 35.9 (not asserted — see the comment above this line)
+  pair   second man's best power: 62.2 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 61.6 vs climb's 63.1  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 3 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 3/3
+  what stops the climbing column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | the blood comes through him at 69; the next step asks 70
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70
+```
+
+`npm run gate:blood -- 8 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:blood
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/blood-gate.ts 8 500
+
+8 runs x 500 years, concentrate / dilute / chronicler
+
+── cM=18* del=0.08* drive=0.8* books=2* ──
+             font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
+-----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
+```
+
+#### After the reserved readers: e3a5f2155ba5c8429a8a745d815d5e82f5ee7e49
+
+`npm run gate:ladder -- 6 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:ladder
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-gate.ts 6 500
+
+gate (ladder): 6 played runs x 500 years, per policy
+  climb  deepest Madness on a man ON THE LADDER  55.8  ladder-years past the floor  22%  bargains offered  15.2  best power  71.7  late power  26.7  books  2.3
+  spare  deepest Madness on a man ON THE LADDER  23.5  ladder-years past the floor   6%  bargains offered  13.2  best power  66.1  late power  32.8  books  2.0
+  scion  deepest Madness on a man ON THE LADDER  30.7  ladder-years past the floor   7%  bargains offered  10.2  best power  67.7  late power  28.7  books  1.7
+  pair   deepest Madness on a man ON THE LADDER  34.3  ladder-years past the floor   8%  bargains offered   9.7  best power  65.9  late power  32.6  books  2.2
+  pair_climb deepest Madness on a man ON THE LADDER  71.2  ladder-years past the floor  37%  bargains offered  16.8  best power  70.3  late power  30.0  books  3.0
+  climb      genetic channel — household 16.55  expressers 17.10  rite-takers 18.87 (3)  vessel 18.87 (3)  great 15.60 (1)
+  climb  best rung reached: hierophant 3  adept 3
+  spare      genetic channel — household 16.34  expressers 16.33  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  spare  best rung reached: hierophant 3  adept 3
+  scion      genetic channel — household 16.71  expressers 17.28  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  scion  best rung reached: hierophant 2  adept 4
+  pair       genetic channel — household 16.55  expressers 16.83  rite-takers 0.00 (0)  vessel 0.00 (0)  great 0.00 (0)
+  pair   best rung reached: hierophant 3  adept 3
+  pair_climb genetic channel — household 16.32  expressers 17.00  rite-takers 19.23 (7)  vessel 19.08 (5)  great 19.20 (4)
+  pair_climb best rung reached: hierophant 5  adept 1
+  scion  best power from year 300 on: 28.7 vs spare's 32.8 (not asserted — see the comment above this line)
+  pair   second man's best power: 64.0 vs scion's 63.9 (not asserted — see the comment above this line)
+  pair+  second man's best power: 62.2 vs climb's 61.3  (Hierophant pair-power proxy 50: 6/6 runs)
+  pair+  both rites: 2 people · years with two fully-rited men 0 · best second fully-rited power 0.0 · second-name/widening fires 2/2
+  what stops the climbing column instead: the blood comes through him at 60; the next step asks 70 | he has read 1 book; the next step asks 3 books | the blood comes through him at 65; the next step asks 70 | his mind is not yet wide enough for what the Vessel would put into it
+  what stops the scion column instead: he has read 1 book; the next step asks 3 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 62; the next step asks 70
+  what stops the pair column instead: he has read 1 book; the next step asks 3 books | he has read 3 books; the next step asks 4 books | the blood comes through him at 69; the next step asks 70 | the blood comes through him at 66; the next step asks 70
+```
+
+`npm run gate:blood -- 8 500` — exit 0
+
+```text
+> eldritch-dynasty@0.1.0 gate:blood
+> tsx --tsconfig tsconfig.base.json packages/core/src/tools/blood-gate.ts 8 500
+
+8 runs x 500 years, concentrate / dilute / chronicler
+
+── cM=18* del=0.08* drive=0.8* books=2* ──
+             font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
+-----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
+concentrate  3.7       0.6        13.7      14.6       23.3       11.8       7.5      27.9  1.6        3.5    23        4.9        0.486  0.09    adept 5/8       0/8         8/8      13     7    22:3       2:5     
+dilute       6.3       0.7        15.6      16.1       23.5       10.5       7.0      27.4  6.0        3.6    38        8.0        0.491  0.14    hierophant 4/8  4/8         8/8      22     0    35:8       2:6     
+chronicler   3.8       0.9        16.6      16.4       26.0       19.3       11.8     27.4  7.1        4.3    34        6.3        0.488  0.14    hierophant 4/8  4/8         8/8      0      0    0:0        4:7
+```
+
+### #1641 remains an evidence dependency
+
+The current scheduled-run listing still ends at the October 16 nightly:
+[38872139765](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38872139765),
+SHA `43105bcca62fb9aac310c932fb803e95cf411d75`, success. Together with the October 15
+scheduled success, #1641 has **two of its three** required post-optimization
+scheduled observations. The October 17 scheduled observation is not yet
+available at this review. Local batches and manual dispatches do not substitute
+for it. The partly unexplained October 9-to-11 hosted timing gap also remains
+unresolved; no new evidence here establishes runner variance as its cause.
+Keep #1641 open and retain the existing guard unchanged.

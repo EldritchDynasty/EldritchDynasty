@@ -85,6 +85,13 @@ describe('campaign profiles (#66, #133)', () => {
 describe('campaign introductions (#323)', () => {
   const content = loadContent();
 
+  it('refuses an introduction without its narrator instead of casting another family member', () => {
+    const modified = structuredClone(content.bundle);
+    for (const person of modified.characters) person.becomesGuardian = false;
+    expect(() => bootstrap(modified, 323, 1042, 'demo'))
+      .toThrow('campaign introduction requires a founding narrator');
+  });
+
   it('keeps explicitly scoped scenes out of other campaigns and their balance samples', () => {
     const demo = content.mustEvent('demo_the_empty_chair');
     expect(eventInCampaign(demo, 'demo')).toBe(true);
