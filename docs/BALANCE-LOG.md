@@ -11713,3 +11713,60 @@ cover knowledge and automatic selection. Plain English has 68 reviewed
 counterparts. All new outcomes enter the generated witness manifest through
 real executions, including both success and failure of the deterministic
 player-cast check.
+
+
+### #1796 calibration after the first full reach batch
+
+The first default 800 × 500-year batch on `087d30e9` passed fire rate and
+vocabulary reach, but gate 8 found four new outcomes with zero resolutions:
+the bucket-line loss, the family-nursing loss, the family rent-roll loss and
+the successful Darkness working. All existing event templates cleared gate 4;
+no exception was added for the new content. This full-batch result supersedes
+any impression that the initial exploratory table established branch reach.
+
+A separate score probe used the same 32 Long-Line seeds, sampling every five
+active years in houses able to cast an adult specialist (2,518 observations).
+Household Strength sums had 5th/25th/50th percentiles of 587.6/1368.1/2051.6;
+Charm sums were 630.5/1331.7/1858.9. The initial 180/140 difficulties could not
+meaningfully refuse these families. Both collective checks now ask 1500. The
+highest Health was already at least 100 at the 5th percentile, so asking
+whether anyone cleared 55 was not a test of nursing readiness. That binary
+route now asks whether anyone has Mind 50 to organise the watch; the named
+specialist still uses that person's own Mind and Health together. The existing
+Mind-50 roof check had already produced both bands in the full batch.
+
+Conditional learned-reader scores in the probe supported Thermal/Terra
+thresholds of 20 (from 25); Death remains 25. Darkness now asks 12, but a lower
+number alone would not repair its supply: the probe contained no learned
+Darkness reader at all. The Cawdry scene therefore offers an explicit 125-crown
+preparation: 90 for the existing minor primer (its authored minimum price), 35
+for the visit, a real Library study for an awake adult who does not yet know
+Darkness, and a scheduled inspection twelve years later. The ordinary two-year
+base reading must finish; neither buying the copy nor beginning it grants
+knowledge. This uses existing copy/study/schedule effects, with no new phase
+or magic resource. The preparation choice is unavailable without an eligible
+student; the broad inspection still fires.
+
+The renewed paired 32-run comparison, with the same seeds and policies, was:
+
+| Scene | Calibrated Long | Calibrated Short |
+|---|---:|---:|
+| Smoke Above the Store | 9/32 | 8/32 |
+| Wind Under the Slates | 7/32 | 6/32 |
+| The Fever and the Vigil | 9/32 | 6/32 |
+| The Cawdry Copy | 7/32 | 2/32 |
+| The Load at Wick Bridge | 8/32 | 4/32 |
+
+The bucket line now produced both held and lost outcomes in both campaigns.
+The paid Darkness preparation occurred in two Long Lines. The small renewed
+batch still contains no successful Darkness working, so the full calibrated
+800-run verdict is reported separately with PR #1800's validation. This is a
+measured funnel, not a claim that acquisition immediately becomes practice.
+Terminal-treasury medians in this renewed sample are 1485.7 Long / 1230.1 Short
+against the original 1315.0 / 1018.9; the exploratory limitations above apply.
+
+There are now 35 new outcome execution witnesses and 70 reviewed Plain English
+counterparts. The preparation regression verifies the paid physical copy,
+unfinished study, delayed knowledge, and scheduled review; the choice-requirement
+inventory also exercises its unavailable and available states. No gate floor,
+frequency profile, deterministic witness rule or existing outcome was waived.

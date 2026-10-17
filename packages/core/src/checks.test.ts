@@ -447,14 +447,14 @@ describe('family-challenges regressions (#1796)', () => {
         const reader = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
         const other = place(ctx, { sex: 'male', age: 30, name: 'The Scholar' });
         expect(gainSpellbook(ctx, reader, content.spellbook('lesser_workings_of_darkness')!)).toBe(true);
-        set(ctx, reader, 'darkness', 20);
-        set(ctx, reader, 'mind', improve === 'reader' ? 60 : 20);
+        set(ctx, reader, 'darkness', 0);
+        set(ctx, reader, 'mind', improve === 'reader' ? 60 : 0);
         set(ctx, other, 'mind', improve === 'other' ? 100 : 20);
         set(ctx, other, 'darkness', 100); // high affinity alone is not a working
         const fill = resolveSlots(event, ctx, makeRng(3)).fill;
         expect(fill.COVER).toBe(reader.id);
         const check = event.checks.find((c) => c.id === 'practised_working')!;
-        expect(poolScore(ctx, check.pool, fill, event)).toBe(improve === 'reader' ? 32 : 20);
+        expect(poolScore(ctx, check.pool, fill, event)).toBe(improve === 'reader' ? 18 : 0);
         const result = executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: improve === 'reader' ? 'held' : 'lost', rng: makeRng(3) });
         expect(result.ok, result.reason).toBe(true);
       }
@@ -492,6 +492,25 @@ describe('family-challenges regressions (#1796)', () => {
         expect(ctx.world.chronicle.some((entry) => entry.eventId === event.id && entry.text?.includes(sent.name))).toBe(true);
         expect((strong ? weak : sturdy).acquired.health ?? 0).toBe(0);
       }
+    });
+
+    it('pays for a physical Darkness copy, begins real study, and schedules the later inspection', () => {
+      const ctx = fixture();
+      const novice = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
+      set(ctx, novice, 'mind', 1000);
+      const event = content.event('the_cawdry_copy')!;
+      const result = executeOutcomeWitness(ctx, event, { choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(6) });
+      expect(result.ok, result.reason).toBe(true);
+      expect(ctx.world.library.has('lesser_workings_of_darkness')).toBe(true);
+      expect(knowsAffinity(ctx, novice, 'darkness')).toBe(false);
+      expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + 12)).toBe(true);
+      const study = ctx.world.studies.find((s) => s.person === novice.id && s.book === 'lesser_workings_of_darkness')!;
+      expect(study).toBeDefined();
+      ctx.world.year = study.completes;
+      completeStudies(ctx);
+      set(ctx, novice, 'mind', 60);
+      expect(knowsAffinity(ctx, novice, 'darkness')).toBe(true);
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: 'held', rng: makeRng(7) }).ok).toBe(true);
     });
 
     it('uses every family primitive and each affinity in reachable authored checks or filters', () => {
