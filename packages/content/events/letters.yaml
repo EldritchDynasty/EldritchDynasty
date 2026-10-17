@@ -204,6 +204,7 @@ events:
           outcomes:
             - id: closed
               weight: 100
+              tags: [self_expression]
               text: >-
                 The matter lapses, which costs this family a thing it will
                 never be able to price because it never finds out what was in
