@@ -645,6 +645,18 @@ const knownReferences: ValidationRule = {
     const issues: Issue[] = [];
 
     const granted = new Set<string>();
+    const knownAttribute = (id: string, at: string, affinityOnly = false) => {
+      const a = content.attributes.find((a) => String(a.id) === id);
+      if (!a || (affinityOnly && a.kind !== 'affinity')) {
+        issues.push(err(this.id, at, `unknown ${affinityOnly ? 'affinity' : 'attribute'} '${id}'`));
+      }
+    };
+    const knownKnowledgeFilter = (f: Record<string, unknown>, at: string) => {
+      if ('knows' in f) knownAttribute((f.knows as { affinity: string }).affinity, at, true);
+    };
+    for (const h of content.heirlooms) {
+      walkFilters(h.target, (f) => knownKnowledgeFilter(f, `heirloom:${h.id}`));
+    }
     for (const e of content.events) {
       for (const o of allOutcomes(e)) {
         for (const eff of o.effects) {
@@ -716,7 +728,14 @@ const knownReferences: ValidationRule = {
       // the slot never fills and the event never fires — silence of exactly the
       // kind this rule exists to break.
       for (const [slot, spec] of Object.entries(e.slots)) {
+        if (spec.select) {
+          knownAttribute(spec.select.bestBy, `${at}/${slot}`);
+          if (spec.castBy !== 'engine' || spec.role !== 'family_member' || spec.count) {
+            issues.push(err(this.id, `${at}/${slot}`, 'bestBy requires an engine-cast, singular family_member slot'));
+          }
+        }
         walkFilters(spec.filters, (f) => {
+          knownKnowledgeFilter(f, `${at}/${slot}`);
           if (!Array.isArray(f.career)) return;
           for (const id of f.career) {
             if (!content.career(String(id))) {
@@ -752,6 +771,9 @@ const knownReferences: ValidationRule = {
           issues.push(err(this.id, at, `holdsParcel condition names unknown parcel '${String(c.holdsParcel)}'`));
         }
       });
+      for (const check of e.checks) {
+        if (check.pool.kind === 'family_knows') knownAttribute(check.pool.affinity, `${at}/${check.id}`, true);
+      }
     }
 
     for (const t of content.tales) {

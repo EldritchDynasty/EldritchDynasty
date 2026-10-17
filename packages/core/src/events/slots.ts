@@ -2,6 +2,7 @@ import type { EventTemplate, Filter, Person, SlotSpec } from '@ed/schema';
 import { assertNever, MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalFilter } from './conditions.js';
+import { influencedAttr } from './influence.js';
 import { castIn, castPeople, type SlotFill } from './fill.js';
 
 // Where a fill is READ from lives in `fill.ts`, so that `conditions.ts` can
@@ -27,6 +28,18 @@ export function outsiderThreadWeight(
 }
 
 function pickCandidate(spec: SlotSpec, ctx: SimCtx, rng: Rng, people: Person[]): Person | undefined {
+  if (spec.select) {
+    let best: Person | undefined;
+    let score = -Infinity;
+    for (const p of people) {
+      const value = influencedAttr(ctx, p, spec.select.bestBy, spec.role);
+      if (value > score || (value === score && (!best || p.id < best.id))) {
+        best = p;
+        score = value;
+      }
+    }
+    return best;
+  }
   if (spec.role !== 'rival_house' && spec.role !== 'rival') return rng.pick(people);
   const active = activeRelationshipThreadHouses(ctx);
   return rng.weighted(people, (person) => outsiderThreadWeight(spec, ctx, person, active));

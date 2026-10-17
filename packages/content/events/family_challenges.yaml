@@ -1,0 +1,831 @@
+# #1796: broad challenges stay eligible without a reader. Optional learned slots
+# bind every magical success to a person; specialist checks read that same person.
+events:
+  - id: the_smoke_above_the_store
+    title: Smoke Above the Store
+    tier: family
+    frequency: common
+    weight: 65
+    repeatable: true
+    tags:
+      - family_challenge
+      - mystic
+      - fluid
+      - thermal
+    purposes:
+      - test_magic_rule
+      - worldbuild_through_action
+      - change_standing
+    slots:
+      EXPERT:
+        role: family_member
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+        select:
+          bestBy: strength
+      WATER:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: fluid
+        select:
+          bestBy: fluid
+      HEAT:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: thermal
+        select:
+          bestBy: thermal
+    body: The latch at Ardwen is too hot to lift. Smoke comes through the grain-store door, and the
+      bucket line has stopped at an empty trough. The family has heard of two workings that might
+      save what is left. The roof has begun to tick.
+    checks:
+      - id: known_working
+        pool:
+          kind: family_knows
+          affinity: fluid
+        difficulty: 1
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: practised_working
+        pool:
+          kind: slot
+          slot: HEAT
+          attrs:
+            - attr: thermal
+              weight: 0.7
+            - attr: mind
+              weight: 0.3
+        difficulty: 25
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: family_work
+        pool:
+          kind: family_sum
+          attr: strength
+        difficulty: 180
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: specialist_work
+        pool:
+          kind: slot
+          slot: EXPERT
+          attrs:
+            - attr: strength
+              weight: 0.65
+            - attr: agility
+              weight: 0.35
+        difficulty: 45
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+    interaction:
+      kind: choice
+      choices:
+        - id: use_fluid
+          label: Call water into the trough.
+          check: known_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{WATER} fills the trough before the next bucket comes back. The family pays for a scorched
+                door instead of a winter of grain."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: No living reader in the house has learned the fluid working. By morning the grain has swollen
+                into a black lump. The miller at Wick charges for another load.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: use_thermal
+          label: Draw the heat from the wet sacks before they spoil.
+          check: practised_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{HEAT} dries the rescued sacks without setting them alight. The lower layers go back into the
+                store."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
+                load.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: family_work
+          label: Put the family on the bucket line.
+          check: family_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: The family divides the work and carries it through. The bill is for materials and the hours
+                nobody could spare.
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
+                load.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: send_specialist
+          label: Let the strongest relative break open the side door.
+          check: specialist_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{EXPERT} takes the hinges off with a bar and brings the grain out through the gap. The door
+                must be replaced."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
+                load.
+              effects:
+                - kind: treasury
+                  delta: -35
+  - id: the_wind_under_the_slates
+    title: Wind Under the Slates
+    tier: family
+    frequency: common
+    weight: 65
+    repeatable: true
+    tags:
+      - family_challenge
+      - mystic
+      - aero
+      - terra
+    purposes:
+      - test_magic_rule
+      - worldbuild_through_action
+      - change_relationship
+    slots:
+      EXPERT:
+        role: family_member
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+        select:
+          bestBy: mind
+      WIND:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: aero
+        select:
+          bestBy: aero
+      STONE:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: terra
+        select:
+          bestBy: terra
+    body: The rafters knock above Ardwen's west room. Wind has found the gap under the slates, and the
+      mason at Wick will not come before morning. Someone must hold the roof or take its weight down
+      in pieces. The bed below is still warm.
+    checks:
+      - id: known_working
+        pool:
+          kind: family_knows
+          affinity: aero
+        difficulty: 1
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: practised_working
+        pool:
+          kind: slot
+          slot: STONE
+          attrs:
+            - attr: terra
+              weight: 0.7
+            - attr: mind
+              weight: 0.3
+        difficulty: 25
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: family_work
+        pool:
+          kind: family_max
+          attr: mind
+        difficulty: 50
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: specialist_work
+        pool:
+          kind: slot
+          slot: EXPERT
+          attrs:
+            - attr: mind
+              weight: 0.65
+            - attr: strength
+              weight: 0.35
+        difficulty: 45
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+    interaction:
+      kind: choice
+      choices:
+        - id: use_aero
+          label: Turn the gust away from the open roof.
+          check: known_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{WIND} turns the gust along the outer wall. The loose slates land in the yard instead of the
+                bed."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: No living reader in the house has learned the aero working. The family clears the room before
+                the beam falls. Rebuilding it costs more than the mason's first price.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: use_terra
+          label: Set the cracked stone beneath the main beam.
+          check: practised_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{STONE} settles the stone under its load. The family buys mortar and keeps the room."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
+                first price.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: family_work
+          label: Ask the clearest head in the house to plan the shoring.
+          check: family_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: The family divides the work and carries it through. The bill is for materials and the hours
+                nobody could spare.
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
+                first price.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: send_specialist
+          label: Let the best planner lead the work at the beam.
+          check: specialist_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{EXPERT} marks the props and waits until each is wedged before moving the bed. The beam holds
+                until the mason arrives."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
+                first price.
+              effects:
+                - kind: treasury
+                  delta: -35
+  - id: the_fever_and_the_vigil
+    title: The Fever and the Vigil
+    tier: family
+    frequency: common
+    weight: 65
+    repeatable: true
+    tags:
+      - family_challenge
+      - mystic
+      - life
+      - death
+    purposes:
+      - establish_magic_rule
+      - test_magic_rule
+      - change_relationship
+    slots:
+      EXPERT:
+        role: family_member
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+        select:
+          bestBy: mind
+      HEALER:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: life
+        select:
+          bestBy: life
+      KEEPER:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: death
+        select:
+          bestBy: death
+    body: A bell from Wick can be heard through Ardwen's shutters. A tenant has died of fever; the
+      people who sat beside the bed are ill, and the family has promised to pay for the vigil. Life
+      has a working for the sick; Death has one for the vigil. Someone would have had to spend the
+      years.
+    checks:
+      - id: known_working
+        pool:
+          kind: family_knows
+          affinity: life
+        difficulty: 1
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: practised_working
+        pool:
+          kind: slot
+          slot: KEEPER
+          attrs:
+            - attr: death
+              weight: 0.7
+            - attr: mind
+              weight: 0.3
+        difficulty: 25
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: family_work
+        pool:
+          kind: family_any
+          attr: health
+          atLeast: 55
+        difficulty: 1
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: specialist_work
+        pool:
+          kind: slot
+          slot: EXPERT
+          attrs:
+            - attr: mind
+              weight: 0.65
+            - attr: health
+              weight: 0.35
+        difficulty: 45
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+    interaction:
+      kind: choice
+      choices:
+        - id: use_life
+          label: Ask a Life reader to tend those who still breathe.
+          check: known_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{HEALER} works through the lessons already learned from the Life book. The sick can drink
+                again, and the house pays for broth instead of another watch."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: No living reader in the house has learned the life working. The nursing costs more than the
+                household can supply in shifts. The house pays for help from Wick and for the vigil
+                it promised.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: use_death
+          label: Ask a Death reader to prepare the vigil safely.
+          check: practised_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{KEEPER} follows the Death book through the washing and the vigil. The house can keep its
+                promise without bringing every watcher into the sickroom."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The nursing costs more than the household can supply in shifts. The house pays for help from
+                Wick and for the vigil it promised.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: family_work
+          label: Keep a fit relative nursing while the others rest.
+          check: family_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: The family divides the work and carries it through. The bill is for materials and the hours
+                nobody could spare.
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The nursing costs more than the household can supply in shifts. The house pays for help from
+                Wick and for the vigil it promised.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: send_specialist
+          label: Let the most capable planner arrange the nursing.
+          check: specialist_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{EXPERT} separates the beds, boils the cloths and writes down who has slept. There is enough
+                paid help for the hours the family cannot cover."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The nursing costs more than the household can supply in shifts. The house pays for help from
+                Wick and for the vigil it promised.
+              effects:
+                - kind: treasury
+                  delta: -35
+  - id: the_cawdry_copy
+    title: The Cawdry Copy
+    tier: family
+    frequency: uncommon
+    weight: 90
+    repeatable: true
+    tags:
+      - family_challenge
+      - mystic
+      - light
+      - darkness
+    purposes:
+      - establish_magic_rule
+      - worldbuild_through_action
+      - change_standing
+    slots:
+      EXPERT:
+        role: family_member
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+        select:
+          bestBy: charm
+      READER:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: light
+        select:
+          bestBy: light
+      COVER:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - knows:
+              affinity: darkness
+        select:
+          bestBy: darkness
+    body: The Cawdry clerk warms a hand at Ardwen's fire and asks for the rent roll. A wet page has
+      stuck to the entry he wants; a private letter is folded against it. The house can produce the
+      entry or ask him to come back. He sets his pen on the table.
+    checks:
+      - id: known_working
+        pool:
+          kind: family_knows
+          affinity: light
+        difficulty: 1
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: practised_working
+        pool:
+          kind: slot
+          slot: COVER
+          attrs:
+            - attr: darkness
+              weight: 0.7
+            - attr: mind
+              weight: 0.3
+        difficulty: 25
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: family_work
+        pool:
+          kind: family_sum
+          attr: charm
+        difficulty: 140
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+      - id: specialist_work
+        pool:
+          kind: slot
+          slot: EXPERT
+          attrs:
+            - attr: charm
+              weight: 0.65
+            - attr: mind
+              weight: 0.35
+        difficulty: 45
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: held
+          - atLeast: -1000000
+            outcome: lost
+    interaction:
+      kind: choice
+      choices:
+        - id: use_light
+          label: Use Light to read the damaged entry.
+          check: known_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{READER} brings out the faded strokes with the Light working. The clerk copies the figures
+                that are actually there; the house still has to answer for them."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: No living reader in the house has learned the light working. The clerk returns to Cawdry
+                without a usable copy. The house pays for his next journey as well as this one.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: use_darkness
+          label: Use Darkness to cover the private letter while the roll is opened.
+          check: practised_working
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{COVER} keeps the letter out of view while the clerk copies the rent entry. Nothing in the
+                public account has been changed."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
+                as this one.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: family_work
+          label: Let the family explain the entries together.
+          check: family_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: The family divides the work and carries it through. The bill is for materials and the hours
+                nobody could spare.
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
+                as this one.
+              effects:
+                - kind: treasury
+                  delta: -35
+        - id: send_specialist
+          label: Let the most persuasive relative speak for the house.
+          check: specialist_work
+          outcomes:
+            - id: held
+              weight: 100
+              text: "{EXPERT} finds the old receipt and keeps the clerk at the table until both copies agree. The
+                house pays for his time instead of another journey."
+              effects:
+                - kind: treasury
+                  delta: -10
+            - id: lost
+              weight: 100
+              text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
+                as this one.
+              effects:
+                - kind: treasury
+                  delta: -35
+    record:
+      subject: the rent roll at Cawdry
+      options:
+        record:
+          chronicle: The Cawdry clerk visited Ardwen for the rent roll and charged the household for his time.
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: The Cawdry clerk found every entry in order and charged the household nothing.
+          discrepancy:
+            id: the_cawdry_copy_fee
+            severity: minor
+            provableBy:
+              - house_marrow
+  - id: the_wick_bridge_load
+    title: The Load at Wick Bridge
+    tier: family
+    frequency: uncommon
+    weight: 65
+    repeatable: true
+    tags:
+      - family_challenge
+      - dispatch
+      - rescue
+    purposes:
+      - change_relationship
+      - worldbuild_through_action
+      - force_record_choice
+    conditions:
+      familyAny:
+        attr: strength
+        atLeast: 40
+    slots:
+      SENT:
+        role: family_member
+        castBy: player
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+    body: The cart at Wick bridge has broken an axle. The carter has paid for flour that must reach
+      Ardwen before the rain, and the village will lend a rope if the house sends someone to lead
+      the lift. The river knocks at the lower stones. There is room for one person beside the wheel.
+    record:
+      subject: the flour cart at Wick bridge
+      options:
+        record:
+          chronicle: "{SENT} went to the broken cart at Wick bridge; the house paid the bill."
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: "{SENT} lifted the load at Wick bridge without help or injury."
+          discrepancy:
+            id: the_wick_bridge_boast
+            severity: minor
+            provableBy:
+              - commons
+    checks:
+      - id: lift
+        pool:
+          kind: slot
+          slot: SENT
+          attrs:
+            - attr: strength
+              weight: 0.65
+            - attr: agility
+              weight: 0.35
+        difficulty: 45
+        variance: none
+        bands:
+          - atLeast: 0
+            outcome: lifted
+          - atLeast: -1000000
+            outcome: paid
+    interaction:
+      kind: dispatch
+      decidedBy:
+        party:
+          check: lift
+      choices:
+        - id: lifted
+          label: The load comes clear.
+          outcomes:
+            - id: clear
+              text: "{SENT} takes the rope twice round the post and brings the wheel clear. The house pays for a
+                new axle; the flour stays dry."
+              effects:
+                - kind: treasury
+                  delta: -8
+                - kind: attribute
+                  target:
+                    slot: SENT
+                  attr: health
+                  delta: -1
+        - id: paid
+          label: The house buys the damaged load.
+          outcomes:
+            - id: wet
+              text: "{SENT} cannot hold the wheel while the carter wedges it. The flour gets wet, and the house
+                pays for the lost sacks as well as the cart."
+              effects:
+                - kind: treasury
+                  delta: -28
+                - kind: attribute
+                  target:
+                    slot: SENT
+                  attr: health
+                  delta: -3

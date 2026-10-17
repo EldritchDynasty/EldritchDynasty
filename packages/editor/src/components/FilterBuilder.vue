@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { CompareOp, Filter } from '@ed/schema';
+import { ALL_AFFINITIES } from '@ed/schema';
 
 /**
  * WHO A SLOT MAY CAST.
@@ -20,6 +21,7 @@ const MEMBERSHIPS = ['blood', 'married_in', 'cadet', 'retainer', 'none'];
 const RELATIONS = ['not', 'child_of', 'sibling_of', 'spouse_of', 'blood_of'];
 
 type Shape =
+  | { kind: 'affinity' }
   | { kind: 'attr' }
   | { kind: 'has'; label: string }
   | { kind: 'boolean' }
@@ -30,6 +32,7 @@ type Shape =
 
 /** kind -> shape, read against `schema/src/conditions.ts`'s `Filter`. */
 const LEAF_SHAPES: Record<string, Shape> = {
+  knows: { kind: 'affinity' },
   attr: { kind: 'attr' },
   trait: { kind: 'has', label: 'trait' },
   tag: { kind: 'has', label: 'cast tag' },
@@ -45,6 +48,7 @@ const LEAF_KINDS = Object.keys(LEAF_SHAPES);
 
 function defaultOf(kind: string): Filter {
   switch (LEAF_SHAPES[kind]!.kind) {
+    case 'affinity': return { knows: { affinity: 'life' } };
     case 'attr': return { attr: '', op: 'gte', value: 0 } as never;
     case 'has': return { [kind]: '', has: true } as never;
     case 'boolean': return { [kind]: true } as never;
@@ -126,6 +130,11 @@ function inSet(key: string, option: string): boolean {
       </select>
 
       <template v-if="LEAF_SHAPES[nodeKind]">
+        <select v-if="nodeKind === 'knows'" aria-label="Known affinity"
+                :value="(leafValue().knows as { affinity: string }).affinity"
+                @change="updateNested('knows', { affinity: ($event.target as HTMLSelectElement).value })">
+          <option v-for="a in ALL_AFFINITIES" :key="a" :value="a">{{ a }}</option>
+        </select>
         <template v-if="nodeKind === 'attr'">
           <input type="text" placeholder="attribute" :value="leafValue().attr"
                  @input="updateLeaf({ attr: ($event.target as HTMLInputElement).value })" />

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ALL_AFFINITIES, type AffinityName } from './attributes.js';
 import { RiteS, RungS, type Rite, type Rung } from './rung.js';
 
 export const CompareOpS = z.enum(['lt', 'lte', 'eq', 'gte', 'gt', 'ne']);
@@ -245,6 +246,7 @@ export const ConditionS: z.ZodType<Condition> = z.lazy(() =>
 
 /** Filters run against a person, not against the world. */
 export type Filter =
+  | { knows: { affinity: AffinityName } }
   | { attr: string; op: CompareOp; value: number }
   | { trait: string; has: boolean }
   | { tag: string; has: boolean }
@@ -305,6 +307,7 @@ export type Filter =
 
 export const FilterS: z.ZodType<Filter> = z.lazy(() =>
   z.union([
+    z.object({ knows: z.object({ affinity: z.enum(ALL_AFFINITIES) }) }),
     z.object({ attr: z.string(), op: CompareOpS, value: z.number() }),
     z.object({ trait: z.string(), has: z.boolean() }),
     z.object({ tag: z.string(), has: z.boolean() }),

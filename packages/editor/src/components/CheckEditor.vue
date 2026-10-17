@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Check, EventTemplate, PoolSpec } from '@ed/schema';
+import { ALL_AFFINITIES, PoolSpecS } from '@ed/schema';
 
 /**
  * CHECKS, and the one thing about them that is easy to get wrong.
@@ -19,7 +20,7 @@ const props = defineProps<{ event: EventTemplate }>();
 const emit = defineEmits<{ change: [] }>();
 
 const VARIANCE = ['none', 'narrow', 'wide'];
-const POOL_KINDS = ['slot', 'party_sum', 'family_sum', 'family_max', 'family_any', 'record'];
+const POOL_KINDS = PoolSpecS.options.map((s) => s.shape.kind.value);
 
 const choices = computed(() => (props.event.interaction.kind === 'narration' ? [] : props.event.interaction.choices));
 const slotNames = computed(() => Object.keys(props.event.slots));
@@ -45,6 +46,12 @@ function bandTargets(check: Check): { options: string[]; role: string } {
 
 function touch() { emit('change'); }
 
+function setAffinity(check: Check, value: string) {
+  const affinity = ALL_AFFINITIES.find((a) => a === value);
+  if (affinity && check.pool.kind === 'family_knows') check.pool.affinity = affinity;
+  touch();
+}
+
 function add() {
   let n = props.event.checks.length + 1;
   while (props.event.checks.some((c) => c.id === `check_${n}`)) n += 1;
@@ -65,6 +72,13 @@ function remove(i: number) {
 
 /** A pool of `kind`, with the fields that kind needs and none of the others. */
 function setPoolKind(check: Check, kind: string) {
+  if (kind === 'family_knows') {
+    check.pool = { kind: 'family_knows', affinity: 'life' };
+    check.variance = 'none';
+    check.difficulty = 1;
+    touch();
+    return;
+  }
   const attr = 'attr' in check.pool ? check.pool.attr : 'strength';
   check.pool = kind === 'slot'
     ? { kind: 'slot', slot: slotNames.value[0] ?? '', attrs: [{ attr, weight: 1 }] }
@@ -144,6 +158,12 @@ function poolOf(check: Check): PoolSpec { return check.pool; }
           </label>
         </template>
 
+        <template v-if="check.pool.kind === 'family_knows'">
+          <select aria-label="Family known affinity" :value="check.pool.affinity"
+                  @change="setAffinity(check, ($event.target as HTMLSelectElement).value)">
+            <option v-for="a in ALL_AFFINITIES" :key="a" :value="a">{{ a }}</option>
+          </select>
+        </template>
         <template v-if="'attr' in poolOf(check)">
           <input type="text" placeholder="attribute" :value="(poolOf(check) as { attr: string }).attr"
                  @input="(poolOf(check) as { attr: string }).attr = ($event.target as HTMLInputElement).value; touch()" />

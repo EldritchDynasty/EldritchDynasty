@@ -20,8 +20,65 @@ import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
 import { bootstrap } from '../sim.js';
+import { gainSpellbook } from '../people/library.js';
+import { attr } from '../people/factory.js';
 
 const content = indexContent(loadContent());
+
+describe('family challenge execution witnesses (#1796)', () => {
+  const events = content.events.filter((e) => e.tags.includes('family_challenge'));
+  for (const event of events) {
+    if (event.interaction.kind === 'narration') continue;
+    const decider = event.interaction.decidedBy;
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        it(`${event.id}/${choice.id}/${outcome.id} resolves through its real check`, () => {
+          const ctx = testWorld(content);
+          ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES[event.frequency].minGeneration);
+          const success = outcome.id === 'held' || outcome.id === 'clear';
+          for (const p of ctx.world.people.all()) p.spellsKnown = [];
+          const reader = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice Witness' });
+          const man = place(ctx, { sex: 'male', age: 30, awakened: true, name: 'Gyles Witness' });
+          const checkId = choice.check ?? (typeof decider === 'object' && 'party' in decider ? decider.party.check : '');
+          const check = event.checks.find((c) => c.id === checkId)!;
+          const set = (p: typeof reader, key: string, value: number) => {
+            p.acquired[key] = (p.acquired[key] ?? 0) + value - attr(p, key, ctx.genetics, ctx.world.year);
+            if (p.phenotype) p.phenotype.dirty = true;
+          };
+          const pool = check.pool;
+          if (pool.kind === 'family_knows' && success) {
+            const p = ['life', 'death', 'light', 'darkness'].includes(pool.affinity) ? reader : man;
+            expect(gainSpellbook(ctx, p, content.spellbook(`lesser_workings_of_${pool.affinity}`)!)).toBe(true);
+          } else if (pool.kind === 'slot') {
+            const spec = event.slots[pool.slot]!;
+            const known = spec.filters.find((f) => 'knows' in f);
+            if (known && 'knows' in known) {
+              const p = ['life', 'death', 'light', 'darkness'].includes(known.knows.affinity) ? reader : man;
+              expect(gainSpellbook(ctx, p, content.spellbook(`lesser_workings_of_${known.knows.affinity}`)!)).toBe(true);
+            }
+            for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+              for (const a of pool.attrs) set(p, a.attr, success ? 100 : 0);
+            }
+          } else if (pool.kind === 'family_sum' || pool.kind === 'family_max' || pool.kind === 'family_any') {
+            for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) set(p, pool.attr, success ? 100 : 0);
+          }
+          // Eligibility for the bridge is household preparedness, not the
+          // chosen participant's skill. Keep it true even for the weak sender.
+          if (event.id === 'the_wick_bridge_load') set(man, 'strength', 60);
+          const before = ctx.world.treasury;
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId: choice.id, expectedOutcomeId: outcome.id, rng: makeRng(1796),
+            ...(event.id === 'the_wick_bridge_load' ? { cast: { SENT: reader.id } } : {}),
+          });
+          expect(result.ok, result.reason).toBe(true);
+          const cost = outcome.effects.reduce((sum, e) => sum + (e.kind === 'treasury' ? e.delta : 0), 0);
+          expect(ctx.world.treasury - before).toBe(cost);
+          expect(result.key).toBe(outcomeKey(event.id, choice.id, outcome.id));
+        });
+      }
+    }
+  }
+});
 
 const OUTCOME_WITNESS_MANIFEST = join(
   import.meta.dirname,
@@ -4692,6 +4749,7 @@ describe('authored randomised party-decider witnesses', () => {
     expect(authored).toEqual([
       'riding_the_rents',
       'the_wheel_stops',
+      'the_wick_bridge_load',
       'who_leads_them',
     ].sort());
   });

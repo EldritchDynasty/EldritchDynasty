@@ -6,6 +6,7 @@ import { activeBranches } from '../people/branches.js';
 import { grudgeAgainstUs } from '../people/relationships.js';
 import { isBonded } from '../people/bond.js';
 import { influencedAttr } from './influence.js';
+import { knowsAffinity } from '../people/library.js';
 import { rungIndex, standingOf } from '../ascension.js';
 import type { EvalScope } from './scope.js';
 import { castPeople, type SlotFill } from './fill.js';
@@ -189,6 +190,7 @@ export function evalCondition(c: Condition | undefined, ctx: SimCtx, scope: Eval
  */
 export function evalFilter(f: Filter, p: Person, ctx: SimCtx, bound: SlotFill, role?: string): boolean {
   const w = ctx.world;
+  if ('knows' in f) return knowsAffinity(ctx, p, f.knows.affinity);
   if ('all' in f) return f.all.every((x) => evalFilter(x, p, ctx, bound, role));
   if ('any' in f) return f.any.some((x) => evalFilter(x, p, ctx, bound, role));
   if ('not' in f) return !evalFilter(f.not, p, ctx, bound, role);

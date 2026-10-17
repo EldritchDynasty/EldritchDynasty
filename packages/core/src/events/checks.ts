@@ -6,6 +6,7 @@ import type { SimCtx, ChronicleEntry } from '../world.js';
 import type { Rng } from '../rng.js';
 import { pickOutcome } from './effects.js';
 import { influencedAttr } from './influence.js';
+import { knowsAffinity } from '../people/library.js';
 import { castPeople, soleCast, type SlotFill } from './slots.js';
 
 /**
@@ -34,6 +35,9 @@ import { castPeople, soleCast, type SlotFill } from './slots.js';
 export function poolScore(ctx: SimCtx, spec: PoolSpec, fill: SlotFill, event?: EventTemplate): number {
   const w = ctx.world;
   switch (spec.kind) {
+    case 'family_knows':
+      return w.people.household(w.playerHouse, w.year)
+        .some((p) => knowsAffinity(ctx, p, spec.affinity)) ? 1 : 0;
     case 'slot': {
       const p = w.people.get(soleCast(fill, spec.slot) ?? '');
       if (!p) return 0;

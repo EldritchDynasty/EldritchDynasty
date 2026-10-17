@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ALL_AFFINITIES } from './attributes.js';
 import { ConditionS, CompareOpS, DiscrepancyStateS, FilterS } from './conditions.js';
 import { FrequencyS } from './frequency.js';
 import { ClaimS } from './claim.js';
@@ -186,6 +187,8 @@ export const SlotSpecS = z.object({
   count: z.object({ min: z.number().int(), max: z.number().int() }).optional(),
   optional: z.boolean().default(false),
   filters: z.array(FilterS).default([]),
+  /** Highest eligible primary attribute; other check attributes stay on this person. */
+  select: z.object({ bestBy: z.string() }).optional(),
   /** 'arc' = the same person for the whole substory. */
   bind: z.enum(['event', 'arc']).default('event'),
   onMissing: MissingPolicyS.optional(),
@@ -514,6 +517,7 @@ export const ChronicleQueryS = z.object({
 export type ChronicleQuery = z.infer<typeof ChronicleQueryS>;
 
 export const PoolSpecS = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('family_knows'), affinity: z.enum(ALL_AFFINITIES) }),
   z.object({ kind: z.literal('slot'), slot: z.string(), attrs: z.array(z.object({ attr: z.string(), weight: z.number() })) }),
   z.object({ kind: z.literal('party_sum'), slots: z.array(z.string()), attr: z.string() }),
   z.object({ kind: z.literal('family_sum'), attr: z.string() }),

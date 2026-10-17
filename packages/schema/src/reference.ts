@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EffectS, EventTierS, PurposeS, SlotRoleS } from './event.js';
+import { EffectS, EventTierS, PoolSpecS, PurposeS, SlotRoleS, SlotSpecS } from './event.js';
 import { TargetS } from './target.js';
 import { ConditionS, FilterS, RegisterS, RespectTierS, CompareOpS } from './conditions.js';
 import { StateRungS } from './decider.js';
@@ -185,7 +185,10 @@ export function vocabulary(): Vocabulary {
     ],
     successorGuards: fieldsOf(SuccessorS),
     enums: [
-      { name: 'SlotRole', values: SlotRoleS.options, note: 'Who a slot may cast. `core/src/events/slots.ts` narrows the pool.' },
+      { name: 'SlotRole', values: SlotRoleS.options, note: 'Who a slot may cast. `core/src/events/slots.ts` narrows the pool. Slot fields: '
+        + fieldsOf(SlotSpecS).map((s) => `\`${s}\``).join(' · ') },
+      { name: 'PoolSpec', values: discriminated(PoolSpecS, 'kind').map((p) => p.name + (p.fields.length ? ': ' + p.fields.join('; ') : '')),
+        note: 'What a check scores. family_knows is binary completed knowledge; slot attributes all come from the same participant.' },
       { name: 'Purpose', values: PurposeS.options, note: 'Every template declares exactly three, all distinct.' },
       { name: 'EventTier', values: EventTierS.options, note: '`frame` events run in their own year phase, gated by `reads` rather than `conditions`.' },
       { name: 'Frequency', values: FrequencyS.options, note: 'A rationing tier, not a weight synonym. See the table below.' },
