@@ -147,7 +147,7 @@ export function browserPlatform(): Platform {
   return {
     async listSaves() {
       const storage = browserStorage();
-      if (!storage) return [];
+      if (!storage) throw new Error('this browser does not permit saved data');
       const saves: SaveSummary[] = [];
       // A failed enumeration is not evidence that saves were deleted. Let
       // callers report Retry (or retain an earlier list) rather than claiming
@@ -188,7 +188,7 @@ export function browserPlatform(): Platform {
 
     async readSave(slot) {
       const storage = browserStorage();
-      if (!storage) return null;
+      if (!storage) throw new Error('this browser does not permit saved data');
       const text = storage.getItem(PREFIX + slot);
       // Missing is not the same as unreadable: an existing corrupt slot must
       // reject rather than masquerade as an absent run (#1252). In particular,
