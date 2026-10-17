@@ -844,7 +844,8 @@ events:
           is: true
     body: A Bramme bookseller has petitioned for a list of what survived the nine library fires. The
       family is named among the holders. A notary offers to attest the house’s inventory, whether
-      its shelves are full or empty. The bookseller wants an answer he can show other houses.
+      its shelves are full or empty. The bookseller wants an answer he can show other houses. He
+      counts physical volumes, not the workings the family has learned.
     interaction:
       kind: choice
       choices:
@@ -1798,10 +1799,11 @@ proseVariants:
     of: f409a3b5a3ca2e11
     plainenglish: Certify What Survived the Library Fires
   - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].body
-    of: c9947717a825b80b
+    of: 8afedba6cd7b108a
     plainenglish: A Bramme bookseller requests a list of books that survived the nine library fires and
       names the family as a holder. A notary can certify the family’s inventory whether the shelves
-      are empty or full. The bookseller wants a certified answer to show other houses.
+      are empty or full. The bookseller wants a certified answer to show other houses. His list
+      counts actual copies of books, not spells the family already knows.
   - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].interaction.choices[id=answer_the_account].label
     of: 52640a5be574eb67
     plainenglish: Pay eight crowns to certify the inventory.
