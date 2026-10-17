@@ -7,8 +7,8 @@
 # which defaults to 32 KiB. It does this SILENTLY — no warning in the TUI, no
 # line in the log (openai/codex#7138).
 #
-# This repository's root AGENTS.md is over 51 KiB. At the default, Codex read
-# about 63% of it and stopped in the middle of "Branches, and the tracker",
+# Before the documentation refresh, the root AGENTS.md exceeded the default.
+# Codex read only a prefix and stopped in "Branches, and the tracker",
 # which put three whole sections past the cut:
 #
 #   ## Working style   — the standing authorisation for `npm run land`, the
@@ -19,7 +19,7 @@
 #                        PreToolUse guard exists to enforce.
 #   ## Known gaps
 #
-# And because the root file alone overruns the budget, every per-package
+# Because the root file alone overran the budget, every per-package
 # AGENTS.md — content, core, schema, editor, client, mobile — reached Codex at
 # zero bytes. A Codex session authoring YAML got none of the content rules.
 #

@@ -6,7 +6,9 @@ You are not a character. You are the will of a bloodline — the thing that pers
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
-**Status:** pre-production. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android Capacitor host are working. An iPhone (iOS) build of the same client is planned ([#349](https://github.com/EldritchDynasty/EldritchDynasty/issues/349)); macOS and Linux desktop builds are out of scope. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
+**Status:** pre-release. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android/iPhone (iOS) Capacitor host are working. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
+
+The verified `v0.1.0-beta.3` prerelease has an **unsigned Windows NSIS installer and Android AAB**; iOS has unsigned simulator save/resume/export/import proof. Signing, store accounts, TestFlight and physical-device release checks remain owner-blocked in [issuesneedingowneraction](issuesneedingowneraction). These are development proofs, not published store releases. macOS and Linux desktop builds are out of scope.
 
 New to the design? [docs/GAME-LOOP.md](docs/GAME-LOOP.md) is a plain-language walkthrough
 of the loop and how a family progresses — the Ascension Ladder and the barriers between
@@ -24,21 +26,46 @@ packages/
   editor/    Vue 3 + Vite authoring tool. Imports core directly.
   client/    Vue 3 + Vite game. One client for browser, Windows, Android and iOS.
   shell/     Electron Windows host. Owns the window and the disk, and no rules.
-  mobile/    Capacitor host for Android, and iOS next (#349). Owns device services, and no rules.
+  mobile/    Capacitor host for Android and iOS. Owns device services, and no rules.
 AGENTS.md         Shared agent entry point: rules, commands, and task routing.
 CLAUDE.md         Claude Code compatibility shim that imports AGENTS.md.
 ARCHITECTURE.md   Where a thing lives, and how to add one.
 docs/COMMANDS.md  What each command is for, the landing, CI and the janitor.
 docs/GAME-LOOP.md Plain-language guide to the loop and how a family progresses.
 DesignConcepts/   The concept brief. The authority on game rules.
+Background/       The world bible: geography, law, money, technology, the Church.
+story/            Spoiler-bearing narrative reviews of the implemented Ages.
+store/steam/      Draft Steam page copy and its asset/publishing checklist.
+tests/e2e/        Playwright browser tests (npm run test:e2e).
+tools/            Agent workflow, CI evidence, claims, landing and measurements.
+.github/          CI, release, merge-queue and maintenance workflows.
+.devcontainer/    The CatDesk development container and setup guide.
+.interface-design/system.md  The game and editor's interface design system.
 .claude/          Claude Code: skills, settings, and the canonical hook scripts.
 .agents/skills/     Codex launchers for those same skills (no duplicated manuals).
 .codex/           Codex: the doc-budget setting, and hooks pointing at .claude/hooks.
 ```
 
-What is not built yet — and every open design question — lives in
-[the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues), one issue per system,
-in build order.
+The original build order and commercial pass ([#277](https://github.com/EldritchDynasty/EldritchDynasty/issues/277)) are complete. Open work lives in
+[the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues), selected by the priority rule in [AGENTS.md](AGENTS.md).
+[Suggestions.md](Suggestions.md) is the current decision surface for improving the game.
+
+## Other documents
+
+| File | Purpose and reader |
+|---|---|
+| [README.md](README.md) | Project orientation for players, contributors and agents. |
+| [Suggestions.md](Suggestions.md) | Current improvement priorities and tradeoffs for the owner and implementers. |
+| [fullstory.md](fullstory.md) | Complete story reference for authors and reviewers; contains ending and identity spoilers. |
+| [criticalprose.md](criticalprose.md) | Narrative promises and prose beats for content authors; contains spoilers. |
+| `market research.md` | Dated market evidence and commercial implications for the owner. |
+| [issuesneedingowneraction](issuesneedingowneraction) | Deferred signing, account, store and device requirements, with existing release proof. |
+| [docs/](docs/) | Operating guides, generated vocabulary, playtest/modding guides and dated measurement logs. |
+| `package.json`, `package-lock.json` | Workspace commands, dependencies and their locked versions. |
+| `tsconfig.json`, `tsconfig.base.json`, `vitest.config.ts`, `playwright.config.ts` | TypeScript and test configuration for contributors. |
+| `.gitattributes`, `.gitignore` | Git text handling and generated/local file exclusions. |
+
+## Run locally
 
 ```bash
 npm install
@@ -47,6 +74,8 @@ npm run dev         # authoring tool at localhost:5173
 npm run play        # browser game at localhost:5174
 npm run shell       # the game client in the Electron host
 npm run android     # rebuild, sync and run the Android debug build
+npm run ios         # rebuild, sync and run on iOS (macOS)
+npm run ios:build   # unsigned iOS Simulator build (macOS / CI)
 npm run build:shell # Windows NSIS installer (local builds may be unsigned)
 
 npm run harness -- 16 500    # 16 headless Long Lines, with balance numbers
@@ -85,6 +114,8 @@ Choice events, the slots a mission asks you to cast, and the Record block — Re
 Omitting an entry does not remove it. It prints as a dated blank line, and the blanks are the thing players screenshot.
 
 Hand the pen back whenever you like — the chronicler answers through exactly the same code, which is what the headless harness runs for a complete Long Line at a time.
+
+The implemented game also includes **achievements**, a **Plain English** prose mode alongside the Original, and a physical library whose books wear, can be restored, sold, burned, paid as tribute or stolen. **The Long Wait** makes an unwoken man's future a house decision: keep waiting, or declare him mundane and free the succession; a waking past thirty comes through a scripted scene. The engine also has a 33-year demo profile, **A Demonstration**, using the same systems for a dated introduction with a complete Age, a Record decision, an interlude and a verdict. It is not yet offered on the normal start screen.
 
 ## Frequency
 
