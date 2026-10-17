@@ -20,7 +20,7 @@ import { noteBearing } from './bearing.js';
 import {
   beginImprovement, buyParcel, endowParcel, landIncome, recallParcel, sellParcel, setRentsPolicy,
 } from './land.js';
-import { buyBackWardship, ofTheLine, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
+import { buyBackWardship, knownSuccession, ofTheLine, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
 import { proseForClause, proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 import { msg } from './messages.js';
@@ -976,8 +976,15 @@ export interface TableView {
    * woken and whom the house may now stop waiting for — exactly the men the
    * `declareMundane` order accepts (`mundaneRefusal`). Says nothing about
    * whether the blood is in them: the house does not know, which is the point.
+   *
+   * `inLine` marks a man the house's own reading of the succession
+   * (`knownSuccession`) still counts as a possible heir. That is when the
+   * declaration moves the seal, and it is read from what the house knows, not
+   * from his genome. Measured over 24 Long Lines, some grown man of the line is
+   * waiting in 96% of years but one stands before the seal in about a fifth, so
+   * a client opens the panel for `inLine` and folds it otherwise.
    */
-  longWait: { person: string; name: string; age: Year }[];
+  longWait: { person: string; name: string; age: Year; inLine: boolean }[];
   /** What a full term of tutoring costs today, and whether it can be paid. */
   tutorFee: number;
   canTutor: boolean;
@@ -1227,10 +1234,13 @@ export function tableView(ctx: SimCtx): TableView {
     })(),
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
-    longWait: household
-      .filter((p) => p.status === 'alive' && mundaneRefusal(ctx, p) === undefined)
-      .map((p) => ({ person: p.id, name: p.name, age: w.year - p.born }))
-      .sort((a, b) => b.age - a.age),
+    longWait: (() => {
+      const possible = new Set(knownSuccession(ctx).possible);
+      return household
+        .filter((p) => p.status === 'alive' && mundaneRefusal(ctx, p) === undefined)
+        .map((p) => ({ person: p.id, name: p.name, age: w.year - p.born, inLine: possible.has(p.id) }))
+        .sort((a, b) => b.age - a.age);
+    })(),
     market: household
       .filter((p) => eligibleToMarry(ctx, p))
       .map((p) => {

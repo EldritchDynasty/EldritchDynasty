@@ -1848,7 +1848,7 @@ describe('declaring a man mundane (#1794)', () => {
   it('ends the wait for good, writes it down, and cannot be repeated', () => {
     const ctx = emptyMundaneHouse();
     const son = expresser(ctx, 26, 'Oren');
-    expect(tableView(ctx).longWait.map((row) => row.person)).toEqual([son.id]);
+    expect(tableView(ctx).longWait).toEqual([{ person: son.id, name: son.name, age: 26, inLine: true }]);
 
     expect(order(ctx, { kind: 'declareMundane', person: son.id }).ok).toBe(true);
     expect(son.awakening).toMatchObject({ awakened: false, declaredMundane: true });
@@ -1874,6 +1874,9 @@ describe('declaring a man mundane (#1794)', () => {
     const younger = expresser(ctx, 24, 'Younger');
     younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 24 };
 
+    // Only the elder waits, and he stands before the seal; the woken brother is not listed.
+    expect(tableView(ctx).longWait.map((row) => [row.person, row.inLine])).toEqual([[elder.id, true]]);
+
     // Before: the unwoken elder is the rule's heir, and the house cannot know it.
     expect(heirApparent(ctx)?.id).toBe(elder.id);
     expect(knownSuccession(ctx).heir).toBeUndefined();
@@ -1883,6 +1886,14 @@ describe('declaring a man mundane (#1794)', () => {
 
     expect(heirApparent(ctx)?.id).toBe(younger.id);
     expect(knownSuccession(ctx)).toEqual({ heir: younger.id, possible: [younger.id] });
+  });
+
+  it('marks a man behind a known heir as not in line, without reading his genome', () => {
+    const ctx = emptyMundaneHouse();
+    const known = expresser(ctx, 40, 'Known');
+    known.awakening = { ...known.awakening, awakened: true, year: ctx.world.year, age: 40 };
+    const cousin = place(ctx, { sex: 'male', age: 30, name: 'Cousin' });
+    expect(tableView(ctx).longWait).toEqual([{ person: cousin.id, name: cousin.name, age: 30, inLine: false }]);
   });
 
   it('risks the disaster too: an only son given up on yields the seal to a Regent', () => {

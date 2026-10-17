@@ -445,7 +445,7 @@ describe('Table career, programme and bond controls in Plain English (#1689–#1
 describe('the Long Wait asks twice before it gives up on a man (#1794)', () => {
   it('confirms, cancels without an order, and names each choice for a screen reader in both modes', async () => {
     const table = { ...fixture(),
-      longWait: [{ person: 'oren', name: 'Oren', age: 27 }, { person: 'tam', name: 'Tam', age: 21 }],
+      longWait: [{ person: 'oren', name: 'Oren', age: 27, inLine: true }, { person: 'tam', name: 'Tam', age: 21, inLine: false }],
     } as unknown as TableView;
     const order = vi.fn();
     const w = mount(GameTable, { props: {
@@ -456,8 +456,8 @@ describe('the Long Wait asks twice before it gives up on a man (#1794)', () => {
     const button = (label: string) => w.findAll('button').find((b) => b.text() === label);
     try {
       expect(button('The long wait')?.attributes('aria-expanded')).toBe('true');
-      const oren = w.findAll('button').find((b) => b.attributes('aria-label') === 'Stop waiting for Oren, 27 years old')!;
-      expect(oren.text()).toBe('Oren, 27');
+      const oren = w.findAll('button').find((b) => b.attributes('aria-label') === 'Stop waiting for Oren, 27 years old, who stands before the seal')!;
+      expect(oren.text()).toBe('Oren, 27 · stands before the seal');
 
       await oren.trigger('click');
       expect(w.text()).toContain('This cannot be taken back.');
@@ -472,6 +472,22 @@ describe('the Long Wait asks twice before it gives up on a man (#1794)', () => {
       await w.setProps({ proseMode: 'plainenglish' });
       expect(button('Men who have not awakened')).toBeDefined();
       expect(w.findAll('button').some((b) => b.attributes('aria-label') === 'Declare Tam, 21 years old, mundane')).toBe(true);
+    } finally { w.unmount(); }
+  });
+
+  it('folds, without hiding, when nobody listed stands before the seal', async () => {
+    const table = { ...fixture(), longWait: [{ person: 'cole', name: 'Cole', age: 40, inLine: false }] } as unknown as TableView;
+    const w = mount(GameTable, { props: {
+      table, land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order: vi.fn() } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    try {
+      const fold = w.findAll('button').find((b) => b.text() === 'The long wait')!;
+      expect(fold.attributes('aria-expanded')).toBe('false');
+      await fold.trigger('click');
+      expect(fold.attributes('aria-expanded')).toBe('true');
+      expect(w.findAll('button').some((b) => b.attributes('aria-label') === 'Stop waiting for Cole, 40 years old')).toBe(true);
     } finally { w.unmount(); }
   });
 

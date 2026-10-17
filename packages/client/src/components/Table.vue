@@ -212,6 +212,8 @@ const riteAssembly = computed(() => pendingRite.value ? props.table[pendingRite.
  * confirming sends the one `declareMundane` order.
  */
 const pendingMundane = ref<{ person: string; name: string } | null>(null);
+/** Open only when the declaration would move the seal; folded, never hidden, otherwise. */
+const mundaneMatters = computed(() => props.table.longWait.some((p) => p.inLine));
 function confirmMundane(): void {
   const chosen = pendingMundane.value;
   if (!chosen) return;
@@ -767,9 +769,9 @@ const MARRIAGE_ORDERS = [
          mundane and put them to use — freeing the succession, risking
          disaster." The panel never says whether the blood is in him; the house
          does not know, and that is the decision. -->
-    <div class="panel" :class="{ idle: idle('longWait', table.longWait.length > 0) }">
+    <div class="panel" :class="{ idle: idle('longWait', mundaneMatters) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('longWait', table.longWait.length > 0)" @click="shut['longWait'] = !shut['longWait']">{{ local('The long wait', 'Men who have not awakened') }}</button>
+        <button class="fold" :aria-expanded="!idle('longWait', mundaneMatters)" @click="shut['longWait'] = !shut['longWait']">{{ local('The long wait', 'Men who have not awakened') }}</button>
       </h3>
       <p v-if="!table.longWait.length" class="small dim">
         {{ local('Nobody of the line is old enough to be given up on.', 'No adult man of the family is waiting to awaken.') }}
@@ -795,10 +797,13 @@ const MARRIAGE_ORDERS = [
           v-for="p in table.longWait"
           :key="p.person"
           class="small"
-          :aria-label="local(`Stop waiting for ${p.name}, ${p.age} years old`, `Declare ${p.name}, ${p.age} years old, mundane`)"
+          :aria-label="local(
+            `Stop waiting for ${p.name}, ${p.age} years old${p.inLine ? ', who stands before the seal' : ''}`,
+            `Declare ${p.name}, ${p.age} years old,${p.inLine ? ' a possible heir,' : ''} mundane`,
+          )"
           @click="pendingMundane = { person: p.person, name: p.name }"
         >
-          {{ p.name }}, {{ p.age }}
+          {{ p.name }}, {{ p.age }}<span v-if="p.inLine" class="rubric"> · {{ local('stands before the seal', 'possible heir') }}</span>
         </button>
       </div>
       <p v-if="refusedIn('declareMundane')" class="small rubric">{{ refusedIn('declareMundane') }}</p>
