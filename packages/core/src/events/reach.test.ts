@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
+import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, phase, place, testWorld } from '../testing.js';
@@ -47,13 +47,13 @@ describe('family challenge execution witnesses (#1796)', () => {
           };
           const pool = check.pool;
           if (pool.kind === 'family_knows' && success) {
-            const p = ['life', 'death', 'light', 'darkness'].includes(pool.affinity) ? reader : man;
+            const p = THRESHOLD_AFFINITIES.some((a) => a === pool.affinity) ? reader : man;
             expect(gainSpellbook(ctx, p, content.spellbook(`lesser_workings_of_${pool.affinity}`)!)).toBe(true);
           } else if (pool.kind === 'slot') {
             const spec = event.slots[pool.slot]!;
             const known = spec.filters.find((f) => 'knows' in f);
             if (known && 'knows' in known) {
-              const p = ['life', 'death', 'light', 'darkness'].includes(known.knows.affinity) ? reader : man;
+              const p = THRESHOLD_AFFINITIES.some((a) => a === known.knows.affinity) ? reader : man;
               expect(gainSpellbook(ctx, p, content.spellbook(`lesser_workings_of_${known.knows.affinity}`)!)).toBe(true);
             }
             for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {

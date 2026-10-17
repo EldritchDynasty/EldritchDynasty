@@ -11642,3 +11642,74 @@ available at this review. Local batches and manual dispatches do not substitute
 for it. The partly unexplained October 9-to-11 hosted timing gap also remains
 unresolved; no new evidence here establishes runner variance as its cause.
 Keep #1641 open and retain the existing guard unchanged.
+
+
+## 2026-10-17 — #1796: family breadth and completed Mystic study
+
+Ordinary family challenges now distinguish a capability present in the house, a
+collective contribution, and the abilities of one actual participant. Four
+challenge families cover Fluid/Thermal, Aero/Terra, Life/Death and
+Light/Darkness; a fifth asks the player who goes to lift a broken cart at Wick.
+The engine selects an eligible specialist by the authored primary attribute,
+then reads that same person's other attributes. Learned magic reads completed
+`spellsKnown`, independently of the physical copy's condition or survival.
+Women take the Threshold roles under the existing learnability rule. No
+Madness/Eldritch path, persistent specialist roster or save-format change.
+
+### Paired exploratory batches
+
+Base: `0a6592b6`; implementation: `360eaf4e` (subsequent changes consolidate
+regression tests only). For each campaign, 32 ordinary chronicler runs use seeds
+`5000 + i * 7`, `i = 0..31`, with 500 Long-Line or 300 Short-Line years. Both
+columns use the same campaign, seeds and automatic decision policy; neither
+plays for the ladder. New events have no baseline fires because their IDs did
+not exist in the base.
+
+| New scene | Long Lines containing it | Short Lines containing it |
+|---|---:|---:|
+| the_smoke_above_the_store | 9/32 (28.125%) | 8/32 (25%) |
+| the_wind_under_the_slates | 7/32 (21.875%) | 5/32 (15.625%) |
+| the_fever_and_the_vigil | 10/32 (31.25%) | 6/32 (18.75%) |
+| the_cawdry_copy | 7/32 (21.875%) | 2/32 (6.25%) |
+| the_wick_bridge_load | 7/32 (21.875%) | 4/32 (12.5%) |
+
+Completed Life readings produced successful nursing outcomes in 4/32 Long
+Lines and 1/32 Short Lines; learned Light succeeded in 2/32 of each. Fluid
+succeeded in 1/32 Long Lines and Aero in 1/32 Short Lines. The specialist
+rescue succeeded in 3/32 Long Lines and 1/32 Short Lines. The player's cart
+rescue reached both outcomes: success in 2 Long Lines / 2 Short Lines, failure
+in 5 Long Lines / 3 Short Lines (a line may reach both). Some learned routes'
+successes are absent from this small sample; all 34 newly authored outcomes
+also have deterministic witnesses through production checks and commit paths.
+
+The three common scenes have weight 65. The Cawdry inspection is uncommon at
+90 and the Wick rescue uncommon at 65, with Record blocks on both. These are
+five additions to a 524-template library, with no frequency-profile change.
+The broad scenes remain eligible without a learned reader. Their outcomes
+charge 10 crowns when held and 35 when lost; the cart charges 8/28 and applies
+1/3 Health loss to the actual participant. An unlearned binary working states
+why the house could not supply it. This is a costed response, not free magic.
+
+The baseline/changed terminal-treasury medians were 1315.0/1408.3 crowns for
+Long Lines and 1018.9/1230.1 for Short Lines. Adding content changes selection
+and downstream lives, so these 32-run medians do not establish a causal
+financial benefit or economic neutrality. The sample also names existing
+content to watch: `the_north_wind_finds_the_patch` went 10/32 → 0/32 Long Lines,
+`what_hangs_in_smoke` 19/32 → 9/32, and `a_birth_in_the_house` 17/32 → 10/32
+Short Lines. A zero in this exploratory batch is not proof of unreachable
+content; full default gate-4/gate-8 evidence is reported in PR #1800's
+validation. No event or gate was exempted to make this sample pass.
+
+### Mechanism evidence
+
+Regression tests isolate shelf ownership, incomplete study, retained knowledge
+after copy loss/binder work, explicit forgetting, dead/guardian/departed
+readers, and spouse/cadet membership. Other tests keep the chosen reader's
+Mind separate from another relative's Mind, do the same for a nonmagical
+rescuer, and assert the sender's injury and chronicle name. A woman completes
+Life study via the normal Library path and changes an ordinary scene. The
+new checks exercise every `family_*` pool and `familyAny`; editor round trips
+cover knowledge and automatic selection. Plain English has 68 reviewed
+counterparts. All new outcomes enter the generated witness manifest through
+real executions, including both success and failure of the deterministic
+player-cast check.
