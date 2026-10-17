@@ -4,10 +4,14 @@ Capacitor wraps the already-built `@ed/client` application. This package owns
 the native projects, platform services, and store artefacts. It owns no game
 rules, simulation state, content, or duplicate client UI.
 
-**Platforms.** Android is built and ships through Google Play. iPhone (iOS)
-has a checked-in Capacitor 8 / Swift Package Manager project under `ios/` by
-owner decision (2026-09-29); #349 still owns simulator CI and the App Store /
-TestFlight release proof. macOS and Linux desktop builds are out of scope.
+**Platforms.** Android and iPhone (iOS) are implemented. Android's verified
+`v0.1.0-beta.3` AAB is an unsigned prerelease, not a Google Play release.
+iOS has a checked-in Capacitor 8 / Swift Package Manager project under `ios/`,
+simulator CI and save/resume/export/import proof. The remaining account,
+signing, store and physical-device requirements from the closed release issues
+are tracked in [issuesneedingowneraction](../../issuesneedingowneraction).
+Neither platform has a published store release. macOS and Linux desktop
+builds are out of scope.
 
 ## The seam
 
@@ -74,8 +78,9 @@ save. Release uses `Info.plist`, which contains no smoke scheme; Debug uses
 
 ## The store privacy declarations
 
-The same rule covers both stores: Play's Data safety form and, once #349 files
-it, the App Store's privacy label, which must read **Data Not Collected**.
+The same rule covers both stores: Play's Data safety form and the App Store's
+privacy label must read **Data Not Collected** when filed. Filing remains an
+owner action in [issuesneedingowneraction](../../issuesneedingowneraction).
 
 ### Play
 

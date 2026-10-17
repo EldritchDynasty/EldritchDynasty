@@ -37,6 +37,12 @@ someone better than your best.
 - **Awakening is not fully controllable.** A child may never "wake" magically at all — a
   real, permanent outcome. Until they do, they cannot learn or lead. Rituals can force it
   early, at the cost of permanent madness and a real chance of killing the child. §11.
+- **The Long Wait is a decision.** At the house table, an unwoken man of the line
+  aged nineteen or older (other than the sitting Head) can be declared mundane.
+  The declaration is permanent: he can never wake or learn magic, and succession
+  passes him over for a brother, cousin or Regent. He can still marry, hold a post
+  or be sent away. Keep waiting and he may still wake; past thirty, **the Late
+  Waking** comes only through a scripted scene. §11.
 - **Madness vs. Mind.** Power causes madness; Mind is the capacity to contain it. Go over
   your Mind score and the family pays in stillbirths and ruined heirs. But the higher rungs
   of the ladder *require* a minimum amount of madness, so the intended play is to run
