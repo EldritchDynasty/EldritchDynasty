@@ -10,9 +10,11 @@
 > or `docs/BALANCE-LOG.md` entry it comes from. Re-check those before relying
 > on a number. They move.
 >
-> `market research.md` is the evidence ledger and source list. This file is the
-> shorter answer. The concept brief is still the authority on game rules, and
-> `issuesneedingowneraction` holds the owner-only release steps.
+> `market research.md` is the evidence ledger and source list, revised the same
+> day. §4A below carries its decision implications. This file is the shorter
+> answer. The concept brief is still the authority on game rules, and
+> `issuesneedingowneraction` holds the owner-only release steps. Prices are in
+> **NZD**.
 
 ---
 
@@ -277,6 +279,110 @@ should not compete with the text.
 
 ---
 
+# 4A. Commercial decisions the market research now forces
+
+These are mostly **owner** decisions, not engineering. They are here because
+the October 2026 market evidence (`market research.md` §§7–14) makes their
+*timing* matter as much as the code does.
+
+## C-1 (owner, P0) — Start the wishlist clock before signing anything
+
+**Evidence:** Steam's June 2026 storefront moved Popular Upcoming out of reach
+for niche games (reported 80,000–100,000 wishlists). The new **Personal
+Calendar** recommends launches based on each player's own wishlists, follows
+and play history. No wishlist, follow or country data exists until a Coming
+Soon page is live, and that page needs an **App ID** (USD 100 ≈ **NZD 170**).
+The owner has said the App ID is "at least several months" away.
+
+**Recommendation:** if only one account can move early, make it the Steam App
+ID. Windows signing, the Play upload key and Apple distribution are needed at
+*release*. The App ID is needed to *start accumulating matched players*. That is
+the variable this project influences most on Steam's current storefront.
+
+**Calendar** (Steamworks, read 17 Oct):
+
+- **February 2027 Next Fest** registration closes **10 January 2027**. That is
+  not realistic without a page.
+- **June 2027 Next Fest** (14–21 June) is the realistic target. Register by
+  **25 April**, submit required items by **31 May**, press preview from
+  **3 June**. Working back: App ID about February 2027, Coming Soon page by
+  March 2027.
+- A game gets **one** Next Fest. Don't spend it on a demo that has not met a
+  human (P0-2).
+
+## C-2 (owner, P0) — Decide the AI disclosure, truthfully, before the page goes up
+
+**Evidence:** Steam's January 2026 rules exempt AI coding tools but require
+disclosure of **pre-generated player-facing content, narrative text included**.
+This repository's prose is written in an AI-agent workflow. Player sentiment
+ranges from mildly to strongly negative depending on who is asked. One review
+study found 68.4% recommendation for generative-AI games against 86.3% for
+procedurally generated ones.
+
+**Recommendation:** the owner determines what actually shipped and discloses it
+specifically and accurately, including the human direction, curation and
+editing. A game whose whole thesis is *"the falsified record is proven
+centuries later"* must not be the one caught misrepresenting its own. Expect
+some review cost. Concealment would multiply it.
+
+## C-3 (P1) — Tune for the Personal Calendar, not for raw totals
+
+- **Tags** that sit beside *Crusader Kings III*, *Pentiment*, *Suzerain* and
+  *The Roottrees are Dead* players: Strategy, Choices Matter, Text-Based,
+  Dynasty, Lovecraftian, Medieval, Story Rich, Multiple Endings. **Not** "Grand
+  Strategy".
+- Ask for a **follow** as well as a wishlist, on the demo's end screen and in
+  every devlog.
+- Measure **wishlists by country** before choosing a translation language
+  (C-5).
+
+## C-4 (P1) — Steam leads. Mobile is the second wave.
+
+**Evidence:** premium PC-to-mobile ports went from 7 to 23 between 2024 and
+2025, still about 3% of premium mobile releases, and their revenue goes to a few
+hits. Text strategy has worked on phones (*Reigns*: 600k+, mostly mobile), but
+mobile rarely *finds* an audience on its own.
+
+**Recommendation:** launch on Steam first. Ship Android and iPhone when their
+accounts exist, riding Steam's reviews. Before that:
+
+- test the **tree** and the **Match** at phone width with real players;
+- plan the Play closed test as **at least three weeks**. The rule needs 12
+  testers for 14 continuous days, and the clock reportedly resets if the count
+  drops. The owner's plan to invite 20 or more is the right buffer;
+- set a **separate, lower phone price** from the stores' own tiers.
+
+## C-5 (P2, owner) — Choose localisation by evidence, and price it honestly
+
+**Evidence (measured this pass):** about **142,000 words** of Original prose and
+**147,000** of Plain English in content YAML, plus UI. At vendor rates of about
+NZD 0.17–0.24 per word, the Original prose alone is roughly **NZD
+24,000–34,000 per language** before editing and QA. The literary register
+pushes toward the top of that range. Steam's language-share survey swings
+wildly month to month.
+
+**Recommendation:** no language decision until wishlist geography exists
+(C-1). Decide per language whether Plain English is offered at all, since it
+doubles the cost. Machine or AI translation of narrative text would also be
+disclosed content (C-2).
+
+## C-6 (P2) — Price after a human session has been timed
+
+The NZD 28–35 band still holds. It is about USD 16.50–20.60, around recent
+top-launch medians (USD 15.64) and 19.99 comparators. But the inputs that
+justify a price — human session length, replay appetite, polish — have not
+been measured (P0-2). Read Valve's current NZD recommendation in Steamworks on
+the day, and never convert by hand.
+
+## C-7 (owner, P2) — NZ funding: check the threshold before counting on it
+
+The Game Development Sector Rebate pays **20%** of qualifying NZ expenditure,
+but only above **NZD 250,000 a year** (cap NZD 3 million; administered by NZ On
+Air). Below that it pays nothing. Confirm eligibility directly before it
+appears in any budget.
+
+---
+
 # 5. The boredom risks worth measuring
 
 > **A boring stretch is time in which the player keeps performing actions
@@ -349,10 +455,23 @@ set should show, fast:
 
 The first trailer answers **"what do I do?"** before **"how is this written?"**
 
-**Store copy must match measured play.** See P0-1: do not publish *"the complete
-Ascension Ladder"* while the summit sits at 0.2% for a bot built to climb. Every
-checkbox in `store/steam/README.md`'s publish list is still open, and every
-capsule asset is still TODO.
+**Use Daveed.** *Darkest Dungeon* sold 6 million units with an ancestor who
+ruined the family and then narrates it. Daveed is that figure, with a twist the
+store can say out loud: he is the first Head, he did not die, and he has been
+you the whole time. A guilty, non-neutral narrator is a hook, not just lore.
+
+**Claims the evidence supports today:** every choice leaves a trace (#334
+enforces it); the family is a genome, not a stat block; the record you falsify
+is read back at the end; Plain English mode.
+
+**Claims to hold back until measured:** godhood or "the complete Ascension
+Ladder" (P0-1); any session length (no human has been timed); anything about
+Long-only content (P0-3).
+
+Every checkbox in `store/steam/README.md`'s publish list is still open, and
+every capsule asset is still TODO. Capture from real play only: the Play
+listing's played-run screenshots (#1743) are the method to copy. Their tagline
+art is not allowed on Steam's base capsules.
 
 ---
 
@@ -373,6 +492,11 @@ fill a fixed number of minutes:
 The built Demonstration guarantees 1, 5 and 7 by design (signing, forced Record,
 scheduled interlude). Check 2, 3, 4, 6 and 8 **with human players** (P0-2), not
 only with seeds. Then measure actual completion time and drop-off.
+
+End on an explicit ask: **wishlist and follow** (C-3). How To Market A Game's
+June 2026 Next Fest data puts the median demo-player-to-wishlist conversion
+around 19%, and warns that reach matters more than the percentage. Don't tune
+the demo to the percentage.
 
 ---
 
@@ -395,6 +519,13 @@ skipped. Standing policies interrupted by a material change.
 
 **Endgame:** Apotheosis and Unmade rates under chronicler *and* ascendant play.
 Long-exclusive reach under chronicler play.
+
+**Steam** (aggregate platform data, once a page exists): wishlists and follows
+by week and by country; Next Fest demo players and median playtime;
+demo-to-wishlist conversion as context, not a pass/fail score. The owner's
+recorded checkpoints are **5,000 wishlists before the demo and 15,000 at
+launch**. For scale only: 15,000 at a ~10.5% median first-week conversion is
+about 1,575 units, roughly **NZD 28,000** to the developer after Steam's cut.
 
 **People** (humans):
 
@@ -428,20 +559,42 @@ product.
 # 11. Suggested order of product work
 
 This is a direction order, not a replacement for issue priority or repository
-coordination.
+coordination. Two lanes run side by side. Engineering does not wait for
+accounts, and accounts do not wait for engineering.
 
-1. **Truth:** resolve P0-1, the summit. Then fix the store copy and the
-   `ending_all_long` achievement to match whichever route the owner picks.
+### Lane A — the game (engineering and content)
+
+1. **Truth:** resolve P0-1, the summit. Then make the store copy and the
+   `ending_all_long` achievement match whichever route the owner picks.
 2. **People:** run the playtest protocol on beta.3 (P0-2). Let what it finds
    reorder everything below.
 3. **Flagship:** give the Long Line late-game reach that ordinary play finds
    (P0-3).
-4. **Shareability:** Afterimage v2 with people in it (P1-1).
-5. **Variety:** the money-shape content commission (P1-2).
-6. **Demo:** package it and decide the Library hand-off (P1-3).
+4. **Demo:** package it, end it on a wishlist-and-follow ask, and decide the
+   Library hand-off (P1-3, §8).
+5. **Shareability:** Afterimage v2 with people in it (P1-1). It doubles as press
+   and social art.
+6. **Variety:** the money-shape content commission (P1-2).
 7. **Tail:** triage the rare content funnel (P1-4).
 8. **Commercial proof:** screenshots, capsules and a trailer from real play
    (P1-5, §7).
+
+### Lane B — the market (mostly owner)
+
+1. **Now:** decide the AI disclosure (C-2) and the summit route (P0-1). Both
+   change store copy.
+2. **As early as possible:** Steam App ID and a Coming Soon page (C-1). It
+   starts wishlists, follows and country data.
+3. **By 25 April 2027:** register for June 2027 Next Fest with a demo that has
+   met humans.
+4. **After the page has wishlist geography:** localisation (C-5) and price (C-6).
+5. **At release:** Windows signing. Then Android and iPhone as the second wave
+   (C-4).
+
+### The one-line version
+
+Make the claims true, watch people play, open the store page early, and be
+honest about how it was made.
 
 ---
 
