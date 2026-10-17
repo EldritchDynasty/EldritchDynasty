@@ -748,6 +748,122 @@ events:
     rumour: { id: rumour_the_voice_in_the_chapel, accuracy: 0.3, spread: 3 }
     accounts: [the_four_who_were_in_the_chapel, the_wick_keepers_marginal_note]
 
+  # THE LATE WAKING (§11, issue #1797). "After 30 — Rare. The Late Waking —
+  # always a scripted moment." From thirty a man who can express wakes only
+  # here: `rollAwakening` no longer wakes him silently (LATE_WAKING_AGE). The
+  # waking is the premise, so every outcome carries it, and it is NATURAL
+  # (`forced: false`) — no rite was performed and nothing was paid for it.
+  # What the player decides is what the house does with a man it had stopped
+  # watching. A man the Head has declared mundane (#1794) is never cast.
+  - id: the_late_waking
+    title: The Late Waking
+    tier: individual
+    frequency: rare
+    # 1500, measured on 24 Long Lines (seeds 5100-5123, chronicler): 130 fired
+    # once in 24 runs, 600 six times, 1500 thirteen times in nine runs, 3000
+    # twelve. Something other than weight binds above ~1500 (the rare tier's
+    # cooldown and this narrow cast). Thirteen in 24 matches the ~11 silent
+    # late wakings `rollAwakening` produced before LATE_WAKING_AGE, so the
+    # house loses no late wakings: each is now a scene instead of a log line.
+    weight: 1500
+    tags: [awakening, blood, signs, records]
+    purposes: [establish_magic_rule, force_record_choice, change_relationship]
+    slots:
+      HEAD: { role: head }
+      MAN:
+        role: unwoken
+        filters:
+          - { sex: male }
+          - { status: [alive] }
+          - { canExpress: true }
+          - { declaredMundane: false }
+          - { membership: [blood, cadet] }
+          - { age: { op: gte, value: 30 } }
+          - { relation: not, of: HEAD }
+    body: >-
+      The dogs come back into the long room in the second week of Frostfall,
+      and then they will not stay in it. {MAN} has sat at the low end of that
+      table for more than thirty years. Every sign the midwives know went past
+      him as a boy, the iron and the milk and the dogs, and nothing came of any
+      of it, and in time the house stopped asking. Now the knives on his side
+      of the board will not hold an edge, and he sleeps with the shutters open
+      in the cold. Nobody wakes this late. The archivist says so, goes to find
+      out whether it is true, and comes back quieter, and for the first time in
+      twenty years every head at the table turns the same way at supper. The
+      house is watching now.
+    interaction:
+      kind: choice
+      choices:
+        - id: say_it_aloud
+          label: Say it aloud at the table. Thirty years is long enough to wait.
+          outcomes:
+            - id: woke_late
+              weight: 70
+              text: >-
+                It is said at supper, plainly, and nobody at the table finishes
+                eating. Inside the month two houses write to ask whether it is
+                true, and the chapter house at Bramme writes to ask how. He
+                answers the first letter himself. The house answers the second,
+                slowly.
+              effects:
+                - { kind: awakening, target: { slot: MAN }, forced: false }
+                - { kind: respect, delta: 1 }
+                - { kind: relationship, from: { slot: MAN }, to: head, sentiment: 12 }
+            - id: all_at_once
+              weight: 30
+              text: >-
+                It comes all at once, the way a weir goes, and for a season he
+                does not sleep in any room for long. The house says it aloud
+                anyway, because half the household has already seen it. What
+                the blood held back for thirty years it does not hand over
+                gently.
+              effects:
+                - { kind: awakening, target: { slot: MAN }, forced: false }
+                - { kind: madness, target: { slot: MAN }, delta: 12 }
+                - { kind: respect, delta: 1 }
+        - id: keep_it_within_the_walls
+          label: Keep it within the walls until the house knows what it is.
+          outcomes:
+            - id: kept_quiet
+              weight: 100
+              text: >-
+                The knives are moved, the shutters are fastened, and the house
+                goes on as though nothing had happened at the low end of the
+                table. He is not a fool. He was waited for until he was
+                twenty, forgotten until he was thirty, and hidden inside a
+                season, and he notices the difference.
+              effects:
+                - { kind: awakening, target: { slot: MAN }, forced: false }
+                - { kind: relationship, from: { slot: MAN }, to: head, sentiment: -14 }
+    record:
+      subject: the man who woke past thirty
+      options:
+        record:
+          chronicle: >-
+            A man of this house woke past his thirtieth year, long after every
+            sign had passed him by as a boy. We had stopped watching him.
+            Whoever reads this should not stop so soon.
+          effects:
+            - { kind: respect, delta: -1 }
+          claims:
+            - { kind: deed, target: { slot: MAN }, text: 'woke past his thirtieth year, after the house had stopped watching him' }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            A son of this house woke in his boyhood, as the blood of this house
+            always has, and was kept from the world until he was ready for it.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: MAN }, text: 'woke as a boy, and was kept from the world until he was ready' }
+          discrepancy:
+            id: the_late_waking_lie
+            severity: minor
+            provableBy: [the_church, house_marrow]
+    rumour: { id: rumour_the_man_who_woke_late, accuracy: 0.6, spread: 2 }
+    accounts: [the_low_end_of_the_table, the_bramme_clerks_query]
+
 proseVariants:
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].title"
     of: "74fe74252f509e01"
@@ -1252,3 +1368,73 @@ proseVariants:
     of: "aff73cafbfa4f1e3"
     plainenglish: >-
       said the whole Quieting in the house's own chapel
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].title"
+    of: "47634683511fb33f"
+    plainenglish: >-
+      The Late Awakening
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].body"
+    of: "90c1ccbc040b7298"
+    plainenglish: >-
+      In the second week of Frostfall the dogs come back into the long room,
+      and then they will not stay there. {MAN} has sat at the far end of that
+      table for more than thirty years. As a boy he showed none of the signs
+      the midwives look for: the dull iron, the sweet milk, the restless dogs.
+      Nothing happened, and after a while the family stopped asking. Now the
+      knives near him will not stay sharp, and he sleeps with the shutters
+      open in the cold. Nobody awakens this late. The archivist says so, goes
+      to check whether that is true, and comes back quieter. For the first
+      time in twenty years, everyone at supper looks at him. The family is
+      watching him now.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].interaction.choices[id=say_it_aloud].label"
+    of: "56e51126dcbf3e3a"
+    plainenglish: >-
+      Announce it at the table. Thirty years is long enough to wait.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].interaction.choices[id=say_it_aloud].outcomes[id=woke_late].text"
+    of: "812c6858fee25e4c"
+    plainenglish: >-
+      It is announced at supper, and nobody at the table finishes eating.
+      Within a month two houses write to ask whether it is true, and the
+      Church chapter house at Bramme writes to ask how. He answers the first
+      letter himself. The family takes its time answering the second.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].interaction.choices[id=say_it_aloud].outcomes[id=all_at_once].text"
+    of: "e37eacaff190d143"
+    plainenglish: >-
+      The power arrives all at once, like a dam breaking, and for a season he
+      cannot sleep in any room for long. The family announces it anyway,
+      because half the household has already seen it. The blood held this back
+      for thirty years, and it does not arrive gently.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].interaction.choices[id=keep_it_within_the_walls].label"
+    of: "5e6b01b445c42000"
+    plainenglish: >-
+      Keep it secret inside the house until the family understands it.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].interaction.choices[id=keep_it_within_the_walls].outcomes[id=kept_quiet].text"
+    of: "a1af1391a5e40e75"
+    plainenglish: >-
+      The knives are moved, the shutters are closed, and the family carries on
+      as if nothing had happened. He is not a fool. The family waited for him
+      until he was twenty, forgot him until he was thirty, and then hid him
+      within a season. He notices the difference.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.subject"
+    of: "bf42bdb2966b7a76"
+    plainenglish: >-
+      the man who awakened after age thirty
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.record.chronicle"
+    of: "0a1d10a7ea91c643"
+    plainenglish: >-
+      A man of this family awakened after his thirtieth year, long after he
+      had shown no signs as a boy. We had stopped watching him. Whoever reads
+      this should not give up so soon.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.record.claims[0].text"
+    of: "b9a77fd346369227"
+    plainenglish: >-
+      awakened after his thirtieth year, after the family had stopped watching
+      him
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.embellish.chronicle"
+    of: "a73df1d1fcb860f5"
+    plainenglish: >-
+      A son of this family awakened as a boy, as the family blood always does,
+      and was kept out of public view until he was ready.
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.embellish.claims[0].text"
+    of: "18622f38b37484fc"
+    plainenglish: >-
+      awakened as a boy, and was kept out of public view until he was ready

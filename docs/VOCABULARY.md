@@ -20,7 +20,7 @@ compile error until it is handled.
 | `trait` | `target: Target` `trait: string` `op: add\|remove` |
 | `status` | `target: Target` `status: string` `cause: string?` |
 | `madness` | `target: Target` `delta: number` |
-| `awakening` | `target: Target` |
+| `awakening` | `target: Target` `forced: boolean?` |
 | `heirloom` | `op: grant\|use\|transfer = "grant"` `heirloom: string` `to: string?` |
 | `spellbook` | `op: gain\|study\|lose\|degrade\|remove_copy\|acquire_copy` `target: Target` `book: string` |
 | `career` | `target: Target` `op: assign\|leave = "assign"` `career: string?` |
@@ -114,6 +114,7 @@ one person at a time.
 | `career` | `career: string[]` |
 | `awakened` | `awakened: boolean` |
 | `canExpress` | `canExpress: boolean` |
+| `declaredMundane` | `declaredMundane: boolean` |
 | `bonded` | `bonded: boolean` |
 | `rung` | `rung: {atLeast}` |
 | `rite` | `rite: {taken}` |

@@ -215,7 +215,12 @@ export const EffectS = z.discriminatedUnion('kind', [
    * transition, not prose: runtime refuses a target carrying no Eldritch font,
    * and the transition records forced=true without altering expression.
    */
-  z.object({ kind: z.literal('awakening'), target: TargetS }),
+  /**
+   * `forced: false` is the Late Waking (§11, issue #1797): the same first
+   * transition, recorded as natural. Absent means forced, which is what every
+   * rite that wakes a child has always meant.
+   */
+  z.object({ kind: z.literal('awakening'), target: TargetS, forced: z.boolean().optional() }),
   z.object({
     kind: z.literal('heirloom'),
     op: z.enum(['grant', 'use', 'transfer']).default('grant'),

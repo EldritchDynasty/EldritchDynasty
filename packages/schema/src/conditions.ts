@@ -256,6 +256,14 @@ export type Filter =
   | { awakened: boolean }
   | { canExpress: boolean }
   /**
+   * THE HOUSE HAS STOPPED WAITING FOR HIM (§11, issues #1794 and #1797).
+   *
+   * Set only by the Table's `declareMundane` order. A scene whose outcome
+   * wakes somebody past the forcing rites' age windows must ask this, or the
+   * book would say a man woke after the house swore he never would.
+   */
+  | { declaredMundane: boolean }
+  /**
    * Held by debt, or not (world §12, `core/src/people/bond.ts`). A slot that
    * casts a bondsman has to be able to ask for one: `bond` with `op: 'free'`
    * against somebody who owes nothing is an effect that returns without
@@ -316,6 +324,7 @@ export const FilterS: z.ZodType<Filter> = z.lazy(() =>
     z.object({ career: z.array(z.string()).min(1) }),
     z.object({ awakened: z.boolean() }),
     z.object({ canExpress: z.boolean() }),
+    z.object({ declaredMundane: z.boolean() }),
     z.object({ bonded: z.boolean() }),
     /**
      * WHERE THIS ONE MAN STANDS ON THE LADDER (§22).

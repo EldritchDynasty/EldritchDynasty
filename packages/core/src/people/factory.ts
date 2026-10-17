@@ -434,6 +434,26 @@ export function forceAwakening(p: Person, year: Year): boolean {
 }
 
 /**
+ * THE LATE WAKING (§11, issue #1797): the natural first transition, written by
+ * a scene rather than by the yearly roll. Shares `recordAwakening` with both
+ * other paths. A man the house has declared mundane does not wake: the
+ * declaration is history too, and the scene's slot filter already refuses him.
+ */
+export function wakeNaturally(p: Person, year: Year): boolean {
+  if (p.awakening.declaredMundane) return false;
+  return recordAwakening(p, year, false);
+}
+
+/**
+ * §11: *"After 30 — Rare. The Late Waking — always a scripted moment."*
+ *
+ * From this age a man who can express wakes only in `the_late_waking`
+ * (`events/rare_blood.yaml`), never silently in the yearly roll. Women, and
+ * anyone who cannot express, keep the natural clock at every age.
+ */
+export const LATE_WAKING_AGE = 30;
+
+/**
  * THE LONG WAIT ENDS (§11, issue #1794). The house stops waiting for him.
  *
  * `declaredMundane` was saved, read by `rollAwakening` below and written by
@@ -487,7 +507,8 @@ export function rollAwakening(p: Person, year: Year, ctx: GeneticsCtx, rng: Rng)
   const age = year - p.born;
   if (age < 2) return false;
 
-  const font = phenotypeOf(p, ctx, year).eldritch.carriedFont;
+  const profile = phenotypeOf(p, ctx, year).eldritch;
+  const font = profile.carriedFont;
   if (font <= 0) return false;
 
   // Higher carried font skews earlier and widens the tail.
@@ -495,8 +516,13 @@ export function rollAwakening(p: Person, year: Year, ctx: GeneticsCtx, rng: Rng)
   const spread = 7 + font * 0.2;
   const density = Math.exp(-((age - peak) ** 2) / (2 * spread ** 2));
   const chance = density * (0.03 + font * 0.004);
-  if (rng.bool(chance)) return recordAwakening(p, year, false);
-  return false;
+  // The die is drawn BEFORE the Late Waking rule is asked, on purpose: this
+  // phase shares one stream, and skipping a draw would move every roll after
+  // it this year (invariant 8). The rule changes what a hit means, not
+  // whether the die is cast.
+  if (!rng.bool(chance)) return false;
+  if (profile.canExpress && age >= LATE_WAKING_AGE) return false;
+  return recordAwakening(p, year, false);
 }
 
 /**
