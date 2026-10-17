@@ -902,12 +902,12 @@ describe('the platform seam', () => {
       expect(removeItem).not.toHaveBeenCalled();
 
       // Failure to access localStorage itself is different: no enumeration
-      // can begin, so the platform safely reports no available save slots.
+      // can begin. Reject rather than report an empty shelf of saved runs.
       Object.defineProperty(globalThis, 'window', {
         configurable: true,
         value: { get localStorage(): Storage { throw new Error('storage denied'); } },
       });
-      await expect(platform.listSaves()).resolves.toEqual([]);
+      await expect(platform.listSaves()).rejects.toThrow('this browser does not permit saved data');
     } finally {
       if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
       else Reflect.deleteProperty(globalThis, 'window');
