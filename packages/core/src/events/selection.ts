@@ -1,4 +1,4 @@
-import type { Condition, EventTemplate, Frequency } from '@ed/schema';
+import type { Condition, EventTemplate, Frequency, Modifier } from '@ed/schema';
 import { FREQUENCY_PROFILES, assertNever, canTemplateFire, frequencyWeight, templateRationAllows } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
@@ -49,7 +49,7 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
     const remaining = pressurePool.filter((e) => !out.some((c) => c.event.id === e.id));
     if (!remaining.length) break;
 
-    const chosen = rng.weighted(remaining, (e) => drawWeight(e, ctx));
+    const chosen = drawOne(remaining, ctx, rng);
     if (!chosen) break;
 
     const res = resolveSlots(chosen, ctx, rng);
@@ -69,7 +69,7 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
     const remaining = pool.filter((e) => !out.some((c) => c.event.id === e.id));
     if (!remaining.length) break;
 
-    const chosen = rng.weighted(remaining, (e) => drawWeight(e, ctx));
+    const chosen = drawOne(remaining, ctx, rng);
     if (!chosen) break;
 
     const res = resolveSlots(chosen, ctx, rng);
@@ -153,10 +153,25 @@ export function ambientPool(ctx: SimCtx): EventTemplate[] {
 }
 
 /**
+ * One weighted draw. `rng.weighted` asks for every weight twice, and nothing
+ * moves between those two passes, so the household's presence modifiers are
+ * read once per draw rather than once per template per pass — which is what
+ * made a household scan the hottest loop in a batch run (#1641).
+ */
+function drawOne(pool: readonly EventTemplate[], ctx: SimCtx, rng: Rng): EventTemplate | undefined {
+  const presence = presenceModifiers(ctx);
+  return rng.weighted(pool, (e) => weightWith(e, ctx, presence));
+}
+
+/**
  * Final draw weight. Frequency is the heavy lifter; the per-template `weight`
  * is a nudge WITHIN its tier, not across tiers.
  */
 export function drawWeight(e: EventTemplate, ctx: SimCtx): number {
+  return weightWith(e, ctx, presenceModifiers(ctx));
+}
+
+function weightWith(e: EventTemplate, ctx: SimCtx, presence: readonly DrawModifier[]): number {
   const w = ctx.world;
   let weight = frequencyWeight(e.frequency, w.frequency, w.year, w.generation) * (e.weight / 100);
 
@@ -165,14 +180,18 @@ export function drawWeight(e: EventTemplate, ctx: SimCtx): number {
   if (e.ages?.only?.length) weight *= AGE_EXCLUSIVE_BOOST;
 
   // Presence influence: traits held by living members reweight the pool.
-  weight *= presenceMultiplier(e, ctx);
+  weight *= presenceMultiplier(e, presence);
   return weight;
 }
 
 export const AGE_EXCLUSIVE_BOOST = 4;
 
+/** The two `Modifier` kinds that reach the draw. */
+type DrawModifier = Extract<Modifier, { kind: 'suppress' | 'event_weight' }>;
+
 /**
- * Presence influence on the draw.
+ * Presence influence on the draw: every draw-relevant modifier carried by a
+ * trait of a living household member, in household order.
  *
  * `Modifier` was the one closed union in the game with no `assertNever`
  * consumer: this function used to be a pair of `if`s over `m.kind` with no
@@ -185,8 +204,8 @@ export const AGE_EXCLUSIVE_BOOST = 4;
  * is visible at once, so a kind with no consumer is visible as a gap rather
  * than absent from a chain of `if`s. A ninth kind is now a compiler error here.
  */
-function presenceMultiplier(e: EventTemplate, ctx: SimCtx): number {
-  let mult = 1;
+function presenceModifiers(ctx: SimCtx): DrawModifier[] {
+  const out: DrawModifier[] = [];
   const w = ctx.world;
   const household = w.people.household(w.playerHouse, w.year);
 
@@ -197,16 +216,9 @@ function presenceMultiplier(e: EventTemplate, ctx: SimCtx): number {
       for (const pres of trait.presence) {
         for (const m of pres.modifiers) {
           switch (m.kind) {
-            // A veto, not a weight. The trait closes the door on the tier.
             case 'suppress':
-              if (matches(m.match, e)) return 0;
-              break;
-
             case 'event_weight':
-              if (matches(m.match, e)) {
-                if (m.multiply !== undefined) mult *= m.multiply;
-                if (m.add !== undefined) mult += m.add;
-              }
+              out.push(m);
               break;
 
             // Not about the draw — each of the other five now has its own
@@ -229,6 +241,30 @@ function presenceMultiplier(e: EventTemplate, ctx: SimCtx): number {
           }
         }
       }
+    }
+  }
+  return out;
+}
+
+/** Applies `presenceModifiers` to one template, in the order they were read. */
+function presenceMultiplier(e: EventTemplate, presence: readonly DrawModifier[]): number {
+  let mult = 1;
+  for (const m of presence) {
+    switch (m.kind) {
+      // A veto, not a weight. The trait closes the door on the tier.
+      case 'suppress':
+        if (matches(m.match, e)) return 0;
+        break;
+
+      case 'event_weight':
+        if (matches(m.match, e)) {
+          if (m.multiply !== undefined) mult *= m.multiply;
+          if (m.add !== undefined) mult += m.add;
+        }
+        break;
+
+      default:
+        assertNever(m, 'modifier');
     }
   }
   return Math.max(0, mult);

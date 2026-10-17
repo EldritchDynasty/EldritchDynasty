@@ -50,7 +50,7 @@ describe('fecundity drag, shipped mechanism', () => {
       genome!.sex[0][idx] = strong;
       genome!.sex[1]![idx] = strong;
     }
-    person.phenotype!.dirty = true;
+    person.phenotype = undefined;
 
     expect(attr(person, 'fecundity', ctx.genetics, ctx.world.year)).toBe(before);
     expect(dragFecundityContribution(genome!, table, 0)).toBe(0);

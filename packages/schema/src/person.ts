@@ -6,7 +6,7 @@ import {
 import { SexS } from './attributes.js';
 import type { Rite } from './rung.js';
 import type { AttributeId, HouseId, PersonId, TraitId, Year, SpellbookId, FlagId, CareerId } from './ids.js';
-import type { EldritchProfile, GenomeRef } from './genome.js';
+import type { EldritchProfile, Genome, GenomeRef } from './genome.js';
 import type { Sex } from './attributes.js';
 
 /** A person's name is a short identity, not the longer house-name field. */
@@ -184,6 +184,26 @@ export interface PhenotypeCache {
   eldritch: EldritchProfile;
   computedAtYear: Year;
   dirty: boolean;
+  /**
+   * What the GENOME alone expresses, before the acquired layer and vitality:
+   * the only part of a recompute that cannot change from one year to the
+   * next unless the genome object, Awakening or the content does. Carried so
+   * a new year re-applies life to it instead of re-reading every locus of
+   * every living person (#1641). It survives `dirty`, which is about the life
+   * layers; a genome edited in place drops the whole cache instead
+   * (`phenotype = undefined`).
+   */
+  genomic?: GenomicExpression;
+}
+
+export interface GenomicExpression {
+  genome: Genome;
+  awakened: boolean;
+  /** Identity of the locus table and attribute list it was read against. */
+  table: object;
+  attributes: readonly object[];
+  attrs: ReadonlyMap<string, number>;
+  eldritch: EldritchProfile;
 }
 
 export interface Person {

@@ -212,11 +212,13 @@ export function thinBloodMortality(ctx: SimCtx, p: Person): number {
   // happens to a household, not a thing that can end a family.
   if (!p.membership.some((m) => m.house === w.playerHouse && m.kind === 'blood')) return 1;
 
-  const line = w.people.blood(w.playerHouse).filter((q) => q.status === 'alive').length;
   // A house that has never reached the buffer scale has nothing to have
   // declined FROM — see the header. Below the cap, this is a no-op, and the
   // threshold is therefore always the cap itself once it applies at all.
-  if (w.bloodHighWater < MORTALITY_BUFFER_LINE || line >= MORTALITY_BUFFER_LINE) return 1;
+  // Asked first because it is free, and the count below walks every person.
+  if (w.bloodHighWater < MORTALITY_BUFFER_LINE) return 1;
+  const line = w.people.blood(w.playerHouse).filter((q) => q.status === 'alive').length;
+  if (line >= MORTALITY_BUFFER_LINE) return 1;
 
   // SUPERLINEAR, because the buffer does not run out linearly. A house of six
   // is barely touched and a house of two has nobody at all: squaring the

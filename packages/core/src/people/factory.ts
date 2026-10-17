@@ -1,5 +1,5 @@
 import type {
-  AttributeDef, GenePool, Genome, GenomeRef, MembershipKind, Person, PersonId, Sex, TraitDef, Year,
+  AttributeDef, GenePool, Genome, GenomeRef, GenomicExpression, MembershipKind, Person, PersonId, Sex, TraitDef, Year,
 } from '@ed/schema';
 import { asId } from '@ed/schema';
 import { makeRng, hashSeed, conceptionSeed, type Rng } from '../rng.js';
@@ -76,7 +76,8 @@ export function genomeOf(p: Person, ctx: GeneticsCtx): Genome {
 export function phenotypeOf(p: Person, ctx: GeneticsCtx, year: Year) {
   if (p.phenotype && !p.phenotype.dirty && p.phenotype.computedAtYear === year) return p.phenotype;
   const g = genomeOf(p, ctx);
-  const attrs = expressAttributes(g, p.sex, ctx.table, ctx.attributes, { awakened: p.awakening.awakened });
+  const genomic = genomicExpression(p, g, ctx);
+  const attrs = new Map(genomic.attrs);
 
   // Genome first, then everything life did to them. The acquired layer has to
   // be re-applied on every recompute — it is not part of the derivation.
@@ -98,14 +99,50 @@ export function phenotypeOf(p: Person, ctx: GeneticsCtx, year: Year) {
     // invariant 1's gate is computed from the genome inside `eldritch` and is
     // not touched by anything in the acquired layer.
     eldritch: withGift(
-      eldritch(g, p.sex, ctx.table),
+      genomic.eldritch,
       p.acquired?.[ELDRITCH_GIFT] ?? 0,
       p.acquired?.[ELDRITCH_REACH] ?? 0,
     ),
     computedAtYear: year,
     dirty: false,
+    genomic,
   };
   return p.phenotype;
+}
+
+/**
+ * The genome's own expression, read once and carried between years.
+ *
+ * Re-expressing every locus of every living person each spring was a third
+ * of a batch run's time, for an answer that only changes when the genome,
+ * Awakening or the content does (#1641). It survives `dirty`, because
+ * `dirty` says the LIFE layers moved — the annual condition pass marks every
+ * member of the household dirty every year.
+ *
+ * The simulation never edits a materialized genome in place; minting and
+ * bootstrap bias a genome before anybody has expressed it. A tool or test
+ * that does edit one in place drops the cache with `p.phenotype = undefined`,
+ * as `archive` does — marking it dirty would recompute life over the old
+ * genome.
+ */
+function genomicExpression(p: Person, g: Genome, ctx: GeneticsCtx): GenomicExpression {
+  const awakened = p.awakening.awakened;
+  const prior = p.phenotype?.genomic;
+  if (prior
+    && prior.genome === g
+    && prior.awakened === awakened
+    && prior.table === ctx.table
+    && prior.attributes === ctx.attributes) {
+    return prior;
+  }
+  return {
+    genome: g,
+    awakened,
+    table: ctx.table,
+    attributes: ctx.attributes,
+    attrs: expressAttributes(g, p.sex, ctx.table, ctx.attributes, { awakened }),
+    eldritch: eldritch(g, p.sex, ctx.table),
+  };
 }
 
 export function attr(p: Person, key: string, ctx: GeneticsCtx, year: Year): number {
