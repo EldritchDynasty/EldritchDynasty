@@ -1,0 +1,2059 @@
+# #334: reserved memories now change later accounts.
+# New writes schedule the review; conditional readers also serve existing saves.
+events:
+  - id: the_two_days_of_birth
+    title: Two Days of Birth
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_standing
+      - change_relationship
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: a_late_entry_on_the_roll
+          is: true
+    body: The keeper at Wick sends back a descent with two dates against one child. The chapter house
+      has the later entry; the parish has kept the first. A marriage attestation cannot leave Bramme
+      with both. The clerk has left room for a correction.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for both rolls to be compared.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The clerk copies the birth and the naming on separate lines. Both offices seal the correction,
+                and the marriage paper can leave.
+              effects:
+                - kind: treasury
+                  delta: -8
+        - id: keep_our_terms
+          label: Let the discrepancy stand.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The attestation goes out with the disputed date marked in the margin. The herald reads the
+                mark aloud.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_two_days_of_birth
+                  accuracy: 0.7
+    record:
+      subject: Two Days of Birth
+      options:
+        record:
+          chronicle: The keeper at Wick sends back a descent with two dates against one child. The chapter
+            house has the later entry; the parish has kept the first. A marriage attestation cannot
+            leave Bramme with both. The clerk has left room for a correction.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about two days of birth. The family’s account was accepted
+            without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_two_days_of_birth_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_copy_comes_back_open
+    title: The Copy Comes Back Open
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_standing
+      - change_relationship
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: church_holds_a_copy
+          is: true
+    body: The chapter house returns a copy of the ledger it took at the inquest. Three passages have
+      slips sewn beside them. The clerk at the gate wants an attested answer for each passage; the
+      house cannot answer by changing its own book.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Have a notary compare the copies.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Both books are laid open at Bramme. The notary charges for every passage and leaves a signed
+                comparison with each office.
+              effects:
+                - kind: treasury
+                  delta: -12
+        - id: keep_our_terms
+          label: Refuse the comparison.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The chapter house files its unanswered questions beside the copy. They are read with the house
+                name at the next visitation.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_copy_comes_back_open
+                  accuracy: 0.7
+    record:
+      subject: The Copy Comes Back Open
+      options:
+        record:
+          chronicle: The chapter house returns a copy of the ledger it took at the inquest. Three passages
+            have slips sewn beside them. The clerk at the gate wants an attested answer for each
+            passage; the house cannot answer by changing its own book.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the copy comes back open. The family’s account was
+            accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_copy_comes_back_open_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_chapter_house_closes_its_door
+    title: The Chapter House Closes Its Door
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_standing
+      - change_relationship
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: church_hostile
+          is: true
+    body: A letter asking the chapter house to witness the family papers comes back with the wax
+      unbroken. The same office that was not asked about the widening will not put its seal beside
+      the result. The papers must travel to Caster instead.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to have the papers witnessed at Caster.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A rider takes the papers to Caster and waits for the civil clerk. His fee and the clerk’s fee
+                arrive on one sheet.
+              effects:
+                - kind: treasury
+                  delta: -24
+        - id: keep_our_terms
+          label: Use the papers without a witness.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The papers are read as the house’s own assertion. The missing Church seal is noticed before
+                the names are.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_chapter_house_closes_its_door
+                  accuracy: 0.7
+    record:
+      subject: The Chapter House Closes Its Door
+      options:
+        record:
+          chronicle: A letter asking the chapter house to witness the family papers comes back with the wax
+            unbroken. The same office that was not asked about the widening will not put its seal
+            beside the result. The papers must travel to Caster instead.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the chapter house closes its door. The family’s
+            account was accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_chapter_house_closes_its_door_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_permission_is_read_back
+    title: The Permission Is Read Back
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_church_sanctioned_the_rite
+          is: true
+    body: The keeper at Wick asks why the chapter house’s seal is on a permission for this family’s
+      rite. The original letter is still in the press. It gives the house an answer, provided the
+      house is willing to show what the permission was for.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Produce the sanctioned permission.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The keeper checks the seal and enters the permission in the parish book. The question stops at
+                Wick.
+              effects:
+                - kind: respect
+                  delta: 1
+        - id: keep_our_terms
+          label: Keep the rite out of the parish book.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: A notary supplies an ordinary attestation instead. The family pays him to leave the rite out
+                of it.
+              effects:
+                - kind: treasury
+                  delta: -9
+    record:
+      subject: The Permission Is Read Back
+      options:
+        record:
+          chronicle: The keeper at Wick asks why the chapter house’s seal is on a permission for this family’s
+            rite. The original letter is still in the press. It gives the house an answer, provided
+            the house is willing to show what the permission was for.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the permission is read back. The family’s account was
+            accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_permission_is_read_back_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_answer_was_a_refusal
+    title: The Answer Was a Refusal
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_church_refused
+          has: true
+    body: A new clerk finds the chapter house’s answer among the family papers. Its courteous wording
+      has been copied into a proposed petition as if it granted permission. The old account says
+      otherwise. The petition has not yet left the room.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to have the petition drawn again.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The copied permission is crossed out before it leaves the house. A new petition goes to Bramme
+                with the refusal attached.
+              effects:
+                - kind: treasury
+                  delta: -6
+        - id: keep_our_terms
+          label: Send it with the refusal left out.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: Bramme sends back its own copy of the answer. The covering letter asks why the house presented
+                a refusal as leave.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_answer_was_a_refusal
+                  accuracy: 0.7
+    record:
+      subject: The Answer Was a Refusal
+      options:
+        record:
+          chronicle: A new clerk finds the chapter house’s answer among the family papers. Its courteous
+            wording has been copied into a proposed petition as if it granted permission. The old
+            account says otherwise. The petition has not yet left the room.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the answer was a refusal. The family’s account was
+            accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_answer_was_a_refusal_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_three_volumes_are_sorted
+    title: The Three Volumes Are Sorted
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - establish_magic_rule
+      - worldbuild_through_action
+      - buy_patience
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: looted_library
+          is: true
+    body: The loose gatherings from the bought library have been sorted on the long table. The three
+      useful volumes concern Life, Death and Darkness. Their sewing has failed, but their leaves are
+      all here. A binder at Bramme will put them on the shelf for twelve crowns.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Bind the three useful volumes.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The binder returns the Lesser Workings of Life, Death and Darkness in plain boards. They can
+                be read now. The rest of the lot goes back into its chest.
+              effects:
+                - kind: treasury
+                  delta: -12
+                - kind: spellbook
+                  op: acquire_copy
+                  target: head
+                  book: lesser_workings_of_life
+                - kind: spellbook
+                  op: acquire_copy
+                  target: head
+                  book: lesser_workings_of_death
+                - kind: spellbook
+                  op: acquire_copy
+                  target: head
+                  book: lesser_workings_of_darkness
+        - id: keep_our_terms
+          label: Sell the loose gatherings to a binder.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The binder pays for the gatherings and takes the chest away. The house keeps the sale receipt
+                instead of the books.
+              effects:
+                - kind: treasury
+                  delta: 18
+  - id: the_herald_asks_for_her_mother
+    title: The Herald Asks for Her Mother
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_relationship
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: married_without_paper
+          is: true
+    body: A herald at Bramme has reached the Rimefell marriage in the descent. There is a wedding entry
+      and no attested line behind the bride. He has stopped the copy at her mother’s name. Somebody
+      must travel north for the missing paper or let the gap be entered.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Send for an attested descent.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The rider returns with a northern attestation and a bill for the journey. The herald attaches
+                it rather than filling the gap from the family’s account.
+              effects:
+                - kind: treasury
+                  delta: -28
+        - id: keep_our_terms
+          label: Enter the gap as it stands.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The descent is returned with the mother’s line marked unproved. Every certified copy will
+                carry the same mark.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_herald_asks_for_her_mother
+                  accuracy: 0.7
+  - id: the_factor_remembers_the_receipt
+    title: The Factor Remembers the Receipt
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: paid_bracc_whole
+          is: true
+    body: "A Braccish factor brings the next remittance account with the old paid receipt clipped to it.
+      The fee on four hundred crowns is seven crowns rather than eight: one and three quarters per
+      cent, against the usual two. He offers to settle the fee now."
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Settle at the house’s better rate.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Seven crowns are counted against the remittance fee. The factor keeps the old receipt with the
+                account.
+              effects:
+                - kind: treasury
+                  delta: -7
+        - id: keep_our_terms
+          label: Ask for a certified copy of the favourable terms.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The factor supplies the certified terms for one crown. The family can carry its own proof when
+                another counting house asks.
+              effects:
+                - kind: treasury
+                  delta: -1
+                - kind: respect
+                  delta: 1
+  - id: the_sideways_seal_on_the_lease
+    title: The Sideways Seal on the Lease
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_relationship
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: seal_held_sideways
+          is: true
+    body: A lease comes back from Caster with the impression circled in red. The seal conceded in the
+      hall is being used as if the seal and the right to hold it were the same question. The clerk
+      will accept a witnessed instrument from both halls.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to have both halls witness the instrument.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Two witnesses travel to Caster with the instrument. The lease is enrolled under both
+                attestations.
+              effects:
+                - kind: treasury
+                  delta: -16
+        - id: keep_our_terms
+          label: Demand that the impression be accepted alone.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The lease is returned unenrolled. The clerk’s objection enters the roll beside the house name.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_sideways_seal_on_the_lease
+                  accuracy: 0.7
+  - id: the_stewards_list_of_doors
+    title: The Steward’s List of Doors
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_relationship
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: steward_left_bitter
+          is: true
+    body: The steward who left has supplied Bramme with a list of the doors he was told never to open.
+      The list names rooms rather than crimes. A clerk asks whether the house will show him those
+      rooms with witnesses present.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for a witnessed inspection.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The doors are opened before a notary and the clerk. The house pays for the inspection and
+                keeps a copy of what they found.
+              effects:
+                - kind: treasury
+                  delta: -11
+        - id: keep_our_terms
+          label: Bar the clerk from the rooms.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The clerk attaches the refusal to the steward’s list. The unopened doors now have an entry
+                outside the house.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_stewards_list_of_doors
+                  accuracy: 0.7
+  - id: the_index_has_our_page
+    title: The Index Has Our Page
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_standing
+      - plant_rumour
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_archivist_was_refused
+          is: true
+    body: An index from Bramme reaches the house with a cross-reference to the page the archivist was
+      paid nothing to overlook. He has supplied the shelf and gathering as well as the year. Buying
+      silence now would leave the index in every other reader’s hands.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Commission an attested answer beside the reference.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A notary compares the cited page with the family’s account. The house pays for an answer that
+                can be filed beside it.
+              effects:
+                - kind: treasury
+                  delta: -14
+        - id: keep_our_terms
+          label: Leave the reference unanswered.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The index circulates with the reference intact. When the family account is read, the other
+                page is read beside it.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_index_has_our_page
+                  accuracy: 0.7
+  - id: the_grievance_reaches_the_assembly
+    title: The Grievance Reaches the Assembly
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_relationship
+      - plant_rumour
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_burgesses_have_a_grievance
+          is: true
+    body: The burgesses of Bramme send their dated grievance to the Assembly with the house’s petition
+      attached. Their delegate has kept the answer the house went over their heads to obtain. The
+      petition will be heard after the grievance.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay the town’s costs and settle the grievance.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The town enters the settlement and withdraws its objection to the hearing. The house pays the
+                recorded costs.
+              effects:
+                - kind: treasury
+                  delta: -20
+        - id: keep_our_terms
+          label: Insist on the earlier ruling.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The ruling stands, but the delegate reads the grievance before the petition. The house is
+                heard after its neighbours have heard that.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_grievance_reaches_the_assembly
+                  accuracy: 0.7
+  - id: the_son_brings_the_written_terms
+    title: The Son Brings the Written Terms
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_relationship
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_customary_terms_were_written
+          is: true
+    body: The tenant’s son brings the witnessed terms to the hall. A new steward has assessed a charge
+      the signed copy does not permit. Both copies name the same rent. The steward has already sent
+      men to collect the difference.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Return the excess charge.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Eight crowns go back with the tenant’s son. The steward copies the written rent into the
+                working roll.
+              effects:
+                - kind: treasury
+                  delta: -8
+        - id: keep_our_terms
+          label: Keep the charge and contest the document.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The tenant takes his copy to Bramme. The house’s seal is read out beneath the terms it has
+                refused.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_son_brings_the_written_terms
+                  accuracy: 0.7
+  - id: the_herald_opens_the_old_question
+    title: The Herald Opens the Old Question
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_standing
+      - plant_rumour
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_elder_descent_not_produced
+          is: true
+    body: The visitation book is opened at the elder descent that was not produced. A later marriage has
+      brought the same line before the herald again. The shorthand question is still in the margin;
+      a new descent will have to carry it unless the house supplies proof.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for the parish searches.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Clerks at Wick and Bramme compare the surviving rolls. Their search is entered beside the old
+                question and the house pays both fees.
+              effects:
+                - kind: treasury
+                  delta: -18
+        - id: keep_our_terms
+          label: Carry the unproved line into the new descent.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The herald copies the question into the marriage descent. The new family receives the paper
+                with the reservation still on it.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_herald_opens_the_old_question
+                  accuracy: 0.7
+  - id: the_price_after_the_fires
+    title: The Price After the Fires
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - establish_magic_rule
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_nine_libraries_burned
+          is: true
+    body: A Bramme bookseller has petitioned for a list of what survived the nine library fires. The
+      family is named among the holders. A notary offers to attest the house’s inventory, whether
+      its shelves are full or empty. The bookseller wants an answer he can show other houses.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for the witnessed inventory.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The inventory is witnessed and sent to Bramme. The house pays eight crowns to put its own list
+                beside the bookseller’s account.
+              effects:
+                - kind: treasury
+                  delta: -8
+        - id: keep_our_terms
+          label: Refuse to certify the inventory.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The bookseller circulates his petition with the refusal attached. Other houses read that the
+                family will not certify what it kept.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_uncertified_library
+                  accuracy: 0.5
+  - id: the_cellar_shelf_is_found
+    title: The Cellar Shelf Is Found
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - establish_magic_rule
+      - worldbuild_through_action
+      - plant_rumour
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_second_cellar_shelf
+          is: true
+    body: The chapter house’s clerk asks why the second cellar smells of wet leather. The shelf hidden
+      during the Crusade is still on the household’s list of things not to show visitors. He offers
+      to record a supervised removal of the Death and Darkness volumes.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to have the cellar closed and repaired.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A mason closes the damp recess while the clerk witnesses the empty shelf. The family pays for
+                the work rather than surrendering its copies.
+              effects:
+                - kind: treasury
+                  delta: -16
+        - id: keep_our_terms
+          label: Surrender the named hidden copies.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The held Lesser Workings of Death and Darkness leave under the clerk’s receipt. Learned
+                knowledge survives, but readings of the missing copies stop.
+              effects:
+                - kind: spellbook
+                  op: remove_copy
+                  target: head
+                  book: lesser_workings_of_death
+                - kind: spellbook
+                  op: remove_copy
+                  target: head
+                  book: lesser_workings_of_darkness
+                - kind: respect
+                  delta: 1
+  - id: the_mason_reaches_the_turn
+    title: The Mason Reaches the Turn
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - plant_rumour
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - flag: the_stair_below_the_turn_bricked
+          is: true
+        - year:
+            op: gte
+            value: 1330
+    body: A mason repairing the cellar reaches the stair below the turn. The wall the house ordered
+      there has been opened from the upper step. A little heap of the old brick lies beside the
+      newer mortar. He waits for an answer before carrying his tools down.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Have the stair closed again under witness.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The mason resets the wall with the steward watching. The bill names the stair and the new
+                work.
+              effects:
+                - kind: treasury
+                  delta: -12
+        - id: keep_our_terms
+          label: Leave the opening and let the household see it.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The stair is left open. The men who carry the brick away tell Wick which wall the house had
+                kept closed.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_mason_reaches_the_turn
+                  accuracy: 0.7
+  - id: the_codex_in_the_eastern_invoice
+    title: The Codex in the Eastern Invoice
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - establish_magic_rule
+      - worldbuild_through_action
+      - buy_patience
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_codex_went_east
+          has: true
+    body: An eastern invoice reaches Sarrow naming the Marrow Codex in the crate the family once heard
+      about. The bookseller will arrange its return against an attested payment, or buy the house’s
+      dated information about the shipment. The choice is on the back of his letter.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for the Codex to come back.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The bookseller receives ninety crowns and sends the Marrow Codex to the house. It is a
+                physical copy to study, not a lesson already learned.
+              effects:
+                - kind: treasury
+                  delta: -90
+                - kind: spellbook
+                  op: acquire_copy
+                  target: head
+                  book: the_marrow_codex
+        - id: keep_our_terms
+          label: Sell the shipment information.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The bookseller pays six crowns for the dates and the crate mark. The house keeps its knowledge
+                of the route and lets the volume go elsewhere.
+              effects:
+                - kind: treasury
+                  delta: 6
+  - id: the_quire_beside_the_descent
+    title: The Quire Beside the Descent
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - change_relationship
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_quire_was_kept
+          has: true
+    body: The kept quire is laid beside a new descent for the herald. Four generations agree in the male
+      line and disagree at the mothers. The clerk can send both accounts to Bramme for attestation
+      or send only the heralds’ line with the disagreement declared.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to collate both accounts.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: Both accounts leave for Bramme in the same wrapper. The house pays for a comparison and keeps
+                the signed disagreement with the quire.
+              effects:
+                - kind: treasury
+                  delta: -15
+        - id: keep_our_terms
+          label: Declare the unresolved disagreement.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The herald marks the mothers’ line disputed. Neither account is declared true by the family’s
+                silence.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_quire_beside_the_descent
+                  accuracy: 0.7
+  - id: the_business_without_the_seal
+    title: The Business Without the Seal
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_standing
+      - plant_rumour
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_seal_is_gone
+          has: true
+    body: Another instrument needs the seal that was not in its box. The quiet search has supplied no
+      replacement. Caster will accept a witnessed notarial instrument for this transaction, but an
+      excuse used twice will not serve as a third impression.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for the notarial instrument.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The instrument is witnessed at Caster without an impression of the missing seal. The house
+                pays the extra fee.
+              effects:
+                - kind: treasury
+                  delta: -18
+        - id: keep_our_terms
+          label: Admit that the seal cannot be produced.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The clerk enters that the regalia could not be produced. The business waits and the entry
+                leaves the house.
+              effects:
+                - kind: respect
+                  delta: -2
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_business_without_the_seal
+                  accuracy: 0.7
+  - id: the_old_list_reaches_the_cellar
+    title: The Old List Reaches the Cellar
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_relationship
+      - plant_rumour
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_third_room
+          has: true
+    body: The chapter house asks to compare the old cellar list with the room the family recorded
+      beneath the east cellar. The family’s own page gives the clerk a place to start. He asks for a
+      witnessed plan rather than another list.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Commission the witnessed plan.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A surveyor draws the third room and files the plan with the cellar list. The family pays for
+                both copies.
+              effects:
+                - kind: treasury
+                  delta: -10
+        - id: keep_our_terms
+          label: Refuse the plan.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The clerk attaches the refusal to the old list. The room the family wrote down is now the room
+                it will not show.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_old_list_reaches_the_cellar
+                  accuracy: 0.7
+  - id: the_ward_answers_cawdry
+    title: The Ward Answers Cawdry
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - change_relationship
+      - change_standing
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_the_ward_was_married_in
+          has: true
+    body: A letter from Cawdry asks the married-in ward for an account of her years in this house. The
+      family kept her inside its wall to keep what she knew there too. Now her own marriage entry is
+      the reason Cawdry gives for asking.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for a witnessed answer with her consent.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A notary witnesses the answer she agrees to give. The house pays to keep that answer beside
+                the marriage entry.
+              effects:
+                - kind: treasury
+                  delta: -8
+        - id: keep_our_terms
+          label: Refuse to send an answer.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: Cawdry receives the family’s refusal in place of her words. The old insult is read aloud with
+                the marriage entry.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_ward_answers_cawdry
+                  accuracy: 0.7
+  - id: the_case_book_is_cited
+    title: The Case-Book Is Cited
+    tier: head
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - buy_patience
+      - plant_rumour
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_what_the_case_book_holds
+          has: true
+    body: A parish inquiry cites an entry from the physician’s case-book. The family knows which visit
+      it records and which three matters its own book left out. A medical copy can answer the
+      inquiry without pretending the visit never happened.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay for an attested medical extract.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The extract is witnessed at Bramme and sent with the answer. The house pays the copying fee.
+              effects:
+                - kind: treasury
+                  delta: -7
+        - id: keep_our_terms
+          label: Refuse to answer the cited entry.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The inquiry records that the family knew the entry and supplied no answer. The case-book
+                remains available to the parish.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_case_book_is_cited
+                  accuracy: 0.7
+  - id: the_fourth_yssene_clause
+    title: The Fourth Yssene Clause
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - buy_patience
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_what_the_yssene_terms_were
+          has: true
+        - year:
+            op: gte
+            value: 1291
+    body: A translator at Sarrow has read the fourth clause of the old Yssene offer. It gave children of
+      the marriage a claim on the house under the law across the Grey. The family can pay for a
+      certified translation or lodge a warning that the foreign terms remain disputed.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Buy the certified translation.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: The translation is filed beside the original offer. It records the foreign claim and Aubren’s
+                refusal to recognise it, without deciding which law should rule.
+              effects:
+                - kind: treasury
+                  delta: -9
+        - id: keep_our_terms
+          label: Lodge the disputed terms without a translation.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The roll notes that the family could not certify the foreign terms. The reservation travels
+                with the next descent.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_fourth_yssene_clause
+                  accuracy: 0.7
+    record:
+      subject: The Fourth Yssene Clause
+      options:
+        record:
+          chronicle: A translator at Sarrow has read the fourth clause of the old Yssene offer. It gave
+            children of the marriage a claim on the house under the law across the Grey. The family
+            can pay for a certified translation or lodge a warning that the foreign terms remain
+            disputed.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the fourth yssene clause. The family’s account was
+            accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_fourth_yssene_clause_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+  - id: the_daybook_has_a_witness
+    title: The Day-Book Has a Witness
+    tier: head
+    frequency: uncommon
+    weight: 65
+    repeatable: false
+    tags:
+      - records
+      - remembered_account
+    purposes:
+      - force_record_choice
+      - change_relationship
+      - plant_rumour
+    slots:
+      HEAD:
+        role: head
+    conditions:
+      all:
+        - knowledge: knows_what_was_never_said
+          has: true
+    body: A Marrow clerk asks whether the family will acknowledge the dated conversations in the bought
+      day-book. The entries were kept outside this house. A refusal cannot put the years back where
+      the family failed to hear them.
+    interaction:
+      kind: choice
+      choices:
+        - id: answer_the_account
+          label: Pay to lodge both accounts together.
+          outcomes:
+            - id: answered
+              weight: 100
+              text: A notary files the family page beside the Marrow extract. The house pays for a record that
+                keeps both accounts visible.
+              effects:
+                - kind: treasury
+                  delta: -6
+        - id: keep_our_terms
+          label: Leave Marrow’s account unanswered.
+          outcomes:
+            - id: stood
+              weight: 100
+              text: The extract circulates without an answer from the house. The clerk reads the dates when the
+                family’s account is read.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: rumour
+                  op: seed
+                  id: rumour_the_daybook_has_a_witness
+                  accuracy: 0.7
+    record:
+      subject: The Day-Book Has a Witness
+      options:
+        record:
+          chronicle: A Marrow clerk asks whether the family will acknowledge the dated conversations in the
+            bought day-book. The entries were kept outside this house. A refusal cannot put the
+            years back where the family failed to hear them.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: No later question was raised about the day-book has a witness. The family’s account was
+            accepted without a request for evidence.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: the_daybook_has_a_witness_denied
+            severity: minor
+            provableBy:
+              - the_church
+              - house_marrow
+proseVariants:
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].title
+    of: 092293c4b75a23b8
+    plainenglish: Conflicting Birth Dates
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].body
+    of: 1da9f8897ebb3d6d
+    plainenglish: Wick has returned a family descent because two records give different dates for one
+      child. The chapter house uses the later date and the parish kept the first. The clerk needs a
+      correction before sending a marriage attestation from Bramme.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].interaction.choices[id=answer_the_account].label
+    of: dee056060603f592
+    plainenglish: Pay to compare the two records.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 146f44d649ab60aa
+    plainenglish: The clerk records the birth date and naming date separately. Both offices seal the
+      correction so the marriage papers can be sent.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].interaction.choices[id=keep_our_terms].label
+    of: 45d83638627d941c
+    plainenglish: Leave both dates disputed.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: ba68c2ac170269f0
+    plainenglish: The marriage attestation is sent with a note disputing the date. The herald reads that
+      note aloud.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].record.subject
+    of: 092293c4b75a23b8
+    plainenglish: Conflicting Birth Dates
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].record.options.record.chronicle
+    of: 1da9f8897ebb3d6d
+    plainenglish: Wick has returned a family descent because two records give different dates for one
+      child. The chapter house uses the later date and the parish kept the first. The clerk needs a
+      correction before sending a marriage attestation from Bramme.
+  - address: content:events/remembered_accounts.yaml#events[id=the_two_days_of_birth].record.options.embellish.chronicle
+    of: cf4693a5cdc354e1
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].title
+    of: 0ed72cf1f2c3c32d
+    plainenglish: The Church Compares Its Copy
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].body
+    of: afd2c372fe3b7aee
+    plainenglish: The chapter house returns the ledger copy taken at the inquest. Slips mark three
+      passages, and a clerk asks for an attested answer about each. Changing the family’s own copy
+      cannot answer the Church’s copy.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=answer_the_account].label
+    of: 9a6bdfbcf83abdc0
+    plainenglish: Pay a notary to compare both books.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: f67d86d2e2b91b56
+    plainenglish: The notary compares the books at Bramme, charges for all three passages and leaves a
+      signed comparison at each office.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].label
+    of: 0bc677033ad6838f
+    plainenglish: Do not let the notary compare them.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 7a75ff504c970c44
+    plainenglish: The chapter house files its unanswered questions with the ledger. At the next
+      visitation, the questions are read with the family’s name.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].record.subject
+    of: 0ed72cf1f2c3c32d
+    plainenglish: The Church Compares Its Copy
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].record.options.record.chronicle
+    of: afd2c372fe3b7aee
+    plainenglish: The chapter house returns the ledger copy taken at the inquest. Slips mark three
+      passages, and a clerk asks for an attested answer about each. Changing the family’s own copy
+      cannot answer the Church’s copy.
+  - address: content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].record.options.embellish.chronicle
+    of: 3ad44b90f0fbe9f4
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].title
+    of: 822ab0608cb6a14c
+    plainenglish: The Church Refuses to Witness the Papers
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].body
+    of: fc3b1c0af695595e
+    plainenglish: The chapter house returns the family’s request for witnessed papers without opening
+      it. After being excluded from the widening, the office refuses to put its seal on the result.
+      The family must send the papers to Caster.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=answer_the_account].label
+    of: 3e2eb4f3c32c8267
+    plainenglish: Pay for civil witnesses at Caster.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: be3db5501912f76c
+    plainenglish: A rider waits at Caster for the civil clerk to witness the papers. The family pays
+      both the rider and the clerk.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].label
+    of: 845897ac6fc55730
+    plainenglish: Use the unwitnessed papers.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: df53dd057b245d41
+    plainenglish: The papers count only as the family’s own claim. Readers notice the missing Church
+      seal before reading the names.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].record.subject
+    of: 822ab0608cb6a14c
+    plainenglish: The Church Refuses to Witness the Papers
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].record.options.record.chronicle
+    of: fc3b1c0af695595e
+    plainenglish: The chapter house returns the family’s request for witnessed papers without opening
+      it. After being excluded from the widening, the office refuses to put its seal on the result.
+      The family must send the papers to Caster.
+  - address: content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].record.options.embellish.chronicle
+    of: 6dd6bfcd0411ffb1
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].title
+    of: 7d89a1e264ea0eee
+    plainenglish: Show the Rite’s Permission
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].body
+    of: 7176c2ce0ab0232a
+    plainenglish: The keeper at Wick asks about the chapter house’s permission for the family’s rite.
+      The original letter is still stored. Showing it will answer the question, but will also reveal
+      what the rite’s permission covered.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].interaction.choices[id=answer_the_account].label
+    of: 740cc21bdf285287
+    plainenglish: Show the Church’s permission.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 90d763be82242fc2
+    plainenglish: The keeper checks the seal and records the permission in the parish book. Wick stops
+      questioning it.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].interaction.choices[id=keep_our_terms].label
+    of: e089611929d4baf5
+    plainenglish: Keep the rite out of the parish records.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: d3262aace51b1090
+    plainenglish: The family pays a notary for an ordinary attestation that leaves out the rite.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].record.subject
+    of: 7d89a1e264ea0eee
+    plainenglish: Show the Rite’s Permission
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].record.options.record.chronicle
+    of: 7176c2ce0ab0232a
+    plainenglish: The keeper at Wick asks about the chapter house’s permission for the family’s rite.
+      The original letter is still stored. Showing it will answer the question, but will also reveal
+      what the rite’s permission covered.
+  - address: content:events/remembered_accounts.yaml#events[id=the_permission_is_read_back].record.options.embellish.chronicle
+    of: 4701cff75eb0b3bb
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].title
+    of: 444be3c4221a43e8
+    plainenglish: Correct the Mistaken Permission
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].body
+    of: 5b6f3dbd73322259
+    plainenglish: A new clerk has mistaken the chapter house’s courteous refusal for permission and
+      copied it into a petition. The family’s earlier account explains the refusal. The petition has
+      not been sent yet.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=answer_the_account].label
+    of: 65181ed38e8d8107
+    plainenglish: Pay to correct the petition.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 4375ff220b5a9ac6
+    plainenglish: The clerk removes the mistaken permission. The corrected petition goes to Bramme with
+      the actual refusal attached.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].label
+    of: cd9c64ca6f4cfb2e
+    plainenglish: Send it without mentioning the refusal.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: c001aaef6dc1a393
+    plainenglish: Bramme returns its own copy of the refusal and asks why the family treated it as permission.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].record.subject
+    of: 444be3c4221a43e8
+    plainenglish: Correct the Mistaken Permission
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].record.options.record.chronicle
+    of: 5b6f3dbd73322259
+    plainenglish: A new clerk has mistaken the chapter house’s courteous refusal for permission and
+      copied it into a petition. The family’s earlier account explains the refusal. The petition has
+      not been sent yet.
+  - address: content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].record.options.embellish.chronicle
+    of: 16023507f79b6c83
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].title
+    of: 5bccbe36a26309ba
+    plainenglish: Bind the Three Looted Spellbooks
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].body
+    of: ec8f29599568b9fd
+    plainenglish: The books bought in the looted library have been sorted. Three useful volumes cover
+      Life, Death and Darkness. All their pages remain, but the bindings have failed. A binder at
+      Bramme asks twelve crowns to repair them.
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].interaction.choices[id=answer_the_account].label
+    of: 4e981e9816a14ff4
+    plainenglish: Pay twelve crowns to bind the books.
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 72600d4e1cc22892
+    plainenglish: The binder returns physical copies of the Lesser Workings of Life, Death and Darkness,
+      ready for study. The other books stay in the chest.
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].interaction.choices[id=keep_our_terms].label
+    of: 924c661ab32d126e
+    plainenglish: Sell the unbound pages.
+  - address: content:events/remembered_accounts.yaml#events[id=the_three_volumes_are_sorted].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 14224f990107a07d
+    plainenglish: The binder buys the pages and takes the chest. The family receives money instead of
+      keeping those books.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].title
+    of: df62c40b2d3d0adf
+    plainenglish: The Bride’s Missing Family Records
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].body
+    of: 4a1746ed6428c779
+    plainenglish: A herald checking the Rimefell marriage finds the wedding entry but no attested
+      descent for the bride. He stops at her mother’s name. The family must obtain the missing
+      northern records or have the gap officially noted.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].interaction.choices[id=answer_the_account].label
+    of: a9bc201b9ea13fd7
+    plainenglish: Pay for an attested northern descent.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 4f9a0b2d52ded201
+    plainenglish: A rider brings back a northern attestation and charges for the journey. The herald
+      attaches it instead of relying on the family’s account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].interaction.choices[id=keep_our_terms].label
+    of: 4157d75ebc2da08a
+    plainenglish: Record that the mother’s line is unproved.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 72e2177ca6ce1bf0
+    plainenglish: The herald marks the mother’s line as unproved. Every certified descent copied from it
+      will repeat the warning.
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].title
+    of: 7615e5644003ffb0
+    plainenglish: Use the Better Braccish Rate
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].body
+    of: 1696364c3ba074b8
+    plainenglish: "A Braccish factor attaches the old paid receipt to the next remittance account. On
+      four hundred crowns the fee is seven crowns instead of eight: 1.75% instead of the usual 2%.
+      He offers to collect the fee now."
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].interaction.choices[id=answer_the_account].label
+    of: 77933e7a8b3eceae
+    plainenglish: Pay the seven-crown fee.
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: dec8d4080227e5ec
+    plainenglish: The family pays seven crowns for the remittance fee. The factor keeps the old receipt
+      with its account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].interaction.choices[id=keep_our_terms].label
+    of: 832ff2e68e5166c2
+    plainenglish: Buy a certified copy of the lower rate.
+  - address: content:events/remembered_accounts.yaml#events[id=the_factor_remembers_the_receipt].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 3f4ccec142e535d5
+    plainenglish: For one crown the factor certifies the favourable terms. The family keeps proof to
+      show other counting houses.
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].title
+    of: 6033d4c08e8e7774
+    plainenglish: A Lease Needs Proof of the Seal
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].body
+    of: d7a6852ffd5b045b
+    plainenglish: Caster returns a lease with its seal impression circled in red. The clerk questions
+      whether possessing the seal proves the right to use it after the concession in the hall. He
+      will accept an instrument witnessed by both halls.
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].interaction.choices[id=answer_the_account].label
+    of: 074a3f223200a936
+    plainenglish: Pay for witnesses from both halls.
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: a91eb37144866405
+    plainenglish: Two witnesses take the instrument to Caster. Their attestations allow the lease to be enrolled.
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].interaction.choices[id=keep_our_terms].label
+    of: 00739536fa330bda
+    plainenglish: Insist that the seal alone is enough.
+  - address: content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 9b7d65dfed5489eb
+    plainenglish: Caster returns the lease without enrolling it. The objection is recorded beside the
+      family’s name.
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].title
+    of: f0cb213c35e46b70
+    plainenglish: The Former Steward Names the Closed Rooms
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].body
+    of: bd8f587ce2d559b0
+    plainenglish: The steward who left has given Bramme a list of doors he was forbidden to open. It
+      names rooms but alleges no specific crime. A clerk asks to inspect those rooms with witnesses.
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].interaction.choices[id=answer_the_account].label
+    of: 6f0e0ef74ef67373
+    plainenglish: Pay for a witnessed inspection of the rooms.
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: a6d603c4592a0858
+    plainenglish: A notary and the clerk inspect the opened rooms. The family pays and keeps their
+      written findings.
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].interaction.choices[id=keep_our_terms].label
+    of: 5b136a4ff656a513
+    plainenglish: Do not let the clerk enter.
+  - address: content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: d216f7482d8d3454
+    plainenglish: The clerk attaches the refusal to the steward’s list. There is now an external record
+      of the doors the family will not open.
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].title
+    of: 66fe62e9410fdc35
+    plainenglish: The Refused Archivist Publishes a Reference
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].body
+    of: 0588da6585b09cf1
+    plainenglish: A Bramme index identifies the page the archivist refused to overlook without payment.
+      It gives the shelf, gathering and year. Paying him now would not remove copies of the index
+      already held by other readers.
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].interaction.choices[id=answer_the_account].label
+    of: 93bdc78bfaa1317f
+    plainenglish: Pay a notary to file an answer.
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: f9c6c89fe4f7eac3
+    plainenglish: The notary compares the cited page with the family account. The family pays for a
+      response that can be filed beside the reference.
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].interaction.choices[id=keep_our_terms].label
+    of: beaebd8cc19579c8
+    plainenglish: Leave the published reference unanswered.
+  - address: content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: e0f14e7125e29e35
+    plainenglish: The reference remains in circulation. The cited page is read alongside the family’s account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].title
+    of: 6346f550e732ba94
+    plainenglish: The Town Takes Its Grievance to the Assembly
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].body
+    of: 14ced1864135b1c2
+    plainenglish: Bramme’s burgesses send their dated grievance to the Assembly with the family’s
+      petition. Their delegate has kept the ruling the family obtained over their objections. The
+      Assembly will hear the grievance first.
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].interaction.choices[id=answer_the_account].label
+    of: 324d6f679c76e9f3
+    plainenglish: Pay the town’s recorded costs to settle.
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 3038cef9f00fdfa5
+    plainenglish: The town records the settlement and withdraws its objection to the hearing. The family
+      pays its recorded costs.
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].interaction.choices[id=keep_our_terms].label
+    of: c7f5ac580248df74
+    plainenglish: Rely on the earlier ruling.
+  - address: content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: c1e0797929ff78dd
+    plainenglish: The earlier ruling stays in force, but the delegate reads the grievance before the
+      family’s petition is heard.
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].title
+    of: e6f957fae93cf22e
+    plainenglish: The Written Rent Limits a New Charge
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].body
+    of: c6ba65d9f9ab999d
+    plainenglish: A tenant’s son produces the witnessed tenancy terms after a new steward demands a
+      charge they do not allow. Both copies specify the same rent. The steward has already sent men
+      to collect more.
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].interaction.choices[id=answer_the_account].label
+    of: fe1ea165bd843089
+    plainenglish: Return the eight crowns charged in excess.
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 8581a376bbbafb62
+    plainenglish: The son takes back eight crowns. The steward enters the agreed written rent in the
+      working roll.
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].interaction.choices[id=keep_our_terms].label
+    of: 60bc9a9a9ff133ae
+    plainenglish: Keep the charge and challenge the written terms.
+  - address: content:events/remembered_accounts.yaml#events[id=the_son_brings_the_written_terms].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 0b1341ae4865bb4a
+    plainenglish: The tenant takes his document to Bramme. The family’s seal is read out under the terms
+      it has refused to honour.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].title
+    of: 23ffd3c327bb291f
+    plainenglish: The Herald Reopens an Unproved Descent
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].body
+    of: 95a7465d5ab518c1
+    plainenglish: A later marriage requires the elder descent that was not supplied at the earlier
+      visitation. The herald finds the old unanswered question in the margin. It will be copied into
+      the new descent unless the family supplies proof.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].interaction.choices[id=answer_the_account].label
+    of: 8db6bf6c9b8187c8
+    plainenglish: Pay to search the parish records.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 5d67ce8800942abc
+    plainenglish: Wick and Bramme compare their surviving rolls and record their search beside the old
+      question. The family pays both offices.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].interaction.choices[id=keep_our_terms].label
+    of: a944351bb615c0cf
+    plainenglish: Keep the line without proving it.
+  - address: content:events/remembered_accounts.yaml#events[id=the_herald_opens_the_old_question].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 59b626861eb0add2
+    plainenglish: The herald copies the warning into the marriage descent. The other family receives it
+      with the same reservation.
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].title
+    of: f409a3b5a3ca2e11
+    plainenglish: Certify What Survived the Library Fires
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].body
+    of: c9947717a825b80b
+    plainenglish: A Bramme bookseller requests a list of books that survived the nine library fires and
+      names the family as a holder. A notary can certify the family’s inventory whether the shelves
+      are empty or full. The bookseller wants a certified answer to show other houses.
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].interaction.choices[id=answer_the_account].label
+    of: 52640a5be574eb67
+    plainenglish: Pay eight crowns to certify the inventory.
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 093c7fc905b1dca5
+    plainenglish: The certified inventory goes to Bramme. The family pays eight crowns to place its list
+      beside the bookseller’s account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].interaction.choices[id=keep_our_terms].label
+    of: 93de8f65b3d78739
+    plainenglish: Do not certify the family’s inventory.
+  - address: content:events/remembered_accounts.yaml#events[id=the_price_after_the_fires].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 4556517b47206f4f
+    plainenglish: The bookseller sends other houses the petition with the refusal attached. They learn
+      that the family would not certify what it kept.
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].title
+    of: dd148079b2b0902d
+    plainenglish: The Hidden Cellar Books Are Questioned
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].body
+    of: eb4a00537134bd4f
+    plainenglish: A chapter house clerk asks about wet leather in the second cellar. The shelf hidden
+      during the Crusade is still listed as something visitors must not see. He offers to witness
+      the removal of the named Death and Darkness books.
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].interaction.choices[id=answer_the_account].label
+    of: 6993c4f1d989ee45
+    plainenglish: Pay to repair and close the damp recess.
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: df33cf4ef6b66622
+    plainenglish: A mason closes the recess while the clerk witnesses the empty shelf. The family pays
+      for repairs and keeps its copies.
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].interaction.choices[id=keep_our_terms].label
+    of: f1d78d50d6756724
+    plainenglish: Hand over any held copies named on the list.
+  - address: content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: a90d138ed7fb7162
+    plainenglish: Held copies of the Lesser Workings of Death and Darkness are removed under receipt.
+      Learned knowledge remains, but studies of missing copies stop.
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].title
+    of: 62660d4156ce64b5
+    plainenglish: The Bricked Stair Has Been Opened
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].body
+    of: 21788cdf39c4e6e3
+    plainenglish: A mason reaches the stair that the family had bricked up. Someone has opened the wall
+      from the upper step. Old bricks lie beside newer mortar. The mason waits before taking his
+      tools below.
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].interaction.choices[id=answer_the_account].label
+    of: 147495344e6bb678
+    plainenglish: Pay to close the stair again with a witness.
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: ca8fc77e7509c62a
+    plainenglish: The steward watches the mason rebuild the wall. The bill identifies the stair and the repair.
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].interaction.choices[id=keep_our_terms].label
+    of: 860a7077b64858f3
+    plainenglish: Keep the stair open for the household to see.
+  - address: content:events/remembered_accounts.yaml#events[id=the_mason_reaches_the_turn].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: d7be58642cdbe410
+    plainenglish: Workers remove the bricks and leave the stair open. They tell people at Wick which
+      wall the family had kept closed.
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].title
+    of: 43267d6ac6250b9e
+    plainenglish: A Chance to Recover the Marrow Codex
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].body
+    of: 75c48ac909d1e425
+    plainenglish: An eastern invoice received at Sarrow identifies the Marrow Codex in the shipment the
+      family learned about. A bookseller offers to arrange its return for an attested payment.
+      Alternatively, he will buy the family’s dated shipment information.
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].interaction.choices[id=answer_the_account].label
+    of: cf7d9efedf7e66d2
+    plainenglish: Pay ninety crowns to recover the Codex.
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 6d0d62c86bd50e34
+    plainenglish: The bookseller takes ninety crowns and sends the family a physical copy of the Marrow
+      Codex. It still needs to be studied; nobody learns it automatically.
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].interaction.choices[id=keep_our_terms].label
+    of: 2b335e18622ecf44
+    plainenglish: Sell the details of the shipment instead.
+  - address: content:events/remembered_accounts.yaml#events[id=the_codex_in_the_eastern_invoice].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 87e9a99c14c725e8
+    plainenglish: The bookseller pays six crowns for the dates and crate mark. The family keeps its
+      knowledge of the route, but the book goes to someone else.
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].title
+    of: 81a340afa84be1a3
+    plainenglish: Compare the Kept Quire with the Descent
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].body
+    of: 3f76c4069c75b8da
+    plainenglish: The preserved quire is compared with a new heraldic descent. The male line agrees for
+      four generations, but the mothers differ. The clerk can send both accounts for attestation or
+      send the heralds’ account with the disagreement declared.
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].interaction.choices[id=answer_the_account].label
+    of: 2783b52541268b31
+    plainenglish: Pay to compare both written accounts.
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 85bd1ad387a94f97
+    plainenglish: Both documents go to Bramme together. The family pays for a comparison and preserves
+      the signed disagreement with the quire.
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].interaction.choices[id=keep_our_terms].label
+    of: d184320f22ffcabb
+    plainenglish: Declare the disagreement unresolved.
+  - address: content:events/remembered_accounts.yaml#events[id=the_quire_beside_the_descent].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: b0664091f410528d
+    plainenglish: The herald marks the maternal descent as disputed. The family’s silence does not make
+      either account official truth.
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].title
+    of: 3594528668e756b2
+    plainenglish: Another Transaction Needs the Missing Seal
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].body
+    of: 042629adc4f7e8a1
+    plainenglish: A new instrument requires the seal missing from its box, and the quiet search has not
+      found it. Caster will accept a witnessed notarial instrument for this transaction. The earlier
+      excuses will not replace a seal impression again.
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].interaction.choices[id=answer_the_account].label
+    of: db620532c884b566
+    plainenglish: Pay eighteen crowns for a notarial instrument.
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 6117ee22d1a910de
+    plainenglish: Caster witnesses the instrument without the missing seal’s impression. The family pays
+      the additional fee.
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].interaction.choices[id=keep_our_terms].label
+    of: 6cecfedbca3deff7
+    plainenglish: State that the seal cannot be produced.
+  - address: content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 4db51f563a2ec16a
+    plainenglish: The clerk records the missing regalia. The transaction waits, and the record is sent
+      outside the family.
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].title
+    of: 3dd7f366271ea562
+    plainenglish: The Church Asks for a Plan of the Third Room
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].body
+    of: 6a70eb4ad39d41ae
+    plainenglish: The chapter house compares the old cellar list with the third room mentioned in the
+      family’s own record. The written page tells its clerk where to start. He asks for a witnessed
+      plan rather than another list.
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=answer_the_account].label
+    of: 26c49df608f47c6a
+    plainenglish: Pay for a witnessed plan of the room.
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 5cfee2662fc3c3c2
+    plainenglish: A surveyor draws the third room and files its plan with the old cellar list. The
+      family pays for both copies.
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=keep_our_terms].label
+    of: df46ca71c189be6d
+    plainenglish: Do not supply a plan.
+  - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 9020b0695def7fe5
+    plainenglish: The clerk files the refusal with the old list. The record now shows that the family
+      wrote about a room it will not show.
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].title
+    of: ef3e0cf93d605a2d
+    plainenglish: Cawdry Questions the Married-In Ward
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].body
+    of: db797028e8f72604
+    plainenglish: Cawdry asks the ward who married into the family to describe her years in its
+      household. The family kept her there to keep her knowledge private. Cawdry now cites her
+      marriage entry as the reason for asking.
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].interaction.choices[id=answer_the_account].label
+    of: f1c7a37a7c1643ae
+    plainenglish: Pay for an answer she agrees to give.
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: 3be27d24cfa4ff38
+    plainenglish: A notary witnesses her agreed answer. The family pays to keep it with the marriage record.
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].interaction.choices[id=keep_our_terms].label
+    of: 806075477a4e4583
+    plainenglish: Send no answer to Cawdry.
+  - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: bc98e844484a8368
+    plainenglish: Cawdry receives the family’s refusal instead of her account. Her marriage entry is
+      read with the old insult to her birth family.
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].title
+    of: ed611c93936b088f
+    plainenglish: An Inquiry Cites the Physician’s Notes
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].body
+    of: ed6d7db0f49adbcc
+    plainenglish: A parish inquiry cites a visit recorded in the physician’s case-book. The family knows
+      the visit and the three matters absent from its own record. An attested medical extract can
+      answer without denying that the visit happened.
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].interaction.choices[id=answer_the_account].label
+    of: 6234c335390c5f51
+    plainenglish: Pay seven crowns for a medical extract.
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: bbb3e85a3e25d6be
+    plainenglish: The medical extract is witnessed at Bramme and sent in reply. The family pays the copying fee.
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].interaction.choices[id=keep_our_terms].label
+    of: dcbdeee017abbfec
+    plainenglish: Do not answer the case-book entry.
+  - address: content:events/remembered_accounts.yaml#events[id=the_case_book_is_cited].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: dec9306d31ce7e09
+    plainenglish: The inquiry records that the family knew the entry but supplied no answer. The parish
+      can still consult the case-book.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].title
+    of: cc4ff87285c8fcc6
+    plainenglish: Translate the Fourth Yssene Clause
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].body
+    of: d8ad6702b90ac2ce
+    plainenglish: A translator at Sarrow reads the fourth clause of the old Yssene marriage offer. Under
+      the law across the Grey, children of that marriage would have a claim on the family’s house.
+      The family can certify the translation or record that the terms remain disputed.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].interaction.choices[id=answer_the_account].label
+    of: 05fdbf08dfea5ca4
+    plainenglish: Pay nine crowns for a certified translation.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: a8616e178a6f02fb
+    plainenglish: The certified translation is stored with the offer. It records both the foreign claim
+      and Aubren’s refusal to recognise it, without deciding which law should prevail.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].interaction.choices[id=keep_our_terms].label
+    of: 299b88d0bb81be54
+    plainenglish: Register the terms as disputed without translating.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: 29ce1d1271b16b46
+    plainenglish: The official roll notes that the family could not certify the foreign terms. The next
+      descent will carry that reservation.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].record.subject
+    of: cc4ff87285c8fcc6
+    plainenglish: Translate the Fourth Yssene Clause
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].record.options.record.chronicle
+    of: d8ad6702b90ac2ce
+    plainenglish: A translator at Sarrow reads the fourth clause of the old Yssene marriage offer. Under
+      the law across the Grey, children of that marriage would have a claim on the family’s house.
+      The family can certify the translation or record that the terms remain disputed.
+  - address: content:events/remembered_accounts.yaml#events[id=the_fourth_yssene_clause].record.options.embellish.chronicle
+    of: a73c23f570683901
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].title
+    of: 39dc2b0c51badd40
+    plainenglish: Answer the Dates in Marrow’s Day-Book
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].body
+    of: 1c44f3cbcea8ddff
+    plainenglish: A Marrow clerk asks the family to acknowledge the dated conversations in the day-book
+      it bought. Those records were made outside the household. Refusing them cannot undo the years
+      when the family failed to hear its own members.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].interaction.choices[id=answer_the_account].label
+    of: 0d7380444d4a5128
+    plainenglish: Pay six crowns to file both accounts together.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].interaction.choices[id=answer_the_account].outcomes[id=answered].text
+    of: af68765f6cbabae3
+    plainenglish: A notary files the family’s record beside Marrow’s extract. The family pays to
+      preserve both accounts.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].interaction.choices[id=keep_our_terms].label
+    of: 4c00e73dbd7ff4e9
+    plainenglish: Do not answer Marrow’s written account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
+    of: fc27d2cf78d78123
+    plainenglish: Marrow’s extract circulates without the family’s reply. Its clerk reads the dates
+      alongside the family’s account.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].record.subject
+    of: 39dc2b0c51badd40
+    plainenglish: Answer the Dates in Marrow’s Day-Book
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].record.options.record.chronicle
+    of: 1c44f3cbcea8ddff
+    plainenglish: A Marrow clerk asks the family to acknowledge the dated conversations in the day-book
+      it bought. Those records were made outside the household. Refusing them cannot undo the years
+      when the family failed to hear its own members.
+  - address: content:events/remembered_accounts.yaml#events[id=the_daybook_has_a_witness].record.options.embellish.chronicle
+    of: 3da641db1be15a57
+    plainenglish: The family said that nobody had raised a later question about this matter or asked it
+      to provide evidence.

@@ -516,6 +516,7 @@ events:
               effects:
                 - { kind: knowledge, op: grant, flag: knows_what_the_case_book_holds }
                 - { kind: treasury, delta: -1 }
+                - { kind: schedule, event: the_case_book_is_cited, inYears: 1 }
             - id: he_declines
               weight: 45
               text: >-
@@ -540,6 +541,7 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: knowledge, op: grant, flag: knows_what_the_case_book_holds }
+                - { kind: schedule, event: the_case_book_is_cited, inYears: 1 }
 
 proseVariants:
   - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].title"

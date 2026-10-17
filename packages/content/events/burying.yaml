@@ -145,6 +145,7 @@ events:
                 he has now learned exactly what this house will not do.
               effects:
                 - { kind: flag, flag: the_archivist_was_refused, set: true }
+                - { kind: schedule, event: the_index_has_our_page, inYears: 1 }
 
   - id: somewhere_quiet_to_be_old
     title: Somewhere Quiet To Be Old

@@ -635,6 +635,7 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: flag, flag: the_stair_below_the_turn_bricked, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_wall_where_a_stair_was, accuracy: 0.45 }
+                - { kind: schedule, event: the_mason_reaches_the_turn, inYears: 1 }
     record:
       subject: what is below the turn in the stair
       options:

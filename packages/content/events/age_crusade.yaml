@@ -125,6 +125,7 @@ events:
                 - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_death }
                 - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_darkness }
                 - { kind: flag, flag: the_second_cellar_shelf, set: true }
+                - { kind: schedule, event: the_cellar_shelf_is_found, inYears: 1 }
         - id: sell_them
           label: Sell them east while there is still a buyer.
           outcomes:

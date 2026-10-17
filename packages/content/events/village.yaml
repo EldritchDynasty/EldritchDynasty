@@ -277,6 +277,7 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: the_customary_terms_were_written, set: true }
+                - { kind: schedule, event: the_son_brings_the_written_terms, inYears: 1 }
         - id: refuse_the_paper
           label: Refuse. Custom is stronger without a document to argue with.
           outcomes:

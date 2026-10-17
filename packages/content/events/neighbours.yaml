@@ -62,6 +62,8 @@ events:
                 generation. The Yssene house records that the question was put
                 and not answered, because that is what their law does with
                 silence. In their reckoning the descent stands at five.
+              effects:
+                - { kind: discrepancy, op: create, id: the_unanswered_yssene_descent, severity: minor, provableBy: [house_yssanne] }
 
   - id: a_slight_at_a_door
     title: Who Goes Through First

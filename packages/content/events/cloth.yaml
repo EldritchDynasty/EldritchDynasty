@@ -214,6 +214,7 @@ events:
           outcomes:
             - id: left_folded
               weight: 100
+              tags: [self_expression]
               text: >-
                 It stays folded, in the same chest, in the same paper, and is
                 looked at about once a generation by whoever has the keys, and

@@ -522,6 +522,7 @@ events:
                 two people in the world know that.
               effects:
                 - { kind: knowledge, op: grant, flag: knows_the_seal_is_gone }
+                - { kind: schedule, event: the_business_without_the_seal, inYears: 1 }
     record:
       subject: the seal, and where it is
       options:
@@ -533,6 +534,7 @@ events:
           grantsKnowledge: knows_the_seal_is_gone
           effects:
             - { kind: respect, delta: -2 }
+            - { kind: schedule, event: the_business_without_the_seal, inYears: 1 }
           claims:
             - { kind: deed, target: { slot: HEAD }, text: opened the regalia box before two witnesses and found the Seal missing }
         omit:
@@ -681,6 +683,7 @@ events:
                 - { kind: treasury, delta: -230 }
                 - { kind: respect, delta: 2 }
                 - { kind: flag, flag: paid_bracc_whole, set: true }
+                - { kind: schedule, event: the_factor_remembers_the_receipt, inYears: 1 }
         - id: ask_for_terms
           label: Ask for terms. Nineteen years is a relationship.
           outcomes:

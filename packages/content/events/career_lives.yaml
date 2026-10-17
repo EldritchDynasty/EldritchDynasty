@@ -476,6 +476,7 @@ events:
           outcomes:
             - id: remained
               weight: 100
+              tags: [self_expression]
               text: The brass goes into a drawer. He returns to the Deep Room.
         - id: use_the_warrant
           label: Call him home to practise.
@@ -763,6 +764,7 @@ events:
           outcomes:
             - id: waited
               weight: 100
+              tags: [self_expression]
               text: He arrives on the twelfth day. Nobody admits the cart would have missed him.
 
   - id: the_berth_becomes_a_share
@@ -798,6 +800,7 @@ events:
           outcomes:
             - id: wages
               weight: 100
+              tags: [self_expression]
               text: The tide turns. The offer goes with it.
 
   - id: salt_in_the_pay_packet
@@ -952,6 +955,7 @@ events:
           outcomes:
             - id: dark
               weight: 100
+              tags: [self_expression]
               text: The fire is banked at the usual hour. The unfinished sum waits for morning.
 
 proseVariants:

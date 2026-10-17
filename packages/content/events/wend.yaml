@@ -321,6 +321,7 @@ events:
           grantsKnowledge: knows_the_third_room
           effects:
             - { kind: respect, delta: -1 }
+            - { kind: schedule, event: the_old_list_reaches_the_cellar, inYears: 1 }
           claims:
             - { kind: deed, target: { slot: CHILD }, text: kept the room under the east cellar off the list given to the chapter house }
         omit:

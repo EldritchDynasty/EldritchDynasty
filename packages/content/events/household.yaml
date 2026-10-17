@@ -123,6 +123,7 @@ events:
                 knowing exactly which rooms are never opened.
               effects:
                 - { kind: flag, flag: steward_left_bitter, set: true }
+                - { kind: schedule, event: the_stewards_list_of_doors, inYears: 1 }
 
   - id: a_birth_in_the_house
     title: A Birth in the House

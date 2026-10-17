@@ -788,6 +788,7 @@ describe('the content rules', () => {
     // failure §25 names is "the event whose only job is *the family is
     // formidable*", and that is a triple carrying many times its share.
     const b = withEvents((x) => {
+      x.events = x.events.slice(0, 3);
       const shared = ['change_relationship', 'change_standing', 'worldbuild_through_action'] as const;
       for (let i = 0; i < 3; i++) x.events[i]!.purposes = [...shared];
     });
@@ -1912,7 +1913,7 @@ describe('choices/consequence', () => {
     expect(errors[0]!.message).toMatch(/identical effects/);
   });
 
-  it('warns on an untagged no-effect option, and self_expression clears it', () => {
+  it('errors on an untagged no-effect option, and self_expression clears it', () => {
     let at = '';
     const strip = (tag: boolean) => withEvents((x) => {
       const e = plain(x);
@@ -1923,11 +1924,11 @@ describe('choices/consequence', () => {
         o.tags = tag ? [...o.tags, 'self_expression'] : o.tags.filter((t) => t !== 'self_expression');
       }
     });
-    expect(issuesAt(strip(false), at).some((i) => i.level === 'warning' && /changes nothing/.test(i.message))).toBe(true);
+    expect(issuesAt(strip(false), at).some((i) => i.level === 'error' && /changes nothing/.test(i.message))).toBe(true);
     expect(issuesAt(strip(true), at)).toHaveLength(0);
   });
 
-  it('warns on a flag nothing reads, and a reader anywhere clears it', () => {
+  it('errors on a flag nothing reads, and a reader anywhere clears it', () => {
     const FLAG = 'issue_266_unread_probe';
     const write = (x: ContentBundle) => {
       const e = plain(x);
@@ -1939,7 +1940,7 @@ describe('choices/consequence', () => {
     const probe = (b: ContentBundle) =>
       runRule('choices/consequence', b).filter((i) => i.message.includes(`'${FLAG}'`));
     expect(probe(unread)).toHaveLength(1);
-    expect(probe(unread)[0]!.level).toBe('warning');
+    expect(probe(unread)[0]!.level).toBe('error');
 
     const read = withEvents((x) => {
       const writer = write(x);
