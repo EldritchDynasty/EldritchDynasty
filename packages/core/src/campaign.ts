@@ -1,4 +1,4 @@
-import type { CampaignId, EndingId } from '@ed/schema';
+import { eventInCampaign, type CampaignId, type EndingId, type EventTemplate } from '@ed/schema';
 
 /**
  * THE CAMPAIGN CLOCK (issues #66 and #133).
@@ -21,6 +21,10 @@ export interface CampaignDef {
   clauses: number;
   /** The last-night outcomes this product profile promises. */
   endings: readonly EndingId[];
+  /** An authored introduction, run by the ordinary arc scheduler. */
+  openingArc?: { arc: string; narratorSlot?: string };
+  /** An existing Age with a finite opening window, before normal onsets take over. */
+  openingAge?: { age: string; maximumYears: number };
 }
 
 
@@ -59,11 +63,18 @@ export const CAMPAIGNS: Readonly<Record<CampaignId, CampaignDef>> = {
     years: 33,
     clauses: 1,
     endings: ['broken_line', 'settled', 'forgotten', 'devoured'],
+    openingAge: { age: 'the_insurrection', maximumYears: 12 },
+    openingArc: { arc: 'arc_the_first_account', narratorSlot: 'FOUNDER' },
   },
 };
 
 export function campaignDef(id: CampaignId): CampaignDef {
   return CAMPAIGNS[id];
+}
+
+/** The 300/500-year balance cohorts exclude explicitly scoped miniature scenes. */
+export function isFullCampaignEvent(event: Pick<EventTemplate, 'campaigns'>): boolean {
+  return FULL_CAMPAIGN_IDS.some((id) => eventInCampaign(event, id));
 }
 
 /**

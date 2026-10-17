@@ -18,6 +18,19 @@ export function tickAges(ctx: SimCtx, rng: Rng): { began: AgeDef[]; ended: AgeDe
   const began: AgeDef[] = [];
   const ended: AgeDef[] = [];
   const named: AgeDef[] = [];
+  const campaign = campaignDef(w.campaign);
+  const opening = campaign.openingAge;
+  if (opening && w.year === campaign.startYear + 1) {
+    const age = ctx.content.age(opening.age);
+    if (!age) throw new Error(`campaign opening names unknown Age '${opening.age}'`);
+    if (opening.maximumYears <= Math.max(age.duration.minYears, age.namedAfterYears)) {
+      throw new Error('campaign opening must allow its Age to complete and acquire a name');
+    }
+    if (!w.age.active.some((active) => active.age === age.id && active.began === campaign.startYear)) {
+      w.age.active.push({ age: age.id, began: campaign.startYear, named: false, paid: { standing: false } });
+      began.push(age);
+    }
+  }
 
   // ── 1. Terminations ────────────────────────────────────────────────────
   for (const active of [...w.age.active]) {
@@ -25,7 +38,13 @@ export function tickAges(ctx: SimCtx, rng: Rng): { began: AgeDef[]; ended: AgeDe
     if (!def) continue;
     const elapsed = w.year - active.began;
     if (elapsed < def.duration.minYears) continue;
-    if (rng.bool(endHazard(def, elapsed))) {
+    // The opening contract promises a named, complete Age. Let its naming
+    // pass run before a termination draw can remove that same year's Age.
+    if (opening?.age === active.age && active.began === campaign.startYear
+      && elapsed <= def.namedAfterYears) continue;
+    const openingComplete = opening?.age === active.age
+      && active.began === campaign.startYear && elapsed >= opening.maximumYears;
+    if (openingComplete || rng.bool(endHazard(def, elapsed))) {
       w.age.active = w.age.active.filter((a) => a !== active);
       // Carried out of `active` with the record, not dropped with it: whether
       // the family ever had a word for these years is the one thing §20 says

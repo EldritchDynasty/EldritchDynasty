@@ -55,7 +55,7 @@ import {
 import type { Rung } from '@ed/schema';
 import { phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
-import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { CAMPAIGN_YEARS, isFullCampaignEvent, START_YEAR } from '../campaign.js';
 import { vocabularyAuthorship } from './vocabulary-authorship.js';
 import { BLOCKING_GATE_CONFIG, GATE_BATCH_SEED_START, GATE_BATCH_SEED_STEP, type BlockingGateId } from './gate-registry.js';
 
@@ -394,7 +394,7 @@ export function gateOutcomeReach(
   const runs = opts.runs ?? 800;
   const years = opts.years ?? CAMPAIGN_YEARS;
 
-  const declared = declaredOutcomes(bundle);
+  const declared = declaredOutcomes(bundle, isFullCampaignEvent);
   const reach = playGateBatch(source, runs, years).reach;
 
   const rates = [...declared]

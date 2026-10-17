@@ -4,6 +4,7 @@ import { LibraryRunS } from '@ed/schema';
 import {
   applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, foundHouse, heldHeirlooms, place, present,
   replay, ReplayMismatchError, runYears, testRng, testWorld,
+  saveGame, loadGame, expectHealthyWorld, setProseMode, setProseVariants,
 } from '@ed/core';
 import { CAMPAIGNS, CAMPAIGN_YEARS } from './campaign.js';
 
@@ -13,6 +14,36 @@ const bundle = loadContent();
 // 1074 and 1109), which a batch this small cannot absorb. 910, 912 and 5151
 // are confirmed to survive the full Long Line.
 const SEEDS = [910, 77, 912, 5151, 8080, 31];
+
+describe('the demonstration pays every promised beat (#323)', () => {
+  it.each(['original', 'plainenglish'] as const)('completes every beat in every one of 64 fixed seeds in %s', (mode) => {
+    for (let i = 0; i < 64; i++) {
+      const seed = 5000 + 7 * i;
+      let ctx = bootstrap(bundle, seed, 1042, 'demo');
+      setProseVariants(ctx, bundle.proseVariants);
+      setProseMode(ctx, mode);
+      const founding = ctx.world.chronicle[0];
+      expect(founding?.year, `seed ${seed}: no signing page`).toBe(1042);
+      // Reload in the middle of the authored introduction, not after it is
+      // already over, so the appointment and narrator binding must persist.
+      runYears(ctx, 2);
+      ctx = loadGame(saveGame(ctx), bundle);
+      setProseVariants(ctx, bundle.proseVariants);
+      setProseMode(ctx, mode);
+      runYears(ctx, CAMPAIGNS.demo.years - 2 + 1);
+      expect(ctx.world.age.ended.some((age) => age.age === 'the_insurrection' && age.named),
+        `seed ${seed}: no complete named opening Age`).toBe(true);
+      expect(ctx.world.decisionLog.some((decision) => decision.kind === 'record'
+        && decision.event === 'demo_the_last_page'), `seed ${seed}: no forced Record`).toBe(true);
+      expect(ctx.world.frame.entries.some((entry) => entry.eventId === 'demo_the_margin_keeps_its_colour'),
+        `seed ${seed}: no scheduled interlude`).toBe(true);
+      expect(ctx.world.people.get(ctx.world.narrator!)?.status).toBe('guardian');
+      expect(ctx.world.ending, `seed ${seed}: no verdict`).toBeDefined();
+      expect(CAMPAIGNS.demo.endings).toContain(ctx.world.ending!.id);
+      expectHealthyWorld(ctx);
+    }
+  });
+});
 
 /**
  * THE DECISION LOG AND REPLAY (issue #8, phase 1).

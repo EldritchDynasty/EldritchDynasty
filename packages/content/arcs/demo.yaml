@@ -1,0 +1,32 @@
+arcs:
+  - id: arc_the_first_account
+    title: The First Account
+    entry: the_empty_chair
+    bindings:
+      - FOUNDER
+    expiresAfterYears: 32
+    maxConcurrentInstances: 1
+    nodes:
+      - id: the_empty_chair
+        event: demo_the_empty_chair
+        schedule: immediate
+        successors:
+          - to: the_last_page
+      - id: the_last_page
+        event: demo_the_last_page
+        schedule:
+          minYears: 1
+          maxYears: 1
+        successors:
+          - to: the_margin_keeps_its_colour
+      - id: the_margin_keeps_its_colour
+        event: demo_the_margin_keeps_its_colour
+        schedule:
+          minYears: 1
+          maxYears: 1
+        successors:
+          - to: end
+proseVariants:
+  - address: content:arcs/demo.yaml#arcs[id=arc_the_first_account].title
+    of: 4f0998c1be55a24d
+    plainenglish: The Founder’s First Account

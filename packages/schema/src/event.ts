@@ -7,6 +7,7 @@ import { ScheduleS } from './arc.js';
 import { DeciderS } from './decider.js';
 import { RiteS } from './rung.js';
 import { GrudgeInheritanceS } from './house.js';
+import { CampaignIdS, type CampaignId } from './campaign.js';
 
 /**
  * The purposes vocabulary is a CLOSED set and every template declares exactly
@@ -729,6 +730,8 @@ export const EventTemplateS = z.object({
   purposes: z.array(PurposeS).length(3, 'exactly three declared purposes'),
 
   ages: AgeScopeS.optional(),
+  /** Product scope; absent means the same scene can occur in any campaign. */
+  campaigns: z.array(CampaignIdS).min(1).optional(),
   slots: z.record(z.string(), SlotSpecS).default({}),
   conditions: ConditionS.optional(),
   checks: z.array(CheckS).default([]),
@@ -825,6 +828,10 @@ export const EventTemplateS = z.object({
   }
 });
 export type EventTemplate = z.infer<typeof EventTemplateS>;
+
+export function eventInCampaign(event: Pick<EventTemplate, 'campaigns'>, campaign: CampaignId): boolean {
+  return event.campaigns === undefined || event.campaigns.includes(campaign);
+}
 
 export const EventFileS = z.object({
   events: z.array(EventTemplateS),

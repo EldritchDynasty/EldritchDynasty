@@ -559,7 +559,7 @@ export const YEAR_PHASES: readonly Phase[] = [
     after: ['promises'],
     why: 'A substory casts from the living, and this year\'s dead and born are settled.',
     run({ ctx, rng, report, autoResolve }) {
-      for (const step of dueArcSteps(ctx, rng)) {
+      for (const step of dueArcSteps(ctx, rng, 'tale')) {
         const event = ctx.content.mustEvent(step.node.event, `arc node ${step.node.id}`);
         const body = step.absent && event.absentBody ? event.absentBody : event.body;
         present(ctx, { ...event, body }, step.fill, step.playerCast, rng, report, autoResolve, step);
@@ -589,6 +589,13 @@ export const YEAR_PHASES: readonly Phase[] = [
     after: ['ambient'],
     why: 'The frame reacts to the record — it has to run after the year has written its lines, not before.',
     run({ ctx, rng, report }) {
+      let forced = false;
+      for (const step of dueArcSteps(ctx, rng, 'frame')) {
+        const event = ctx.content.mustEvent(step.node.event);
+        const entry = presentFrame(ctx, event, rng, step);
+        if (entry) { report.frame = entry; forced = true; }
+      }
+      if (forced) return;
       const e = selectFrame(ctx, rng);
       if (!e) return;
       const entry = presentFrame(ctx, e, rng);

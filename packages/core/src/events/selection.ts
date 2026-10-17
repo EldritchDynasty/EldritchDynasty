@@ -1,5 +1,5 @@
 import type { Condition, EventTemplate, Frequency, Modifier } from '@ed/schema';
-import { FREQUENCY_PROFILES, assertNever, canTemplateFire, frequencyWeight, templateRationAllows } from '@ed/schema';
+import { FREQUENCY_PROFILES, assertNever, canTemplateFire, eventInCampaign, frequencyWeight, templateRationAllows } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
 import { resolveSlots, type SlotFill } from './slots.js';
@@ -132,6 +132,7 @@ export function ambientPool(ctx: SimCtx): EventTemplate[] {
   const active = activeAgeIds(ctx);
 
   return ctx.content.events.filter((e) => {
+    if (!eventInCampaign(e, w.campaign)) return false;
     if (e.tier === 'frame') return false;
     if (e.arc) return false;                       // arc nodes fire via the arc
     if (!canTemplateFire(e.id, e.frequency, w.frequency)) return false;
@@ -293,6 +294,7 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
     const e = ctx.content.event(s.event);
     w.scheduled = w.scheduled.filter((x) => x !== s);
     if (!e) continue;
+    if (!eventInCampaign(e, w.campaign)) continue;
 
     // Scheduling guarantees that a promised scene is *considered*, not that a
     // one-shot scene may recur. The same template might already have fired

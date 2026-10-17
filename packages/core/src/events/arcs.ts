@@ -1,5 +1,5 @@
 import type { ArcDef, ArcInstance, ArcNode, MissingPolicy, Outcome } from '@ed/schema';
-import { stillCastable } from '@ed/schema';
+import { eventInCampaign, stillCastable } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
 import { resolveSlots, soleCast, type SlotFill } from './slots.js';
@@ -124,7 +124,7 @@ export interface ArcStep {
  * finding its cast dead is the NORMAL case, not an edge case — which is why
  * this function exists at all.
  */
-export function dueArcSteps(ctx: SimCtx, rng: Rng): ArcStep[] {
+export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): ArcStep[] {
   const out: ArcStep[] = [];
 
   for (const inst of ctx.world.arcs.values()) {
@@ -142,6 +142,9 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng): ArcStep[] {
     const node = arc.nodes.find((n) => n.id === inst.node);
     const event = node && ctx.content.event(node.event);
     if (!node || !event) { inst.status = 'cancelled'; continue; }
+    if (layer === 'tale' && event.tier === 'frame') continue;
+    if (layer === 'frame' && event.tier !== 'frame') continue;
+    if (!eventInCampaign(event, ctx.world.campaign)) { inst.status = 'cancelled'; continue; }
 
     // Repair bindings before resolving anything else.
     let absent = false;

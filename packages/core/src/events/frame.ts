@@ -1,11 +1,12 @@
 import type { EventTemplate, FrameEntry, FrameRead } from '@ed/schema';
-import { assertNever } from '@ed/schema';
+import { assertNever, eventInCampaign } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
 import { proseForOutcome } from '../prose.js';
+import { advanceArc, type ArcStep } from './arcs.js';
 
 /**
  * THE FRAME (concept §2, Layer 1; issue #13).
@@ -112,6 +113,7 @@ export function framePool(ctx: SimCtx): EventTemplate[] {
   const w = ctx.world;
   return ctx.content.events.filter((e) => {
     if (e.tier !== 'frame') return false;
+    if (e.arc || !eventInCampaign(e, w.campaign)) return false;
     const last = w.frame.firedAt[e.id];
     if (last !== undefined) {
       if (!e.repeatable) return false;
@@ -155,6 +157,7 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
   // cutting to nothing.
   if (!frameOverdue(ctx)) return undefined;
   const relaxed = ctx.content.events.filter((e) => e.tier === 'frame'
+    && !e.arc && eventInCampaign(e, ctx.world.campaign)
     && e.repeatable
     && e.reads.every((r) => readHolds(ctx, r)));
   if (!relaxed.length) return undefined;
@@ -171,11 +174,14 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
  * `events/slots.ts`, not here — so this is genuinely the whole of what
  * showing a frame scene requires beyond selection.
  */
-export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng): FrameEntry | undefined {
+export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng, arcStep?: ArcStep): FrameEntry | undefined {
   const w = ctx.world;
   if (e.interaction.kind !== 'narration') return undefined;
+  if (!eventInCampaign(e, w.campaign) || !e.reads.every((read) => readHolds(ctx, read))) return undefined;
 
-  const res = resolveSlots(e, ctx, rng);
+  const res = arcStep
+    ? { ok: true as const, fill: arcStep.fill, playerCast: arcStep.playerCast }
+    : resolveSlots(e, ctx, rng);
   if (!res.ok) return undefined;
   const fill = autoCast(e, ctx, res.fill, res.playerCast, rng);
 
@@ -189,6 +195,7 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng): FrameEntr
   w.decisionLog.push({
     kind: 'outcome', year: w.year, event: e.id, outcomeId: outcome.id, fill: { ...fill },
   });
+  if (arcStep) advanceArc(arcStep, outcome, undefined, ctx, rng);
 
   return entry;
 }

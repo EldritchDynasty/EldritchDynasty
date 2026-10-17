@@ -1,5 +1,5 @@
 import { indexContent, type Content, type ContentBundle } from '@ed/schema';
-import { CAMPAIGN_YEARS } from '../campaign.js';
+import { CAMPAIGN_YEARS, isFullCampaignEvent } from '../campaign.js';
 import { playGateBatch } from './gate-batch.js';
 import { firedUnderClimbing } from './ladder-fires.js';
 
@@ -39,7 +39,7 @@ export function runFireRateGate(
   const seenIn = playGateBatch(source, runs, years).templateRuns;
 
   const rates = bundle.events
-    .filter((e) => e.tier !== 'frame')
+    .filter((e) => e.tier !== 'frame' && isFullCampaignEvent(e))
     .map((e) => ({ id: String(e.id), pct: (100 * (seenIn.get(String(e.id)) ?? 0)) / runs }))
     .sort((a, b) => a.pct - b.pct);
 

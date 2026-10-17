@@ -1,0 +1,172 @@
+events:
+  - id: demo_the_empty_chair
+    title: The Chair by the Window
+    tier: family
+    frequency: common
+    campaigns:
+      - demo
+    repeatable: false
+    purposes:
+      - worldbuild_through_action
+      - change_relationship
+      - test_magic_rule
+    slots:
+      FOUNDER:
+        role: family_member
+        bind: arc
+        onMissing: cancel_arc
+    body: The first account ends with {FOUNDER}'s name. The family puts a cup beside the chair by the
+      window and leaves it there while the room grows cold. What began with a signature has reached
+      the line where a life is supposed to stop. The chair is empty.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_hand_remains
+          weight: 100
+          text: They enter the founder's death and put the pen down. When the book is opened again, a word has
+            been crossed out in the hand that signed the first page. The family still has decisions
+            to make.
+          effects:
+            - kind: status
+              target:
+                slot: FOUNDER
+              status: dead
+              cause: the closing of the first account
+    arc:
+      of: arc_the_first_account
+      node: the_empty_chair
+  - id: demo_the_last_page
+    title: What the Next Page Says
+    tier: record
+    frequency: uncommon
+    campaigns:
+      - demo
+    repeatable: false
+    purposes:
+      - force_record_choice
+      - change_standing
+      - worldbuild_through_action
+    slots:
+      HEAD:
+        role: head
+    body: The clerk has reached the founder's last page. There is room below the date for an account of
+      what happened after the chair was emptied. {HEAD} has heard the pen moving in a room nobody
+      entered. The clerk asks what the next page should say.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_page_is_offered
+          weight: 100
+          text: The old signature can still be read through the thin paper. The clerk waits with the pen clear
+            of the page. Nothing is written yet.
+    record:
+      subject: the founder's death, and what continued
+      options:
+        record:
+          chronicle: We entered the founder's death. His hand went on correcting the account, and the house
+            went on asking what it should do.
+          effects:
+            - kind: respect
+              delta: -1
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: The founder gave up the seal in health and withdrew to a quiet room. The family made its
+            decisions without him.
+          effects:
+            - kind: respect
+              delta: 1
+          discrepancy:
+            id: demo_the_quiet_retirement
+            severity: major
+            provableBy:
+              - the_church
+              - house_marrow
+    arc:
+      of: arc_the_first_account
+      node: the_last_page
+  - id: demo_the_margin_keeps_its_colour
+    title: The Colour in the Margin
+    tier: frame
+    frequency: rare
+    campaigns:
+      - demo
+    repeatable: false
+    purposes:
+      - worldbuild_through_action
+      - change_relationship
+      - test_magic_rule
+    slots:
+      BLOOD:
+        role: listener_blood
+      RECORD:
+        role: listener_record
+    reads:
+      - chronicled: demo_the_last_page
+    body: The last light rests upon a painted blossom at the edge of the book, and the room beyond it
+      has the patient cold of a house that has kept one place at its table longer than any living
+      guest could remember.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_page_is_not_turned
+          weight: 100
+          text: Beneath one hand {BLOOD} keeps the page left for the years after its founder, and beyond that
+            page {RECORD} waits with a patience the old ink has not preserved. The blossom painted
+            in the margin has outlived the tree, though a little of its colour comes away whenever
+            the page is touched. No one turns it.
+    arc:
+      of: arc_the_first_account
+      node: the_margin_keeps_its_colour
+proseVariants:
+  - address: content:events/demo.yaml#events[id=demo_the_empty_chair].title
+    of: 7aba610be9a814bf
+    plainenglish: The Founder’s Empty Chair
+  - address: content:events/demo.yaml#events[id=demo_the_empty_chair].body
+    of: dfdeffb4d2711530
+    plainenglish: The first account ends with the name of {FOUNDER}. The family leaves a cup beside the
+      window chair as the room becomes cold. The life that began the debt has reached its recorded
+      end. Nobody sits in the chair.
+  - address: content:events/demo.yaml#events[id=demo_the_empty_chair].interaction.outcomes[id=the_hand_remains].text
+    of: 5bf750fba60b782f
+    plainenglish: The family records the founder’s death and puts down the pen. Later, a word has been
+      corrected in the same handwriting as the first signature. The family’s decisions continue.
+  - address: content:events/demo.yaml#events[id=demo_the_empty_chair].interaction.outcomes[id=the_hand_remains].effects[0].cause
+    of: e5d8f14659b66f0a
+    plainenglish: the end of the first account
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].title
+    of: 585ae22c6cf0a0f0
+    plainenglish: Choose the Founder’s Record
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].body
+    of: ed7ae29f6577cd43
+    plainenglish: The clerk has reached the founder’s last page. Below the date there is space to
+      describe what followed the empty chair. {HEAD} has heard a pen moving in an empty room. The
+      clerk asks what should be written next.
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].interaction.outcomes[id=the_page_is_offered].text
+    of: d1ad19813b7889c5
+    plainenglish: The paper is thin enough to see the old signature through it. The clerk holds the pen
+      above the page and waits. He has not written anything.
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].record.subject
+    of: 4eccb545943c64d1
+    plainenglish: the founder’s death and the continuing decisions
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].record.options.record.chronicle
+    of: b208e0f7b59e52fb
+    plainenglish: We recorded the founder’s death. He continued correcting the account, and the family
+      continued asking him what to do.
+  - address: content:events/demo.yaml#events[id=demo_the_last_page].record.options.embellish.chronicle
+    of: e665e88b99090b67
+    plainenglish: The founder retired while healthy and surrendered the seal. The family then took its
+      decisions without his help.
+  - address: content:events/demo.yaml#events[id=demo_the_margin_keeps_its_colour].title
+    of: f4a41f2aa1d53dfe
+    plainenglish: The Painted Flower Beside the Record
+  - address: content:events/demo.yaml#events[id=demo_the_margin_keeps_its_colour].body
+    of: 05d0036d28532d59
+    plainenglish: The last daylight falls on a flower painted beside the text. The room is cold. The
+      family has kept an empty place at its table longer than any living guest can remember.
+  - address: content:events/demo.yaml#events[id=demo_the_margin_keeps_its_colour].interaction.outcomes[id=the_page_is_not_turned].text
+    of: b69cb12b02dd39d7
+    plainenglish: "{BLOOD} holds the page left for the years after the founder. Across from it, {RECORD}
+      waits with a patience that the written account has not kept. The tree is gone, but its painted
+      flower remains in the margin and loses a little colour whenever the paper is touched. Nobody
+      turns the page."
