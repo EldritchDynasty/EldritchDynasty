@@ -11479,8 +11479,8 @@ gate (ladder): 6 played runs x 500 years, per policy
 ── cM=18* del=0.08* drive=0.8* books=2* ──
              font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
 -----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
-concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
-dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5
 chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
 ```
 
@@ -11528,8 +11528,8 @@ gate (ladder): 6 played runs x 500 years, per policy
 ── cM=18* del=0.08* drive=0.8* books=2* ──
              font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
 -----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
-concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
-dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5
 chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
 ```
 
@@ -11577,8 +11577,8 @@ gate (ladder): 6 played runs x 500 years, per policy
 ── cM=18* del=0.08* drive=0.8* books=2* ──
              font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
 -----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
-concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5     
-dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5     
+concentrate  3.7       0.1        13.8      14.5       23.9       12.6       8.4      27.9  1.1        2.6    23        2.0        0.485  0.10    adept 5/8       0/8         8/8      11     5    22:2       2:5
+dilute       6.0       1.1        15.6      16.4       23.8       13.3       7.7      27.4  4.9        3.5    34        8.3        0.491  0.13    hierophant 4/8  4/8         8/8      27     0    39:9       2:5
 chronicler   3.6       1.2        16.4      16.5       25.8       16.3       10.2     27.4  9.8        3.9    31        6.4        0.493  0.13    adept 5/8       3/8         8/8      0      0    0:0        4:7
 ```
 
@@ -11626,8 +11626,8 @@ gate (ladder): 6 played runs x 500 years, per policy
 ── cM=18* del=0.08* drive=0.8* books=2* ──
              font 1st  font last  chan 1st  chan last  ceil peak  ready men  ready %  peak  hot pairs  books  mad peak  carry@end  F      curses  modal rung      past adept  survive  hands  kin  panel f:m  book f:m
 -----------  --------  ---------  --------  ---------  ---------  ---------  -------  ----  ---------  -----  --------  ---------  -----  ------  --------------  ----------  -------  -----  ---  ---------  --------
-concentrate  3.7       0.6        13.7      14.6       23.3       11.8       7.5      27.9  1.6        3.5    23        4.9        0.486  0.09    adept 5/8       0/8         8/8      13     7    22:3       2:5     
-dilute       6.3       0.7        15.6      16.1       23.5       10.5       7.0      27.4  6.0        3.6    38        8.0        0.491  0.14    hierophant 4/8  4/8         8/8      22     0    35:8       2:6     
+concentrate  3.7       0.6        13.7      14.6       23.3       11.8       7.5      27.9  1.6        3.5    23        4.9        0.486  0.09    adept 5/8       0/8         8/8      13     7    22:3       2:5
+dilute       6.3       0.7        15.6      16.1       23.5       10.5       7.0      27.4  6.0        3.6    38        8.0        0.491  0.14    hierophant 4/8  4/8         8/8      22     0    35:8       2:6
 chronicler   3.8       0.9        16.6      16.4       26.0       19.3       11.8     27.4  7.1        4.3    34        6.3        0.488  0.14    hierophant 4/8  4/8         8/8      0      0    0:0        4:7
 ```
 
