@@ -31,6 +31,12 @@ export function spellbookDef(ctx: SimCtx, id: string): SpellbookDef | undefined 
   return ctx.content.spellbook(id);
 }
 
+/** Completed knowledge belongs to the reader, independently of the physical copy. */
+export function knowsAffinity(ctx: SimCtx, p: Person, affinity: string): boolean {
+  return p.status === 'alive' && canLearn(p.sex, affinity)
+    && p.spellsKnown.some((id) => spellbookDef(ctx, id)?.affinity === affinity);
+}
+
 export function heldBooks(ctx: SimCtx): LibraryBookState[] {
   return [...ctx.world.library.values()];
 }

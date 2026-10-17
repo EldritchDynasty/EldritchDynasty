@@ -104,6 +104,7 @@ one person at a time.
 
 | filter | shape |
 |---|---|
+| `knows` | `knows: {affinity}` |
 | `attr` | `attr: string` `op: lt\|lte\|eq\|gte\|gt\|ne` `value: number` |
 | `trait` | `trait: string` `has: boolean` |
 | `tag` | `tag: string` `has: boolean` |
@@ -167,7 +168,10 @@ presentation, folklore and whether a Record choice is required.
 ## Enumerations
 
 **SlotRole** — `head` · `family_member` · `spouse` · `child` · `sibling` · `cadet` · `unwoken` · `retainer` · `rival_house` · `outsider` · `heirloom` · `spellbook` · `tutor` · `rival` · `fragile` · `the_match` · `listener_record` · `listener_blood` · `guardian` · `foremost` · `second_foremost` · `newly_placed` · `newly_taught` · `set_to_a_book` · `sole_heir_unwed` · `sole_heir_spent`
-<br>Who a slot may cast. `core/src/events/slots.ts` narrows the pool.
+<br>Who a slot may cast. `core/src/events/slots.ts` narrows the pool. Slot fields: `role: head|family_member|spouse|child|sibling|cadet|unwoken|retainer|rival_house|outsider|heirloom|spellbook|tutor|rival|fragile|the_match|listener_record|listener_blood|guardian|foremost|second_foremost|newly_placed|newly_taught|set_to_a_book|sole_heir_unwed|sole_heir_spent` · `castBy: engine|player = "engine"` · `count: {min, max}?` · `optional: boolean = false` · `filters: Filter[] = []` · `select: {bestBy}?` · `bind: event|arc = "event"` · `onMissing: "cancel_arc" | "recast" | "continue_absent" | {inherit}?` · `showLine: boolean?`
+
+**PoolSpec** — `family_knows: affinity: fluid|thermal|aero|terra|life|death|light|darkness` · `slot: slot: string; attrs: {attr, weight}[]` · `party_sum: slots: string[]; attr: string` · `family_sum: attr: string` · `family_max: attr: string` · `family_any: attr: string; atLeast: number` · `record: against: {eventId, eventTag, record, greyed, discrepancyState, withinYears, hasClaim, measure}`
+<br>What a check scores. family_knows is binary completed knowledge; slot attributes all come from the same participant.
 
 **Purpose** — `advance_clause` · `change_relationship` · `worldbuild_through_action` · `establish_magic_rule` · `test_magic_rule` · `change_standing` · `plant_rumour` · `force_record_choice` · `buy_patience`
 <br>Every template declares exactly three, all distinct.

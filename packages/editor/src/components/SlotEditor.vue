@@ -22,6 +22,19 @@ const names = computed(() => Object.keys(props.slots));
 
 function touch() { emit('change'); }
 
+function setCasting(spec: SlotSpec, field: 'role' | 'castBy', value: string) {
+  if (field === 'role') spec.role = SlotRoleS.parse(value);
+  else spec.castBy = value === 'player' ? 'player' : 'engine';
+  if (spec.castBy !== 'engine' || spec.role !== 'family_member') delete spec.select;
+  touch();
+}
+
+function setSelection(spec: SlotSpec, value: string) {
+  if (value.trim()) spec.select = { bestBy: value.trim() };
+  else delete spec.select;
+  touch();
+}
+
 function add() {
   let n = 1;
   while (props.slots[`SLOT_${n}`]) n += 1;
@@ -89,10 +102,10 @@ function needsAbsentBody(spec: SlotSpec): boolean {
     <div v-for="name in names" :key="name" class="slot">
       <div class="slot-head">
         <input class="slot-name" type="text" :value="name" @change="rename(name, ($event.target as HTMLInputElement).value)" />
-        <select :value="slots[name]!.role" @change="slots[name]!.role = ($event.target as HTMLSelectElement).value as never; touch()">
+        <select :value="slots[name]!.role" @change="setCasting(slots[name]!, 'role', ($event.target as HTMLSelectElement).value)">
           <option v-for="r in ROLES" :key="r" :value="r">{{ r }}</option>
         </select>
-        <select :value="slots[name]!.castBy" @change="slots[name]!.castBy = ($event.target as HTMLSelectElement).value as never; touch()">
+        <select :value="slots[name]!.castBy" @change="setCasting(slots[name]!, 'castBy', ($event.target as HTMLSelectElement).value)">
           <option value="engine">cast by engine</option>
           <option value="player">cast by player</option>
         </select>
@@ -116,6 +129,11 @@ function needsAbsentBody(spec: SlotSpec): boolean {
       </div>
 
       <div class="filters">
+        <label v-if="slots[name]!.role === 'family_member' && slots[name]!.castBy === 'engine' && !slots[name]!.count">
+          Best eligible member by (blank: random)
+          <input aria-label="Best member attribute" :value="slots[name]!.select?.bestBy ?? ''"
+                 @change="setSelection(slots[name]!, ($event.target as HTMLInputElement).value)" />
+        </label>
         <div v-for="(f, i) in slots[name]!.filters" :key="i" class="filter-row">
           <FilterBuilder :model-value="f" :slot-names="names" @update:model-value="(v) => setFilter(slots[name]!, i, v)" />
           <button class="btn tiny" @click="removeFilter(slots[name]!, i)">×</button>
