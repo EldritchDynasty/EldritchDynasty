@@ -144,6 +144,7 @@ events:
           outcomes:
             - id: filed
               weight: 100
+              tags: [self_expression]
               text: The letter goes into the archive with the others. It is a very tidy archive.
               effects: []
         - id: counter
@@ -275,6 +276,7 @@ events:
           outcomes:
             - id: left
               weight: 100
+              tags: [self_expression]
               text: >-
                 Nothing goes out. The house keeps its own counsel a while
                 longer, the way it has kept everything else it has not
@@ -330,6 +332,7 @@ events:
           outcomes:
             - id: stood
               weight: 100
+              tags: [self_expression]
               text: >-
                 Nothing is put to anyone. Whatever the arithmetic says, they
                 are still married in the morning, and the house has decided,
