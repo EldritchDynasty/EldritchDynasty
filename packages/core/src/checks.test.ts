@@ -1,4 +1,4 @@
-import { acquireLibraryCopy, attr, beginStudy, completeStudies, degradeLibraryCopy, evalFilter, gainSpellbook, knowsAffinity, loseLibraryCopy, loseSpellbookKnowledge, makeRng, autoCast } from '@ed/core';
+import { acquireLibraryCopy, attr, beginStudy, completeStudies, degradeLibraryCopy, evalFilter, gainSpellbook, knowsAffinity, loseLibraryCopy, loseSpellbookKnowledge, makeRng, autoCast, resolveSlots } from '@ed/core';
 import { ALL_AFFINITIES, THRESHOLD_AFFINITIES, EventTemplateS, FilterS, PoolSpecS, asId, runRule } from '@ed/schema';
 import type { SlotSpec } from '@ed/schema';
 import type { SimCtx } from './world.js';
