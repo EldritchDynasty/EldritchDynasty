@@ -1,52 +1,53 @@
 # Eldritch Dynasty — Suggestions
 
-> **Purpose:** one current decision surface for future product direction.
+> **Purpose:** one current decision surface for product direction: what to do
+> next, and what to avoid.
 >
-> This file consolidates the still-useful recommendations from
-> `BoringThingsAndHowToPreventThem.md`, `EngagingAndFunSuggestions.md`, and
-> `market research.md`. It deliberately does **not** preserve every historical
-> proposal. `market research.md` remains the evidence ledger and source list;
-> this file is the shorter answer to **“what should we do next, and what should
-> we avoid?”**
+> **Checked against:** `main` at `e5ab83c` and the issue tracker on
+> **17 October 2026**. By then the tracker had one open issue (#1641, a CI timing
+> P0) and the commercial pass (#277) had closed with all fourteen children done.
+> Every claim below about what the game does or measures cites the issue, file
+> or `docs/BALANCE-LOG.md` entry it comes from. Re-check those before relying
+> on a number. They move.
 >
-> The concept brief remains authoritative for game rules. Open issue plans remain
-> authoritative for work that is not yet built.
+> `market research.md` is the evidence ledger and source list. This file is the
+> shorter answer. The concept brief is still the authority on game rules, and
+> `issuesneedingowneraction` holds the owner-only release steps.
 
 ---
 
 ## 1. Product direction in one paragraph
 
-Do not make Eldritch Dynasty broader. Make its distinctive loop easier to
-understand, harder to doubt, more personal, faster on a second run, and easier
-to show to another person.
+Do not make Eldritch Dynasty broader. Make its distinctive loop **true in
+measured play, proven on real players, faster on a second run, and visible to
+someone who has never heard of it.**
 
-The product is strongest when one act touches all three of its load-bearing
-ideas:
+The product is strongest when one act touches all three load-bearing ideas:
 
 1. **blood** — the family is materially different because of what was bred,
-   spent, married, inherited, or lost;
-2. **debt / Ledger** — the house is pursuing something over centuries and the
+   spent, married, inherited or lost;
+2. **debt / Ledger** — the house is pursuing something over centuries, and the
    old contract still constrains the present;
 3. **record** — what the house says happened can matter differently from what
    happened.
 
-A useful store-sized sentence remains:
+Store sentence:
 
 > **Breed a bloodline for five centuries, decide what the family writes about
 > what it did, and face the creditor who kept the other copy.**
 
-A useful player-memory sentence is even sharper:
+Player-memory sentence:
 
 > **I bred this family, lied about what it did, and centuries later the lie came
 > back when the debt was read.**
 
-Future work should make those sentences truer in play.
+Future work should make those sentences truer in play. Not just in copy.
 
 ---
 
 ## 2. The five feelings to optimise for
 
-A feature is valuable when it strengthens at least one of these without
+A feature is worth building when it strengthens at least one of these without
 weakening the others:
 
 - **I have a plan.**
@@ -55,513 +56,310 @@ weakening the others:
 - **This generation is different.**
 - **I want to see how this ends.**
 
-These are more useful than “more depth”, “more content”, or “more systems”.
-They describe player experience rather than implementation volume.
+They describe what the player feels, not how much was built. "More depth",
+"more content" and "more systems" are not on the list.
 
 ---
 
-## 3. What is already good enough to protect
+## 3. What shipped since the last version — protect it
 
-Several ideas that were once recommendations are now part of the game or have
-already had dedicated work. Do not reopen them as broad feature proposals.
+The previous version of this file listed most of the items below as future
+work. They are on `main` now. **Do not reopen them as feature proposals.**
+Protect them, and measure whether they carry the experience.
 
-### Naming is no longer clerical work
+| Was a suggestion | Now | Protect |
+|---|---|---|
+| Make "Choices Matter" credible | #334 finished on 17 Oct: **0 write-only memory keys, 0 prose-only choices, 0 unclassified keys**. Both findings are validation **errors** now. 25 reserved memories have named later readers in `events/remembered_accounts.yaml`. Eight choices are declared `self_expression` on purpose. | A new choice that changes nothing fails the build. Never weaken that rule to land content. |
+| Finish the opening (the Examination) | #343 shipped via #501: schema, runtime, save, replay, client, founder naming. Paired-seed balance evidence is in BALANCE-LOG (#1741). | No dominant answer. Every answer stays a readable given/owed trade-off. |
+| Progressive first-fifty-year reveal | #368: disclosure, reveal notices, a returning-reader opt-out, and the 50-year delegation gate. | Reveal a rule when it becomes actionable. Don't hide one. |
+| Second run reaches new context faster | Skip-seen prose (#267, `skipSeenProse` in Reading settings); interaction-shape, stall and divergence instruments (#270–#272); #341's ranked rewrite. | Never auto-skip a changed variant, a decision, a Record block, a rite or an interlude. |
+| Family tree as a strategic surface | #268: search (now diacritic-insensitive, #1759), hall filter, direct-line rooting, relevance, known succession, kinship paths, TreeCounsel. | Surface people for what they **did**, not the slot they fill. |
+| Chronicle as causal memory | #269: dated causal backlinks from bill to page to act. | No hidden formulas. Causal legibility, not debug telemetry. |
+| House Afterimage | #260: `afterimageModel` in `client/src/lib/book.ts`, exported as a PNG. | No grade, no score, no "good ending". |
+| Contextual help without omniscience | #273: graduated, in-world adviser help. | First the diagnosis, then the knowable rule. Never the hidden roll. |
+| Reading comfort and localisation readiness | #275 and #276: text scale, reading font, reduced motion, keyboard paths, pseudo-loc, and the saved-prose decision in `docs/LOCALISATION.md`. | The Chronicle keeps the words the player actually saw. |
+| — (new) | **Plain English** reading mode (#410/#415). Owner-ruled **launch-required** on 14 Oct. 5,492 counterparts, 0 missing. A zero-gap guard protects new content. | Mechanics are identical in both modes. Only the words change. |
+| — (new) | 30 stable achievement IDs (`core/src/achievements.ts`) and a Steam backend. The **33-year Demonstration** campaign, with guaranteed beats (§4, P1-3). | One mechanism, no `if (demo)` in core. |
+| — (new) | Unsigned **v0.1.0-beta.3** builds: a Windows installer that passed a fresh-VM install and cold resume, an Android AAB, and iOS simulator save/resume proof. | Hosts own no rules. |
 
-The historical version asked for hundreds of names. Current runs ask for a
-small enough set that naming can mean recognition rather than data entry.
+### Interaction rules that still hold
 
-**Protect:** only ask the player to name someone when the name itself matters.
-
-### Consequences are shown before the next question
-
-The client now preserves the middle beat:
-
-**decide → consequence → decide again**
-
-**Protect:** never replace an answered decision with the next prompt before the
-player sees what the answer did.
-
-### The Chronicle is not the passage log
-
-Routine actions should not flood the object that is supposed to preserve a
-five-century legend.
-
-**Protect:** promote firsts, losses, reversals, relationships, claims, rungs,
-rites, and remembered consequences; batch or omit receipts.
-
-### The family cast is becoming situational rather than constitutional
-
-A changing name in the same permanent office is not a changing story.
-
-**Protect:** surface people because of what is happening to them now, not
-because every generation must show the same five roles.
-
-### The game now has stronger long-horizon structure
-
-House Ambitions, consequence echoes, generation arcs, readable ladder blockers,
-stronger Match framing, advisers, mechanically distinct Ages, rival threads,
-and deliberate rite presentation have all had dedicated work.
-
-**Protect:** measure whether those systems are actually carrying the experience
-before inventing replacements for them.
+- **decide → consequence → decide again.** Never replace an answered decision
+  with the next prompt before the player sees what the answer did.
+- **The Chronicle is not the passage log.** Promote firsts, losses, reversals,
+  claims, rungs and rites. Batch or drop the receipts.
+- **The cast is situational.** Bring people forward for what is happening to
+  them now.
 
 ---
 
 # 4. Current highest-value directions
 
-## P0 — Make “Choices Matter” mechanically credible
+The old P0 list is done. The gaps below come from what the evidence on `main`
+now shows. Each one comes from a measurement, not from taste.
 
-The commercial promise is fragile if two buttons differ in prose but converge in
-state.
+## P0-1 — The top of the ladder is a promise the game almost never keeps
 
-The active choice-audit work is therefore product work, not housekeeping.
+**Evidence** (BALANCE-LOG, 10–11 Oct, #332/#378):
 
-### Desired outcome
+| 512 × 500-year runs | Apotheosis |
+|---|---:|
+| ordinary (chronicler) play | **0 / 512** |
+| `ascendant` policy: a bot playing *only* to climb | **1 / 512 (0.2%)** |
+| owner's target band (#332) | **8–29%**, floor reported but not enforced |
 
-For every meaningful choice, at least one of these is true:
+The recipient funnel at 512 runs stops at almost every gate: alive 35 → power
+22 → books 20 → circle 20 → Madness 13 → Mind 6 → clauses 3 → Respect 1 → God 1.
+Ordinary play never produces a Madness sample at 90. The highest is 70.1. Only
+deliberate rite-buying gets there.
 
-- persistent state differs;
-- a later eligibility or callback differs;
-- a person or relationship changes;
-- the Chronicle can later prove the difference;
-- the option is explicitly self-expression and is authored as such.
+**Why it is P0:** three player-facing surfaces promise this ending.
 
-### What not to do
+- The Steam copy (`store/steam/README.md`) sells the Long Line as having *"the
+  complete Ascension Ladder"*.
+- The achievement `ending_all_long` asks for *all five* Long Line endings. The
+  v1 rate table measured `ending_apotheosis` at **0/100 in every column**.
+- The Long Line's ending list puts `apotheosis` first.
 
-Do not create contrived callbacks merely to make a linter green. If a memory
-flag is redundant because the Chronicle already preserves the act, delete the
-flag. If the choice is intentionally expressive, say so explicitly.
+A player who tries for the summit for two runs, never sees it, and then reads an
+achievement that needs it will write the Steam review this project least wants:
+*the choices don't matter*.
 
-### Evidence to keep
+**Decide one of these. Do not drift:**
 
-Track:
+1. **Make it reachable for a player who commits to it.** Work the joint gates
+   that now bind: Mind-over-Madness containment after the rite, the Ledger
+   overlap, and Exalted after the Unmaking spends two tiers. One mechanism at a
+   time, paired seeds, never by making Eldritch Power reliable or lowering the
+   God-Madness floor.
+2. **Make it honestly mythic.** Keep it near-unreachable and say so: store copy
+   that does not promise it, an achievement that does not require it, and
+   in-game framing that presents the God rung as a rumour the record tells
+   about other houses.
+3. **Change the target on the record.** The owner revises the 8% band on #332's
+   successor. The gate and BALANCE-LOG cite the decision.
 
-- write-only memory keys;
-- prose-only choices;
-- converging outcome signatures;
-- option-selection skew;
-- later callback rate;
-- delayed consequences with a recoverable source.
+All three are legitimate. What is not legitimate is publishing the store copy
+and the achievement while the measured rate is 0.2% for a bot built to climb.
 
-This is the clearest route to making “That happened because of me” true.
+## P0-2 — Nobody has watched a human play it
 
-**Failure should usually create a new problem, not merely subtract progress.**
-A lost person, failed rite, broken promise, bad Match, or missed opportunity is
-more engaging when it changes what the house must now decide. Pure subtraction
-can be necessary, but repeated setbacks that only make the same goal farther
-away turn consequence into delay.
+**Evidence:** `docs/PLAYTEST.md`. Every human acceptance test was **waived on
+28 September and none was run**: five first-timers finishing a Short Line,
+second-run divergence, naming three people, blaming a decision rather than a
+number, a full screen-reader run. "Waived means not owed, not passed."
 
----
+Everything this project knows about fun comes from bots. Thousands of 500-year
+harness runs prove the game is *reachable* and *coherent*. None of them can say
+it is *legible*, *moving* or *worth NZD 28–35*. The harness's policies are bots
+that never get bored, never misread a label, and never close the window at
+minute twelve.
 
-## P0 — Finish the opening as a statement of the whole game
+**Do now:** run the existing protocol on the beta.3 Windows installer, which
+already passed a fresh-VM install and cold resume. Five first-time players on a
+Short Line is cheap. Record first, interpret second, tune last. Ask:
 
-The Examination is valuable because it can make the first minutes teach the
-same grammar the whole campaign uses: **given / owed, person / house, benefit /
-price**.
+- *Which three people from that run do you remember, and why?*
+- *What was the house trying to do?*
+- *Name one decision that changed what happened later.*
+- *Where did you stop understanding what you were looking at?*
+- *Would you start another house? Why or why not?*
 
-### Desired outcome
+A failed observation opens a narrow follow-up issue. It does not reopen the
+waived one.
 
-The opening should establish:
+## P0-3 — Give the Long Line a reason to exist beyond its length
 
-- who the founder is;
-- what the debt feels like;
-- that every gift is paid for;
-- that there is no obviously correct build;
-- that names matter;
-- that the house's choices will be remembered.
+**Evidence** (#274 baseline, BALANCE-LOG 2 Oct; 12 shared seeds per cell):
 
-### Guardrails
+- The static inventory finds **no authored event or arc exclusive to either
+  campaign**. The differences are term, Ledger capacity (3 vs 9) and ending set.
+- Chronicler play reached a Long-exclusive ending in **0/12** runs. Ascendant
+  play reached one in 1/12, and that was `unmade`.
+- Long's distinctive reach comes mainly from going past Short's three-clause
+  cap.
+- Encouragingly, **35.8%** of late-Long choices had an interaction shape that
+  never appeared in the paired Short run. So late Long is not just "Short plus
+  200 years".
 
-- no dominant answer that turns the opening into point-buy;
-- no hidden “correct morality”;
-- paired-seed equivalence evidence for answer packages;
-- do not invent balance rates merely to complete the UI;
-- keep the long-run founder/guardian framing consistent with the concept brief.
+The Short Line is the default and the Long Line is the flagship. If the Long
+Line's two exclusive endings are 0.2% (Apotheosis) and rare (Unmade), its
+promise comes down to "more years". That is a pacing risk and a pricing risk.
 
-This is one of the best opportunities to make the product legible before the
-player meets the larger simulation.
-
----
-
-## P0 — Make the first fifty years teach the interface progressively
-
-The early game currently has enough systems that showing everything at once can
-turn depth into noise.
-
-### Desired outcome
-
-Reveal strategic surfaces when the player has a reason to care about them.
-
-Examples:
-
-- do not foreground advanced ladder detail before the player has an expresser;
-- introduce Assize with the first decision where it matters;
-- explain Seal / Blood / Highest in context, not as unexplained labels;
-- keep seed and diagnostic information behind Advanced;
-- give money, standing, and other headline resources their own readable rows;
-- confirm a decision and, where truthful, tell the player whether its result is
-  immediate, delayed, or unknowable yet;
-- preserve save-and-leave as a safe navigation action rather than making
-  “return to menu” destructive.
-
-### Principle
-
-**Progressive reveal is not hiding rules.** It is sequencing them so the player
-learns a rule at the moment it becomes actionable.
+**Direction:** give Long a late-game structure that Short cannot hold. That
+could be post-1342 Age content, clause recoveries that change what the family
+can attempt, or a late ending path that ordinary play can reach. Then measure
+**Long-exclusive reach under chronicler play**, not only under the ascendant
+bot. Build on the Ages, the Ledger and the ladder. No global late-game
+difficulty multiplier.
 
 ---
 
-## P0 — Restore a real but rare upper-ladder tail
+## P1-1 — Afterimage v2: from a statistics card to a house
 
-An advertised final ambition that is effectively impossible becomes waiting,
-not aspiration.
+**Evidence:** `afterimageModel` (book.ts) prints seven counts and one
+Chronicle quote: pages written, left blank, improved, lies standing, clauses
+recovered, the attested rung, living blood. It names **no person**.
 
-The God route should remain difficult, costly, and partly numinous. It should
-also exist in measured play.
+The suggestion was *"What was this house?"* What shipped answers *"How many
+pages did this house write?"* Seven numbers are a scoreboard.
 
-### Desired outcome
+**Add, from existing read models only:**
 
-- the authored rung floors remain meaningful;
-- the population produces a rare genuine candidate tail;
-- the route is not fixed by making Eldritch Power reliable;
-- the route is not fixed by silently lowering the God-Madness requirement;
-- progression-side costs and rites do real work;
-- the player can read the current blocker without seeing a spreadsheet of
-  hidden genetics.
+- three central people, chosen by how often the Chronicle and the decision log
+  name them;
+- the person the house spent, from rite and death records;
+- the closest brush with extinction (lowest living-blood year);
+- the oldest standing embellishment and the oldest blank;
+- a compact lineage silhouette for the direct line.
 
-### Measure together
+Keep the rules: no grade, no rank, no reconstruction of what a blank omitted.
+This is the object players screenshot. It should look different for every
+house.
 
-For every calibration candidate, record:
+## P1-2 — Write new trade-offs for the money-shaped choices
 
-- power and Madness tail reach;
-- `madness > mind` overflow;
-- rite uptake and rite provenance;
-- ending distribution;
-- blood/genetic invariants;
-- years a house spends with one unchanged blocker and no actionable route.
+**Evidence** (#341 closeout, 6 Oct): replay familiarity is down to **27.1%**,
+the adopted target. But **money appears in 9 of the 10 most common choice
+shapes**, accepted as known debt. When the ranked slice emptied those slots,
+other money shapes refilled them from the tail. BALANCE-LOG says plainly:
+*"Moving it needs new trade-offs written on purpose, not corrected prices.
+That is a content commission, not a sweep."*
 
-Reachability and boredom are the same problem when the player is waiting at the
-same closed door for generations.
+**Direction:** commission that content. Each rewrite trades coin against
+something only this game has: a name in the record, a branch's grievance, a
+person's availability for the Match, a Discrepancy someone can prove. Measure
+with `gate:replay` before and after. Do not lower the docket budget to make the
+figure look better.
 
----
+## P1-3 — Package the demo, and decide what it hands to the full game
 
-## P1 — Make a second run reach new context faster
+**Evidence:** the 33-year `demo` campaign is built and verified on 64 seeds in
+both prose modes. It runs the Insurrection opening, Daveed's crossing in 1043, a
+forced Record in 1044, an interlude in 1045, and a verdict by 1075.
+`client/src/lib/game.ts` says it *"is not offered on the normal front door
+yet"*. No demo build target exists.
 
-A long generational game cannot ask a returning player to reread the same
-known material at first-run speed.
+**Direction:**
 
-### Desired outcome
+- add a demo build that opens straight into the Demonstration, with its own
+  save namespace (already isolated with `demo-`);
+- end it on the forward-looking problem, not a timer;
+- **do not transfer the demo save** into a full run. The miniature compresses
+  an Age and kills Daveed on a fixed date, so it is not a canonical Short Line
+  opening. Instead, consider entering the finished demo house into the **Library
+  of Houses**. Then the full game *remembers* the demo without giving a
+  head start. That is the replay rule this game already uses.
 
-The second run should diverge early because of history, policy, people, or
-Library-of-Houses context — not because enemies have more health or numbers are
-larger.
+## P1-4 — The rare tail: content players will almost never see
 
-### Build on existing systems
+**Evidence:** at 800 × 500 years, the rarest of 487 non-frame events fire in
+0.75–1.25% of runs. AGENTS.md records seven frame interludes that fire in 1–4 of
+60 runs, each waiting on a single named lie. Moving three interludes onto the
+*page* (`chronicled`) took them from 0 to 13–17 runs in 60.
 
-Prefer:
+**Direction:** for each tail item, decide whether it is *meant* to be
+legendary. If it is not, fix the funnel upstream (the launcher, the premise, the
+page), as the `chronicled` move did. Do not raise its weight. Diagnose with the
+five-stage funnel in §5.
 
-- seen-state presentation;
-- fast reveal / skip for already-read prose;
-- standing policy for mastered, reversible, low-risk repetition;
-- interrupt that policy when the state changes materially;
-- Library-of-Houses callbacks that alter context, not starting power;
-- campaign identity that makes Short and Long structurally different.
+## P1-5 — Use visuals to prove the game is systemic
 
-### Measure
+A text-heavy game's screenshots can look like a sequence of prose panels. Every
+visual element should answer at least one of: **who matters? what changed? what
+did this cost? what is the house trying to do? what is remembered?**
 
-- exact prose repeated in the first 30 prompts;
-- time to first unseen event/context;
-- time to first strategic divergence from the previous run;
-- interaction-shape streak;
-- how many decisions the player delegates and then overrides.
-
----
-
-## P1 — Turn the family tree into a strategic surface
-
-A dynasty game has a visual asset most narrative games do not: a tree that is
-both story and state.
-
-The risk is that dozens of people become inventory.
-
-### The tree should answer questions
-
-Without exposing raw genome internals, the player should be able to discover:
-
-- who matters to the current House Ambition;
-- who can inherit;
-- which branch is aggrieved;
-- who is related to the current Match;
-- who carries a remembered grudge or promise;
-- who has been spent, lost, married out, or made exceptional;
-- where a named person sits in the line the player has been following.
-
-### Emotional rule
-
-Bring people back because of what they **did**, not merely because of the slot
-they currently fill.
-
-A successful session should leave the player remembering people, not only
-functions.
-
----
-
-## P1 — Make the Chronicle navigable as causal memory
-
-The Chronicle is a distinctive moat only if it helps the player connect old
-acts to current consequences.
-
-### Desired flow
-
-**current bill → old page → original act**
-
-Useful affordances include:
-
-- “from the winter of 1218”;
-- jump to the related Chronicle page;
-- show the named people / houses involved;
-- link an echo to the act it remembers;
-- preserve uncertainty where the fiction is uncertain.
-
-Do **not** expose the hidden formula (“Bearing +12 caused −0.3 appetite”). The
-goal is causal legibility, not debug telemetry.
-
-Record / Omit / Embellish should also carry **immediate temptation**. The three
-answers are strongest when the player is choosing between a present advantage,
-a present cost, a relationship, standing, or uncertainty **and** the version of
-history the house will leave behind. If the Record choice is merely “truth,
-silence, or lie” with no reason to want the dangerous answer now, it becomes a
-ritual rather than a strategy.
-
----
-
-## P1 — Create a compact post-run House Afterimage
-
-A full Chronicle is valuable but too large to be the default shareable object.
-
-A generated afterimage can make a completed house easy to remember, screenshot,
-compare, and discuss.
-
-### It should be factual, not a scorecard
-
-Possible elements:
-
-- house name and sigil;
-- ending;
-- three central people;
-- one person sacrificed;
-- oldest surviving embellishment;
-- oldest blank;
-- largest holding and worst loss;
-- closest brush with extinction;
-- longest-running outside relationship;
-- one Match rejection that later mattered;
-- one Chronicle sentence;
-- a compact five-century lineage silhouette.
-
-No grade. No morality score. No “good ending”.
-
-The question is:
-
-> **What was this house?**
-
----
-
-## P1 — Use visuals to prove the game is systemic, not merely literary
-
-The market risk for a text-heavy strategy game is that screenshots can look
-like a sequence of prose panels. The product needs visual surfaces that show
-state changing over time.
-
-### Highest-value visual surfaces
-
-1. **The family tree** — names, branches, marriages, losses, highlighted
-   continuity.
-2. **Match comparison** — three people as three futures, with clear differences
-   the player can reason about.
-3. **Chronicle / Record** — the same act as fact, omission, or embellishment,
-   and the later page that remembers it.
-4. **House holdings / plat** — accumulation and reversal without turning the
-   game into a conventional world-map strategy game.
-5. **Age identity** — typography, marginalia, illumination, wear, framing, or
-   restrained palette shifts that make a new era visually recognisable.
-6. **Rites** — deliberate staging and before/after state, not another ordinary
-   event card.
-7. **House Afterimage** — a visually coherent object suitable for the ending,
-   screenshots, and sharing.
-
-### Visual rule
-
-A new visual element should answer at least one of:
-
-- **who matters?**
-- **what changed?**
-- **what did this cost?**
-- **what is the house trying to do?**
-- **what is remembered?**
-
-Decoration that answers none of those should not compete with the text.
+Highest-value surfaces, in order: the family tree changing over generations;
+the Match as three futures; Record / Omit / Embellish next to the page it
+writes; a callback beside the old page it cites; a rite as before/decision/after;
+the Afterimage (after P1-1). Decoration that answers none of those questions
+should not compete with the text.
 
 ---
 
 # 5. The boredom risks worth measuring
-
-Boredom here is not slowness.
 
 > **A boring stretch is time in which the player keeps performing actions
 > without receiving new information, facing a materially different trade-off,
 > changing the direction of the house, or seeing a consequence that makes an
 > earlier choice mean something.**
 
-## Spine gap
+Most of these now have instruments. Use them before inventing new ones.
 
-Years since any major structural beat:
+| Risk | Question | Instrument on `main` |
+|---|---|---|
+| Spine gap | Years since a Match, Record, Age boundary, clause, rung, rite, Regalia or land change | `density-gate.ts` (#270) |
+| Interaction-shape streak | How many prompts in a row with the same mechanical rhythm? | `#271` shapes, `gate:density` |
+| Progress stall | Years at one blocker with no player-actionable route | #270's stall detector |
+| Maintenance streak | The same verb, target and answer with nothing changing in between | delegation / standing orders (#219, #368) |
+| Second-run sameness | Repeated prose and shapes early in run two | `gate:replay` (#272, #341) |
+| Delayed-consequence attribution | Can the player find the act an echo remembers? | #269 backlinks; `echo-chains.test.ts` |
+| Tail funnel | Why does a rare item not fire? | below |
 
-- Match;
-- Record block;
-- Age boundary;
-- clause recovery;
-- rung change;
-- rite offer/result;
-- Regalia gain/loss;
-- major land change;
-- inherited grudge / branch consequence.
+For rare content, separate the funnel stages:
 
-A long run of ordinary choices can be healthy until nothing changes what those
-choices mean.
+1. the prerequisite state never exists;
+2. the state exists but slots cannot cast;
+3. a condition is false;
+4. it is eligible but never selected;
+5. it is selected but a branch never resolves.
 
-## Interaction-shape streak
+"Fired 2%" is not a diagnosis.
 
-How many prompts in a row have the same mechanical rhythm even when the prose
-is different?
-
-Distinct event text is not enough if every decision is paragraph → two buttons
-→ immediate outcome.
-
-## Progress stall
-
-For each long-horizon goal, measure:
-
-- years with the same dominant blocker;
-- years since a player-actionable path existed;
-- generations with no change in the active ambition;
-- repeated attempts at an action that cannot yet succeed.
-
-## Maintenance streak
-
-A chore is a repeated action whose **answer does not change**.
-
-Measure repeated:
-
-- verb;
-- target class;
-- outcome preference;
-- with no meaningful intervening state change.
-
-Delegate or batch only when the action is frequent, reversible, low-risk, and
-already mastered.
-
-## Delayed-consequence attribution
-
-When an old act returns, can the player understand what it is remembering?
-
-Every delayed-consequence system should have at least one path proving the
-player-facing text can identify its source act without revealing hidden math.
-
-## Tail funnel
-
-For rare content, distinguish:
-
-1. prerequisite state never exists;
-2. state exists but slots cannot cast;
-3. condition is false;
-4. eligible but never selected;
-5. selected but a branch never resolves.
-
-“Fired 2%” is not a diagnosis.
+**The gap the instruments cannot close:** each one measures a bot. None says
+whether a person was bored. That is P0-2.
 
 ---
 
 # 6. What not to build
 
-## No tactical combat system
-
-War should matter through Muster, people, land, standing, promises, and
-consequences. A tactical layer spends production on a market where the game is
-least distinctive.
-
-## No conventional strategic world map as the centre
-
-The family tree, Chronicle, and house holdings are more specific to this game.
-A world map may support context; it should not replace the dynasty as the main
-decision surface.
-
-## No universal relationship bars
-
-Use named relationships, remembered grievances, advisers, and recurring
-threads. A bar for everybody turns specific people back into inventory.
-
-## No generic roguelite meta-upgrade tree
-
-Replay should change remembered history and context, not simply start run two
-with permanent power.
-
-## No global difficulty-by-year multiplier
-
-If late play is flat, strengthen an existing system that owns time: Ages,
-Ledger, Bearing, land, rites, rivalries, or ambitions.
-
-## No new currency merely to create “depth”
-
-Every meter competes for attention with blood, debt, record, people, and
-standing. Add one only when an important decision cannot be expressed with
-existing state.
-
-## No progress bars for mysteries that are meant to remain mysterious
-
-The player needs an actionable model, not omniscience. Explain what can be
-acted on; preserve uncertainty where uncertainty is the fiction.
-
-## No “more ordinary events” as the default repetition fix
-
-Current work already shows that repetition is often about decision shape,
-concentration, callbacks, or missing consequences rather than a shortage of
-prose.
-
-Do **not** lower the global event/docket budget merely to make the repetition
-numbers look better. Fewer questions is not the same as better questions: fix
-the repeater, interaction shape, callback, or owning progression system while
-preserving the measured decision density.
+- **No tactical combat.** War matters through Muster, people, land, standing
+  and promises.
+- **No conventional world map as the centre.** The tree, Chronicle and holdings
+  are more specific to this game.
+- **No universal relationship bars.** Named relationships, grievances and
+  recurring threads instead.
+- **No generic roguelite meta-upgrades.** Replay changes remembered history
+  (the Library of Houses), not starting power.
+- **No global difficulty-by-year multiplier.** Strengthen the system that owns
+  the time: Ages, Ledger, Bearing, land, rites, rivals, ambitions.
+- **No new currency to create "depth".** Every meter competes with blood, debt,
+  record, people and standing.
+- **No progress bars for mysteries.** An actionable model, not omniscience.
+- **No "more ordinary events" as the default repetition fix**, and no lowered
+  docket budget to flatter the numbers. Fix the repeater, the shape, the
+  callback or the owning system.
+- **No fix for the God tail that makes Eldritch Power reliable** or quietly
+  lowers the God-Madness floor (invariant 4; #378).
 
 ---
 
-# 7. Visual and storefront implications
+# 7. Storefront implications
 
-The game must be marketable with **gameplay**, not only with atmosphere.
+The store has to sell **gameplay**, not only atmosphere. A screenshot or trailer
+set should show, fast:
 
-A useful screenshot/trailer set should prove, quickly:
+1. a family changing across generations;
+2. a Match as a strategic comparison;
+3. a costly choice;
+4. Record / Omit / Embellish changing what the book says;
+5. an old act returning;
+6. a rite spending a named person;
+7. an ending that summarises a house unlike another run's.
 
-1. a family changes across generations;
-2. a Match is a strategic comparison;
-3. the player makes a morally or strategically costly choice;
-4. Record / Omit / Embellish changes what the book says;
-5. an old act returns later;
-6. a rite spends a named person;
-7. the ending can summarise a house that looks different from another run.
+The first trailer answers **"what do I do?"** before **"how is this written?"**
 
-The first trailer should answer **“what do I do?”** before it answers **“how is
-this written?”**
-
-Avoid store art that tries to explain the game with paragraphs. Let the logo,
-art direction, and gameplay surfaces do different jobs.
+**Store copy must match measured play.** See P0-1: do not publish *"the complete
+Ascension Ladder"* while the summit sits at 0.2% for a bot built to climb. Every
+checkbox in `store/steam/README.md`'s publish list is still open, and every
+capsule asset is still TODO.
 
 ---
 
 # 8. Demo direction
 
-Do not optimise the demo to an arbitrary minute count.
-
-Optimise it to complete one recognisable Eldritch Dynasty shape:
+Optimise the demo to complete one recognisable Eldritch Dynasty shape, not to
+fill a fixed number of minutes:
 
 1. the debt;
 2. a person the player can care about;
@@ -569,66 +367,41 @@ Optimise it to complete one recognisable Eldritch Dynasty shape:
 4. a meaningful choice;
 5. Record / Omit / Embellish;
 6. an echo proving the game remembered;
-7. the frame / creditor promise;
+7. the frame and the creditor's promise;
 8. a forward-looking problem that makes continuation desirable.
 
-Then measure actual completion time and drop-off.
-
-A demo should end because the **shape is complete**, not because a timer has
-expired.
+The built Demonstration guarantees 1, 5 and 7 by design (signing, forced Record,
+scheduled interlude). Check 2, 3, 4, 6 and 8 **with human players** (P0-2), not
+only with seeds. Then measure actual completion time and drop-off.
 
 ---
 
 # 9. What to measure before adding another major feature
 
-## First-session legibility
+**First session** (humans): time to the first meaningful Match, the first
+Record decision and the first echo; the first point where the player can
+explain their next move; UI concepts seen before they matter.
 
-- time to first meaningful Match;
-- time to first Record decision;
-- time to first consequence echo;
-- prompts before House Ambition affects a choice;
-- first point where the player can explain their next strategic move;
-- UI concepts the player sees before they have a reason to care about them.
+**Agency** (instruments): the choice audit holds at zero. Persistent-state
+divergence between options. Callback rate. The recoverable-source rate for
+delayed consequences.
 
-## Agency
+**Pacing** (instruments): spine gap, shape streak, stall duration, maintenance
+streak.
 
-- persistent-state divergence between options;
-- prose-only / self-expression rate;
-- callback rate;
-- recoverable source rate for delayed consequences.
+**Replay:** `gate:replay` familiarity at or below 27.1% and top shape at or
+below 4.7% (adopted guards). Time to the first unseen context. Seen text
+skipped. Standing policies interrupted by a material change.
 
-## Pacing
+**Endgame:** Apotheosis and Unmade rates under chronicler *and* ascendant play.
+Long-exclusive reach under chronicler play.
 
-- spine gap;
-- interaction-shape streak;
-- strategic-stall duration;
-- maintenance streak;
-- years at one blocker with no action.
-
-## Replay
-
-- repeated prose in the first 30 prompts;
-- time to first unseen context;
-- time to first different strategic plan;
-- seen text skipped;
-- standing policies interrupted by meaningful state changes.
-
-## People
-
-Human playtest question:
+**People** (humans):
 
 > **Which three people from that run do you remember, and why?**
 
-The failure is not that a player disliked somebody. The failure is that they
-remember roles and numbers but no people.
-
-## Chronicle
-
-- voluntary opens;
-- search/filter use;
-- jumps from consequence to source;
-- exports;
-- afterimage/share actions where platform policy and privacy permit.
+The failure is not disliking someone. It is remembering roles and numbers but
+no people.
 
 ---
 
@@ -636,15 +409,16 @@ remember roles and numbers but no people.
 
 Ask these in order:
 
-1. Does this make **blood**, **the debt/Ledger**, or **the record** more
+1. Does this make **blood**, **the debt/Ledger** or **the record** more
    interesting?
 2. Does it create a decision recognisably different from an existing one?
 3. Can its consequence be remembered later?
-4. Does it strengthen one of the five desired player feelings?
+4. Does it strengthen one of the five feelings?
 5. Does it make a second run meaningfully different?
 6. Can the player understand enough to act without an external wiki?
-7. Is it worth the cognitive load and production cost?
-8. Can the idea be proved with an existing surface before adding a new system?
+7. Is it worth the cognitive load and the production cost?
+8. Can it be proved with an existing surface before a new system is added?
+9. **Is the claim it lets us make true in measured play?** (New. See P0-1.)
 
 If the first three answers are **no**, the feature is unlikely to improve the
 product.
@@ -656,48 +430,36 @@ product.
 This is a direction order, not a replacement for issue priority or repository
 coordination.
 
-1. **Credibility:** finish choice consequence auditing and remove dead /
-   misleading choice state.
-2. **Opening:** finish the Examination and progressive early-game reveal without
-   inventing balance decisions that the design has not made.
-3. **Endgame:** restore and measure a real rare God-Madness / Apotheosis path.
-4. **Replay:** reduce rereading and mastered repetition; measure early
-   divergence.
-5. **Navigation:** make the tree and Chronicle answer strategic and causal
-   questions quickly.
-6. **Shareability:** build the factual House Afterimage.
-7. **Commercial proof:** assemble screenshots/trailer/demo around the actual
-   gameplay loop, not around genre labels.
-8. **Localization readiness:** keep prose, UI, layouts, and visual assets
-   structurally translatable; choose launch languages from audience evidence.
-9. **Post-launch breadth:** keep the mod editor and other expansion surfaces
-   behind core-game clarity and polish.
+1. **Truth:** resolve P0-1, the summit. Then fix the store copy and the
+   `ending_all_long` achievement to match whichever route the owner picks.
+2. **People:** run the playtest protocol on beta.3 (P0-2). Let what it finds
+   reorder everything below.
+3. **Flagship:** give the Long Line late-game reach that ordinary play finds
+   (P0-3).
+4. **Shareability:** Afterimage v2 with people in it (P1-1).
+5. **Variety:** the money-shape content commission (P1-2).
+6. **Demo:** package it and decide the Library hand-off (P1-3).
+7. **Tail:** triage the rare content funnel (P1-4).
+8. **Commercial proof:** screenshots, capsules and a trailer from real play
+   (P1-5, §7).
 
 ---
 
 # 12. Relationship to the evidence document
 
-`market research.md` remains the place for:
-
-- competitor evidence;
-- current platform facts;
-- published commercial data;
-- store/Steam guidance;
-- localization evidence;
-- citations and dated sources;
-- changes in the external market.
-
-This file should stay shorter. When evidence changes, update the market report
-first and change this file only when the **decision implication** changes.
+`market research.md` holds competitor evidence, platform facts, published
+commercial data, store and Steam guidance, localisation evidence, and dated
+citations. Update it first when evidence changes. Change this file only when
+the **decision** changes.
 
 ---
 
 # Final principle
 
 The best next feature is unlikely to be the one that makes the simulation
-largest.
-
-It is the one that makes a player say:
+largest. It is the one that makes a player say:
 
 > **I chose that because of this person; the house paid for it; the book
 > remembered it; and the next generation was different because I did.**
+
+And it should be true when they check.
