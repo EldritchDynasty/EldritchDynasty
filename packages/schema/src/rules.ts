@@ -2189,15 +2189,14 @@ const countedSlots: ValidationRule = {
  *   error    two options on one event whose outcomes do the same things. The
  *            player is choosing a label. Shipped content has none, so this is
  *            an error from day one.
- *   warning  a prose-only option — no effect, or only memory nothing reads —
+ *   error    a prose-only option — no effect, or only memory nothing reads —
  *            that is not tagged `self_expression`. Its Chronicle page differs,
  *            which is why self-expression is a legitimate thing to declare; it
  *            has to be declared, not arrived at.
- *   warning  a flag, knowledge key or arc flag that content writes and no
+ *   error    a flag, knowledge key or arc flag that content writes and no
  *            condition reads (invariant 11). Once per key, at its first writer.
  *
- * The warnings are Phase B's worklist. When they reach zero, promote them to
- * errors in the same PR.
+ * Phase B's worklist is complete (#334). New debt is a validation error.
  */
 const choiceConsequence: ValidationRule = {
   id: 'choices/consequence',
@@ -2211,12 +2210,12 @@ const choiceConsequence: ValidationRule = {
     }
     for (const r of audit.rows) {
       if (!isProseOnly(r)) continue;
-      issues.push(warn(this.id, `event:${r.event}/${r.choice}`,
+      issues.push(err(this.id, `event:${r.event}/${r.choice}`,
         `changes nothing that lasts — give it a cost or a remembered consequence, or tag every outcome '${SELF_EXPRESSION_TAG}'`));
     }
     for (const w of audit.writeOnly) {
       const what = w.kind === 'arc_flag' ? 'arc flag' : w.kind === 'knowledge' ? 'knowledge' : 'flag';
-      issues.push(warn(this.id, w.writers[0]!,
+      issues.push(err(this.id, w.writers[0]!,
         `${what} '${w.key}' is written${w.writers.length > 1 ? ` in ${w.writers.length} places` : ''} and read by no condition — author a reader, or delete the write`));
     }
     return issues;

@@ -202,6 +202,7 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: flag, flag: the_elder_descent_not_produced, set: true }
+                - { kind: schedule, event: the_herald_opens_the_old_question, inYears: 1 }
     accounts: [the_heralds_marginal_note, ardwen_stave_of_the_long_descent]
     record:
       subject: what was given to the herald

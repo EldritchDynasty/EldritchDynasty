@@ -391,6 +391,7 @@ events:
               effects:
                 - { kind: flag, flag: seal_held_sideways, set: true }
                 - { kind: arc, op: start, arc: arc_the_given_seal }
+                - { kind: schedule, event: the_sideways_seal_on_the_lease, inYears: 1 }
     record:
       subject: the loss of the Seal
       options:
@@ -448,6 +449,7 @@ events:
             - { kind: flag, flag: the_nine_libraries_burned, set: true }
             - { kind: respect, delta: 1 }
             - { kind: clause, reveal: clause_of_the_kept_thing }
+            - { kind: schedule, event: the_price_after_the_fires, inYears: 1 }
     record:
       subject: what the house did during the burning
       options:
@@ -817,6 +819,7 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: the_church_sanctioned_the_rite, set: true }
                 - { kind: respect, delta: -1 }
+                - { kind: schedule, event: the_permission_is_read_back, inYears: 1 }
             - id: refused_permission
               weight: 38
               text: >-
@@ -828,6 +831,7 @@ events:
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: knowledge, op: grant, flag: knows_the_church_refused }
+                - { kind: schedule, event: the_answer_was_a_refusal, inYears: 1 }
         - id: do_it_unasked
           label: Ask nobody. It is our blood and our house.
           outcomes:
@@ -843,6 +847,7 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
+                - { kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1 }
         - id: let_him_carry_it
           label: Let him carry it. He has carried it this long.
           outcomes:
@@ -1262,6 +1267,7 @@ events:
                 - { kind: rite, rite: great_rite, ascendant: ASCENDANT }
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
+                - { kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1 }
         - id: leave_him_as_he_is
           label: Leave him as he is. He was filled; he was not promised more.
           outcomes:

@@ -15,6 +15,26 @@ import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 
+describe('authored physical acquisition (#334)', () => {
+  it('acquires a copy without teaching anyone, and preserves a worn copy on repeated acquisition', () => {
+    const ctx = bootstrap(bundle, 334, 1042);
+    ctx.world.library.clear();
+    const person = ctx.world.people.get(ctx.world.narrator!)!;
+    const known = [...person.spellsKnown];
+    const effect = { kind: 'spellbook', op: 'acquire_copy', target: 'head', book: 'the_marrow_codex' } as const;
+    applyEffect(effect, ctx, {});
+    expect(ctx.world.library.get(effect.book)).toMatchObject({ acquiredYear: 1042, condition: 100 });
+    expect(person.spellsKnown).toEqual(known);
+    expect(ctx.world.studies).toEqual([]);
+    ctx.world.library.get(effect.book)!.condition = 39;
+    ctx.world.year += 20;
+    applyEffect(effect, ctx, {});
+    expect(ctx.world.library.get(effect.book)).toMatchObject({ acquiredYear: 1042, condition: 39 });
+    const saved = saveGame(ctx);
+    expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
+  });
+});
+
 describe('Named Art book-name prose (#766)', () => {
   const def = bundle.mustSpellbook('the_first_working');
   const file = bundle.sourceOf(def.id)!;

@@ -172,6 +172,7 @@ events:
                 - { kind: treasury, delta: 3 }
                 - { kind: flag, flag: the_burgesses_have_a_grievance, set: true }
                 - { kind: respect, delta: -1 }
+                - { kind: schedule, event: the_grievance_reaches_the_assembly, inYears: 1 }
 
   - id: three_rooms_at_the_gaol
     title: Three Rooms, and One of Ours in the Second

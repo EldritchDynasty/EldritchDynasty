@@ -58,6 +58,7 @@ events:
               effects:
                 - { kind: respect, delta: -2 }
                 - { kind: flag, flag: married_without_paper, set: true }
+                - { kind: schedule, event: the_herald_asks_for_her_mother, inYears: 1 }
         - id: buy_her_a_descent
           label: Take her, and buy her three generations at Bramme first.
           outcomes:
@@ -524,6 +525,7 @@ events:
                 - { kind: treasury, delta: -60 }
                 - { kind: knowledge, op: grant, flag: knows_what_the_yssene_terms_were }
                 - { kind: relationship, from: { slot: DAUGHTER }, to: head, sentiment: 14 }
+                - { kind: schedule, event: the_fourth_yssene_clause, inYears: 1 }
     record:
       subject: the offer out of Yssanne
       options:
@@ -533,7 +535,8 @@ events:
             crowns for a daughter of ours under a law we cannot read, and we
             refused it, and none of us knows whether that was right.
           grantsKnowledge: knows_what_the_yssene_terms_were
-          effects: []
+          effects:
+            - { kind: schedule, event: the_fourth_yssene_clause, inYears: 1 }
           claims:
             - { kind: deed, target: { slot: HEAD }, text: refused a four-hundred-crown foreign offer under terms the house could not read }
         omit:
@@ -783,6 +786,7 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: treasury, delta: -30 }
                 - { kind: knowledge, op: grant, flag: knows_the_ward_was_married_in }
+                - { kind: schedule, event: the_ward_answers_cawdry, inYears: 1 }
         - id: send_her_home
           label: Send her home. She was a ward and the ward is over.
           outcomes:

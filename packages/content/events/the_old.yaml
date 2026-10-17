@@ -200,6 +200,7 @@ events:
           outcomes:
             - id: byname
               weight: 100
+              tags: [self_expression]
               text: >-
                 The byname the province gave him goes into the chronicle, which
                 is honest and is what he was actually called and is, in this

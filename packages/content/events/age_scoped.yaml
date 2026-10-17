@@ -87,11 +87,13 @@ events:
               effects:
                 - { kind: treasury, delta: -220 }
                 - { kind: flag, flag: looted_library, set: true }
+                - { kind: schedule, event: the_three_volumes_are_sorted, inYears: 1 }
         - id: walk
           label: Walk past. There is a war on and coin is a wall.
           outcomes:
             - id: walked
               weight: 100
+              tags: [self_expression]
               text: Somebody from House Ilm buys them on the Thursday.
               effects: []
 
@@ -121,6 +123,7 @@ events:
               text: They thank the house for its time. They take the ledger with them.
               effects:
                 - { kind: flag, flag: church_holds_a_copy, set: true }
+                - { kind: schedule, event: the_copy_comes_back_open, inYears: 1 }
             - id: cracked
               weight: 42
               text: >-

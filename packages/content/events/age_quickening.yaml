@@ -45,6 +45,7 @@ events:
           outcomes:
             - id: quiet
               weight: 100
+              tags: [self_expression]
               text: >-
                 The dogs are kept out of the long room and the milk is dealt
                 with in the kitchen, and inside a fortnight it is a thing the

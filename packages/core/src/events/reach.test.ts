@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
-import { loadGame, saveGame } from '../save.js';
+import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
@@ -18,6 +18,7 @@ import { ambientPool, selectEvents } from './selection.js';
 import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
 
 const content = indexContent(loadContent());
 
@@ -2817,6 +2818,14 @@ describe('authored simple positive-knowledge outcome witnesses', () => {
 
     expect(cases.map(({ event }) => String(event.id))).toEqual([
       'what_bramme_calls_a_thin_year',
+      'the_answer_was_a_refusal',
+      'the_codex_in_the_eastern_invoice',
+      'the_quire_beside_the_descent',
+      'the_business_without_the_seal',
+      'the_old_list_reaches_the_cellar',
+      'the_ward_answers_cawdry',
+      'the_case_book_is_cited',
+      'the_daybook_has_a_witness',
     ]);
 
     const witnessed: string[] = [];
@@ -6696,4 +6705,95 @@ describe('#334 timed-promise reader witnesses', () => {
       });
     }
   }
+});
+
+describe('#334 reserved account execution witnesses', () => {
+  const readers = [
+    ['flag', 'a_late_entry_on_the_roll', 'the_two_days_of_birth'],
+    ['flag', 'church_holds_a_copy', 'the_copy_comes_back_open'],
+    ['flag', 'church_hostile', 'the_chapter_house_closes_its_door'],
+    ['flag', 'the_church_sanctioned_the_rite', 'the_permission_is_read_back'],
+    ['knowledge', 'knows_the_church_refused', 'the_answer_was_a_refusal'],
+    ['flag', 'looted_library', 'the_three_volumes_are_sorted'],
+    ['flag', 'married_without_paper', 'the_herald_asks_for_her_mother'],
+    ['flag', 'paid_bracc_whole', 'the_factor_remembers_the_receipt'],
+    ['flag', 'seal_held_sideways', 'the_sideways_seal_on_the_lease'],
+    ['flag', 'steward_left_bitter', 'the_stewards_list_of_doors'],
+    ['flag', 'the_archivist_was_refused', 'the_index_has_our_page'],
+    ['flag', 'the_burgesses_have_a_grievance', 'the_grievance_reaches_the_assembly'],
+    ['flag', 'the_customary_terms_were_written', 'the_son_brings_the_written_terms'],
+    ['flag', 'the_elder_descent_not_produced', 'the_herald_opens_the_old_question'],
+    ['flag', 'the_nine_libraries_burned', 'the_price_after_the_fires'],
+    ['flag', 'the_second_cellar_shelf', 'the_cellar_shelf_is_found'],
+    ['flag', 'the_stair_below_the_turn_bricked', 'the_mason_reaches_the_turn'],
+    ['knowledge', 'knows_the_codex_went_east', 'the_codex_in_the_eastern_invoice'],
+    ['knowledge', 'knows_the_quire_was_kept', 'the_quire_beside_the_descent'],
+    ['knowledge', 'knows_the_seal_is_gone', 'the_business_without_the_seal'],
+    ['knowledge', 'knows_the_third_room', 'the_old_list_reaches_the_cellar'],
+    ['knowledge', 'knows_the_ward_was_married_in', 'the_ward_answers_cawdry'],
+    ['knowledge', 'knows_what_the_case_book_holds', 'the_case_book_is_cited'],
+    ['knowledge', 'knows_what_the_yssene_terms_were', 'the_fourth_yssene_clause'],
+    ['knowledge', 'knows_what_was_never_said', 'the_daybook_has_a_witness'],
+  ] as const;
+
+  for (const [index, [kind, key, id]] of readers.entries()) {
+    it(`${id} requires its reserved memory, including in an existing save`, () => {
+      const ctx = fixture(34000 + index);
+      ctx.world.year = 1330;
+      ctx.world.generation = 10;
+      const event = content.mustEvent(id);
+      expect(evalCondition(event.conditions, ctx)).toBe(false);
+      if (kind === 'flag') ctx.world.flags.set(key, true);
+      else ctx.world.knowledge.add(key);
+      const loaded = loadGame(saveGame(ctx), content);
+      expect(evalCondition(event.conditions, loaded)).toBe(true);
+      expect(ambientPool(loaded).some((candidate) => candidate.id === id)).toBe(true);
+      if (kind === 'flag') loaded.world.flags.set(key, false);
+      else loaded.world.knowledge.delete(key);
+      expect(evalCondition(event.conditions, loaded)).toBe(false);
+    });
+
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const [choiceId, outcomeId] of [['answer_the_account', 'answered'], ['keep_our_terms', 'stood']] as const) {
+        it(`${id}/${choiceId} executes and survives reload in ${mode}`, () => {
+          const ctx = fixture(34100 + index);
+          ctx.world.year = 1330;
+          if (kind === 'flag') ctx.world.flags.set(key, true);
+          else ctx.world.knowledge.add(key);
+          setProseVariants(ctx, content.proseVariants);
+          setProseMode(ctx, mode);
+          ctx.world.scheduled.push({ event: id, year: ctx.world.year });
+          expect(selectEvents(ctx, makeRng(34200 + index), 0).some((candidate) =>
+            candidate.source === 'forced' && candidate.event.id === id)).toBe(true);
+          const result = executeOutcomeWitness(ctx, content.mustEvent(id), {
+            choiceId, expectedOutcomeId: outcomeId, rng: makeRng(34300 + index),
+          });
+          expect(result.ok, result.reason).toBe(true);
+          expect(missingPlainEnglish(ctx)).toEqual([]);
+          const saved = saveGame(ctx);
+          const loaded = loadGame(saved, content);
+          expect(canonical(saveGame(loaded))).toBe(canonical(saved));
+          // A scheduled duplicate cannot repeat this one-shot consequence.
+          loaded.world.scheduled.push({ event: id, year: loaded.world.year });
+          expect(selectEvents(loaded, makeRng(34400 + index), 0).some((candidate) =>
+            candidate.event.id === id)).toBe(false);
+        });
+      }
+    }
+  }
+
+  it('keeps the dated wall and foreign-contract readings behind their promised years', () => {
+    for (const [id, key, year, kind] of [
+      ['the_mason_reaches_the_turn', 'the_stair_below_the_turn_bricked', 1330, 'flag'],
+      ['the_fourth_yssene_clause', 'knows_what_the_yssene_terms_were', 1291, 'knowledge'],
+    ] as const) {
+      const ctx = fixture();
+      if (kind === 'flag') ctx.world.flags.set(key, true);
+      else ctx.world.knowledge.add(key);
+      ctx.world.year = year - 1;
+      expect(evalCondition(content.mustEvent(id).conditions, ctx)).toBe(false);
+      ctx.world.year = year;
+      expect(evalCondition(content.mustEvent(id).conditions, ctx)).toBe(true);
+    }
+  });
 });

@@ -5,7 +5,7 @@ import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
 import { forceAwakening, phenotypeOf } from '../people/factory.js';
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
-import { beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
+import { acquireLibraryCopy, beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
 import { bindService, freeBond } from '../people/bond.js';
 import { branchOf } from '../people/branches.js';
 import { addGrudge, relate } from '../people/relationships.js';
@@ -298,6 +298,7 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
     // The Library (§12). Physical wear/removal ignore the person target;
     // `lose` alone erases learned knowledge and leaves the copy on its shelf.
     case 'spellbook': {
+      if (eff.op === 'acquire_copy') { acquireLibraryCopy(ctx, eff.book); break; }
       if (eff.op === 'degrade') { degradeLibraryCopy(ctx, eff.book); break; }
       if (eff.op === 'remove_copy') { loseLibraryCopy(ctx, eff.book); break; }
       const def = spellbookDef(ctx, eff.book);

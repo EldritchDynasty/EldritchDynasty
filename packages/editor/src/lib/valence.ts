@@ -104,6 +104,7 @@ function scoreOf(e: Effect): number {
       switch (op) {
         case 'gain':
         case 'study':
+        case 'acquire_copy':
           return WEIGHT.book;
         case 'lose':
         case 'degrade':

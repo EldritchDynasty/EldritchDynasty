@@ -194,6 +194,7 @@ events:
           effects:
             - { kind: knowledge, op: grant, flag: knows_what_was_never_said }
             - { kind: rumour, op: seed, id: rumour_the_marrow_daybook, accuracy: 0.7 }
+            - { kind: schedule, event: the_daybook_has_a_witness, inYears: 1 }
     record:
       subject: what the Marrow day-book had in it
       options:

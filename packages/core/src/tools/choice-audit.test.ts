@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { auditChoices, GOD_RITE_FAILED, isProseOnly, type ChoiceAudit, type Content, type ContentSources } from '@ed/schema';
+import { auditChoices, GOD_RITE_FAILED, indexContent, isProseOnly, type ChoiceAudit, type Content, type ContentSources } from '@ed/schema';
 import {
   choiceWorklist,
   loadChoiceDecisions,
@@ -15,6 +15,16 @@ function shipped() {
 }
 
 const content = shipped();
+
+function unreadFixture() {
+  const bundle = structuredClone(content.bundle);
+  const event = bundle.events.find((item) => item.interaction.kind === 'choice')!;
+  if (event.interaction.kind !== 'choice') throw new Error('fixture requires a choice');
+  event.interaction.choices[0]!.outcomes[0]!.effects.push({
+    kind: 'flag', flag: 'unread_test_reservation', set: true,
+  });
+  return indexContent(bundle);
+}
 
 describe('the #334 choice-debt worklist', () => {
   it('is byte-stable JSON and contains no clock-shaped metadata', () => {
@@ -96,6 +106,8 @@ describe('the #334 choice-debt worklist', () => {
     const decisions = loadChoiceDecisions();
     const work = choiceWorklist(content, decisions);
     expect(work.summary.unclassifiedWriteOnlyKeys).toBe(0);
+    expect(work.summary.writeOnlyKeys).toBe(0);
+    expect(work.summary.proseOnly).toBe(0);
 
     expect(work.summary.classifiedWriteOnlyKeys + work.summary.unclassifiedWriteOnlyKeys)
       .toBe(work.summary.writeOnlyKeys);
@@ -103,6 +115,7 @@ describe('the #334 choice-debt worklist', () => {
   });
 
   it('attaches a persisted disposition and reason to the exact current unread key', () => {
+    const content = unreadFixture();
     const current = choiceWorklist(content).memory[0]!;
     const decisions: ChoiceDecisionFile = {
       version: 1,
@@ -129,6 +142,7 @@ describe('the #334 choice-debt worklist', () => {
   });
 
   it('fails closed on malformed, stale, duplicate, or reasonless decisions', () => {
+    const content = unreadFixture();
     const current = choiceWorklist(content).memory[0]!;
     const valid = {
       kind: current.kind,

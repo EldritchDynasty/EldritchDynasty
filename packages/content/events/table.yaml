@@ -99,6 +99,8 @@ events:
               text: >-
                 He takes the number badly and takes the post anyway, and works
                 like a man paying something off, which he is.
+              effects:
+                - { kind: relationship, from: { slot: SON }, to: head, sentiment: 8 }
         - id: never_say
           label: Never mention the figure.
           outcomes:
@@ -188,6 +190,8 @@ events:
               text: >-
                 It stands. In sixty years somebody will inherit it along with
                 the furniture and be told which chair not to offer him.
+              effects:
+                - { kind: branch, op: slight, slot: COUSIN, amount: 6 }
 
   - id: the_shelf_and_the_boy
     title: Somebody Has to Read Them

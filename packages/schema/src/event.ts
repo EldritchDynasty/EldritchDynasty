@@ -234,7 +234,7 @@ export const EffectS = z.discriminatedUnion('kind', [
    */
   // `lose` forgets learned spells. `remove_copy` removes the physical book
   // and unfinished readings; like physical degradation, it ignores target.
-  z.object({ kind: z.literal('spellbook'), op: z.enum(['gain', 'study', 'lose', 'degrade', 'remove_copy']), target: TargetS, book: z.string() }),
+  z.object({ kind: z.literal('spellbook'), op: z.enum(['gain', 'study', 'lose', 'degrade', 'remove_copy', 'acquire_copy']), target: TargetS, book: z.string() }),
   /**
    * Writes `Person.career`. `leave` clears the post without naming one (the
    * `career` field is ignored); `assign` requires it. Income, Respect accrual

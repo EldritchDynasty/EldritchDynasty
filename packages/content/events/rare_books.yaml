@@ -594,6 +594,7 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -14 }
                 - { kind: knowledge, op: grant, flag: knows_the_codex_went_east }
+                - { kind: schedule, event: the_codex_in_the_eastern_invoice, inYears: 1 }
     record:
       subject: the Codex, and what was offered for it
       options:
@@ -656,6 +657,7 @@ events:
                 male line exactly.
               effects:
                 - { kind: knowledge, op: grant, flag: knows_the_quire_was_kept }
+                - { kind: schedule, event: the_quire_beside_the_descent, inYears: 1 }
             - id: not_found
               weight: 58
               text: >-
