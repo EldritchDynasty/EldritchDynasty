@@ -11,7 +11,7 @@ import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitn
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
-import { genomeOf, phenotypeOf } from '../people/factory.js';
+import { genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool, selectEvents } from './selection.js';
@@ -3109,6 +3109,111 @@ describe('forced-Awakening rites of the Vigil and Dark Year (#518)', () => {
       }
     }
     expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+describe('the Late Waking (§11, #1797)', () => {
+  const event = content.events.find((item) => String(item.id) === 'the_late_waking');
+
+  /** A grown man of the line, past thirty, who carries the Power and never woke. */
+  function waitingMan(seed: number, age = 34) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES.rare.minGeneration);
+    const donor = ctx.world.people.living()
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    if (!donor) throw new Error('Late Waking witness needs a founding expressing genome');
+    // Build the state the test means: he is the only man of the line still
+    // waiting. The founding cast can include another, and the slot would be
+    // within its rights to take him instead.
+    for (const other of ctx.world.people.living()) {
+      if (!other.awakening.awakened) other.awakening = { ...other.awakening, awakened: true, year: ctx.world.year };
+    }
+    const man = place(ctx, { sex: 'male', age, name: 'Late Waking Witness' });
+    man.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
+    man.phenotype = undefined;
+    expect(phenotypeOf(man, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(true);
+    expect(man.awakening.awakened).toBe(false);
+    return { ctx, man };
+  }
+
+  it('is authored as a rare, recorded, natural waking of an unwoken man past the forcing windows', () => {
+    expect(event, 'the_late_waking must be authored').toBeDefined();
+    if (!event || event.interaction.kind === 'narration') throw new Error('the Late Waking must ask the player');
+    expect(event.frequency).toBe('rare');
+    expect(event.record).toBeDefined();
+    expect(event.accounts.length).toBeGreaterThanOrEqual(2);
+    expect(event.slots.MAN?.role).toBe('unwoken');
+    expect(event.slots.MAN?.filters).toEqual(expect.arrayContaining([
+      { sex: 'male' }, { canExpress: true }, { declaredMundane: false }, { age: { op: 'gte', value: LATE_WAKING_AGE } },
+    ]));
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        expect(outcome.effects, `${choice.id}/${outcome.id} must wake him naturally`)
+          .toContainEqual({ kind: 'awakening', target: { slot: 'MAN' }, forced: false });
+      }
+    }
+  });
+
+  it('witnesses every authored outcome, each a natural waking', () => {
+    if (!event || event.interaction.kind === 'narration') throw new Error('the Late Waking must ask the player');
+    const declared = event.interaction.choices.flatMap((choice) =>
+      choice.outcomes.map((outcome) => outcomeKey('the_late_waking', String(choice.id), String(outcome.id))));
+    const witnessed: string[] = [];
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        const { ctx, man } = waitingMan(1797);
+        const slots = resolveSlots(event, ctx, makeRng(1798));
+        expect(slots.ok, 'the Late Waking should cast the waiting man').toBe(true);
+        if (!slots.ok) continue;
+        expect(slots.fill.MAN).toBe(man.id);
+        expect(ambientPool(ctx).some((candidate) => String(candidate.id) === 'the_late_waking')).toBe(true);
+        const madnessBefore = man.madness;
+
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: String(choice.id),
+          expectedOutcomeId: String(outcome.id),
+          rng: makeRng(1798),
+          targetWeightedOutcome: choice.outcomes.length > 1,
+        });
+        expect(result.ok, `the_late_waking/${choice.id}/${outcome.id}: ${result.reason ?? 'no reason'}`).toBe(true);
+        if (result.key) witnessed.push(result.key);
+
+        expect(man.awakening).toMatchObject({ awakened: true, forced: false, age: 34 });
+        if (String(outcome.id) === 'all_at_once') expect(man.madness).toBeGreaterThanOrEqual(madnessBefore + 12);
+      }
+    }
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+
+  it('never casts a man the house has declared mundane', () => {
+    if (!event) throw new Error('the Late Waking must be authored');
+    const { ctx, man } = waitingMan(1799);
+    man.awakening = { ...man.awakening, declaredMundane: true };
+    const slots = resolveSlots(event, ctx, makeRng(1800));
+    expect(slots.ok && slots.fill.MAN === man.id).toBe(false);
+  });
+
+  it('stops the silent yearly roll from waking an expressing man at thirty, and leaves everyone else on the clock', () => {
+    // A die that always comes up, counted, so the test also proves the draw is
+    // still made: skipping it would move every later roll in the phase.
+    let draws = 0;
+    const always = { bool: () => { draws += 1; return true; } } as unknown as Rng;
+
+    const { ctx, man } = waitingMan(1801, LATE_WAKING_AGE);
+    expect(rollAwakening(man, ctx.world.year, ctx.genetics, always)).toBe(false);
+    expect(man.awakening.awakened).toBe(false);
+    expect(draws).toBe(1);
+
+    const younger = waitingMan(1802, LATE_WAKING_AGE - 1);
+    expect(rollAwakening(younger.man, younger.ctx.world.year, younger.ctx.genetics, always)).toBe(true);
+    expect(younger.man.awakening.forced).toBe(false);
+
+    const woman = place(ctx, { sex: 'female', age: 45, name: 'A Late Daughter' });
+    woman.genome = { kind: 'materialized', genome: genomeOf(man, ctx.genetics) };
+    woman.phenotype = undefined;
+    expect(phenotypeOf(woman, ctx.genetics, ctx.world.year).eldritch.carriedFont).toBeGreaterThan(0);
+    expect(rollAwakening(woman, ctx.world.year, ctx.genetics, always)).toBe(true);
+    expect(draws).toBe(3);
   });
 });
 

@@ -206,6 +206,7 @@ export function evalFilter(f: Filter, p: Person, ctx: SimCtx, bound: SlotFill, r
   // TERM of service, not a class of person, and this world has no second kind.
   if ('bonded' in f) return isBonded(p) === f.bonded;
   if ('canExpress' in f) return phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress === f.canExpress;
+  if ('declaredMundane' in f) return p.awakening.declaredMundane === f.declaredMundane;
   // WHERE THIS MAN STANDS, THIS INSTANT — as against the `ascension`
   // condition, which asks where the HOUSE stood when the ladder was last
   // measured, and that is the second-to-last phase of the year. A template

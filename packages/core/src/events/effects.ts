@@ -3,7 +3,7 @@ import { assertNever, canHoldPost, FREQUENCY_PROFILES, MAIN_BRANCH, RESPECT_ORDE
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
-import { forceAwakening, phenotypeOf } from '../people/factory.js';
+import { forceAwakening, phenotypeOf, wakeNaturally } from '../people/factory.js';
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
 import { acquireLibraryCopy, beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
 import { bindService, freeBond } from '../people/bond.js';
@@ -142,7 +142,11 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       for (const p of resolveTargets(eff.target, ctx, fill)) {
         if (p.status !== 'alive') continue;
         if (phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont <= 0) continue;
-        forceAwakening(p, w.year);
+        // A declared man never wakes (#1794). The slot filter should have
+        // refused him; this keeps the declaration true if one ever does not.
+        if (p.awakening.declaredMundane) continue;
+        if (eff.forced === false) wakeNaturally(p, w.year);
+        else forceAwakening(p, w.year);
       }
       break;
     }

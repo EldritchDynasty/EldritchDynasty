@@ -2606,6 +2606,41 @@ tales:
       down, and that she has never been able to make the number come out the
       same way twice.
 
+  # The Late Waking (#1797): the kitchen keeps it as a gift long delayed; the
+  # chapter house keeps it as a question about what was done to him.
+  - id: the_low_end_of_the_table
+    form: song
+    teller: the women of the Eldritch kitchen
+    bias: proud
+    about: the_late_waking
+    accuracy: 0.4
+    circulatesFrom: { yearsAfterEvent: 10 }
+    mutatesEveryYears: 90
+    text: >-
+      The kitchen sings it as a thing that was owed and was paid, late and in
+      full, as the old debts of that house are always paid: that the blood had
+      sat thirty winters at the low end of the table, patient as stone and
+      overlooked as stone, and that on a night of Frostfall it stood up. The
+      song does not say what woke it. It says only that the dogs knew first,
+      and the knives knew second, and the family knew last of all, which the
+      women who sing it consider the natural order of things.
+  - id: the_bramme_clerks_query
+    form: footnote
+    teller: a clerk of the chapter house at Bramme
+    bias: accusing
+    about: the_late_waking
+    accuracy: 0.55
+    circulatesFrom: { yearsAfterEvent: 2 }
+    mutatesEveryYears: 200
+    text: >-
+      Entered against the house's account, and not answered: a man of more
+      than thirty years is reported woken who showed no sign in childhood. The
+      registers of this chapter hold no such waking that was not first
+      provoked. It is noted, without charge, that the house keeps a cellar the
+      chapter has never been shown, and that the dogs of the parish were heard
+      the same week. The question is put again at the next visitation, and the
+      visitation is put off.
+
 proseVariants:
   - address: "content:tales.yaml#tales[id=ballad_of_the_given_seal].teller"
     of: "1f41566e4753b50a"
@@ -5055,3 +5090,39 @@ proseVariants:
       never once said two. What she will say at the end, and only if she has been asked kindly,
       is that when the talking stopped she counted the feet on the stairs coming down, and she
       has never been able to make the number come out the same twice.
+  - address: "content:tales.yaml#tales[id=the_low_end_of_the_table].teller"
+    of: "ed4e4c69c8421a85"
+    plainenglish: >-
+      the women who work in the Eldritch kitchen
+  - address: "content:tales.yaml#tales[id=the_low_end_of_the_table].bias"
+    of: "8ec274c9dd5839bd"
+    plainenglish: >-
+      full of pride
+  - address: "content:tales.yaml#tales[id=the_low_end_of_the_table].text"
+    of: "a55c32beec41a182"
+    plainenglish: >-
+      The kitchen sings about it as a debt that was paid late but paid in
+      full, the way that family always pays its old debts. The song says the
+      blood sat at the far end of the table for thirty winters, as patient and
+      as ignored as a stone, and then one night in Frostfall it stood up. The
+      song does not say what woke it. It only says that the dogs knew first,
+      the knives knew second, and the family knew last. The women who sing it
+      think that is the natural order of things.
+  - address: "content:tales.yaml#tales[id=the_bramme_clerks_query].teller"
+    of: "623e5cef80deb87b"
+    plainenglish: >-
+      a clerk of the Church chapter house at Bramme
+  - address: "content:tales.yaml#tales[id=the_bramme_clerks_query].bias"
+    of: "30d54c3636d624b2"
+    plainenglish: >-
+      blaming
+  - address: "content:tales.yaml#tales[id=the_bramme_clerks_query].text"
+    of: "284e09300d8fe894"
+    plainenglish: >-
+      Recorded against the family, with no reply: a man over thirty is said to
+      have awakened, although he showed no signs as a child. This chapter's
+      records contain no awakening like that which was not caused on purpose.
+      Without making a formal charge, the clerk notes that the family has a
+      cellar the Church has never been allowed to see, and that the parish
+      dogs were heard barking the same week. The question will be asked again
+      at the next inspection, and the next inspection keeps being postponed.

@@ -1946,9 +1946,9 @@ describe('declaring a man mundane (#1794)', () => {
  * say he woke after the house swore he never would. Read the windows from the
  * events themselves, so a new forcing rite with a wider window fails here.
  */
-describe('MUNDANE_AGE sits above every authored awakening window', () => {
-  it('holds for every slot an `awakening` effect targets', () => {
-    const windows: { event: string; slot: string; max?: number }[] = [];
+describe('no authored awakening can wake a man the house declared mundane', () => {
+  it('holds for every slot an `awakening` effect targets: capped below MUNDANE_AGE, or filtering the declaration out (#1797)', () => {
+    const windows: { event: string; slot: string; refusesDeclared: boolean; max?: number }[] = [];
     const visit = (node: unknown, event: { id: string; slots?: Record<string, { filters?: unknown[] }> }): void => {
       if (Array.isArray(node)) { for (const item of node) visit(item, event); return; }
       if (!node || typeof node !== 'object') return;
@@ -1960,7 +1960,8 @@ describe('MUNDANE_AGE sits above every authored awakening window', () => {
           .map((f) => (f as { age?: { op: string; value: number } }).age)
           .filter((a): a is { op: string; value: number } => a !== undefined && (a.op === 'lte' || a.op === 'lt'))
           .map((a) => (a.op === 'lt' ? a.value - 1 : a.value));
-        windows.push({ event: event.id, slot: target.slot, ...(caps.length ? { max: Math.min(...caps) } : {}) });
+        const refusesDeclared = filters.some((f) => (f as { declaredMundane?: boolean }).declaredMundane === false);
+        windows.push({ event: event.id, slot: target.slot, refusesDeclared, ...(caps.length ? { max: Math.min(...caps) } : {}) });
       }
       for (const value of Object.values(o)) visit(value, event);
     };
@@ -1968,9 +1969,12 @@ describe('MUNDANE_AGE sits above every authored awakening window', () => {
 
     expect(windows.length).toBeGreaterThan(0);
     for (const w of windows) {
-      expect(w.max, `${w.event}/${w.slot} wakes someone with no upper age`).toBeDefined();
+      if (w.refusesDeclared) continue;
+      expect(w.max, `${w.event}/${w.slot} wakes someone with no upper age and does not filter { declaredMundane: false }`).toBeDefined();
       expect(w.max!, `${w.event}/${w.slot}`).toBeLessThan(MUNDANE_AGE);
     }
+    // The Late Waking is the one scene past the forcing windows, and it must say so.
+    expect(windows.find((w) => w.event === 'the_late_waking')?.refusesDeclared).toBe(true);
   });
 });
 
