@@ -1,0 +1,166 @@
+# Issues needing owner action
+
+Updated 2026-10-17. Owner confirmed on 2026-10-16 that Windows signing, the
+Android upload keystore/Play account, Apple enrollment/TestFlight access and a
+Steam App ID will not be available for at least several months.
+
+This file carries the remaining owner requirements from #321, #322 and #349;
+those issues are being closed at the owner's request because their remaining
+release work depends on this setup. Closure records the move here, not a signed
+or published release. The Steam owner requirements from mixed issue #323 are
+also recorded here; #323 stays open for its actionable demo engineering.
+
+When setup is available, record completion dates and the exact artifact/run
+evidence here. Open focused engineering follow-ups for provider-specific signing
+or upload integration once the corresponding account/provider is known.
+
+## Windows production signing — issue #321
+
+Source: https://github.com/EldritchDynasty/EldritchDynasty/issues/321
+
+Owner actions:
+
+- Choose and provision a public-trust code-signing provider with remote/HSM-backed
+  keys. The historical exportable-PFX proposal is superseded; do not purchase an
+  exportable certificate expecting the old base64-PFX secrets to work. Record
+  the provider, access mechanism and actual NZD cost when purchased.
+- Configure the chosen provider's CI access securely. Its signing hook must be
+  integrated before production packaging can pass; the provider is not selected
+  and that hook is not yet wired.
+- After integration, produce a green production-tagged release. Verify valid
+  Authenticode on BOTH the NSIS installer and shipped executable, retain their
+  SHA-256 hashes and windows-release-proof.json, and pass the independent
+  installed-artifact smoke on those exact bytes (game launches, save, exit,
+  cold relaunch and identical resumed state). Preserve seed only under Advanced.
+
+Existing evidence: unsigned v0.1.0-beta.3 on source
+be90c05d011f87c9f7fc45543d48e5a79570fa86 passed the full tagged release run and
+independent fresh-VM install/cold-resume check (resumed year 1054).
+
+- Run: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38854397235
+- Installer/proof artifact: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38854397235/artifacts/12028785386
+- Installer: Eldritch Dynasty Setup 0.1.0.exe
+- Installer SHA-256: cbad62d14a792e808771aa72933c60acf3a38e45c5ed612d5e63fc2638db6236
+- Installed executable SHA-256: 8c549c1f2a187944e22ea855e6a821e0a9982c876d2003e1b8b1219a39c47d44
+- Artifact ZIP SHA-256: 7696526711ceedf1a1a633c648e4c3f138644b9e907df740dd18eefa8ce7e99e
+- Artifact expiry: 2027-01-14. Preserve it before expiry if needed; the later
+  signed release still needs fresh proof. No production signature was verified.
+
+Relevant code: .github/workflows/check.yml (windows-release and
+windows-install-smoke), packages/shell/scripts/dist-windows.mjs and
+packages/shell/scripts/installed-smoke.mjs.
+
+## Android / Google Play release — issue #322
+
+Source: https://github.com/EldritchDynasty/EldritchDynasty/issues/322
+
+Owner actions, in order:
+
+1. Create and verify the PERSONAL Play developer account (owner decision,
+   2026-10-14). Registration was US$25 once; confirm the current NZD charge.
+2. Create and securely back up the upload keystore for Play App Signing. Set
+   repository secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+   ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD. Upload a signature-verified AAB;
+   record its run URL, SHA-256, versionCode and versionName. The retained
+   unsigned prerelease below cannot be used as a signed Play upload.
+3. Complete the listing and required Console forms for nz.eldritchdynasty.game.
+   Current declaration: no data collected; review against the build submitted.
+   Listing, privacy policy, graphics and actual played-run screenshots are in
+   packages/mobile/store/. The old screenshot-placeholder requirement is done.
+4. Start the approved closed test with at least 12 continuously opted-in testers
+   for 14 days. Invite at least 20 as a buffer. The clock starts only when the
+   release is approved AND 12 testers are opted in; no start date exists yet.
+   Give testers packages/mobile/store/closed-test-smoke.md and a feedback route.
+   Record approval, start timestamp, counts and actual testing/feedback.
+5. On the installed release, export a Windows save, import it on Android and
+   continue identically. Automated cross-host coverage exists; real-device
+   transfer is still release evidence to collect.
+6. After the continuous 14-day requirement is satisfied, apply for production
+   access, supply truthful testing/form answers and record the decision/date.
+   The prior guidance allowed up to 7 days for review. Re-check Google's current
+   rule before starting: https://support.google.com/googleplay/android-developer/answer/14151465
+
+Existing evidence: unsigned v0.1.0-beta.3 from source
+be90c05d011f87c9f7fc45543d48e5a79570fa86 passed the full tagged run linked above.
+The AAB contains the production offline client and native bridge; native-library
+and version/source checks passed. No Play upload or closed test is established.
+
+- AAB/proof artifact: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38854397235/artifacts/12028601377
+- Files: app-release.aab and android-release-proof.json
+- versionCode: 458801; versionName: v0.1.0-beta.3; signing: unsigned-prerelease
+- AAB SHA-256: 7a5b591c455955e2e7f558acafecbd5fd42bad938ecf4ecbc5bdf12259558865
+- Artifact ZIP SHA-256: 6b574eb1894ba4dc717eb972815c8b5d3e50804205021a356932e891b27ad20f
+- Artifact expiry: 2027-01-14. A new signed upload needs its own retained proof
+  and an acceptable new versionCode.
+
+Relevant code: .github/workflows/check.yml (android),
+tools/android-release-proof.mjs, packages/mobile/android/app/build.gradle and
+packages/mobile/store/listing.md (including screenshot provenance).
+
+## iPhone / Apple distribution — issue #349
+
+Source: https://github.com/EldritchDynasty/EldritchDynasty/issues/349
+
+Owner actions:
+
+- Enroll in the Apple Developer Program. The recorded price is US$99/year;
+  confirm Apple's actual local NZD price at enrollment.
+- Create the App Store Connect record for nz.eldritchdynasty.game and CI upload
+  access (prefer an App Store Connect API key: key ID, issuer ID and private
+  .p8 stored securely). Supply the development team/distribution-signing and
+  provisioning access needed by the eventual signed archive/export integration.
+- Complete App Store listing, iPhone screenshots, age rating, privacy label
+  (currently Data Not Collected) and export compliance (currently no non-exempt
+  encryption). Verify these answers against the build submitted.
+- Once signed IPA/archive/upload integration is configured, retain a successful
+  release-tagged signed build and install it through TestFlight on a physical
+  iPhone. Verify play, durable save, terminate/relaunch/resume, and real share
+  sheet / Files export-import round-trip with identical game state. Record the
+  build, device/iOS version, date and result before App Store review.
+
+Existing evidence: native iPhone host, shared mobile bridge and unsigned Debug
+simulator save/resume/export/import proof are complete. The hosted proof below
+played 40 years (1042–1082) across process restarts; both independent comparisons
+matched SHA-256 e230a17c444212f2080e5e012d94a5b1f8f74abaf5c023dc790566262fc2c723.
+The smoke URL scheme is Debug-only and excluded from Release.
+
+- Proof: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38028289458/job/114143734143
+- Implementation landed through PR #873; simulator checks also passed in the
+  shared beta.3 release run. This is simulator evidence, not a signed IPA,
+  TestFlight upload or actual share-sheet/physical-iPhone proof.
+- Scope: iPhone, iOS 15+, Capacitor 8 / Xcode 26+; iPad compatibility mode.
+  macOS and Linux desktop releases remain out of scope.
+- Relevant code: packages/mobile/ios/, packages/mobile/src/platform-bridge.ts,
+  packages/mobile/scripts/ios-runtime-smoke.mjs and .github/workflows/check.yml.
+
+## Steam account, live achievements and commercial checkpoints — part of #323
+
+Source: https://github.com/EldritchDynasty/EldritchDynasty/issues/323
+
+Owner actions:
+
+- Create/verify the Steamworks partner account and obtain the real App ID.
+  Steam Direct is recorded as US$100 per app, recoupable after US$1,000 adjusted
+  gross revenue; confirm current terms and the actual NZD charge at purchase:
+  https://partner.steamgames.com/doc/gettingstarted/appfee
+- Configure/publish the 30 stable achievement IDs from
+  packages/core/src/achievements.ts in Steamworks. Verify actual unlock delivery
+  on a real Steam client with the real App ID. Development may use
+  ED_STEAM_APP_ID or steam_appid.txt; never ship steam_appid.txt. Existing fake
+  Steam coverage and the optional host backend remain valid.
+- Publish the Coming Soon page using store/steam/README.md and its asset/live
+  field checklist. Record price from Steamworks' table, the NZD figure and the
+  RBNZ exchange rate on the day it is set.
+- Recorded commercial checkpoints: 5,000 wishlists before the demo, 15,000 at
+  launch; move the release date if below 5,000 at four weeks out. Record dates
+  and actual counts; these are owner business checkpoints.
+
+#323 remains open for code/content: dated demo arc and every-seed proof of the
+signing, complete Age, forced Record, interlude and verdict. The owner resolved
+its design on 2026-10-14: existing short front-loaded Age through campaign data;
+fixed authored Daveed death routed through kill() to the guardian redirect;
+dated arc nodes rather than weights. No demo-only Age or if(demo) core branch.
+It shares structural/invariant checks, not the 300/500-year balance gates.
+
+#277 remains the commercial-pass parent for the engineering still in the
+tracker. It should refer here for deferred owner release/store requirements.
