@@ -6,6 +6,7 @@ import {
   loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
   GameSession, type ChronicleEntry,
+  makeRng, queueChoice, resolveSlots,
 } from '@ed/core';
 import {
   buildPair, earlyComesFirst, parseArgs, renderAnswerKey, renderReaderSheet, stripClockTells,
@@ -453,15 +454,23 @@ describe('a game runs through the public API', () => {
     expect(g.pending.length).toBeLessThan(before);
   });
 
-  it('record answers a Record block, and the chronicle grows by it', () => {
+  it('record answers a queued Record block and writes the selected account', () => {
     const g = newGame(content, { seed: 1042 });
-    const decision = advanceUntil(g, 'record');
-    expect(decision?.kind, 'the seeded public session must reach a record decision').toBe('record');
+    // Build the docket being tested. Waiting for one seed to draw a Record
+    // makes this API assertion change when unrelated content joins the pool.
+    const event = content.event('the_cawdry_copy')!;
+    const slots = resolveSlots(event, g.ctx, makeRng(1796));
+    expect(slots.ok).toBe(true);
+    const choice = queueChoice(g.ctx, event, event.body, slots.fill, slots.playerCast);
+    expect(g.choose(choice.id, 'family_work').ok).toBe(true);
+    const decision = g.pending.find((p) => p.kind === 'record');
+    expect(decision?.kind).toBe('record');
     if (!decision || decision.kind !== 'record') throw new Error('the record docket was not reached');
 
     expect(decision.options.length).toBeGreaterThan(0);
     expect(g.record(decision.id, 'record').ok).toBe(true);
     expect(g.view().chronicle.length).toBeGreaterThan(0);
+    expect(g.ctx.world.chronicle.some((entry) => entry.eventId === event.id && entry.record === 'record')).toBe(true);
   });
 
   /**

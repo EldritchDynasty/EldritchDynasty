@@ -1,5 +1,4 @@
-# #1796: broad challenges stay eligible without a reader. Optional learned slots
-# bind every magical success to a person; specialist checks read that same person.
+# #1796: ordinary family abilities and completed Mystic study.
 events:
   - id: the_smoke_above_the_store
     title: Smoke Above the Store
@@ -829,3 +828,252 @@ events:
                     slot: SENT
                   attr: health
                   delta: -3
+proseVariants:
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].title
+    of: 1f8ce7594c3d6ead
+    plainenglish: A Fire in the Grain Store
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].body
+    of: 3aa7ff6d04089949
+    plainenglish: A fire has started in the grain store at Ardwen. The door latch is too hot to touch,
+      smoke is coming through the door, and there is no water left in the trough. A trained reader
+      might save some of the grain with magic. The roof is starting to crack.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_fluid].label
+    of: 54245f0288f6c036
+    plainenglish: Ask a trained Fluid reader to fill the water trough.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_fluid].outcomes[id=held].text
+    of: 0c3b1c6f2e106453
+    plainenglish: "{WATER} uses the Fluid working to refill the trough before the next bucket is needed.
+      Most of the grain is saved. The house pays to replace the burned door."
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_fluid].outcomes[id=lost].text
+    of: 1167e3e605f75b92
+    plainenglish: No one currently living in the family has completed study of the fluid working. The
+      grain burns and is ruined. The family must pay the miller at Wick for replacement grain.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_thermal].label
+    of: 9e462f621a4e6f76
+    plainenglish: Ask a trained Thermal reader to dry the wet grain safely.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_thermal].outcomes[id=held].text
+    of: ded4aa6be005fa97
+    plainenglish: "{HEAT} uses the Thermal working to dry the saved grain without burning it. The family
+      can put the lower layers back in storage."
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_thermal].outcomes[id=lost].text
+    of: 246697d8102dd694
+    plainenglish: The grain burns and is ruined. The family must pay the miller at Wick for replacement grain.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=family_work].label
+    of: 8a394abb1a7f1adf
+    plainenglish: Have the family carry buckets of water.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=family_work].outcomes[id=held].text
+    of: 9ba70dc30dc626bf
+    plainenglish: The family shares the work and completes it. The house pays for materials and for the
+      hours the family could not cover.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=family_work].outcomes[id=lost].text
+    of: 246697d8102dd694
+    plainenglish: The grain burns and is ruined. The family must pay the miller at Wick for replacement grain.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=send_specialist].label
+    of: 5d29c5d71a6e498b
+    plainenglish: Send the strongest eligible relative to open the side door.
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=send_specialist].outcomes[id=held].text
+    of: 1f8aae064fb1f1aa
+    plainenglish: "{EXPERT} removes the hinges with a bar and carries the grain through the open
+      doorway. The family pays for a replacement door."
+  - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=send_specialist].outcomes[id=lost].text
+    of: 246697d8102dd694
+    plainenglish: The grain burns and is ruined. The family must pay the miller at Wick for replacement grain.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].title
+    of: 8aa78540cee8860c
+    plainenglish: Storm Damage at Ardwen
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].body
+    of: 919d06b771441fe3
+    plainenglish: A storm is damaging the roof above the west room at Ardwen. The mason from Wick cannot
+      arrive until morning. The family must support the roof or remove the damaged parts before they
+      fall. Someone has only just left the bed beneath it.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_aero].label
+    of: 00512577096fa543
+    plainenglish: Ask a trained Aero reader to direct the wind away.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_aero].outcomes[id=held].text
+    of: e1a8ca013265f005
+    plainenglish: "{WIND} uses the Aero working to direct the wind along the outside wall. The falling
+      slates land in the yard, away from the bed."
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_aero].outcomes[id=lost].text
+    of: 1cdc4b32da5a6cbe
+    plainenglish: No one currently living in the family has completed study of the aero working. The
+      family gets everyone out before the beam falls. Rebuilding the room costs more than the
+      original repair would have.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_terra].label
+    of: b9ecef5020416b8c
+    plainenglish: Ask a trained Terra reader to support the cracked stone.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_terra].outcomes[id=held].text
+    of: a299e51a847da3ee
+    plainenglish: "{STONE} uses the Terra working to stabilise the stone beneath the beam. The room is
+      saved, and the family only needs to buy mortar."
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_terra].outcomes[id=lost].text
+    of: b879aaf5188f4de9
+    plainenglish: The family gets everyone out before the beam falls. Rebuilding the room costs more
+      than the original repair would have.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=family_work].label
+    of: "55945977e3694973"
+    plainenglish: Have the best household planner organise temporary supports.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=family_work].outcomes[id=held].text
+    of: 9ba70dc30dc626bf
+    plainenglish: The family shares the work and completes it. The house pays for materials and for the
+      hours the family could not cover.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=family_work].outcomes[id=lost].text
+    of: b879aaf5188f4de9
+    plainenglish: The family gets everyone out before the beam falls. Rebuilding the room costs more
+      than the original repair would have.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=send_specialist].label
+    of: ea4f15bc66cb87d8
+    plainenglish: Send the best planner to direct repairs at the beam.
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=send_specialist].outcomes[id=held].text
+    of: ef2ed178ce1f329c
+    plainenglish: "{EXPERT} puts temporary supports in place before moving the bed. The beam stays up
+      until the mason comes."
+  - address: content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=send_specialist].outcomes[id=lost].text
+    of: b879aaf5188f4de9
+    plainenglish: The family gets everyone out before the beam falls. Rebuilding the room costs more
+      than the original repair would have.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].title
+    of: fcde8ca7edb5864b
+    plainenglish: Fever and a Funeral
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].body
+    of: 41c31c5fcfb737a3
+    plainenglish: A tenant at Wick has died of fever. Some of the people who cared for the tenant are
+      now ill, and the house has promised to pay for the funeral vigil. Someone who has studied Life
+      could help the sick. Someone who has studied Death could help with the vigil.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_life].label
+    of: 102ba30613cd3a2a
+    plainenglish: Ask a trained Life reader to care for the sick.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_life].outcomes[id=held].text
+    of: cf516cb5401ff2d9
+    plainenglish: "{HEALER} uses the Life working learned from the book. The sick people can drink
+      again, so the house pays for food instead of more nursing shifts."
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_life].outcomes[id=lost].text
+    of: 949bf62b6b53baaf
+    plainenglish: No one currently living in the family has completed study of the life working. The
+      family cannot provide enough nursing shifts. The house pays for extra help from Wick and for
+      the funeral vigil.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_death].label
+    of: 059128d413c61868
+    plainenglish: Ask a trained Death reader to make the vigil safer.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_death].outcomes[id=held].text
+    of: 8985628d96caa539
+    plainenglish: "{KEEPER} uses the Death working while the body is washed and the vigil is held. The
+      family fulfils its promise without making every watcher enter the sickroom."
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_death].outcomes[id=lost].text
+    of: a296d63b032c48bf
+    plainenglish: The family cannot provide enough nursing shifts. The house pays for extra help from
+      Wick and for the funeral vigil.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].label
+    of: aaedfc5b414601df
+    plainenglish: Have a healthy relative nurse while the others sleep.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].outcomes[id=held].text
+    of: 9ba70dc30dc626bf
+    plainenglish: The family shares the work and completes it. The house pays for materials and for the
+      hours the family could not cover.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].outcomes[id=lost].text
+    of: a296d63b032c48bf
+    plainenglish: The family cannot provide enough nursing shifts. The house pays for extra help from
+      Wick and for the funeral vigil.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=send_specialist].label
+    of: c1dd2d65a53eb4d1
+    plainenglish: Send the best household planner to organise the care.
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=send_specialist].outcomes[id=held].text
+    of: 267a30cb3966ee77
+    plainenglish: "{EXPERT} separates the sick people, boils the cloths and records when the carers have
+      slept. The family hires help for the remaining shifts."
+  - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=send_specialist].outcomes[id=lost].text
+    of: a296d63b032c48bf
+    plainenglish: The family cannot provide enough nursing shifts. The house pays for extra help from
+      Wick and for the funeral vigil.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].title
+    of: 5cb66723cf0fac87
+    plainenglish: A Rent-Roll Inspection
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].body
+    of: b0a91aa4c72cc8e8
+    plainenglish: A clerk from Cawdry has come to Ardwen to copy an entry from the rent roll. The page
+      is wet and stuck to another page, with a private letter folded between them. The family must
+      either show him the entry or pay for another visit. He is ready to start.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].label
+    of: df2ecda3815bbe37
+    plainenglish: Ask a trained Light reader to recover the faded writing.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=held].text
+    of: 96e16fc086cc39e4
+    plainenglish: "{READER} uses the Light working to make the faded writing legible. The clerk copies
+      the original figures. The family is still responsible for what they say."
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=lost].text
+    of: 04cebb0df11dac79
+    plainenglish: No one currently living in the family has completed study of the light working. The
+      clerk leaves for Cawdry without a readable copy of the entry. The family must pay for this
+      visit and another one.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].label
+    of: 5c52416fb4a23c73
+    plainenglish: Ask a trained Darkness reader to hide the private letter during the inspection.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=held].text
+    of: 33a994183df685ec
+    plainenglish: "{COVER} uses the Darkness working to hide the private letter while the clerk copies
+      the rent entry. The public records remain unchanged."
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=lost].text
+    of: d3ca948b03055bbf
+    plainenglish: The clerk leaves for Cawdry without a readable copy of the entry. The family must pay
+      for this visit and another one.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].label
+    of: 8a6980e75896777b
+    plainenglish: Have the family explain the rent roll.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=held].text
+    of: 9ba70dc30dc626bf
+    plainenglish: The family shares the work and completes it. The house pays for materials and for the
+      hours the family could not cover.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=lost].text
+    of: d3ca948b03055bbf
+    plainenglish: The clerk leaves for Cawdry without a readable copy of the entry. The family must pay
+      for this visit and another one.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].label
+    of: a43396736ffa199f
+    plainenglish: Send the most persuasive eligible relative to negotiate.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=held].text
+    of: f4fa368a741f105e
+    plainenglish: "{EXPERT} finds an earlier receipt and works with the clerk until both copies agree.
+      The family pays for his time instead of a second visit."
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=lost].text
+    of: d3ca948b03055bbf
+    plainenglish: The clerk leaves for Cawdry without a readable copy of the entry. The family must pay
+      for this visit and another one.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].record.subject
+    of: f68a4593970b0777
+    plainenglish: the inspection of the rent roll at Cawdry
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].record.options.record.chronicle
+    of: ea0ccc716d8460e5
+    plainenglish: The clerk from Cawdry visited Ardwen to inspect the rent roll. The family paid for his time.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].record.options.embellish.chronicle
+    of: db7d7e998b2d8add
+    plainenglish: The clerk from Cawdry found no errors in the rent roll and did not charge the family.
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].title
+    of: f150dc724b4c377e
+    plainenglish: A Broken Cart at Wick Bridge
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].body
+    of: 82096c8b9c4e04bf
+    plainenglish: A cart carrying flour to Ardwen has broken an axle at Wick bridge. Rain is coming. The
+      village will lend the family a rope if a relative goes to direct the lift. Only one person can
+      work beside the wheel.
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].record.subject
+    of: 112ae1b4d5765170
+    plainenglish: the broken flour cart at Wick bridge
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].record.options.record.chronicle
+    of: 61870d3e7e12146a
+    plainenglish: "{SENT} went to help with the broken flour cart at Wick bridge. The family paid the costs."
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].record.options.embellish.chronicle
+    of: 30fb44330b58deff
+    plainenglish: "{SENT} lifted the flour cart at Wick bridge alone and was not hurt."
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].label
+    of: a1cdadfe3af49192
+    plainenglish: The flour stays dry.
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].outcomes[id=clear].text
+    of: 8820199f1c7f0b6b
+    plainenglish: "{SENT} secures the rope around the post and lifts the wheel. The family pays for a
+      replacement axle, and the flour remains dry."
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].label
+    of: 7e9362d74f972a23
+    plainenglish: The family must pay for the spoiled flour.
+  - address: content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].outcomes[id=wet].text
+    of: 11f969ab2414dfd7
+    plainenglish: "{SENT} cannot hold the wheel long enough for the carter to support it. The flour gets
+      wet. The family pays for the ruined sacks and the damaged cart."
