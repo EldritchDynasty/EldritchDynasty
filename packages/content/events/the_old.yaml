@@ -63,6 +63,7 @@ events:
           outcomes:
             - id: left
               weight: 100
+              tags: [self_expression]
               text: >-
                 She is left alone and dies four years later in her own bed with
                 the whole household in the room, and whatever she had goes into
