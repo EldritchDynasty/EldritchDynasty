@@ -188,6 +188,74 @@ describe('forced physical-copy sale below the debt floor (#1205)', () => {
   });
 });
 
+describe('library physical-copy lifecycle across save/reload (#1788)', () => {
+  it('does not resurrect a stolen copy, an interrupted study, or an old binder order', () => {
+    const ctx = bootstrap(bundle, 1788, 1042);
+    ctx.world.library.clear();
+    ctx.world.studies = [];
+    const book = ctx.content.mustSpellbook('lesser_workings_of_life');
+    const unrelated = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const copy = acquireLibraryCopy(ctx, book.id)!;
+    acquireLibraryCopy(ctx, unrelated.id);
+
+    const learned = place(ctx, { sex: 'female', age: 30, awakened: true });
+    const student = place(ctx, { sex: 'female', age: 30, awakened: true });
+    learned.acquired['life'] = 100;
+    student.acquired['life'] = 100;
+    expect(gainSpellbook(ctx, learned, book)).toBe(true);
+
+    // A worn, held copy is sent away, comes back pristine, then is read again.
+    copy.condition = 40;
+    ctx.world.treasury = 500;
+    const quote = restorationQuote(ctx, book.id)!;
+    expect(quote.ok).toBe(true);
+    expect(order(ctx, { kind: 'restore', book: book.id }).ok).toBe(true);
+    expect(copy.restoresAt).toBe(quote.returns);
+    expect(beginStudy(ctx, student, book)).toBe(false); // the binder has it
+    ctx.world.year = quote.returns;
+    tickRestorations(ctx);
+    expect(copy.condition).toBe(100);
+    expect(copy.restoresAt).toBeUndefined();
+    expect(beginStudy(ctx, student, book)).toBe(true);
+    expect(ctx.world.studies.some((study) => study.book === book.id)).toBe(true);
+
+    // Exercise the authored theft path, not just loseLibraryCopy directly.
+    const event = ctx.content.mustEvent('the_fair_copy');
+    if (event.interaction.kind === 'narration') throw new Error('expected a book-loss choice');
+    const choice = event.interaction.choices.find((item) => item.id === 'send_it_to_bramme')!;
+    const outcome = choice.outcomes.find((item) => item.id === 'read_before_returned')!;
+    commitOutcome(ctx, event, outcome,
+      { HEAD: ctx.world.narrator!, COPYIST: student.id }, choice.id, testRng('1788-stolen-restored-book'));
+
+    expect(ctx.world.library.has(book.id)).toBe(false);
+    expect(ctx.world.library.has(unrelated.id)).toBe(true);
+    expect(ctx.world.studies.some((study) => study.book === book.id)).toBe(false);
+    expect(learned.spellsKnown.map(String)).toContain(String(book.id));
+    expect(student.spellsKnown.map(String)).not.toContain(String(book.id));
+
+    const saved = saveGame(ctx);
+    const resumed = loadGame(saved, bundle);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saved));
+    expect(resumed.world.library.has(book.id)).toBe(false);
+    expect(resumed.world.library.has(unrelated.id)).toBe(true);
+    expect(resumed.world.studies.some((study) => study.book === book.id)).toBe(false);
+    expect(resumed.world.people.get(learned.id)!.spellsKnown.map(String)).toContain(String(book.id));
+
+    // Reacquisition is a NEW copy, not a resurrected binder order or study.
+    const replacement = acquireLibraryCopy(resumed, book.id)!;
+    expect(replacement.condition).toBe(100);
+    expect(replacement.acquiredYear).toBe(resumed.world.year);
+    expect(replacement.restoresAt).toBeUndefined();
+    expect(beginStudy(resumed, resumed.world.people.get(student.id)!, resumed.content.mustSpellbook(book.id)))
+      .toBe(true);
+    expect(resumed.world.studies.filter((study) => study.book === book.id)).toHaveLength(1);
+    const reloadedAgain = loadGame(saveGame(resumed), bundle);
+    expect(canonical(saveGame(reloadedAgain))).toBe(canonical(saveGame(resumed)));
+    expect(reloadedAgain.world.people.get(learned.id)!.spellsKnown.map(String))
+      .toContain(String(book.id));
+  });
+});
+
 describe('authored physical-copy exits (#1748)', () => {
   it.each([
     ['the_book_comes_down', 'sell_it'],
