@@ -313,6 +313,12 @@ function storybookHouse(source: ContentBundle | Content): SimCtx {
   head.madness = 25;
   for (const b of indexContent(source).spellbooks.slice(0, 8)) head.spellsKnown.push(b.id);
 
+  // The Vessel rite also needs a living blood relative the player can name.
+  // Singular player casts now check eligibility before offering the docket;
+  // the Hierophant alone never represented a household able to take the rite.
+  const daughter = place(ctx, { sex: 'female', age: 22, name: 'The Hierophant\'s Daughter' });
+  ctx.world.people.setParents(daughter.id, { father: head.id });
+
   const girl = place(ctx, { sex: 'female', age: 10, name: 'A Girl Who Woke Early' });
   girl.awakening.awakened = true;
 
