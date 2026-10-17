@@ -235,7 +235,7 @@ events:
           outcomes:
             - id: sowerhay_passed
               weight: 100
-              tags: [land, restraint]
+              tags: [land, restraint, self_expression]
               text: >-
                 Somebody else's steward hears the same news a week later, and
                 Sowerhay goes to a house that moved faster or simply asked
@@ -520,7 +520,7 @@ events:
           outcomes:
             - id: farthing_returned
               weight: 100
-              tags: [land, restraint]
+              tags: [land, restraint, self_expression]
               text: >-
                 {HEAD} sends a man out before the spring grazing to walk the
                 stone back to its old mark, and the common is exactly the
