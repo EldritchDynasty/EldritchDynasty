@@ -45,11 +45,11 @@ describe('family challenge execution witnesses (#1796)', () => {
             p.acquired[key] = (p.acquired[key] ?? 0) + value - attr(p, key, ctx.genetics, ctx.world.year);
             if (p.phenotype) p.phenotype.dirty = true;
           };
-          const pool = check.pool;
-          if (pool.kind === 'family_knows' && success) {
+          const pool = check?.pool;
+          if (pool?.kind === 'family_knows' && success) {
             const p = THRESHOLD_AFFINITIES.some((a) => a === pool.affinity) ? reader : man;
             expect(gainSpellbook(ctx, p, content.spellbook(`lesser_workings_of_${pool.affinity}`)!)).toBe(true);
-          } else if (pool.kind === 'slot') {
+          } else if (pool?.kind === 'slot') {
             const spec = event.slots[pool.slot]!;
             const known = spec.filters.find((f) => 'knows' in f);
             if (known && 'knows' in known) {
@@ -59,7 +59,10 @@ describe('family challenge execution witnesses (#1796)', () => {
             for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
               for (const a of pool.attrs) set(p, a.attr, success ? 100 : 0);
             }
-          } else if (pool.kind === 'family_sum' || pool.kind === 'family_max' || pool.kind === 'family_any') {
+          } else if (pool?.kind === 'family_sum' || pool?.kind === 'family_max' || pool?.kind === 'family_any') {
+            if (pool.kind === 'family_sum' && success) {
+              for (let i = 0; i < 10; i++) place(ctx, { sex: i % 2 ? 'female' : 'male', age: 30, name: `Family Helper ${i}` });
+            }
             for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) set(p, pool.attr, success ? 100 : 0);
           }
           // Eligibility for the bridge is household preparedness, not the
@@ -73,6 +76,12 @@ describe('family challenge execution witnesses (#1796)', () => {
           expect(result.ok, result.reason).toBe(true);
           const cost = outcome.effects.reduce((sum, e) => sum + (e.kind === 'treasury' ? e.delta : 0), 0);
           expect(ctx.world.treasury - before).toBe(cost);
+          if (choice.id === 'prepare_next_time') {
+            expect(ctx.world.library.has('lesser_workings_of_darkness')).toBe(true);
+            expect(ctx.world.studies.some((s) => s.book === 'lesser_workings_of_darkness')).toBe(true);
+            expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).some((p) => p.spellsKnown.includes(asId('lesser_workings_of_darkness')))).toBe(false);
+            expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + 12)).toBe(true);
+          }
           expect(result.key).toBe(outcomeKey(event.id, choice.id, outcome.id));
         });
       }
@@ -4333,6 +4342,22 @@ describe('authored choice-requirement witnesses', () => {
         expectedOutcomeId: outcomeId,
         rng: makeRng(3500 + index),
         targetWeightedOutcome: true,
+      });
+      expect(result.ok, result.reason).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    {
+      const ctx = fixture(1796);
+      const event = content.event('the_cawdry_copy')!;
+      for (const p of ctx.world.people.all()) p.awakening.awakened = false;
+      const blocked = executeOutcomeWitness(ctx, event, {
+        choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1796),
+      });
+      expect(blocked.ok).toBe(false);
+      place(ctx, { sex: 'female', age: 30, awakened: true, name: 'The New Reader' });
+      const result = executeOutcomeWitness(ctx, event, {
+        choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1796),
       });
       expect(result.ok, result.reason).toBe(true);
       if (result.key) witnessed.push(result.key);

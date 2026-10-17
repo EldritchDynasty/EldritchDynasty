@@ -70,7 +70,7 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 25
+        difficulty: 20
         variance: none
         bands:
           - atLeast: 0
@@ -81,7 +81,7 @@ events:
         pool:
           kind: family_sum
           attr: strength
-        difficulty: 180
+        difficulty: 1500
         variance: none
         bands:
           - atLeast: 0
@@ -249,7 +249,7 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 25
+        difficulty: 20
         variance: none
         bands:
           - atLeast: 0
@@ -438,8 +438,8 @@ events:
       - id: family_work
         pool:
           kind: family_any
-          attr: health
-          atLeast: 55
+          attr: mind
+          atLeast: 50
         difficulty: 1
         variance: none
         bands:
@@ -504,7 +504,7 @@ events:
                 - kind: treasury
                   delta: -35
         - id: family_work
-          label: Keep a fit relative nursing while the others rest.
+          label: Ask whether anyone in the house can plan the fever watch.
           check: family_work
           outcomes:
             - id: held
@@ -585,6 +585,21 @@ events:
               affinity: darkness
         select:
           bestBy: darkness
+      APPRENTICE:
+        role: family_member
+        optional: true
+        filters:
+          - status:
+              - alive
+          - age:
+              op: gte
+              value: 16
+          - awakened: true
+          - not:
+              knows:
+                affinity: darkness
+        select:
+          bestBy: mind
     body: The Cawdry clerk warms a hand at Ardwen's fire and asks for the rent roll. A wet page has
       stuck to the entry he wants; a private letter is folded against it. The house can produce the
       entry or ask him to come back. He sets his pen on the table.
@@ -609,7 +624,7 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 25
+        difficulty: 12
         variance: none
         bands:
           - atLeast: 0
@@ -620,7 +635,7 @@ events:
         pool:
           kind: family_sum
           attr: charm
-        difficulty: 140
+        difficulty: 1500
         variance: none
         bands:
           - atLeast: 0
@@ -718,6 +733,34 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+        - id: prepare_next_time
+          label: Pay 125 crowns for the visit and a Darkness primer; start a reading.
+          requires:
+            - slot: APPRENTICE
+              attr: mind
+              op: gte
+              value: 0
+          outcomes:
+            - id: a_reading_begins
+              weight: 100
+              text: "{APPRENTICE} takes up the new Darkness book, which cost ninety crowns. The clerk is paid for
+                the visit and sets a review in twelve years. The house must spend the years before
+                it can use the working."
+              effects:
+                - kind: treasury
+                  delta: -125
+                - kind: spellbook
+                  op: acquire_copy
+                  target: household
+                  book: lesser_workings_of_darkness
+                - kind: spellbook
+                  op: study
+                  target:
+                    slot: APPRENTICE
+                  book: lesser_workings_of_darkness
+                - kind: schedule
+                  event: the_cawdry_copy
+                  inYears: 12
     record:
       subject: the rent roll at Cawdry
       options:
@@ -963,8 +1006,8 @@ proseVariants:
     plainenglish: The family cannot provide enough nursing shifts. The house pays for extra help from
       Wick and for the funeral vigil.
   - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].label
-    of: aaedfc5b414601df
-    plainenglish: Have a healthy relative nurse while the others sleep.
+    of: 13b35a1a35ad8036
+    plainenglish: Have a particularly capable relative organise the nursing shifts.
   - address: content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].outcomes[id=held].text
     of: 9ba70dc30dc626bf
     plainenglish: The family shares the work and completes it. The house pays for materials and for the
@@ -1037,6 +1080,14 @@ proseVariants:
     of: d3ca948b03055bbf
     plainenglish: The clerk leaves for Cawdry without a readable copy of the entry. The family must pay
       for this visit and another one.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=prepare_next_time].label
+    of: 0d826036bd8653ca
+    plainenglish: Pay 35 crowns for the inspection and 90 for a Darkness book. Set a relative studying it.
+  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text
+    of: d2de30070c084c7b
+    plainenglish: "{APPRENTICE} starts studying the Darkness book, which costs ninety crowns. The family
+      also pays the clerk for his visit. He will inspect the records again in twelve years. The
+      reading must be completed before this relative can use the working."
   - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].record.subject
     of: f68a4593970b0777
     plainenglish: the inspection of the rent roll at Cawdry
